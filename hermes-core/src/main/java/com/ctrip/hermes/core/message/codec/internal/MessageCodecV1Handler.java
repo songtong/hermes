@@ -193,7 +193,7 @@ public class MessageCodecV1Handler implements MessageCodecHandler {
 		int writeIndexBeforeLength = buf.writerIndex();
 		codec.writeInt(-1);
 		int writeIndexBeforeMap = buf.writerIndex();
-		codec.writeMap(properties);
+		codec.writeStringStringMap(properties);
 		int mapLength = buf.writerIndex() - writeIndexBeforeMap;
 		int writeIndexEnd = buf.writerIndex();
 		buf.writerIndex(writeIndexBeforeLength);
@@ -201,10 +201,9 @@ public class MessageCodecV1Handler implements MessageCodecHandler {
 		buf.writerIndex(writeIndexEnd);
 	}
 
-	@SuppressWarnings("unchecked")
 	private Map<String, String> readProperties(ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
-		return codec.readMap();
+		return codec.readStringStringMap();
 	}
 
 }

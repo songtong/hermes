@@ -70,7 +70,6 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testEncodeAndDecodeWithSingleMessage() {
 		JsonCodec jsonCodec = new JsonCodec();
@@ -119,8 +118,10 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 		Assert.assertEquals("key", msg.getKey());
 
-		Map<String, String> decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readMap();
-		Map<String, String> decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readMap();
+		Map<String, String> decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties())
+		      .readStringStringMap();
+		Map<String, String> decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties())
+		      .readStringStringMap();
 
 		Assert.assertEquals(1, decodedAppProperties.size());
 		Assert.assertEquals("1", decodedAppProperties.get(PropertiesHolder.APP + "1"));
@@ -129,7 +130,6 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testEncodeAndDecodeWithMultipleMessagesInSameTPP() {
 		JsonCodec jsonCodec = new JsonCodec();
@@ -184,8 +184,10 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 		Assert.assertEquals("key1", msg.getKey());
 
-		Map<String, String> decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readMap();
-		Map<String, String> decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readMap();
+		Map<String, String> decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties())
+		      .readStringStringMap();
+		Map<String, String> decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties())
+		      .readStringStringMap();
 
 		Assert.assertEquals(1, decodedAppProperties.size());
 		Assert.assertEquals("1", decodedAppProperties.get(PropertiesHolder.APP + "1"));
@@ -204,8 +206,8 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 		Assert.assertEquals("key2", msg.getKey());
 
-		decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readMap();
-		decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readMap();
+		decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readStringStringMap();
+		decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readStringStringMap();
 
 		Assert.assertEquals(1, decodedAppProperties.size());
 		Assert.assertEquals("1", decodedAppProperties.get(PropertiesHolder.APP + "1"));
@@ -215,7 +217,6 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testEncodeAndDecodeWithMultipleMessagesInDifferentTPP() {
 		JsonCodec jsonCodec = new JsonCodec();
@@ -279,8 +280,10 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 		Assert.assertEquals("key1", msg.getKey());
 
-		Map<String, String> decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readMap();
-		Map<String, String> decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readMap();
+		Map<String, String> decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties())
+		      .readStringStringMap();
+		Map<String, String> decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties())
+		      .readStringStringMap();
 
 		Assert.assertEquals(1, decodedAppProperties.size());
 		Assert.assertEquals("1", decodedAppProperties.get(PropertiesHolder.APP + "1"));
@@ -299,8 +302,8 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 		Assert.assertEquals("key2", msg.getKey());
 
-		decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readMap();
-		decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readMap();
+		decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readStringStringMap();
+		decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readStringStringMap();
 
 		Assert.assertEquals(1, decodedAppProperties.size());
 		Assert.assertEquals("1", decodedAppProperties.get(PropertiesHolder.APP + "1"));
@@ -333,8 +336,8 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 		Assert.assertEquals("key3", msg.getKey());
 
-		decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readMap();
-		decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readMap();
+		decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readStringStringMap();
+		decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readStringStringMap();
 
 		Assert.assertEquals(1, decodedAppProperties.size());
 		Assert.assertEquals("1", decodedAppProperties.get(PropertiesHolder.APP + "1"));
@@ -353,8 +356,8 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 		Assert.assertEquals("key4", msg.getKey());
 
-		decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readMap();
-		decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readMap();
+		decodedAppProperties = new HermesPrimitiveCodec(msg.getDurableProperties()).readStringStringMap();
+		decodedSysProperties = new HermesPrimitiveCodec(msg.getVolatileProperties()).readStringStringMap();
 
 		Assert.assertEquals(1, decodedAppProperties.size());
 		Assert.assertEquals("1", decodedAppProperties.get(PropertiesHolder.APP + "1"));

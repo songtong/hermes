@@ -43,19 +43,18 @@ public class SendMessageAckCommand extends AbstractCommand implements Ack {
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void parse0(ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
 		m_totalSize = codec.readInt();
-		m_successes = codec.readMap();
+		m_successes = codec.readIntBooleanMap();
 	}
 
 	@Override
 	public void toBytes0(ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
 		codec.writeInt(m_totalSize);
-		codec.writeMap(m_successes);
+		codec.writeIntBooleanMap(m_successes);
 	}
 
 }
