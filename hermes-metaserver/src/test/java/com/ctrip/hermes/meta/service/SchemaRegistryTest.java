@@ -13,8 +13,8 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import ctrip.io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
-import ctrip.io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 
 public class SchemaRegistryTest {
 

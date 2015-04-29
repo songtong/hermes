@@ -1,5 +1,7 @@
 package com.ctrip.hermes.meta.service;
 
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 
 import java.io.IOException;
@@ -27,9 +29,6 @@ import com.ctrip.hermes.meta.dal.meta.SchemaEntity;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.pojo.SchemaView;
-
-import ctrip.io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
-import ctrip.io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 
 @Named
 public class SchemaService {
