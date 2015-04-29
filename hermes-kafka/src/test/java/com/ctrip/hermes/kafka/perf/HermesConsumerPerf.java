@@ -15,6 +15,8 @@ public class HermesConsumerPerf {
 
 	private static class ConsumerPerf extends BaseConsumer<byte[]> {
 
+		private boolean isRunning;
+
 		private Integer threadId;
 
 		private String name;
@@ -44,20 +46,29 @@ public class HermesConsumerPerf {
 			this.config = config;
 			this.totalMessagesRead = totalMessagesRead;
 			this.totalBytesRead = totalBytesRead;
+			this.isRunning = true;
 		}
 
 		@Override
 		protected void consume(ConsumerMessage<byte[]> msg) {
-			byte[] event = msg.getBody();
-			messagesRead += 1;
-			bytesRead += event.length;
-			System.out.println(messagesRead);
-			if (messagesRead % config.reportingInterval == 0) {
-				printMessage(threadId, bytesRead, lastBytesRead, messagesRead, lastMessagesRead, lastReportTime,
-				      System.currentTimeMillis());
-				lastReportTime = System.currentTimeMillis();
-				lastMessagesRead = messagesRead;
-				lastBytesRead = bytesRead;
+			if (this.isRunning && messagesRead < config.numMessages) {
+				byte[] event = msg.getBody();
+				messagesRead += 1;
+				bytesRead += event.length;
+				if (messagesRead % config.reportingInterval == 0) {
+					printMessage(threadId, bytesRead, lastBytesRead, messagesRead, lastMessagesRead, lastReportTime,
+					      System.currentTimeMillis());
+					lastReportTime = System.currentTimeMillis();
+					lastMessagesRead = messagesRead;
+					lastBytesRead = bytesRead;
+				}
+			} else {
+				totalMessagesRead.addAndGet(messagesRead);
+				totalBytesRead.addAndGet(bytesRead);
+				if (config.showDetailedStats)
+					printMessage(threadId, bytesRead, lastBytesRead, messagesRead, lastMessagesRead, startMs,
+					      System.currentTimeMillis());
+				this.isRunning = false;
 			}
 		}
 

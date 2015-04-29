@@ -24,13 +24,19 @@ public class ServerMetaManager implements MetaManager {
 
 	@Override
 	public Meta getMeta() {
-		if (m_cachedMeta == null) {
-			try {
-				com.ctrip.hermes.meta.dal.meta.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
-				m_cachedMeta = JSON.parseObject(dalMeta.getValue(), Meta.class);
-			} catch (DalException e) {
-				throw new RuntimeException("Get meta failed.", e);
-			}
+		return getMeta(false);
+	}
+
+	@Override
+	public Meta getMeta(boolean isForceLatest) {
+		if (!isForceLatest && m_cachedMeta != null) {
+			return m_cachedMeta;
+		}
+		try {
+			com.ctrip.hermes.meta.dal.meta.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+			m_cachedMeta = JSON.parseObject(dalMeta.getValue(), Meta.class);
+		} catch (DalException e) {
+			throw new RuntimeException("Get meta failed.", e);
 		}
 		return m_cachedMeta;
 	}
