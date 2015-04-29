@@ -209,6 +209,24 @@
 						</dependency>
 					</dependencies>
 				</plugin>
+
+				<!--deploy source-->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>2.2.1</version>
+					<configuration>
+						<attach>true</attach>
+					</configuration>
+					<executions>
+						<execution>
+							<phase>deploy</phase>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -224,14 +242,6 @@
             <checksumPolicy>ignore</checksumPolicy>
          </releases>
       </repository>
-	   <repository>
-		   <id>ctrip_public</id>
-		   <url>http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/public</url>
-	   </repository>
-	   <repository>
-		   <id>ctrip_fx</id>
-		   <url>http://maven.dev.sh.ctripcorp.com:8081/nexus/service/local/repositories/fxrelease</url>
-	   </repository>
    </repositories>
    <pluginRepositories>
       <pluginRepository>
