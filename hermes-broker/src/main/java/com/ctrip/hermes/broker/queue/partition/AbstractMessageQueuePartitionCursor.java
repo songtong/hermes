@@ -2,7 +2,6 @@ package com.ctrip.hermes.broker.queue.partition;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -62,57 +61,49 @@ public abstract class AbstractMessageQueuePartitionCursor implements MessageQueu
 
 	@Override
 	public List<TppConsumerMessageBatch> next(int batchSize) {
-		while (!Thread.currentThread().isInterrupted()) {
-			try {
-				List<TppConsumerMessageBatch> result = new LinkedList<>();
-				int remainingSize = batchSize;
-				FetchResult pFetchResult = fetchPriortyMessages(batchSize);
+		try {
+			List<TppConsumerMessageBatch> result = new LinkedList<>();
+			int remainingSize = batchSize;
+			FetchResult pFetchResult = fetchPriortyMessages(batchSize);
 
-				if (pFetchResult != null) {
-					TppConsumerMessageBatch priorityMessageBatch = pFetchResult.getBatch();
-					if (priorityMessageBatch != null && priorityMessageBatch.size() > 0) {
-						result.add(priorityMessageBatch);
-						remainingSize -= priorityMessageBatch.size();
-						m_priorityOffset = pFetchResult.getOffset();
-					}
+			if (pFetchResult != null) {
+				TppConsumerMessageBatch priorityMessageBatch = pFetchResult.getBatch();
+				if (priorityMessageBatch != null && priorityMessageBatch.size() > 0) {
+					result.add(priorityMessageBatch);
+					remainingSize -= priorityMessageBatch.size();
+					m_priorityOffset = pFetchResult.getOffset();
 				}
-
-				if (remainingSize > 0) {
-					FetchResult rFetchResult = fetchResendMessages(remainingSize);
-
-					if (rFetchResult != null) {
-						TppConsumerMessageBatch resendMessageBatch = rFetchResult.getBatch();
-						if (resendMessageBatch != null && resendMessageBatch.size() > 0) {
-							result.add(resendMessageBatch);
-							remainingSize -= resendMessageBatch.size();
-							m_resendOffset = rFetchResult.getOffset();
-						}
-					}
-				}
-
-				if (remainingSize > 0) {
-					FetchResult npFetchResult = fetchNonPriortyMessages(remainingSize);
-
-					if (npFetchResult != null) {
-						TppConsumerMessageBatch nonPriorityMessageBatch = npFetchResult.getBatch();
-						if (nonPriorityMessageBatch != null && nonPriorityMessageBatch.size() > 0) {
-							result.add(nonPriorityMessageBatch);
-							remainingSize -= nonPriorityMessageBatch.size();
-							m_nonPriorityOffset = npFetchResult.getOffset();
-						}
-					}
-				}
-
-				if (result.size() > 0) {
-					return result;
-				} else {
-					TimeUnit.MILLISECONDS.sleep(10);
-				}
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			} catch (Exception e) {
-				// TODO
 			}
+
+			if (remainingSize > 0) {
+				FetchResult rFetchResult = fetchResendMessages(remainingSize);
+
+				if (rFetchResult != null) {
+					TppConsumerMessageBatch resendMessageBatch = rFetchResult.getBatch();
+					if (resendMessageBatch != null && resendMessageBatch.size() > 0) {
+						result.add(resendMessageBatch);
+						remainingSize -= resendMessageBatch.size();
+						m_resendOffset = rFetchResult.getOffset();
+					}
+				}
+			}
+
+			if (remainingSize > 0) {
+				FetchResult npFetchResult = fetchNonPriortyMessages(remainingSize);
+
+				if (npFetchResult != null) {
+					TppConsumerMessageBatch nonPriorityMessageBatch = npFetchResult.getBatch();
+					if (nonPriorityMessageBatch != null && nonPriorityMessageBatch.size() > 0) {
+						result.add(nonPriorityMessageBatch);
+						remainingSize -= nonPriorityMessageBatch.size();
+						m_nonPriorityOffset = npFetchResult.getOffset();
+					}
+				}
+			}
+
+			return result;
+		} catch (Exception e) {
+			// TODO
 		}
 
 		return null;

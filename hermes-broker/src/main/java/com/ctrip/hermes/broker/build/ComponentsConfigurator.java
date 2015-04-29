@@ -14,7 +14,6 @@ import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.queue.partition.DefaultMessageQueuePullerManager;
 import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionFactory;
-import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionPullerManager;
 import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesJdbcDataSourceDescriptorManager;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
@@ -44,7 +43,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND.toString(), SendMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class));
 		all.add(C(CommandProcessor.class, CommandType.SUBSCRIBE.toString(), SubscribeCommandProcessor.class)//
-		      .req(MessageQueuePartitionPullerManager.class)//
 		      .req(MessageTransmitter.class));
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(AckManager.class));

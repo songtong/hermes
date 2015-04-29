@@ -38,4 +38,9 @@ public class DefaultMessageQueuePullerManager implements MessageQueuePartitionPu
 		m_pullers.get(tpg).start();
 	}
 
+	@Override
+	public void closePuller(Tpg tpg) {
+		m_pullers.remove(tpg);
+	}
+
 }
