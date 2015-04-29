@@ -61,6 +61,7 @@ public class CmessageResource {
 			t.setStatus(Message.SUCCESS);
 			metricsAddCount(MetricsConstant.CmessageDelivery);
 		} catch (Exception e) {
+			logger.error(e.getMessage());
 			t.setStatus(e);
 		}
 		t.complete();
