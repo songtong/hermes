@@ -41,10 +41,10 @@ public class CmessageResource {
 
 		metricsAddCount(MetricsConstant.CmessageReceive);
 
-		String topic = map.get("topic");
-		// TODO: in fact, content in map is byte[]...
-		String content = map.get("content");
-		String header = map.get("header");
+		String topic = map.get("Topic");
+		// in fact, content in map is byte[]...
+		String content = map.get("Content");
+		String header = map.get("Header");
 		try {
 			if (null == topic || null == content || null == header) {
 				StringBuilder sb = new StringBuilder();
@@ -67,7 +67,7 @@ public class CmessageResource {
 
 		Cat.logEvent(RestConstant.CAT_TYPE, RestConstant.CAT_NAME, Message.SUCCESS, map.toString());
 
-		map.remove("content");
+		map.remove("Content");
 		logger.info("received cmessage message", content, map);
 
 		return integer.addAndGet(1);
