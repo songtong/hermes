@@ -24,7 +24,8 @@ import com.ctrip.hermes.meta.service.ServerMetaManager;
 @Produces(MediaType.APPLICATION_JSON)
 public class MetaResource {
 
-	private MetaManager metaManager = PlexusComponentLocator.lookup(MetaManager.class, ServerMetaManager.ID);
+	private MetaManager metaManager = PlexusComponentLocator.lookup(
+			MetaManager.class, ServerMetaManager.ID);
 
 	@GET
 	public Response getMeta(@QueryParam("hashCode") long hashCode) {
@@ -43,10 +44,26 @@ public class MetaResource {
 		return Response.status(Status.OK).entity(meta).build();
 	}
 
+	@GET
+	@Path("refresh")
+	public Response refreshMeta() {
+		Meta meta = null;
+		try {
+			meta = metaManager.getMeta(true);
+			if (meta == null) {
+				throw new RestException("Meta not found", Status.NOT_FOUND);
+			}
+		} catch (Exception e) {
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		return Response.status(Status.OK).entity(meta).build();
+	}
+
 	@POST
 	public Response updateMeta(String content) {
 		if (StringUtils.isEmpty(content)) {
-			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
+			throw new RestException("HTTP POST body is empty",
+					Status.BAD_REQUEST);
 		}
 
 		Meta meta = null;

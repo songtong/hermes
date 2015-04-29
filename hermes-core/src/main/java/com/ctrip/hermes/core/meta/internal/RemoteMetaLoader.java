@@ -9,6 +9,7 @@ import java.net.URL;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.lookup.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.env.ClientEnvironment;
@@ -23,28 +24,51 @@ public class RemoteMetaLoader implements MetaLoader {
 	@Inject
 	private ClientEnvironment m_clientEnvironment;
 
+	private Meta m_meta;
+
+	private String host;
+
+	private String port;
+
 	@Override
 	public Meta load() {
-		Meta meta = null;
 		try {
-			String host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
-			String port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
-			URL metaURL = new URL("http://" + host + ":" + port + "/meta");
-			InputStream is = metaURL.openStream();
-			String jsonString = new String(ByteStreams.toByteArray(is));
-			meta = JSON.parseObject(jsonString, Meta.class);
+			if (StringUtils.isEmpty(host))
+				host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
+			if (StringUtils.isEmpty(port))
+				port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
+			String url;
+			if (m_meta != null) {
+				url = "http://" + host + ":" + port + "/meta?hashCode=" + m_meta.hashCode();
+			} else {
+				url = "http://" + host + ":" + port + "/meta";
+			}
+			URL metaURL = new URL(url);
+			HttpURLConnection connection = (HttpURLConnection) metaURL.openConnection();
+			connection.setRequestMethod("GET");
+			connection.connect();
+			if (connection.getResponseCode() == 200) {
+				InputStream is = connection.getInputStream();
+				String jsonString = new String(ByteStreams.toByteArray(is));
+				m_meta = JSON.parseObject(jsonString, Meta.class);
+			} else if (connection.getResponseCode() == 304) {
+				return m_meta;
+			}
 		} catch (Exception e) {
 			throw new RuntimeException("Load remote meta failed", e);
 		}
-		return meta;
+		return m_meta;
 	}
 
 	@Override
 	public boolean save(Meta meta) {
 		try {
-			String host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
-			String port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
-			URL metaURL = new URL("http://" + host + ":" + port + "/meta");
+			if (StringUtils.isEmpty(host))
+				host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
+			if (StringUtils.isEmpty(port))
+				port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
+			String url = "http://" + host + ":" + port + "/meta";
+			URL metaURL = new URL(url);
 			HttpURLConnection conn = (HttpURLConnection) metaURL.openConnection();
 			conn.setRequestMethod("POST");
 			OutputStream os = conn.getOutputStream();
