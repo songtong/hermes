@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -22,6 +23,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelActiveEvent;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelEvent;
+import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelExceptionCaughtEvent;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelInactiveEvent;
 
 /**
@@ -70,16 +72,16 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 			@Override
 			public void run() {
 				Command cmd = null;
-				while (!Thread.currentThread().isInterrupted()) {
+				while (!m_closed.get() && !Thread.currentThread().isInterrupted()) {
 					try {
 
 						if (cmd == null) {
-							cmd = m_writeQueue.take();
+							cmd = m_writeQueue.poll(1, TimeUnit.SECONDS);
 						}
 
 						Channel channel = m_channel.get();
 
-						if (channel != null && channel.isWritable()) {
+						if (cmd != null && channel != null && channel.isWritable()) {
 							ChannelFuture future = channel.writeAndFlush(cmd).sync();
 							if (future.isSuccess()) {
 								cmd = null;
@@ -142,6 +144,14 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	}
 
 	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		// TODO
+		cause.printStackTrace();
+		notifyListener(new EndpointChannelExceptionCaughtEvent(ctx, cause, this));
+		super.exceptionCaught(ctx, cause);
+	}
+
+	@Override
 	public void addListener(EndpointChannelEventListener... listeners) {
 		if (listeners != null) {
 			m_listeners.addAll(Arrays.asList(listeners));
@@ -160,7 +170,17 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 	@Override
 	public boolean isClosed() {
-		return m_channel.get() == null;
+		return m_closed.get();
+	}
+
+	@Override
+	public void close() {
+		m_closed.set(true);
+	}
+
+	@Override
+	public String getHost() {
+		return m_channel.get().remoteAddress().toString();
 	}
 
 }

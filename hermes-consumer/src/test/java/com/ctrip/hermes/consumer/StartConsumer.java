@@ -1,4 +1,4 @@
-package com.ctrip.hermes.example;
+package com.ctrip.hermes.consumer;
 
 import java.util.Arrays;
 import java.util.HashMap;

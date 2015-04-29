@@ -38,9 +38,6 @@
 			<implementation>com.ctrip.hermes.broker.transport.command.processor.SubscribeCommandProcessor</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionPullerManager</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.broker.transport.transmitter.MessageTransmitter</role>
 				</requirement>
 			</requirements>
@@ -88,6 +85,9 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.broker.ack.AckManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionPullerManager</role>
 				</requirement>
 			</requirements>
 		</component>
