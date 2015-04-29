@@ -62,11 +62,6 @@ public class DefaultMessageQueuePartitionPuller implements MessageQueuePartition
 
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
-					if (m_relayer == null) {
-						TimeUnit.SECONDS.sleep(1);
-						continue;
-					}
-
 					if (m_relayer.isClosed()) {
 						// TODO log
 						return;
@@ -75,15 +70,18 @@ public class DefaultMessageQueuePartitionPuller implements MessageQueuePartition
 					int availableSize = m_relayer.availableSize();
 					if (availableSize > 0) {
 						if (batch.isEmpty()) {
-							batch = pullMessages(availableSize);
+							List<TppConsumerMessageBatch> tmpBatch = pullMessages(availableSize);
+							if (tmpBatch != null) {
+								batch.addAll(tmpBatch);
+							}
 						}
 
-						if (m_relayer.relay(batch)) {
+						if (!batch.isEmpty() && m_relayer.relay(batch)) {
 							batch.clear();
 						}
-					} else {
-						TimeUnit.MILLISECONDS.sleep(50);
 					}
+					// TODO
+					TimeUnit.MILLISECONDS.sleep(50);
 
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();

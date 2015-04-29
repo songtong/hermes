@@ -10,4 +10,6 @@ import com.ctrip.hermes.core.bo.Tpg;
 public interface MessageQueuePartitionPullerManager {
 	void startPuller(Tpg tpg, TpgRelayer relayer);
 
+	void closePuller(Tpg tpg);
+
 }

@@ -14,6 +14,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.broker.ack.AckManager;
+import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionPullerManager;
 import com.ctrip.hermes.broker.transport.transmitter.TpgChannel.TpgChannelFetchResult;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
@@ -38,8 +39,11 @@ public class DefaultMessageTransmitter implements MessageTransmitter, Initializa
 	@Inject
 	private AckManager m_ackManager;
 
+	@Inject
+	private MessageQueuePartitionPullerManager m_queuePartitionPullerManager;
+
 	@Override
-	public synchronized TpgRelayer registerDestination(Tpg tpg, long correlationId, EndpointChannel channel, int window) {
+	public synchronized void registerDestination(Tpg tpg, long correlationId, EndpointChannel channel, int window) {
 		if (!m_channel2Worker.containsKey(channel)) {
 			TransmitterWorker worker = new TransmitterWorker(channel);
 			worker.start();
@@ -64,8 +68,7 @@ public class DefaultMessageTransmitter implements MessageTransmitter, Initializa
 			worker.addTpgChannel(tpgChannel);
 		}
 
-		return m_tpg2Relayer.get(tpg);
-
+		m_queuePartitionPullerManager.startPuller(tpg, m_tpg2Relayer.get(tpg));
 	}
 
 	private class TransmitterWorker {
@@ -169,7 +172,7 @@ public class DefaultMessageTransmitter implements MessageTransmitter, Initializa
 
 			});
 			m_workerThread.setDaemon(true);
-			m_workerThread.setName(String.format("TransmitterWorker-%s", m_channel));
+			m_workerThread.setName(String.format("TransmitterWorker-%s", m_channel.getHost()));
 			m_workerThread.start();
 		}
 	}
@@ -196,6 +199,7 @@ public class DefaultMessageTransmitter implements MessageTransmitter, Initializa
 		if (tpgRelayer.channleCount() == 0) {
 			tpgRelayer.close();
 			m_tpg2Relayer.remove(tpg);
+			m_queuePartitionPullerManager.closePuller(tpg);
 		}
 	}
 

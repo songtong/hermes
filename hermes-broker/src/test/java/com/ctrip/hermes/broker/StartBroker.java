@@ -1,4 +1,4 @@
-package com.ctrip.hermes.example;
+package com.ctrip.hermes.broker;
 
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;

@@ -2,18 +2,14 @@ package com.ctrip.hermes.core.transport.command.processor;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.unidal.helper.Threads;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -64,16 +60,15 @@ public class CommandProcessorManager implements Initializable, LogEnabled {
 		Set<CommandProcessor> cmdProcessors = m_registry.listAllProcessors();
 
 		for (CommandProcessor cmdProcessor : cmdProcessors) {
-			BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
 
+			String threadNamePrefix = String.format("CmdProcessor-%s", cmdProcessor.getClass().getSimpleName());
 			if (cmdProcessor.getClass().isAnnotationPresent(SingleThreaded.class)) {
 				// TODO config ThreadFactory
 				// TODO when do we need to shutdown executorService;
-				m_executors.put(cmdProcessor, Executors.newSingleThreadExecutor());
+				m_executors.put(cmdProcessor, Threads.forPool().getFixedThreadPool(threadNamePrefix, 1));
 			} else {
 				// TODO config thread pool
-				m_executors.put(cmdProcessor,
-				      new ThreadPoolExecutor(10, 10, Integer.MAX_VALUE, TimeUnit.SECONDS, workQueue));
+				m_executors.put(cmdProcessor, Threads.forPool().getFixedThreadPool(threadNamePrefix, 10));
 			}
 		}
 
