@@ -19,12 +19,17 @@ public class ClientMetaManager extends ContainerHolder implements MetaManager {
 	private MetaLoader m_remoteMeta;
 
 	@Override
-	public Meta getMeta() {
+	public Meta getMeta(boolean isForceLatest) {
 		if (isLocalMode()) {
 			return m_localMeta.load();
 		} else {
 			return m_remoteMeta.load();
 		}
+	}
+
+	@Override
+	public Meta getMeta() {
+		return getMeta(false);
 	}
 
 	private boolean isLocalMode() {

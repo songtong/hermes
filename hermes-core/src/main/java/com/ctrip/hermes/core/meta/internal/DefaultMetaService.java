@@ -29,7 +29,11 @@ public class DefaultMetaService extends AbstractMetaService {
 
 			@Override
 			public void run() {
-				refreshMeta(m_manager.getMeta());
+				try {
+					refreshMeta(m_manager.getMeta());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 
 		}, REFRESH_PERIOD_MINUTES, REFRESH_PERIOD_MINUTES, TimeUnit.MINUTES);
