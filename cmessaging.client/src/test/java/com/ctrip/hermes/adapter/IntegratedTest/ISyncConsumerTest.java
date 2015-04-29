@@ -18,8 +18,9 @@ import com.ctrip.cmessaging.client.impl.ProducerFactory;
 
 import junit.framework.TestCase;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 
 public class ISyncConsumerTest {
 
