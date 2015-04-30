@@ -33,10 +33,13 @@ public class RemoteMetaLoader implements MetaLoader {
 	@Override
 	public Meta load() {
 		try {
-			if (StringUtils.isEmpty(host))
+			if (StringUtils.isEmpty(host)) {
+				System.out.println("Loading meta from server: " + host);
 				host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
-			if (StringUtils.isEmpty(port))
+			}
+			if (StringUtils.isEmpty(port)) {
 				port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
+			}
 			String url;
 			if (m_meta != null) {
 				url = "http://" + host + ":" + port + "/meta?hashCode=" + m_meta.hashCode();
@@ -63,10 +66,13 @@ public class RemoteMetaLoader implements MetaLoader {
 	@Override
 	public boolean save(Meta meta) {
 		try {
-			if (StringUtils.isEmpty(host))
+			if (StringUtils.isEmpty(host)) {
+				System.out.println("Saving mete to server: " + host);
 				host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
-			if (StringUtils.isEmpty(port))
+			}
+			if (StringUtils.isEmpty(port)) {
 				port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
+			}
 			String url = "http://" + host + ":" + port + "/meta";
 			URL metaURL = new URL(url);
 			HttpURLConnection conn = (HttpURLConnection) metaURL.openConnection();

@@ -18,7 +18,7 @@ public class LocalMetaLoader implements MetaLoader {
 
 	@Override
 	public Meta load() {
-
+		System.out.println("Loading meta from local: " + PATH);
 		InputStream in = getClass().getResourceAsStream(PATH);
 
 		if (in == null) {
