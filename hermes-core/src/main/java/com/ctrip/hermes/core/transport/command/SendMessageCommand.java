@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.ctrip.hermes.core.ManualRelease;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.google.common.util.concurrent.SettableFuture;

@@ -14,12 +14,12 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.codec.JsonPayloadCodec;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
+import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.command.Header;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;

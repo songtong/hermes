@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
-import com.ctrip.hermes.core.ManualRelease;
+import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.parser.CommandParser;
 import com.ctrip.hermes.core.transport.command.parser.DefaultCommandParser;

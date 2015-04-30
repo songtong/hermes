@@ -9,8 +9,8 @@ import java.util.Map;
 
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.ManualRelease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 
 /**

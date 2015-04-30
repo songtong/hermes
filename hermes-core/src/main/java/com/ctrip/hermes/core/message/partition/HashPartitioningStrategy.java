@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.partition;
+package com.ctrip.hermes.core.message.partition;
 
 import java.util.Random;
 

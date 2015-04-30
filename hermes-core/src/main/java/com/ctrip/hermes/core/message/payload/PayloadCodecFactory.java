@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.codec;
+package com.ctrip.hermes.core.message.payload;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -53,7 +53,7 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.codec.PayloadCodec</role>
+			<role>com.ctrip.hermes.core.message.payload.PayloadCodec</role>
 			<role-hint>avro</role-hint>
 			<implementation>com.ctrip.hermes.kafka.codec.AvroPayloadCodec</implementation>
 		</component>

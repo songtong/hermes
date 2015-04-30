@@ -11,7 +11,7 @@ import kafka.utils.VerifiableProperties;
 
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.codec.PayloadCodec;
+import com.ctrip.hermes.core.message.payload.PayloadCodec;
 
 @Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.AVRO)
 public class AvroPayloadCodec implements PayloadCodec {
