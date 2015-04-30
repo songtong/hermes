@@ -39,6 +39,9 @@
 					<role-hint>remote-meta-loader</role-hint>
 					<field-name>m_remoteMeta</field-name>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>

@@ -37,7 +37,7 @@ public class MetaRestServer implements LogEnabled {
 	private Logger m_logger;
 
 	private HttpServer m_server;
-
+	
 	@Inject
 	private ClientEnvironment m_env;
 

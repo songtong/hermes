@@ -27,14 +27,22 @@ public abstract class AbstractMetaService implements MetaService, Initializable 
 	protected Map<Long, Topic> m_topics;
 
 	@Override
-	public String getEndpointType(String topic) {
+	public String getEndpointType(String topicName) {
 		if (m_meta.isDevMode()) {
 			return Endpoint.LOCAL;
 		} else {
-			String endpointId = m_meta.getTopics().get(topic).getPartitions().get(0).getEndpoint();
+			Topic topic = m_meta.getTopics().get(topicName);
+			if (topic == null) {
+				throw new RuntimeException(String.format("Topic %s is not found", topicName));
+			}
+			List<Partition> partitions = topic.getPartitions();
+			if (partitions == null || partitions.size() == 0) {
+				throw new RuntimeException(String.format("Partitions for topic %s is not found", topicName));
+			}
+			String endpointId = partitions.get(0).getEndpoint();
 			Endpoint endpoint = m_meta.getEndpoints().get(endpointId);
 			if (endpoint == null) {
-				throw new RuntimeException(String.format("Endpoint for topic %s is not found", topic));
+				throw new RuntimeException(String.format("Endpoint for topic %s is not found", topicName));
 			} else {
 				return endpoint.getType();
 			}

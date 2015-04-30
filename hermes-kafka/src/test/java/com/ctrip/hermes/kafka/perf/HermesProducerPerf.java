@@ -61,6 +61,7 @@ public class HermesProducerPerf {
 
 		/* print final results */
 		stats.printTotal();
+		System.exit(0);
 	}
 
 	private static class Stats {
