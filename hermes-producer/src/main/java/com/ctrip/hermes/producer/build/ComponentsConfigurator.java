@@ -6,8 +6,8 @@ import java.util.List;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.core.message.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.core.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
 import com.ctrip.hermes.core.transport.endpoint.EndpointChannelManager;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;

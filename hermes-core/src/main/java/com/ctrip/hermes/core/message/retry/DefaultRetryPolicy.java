@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.policy.retry;
+package com.ctrip.hermes.core.message.retry;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)

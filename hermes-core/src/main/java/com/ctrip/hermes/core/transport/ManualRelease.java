@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core;
+package com.ctrip.hermes.core.transport;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

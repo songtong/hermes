@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.policy.retry;
+package com.ctrip.hermes.core.message.retry;
 
 import java.util.LinkedList;
 import java.util.List;

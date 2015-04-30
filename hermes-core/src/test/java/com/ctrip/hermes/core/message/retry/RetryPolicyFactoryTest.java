@@ -1,7 +1,11 @@
-package com.ctrip.hermes.core.policy.retry;
+package com.ctrip.hermes.core.message.retry;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.ctrip.hermes.core.message.retry.FrequencySpecifiedRetryPolicy;
+import com.ctrip.hermes.core.message.retry.RetryPolicy;
+import com.ctrip.hermes.core.message.retry.RetryPolicyFactory;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)

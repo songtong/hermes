@@ -11,10 +11,10 @@ import kafka.utils.VerifiableProperties;
 
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.codec.Codec;
+import com.ctrip.hermes.core.message.payload.PayloadCodec;
 
-@Named(type = Codec.class, value = com.ctrip.hermes.meta.entity.Codec.AVRO)
-public class AvroCodec implements Codec {
+@Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.AVRO)
+public class AvroPayloadCodec implements PayloadCodec {
 
 	private KafkaAvroSerializer avroSerializer;
 

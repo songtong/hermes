@@ -14,12 +14,12 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.codec.JsonCodec;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
+import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.command.Header;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
@@ -72,7 +72,7 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 	@Test
 	public void testEncodeAndDecodeWithSingleMessage() {
-		JsonCodec jsonCodec = new JsonCodec();
+		JsonPayloadCodec jsonCodec = new JsonPayloadCodec();
 		SendMessageCommand cmd = new SendMessageCommand();
 
 		Map<String, String> appProperties = new HashMap<String, String>();
@@ -132,7 +132,7 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 	@Test
 	public void testEncodeAndDecodeWithMultipleMessagesInSameTPP() {
-		JsonCodec jsonCodec = new JsonCodec();
+		JsonPayloadCodec jsonCodec = new JsonPayloadCodec();
 		SendMessageCommand cmd = new SendMessageCommand();
 
 		Map<String, String> appProperties = new HashMap<String, String>();
@@ -219,7 +219,7 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 	@Test
 	public void testEncodeAndDecodeWithMultipleMessagesInDifferentTPP() {
-		JsonCodec jsonCodec = new JsonCodec();
+		JsonPayloadCodec jsonCodec = new JsonPayloadCodec();
 		SendMessageCommand cmd = new SendMessageCommand();
 
 		Map<String, String> appProperties = new HashMap<String, String>();

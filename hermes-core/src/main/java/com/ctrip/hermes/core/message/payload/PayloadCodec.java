@@ -1,8 +1,8 @@
-package com.ctrip.hermes.core.codec;
+package com.ctrip.hermes.core.message.payload;
 
 import java.util.Map;
 
-public interface Codec {
+public interface PayloadCodec {
 
 	public String getType();
 

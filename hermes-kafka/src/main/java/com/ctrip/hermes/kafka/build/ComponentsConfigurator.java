@@ -7,7 +7,7 @@ import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.core.pipeline.PipelineSink;
-import com.ctrip.hermes.kafka.codec.AvroCodec;
+import com.ctrip.hermes.kafka.codec.AvroPayloadCodec;
 import com.ctrip.hermes.kafka.engine.KafkaConsumerBootstrap;
 import com.ctrip.hermes.kafka.producer.KafkaMessageSender;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -25,7 +25,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(KafkaMessageSender.class));
 
 		all.add(A(KafkaConsumerBootstrap.class));
-		all.add(A(AvroCodec.class));
+		all.add(A(AvroPayloadCodec.class));
 		return all;
 	}
 

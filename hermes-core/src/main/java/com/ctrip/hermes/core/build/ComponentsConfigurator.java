@@ -7,15 +7,15 @@ import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.HermesCoreModule;
-import com.ctrip.hermes.core.codec.CMessagingCodec;
-import com.ctrip.hermes.core.codec.JsonCodec;
 import com.ctrip.hermes.core.env.DefaultClientEnvironment;
 import com.ctrip.hermes.core.message.codec.DefaultMessageCodec;
+import com.ctrip.hermes.core.message.partition.HashPartitioningStrategy;
+import com.ctrip.hermes.core.message.payload.CMessagingPayloadCodec;
+import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
 import com.ctrip.hermes.core.meta.internal.ClientMetaManager;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaService;
 import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
 import com.ctrip.hermes.core.meta.internal.RemoteMetaLoader;
-import com.ctrip.hermes.core.partition.HashPartitioningStrategy;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.command.processor.DefaultCommandProcessorRegistry;
 import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointChannelManager;
@@ -50,8 +50,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		// codec
 		all.add(A(DefaultMessageCodec.class));
-		all.add(A(JsonCodec.class));
-		all.add(A(CMessagingCodec.class));
+		all.add(A(JsonPayloadCodec.class));
+		all.add(A(CMessagingPayloadCodec.class));
 
 		// env
 		all.add(A(DefaultClientEnvironment.class));
