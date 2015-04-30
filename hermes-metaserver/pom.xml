@@ -180,11 +180,5 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-	<repositories>
-		<repository>
-			<id>confluentinc</id>
-			<url>file:///${basedir}/../local-maven-repo</url>
-		</repository>
-	</repositories>
 </project>
 

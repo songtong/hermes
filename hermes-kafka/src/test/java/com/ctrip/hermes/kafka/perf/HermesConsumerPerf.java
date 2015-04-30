@@ -2,6 +2,7 @@ package com.ctrip.hermes.kafka.perf;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.log4j.Logger;
@@ -39,14 +40,17 @@ public class HermesConsumerPerf {
 
 		private long lastMessagesRead = 0L;
 
+		private CountDownLatch latch;
+
 		public ConsumerPerf(Integer threadId, String name, ConsumerPerfConfig config, AtomicLong totalMessagesRead,
-		      AtomicLong totalBytesRead) {
+		      AtomicLong totalBytesRead, CountDownLatch latch) {
 			this.threadId = threadId;
 			this.name = name;
 			this.config = config;
 			this.totalMessagesRead = totalMessagesRead;
 			this.totalBytesRead = totalBytesRead;
 			this.isRunning = true;
+			this.latch = latch;
 		}
 
 		@Override
@@ -69,6 +73,7 @@ public class HermesConsumerPerf {
 					printMessage(threadId, bytesRead, lastBytesRead, messagesRead, lastMessagesRead, startMs,
 					      System.currentTimeMillis());
 				this.isRunning = false;
+				this.latch.countDown();
 			}
 		}
 
@@ -86,8 +91,13 @@ public class HermesConsumerPerf {
 	public static void main(String[] args) throws InterruptedException {
 		ConsumerPerfConfig config = new ConsumerPerfConfig(args);
 		logger.info("Starting consumer...");
+		String topic = config.topic;
+		String group = config.consumerConfig.groupId();
+		int numThreads = config.numThreads;
 		AtomicLong totalMessagesRead = new AtomicLong(0);
 		AtomicLong totalBytesRead = new AtomicLong(0);
+		CountDownLatch latch = new CountDownLatch(numThreads);
+
 		if (!config.hideHeader) {
 			if (!config.showDetailedStats)
 				System.out
@@ -98,14 +108,11 @@ public class HermesConsumerPerf {
 
 		Engine engine = Engine.getInstance();
 
-		String topic = config.topic;
-		String group = config.consumerConfig.groupId();
-		int numThreads = config.numThreads;
 		List<Subscriber> subscribers = new ArrayList<>();
 
 		for (int i = 0; i < numThreads; i++) {
 			Subscriber s = new Subscriber(topic, group, new ConsumerPerf(i, "kafka-zk-consumer-" + i, config,
-			      totalMessagesRead, totalBytesRead));
+			      totalMessagesRead, totalBytesRead, latch));
 			subscribers.add(s);
 		}
 
@@ -116,7 +123,7 @@ public class HermesConsumerPerf {
 		System.out.println("Starting consumer...");
 		engine.start(subscribers);
 
-		Thread.currentThread().join();
+		latch.await();
 		long endMs = System.currentTimeMillis();
 		double elapsedSecs = (endMs - startMs - config.consumerConfig.consumerTimeoutMs()) / 1000.0;
 		if (!config.showDetailedStats) {
