@@ -128,7 +128,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Log
 		Properties configs = new Properties();
 
 		try {
-			Properties envProperties = m_environment.getProducerConfig(topic);
+			Properties envProperties = m_environment.getConsumerConfig(topic);
 			configs.putAll(envProperties);
 		} catch (IOException e) {
 			e.printStackTrace();
