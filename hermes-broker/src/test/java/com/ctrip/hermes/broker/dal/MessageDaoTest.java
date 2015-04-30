@@ -105,7 +105,7 @@ public class MessageDaoTest extends ComponentTestCase {
 
 		ByteBuf buf = Unpooled.buffer();
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
-		codec.writeMap(map);
+		codec.writeStringStringMap(map);
 
 		byte[] bytes = new byte[buf.readableBytes()];
 		buf.readBytes(bytes);
@@ -120,7 +120,7 @@ public class MessageDaoTest extends ComponentTestCase {
 
 		HermesPrimitiveCodec codec2 = new HermesPrimitiveCodec(buf2);
 
-		System.out.println(codec2.readMap());
+		System.out.println(codec2.readStringStringMap());
 
 		MessagePriorityDao dao = lookup(MessagePriorityDao.class);
 
@@ -133,7 +133,7 @@ public class MessageDaoTest extends ComponentTestCase {
 
 		HermesPrimitiveCodec codec3 = new HermesPrimitiveCodec(buf3);
 
-		System.out.println(codec3.readMap());
+		System.out.println(codec3.readStringStringMap());
 	}
 
 	@Test

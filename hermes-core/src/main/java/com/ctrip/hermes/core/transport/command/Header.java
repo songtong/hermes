@@ -62,13 +62,12 @@ public class Header implements Serializable {
 		m_properties.put(key, value);
 	}
 
-	@SuppressWarnings("unchecked")
 	public void parse(ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
 		m_version = codec.readInt();
 		m_type = CommandType.valueOf(codec.readInt());
 		m_correlationId = codec.readLong();
-		m_properties = codec.readMap();
+		m_properties = codec.readStringStringMap();
 	}
 
 	public void toBytes(ByteBuf buf) {
@@ -76,7 +75,7 @@ public class Header implements Serializable {
 		codec.writeInt(m_version);
 		codec.writeInt(m_type.getType());
 		codec.writeLong(m_correlationId);
-		codec.writeMap(m_properties);
+		codec.writeStringStringMap(m_properties);
 	}
 
 	@Override

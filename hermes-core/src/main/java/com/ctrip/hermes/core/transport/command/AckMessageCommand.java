@@ -63,13 +63,12 @@ public class AckMessageCommand extends AbstractCommand {
 			}
 			for (Triple<Tpp, String, Boolean> tppgr : msgSeqMap.keySet()) {
 				Map<Long, Integer> msgSeqs = msgSeqMap.get(tppgr);
-				codec.writeMap(msgSeqs);
+				codec.writeLongIntMap(msgSeqs);
 			}
 		}
 
 	}
 
-	@SuppressWarnings("unchecked")
 	private ConcurrentMap<Triple<Tpp, String, Boolean>, Map<Long, Integer>> readMsgSeqMap(HermesPrimitiveCodec codec) {
 		ConcurrentMap<Triple<Tpp, String, Boolean>, Map<Long, Integer>> msgSeqMap = new ConcurrentHashMap<>();
 
@@ -84,7 +83,7 @@ public class AckMessageCommand extends AbstractCommand {
 			}
 			for (int i = 0; i < mapSize; i++) {
 				Triple<Tpp, String, Boolean> tppgr = tppgrs.get(i);
-				msgSeqMap.put(tppgr, codec.readMap());
+				msgSeqMap.put(tppgr, codec.readLongIntMap());
 			}
 		}
 
