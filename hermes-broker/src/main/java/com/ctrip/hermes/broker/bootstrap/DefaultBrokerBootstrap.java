@@ -12,12 +12,14 @@ import com.ctrip.hermes.broker.transport.NettyServer;
  */
 @Named(type = BrokerBootstrap.class)
 public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBootstrap {
-	
+
 	@Inject
 	private NettyServer m_nettyServer;
 
 	@Override
 	public void start() throws Exception {
+		// TODO should move to start script -D cause ByteBufUtil will read in static initialization
+		System.setProperty("io.netty.allocator.type", "pooled");
 		m_nettyServer.start();
 	}
 
