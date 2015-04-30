@@ -34,12 +34,12 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.curator</groupId>
-			<artifactId>curator-test</artifactId>
+			<artifactId>curator-recipes</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.curator</groupId>
-			<artifactId>curator-recipes</artifactId>
+			<artifactId>curator-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

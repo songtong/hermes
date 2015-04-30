@@ -34,8 +34,8 @@ public class RemoteMetaLoader implements MetaLoader {
 	public Meta load() {
 		try {
 			if (StringUtils.isEmpty(host)) {
-				System.out.println("Loading meta from server: " + host);
 				host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
+				System.out.println("Loading meta from server: " + host);
 			}
 			if (StringUtils.isEmpty(port)) {
 				port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
@@ -67,8 +67,8 @@ public class RemoteMetaLoader implements MetaLoader {
 	public boolean save(Meta meta) {
 		try {
 			if (StringUtils.isEmpty(host)) {
-				System.out.println("Saving mete to server: " + host);
 				host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
+				System.out.println("Saving mete to server: " + host);
 			}
 			if (StringUtils.isEmpty(port)) {
 				port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
