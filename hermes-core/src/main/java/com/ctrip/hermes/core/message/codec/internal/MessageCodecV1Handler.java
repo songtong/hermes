@@ -5,8 +5,8 @@ import io.netty.buffer.Unpooled;
 
 import java.util.Map;
 
-import com.ctrip.hermes.core.codec.Codec;
-import com.ctrip.hermes.core.codec.CodecFactory;
+import com.ctrip.hermes.core.codec.PayloadCodec;
+import com.ctrip.hermes.core.codec.PayloadCodecFactory;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
@@ -22,7 +22,7 @@ public class MessageCodecV1Handler implements MessageCodecHandler {
 
 	@Override
 	public byte[] encode(ProducerMessage<?> msg, byte version) {
-		Codec bodyCodec = CodecFactory.getCodecByTopicName(msg.getTopic());
+		PayloadCodec bodyCodec = PayloadCodecFactory.getCodecByTopicName(msg.getTopic());
 		byte[] body = bodyCodec.encode(msg.getTopic(), msg.getBody());
 		ByteBuf buf = Unpooled.buffer(body.length + 150);
 		buf.writeByte(version);
@@ -38,7 +38,7 @@ public class MessageCodecV1Handler implements MessageCodecHandler {
 
 	@Override
 	public void encode(ProducerMessage<?> msg, ByteBuf buf) {
-		Codec bodyCodec = CodecFactory.getCodecByTopicName(msg.getTopic());
+		PayloadCodec bodyCodec = PayloadCodecFactory.getCodecByTopicName(msg.getTopic());
 		byte[] body = bodyCodec.encode(msg.getTopic(), msg.getBody());
 		encode(msg, buf, body, bodyCodec.getType());
 	}
@@ -129,7 +129,7 @@ public class MessageCodecV1Handler implements MessageCodecHandler {
 		Map<String, String> durableProperties = readProperties(decodedMessage.getDurableProperties());
 		Map<String, String> volatileProperties = readProperties(decodedMessage.getVolatileProperties());
 		msg.setPropertiesHolder(new PropertiesHolder(durableProperties, volatileProperties));
-		Codec bodyCodec = CodecFactory.getCodecByType(decodedMessage.getBodyCodecType());
+		PayloadCodec bodyCodec = PayloadCodecFactory.getCodecByType(decodedMessage.getBodyCodecType());
 		msg.setBody(bodyCodec.decode(decodedMessage.readBody(), bodyClazz));
 
 		return msg;

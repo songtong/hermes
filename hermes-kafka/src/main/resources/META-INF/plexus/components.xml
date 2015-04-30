@@ -53,9 +53,9 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.codec.Codec</role>
+			<role>com.ctrip.hermes.core.codec.PayloadCodec</role>
 			<role-hint>avro</role-hint>
-			<implementation>com.ctrip.hermes.kafka.codec.AvroCodec</implementation>
+			<implementation>com.ctrip.hermes.kafka.codec.AvroPayloadCodec</implementation>
 		</component>
 	</components>
 </plexus>

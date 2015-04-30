@@ -6,8 +6,8 @@ import org.unidal.lookup.annotation.Named;
 
 import com.google.common.base.Charsets;
 
-@Named(type = Codec.class, value = com.ctrip.hermes.meta.entity.Codec.CMESSAGING)
-public class CMessagingCodec implements Codec {
+@Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.CMESSAGING)
+public class CMessagingPayloadCodec implements PayloadCodec {
 
 	@Override
 	public byte[] encode(String topic, Object obj) {

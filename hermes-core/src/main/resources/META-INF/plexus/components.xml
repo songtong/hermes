@@ -87,14 +87,14 @@
 			<implementation>com.ctrip.hermes.core.message.codec.DefaultMessageCodec</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.codec.Codec</role>
+			<role>com.ctrip.hermes.core.codec.PayloadCodec</role>
 			<role-hint>json</role-hint>
-			<implementation>com.ctrip.hermes.core.codec.JsonCodec</implementation>
+			<implementation>com.ctrip.hermes.core.codec.JsonPayloadCodec</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.codec.Codec</role>
+			<role>com.ctrip.hermes.core.codec.PayloadCodec</role>
 			<role-hint>cmessaging</role-hint>
-			<implementation>com.ctrip.hermes.core.codec.CMessagingCodec</implementation>
+			<implementation>com.ctrip.hermes.core.codec.CMessagingPayloadCodec</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.env.ClientEnvironment</role>

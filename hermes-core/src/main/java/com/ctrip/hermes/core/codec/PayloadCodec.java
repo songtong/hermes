@@ -2,7 +2,7 @@ package com.ctrip.hermes.core.codec;
 
 import java.util.Map;
 
-public interface Codec {
+public interface PayloadCodec {
 
 	public String getType();
 

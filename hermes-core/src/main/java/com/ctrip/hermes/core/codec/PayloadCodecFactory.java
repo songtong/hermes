@@ -11,17 +11,17 @@ import com.ctrip.hermes.meta.entity.Property;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class CodecFactory {
+public class PayloadCodecFactory {
 
-	public static Codec getCodecByTopicName(String topic) {
+	public static PayloadCodec getCodecByTopicName(String topic) {
 		MetaService metaService = PlexusComponentLocator.lookup(MetaService.class);
 
 		com.ctrip.hermes.meta.entity.Codec codecEntity = metaService.getCodecByTopic(topic);
 		return getCodec(codecEntity);
 	}
 
-	private static Codec getCodec(com.ctrip.hermes.meta.entity.Codec codecEntity) {
-	   Codec codec = PlexusComponentLocator.lookup(Codec.class, codecEntity.getType());
+	private static PayloadCodec getCodec(com.ctrip.hermes.meta.entity.Codec codecEntity) {
+	   PayloadCodec codec = PlexusComponentLocator.lookup(PayloadCodec.class, codecEntity.getType());
 		Map<String, String> configs = new HashMap<>();
 		for (Property property : codecEntity.getProperties()) {
 			configs.put(property.getName(), property.getValue());
@@ -30,7 +30,7 @@ public class CodecFactory {
 		return codec;
    }
 
-	public static Codec getCodecByType(String codecType) {
+	public static PayloadCodec getCodecByType(String codecType) {
 		MetaService metaService = PlexusComponentLocator.lookup(MetaService.class);
 		com.ctrip.hermes.meta.entity.Codec codecEntity = metaService.getCodecByType(codecType);
 		return getCodec(codecEntity);
