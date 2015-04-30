@@ -18,6 +18,13 @@ public class NettyDecoder extends LengthFieldBasedFrameDecoder {
 	}
 
 	@Override
+	protected ByteBuf extractFrame(ChannelHandlerContext ctx, ByteBuf buffer, int index, int length) {
+		ByteBuf slicedBuffer = buffer.slice(index, length);
+		slicedBuffer.retain();
+		return slicedBuffer;
+	}
+
+	@Override
 	protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
 		ByteBuf frame = null;
 		Command cmd = null;

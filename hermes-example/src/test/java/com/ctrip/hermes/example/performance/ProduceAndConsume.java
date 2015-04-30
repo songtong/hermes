@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -56,28 +55,25 @@ public class ProduceAndConsume extends ComponentTestCase {
 		receiveCount.set(0);
 	}
 
-//	@Test
+	// @Test
 	public void suddenDownTest() throws IOException, InterruptedException {
 		startBroker();
 		System.in.read();
 	}
 
-
-//	@Test
+	// @Test
 	public void produceOne() throws IOException {
 		Producer p = lookup(Producer.class);
 
-			p.message(TOPIC, sendCount.get()).send();
+		p.message(TOPIC, sendCount.get()).send();
 		System.in.read();
 	}
 
-//	@Test
+	// @Test
 	public void consumeOne() throws IOException {
 		startConsumeThread();
 		System.in.read();
 	}
-
-
 
 	@Test
 	public void myTest() throws IOException, InterruptedException {
@@ -102,11 +98,11 @@ public class ProduceAndConsume extends ComponentTestCase {
 			}
 		}).start();
 		try {
-	      TimeUnit.SECONDS.sleep(2);
-      } catch (InterruptedException e) {
-	      // TODO Auto-generated catch block
-	      e.printStackTrace();
-      }
+			TimeUnit.SECONDS.sleep(2);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void startCountTimer() {
@@ -119,7 +115,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 	}
 
 	private void startProduceThread() {
-		for (int i = 0; i < threadNum; i ++) {
+		for (int i = 0; i < threadNum; i++) {
 			runProducer();
 		}
 	}
@@ -131,26 +127,26 @@ public class ProduceAndConsume extends ComponentTestCase {
 				Producer p = lookup(Producer.class);
 
 				for (;;) {
-					SettableFuture<SendResult> future = (SettableFuture<SendResult>) p.message(TOPIC, sendCount.get()).send();
+					SettableFuture<SendResult> future = (SettableFuture<SendResult>) p.message(TOPIC, sendCount.get())
+					      .send();
 
 					Futures.addCallback(future, new FutureCallback<SendResult>() {
-								  @Override
-								  public void onSuccess(SendResult result) {
-									  sendCount.addAndGet(1);
-								  }
+						@Override
+						public void onSuccess(SendResult result) {
+							sendCount.addAndGet(1);
+						}
 
-								  @Override
-								  public void onFailure(Throwable t) {
-									  sendCount.addAndGet(1);
-								  }
-							  }, Executors.newCachedThreadPool()
-					);
+						@Override
+						public void onFailure(Throwable t) {
+							sendCount.addAndGet(1);
+						}
+					});
 
-					try {
-						Thread.sleep(1);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+//					try {
+//						Thread.sleep(1);
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
 				}
 			}
 		}).start();
@@ -178,24 +174,21 @@ public class ProduceAndConsume extends ComponentTestCase {
 		}).start();
 	}
 
-	final static String stangeString = "{\"1\":{\"str\":\"429bb071-7d14-4da7-9ef1-a6f5b17911b5\"}," +
-			  "\"2\":{\"str\":\"ExchangeTest\"},\"3\":33333{\"i32\":8},\"4\":{\"str\":\"uft-8\"}," +
-			  "\"5\":{\"str\":\"cmessage-adapter 1.0\"},\"6\":{\"i32\":3},\"7\":{\"i32\":1},\"8\":{\"i32\":0},\"9\":{\"str\":\"order_new\"},\"10\":{\"str\":\"\"},\"11\":{\"str\":\"1\"},\"12\":{\"str\":\"DST56615\"},\"13\":{\"str\":\"555555\"},\"14\":{\"str\":\"169.254.142.159\"},\"15\":{\"str\":\"java.lang.String\"},\"16\":{\"i64\":1429168996889},\"17\":{\"map\":[\"str\",\"str\",0,{}]}}";
+	final static String stangeString = "{\"1\":{\"str\":\"429bb071-7d14-4da7-9ef1-a6f5b17911b5\"},"
+	      + "\"2\":{\"str\":\"ExchangeTest\"},\"3\":33333{\"i32\":8},\"4\":{\"str\":\"uft-8\"},"
+	      + "\"5\":{\"str\":\"cmessage-adapter 1.0\"},\"6\":{\"i32\":3},\"7\":{\"i32\":1},\"8\":{\"i32\":0},\"9\":{\"str\":\"order_new\"},\"10\":{\"str\":\"\"},\"11\":{\"str\":\"1\"},\"12\":{\"str\":\"DST56615\"},\"13\":{\"str\":\"555555\"},\"14\":{\"str\":\"169.254.142.159\"},\"15\":{\"str\":\"java.lang.String\"},\"16\":{\"i64\":1429168996889},\"17\":{\"map\":[\"str\",\"str\",0,{}]}}";
 
-	@Test
+//	@Test
 	public void integratedTest() throws IOException, InterruptedException {
 		startBroker();
 		startConsumeThreadStrange();
 
 		Producer p = lookup(Producer.class);
 
-		p.message(TOPIC, "some content").
-				  addProperty("strangeString", stangeString).
-				  send();
+		p.message(TOPIC, "some content").addProperty("strangeString", stangeString).send();
 
 		System.in.read();
 	}
-
 
 	private void startConsumeThreadStrange() {
 		new Thread(new Runnable() {
