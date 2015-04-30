@@ -14,37 +14,41 @@ import com.ctrip.hermes.core.message.ProducerMessage;
  */
 @Named(type = MessageCodec.class)
 public class DefaultMessageCodec implements MessageCodec {
-	private static MessageCodecVersion VERSION = MessageCodecVersion.V1;
+	private static MessageCodecVersion CURRENT_VERSION = MessageCodecVersion.BINARY_V1;
 
 	@Override
 	public void encode(ProducerMessage<?> msg, ByteBuf buf) {
-		buf.writeByte(VERSION.getVersion());
+		Magic.writeMagic(buf);
+		buf.writeByte(CURRENT_VERSION.getVersion());
 
-		VERSION.getHandler().encode(msg, buf);
+		CURRENT_VERSION.getHandler().encode(msg, buf);
 	}
 
 	@Override
 	public byte[] encode(ProducerMessage<?> msg) {
-		return VERSION.getHandler().encode(msg, VERSION.getVersion());
+		return CURRENT_VERSION.getHandler().encode(msg, CURRENT_VERSION.getVersion());
 	}
 
 	@Override
-	public PartialDecodedMessage partialDecode(ByteBuf buf) {
+	public PartialDecodedMessage decodePartial(ByteBuf buf) {
+		Magic.readAndCheckMagic(buf);
 		MessageCodecVersion version = getVersion(buf);
-		return version.getHandler().partialDecode(buf);
+		return version.getHandler().decodePartial(buf);
 	}
 
 	@Override
 	public BaseConsumerMessage<?> decode(String topic, ByteBuf buf, Class<?> bodyClazz) {
+		Magic.readAndCheckMagic(buf);
 		MessageCodecVersion version = getVersion(buf);
 		return version.getHandler().decode(topic, buf, bodyClazz);
 	}
 
 	@Override
 	public void encode(PartialDecodedMessage msg, ByteBuf buf) {
-		buf.writeByte(VERSION.getVersion());
+		Magic.writeMagic(buf);
+		buf.writeByte(CURRENT_VERSION.getVersion());
 
-		VERSION.getHandler().encode(msg, buf);
+		CURRENT_VERSION.getHandler().encode(msg, buf);
 	}
 
 	private MessageCodecVersion getVersion(ByteBuf buf) {

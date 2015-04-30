@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.ctrip.hermes.core.message.codec.Magic;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 
 /**
@@ -64,6 +65,7 @@ public class Header implements Serializable {
 
 	public void parse(ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
+		Magic.readAndCheckMagic(buf);
 		m_version = codec.readInt();
 		m_type = CommandType.valueOf(codec.readInt());
 		m_correlationId = codec.readLong();
@@ -72,6 +74,7 @@ public class Header implements Serializable {
 
 	public void toBytes(ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
+		Magic.writeMagic(buf);
 		codec.writeInt(m_version);
 		codec.writeInt(m_type.getType());
 		codec.writeLong(m_correlationId);

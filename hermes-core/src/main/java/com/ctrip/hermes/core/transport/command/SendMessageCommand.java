@@ -256,7 +256,7 @@ public class SendMessageCommand extends AbstractCommand implements AckAware<Send
 						MessageCodec messageCodec = PlexusComponentLocator.lookup(MessageCodec.class);
 
 						while (tmpBuf.readableBytes() > 0) {
-							m_msgs.add(messageCodec.partialDecode(tmpBuf));
+							m_msgs.add(messageCodec.decodePartial(tmpBuf));
 						}
 
 					}

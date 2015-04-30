@@ -9,6 +9,7 @@ import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
+import com.ctrip.hermes.core.message.codec.Magic;
 import com.ctrip.hermes.core.message.codec.MessageCodecHandler;
 import com.ctrip.hermes.core.message.payload.PayloadCodec;
 import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
@@ -18,13 +19,14 @@ import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class MessageCodecV1Handler implements MessageCodecHandler {
+public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 
 	@Override
 	public byte[] encode(ProducerMessage<?> msg, byte version) {
 		PayloadCodec bodyCodec = PayloadCodecFactory.getCodecByTopicName(msg.getTopic());
 		byte[] body = bodyCodec.encode(msg.getTopic(), msg.getBody());
 		ByteBuf buf = Unpooled.buffer(body.length + 150);
+		Magic.writeMagic(buf);
 		buf.writeByte(version);
 
 		encode(msg, buf, body, bodyCodec.getType());
@@ -91,7 +93,7 @@ public class MessageCodecV1Handler implements MessageCodecHandler {
 	}
 
 	@Override
-	public PartialDecodedMessage partialDecode(ByteBuf buf) {
+	public PartialDecodedMessage decodePartial(ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
 
 		// skip whole length
@@ -121,7 +123,7 @@ public class MessageCodecV1Handler implements MessageCodecHandler {
 	public BaseConsumerMessage<?> decode(String topic, ByteBuf buf, Class<?> bodyClazz) {
 		BaseConsumerMessage msg = new BaseConsumerMessage();
 
-		PartialDecodedMessage decodedMessage = partialDecode(buf);
+		PartialDecodedMessage decodedMessage = decodePartial(buf);
 		msg.setTopic(topic);
 		msg.setKey(decodedMessage.getKey());
 		msg.setBornTime(decodedMessage.getBornTime());

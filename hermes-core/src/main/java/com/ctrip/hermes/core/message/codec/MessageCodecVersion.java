@@ -3,14 +3,14 @@ package com.ctrip.hermes.core.message.codec;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ctrip.hermes.core.message.codec.internal.MessageCodecV1Handler;
+import com.ctrip.hermes.core.message.codec.internal.MessageCodecBinaryV1Handler;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
 public enum MessageCodecVersion {
-	V1((byte) 1, new MessageCodecV1Handler()), //
+	BINARY_V1((byte) 1, new MessageCodecBinaryV1Handler()), //
 	;
 
 	private byte m_version;
