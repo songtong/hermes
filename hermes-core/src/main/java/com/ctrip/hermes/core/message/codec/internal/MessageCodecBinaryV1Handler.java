@@ -13,6 +13,7 @@ import com.ctrip.hermes.core.message.codec.Magic;
 import com.ctrip.hermes.core.message.codec.MessageCodecHandler;
 import com.ctrip.hermes.core.message.payload.PayloadCodec;
 import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
+import com.ctrip.hermes.core.utils.ChecksumUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 
 /**
@@ -52,6 +53,7 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 		codec.writeInt(-1);// placeholder for whole length
 		int indexAfterWholeLen = buf.writerIndex();
 		codec.writeInt(-1);// placeholder for header length
+		codec.writeInt(-1);// placeholder for body length
 		int indexBeforeHeader = buf.writerIndex();
 
 		// header begin
@@ -66,21 +68,17 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 
 		int headerLen = buf.writerIndex() - indexBeforeHeader;
 
-		int indexBeforeBodyLen = buf.writerIndex();
-		codec.writeInt(-1);// placeholder for body length
-
 		// body begin
 		int indexBeforeBody = buf.writerIndex();
 		buf.writeBytes(body);
-		int indexEnd = buf.writerIndex();
+		int bodyLen = buf.writerIndex() - indexBeforeBody;
 		// body end
 
-		int bodyLen = indexEnd - indexBeforeBody;
-		int wholeLen = indexEnd - indexAfterWholeLen;
+		// crc
+		codec.writeLong(ChecksumUtil.crc32(buf.slice(indexBeforeHeader, headerLen + bodyLen)));
+		int indexEnd = buf.writerIndex();
 
-		// refill body length
-		buf.writerIndex(indexBeforeBodyLen);
-		codec.writeInt(bodyLen);
+		int wholeLen = indexEnd - indexAfterWholeLen;
 
 		// refill whole length
 		buf.writerIndex(indexBeginning);
@@ -89,7 +87,11 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 		// refill header length
 		codec.writeInt(headerLen);
 
+		// refill body length
+		codec.writeInt(bodyLen);
+
 		buf.writerIndex(indexEnd);
+
 	}
 
 	@Override
@@ -99,7 +101,10 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 		// skip whole length
 		codec.readInt();
 		// skip header length
-		codec.readInt();
+		int headerLen = codec.readInt();
+		// skip body length
+		int bodyLen = codec.readInt();
+		verifyChecksum(buf, headerLen + bodyLen);
 		PartialDecodedMessage msg = new PartialDecodedMessage();
 		msg.setKey(codec.readString());
 		msg.setBornTime(codec.readLong());
@@ -112,10 +117,21 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 		len = codec.readInt();
 		msg.setVolatileProperties(buf.readSlice(len));
 
-		len = codec.readInt();
-		msg.setBody(buf.readSlice(len));
+		msg.setBody(buf.readSlice(bodyLen));
+
+		// skip crc
+		codec.readLong();
 
 		return msg;
+	}
+
+	private void verifyChecksum(ByteBuf buf, int len) {
+		long actualChecksum = ChecksumUtil.crc32(buf.slice(buf.readerIndex(), len));
+		long expectedChecksum = buf.getLong(buf.readerIndex() + len);
+		if (actualChecksum != expectedChecksum) {
+			// TODO
+			throw new IllegalArgumentException();
+		}
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -145,6 +161,7 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 		codec.writeInt(-1);// placeholder for whole length
 		int indexAfterWholeLen = buf.writerIndex();
 		codec.writeInt(-1);// placeholder for header length
+		codec.writeInt(-1);// placeholder for body length
 		int indexBeforeHeader = buf.writerIndex();
 
 		// header begin
@@ -160,19 +177,23 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 
 		// body begin
 		ByteBuf body = msg.getBody();
-		codec.writeInt(body.readableBytes());
+		int bodyLen = body.readableBytes();
 		buf.writeBytes(body);
 		// body end
 
-		int indexAfterBody = buf.writerIndex();
+		// crc
+		codec.writeLong(ChecksumUtil.crc32(buf.slice(indexBeforeHeader, headerLen + bodyLen)));
+		int indexEnd = buf.writerIndex();
 
 		// refill whole length
 		buf.writerIndex(indexBeginning);
-		codec.writeInt(indexAfterBody - indexAfterWholeLen);
+		codec.writeInt(indexEnd - indexAfterWholeLen);
 		// refill header length
 		codec.writeInt(headerLen);
+		// refill body length
+		codec.writeInt(bodyLen);
 
-		buf.writerIndex(indexAfterBody);
+		buf.writerIndex(indexEnd);
 	}
 
 	private void writeProperties(ByteBuf propertiesBuf, ByteBuf out, HermesPrimitiveCodec codec) {

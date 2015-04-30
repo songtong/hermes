@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.unidal.helper.Threads;
 import org.unidal.lookup.ComponentTestCase;
 import org.unidal.lookup.LookupException;
 
@@ -274,7 +273,6 @@ public class OneBoxTest extends ComponentTestCase {
 				}
 			};
 		}.start();
-		
 
 		Thread.sleep(2000);
 	}
