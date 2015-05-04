@@ -77,7 +77,7 @@ public class ProducerMessage<T> {
 		m_priority = priority;
 	}
 
-	public String getPartition() {
+	public String getPartitionKey() {
 		return m_partition;
 	}
 

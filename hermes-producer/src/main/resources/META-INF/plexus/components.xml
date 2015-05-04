@@ -40,6 +40,11 @@
 			<implementation>com.ctrip.hermes.producer.pipeline.TracingMessageValve</implementation>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.core.pipeline.spi.Valve</role>
+			<role-hint>enrich</role-hint>
+			<implementation>com.ctrip.hermes.producer.pipeline.EnrichMessageValve</implementation>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.producer.pipeline.ProducerPipelineSinkManager</role>
 			<implementation>com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSinkManager</implementation>
 			<requirements>

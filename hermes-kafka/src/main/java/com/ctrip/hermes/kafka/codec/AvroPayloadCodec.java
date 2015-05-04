@@ -33,14 +33,18 @@ public class AvroPayloadCodec implements PayloadCodec {
 
 	@Override
 	public void configure(Map<String, ?> configs) {
-		avroSerializer = new KafkaAvroSerializer();
-		avroSerializer.configure(configs, false);
-		Properties prop = new Properties();
-		for (Entry<String, ?> entry : configs.entrySet()) {
-			prop.setProperty(entry.getKey(), entry.getValue().toString());
+		if (avroSerializer == null) {
+			avroSerializer = new KafkaAvroSerializer();
+			avroSerializer.configure(configs, false);
 		}
-		prop.setProperty("specific.avro.reader", Boolean.TRUE.toString());
-		avroDeserializer = new KafkaAvroDecoder(new VerifiableProperties(prop));
+		if (avroDeserializer == null) {
+			Properties prop = new Properties();
+			for (Entry<String, ?> entry : configs.entrySet()) {
+				prop.setProperty(entry.getKey(), entry.getValue().toString());
+			}
+			prop.setProperty("specific.avro.reader", Boolean.TRUE.toString());
+			avroDeserializer = new KafkaAvroDecoder(new VerifiableProperties(prop));
+		}
 	}
 
 	@Override

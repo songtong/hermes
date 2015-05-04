@@ -4,8 +4,6 @@ import java.util.concurrent.Future;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.lookup.util.StringUtils;
-import org.unidal.net.Networks;
 
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
@@ -29,9 +27,6 @@ public class DefaultProducer extends Producer {
 
 		public DefaultMessageHolder(String topic, String partitionKey, Object body) {
 			m_msg = new ProducerMessage<Object>(topic, body);
-			if (StringUtils.isEmpty(partitionKey)) {
-				partitionKey = Networks.forIp().getLocalHostAddress();
-			}
 			m_msg.setPartitionKey(partitionKey);
 		}
 
