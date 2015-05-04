@@ -49,7 +49,7 @@ public class CmessageTransferService {
 
 	private void doSend(String topic, String content, String header) {
 		// 由于开发初期的原因，全部放到order_new这个topic下
-		Future<SendResult> future = p.message(RestConstant.CMESSAGEING_TOPIC, content)
+		Future<SendResult> future = p.message(RestConstant.CMESSAGEING_TOPIC, null, content)
 				  .addProperty(RestConstant.CMESSAGING_ORIGIN_TOPIC, topic)
 				  .addProperty(RestConstant.CMESSAGING_HEADER, header)
 				  .send();

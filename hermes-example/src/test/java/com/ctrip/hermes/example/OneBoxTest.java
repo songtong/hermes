@@ -43,7 +43,7 @@ public class OneBoxTest extends ComponentTestCase {
 		startBroker();
 		Producer p = Producer.getInstance();
 
-		p.message("order_new", 1233213423L).withKey("key").withPartition("0").withPriority().send();
+		p.message("order_new", "0", 1233213423L).withRefKey("key").withPriority().send();
 
 		System.in.read();
 	}
@@ -80,8 +80,8 @@ public class OneBoxTest extends ComponentTestCase {
 		Thread.sleep(2000);
 		Producer p = Producer.getInstance();
 
-		p.message(topic, 1233213423L).withKey("key").withPartition("0").withPriority().send();
-		p.message(topic, 1233213423L).withKey("key").withPartition("0").withPriority().send();
+		p.message(topic, "0", 1233213423L).withRefKey("key").withPriority().send();
+		p.message(topic, "0", 1233213423L).withRefKey("key").withPriority().send();
 		Thread.sleep(1000);
 
 		long start = System.currentTimeMillis();
@@ -115,11 +115,11 @@ public class OneBoxTest extends ComponentTestCase {
 			boolean priority = random.nextBoolean();
 			SettableFuture<SendResult> future;
 			if (priority) {
-				future = (SettableFuture<SendResult>) Producer.getInstance().message(topic, msg + " priority")
-				      .withKey(uuid).withPriority().send();
+				future = (SettableFuture<SendResult>) Producer.getInstance().message(topic, null, msg + " priority")
+				      .withRefKey(uuid).withPriority().send();
 			} else {
-				future = (SettableFuture<SendResult>) Producer.getInstance().message(topic, msg + " non-priority")
-				      .withKey(uuid).send();
+				future = (SettableFuture<SendResult>) Producer.getInstance().message(topic, null, msg + " non-priority")
+				      .withRefKey(uuid).send();
 			}
 
 			future.addListener(new Runnable() {
@@ -209,9 +209,9 @@ public class OneBoxTest extends ComponentTestCase {
 		boolean priority = random.nextBoolean();
 		Future<SendResult> future;
 		if (priority) {
-			future = Producer.getInstance().message(topic, msg + " priority").withKey(uuid).withPriority().send();
+			future = Producer.getInstance().message(topic, null, msg + " priority").withRefKey(uuid).withPriority().send();
 		} else {
-			future = Producer.getInstance().message(topic, msg + " non-priority").withKey(uuid).send();
+			future = Producer.getInstance().message(topic, null, msg + " non-priority").withRefKey(uuid).send();
 		}
 
 		future.get();

@@ -31,7 +31,7 @@ public class HermesProducer implements IProducer {
 		// as cmessage-java-client: SimpleProducer generated messaged id.
 		String messageId = UUID.randomUUID().toString();
 
-		p.message(subject, content)
+		p.message(subject, null, content)
 				  .addProperty(AdapterConstant.CMESSAGING_EXCHANGENAME, exchangeName)
 				  .addProperty(AdapterConstant.CMESSAGING_MESSAGEID, messageId)
 				  .addProperty(AdapterConstant.CMESSAGING_HEADER,

@@ -16,8 +16,8 @@ public class OrderProducer {
 		System.out.println(String.format("%s >>>>>>>>>> %s", order, topic));
 
 		return Producer.getInstance() //
-		      .message(topic, order) //
-		      .withKey(order.getId()) //
+		      .message(topic, null, order) //
+		      .withRefKey(order.getId()) //
 		      .send();
 	}
 

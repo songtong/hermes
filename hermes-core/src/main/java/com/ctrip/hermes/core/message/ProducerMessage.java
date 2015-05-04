@@ -81,7 +81,7 @@ public class ProducerMessage<T> {
 		return m_partition;
 	}
 
-	public void setPartition(String partition) {
+	public void setPartitionKey(String partition) {
 		m_partition = partition;
 	}
 
