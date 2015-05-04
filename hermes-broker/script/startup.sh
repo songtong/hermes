@@ -1,12 +1,17 @@
 #!/bin/sh
 
+set -e
+set -u
+
+cd `dirname $0`
+
+mkdir -p /opt/logs/hermes/
+
 ENV_FILE="./env.sh"
 . "${ENV_FILE}"
 
-PID_FILE=../bin/BrokerServer.pid
-PID=0
-LOG_PATH="../"
-LOG_FILE="run.log"
+LOG_PATH="/opt/logs/hermes/"
+LOG_FILE="sysout.log"
 
 SERVER_DRIVER=com.ctrip.hermes.broker.BrokerServer
 
@@ -22,23 +27,16 @@ done
 
 
 start() {
-    PID='check_pid'
-	echo ${PID}
-#    if [ "${PID}" != "" ];  then
-#       echo "#######################################################################################"
-#       echo "WARN: ${DESC} already started! (pid=${PID})"
-#       echo "#######################################################################################"
-#    else
-        if [ ! -d "${LOG_PATH}" ]; then
-            mkdir "${LOG_PATH}"
-        fi
-        nohup java ${JAVA_OPTS} -classpath ${CLASSPATH} ${SERVER_DRIVER} > "${LOG_PATH}/${LOG_FILE}" 2>&1 &
-        echo "BrokerServer Started!"
-#    fi
+    ensure_not_started
+	if [ ! -d "${LOG_PATH}" ]; then
+        mkdir "${LOG_PATH}"
+    fi
+    nohup java ${JAVA_OPTS} -classpath ${CLASSPATH} ${SERVER_DRIVER} > "${LOG_PATH}/${LOG_FILE}" 2>&1 &
+    echo "BrokerServer Started!"
 }
 
 stop(){
-    serverPID=`jps | grep HermesRestServer | awk '{print $1;" "}'`
+    serverPID=`jps -lvm | grep com.ctrip.hermes.broker.BrokerServer | awk '{print $1}'`
     if [ "${serverPID}" == "" ]; then
         echo "no BrokerServer is running"
     else
@@ -48,13 +46,12 @@ stop(){
 }
 
 
-check_pid() {
- if [ -f "${PID_FILE}" ]; then
-      PID=`cat "${PID_FILE}"`
-      if [ -n pid ]; then
-          echo ${PID}
-      fi
-  fi
+ensure_not_started() {
+	serverPID=`jps -lvm | grep com.ctrip.hermes.broker.BrokerServer | awk '{print $1}'`
+    if [ "${serverPID}" != "" ]; then
+        echo "BrokerServer is already running"
+        exit 1
+    fi
 }
 
 
