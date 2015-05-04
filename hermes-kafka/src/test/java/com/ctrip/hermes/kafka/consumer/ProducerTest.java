@@ -25,7 +25,7 @@ public class ProducerTest {
 		List<Future<SendResult>> result = new ArrayList<>();
 		for (int i = 0; i < 2; i++) {
 			VisitEvent event = generateEvent();
-			MessageHolder holder = producer.message(topic, event);
+			MessageHolder holder = producer.message(topic, null, event);
 			Future<SendResult> send = holder.send();
 			result.add(send);
 		}

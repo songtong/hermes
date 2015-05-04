@@ -46,7 +46,7 @@ public class OneProducer extends ComponentTestCase {
         final CountDownLatch latch = new CountDownLatch(1);
 
         Producer p = lookup(Producer.class);
-        p.message(TOPIC, msg).send();
+        p.message(TOPIC, null, msg).send();
 
         Engine engine = lookup(Engine.class);
         Subscriber s = new Subscriber(TOPIC, "group1", new Consumer<String>() {

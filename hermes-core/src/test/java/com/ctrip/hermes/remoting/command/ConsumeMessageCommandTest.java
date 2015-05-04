@@ -242,7 +242,7 @@ public class ConsumeMessageCommandTest extends ComponentTestCase {
 		ProducerMessage<T> msg = new ProducerMessage<T>(topic, body);
 		msg.setBornTime(System.currentTimeMillis());
 		msg.setKey(key);
-		msg.setPartition(partition);
+		msg.setPartitionKey(partition);
 		msg.setPartitionNo(partitionNo);
 		msg.setPriority(priority);
 		PropertiesHolder propertiesHolder = new PropertiesHolder();

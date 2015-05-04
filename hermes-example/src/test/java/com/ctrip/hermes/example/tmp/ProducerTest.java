@@ -38,7 +38,7 @@ public class ProducerTest extends ComponentTestCase {
 		Thread.sleep(1000);
 		Producer p = Producer.getInstance();
 
-		p.message("order_new", 0L).withKey("key0").withPartition("0").addProperty("k", "v").send();
+		p.message("order_new", "0", 0L).withRefKey("key0").addProperty("k", "v").send();
 		
 		List<Subscriber> subscribers = Arrays.asList(new Subscriber("order_new", "xx", new BaseConsumer<String>() {
 

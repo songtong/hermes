@@ -4,6 +4,8 @@ import java.util.concurrent.Future;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.lookup.util.StringUtils;
+import org.unidal.net.Networks;
 
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
@@ -18,15 +20,19 @@ public class DefaultProducer extends Producer {
 	private Pipeline<Future<SendResult>> m_pipeline;
 
 	@Override
-	public DefaultMessageHolder message(String topic, Object body) {
-		return new DefaultMessageHolder(topic, body);
+	public DefaultMessageHolder message(String topic, String partitionKey, Object body) {
+		return new DefaultMessageHolder(topic, partitionKey, body);
 	}
 
 	class DefaultMessageHolder implements MessageHolder {
 		private ProducerMessage<Object> m_msg;
 
-		public DefaultMessageHolder(String topic, Object body) {
+		public DefaultMessageHolder(String topic, String partitionKey, Object body) {
 			m_msg = new ProducerMessage<Object>(topic, body);
+			if (StringUtils.isEmpty(partitionKey)) {
+				partitionKey = Networks.forIp().getLocalHostAddress();
+			}
+			m_msg.setPartitionKey(partitionKey);
 		}
 
 		@Override
@@ -36,7 +42,7 @@ public class DefaultProducer extends Producer {
 		}
 
 		@Override
-		public MessageHolder withKey(String key) {
+		public MessageHolder withRefKey(String key) {
 			m_msg.setKey(key);
 			return this;
 		}
@@ -44,12 +50,6 @@ public class DefaultProducer extends Producer {
 		@Override
 		public MessageHolder withPriority() {
 			m_msg.setPriority(true);
-			return this;
-		}
-
-		@Override
-		public MessageHolder withPartition(String partition) {
-			m_msg.setPartition(partition);
 			return this;
 		}
 

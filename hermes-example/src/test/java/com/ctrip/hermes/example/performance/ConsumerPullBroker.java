@@ -68,7 +68,7 @@ public class ConsumerPullBroker extends ComponentTestCase {
 		Producer p = Producer.getInstance();
 
 		for (int i = 0; i < MESSAGE_COUNT; i++)
-			p.message("order_new", "hello").withKey("key").withPartition("0").withPriority().send();
+			p.message("order_new", "0", "hello").withRefKey("key").withPriority().send();
 	}
 
 	private void startBroker() throws Exception {

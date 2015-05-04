@@ -38,12 +38,12 @@ public class ProducerPushBroker extends ComponentTestCase {
 
 		Producer p = Producer.getInstance();
 
-		p.message("order_new", 1233213423L).withKey("key").withPartition("0").withPriority().send();
+		p.message("order_new", "0", 1233213423L).withRefKey("key").withPriority().send();
 
 		long startTime = System.currentTimeMillis();
 		for (int i = 0; i < MESSAGE_COUNT; i++) {
-			SettableFuture<SendResult> future = (SettableFuture<SendResult>) p.message("order_new", 1233213423L)
-					  .withKey("key").withPartition("0").withPriority().send();
+			SettableFuture<SendResult> future = (SettableFuture<SendResult>) p.message("order_new", "0", 1233213423L)
+					  .withRefKey("key").withPriority().send();
 
 			future.addListener(new Runnable() {
 

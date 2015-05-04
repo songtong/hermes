@@ -46,7 +46,7 @@ public class OneBoxTest {
 				}
 
 				String proMsg = RandomStringUtils.randomAlphanumeric(10) + System.currentTimeMillis();
-				MessageHolder holder = producer.message(topic, proMsg);
+				MessageHolder holder = producer.message(topic, null, proMsg);
 				holder.send();
 				System.out.println("Sent: " + proMsg);
 			}

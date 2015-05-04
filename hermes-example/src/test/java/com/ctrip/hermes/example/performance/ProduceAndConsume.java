@@ -65,7 +65,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 	public void produceOne() throws IOException {
 		Producer p = lookup(Producer.class);
 
-		p.message(TOPIC, sendCount.get()).send();
+		p.message(TOPIC, null, sendCount.get()).send();
 		System.in.read();
 	}
 
@@ -127,7 +127,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 				Producer p = lookup(Producer.class);
 
 				for (;;) {
-					SettableFuture<SendResult> future = (SettableFuture<SendResult>) p.message(TOPIC, sendCount.get())
+					SettableFuture<SendResult> future = (SettableFuture<SendResult>) p.message(TOPIC, null, sendCount.get())
 					      .send();
 
 					Futures.addCallback(future, new FutureCallback<SendResult>() {
@@ -185,7 +185,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 
 		Producer p = lookup(Producer.class);
 
-		p.message(TOPIC, "some content").addProperty("strangeString", stangeString).send();
+		p.message(TOPIC, null, "some content").addProperty("strangeString", stangeString).send();
 
 		System.in.read();
 	}

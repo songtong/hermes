@@ -59,7 +59,7 @@ public class KafkaAvroTest {
 				}
 
 				AvroVisitEvent event = generateEvent();
-				MessageHolder holder = producer.message(topic, event);
+				MessageHolder holder = producer.message(topic, null, event);
 				Future<SendResult> future = holder.send();
 				future.get();
 				if (future.isDone()) {
@@ -103,7 +103,7 @@ public class KafkaAvroTest {
 		int i = 0;
 		while (i++ < limit) {
 			AvroVisitEvent event = generateEvent();
-			MessageHolder holder = producer.message(topic, event);
+			MessageHolder holder = producer.message(topic, null, event);
 			Future<SendResult> future = holder.send();
 			future.get();
 			if (future.isDone()) {
