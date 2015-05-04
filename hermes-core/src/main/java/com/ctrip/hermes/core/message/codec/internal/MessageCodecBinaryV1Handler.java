@@ -126,6 +126,7 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 	}
 
 	private void verifyChecksum(ByteBuf buf, int len) {
+		// TODO allow skip verify checksum
 		long actualChecksum = ChecksumUtil.crc32(buf.slice(buf.readerIndex(), len));
 		long expectedChecksum = buf.getLong(buf.readerIndex() + len);
 		if (actualChecksum != expectedChecksum) {
