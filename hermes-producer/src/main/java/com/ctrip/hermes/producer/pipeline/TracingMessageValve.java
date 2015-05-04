@@ -1,13 +1,13 @@
 package com.ctrip.hermes.producer.pipeline;
 
 import org.unidal.lookup.annotation.Named;
+import org.unidal.net.Networks;
 
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
 import com.ctrip.hermes.core.pipeline.spi.Valve;
 import com.dianping.cat.Cat;
-import com.dianping.cat.configuration.NetworkInterfaceManager;
 import com.dianping.cat.message.Event;
 import com.dianping.cat.message.Transaction;
 import com.dianping.cat.message.spi.MessageTree;
@@ -31,7 +31,7 @@ public class TracingMessageValve implements Valve {
 			String msgId = Cat.getCurrentMessageId();
 			rootMsgId = rootMsgId == null ? msgId : rootMsgId;
 
-			String ip = NetworkInterfaceManager.INSTANCE.getLocalHostAddress();
+			String ip = Networks.forIp().getLocalHostAddress();;
 			Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
 			Cat.logEvent("Producer:" + ip, topic, Event.SUCCESS, "key=" + msg.getKey());
 

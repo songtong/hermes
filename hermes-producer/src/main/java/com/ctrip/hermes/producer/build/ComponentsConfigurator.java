@@ -16,6 +16,7 @@ import com.ctrip.hermes.producer.DefaultProducer;
 import com.ctrip.hermes.producer.HermesProducerModule;
 import com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSink;
 import com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSinkManager;
+import com.ctrip.hermes.producer.pipeline.EnrichMessageValve;
 import com.ctrip.hermes.producer.pipeline.ProducerPipeline;
 import com.ctrip.hermes.producer.pipeline.ProducerValveRegistry;
 import com.ctrip.hermes.producer.pipeline.TracingMessageValve;
@@ -37,6 +38,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		// valves
 		all.add(A(TracingMessageValve.class));
+		all.add(A(EnrichMessageValve.class));
 
 		// sinks
 		all.add(A(DefaultProducerPipelineSinkManager.class)); 

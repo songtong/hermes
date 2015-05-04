@@ -97,8 +97,10 @@ public class TopicService {
 				replication = Integer.parseInt(prop.getValue());
 			} else if ("partitions".equals(prop.getName())) {
 				partition = Integer.parseInt(prop.getValue());
-			} else {
-				topicProp.setProperty(prop.getName(), prop.getValue());
+			} else if ("retention.ms".equals(prop.getName())) {
+				topicProp.setProperty("retention.ms", prop.getValue());
+			} else if ("retention.bytes".equals(prop.getName())) {
+				topicProp.setProperty("retention.bytes", prop.getValue());
 			}
 		}
 		AdminUtils.createTopic(zkClient, topic.getName(), partition, replication, topicProp);

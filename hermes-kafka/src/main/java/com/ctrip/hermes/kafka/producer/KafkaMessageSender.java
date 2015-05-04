@@ -93,7 +93,7 @@ public class KafkaMessageSender implements MessageSender {
 	@Override
 	public Future<SendResult> send(ProducerMessage<?> msg) {
 		String topic = msg.getTopic();
-		String partition = msg.getPartition();
+		String partition = msg.getPartitionKey();
 
 		if (!m_producers.containsKey(topic)) {
 			Properties configs = getProduerProperties(topic);

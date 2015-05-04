@@ -19,6 +19,8 @@ public class TopicView {
 
 	private String description;
 
+	private String otherinfo;
+
 	private String status;
 
 	private Date createTime;
@@ -32,7 +34,7 @@ public class TopicView {
 	private Storage storage;
 
 	private Long schemaId;
-	
+
 	private SchemaView schemaView;
 
 	private String codecType;
@@ -55,11 +57,12 @@ public class TopicView {
 		this.properties = topic.getProperties();
 		this.codecType = topic.getCodecType();
 		this.schemaId = topic.getSchemaId();
+		this.otherinfo = topic.getOtherInfo();
 	}
 
 	public Codec getCodec() {
-	   return codec;
-   }
+		return codec;
+	}
 
 	public String getCodecType() {
 		return codecType;
@@ -85,6 +88,10 @@ public class TopicView {
 		return name;
 	}
 
+	public String getOtherinfo() {
+		return otherinfo;
+	}
+
 	public List<Partition> getPartitions() {
 		return partitions;
 	}
@@ -98,8 +105,8 @@ public class TopicView {
 	}
 
 	public Long getSchemaId() {
-	   return schemaId;
-   }
+		return schemaId;
+	}
 
 	public String getStatus() {
 		return status;
@@ -114,8 +121,8 @@ public class TopicView {
 	}
 
 	public void setCodec(Codec codec) {
-	   this.codec = codec;
-   }
+		this.codec = codec;
+	}
 
 	public void setCodecType(String codecType) {
 		this.codecType = codecType;
@@ -141,6 +148,10 @@ public class TopicView {
 		this.name = name;
 	}
 
+	public void setOtherinfo(String otherinfo) {
+		this.otherinfo = otherinfo;
+	}
+
 	public void setPartitions(List<Partition> partitions) {
 		this.partitions = partitions;
 	}
@@ -154,8 +165,8 @@ public class TopicView {
 	}
 
 	public void setSchemaId(Long schemaId) {
-	   this.schemaId = schemaId;
-   }
+		this.schemaId = schemaId;
+	}
 
 	public void setStatus(String status) {
 		this.status = status;
@@ -190,6 +201,7 @@ public class TopicView {
 		topic.setLastModifiedTime(this.lastModifiedTime);
 		topic.setCodecType(this.codecType);
 		topic.setSchemaId(this.schemaId);
+		topic.setOtherInfo(this.otherinfo);
 		return topic;
 	}
 }
