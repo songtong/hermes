@@ -10,6 +10,6 @@ public interface LeaseManager<T> {
 	public static interface LeaseAcquisitionListener {
 		public void onAcquire();
 
-		public void onClose();
+		public void onExpire();
 	}
 }

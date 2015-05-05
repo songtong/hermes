@@ -22,6 +22,7 @@ import com.ctrip.hermes.broker.transport.NettyServerConfig;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SubscribeCommandProcessor;
+import com.ctrip.hermes.broker.transport.command.processor.UnsubscribeCommandProcessor;
 import com.ctrip.hermes.broker.transport.transmitter.DefaultMessageTransmitter;
 import com.ctrip.hermes.broker.transport.transmitter.MessageTransmitter;
 import com.ctrip.hermes.core.meta.MetaService;
@@ -43,6 +44,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND.toString(), SendMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class));
 		all.add(C(CommandProcessor.class, CommandType.SUBSCRIBE.toString(), SubscribeCommandProcessor.class)//
+		      .req(MessageTransmitter.class));
+		all.add(C(CommandProcessor.class, CommandType.UNSUBSCRIBE.toString(), UnsubscribeCommandProcessor.class)//
 		      .req(MessageTransmitter.class));
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(AckManager.class));

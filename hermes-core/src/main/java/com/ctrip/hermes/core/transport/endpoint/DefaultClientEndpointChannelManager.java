@@ -43,13 +43,15 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 						      endpoint.getPort(), m_cmdProcessorManager);
 
 						channel.addListener(new NettyChannelAutoReconnectListener(RECONNECT_DELAY_SECONDS));
-						channel.addListener(listeners);
 						channel.start();
 						m_channels.put(endpoint, channel);
 					}
 				}
 			}
-			return m_channels.get(endpoint);
+			
+			ClientEndpointChannel channel = m_channels.get(endpoint);
+			channel.addListener(listeners);
+			return channel;
 
 		default:
 			// TODO

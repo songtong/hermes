@@ -157,7 +157,7 @@ public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initia
 						m_listenerNotifierThreadPool.submit(new Runnable() {
 							@Override
 							public void run() {
-								listener.onClose();
+								listener.onExpire();
 							}
 						});
 					}

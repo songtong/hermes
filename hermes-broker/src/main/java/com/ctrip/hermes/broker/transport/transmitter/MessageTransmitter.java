@@ -11,4 +11,6 @@ public interface MessageTransmitter {
 
 	void registerDestination(Tpg tpg, long correlationId, EndpointChannel channel, int window);
 
+	void deregisterDestination(long correlationId, EndpointChannel channel);
+
 }

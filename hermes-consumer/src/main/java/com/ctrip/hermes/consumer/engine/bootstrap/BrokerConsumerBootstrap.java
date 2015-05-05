@@ -12,6 +12,8 @@ import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.lease.LeaseManager.LeaseAcquisitionListener;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.SubscribeCommand;
+import com.ctrip.hermes.core.transport.command.UnsubscribeCommand;
+import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannel;
 import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
 import com.ctrip.hermes.core.transport.endpoint.EndpointChannelEventListener;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelActiveEvent;
@@ -41,24 +43,36 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 
 		for (final Partition partition : partitions) {
 
-			m_leaseManager.registerAcquisition(
-			      new Tpg(consumerContext.getTopic().getName(), partition.getId(), consumerContext.getGroupId()),
-			      new LeaseAcquisitionListener() {
+			m_leaseManager.registerAcquisition(new Tpg(consumerContext.getTopic().getName(), partition.getId(),
+			      consumerContext.getGroupId()), new LeaseAcquisitionListener() {
 
-				      private Endpoint m_endpoint;
+				ConsumerAutoReconnectListener m_eventListener = new ConsumerAutoReconnectListener(consumerContext,
+				      partition);
 
-				      @Override
-				      public void onClose() {
-					      m_clientEndpointChannelManager.closeChannel(m_endpoint);
-				      }
+				ClientEndpointChannel m_channel;
 
-				      @Override
-				      public void onAcquire() {
-					      m_endpoint = m_endpointManager.getEndpoint(consumerContext.getTopic().getName(), partition.getId());
-					      m_clientEndpointChannelManager.getChannel(m_endpoint, new ConsumerAutoReconnectListener(consumerContext,
-					            partition));
-				      }
-			      });
+				@Override
+				public void onExpire() {
+					System.out.println("Lease expired..." + consumerContext);
+					Long correlationId = m_eventListener.getCorrelationId();
+					if (correlationId != null) {
+						UnsubscribeCommand cmd = new UnsubscribeCommand();
+						cmd.getHeader().setCorrelationId(correlationId);
+						m_channel.writeCommand(cmd);
+						m_eventListener.onEvent(new UnsubscribeEvent());
+						// TODO log
+						// TODO if no tpg attach to this endpoint channel, close it
+						// m_clientEndpointChannelManager.closeChannel(m_endpoint);
+					}
+				}
+
+				@Override
+				public void onAcquire() {
+					Endpoint endpoint = m_endpointManager.getEndpoint(consumerContext.getTopic().getName(),
+					      partition.getId());
+					m_channel = m_clientEndpointChannelManager.getChannel(endpoint, m_eventListener);
+				}
+			});
 
 		}
 
@@ -76,17 +90,27 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 			m_partition = partition;
 		}
 
+		public Long getCorrelationId() {
+			return m_correlationId.get();
+		}
+
 		@Override
 		public void onEvent(EndpointChannelEvent event) {
 			if (event instanceof EndpointChannelActiveEvent) {
 				channelActive(event.getChannel());
 			} else if (event instanceof EndpointChannelInactiveEvent) {
-				Long correlationId = m_correlationId.getAndSet(null);
-				if (correlationId != null) {
-					m_consumerNotifier.deregister(correlationId);
-					// TODO
-					System.out.println(String.format("Deregister consumer notifier(correlationId=%s)...", correlationId));
-				}
+				deregisterConsumerNotifier();
+			} else if (event instanceof UnsubscribeEvent) {
+				deregisterConsumerNotifier();
+			}
+		}
+
+		private void deregisterConsumerNotifier() {
+			Long correlationId = m_correlationId.getAndSet(null);
+			if (correlationId != null) {
+				m_consumerNotifier.deregister(correlationId);
+				// TODO
+				System.out.println(String.format("Deregister consumer notifier(correlationId=%s)...", correlationId));
 			}
 		}
 
@@ -107,5 +131,13 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 				System.out.println("Subscribe command writed..." + subscribeCommand);
 			}
 		}
+	}
+
+	public class UnsubscribeEvent extends EndpointChannelEvent {
+
+		public UnsubscribeEvent() {
+			super(null, null);
+		}
+
 	}
 }

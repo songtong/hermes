@@ -56,4 +56,10 @@ public class ConsumerContext {
 		this.m_consumer = consumer;
 	}
 
+	@Override
+	public String toString() {
+		return "ConsumerContext [m_topic=" + m_topic + ", m_groupId=" + m_groupId + ", m_messageClazz=" + m_messageClazz
+		      + "]";
+	}
+
 }
