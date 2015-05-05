@@ -8,7 +8,7 @@ import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 
 /**
@@ -21,7 +21,7 @@ public abstract class AbstractMessageSender implements MessageSender {
 	protected EndpointManager m_endpointManager;
 
 	@Inject
-	protected EndpointChannelManager m_endpointChannelManager;
+	protected ClientEndpointChannelManager m_clientEndpointChannelManager;
 
 	@Inject
 	protected PartitioningStrategy m_partitioningAlgo;

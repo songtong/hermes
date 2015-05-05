@@ -41,6 +41,10 @@ public class TpgChannel {
 
 	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
+	public TpgChannel(Tpg tpg, long correlationId, EndpointChannel channel) {
+		this(tpg, correlationId, channel, 0);
+	}
+
 	public TpgChannel(Tpg tpg, long correlationId, EndpointChannel channel, int window) {
 		m_tpg = tpg;
 		m_correlationId = correlationId;

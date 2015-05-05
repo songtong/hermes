@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 
+import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
@@ -184,5 +186,17 @@ public abstract class AbstractMetaService implements MetaService, Initializable 
 	@Override
 	public Codec getCodecByType(String codecType) {
 		return m_meta.findCodec(codecType);
+	}
+
+	@Override
+	public Lease tryAcquireConsumerLease(Tpg tpg) {
+		// TODO Auto-generated method stub
+		return new Lease(System.currentTimeMillis() + 60 * 1000L);
+	}
+
+	@Override
+	public boolean tryRenewLease(Tpg tpg, Lease lease) {
+		// TODO
+		return false;
 	}
 }

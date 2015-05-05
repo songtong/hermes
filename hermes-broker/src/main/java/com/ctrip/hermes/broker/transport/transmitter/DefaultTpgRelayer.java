@@ -76,16 +76,6 @@ public class DefaultTpgRelayer implements TpgRelayer {
 	}
 
 	@Override
-	public boolean containsChannel(TpgChannel channel) {
-		m_rwLock.readLock().lock();
-		try {
-			return m_channels.contains(channel);
-		} finally {
-			m_rwLock.readLock().unlock();
-		}
-	}
-
-	@Override
 	public synchronized int channleCount() {
 		return m_channels.size();
 	}

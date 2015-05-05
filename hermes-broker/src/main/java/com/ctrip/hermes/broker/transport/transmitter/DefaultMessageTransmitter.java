@@ -12,6 +12,7 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
 import org.unidal.helper.Threads;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.ack.AckManager;
 import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionPullerManager;
@@ -35,6 +36,8 @@ public class DefaultMessageTransmitter implements MessageTransmitter, Initializa
 	private Map<EndpointChannel, TransmitterWorker> m_channel2Worker = new ConcurrentHashMap<>();
 
 	private Map<Tpg, TpgRelayer> m_tpg2Relayer = new ConcurrentHashMap<>();
+
+	private Map<Pair<EndpointChannel, Long>, TpgChannel> m_correlationId2TpgChannel = new ConcurrentHashMap<>();
 
 	@Inject
 	private AckManager m_ackManager;
@@ -60,15 +63,23 @@ public class DefaultMessageTransmitter implements MessageTransmitter, Initializa
 		TransmitterWorker worker = m_channel2Worker.get(channel);
 		TpgChannel tpgChannel = new TpgChannel(tpg, correlationId, channel, window);
 
-		if (!relayer.containsChannel(tpgChannel)) {
-			relayer.addChannel(tpgChannel);
-		}
+		relayer.addChannel(tpgChannel);
 
-		if (!worker.containsTpgChannel(tpgChannel)) {
-			worker.addTpgChannel(tpgChannel);
-		}
+		worker.addTpgChannel(tpgChannel);
+
+		m_correlationId2TpgChannel.put(new Pair<>(channel, correlationId), tpgChannel);
 
 		m_queuePartitionPullerManager.startPuller(tpg, m_tpg2Relayer.get(tpg));
+	}
+
+	@Override
+	public synchronized void deregisterDestination(long correlationId, EndpointChannel channel) {
+		Pair<EndpointChannel, Long> key = new Pair<>(channel, correlationId);
+		TpgChannel tpgChannel = m_correlationId2TpgChannel.get(key);
+		if (tpgChannel != null) {
+			tpgChannel.close();
+		}
+		m_correlationId2TpgChannel.remove(key);
 	}
 
 	private class TransmitterWorker {
@@ -90,15 +101,6 @@ public class DefaultMessageTransmitter implements MessageTransmitter, Initializa
 				m_tpgChannels.add(tpgChannel);
 			} finally {
 				m_rwLock.writeLock().unlock();
-			}
-		}
-
-		public boolean containsTpgChannel(TpgChannel tpgChannel) {
-			m_rwLock.readLock().lock();
-			try {
-				return m_tpgChannels.contains(tpgChannel);
-			} finally {
-				m_rwLock.readLock().unlock();
 			}
 		}
 
@@ -128,29 +130,34 @@ public class DefaultMessageTransmitter implements MessageTransmitter, Initializa
 							m_rwLock.readLock().lock();
 							try {
 								// TODO start with different pos each time
-								for (int i = 0; i < m_tpgChannels.size(); i++) {
+								int cnt = m_tpgChannels.size();
+								while (cnt > 0) {
 									if (batchSize <= 0) {
 										break;
 									}
 
-									TpgChannel tpgChannel = m_tpgChannels.get((startPos + i) % m_tpgChannels.size());
+									cnt--;
+									TpgChannel tpgChannel = m_tpgChannels.get(startPos % m_tpgChannels.size());
 
-									TpgChannelFetchResult result = tpgChannel.fetch(batchSize);
+									if (tpgChannel.isClosed()) {
+										m_tpgChannels.remove(tpgChannel);
+									} else {
+										TpgChannelFetchResult result = tpgChannel.fetch(batchSize);
 
-									if (result != null && result.getBatches() != null && !result.getBatches().isEmpty()) {
-										cmd.addMessage(tpgChannel.getCorrelationId(), result.getBatches());
-										batchSize -= result.getSize();
+										if (result != null && result.getBatches() != null && !result.getBatches().isEmpty()) {
+											cmd.addMessage(tpgChannel.getCorrelationId(), result.getBatches());
+											batchSize -= result.getSize();
 
-										// notify ack manager
-										for (TppConsumerMessageBatch batch : result.getBatches()) {
-											m_ackManager.delivered(
-											      new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority()), tpgChannel
-											            .getTpg().getGroupId(), batch.isResend(), batch.getMsgSeqs());
+											// notify ack manager
+											for (TppConsumerMessageBatch batch : result.getBatches()) {
+												m_ackManager.delivered(
+												      new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority()),
+												      tpgChannel.getTpg().getGroupId(), batch.isResend(), batch.getMsgSeqs());
+											}
 										}
+										startPos = (startPos + 1) % m_tpgChannels.size();
 									}
 								}
-								startPos = (startPos + 1) % m_tpgChannels.size();
-
 							} finally {
 								m_rwLock.readLock().unlock();
 							}

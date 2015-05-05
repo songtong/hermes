@@ -64,8 +64,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.transport.endpoint.EndpointChannelManager</role>
-			<implementation>com.ctrip.hermes.core.transport.endpoint.DefaultEndpointChannelManager</implementation>
+			<role>com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager</role>
+			<implementation>com.ctrip.hermes.core.transport.endpoint.DefaultClientEndpointChannelManager</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager</role>

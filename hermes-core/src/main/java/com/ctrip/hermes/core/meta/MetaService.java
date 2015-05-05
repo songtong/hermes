@@ -2,6 +2,8 @@ package com.ctrip.hermes.core.meta;
 
 import java.util.List;
 
+import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -80,7 +82,11 @@ public interface MetaService {
 	int getAckTimeoutSeconds(String topic);
 
 	Codec getCodecByType(String codecType);
-	
+
 	public void refreshMeta(Meta meta);
+
+	Lease tryAcquireConsumerLease(Tpg tpg);
+
+	boolean tryRenewLease(Tpg tpg, Lease lease);
 
 }
