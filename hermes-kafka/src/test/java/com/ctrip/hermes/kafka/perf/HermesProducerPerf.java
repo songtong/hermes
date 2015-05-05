@@ -8,6 +8,7 @@ import com.ctrip.hermes.core.result.Callback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
+import com.dianping.cat.Cat;
 
 public class HermesProducerPerf {
 	private static final long NS_PER_MS = 1000000L;
@@ -23,6 +24,8 @@ public class HermesProducerPerf {
 			System.exit(1);
 		}
 
+		Cat.initializeByDomain("900777", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
+		
 		/* parse args */
 		String topicName = args[0];
 		long numRecords = Long.parseLong(args[1]);
@@ -32,7 +35,7 @@ public class HermesProducerPerf {
 		Producer producer = Producer.getInstance();
 
 		/* setup perf test */
-		String proMsg = RandomStringUtils.randomAlphanumeric(10) + System.currentTimeMillis();
+		String proMsg = RandomStringUtils.randomAlphanumeric(recordSize - 4) + System.currentTimeMillis();
 		long sleepTime = NS_PER_SEC / throughput;
 		long sleepDeficitNs = 0;
 		Stats stats = new Stats(numRecords, 5000);
