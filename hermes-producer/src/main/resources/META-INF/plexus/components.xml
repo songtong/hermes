@@ -95,7 +95,7 @@
 					<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.transport.endpoint.EndpointChannelManager</role>
+					<role>com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.message.partition.PartitioningStrategy</role>
@@ -114,7 +114,7 @@
 					<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.transport.endpoint.EndpointChannelManager</role>
+					<role>com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.message.partition.PartitioningStrategy</role>
@@ -133,7 +133,7 @@
 					<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.transport.endpoint.EndpointChannelManager</role>
+					<role>com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.message.partition.PartitioningStrategy</role>

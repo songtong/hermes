@@ -8,7 +8,7 @@ import org.unidal.lookup.annotation.Inject;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 
 /**
@@ -18,7 +18,7 @@ import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 public abstract class BaseConsumerBootstrap implements ConsumerBootstrap {
 
 	@Inject
-	protected EndpointChannelManager m_endpointChannelManager;
+	protected ClientEndpointChannelManager m_clientEndpointChannelManager;
 
 	@Inject
 	protected EndpointManager m_endpointManager;

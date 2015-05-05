@@ -88,11 +88,11 @@ public class DefaultMessageQueuePartitionPuller implements MessageQueuePartition
 				} catch (Exception e) {
 					// TODO
 					e.printStackTrace();
-				} finally {
-					m_listener.onShutdown();
 				}
 			}
-
+			if (m_listener != null) {
+				m_listener.onShutdown();
+			}
 		}
 	}
 

@@ -81,7 +81,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 						Channel channel = m_channel.get();
 
-						if (cmd != null && channel != null && channel.isWritable()) {
+						if (cmd != null && channel != null && channel.isActive() && channel.isWritable()) {
 							ChannelFuture future = channel.writeAndFlush(cmd).sync();
 							if (future.isSuccess()) {
 								cmd = null;
@@ -129,7 +129,10 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		// TODO log
 		System.out.println("Channel inactive...");
-		m_channel.set(null);
+		Channel channel = m_channel.getAndSet(null);
+		if (channel != null) {
+			channel.close();
+		}
 		notifyListener(new EndpointChannelInactiveEvent(ctx, this));
 	}
 
@@ -147,6 +150,10 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		// TODO
 		cause.printStackTrace();
+		Channel channel = m_channel.getAndSet(null);
+		if (channel != null) {
+			channel.close();
+		}
 		notifyListener(new EndpointChannelExceptionCaughtEvent(ctx, cause, this));
 		super.exceptionCaught(ctx, cause);
 	}
@@ -176,6 +183,12 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	@Override
 	public void close() {
 		m_closed.set(true);
+		Channel channel = m_channel.get();
+		if (channel != null) {
+			// TODO notify?
+			// TODO do we need to wait for all wQueue flushed
+			channel.close();
+		}
 	}
 
 	@Override

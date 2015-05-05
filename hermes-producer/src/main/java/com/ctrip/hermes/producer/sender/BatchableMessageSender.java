@@ -15,7 +15,7 @@ import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -42,7 +42,7 @@ public class BatchableMessageSender extends AbstractMessageSender implements Mes
 		if (!m_workers.containsKey(endpoint)) {
 			synchronized (m_workers) {
 				if (!m_workers.containsKey(endpoint)) {
-					EndpointWritingWorkerThread worker = new EndpointWritingWorkerThread(endpoint, m_endpointChannelManager);
+					EndpointWritingWorkerThread worker = new EndpointWritingWorkerThread(endpoint, m_clientEndpointChannelManager);
 
 					worker.setDaemon(true);
 					worker.setName("ProducerChannelWorkerThread-Channel-" + endpoint.getId());
@@ -63,7 +63,7 @@ public class BatchableMessageSender extends AbstractMessageSender implements Mes
 
 		private BlockingQueue<ProducerChannelWorkerContext> m_queue = new LinkedBlockingQueue<>();
 
-		private EndpointChannelManager m_endpointChannelManager;
+		private ClientEndpointChannelManager m_clientEndpointChannelManager;
 
 		private Endpoint m_endpoint;
 
@@ -71,8 +71,8 @@ public class BatchableMessageSender extends AbstractMessageSender implements Mes
 
 		private static final int INTERVAL_MILLISECONDS = 50;
 
-		public EndpointWritingWorkerThread(Endpoint endpoint, EndpointChannelManager endpointChannelManager) {
-			m_endpointChannelManager = endpointChannelManager;
+		public EndpointWritingWorkerThread(Endpoint endpoint, ClientEndpointChannelManager endpointChannelManager) {
+			m_clientEndpointChannelManager = endpointChannelManager;
 			m_endpoint = endpoint;
 		}
 
@@ -102,7 +102,7 @@ public class BatchableMessageSender extends AbstractMessageSender implements Mes
 							command.addMessage(context.m_msg, context.m_future);
 						}
 
-						EndpointChannel channel = m_endpointChannelManager.getChannel(m_endpoint);
+						EndpointChannel channel = m_clientEndpointChannelManager.getChannel(m_endpoint);
 
 						channel.writeCommand(command);
 

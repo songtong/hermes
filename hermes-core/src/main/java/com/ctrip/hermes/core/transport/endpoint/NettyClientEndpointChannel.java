@@ -18,7 +18,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelConnectFailedEvent;
 
 @Sharable
-public class NettyClientEndpointChannel extends NettyEndpointChannel {
+public class NettyClientEndpointChannel extends NettyEndpointChannel implements ClientEndpointChannel {
 
 	private EventLoopGroup m_eventLoopGroup = new NioEventLoopGroup();
 

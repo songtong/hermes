@@ -9,7 +9,7 @@ import org.unidal.lookup.configuration.Component;
 import com.ctrip.hermes.core.message.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.DefaultProducer;
@@ -56,13 +56,13 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(SimpleMessageSender.class));
 		all.add(C(MessageSender.class, Endpoint.BROKER, BatchableMessageSender.class)//
 		      .req(EndpointManager.class)//
-		      .req(EndpointChannelManager.class)//
+		      .req(ClientEndpointChannelManager.class)//
 		      .req(PartitioningStrategy.class)//
 		      .req(MetaService.class)//
 		);
 		all.add(C(MessageSender.class, Endpoint.TRANSACTION, BatchableMessageSender.class)//
 		      .req(EndpointManager.class)//
-		      .req(EndpointChannelManager.class)//
+		      .req(ClientEndpointChannelManager.class)//
 		      .req(PartitioningStrategy.class)//
 		      .req(MetaService.class)//
 		);

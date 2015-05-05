@@ -7,6 +7,9 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.lease.LeaseManager;
+import com.ctrip.hermes.core.lease.LeaseManager.LeaseAcquisitionListener;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.SubscribeCommand;
 import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
@@ -27,6 +30,9 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 	@Inject
 	private MetaService m_metaService;
 
+	@Inject("consumer")
+	private LeaseManager<Tpg> m_leaseManager;
+
 	@Override
 	protected void doStart(final ConsumerContext consumerContext) {
 
@@ -35,8 +41,25 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 
 		for (final Partition partition : partitions) {
 
-			Endpoint endpoint = m_endpointManager.getEndpoint(consumerContext.getTopic().getName(), partition.getId());
-			m_endpointChannelManager.getChannel(endpoint, new ConsumerAutoReconnectListener(consumerContext, partition));
+			m_leaseManager.registerAcquisition(
+			      new Tpg(consumerContext.getTopic().getName(), partition.getId(), consumerContext.getGroupId()),
+			      new LeaseAcquisitionListener() {
+
+				      private Endpoint m_endpoint;
+
+				      @Override
+				      public void onClose() {
+					      m_clientEndpointChannelManager.closeChannel(m_endpoint);
+				      }
+
+				      @Override
+				      public void onAcquire() {
+					      m_endpoint = m_endpointManager.getEndpoint(consumerContext.getTopic().getName(), partition.getId());
+					      m_clientEndpointChannelManager.getChannel(m_endpoint, new ConsumerAutoReconnectListener(consumerContext,
+					            partition));
+				      }
+			      });
+
 		}
 
 	}

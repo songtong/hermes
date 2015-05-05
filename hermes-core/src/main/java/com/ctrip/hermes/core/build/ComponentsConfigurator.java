@@ -18,7 +18,7 @@ import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
 import com.ctrip.hermes.core.meta.internal.RemoteMetaLoader;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.command.processor.DefaultCommandProcessorRegistry;
-import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.DefaultClientEndpointChannelManager;
 import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointManager;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
@@ -42,7 +42,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(DefaultEndpointManager.class));
 
 		// endpoint channel
-		all.add(A(DefaultEndpointChannelManager.class));
+		all.add(A(DefaultClientEndpointChannelManager.class));
 
 		// command processor
 		all.add(A(CommandProcessorManager.class));
