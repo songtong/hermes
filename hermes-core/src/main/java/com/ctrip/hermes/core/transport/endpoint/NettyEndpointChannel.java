@@ -7,11 +7,15 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,13 +35,27 @@ import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelInactiveEve
  *
  */
 public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<Command> implements EndpointChannel {
-	private ConcurrentMap<Long, AckAware<Ack>> m_pendingCommands = new ConcurrentHashMap<>();
 
 	private AtomicReference<Channel> m_channel = new AtomicReference<>(null);
 
 	private AtomicBoolean m_writerStarted = new AtomicBoolean(false);
 
+	private ConcurrentMap<Long, AckAware<Ack>> m_pendingCommands = new ConcurrentHashMap<>();
+
+	private Object m_pendingCmdsLock = new Object();
+
+	private AtomicBoolean m_pendingCmdsHouseKeeperStarted = new AtomicBoolean(false);
+
 	private Thread m_writer;
+
+	private ScheduledExecutorService m_pendingCmdsHouseKepper = Executors
+	      .newSingleThreadScheduledExecutor(new ThreadFactory() {
+
+		      @Override
+		      public Thread newThread(Runnable r) {
+			      return new Thread(r, "PendingCmdsHouseKeeper");
+		      }
+	      });
 
 	protected CommandProcessorManager m_cmdProcessorManager;
 
@@ -59,12 +77,38 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 			startWriter();
 		}
 
+		if (m_pendingCmdsHouseKeeperStarted.compareAndSet(false, true)) {
+			startPendingCmdHouseKeeper();
+		}
+
 		if (command instanceof AckAware) {
-			m_pendingCommands.put(command.getHeader().getCorrelationId(), (AckAware<Ack>) command);
+			synchronized (m_pendingCmdsLock) {
+				m_pendingCommands.put(command.getHeader().getCorrelationId(), (AckAware<Ack>) command);
+			}
 		}
 
 		// TODO if full?
 		m_writeQueue.offer(command);
+	}
+
+	private void startPendingCmdHouseKeeper() {
+		m_pendingCmdsHouseKepper.scheduleAtFixedRate(new Runnable() {
+
+			@Override
+			public void run() {
+				long now = System.currentTimeMillis();
+				synchronized (m_pendingCmdsLock) {
+					for (Map.Entry<Long, AckAware<Ack>> entry : m_pendingCommands.entrySet()) {
+						AckAware<Ack> ackAware = entry.getValue();
+						Long correlationId = entry.getKey();
+						if (ackAware.getExpireTime() < now) {
+							ackAware.onFail();
+							m_pendingCommands.remove(correlationId);
+						}
+					}
+				}
+			}
+		}, 3, 3, TimeUnit.SECONDS);
 	}
 
 	private void startWriter() {
@@ -106,11 +150,13 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Command command) throws Exception {
 		if (command instanceof Ack) {
-			long correlationId = command.getHeader().getCorrelationId();
-			AckAware<Ack> reqCommand = m_pendingCommands.get(correlationId);
-			if (reqCommand != null) {
-				reqCommand.onAck((Ack) command);
-				m_pendingCommands.remove(correlationId);
+			synchronized (m_pendingCmdsLock) {
+				long correlationId = command.getHeader().getCorrelationId();
+				AckAware<Ack> reqCommand = m_pendingCommands.get(correlationId);
+				if (reqCommand != null) {
+					reqCommand.onAck((Ack) command);
+					m_pendingCommands.remove(correlationId);
+				}
 			}
 		} else {
 			m_cmdProcessorManager.offer(new CommandProcessorContext(command, this));
@@ -133,7 +179,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 		if (channel != null) {
 			channel.close();
 		}
-		cancelAllPendings();
+		clearAllPendings();
 		notifyListener(new EndpointChannelInactiveEvent(ctx, this));
 	}
 
@@ -155,7 +201,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 		if (channel != null) {
 			channel.close();
 		}
-		cancelAllPendings();
+		clearAllPendings();
 		notifyListener(new EndpointChannelExceptionCaughtEvent(ctx, cause, this));
 		super.exceptionCaught(ctx, cause);
 	}
@@ -167,9 +213,12 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 		}
 	}
 
-	private void cancelAllPendings() {
-		for (AckAware<Ack> ackAware : m_pendingCommands.values()) {
-			ackAware.onFail();
+	private void clearAllPendings() {
+		synchronized (m_pendingCmdsLock) {
+			for (AckAware<Ack> ackAware : m_pendingCommands.values()) {
+				ackAware.onFail();
+			}
+			m_pendingCommands.clear();
 		}
 	}
 
