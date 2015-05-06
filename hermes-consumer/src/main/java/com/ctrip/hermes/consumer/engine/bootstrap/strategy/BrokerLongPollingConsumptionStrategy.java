@@ -11,12 +11,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
+import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.lease.LeaseManager;
+import com.ctrip.hermes.core.lease.LeaseManager.LeaseAcquisitionListener;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -38,6 +43,9 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionStrategy {
 	@Inject
+	private LeaseManager<Tpg> m_leaseManager;
+
+	@Inject
 	private ConsumerNotifier m_consumerNotifier;
 
 	@Inject
@@ -49,26 +57,56 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	@Inject
 	private MessageCodec m_messageCodec;
 
+	// TODO
+	private static final long MIN_POLL_TIMEOUT = 1000L;
+
 	@Override
-	public void start(ConsumerContext consumerContext, int partitionId) {
-		// TODO
-		System.out.println(String.format(
-		      "Start long polling consumer bootstrap(topic=%s, partition=%s, consumerGroupId=%s)", consumerContext
-		            .getTopic().getName(), partitionId, consumerContext.getGroupId()));
+	public void start(final ConsumerContext consumerContext, final int partitionId) {
+		m_leaseManager.registerAcquisition(
+		      new Tpg(consumerContext.getTopic().getName(), partitionId, consumerContext.getGroupId()),
+		      new LeaseAcquisitionListener() {
 
-		final long correlationId = CorrelationIdGenerator.generateCorrelationId();
+			      // TODO thread factory
+			      private ExecutorService m_consumerTaskThreadPool = Executors
+			            .newSingleThreadExecutor(new ThreadFactory() {
 
-		m_consumerNotifier.register(correlationId, consumerContext);
+				            @Override
+				            public Thread newThread(Runnable r) {
+					            return new Thread(r, "ConsumerLongPollingThread");
+				            }
+			            });
 
-		// TODO cache it
-		Thread consumerThread = newConsumerThread(consumerContext, partitionId, correlationId);
-		consumerThread.start();
-	}
+			      private AtomicReference<ConsumerTask> m_consumerTask = new AtomicReference<>(null);
 
-	private Thread newConsumerThread(final ConsumerContext consumerContext, final int partitionId,
-	      final long correlationId) {
-		Thread consumerThread = new Thread(new ConsumerTask(consumerContext, partitionId, correlationId));
-		return consumerThread;
+			      private AtomicReference<Long> m_correlationId = new AtomicReference<>(null);
+
+			      @Override
+			      public void onExpire() {
+				      // TODO
+				      System.out.println(String.format("Lease expired...(topic=%s, partition=%s, consumerGroupId=%s)",
+				            consumerContext.getTopic().getName(), partitionId, consumerContext.getGroupId()));
+				      ConsumerTask oldThread = m_consumerTask.getAndSet(null);
+				      if (oldThread != null) {
+					      oldThread.close();
+				      }
+				      m_correlationId.set(null);
+			      }
+
+			      @Override
+			      public void onAcquire(Lease lease) {
+
+				      m_correlationId.set(CorrelationIdGenerator.generateCorrelationId());
+				      // TODO
+				      System.out.println(String.format(
+				            "Lease acquired...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)",
+				            consumerContext.getTopic().getName(), partitionId, consumerContext.getGroupId(),
+				            m_correlationId.get()));
+
+				      m_consumerTask.set(new ConsumerTask(consumerContext, partitionId, m_correlationId.get(), lease));
+				      m_consumerTaskThreadPool.submit(m_consumerTask.get());
+			      }
+		      });
+
 	}
 
 	private class ConsumerTask implements Runnable {
@@ -86,15 +124,20 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 
 		private AtomicBoolean m_pullTaskRunning = new AtomicBoolean(false);
 
+		private Lease m_lease;
+
+		private AtomicBoolean closed = new AtomicBoolean(false);
+
 		// TODO
 		private ExecutorService m_executorService;
 
-		public ConsumerTask(ConsumerContext context, int partitionId, long correlationId) {
+		public ConsumerTask(ConsumerContext context, int partitionId, long correlationId, Lease lease) {
 			m_context = context;
 			m_partitionId = partitionId;
 			m_correlationId = correlationId;
+			m_lease = lease;
 
-			// TODO
+			// TODO ThreadFactory
 			m_executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
 
 				@Override
@@ -105,10 +148,20 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 			});
 		}
 
+		public void close() {
+			closed.set(true);
+		}
+
 		@Override
 		public void run() {
+			// TODO
+			System.out.println(String.format(
+			      "Start long polling...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)", m_context
+			            .getTopic().getName(), m_partitionId, m_context.getGroupId(), m_correlationId));
 
-			while (!Thread.currentThread().isInterrupted()) {
+			m_consumerNotifier.register(m_correlationId, m_context);
+
+			while (!closed.get() && !Thread.currentThread().isInterrupted()) {
 				try {
 					// TODO config size
 					if (m_msgs.size() < 10) {
@@ -116,12 +169,8 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 					}
 
 					if (!m_msgs.isEmpty()) {
-						List<ConsumerMessage<?>> msgs = new ArrayList<>();
-
 						// TODO size
-						m_msgs.drainTo(msgs, 50);
-
-						m_consumerNotifier.messageReceived(m_correlationId, msgs);
+						consumeMessages(50);
 					} else {
 						// TODO
 						Thread.sleep(10);
@@ -134,6 +183,39 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 				}
 			}
 
+			m_executorService.shutdown();
+
+			try {
+				m_executorService.awaitTermination(MIN_POLL_TIMEOUT, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// consume all remaining messages
+			if (!m_msgs.isEmpty()) {
+				consumeMessages(0);
+			}
+
+			// TODO
+			System.out.println(String.format(
+			      "Stop long polling...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)", m_context
+			            .getTopic().getName(), m_partitionId, m_context.getGroupId(), m_correlationId));
+
+			m_consumerNotifier.deregister(m_correlationId);
+
+		}
+
+		private void consumeMessages(int maxItems) {
+			List<ConsumerMessage<?>> msgs = new ArrayList<>();
+
+			if (maxItems <= 0) {
+				m_msgs.drainTo(msgs);
+			} else {
+				m_msgs.drainTo(msgs, maxItems);
+			}
+
+			m_consumerNotifier.messageReceived(m_correlationId, msgs);
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -180,31 +262,38 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 
 							final SettableFuture<PullMessageAckCommand> future = SettableFuture.create();
 
-							// TODO set exp time
-							PullMessageCommand cmd = new PullMessageCommand(consumerContext.getTopic().getName(), partitionId,
-							      consumerContext.getGroupId(), m_cacheSize - m_msgs.size(),
-							      System.currentTimeMillis() + 10 * 1000L);
+							long now = System.currentTimeMillis();
 
-							cmd.getHeader().setCorrelationId(correlationId);
-							cmd.setFuture(future);
+							long timeout = m_lease.getExpireTime() - now;
 
-							channel.writeCommand(cmd);
+							// TODO if lease.expTime < MIN_POLL_TIMEOUT
+							if (timeout < MIN_POLL_TIMEOUT && timeout > 0) {
+								timeout = MIN_POLL_TIMEOUT;
+							}
 
-							// TODO timeout?
-							// TODO use exp time same as cmd?
-							PullMessageAckCommand ack = future.get(10, TimeUnit.SECONDS);
-							try {
-								if (ack == null) {
-									return;
-								}
-								List<TppConsumerMessageBatch> batches = ack.getBatches();
-								Class<?> bodyClazz = m_consumerNotifier.find(correlationId).getMessageClazz();
+							if (timeout > 0) {
+								PullMessageCommand cmd = new PullMessageCommand(consumerContext.getTopic().getName(),
+								      partitionId, consumerContext.getGroupId(), m_cacheSize - m_msgs.size(), now + timeout);
 
-								List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
-								m_msgs.addAll(msgs);
-							} finally {
-								if (ack != null) {
-									ack.release();
+								cmd.getHeader().setCorrelationId(correlationId);
+								cmd.setFuture(future);
+
+								channel.writeCommand(cmd);
+
+								PullMessageAckCommand ack = future.get(timeout, TimeUnit.MILLISECONDS);
+								try {
+									if (ack == null) {
+										return;
+									}
+									List<TppConsumerMessageBatch> batches = ack.getBatches();
+									Class<?> bodyClazz = m_consumerNotifier.find(correlationId).getMessageClazz();
+
+									List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
+									m_msgs.addAll(msgs);
+								} finally {
+									if (ack != null) {
+										ack.release();
+									}
 								}
 							}
 						} catch (Exception e) {

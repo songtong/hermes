@@ -191,7 +191,7 @@ public abstract class AbstractMetaService implements MetaService, Initializable 
 	@Override
 	public Lease tryAcquireConsumerLease(Tpg tpg) {
 		// TODO Auto-generated method stub
-		return new Lease(System.currentTimeMillis() + 60 * 1000L);
+		return new Lease(System.currentTimeMillis() + 10 * 1000L);
 	}
 
 	@Override

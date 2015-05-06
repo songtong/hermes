@@ -114,14 +114,14 @@ public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initia
 					Futures.addCallback(future, new FutureCallback<Lease>() {
 
 						@Override
-						public void onSuccess(Lease lease) {
+						public void onSuccess(final Lease lease) {
 							phaser.arriveAndDeregister();
 							if (lease != null && lease.getExpireTime() > System.currentTimeMillis()) {
 								m_existingLeases.put(key, lease);
 								m_listenerNotifierThreadPool.submit(new Runnable() {
 									@Override
 									public void run() {
-										listener.onAcquire();
+										listener.onAcquire(lease);
 									}
 								});
 							}
