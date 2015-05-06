@@ -15,7 +15,11 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import com.ctrip.hermes.core.transport.codec.NettyDecoder;
 import com.ctrip.hermes.core.transport.codec.NettyEncoder;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
+import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelActiveEvent;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelConnectFailedEvent;
+import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelEvent;
+import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelExceptionCaughtEvent;
+import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelInactiveEvent;
 
 @Sharable
 public class NettyClientEndpointChannel extends NettyEndpointChannel implements ClientEndpointChannel {
@@ -72,6 +76,26 @@ public class NettyClientEndpointChannel extends NettyEndpointChannel implements 
 			e.printStackTrace();
 		} finally {
 		}
+	}
+
+	@Override
+	public void startVirtualChannel(final VirtualChannelEventListener listener) {
+		// TODO remove the listener
+		addListener(new EndpointChannelEventListener() {
+
+			@Override
+			public void onEvent(EndpointChannelEvent event) {
+				if (event instanceof EndpointChannelActiveEvent) {
+					listener.channelOpen(NettyClientEndpointChannel.this);
+				} else if (event instanceof EndpointChannelExceptionCaughtEvent) {
+					listener.channelClose();
+				} else if (event instanceof EndpointChannelInactiveEvent) {
+					listener.channelClose();
+				}
+			}
+		});
+
+		listener.channelOpen(this);
 	}
 
 }

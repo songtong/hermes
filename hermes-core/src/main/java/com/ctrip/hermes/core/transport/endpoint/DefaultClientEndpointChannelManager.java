@@ -33,7 +33,7 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 	private int RECONNECT_DELAY_SECONDS = 1;
 
 	@Override
-	public ClientEndpointChannel getChannel(Endpoint endpoint, EndpointChannelEventListener... listeners) {
+	public ClientEndpointChannel getChannel(Endpoint endpoint) {
 		switch (endpoint.getType()) {
 		case Endpoint.BROKER:
 			if (!m_channels.containsKey(endpoint)) {
@@ -43,7 +43,6 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 						      endpoint.getPort(), m_cmdProcessorManager);
 
 						channel.addListener(new NettyChannelAutoReconnectListener(RECONNECT_DELAY_SECONDS));
-						channel.addListener(listeners);
 						channel.start();
 						m_channels.put(endpoint, channel);
 					}
@@ -56,6 +55,13 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 			// TODO
 			throw new IllegalArgumentException(String.format("unknow endpoint type: %s", endpoint.getType()));
 		}
+	}
+
+	@Override
+	public ClientEndpointChannel startVirtualChannel(Endpoint endpoint, VirtualChannelEventListener listener) {
+		ClientEndpointChannel channel = getChannel(endpoint);
+		channel.startVirtualChannel(listener);
+		return channel;
 	}
 
 	@Override

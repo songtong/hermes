@@ -20,6 +20,7 @@ import org.unidal.lookup.LookupException;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
 import com.ctrip.hermes.consumer.BaseConsumer;
+import com.ctrip.hermes.consumer.ConsumerType;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -142,16 +143,16 @@ public class OneBoxTest extends ComponentTestCase {
 		Engine engine = lookup(Engine.class);
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
-		 subscribers.put("group2", Arrays.asList("1-a"));
-		// subscribers.put("group1", Arrays.asList("1-a", "1-b"));
-		// subscribers.put("group2", Arrays.asList("2-a", "2-b"));
-		// subscribers.put("group3", Arrays.asList("3-a", "3-b", "3-c"));
+		// subscribers.put("group2", Arrays.asList("1-a"));
+		subscribers.put("group1", Arrays.asList("1-a", "1-b"));
+		subscribers.put("group2", Arrays.asList("2-a", "2-b"));
+		subscribers.put("group3", Arrays.asList("3-a", "3-b", "3-c"));
 
 		for (Map.Entry<String, List<String>> entry : subscribers.entrySet()) {
 			String groupId = entry.getKey();
 			Map<String, Integer> nacks = findNacks(groupId);
 			for (String id : entry.getValue()) {
-				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(nacks, id));
+				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(nacks, id), ConsumerType.PUSH);
 				System.out.println("Starting consumer " + groupId + ":" + id);
 				engine.start(Arrays.asList(s));
 			}
