@@ -8,5 +8,5 @@ import com.ctrip.hermes.consumer.engine.ConsumerContext;
  */
 public interface BrokerConsumptionStrategy {
 
-	void start(ConsumerContext consumerContext, int partitionId);
+	void start(ConsumerContext context, int partitionId);
 }
