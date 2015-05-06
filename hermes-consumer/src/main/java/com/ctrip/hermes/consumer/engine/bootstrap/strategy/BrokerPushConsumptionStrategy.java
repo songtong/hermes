@@ -37,10 +37,9 @@ public class BrokerPushConsumptionStrategy implements BrokerConsumptionStrategy 
 	private ClientEndpointChannelManager m_clientEndpointChannelManager;
 
 	@Override
-	public void start(final ConsumerContext consumerContext, final int partitionId) {
-		m_leaseManager.registerAcquisition(
-		      new Tpg(consumerContext.getTopic().getName(), partitionId, consumerContext.getGroupId()),
-		      new ConsumerAutoReconnectListener(consumerContext, partitionId));
+	public void start(ConsumerContext context, int partitionId) {
+		m_leaseManager.registerAcquisition(new Tpg(context.getTopic().getName(), partitionId, context.getGroupId()),
+		      new ConsumerAutoReconnectListener(context, partitionId));
 
 	}
 

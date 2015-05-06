@@ -21,12 +21,12 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 	private BrokerConsumptionStrategyRegistry m_consumptionStrategyRegistry;
 
 	@Override
-	protected void doStart(final ConsumerContext consumerContext) {
+	protected void doStart(final ConsumerContext context) {
 
-		List<Partition> partitions = m_metaService.getPartitions(consumerContext.getTopic().getName(),
-		      consumerContext.getGroupId());
+		List<Partition> partitions = m_metaService.getPartitions(context.getTopic().getName(),
+		      context.getGroupId());
 		for (final Partition partition : partitions) {
-			m_consumptionStrategyRegistry.findStrategy(consumerContext.getConsumerType()).start(consumerContext,
+			m_consumptionStrategyRegistry.findStrategy(context.getConsumerType()).start(context,
 			      partition.getId());
 		}
 	}

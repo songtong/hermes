@@ -26,18 +26,18 @@ public abstract class BaseConsumerBootstrap implements ConsumerBootstrap {
 	@Inject
 	protected ConsumerNotifier m_consumerNotifier;
 
-	public void start(ConsumerContext consumerContext) {
-		doStart(consumerContext);
+	public void start(ConsumerContext context) {
+		doStart(context);
 	}
 
-	public void stop(ConsumerContext consumerContext) {
-		doStop(consumerContext);
+	public void stop(ConsumerContext context) {
+		doStop(context);
 	}
 
-	protected void doStop(ConsumerContext consumerContext) {
+	protected void doStop(ConsumerContext context) {
 
 	}
 
-	protected abstract void doStart(ConsumerContext consumerContext);
+	protected abstract void doStart(ConsumerContext context);
 
 }

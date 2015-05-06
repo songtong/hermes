@@ -10,6 +10,7 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.ack.AckManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
@@ -37,7 +38,7 @@ public class SingleThreadLoopLongPollingService implements LongPollingService, I
 	// TODO size, if full?
 	private LinkedBlockingQueue<PullTask> m_tasks = new LinkedBlockingQueue<>();
 
-	private ConcurrentMap<Tpg, MessageQueuePartitionCursor> m_cursors = new ConcurrentHashMap<>();
+	private ConcurrentMap<Tpg, Pair<MessageQueuePartitionCursor, Long>> m_cursors = new ConcurrentHashMap<>();
 
 	@Override
 	public void schedulePush(Tpg tpg, long correlationId, int batchSize, EndpointChannel channel, long expireTime) {
@@ -51,14 +52,17 @@ public class SingleThreadLoopLongPollingService implements LongPollingService, I
 
 			@Override
 			public void run() {
+				int times = 0;
 				while (!Thread.currentThread().isInterrupted()) {
 					try {
-						PullTask pullTask = m_tasks.poll(20, TimeUnit.MILLISECONDS);
+						long now = System.currentTimeMillis();
+						PullTask pullTask = m_tasks.poll(50, TimeUnit.MILLISECONDS);
 
 						if (pullTask == null) {
 							continue;
 						}
 
+						// skip and remove expired task
 						if (pullTask.getExpireTime() < System.currentTimeMillis()) {
 							continue;
 						}
@@ -68,25 +72,41 @@ public class SingleThreadLoopLongPollingService implements LongPollingService, I
 						if (!m_cursors.containsKey(tpg)) {
 							MessageQueuePartitionCursor cursor = m_queueManager.createCursor(tpg);
 							// TODO when to remove this cursor
-							m_cursors.put(tpg, cursor);
+							m_cursors.put(tpg, new Pair<>(cursor, now));
 						}
 
-						List<TppConsumerMessageBatch> batches = m_cursors.get(tpg).next(pullTask.getBatchSize());
+						Pair<MessageQueuePartitionCursor, Long> pair = m_cursors.get(tpg);
+						MessageQueuePartitionCursor cursor = pair.getKey();
+						long scheduleTime = pair.getValue();
+
+						List<TppConsumerMessageBatch> batches = null;
+
+						if (scheduleTime <= now) {
+							batches = cursor.next(pullTask.getBatchSize());
+							// TODO query queue interval is 100 milliseconds, configable?
+							pair.setValue(now + 100L);
+						}
 
 						if (batches != null && !batches.isEmpty()) {
-							PullMessageAckCommand cmd = new PullMessageAckCommand();
-							cmd.addBatches(batches);
-							cmd.getHeader().setCorrelationId(pullTask.getCorrelationId());
-
-							pullTask.getChannel().writeCommand(cmd);
-
 							// notify ack manager
 							for (TppConsumerMessageBatch batch : batches) {
 								m_ackManager.delivered(new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority()),
 								      tpg.getGroupId(), batch.isResend(), batch.getMsgSeqs());
 							}
+
+							PullMessageAckCommand cmd = new PullMessageAckCommand();
+							cmd.addBatches(batches);
+							cmd.getHeader().setCorrelationId(pullTask.getCorrelationId());
+
+							pullTask.getChannel().writeCommand(cmd);
 						} else {
 							m_tasks.offer(pullTask);
+						}
+
+						// TODO
+						if (times++ == 500) {
+							times = 0;
+							Thread.sleep(5);
 						}
 
 					} catch (InterruptedException e) {

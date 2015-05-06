@@ -48,14 +48,10 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 	private Thread m_writer;
 
-	private ScheduledExecutorService m_pendingCmdsHouseKepper = Executors
-	      .newSingleThreadScheduledExecutor(new ThreadFactory() {
+	private ScheduledExecutorService m_pendingCmdsHouseKepper;
 
-		      @Override
-		      public Thread newThread(Runnable r) {
-			      return new Thread(r, "PendingCmdsHouseKeeper");
-		      }
-	      });
+	// TODO config size
+	private BlockingQueue<Command> m_writeQueue = new LinkedBlockingQueue<Command>();
 
 	protected CommandProcessorManager m_cmdProcessorManager;
 
@@ -63,11 +59,16 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 	protected AtomicBoolean m_closed = new AtomicBoolean(false);
 
-	// TODO config size
-	private BlockingQueue<Command> m_writeQueue = new LinkedBlockingQueue<Command>();
-
 	public NettyEndpointChannel(CommandProcessorManager cmdProcessorManager) {
 		m_cmdProcessorManager = cmdProcessorManager;
+
+		m_pendingCmdsHouseKepper = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+
+			@Override
+			public Thread newThread(Runnable r) {
+				return new Thread(r, "PendingCmdsHouseKeeper");
+			}
+		});
 	}
 
 	@SuppressWarnings("unchecked")
@@ -112,34 +113,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	}
 
 	private void startWriter() {
-		m_writer = new Thread() {
-			@Override
-			public void run() {
-				Command cmd = null;
-				while (!m_closed.get() && !Thread.currentThread().isInterrupted()) {
-					try {
-
-						if (cmd == null) {
-							cmd = m_writeQueue.poll(1, TimeUnit.SECONDS);
-						}
-
-						Channel channel = m_channel.get();
-
-						if (cmd != null && channel != null && channel.isActive() && channel.isWritable()) {
-							ChannelFuture future = channel.writeAndFlush(cmd).sync();
-							if (future.isSuccess()) {
-								cmd = null;
-							}
-						}
-
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-					} catch (Exception e) {
-						// TODO
-					}
-				}
-			}
-		};
+		m_writer = new Thread(new NettyWriter());
 
 		// TODO
 		m_writer.setDaemon(true);
@@ -156,6 +130,8 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 				if (reqCommand != null) {
 					reqCommand.onAck((Ack) command);
 					m_pendingCommands.remove(correlationId);
+				} else {
+					command.release();
 				}
 			}
 		} else {
@@ -253,4 +229,43 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 		return m_channel.get().remoteAddress().toString();
 	}
 
+	private class NettyWriter implements Runnable {
+
+		@Override
+		public void run() {
+			int times = 0;
+
+			Command cmd = null;
+			while (!m_closed.get() && !Thread.currentThread().isInterrupted()) {
+				try {
+
+					if (cmd == null) {
+						cmd = m_writeQueue.poll(1, TimeUnit.SECONDS);
+					}
+
+					Channel channel = m_channel.get();
+
+					if (cmd != null && channel != null && channel.isActive() && channel.isWritable()) {
+						ChannelFuture future = channel.writeAndFlush(cmd).sync();
+						if (future.isSuccess()) {
+							cmd = null;
+							times = 0;
+						}
+					}
+
+					// TODO
+					if (times++ == 500) {
+						times = 0;
+						Thread.sleep(5);
+					}
+
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} catch (Exception e) {
+					// TODO
+				}
+			}
+		}
+
+	}
 }

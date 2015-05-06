@@ -61,52 +61,61 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	private static final long MIN_POLL_TIMEOUT = 1000L;
 
 	@Override
-	public void start(final ConsumerContext consumerContext, final int partitionId) {
-		m_leaseManager.registerAcquisition(
-		      new Tpg(consumerContext.getTopic().getName(), partitionId, consumerContext.getGroupId()),
-		      new LeaseAcquisitionListener() {
+	public void start(ConsumerContext context, int partitionId) {
+		m_leaseManager.registerAcquisition(new Tpg(context.getTopic().getName(), partitionId, context.getGroupId()),
+		      new LongPollingConsumerLeaseAcquisitionListener(context, partitionId));
 
-			      // TODO thread factory
-			      private ExecutorService m_consumerTaskThreadPool = Executors
-			            .newSingleThreadExecutor(new ThreadFactory() {
+	}
 
-				            @Override
-				            public Thread newThread(Runnable r) {
-					            return new Thread(r, "ConsumerLongPollingThread");
-				            }
-			            });
+	private class LongPollingConsumerLeaseAcquisitionListener implements LeaseAcquisitionListener {
 
-			      private AtomicReference<ConsumerTask> m_consumerTask = new AtomicReference<>(null);
+		private ExecutorService m_consumerTaskThreadPool;
 
-			      private AtomicReference<Long> m_correlationId = new AtomicReference<>(null);
+		private AtomicReference<ConsumerTask> m_consumerTask = new AtomicReference<>(null);
 
-			      @Override
-			      public void onExpire() {
-				      // TODO
-				      System.out.println(String.format("Lease expired...(topic=%s, partition=%s, consumerGroupId=%s)",
-				            consumerContext.getTopic().getName(), partitionId, consumerContext.getGroupId()));
-				      ConsumerTask oldThread = m_consumerTask.getAndSet(null);
-				      if (oldThread != null) {
-					      oldThread.close();
-				      }
-				      m_correlationId.set(null);
-			      }
+		private AtomicReference<Long> m_correlationId = new AtomicReference<>(null);
 
-			      @Override
-			      public void onAcquire(Lease lease) {
+		private ConsumerContext m_context;
 
-				      m_correlationId.set(CorrelationIdGenerator.generateCorrelationId());
-				      // TODO
-				      System.out.println(String.format(
-				            "Lease acquired...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)",
-				            consumerContext.getTopic().getName(), partitionId, consumerContext.getGroupId(),
-				            m_correlationId.get()));
+		private int m_partitionId;
 
-				      m_consumerTask.set(new ConsumerTask(consumerContext, partitionId, m_correlationId.get(), lease));
-				      m_consumerTaskThreadPool.submit(m_consumerTask.get());
-			      }
-		      });
+		public LongPollingConsumerLeaseAcquisitionListener(ConsumerContext consumerContext, int partitionId) {
+			m_context = consumerContext;
+			m_partitionId = partitionId;
+			// TODO thread factory
+			m_consumerTaskThreadPool = Executors.newSingleThreadExecutor(new ThreadFactory() {
 
+				@Override
+				public Thread newThread(Runnable r) {
+					return new Thread(r, "ConsumerLongPollingThread");
+				}
+			});
+		}
+
+		@Override
+		public void onExpire() {
+			// TODO
+			System.out.println(String.format("Lease expired...(topic=%s, partition=%s, consumerGroupId=%s)", m_context
+			      .getTopic().getName(), m_partitionId, m_context.getGroupId()));
+			ConsumerTask oldThread = m_consumerTask.getAndSet(null);
+			if (oldThread != null) {
+				oldThread.close();
+			}
+			m_correlationId.set(null);
+		}
+
+		@Override
+		public void onAcquire(Lease lease) {
+
+			m_correlationId.set(CorrelationIdGenerator.generateCorrelationId());
+			// TODO
+			System.out.println(String.format(
+			      "Lease acquired...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)", m_context.getTopic()
+			            .getName(), m_partitionId, m_context.getGroupId(), m_correlationId.get()));
+
+			m_consumerTask.set(new ConsumerTask(m_context, m_partitionId, m_correlationId.get(), lease));
+			m_consumerTaskThreadPool.submit(m_consumerTask.get());
+		}
 	}
 
 	private class ConsumerTask implements Runnable {
@@ -120,16 +129,15 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 		// TODO size configable dynamic
 		private int m_cacheSize = 50;
 
-		private BlockingQueue<ConsumerMessage<?>> m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
+		private Lease m_lease;
 
 		private AtomicBoolean m_pullTaskRunning = new AtomicBoolean(false);
 
-		private Lease m_lease;
-
 		private AtomicBoolean closed = new AtomicBoolean(false);
 
-		// TODO
 		private ExecutorService m_executorService;
+
+		private BlockingQueue<ConsumerMessage<?>> m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
 
 		public ConsumerTask(ConsumerContext context, int partitionId, long correlationId, Lease lease) {
 			m_context = context;
@@ -165,7 +173,7 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 				try {
 					// TODO config size
 					if (m_msgs.size() < 10) {
-						schedulePullTask(m_context, m_partitionId, m_correlationId);
+						schedulePullMessageTask();
 					}
 
 					if (!m_msgs.isEmpty()) {
@@ -245,66 +253,64 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 			return msgs;
 		}
 
-		private void schedulePullTask(final ConsumerContext consumerContext, final int partitionId,
-		      final long correlationId) {
+		private void schedulePullMessageTask() {
 			if (m_pullTaskRunning.compareAndSet(false, true)) {
-				// TODO
-				System.out.println(String.format("Schedule pull task(topic=%s, partitionId=%s, consumerGroupId=%s)",
-				      consumerContext.getTopic().getName(), partitionId, consumerContext.getGroupId()));
-				m_executorService.submit(new Runnable() {
+				m_executorService.submit(new PullMessageTask());
+			}
+		}
 
-					@Override
-					public void run() {
+		private class PullMessageTask implements Runnable {
+
+			@Override
+			public void run() {
+				try {
+					Endpoint endpoint = m_endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
+					ClientEndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
+
+					final SettableFuture<PullMessageAckCommand> future = SettableFuture.create();
+
+					long now = System.currentTimeMillis();
+
+					long timeout = m_lease.getExpireTime() - now;
+
+					// TODO if lease.expTime < MIN_POLL_TIMEOUT
+					if (timeout < MIN_POLL_TIMEOUT && timeout > 0) {
+						timeout = MIN_POLL_TIMEOUT;
+					}
+
+					if (timeout > 0) {
+						PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
+						      m_context.getGroupId(), m_cacheSize - m_msgs.size(), now + timeout);
+
+						cmd.getHeader().setCorrelationId(m_correlationId);
+						cmd.setFuture(future);
+
+						channel.writeCommand(cmd);
+
+						PullMessageAckCommand ack = future.get(timeout, TimeUnit.MILLISECONDS);
 						try {
-							Endpoint endpoint = m_endpointManager.getEndpoint(consumerContext.getTopic().getName(),
-							      partitionId);
-							ClientEndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
-
-							final SettableFuture<PullMessageAckCommand> future = SettableFuture.create();
-
-							long now = System.currentTimeMillis();
-
-							long timeout = m_lease.getExpireTime() - now;
-
-							// TODO if lease.expTime < MIN_POLL_TIMEOUT
-							if (timeout < MIN_POLL_TIMEOUT && timeout > 0) {
-								timeout = MIN_POLL_TIMEOUT;
+							if (ack == null) {
+								return;
 							}
+							List<TppConsumerMessageBatch> batches = ack.getBatches();
+							Class<?> bodyClazz = m_consumerNotifier.find(m_correlationId).getMessageClazz();
 
-							if (timeout > 0) {
-								PullMessageCommand cmd = new PullMessageCommand(consumerContext.getTopic().getName(),
-								      partitionId, consumerContext.getGroupId(), m_cacheSize - m_msgs.size(), now + timeout);
-
-								cmd.getHeader().setCorrelationId(correlationId);
-								cmd.setFuture(future);
-
-								channel.writeCommand(cmd);
-
-								PullMessageAckCommand ack = future.get(timeout, TimeUnit.MILLISECONDS);
-								try {
-									if (ack == null) {
-										return;
-									}
-									List<TppConsumerMessageBatch> batches = ack.getBatches();
-									Class<?> bodyClazz = m_consumerNotifier.find(correlationId).getMessageClazz();
-
-									List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
-									m_msgs.addAll(msgs);
-								} finally {
-									if (ack != null) {
-										ack.release();
-									}
-								}
-							}
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							// e.printStackTrace();
+							List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
+							m_msgs.addAll(msgs);
 						} finally {
-							m_pullTaskRunning.set(false);
+							if (ack != null) {
+								ack.release();
+							}
 						}
 					}
-				});
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					// e.printStackTrace();
+				} finally {
+					m_pullTaskRunning.set(false);
+				}
 			}
+
 		}
 	}
 }
