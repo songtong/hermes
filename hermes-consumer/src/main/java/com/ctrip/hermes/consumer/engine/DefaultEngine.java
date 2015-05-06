@@ -27,7 +27,7 @@ public class DefaultEngine extends Engine {
 			for (Topic topic : topics) {
 				String endpointType = m_metaService.getEndpointType(topic.getName());
 				ConsumerContext consumerContext = new ConsumerContext(topic, s.getGroupId(), s.getConsumer(),
-				      s.getMessageClass());
+				      s.getMessageClass(), s.getConsumerType());
 				ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(endpointType);
 				consumerBootstrap.start(consumerContext);
 			}

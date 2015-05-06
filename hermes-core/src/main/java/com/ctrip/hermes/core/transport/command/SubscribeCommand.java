@@ -8,7 +8,7 @@ import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class SubscribeCommand extends AbstractCommand implements AckAware<SubscribeAckCommand> {
+public class SubscribeCommand extends AbstractCommand {
 
 	private static final long serialVersionUID = 3599083022933864580L;
 
@@ -54,11 +54,6 @@ public class SubscribeCommand extends AbstractCommand implements AckAware<Subscr
 
 	public void setPartition(int partition) {
 		m_partition = partition;
-	}
-
-	@Override
-	public void onAck(SubscribeAckCommand ack) {
-		// TODO
 	}
 
 	@Override
