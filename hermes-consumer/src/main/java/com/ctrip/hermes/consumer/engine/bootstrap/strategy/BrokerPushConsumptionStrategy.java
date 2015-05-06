@@ -7,6 +7,7 @@ import org.unidal.lookup.annotation.Inject;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.lease.LeaseManager.LeaseAcquisitionListener;
 import com.ctrip.hermes.core.transport.command.SubscribeCommand;
@@ -69,7 +70,7 @@ public class BrokerPushConsumptionStrategy implements BrokerConsumptionStrategy 
 			      }
 
 			      @Override
-			      public void onAcquire() {
+			      public void onAcquire(Lease lease) {
 				      Endpoint endpoint = m_endpointManager.getEndpoint(consumerContext.getTopic().getName(), partitionId);
 				      m_channel = m_clientEndpointChannelManager.getChannel(endpoint, m_eventListener);
 			      }

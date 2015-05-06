@@ -8,7 +8,7 @@ public interface LeaseManager<T> {
 	public void registerAcquisition(T key, LeaseAcquisitionListener listener);
 
 	public static interface LeaseAcquisitionListener {
-		public void onAcquire();
+		public void onAcquire(Lease lease);
 
 		public void onExpire();
 	}
