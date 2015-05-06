@@ -34,6 +34,16 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>MESSAGE_PULL</role-hint>
+			<implementation>com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessor</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.longpolling.LongPollingService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
 			<role-hint>SUBSCRIBE</role-hint>
 			<implementation>com.ctrip.hermes.broker.transport.command.processor.SubscribeCommandProcessor</implementation>
 			<requirements>
@@ -57,6 +67,18 @@
 			<role-hint>MESSAGE_ACK</role-hint>
 			<implementation>com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor</implementation>
 			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.ack.AckManager</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.broker.longpolling.LongPollingService</role>
+			<implementation>com.ctrip.hermes.broker.longpolling.SingleThreadLoopLongPollingService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
+				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.broker.ack.AckManager</role>
 				</requirement>

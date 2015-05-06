@@ -4,6 +4,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import com.ctrip.hermes.consumer.Consumer;
+import com.ctrip.hermes.consumer.ConsumerType;
 
 @SuppressWarnings("rawtypes")
 public class Subscriber {
@@ -14,10 +15,21 @@ public class Subscriber {
 
 	private Consumer m_consumer;
 
-	public Subscriber(String topicPattern, String groupId, Consumer consumer) {
+	private ConsumerType m_consumerType;
+
+	public Subscriber(String topicPattern, String groupId, Consumer consumer, ConsumerType consumerType) {
 		m_topicPattern = topicPattern;
 		m_groupId = groupId;
 		m_consumer = consumer;
+		m_consumerType = consumerType;
+	}
+
+	public Subscriber(String topicPattern, String groupId, Consumer consumer) {
+		this(topicPattern, groupId, consumer, ConsumerType.LONG_POLLING);
+	}
+
+	public ConsumerType getConsumerType() {
+		return m_consumerType;
 	}
 
 	public String getGroupId() {

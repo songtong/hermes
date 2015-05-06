@@ -133,6 +133,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 		if (channel != null) {
 			channel.close();
 		}
+		cancelAllPendings();
 		notifyListener(new EndpointChannelInactiveEvent(ctx, this));
 	}
 
@@ -154,6 +155,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 		if (channel != null) {
 			channel.close();
 		}
+		cancelAllPendings();
 		notifyListener(new EndpointChannelExceptionCaughtEvent(ctx, cause, this));
 		super.exceptionCaught(ctx, cause);
 	}
@@ -162,6 +164,12 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	public void addListener(EndpointChannelEventListener... listeners) {
 		if (listeners != null) {
 			m_listeners.addAll(Arrays.asList(listeners));
+		}
+	}
+
+	private void cancelAllPendings() {
+		for (AckAware<Ack> ackAware : m_pendingCommands.values()) {
+			ackAware.onFail();
 		}
 	}
 

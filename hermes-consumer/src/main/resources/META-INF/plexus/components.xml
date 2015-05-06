@@ -44,16 +44,7 @@
 			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.BrokerConsumerBootstrap</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
-					<field-name>m_metaService</field-name>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
-					<field-name>m_metaService</field-name>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.core.lease.LeaseManager</role>
-					<role-hint>consumer</role-hint>
+					<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategyRegistry</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager</role>
@@ -62,7 +53,52 @@
 					<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategyRegistry</role>
+			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultBrokerConsumptionRegistry</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategy</role>
+			<role-hint>LONG_POLLING</role-hint>
+			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerLongPollingConsumptionStrategy</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.message.codec.MessageCodec</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategy</role>
+			<role-hint>PUSH</role-hint>
+			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerPushConsumptionStrategy</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.lease.LeaseManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager</role>
 				</requirement>
 			</requirements>
 		</component>

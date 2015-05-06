@@ -271,4 +271,11 @@ public class SendMessageCommand extends AbstractCommand implements AckAware<Send
 		}
 	}
 
+	@Override
+	public void onFail() {
+		Exception e = new RuntimeException();
+		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
+			entry.getValue().setException(e);
+		}
+	}
 }
