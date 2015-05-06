@@ -79,8 +79,8 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 
 		private long m_correlationId;
 
-		// TODO size configable
-		private int m_cacheSize = 200;
+		// TODO size configable dynamic
+		private int m_cacheSize = 50;
 
 		private BlockingQueue<ConsumerMessage<?>> m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
 
@@ -111,7 +111,7 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
 					// TODO config size
-					if (m_msgs.size() < 50) {
+					if (m_msgs.size() < 10) {
 						schedulePullTask(m_context, m_partitionId, m_correlationId);
 					}
 
@@ -193,14 +193,19 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 							// TODO timeout?
 							// TODO use exp time same as cmd?
 							PullMessageAckCommand ack = future.get(10, TimeUnit.SECONDS);
-							List<TppConsumerMessageBatch> batches = ack.getBatches();
-							Class<?> bodyClazz = m_consumerNotifier.find(correlationId).getMessageClazz();
-
 							try {
+								if (ack == null) {
+									return;
+								}
+								List<TppConsumerMessageBatch> batches = ack.getBatches();
+								Class<?> bodyClazz = m_consumerNotifier.find(correlationId).getMessageClazz();
+
 								List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
 								m_msgs.addAll(msgs);
 							} finally {
-								ack.release();
+								if (ack != null) {
+									ack.release();
+								}
 							}
 						} catch (Exception e) {
 							// TODO Auto-generated catch block

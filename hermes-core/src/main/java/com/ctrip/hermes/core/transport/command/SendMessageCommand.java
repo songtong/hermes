@@ -278,4 +278,10 @@ public class SendMessageCommand extends AbstractCommand implements AckAware<Send
 			entry.getValue().setException(e);
 		}
 	}
+
+	@Override
+	public long getExpireTime() {
+		// TODO config
+		return System.currentTimeMillis() + 10 * 1000L;
+	}
 }

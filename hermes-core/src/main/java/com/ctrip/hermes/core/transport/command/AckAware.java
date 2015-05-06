@@ -8,4 +8,6 @@ public interface AckAware<T extends Ack> {
 	public void onAck(T ack);
 
 	public void onFail();
+
+	public long getExpireTime();
 }
