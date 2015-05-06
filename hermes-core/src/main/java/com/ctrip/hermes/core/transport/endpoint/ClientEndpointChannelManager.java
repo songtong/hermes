@@ -8,7 +8,9 @@ import com.ctrip.hermes.meta.entity.Endpoint;
  */
 public interface ClientEndpointChannelManager {
 
-	ClientEndpointChannel getChannel(Endpoint endpoint, EndpointChannelEventListener... listeners);
+	ClientEndpointChannel getChannel(Endpoint endpoint);
+
+	ClientEndpointChannel startVirtualChannel(Endpoint endpoint, VirtualChannelEventListener listener);
 
 	void closeChannel(Endpoint endpoint);
 }

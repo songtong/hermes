@@ -8,7 +8,6 @@ import java.util.Map;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
-import com.ctrip.hermes.consumer.Consumer;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -27,11 +26,12 @@ public class StartConsumer extends ComponentTestCase {
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
 		subscribers.put("group1", Arrays.asList("1-a"));
+		subscribers.put("group2", Arrays.asList("2-a", "2-b"));
 
 		for (Map.Entry<String, List<String>> entry : subscribers.entrySet()) {
 			String groupId = entry.getKey();
 			for (String id : entry.getValue()) {
-				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(id));
+				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(id), ConsumerType.LONG_POLLING);
 				System.out.println("Starting consumer " + groupId + ":" + id);
 				engine.start(Arrays.asList(s));
 			}

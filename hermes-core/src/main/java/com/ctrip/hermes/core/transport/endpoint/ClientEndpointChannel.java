@@ -6,4 +6,6 @@ package com.ctrip.hermes.core.transport.endpoint;
  */
 public interface ClientEndpointChannel extends EndpointChannel {
 
+	void startVirtualChannel(VirtualChannelEventListener listener);
+
 }

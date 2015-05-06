@@ -51,7 +51,7 @@ public class ConsumerContext {
 
 	@Override
 	public String toString() {
-		return "ConsumerContext [m_topic=" + m_topic + ", m_groupId=" + m_groupId + ", m_messageClazz=" + m_messageClazz
+		return "ConsumerContext [m_topic=" + m_topic.getName() + ", m_groupId=" + m_groupId + ", m_messageClazz=" + m_messageClazz
 		      + ", m_consumer=" + m_consumer + ", m_consumerType=" + m_consumerType + "]";
 	}
 

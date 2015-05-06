@@ -25,14 +25,9 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 
 		List<Partition> partitions = m_metaService.getPartitions(consumerContext.getTopic().getName(),
 		      consumerContext.getGroupId());
-
 		for (final Partition partition : partitions) {
-
 			m_consumptionStrategyRegistry.findStrategy(consumerContext.getConsumerType()).start(consumerContext,
 			      partition.getId());
-
 		}
-
 	}
-
 }
