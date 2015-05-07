@@ -13,7 +13,7 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
-import com.ctrip.hermes.consumer.Consumer;
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -49,7 +49,7 @@ public class OneProducer extends ComponentTestCase {
         p.message(TOPIC, null, msg).send();
 
         Engine engine = lookup(Engine.class);
-        Subscriber s = new Subscriber(TOPIC, "group1", new Consumer<String>() {
+        Subscriber s = new Subscriber(TOPIC, "group1", new MessageListener<String>() {
             @Override
             public void consume(List<ConsumerMessage<String>> msgs) {
                 assertEquals(msgs.size(), 1);

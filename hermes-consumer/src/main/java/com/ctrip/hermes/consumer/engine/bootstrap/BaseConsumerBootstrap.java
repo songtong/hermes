@@ -3,6 +3,7 @@ package com.ctrip.hermes.consumer.engine.bootstrap;
 import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
@@ -26,8 +27,8 @@ public abstract class BaseConsumerBootstrap implements ConsumerBootstrap {
 	@Inject
 	protected ConsumerNotifier m_consumerNotifier;
 
-	public void start(ConsumerContext context) {
-		doStart(context);
+	public SubscribeHandle start(ConsumerContext context) {
+		return doStart(context);
 	}
 
 	public void stop(ConsumerContext context) {
@@ -38,6 +39,6 @@ public abstract class BaseConsumerBootstrap implements ConsumerBootstrap {
 
 	}
 
-	protected abstract void doStart(ConsumerContext context);
+	protected abstract SubscribeHandle doStart(ConsumerContext context);
 
 }

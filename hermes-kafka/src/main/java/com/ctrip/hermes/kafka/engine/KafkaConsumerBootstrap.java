@@ -23,6 +23,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.bootstrap.BaseConsumerBootstrap;
 import com.ctrip.hermes.consumer.engine.bootstrap.ConsumerBootstrap;
 import com.ctrip.hermes.core.env.ClientEnvironment;
@@ -56,7 +57,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Log
 	private Map<ConsumerContext, SubscribeCommand> commands = new HashMap<>();
 
 	@Override
-	protected void doStart(ConsumerContext consumerContext) {
+	protected SubscribeHandle doStart(final ConsumerContext consumerContext) {
 		Topic topic = consumerContext.getTopic();
 
 		Properties prop = getConsumerProperties(topic.getName(), consumerContext.getGroupId());
@@ -77,6 +78,14 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Log
 		      .getCorrelationId()));
 		consumers.put(consumerContext, consumerConnector);
 		commands.put(consumerContext, subscribeCommand);
+
+		return new SubscribeHandle() {
+
+			@Override
+			public void close() {
+				doStop(consumerContext);
+			}
+		};
 	}
 
 	@Override

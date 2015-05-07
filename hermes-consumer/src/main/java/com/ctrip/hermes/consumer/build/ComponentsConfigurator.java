@@ -7,6 +7,7 @@ import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.consumer.ConsumerType;
+import com.ctrip.hermes.consumer.DefaultConsumer;
 import com.ctrip.hermes.consumer.engine.DefaultEngine;
 import com.ctrip.hermes.consumer.engine.bootstrap.BrokerConsumerBootstrap;
 import com.ctrip.hermes.consumer.engine.bootstrap.DefaultConsumerBootstrapManager;
@@ -35,6 +36,9 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 	@Override
 	public List<Component> defineComponents() {
 		List<Component> all = new ArrayList<Component>();
+
+		// consumer
+		all.add(A(DefaultConsumer.class));
 
 		// engine
 		all.add(A(DefaultEngine.class));

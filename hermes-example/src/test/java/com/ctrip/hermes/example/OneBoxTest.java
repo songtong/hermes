@@ -19,8 +19,8 @@ import org.unidal.lookup.ComponentTestCase;
 import org.unidal.lookup.LookupException;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
-import com.ctrip.hermes.consumer.BaseConsumer;
 import com.ctrip.hermes.consumer.ConsumerType;
+import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -57,7 +57,8 @@ public class OneBoxTest extends ComponentTestCase {
 		Engine engine = lookup(Engine.class);
 		final AtomicLong counter = new AtomicLong(0);
 
-		Subscriber s = new Subscriber("order_new", "sdf", new BaseConsumer<Long>() {
+		String groupId = "sdf";
+		Subscriber s = new Subscriber("order_new", groupId, new BaseMessageListener<Long>(groupId) {
 
 			@Override
 			protected void consume(ConsumerMessage<Long> msg) {
@@ -152,7 +153,7 @@ public class OneBoxTest extends ComponentTestCase {
 			String groupId = entry.getKey();
 			Map<String, Integer> nacks = findNacks(groupId);
 			for (String id : entry.getValue()) {
-				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(nacks, id), ConsumerType.LONG_POLLING);
+				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(groupId, nacks, id), ConsumerType.LONG_POLLING);
 				System.out.println("Starting consumer " + groupId + ":" + id);
 				engine.start(Arrays.asList(s));
 			}
@@ -185,7 +186,7 @@ public class OneBoxTest extends ComponentTestCase {
 					String id = parts[2];
 					Map<String, Integer> nacks = findNacks(groupId);
 					System.out.println(String.format("Starting consumer with groupId %s and id %s", groupId, id));
-					engine.start(Arrays.asList((new Subscriber(topic, groupId, new MyConsumer(nacks, id)))));
+					engine.start(Arrays.asList((new Subscriber(topic, groupId, new MyConsumer(groupId, nacks, id)))));
 				}
 			} else {
 				send(topic, prefix);
@@ -219,13 +220,14 @@ public class OneBoxTest extends ComponentTestCase {
 
 	}
 
-	static class MyConsumer extends BaseConsumer<String> {
+	static class MyConsumer extends BaseMessageListener<String> {
 
 		private Map<String, Integer> m_nacks;
 
 		private String m_id;
 
-		public MyConsumer(Map<String, Integer> nacks, String id) {
+		public MyConsumer(String groupId, Map<String, Integer> nacks, String id) {
+			super(groupId);
 			m_nacks = nacks;
 			m_id = id;
 		}

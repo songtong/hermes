@@ -13,7 +13,7 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
-import com.ctrip.hermes.consumer.Consumer;
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -158,7 +158,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 			public void run() {
 				Engine engine = lookup(Engine.class);
 
-				Subscriber s = new Subscriber(TOPIC, "group1", new Consumer<String>() {
+				Subscriber s = new Subscriber(TOPIC, "group1", new MessageListener<String>() {
 					@Override
 					public void consume(List<ConsumerMessage<String>> msgs) {
 						receiveCount.addAndGet(msgs.size());
@@ -197,7 +197,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 				String topic = TOPIC;
 				Engine engine = lookup(Engine.class);
 
-				Subscriber s = new Subscriber(topic, "group1", new Consumer<String>() {
+				Subscriber s = new Subscriber(topic, "group1", new MessageListener<String>() {
 					@Override
 					public void consume(List<ConsumerMessage<String>> msgs) {
 						for (ConsumerMessage<String> msg : msgs) {

@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.ctrip.hermes.consumer.Consumer;
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -26,7 +26,7 @@ public class PartitionTest {
 
 		Engine engine = Engine.getInstance();
 
-		Subscriber s = new Subscriber(topicPattern, group, new Consumer<VisitEvent>() {
+		Subscriber s = new Subscriber(topicPattern, group, new MessageListener<VisitEvent>() {
 
 			@Override
 			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
@@ -64,7 +64,7 @@ public class PartitionTest {
 
 		Engine engine = Engine.getInstance();
 
-		Subscriber s1 = new Subscriber(topicPattern, group, new Consumer<VisitEvent>() {
+		Subscriber s1 = new Subscriber(topicPattern, group, new MessageListener<VisitEvent>() {
 
 			@Override
 			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
@@ -78,7 +78,7 @@ public class PartitionTest {
 		System.out.println("Starting consumer1...");
 		engine.start(Arrays.asList(s1));
 
-		Subscriber s2 = new Subscriber(topicPattern, group, new Consumer<VisitEvent>() {
+		Subscriber s2 = new Subscriber(topicPattern, group, new MessageListener<VisitEvent>() {
 
 			@Override
 			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {

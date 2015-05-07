@@ -1,5 +1,6 @@
 package com.ctrip.hermes.consumer.engine;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.unidal.lookup.annotation.Inject;
@@ -20,7 +21,9 @@ public class DefaultEngine extends Engine {
 	private MetaService m_metaService;
 
 	@Override
-	public void start(List<Subscriber> subscribers) {
+	public SubscribeHandle start(List<Subscriber> subscribers) {
+		CompositeSubscribeHandle handle = new CompositeSubscribeHandle();
+
 		for (Subscriber s : subscribers) {
 			List<Topic> topics = m_metaService.findTopicsByPattern(s.getTopicPattern());
 
@@ -29,9 +32,28 @@ public class DefaultEngine extends Engine {
 				ConsumerContext consumerContext = new ConsumerContext(topic, s.getGroupId(), s.getConsumer(),
 				      s.getMessageClass(), s.getConsumerType());
 				ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(endpointType);
-				consumerBootstrap.start(consumerContext);
+				handle.addSubscribeHandle(consumerBootstrap.start(consumerContext));
 			}
 		}
+
+		return handle;
+	}
+
+	private static class CompositeSubscribeHandle implements SubscribeHandle {
+
+		private List<SubscribeHandle> m_childHandles = new ArrayList<>();
+
+		public void addSubscribeHandle(SubscribeHandle handle) {
+			m_childHandles.add(handle);
+		}
+
+		@Override
+		public void close() {
+			for (SubscribeHandle child : m_childHandles) {
+				child.close();
+			}
+		}
+
 	}
 
 }

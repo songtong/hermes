@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.log4j.Logger;
 
-import com.ctrip.hermes.consumer.BaseConsumer;
+import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -15,12 +15,13 @@ import com.dianping.cat.Cat;
 
 public class HermesConsumerPerf {
 
-	private static class ConsumerPerf extends BaseConsumer<byte[]> {
+	private static class ConsumerPerf extends BaseMessageListener<byte[]> {
 
 		private boolean isRunning;
 
 		private Integer threadId;
 
+		@SuppressWarnings("unused")
 		private String name;
 
 		private ConsumerPerfConfig config;
@@ -44,7 +45,8 @@ public class HermesConsumerPerf {
 		private CountDownLatch latch;
 
 		public ConsumerPerf(Integer threadId, String name, ConsumerPerfConfig config, AtomicLong totalMessagesRead,
-		      AtomicLong totalBytesRead, CountDownLatch latch) {
+		      AtomicLong totalBytesRead, CountDownLatch latch, String group) {
+			super(group);
 			this.threadId = threadId;
 			this.name = name;
 			this.config = config;
@@ -90,9 +92,9 @@ public class HermesConsumerPerf {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-		
+
 		Cat.initializeByDomain("900777", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
-		
+
 		ConsumerPerfConfig config = new ConsumerPerfConfig(args);
 		logger.info("Starting consumer...");
 		String topic = config.topic;
@@ -116,7 +118,7 @@ public class HermesConsumerPerf {
 
 		for (int i = 0; i < numThreads; i++) {
 			Subscriber s = new Subscriber(topic, group, new ConsumerPerf(i, "kafka-zk-consumer-" + i, config,
-			      totalMessagesRead, totalBytesRead, latch));
+			      totalMessagesRead, totalBytesRead, latch, group));
 			subscribers.add(s);
 		}
 

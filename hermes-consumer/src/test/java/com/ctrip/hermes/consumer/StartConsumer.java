@@ -8,6 +8,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -41,7 +42,7 @@ public class StartConsumer extends ComponentTestCase {
 		System.in.read();
 	}
 
-	static class MyConsumer implements Consumer<String> {
+	static class MyConsumer implements MessageListener<String> {
 
 		private String m_id;
 

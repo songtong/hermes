@@ -9,7 +9,7 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import com.ctrip.hermes.consumer.Consumer;
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -29,7 +29,7 @@ public class WildcardTopicsTest {
 
 		Engine engine = Engine.getInstance();
 
-		Subscriber s = new Subscriber(topicPattern, group, new Consumer<VisitEvent>() {
+		Subscriber s = new Subscriber(topicPattern, group, new MessageListener<VisitEvent>() {
 
 			@Override
 			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {

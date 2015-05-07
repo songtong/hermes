@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 
 public class ConsumerTest {
@@ -21,7 +22,7 @@ public class ConsumerTest {
 	}
 
 	@Subscribe(topicPattern = "order.*", groupId = "search.order")
-	public static class MockConsumer implements Consumer<Object> {
+	public static class MockConsumer implements MessageListener<Object> {
 
 		@Override
 		public void consume(List<ConsumerMessage<Object>> msgs) {

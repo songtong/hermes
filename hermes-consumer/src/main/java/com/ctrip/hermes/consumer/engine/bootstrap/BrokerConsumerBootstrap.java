@@ -6,6 +6,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategyRegistry;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
@@ -21,13 +22,14 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 	private BrokerConsumptionStrategyRegistry m_consumptionStrategyRegistry;
 
 	@Override
-	protected void doStart(final ConsumerContext context) {
+	protected SubscribeHandle doStart(final ConsumerContext context) {
 
-		List<Partition> partitions = m_metaService.getPartitions(context.getTopic().getName(),
-		      context.getGroupId());
+		List<Partition> partitions = m_metaService.getPartitions(context.getTopic().getName(), context.getGroupId());
 		for (final Partition partition : partitions) {
-			m_consumptionStrategyRegistry.findStrategy(context.getConsumerType()).start(context,
-			      partition.getId());
+			m_consumptionStrategyRegistry.findStrategy(context.getConsumerType()).start(context, partition.getId());
 		}
+
+		// TODO
+		return null;
 	}
 }

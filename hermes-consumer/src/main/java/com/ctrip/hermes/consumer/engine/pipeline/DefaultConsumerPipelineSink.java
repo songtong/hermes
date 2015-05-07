@@ -5,7 +5,7 @@ import java.util.List;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.consumer.Consumer;
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
@@ -23,7 +23,7 @@ public class DefaultConsumerPipelineSink implements PipelineSink<Void> {
 	public Void handle(PipelineContext<Void> ctx, Object payload) {
 		Pair<ConsumerContext, List<ConsumerMessage<?>>> pair = (Pair<ConsumerContext, List<ConsumerMessage<?>>>) payload;
 
-		Consumer consumer = pair.getKey().getConsumer();
+		MessageListener consumer = pair.getKey().getConsumer();
 		List<ConsumerMessage<?>> msgs = pair.getValue();
 		consumer.consume(msgs);
 

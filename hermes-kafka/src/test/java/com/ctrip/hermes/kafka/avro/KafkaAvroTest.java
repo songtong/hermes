@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.ctrip.hermes.consumer.Consumer;
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -36,7 +36,7 @@ public class KafkaAvroTest {
 		final List<AvroVisitEvent> actualResult = new ArrayList<>();
 		final List<AvroVisitEvent> expectedResult = new ArrayList<>();
 
-		Subscriber s = new Subscriber(topic, group, new Consumer<AvroVisitEvent>() {
+		Subscriber s = new Subscriber(topic, group, new MessageListener<AvroVisitEvent>() {
 
 			@Override
 			public void consume(List<ConsumerMessage<AvroVisitEvent>> msgs) {
@@ -84,7 +84,7 @@ public class KafkaAvroTest {
 		final List<AvroVisitEvent> actualResult = new ArrayList<>();
 		final List<AvroVisitEvent> expectedResult = new ArrayList<>();
 
-		Subscriber s = new Subscriber(topic, group, new Consumer<AvroVisitEvent>() {
+		Subscriber s = new Subscriber(topic, group, new MessageListener<AvroVisitEvent>() {
 
 			@Override
 			public void consume(List<ConsumerMessage<AvroVisitEvent>> msgs) {
