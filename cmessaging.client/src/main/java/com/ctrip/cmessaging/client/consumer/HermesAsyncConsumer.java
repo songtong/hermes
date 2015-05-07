@@ -7,7 +7,7 @@ import java.util.List;
 import com.ctrip.cmessaging.client.IAsyncConsumer;
 import com.ctrip.cmessaging.client.event.IConsumerCallbackEventHandler;
 import com.ctrip.cmessaging.client.message.HermesIMessage;
-import com.ctrip.hermes.consumer.Consumer;
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -86,7 +86,7 @@ public class HermesAsyncConsumer implements IAsyncConsumer {
 		this.groupId = identifier;
 	}
 
-	class InnerConsumer implements Consumer<byte[]> {
+	class InnerConsumer implements MessageListener<byte[]> {
 		@Override
 		public void consume(List<ConsumerMessage<byte[]>> msgs) {
 			try {

@@ -1,4 +1,4 @@
-package com.ctrip.hermes.consumer;
+package com.ctrip.hermes.consumer.api;
 
 import java.util.List;
 
@@ -13,7 +13,13 @@ import com.dianping.cat.message.Event;
 import com.dianping.cat.message.Transaction;
 import com.dianping.cat.message.spi.MessageTree;
 
-public abstract class BaseConsumer<T> implements Consumer<T> {
+public abstract class BaseMessageListener<T> implements MessageListener<T> {
+
+	private String m_groupId;
+
+	public BaseMessageListener(String groupId) {
+		m_groupId = groupId;
+	}
 
 	@Override
 	public void consume(List<ConsumerMessage<T>> msgs) {
@@ -38,7 +44,7 @@ public abstract class BaseConsumer<T> implements Consumer<T> {
 				try {
 					t.addData("topic", topic);
 					t.addData("key", msg.getKey());
-					t.addData("groupId", getGroupId());
+					t.addData("groupId", m_groupId);
 					// TODO
 					t.addData("appId", "demo-app");
 
@@ -47,7 +53,7 @@ public abstract class BaseConsumer<T> implements Consumer<T> {
 					msg.ack();
 
 					String ip = NetworkInterfaceManager.INSTANCE.getLocalHostAddress();
-					Cat.logEvent("Consumer:" + ip, msg.getTopic() + ":" + getGroupId(), Event.SUCCESS, "key=" + msg.getKey());
+					Cat.logEvent("Consumer:" + ip, msg.getTopic() + ":" + m_groupId, Event.SUCCESS, "key=" + msg.getKey());
 					Cat.logEvent("Message:" + topic, "Consumed:" + ip, Event.SUCCESS, "key=" + msg.getKey());
 					Cat.logMetricForCount(msg.getTopic());
 					t.setStatus(MessageStatus.SUCCESS.equals(msg.getStatus()) ? Transaction.SUCCESS : "FAILED-WILL-RETRY");
@@ -59,16 +65,6 @@ public abstract class BaseConsumer<T> implements Consumer<T> {
 				}
 			}
 
-		}
-	}
-
-	protected String getGroupId() {
-		Subscribe s = this.getClass().getAnnotation(Subscribe.class);
-
-		if (s != null) {
-			return s.groupId();
-		} else {
-			return "Unknown";
 		}
 	}
 

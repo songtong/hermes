@@ -3,8 +3,8 @@ package com.ctrip.hermes.consumer.engine;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-import com.ctrip.hermes.consumer.Consumer;
 import com.ctrip.hermes.consumer.ConsumerType;
+import com.ctrip.hermes.consumer.api.MessageListener;
 
 @SuppressWarnings("rawtypes")
 public class Subscriber {
@@ -13,18 +13,18 @@ public class Subscriber {
 
 	private String m_topicPattern;
 
-	private Consumer m_consumer;
+	private MessageListener m_consumer;
 
 	private ConsumerType m_consumerType;
 
-	public Subscriber(String topicPattern, String groupId, Consumer consumer, ConsumerType consumerType) {
+	public Subscriber(String topicPattern, String groupId, MessageListener consumer, ConsumerType consumerType) {
 		m_topicPattern = topicPattern;
 		m_groupId = groupId;
 		m_consumer = consumer;
 		m_consumerType = consumerType;
 	}
 
-	public Subscriber(String topicPattern, String groupId, Consumer consumer) {
+	public Subscriber(String topicPattern, String groupId, MessageListener consumer) {
 		this(topicPattern, groupId, consumer, ConsumerType.LONG_POLLING);
 	}
 
@@ -40,7 +40,7 @@ public class Subscriber {
 		return m_topicPattern;
 	}
 
-	public Consumer getConsumer() {
+	public MessageListener getConsumer() {
 		return m_consumer;
 	}
 

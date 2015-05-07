@@ -17,6 +17,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -61,10 +62,13 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	private static final long MIN_POLL_TIMEOUT = 1000L;
 
 	@Override
-	public void start(ConsumerContext context, int partitionId) {
+	public SubscribeHandle start(ConsumerContext context, int partitionId) {
 		m_leaseManager.registerAcquisition(new Tpg(context.getTopic().getName(), partitionId, context.getGroupId()),
 		      new LongPollingConsumerLeaseAcquisitionListener(context, partitionId));
 
+		
+		// TODO
+		return null;
 	}
 
 	private class LongPollingConsumerLeaseAcquisitionListener implements LeaseAcquisitionListener {

@@ -8,7 +8,7 @@ import java.util.Arrays;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 
-import com.ctrip.hermes.consumer.BaseConsumer;
+import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -26,7 +26,7 @@ public class OneBoxTest {
 
 		Engine engine = Engine.getInstance();
 
-		Subscriber s = new Subscriber(topic, group, new BaseConsumer<String>() {
+		Subscriber s = new Subscriber(topic, group, new BaseMessageListener<String>(group) {
 
 			@Override
 			protected void consume(ConsumerMessage<String> msg) {

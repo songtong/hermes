@@ -10,7 +10,7 @@ import com.ctrip.cmessaging.client.IMessage;
 import com.ctrip.cmessaging.client.ISyncConsumer;
 import com.ctrip.cmessaging.client.exception.ConsumeTimeoutException;
 import com.ctrip.cmessaging.client.message.HermesIMessage;
-import com.ctrip.hermes.consumer.Consumer;
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -80,7 +80,7 @@ public class HermesSyncConsumer implements ISyncConsumer {
 		this.groupId = identifier;
 	}
 
-	class InnerConsumer implements Consumer<byte[]> {
+	class InnerConsumer implements MessageListener<byte[]> {
 		@Override
 		public void consume(List<ConsumerMessage<byte[]>> msgs) {
 			msgQueue.addAll(msgs);

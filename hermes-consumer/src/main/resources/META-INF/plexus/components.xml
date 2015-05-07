@@ -1,6 +1,15 @@
 <plexus>
 	<components>
 		<component>
+			<role>com.ctrip.hermes.consumer.api.Consumer</role>
+			<implementation>com.ctrip.hermes.consumer.DefaultConsumer</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.Engine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.consumer.engine.Engine</role>
 			<implementation>com.ctrip.hermes.consumer.engine.DefaultEngine</implementation>
 			<requirements>

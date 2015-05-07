@@ -1,7 +1,7 @@
 package com.ctrip.hermes.consumer.engine;
 
-import com.ctrip.hermes.consumer.Consumer;
 import com.ctrip.hermes.consumer.ConsumerType;
+import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.meta.entity.Topic;
 
 /**
@@ -16,11 +16,11 @@ public class ConsumerContext {
 
 	private Class<?> m_messageClazz;
 
-	private Consumer m_consumer;
+	private MessageListener m_consumer;
 
 	private ConsumerType m_consumerType;
 
-	public ConsumerContext(Topic topic, String groupId, Consumer consumer, Class<?> messageClazz,
+	public ConsumerContext(Topic topic, String groupId, MessageListener consumer, Class<?> messageClazz,
 	      ConsumerType consumerType) {
 		m_topic = topic;
 		m_groupId = groupId;
@@ -45,7 +45,7 @@ public class ConsumerContext {
 		return m_groupId;
 	}
 
-	public Consumer getConsumer() {
+	public MessageListener getConsumer() {
 		return m_consumer;
 	}
 
