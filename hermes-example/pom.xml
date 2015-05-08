@@ -1,37 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>hermes</artifactId>
-        <groupId>com.ctrip.hermes</groupId>
-        <version>0.1-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>hermes-example</artifactId>
-    <name>Hermes Example</name>
-    <dependencies>
-        <dependency>
-            <groupId>com.ctrip.hermes</groupId>
-            <artifactId>hermes-broker</artifactId>
-            <classifier>classes</classifier>
-        </dependency>
-        <dependency>
-            <groupId>com.ctrip.hermes</groupId>
-            <artifactId>hermes-consumer</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ctrip.hermes</groupId>
-            <artifactId>hermes-producer</artifactId>
-        </dependency>
-    </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<artifactId>hermes</artifactId>
+		<groupId>com.ctrip.hermes</groupId>
+		<version>0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>hermes-example</artifactId>
+	<name>Hermes Example</name>
+	<dependencies>
+		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-broker</artifactId>
+			<classifier>classes</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-consumer</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-producer</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-metaserver</artifactId>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
 </project>

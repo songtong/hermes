@@ -21,8 +21,8 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.lookup.util.StringUtils;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.meta.MetaManager;
-import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.meta.core.MetaManager;
+import com.ctrip.hermes.meta.core.MetaService;
 import com.ctrip.hermes.meta.dal.meta.Schema;
 import com.ctrip.hermes.meta.dal.meta.SchemaDao;
 import com.ctrip.hermes.meta.dal.meta.SchemaEntity;

@@ -13,6 +13,9 @@ public class Tpg {
 
 	private String m_groupId;
 
+	public Tpg() {
+	}
+
 	public Tpg(String topic, int partition, String groupId) {
 		m_topic = topic;
 		m_partition = partition;
@@ -29,6 +32,18 @@ public class Tpg {
 
 	public String getGroupId() {
 		return m_groupId;
+	}
+
+	public void setTopic(String topic) {
+		m_topic = topic;
+	}
+
+	public void setPartition(int partition) {
+		m_partition = partition;
+	}
+
+	public void setGroupId(String groupId) {
+		m_groupId = groupId;
 	}
 
 	@Override

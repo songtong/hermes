@@ -1,9 +1,6 @@
 package com.ctrip.hermes.core.meta.internal;
 
-import java.io.BufferedWriter;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -63,28 +60,4 @@ public class RemoteMetaLoader implements MetaLoader {
 		return m_meta;
 	}
 
-	@Override
-	public boolean save(Meta meta) {
-		try {
-			if (StringUtils.isEmpty(host)) {
-				host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
-				System.out.println("Saving mete to server: " + host);
-			}
-			if (StringUtils.isEmpty(port)) {
-				port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
-			}
-			String url = "http://" + host + ":" + port + "/meta";
-			URL metaURL = new URL(url);
-			HttpURLConnection conn = (HttpURLConnection) metaURL.openConnection();
-			conn.setRequestMethod("POST");
-			OutputStream os = conn.getOutputStream();
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-			String jsonString = JSON.toJSONString(meta);
-			writer.write(jsonString);
-			writer.close();
-		} catch (Exception e) {
-			throw new RuntimeException("Save remote meta failed", e);
-		}
-		return true;
-	}
 }

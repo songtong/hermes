@@ -15,8 +15,8 @@ import javax.ws.rs.core.Response.Status;
 import org.codehaus.plexus.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.meta.MetaManager;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.core.MetaManager;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.server.RestException;
 import com.ctrip.hermes.meta.service.ServerMetaManager;
@@ -26,8 +26,7 @@ import com.ctrip.hermes.meta.service.ServerMetaManager;
 @Produces(MediaType.APPLICATION_JSON)
 public class MetaResource {
 
-	private MetaManager metaManager = PlexusComponentLocator.lookup(
-			MetaManager.class, ServerMetaManager.ID);
+	private MetaManager metaManager = PlexusComponentLocator.lookup(MetaManager.class, ServerMetaManager.ID);
 
 	@GET
 	public Response getMeta(@QueryParam("hashCode") long hashCode) {
@@ -64,8 +63,7 @@ public class MetaResource {
 	@POST
 	public Response updateMeta(String content, @Context HttpServletRequest req) {
 		if (StringUtils.isEmpty(content)) {
-			throw new RestException("HTTP POST body is empty",
-					Status.BAD_REQUEST);
+			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
 
 		Meta meta = null;

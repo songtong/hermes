@@ -1,5 +1,7 @@
 package com.ctrip.hermes.example.performance;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -10,15 +12,13 @@ import org.unidal.lookup.LookupException;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.meta.server.MetaRestServer;
 import com.ctrip.hermes.producer.api.Producer;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
-import static org.junit.Assert.assertTrue;
-
 /**
- * Test the performance on: producer send msgs to broker.
- * Assume that network is not th bottleneck.
+ * Test the performance on: producer send msgs to broker. Assume that network is not th bottleneck.
  */
 public class ProducerPushBroker extends ComponentTestCase {
 
@@ -35,7 +35,6 @@ public class ProducerPushBroker extends ComponentTestCase {
 
 		final CountDownLatch latch = new CountDownLatch(MESSAGE_COUNT);
 
-
 		Producer p = Producer.getInstance();
 
 		p.message("order_new", "0", 1233213423L).withRefKey("key").withPriority().send();
@@ -43,7 +42,7 @@ public class ProducerPushBroker extends ComponentTestCase {
 		long startTime = System.currentTimeMillis();
 		for (int i = 0; i < MESSAGE_COUNT; i++) {
 			SettableFuture<SendResult> future = (SettableFuture<SendResult>) p.message("order_new", "0", 1233213423L)
-					  .withRefKey("key").withPriority().send();
+			      .withRefKey("key").withPriority().send();
 
 			future.addListener(new Runnable() {
 
@@ -60,12 +59,11 @@ public class ProducerPushBroker extends ComponentTestCase {
 		long endTime = System.currentTimeMillis();
 		outputResult(endTime - startTime);
 
-
 	}
 
 	private void outputResult(long eclipseTime) {
-		System.out.println(String.format("Produce %d msgs spends %d ms, QPS: %.2f msg/s",
-				  MESSAGE_COUNT, eclipseTime,  MESSAGE_COUNT / (eclipseTime/1000f)));
+		System.out.println(String.format("Produce %d msgs spends %d ms, QPS: %.2f msg/s", MESSAGE_COUNT, eclipseTime,
+		      MESSAGE_COUNT / (eclipseTime / 1000f)));
 	}
 
 	@Test
@@ -78,6 +76,7 @@ public class ProducerPushBroker extends ComponentTestCase {
 			public void run() {
 
 				try {
+					lookup(MetaRestServer.class).start();
 					lookup(BrokerBootstrap.class).start();
 				} catch (Exception e) {
 					System.out.println("Fail to start Broker: " + e.getMessage());

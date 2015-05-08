@@ -32,8 +32,4 @@ public class LocalMetaLoader implements MetaLoader {
 		}
 	}
 
-	@Override
-	public boolean save(Meta meta) {
-		return false;
-	}
 }

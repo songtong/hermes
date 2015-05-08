@@ -15,8 +15,8 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.meta.MetaManager;
-import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.meta.core.MetaManager;
+import com.ctrip.hermes.meta.core.MetaService;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;

@@ -1,7 +1,11 @@
 package com.ctrip.hermes.example.performance;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -14,6 +18,7 @@ import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.meta.server.MetaRestServer;
 import com.ctrip.hermes.producer.api.Producer;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -41,18 +46,18 @@ public class ProduceAndConsume extends ComponentTestCase {
 		totalSend.addAndGet(sendCount.get());
 		totalReceive.addAndGet(receiveCount.get());
 		System.out.println(String.format(
-				  "Throughput:Send:%8d items (QPS: %.2f msg/s), Receive: %8d items (QPS: %.2f msg/s) " + "in %d "
-							 + "second. " + "Total Send: %8d, Total Receive: %8d, Delta: %8d.", sendCount.get(), sendCount.get()
-							 / (float) secondInTimeInterval, receiveCount.get(),
-				  receiveCount.get() / (float) secondInTimeInterval, secondInTimeInterval, totalSend.get(),
-				  totalReceive.get(), Math.abs(totalSend.get() - totalReceive.get())));
+		      "Throughput:Send:%8d items (QPS: %.2f msg/s), Receive: %8d items (QPS: %.2f msg/s) " + "in %d "
+		            + "second. " + "Total Send: %8d, Total Receive: %8d, Delta: %8d.", sendCount.get(), sendCount.get()
+		            / (float) secondInTimeInterval, receiveCount.get(),
+		      receiveCount.get() / (float) secondInTimeInterval, secondInTimeInterval, totalSend.get(),
+		      totalReceive.get(), Math.abs(totalSend.get() - totalReceive.get())));
 
 		sendCount.set(0);
 		receiveCount.set(0);
 	}
 
 	// @Test
-	public void suddenDownTest() throws IOException, InterruptedException {
+	public void suddenDownTest() throws Exception {
 		startBroker();
 		System.in.read();
 	}
@@ -72,7 +77,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 	}
 
 	@Test
-	public void myTest() throws IOException, InterruptedException {
+	public void myTest() throws Exception {
 		startBroker();
 		startCountTimer();
 		startProduceThread();
@@ -81,11 +86,13 @@ public class ProduceAndConsume extends ComponentTestCase {
 		System.in.read();
 	}
 
-	private void startBroker() throws InterruptedException {
+	private void startBroker() throws Exception {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
+
 				try {
+					lookup(MetaRestServer.class).start();
 					lookup(BrokerBootstrap.class).start();
 				} catch (Exception e) {
 					System.out.println("Fail to start Broker: " + e.getMessage());
@@ -117,9 +124,9 @@ public class ProduceAndConsume extends ComponentTestCase {
 			public void run() {
 				Producer p = lookup(Producer.class);
 
-				for (; ; ) {
+				for (;;) {
 					SettableFuture<SendResult> future = (SettableFuture<SendResult>) p.message(TOPIC, null, sendCount.get())
-							  .send();
+					      .send();
 
 					Futures.addCallback(future, new FutureCallback<SendResult>() {
 						@Override
@@ -133,11 +140,11 @@ public class ProduceAndConsume extends ComponentTestCase {
 						}
 					});
 
-//					try {
-//						Thread.sleep(1);
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
+					// try {
+					// Thread.sleep(1);
+					// } catch (InterruptedException e) {
+					// e.printStackTrace();
+					// }
 				}
 			}
 		}).start();
@@ -165,11 +172,11 @@ public class ProduceAndConsume extends ComponentTestCase {
 	}
 
 	final static String stangeString = "{\"1\":{\"str\":\"429bb071-7d14-4da7-9ef1-a6f5b17911b5\"},"
-			  + "\"2\":{\"str\":\"ExchangeTest\"},\"3\":33333{\"i32\":8},\"4\":{\"str\":\"uft-8\"},"
-			  + "\"5\":{\"str\":\"cmessage-adapter 1.0\"},\"6\":{\"i32\":3},\"7\":{\"i32\":1},\"8\":{\"i32\":0},\"9\":{\"str\":\"order_new\"},\"10\":{\"str\":\"\"},\"11\":{\"str\":\"1\"},\"12\":{\"str\":\"DST56615\"},\"13\":{\"str\":\"555555\"},\"14\":{\"str\":\"169.254.142.159\"},\"15\":{\"str\":\"java.lang.String\"},\"16\":{\"i64\":1429168996889},\"17\":{\"map\":[\"str\",\"str\",0,{}]}}";
+	      + "\"2\":{\"str\":\"ExchangeTest\"},\"3\":33333{\"i32\":8},\"4\":{\"str\":\"uft-8\"},"
+	      + "\"5\":{\"str\":\"cmessage-adapter 1.0\"},\"6\":{\"i32\":3},\"7\":{\"i32\":1},\"8\":{\"i32\":0},\"9\":{\"str\":\"order_new\"},\"10\":{\"str\":\"\"},\"11\":{\"str\":\"1\"},\"12\":{\"str\":\"DST56615\"},\"13\":{\"str\":\"555555\"},\"14\":{\"str\":\"169.254.142.159\"},\"15\":{\"str\":\"java.lang.String\"},\"16\":{\"i64\":1429168996889},\"17\":{\"map\":[\"str\",\"str\",0,{}]}}";
 
-	//	@Test
-	public void integratedTest() throws IOException, InterruptedException {
+	// @Test
+	public void integratedTest() throws Exception {
 		startBroker();
 		startConsumeThreadStrange();
 

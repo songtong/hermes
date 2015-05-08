@@ -14,11 +14,11 @@
 			<implementation>com.ctrip.hermes.meta.service.TopicService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaManager</role>
+					<role>com.ctrip.hermes.meta.core.MetaManager</role>
 					<role-hint>meta-server</role-hint>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
+					<role>com.ctrip.hermes.meta.core.MetaService</role>
 					<role-hint>server-meta</role-hint>
 				</requirement>
 				<requirement>
@@ -37,11 +37,11 @@
 					<role>com.ctrip.hermes.meta.dal.meta.SchemaDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaManager</role>
+					<role>com.ctrip.hermes.meta.core.MetaManager</role>
 					<role-hint>meta-server</role-hint>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
+					<role>com.ctrip.hermes.meta.core.MetaService</role>
 					<role-hint>server-meta</role-hint>
 				</requirement>
 				<requirement>
@@ -54,7 +54,7 @@
 			<implementation>com.ctrip.hermes.meta.service.CodecService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
+					<role>com.ctrip.hermes.meta.core.MetaService</role>
 					<role-hint>server-meta</role-hint>
 				</requirement>
 			</requirements>
@@ -64,7 +64,7 @@
 			<implementation>com.ctrip.hermes.meta.service.CompileService</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.meta.MetaManager</role>
+			<role>com.ctrip.hermes.meta.core.MetaManager</role>
 			<role-hint>meta-server</role-hint>
 			<implementation>com.ctrip.hermes.meta.service.ServerMetaManager</implementation>
 			<requirements>
@@ -74,12 +74,12 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.meta.MetaService</role>
+			<role>com.ctrip.hermes.meta.core.MetaService</role>
 			<role-hint>server-meta</role-hint>
 			<implementation>com.ctrip.hermes.meta.service.ServerMetaService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaManager</role>
+					<role>com.ctrip.hermes.meta.core.MetaManager</role>
 					<role-hint>meta-server</role-hint>
 				</requirement>
 			</requirements>
