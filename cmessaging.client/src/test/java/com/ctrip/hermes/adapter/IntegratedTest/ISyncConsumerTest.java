@@ -37,7 +37,8 @@ public class ISyncConsumerTest {
 	@Before
 	public void initTopic() {
 		consumeOldMessage();
-		// todo: wait 10s to server background work (maybe create tables in mysql)
+		// todo: need wait a random long time for background work on old cmessage server
+		// (maybe create tables in mysql etc.)
 	}
 
 	private void consumeOldMessage() {
@@ -138,7 +139,6 @@ public class ISyncConsumerTest {
 		consumer1.setBatchSize(1);
 
 		message1 = consumer1.consumeOne();
-		// todo: dispose() here?
 		message1.dispose();
 
 		return message1;

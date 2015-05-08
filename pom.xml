@@ -274,6 +274,12 @@
 		   <id>ctrip_fx</id>
 		   <url>http://maven.dev.sh.ctripcorp.com:8081/nexus/service/local/repositories/fxrelease</url>
 	   </repository>
+	   <repository>
+		   <id>ctrip_fx_snapshot</id>
+		   <url>
+			   http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/fxsnapshot
+		   </url>
+	   </repository>
    </repositories>
    <pluginRepositories>
       <pluginRepository>

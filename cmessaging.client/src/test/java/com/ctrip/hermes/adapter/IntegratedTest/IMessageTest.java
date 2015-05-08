@@ -47,7 +47,6 @@ public class IMessageTest {
 		}
 		consumer1.setBatchSize(1);
 
-		// todo: wait 10s to server background work (maybe create tables in mysql)
 	}
 
 	private void consumeOldMessage() {
@@ -145,7 +144,6 @@ public class IMessageTest {
 	private IMessage syncConsume() throws IllegalTopic, IllegalExchangeName, ConsumeTimeoutException {
 		IMessage message1 = null;
 			message1 = consumer1.consumeOne();
-			// todo: dispose() here?
 			message1.dispose();
 
 		return message1;
