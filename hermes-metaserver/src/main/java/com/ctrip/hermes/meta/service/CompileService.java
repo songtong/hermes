@@ -63,7 +63,8 @@ public class CompileService {
 	 * @param jarFile
 	 * @throws IOException
 	 */
-	public void jar(final Path destDir, Path jarFile) throws IOException {
+	@SuppressWarnings("deprecation")
+   public void jar(final Path destDir, Path jarFile) throws IOException {
 		Manifest manifest = new Manifest();
 		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 		manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VENDOR, "com.ctrip");

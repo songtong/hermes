@@ -9,6 +9,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Lease {
 	private AtomicLong m_expireTime = new AtomicLong();
 
+	public Lease() {
+	}
+
 	public Lease(long expireTime) {
 		m_expireTime = new AtomicLong(expireTime);
 	}
