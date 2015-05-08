@@ -53,7 +53,8 @@ public class HermesRestServer {
 	}
 
 	public void init() {
-		Configuration.addResource("hermes-rest.properties");
+		Configuration.addResource("hermes-rest-default.properties");	// first load common & default properties
+		Configuration.addResource("hermes-rest.properties");  	      // then load env related properties
 
 		this.port = Configuration.getInt("server.port", 1357);
 
@@ -62,6 +63,10 @@ public class HermesRestServer {
 		LogConfig.setLoggingServerPort(Configuration.get("clog.collector.port", "63100"));
 
 		Cat.initializeByDomain("900777", 2280, 80, Configuration.get("cat.url", "cat.ctripcorp.com"));
+		logger.warn(String.format("STARTING INFO\nHermesRestPort--%d\nHermeRestAppid--%s\nCLogCollectorIp--%s" +
+							 "\nClogCollectorPort--%s\nCATURL--%s",
+							 port, LogConfig.getAppID(), LogConfig.getLoggingServerIP(), LogConfig.getLoggingServerPort(),
+							 Configuration.get("cat.url", "cat.ctripcorp.com")));
 	}
 
 	public static void main(String[] args) throws ServerException, InterruptedException {

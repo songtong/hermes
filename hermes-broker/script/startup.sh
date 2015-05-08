@@ -67,11 +67,8 @@ case "$1" in
 	stop)
 	    stop
 	    ;;
-	check_pid)
-	    check_pid
-	    ;;
     *)
-        echo "Usage: $0 {start|check_pid}"
+        echo "Usage: $0 {start|stop}"
    	    exit 1;
 	    ;;
 esac
