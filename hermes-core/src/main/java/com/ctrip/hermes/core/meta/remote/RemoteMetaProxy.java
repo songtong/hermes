@@ -1,7 +1,6 @@
 package com.ctrip.hermes.core.meta.remote;
 
 import java.util.List;
-import java.util.function.Function;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -22,6 +21,7 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.meta.MetaProxy;
+import com.google.common.base.Function;
 
 @Named(type = MetaProxy.class, value = RemoteMetaProxy.ID)
 public class RemoteMetaProxy implements MetaProxy, Initializable {

@@ -57,7 +57,7 @@ public class HermesConsumerPerf {
 		}
 
 		@Override
-		protected void consume(ConsumerMessage<byte[]> msg) {
+		protected void onMessage(ConsumerMessage<byte[]> msg) {
 			if (this.isRunning && messagesRead < config.numMessages) {
 				byte[] event = msg.getBody();
 				messagesRead += 1;

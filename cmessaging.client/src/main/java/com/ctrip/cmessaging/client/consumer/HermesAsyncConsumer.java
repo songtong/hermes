@@ -88,7 +88,7 @@ public class HermesAsyncConsumer implements IAsyncConsumer {
 
 	class InnerConsumer implements MessageListener<byte[]> {
 		@Override
-		public void consume(List<ConsumerMessage<byte[]>> msgs) {
+		public void onMessage(List<ConsumerMessage<byte[]>> msgs) {
 			try {
 //				System.out.println("received " + msgs.size() + " msgs.");
 				for (ConsumerMessage<byte[]> msg : msgs) {

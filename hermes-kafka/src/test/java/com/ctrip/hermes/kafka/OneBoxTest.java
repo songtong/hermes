@@ -29,7 +29,7 @@ public class OneBoxTest {
 		Subscriber s = new Subscriber(topic, group, new BaseMessageListener<String>(group) {
 
 			@Override
-			protected void consume(ConsumerMessage<String> msg) {
+			protected void onMessage(ConsumerMessage<String> msg) {
 				String body = msg.getBody();
 				System.out.println("Receive: " + body);
 			}

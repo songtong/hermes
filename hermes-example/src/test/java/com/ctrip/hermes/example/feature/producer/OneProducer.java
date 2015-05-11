@@ -53,7 +53,7 @@ public class OneProducer extends ComponentTestCase {
 		Engine engine = lookup(Engine.class);
 		Subscriber s = new Subscriber(TOPIC, "group1", new MessageListener<String>() {
 			@Override
-			public void consume(List<ConsumerMessage<String>> msgs) {
+			public void onMessage(List<ConsumerMessage<String>> msgs) {
 				assertEquals(msgs.size(), 1);
 				assertEquals(msgs.get(0).getBody(), msg);
 				latch.countDown();

@@ -39,7 +39,7 @@ public class KafkaAvroTest {
 		Subscriber s = new Subscriber(topic, group, new MessageListener<AvroVisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<AvroVisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<AvroVisitEvent>> msgs) {
 				for (ConsumerMessage<AvroVisitEvent> msg : msgs) {
 					AvroVisitEvent event = msg.getBody();
 					System.out.println("Consumer Received: " + event);
@@ -87,7 +87,7 @@ public class KafkaAvroTest {
 		Subscriber s = new Subscriber(topic, group, new MessageListener<AvroVisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<AvroVisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<AvroVisitEvent>> msgs) {
 				for (ConsumerMessage<AvroVisitEvent> msg : msgs) {
 					AvroVisitEvent event = msg.getBody();
 					System.out.println("Consumer Received: " + event);

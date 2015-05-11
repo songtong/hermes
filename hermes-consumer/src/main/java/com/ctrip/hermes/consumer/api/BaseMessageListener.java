@@ -22,7 +22,7 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 	}
 
 	@Override
-	public void consume(List<ConsumerMessage<T>> msgs) {
+	public void onMessage(List<ConsumerMessage<T>> msgs) {
 		if (msgs != null && !msgs.isEmpty()) {
 			String topic = msgs.get(0).getTopic();
 
@@ -48,7 +48,7 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 					// TODO
 					t.addData("appId", "demo-app");
 
-					consume(msg);
+					onMessage(msg);
 					// by design, if nacked, no effect
 					msg.ack();
 
@@ -68,6 +68,6 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 		}
 	}
 
-	protected abstract void consume(ConsumerMessage<T> msg);
+	protected abstract void onMessage(ConsumerMessage<T> msg);
 
 }
