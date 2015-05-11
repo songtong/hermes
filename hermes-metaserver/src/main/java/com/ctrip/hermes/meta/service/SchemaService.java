@@ -4,6 +4,7 @@ import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,7 +12,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.avro.Protocol;
 import org.apache.avro.Schema.Parser;
+import org.apache.avro.compiler.idl.ParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.unidal.dal.jdbc.DalException;
@@ -80,6 +83,43 @@ public class SchemaService {
 		m_compileService.compile(destDir);
 		Path jarFile = Files.createTempFile(metaSchema.getName(), ".jar");
 		m_compileService.jar(destDir, jarFile);
+
+		byte[] jarContent = Files.readAllBytes(jarFile);
+		metaSchema.setJarContent(jarContent);
+		FormDataContentDisposition disposition = FormDataContentDisposition.name(metaSchema.getName())
+		      .creationDate(new Date(System.currentTimeMillis()))
+		      .fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar").size(jarFile.toFile().length())
+		      .build();
+		metaSchema.setJarProperties(disposition.toString());
+		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
+		Files.delete(jarFile);
+		m_compileService.delete(destDir);
+	}
+
+	/**
+	 * 
+	 * @param metaSchema
+	 * @param Idl
+	 * @throws ParseException
+	 * @throws IOException
+	 * @throws DalException
+	 */
+	public void compileAvro(Schema metaSchema, org.apache.avro.compiler.idl.Idl idl) throws ParseException, IOException,
+	      DalException {
+		final Path destDir = Files.createTempDirectory("avroschema");
+		Protocol compilationUnit = idl.CompilationUnit();
+		for (org.apache.avro.Schema schema : compilationUnit.getTypes()) {
+			SpecificCompiler compiler = new SpecificCompiler(schema);
+			compiler.compileToDestination(null, destDir.toFile());
+		}
+		idl.close();
+		Path jarFile = Files.createTempFile(metaSchema.getName(), ".jar");
+		for (org.apache.avro.Schema schema : compilationUnit.getTypes()) {
+			Path compileDir = new File(destDir + schema.getNamespace().replace('.', '/')).toPath();
+			m_compileService.compile(compileDir);
+			m_compileService.jar(destDir, jarFile);
+			System.out.println(jarFile);
+		}
 
 		byte[] jarContent = Files.readAllBytes(jarFile);
 		metaSchema.setJarContent(jarContent);
@@ -280,12 +320,14 @@ public class SchemaService {
 			metaSchema.setSchemaContent(schemaContent);
 			metaSchema.setSchemaProperties(schemaHeader.toString());
 
-			Parser parser = new Parser();
-			org.apache.avro.Schema avroSchema = parser.parse(new String(schemaContent));
-			int avroid = getAvroSchemaRegistry().register(metaSchema.getName(), avroSchema);
-			metaSchema.setAvroid(avroid);
+			if (schemaHeader.getName().endsWith("avsc")) {
+				Parser parser = new Parser();
+				org.apache.avro.Schema avroSchema = parser.parse(new String(schemaContent));
+				int avroid = getAvroSchemaRegistry().register(metaSchema.getName(), avroSchema);
+				metaSchema.setAvroid(avroid);
 
-			compileAvro(metaSchema, avroSchema);
+				compileAvro(metaSchema, avroSchema);
+			}
 			isUpdated = true;
 		}
 		if (jarContent != null) {

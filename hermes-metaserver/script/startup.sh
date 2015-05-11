@@ -13,7 +13,7 @@ ENV_FILE="./env.sh"
 LOG_PATH="/opt/logs/hermes/"
 LOG_FILE="sysout-metaserver.log"
 
-SERVER_DRIVER=com.ctrip.hermes.metaserver.MetaRestServer
+SERVER_DRIVER=com.ctrip.hermes.meta.server.MetaRestServer
 
 SERVER_HOME=..
 
@@ -36,7 +36,7 @@ start() {
 }
 
 stop(){
-    serverPID=`jps -lvm | grep com.ctrip.hermes.metaserver.MetaRestServer | awk '{print $1}'`
+    serverPID=`jps -lvm | grep com.ctrip.hermes.meta.server.MetaRestServer | awk '{print $1}'`
     if [ "${serverPID}" == "" ]; then
         echo "no MetaServer is running"
     else
@@ -47,7 +47,7 @@ stop(){
 
 
 ensure_not_started() {
-	serverPID=`jps -lvm | grep com.ctrip.hermes.metaserver.MetaRestServer | awk '{print $1}'`
+	serverPID=`jps -lvm | grep com.ctrip.hermes.meta.server.MetaRestServer | awk '{print $1}'`
     if [ "${serverPID}" != "" ]; then
         echo "MetaServer is already running"
         exit 1
