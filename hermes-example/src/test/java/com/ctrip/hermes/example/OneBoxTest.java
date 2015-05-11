@@ -62,7 +62,7 @@ public class OneBoxTest extends ComponentTestCase {
 		Subscriber s = new Subscriber("order_new", groupId, new BaseMessageListener<Long>(groupId) {
 
 			@Override
-			protected void consume(ConsumerMessage<Long> msg) {
+			protected void onMessage(ConsumerMessage<Long> msg) {
 				counter.incrementAndGet();
 				// System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>Received: " + msg.getBody());
 			}
@@ -234,7 +234,7 @@ public class OneBoxTest extends ComponentTestCase {
 		}
 
 		@Override
-		public void consume(ConsumerMessage<String> msg) {
+		public void onMessage(ConsumerMessage<String> msg) {
 			String body = msg.getBody();
 			System.out.println(m_id + "<<< " + body);
 

@@ -30,7 +30,7 @@ public class ConsumerTest {
 		Subscriber s = new Subscriber(topic, group, new BaseMessageListener<VisitEvent>(group) {
 
 			@Override
-			protected void consume(ConsumerMessage<VisitEvent> msg) {
+			protected void onMessage(ConsumerMessage<VisitEvent> msg) {
 				VisitEvent event = msg.getBody();
 				System.out.println("Receive: " + event);
 			}
@@ -67,7 +67,7 @@ public class ConsumerTest {
 		Subscriber s1 = new Subscriber(topic, group, new MessageListener<VisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
 				for (ConsumerMessage<VisitEvent> msg : msgs) {
 					VisitEvent event = msg.getBody();
 					System.out.println("Consumer1 Receive: " + event);
@@ -81,7 +81,7 @@ public class ConsumerTest {
 		Subscriber s2 = new Subscriber(topic, group, new MessageListener<VisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
 				for (ConsumerMessage<VisitEvent> msg : msgs) {
 					VisitEvent event = msg.getBody();
 					System.out.println("Consumer2 Receive: " + event);
@@ -120,7 +120,7 @@ public class ConsumerTest {
 		Subscriber s1 = new Subscriber(topic, group1, new MessageListener<VisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
 				for (ConsumerMessage<VisitEvent> msg : msgs) {
 					VisitEvent event = msg.getBody();
 					System.out.println("Consumer1 Receive: " + event);
@@ -134,7 +134,7 @@ public class ConsumerTest {
 		Subscriber s2 = new Subscriber(topic, group2, new MessageListener<VisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
 				for (ConsumerMessage<VisitEvent> msg : msgs) {
 					VisitEvent event = msg.getBody();
 					System.out.println("Consumer2 Receive: " + event);

@@ -158,7 +158,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 
 				Subscriber s = new Subscriber(TOPIC, "group1", new MessageListener<String>() {
 					@Override
-					public void consume(List<ConsumerMessage<String>> msgs) {
+					public void onMessage(List<ConsumerMessage<String>> msgs) {
 						receiveCount.addAndGet(msgs.size());
 						for (ConsumerMessage<?> msg : msgs) {
 							msg.ack();
@@ -196,7 +196,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 
 				Subscriber s = new Subscriber(topic, "group1", new MessageListener<String>() {
 					@Override
-					public void consume(List<ConsumerMessage<String>> msgs) {
+					public void onMessage(List<ConsumerMessage<String>> msgs) {
 						for (ConsumerMessage<String> msg : msgs) {
 							Iterator<String> it = msg.getPropertyNames();
 							System.out.println("msg: " + msg.getBody());

@@ -13,7 +13,7 @@ public class ConsumerTest {
 		Consumer.getInstance().start("order_new", "group1", new BaseMessageListener<String>("group1") {
 
 			@Override
-			protected void consume(ConsumerMessage<String> msg) {
+			protected void onMessage(ConsumerMessage<String> msg) {
 				System.out.println(msg.getBody());
 			}
 		});

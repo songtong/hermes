@@ -32,7 +32,7 @@ public class WildcardTopicsTest {
 		Subscriber s = new Subscriber(topicPattern, group, new MessageListener<VisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
 				for (ConsumerMessage<VisitEvent> msg : msgs) {
 					VisitEvent event = msg.getBody();
 					System.out.println(String.format("Receive from %s: %s", msg.getTopic(), event));

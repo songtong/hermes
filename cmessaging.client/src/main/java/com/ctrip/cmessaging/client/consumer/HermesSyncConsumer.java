@@ -82,7 +82,7 @@ public class HermesSyncConsumer implements ISyncConsumer {
 
 	class InnerConsumer implements MessageListener<byte[]> {
 		@Override
-		public void consume(List<ConsumerMessage<byte[]>> msgs) {
+		public void onMessage(List<ConsumerMessage<byte[]>> msgs) {
 			msgQueue.addAll(msgs);
 		}
 	}
