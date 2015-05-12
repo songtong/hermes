@@ -10,12 +10,14 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.codehaus.plexus.logging.LogEnabled;
+import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.annotation.Named;
 
 @Named(type = ClientEnvironment.class)
-public class DefaultClientEnvironment implements ClientEnvironment, Initializable {
+public class DefaultClientEnvironment implements ClientEnvironment, Initializable, LogEnabled {
 	private final static String PRODUCER_DEFAULT_FILE = "/hermes-producer.properties";
 
 	private final static String PRODUCER_PATTERN = "/hermes-producer-%s.properties";
@@ -35,6 +37,8 @@ public class DefaultClientEnvironment implements ClientEnvironment, Initializabl
 	private Properties m_consumerDefault;
 
 	private Properties m_globalDefault;
+
+	private Logger logger;
 
 	@Override
 	public Properties getProducerConfig(String topic) throws IOException {
@@ -69,13 +73,19 @@ public class DefaultClientEnvironment implements ClientEnvironment, Initializabl
 
 	private Properties readConfigFile(String configPath, Properties defaults) throws IOException {
 		InputStream in = this.getClass().getResourceAsStream(configPath);
+		logger.info("Reading config from resource: " + configPath);
 		if (in == null) {
 			// load outside resource under current user path
 			Path path = new File(System.getProperty("user.dir") + configPath).toPath();
-			if (Files.isReadable(path))
+			if (Files.isReadable(path)) {
 				in = new FileInputStream(path.toFile());
+				logger.info("Reading config from file: " + path);
+			}
 		}
-		Properties props = new Properties(defaults);
+		Properties props = new Properties();
+		if (defaults != null) {
+			props.putAll(defaults);
+		}
 
 		if (in != null) {
 			props.load(in);
@@ -93,6 +103,11 @@ public class DefaultClientEnvironment implements ClientEnvironment, Initializabl
 		} catch (IOException e) {
 			throw new InitializationException("Error read producer default config file", e);
 		}
+	}
+
+	@Override
+	public void enableLogging(Logger logger) {
+		this.logger = logger;
 	}
 
 }

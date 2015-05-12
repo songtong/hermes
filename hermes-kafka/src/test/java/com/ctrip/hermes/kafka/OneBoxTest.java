@@ -3,14 +3,13 @@ package com.ctrip.hermes.kafka;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
-import com.ctrip.hermes.consumer.engine.Engine;
-import com.ctrip.hermes.consumer.engine.Subscriber;
+import com.ctrip.hermes.consumer.api.Consumer;
+import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
@@ -24,9 +23,7 @@ public class OneBoxTest {
 
 		Producer producer = Producer.getInstance();
 
-		Engine engine = Engine.getInstance();
-
-		Subscriber s = new Subscriber(topic, group, new BaseMessageListener<String>(group) {
+		ConsumerHolder consumer = Consumer.getInstance().start(topic, group, new BaseMessageListener<String>(group) {
 
 			@Override
 			protected void onMessage(ConsumerMessage<String> msg) {
@@ -36,7 +33,6 @@ public class OneBoxTest {
 		});
 
 		System.out.println("Starting consumer...");
-		engine.start(Arrays.asList(s));
 
 		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
 			while (true) {
@@ -51,5 +47,7 @@ public class OneBoxTest {
 				System.out.println("Sent: " + proMsg);
 			}
 		}
+
+		consumer.close();
 	}
 }

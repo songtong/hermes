@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -14,9 +13,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.ctrip.hermes.consumer.api.Consumer;
+import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.consumer.api.MessageListener;
-import com.ctrip.hermes.consumer.engine.Engine;
-import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.producer.api.Producer;
@@ -31,12 +30,10 @@ public class KafkaAvroTest {
 
 		Producer producer = Producer.getInstance();
 
-		Engine engine = Engine.getInstance();
-
 		final List<AvroVisitEvent> actualResult = new ArrayList<>();
 		final List<AvroVisitEvent> expectedResult = new ArrayList<>();
 
-		Subscriber s = new Subscriber(topic, group, new MessageListener<AvroVisitEvent>() {
+		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group, new MessageListener<AvroVisitEvent>() {
 
 			@Override
 			public void onMessage(List<ConsumerMessage<AvroVisitEvent>> msgs) {
@@ -49,7 +46,6 @@ public class KafkaAvroTest {
 		});
 
 		System.out.println("Starting consumer...");
-		engine.start(Arrays.asList(s));
 
 		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
 			while (true) {
@@ -68,7 +64,7 @@ public class KafkaAvroTest {
 				}
 			}
 		}
-
+		consumerHolder.close();
 		Assert.assertEquals(expectedResult.size(), actualResult.size());
 	}
 
@@ -79,12 +75,10 @@ public class KafkaAvroTest {
 
 		Producer producer = Producer.getInstance();
 
-		Engine engine = Engine.getInstance();
-
 		final List<AvroVisitEvent> actualResult = new ArrayList<>();
 		final List<AvroVisitEvent> expectedResult = new ArrayList<>();
 
-		Subscriber s = new Subscriber(topic, group, new MessageListener<AvroVisitEvent>() {
+		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group, new MessageListener<AvroVisitEvent>() {
 
 			@Override
 			public void onMessage(List<ConsumerMessage<AvroVisitEvent>> msgs) {
@@ -97,7 +91,6 @@ public class KafkaAvroTest {
 		});
 
 		System.out.println("Starting consumer...");
-		engine.start(Arrays.asList(s));
 
 		int limit = new Random().nextInt(20) + 1;
 		int i = 0;
@@ -113,6 +106,7 @@ public class KafkaAvroTest {
 		}
 
 		Assert.assertEquals(expectedResult.size(), actualResult.size());
+		consumerHolder.close();
 	}
 
 	static AtomicLong counter = new AtomicLong();
