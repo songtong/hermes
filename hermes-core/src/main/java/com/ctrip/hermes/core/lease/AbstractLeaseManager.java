@@ -25,7 +25,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initializable {
+public abstract class AbstractLeaseManager<T extends SessionIdAware> implements LeaseManager<T>, Initializable {
 
 	protected ConcurrentMap<T, LeaseAcquisitionContext> m_pendings = new ConcurrentHashMap<>();
 
@@ -61,9 +61,8 @@ public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initia
 	      }));
 
 	@Override
-	public void registerAcquisition(T key, String sessionId, LeaseAcquisitionListener listener) {
-		m_pendings.putIfAbsent(key, new LeaseAcquisitionContext(listener, new AtomicLong(System.currentTimeMillis()),
-		      sessionId));
+	public void registerAcquisition(T key, LeaseAcquisitionListener listener) {
+		m_pendings.putIfAbsent(key, new LeaseAcquisitionContext(listener, new AtomicLong(System.currentTimeMillis())));
 	}
 
 	@Override
@@ -94,9 +93,9 @@ public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initia
 		return 1000L * 3;
 	}
 
-	protected abstract LeaseAcquireResponse tryAcquireLease(T key, String sessionId);
+	protected abstract LeaseAcquireResponse tryAcquireLease(T key);
 
-	protected abstract LeaseAcquireResponse tryRenewLease(T key, Lease lease, String sessionId);
+	protected abstract LeaseAcquireResponse tryRenewLease(T key, Lease lease);
 
 	private void tryAcquireNewLeases() {
 		final Phaser phaser = new Phaser(1);
@@ -131,7 +130,7 @@ public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initia
 
 			      @Override
 			      public LeaseAcquireResponse call() throws Exception {
-				      return tryAcquireLease(key, context.getSessionId());
+				      return tryAcquireLease(key);
 			      }
 		      });
 
@@ -204,7 +203,7 @@ public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initia
 
 			      @Override
 			      public LeaseAcquireResponse call() throws Exception {
-				      return tryRenewLease(key, lease, context.getSessionId());
+				      return tryRenewLease(key, lease);
 			      }
 		      });
 
@@ -257,12 +256,9 @@ public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initia
 
 		private AtomicLong m_nextAcquireTime;
 
-		private String m_sessionId;
-
-		public LeaseAcquisitionContext(LeaseAcquisitionListener listener, AtomicLong nextAcquireTime, String sessionId) {
+		public LeaseAcquisitionContext(LeaseAcquisitionListener listener, AtomicLong nextAcquireTime) {
 			m_listener = listener;
 			m_nextAcquireTime = nextAcquireTime;
-			m_sessionId = sessionId;
 		}
 
 		public LeaseAcquisitionListener getListener() {
@@ -273,8 +269,5 @@ public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initia
 			return m_nextAcquireTime;
 		}
 
-		public String getSessionId() {
-			return m_sessionId;
-		}
 	}
 }
