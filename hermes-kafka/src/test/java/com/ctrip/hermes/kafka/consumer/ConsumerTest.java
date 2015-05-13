@@ -9,6 +9,8 @@ import java.util.List;
 import org.junit.Test;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
+import com.ctrip.hermes.consumer.api.Consumer;
+import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
@@ -25,19 +27,17 @@ public class ConsumerTest {
 
 		Producer producer = Producer.getInstance();
 
-		Engine engine = Engine.getInstance();
+		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group,
+		      new BaseMessageListener<VisitEvent>(group) {
 
-		Subscriber s = new Subscriber(topic, group, new BaseMessageListener<VisitEvent>(group) {
-
-			@Override
-			protected void consume(ConsumerMessage<VisitEvent> msg) {
-				VisitEvent event = msg.getBody();
-				System.out.println("Receive: " + event);
-			}
-		});
+			      @Override
+			      protected void onMessage(ConsumerMessage<VisitEvent> msg) {
+				      VisitEvent event = msg.getBody();
+				      System.out.println("Receive: " + event);
+			      }
+		      });
 
 		System.out.println("Starting consumer...");
-		engine.start(Arrays.asList(s));
 
 		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
 			while (true) {
@@ -53,6 +53,7 @@ public class ConsumerTest {
 			}
 		}
 
+		consumerHolder.close();
 	}
 
 	@Test
@@ -67,7 +68,7 @@ public class ConsumerTest {
 		Subscriber s1 = new Subscriber(topic, group, new MessageListener<VisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
 				for (ConsumerMessage<VisitEvent> msg : msgs) {
 					VisitEvent event = msg.getBody();
 					System.out.println("Consumer1 Receive: " + event);
@@ -81,7 +82,7 @@ public class ConsumerTest {
 		Subscriber s2 = new Subscriber(topic, group, new MessageListener<VisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
 				for (ConsumerMessage<VisitEvent> msg : msgs) {
 					VisitEvent event = msg.getBody();
 					System.out.println("Consumer2 Receive: " + event);
@@ -120,7 +121,7 @@ public class ConsumerTest {
 		Subscriber s1 = new Subscriber(topic, group1, new MessageListener<VisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
 				for (ConsumerMessage<VisitEvent> msg : msgs) {
 					VisitEvent event = msg.getBody();
 					System.out.println("Consumer1 Receive: " + event);
@@ -134,7 +135,7 @@ public class ConsumerTest {
 		Subscriber s2 = new Subscriber(topic, group2, new MessageListener<VisitEvent>() {
 
 			@Override
-			public void consume(List<ConsumerMessage<VisitEvent>> msgs) {
+			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
 				for (ConsumerMessage<VisitEvent> msg : msgs) {
 					VisitEvent event = msg.getBody();
 					System.out.println("Consumer2 Receive: " + event);

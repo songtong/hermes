@@ -25,7 +25,7 @@ public class DefaultConsumerPipelineSink implements PipelineSink<Void> {
 
 		MessageListener consumer = pair.getKey().getConsumer();
 		List<ConsumerMessage<?>> msgs = pair.getValue();
-		consumer.consume(msgs);
+		consumer.onMessage(msgs);
 
 		return null;
 	}

@@ -25,6 +25,7 @@ import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.meta.server.MetaRestServer;
 import com.ctrip.hermes.producer.api.Producer;
 import com.dianping.cat.Cat;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -61,7 +62,7 @@ public class OneBoxTest extends ComponentTestCase {
 		Subscriber s = new Subscriber("order_new", groupId, new BaseMessageListener<Long>(groupId) {
 
 			@Override
-			protected void consume(ConsumerMessage<Long> msg) {
+			protected void onMessage(ConsumerMessage<Long> msg) {
 				counter.incrementAndGet();
 				// System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>Received: " + msg.getBody());
 			}
@@ -233,7 +234,7 @@ public class OneBoxTest extends ComponentTestCase {
 		}
 
 		@Override
-		public void consume(ConsumerMessage<String> msg) {
+		public void onMessage(ConsumerMessage<String> msg) {
 			String body = msg.getBody();
 			System.out.println(m_id + "<<< " + body);
 
@@ -262,6 +263,8 @@ public class OneBoxTest extends ComponentTestCase {
 	}
 
 	private void startBroker() throws Exception {
+		lookup(MetaRestServer.class).start();
+		
 		new Thread() {
 			public void run() {
 

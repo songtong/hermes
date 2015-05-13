@@ -14,6 +14,7 @@ import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.meta.server.MetaRestServer;
 import com.ctrip.hermes.producer.api.Producer;
 
 /**
@@ -43,7 +44,7 @@ public class ConsumerPullBroker extends ComponentTestCase {
 		final long startTime = System.currentTimeMillis();
 		Subscriber s = new Subscriber(topic, "group1", new MessageListener<String>() {
 			@Override
-			public void consume(List<ConsumerMessage<String>> msgs) {
+			public void onMessage(List<ConsumerMessage<String>> msgs) {
 				receiveCount.addAndGet(msgs.size());
 //				System.out.println("receiveCount: " + receiveCount);
 				if (receiveCount.get() >= MESSAGE_COUNT) {
@@ -72,6 +73,8 @@ public class ConsumerPullBroker extends ComponentTestCase {
 	}
 
 	private void startBroker() throws Exception {
+		lookup(MetaRestServer.class).start();
+		
 		new Thread() {
 			public void run() {
 

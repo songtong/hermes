@@ -74,7 +74,7 @@ public abstract class AbstractLeaseManager<T> implements LeaseManager<T>, Initia
 					tryRenewExistingAndRemoveExpiredLeases();
 
 					try {
-						Thread.sleep(5);
+						Thread.sleep(500);
 					} catch (InterruptedException e) {
 						// TODO
 						Thread.currentThread().interrupt();

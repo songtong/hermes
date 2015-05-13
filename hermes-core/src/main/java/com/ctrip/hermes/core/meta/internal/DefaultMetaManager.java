@@ -8,12 +8,12 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.meta.MetaManager;
+import com.ctrip.hermes.core.meta.MetaProxy;
+import com.ctrip.hermes.core.meta.remote.RemoteMetaProxy;
 import com.ctrip.hermes.meta.entity.Meta;
 
-@Named(type = MetaManager.class, value = ClientMetaManager.ID)
-public class ClientMetaManager extends ContainerHolder implements MetaManager {
-
-	public static final String ID = "meta-client";
+@Named(type = MetaManager.class)
+public class DefaultMetaManager extends ContainerHolder implements MetaManager {
 
 	@Inject(LocalMetaLoader.ID)
 	private MetaLoader m_localMeta;
@@ -24,18 +24,28 @@ public class ClientMetaManager extends ContainerHolder implements MetaManager {
 	@Inject
 	private ClientEnvironment m_env;
 
+	@Inject(LocalMetaProxy.ID)
+	private MetaProxy m_localMetaProxy;
+
+	@Inject(RemoteMetaProxy.ID)
+	private MetaProxy m_remoteMetaProxy;
+
 	@Override
-	public Meta getMeta(boolean isForceLatest) {
+	public MetaProxy getMetaProxy() {
+		if (isLocalMode()) {
+			return m_localMetaProxy;
+		} else {
+			return m_remoteMetaProxy;
+		}
+	}
+	
+	@Override
+	public Meta getMeta() {
 		if (isLocalMode()) {
 			return m_localMeta.load();
 		} else {
 			return m_remoteMeta.load();
 		}
-	}
-
-	@Override
-	public Meta getMeta() {
-		return getMeta(false);
 	}
 
 	private boolean isLocalMode() {
@@ -51,15 +61,6 @@ public class ClientMetaManager extends ContainerHolder implements MetaManager {
 			}
 		// FIXME for dev only
 		return true;
-	}
-
-	@Override
-	public boolean updateMeta(Meta meta) {
-		if (isLocalMode()) {
-			return m_localMeta.save(meta);
-		} else {
-			return m_remoteMeta.save(meta);
-		}
 	}
 
 }

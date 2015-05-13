@@ -50,10 +50,15 @@ public class CompileService {
 		StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
 		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 		Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(files);
-		compiler.getTask(null, fileManager, diagnostics, null, null, compilationUnits).call();
+		List<String> options = new ArrayList<String>();
+		options.add("-source");
+		options.add("1.7");
+		options.add("-target");
+		options.add("1.7");
+		compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits).call();
 		for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
 			System.out.format("%s on line %d in %s: %s%n", diagnostic.getKind().toString(), diagnostic.getLineNumber(),
-			      diagnostic.getSource().toUri(), diagnostic.getMessage(null));
+			      diagnostic.getSource() != null ? diagnostic.getSource().toUri() : "", diagnostic.getMessage(null));
 		fileManager.close();
 	}
 
@@ -63,7 +68,7 @@ public class CompileService {
 	 * @param jarFile
 	 * @throws IOException
 	 */
-	public void jar(final Path destDir, Path jarFile) throws IOException {
+   public void jar(final Path destDir, Path jarFile) throws IOException {
 		Manifest manifest = new Manifest();
 		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 		manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VENDOR, "com.ctrip");

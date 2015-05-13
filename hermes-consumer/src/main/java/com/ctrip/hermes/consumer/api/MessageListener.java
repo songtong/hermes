@@ -6,6 +6,6 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 
 public interface MessageListener<T> {
 
-	public void consume(List<ConsumerMessage<T>> msgs);
+	public void onMessage(List<ConsumerMessage<T>> msgs);
 
 }

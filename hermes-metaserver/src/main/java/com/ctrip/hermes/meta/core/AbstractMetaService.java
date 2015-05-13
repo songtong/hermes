@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.meta.internal;
+package com.ctrip.hermes.meta.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,7 +11,6 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
-import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;

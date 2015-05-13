@@ -25,7 +25,7 @@ public class ConsumerTest {
 	public static class MockConsumer implements MessageListener<Object> {
 
 		@Override
-		public void consume(List<ConsumerMessage<Object>> msgs) {
+		public void onMessage(List<ConsumerMessage<Object>> msgs) {
 		}
 
 	}

@@ -51,7 +51,7 @@ public class StartConsumer extends ComponentTestCase {
 		}
 
 		@Override
-		public void consume(List<ConsumerMessage<String>> msgs) {
+		public void onMessage(List<ConsumerMessage<String>> msgs) {
 			for (ConsumerMessage<String> msg : msgs) {
 				String body = msg.getBody();
 				System.out.println(m_id + "<<< " + body);

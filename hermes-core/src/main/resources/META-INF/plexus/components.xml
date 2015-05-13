@@ -26,8 +26,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.meta.MetaManager</role>
-			<role-hint>meta-client</role-hint>
-			<implementation>com.ctrip.hermes.core.meta.internal.ClientMetaManager</implementation>
+			<implementation>com.ctrip.hermes.core.meta.internal.DefaultMetaManager</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.internal.MetaLoader</role>
@@ -42,6 +41,16 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaProxy</role>
+					<role-hint>local</role-hint>
+					<field-name>m_localMetaProxy</field-name>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaProxy</role>
+					<role-hint>remote</role-hint>
+					<field-name>m_remoteMetaProxy</field-name>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -50,9 +59,27 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaManager</role>
-					<role-hint>meta-client</role-hint>
 				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.meta.MetaProxy</role>
+			<role-hint>local</role-hint>
+			<implementation>com.ctrip.hermes.core.meta.internal.LocalMetaProxy</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.meta.MetaProxy</role>
+			<role-hint>remote</role-hint>
+			<implementation>com.ctrip.hermes.core.meta.remote.RemoteMetaProxy</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.remote.MetaServerLocator</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.meta.remote.MetaServerLocator</role>
+			<implementation>com.ctrip.hermes.core.meta.remote.DefaultMetaServerLocator</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
