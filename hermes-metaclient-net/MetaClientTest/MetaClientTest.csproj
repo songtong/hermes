@@ -84,12 +84,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MetaClient.csproj">
-      <Project>{88838E92-1427-4F60-A82A-0C2E1F070775}</Project>
-      <Name>MetaClient</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
