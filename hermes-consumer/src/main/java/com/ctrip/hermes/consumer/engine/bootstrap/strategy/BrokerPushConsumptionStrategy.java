@@ -7,6 +7,7 @@ import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
+import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -26,7 +27,7 @@ import com.ctrip.hermes.meta.entity.Endpoint;
  */
 public class BrokerPushConsumptionStrategy implements BrokerConsumptionStrategy {
 	@Inject
-	private LeaseManager<Tpg> m_leaseManager;
+	private LeaseManager<ConsumerLeaseKey> m_leaseManager;
 
 	@Inject
 	private ConsumerNotifier m_consumerNotifier;
@@ -39,8 +40,11 @@ public class BrokerPushConsumptionStrategy implements BrokerConsumptionStrategy 
 
 	@Override
 	public SubscribeHandle start(ConsumerContext context, int partitionId) {
-		m_leaseManager.registerAcquisition(new Tpg(context.getTopic().getName(), partitionId, context.getGroupId()),
-		      context.getSessionId(), new ConsumerAutoReconnectListener(context, partitionId));
+		m_leaseManager.registerAcquisition(//
+		      new ConsumerLeaseKey(new Tpg(context.getTopic().getName(), partitionId, context.getGroupId()), context
+		            .getSessionId()),//
+		      new ConsumerAutoReconnectListener(context, partitionId)//
+		      );
 
 		// TODO
 		return null;
