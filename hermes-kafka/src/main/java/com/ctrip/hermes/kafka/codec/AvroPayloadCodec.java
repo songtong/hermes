@@ -1,13 +1,10 @@
 package com.ctrip.hermes.kafka.codec;
 
-import io.confluent.kafka.serializers.KafkaAvroDecoder;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-
-import kafka.utils.VerifiableProperties;
 
 import org.unidal.lookup.annotation.Named;
 
@@ -18,12 +15,12 @@ public class AvroPayloadCodec implements PayloadCodec {
 
 	private KafkaAvroSerializer avroSerializer;
 
-	private KafkaAvroDecoder avroDeserializer;
+	private KafkaAvroDeserializer avroDeserializer;
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T decode(byte[] raw, Class<T> clazz) {
-		return (T) avroDeserializer.fromBytes(raw);
+		return (T) avroDeserializer.deserialize(null, raw);
 	}
 
 	@Override
@@ -32,18 +29,15 @@ public class AvroPayloadCodec implements PayloadCodec {
 	}
 
 	@Override
-	public void configure(Map<String, ?> configs) {
+	public void configure(Map<String, String> configs) {
 		if (avroSerializer == null) {
 			avroSerializer = new KafkaAvroSerializer();
 			avroSerializer.configure(configs, false);
 		}
 		if (avroDeserializer == null) {
-			Properties prop = new Properties();
-			for (Entry<String, ?> entry : configs.entrySet()) {
-				prop.setProperty(entry.getKey(), entry.getValue().toString());
-			}
-			prop.setProperty("specific.avro.reader", Boolean.TRUE.toString());
-			avroDeserializer = new KafkaAvroDecoder(new VerifiableProperties(prop));
+			avroDeserializer = new KafkaAvroDeserializer();
+			configs.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, Boolean.TRUE.toString());
+			avroDeserializer.configure(configs, false);
 		}
 	}
 
