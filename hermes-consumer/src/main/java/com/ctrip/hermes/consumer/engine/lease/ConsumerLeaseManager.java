@@ -6,6 +6,7 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.AbstractLeaseManager;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.meta.MetaService;
 
@@ -19,13 +20,13 @@ public class ConsumerLeaseManager extends AbstractLeaseManager<Tpg> {
 	private MetaService m_metaService;
 
 	@Override
-	protected Lease tryAcquireLease(Tpg tpg) {
-		return m_metaService.tryAcquireConsumerLease(tpg);
+	protected LeaseAcquireResponse tryAcquireLease(Tpg tpg, String sessionId) {
+		return m_metaService.tryAcquireConsumerLease(tpg, sessionId);
 	}
 
 	@Override
-	protected boolean tryRenewLease(Tpg tpg, Lease lease) {
-		return m_metaService.tryRenewLease(tpg, lease);
+	protected LeaseAcquireResponse tryRenewLease(Tpg tpg, Lease lease, String sessionId) {
+		return m_metaService.tryRenewConsumerLease(tpg, lease, sessionId);
 	}
 
 }

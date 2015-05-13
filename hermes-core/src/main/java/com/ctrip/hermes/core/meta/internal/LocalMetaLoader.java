@@ -6,6 +6,7 @@ import java.io.InputStream;
 import org.unidal.lookup.annotation.Named;
 import org.xml.sax.SAXException;
 
+import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 
@@ -32,4 +33,8 @@ public class LocalMetaLoader implements MetaLoader {
 		}
 	}
 
+	public static void main(String[] args) {
+		LocalMetaLoader loader = new LocalMetaLoader();
+		System.out.println(JSON.toJSONString(loader.load()));
+	}
 }

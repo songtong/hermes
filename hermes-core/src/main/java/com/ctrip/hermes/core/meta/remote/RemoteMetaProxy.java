@@ -1,6 +1,8 @@
 package com.ctrip.hermes.core.meta.remote;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -8,6 +10,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.config.RequestConfig.Builder;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
@@ -20,11 +23,16 @@ import org.unidal.lookup.annotation.Named;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.meta.MetaProxy;
 import com.google.common.base.Function;
 
 @Named(type = MetaProxy.class, value = RemoteMetaProxy.ID)
 public class RemoteMetaProxy implements MetaProxy, Initializable {
+
+	private static final String LEASE_ID = "leaseId";
+
+	private static final String SESSION_ID = "sessionId";
 
 	public final static String ID = "remote";
 
@@ -36,10 +44,25 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 	private RequestConfig m_requestConfig;
 
 	@Override
-	public Lease tryAcquireConsumerLease(Tpg tpg) {
-		String response = post("/lease/acquire", tpg);
+	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
+		Map<String, String> params = new HashMap<>();
+		params.put(SESSION_ID, sessionId);
+		String response = post("/lease/consumer/acquire", params, tpg);
 		if (response != null) {
-			return JSON.parseObject(response, Lease.class);
+			return JSON.parseObject(response, LeaseAcquireResponse.class);
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId) {
+		Map<String, String> params = new HashMap<>();
+		params.put(LEASE_ID, String.valueOf(lease.getId()));
+		params.put(SESSION_ID, sessionId);
+		String response = post("/lease/consumer/renew", params, tpg);
+		if (response != null) {
+			return JSON.parseObject(response, LeaseAcquireResponse.class);
 		} else {
 			return null;
 		}
@@ -61,24 +84,33 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 
 	}
 
-	private String post(final String path, final Object payload) {
+	private String post(final String path, final Map<String, String> requestParams, final Object payload) {
 		return pollMetaServer(new Function<String, String>() {
 
 			@Override
 			public String apply(String ip) {
-				String url = String.format("http://%s%s", ip, path);
-				HttpPost post = new HttpPost(url);
-				post.setConfig(m_requestConfig);
-
-				HttpResponse response;
 				try {
+					URIBuilder uriBuilder = new URIBuilder()//
+					      .setScheme("http")//
+					      .setHost(ip)//
+					      .setPath(path);
+					if (requestParams != null) {
+						for (Map.Entry<String, String> entry : requestParams.entrySet()) {
+							uriBuilder.addParameter(entry.getKey(), entry.getValue());
+						}
+					}
+
+					HttpPost post = new HttpPost(uriBuilder.build());
+					post.setConfig(m_requestConfig);
+
+					HttpResponse response;
 					post.setEntity(new StringEntity(JSON.toJSONString(payload), ContentType.APPLICATION_JSON));
 					response = m_httpClient.execute(post);
 					if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 						return EntityUtils.toString(response.getEntity());
 					} else {
 						// TODO log
-						System.out.println("POST ERROR " + url);
+						System.out.println("POST ERROR " + uriBuilder.build());
 						return null;
 					}
 				} catch (Exception e) {

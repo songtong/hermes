@@ -64,9 +64,8 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	@Override
 	public SubscribeHandle start(ConsumerContext context, int partitionId) {
 		m_leaseManager.registerAcquisition(new Tpg(context.getTopic().getName(), partitionId, context.getGroupId()),
-		      new LongPollingConsumerLeaseAcquisitionListener(context, partitionId));
+		      context.getSessionId(), new LongPollingConsumerLeaseAcquisitionListener(context, partitionId));
 
-		
 		// TODO
 		return null;
 	}
@@ -167,9 +166,9 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 		@Override
 		public void run() {
 			// TODO
-			System.out.println(String.format(
-			      "Start long polling...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)", m_context
-			            .getTopic().getName(), m_partitionId, m_context.getGroupId(), m_correlationId));
+			// System.out.println(String.format(
+			// "Start long polling...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)", m_context
+			// .getTopic().getName(), m_partitionId, m_context.getGroupId(), m_correlationId));
 
 			m_consumerNotifier.register(m_correlationId, m_context);
 
@@ -210,9 +209,9 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 			}
 
 			// TODO
-			System.out.println(String.format(
-			      "Stop long polling...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)", m_context
-			            .getTopic().getName(), m_partitionId, m_context.getGroupId(), m_correlationId));
+			// System.out.println(String.format(
+			// "Stop long polling...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)", m_context
+			// .getTopic().getName(), m_partitionId, m_context.getGroupId(), m_correlationId));
 
 			m_consumerNotifier.deregister(m_correlationId);
 

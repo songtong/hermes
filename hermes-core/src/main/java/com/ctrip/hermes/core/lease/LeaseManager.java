@@ -5,7 +5,7 @@ package com.ctrip.hermes.core.lease;
  *
  */
 public interface LeaseManager<T> {
-	public void registerAcquisition(T key, LeaseAcquisitionListener listener);
+	public void registerAcquisition(T key, String sessionId, LeaseAcquisitionListener listener);
 
 	public static interface LeaseAcquisitionListener {
 		public void onAcquire(Lease lease);

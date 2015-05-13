@@ -10,6 +10,7 @@ public class StartMetaServer extends ComponentTestCase {
 	@Test
 	public void test() throws Exception {
 		lookup(MetaRestServer.class).start();
+		System.in.read();
 	}
 
 }

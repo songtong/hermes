@@ -11,6 +11,7 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
@@ -188,14 +189,16 @@ public abstract class AbstractMetaService implements MetaService, Initializable 
 	}
 
 	@Override
-	public Lease tryAcquireConsumerLease(Tpg tpg) {
+	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg) {
 		// TODO Auto-generated method stub
-		return new Lease(System.currentTimeMillis() + 10 * 1000L);
+		long expireTime = System.currentTimeMillis() + 10 * 1000L;
+		long leaseId = 123L;
+		return new LeaseAcquireResponse(true, new Lease(leaseId, expireTime), expireTime);
 	}
 
 	@Override
-	public boolean tryRenewLease(Tpg tpg, Lease lease) {
+	public LeaseAcquireResponse tryRenewLease(Tpg tpg, Lease lease) {
 		// TODO
-		return false;
+		return new LeaseAcquireResponse(false, null, System.currentTimeMillis() + 10 * 1000L);
 	}
 }
