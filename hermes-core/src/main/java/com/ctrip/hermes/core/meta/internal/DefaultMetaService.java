@@ -17,6 +17,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.meta.MetaManager;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.meta.entity.Codec;
@@ -204,10 +205,10 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public Lease tryAcquireConsumerLease(Tpg tpg) {
+	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
 		// return new Lease(System.currentTimeMillis() + 10 * 1000);
 		try {
-			return m_manager.getMetaProxy().tryAcquireConsumerLease(tpg);
+			return m_manager.getMetaProxy().tryAcquireConsumerLease(tpg, sessionId);
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			// TODO
@@ -216,9 +217,16 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public boolean tryRenewLease(Tpg tpg, Lease lease) {
+	public LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId) {
 		// TODO
-		return false;
+		try {
+			return m_manager.getMetaProxy().tryRenewConsumerLease(tpg, lease, sessionId);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			// TODO
+			throw e;
+		}
+
 	}
 
 	@Override

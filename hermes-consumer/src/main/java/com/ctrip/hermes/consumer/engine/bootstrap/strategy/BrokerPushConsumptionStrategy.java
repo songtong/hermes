@@ -40,7 +40,7 @@ public class BrokerPushConsumptionStrategy implements BrokerConsumptionStrategy 
 	@Override
 	public SubscribeHandle start(ConsumerContext context, int partitionId) {
 		m_leaseManager.registerAcquisition(new Tpg(context.getTopic().getName(), partitionId, context.getGroupId()),
-		      new ConsumerAutoReconnectListener(context, partitionId));
+		      context.getSessionId(), new ConsumerAutoReconnectListener(context, partitionId));
 
 		// TODO
 		return null;
