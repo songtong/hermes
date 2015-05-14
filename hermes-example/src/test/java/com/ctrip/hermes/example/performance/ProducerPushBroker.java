@@ -76,7 +76,6 @@ public class ProducerPushBroker extends ComponentTestCase {
 			public void run() {
 
 				try {
-					lookup(MetaRestServer.class).start();
 					lookup(BrokerBootstrap.class).start();
 				} catch (Exception e) {
 					System.out.println("Fail to start Broker: " + e.getMessage());

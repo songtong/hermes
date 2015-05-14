@@ -1,8 +1,6 @@
 package com.ctrip.hermes.kafka.producer;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +17,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.net.Networks;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ProducerMessage;
@@ -81,11 +80,7 @@ public class KafkaMessageSender implements MessageSender {
 		configs.put("key.serializer", StringSerializer.class.getCanonicalName());
 
 		if (!configs.containsKey("client.id")) {
-			try {
-				configs.put("client.id", InetAddress.getLocalHost().getHostAddress() + "_" + topic);
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-			}
+			configs.put("client.id", Networks.forIp().getLocalHostAddress() + "_" + topic);
 		}
 		return configs;
 	}
@@ -104,7 +99,7 @@ public class KafkaMessageSender implements MessageSender {
 		KafkaProducer<String, byte[]> producer = m_producers.get(topic);
 
 		byte[] bytes = m_codec.encode(msg);
-		
+
 		ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, partition, bytes);
 
 		Future<RecordMetadata> sendResult = null;

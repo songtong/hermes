@@ -25,7 +25,6 @@ import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.result.SendResult;
-import com.ctrip.hermes.meta.server.MetaRestServer;
 import com.ctrip.hermes.producer.api.Producer;
 import com.dianping.cat.Cat;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -263,8 +262,6 @@ public class OneBoxTest extends ComponentTestCase {
 	}
 
 	private void startBroker() throws Exception {
-		lookup(MetaRestServer.class).start();
-		
 		new Thread() {
 			public void run() {
 

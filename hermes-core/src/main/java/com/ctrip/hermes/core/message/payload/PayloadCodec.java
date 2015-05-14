@@ -10,5 +10,5 @@ public interface PayloadCodec {
 
 	public <T> T decode(byte[] raw, Class<T> clazz);
 
-	public void configure(Map<String, ?> configs);
+	public void configure(Map<String, String> configs);
 }

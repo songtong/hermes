@@ -33,6 +33,7 @@
     "retryTimes": 3
   },
   "partitionCount": 1,
+  "createBy": "who",
   "partitions": [
     {
       "endpoint": "kafka-endpoint",

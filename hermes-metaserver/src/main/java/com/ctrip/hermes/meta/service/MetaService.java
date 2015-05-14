@@ -1,9 +1,10 @@
-package com.ctrip.hermes.meta.core;
+package com.ctrip.hermes.meta.service;
 
 import java.util.List;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -83,10 +84,15 @@ public interface MetaService {
 
 	Codec getCodecByType(String codecType);
 
-	public void refreshMeta(Meta meta);
+	LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg);
 
-	Lease tryAcquireConsumerLease(Tpg tpg);
+	LeaseAcquireResponse tryRenewLease(Tpg tpg, Lease lease);
 
-	boolean tryRenewLease(Tpg tpg, Lease lease);
-
+	public boolean updateMeta(Meta meta);
+	
+	public void refreshMeta();
+	
+	public Meta getMeta();
+	
+	public Meta getMeta(boolean isForceLatest);
 }

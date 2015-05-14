@@ -18,6 +18,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
+import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -44,7 +45,7 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionStrategy {
 	@Inject
-	private LeaseManager<Tpg> m_leaseManager;
+	private LeaseManager<ConsumerLeaseKey> m_leaseManager;
 
 	@Inject
 	private ConsumerNotifier m_consumerNotifier;
@@ -58,15 +59,14 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	@Inject
 	private MessageCodec m_messageCodec;
 
-	// TODO
-	private static final long MIN_POLL_TIMEOUT = 1000L;
-
 	@Override
 	public SubscribeHandle start(ConsumerContext context, int partitionId) {
-		m_leaseManager.registerAcquisition(new Tpg(context.getTopic().getName(), partitionId, context.getGroupId()),
-		      new LongPollingConsumerLeaseAcquisitionListener(context, partitionId));
+		m_leaseManager.registerAcquisition(//
+		      new ConsumerLeaseKey(new Tpg(context.getTopic().getName(), partitionId, context.getGroupId()), context
+		            .getSessionId()),//
+		      new LongPollingConsumerLeaseAcquisitionListener(context, partitionId)//
+		      );
 
-		
 		// TODO
 		return null;
 	}
@@ -166,11 +166,6 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 
 		@Override
 		public void run() {
-			// TODO
-			System.out.println(String.format(
-			      "Start long polling...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)", m_context
-			            .getTopic().getName(), m_partitionId, m_context.getGroupId(), m_correlationId));
-
 			m_consumerNotifier.register(m_correlationId, m_context);
 
 			while (!closed.get() && !Thread.currentThread().isInterrupted()) {
@@ -182,7 +177,7 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 
 					if (!m_msgs.isEmpty()) {
 						// TODO size
-						consumeMessages(50);
+						consumeMessages(m_cacheSize);
 					} else {
 						// TODO
 						Thread.sleep(10);
@@ -198,7 +193,7 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 			m_executorService.shutdown();
 
 			try {
-				m_executorService.awaitTermination(MIN_POLL_TIMEOUT, TimeUnit.MILLISECONDS);
+				m_executorService.awaitTermination(1, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -208,11 +203,6 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 			if (!m_msgs.isEmpty()) {
 				consumeMessages(0);
 			}
-
-			// TODO
-			System.out.println(String.format(
-			      "Stop long polling...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s)", m_context
-			            .getTopic().getName(), m_partitionId, m_context.getGroupId(), m_correlationId));
 
 			m_consumerNotifier.deregister(m_correlationId);
 
@@ -259,6 +249,8 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 
 		private void schedulePullMessageTask() {
 			if (m_pullTaskRunning.compareAndSet(false, true)) {
+				// TODO
+				System.out.println("Pull Message...");
 				m_executorService.submit(new PullMessageTask());
 			}
 		}
@@ -276,11 +268,6 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 					long now = System.currentTimeMillis();
 
 					long timeout = m_lease.getExpireTime() - now;
-
-					// TODO if lease.expTime < MIN_POLL_TIMEOUT
-					if (timeout < MIN_POLL_TIMEOUT && timeout > 0) {
-						timeout = MIN_POLL_TIMEOUT;
-					}
 
 					if (timeout > 0) {
 						PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,

@@ -31,7 +31,7 @@ public class CMessagingPayloadCodec implements PayloadCodec {
 	}
 
 	@Override
-	public void configure(Map<String, ?> configs) {
+	public void configure(Map<String, String> configs) {
 	}
 
 	@Override

@@ -46,6 +46,15 @@
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-recipes</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
@@ -119,7 +128,7 @@
 				</executions>
 			</plugin>
 
-			<!--build to tar plugin-->
+			<!--build to tar plugin -->
 			<plugin>
 				<groupId>com.keyboardsamurais.maven</groupId>
 				<artifactId>maven-timestamp-plugin</artifactId>

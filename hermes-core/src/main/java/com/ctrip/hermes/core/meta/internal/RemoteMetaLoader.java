@@ -45,6 +45,9 @@ public class RemoteMetaLoader implements MetaLoader {
 			}
 			URL metaURL = new URL(url);
 			HttpURLConnection connection = (HttpURLConnection) metaURL.openConnection();
+			// TODO
+			connection.setConnectTimeout(2000);
+			connection.setReadTimeout(2000);
 			connection.setRequestMethod("GET");
 			connection.connect();
 			if (connection.getResponseCode() == 200) {

@@ -111,7 +111,7 @@ public class KafkaAvroTest {
 
 	static AtomicLong counter = new AtomicLong();
 
-	static AvroVisitEvent generateEvent() {
+	public static AvroVisitEvent generateEvent() {
 		Random random = new Random(System.currentTimeMillis());
 		AvroVisitEvent event = AvroVisitEvent.newBuilder().setIp("192.168.0." + random.nextInt(255))
 		      .setTz(System.currentTimeMillis()).setUrl("www.ctrip.com/" + counter.incrementAndGet()).build();

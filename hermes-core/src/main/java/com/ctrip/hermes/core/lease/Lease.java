@@ -7,13 +7,24 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  */
 public class Lease {
+	private long m_id;
+
 	private AtomicLong m_expireTime = new AtomicLong();
 
 	public Lease() {
 	}
 
-	public Lease(long expireTime) {
+	public Lease(long id, long expireTime) {
 		m_expireTime = new AtomicLong(expireTime);
+		m_id = id;
+	}
+
+	public void setId(long id) {
+		m_id = id;
+	}
+
+	public long getId() {
+		return m_id;
 	}
 
 	public void setExpireTime(long expireTime) {

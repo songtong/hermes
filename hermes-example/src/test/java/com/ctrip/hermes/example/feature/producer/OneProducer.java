@@ -25,8 +25,6 @@ public class OneProducer extends ComponentTestCase {
 	static final String TOPIC = "order.new";
 
 	public void startBroker() throws Exception {
-		lookup(MetaRestServer.class).start();
-
 		new Thread(new Runnable() {
 			@Override
 			public void run() {

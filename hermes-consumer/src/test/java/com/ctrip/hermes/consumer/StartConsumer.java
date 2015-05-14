@@ -27,7 +27,8 @@ public class StartConsumer extends ComponentTestCase {
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
 		subscribers.put("group1", Arrays.asList("1-a"));
-		subscribers.put("group2", Arrays.asList("2-a", "2-b"));
+		subscribers.put("group2", Arrays.asList("2-a"));
+//		subscribers.put("group2", Arrays.asList("2-a", "2-b"));
 
 		for (Map.Entry<String, List<String>> entry : subscribers.entrySet()) {
 			String groupId = entry.getKey();

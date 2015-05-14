@@ -3,7 +3,7 @@ package com.ctrip.hermes.broker.queue.storage.mysql.dal;
 import java.util.List;
 import java.util.Map;
 
-import org.unidal.dal.jdbc.datasource.JdbcDataSourceDescriptorManager;
+import org.unidal.dal.jdbc.datasource.DataSourceProvider;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourceDef;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourcesDef;
 import org.unidal.dal.jdbc.datasource.model.entity.PropertiesDef;
@@ -14,14 +14,14 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Property;
 
-@Named(type = JdbcDataSourceDescriptorManager.class)
-public class HermesJdbcDataSourceDescriptorManager extends JdbcDataSourceDescriptorManager {
+@Named(type = DataSourceProvider.class, value = "message")
+public class MessageDataSourceProvider implements DataSourceProvider {
 
 	@Inject
 	private MetaService m_metaService;
 
 	@Override
-	protected DataSourcesDef defineDatasources() {
+	public DataSourcesDef defineDatasources() {
 		DataSourcesDef def = new DataSourcesDef();
 
 		List<Datasource> dataSources = m_metaService.listMysqlDataSources();

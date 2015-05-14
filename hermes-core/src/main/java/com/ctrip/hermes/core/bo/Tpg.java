@@ -80,4 +80,9 @@ public class Tpg {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "Tpg [m_topic=" + m_topic + ", m_partition=" + m_partition + ", m_groupId=" + m_groupId + "]";
+	}
+
 }
