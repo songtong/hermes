@@ -64,7 +64,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 					dnsResolved = true;
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					System.out.println("Can not resolve " + getMetaServerDomainName());
 					return null;
 				}
 			}
@@ -75,7 +75,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 					return result;
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					System.out.println("Fetch meta server ip list failed");
 					continue;
 				}
 			}
@@ -125,6 +125,6 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 				}
 			}
 
-		}, 0, 10, TimeUnit.SECONDS);
+		}, 0, 60, TimeUnit.SECONDS);
 	}
 }
