@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -40,16 +41,17 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	private ScheduledExecutorService executor;
 
-	private Meta m_meta;
+	private AtomicReference<Meta> m_meta = new AtomicReference<>();
 
-	private Map<Long, Topic> m_topics;
+	private AtomicReference<Map<Long, Topic>> m_topics = new AtomicReference<>();
 
 	@Override
 	public String getEndpointType(String topicName) {
-		if (m_meta.isDevMode()) {
+		Meta meta = m_meta.get();
+		if (meta.isDevMode()) {
 			return Endpoint.LOCAL;
 		} else {
-			Topic topic = m_meta.getTopics().get(topicName);
+			Topic topic = meta.getTopics().get(topicName);
 			if (topic == null) {
 				throw new RuntimeException(String.format("Topic %s is not found", topicName));
 			}
@@ -58,7 +60,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 				throw new RuntimeException(String.format("Partitions for topic %s is not found", topicName));
 			}
 			String endpointId = partitions.get(0).getEndpoint();
-			Endpoint endpoint = m_meta.getEndpoints().get(endpointId);
+			Endpoint endpoint = meta.getEndpoints().get(endpointId);
 			if (endpoint == null) {
 				throw new RuntimeException(String.format("Endpoint for topic %s is not found", topicName));
 			} else {
@@ -69,7 +71,8 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public List<Partition> getPartitions(String topicName) {
-		Topic topic = m_meta.findTopic(topicName);
+		Meta meta = m_meta.get();
+		Topic topic = meta.findTopic(topicName);
 		if (topic != null) {
 			return topic.getPartitions();
 		}
@@ -78,28 +81,32 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public Endpoint findEndpoint(String endpointId) {
-		return m_meta.findEndpoint(endpointId);
+		Meta meta = m_meta.get();
+		return meta.findEndpoint(endpointId);
 	}
 
 	@Override
 	public Storage findStorage(String topic) {
-		String storageType = m_meta.findTopic(topic).getStorageType();
-		return m_meta.findStorage(storageType);
+		Meta meta = m_meta.get();
+		String storageType = meta.findTopic(topic).getStorageType();
+		return meta.findStorage(storageType);
 	}
 
 	@Override
 	public Codec getCodecByTopic(String topicName) {
-		Topic topic = m_meta.findTopic(topicName);
+		Meta meta = m_meta.get();
+		Topic topic = meta.findTopic(topicName);
 		if (topic != null) {
 			String codeType = topic.getCodecType();
-			return m_meta.getCodecs().get(codeType);
+			return meta.getCodecs().get(codeType);
 		} else
 			return null;
 	}
 
 	@Override
 	public Partition findPartition(String topicName, int partitionId) {
-		Topic topic = m_meta.findTopic(topicName);
+		Meta meta = m_meta.get();
+		Topic topic = meta.findTopic(topicName);
 		if (topic != null)
 			return topic.findPartition(partitionId);
 		else
@@ -107,9 +114,10 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	public List<Topic> findTopicsByPattern(String topicPattern) {
+		Meta meta = m_meta.get();
 		List<Topic> matchedTopics = new ArrayList<>();
 
-		Collection<Topic> topics = m_meta.getTopics().values();
+		Collection<Topic> topics = meta.getTopics().values();
 
 		Pattern pattern = Pattern.compile(topicPattern);
 
@@ -124,7 +132,8 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public Topic findTopic(String topic) {
-		return m_meta.findTopic(topic);
+		Meta meta = m_meta.get();
+		return meta.findTopic(topic);
 	}
 
 	@Override
@@ -135,8 +144,9 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public int getGroupIdInt(String groupName) {
+		Meta meta = m_meta.get();
 		// TODO groupIdStr唯一
-		for (Topic topic : m_meta.getTopics().values()) {
+		for (Topic topic : meta.getTopics().values()) {
 			for (ConsumerGroup group : topic.getConsumerGroups()) {
 				if (group.getName().equals(groupName)) {
 					return group.getId();
@@ -150,10 +160,11 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public List<Datasource> listMysqlDataSources() {
+		Meta meta = m_meta.get();
 		// TODO
 		final List<Datasource> dataSources = new ArrayList<>();
 
-		m_meta.accept(new BaseVisitor2() {
+		meta.accept(new BaseVisitor2() {
 
 			@Override
 			protected void visitDatasourceChildren(Datasource ds) {
@@ -171,26 +182,27 @@ public class DefaultMetaService implements MetaService, Initializable {
 		return dataSources;
 	}
 
-	// TODO add lock
 	public void refreshMeta(Meta meta) {
-		m_meta = meta;
-		m_topics = new HashMap<>();
+		final HashMap<Long, Topic> topics = new HashMap<>();
 
-		m_meta.accept(new BaseVisitor2() {
+		meta.accept(new BaseVisitor2() {
 
 			@Override
 			protected void visitTopicChildren(Topic topic) {
-				m_topics.put(topic.getId(), topic);
+				topics.put(topic.getId(), topic);
 
 				super.visitTopicChildren(topic);
 			}
 
 		});
+
+		m_meta.set(meta);
+		m_topics.set(topics);
 	}
 
 	@Override
 	public Topic findTopic(long topicId) {
-		return m_topics.get(topicId);
+		return m_topics.get().get(topicId);
 	}
 
 	@Override
@@ -201,7 +213,8 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public Codec getCodecByType(String codecType) {
-		return m_meta.findCodec(codecType);
+		Meta meta = m_meta.get();
+		return meta.findCodec(codecType);
 	}
 
 	@Override

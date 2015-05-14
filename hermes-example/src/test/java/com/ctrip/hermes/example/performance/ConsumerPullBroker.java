@@ -73,8 +73,6 @@ public class ConsumerPullBroker extends ComponentTestCase {
 	}
 
 	private void startBroker() throws Exception {
-		lookup(MetaRestServer.class).start();
-		
 		new Thread() {
 			public void run() {
 

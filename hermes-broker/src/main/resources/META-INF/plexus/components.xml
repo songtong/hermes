@@ -214,8 +214,9 @@
 			</requirements>
 		</component>
 		<component>
-			<role>org.unidal.dal.jdbc.datasource.JdbcDataSourceDescriptorManager</role>
-			<implementation>com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesJdbcDataSourceDescriptorManager</implementation>
+			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>
+			<role-hint>message</role-hint>
+			<implementation>com.ctrip.hermes.broker.queue.storage.mysql.dal.MessageDataSourceProvider</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>

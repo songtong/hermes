@@ -67,7 +67,7 @@
 			<dependency>
 				<groupId>org.unidal.framework</groupId>
 				<artifactId>dal-jdbc</artifactId>
-				<version>2.2.3</version>
+				<version>2.2.5</version>
 			</dependency>
 			<dependency>
 				<groupId>org.unidal.framework</groupId>
@@ -77,7 +77,7 @@
 			<dependency>
 				<groupId>org.unidal.framework</groupId>
 				<artifactId>foundation-service</artifactId>
-				<version>2.2.1</version>
+				<version>2.2.2</version>
 			</dependency>
 			<!--third party-->
 			<dependency>
