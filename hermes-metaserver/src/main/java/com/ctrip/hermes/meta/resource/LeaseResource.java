@@ -69,11 +69,11 @@ public class LeaseResource {
 		m_lock.lock();
 		try {
 			Lease existsLease = m_consumerLeases.get(tpg);
-			if (!m_random.nextBoolean() || existsLease == null || existsLease.getId() != leaseId) {
+			if (m_random.nextInt(100) != 0 || existsLease == null || existsLease.getId() != leaseId) {
 				// TODO
 				System.out.println(String.format("[%s]Try renew consumer lease fail(tpg=%s, sessionId=%s)", new Date(),
 				      tpg, sessionId));
-				return new LeaseAcquireResponse(false, null, -1L);
+				return new LeaseAcquireResponse(false, null, existsLease == null ? -1L : existsLease.getExpireTime());
 			} else {
 				// TODO
 				System.out.println(String.format("[%s]Try renew consumer lease success(tpg=%s, sessionId=%s)", new Date(),

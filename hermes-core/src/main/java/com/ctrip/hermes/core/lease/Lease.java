@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Lease {
 	private long m_id;
 
-	private AtomicLong m_expireTime = new AtomicLong();
+	private AtomicLong m_expireTime = new AtomicLong(0);
 
 	public Lease() {
 	}
