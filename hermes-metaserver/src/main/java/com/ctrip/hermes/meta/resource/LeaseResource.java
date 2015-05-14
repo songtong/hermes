@@ -22,7 +22,7 @@ import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class LeaseResource {
-	private static final long LEASE_TIME = 60 * 1000L;
+	private static final long LEASE_TIME = 20 * 1000L;
 
 	// TODO server端lease比client端延后2秒
 	private static final long LEASE_SERVER_DELAY_TIME = 2 * 1000L;

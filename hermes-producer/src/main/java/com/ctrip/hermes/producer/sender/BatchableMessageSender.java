@@ -10,12 +10,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
 import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
+import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -26,32 +28,31 @@ import com.google.common.util.concurrent.SettableFuture;
 @Named(type = MessageSender.class, value = Endpoint.BROKER)
 public class BatchableMessageSender extends AbstractMessageSender implements MessageSender {
 
-	private ConcurrentMap<Endpoint, EndpointWritingWorkerThread> m_workers = new ConcurrentHashMap<>();
+	private ConcurrentMap<Pair<String, Integer>, EndpointWritingWorkerThread> m_workers = new ConcurrentHashMap<>();
 
 	@Override
 	public Future<SendResult> doSend(ProducerMessage<?> msg) {
 
-		Endpoint endpoint = m_endpointManager.getEndpoint(msg.getTopic(), msg.getPartitionNo());
-
-		createWorkerIfNecessary(endpoint);
-
-		return m_workers.get(endpoint).submit(msg);
+		return createWorkerIfNecessary(msg.getTopic(), msg.getPartitionNo()).submit(msg);
 	}
 
-	private void createWorkerIfNecessary(Endpoint endpoint) {
-		if (!m_workers.containsKey(endpoint)) {
+	private EndpointWritingWorkerThread createWorkerIfNecessary(String topic, int partition) {
+		Pair<String, Integer> key = new Pair<>(topic, partition);
+		if (!m_workers.containsKey(key)) {
 			synchronized (m_workers) {
-				if (!m_workers.containsKey(endpoint)) {
-					EndpointWritingWorkerThread worker = new EndpointWritingWorkerThread(endpoint, m_clientEndpointChannelManager);
+				if (!m_workers.containsKey(key)) {
+					EndpointWritingWorkerThread worker = new EndpointWritingWorkerThread(topic, partition,
+					      m_endpointManager, m_clientEndpointChannelManager);
 
 					worker.setDaemon(true);
-					worker.setName("ProducerChannelWorkerThread-Channel-" + endpoint.getId());
+					worker.setName(String.format("ProducerChannelWorkerThread-Channel-%s-%s", topic, partition));
 					worker.start();
 
-					m_workers.put(endpoint, worker);
+					m_workers.put(key, worker);
 				}
 			}
 		}
+		return m_workers.get(key);
 	}
 
 	/**
@@ -63,17 +64,24 @@ public class BatchableMessageSender extends AbstractMessageSender implements Mes
 
 		private BlockingQueue<ProducerChannelWorkerContext> m_queue = new LinkedBlockingQueue<>();
 
+		private EndpointManager m_endpointManager;
+
 		private ClientEndpointChannelManager m_clientEndpointChannelManager;
 
-		private Endpoint m_endpoint;
+		private String m_topic;
+
+		private int m_partition;
 
 		private static final int BATCH_SIZE = 3000;
 
 		private static final int INTERVAL_MILLISECONDS = 50;
 
-		public EndpointWritingWorkerThread(Endpoint endpoint, ClientEndpointChannelManager endpointChannelManager) {
+		public EndpointWritingWorkerThread(String topic, int partition, EndpointManager endpointManager,
+		      ClientEndpointChannelManager endpointChannelManager) {
+			m_topic = topic;
+			m_partition = partition;
+			m_endpointManager = endpointManager;
 			m_clientEndpointChannelManager = endpointChannelManager;
-			m_endpoint = endpoint;
 		}
 
 		public Future<SendResult> submit(ProducerMessage<?> msg) {
@@ -84,11 +92,6 @@ public class BatchableMessageSender extends AbstractMessageSender implements Mes
 			return future;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.lang.Runnable#run()
-		 */
 		@Override
 		public void run() {
 			while (!Thread.interrupted()) {
@@ -102,7 +105,8 @@ public class BatchableMessageSender extends AbstractMessageSender implements Mes
 							command.addMessage(context.m_msg, context.m_future);
 						}
 
-						EndpointChannel channel = m_clientEndpointChannelManager.getChannel(m_endpoint);
+						Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partition);
+						EndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
 
 						channel.writeCommand(command);
 
