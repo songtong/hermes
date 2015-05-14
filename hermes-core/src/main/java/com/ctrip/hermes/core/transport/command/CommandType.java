@@ -8,9 +8,6 @@ import java.util.Map;
  *
  */
 public enum CommandType {
-	SUBSCRIBE(1, SubscribeCommand.class), //
-	UNSUBSCRIBE(2, UnsubscribeCommand.class), //
-
 	MESSAGE_SEND(101, SendMessageCommand.class), //
 	MESSAGE_CONSUME(102, ConsumeMessageCommand.class), //
 	MESSAGE_ACK(103, AckMessageCommand.class), //

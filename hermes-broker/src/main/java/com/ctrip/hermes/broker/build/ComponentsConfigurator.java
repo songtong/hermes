@@ -43,10 +43,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MessageQueueManager.class));
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL.toString(), PullMessageCommandProcessor.class)//
 		      .req(LongPollingService.class));
-		// all.add(C(CommandProcessor.class, CommandType.SUBSCRIBE.toString(), SubscribeCommandProcessor.class)//
-		// .req(MessageTransmitter.class));
-		// all.add(C(CommandProcessor.class, CommandType.UNSUBSCRIBE.toString(), UnsubscribeCommandProcessor.class)//
-		// .req(MessageTransmitter.class));
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(AckManager.class));
 
