@@ -41,6 +41,8 @@ public class TopicView {
 
 	private Codec codec;
 
+	private String createBy;
+
 	public TopicView() {
 
 	}
@@ -58,6 +60,7 @@ public class TopicView {
 		this.codecType = topic.getCodecType();
 		this.schemaId = topic.getSchemaId();
 		this.otherinfo = topic.getOtherInfo();
+		this.createBy = topic.getCreateBy();
 	}
 
 	public Codec getCodec() {
@@ -66,6 +69,10 @@ public class TopicView {
 
 	public String getCodecType() {
 		return codecType;
+	}
+
+	public String getCreateBy() {
+		return createBy;
 	}
 
 	public Date getCreateTime() {
@@ -128,6 +135,10 @@ public class TopicView {
 		this.codecType = codecType;
 	}
 
+	public void setCreateBy(String createBy) {
+		this.createBy = createBy;
+	}
+
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
 	}
@@ -188,12 +199,14 @@ public class TopicView {
 		topic.setDescription(this.description);
 		if (this.properties != null) {
 			for (Property prop : this.properties) {
-				topic.addProperty(prop);
+				if (prop != null)
+					topic.addProperty(prop);
 			}
 		}
 		if (this.partitions != null) {
 			for (Partition partition : this.partitions) {
-				topic.addPartition(partition);
+				if (partition != null)
+					topic.addPartition(partition);
 			}
 		}
 		topic.setStatus(this.status);
@@ -202,6 +215,7 @@ public class TopicView {
 		topic.setCodecType(this.codecType);
 		topic.setSchemaId(this.schemaId);
 		topic.setOtherInfo(this.otherinfo);
+		topic.setCreateBy(this.createBy);
 		return topic;
 	}
 }

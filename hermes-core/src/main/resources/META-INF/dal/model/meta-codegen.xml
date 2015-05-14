@@ -17,6 +17,7 @@
     <attribute name="description" value-type="String" />
     <attribute name="status" value-type="String" />
     <attribute name="create-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+    <attribute name="create-by" value-type="String" />
     <attribute name="last-modified-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
     <attribute name="schema-id" value-type="int" />
     <attribute name="consumer-retry-policy" value-type="String" />

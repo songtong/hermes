@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -29,7 +31,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.transform.BaseVisitor2;
 
 @Named(type = MetaService.class, value = ServerMetaService.ID)
-public class ServerMetaService implements MetaService {
+public class ServerMetaService implements MetaService, Initializable {
 
 	public static final String ID = "server-meta-service";
 
@@ -212,6 +214,9 @@ public class ServerMetaService implements MetaService {
 	}
 
 	public synchronized void refreshMeta() {
+		if (m_meta == null) {
+			getMeta(true);
+		}
 		m_topics = new HashMap<>();
 
 		m_meta.accept(new BaseVisitor2() {
@@ -254,6 +259,11 @@ public class ServerMetaService implements MetaService {
 	public LeaseAcquireResponse tryRenewLease(Tpg tpg, Lease lease) {
 		// TODO
 		return new LeaseAcquireResponse(false, null, System.currentTimeMillis() + 10 * 1000L);
+	}
+
+	@Override
+	public void initialize() throws InitializationException {
+		this.refreshMeta();
 	}
 
 }
