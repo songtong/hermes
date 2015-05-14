@@ -1,4 +1,4 @@
-package com.ctrip.hermes.consumer.engine.bootstrap.strategy.internal;
+package com.ctrip.hermes.consumer.engine.bootstrap.strategy;
 
 import io.netty.buffer.ByteBuf;
 
