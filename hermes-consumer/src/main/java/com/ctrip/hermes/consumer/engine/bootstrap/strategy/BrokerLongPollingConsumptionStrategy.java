@@ -1,10 +1,9 @@
-package com.ctrip.hermes.consumer.engine.bootstrap.strategy.internal;
+package com.ctrip.hermes.consumer.engine.bootstrap.strategy;
 
 import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategy;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.lease.LeaseManager;

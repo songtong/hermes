@@ -76,7 +76,7 @@
 		<component>
 			<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategy</role>
 			<role-hint>LONG_POLLING</role-hint>
-			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.internal.BrokerLongPollingConsumptionStrategy</implementation>
+			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerLongPollingConsumptionStrategy</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier</role>
