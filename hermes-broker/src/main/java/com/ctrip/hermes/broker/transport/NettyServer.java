@@ -24,39 +24,36 @@ public class NettyServer extends ContainerHolder {
 	@Inject
 	private NettyServerConfig m_serverConfig;
 
-	public void start() {
-		EventLoopGroup bossGroup = new NioEventLoopGroup();
-		EventLoopGroup workerGroup = new NioEventLoopGroup();
+	private EventLoopGroup m_bossGroup = new NioEventLoopGroup();
 
-		try {
-			ServerBootstrap b = new ServerBootstrap();
-			b.group(bossGroup, workerGroup)//
-			      .channel(NioServerSocketChannel.class)//
-			      .childHandler(new ChannelInitializer<SocketChannel>() {
-				      @Override
-				      public void initChannel(SocketChannel ch) throws Exception {
-					      ch.pipeline().addLast( //
-					            // TODO set max frame length
-					            new NettyDecoder(), //
-					            new LengthFieldPrepender(4), //
-					            new NettyEncoder(), //
-					            new NettyServerEndpointChannel(lookup(CommandProcessorManager.class)));
-				      }
-			      }).option(ChannelOption.SO_BACKLOG, 128) // TODO set tcp options
-			      .childOption(ChannelOption.SO_KEEPALIVE, true);
+	private EventLoopGroup m_workerGroup = new NioEventLoopGroup();
 
-			// Bind and start to accept incoming connections.
-			ChannelFuture f = b.bind(m_serverConfig.getListenPort()).sync();
+	public ChannelFuture start() {
+		ServerBootstrap b = new ServerBootstrap();
+		b.group(m_bossGroup, m_workerGroup)//
+		      .channel(NioServerSocketChannel.class)//
+		      .childHandler(new ChannelInitializer<SocketChannel>() {
+			      @Override
+			      public void initChannel(SocketChannel ch) throws Exception {
+				      ch.pipeline().addLast( //
+				            // TODO set max frame length
+				            new NettyDecoder(), //
+				            new LengthFieldPrepender(4), //
+				            new NettyEncoder(), //
+				            new NettyServerEndpointChannel(lookup(CommandProcessorManager.class)));
+			      }
+		      }).option(ChannelOption.SO_BACKLOG, 128) // TODO set tcp options
+		      .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-			// Wait until the server socket is closed.
-			f.channel().closeFuture().sync();
-		} catch (InterruptedException e) {
-			// TODO
-			e.printStackTrace();
-			workerGroup.shutdownGracefully();
-			bossGroup.shutdownGracefully();
-		} finally {
-		}
+		// Bind and start to accept incoming connections.
+		ChannelFuture f = b.bind(m_serverConfig.getListenPort());
+
+		return f;
+	}
+
+	public void close() {
+		m_workerGroup.shutdownGracefully();
+		m_bossGroup.shutdownGracefully();
 	}
 
 }
