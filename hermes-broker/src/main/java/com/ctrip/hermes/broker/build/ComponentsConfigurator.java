@@ -14,7 +14,6 @@ import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.longpolling.SingleThreadLoopLongPollingService;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
-import com.ctrip.hermes.broker.queue.partition.DefaultMessageQueuePullerManager;
 import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionFactory;
 import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.MessageDataSourceProvider;
@@ -24,10 +23,6 @@ import com.ctrip.hermes.broker.transport.NettyServerConfig;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor;
-import com.ctrip.hermes.broker.transport.command.processor.SubscribeCommandProcessor;
-import com.ctrip.hermes.broker.transport.command.processor.UnsubscribeCommandProcessor;
-import com.ctrip.hermes.broker.transport.transmitter.DefaultMessageTransmitter;
-import com.ctrip.hermes.broker.transport.transmitter.MessageTransmitter;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
@@ -48,10 +43,10 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MessageQueueManager.class));
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL.toString(), PullMessageCommandProcessor.class)//
 		      .req(LongPollingService.class));
-		all.add(C(CommandProcessor.class, CommandType.SUBSCRIBE.toString(), SubscribeCommandProcessor.class)//
-		      .req(MessageTransmitter.class));
-		all.add(C(CommandProcessor.class, CommandType.UNSUBSCRIBE.toString(), UnsubscribeCommandProcessor.class)//
-		      .req(MessageTransmitter.class));
+		// all.add(C(CommandProcessor.class, CommandType.SUBSCRIBE.toString(), SubscribeCommandProcessor.class)//
+		// .req(MessageTransmitter.class));
+		// all.add(C(CommandProcessor.class, CommandType.UNSUBSCRIBE.toString(), UnsubscribeCommandProcessor.class)//
+		// .req(MessageTransmitter.class));
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(AckManager.class));
 
@@ -59,8 +54,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(MessageQueuePartitionFactory.class));
 		all.add(A(DefaultMessageQueueManager.class));
-		all.add(A(DefaultMessageQueuePullerManager.class));
-		all.add(A(DefaultMessageTransmitter.class));
+		// all.add(A(DefaultMessageQueuePullerManager.class));
+		// all.add(A(DefaultMessageTransmitter.class));
 		all.add(A(DefaultAckManager.class));
 		all.add(A(MySQLMessageQueueStorage.class));
 

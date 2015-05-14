@@ -44,26 +44,6 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
-			<role-hint>SUBSCRIBE</role-hint>
-			<implementation>com.ctrip.hermes.broker.transport.command.processor.SubscribeCommandProcessor</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.broker.transport.transmitter.MessageTransmitter</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
-			<role-hint>UNSUBSCRIBE</role-hint>
-			<implementation>com.ctrip.hermes.broker.transport.command.processor.UnsubscribeCommandProcessor</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.broker.transport.transmitter.MessageTransmitter</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
 			<role-hint>MESSAGE_ACK</role-hint>
 			<implementation>com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor</implementation>
 			<requirements>
@@ -99,27 +79,6 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionFactory</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionPullerManager</role>
-			<implementation>com.ctrip.hermes.broker.queue.partition.DefaultMessageQueuePullerManager</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.broker.transport.transmitter.MessageTransmitter</role>
-			<implementation>com.ctrip.hermes.broker.transport.transmitter.DefaultMessageTransmitter</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.broker.ack.AckManager</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionPullerManager</role>
 				</requirement>
 			</requirements>
 		</component>

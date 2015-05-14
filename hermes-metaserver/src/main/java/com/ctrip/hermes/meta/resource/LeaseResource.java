@@ -3,6 +3,7 @@ package com.ctrip.hermes.meta.resource;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,6 +31,8 @@ public class LeaseResource {
 	private Map<Tpg, Lease> m_consumerLeases = new HashMap<>();
 
 	private Lock m_lock = new ReentrantLock();
+
+	private Random m_random = new Random(System.currentTimeMillis());
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -66,15 +69,15 @@ public class LeaseResource {
 		m_lock.lock();
 		try {
 			Lease existsLease = m_consumerLeases.get(tpg);
-			if (existsLease == null || existsLease.getId() != leaseId) {
+			if (!m_random.nextBoolean() || existsLease == null || existsLease.getId() != leaseId) {
 				// TODO
 				System.out.println(String.format("[%s]Try renew consumer lease fail(tpg=%s, sessionId=%s)", new Date(),
 				      tpg, sessionId));
 				return new LeaseAcquireResponse(false, null, -1L);
 			} else {
 				// TODO
-				System.out.println(String.format("[%s]Try renew consumer lease success(tpg=%s, sessionId=%s)",
-				      new Date(), tpg, sessionId));
+				System.out.println(String.format("[%s]Try renew consumer lease success(tpg=%s, sessionId=%s)", new Date(),
+				      tpg, sessionId));
 				existsLease.setExpireTime(existsLease.getExpireTime() + LEASE_TIME + LEASE_SERVER_DELAY_TIME);
 				return new LeaseAcquireResponse(true, new Lease(leaseId, existsLease.getExpireTime()
 				      - LEASE_SERVER_DELAY_TIME), -1L);
