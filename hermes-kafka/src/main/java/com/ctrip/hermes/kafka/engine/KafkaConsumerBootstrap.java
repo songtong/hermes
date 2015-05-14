@@ -30,7 +30,7 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
-import com.ctrip.hermes.core.transport.command.SubscribeCommand;
+import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.kafka.message.KafkaConsumerMessage;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -54,7 +54,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Log
 
 	private Map<ConsumerContext, ConsumerConnector> consumers = new HashMap<>();
 
-	private Map<ConsumerContext, SubscribeCommand> commands = new HashMap<>();
+	private Map<ConsumerContext, Long> correlationIds = new HashMap<>();
 
 	@Override
 	protected SubscribeHandle doStart(final ConsumerContext consumerContext) {
@@ -69,15 +69,12 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Log
 		      topic.getName());
 		KafkaStream<byte[], byte[]> stream = streams.get(0);
 
-		SubscribeCommand subscribeCommand = new SubscribeCommand();
-		subscribeCommand.setGroupId(consumerContext.getGroupId());
-		subscribeCommand.setTopic(consumerContext.getTopic().getName());
+		long correlationId = CorrelationIdGenerator.generateCorrelationId();
 
-		m_consumerNotifier.register(subscribeCommand.getHeader().getCorrelationId(), consumerContext);
-		m_executor.submit(new KafkaConsumerThread(stream, consumerContext, subscribeCommand.getHeader()
-		      .getCorrelationId()));
+		m_consumerNotifier.register(correlationId, consumerContext);
+		m_executor.submit(new KafkaConsumerThread(stream, consumerContext, correlationId));
 		consumers.put(consumerContext, consumerConnector);
-		commands.put(consumerContext, subscribeCommand);
+		correlationIds.put(consumerContext, correlationId);
 
 		return new SubscribeHandle() {
 
@@ -93,8 +90,8 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Log
 		ConsumerConnector consumerConnector = consumers.remove(consumerContext);
 		consumerConnector.shutdown();
 
-		SubscribeCommand subscribeCommand = commands.remove(consumerContext);
-		m_consumerNotifier.deregister(subscribeCommand.getHeader().getCorrelationId());
+		Long correlationId = correlationIds.remove(consumerContext);
+		m_consumerNotifier.deregister(correlationId);
 
 		super.doStop(consumerContext);
 	}
