@@ -40,7 +40,8 @@ public class CodecView {
 		codec.setType(this.type);
 		if (this.properties != null) {
 			for (Property prop : this.properties) {
-				codec.addProperty(prop);
+				if (prop != null)
+					codec.addProperty(prop);
 			}
 		}
 		return codec;
