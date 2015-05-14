@@ -3,7 +3,6 @@ package com.ctrip.hermes.meta.service;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.meta.core.MetaService;
 import com.ctrip.hermes.meta.entity.Codec;
 
 @Named

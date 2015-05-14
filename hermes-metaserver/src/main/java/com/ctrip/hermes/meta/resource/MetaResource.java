@@ -16,23 +16,23 @@ import org.codehaus.plexus.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.core.MetaManager;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.server.RestException;
-import com.ctrip.hermes.meta.service.ServerMetaManager;
+import com.ctrip.hermes.meta.service.MetaService;
+import com.ctrip.hermes.meta.service.ServerMetaService;
 
 @Path("/meta/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class MetaResource {
 
-	private MetaManager metaManager = PlexusComponentLocator.lookup(MetaManager.class, ServerMetaManager.ID);
+	private MetaService metaService = PlexusComponentLocator.lookup(MetaService.class, ServerMetaService.ID);
 
 	@GET
 	public Response getMeta(@QueryParam("hashCode") long hashCode) {
 		Meta meta = null;
 		try {
-			meta = metaManager.getMeta();
+			meta = metaService.getMeta();
 			if (meta == null) {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}
@@ -50,7 +50,7 @@ public class MetaResource {
 	public Response refreshMeta() {
 		Meta meta = null;
 		try {
-			meta = metaManager.getMeta(true);
+			meta = metaService.getMeta(true);
 			if (meta == null) {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}
@@ -73,7 +73,7 @@ public class MetaResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 		try {
-			boolean result = metaManager.updateMeta(meta);
+			boolean result = metaService.updateMeta(meta);
 			if (result == false) {
 				return Response.status(Status.NOT_MODIFIED).build();
 			}

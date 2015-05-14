@@ -24,8 +24,6 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.lookup.util.StringUtils;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.meta.core.MetaManager;
-import com.ctrip.hermes.meta.core.MetaService;
 import com.ctrip.hermes.meta.dal.meta.Schema;
 import com.ctrip.hermes.meta.dal.meta.SchemaDao;
 import com.ctrip.hermes.meta.dal.meta.SchemaEntity;
@@ -45,9 +43,6 @@ public class SchemaService {
 
 	@Inject
 	private SchemaDao m_schemaDao;
-
-	@Inject(ServerMetaManager.ID)
-	private MetaManager m_metaManager;
 
 	@Inject(ServerMetaService.ID)
 	private MetaService m_metaService;
@@ -157,12 +152,11 @@ public class SchemaService {
 		m_schemaDao.insert(schema);
 
 		topic.setSchemaId(schema.getId());
-		Meta meta = m_metaManager.getMeta();
+		Meta meta = m_metaService.getMeta();
 		meta.removeTopic(topic.getName());
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 		meta.addTopic(topic);
-		m_metaManager.updateMeta(meta);
-		m_metaService.refreshMeta(meta);
+		m_metaService.updateMeta(meta);
 
 		if ("avro".equals(schema.getType())) {
 			if (StringUtils.isEmpty(schema.getCompatibility())) {
@@ -185,12 +179,11 @@ public class SchemaService {
 		Topic topic = m_metaService.findTopic(schema.getTopicId());
 		if (topic != null) {
 			topic.setSchemaId(oldSchemaId);
-			Meta meta = m_metaManager.getMeta();
+			Meta meta = m_metaService.getMeta();
 			meta.removeTopic(topic.getName());
 			topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 			meta.addTopic(topic);
-			m_metaManager.updateMeta(meta);
-			m_metaService.refreshMeta(meta);
+			m_metaService.updateMeta(meta);
 		}
 		m_schemaDao.deleteByPK(schema);
 	}

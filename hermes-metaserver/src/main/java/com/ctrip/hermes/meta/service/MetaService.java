@@ -1,4 +1,4 @@
-package com.ctrip.hermes.meta.core;
+package com.ctrip.hermes.meta.service;
 
 import java.util.List;
 
@@ -84,10 +84,15 @@ public interface MetaService {
 
 	Codec getCodecByType(String codecType);
 
-	public void refreshMeta(Meta meta);
-
 	LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg);
 
 	LeaseAcquireResponse tryRenewLease(Tpg tpg, Lease lease);
 
+	public boolean updateMeta(Meta meta);
+	
+	public void refreshMeta();
+	
+	public Meta getMeta();
+	
+	public Meta getMeta(boolean isForceLatest);
 }
