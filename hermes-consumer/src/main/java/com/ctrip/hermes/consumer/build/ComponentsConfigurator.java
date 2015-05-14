@@ -14,7 +14,6 @@ import com.ctrip.hermes.consumer.engine.bootstrap.DefaultConsumerBootstrapManage
 import com.ctrip.hermes.consumer.engine.bootstrap.DefaultConsumerBootstrapRegistry;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategy;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerLongPollingConsumptionStrategy;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerPushConsumptionStrategy;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultBrokerConsumptionRegistry;
 import com.ctrip.hermes.consumer.engine.command.processor.ConsumeMessageCommandProcessor;
 import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve;
@@ -61,11 +60,11 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(ClientEndpointChannelManager.class)//
 		      .req(LeaseManager.class)//
 		      .req(MessageCodec.class));
-		all.add(C(BrokerConsumptionStrategy.class, ConsumerType.PUSH.toString(), BrokerPushConsumptionStrategy.class)//
-		      .req(LeaseManager.class)//
-		      .req(ConsumerNotifier.class)//
-		      .req(EndpointManager.class)//
-		      .req(ClientEndpointChannelManager.class));
+		// all.add(C(BrokerConsumptionStrategy.class, ConsumerType.PUSH.toString(), BrokerPushConsumptionStrategy.class)//
+		// .req(LeaseManager.class)//
+		// .req(ConsumerNotifier.class)//
+		// .req(EndpointManager.class)//
+		// .req(ClientEndpointChannelManager.class));
 
 		all.add(A(DefaultConsumerPipelineSink.class));
 
