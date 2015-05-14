@@ -58,8 +58,11 @@ public class MetaServerTest extends ComponentTestCase {
 		Assert.assertTrue(actual.getTopics().size() > 0);
 
 		Response response = request.post(Entity.text(json));
-		if (response.getStatus() != Status.NOT_MODIFIED.getStatusCode()) {
+		if (response.getStatus() == Status.CREATED.getStatusCode()) {
 			System.out.println(response.readEntity(Meta.class));
+		} else {
+			System.out.println(response.getStatus());
+			System.out.println(response.readEntity(String.class));
 		}
 	}
 }

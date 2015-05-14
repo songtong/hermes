@@ -15,8 +15,6 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.meta.core.MetaManager;
-import com.ctrip.hermes.meta.core.MetaService;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
@@ -26,9 +24,6 @@ import com.ctrip.hermes.meta.entity.Topic;
 
 @Named
 public class TopicService {
-
-	@Inject(ServerMetaManager.ID)
-	private MetaManager m_metaManager;
 
 	@Inject(ServerMetaService.ID)
 	private MetaService m_metaService;
@@ -42,7 +37,7 @@ public class TopicService {
 	 * @return
 	 */
 	public Topic createTopic(Topic topic) {
-		Meta meta = m_metaManager.getMeta();
+		Meta meta = m_metaService.getMeta();
 		topic.setCreateTime(new Date(System.currentTimeMillis()));
 		long maxTopicId = 0;
 		for (Topic topic2 : meta.getTopics().values()) {
@@ -53,8 +48,7 @@ public class TopicService {
 		topic.setId(maxTopicId + 1);
 		meta.addTopic(topic);
 
-		m_metaManager.updateMeta(meta);
-		m_metaService.refreshMeta(meta);
+		m_metaService.updateMeta(meta);
 		return topic;
 	}
 
@@ -146,15 +140,14 @@ public class TopicService {
 	 * @throws DalException
 	 */
 	public void deleteTopic(String name) throws DalException {
-		Meta meta = m_metaManager.getMeta();
+		Meta meta = m_metaService.getMeta();
 		Topic topic = meta.findTopic(name);
 		if (topic == null)
 			return;
 		meta.removeTopic(name);
 		// Remove related schemas
 		m_schemaService.deleteSchemas(topic);
-		m_metaManager.updateMeta(meta);
-		m_metaService.refreshMeta(meta);
+		m_metaService.updateMeta(meta);
 	}
 
 	public Storage findStorage(String topic) {
@@ -179,12 +172,11 @@ public class TopicService {
 	 * @return
 	 */
 	public Topic updateTopic(Topic topic) {
-		Meta meta = m_metaManager.getMeta();
+		Meta meta = m_metaService.getMeta();
 		meta.removeTopic(topic.getName());
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 		meta.addTopic(topic);
-		m_metaManager.updateMeta(meta);
-		m_metaService.refreshMeta(meta);
+		m_metaService.updateMeta(meta);
 		return topic;
 	}
 }
