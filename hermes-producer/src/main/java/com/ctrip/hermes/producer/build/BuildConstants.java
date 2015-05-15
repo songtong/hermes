@@ -1,5 +1,5 @@
 package com.ctrip.hermes.producer.build;
 
-public interface BuildConstants {
-	String PRODUCER = "producer";
+public class BuildConstants {
+	public static final String PRODUCER = "producer";
 }

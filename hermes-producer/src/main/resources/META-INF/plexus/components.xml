@@ -65,47 +65,6 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.pipeline.PipelineSink</role>
-			<role-hint>local</role-hint>
-			<implementation>com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSink</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.producer.sender.MessageSender</role>
-					<role-hint>local</role-hint>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.core.pipeline.PipelineSink</role>
-			<role-hint>transaction</role-hint>
-			<implementation>com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSink</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.producer.sender.MessageSender</role>
-					<role-hint>transaction</role-hint>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.producer.sender.MessageSender</role>
-			<role-hint>local</role-hint>
-			<implementation>com.ctrip.hermes.producer.sender.SimpleMessageSender</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.core.message.partition.PartitioningStrategy</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.producer.sender.MessageSender</role>
 			<role-hint>broker</role-hint>
 			<implementation>com.ctrip.hermes.producer.sender.BatchableMessageSender</implementation>

@@ -5,6 +5,7 @@ import java.util.List;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.core.pipeline.DefaultPipelineContext;
 import com.ctrip.hermes.core.pipeline.Pipeline;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
@@ -12,15 +13,13 @@ import com.ctrip.hermes.core.pipeline.PipelineSink;
 import com.ctrip.hermes.core.pipeline.ValveRegistry;
 import com.ctrip.hermes.core.pipeline.spi.Valve;
 
-@Named(type = Pipeline.class, value = ConsumerPipeline.CONSUMER)
+@Named(type = Pipeline.class, value = BuildConstants.CONSUMER)
 public class ConsumerPipeline implements Pipeline<Void> {
 
-	public static final String CONSUMER = "consumer";
-
-	@Inject(CONSUMER)
+	@Inject(BuildConstants.CONSUMER)
 	private PipelineSink<Void> m_pipelineSink;
 
-	@Inject(CONSUMER)
+	@Inject(BuildConstants.CONSUMER)
 	private ValveRegistry m_registry;
 
 	@Override

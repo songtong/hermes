@@ -6,11 +6,10 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.pipeline.AbstractValveRegistry;
 import com.ctrip.hermes.core.pipeline.ValveRegistry;
+import com.ctrip.hermes.producer.build.BuildConstants;
 
-@Named(type = ValveRegistry.class, value = ProducerValveRegistry.ID)
+@Named(type = ValveRegistry.class, value = BuildConstants.PRODUCER)
 public class ProducerValveRegistry extends AbstractValveRegistry implements Initializable {
-
-	public static final String ID = "producer";
 
 	@Override
 	public void initialize() throws InitializationException {

@@ -65,6 +65,16 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.core.lease.LeaseManager</role>
+			<role-hint>broker</role-hint>
+			<implementation>com.ctrip.hermes.broker.lease.BrokerLeaseManager</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory</role>
 			<implementation>com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory</implementation>
 			<requirements>

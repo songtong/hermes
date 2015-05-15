@@ -22,7 +22,6 @@ import com.ctrip.hermes.producer.pipeline.ProducerValveRegistry;
 import com.ctrip.hermes.producer.pipeline.TracingMessageValve;
 import com.ctrip.hermes.producer.sender.BatchableMessageSender;
 import com.ctrip.hermes.producer.sender.MessageSender;
-import com.ctrip.hermes.producer.sender.SimpleMessageSender;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -41,19 +40,12 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(EnrichMessageValve.class));
 
 		// sinks
-		all.add(A(DefaultProducerPipelineSinkManager.class)); 
+		all.add(A(DefaultProducerPipelineSinkManager.class));
 		all.add(C(PipelineSink.class, Endpoint.BROKER, DefaultProducerPipelineSink.class) //
 		      .req(MessageSender.class, Endpoint.BROKER)//
 		);
-		all.add(C(PipelineSink.class, Endpoint.LOCAL, DefaultProducerPipelineSink.class) //
-		      .req(MessageSender.class, Endpoint.LOCAL)//
-		);
-		all.add(C(PipelineSink.class, Endpoint.TRANSACTION, DefaultProducerPipelineSink.class) //
-		      .req(MessageSender.class, Endpoint.TRANSACTION)//
-		);
 
 		// message sender
-		all.add(A(SimpleMessageSender.class));
 		all.add(C(MessageSender.class, Endpoint.BROKER, BatchableMessageSender.class)//
 		      .req(EndpointManager.class)//
 		      .req(ClientEndpointChannelManager.class)//
