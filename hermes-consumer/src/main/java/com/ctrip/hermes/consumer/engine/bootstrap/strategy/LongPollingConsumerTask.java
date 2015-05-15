@@ -75,8 +75,6 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private AtomicBoolean m_renewLeaseTaskRunning = new AtomicBoolean(false);
 
-	private AtomicBoolean m_closed = new AtomicBoolean(false);
-
 	private AtomicReference<Lease> m_lease = new AtomicReference<>(null);
 
 	private AtomicLong m_nextRenewLeaseTime = new AtomicLong(0);
@@ -131,15 +129,11 @@ public class LongPollingConsumerTask implements Runnable {
 		m_leaseManager = leaseManager;
 	}
 
-	public void close() {
-		m_closed.set(true);
-	}
-
 	@Override
 	public void run() {
 		ConsumerLeaseKey key = new ConsumerLeaseKey(new Tpg(m_context.getTopic().getName(), m_partitionId,
 		      m_context.getGroupId()), m_context.getSessionId());
-		while (!m_closed.get() && !Thread.currentThread().isInterrupted()) {
+		while (!Thread.currentThread().isInterrupted()) {
 			try {
 				acquireLease(key);
 
@@ -170,8 +164,7 @@ public class LongPollingConsumerTask implements Runnable {
 		m_nextRenewLeaseTime.set(System.currentTimeMillis());
 		m_consumerNotifier.register(correlationId, m_context);
 
-		while (!m_closed.get() //
-		      && !Thread.currentThread().isInterrupted()//
+		while (!Thread.currentThread().isInterrupted()//
 		      && m_lease.get().getExpireTime() > System.currentTimeMillis()) {
 
 			try {
@@ -246,10 +239,10 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private void acquireLease(ConsumerLeaseKey key) {
 		long nextTryTime = System.currentTimeMillis();
-		while (!m_closed.get() && !Thread.currentThread().isInterrupted()) {
+		while (!Thread.currentThread().isInterrupted()) {
 			try {
 				while (true) {
-					if (!m_closed.get() && !Thread.currentThread().isInterrupted()) {
+					if (!Thread.currentThread().isInterrupted()) {
 						if (nextTryTime > System.currentTimeMillis()) {
 							LockSupport.parkUntil(nextTryTime);
 						} else {
