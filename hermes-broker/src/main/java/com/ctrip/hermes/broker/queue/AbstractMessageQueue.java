@@ -6,7 +6,7 @@ import java.util.Map;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -32,7 +32,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	}
 
 	@Override
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageRawDataBatch batch) {
+	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch) {
 		m_dumper.startIfNecessary();
 
 		SettableFuture<Map<Integer, Boolean>> future = SettableFuture.create();

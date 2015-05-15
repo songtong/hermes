@@ -10,6 +10,8 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
+import com.ctrip.hermes.producer.monitor.SendMessageAcceptedMonitor;
+import com.ctrip.hermes.producer.monitor.SendMessageResultMonitor;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -28,6 +30,12 @@ public abstract class AbstractMessageSender implements MessageSender {
 
 	@Inject
 	protected MetaService m_metaService;
+
+	@Inject
+	protected SendMessageAcceptedMonitor m_messageAcceptedMonitor;
+
+	@Inject
+	protected SendMessageResultMonitor m_messageResultMonitor;
 
 	/*
 	 * (non-Javadoc)

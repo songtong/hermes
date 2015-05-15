@@ -6,11 +6,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -20,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.transport.command.Ack;
 import com.ctrip.hermes.core.transport.command.AckAware;
 import com.ctrip.hermes.core.transport.command.Command;
@@ -40,7 +40,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 	private AtomicBoolean m_writerStarted = new AtomicBoolean(false);
 
-	private ConcurrentMap<Long, AckAware<Ack>> m_pendingCommands = new ConcurrentHashMap<>();
+	private Map<Long, AckAware<Ack>> m_pendingCommands = new HashMap<>();
 
 	private Object m_pendingCmdsLock = new Object();
 
@@ -126,12 +126,13 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 		if (command instanceof Ack) {
 			synchronized (m_pendingCmdsLock) {
 				long correlationId = command.getHeader().getCorrelationId();
-				AckAware<Ack> reqCommand = m_pendingCommands.get(correlationId);
+				AckAware<Ack> reqCommand = m_pendingCommands.remove(correlationId);
 				if (reqCommand != null) {
 					reqCommand.onAck((Ack) command);
-					m_pendingCommands.remove(correlationId);
 				} else {
-					command.release();
+					if (command.getClass().isAnnotationPresent(ManualRelease.class)) {
+						command.release();
+					}
 				}
 			}
 		} else {

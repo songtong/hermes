@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
@@ -14,7 +14,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  */
 public interface MessageQueue {
 
-	ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageRawDataBatch batch);
+	ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch);
 
 	MessageQueueCursor createCursor(String groupId);
 

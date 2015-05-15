@@ -14,8 +14,9 @@ public enum CommandType {
 	MESSAGE_PULL(104, PullMessageCommand.class), //
 
 	ACK_MESSAGE_SEND(201, SendMessageAckCommand.class), //
-	ACK_SUBSCRIBE(202, SubscribeAckCommand.class), //
-	ACK_MESSAGE_PULL(203, PullMessageAckCommand.class), //
+	ACK_MESSAGE_PULL(202, PullMessageAckCommand.class), //
+
+	RESULT_MESSAGE_SEND(301, SendMessageResultCommand.class), //
 	;
 
 	private static Map<Integer, CommandType> m_types = new HashMap<Integer, CommandType>();
