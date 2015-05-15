@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,7 +13,7 @@ import com.ctrip.hermes.core.meta.MetaService;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class AbstractMessageQueuePartitionCursor implements MessageQueuePartitionCursor {
+public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 	protected Tpg m_tpg;
 
 	protected Tpp m_priorityTpp;
@@ -30,7 +30,7 @@ public abstract class AbstractMessageQueuePartitionCursor implements MessageQueu
 
 	protected int m_groupIdInt;
 
-	public AbstractMessageQueuePartitionCursor(Tpg tpg, MetaService metaService) {
+	public AbstractMessageQueueCursor(Tpg tpg, MetaService metaService) {
 		m_tpg = tpg;
 		m_priorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), true);
 		m_nonPriorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), false);

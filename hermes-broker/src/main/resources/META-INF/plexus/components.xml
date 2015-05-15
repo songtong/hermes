@@ -65,8 +65,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionFactory</role>
-			<implementation>com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionFactory</implementation>
+			<role>com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory</role>
+			<implementation>com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
@@ -78,7 +78,7 @@
 			<implementation>com.ctrip.hermes.broker.queue.DefaultMessageQueueManager</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionFactory</role>
+					<role>com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory</role>
 				</requirement>
 			</requirements>
 		</component>

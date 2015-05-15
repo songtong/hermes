@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import java.util.Collection;
 import java.util.Map;
@@ -15,11 +15,11 @@ import com.google.common.collect.Collections2;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class DefaultMessageQueuePartitionDumper extends AbstractMessageQueuePartitionDumper {
+public class DefaultMessageQueueDumper extends AbstractMessageQueueDumper {
 
 	private MessageQueueStorage m_storage;
 
-	public DefaultMessageQueuePartitionDumper(String topic, int partition, MessageQueueStorage storage) {
+	public DefaultMessageQueueDumper(String topic, int partition, MessageQueueStorage storage) {
 		super(topic, partition);
 		m_storage = storage;
 	}

@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import java.util.Map;
 
@@ -9,7 +9,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public interface MessageQueuePartitionDumper {
+public interface MessageQueueDumper {
 
 	void startIfNecessary();
 

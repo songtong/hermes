@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,7 +22,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class AbstractMessageQueuePartitionDumper implements MessageQueuePartitionDumper {
+public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 	private static final int DEFAULT_BATCH_SIZE = 10;
 
 	private BlockingQueue<FutureBatchPriorityWrapper> m_queue = new LinkedBlockingQueue<>();
@@ -37,7 +37,7 @@ public abstract class AbstractMessageQueuePartitionDumper implements MessageQueu
 
 	protected int m_partition;
 
-	public AbstractMessageQueuePartitionDumper(String topic, int partition) {
+	public AbstractMessageQueueDumper(String topic, int partition) {
 		m_topic = topic;
 		m_partition = partition;
 
