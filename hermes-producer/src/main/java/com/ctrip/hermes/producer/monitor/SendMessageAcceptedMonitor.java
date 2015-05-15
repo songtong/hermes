@@ -1,0 +1,15 @@
+package com.ctrip.hermes.producer.monitor;
+
+import java.util.concurrent.Future;
+
+/**
+ * @author Leo Liang(jhliang@ctrip.com)
+ *
+ */
+public interface SendMessageAcceptedMonitor {
+
+	public Future<Boolean> monitor(long correlationId);
+
+	public void received(long correlationId, boolean success);
+
+}

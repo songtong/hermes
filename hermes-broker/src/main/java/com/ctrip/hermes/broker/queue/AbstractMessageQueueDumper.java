@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.util.concurrent.SettableFuture;
@@ -22,7 +22,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class AbstractMessageQueuePartitionDumper implements MessageQueuePartitionDumper {
+public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 	private static final int DEFAULT_BATCH_SIZE = 10;
 
 	private BlockingQueue<FutureBatchPriorityWrapper> m_queue = new LinkedBlockingQueue<>();
@@ -37,7 +37,7 @@ public abstract class AbstractMessageQueuePartitionDumper implements MessageQueu
 
 	protected int m_partition;
 
-	public AbstractMessageQueuePartitionDumper(String topic, int partition) {
+	public AbstractMessageQueueDumper(String topic, int partition) {
 		m_topic = topic;
 		m_partition = partition;
 
@@ -78,7 +78,7 @@ public abstract class AbstractMessageQueuePartitionDumper implements MessageQueu
 
 	}
 
-	public void submit(SettableFuture<Map<Integer, Boolean>> future, MessageRawDataBatch batch, boolean isPriority) {
+	public void submit(SettableFuture<Map<Integer, Boolean>> future, MessageBatchWithRawData batch, boolean isPriority) {
 		m_queue.offer(new FutureBatchPriorityWrapper(future, batch, isPriority));
 	}
 
@@ -104,11 +104,11 @@ public abstract class AbstractMessageQueuePartitionDumper implements MessageQueu
 			}
 		}
 
-		Function<FutureBatchResultWrapper, Pair<MessageRawDataBatch, Map<Integer, Boolean>>> transformFucntion = new Function<FutureBatchResultWrapper, Pair<MessageRawDataBatch, Map<Integer, Boolean>>>() {
+		Function<FutureBatchResultWrapper, Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> transformFucntion = new Function<FutureBatchResultWrapper, Pair<MessageBatchWithRawData, Map<Integer, Boolean>>>() {
 
 			@Override
-			public Pair<MessageRawDataBatch, Map<Integer, Boolean>> apply(FutureBatchResultWrapper input) {
-				return new Pair<MessageRawDataBatch, Map<Integer, Boolean>>(input.getBatch(), input.getResult());
+			public Pair<MessageBatchWithRawData, Map<Integer, Boolean>> apply(FutureBatchResultWrapper input) {
+				return new Pair<MessageBatchWithRawData, Map<Integer, Boolean>>(input.getBatch(), input.getResult());
 			}
 		};
 
@@ -139,16 +139,16 @@ public abstract class AbstractMessageQueuePartitionDumper implements MessageQueu
 	}
 
 	protected abstract void doAppendMessageSync(boolean isPriority,
-	      Collection<Pair<MessageRawDataBatch, Map<Integer, Boolean>>> todos);
+	      Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos);
 
 	private static class FutureBatchResultWrapper {
 		private SettableFuture<Map<Integer, Boolean>> m_future;
 
-		private MessageRawDataBatch m_batch;
+		private MessageBatchWithRawData m_batch;
 
 		private Map<Integer, Boolean> m_result;
 
-		public FutureBatchResultWrapper(SettableFuture<Map<Integer, Boolean>> future, MessageRawDataBatch batch,
+		public FutureBatchResultWrapper(SettableFuture<Map<Integer, Boolean>> future, MessageBatchWithRawData batch,
 		      Map<Integer, Boolean> result) {
 			m_future = future;
 			m_batch = batch;
@@ -159,7 +159,7 @@ public abstract class AbstractMessageQueuePartitionDumper implements MessageQueu
 			return m_future;
 		}
 
-		public MessageRawDataBatch getBatch() {
+		public MessageBatchWithRawData getBatch() {
 			return m_batch;
 		}
 
@@ -172,11 +172,11 @@ public abstract class AbstractMessageQueuePartitionDumper implements MessageQueu
 	private static class FutureBatchPriorityWrapper {
 		private SettableFuture<Map<Integer, Boolean>> m_future;
 
-		private MessageRawDataBatch m_batch;
+		private MessageBatchWithRawData m_batch;
 
 		private boolean m_isPriority;
 
-		public FutureBatchPriorityWrapper(SettableFuture<Map<Integer, Boolean>> future, MessageRawDataBatch batch,
+		public FutureBatchPriorityWrapper(SettableFuture<Map<Integer, Boolean>> future, MessageBatchWithRawData batch,
 		      boolean isPriority) {
 			m_future = future;
 			m_batch = batch;
@@ -187,7 +187,7 @@ public abstract class AbstractMessageQueuePartitionDumper implements MessageQueu
 			return m_future;
 		}
 
-		public MessageRawDataBatch getBatch() {
+		public MessageBatchWithRawData getBatch() {
 			return m_batch;
 		}
 

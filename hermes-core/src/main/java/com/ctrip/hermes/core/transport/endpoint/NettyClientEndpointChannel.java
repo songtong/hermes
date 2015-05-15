@@ -71,6 +71,7 @@ public class NettyClientEndpointChannel extends NettyEndpointChannel implements 
 
 			});
 
+			future.sync();
 		} catch (Exception e) {
 			// TODO
 			e.printStackTrace();

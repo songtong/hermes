@@ -19,7 +19,7 @@ public class DefaultConsumerBootstrapManager implements ConsumerBootstrapManager
 
 	public ConsumerBootstrap findConsumerBootStrap(String endpointType) {
 
-		if (Arrays.asList(Endpoint.BROKER, Endpoint.TRANSACTION, Endpoint.KAFKA, Endpoint.LOCAL).contains(endpointType)) {
+		if (Arrays.asList(Endpoint.BROKER, Endpoint.KAFKA).contains(endpointType)) {
 			return m_registry.findConsumerBootstrap(endpointType);
 		} else {
 			throw new IllegalArgumentException(String.format("unknow endpoint type: %s", endpointType));

@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import java.util.Arrays;
 
@@ -19,11 +19,11 @@ public class MessageQueuePartitionFactory extends ContainerHolder {
 	@Inject
 	private MetaService m_metaService;
 
-	public MessageQueuePartition createMessageQueuePartition(String topic, int partition) {
+	public MessageQueue getMessageQueue(String topic, int partition) {
 		Storage storage = m_metaService.findStorage(topic);
 
 		if (Arrays.asList(Storage.MYSQL).contains(storage.getType())) {
-			return new DefaultMessageQueuePartition(topic, partition,
+			return new DefaultMessageQueue(topic, partition,
 			      lookup(MessageQueueStorage.class, storage.getType()), m_metaService);
 		} else {
 			throw new IllegalArgumentException("Unsupported storage type " + storage.getType());

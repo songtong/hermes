@@ -17,7 +17,7 @@ import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.meta.entity.Storage;
 
 public class MySQLMessageQueueStorageTest extends ComponentTestCase {
@@ -55,10 +55,10 @@ public class MySQLMessageQueueStorageTest extends ComponentTestCase {
 	public void testAppendMessages() throws Exception {
 		String topic = "order_new";
 		Tpp tpp = new Tpp(topic, 0, true);
-		Collection<MessageRawDataBatch> batches = new ArrayList<>();
+		Collection<MessageBatchWithRawData> batches = new ArrayList<>();
 		// TODO mock data
 		ByteBuf rawData = Unpooled.buffer();
-		MessageRawDataBatch batch = new MessageRawDataBatch(topic, Arrays.asList(1), rawData);
+		MessageBatchWithRawData batch = new MessageBatchWithRawData(topic, Arrays.asList(1), rawData);
 		batches.add(batch);
 		s.appendMessages(tpp, batches);
 	}

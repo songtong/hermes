@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import java.util.List;
 
@@ -13,23 +13,23 @@ import com.ctrip.hermes.core.meta.MetaService;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class DefaultMessageQueuePartition extends AbstractMessageQueuePartition {
+public class DefaultMessageQueue extends AbstractMessageQueue {
 
 	private MetaService m_metaService;
 
-	public DefaultMessageQueuePartition(String topic, int partition, MessageQueueStorage storage, MetaService metaService) {
+	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService) {
 		super(topic, partition, storage);
 		m_metaService = metaService;
 	}
 
 	@Override
-	protected MessageQueuePartitionDumper getMessageQueuePartitionDumper() {
-		return new DefaultMessageQueuePartitionDumper(m_topic, m_partition, m_storage);
+	protected MessageQueueDumper getMessageQueuePartitionDumper() {
+		return new DefaultMessageQueueDumper(m_topic, m_partition, m_storage);
 	}
 
 	@Override
-	protected MessageQueuePartitionCursor doCreateCursor(String groupId) {
-		return new DefaultMessageQueuePartitionCursor(new Tpg(m_topic, m_partition, groupId), m_storage, m_metaService);
+	protected MessageQueueCursor doCreateCursor(String groupId) {
+		return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), m_storage, m_metaService);
 	}
 
 	@Override

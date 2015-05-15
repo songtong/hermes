@@ -12,8 +12,8 @@ import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
-import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
+import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.processor.SingleThreaded;
 import com.google.common.util.concurrent.FutureCallback;
@@ -26,7 +26,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  *
  */
 @SingleThreaded
-public class SendMessageCommandProcessor implements CommandProcessor {
+public class SendMessageCommandProcessor extends AbstractTopicPartitionAuthCommandProcessor {
 
 	@Inject
 	private MessageQueueManager m_queueManager;
@@ -37,19 +37,19 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	}
 
 	@Override
-	public void process(final CommandProcessorContext ctx) {
+	public void doProcess(final CommandProcessorContext ctx) {
 		SendMessageCommand reqCmd = (SendMessageCommand) ctx.getCommand();
 
-		Map<Tpp, MessageRawDataBatch> rawBatches = reqCmd.getMessageRawDataBatches();
+		Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
 
-		final SendMessageAckCommand ack = new SendMessageAckCommand(reqCmd.getMessageCount());
-		ack.correlate(reqCmd);
+		final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
+		result.correlate(reqCmd);
 
-		FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(ack, ctx);
+		FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx);
 
-		for (Map.Entry<Tpp, MessageRawDataBatch> entry : rawBatches.entrySet()) {
-			MessageRawDataBatch batch = entry.getValue();
-			Tpp tpp = entry.getKey();
+		for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
+			MessageBatchWithRawData batch = entry.getValue();
+			Tpp tpp = new Tpp(reqCmd.getTopic(), reqCmd.getPartition(), entry.getKey() == 0 ? true : false);
 			try {
 				ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(tpp, batch);
 
@@ -64,25 +64,25 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	}
 
 	private static class AppendMessageCompletionCallback implements FutureCallback<Map<Integer, Boolean>> {
-		private SendMessageAckCommand m_ack;
+		private SendMessageResultCommand m_result;
 
 		private CommandProcessorContext m_ctx;
 
 		private AtomicBoolean m_written = new AtomicBoolean(false);
 
-		public AppendMessageCompletionCallback(SendMessageAckCommand ack, CommandProcessorContext ctx) {
-			m_ack = ack;
+		public AppendMessageCompletionCallback(SendMessageResultCommand result, CommandProcessorContext ctx) {
+			m_result = result;
 			m_ctx = ctx;
 		}
 
 		@Override
 		public void onSuccess(Map<Integer, Boolean> results) {
-			m_ack.addResults(results);
+			m_result.addResults(results);
 
-			if (m_ack.isAllResultsSet()) {
+			if (m_result.isAllResultsSet()) {
 				try {
 					if (m_written.compareAndSet(false, true)) {
-						m_ctx.write(m_ack);
+						m_ctx.write(m_result);
 					}
 				} finally {
 					m_ctx.getCommand().release();
@@ -96,4 +96,30 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 			// TODO
 		}
 	}
+
+	@Override
+	protected void doAuthFail(CommandProcessorContext ctx) {
+		writeAck(ctx, false);
+	}
+
+	@Override
+	protected TopicPartition getTopicPartition(CommandProcessorContext ctx) {
+		SendMessageCommand req = (SendMessageCommand) ctx.getCommand();
+		return new TopicPartition(req.getTopic(), req.getPartition());
+	}
+
+	@Override
+	protected void doAuthSuccess(CommandProcessorContext ctx) {
+		writeAck(ctx, true);
+	}
+
+	private void writeAck(CommandProcessorContext ctx, boolean success) {
+		SendMessageCommand req = (SendMessageCommand) ctx.getCommand();
+
+		SendMessageAckCommand ack = new SendMessageAckCommand();
+		ack.correlate(req);
+		ack.setSuccess(success);
+		ctx.getChannel().writeCommand(ack);
+	}
+
 }

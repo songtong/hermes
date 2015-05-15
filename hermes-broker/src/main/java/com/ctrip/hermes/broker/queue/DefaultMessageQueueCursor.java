@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
@@ -9,10 +9,10 @@ import com.ctrip.hermes.core.meta.MetaService;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class DefaultMessageQueuePartitionCursor extends AbstractMessageQueuePartitionCursor {
+public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 	private MessageQueueStorage m_storage;
 
-	public DefaultMessageQueuePartitionCursor(Tpg tpg, MessageQueueStorage storage, MetaService metaService) {
+	public DefaultMessageQueueCursor(Tpg tpg, MessageQueueStorage storage, MetaService metaService) {
 		super(tpg, metaService);
 		m_storage = storage;
 	}

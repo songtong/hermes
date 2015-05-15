@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import java.util.List;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Map;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -14,17 +14,17 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class AbstractMessageQueuePartition implements MessageQueuePartition {
+public abstract class AbstractMessageQueue implements MessageQueue {
 
 	protected String m_topic;
 
 	protected int m_partition;
 
-	protected MessageQueuePartitionDumper m_dumper;
+	protected MessageQueueDumper m_dumper;
 
 	protected MessageQueueStorage m_storage;
 
-	public AbstractMessageQueuePartition(String topic, int partition, MessageQueueStorage storage) {
+	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage) {
 		m_topic = topic;
 		m_partition = partition;
 		m_storage = storage;
@@ -32,7 +32,7 @@ public abstract class AbstractMessageQueuePartition implements MessageQueueParti
 	}
 
 	@Override
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageRawDataBatch batch) {
+	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch) {
 		m_dumper.startIfNecessary();
 
 		SettableFuture<Map<Integer, Boolean>> future = SettableFuture.create();
@@ -43,8 +43,8 @@ public abstract class AbstractMessageQueuePartition implements MessageQueueParti
 	}
 
 	@Override
-	public MessageQueuePartitionCursor createCursor(String groupId) {
-		MessageQueuePartitionCursor cursor = doCreateCursor(groupId);
+	public MessageQueueCursor createCursor(String groupId) {
+		MessageQueueCursor cursor = doCreateCursor(groupId);
 		cursor.init();
 		return cursor;
 	}
@@ -59,9 +59,9 @@ public abstract class AbstractMessageQueuePartition implements MessageQueueParti
 		doAck(resend, isPriority, groupId, msgSeq);
 	}
 
-	protected abstract MessageQueuePartitionDumper getMessageQueuePartitionDumper();
+	protected abstract MessageQueueDumper getMessageQueuePartitionDumper();
 
-	protected abstract MessageQueuePartitionCursor doCreateCursor(String groupId);
+	protected abstract MessageQueueCursor doCreateCursor(String groupId);
 
 	protected abstract void doNack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, Integer>> msgSeqs);
 

@@ -10,7 +10,4 @@ public interface ClientEndpointChannelManager {
 
 	ClientEndpointChannel getChannel(Endpoint endpoint);
 
-	ClientEndpointChannel startVirtualChannel(Endpoint endpoint, VirtualChannelEventListener listener);
-
-	void closeChannel(Endpoint endpoint);
 }

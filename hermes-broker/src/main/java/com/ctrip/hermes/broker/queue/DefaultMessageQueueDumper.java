@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.partition;
+package com.ctrip.hermes.broker.queue;
 
 import java.util.Collection;
 import java.util.Map;
@@ -7,7 +7,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
@@ -15,25 +15,25 @@ import com.google.common.collect.Collections2;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class DefaultMessageQueuePartitionDumper extends AbstractMessageQueuePartitionDumper {
+public class DefaultMessageQueueDumper extends AbstractMessageQueueDumper {
 
 	private MessageQueueStorage m_storage;
 
-	public DefaultMessageQueuePartitionDumper(String topic, int partition, MessageQueueStorage storage) {
+	public DefaultMessageQueueDumper(String topic, int partition, MessageQueueStorage storage) {
 		super(topic, partition);
 		m_storage = storage;
 	}
 
 	@Override
 	protected void doAppendMessageSync(boolean isPriority,
-	      Collection<Pair<MessageRawDataBatch, Map<Integer, Boolean>>> todos) {
+	      Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos) {
 
 		try {
 			m_storage.appendMessages(new Tpp(m_topic, m_partition, isPriority), Collections2.transform(todos,
-			      new Function<Pair<MessageRawDataBatch, Map<Integer, Boolean>>, MessageRawDataBatch>() {
+			      new Function<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>, MessageBatchWithRawData>() {
 
 				      @Override
-				      public MessageRawDataBatch apply(Pair<MessageRawDataBatch, Map<Integer, Boolean>> input) {
+				      public MessageBatchWithRawData apply(Pair<MessageBatchWithRawData, Map<Integer, Boolean>> input) {
 					      return input.getKey();
 				      }
 			      }));
@@ -46,8 +46,8 @@ public class DefaultMessageQueuePartitionDumper extends AbstractMessageQueuePart
 		}
 	}
 
-	private void setBatchesResult(Collection<Pair<MessageRawDataBatch, Map<Integer, Boolean>>> todos, boolean success) {
-		for (Pair<MessageRawDataBatch, Map<Integer, Boolean>> todo : todos) {
+	private void setBatchesResult(Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos, boolean success) {
+		for (Pair<MessageBatchWithRawData, Map<Integer, Boolean>> todo : todos) {
 			Map<Integer, Boolean> result = todo.getValue();
 			addResults(result, success);
 		}

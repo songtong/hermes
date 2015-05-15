@@ -10,11 +10,12 @@ import org.unidal.lookup.configuration.Component;
 import com.ctrip.hermes.broker.ack.AckManager;
 import com.ctrip.hermes.broker.ack.DefaultAckManager;
 import com.ctrip.hermes.broker.bootstrap.DefaultBrokerBootstrap;
+import com.ctrip.hermes.broker.lease.BrokerLeaseManager;
 import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.longpolling.SingleThreadLoopLongPollingService;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
-import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionFactory;
+import com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory;
 import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.MessageDataSourceProvider;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
@@ -28,8 +29,6 @@ import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
-
-	public final static String BROKER = "broker";
 
 	@Override
 	public List<Component> defineComponents() {
@@ -47,11 +46,10 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(AckManager.class));
 
 		all.add(A(SingleThreadLoopLongPollingService.class));
+		all.add(A(BrokerLeaseManager.class));
 
 		all.add(A(MessageQueuePartitionFactory.class));
 		all.add(A(DefaultMessageQueueManager.class));
-		// all.add(A(DefaultMessageQueuePullerManager.class));
-		// all.add(A(DefaultMessageTransmitter.class));
 		all.add(A(DefaultAckManager.class));
 		all.add(A(MySQLMessageQueueStorage.class));
 
