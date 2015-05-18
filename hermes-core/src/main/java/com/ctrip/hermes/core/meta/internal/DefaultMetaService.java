@@ -215,7 +215,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
-		// return new Lease(System.currentTimeMillis() + 10 * 1000);
 		try {
 			return m_manager.getMetaProxy().tryAcquireConsumerLease(tpg, sessionId);
 		} catch (RuntimeException e) {
@@ -227,7 +226,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId) {
-		// TODO
 		try {
 			return m_manager.getMetaProxy().tryRenewConsumerLease(tpg, lease, sessionId);
 		} catch (RuntimeException e) {
@@ -235,8 +233,29 @@ public class DefaultMetaService implements MetaService, Initializable {
 			// TODO
 			throw e;
 		}
-
 	}
+	
+	@Override
+   public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId) {
+		try {
+			return m_manager.getMetaProxy().tryRenewBrokerLease(topic, partition, lease, sessionId);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			// TODO
+			throw e;
+		}
+   }
+
+	@Override
+   public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId) {
+		try {
+			return m_manager.getMetaProxy().tryAcquireBrokerLease(topic, partition, sessionId);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			// TODO
+			throw e;
+		}
+   }
 
 	@Override
 	public void initialize() throws InitializationException {

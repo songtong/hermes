@@ -30,6 +30,10 @@
 				<requirement>
 					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.lease.LeaseManager</role>
+					<role-hint>broker</role-hint>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
