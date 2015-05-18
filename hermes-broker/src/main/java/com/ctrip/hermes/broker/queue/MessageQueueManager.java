@@ -5,17 +5,16 @@ import java.util.Map;
 
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionCursor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public interface MessageQueueManager {
 
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageRawDataBatch data);
+	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data);
 
-	public MessageQueuePartitionCursor createCursor(Tpg tpg);
+	public MessageQueueCursor createCursor(Tpg tpg);
 
 	public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, Integer>> msgSeqs);
 

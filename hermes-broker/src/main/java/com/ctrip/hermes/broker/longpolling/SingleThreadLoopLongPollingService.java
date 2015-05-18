@@ -13,8 +13,8 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.ack.AckManager;
+import com.ctrip.hermes.broker.queue.MessageQueueCursor;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
-import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionCursor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
@@ -38,7 +38,7 @@ public class SingleThreadLoopLongPollingService implements LongPollingService, I
 	// TODO size, if full?
 	private LinkedBlockingQueue<PullTask> m_tasks = new LinkedBlockingQueue<>();
 
-	private ConcurrentMap<Tpg, Pair<MessageQueuePartitionCursor, Long>> m_cursors = new ConcurrentHashMap<>();
+	private ConcurrentMap<Tpg, Pair<MessageQueueCursor, Long>> m_cursors = new ConcurrentHashMap<>();
 
 	@Override
 	public void schedulePush(Tpg tpg, long correlationId, int batchSize, EndpointChannel channel, long expireTime) {
@@ -70,13 +70,13 @@ public class SingleThreadLoopLongPollingService implements LongPollingService, I
 						Tpg tpg = pullTask.getTpg();
 
 						if (!m_cursors.containsKey(tpg)) {
-							MessageQueuePartitionCursor cursor = m_queueManager.createCursor(tpg);
+							MessageQueueCursor cursor = m_queueManager.createCursor(tpg);
 							// TODO when to remove this cursor
 							m_cursors.put(tpg, new Pair<>(cursor, now));
 						}
 
-						Pair<MessageQueuePartitionCursor, Long> pair = m_cursors.get(tpg);
-						MessageQueuePartitionCursor cursor = pair.getKey();
+						Pair<MessageQueueCursor, Long> pair = m_cursors.get(tpg);
+						MessageQueueCursor cursor = pair.getKey();
 						long scheduleTime = pair.getValue();
 
 						List<TppConsumerMessageBatch> batches = null;

@@ -5,11 +5,7 @@ package com.ctrip.hermes.core.lease;
  *
  */
 public interface LeaseManager<T extends SessionIdAware> {
-	public void registerAcquisition(T key, LeaseAcquisitionListener listener);
+	public LeaseAcquireResponse tryAcquireLease(T key);
 
-	public static interface LeaseAcquisitionListener {
-		public void onAcquire(Lease lease);
-
-		public void onExpire();
-	}
+	public LeaseAcquireResponse tryRenewLease(T key, Lease lease);
 }

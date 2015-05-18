@@ -78,7 +78,7 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<physical-table-name>meta</physical-table-name>
-				<data-source-name>meta</data-source-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
 			</configuration>
 		</component>
 		<component>
@@ -87,7 +87,7 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<physical-table-name>schema</physical-table-name>
-				<data-source-name>meta</data-source-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
 			</configuration>
 		</component>
 		<component>

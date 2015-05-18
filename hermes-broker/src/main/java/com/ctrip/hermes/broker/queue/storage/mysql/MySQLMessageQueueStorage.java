@@ -41,7 +41,7 @@ import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.core.message.retry.RetryPolicyFactory;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.TransferCallback;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -79,9 +79,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	private Map<Pair<Tpp, Integer>, OffsetMessage> m_offsetMessageCache = new ConcurrentHashMap<>();
 
 	@Override
-	public void appendMessages(Tpp tpp, Collection<MessageRawDataBatch> batches) throws Exception {
+	public void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception {
 		List<MessagePriority> msgs = new ArrayList<>();
-		for (MessageRawDataBatch batch : batches) {
+		for (MessageBatchWithRawData batch : batches) {
 			List<PartialDecodedMessage> pdmsgs = batch.getMessages();
 			for (PartialDecodedMessage pdmsg : pdmsgs) {
 				MessagePriority msg = new MessagePriority();

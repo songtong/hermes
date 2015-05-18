@@ -2,8 +2,6 @@ package com.ctrip.hermes.core.transport.command;
 
 import io.netty.buffer.ByteBuf;
 
-import java.nio.ByteBuffer;
-
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
@@ -25,10 +23,6 @@ public abstract class AbstractCommand implements Command {
 
 	public void setHeader(Header header) {
 		m_header = header;
-	}
-
-	public static Command valueOf(ByteBuffer data) {
-		return new SendMessageCommand();
 	}
 
 	@Override

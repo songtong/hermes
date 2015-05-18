@@ -57,39 +57,6 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 		}
 	}
 
-	@Override
-	public ClientEndpointChannel startVirtualChannel(Endpoint endpoint, VirtualChannelEventListener listener) {
-		ClientEndpointChannel channel = getChannel(endpoint);
-		channel.startVirtualChannel(listener);
-		return channel;
-	}
-
-	@Override
-	public void closeChannel(Endpoint endpoint) {
-		EndpointChannel removedChannel = null;
-
-		switch (endpoint.getType()) {
-		case Endpoint.BROKER:
-			if (m_channels.containsKey(endpoint)) {
-				synchronized (m_channels) {
-					if (m_channels.containsKey(endpoint)) {
-						removedChannel = m_channels.remove(endpoint);
-					}
-				}
-			}
-			break;
-
-		default:
-			// TODO
-			throw new IllegalArgumentException(String.format("unknow endpoint type: %s", endpoint.getType()));
-		}
-
-		if (removedChannel != null) {
-			removedChannel.close();
-		}
-
-	}
-
 	protected static class NettyChannelAutoReconnectListener implements EndpointChannelEventListener {
 
 		private int m_reconnectDelaySeconds;

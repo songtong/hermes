@@ -8,7 +8,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -16,7 +16,7 @@ import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawData
  */
 public interface MessageQueueStorage {
 
-	void appendMessages(Tpp tpp, Collection<MessageRawDataBatch> batches) throws Exception;
+	void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception;
 
 	Object findLastOffset(Tpp tpp, int groupId) throws Exception;
 

@@ -11,6 +11,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -25,7 +26,7 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 	private ConcurrentMap<Long, Pair<ConsumerContext, ExecutorService>> m_consumerContexs = new ConcurrentHashMap<>();
 
-	@Inject("consumer")
+	@Inject(BuildConstants.CONSUMER)
 	protected Pipeline<Void> m_pipeline;
 
 	@Override

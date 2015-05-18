@@ -16,7 +16,7 @@
 				<param name="tId" />
 				<statement><![CDATA[SELECT <FIELDS/>
         FROM <TABLE/>
-        WHERE <FIELD name='topic-id'/> = ${tId}]]></statement>
+        WHERE <FIELD name='topic-id'/> = ${tId} ORDER BY <FIELD name='version'/> DESC]]></statement>
 			</query>
 			<query name="getMaxVersionByTopic" type="SELECT">
 				<param name="tId" />

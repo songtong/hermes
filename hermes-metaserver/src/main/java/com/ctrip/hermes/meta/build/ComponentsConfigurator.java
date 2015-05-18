@@ -28,7 +28,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(ServerMetaService.class));
 		
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/data/appdatas/hermes/datasources.xml"));
-		all.addAll(new MetaDatabaseConfigurator().defineComponents());
+		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
 
 		return all;
 	}

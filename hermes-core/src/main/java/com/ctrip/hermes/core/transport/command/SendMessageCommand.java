@@ -3,13 +3,14 @@ package com.ctrip.hermes.core.transport.command;
 import io.netty.buffer.ByteBuf;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
@@ -24,47 +25,66 @@ import com.google.common.util.concurrent.SettableFuture;
  *
  */
 @ManualRelease
-public class SendMessageCommand extends AbstractCommand implements AckAware<SendMessageAckCommand> {
+public class SendMessageCommand extends AbstractCommand {
 
 	private static final long serialVersionUID = 8443575812437722822L;
 
-	/**
-	 * msg counter within this command
-	 */
 	private AtomicInteger m_msgCounter = new AtomicInteger(0);
 
-	private Map<Tpp, List<ProducerMessage<?>>> m_msgs = new HashMap<>();
+	private String m_topic;
 
-	/**
-	 * msgSeq-future mapping
-	 */
+	private int m_partition;
+
+	private ConcurrentMap<Integer, List<ProducerMessage<?>>> m_msgs = new ConcurrentHashMap<>();
+
+	private Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<>();
+
 	private Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<>();
 
-	private Map<Tpp, MessageRawDataBatch> m_decodedBatches = new HashMap<>();
-
-	/**
-	 * @param commandType
-	 */
 	public SendMessageCommand() {
 		super(CommandType.MESSAGE_SEND);
 	}
 
+	public SendMessageCommand(String topic, int partition) {
+		super(CommandType.MESSAGE_SEND);
+		m_topic = topic;
+		m_partition = partition;
+	}
+
+	public String getTopic() {
+		return m_topic;
+	}
+
+	public int getPartition() {
+		return m_partition;
+	}
+
 	public void addMessage(ProducerMessage<?> msg, SettableFuture<SendResult> future) {
+		validate(msg);
+
 		int msgSeqNo = m_msgCounter.getAndIncrement();
 		msg.setMsgSeqNo(msgSeqNo);
 
-		Tpp tpp = new Tpp(msg.getTopic(), msg.getPartitionNo(), msg.isPriority());
-
-		if (!m_msgs.containsKey(tpp)) {
-			m_msgs.put(tpp, new ArrayList<ProducerMessage<?>>());
+		if (msg.isPriority()) {
+			m_msgs.putIfAbsent(0, new LinkedList<ProducerMessage<?>>());
+			m_msgs.get(0).add(msg);
+		} else {
+			m_msgs.putIfAbsent(1, new LinkedList<ProducerMessage<?>>());
+			m_msgs.get(1).add(msg);
 		}
-
-		m_msgs.get(tpp).add(msg);
 
 		m_futures.put(msgSeqNo, future);
 	}
 
-	public Map<Tpp, MessageRawDataBatch> getMessageRawDataBatches() {
+	private void validate(ProducerMessage<?> msg) {
+		if (!m_topic.equals(msg.getTopic()) || m_partition != msg.getPartitionNo()) {
+			throw new IllegalArgumentException(String.format(
+			      "Illegal message[topic=%s, partition=%s] try to add to SendMessageCommand[topic=%s, partition=%s]",
+			      msg.getTopic(), msg.getPartitionNo(), m_topic, m_partition));
+		}
+	}
+
+	public Map<Integer, MessageBatchWithRawData> getMessageRawDataBatches() {
 		return m_decodedBatches;
 	}
 
@@ -72,10 +92,9 @@ public class SendMessageCommand extends AbstractCommand implements AckAware<Send
 		return m_msgCounter.get();
 	}
 
-	@Override
-	public void onAck(SendMessageAckCommand ack) {
+	public void onResultReceived(SendMessageResultCommand result) {
 		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
-			entry.getValue().set(new SendResult(ack.isSuccess(entry.getKey())));
+			entry.getValue().set(new SendResult(result.isSuccess(entry.getKey())));
 		}
 	}
 
@@ -87,10 +106,10 @@ public class SendMessageCommand extends AbstractCommand implements AckAware<Send
 
 		m_msgCounter.set(codec.readInt());
 
-		List<Tpp> tppNames = readTppNames(buf);
-		List<TppIndex> tppIndices = readTppIndices(buf, tppNames.size());
+		m_topic = codec.readString();
+		m_partition = codec.readInt();
 
-		readTpps(buf, codec, tppNames, tppIndices);
+		readDatas(buf, codec, m_topic);
 
 	}
 
@@ -100,125 +119,79 @@ public class SendMessageCommand extends AbstractCommand implements AckAware<Send
 
 		codec.writeInt(m_msgCounter.get());
 
-		writeTppNames(m_msgs, codec);
+		codec.writeString(m_topic);
+		codec.writeInt(m_partition);
 
-		buf.markWriterIndex();
-
-		// placeholder for indices
-		for (int i = 0; i < m_msgs.size(); i++) {
-			codec.writeInt(-1);
-		}
-
-		List<TppIndex> tppInfos = writeTpps(m_msgs.values(), codec, buf);
-
-		int writerIndex = buf.writerIndex();
-		buf.resetWriterIndex();
-
-		writeTppIndices(tppInfos, codec);
-
-		buf.writerIndex(writerIndex);
+		writeDatas(buf, codec, m_msgs);
 	}
 
-	private void writeTppIndices(List<TppIndex> tppIndices, HermesPrimitiveCodec codec) {
-		for (TppIndex i : tppIndices) {
-			codec.writeInt(i.getLength());
+	private void writeDatas(ByteBuf buf, HermesPrimitiveCodec codec, Map<Integer, List<ProducerMessage<?>>> msgs) {
+		codec.writeInt(msgs.size());
+		for (Map.Entry<Integer, List<ProducerMessage<?>>> entry : m_msgs.entrySet()) {
+			// priority flag
+			codec.writeInt(entry.getKey());
+
+			writeMsgs(entry.getValue(), codec, buf);
 		}
 	}
 
-	private List<TppIndex> readTppIndices(ByteBuf buf, int size) {
-		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
-
-		List<TppIndex> tppInfos = new ArrayList<>(size);
-
-		for (int i = 0; i < size; i++) {
-			tppInfos.add(new TppIndex(codec.readInt()));
-		}
-
-		return tppInfos;
-	}
-
-	private void writeTppNames(Map<Tpp, List<ProducerMessage<?>>> msgs, HermesPrimitiveCodec codec) {
+	private void writeMsgs(List<ProducerMessage<?>> msgs, HermesPrimitiveCodec codec, ByteBuf buf) {
+		MessageCodec msgCodec = PlexusComponentLocator.lookup(MessageCodec.class);
+		// write msgSeqs
 		codec.writeInt(msgs.size());
 
-		for (Map.Entry<Tpp, List<ProducerMessage<?>>> entry : msgs.entrySet()) {
-			Tpp tpp = entry.getKey();
-			codec.writeString(tpp.getTopic());
-			codec.writeInt(tpp.getPartition());
-			codec.writeInt(tpp.isPriority() ? 0 : 1);
+		// seqNos
+		for (ProducerMessage<?> msg : msgs) {
+			codec.writeInt(msg.getMsgSeqNo());
 		}
+
+		// placeholder for payload len
+		int indexBeforeLen = buf.writerIndex();
+		codec.writeInt(-1);
+
+		int indexBeforePayload = buf.writerIndex();
+		// payload
+		for (ProducerMessage<?> msg : msgs) {
+			msgCodec.encode(msg, buf);
+		}
+		int indexAfterPayload = buf.writerIndex();
+		int payloadLen = indexAfterPayload - indexBeforePayload;
+
+		// refill payload len
+		buf.writerIndex(indexBeforeLen);
+		codec.writeInt(payloadLen);
+
+		buf.writerIndex(indexAfterPayload);
 	}
 
-	private List<Tpp> readTppNames(ByteBuf buf) {
-		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
+	private void readDatas(ByteBuf buf, HermesPrimitiveCodec codec, String topic) {
+		int size = codec.readInt();
+		for (int i = 0; i < size; i++) {
+			int priority = codec.readInt();
+
+			m_decodedBatches.put(priority, readMsgs(topic, codec, buf));
+		}
+
+	}
+
+	private MessageBatchWithRawData readMsgs(String topic, HermesPrimitiveCodec codec, ByteBuf buf) {
 		int size = codec.readInt();
 
-		List<Tpp> tppNames = new ArrayList<>();
+		List<Integer> msgSeqs = new ArrayList<>();
 
-		for (int i = 0; i < size; i++) {
-			tppNames.add(new Tpp(codec.readString(), codec.readInt(), codec.readInt() == 0 ? true : false));
+		for (int j = 0; j < size; j++) {
+			msgSeqs.add(codec.readInt());
 		}
 
-		return tppNames;
-	}
+		int payloadLen = codec.readInt();
 
-	private List<TppIndex> writeTpps(Collection<List<ProducerMessage<?>>> msgLists, HermesPrimitiveCodec codec,
-	      ByteBuf buf) {
-		List<TppIndex> tppIndices = new ArrayList<>();
+		ByteBuf rawData = buf.readSlice(payloadLen);
 
-		for (List<ProducerMessage<?>> msgList : msgLists) {
-			MessageCodec msgCodec = PlexusComponentLocator.lookup(MessageCodec.class);
-
-			// write msgSeqs
-			codec.writeInt(msgList.size());
-
-			for (ProducerMessage<?> msg : msgList) {
-				codec.writeInt(msg.getMsgSeqNo());
-			}
-
-			int start = buf.writerIndex();
-			for (ProducerMessage<?> msg : msgList) {
-				msgCodec.encode(msg, buf);
-			}
-			int length = buf.writerIndex() - start;
-			tppIndices.add(new TppIndex(length));
-		}
-
-		return tppIndices;
-	}
-
-	private void readTpps(ByteBuf buf, HermesPrimitiveCodec codec, List<Tpp> tppNames, List<TppIndex> tppIndices) {
-		for (int i = 0; i < tppNames.size(); i++) {
-			Tpp tppName = tppNames.get(i);
-			TppIndex tppInfo = tppIndices.get(i);
-
-			int size = codec.readInt();
-			List<Integer> msgSeqs = new ArrayList<>();
-
-			for (int j = 0; j < size; j++) {
-				msgSeqs.add(codec.readInt());
-			}
-
-			ByteBuf rawData = buf.readSlice(tppInfo.getLength());
-
-			m_decodedBatches.put(tppName, new MessageRawDataBatch(tppName.getTopic(), msgSeqs, rawData));
-		}
-	}
-
-	private static class TppIndex {
-
-		private int m_length;
-
-		public TppIndex(int length) {
-			m_length = length;
-		}
-
-		public int getLength() {
-			return m_length;
-		}
+		return new MessageBatchWithRawData(topic, msgSeqs, rawData);
 
 	}
 
-	public static class MessageRawDataBatch {
+	public static class MessageBatchWithRawData {
 		private String m_topic;
 
 		private List<Integer> m_msgSeqs;
@@ -227,7 +200,7 @@ public class SendMessageCommand extends AbstractCommand implements AckAware<Send
 
 		private List<PartialDecodedMessage> m_msgs;
 
-		public MessageRawDataBatch(String topic, List<Integer> msgSeqs, ByteBuf rawData) {
+		public MessageBatchWithRawData(String topic, List<Integer> msgSeqs, ByteBuf rawData) {
 			m_topic = topic;
 			m_msgSeqs = msgSeqs;
 			m_rawData = rawData;
@@ -265,21 +238,15 @@ public class SendMessageCommand extends AbstractCommand implements AckAware<Send
 
 			return m_msgs;
 		}
-
-		public void release() {
-			m_rawData.release();
-		}
 	}
 
-	@Override
-	public void onFail() {
+	public void onTimeout() {
 		Exception e = new RuntimeException();
 		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
 			entry.getValue().setException(e);
 		}
 	}
 
-	@Override
 	public long getExpireTime() {
 		// TODO config
 		return System.currentTimeMillis() + 10 * 1000L;

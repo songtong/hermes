@@ -48,24 +48,20 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public String getEndpointType(String topicName) {
 		Meta meta = m_meta.get();
-		if (meta.isDevMode()) {
-			return Endpoint.LOCAL;
+		Topic topic = meta.getTopics().get(topicName);
+		if (topic == null) {
+			throw new RuntimeException(String.format("Topic %s is not found", topicName));
+		}
+		List<Partition> partitions = topic.getPartitions();
+		if (partitions == null || partitions.size() == 0) {
+			throw new RuntimeException(String.format("Partitions for topic %s is not found", topicName));
+		}
+		String endpointId = partitions.get(0).getEndpoint();
+		Endpoint endpoint = meta.getEndpoints().get(endpointId);
+		if (endpoint == null) {
+			throw new RuntimeException(String.format("Endpoint for topic %s is not found", topicName));
 		} else {
-			Topic topic = meta.getTopics().get(topicName);
-			if (topic == null) {
-				throw new RuntimeException(String.format("Topic %s is not found", topicName));
-			}
-			List<Partition> partitions = topic.getPartitions();
-			if (partitions == null || partitions.size() == 0) {
-				throw new RuntimeException(String.format("Partitions for topic %s is not found", topicName));
-			}
-			String endpointId = partitions.get(0).getEndpoint();
-			Endpoint endpoint = meta.getEndpoints().get(endpointId);
-			if (endpoint == null) {
-				throw new RuntimeException(String.format("Endpoint for topic %s is not found", topicName));
-			} else {
-				return endpoint.getType();
-			}
+			return endpoint.getType();
 		}
 	}
 
@@ -219,7 +215,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
-		// return new Lease(System.currentTimeMillis() + 10 * 1000);
 		try {
 			return m_manager.getMetaProxy().tryAcquireConsumerLease(tpg, sessionId);
 		} catch (RuntimeException e) {
@@ -231,7 +226,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId) {
-		// TODO
 		try {
 			return m_manager.getMetaProxy().tryRenewConsumerLease(tpg, lease, sessionId);
 		} catch (RuntimeException e) {
@@ -239,8 +233,29 @@ public class DefaultMetaService implements MetaService, Initializable {
 			// TODO
 			throw e;
 		}
-
 	}
+	
+	@Override
+   public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId) {
+		try {
+			return m_manager.getMetaProxy().tryRenewBrokerLease(topic, partition, lease, sessionId);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			// TODO
+			throw e;
+		}
+   }
+
+	@Override
+   public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId) {
+		try {
+			return m_manager.getMetaProxy().tryAcquireBrokerLease(topic, partition, sessionId);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			// TODO
+			throw e;
+		}
+   }
 
 	@Override
 	public void initialize() throws InitializationException {

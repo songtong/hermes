@@ -76,7 +76,7 @@ public class ServerMetaService implements MetaService, Initializable {
 		try {
 			meta.setVersion(meta.getVersion() + 1);
 			dalMeta.setValue(JSON.toJSONString(meta));
-			dalMeta.setLastModifiedTime(new Date(System.currentTimeMillis()));
+			dalMeta.setDataChangeLastTime(new Date(System.currentTimeMillis()));
 			m_metaDao.insert(dalMeta);
 		} catch (DalException e) {
 			throw new RuntimeException("Update meta failed.", e);
@@ -88,24 +88,20 @@ public class ServerMetaService implements MetaService, Initializable {
 
 	@Override
 	public String getEndpointType(String topicName) {
-		if (m_meta.isDevMode()) {
-			return Endpoint.LOCAL;
+		Topic topic = m_meta.getTopics().get(topicName);
+		if (topic == null) {
+			throw new RuntimeException(String.format("Topic %s is not found", topicName));
+		}
+		List<Partition> partitions = topic.getPartitions();
+		if (partitions == null || partitions.size() == 0) {
+			throw new RuntimeException(String.format("Partitions for topic %s is not found", topicName));
+		}
+		String endpointId = partitions.get(0).getEndpoint();
+		Endpoint endpoint = m_meta.getEndpoints().get(endpointId);
+		if (endpoint == null) {
+			throw new RuntimeException(String.format("Endpoint for topic %s is not found", topicName));
 		} else {
-			Topic topic = m_meta.getTopics().get(topicName);
-			if (topic == null) {
-				throw new RuntimeException(String.format("Topic %s is not found", topicName));
-			}
-			List<Partition> partitions = topic.getPartitions();
-			if (partitions == null || partitions.size() == 0) {
-				throw new RuntimeException(String.format("Partitions for topic %s is not found", topicName));
-			}
-			String endpointId = partitions.get(0).getEndpoint();
-			Endpoint endpoint = m_meta.getEndpoints().get(endpointId);
-			if (endpoint == null) {
-				throw new RuntimeException(String.format("Endpoint for topic %s is not found", topicName));
-			} else {
-				return endpoint.getType();
-			}
+			return endpoint.getType();
 		}
 	}
 

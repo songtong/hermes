@@ -9,20 +9,27 @@ import org.unidal.lookup.configuration.Component;
 import com.ctrip.hermes.core.message.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
+import com.ctrip.hermes.core.transport.command.CommandType;
+import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.DefaultProducer;
 import com.ctrip.hermes.producer.HermesProducerModule;
+import com.ctrip.hermes.producer.monitor.DefaultSendMessageAcceptedMonitor;
+import com.ctrip.hermes.producer.monitor.DefaultSendMessageResultMonitor;
+import com.ctrip.hermes.producer.monitor.SendMessageAcceptedMonitor;
+import com.ctrip.hermes.producer.monitor.SendMessageResultMonitor;
 import com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSink;
 import com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSinkManager;
 import com.ctrip.hermes.producer.pipeline.EnrichMessageValve;
 import com.ctrip.hermes.producer.pipeline.ProducerPipeline;
 import com.ctrip.hermes.producer.pipeline.ProducerValveRegistry;
 import com.ctrip.hermes.producer.pipeline.TracingMessageValve;
-import com.ctrip.hermes.producer.sender.BatchableMessageSender;
+import com.ctrip.hermes.producer.sender.BrokerMessageSender;
 import com.ctrip.hermes.producer.sender.MessageSender;
-import com.ctrip.hermes.producer.sender.SimpleMessageSender;
+import com.ctrip.hermes.producer.transport.command.processor.SendMessageAckCommandProcessor;
+import com.ctrip.hermes.producer.transport.command.processor.SendMessageResultCommandProcessor;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -41,31 +48,31 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(EnrichMessageValve.class));
 
 		// sinks
-		all.add(A(DefaultProducerPipelineSinkManager.class)); 
+		all.add(A(DefaultProducerPipelineSinkManager.class));
 		all.add(C(PipelineSink.class, Endpoint.BROKER, DefaultProducerPipelineSink.class) //
 		      .req(MessageSender.class, Endpoint.BROKER)//
 		);
-		all.add(C(PipelineSink.class, Endpoint.LOCAL, DefaultProducerPipelineSink.class) //
-		      .req(MessageSender.class, Endpoint.LOCAL)//
-		);
-		all.add(C(PipelineSink.class, Endpoint.TRANSACTION, DefaultProducerPipelineSink.class) //
-		      .req(MessageSender.class, Endpoint.TRANSACTION)//
-		);
 
 		// message sender
-		all.add(A(SimpleMessageSender.class));
-		all.add(C(MessageSender.class, Endpoint.BROKER, BatchableMessageSender.class)//
+		all.add(C(MessageSender.class, Endpoint.BROKER, BrokerMessageSender.class)//
 		      .req(EndpointManager.class)//
 		      .req(ClientEndpointChannelManager.class)//
 		      .req(PartitioningStrategy.class)//
 		      .req(MetaService.class)//
+		      .req(SendMessageAcceptedMonitor.class)//
+		      .req(SendMessageResultMonitor.class)//
 		);
-		all.add(C(MessageSender.class, Endpoint.TRANSACTION, BatchableMessageSender.class)//
-		      .req(EndpointManager.class)//
-		      .req(ClientEndpointChannelManager.class)//
-		      .req(PartitioningStrategy.class)//
-		      .req(MetaService.class)//
-		);
+
+		// command processors
+		all.add(C(CommandProcessor.class, CommandType.ACK_MESSAGE_SEND.toString(), SendMessageAckCommandProcessor.class)//
+		      .req(SendMessageAcceptedMonitor.class));
+		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_SEND.toString(),
+		      SendMessageResultCommandProcessor.class)//
+		      .req(SendMessageResultMonitor.class));
+
+		// monitors
+		all.add(A(DefaultSendMessageResultMonitor.class));
+		all.add(A(DefaultSendMessageAcceptedMonitor.class));
 
 		return all;
 	}

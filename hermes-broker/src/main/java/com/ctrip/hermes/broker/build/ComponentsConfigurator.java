@@ -10,11 +10,12 @@ import org.unidal.lookup.configuration.Component;
 import com.ctrip.hermes.broker.ack.AckManager;
 import com.ctrip.hermes.broker.ack.DefaultAckManager;
 import com.ctrip.hermes.broker.bootstrap.DefaultBrokerBootstrap;
+import com.ctrip.hermes.broker.lease.BrokerLeaseManager;
 import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.longpolling.SingleThreadLoopLongPollingService;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
-import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionFactory;
+import com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory;
 import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.MessageDataSourceProvider;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
@@ -23,13 +24,12 @@ import com.ctrip.hermes.broker.transport.NettyServerConfig;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor;
+import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
-
-	public final static String BROKER = "broker";
 
 	@Override
 	public List<Component> defineComponents() {
@@ -40,22 +40,19 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(NettyServerConfig.class));
 
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND.toString(), SendMessageCommandProcessor.class)//
-		      .req(MessageQueueManager.class));
+		      .req(MessageQueueManager.class)//
+		      .req(LeaseManager.class, BuildConstants.BROKER)//
+		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL.toString(), PullMessageCommandProcessor.class)//
 		      .req(LongPollingService.class));
-		// all.add(C(CommandProcessor.class, CommandType.SUBSCRIBE.toString(), SubscribeCommandProcessor.class)//
-		// .req(MessageTransmitter.class));
-		// all.add(C(CommandProcessor.class, CommandType.UNSUBSCRIBE.toString(), UnsubscribeCommandProcessor.class)//
-		// .req(MessageTransmitter.class));
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(AckManager.class));
 
 		all.add(A(SingleThreadLoopLongPollingService.class));
+		all.add(A(BrokerLeaseManager.class));
 
 		all.add(A(MessageQueuePartitionFactory.class));
 		all.add(A(DefaultMessageQueueManager.class));
-		// all.add(A(DefaultMessageQueuePullerManager.class));
-		// all.add(A(DefaultMessageTransmitter.class));
 		all.add(A(DefaultAckManager.class));
 		all.add(A(MySQLMessageQueueStorage.class));
 

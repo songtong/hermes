@@ -9,12 +9,9 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.queue.partition.MessageQueuePartition;
-import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionCursor;
-import com.ctrip.hermes.broker.queue.partition.MessageQueuePartitionFactory;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageRawDataBatch;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 
 @Named(type = MessageQueueManager.class)
@@ -24,39 +21,39 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	private MessageQueuePartitionFactory m_queueFactory;
 
 	// one <topic, partition> mapping to one MessageQueue
-	private Map<Pair<String, Integer>, MessageQueuePartition> m_messageQueuePartitions = new ConcurrentHashMap<>();
+	private Map<Pair<String, Integer>, MessageQueue> m_messageQueues = new ConcurrentHashMap<>();
 
 	@Override
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageRawDataBatch data) {
-		return getMessageQueuePartition(tpp.getTopic(), tpp.getPartition()).appendMessageAsync(tpp.isPriority(), data);
+	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data) {
+		return getMessageQueue(tpp.getTopic(), tpp.getPartition()).appendMessageAsync(tpp.isPriority(), data);
 	}
 
 	@Override
-	public MessageQueuePartitionCursor createCursor(Tpg tpg) {
-		return getMessageQueuePartition(tpg.getTopic(), tpg.getPartition()).createCursor(tpg.getGroupId());
+	public MessageQueueCursor createCursor(Tpg tpg) {
+		return getMessageQueue(tpg.getTopic(), tpg.getPartition()).createCursor(tpg.getGroupId());
 	}
 
-	private MessageQueuePartition getMessageQueuePartition(String topic, int partition) {
+	private MessageQueue getMessageQueue(String topic, int partition) {
 		Pair<String, Integer> key = new Pair<>(topic, partition);
-		if (!m_messageQueuePartitions.containsKey(key)) {
-			synchronized (m_messageQueuePartitions) {
-				if (!m_messageQueuePartitions.containsKey(key)) {
-					MessageQueuePartition mqp = m_queueFactory.createMessageQueuePartition(topic, partition);
-					m_messageQueuePartitions.put(key, mqp);
+		if (!m_messageQueues.containsKey(key)) {
+			synchronized (m_messageQueues) {
+				if (!m_messageQueues.containsKey(key)) {
+					MessageQueue mqp = m_queueFactory.getMessageQueue(topic, partition);
+					m_messageQueues.put(key, mqp);
 				}
 			}
 		}
 
-		return m_messageQueuePartitions.get(key);
+		return m_messageQueues.get(key);
 	}
 
 	@Override
 	public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, Integer>> msgSeqs) {
-		getMessageQueuePartition(tpp.getTopic(), tpp.getPartition()).nack(resend, tpp.isPriority(), groupId, msgSeqs);
+		getMessageQueue(tpp.getTopic(), tpp.getPartition()).nack(resend, tpp.isPriority(), groupId, msgSeqs);
 	}
 
 	@Override
 	public void ack(Tpp tpp, String groupId, boolean resend, long msgSeq) {
-		getMessageQueuePartition(tpp.getTopic(), tpp.getPartition()).ack(resend, tpp.isPriority(), groupId, msgSeq);
+		getMessageQueue(tpp.getTopic(), tpp.getPartition()).ack(resend, tpp.isPriority(), groupId, msgSeq);
 	}
 }

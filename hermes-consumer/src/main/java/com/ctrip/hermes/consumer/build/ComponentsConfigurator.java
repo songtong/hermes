@@ -58,13 +58,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(ConsumerNotifier.class)//
 		      .req(EndpointManager.class)//
 		      .req(ClientEndpointChannelManager.class)//
-		      .req(LeaseManager.class)//
+		      .req(LeaseManager.class, BuildConstants.CONSUMER)//
 		      .req(MessageCodec.class));
-		// all.add(C(BrokerConsumptionStrategy.class, ConsumerType.PUSH.toString(), BrokerPushConsumptionStrategy.class)//
-		// .req(LeaseManager.class)//
-		// .req(ConsumerNotifier.class)//
-		// .req(EndpointManager.class)//
-		// .req(ClientEndpointChannelManager.class));
 
 		all.add(A(DefaultConsumerPipelineSink.class));
 
