@@ -76,7 +76,7 @@ public class ServerMetaService implements MetaService, Initializable {
 		try {
 			meta.setVersion(meta.getVersion() + 1);
 			dalMeta.setValue(JSON.toJSONString(meta));
-			dalMeta.setLastModifiedTime(new Date(System.currentTimeMillis()));
+			dalMeta.setDataChangeLastTime(new Date(System.currentTimeMillis()));
 			m_metaDao.insert(dalMeta);
 		} catch (DalException e) {
 			throw new RuntimeException("Update meta failed.", e);

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model>
   <entity name="meta" root="true">
-    <attribute name="dev-mode" value-type="boolean" />
     <attribute name="version" value-type="int" />
     <entity-ref name="topic" type="list" names="topics" />
     <entity-ref name="app" type="list" names="apps" />
