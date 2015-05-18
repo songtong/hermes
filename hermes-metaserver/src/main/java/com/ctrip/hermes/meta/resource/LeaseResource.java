@@ -21,6 +21,12 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 
+/**
+ * TODO this is a mock impl.
+ * 
+ * @author Leo Liang(jhliang@ctrip.com)
+ *
+ */
 @Path("/lease/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
@@ -34,7 +40,7 @@ public class LeaseResource {
 
 	private Lock m_consumerLeaseLock = new ReentrantLock();
 
-	private static final long BROKER_LEASE_TIME = 20 * 1000L;
+	private static final long BROKER_LEASE_TIME = 60 * 1000L;
 
 	// TODO server端lease比client端延后2秒
 	private static final long BROKER_LEASE_SERVER_DELAY_TIME = 2 * 1000L;
@@ -102,39 +108,46 @@ public class LeaseResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("broker/acquire")
-	public LeaseAcquireResponse tryAcquireBrokerLease(@QueryParam("topic") String topic,
-	      @QueryParam("partition") int partition, @QueryParam("sessionId") String sessionId) {
-		Pair<String, Integer> key = new Pair<>(topic, partition);
-		m_brokerLeaseLock.lock();
-		long now = System.currentTimeMillis();
-		try {
-			Lease existsLease = m_brokerLeases.get(key);
-			if (existsLease == null || existsLease.getExpireTime() < now) {
-				// TODO this is mock impl
-				System.out.println(String.format(
-				      "[%s]Try acquire broker lease success(topic=%s, partition=%s, sessionId=%s)", new Date(), topic,
-				      partition, sessionId));
-				long id = now;
-				m_brokerLeases.put(key, new Lease(id, now + BROKER_LEASE_TIME + BROKER_LEASE_SERVER_DELAY_TIME));
-				return new LeaseAcquireResponse(true, new Lease(id, now + BROKER_LEASE_TIME), -1L);
-			} else {
-				// TODO
-				System.out.println(String.format("[%s]Try acquire broker lease fail(topic=%s, partition=%s, sessionId=%s)",
-				      new Date(), topic, partition, sessionId));
-				return new LeaseAcquireResponse(false, null, existsLease.getExpireTime());
-			}
-		} finally {
-			m_brokerLeaseLock.unlock();
-		}
+	public LeaseAcquireResponse tryAcquireBrokerLease(//
+	      @QueryParam("topic") String topic,//
+	      @QueryParam("partition") int partition, //
+	      @QueryParam("sessionId") String sessionId//
+	) {
+		 Pair<String, Integer> key = new Pair<>(topic, partition);
+		 m_brokerLeaseLock.lock();
+		 long now = System.currentTimeMillis();
+		 try {
+		 Lease existsLease = m_brokerLeases.get(key);
+		 if (existsLease == null || existsLease.getExpireTime() < now) {
+		 // TODO this is mock impl
+		 System.out.println(String.format(
+		 "[%s]Try acquire broker lease success(topic=%s, partition=%s, sessionId=%s)", new Date(), topic,
+		 partition, sessionId));
+		 long id = now;
+		 m_brokerLeases.put(key, new Lease(id, now + BROKER_LEASE_TIME + BROKER_LEASE_SERVER_DELAY_TIME));
+		 return new LeaseAcquireResponse(true, new Lease(id, now + BROKER_LEASE_TIME), -1L);
+		 } else {
+		 // TODO
+		 System.out.println(String.format("[%s]Try acquire broker lease fail(topic=%s, partition=%s, sessionId=%s)",
+		 new Date(), topic, partition, sessionId));
+		 return new LeaseAcquireResponse(false, null, existsLease.getExpireTime());
+		 }
+		 } finally {
+		 m_brokerLeaseLock.unlock();
+		 }
 
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("broker/renew")
-	public LeaseAcquireResponse tryRenewBrokerLease(@QueryParam("topic") String topic,
-	      @QueryParam("partition") int partition, @QueryParam("leaseId") long leaseId,
-	      @QueryParam("sessionId") String sessionId) {
+	public LeaseAcquireResponse tryRenewBrokerLease(//
+	      @QueryParam("topic") String topic,//
+	      @QueryParam("partition") int partition, //
+	      @QueryParam("leaseId") long leaseId,//
+	      @QueryParam("sessionId") String sessionId//
+	) {
+
 		Pair<String, Integer> key = new Pair<>(topic, partition);
 		m_brokerLeaseLock.lock();
 		try {

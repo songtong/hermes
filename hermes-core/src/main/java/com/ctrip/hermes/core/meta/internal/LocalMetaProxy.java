@@ -1,5 +1,7 @@
 package com.ctrip.hermes.core.meta.internal;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.bo.Tpg;
@@ -12,11 +14,13 @@ public class LocalMetaProxy implements MetaProxy {
 
 	public final static String ID = "local";
 
+	private AtomicLong m_leaseId = new AtomicLong(0);
+
 	@Override
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
 		// TODO
 		long expireTime = System.currentTimeMillis() + 10 * 1000L;
-		long leaseId = 123L;
+		long leaseId = m_leaseId.incrementAndGet();
 		return new LeaseAcquireResponse(true, new Lease(leaseId, expireTime), expireTime);
 	}
 
@@ -30,7 +34,7 @@ public class LocalMetaProxy implements MetaProxy {
 	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId) {
 		// TODO
 		long expireTime = System.currentTimeMillis() + 10 * 1000L;
-		long leaseId = 123L;
+		long leaseId = m_leaseId.incrementAndGet();
 		return new LeaseAcquireResponse(true, new Lease(leaseId, expireTime), expireTime);
 	}
 

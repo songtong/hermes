@@ -11,7 +11,7 @@ import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class SendMessageResultCommand extends AbstractCommand implements Ack {
+public class SendMessageResultCommand extends AbstractCommand {
 
 	private static final long serialVersionUID = -2408812182538982540L;
 

@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -37,26 +38,22 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 	protected int m_partition;
 
-	public AbstractMessageQueueDumper(String topic, int partition) {
+	protected Lease m_lease;
+
+	public AbstractMessageQueueDumper(String topic, int partition, Lease lease) {
 		m_topic = topic;
 		m_partition = partition;
+		m_lease = lease;
 
 		m_workerThread = new Thread(new Runnable() {
 
 			@Override
 			public void run() {
-				List<FutureBatchPriorityWrapper> todos = new ArrayList<>();
+				List<FutureBatchPriorityWrapper> todos = new ArrayList<>(batchSize);
 
-				while (!Thread.currentThread().isInterrupted()) {
+				while (!Thread.currentThread().isInterrupted() && m_lease.getExpireTime() >= System.currentTimeMillis()) {
 					try {
-						if (todos.isEmpty()) {
-							m_queue.drainTo(todos, batchSize);
-						}
-
-						if (!todos.isEmpty()) {
-							appendMessageSync(todos);
-							todos.clear();
-						} else {
+						if (!flushMsgs(todos)) {
 							TimeUnit.MILLISECONDS.sleep(50);
 						}
 
@@ -69,20 +66,43 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 						e.printStackTrace();
 					}
 				}
+
+				// lease is expired, flush remaining msgs
+				while (!m_queue.isEmpty() && !todos.isEmpty()) {
+					flushMsgs(todos);
+				}
 			}
 		});
 		// TODO
 		m_workerThread.setDaemon(true);
-		m_workerThread.setName(String.format("MessageQueuePartitionDumper-%s-%s-%d", this.getClass().getSimpleName(),
-		      topic, partition));
+		m_workerThread.setName(String.format("MessageQueueDumper-%s-%s-%d", this.getClass().getSimpleName(), topic,
+		      partition));
 
+	}
+
+	public Lease getLease() {
+		return m_lease;
+	}
+
+	private boolean flushMsgs(List<FutureBatchPriorityWrapper> todos) {
+		if (todos.isEmpty()) {
+			m_queue.drainTo(todos, batchSize);
+		}
+
+		if (!todos.isEmpty()) {
+			appendMessageSync(todos);
+			todos.clear();
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public void submit(SettableFuture<Map<Integer, Boolean>> future, MessageBatchWithRawData batch, boolean isPriority) {
 		m_queue.offer(new FutureBatchPriorityWrapper(future, batch, isPriority));
 	}
 
-	public void startIfNecessary() {
+	public void start() {
 		if (m_started.compareAndSet(false, true)) {
 			m_workerThread.start();
 		}

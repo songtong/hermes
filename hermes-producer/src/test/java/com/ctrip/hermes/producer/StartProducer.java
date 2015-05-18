@@ -4,10 +4,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
+import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.producer.api.Producer;
 
 /**
@@ -41,11 +43,13 @@ public class StartProducer extends ComponentTestCase {
 		boolean priority = random.nextBoolean();
 		msg += priority ? " priority" : " non-priority";
 		System.out.println(">>> " + msg);
+		Future<SendResult> future = null;
 		if (priority) {
-			Producer.getInstance().message(topic, null, msg).withRefKey(uuid).withPriority().send();
+			future = Producer.getInstance().message(topic, null, msg).withRefKey(uuid).withPriority().send();
 		} else {
-			Producer.getInstance().message(topic, null, msg).withRefKey(uuid).send();
+			future = Producer.getInstance().message(topic, null, msg).withRefKey(uuid).send();
 		}
-
+		future.get();
+		System.out.println("Sent...");
 	}
 }
