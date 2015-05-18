@@ -15,7 +15,7 @@ LOG_FILE="sysout-metaserver.log"
 
 SERVER_DRIVER=com.ctrip.hermes.meta.server.MetaRestServer
 
-SERVER_HOME=..
+SERVER_HOME=.
 
 CLASSPATH=${SERVER_HOME}
 

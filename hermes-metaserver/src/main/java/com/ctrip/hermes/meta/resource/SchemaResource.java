@@ -73,7 +73,6 @@ public class SchemaResource {
 		if (topic == null) {
 			throw new RestException("Topic not found: " + topicId, Status.NOT_FOUND);
 		}
-		Long oldSchemaId = topic.getSchemaId();
 
 		byte[] fileContent = null;
 		if (fileInputStream != null) {
@@ -97,7 +96,7 @@ public class SchemaResource {
 		} catch (Exception e) {
 			if (schemaView.getId() != null) {
 				try {
-					schemaService.deleteSchema(schemaView.getId(), oldSchemaId);
+					schemaService.deleteSchema(schemaView.getId());
 				} catch (DalException e1) {
 					throw new RestException(e1, Status.INTERNAL_SERVER_ERROR);
 				}
@@ -116,7 +115,7 @@ public class SchemaResource {
 	@Path("{id}")
 	public Response deleteSchema(@PathParam("id") long schemaId) {
 		try {
-			schemaService.deleteSchema(schemaId, null);
+			schemaService.deleteSchema(schemaId);
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (DalException e) {
