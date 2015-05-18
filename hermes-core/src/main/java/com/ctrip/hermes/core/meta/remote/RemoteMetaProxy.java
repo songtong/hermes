@@ -34,6 +34,10 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 
 	private static final String SESSION_ID = "sessionId";
 
+	private static final String TOPIC = "topic";
+
+	private static final String PARTITION = "partition";
+
 	public final static String ID = "remote";
 
 	@Inject
@@ -61,6 +65,35 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		params.put(LEASE_ID, String.valueOf(lease.getId()));
 		params.put(SESSION_ID, sessionId);
 		String response = post("/lease/consumer/renew", params, tpg);
+		if (response != null) {
+			return JSON.parseObject(response, LeaseAcquireResponse.class);
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId) {
+		Map<String, String> params = new HashMap<>();
+		params.put(LEASE_ID, String.valueOf(lease.getId()));
+		params.put(SESSION_ID, sessionId);
+		params.put(TOPIC, topic);
+		params.put(PARTITION, Integer.toString(partition));
+		String response = post("/lease/broker/renew", params, null);
+		if (response != null) {
+			return JSON.parseObject(response, LeaseAcquireResponse.class);
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId) {
+		Map<String, String> params = new HashMap<>();
+		params.put(SESSION_ID, sessionId);
+		params.put(TOPIC, topic);
+		params.put(PARTITION, Integer.toString(partition));
+		String response = post("/lease/broker/acquire", params, null);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
 		} else {
@@ -104,7 +137,9 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 					post.setConfig(m_requestConfig);
 
 					HttpResponse response;
-					post.setEntity(new StringEntity(JSON.toJSONString(payload), ContentType.APPLICATION_JSON));
+					if (payload != null) {
+						post.setEntity(new StringEntity(JSON.toJSONString(payload), ContentType.APPLICATION_JSON));
+					}
 					response = m_httpClient.execute(post);
 					if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 						return EntityUtils.toString(response.getEntity());

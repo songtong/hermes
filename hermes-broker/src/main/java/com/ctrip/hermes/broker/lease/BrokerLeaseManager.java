@@ -22,14 +22,12 @@ public class BrokerLeaseManager implements LeaseManager<BrokerLeaseKey> {
 
 	@Override
 	public LeaseAcquireResponse tryAcquireLease(BrokerLeaseKey key) {
-		// TODO Auto-generated method stub
-		return null;
+		return m_metaService.tryAcquireBrokerLease(key.getTopic(), key.getPartition(), key.getSessionId());
 	}
 
 	@Override
 	public LeaseAcquireResponse tryRenewLease(BrokerLeaseKey key, Lease lease) {
-		// TODO Auto-generated method stub
-		return null;
+		return m_metaService.tryRenewBrokerLease(key.getTopic(), key.getPartition(), lease, key.getSessionId());
 	}
 
 	public static class BrokerLeaseKey implements SessionIdAware {

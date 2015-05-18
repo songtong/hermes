@@ -192,7 +192,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 	}
 
-	private class TaskQueue {
+	private static class TaskQueue {
 		private String m_topic;
 
 		private int m_partition;

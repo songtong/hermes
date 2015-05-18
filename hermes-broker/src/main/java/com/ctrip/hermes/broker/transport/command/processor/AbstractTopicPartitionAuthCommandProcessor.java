@@ -1,5 +1,10 @@
 package com.ctrip.hermes.broker.transport.command.processor;
 
+import org.unidal.lookup.annotation.Inject;
+
+import com.ctrip.hermes.broker.build.BuildConstants;
+import com.ctrip.hermes.broker.lease.BrokerLeaseManager.BrokerLeaseKey;
+import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 
@@ -9,6 +14,9 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext
  *
  */
 public abstract class AbstractTopicPartitionAuthCommandProcessor implements CommandProcessor {
+
+	@Inject(BuildConstants.BROKER)
+	protected LeaseManager<BrokerLeaseKey> m_leaseManager;
 
 	@Override
 	public void process(final CommandProcessorContext ctx) {
