@@ -7,6 +7,7 @@ import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.HermesCoreModule;
+import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.DefaultClientEnvironment;
 import com.ctrip.hermes.core.message.codec.DefaultMessageCodec;
 import com.ctrip.hermes.core.message.partition.HashPartitioningStrategy;
@@ -19,6 +20,7 @@ import com.ctrip.hermes.core.meta.internal.LocalMetaProxy;
 import com.ctrip.hermes.core.meta.internal.RemoteMetaLoader;
 import com.ctrip.hermes.core.meta.remote.DefaultMetaServerLocator;
 import com.ctrip.hermes.core.meta.remote.RemoteMetaProxy;
+import com.ctrip.hermes.core.service.DefaultSystemClockService;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.command.processor.DefaultCommandProcessorRegistry;
 import com.ctrip.hermes.core.transport.endpoint.DefaultClientEndpointChannelManager;
@@ -61,6 +63,9 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		// env
 		all.add(A(DefaultClientEnvironment.class));
+
+		all.add(A(CoreConfig.class));
+		all.add(A(DefaultSystemClockService.class));
 
 		return all;
 	}

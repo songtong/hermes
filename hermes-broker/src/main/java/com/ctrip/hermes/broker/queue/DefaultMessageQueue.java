@@ -4,11 +4,13 @@ import java.util.List;
 
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.service.SystemClockService;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -18,14 +20,18 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 
 	private MetaService m_metaService;
 
-	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService) {
-		super(topic, partition, storage);
+	private BrokerConfig m_config;
+
+	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService,
+	      SystemClockService systemClockService, BrokerConfig config) {
+		super(topic, partition, storage, systemClockService);
 		m_metaService = metaService;
+		m_config = config;
 	}
 
 	@Override
 	protected MessageQueueDumper createDumper(Lease lease) {
-		return new DefaultMessageQueueDumper(m_topic, m_partition, m_storage, lease);
+		return new DefaultMessageQueueDumper(m_topic, m_partition, m_storage, m_systemClockService, m_config, lease);
 	}
 
 	@Override

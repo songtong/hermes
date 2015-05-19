@@ -5,10 +5,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -18,13 +19,15 @@ import com.ctrip.hermes.broker.lease.BrokerLeaseManager.BrokerLeaseKey;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.lease.LeaseManager;
+import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
 @Named(type = BrokerLeaseContainer.class)
-public class BrokerLeaseContainer {
+public class BrokerLeaseContainer implements Initializable {
 
 	@Inject(BuildConstants.BROKER)
 	private LeaseManager<BrokerLeaseKey> m_leaseManager;
@@ -32,24 +35,19 @@ public class BrokerLeaseContainer {
 	@Inject
 	private BrokerConfig m_config;
 
+	@Inject
+	private SystemClockService m_systemClockService;
+
 	private Map<BrokerLeaseKey, Lease> m_existingLeases = new ConcurrentHashMap<>();
 
 	private ConcurrentMap<BrokerLeaseKey, AtomicBoolean> m_leaseAcquireTaskRunnings = new ConcurrentHashMap<>();
 
-	private ScheduledExecutorService m_scheduledExecutorService = Executors.newScheduledThreadPool(3,
-	      new ThreadFactory() {
-
-		      @Override
-		      public Thread newThread(Runnable r) {
-			      return new Thread(r, "BrokerLeaseContainer");
-		      }
-	      });
+	private ScheduledExecutorService m_scheduledExecutorService;
 
 	public Lease acquireLease(String topic, int partition, String sessionId) {
-		long now = System.currentTimeMillis();
 		BrokerLeaseKey key = new BrokerLeaseKey(topic, partition, sessionId);
 		Lease lease = m_existingLeases.get(key);
-		if (lease == null || lease.getExpireTime() < now) {
+		if (lease == null || lease.getExpireTime() < m_systemClockService.now()) {
 			scheduleLeaseAcquireTask(key);
 			return null;
 		} else {
@@ -68,20 +66,19 @@ public class BrokerLeaseContainer {
 				public void run() {
 					try {
 						Lease existingLease = m_existingLeases.get(key);
-						if (existingLease != null && existingLease.getExpireTime() >= System.currentTimeMillis()) {
+						if (existingLease != null && existingLease.getExpireTime() >= m_systemClockService.now()) {
 							return;
 						}
 
 						LeaseAcquireResponse response = m_leaseManager.tryAcquireLease(key);
 
 						if (response != null && response.isAcquired()) {
-							long now = System.currentTimeMillis();
 							Lease lease = response.getLease();
-							if (lease.getExpireTime() > now) {
+							if (lease.getExpireTime() > m_systemClockService.now()) {
 								m_existingLeases.put(key, lease);
 								scheduleRenewLeaseTask(
 								      key,
-								      lease.getExpireTime() - System.currentTimeMillis()
+								      lease.getExpireTime() - m_systemClockService.now()
 								            - m_config.getLeaseRenewTimeMillsBeforeExpire());
 							}
 						}
@@ -113,15 +110,20 @@ public class BrokerLeaseContainer {
 						existingLease.setExpireTime(response.getLease().getExpireTime());
 					} else {
 						if (response != null && response.getNextTryTime() > 0) {
-							scheduleRenewLeaseTask(key, response.getNextTryTime() - System.currentTimeMillis());
+							scheduleRenewLeaseTask(key, response.getNextTryTime() - m_systemClockService.now());
 						} else {
-							// TODO configable delay
-							scheduleRenewLeaseTask(key, 500L);
+							scheduleRenewLeaseTask(key, m_config.getDefaultLeaseRenewDelay());
 						}
 					}
 				}
 			}
 		}, delay, TimeUnit.MILLISECONDS);
 
+	}
+
+	@Override
+	public void initialize() throws InitializationException {
+		m_scheduledExecutorService = Executors.newScheduledThreadPool(m_config.getLeaseContainerThreadCount(),
+		      HermesThreadFactory.create(m_config.getBackgroundThreadGroup(), "BrokerLeaseContainer", true));
 	}
 }

@@ -106,6 +106,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessorRegistry</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.config.CoreConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -129,6 +132,19 @@
 		<component>
 			<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 			<implementation>com.ctrip.hermes.core.env.DefaultClientEnvironment</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.config.CoreConfig</role>
+			<implementation>com.ctrip.hermes.core.config.CoreConfig</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.service.SystemClockService</role>
+			<implementation>com.ctrip.hermes.core.service.DefaultSystemClockService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.config.CoreConfig</role>
+				</requirement>
+			</requirements>
 		</component>
 	</components>
 </plexus>

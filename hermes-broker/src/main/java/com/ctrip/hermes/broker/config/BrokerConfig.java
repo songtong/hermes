@@ -21,4 +21,44 @@ public class BrokerConfig {
 	public long getLeaseRenewTimeMillsBeforeExpire() {
 		return m_leaseRenewTimeMillsBeforeExpire;
 	}
+
+	public String getBackgroundThreadGroup() {
+		return "Hermes-Broker-Background";
+	}
+
+	public int getLongPollingServiceThreadCount() {
+		return 3;
+	}
+
+	public long getLongPollingCheckInterval() {
+		return 100L;
+	}
+
+	public int getDumperFetchSize() {
+		return 20;
+	}
+
+	public long getDumperMessageWaitInterval() {
+		return 50L;
+	}
+
+	public long getAckManagerCheckInterval() {
+		return 50;
+	}
+
+	public int getAckManagerOperationHandlingBatchSize() {
+		return 50;
+	}
+
+	public int getAckManagerOperationQueueSize() {
+		return 10000;
+	}
+
+	public int getLeaseContainerThreadCount() {
+		return 3;
+	}
+
+	public long getDefaultLeaseRenewDelay() {
+		return 100L;
+	}
 }

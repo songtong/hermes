@@ -70,13 +70,19 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.broker.longpolling.LongPollingService</role>
-			<implementation>com.ctrip.hermes.broker.longpolling.SingleThreadLoopLongPollingService</implementation>
+			<implementation>com.ctrip.hermes.broker.longpolling.DefaultLongPollingService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.broker.ack.AckManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -101,6 +107,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -109,6 +118,12 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -130,6 +145,12 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -158,6 +179,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
 				</requirement>
 			</requirements>
 		</component>
