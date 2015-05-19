@@ -7,13 +7,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.lookup.annotation.Inject;
 
+import com.ctrip.hermes.broker.config.BrokerConfig;
+import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
+import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.processor.SingleThreaded;
 import com.google.common.util.concurrent.FutureCallback;
@@ -26,10 +30,16 @@ import com.google.common.util.concurrent.ListenableFuture;
  *
  */
 @SingleThreaded
-public class SendMessageCommandProcessor extends AbstractTopicPartitionAuthCommandProcessor {
+public class SendMessageCommandProcessor implements CommandProcessor {
 
 	@Inject
 	private MessageQueueManager m_queueManager;
+
+	@Inject
+	private BrokerLeaseContainer m_leaseContainer;
+
+	@Inject
+	private BrokerConfig m_config;
 
 	@Override
 	public List<CommandType> commandTypes() {
@@ -37,30 +47,37 @@ public class SendMessageCommandProcessor extends AbstractTopicPartitionAuthComma
 	}
 
 	@Override
-	public void doProcess(final CommandProcessorContext ctx) {
+	public void process(final CommandProcessorContext ctx) {
 		SendMessageCommand reqCmd = (SendMessageCommand) ctx.getCommand();
 
-		Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
+		Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(), m_config.getSessionId());
 
-		final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
-		result.correlate(reqCmd);
+		if (lease != null) {
+			writeAck(ctx, true);
 
-		FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx);
+			Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
 
-		for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
-			MessageBatchWithRawData batch = entry.getValue();
-			Tpp tpp = new Tpp(reqCmd.getTopic(), reqCmd.getPartition(), entry.getKey() == 0 ? true : false);
-			try {
-				ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(tpp, batch);
+			final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
+			result.correlate(reqCmd);
 
-				Futures.addCallback(future, completionCallback);
+			FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx);
 
-			} catch (Exception e) {
-				// TODO
-				e.printStackTrace();
+			for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
+				MessageBatchWithRawData batch = entry.getValue();
+				Tpp tpp = new Tpp(reqCmd.getTopic(), reqCmd.getPartition(), entry.getKey() == 0 ? true : false);
+				try {
+					ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(tpp, batch, lease);
+
+					Futures.addCallback(future, completionCallback);
+
+				} catch (Exception e) {
+					// TODO
+					e.printStackTrace();
+				}
 			}
+		} else {
+			writeAck(ctx, false);
 		}
-
 	}
 
 	private static class AppendMessageCompletionCallback implements FutureCallback<Map<Integer, Boolean>> {
@@ -95,22 +112,6 @@ public class SendMessageCommandProcessor extends AbstractTopicPartitionAuthComma
 		public void onFailure(Throwable t) {
 			// TODO
 		}
-	}
-
-	@Override
-	protected void doAuthFail(CommandProcessorContext ctx) {
-		writeAck(ctx, false);
-	}
-
-	@Override
-	protected TopicPartition getTopicPartition(CommandProcessorContext ctx) {
-		SendMessageCommand req = (SendMessageCommand) ctx.getCommand();
-		return new TopicPartition(req.getTopic(), req.getPartition());
-	}
-
-	@Override
-	protected void doAuthSuccess(CommandProcessorContext ctx) {
-		writeAck(ctx, true);
 	}
 
 	private void writeAck(CommandProcessorContext ctx, boolean success) {

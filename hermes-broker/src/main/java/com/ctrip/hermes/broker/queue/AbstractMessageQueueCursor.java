@@ -2,10 +2,12 @@ package com.ctrip.hermes.broker.queue;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.meta.MetaService;
 
@@ -30,8 +32,13 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	protected int m_groupIdInt;
 
-	public AbstractMessageQueueCursor(Tpg tpg, MetaService metaService) {
+	protected Lease m_lease;
+
+	protected AtomicBoolean inited = new AtomicBoolean(false);
+
+	public AbstractMessageQueueCursor(Tpg tpg, Lease lease, MetaService metaService) {
 		m_tpg = tpg;
+		m_lease = lease;
 		m_priorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), true);
 		m_nonPriorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), false);
 		m_metaService = metaService;
@@ -42,9 +49,15 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	@Override
 	public void init() {
-		m_priorityOffset = loadLastPriorityOffset();
-		m_nonPriorityOffset = loadLastNonPriorityOffset();
-		m_resendOffset = loadLastResendOffset();
+		if (inited.compareAndSet(false, true)) {
+			m_priorityOffset = loadLastPriorityOffset();
+			m_nonPriorityOffset = loadLastNonPriorityOffset();
+			m_resendOffset = loadLastResendOffset();
+		}
+	}
+
+	public Lease getLease() {
+		return m_lease;
 	}
 
 	protected abstract Object loadLastPriorityOffset();

@@ -11,6 +11,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -20,17 +21,17 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	@Inject
 	private MessageQueuePartitionFactory m_queueFactory;
 
-	// one <topic, partition> mapping to one MessageQueue
+	// one <topic, partition, lease> mapping to one MessageQueue
 	private Map<Pair<String, Integer>, MessageQueue> m_messageQueues = new ConcurrentHashMap<>();
 
 	@Override
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data) {
-		return getMessageQueue(tpp.getTopic(), tpp.getPartition()).appendMessageAsync(tpp.isPriority(), data);
+	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data, Lease lease) {
+		return getMessageQueue(tpp.getTopic(), tpp.getPartition()).appendMessageAsync(tpp.isPriority(), data, lease);
 	}
 
 	@Override
-	public MessageQueueCursor createCursor(Tpg tpg) {
-		return getMessageQueue(tpg.getTopic(), tpg.getPartition()).createCursor(tpg.getGroupId());
+	public MessageQueueCursor getCursor(Tpg tpg, Lease lease) {
+		return getMessageQueue(tpg.getTopic(), tpg.getPartition()).getCursor(tpg.getGroupId(), lease);
 	}
 
 	private MessageQueue getMessageQueue(String topic, int partition) {

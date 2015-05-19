@@ -1,6 +1,5 @@
 package com.ctrip.hermes.core.message.payload;
 
-import java.util.Map;
 
 public interface PayloadCodec {
 
@@ -10,5 +9,4 @@ public interface PayloadCodec {
 
 	public <T> T decode(byte[] raw, Class<T> clazz);
 
-	public void configure(Map<String, String> configs);
 }
