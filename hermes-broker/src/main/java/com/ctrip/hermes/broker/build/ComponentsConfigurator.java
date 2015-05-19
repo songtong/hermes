@@ -14,7 +14,7 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.lease.BrokerLeaseManager;
 import com.ctrip.hermes.broker.longpolling.LongPollingService;
-import com.ctrip.hermes.broker.longpolling.SingleThreadLoopLongPollingService;
+import com.ctrip.hermes.broker.longpolling.DefaultLongPollingService;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory;
@@ -51,11 +51,11 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(LongPollingService.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//
-		      );
+		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(AckManager.class));
 
-		all.add(A(SingleThreadLoopLongPollingService.class));
+		all.add(A(DefaultLongPollingService.class));
 		all.add(A(BrokerLeaseManager.class));
 		all.add(A(BrokerLeaseContainer.class));
 

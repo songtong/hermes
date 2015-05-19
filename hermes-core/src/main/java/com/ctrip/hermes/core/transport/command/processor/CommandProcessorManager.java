@@ -4,23 +4,28 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
-import org.unidal.helper.Threads;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 @Named(type = CommandProcessorManager.class)
 public class CommandProcessorManager implements Initializable, LogEnabled {
 
 	@Inject
 	private CommandProcessorRegistry m_registry;
+
+	@Inject
+	private CoreConfig m_config;
 
 	private Map<CommandProcessor, ExecutorService> m_executors = new ConcurrentHashMap<>();
 
@@ -63,12 +68,13 @@ public class CommandProcessorManager implements Initializable, LogEnabled {
 
 			String threadNamePrefix = String.format("CmdProcessor-%s", cmdProcessor.getClass().getSimpleName());
 			if (cmdProcessor.getClass().isAnnotationPresent(SingleThreaded.class)) {
-				// TODO config ThreadFactory
-				// TODO when do we need to shutdown executorService;
-				m_executors.put(cmdProcessor, Threads.forPool().getFixedThreadPool(threadNamePrefix, 1));
+				m_executors.put(cmdProcessor, Executors.newSingleThreadExecutor(HermesThreadFactory.create(
+				      m_config.getBackgroundThreadGroup(), threadNamePrefix, false)));
 			} else {
-				// TODO config thread pool
-				m_executors.put(cmdProcessor, Threads.forPool().getFixedThreadPool(threadNamePrefix, 10));
+				m_executors.put(
+				      cmdProcessor,
+				      Executors.newFixedThreadPool(m_config.getCommandProcessorThreadCount(),
+				            HermesThreadFactory.create(m_config.getBackgroundThreadGroup(), threadNamePrefix, false)));
 			}
 		}
 

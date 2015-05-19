@@ -73,7 +73,7 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 	protected abstract FetchResult fetchResendMessages(int batchSize);
 
 	@Override
-	public List<TppConsumerMessageBatch> next(int batchSize) {
+	public synchronized List<TppConsumerMessageBatch> next(int batchSize) {
 		try {
 			List<TppConsumerMessageBatch> result = new LinkedList<>();
 			int remainingSize = batchSize;

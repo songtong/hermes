@@ -54,7 +54,6 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 		Batch batch = findBatch(offset);
 
 		if (batch == null) {
-			// TODO 
 			// maybe do nothing, since DefaultAckManager can guarantee ack/nack happen after deliver. 
 			// If reach here, that must be the batch has been timeout in the last scan. 
 		} else {

@@ -16,10 +16,15 @@ public class DefaultConsumer extends com.ctrip.hermes.consumer.api.Consumer {
 	@Inject
 	private Engine m_engine;
 
-	public ConsumerHolder start(String topic, String groupId, MessageListener<?> listener) {
-		SubscribeHandle subscribeHandle = m_engine.start(Arrays.asList(new Subscriber(topic, groupId, listener)));
+	private ConsumerHolder start(String topic, String groupId, MessageListener<?> listener, ConsumerType consumerType) {
+		SubscribeHandle subscribeHandle = m_engine.start(Arrays.asList(new Subscriber(topic, groupId, listener,
+		      consumerType)));
 
 		return new DefaultConsumerHolder(subscribeHandle);
+	}
+
+	public ConsumerHolder start(String topic, String groupId, MessageListener<?> listener) {
+		return start(topic, groupId, listener, ConsumerType.LONG_POLLING);
 	}
 
 	public class DefaultConsumerHolder implements ConsumerHolder {

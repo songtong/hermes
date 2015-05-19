@@ -10,6 +10,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -28,12 +29,16 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	protected MessageQueueStorage m_storage;
 
+	protected SystemClockService m_systemClockService;
+
 	protected ConcurrentMap<String, AtomicReference<MessageQueueCursor>> m_cursors = new ConcurrentHashMap<>();
 
-	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage) {
+	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage,
+	      SystemClockService systemClockService) {
 		m_topic = topic;
 		m_partition = partition;
 		m_storage = storage;
+		m_systemClockService = systemClockService;
 	}
 
 	@Override

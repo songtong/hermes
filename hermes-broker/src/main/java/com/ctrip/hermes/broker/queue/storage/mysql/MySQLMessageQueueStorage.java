@@ -40,6 +40,7 @@ import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.core.message.retry.RetryPolicyFactory;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.TransferCallback;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.CollectionUtil;
@@ -74,6 +75,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	@Inject
 	private MetaService m_metaService;
 
+	@Inject
+	private SystemClockService m_systemClockService;
+
 	private Map<Triple<String, Integer, Integer>, OffsetResend> m_offsetResendCache = new ConcurrentHashMap<>();
 
 	private Map<Pair<Tpp, Integer>, OffsetMessage> m_offsetMessageCache = new ConcurrentHashMap<>();
@@ -89,7 +93,6 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				msg.setCreationDate(new Date(pdmsg.getBornTime()));
 				msg.setPartition(tpp.getPartition());
 				msg.setPayload(pdmsg.readBody());
-				// TODO
 				msg.setPriority(tpp.isPriority() ? 0 : 1);
 				// TODO set producer id and producer id in producer
 				msg.setProducerId(101);
@@ -229,7 +232,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	private void copyToResend(Tpp tpp, String groupId, List<Pair<Long, Integer>> msgSeqs, boolean resend,
 	      RetryPolicy retryPolicy) throws DalException {
 		if (CollectionUtil.isNotEmpty(msgSeqs)) {
-			long now = System.currentTimeMillis();
+			long now = m_systemClockService.now();
 
 			if (!resend) {
 				ResendGroupId proto = new ResendGroupId();

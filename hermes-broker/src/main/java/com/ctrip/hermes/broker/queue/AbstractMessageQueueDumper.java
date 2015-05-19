@@ -13,8 +13,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.util.concurrent.SettableFuture;
@@ -24,15 +27,12 @@ import com.google.common.util.concurrent.SettableFuture;
  *
  */
 public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
-	private static final int DEFAULT_BATCH_SIZE = 10;
 
 	private BlockingQueue<FutureBatchPriorityWrapper> m_queue = new LinkedBlockingQueue<>();
 
-	private Thread m_workerThread;
-
 	private AtomicBoolean m_started = new AtomicBoolean(false);
 
-	private int batchSize = DEFAULT_BATCH_SIZE;
+	protected BrokerConfig m_config;
 
 	protected String m_topic;
 
@@ -40,43 +40,21 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 	protected Lease m_lease;
 
-	public AbstractMessageQueueDumper(String topic, int partition, Lease lease) {
+	private Thread m_workerThread;
+
+	private SystemClockService m_systemClockService;
+
+	public AbstractMessageQueueDumper(String topic, int partition, SystemClockService systemClockService,
+	      BrokerConfig config, Lease lease) {
 		m_topic = topic;
 		m_partition = partition;
 		m_lease = lease;
+		m_systemClockService = systemClockService;
+		m_config = config;
 
-		m_workerThread = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				List<FutureBatchPriorityWrapper> todos = new ArrayList<>(batchSize);
-
-				while (!Thread.currentThread().isInterrupted() && m_lease.getExpireTime() >= System.currentTimeMillis()) {
-					try {
-						if (!flushMsgs(todos)) {
-							TimeUnit.MILLISECONDS.sleep(50);
-						}
-
-						// TODO
-						// TimeUnit.MILLISECONDS.sleep(1);
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-					} catch (Exception e) {
-						// TODO
-						e.printStackTrace();
-					}
-				}
-
-				// lease is expired, flush remaining msgs
-				while (!m_queue.isEmpty() && !todos.isEmpty()) {
-					flushMsgs(todos);
-				}
-			}
-		});
-		// TODO
-		m_workerThread.setDaemon(true);
-		m_workerThread.setName(String.format("MessageQueueDumper-%s-%s-%d", this.getClass().getSimpleName(), topic,
-		      partition));
+		String threadName = String.format("MessageQueueDumper-%s-%d", topic, partition);
+		m_workerThread = HermesThreadFactory.create(config.getBackgroundThreadGroup(), threadName, false).newThread(
+		      new DumperTask());
 
 	}
 
@@ -86,7 +64,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 	private boolean flushMsgs(List<FutureBatchPriorityWrapper> todos) {
 		if (todos.isEmpty()) {
-			m_queue.drainTo(todos, batchSize);
+			m_queue.drainTo(todos, m_config.getDumperFetchSize());
 		}
 
 		if (!todos.isEmpty()) {
@@ -160,6 +138,33 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 	protected abstract void doAppendMessageSync(boolean isPriority,
 	      Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos);
+
+	private class DumperTask implements Runnable {
+
+		@Override
+		public void run() {
+			List<FutureBatchPriorityWrapper> todos = new ArrayList<>(m_config.getDumperFetchSize());
+
+			while (!Thread.currentThread().isInterrupted() && m_lease.getExpireTime() >= m_systemClockService.now()) {
+				try {
+					if (!flushMsgs(todos)) {
+						TimeUnit.MILLISECONDS.sleep(m_config.getDumperMessageWaitInterval());
+					}
+
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} catch (Exception e) {
+					// TODO
+					e.printStackTrace();
+				}
+			}
+
+			// lease is expired, flush remaining msgs
+			while (!m_queue.isEmpty() || !todos.isEmpty()) {
+				flushMsgs(todos);
+			}
+		}
+	}
 
 	private static class FutureBatchResultWrapper {
 		private SettableFuture<Map<Integer, Boolean>> m_future;

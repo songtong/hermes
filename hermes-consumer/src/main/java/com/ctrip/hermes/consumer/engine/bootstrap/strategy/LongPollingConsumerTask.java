@@ -338,6 +338,13 @@ public class LongPollingConsumerTask implements Runnable {
 				}
 
 				Endpoint endpoint = m_endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
+
+				if (endpoint == null) {
+					// TODO
+					TimeUnit.SECONDS.sleep(1);
+					return;
+				}
+
 				ClientEndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
 
 				final SettableFuture<PullMessageAckCommand> future = SettableFuture.create();
