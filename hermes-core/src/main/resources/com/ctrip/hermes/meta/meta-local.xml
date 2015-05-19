@@ -73,9 +73,7 @@
 
 	<codec type="json" />
 	<codec type="cmessaging" />
-	<codec type="avro">
-		<property name="schema.registry.url" value="http://10.3.8.63:8081" />
-	</codec>
+	<codec type="avro" />
 
 	<storage type='mysql'>
 		<property name="x" value="x" />

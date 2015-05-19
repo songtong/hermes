@@ -8,6 +8,6 @@ public interface ClientEnvironment {
 	Properties getProducerConfig(String topic) throws IOException;
 
 	Properties getConsumerConfig(String topic) throws IOException;
-	
-	Properties getGlobalConfig() throws IOException;
+
+	Properties getGlobalConfig();
 }

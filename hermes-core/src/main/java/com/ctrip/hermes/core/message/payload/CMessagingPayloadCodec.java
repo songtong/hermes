@@ -1,7 +1,5 @@
 package com.ctrip.hermes.core.message.payload;
 
-import java.util.Map;
-
 import org.unidal.lookup.annotation.Named;
 
 import com.google.common.base.Charsets;
@@ -28,10 +26,6 @@ public class CMessagingPayloadCodec implements PayloadCodec {
 			throw new IllegalArgumentException("CMessaging consumer messages should be byte[] type, illegal message type "
 			      + clazz);
 		}
-	}
-
-	@Override
-	public void configure(Map<String, String> configs) {
 	}
 
 	@Override

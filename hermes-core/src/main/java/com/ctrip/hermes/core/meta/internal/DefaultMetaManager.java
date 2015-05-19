@@ -1,7 +1,5 @@
 package com.ctrip.hermes.core.meta.internal;
 
-import java.io.IOException;
-
 import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -38,7 +36,7 @@ public class DefaultMetaManager extends ContainerHolder implements MetaManager {
 			return m_remoteMetaProxy;
 		}
 	}
-	
+
 	@Override
 	public Meta getMeta() {
 		if (isLocalMode()) {
@@ -51,14 +49,9 @@ public class DefaultMetaManager extends ContainerHolder implements MetaManager {
 	private boolean isLocalMode() {
 		if (System.getenv().containsKey("isLocalMode")) {
 			return Boolean.parseBoolean(System.getenv("isLocalMode"));
-		} else
-			try {
-				if (m_env.getGlobalConfig().containsKey("isLocalMode")) {
-					return Boolean.parseBoolean(m_env.getGlobalConfig().getProperty("isLocalMode"));
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		} else if (m_env.getGlobalConfig().containsKey("isLocalMode")) {
+			return Boolean.parseBoolean(m_env.getGlobalConfig().getProperty("isLocalMode"));
+		}
 		// FIXME for dev only
 		return true;
 	}

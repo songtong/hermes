@@ -63,7 +63,7 @@ public class DefaultClientEnvironment implements ClientEnvironment, Initializabl
 	}
 
 	@Override
-	public Properties getGlobalConfig() throws IOException {
+	public Properties getGlobalConfig() {
 		return m_globalDefault;
 	}
 

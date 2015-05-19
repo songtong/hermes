@@ -13,14 +13,10 @@ public class StandaloneRestServer {
 
 	static {
 		Properties load;
-		try {
-			load = PlexusComponentLocator.lookup(ClientEnvironment.class).getGlobalConfig();
-			String host = load.getProperty("meta-host");
-			String port = load.getProperty("meta-port");
-			HOST = "http://" + host + ":" + port + "/";
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		load = PlexusComponentLocator.lookup(ClientEnvironment.class).getGlobalConfig();
+		String host = load.getProperty("meta-host");
+		String port = load.getProperty("meta-port");
+		HOST = "http://" + host + ":" + port + "/";
 
 	}
 
