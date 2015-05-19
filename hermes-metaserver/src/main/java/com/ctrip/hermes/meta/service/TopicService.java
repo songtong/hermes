@@ -136,6 +136,48 @@ public class TopicService {
 
 	/**
 	 * 
+	 * @param topic
+	 */
+	public void configTopicInKafka(Topic topic) {
+		List<Partition> partitions = m_metaService.getPartitions(topic.getName());
+		if (partitions == null || partitions.size() < 1) {
+			return;
+		}
+
+		String consumerDatasource = partitions.get(0).getReadDatasource();
+		Storage targetStorage = m_metaService.findStorage(topic.getName());
+		if (targetStorage == null) {
+			return;
+		}
+
+		String zkConnect = null;
+		for (Datasource datasource : targetStorage.getDatasources()) {
+			if (consumerDatasource.equals(datasource.getId())) {
+				Map<String, Property> properties = datasource.getProperties();
+				for (Map.Entry<String, Property> prop : properties.entrySet()) {
+					if ("zookeeper.connect".equals(prop.getValue().getName())) {
+						zkConnect = prop.getValue().getValue();
+						break;
+					}
+				}
+			}
+		}
+
+		ZkClient zkClient = new ZkClient(zkConnect);
+		zkClient.setZkSerializer(new ZKStringSerializer());
+		Properties topicProp = new Properties();
+		for (Property prop : topic.getProperties()) {
+			if ("retention.ms".equals(prop.getName())) {
+				topicProp.setProperty("retention.ms", prop.getValue());
+			} else if ("retention.bytes".equals(prop.getName())) {
+				topicProp.setProperty("retention.bytes", prop.getValue());
+			}
+		}
+		AdminUtils.changeTopicConfig(zkClient, topic.getName(), topicProp);
+	}
+
+	/**
+	 * 
 	 * @param name
 	 * @throws DalException
 	 */

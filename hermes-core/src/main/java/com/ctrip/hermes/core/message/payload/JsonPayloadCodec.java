@@ -1,7 +1,5 @@
 package com.ctrip.hermes.core.message.payload;
 
-import java.util.Map;
-
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
@@ -17,11 +15,6 @@ public class JsonPayloadCodec implements PayloadCodec {
 	@Override
 	public byte[] encode(String topic, Object input) {
 		return JSON.toJSONBytes(input);
-	}
-
-	@Override
-	public void configure(Map<String, String> configs) {
-
 	}
 
 	@Override

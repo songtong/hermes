@@ -16,7 +16,6 @@ public class CodecView {
 
 	public CodecView(Codec codec) {
 		this.type = codec.getType();
-		this.properties = codec.getProperties();
 	}
 
 	public List<Property> getProperties() {
@@ -38,12 +37,6 @@ public class CodecView {
 	public Codec toMetaCodec() {
 		Codec codec = new Codec();
 		codec.setType(this.type);
-		if (this.properties != null) {
-			for (Property prop : this.properties) {
-				if (prop != null)
-					codec.addProperty(prop);
-			}
-		}
 		return codec;
 	}
 

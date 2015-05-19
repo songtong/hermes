@@ -224,4 +224,19 @@ public class TopicResource {
 		}
 		return Response.status(Status.OK).build();
 	}
+	
+	@POST
+	@Path("{name}/config")
+	public Response configTopic(@PathParam("name") String name) {
+		TopicView topicView = getTopic(name);
+		try {
+			Topic topic = topicView.toMetaTopic();
+			if ("kafka".equalsIgnoreCase(topic.getStorageType())) {
+				topicService.configTopicInKafka(topic);
+			}
+		} catch (Exception e) {
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		return Response.status(Status.OK).build();
+	}
 }
