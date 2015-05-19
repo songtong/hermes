@@ -16,6 +16,8 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema.Parser;
 import org.apache.avro.compiler.idl.ParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.codehaus.plexus.logging.LogEnabled;
+import org.codehaus.plexus.logging.Logger;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
@@ -32,9 +34,11 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.pojo.SchemaView;
 
 @Named
-public class SchemaService {
+public class SchemaService implements LogEnabled {
 
 	private static final String DEFAULT_COMPABILITY = "FORWARD";
+
+	private Logger m_logger;
 
 	private SchemaRegistryClient avroSchemaRegistry;
 
@@ -71,6 +75,7 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public void compileAvro(Schema metaSchema, org.apache.avro.Schema avroSchema) throws IOException, DalException {
+		m_logger.info(String.format("Compile %s by %s", metaSchema.getName(), avroSchema.getName()));
 		final Path destDir = Files.createTempDirectory("avroschema");
 		SpecificCompiler compiler = new SpecificCompiler(avroSchema);
 		compiler.compileToDestination(null, destDir.toFile());
@@ -139,6 +144,7 @@ public class SchemaService {
 	 */
 	public SchemaView createSchema(SchemaView schemaView, Topic topic) throws DalException, IOException,
 	      RestClientException {
+		m_logger.info(String.format("Create schema for %s", topic.getName()));
 		Schema schema = schemaView.toMetaSchema();
 		schema.setCreateTime(new Date(System.currentTimeMillis()));
 		schema.setName(topic.getName() + "-value");
@@ -316,7 +322,7 @@ public class SchemaService {
 			metaSchema.setSchemaContent(schemaContent);
 			metaSchema.setSchemaProperties(schemaHeader.toString());
 
-			if (schemaHeader.getName().endsWith("avsc")) {
+			if (schemaHeader.getFileName().endsWith("avsc")) {
 				Parser parser = new Parser();
 				org.apache.avro.Schema avroSchema = parser.parse(new String(schemaContent));
 				int avroid = getAvroSchemaRegistry().register(metaSchema.getName(), avroSchema);
@@ -395,6 +401,11 @@ public class SchemaService {
 		org.apache.avro.Schema avroSchema = parser.parse(new String(schemaContent));
 		boolean result = getAvroSchemaRegistry().testCompatibility(schema.getName(), avroSchema);
 		return result;
+	}
+
+	@Override
+	public void enableLogging(Logger logger) {
+		m_logger = logger;
 	}
 
 }

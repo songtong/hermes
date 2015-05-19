@@ -56,6 +56,11 @@
 			<role>com.ctrip.hermes.core.message.payload.PayloadCodec</role>
 			<role-hint>avro</role-hint>
 			<implementation>com.ctrip.hermes.kafka.codec.AvroPayloadCodec</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
 		</component>
 	</components>
 </plexus>
