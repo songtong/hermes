@@ -92,6 +92,9 @@
 					<role-hint>consumer</role-hint>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.config.ConsumerConfig</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.core.message.codec.MessageCodec</role>
 				</requirement>
 			</requirements>
@@ -108,6 +111,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.pipeline.Pipeline</role>
 					<role-hint>consumer</role-hint>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.config.ConsumerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -145,6 +151,10 @@
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
 				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.consumer.engine.config.ConsumerConfig</role>
+			<implementation>com.ctrip.hermes.consumer.engine.config.ConsumerConfig</implementation>
 		</component>
 	</components>
 </plexus>

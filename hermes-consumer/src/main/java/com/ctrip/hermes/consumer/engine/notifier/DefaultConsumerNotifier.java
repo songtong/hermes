@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -13,9 +12,11 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -27,21 +28,18 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 	private ConcurrentMap<Long, Pair<ConsumerContext, ExecutorService>> m_consumerContexs = new ConcurrentHashMap<>();
 
 	@Inject(BuildConstants.CONSUMER)
-	protected Pipeline<Void> m_pipeline;
+	private Pipeline<Void> m_pipeline;
+
+	@Inject
+	private ConsumerConfig m_config;
 
 	@Override
-	public void register(long correlationId, final ConsumerContext consumerContext) {
-		// TODO configable thread pool
-		m_consumerContexs.putIfAbsent(correlationId,
-		      new Pair<>(consumerContext, Executors.newFixedThreadPool(10, new ThreadFactory() {
-
-			      @Override
-			      public Thread newThread(Runnable r) {
-				      Thread t = new Thread(r);
-				      t.setName("ConsumerThread-" + consumerContext.getTopic().getName());
-				      return t;
-			      }
-		      })));
+	public void register(long correlationId, final ConsumerContext context) {
+		m_consumerContexs.putIfAbsent(
+		      correlationId,
+		      new Pair<>(context, Executors.newFixedThreadPool(m_config.getNotifierThreadCount(), HermesThreadFactory
+		            .create(String.format("ConsumerNotifier-%s-%s-%s", context.getTopic().getName(),
+		                  context.getGroupId(), correlationId), false))));
 	}
 
 	@Override
@@ -78,8 +76,8 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 	@Override
 	public ConsumerContext find(long correlationId) {
-		// TODO npe
-		return m_consumerContexs.get(correlationId).getKey();
+		Pair<ConsumerContext, ExecutorService> pair = m_consumerContexs.get(correlationId);
+		return pair == null ? null : pair.getKey();
 	}
 
 }

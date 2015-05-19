@@ -16,6 +16,7 @@ import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.DefaultProducer;
 import com.ctrip.hermes.producer.HermesProducerModule;
+import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.monitor.DefaultSendMessageAcceptedMonitor;
 import com.ctrip.hermes.producer.monitor.DefaultSendMessageResultMonitor;
 import com.ctrip.hermes.producer.monitor.SendMessageAcceptedMonitor;
@@ -61,6 +62,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(MetaService.class)//
 		      .req(SendMessageAcceptedMonitor.class)//
 		      .req(SendMessageResultMonitor.class)//
+		      .req(ProducerConfig.class)//
 		);
 
 		// command processors
@@ -73,6 +75,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		// monitors
 		all.add(A(DefaultSendMessageResultMonitor.class));
 		all.add(A(DefaultSendMessageAcceptedMonitor.class));
+
+		all.add(A(ProducerConfig.class));
 
 		return all;
 	}

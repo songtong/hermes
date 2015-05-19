@@ -68,13 +68,13 @@ public class CommandProcessorManager implements Initializable, LogEnabled {
 
 			String threadNamePrefix = String.format("CmdProcessor-%s", cmdProcessor.getClass().getSimpleName());
 			if (cmdProcessor.getClass().isAnnotationPresent(SingleThreaded.class)) {
-				m_executors.put(cmdProcessor, Executors.newSingleThreadExecutor(HermesThreadFactory.create(
-				      m_config.getBackgroundThreadGroup(), threadNamePrefix, false)));
+				m_executors.put(cmdProcessor,
+				      Executors.newSingleThreadExecutor(HermesThreadFactory.create(threadNamePrefix, false)));
 			} else {
 				m_executors.put(
 				      cmdProcessor,
 				      Executors.newFixedThreadPool(m_config.getCommandProcessorThreadCount(),
-				            HermesThreadFactory.create(m_config.getBackgroundThreadGroup(), threadNamePrefix, false)));
+				            HermesThreadFactory.create(threadNamePrefix, false)));
 			}
 		}
 

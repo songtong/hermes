@@ -47,7 +47,7 @@ public class BrokerLeaseContainer implements Initializable {
 	public Lease acquireLease(String topic, int partition, String sessionId) {
 		BrokerLeaseKey key = new BrokerLeaseKey(topic, partition, sessionId);
 		Lease lease = m_existingLeases.get(key);
-		if (lease == null || lease.getExpireTime() < m_systemClockService.now()) {
+		if (lease == null || lease.isExpired()) {
 			scheduleLeaseAcquireTask(key);
 			return null;
 		} else {
@@ -60,29 +60,13 @@ public class BrokerLeaseContainer implements Initializable {
 
 		final AtomicBoolean acquireTaskRunning = m_leaseAcquireTaskRunnings.get(key);
 		if (acquireTaskRunning.compareAndSet(false, true)) {
+
 			m_scheduledExecutorService.submit(new Runnable() {
 
 				@Override
 				public void run() {
 					try {
-						Lease existingLease = m_existingLeases.get(key);
-						if (existingLease != null && existingLease.getExpireTime() >= m_systemClockService.now()) {
-							return;
-						}
-
-						LeaseAcquireResponse response = m_leaseManager.tryAcquireLease(key);
-
-						if (response != null && response.isAcquired()) {
-							Lease lease = response.getLease();
-							if (lease.getExpireTime() > m_systemClockService.now()) {
-								m_existingLeases.put(key, lease);
-								scheduleRenewLeaseTask(
-								      key,
-								      lease.getExpireTime() - m_systemClockService.now()
-								            - m_config.getLeaseRenewTimeMillsBeforeExpire());
-							}
-						}
-
+						doAcquireLease(key);
 					} finally {
 						acquireTaskRunning.set(false);
 					}
@@ -91,6 +75,25 @@ public class BrokerLeaseContainer implements Initializable {
 			});
 		}
 
+	}
+
+	private void doAcquireLease(BrokerLeaseKey key) {
+		Lease existingLease = m_existingLeases.get(key);
+		if (existingLease != null && !existingLease.isExpired()) {
+			return;
+		}
+
+		LeaseAcquireResponse response = m_leaseManager.tryAcquireLease(key);
+
+		if (response != null && response.isAcquired()) {
+			Lease lease = response.getLease();
+			if (!lease.isExpired()) {
+				m_existingLeases.put(key, lease);
+
+				long renewDelay = lease.getRemainingTime() - m_config.getLeaseRenewTimeMillsBeforeExpire();
+				scheduleRenewLeaseTask(key, renewDelay);
+			}
+		}
 	}
 
 	private void scheduleRenewLeaseTask(final BrokerLeaseKey key, long delay) {
@@ -124,6 +127,6 @@ public class BrokerLeaseContainer implements Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		m_scheduledExecutorService = Executors.newScheduledThreadPool(m_config.getLeaseContainerThreadCount(),
-		      HermesThreadFactory.create(m_config.getBackgroundThreadGroup(), "BrokerLeaseContainer", true));
+		      HermesThreadFactory.create("BrokerLeaseContainer", false));
 	}
 }

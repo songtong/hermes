@@ -62,7 +62,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 		m_opQueue = new LinkedBlockingQueue<>(m_config.getAckManagerOperationQueueSize());
 
 		m_scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
-		      m_config.getBackgroundThreadGroup(), "AckManagerWorker", true));
+		      "AckManagerWorker", false));
 		m_scheduledExecutorService.scheduleAtFixedRate(new AckTask(), 0, m_config.getAckManagerCheckInterval(),
 		      TimeUnit.MILLISECONDS);
 
@@ -101,16 +101,51 @@ public class DefaultAckManager implements AckManager, Initializable {
 	}
 
 	private class AckTask implements Runnable {
-		private List<Operation> ops = new ArrayList<Operation>();
+		private List<Operation> m_todos = new ArrayList<Operation>();
 
 		@Override
 		public void run() {
 			try {
-				handleOperations(ops);
+				handleOperations();
 
 				checkHolders();
 			} catch (Exception e) {
 				// TODO
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		private void handleOperations() {
+			try {
+				if (m_todos.isEmpty()) {
+					m_opQueue.drainTo(m_todos, m_config.getAckManagerOperationHandlingBatchSize());
+				}
+
+				if (m_todos.isEmpty()) {
+					return;
+				}
+
+				for (Operation op : m_todos) {
+					switch (op.getType()) {
+					case ACK:
+						m_holders.get(op.getKey()).acked((Long) op.getData(), true);
+						break;
+					case NACK:
+						m_holders.get(op.getKey()).acked((Long) op.getData(), false);
+						break;
+					case DELIVERED:
+						m_holders.get(op.getKey()).delivered((List<Pair<Long, Integer>>) op.getData(), op.getCreateTime());
+						break;
+
+					default:
+						break;
+					}
+				}
+
+				m_todos.clear();
+			} catch (Exception e) {
+				// TODO
+				e.printStackTrace();
 			}
 		}
 
@@ -149,41 +184,6 @@ public class DefaultAckManager implements AckManager, Initializable {
 			}
 		}
 
-	}
-
-	@SuppressWarnings("unchecked")
-	private void handleOperations(List<Operation> ops) {
-		try {
-			if (ops.isEmpty()) {
-				m_opQueue.drainTo(ops, m_config.getAckManagerOperationHandlingBatchSize());
-			}
-
-			if (ops.isEmpty()) {
-				return;
-			}
-
-			for (Operation op : ops) {
-				switch (op.getType()) {
-				case ACK:
-					m_holders.get(op.getKey()).acked((Long) op.getData(), true);
-					break;
-				case NACK:
-					m_holders.get(op.getKey()).acked((Long) op.getData(), false);
-					break;
-				case DELIVERED:
-					m_holders.get(op.getKey()).delivered((List<Pair<Long, Integer>>) op.getData(), op.getCreateTime());
-					break;
-
-				default:
-					break;
-				}
-			}
-
-			ops.clear();
-		} catch (Exception e) {
-			// TODO
-			e.printStackTrace();
-		}
 	}
 
 	static class Operation {

@@ -22,10 +22,6 @@ public class BrokerConfig {
 		return m_leaseRenewTimeMillsBeforeExpire;
 	}
 
-	public String getBackgroundThreadGroup() {
-		return "Hermes-Broker-Background";
-	}
-
 	public int getLongPollingServiceThreadCount() {
 		return 3;
 	}
@@ -38,7 +34,7 @@ public class BrokerConfig {
 		return 20;
 	}
 
-	public long getDumperMessageWaitInterval() {
+	public long getDumperNoMessageWaitInterval() {
 		return 50L;
 	}
 
