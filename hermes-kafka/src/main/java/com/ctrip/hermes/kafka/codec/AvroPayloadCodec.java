@@ -12,8 +12,8 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.payload.PayloadCodec;
+import com.ctrip.hermes.core.meta.MetaService;
 
 @Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.AVRO)
 public class AvroPayloadCodec implements PayloadCodec, Initializable {
@@ -21,7 +21,7 @@ public class AvroPayloadCodec implements PayloadCodec, Initializable {
 	private static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
 
 	@Inject
-	private ClientEnvironment clientEnv;
+	private MetaService m_metaService;
 
 	private KafkaAvroSerializer avroSerializer;
 
@@ -46,7 +46,7 @@ public class AvroPayloadCodec implements PayloadCodec, Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		Map<String, String> configs = new HashMap<>();
-		configs.put(SCHEMA_REGISTRY_URL, clientEnv.getGlobalConfig().getProperty(SCHEMA_REGISTRY_URL));
+		configs.put(SCHEMA_REGISTRY_URL, m_metaService.findAvroSchemaRegistryUrl());
 
 		avroSerializer = new KafkaAvroSerializer();
 		avroSerializer.configure(configs, false);

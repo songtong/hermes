@@ -19,9 +19,12 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.Hermes.Env;
+import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.DNSUtil;
 
@@ -29,6 +32,9 @@ import com.ctrip.hermes.core.utils.DNSUtil;
 public class DefaultMetaServerLocator implements MetaServerLocator, Initializable {
 
 	private static final int DEFAULT_META_SERVER_PORT = 1248;
+
+	@Inject
+	private ClientEnvironment m_clientEnv;
 
 	private ReentrantReadWriteLock m_lock = new ReentrantReadWriteLock();
 
@@ -56,15 +62,18 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		while (!dnsResolved) {
 			if (CollectionUtil.isNullOrEmpty(curIpPorts)) {
 				curIpPorts = new ArrayList<String>();
+				String domain = getMetaServerDomainName();
+				// TODO
+				System.out.println("Meta server domain " + domain);
 				try {
-					List<String> ips = DNSUtil.resolve(getMetaServerDomainName());
+					List<String> ips = DNSUtil.resolve(domain);
 					for (String ip : ips) {
 						curIpPorts.add(String.format("%s:%s", ip, DEFAULT_META_SERVER_PORT));
 					}
 					dnsResolved = true;
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
-					System.out.println("Can not resolve " + getMetaServerDomainName());
+					System.out.println("Can not resolve " + domain);
 					return null;
 				}
 			}
@@ -96,7 +105,24 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	private String getMetaServerDomainName() {
 		// TODO choose domain name according to current env
-		return "meta.hermes.fx.ctripcorp.com";
+		Env env = m_clientEnv.getEnv();
+
+		switch (env) {
+		case DEV:
+			return "127.0.0.1";
+		case FWS:
+			return "";
+		case UAT:
+			return "";
+		case LPT:
+			return "";
+		case PROD:
+			return "meta.hermes.fx.ctripcorp.com";
+
+		default:
+			throw new IllegalArgumentException(String.format("Unknown hermes env %s", env));
+		}
+
 	}
 
 	@Override
@@ -114,6 +140,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 			@Override
 			public void run() {
+				// TODO
 				try {
 					List<String> newIpPorts = fetchMetaServerIpPorts();
 					if (CollectionUtil.isNotEmpty(newIpPorts)) {
@@ -124,8 +151,9 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 							m_lock.writeLock().unlock();
 						}
 					}
-				} catch (Exception e) {
+				} catch (RuntimeException e) {
 					// TODO
+					e.printStackTrace();
 				}
 			}
 

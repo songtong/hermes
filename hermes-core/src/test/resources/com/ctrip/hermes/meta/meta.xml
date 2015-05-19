@@ -33,7 +33,10 @@
 	<app id='2' />
 
 	<codec type="json" />
-	<codec type="avro" />
+	<codec type="avro">
+		<property name="schema.registry.url" value="http://10.3.8.63:8081" />
+		<property name="k" value="v" />
+	</codec>
 
 	<endpoint id='br0' type="broker" host="1.1.1.1" port="4376" />
 	<endpoint id='br1' type="broker" host="1.1.1.1" port="4376" />

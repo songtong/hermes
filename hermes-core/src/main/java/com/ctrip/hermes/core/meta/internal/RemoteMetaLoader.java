@@ -3,13 +3,16 @@ package com.ctrip.hermes.core.meta.internal;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.lookup.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.meta.remote.MetaServerLocator;
+import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.google.common.io.ByteStreams;
 
@@ -21,27 +24,38 @@ public class RemoteMetaLoader implements MetaLoader {
 	@Inject
 	private ClientEnvironment m_clientEnvironment;
 
+	@Inject
+	private MetaServerLocator m_metaServerLocator;
+
 	private Meta m_meta;
-
-	private String host;
-
-	private String port;
 
 	@Override
 	public Meta load() {
+		// TODO
+		String ipPort = null;
+		while (true) {
+			// TODO
+			System.out.println("try get metaserver ip port list");
+			List<String> ipPorts = m_metaServerLocator.getMetaServerIpPorts();
+			if (CollectionUtil.isNotEmpty(ipPorts)) {
+				ipPort = ipPorts.get(0);
+				break;
+			} else {
+				try {
+					TimeUnit.SECONDS.sleep(1);
+				} catch (InterruptedException e) {
+					return null;
+				}
+			}
+		}
+		System.out.println("Loading meta from server: " + ipPort);
+
 		try {
-			if (StringUtils.isEmpty(host)) {
-				host = m_clientEnvironment.getGlobalConfig().getProperty("meta-host");
-				System.out.println("Loading meta from server: " + host);
-			}
-			if (StringUtils.isEmpty(port)) {
-				port = m_clientEnvironment.getGlobalConfig().getProperty("meta-port");
-			}
 			String url;
 			if (m_meta != null) {
-				url = "http://" + host + ":" + port + "/meta?hashCode=" + m_meta.hashCode();
+				url = "http://" + ipPort + "/meta?hashCode=" + m_meta.hashCode();
 			} else {
-				url = "http://" + host + ":" + port + "/meta";
+				url = "http://" + ipPort + "/meta";
 			}
 			URL metaURL = new URL(url);
 			HttpURLConnection connection = (HttpURLConnection) metaURL.openConnection();

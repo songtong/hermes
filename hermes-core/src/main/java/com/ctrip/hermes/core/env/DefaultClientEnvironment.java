@@ -6,18 +6,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.Hermes;
+import com.ctrip.hermes.Hermes.Env;
+
 @Named(type = ClientEnvironment.class)
-public class DefaultClientEnvironment implements ClientEnvironment, Initializable, LogEnabled {
+public class DefaultClientEnvironment extends ContainerHolder implements ClientEnvironment, Initializable, LogEnabled {
 	private final static String PRODUCER_DEFAULT_FILE = "/hermes-producer.properties";
 
 	private final static String PRODUCER_PATTERN = "/hermes-producer-%s.properties";
@@ -39,6 +45,8 @@ public class DefaultClientEnvironment implements ClientEnvironment, Initializabl
 	private Properties m_globalDefault;
 
 	private Logger logger;
+
+	private AtomicReference<Env> m_env = new AtomicReference<>();
 
 	@Override
 	public Properties getProducerConfig(String topic) throws IOException {
@@ -108,6 +116,36 @@ public class DefaultClientEnvironment implements ClientEnvironment, Initializabl
 	@Override
 	public void enableLogging(Logger logger) {
 		this.logger = logger;
+	}
+
+	@Override
+	public Env getEnv() {
+		if (m_env.get() == null) {
+			Env resultEnv = Hermes.getEnv();
+
+			List<EnvProvider> envProviders = lookupList(EnvProvider.class);
+			for (EnvProvider p : envProviders) {
+				Env newEnv = p.getEnv();
+				if (newEnv != null) {
+					if (resultEnv == null) {
+						resultEnv = newEnv;
+					} else {
+						if (newEnv != resultEnv) {
+							throw new IllegalArgumentException(String.format("Conflict hermes env found '%s' and '%s'",
+							      newEnv, resultEnv));
+						}
+					}
+				}
+			}
+
+			m_env.compareAndSet(null, resultEnv);
+		}
+
+		if (m_env.get() == null) {
+			throw new IllegalArgumentException("Hermes env is not set");
+		}
+
+		return m_env.get();
 	}
 
 }

@@ -94,4 +94,6 @@ public interface MetaService {
 
 	LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId);
 
+	String findAvroSchemaRegistryUrl();
+
 }
