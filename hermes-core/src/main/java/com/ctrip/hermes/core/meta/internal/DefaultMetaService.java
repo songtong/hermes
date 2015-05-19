@@ -275,5 +275,12 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 		}, REFRESH_PERIOD_MINUTES, REFRESH_PERIOD_MINUTES, TimeUnit.MINUTES);
 	}
+	
+	@Override
+	public String findAvroSchemaRegistryUrl() {
+		Codec avroCodec = m_meta.get().findCodec("avro");
+		// TODO validate avro codec and extract "schema.registry.url" to constant
+		return avroCodec.getProperties().get("schema.registry.url").getValue();
+	}
 
 }

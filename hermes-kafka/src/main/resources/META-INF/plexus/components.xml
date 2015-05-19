@@ -58,7 +58,7 @@
 			<implementation>com.ctrip.hermes.kafka.codec.AvroPayloadCodec</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
 				</requirement>
 			</requirements>
 		</component>

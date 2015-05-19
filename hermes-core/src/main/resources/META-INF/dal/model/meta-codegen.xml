@@ -50,6 +50,7 @@
   </entity>
   <entity name="codec">
     <attribute name="type" value-type="String" />
+    <entity-ref name="property" type="list" names="properties" />
   </entity>
   <entity name="endpoint">
     <attribute name="id" value-type="String" />

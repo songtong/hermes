@@ -22,6 +22,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.remote.MetaServerLocator</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -80,6 +83,11 @@
 		<component>
 			<role>com.ctrip.hermes.core.meta.remote.MetaServerLocator</role>
 			<implementation>com.ctrip.hermes.core.meta.remote.DefaultMetaServerLocator</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
@@ -132,6 +140,15 @@
 		<component>
 			<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 			<implementation>com.ctrip.hermes.core.env.DefaultClientEnvironment</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.env.EnvProvider</role>
+			<implementation>com.ctrip.hermes.core.env.FileEnvProvider</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.config.CoreConfig</role>
