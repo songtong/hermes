@@ -73,8 +73,7 @@ public class NettyClientEndpointChannel extends NettyEndpointChannel implements 
 
 			future.sync();
 		} catch (Exception e) {
-			// TODO
-			e.printStackTrace();
+			// TODO don't print log
 		} finally {
 		}
 	}

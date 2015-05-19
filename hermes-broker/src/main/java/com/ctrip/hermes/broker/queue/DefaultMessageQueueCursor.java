@@ -3,6 +3,7 @@ package com.ctrip.hermes.broker.queue;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.meta.MetaService;
 
 /**
@@ -12,8 +13,8 @@ import com.ctrip.hermes.core.meta.MetaService;
 public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 	private MessageQueueStorage m_storage;
 
-	public DefaultMessageQueueCursor(Tpg tpg, MessageQueueStorage storage, MetaService metaService) {
-		super(tpg, metaService);
+	public DefaultMessageQueueCursor(Tpg tpg, Lease lease, MessageQueueStorage storage, MetaService metaService) {
+		super(tpg, lease, metaService);
 		m_storage = storage;
 	}
 

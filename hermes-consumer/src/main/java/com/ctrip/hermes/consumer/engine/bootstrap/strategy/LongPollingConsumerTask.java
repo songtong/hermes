@@ -216,7 +216,9 @@ public class LongPollingConsumerTask implements Runnable {
 				public void run() {
 					try {
 						Lease lease = m_lease.get();
-						if (lease != null) {
+						if (lease != null
+						      && lease.getExpireTime() - System.currentTimeMillis() <= m_renewLeaseTimeMillisBeforeExpired
+						      && m_nextRenewLeaseTime.get() <= System.currentTimeMillis()) {
 							LeaseAcquireResponse response = m_leaseManager.tryRenewLease(key, lease);
 							if (response != null && response.isAcquired()) {
 								lease.setExpireTime(response.getLease().getExpireTime());
@@ -259,7 +261,12 @@ public class LongPollingConsumerTask implements Runnable {
 					m_lease.set(response.getLease());
 					return;
 				} else {
-					nextTryTime = response.getNextTryTime();
+					if (response != null) {
+						nextTryTime = response.getNextTryTime();
+					} else {
+						// TODO
+						nextTryTime = System.currentTimeMillis() + 500L;
+					}
 				}
 			} catch (Exception e) {
 				// TODO
@@ -325,6 +332,11 @@ public class LongPollingConsumerTask implements Runnable {
 		@Override
 		public void run() {
 			try {
+				// TODO
+				if (m_msgs.size() >= 10) {
+					return;
+				}
+
 				Endpoint endpoint = m_endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
 				ClientEndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
 
@@ -351,10 +363,12 @@ public class LongPollingConsumerTask implements Runnable {
 								return;
 							}
 							List<TppConsumerMessageBatch> batches = ack.getBatches();
-							Class<?> bodyClazz = m_consumerNotifier.find(m_correlationId).getMessageClazz();
+							if (batches != null && !batches.isEmpty()) {
+								Class<?> bodyClazz = m_consumerNotifier.find(m_correlationId).getMessageClazz();
 
-							List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
-							m_msgs.addAll(msgs);
+								List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
+								m_msgs.addAll(msgs);
+							}
 						} finally {
 							if (ack != null) {
 								ack.release();

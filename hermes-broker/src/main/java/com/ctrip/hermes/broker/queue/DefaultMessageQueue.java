@@ -7,6 +7,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.meta.MetaService;
 
 /**
@@ -23,13 +24,13 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	}
 
 	@Override
-	protected MessageQueueDumper getMessageQueuePartitionDumper() {
-		return new DefaultMessageQueueDumper(m_topic, m_partition, m_storage);
+	protected MessageQueueDumper createDumper(Lease lease) {
+		return new DefaultMessageQueueDumper(m_topic, m_partition, m_storage, lease);
 	}
 
 	@Override
-	protected MessageQueueCursor doCreateCursor(String groupId) {
-		return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), m_storage, m_metaService);
+	protected MessageQueueCursor create(String groupId, Lease lease) {
+		return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), lease, m_storage, m_metaService);
 	}
 
 	@Override

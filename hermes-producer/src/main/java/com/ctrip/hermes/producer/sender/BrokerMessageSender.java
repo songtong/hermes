@@ -170,22 +170,26 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		private boolean sendMessagesToBroker(SendMessageCommand cmd) throws InterruptedException, ExecutionException,
 		      TimeoutException {
 			Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partition);
-			EndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
+			if (endpoint != null) {
+				EndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
 
-			Future<Boolean> future = m_messageAcceptedMonitor.monitor(cmd.getHeader().getCorrelationId());
-			m_messageResultMonitor.monitor(cmd);
+				Future<Boolean> future = m_messageAcceptedMonitor.monitor(cmd.getHeader().getCorrelationId());
+				m_messageResultMonitor.monitor(cmd);
 
-			channel.writeCommand(cmd);
+				channel.writeCommand(cmd);
 
-			Boolean brokerAccepted = null;
-			try {
-				brokerAccepted = future.get(m_timeout, TimeUnit.MILLISECONDS);
-			} catch (TimeoutException e) {
-				future.cancel(true);
-			}
+				Boolean brokerAccepted = null;
+				try {
+					brokerAccepted = future.get(m_timeout, TimeUnit.MILLISECONDS);
+				} catch (TimeoutException e) {
+					future.cancel(true);
+				}
 
-			if (brokerAccepted != null && brokerAccepted) {
-				return true;
+				if (brokerAccepted != null && brokerAccepted) {
+					return true;
+				} else {
+					return false;
+				}
 			} else {
 				return false;
 			}

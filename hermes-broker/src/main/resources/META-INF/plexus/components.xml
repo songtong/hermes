@@ -1,6 +1,10 @@
 <plexus>
 	<components>
 		<component>
+			<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+			<implementation>com.ctrip.hermes.broker.config.BrokerConfig</implementation>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.broker.bootstrap.BrokerBootstrap</role>
 			<implementation>com.ctrip.hermes.broker.bootstrap.DefaultBrokerBootstrap</implementation>
 			<requirements>
@@ -31,8 +35,10 @@
 					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.lease.LeaseManager</role>
-					<role-hint>broker</role-hint>
+					<role>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -43,6 +49,12 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.broker.longpolling.LongPollingService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -75,6 +87,19 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</role>
+			<implementation>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.lease.LeaseManager</role>
+					<role-hint>broker</role-hint>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
