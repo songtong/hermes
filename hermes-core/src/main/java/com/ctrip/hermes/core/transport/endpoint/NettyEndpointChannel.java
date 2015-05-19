@@ -97,16 +97,20 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 			@Override
 			public void run() {
-				long now = System.currentTimeMillis();
-				synchronized (m_pendingCmdsLock) {
-					for (Map.Entry<Long, AckAware<Ack>> entry : m_pendingCommands.entrySet()) {
-						AckAware<Ack> ackAware = entry.getValue();
-						Long correlationId = entry.getKey();
-						if (ackAware.getExpireTime() < now) {
-							ackAware.onFail();
-							m_pendingCommands.remove(correlationId);
+				try {
+					long now = System.currentTimeMillis();
+					synchronized (m_pendingCmdsLock) {
+						for (Map.Entry<Long, AckAware<Ack>> entry : m_pendingCommands.entrySet()) {
+							AckAware<Ack> ackAware = entry.getValue();
+							Long correlationId = entry.getKey();
+							if (ackAware.getExpireTime() < now) {
+								ackAware.onFail();
+								m_pendingCommands.remove(correlationId);
+							}
 						}
 					}
+				} catch (Exception e) {
+					// TODO
 				}
 			}
 		}, 3, 3, TimeUnit.SECONDS);

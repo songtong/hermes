@@ -114,14 +114,18 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 			@Override
 			public void run() {
-				List<String> newIpPorts = fetchMetaServerIpPorts();
-				if (CollectionUtil.isNotEmpty(newIpPorts)) {
-					try {
-						m_lock.writeLock().lock();
-						m_ipPorts.set(newIpPorts);
-					} finally {
-						m_lock.writeLock().unlock();
+				try {
+					List<String> newIpPorts = fetchMetaServerIpPorts();
+					if (CollectionUtil.isNotEmpty(newIpPorts)) {
+						try {
+							m_lock.writeLock().lock();
+							m_ipPorts.set(newIpPorts);
+						} finally {
+							m_lock.writeLock().unlock();
+						}
 					}
+				} catch (Exception e) {
+					// TODO
 				}
 			}
 

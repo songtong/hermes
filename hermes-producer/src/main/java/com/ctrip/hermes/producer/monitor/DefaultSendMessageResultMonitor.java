@@ -58,16 +58,20 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 
 			@Override
 			public void run() {
-				long now = System.currentTimeMillis();
-				synchronized (m_lock) {
-					for (Map.Entry<Long, SendMessageCommand> entry : m_cmds.entrySet()) {
-						SendMessageCommand cmd = entry.getValue();
-						Long correlationId = entry.getKey();
-						if (cmd.getExpireTime() < now) {
-							cmd.onTimeout();
-							m_cmds.remove(correlationId);
+				try {
+					long now = System.currentTimeMillis();
+					synchronized (m_lock) {
+						for (Map.Entry<Long, SendMessageCommand> entry : m_cmds.entrySet()) {
+							SendMessageCommand cmd = entry.getValue();
+							Long correlationId = entry.getKey();
+							if (cmd.getExpireTime() < now) {
+								cmd.onTimeout();
+								m_cmds.remove(correlationId);
+							}
 						}
 					}
+				} catch (Exception e) {
+					// TODO
 				}
 			}
 		}, 5, 5, TimeUnit.SECONDS);

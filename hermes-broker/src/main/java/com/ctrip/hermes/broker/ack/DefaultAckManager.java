@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -41,7 +43,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 	private BlockingQueue<Operation> m_opQueue;
 
-	private Thread m_workerThread;
+	private ScheduledExecutorService m_scheduledExecutorService;
 
 	@Inject
 	private MessageQueueManager m_queueManager;
@@ -58,9 +60,12 @@ public class DefaultAckManager implements AckManager, Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		m_opQueue = new LinkedBlockingQueue<>(m_config.getAckManagerOperationQueueSize());
-		m_workerThread = HermesThreadFactory.create(m_config.getBackgroundThreadGroup(), "AckManagerWorker", true)
-		      .newThread(new AckTask());
-		m_workerThread.start();
+
+		m_scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
+		      m_config.getBackgroundThreadGroup(), "AckManagerWorker", true));
+		m_scheduledExecutorService.scheduleAtFixedRate(new AckTask(), 0, m_config.getAckManagerCheckInterval(),
+		      TimeUnit.MILLISECONDS);
+
 	}
 
 	@Override
@@ -96,26 +101,16 @@ public class DefaultAckManager implements AckManager, Initializable {
 	}
 
 	private class AckTask implements Runnable {
+		private List<Operation> ops = new ArrayList<Operation>();
 
 		@Override
 		public void run() {
-			List<Operation> ops = new ArrayList<Operation>();
-			while (!Thread.currentThread().isInterrupted()) {
-				try {
-					handleOperations(ops);
+			try {
+				handleOperations(ops);
 
-					checkHolders();
-
-				} catch (Exception e) {
-					// TODO
-					e.printStackTrace();
-				} finally {
-					try {
-						TimeUnit.MILLISECONDS.sleep(m_config.getAckManagerCheckInterval());
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-					}
-				}
+				checkHolders();
+			} catch (Exception e) {
+				// TODO
 			}
 		}
 
@@ -154,39 +149,40 @@ public class DefaultAckManager implements AckManager, Initializable {
 			}
 		}
 
-		@SuppressWarnings("unchecked")
-		private void handleOperations(List<Operation> ops) {
-			try {
-				if (ops.isEmpty()) {
-					m_opQueue.drainTo(ops, m_config.getAckManagerOperationHandlingBatchSize());
-				}
+	}
 
-				if (ops.isEmpty()) {
-					return;
-				}
-
-				for (Operation op : ops) {
-					switch (op.getType()) {
-					case ACK:
-						m_holders.get(op.getKey()).acked((Long) op.getData(), true);
-						break;
-					case NACK:
-						m_holders.get(op.getKey()).acked((Long) op.getData(), false);
-						break;
-					case DELIVERED:
-						m_holders.get(op.getKey()).delivered((List<Pair<Long, Integer>>) op.getData(), op.getCreateTime());
-						break;
-
-					default:
-						break;
-					}
-				}
-
-				ops.clear();
-			} catch (Exception e) {
-				// TODO
-				e.printStackTrace();
+	@SuppressWarnings("unchecked")
+	private void handleOperations(List<Operation> ops) {
+		try {
+			if (ops.isEmpty()) {
+				m_opQueue.drainTo(ops, m_config.getAckManagerOperationHandlingBatchSize());
 			}
+
+			if (ops.isEmpty()) {
+				return;
+			}
+
+			for (Operation op : ops) {
+				switch (op.getType()) {
+				case ACK:
+					m_holders.get(op.getKey()).acked((Long) op.getData(), true);
+					break;
+				case NACK:
+					m_holders.get(op.getKey()).acked((Long) op.getData(), false);
+					break;
+				case DELIVERED:
+					m_holders.get(op.getKey()).delivered((List<Pair<Long, Integer>>) op.getData(), op.getCreateTime());
+					break;
+
+				default:
+					break;
+				}
+			}
+
+			ops.clear();
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
 		}
 	}
 

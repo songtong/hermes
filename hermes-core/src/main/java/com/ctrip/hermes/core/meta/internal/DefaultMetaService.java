@@ -234,9 +234,9 @@ public class DefaultMetaService implements MetaService, Initializable {
 			throw e;
 		}
 	}
-	
+
 	@Override
-   public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId) {
+	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId) {
 		try {
 			return m_manager.getMetaProxy().tryRenewBrokerLease(topic, partition, lease, sessionId);
 		} catch (RuntimeException e) {
@@ -244,10 +244,10 @@ public class DefaultMetaService implements MetaService, Initializable {
 			// TODO
 			throw e;
 		}
-   }
+	}
 
 	@Override
-   public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId) {
+	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId) {
 		try {
 			return m_manager.getMetaProxy().tryAcquireBrokerLease(topic, partition, sessionId);
 		} catch (RuntimeException e) {
@@ -255,7 +255,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 			// TODO
 			throw e;
 		}
-   }
+	}
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -268,6 +268,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 				try {
 					refreshMeta(m_manager.getMeta());
 				} catch (Exception e) {
+					// TODO
 					e.printStackTrace();
 				}
 			}
