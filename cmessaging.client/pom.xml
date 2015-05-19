@@ -12,7 +12,8 @@
 
     <groupId>com.ctrip.cmessaging</groupId>
     <artifactId>cmessaging.client</artifactId>
-    <version>1.0.2-hermes-adapter</version>
+    <!--临时注释掉该version-->
+    <!--<version>1.0.2-hermes-adapter</version>-->
 
     <dependencies>
         <dependency>
