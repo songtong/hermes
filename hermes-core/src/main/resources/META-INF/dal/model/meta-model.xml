@@ -7,6 +7,7 @@
 		<entity-ref name="storage" type="map" names="storages" />
 		<entity-ref name="codec" type="map" names="codecs" />
 		<entity-ref name="app" type="map" names="apps" />
+		<entity-ref name="server" type="map" names="servers" />
 	</entity>
 
 	<entity name="consumer-group">
@@ -71,6 +72,11 @@
 	</entity>
 	<entity name="property">
 		<attribute name="name" key='true' />
+	</entity>
+	<entity name="server">
+		<attribute name="id" value-type="String" key="true"/>
+		<attribute name="host" value-type="String"/>
+		<attribute name="port" value-type="int"/>
 	</entity>
 </model>
 

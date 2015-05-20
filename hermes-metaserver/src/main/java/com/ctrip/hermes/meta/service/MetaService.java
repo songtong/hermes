@@ -10,6 +10,7 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 
@@ -95,4 +96,6 @@ public interface MetaService {
 	public Meta getMeta();
 	
 	public Meta getMeta(boolean isForceLatest);
+	
+	public List<Server> getServers();
 }

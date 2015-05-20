@@ -52,8 +52,7 @@ public class DefaultMetaManager extends ContainerHolder implements MetaManager {
 		} else if (m_env.getGlobalConfig().containsKey("isLocalMode")) {
 			return Boolean.parseBoolean(m_env.getGlobalConfig().getProperty("isLocalMode"));
 		}
-		// FIXME for dev only
-		return true;
+		return false;
 	}
 
 }
