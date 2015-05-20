@@ -93,6 +93,12 @@ public class BrokerLeaseContainer implements Initializable {
 				long renewDelay = lease.getRemainingTime() - m_config.getLeaseRenewTimeMillsBeforeExpire();
 				scheduleRenewLeaseTask(key, renewDelay);
 			}
+		} else {
+			try {
+				TimeUnit.MILLISECONDS.sleep(m_config.getDefaultLeaseAcquireDelay());
+			} catch (Exception e) {
+				// TODO
+			}
 		}
 	}
 

@@ -3,6 +3,7 @@ package com.ctrip.hermes.core.transport.command;
 import io.netty.buffer.ByteBuf;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -251,4 +252,9 @@ public class SendMessageCommand extends AbstractCommand {
 		// TODO config
 		return System.currentTimeMillis() + 10 * 1000L;
 	}
+
+	public Collection<List<ProducerMessage<?>>> getProducerMessages() {
+		return m_msgs.values();
+	}
+
 }

@@ -34,11 +34,9 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 					PropertiesHolder holder = ((PropertiesHolderAware) msg).getPropertiesHolder();
 					String rootMsgId = holder.getDurableSysProperty(CatConstants.ROOT_MESSAGE_ID);
 					String parentMsgId = holder.getDurableSysProperty(CatConstants.CURRENT_MESSAGE_ID);
-					String msgId = holder.getDurableSysProperty(CatConstants.SERVER_MESSAGE_ID);
 
 					tree.setRootMessageId(rootMsgId);
 					tree.setParentMessageId(parentMsgId);
-					tree.setMessageId(msgId);
 				}
 
 				try {
