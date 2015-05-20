@@ -39,7 +39,7 @@ public class DefaultLease implements Lease {
 	}
 
 	public boolean isExpired() {
-		return getRemainingTime() > 0;
+		return getRemainingTime() <= 0;
 	}
 
 	@Override

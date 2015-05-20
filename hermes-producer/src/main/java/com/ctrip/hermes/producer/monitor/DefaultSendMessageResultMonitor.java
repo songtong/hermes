@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -27,13 +28,16 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 
 	private Map<Long, SendMessageCommand> m_cmds = new HashMap<>();
 
-	private Object m_lock = new Object();
+	private ReentrantLock m_lock = new ReentrantLock();
 
 	@Override
 	public void monitor(SendMessageCommand cmd) {
 		if (cmd != null) {
-			synchronized (m_lock) {
+			m_lock.lock();
+			try {
 				m_cmds.put(cmd.getHeader().getCorrelationId(), cmd);
+			} finally {
+				m_lock.unlock();
 			}
 		}
 	}
@@ -42,8 +46,11 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	public void received(SendMessageResultCommand result) {
 		if (result != null) {
 			SendMessageCommand sendMessageCommand = null;
-			synchronized (m_lock) {
+			m_lock.lock();
+			try {
 				sendMessageCommand = m_cmds.remove(result.getHeader().getCorrelationId());
+			} finally {
+				m_lock.unlock();
 			}
 			if (sendMessageCommand != null) {
 				sendMessageCommand.onResultReceived(result);
@@ -60,7 +67,8 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 			      @Override
 			      public void run() {
 				      try {
-					      synchronized (m_lock) {
+					      m_lock.lock();
+					      try {
 						      for (Map.Entry<Long, SendMessageCommand> entry : m_cmds.entrySet()) {
 							      SendMessageCommand cmd = entry.getValue();
 							      Long correlationId = entry.getKey();
@@ -69,6 +77,8 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 								      m_cmds.remove(correlationId);
 							      }
 						      }
+					      } finally {
+						      m_lock.unlock();
 					      }
 				      } catch (Exception e) {
 					      // TODO

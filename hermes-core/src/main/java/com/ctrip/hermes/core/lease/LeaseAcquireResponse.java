@@ -7,14 +7,14 @@ package com.ctrip.hermes.core.lease;
 public class LeaseAcquireResponse {
 	private boolean m_acquired = false;
 
-	private Lease m_lease;
+	private DefaultLease m_lease;
 
 	private long m_nextTryTime;
 
 	public LeaseAcquireResponse() {
 	}
 
-	public LeaseAcquireResponse(boolean acquired, Lease lease, long nextTryTime) {
+	public LeaseAcquireResponse(boolean acquired, DefaultLease lease, long nextTryTime) {
 		m_acquired = acquired;
 		m_lease = lease;
 		m_nextTryTime = nextTryTime;
@@ -32,7 +32,7 @@ public class LeaseAcquireResponse {
 		return m_lease;
 	}
 
-	public void setLease(Lease lease) {
+	public void setLease(DefaultLease lease) {
 		m_lease = lease;
 	}
 

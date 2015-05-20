@@ -47,7 +47,7 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 		      context, //
 		      partitionId,//
 		      m_config.getLocalCacheSize(), //
-		      m_config.getStopConsumerTimeMillsBeforLeaseExpired());
+		      m_systemClockService);
 
 		consumerTask.setClientEndpointChannelManager(m_clientEndpointChannelManager);
 		consumerTask.setConsumerNotifier(m_consumerNotifier);

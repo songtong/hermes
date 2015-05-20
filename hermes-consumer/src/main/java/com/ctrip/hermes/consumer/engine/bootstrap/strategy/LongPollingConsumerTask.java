@@ -69,8 +69,6 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private int m_cacheSize;
 
-	private long m_stopConsumerTimeMillsBeforLeaseExpired;
-
 	private ConsumerContext m_context;
 
 	private int m_partitionId;
@@ -80,12 +78,12 @@ public class LongPollingConsumerTask implements Runnable {
 	private AtomicReference<Lease> m_lease = new AtomicReference<>(null);
 
 	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize,
-	      long stopConsumerTimeMillsBeforLeaseExpired) {
+	      SystemClockService systemClockService) {
 		m_context = context;
 		m_partitionId = partitionId;
 		m_cacheSize = cacheSize;
 		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
-		m_stopConsumerTimeMillsBeforLeaseExpired = stopConsumerTimeMillsBeforLeaseExpired;
+		m_systemClockService = systemClockService;
 
 		m_pullMessageTaskExecutorService = Executors.newSingleThreadExecutor(HermesThreadFactory.create(String.format(
 		      "LongPollingPullMessageTask-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
@@ -163,7 +161,7 @@ public class LongPollingConsumerTask implements Runnable {
 
 			try {
 				// if leaseRemainingTime < stopConsumerTimeMillsBeforLeaseExpired, stop
-				if (m_lease.get().getRemainingTime() <= m_stopConsumerTimeMillsBeforLeaseExpired) {
+				if (m_lease.get().getRemainingTime() <= m_config.getStopConsumerTimeMillsBeforLeaseExpired()) {
 					break;
 				}
 
