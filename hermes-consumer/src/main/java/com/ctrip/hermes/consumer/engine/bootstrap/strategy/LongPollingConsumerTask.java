@@ -8,16 +8,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -29,6 +29,7 @@ import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.core.transport.command.PullMessageAckCommand;
 import com.ctrip.hermes.core.transport.command.PullMessageCommand;
@@ -36,6 +37,7 @@ import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannel;
 import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
 import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -55,17 +57,17 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private LeaseManager<ConsumerLeaseKey> m_leaseManager;
 
+	private SystemClockService m_systemClockService;
+
+	private ConsumerConfig m_config;
+
 	private ExecutorService m_pullMessageTaskExecutorService;
 
-	private ExecutorService m_renewLeaseTaskExecutorService;
+	private ScheduledExecutorService m_renewLeaseTaskExecutorService;
 
 	private BlockingQueue<ConsumerMessage<?>> m_msgs;
 
 	private int m_cacheSize;
-
-	private long m_renewLeaseTimeMillisBeforeExpired;
-
-	private long m_stopConsumerTimeMillsBeforLeaseExpired;
 
 	private ConsumerContext m_context;
 
@@ -73,40 +75,31 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private AtomicBoolean m_pullTaskRunning = new AtomicBoolean(false);
 
-	private AtomicBoolean m_renewLeaseTaskRunning = new AtomicBoolean(false);
-
 	private AtomicReference<Lease> m_lease = new AtomicReference<>(null);
 
-	private AtomicLong m_nextRenewLeaseTime = new AtomicLong(0);
-
 	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize,
-	      long renewLeaseTimeMillisBeforeExpired, long stopConsumerTimeMillsBeforLeaseExpired) {
+	      SystemClockService systemClockService) {
 		m_context = context;
 		m_partitionId = partitionId;
 		m_cacheSize = cacheSize;
 		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
-		m_renewLeaseTimeMillisBeforeExpired = renewLeaseTimeMillisBeforeExpired;
-		m_stopConsumerTimeMillsBeforLeaseExpired = stopConsumerTimeMillsBeforLeaseExpired;
+		m_systemClockService = systemClockService;
 
-		// TODO ThreadFactory
-		m_pullMessageTaskExecutorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+		m_pullMessageTaskExecutorService = Executors.newSingleThreadExecutor(HermesThreadFactory.create(String.format(
+		      "LongPollingPullMessageTask-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
+		      m_context.getGroupId()), false));
 
-			@Override
-			public Thread newThread(Runnable r) {
-				return new Thread(r, String.format("LongPollingPullMessageTask-%s-%s-%s", m_context.getTopic().getName(),
-				      m_partitionId, m_context.getGroupId()));
-			}
-		});
+		m_renewLeaseTaskExecutorService = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(String
+		      .format("LongPollingRenewLeaseTask-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
+		            m_context.getGroupId()), false));
+	}
 
-		// TODO ThreadFactory
-		m_renewLeaseTaskExecutorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+	public void setConfig(ConsumerConfig config) {
+		m_config = config;
+	}
 
-			@Override
-			public Thread newThread(Runnable r) {
-				return new Thread(r, String.format("LongPollingRenewLeaseTask-%s-%s-%s", m_context.getTopic().getName(),
-				      m_partitionId, m_context.getGroupId()));
-			}
-		});
+	public void setSystemClockService(SystemClockService systemClockService) {
+		m_systemClockService = systemClockService;
 	}
 
 	public void setConsumerNotifier(ConsumerNotifier consumerNotifier) {
@@ -137,13 +130,14 @@ public class LongPollingConsumerTask implements Runnable {
 			try {
 				acquireLease(key);
 
-				if (m_lease.get() != null && m_lease.get().getExpireTime() > System.currentTimeMillis()) {
+				if (m_lease.get() != null && !m_lease.get().isExpired()) {
 					long correlationId = CorrelationIdGenerator.generateCorrelationId();
 					// TODO
 					System.out.println(String.format(
 					      "Lease acquired...(topic=%s, partition=%s, consumerGroupId=%s, correlationId=%s, sessionId=%s)",
 					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), correlationId,
 					      m_context.getSessionId()));
+
 					startConsumer(key, correlationId);
 
 					// TODO
@@ -161,35 +155,24 @@ public class LongPollingConsumerTask implements Runnable {
 	}
 
 	private void startConsumer(ConsumerLeaseKey key, long correlationId) {
-		m_nextRenewLeaseTime.set(System.currentTimeMillis());
 		m_consumerNotifier.register(correlationId, m_context);
 
-		while (!Thread.currentThread().isInterrupted()//
-		      && m_lease.get().getExpireTime() > System.currentTimeMillis()) {
+		while (!Thread.currentThread().isInterrupted() && !m_lease.get().isExpired()) {
 
 			try {
-				long leaseRemainingTime = m_lease.get().getExpireTime() - System.currentTimeMillis();
-
 				// if leaseRemainingTime < stopConsumerTimeMillsBeforLeaseExpired, stop
-				if (leaseRemainingTime <= m_stopConsumerTimeMillsBeforLeaseExpired) {
+				if (m_lease.get().getRemainingTime() <= m_config.getStopConsumerTimeMillsBeforLeaseExpired()) {
 					break;
 				}
 
-				if (leaseRemainingTime <= m_renewLeaseTimeMillisBeforeExpired
-				      && m_nextRenewLeaseTime.get() <= System.currentTimeMillis()) {
-					scheduleRenewLeaseTask(key);
-				}
-
-				// TODO config size
-				if (m_msgs.size() < 10) {
+				if (m_msgs.size() < m_config.getPullMessagesThreshold()) {
 					schedulePullMessagesTask(correlationId);
 				}
 
 				if (!m_msgs.isEmpty()) {
 					consumeMessages(correlationId, m_cacheSize);
 				} else {
-					// TODO
-					Thread.sleep(10);
+					TimeUnit.MILLISECONDS.sleep(m_config.getNoMessageWaitInterval());
 				}
 
 			} catch (InterruptedException e) {
@@ -208,44 +191,39 @@ public class LongPollingConsumerTask implements Runnable {
 		m_lease.set(null);
 	}
 
-	private void scheduleRenewLeaseTask(final ConsumerLeaseKey key) {
-		if (m_renewLeaseTaskRunning.compareAndSet(false, true)) {
-			m_renewLeaseTaskExecutorService.submit(new Runnable() {
+	private void scheduleRenewLeaseTask(final ConsumerLeaseKey key, long delay) {
+		m_renewLeaseTaskExecutorService.schedule(new Runnable() {
 
-				@Override
-				public void run() {
-					try {
-						Lease lease = m_lease.get();
-						if (lease != null
-						      && lease.getExpireTime() - System.currentTimeMillis() <= m_renewLeaseTimeMillisBeforeExpired
-						      && m_nextRenewLeaseTime.get() <= System.currentTimeMillis()) {
-							LeaseAcquireResponse response = m_leaseManager.tryRenewLease(key, lease);
-							if (response != null && response.isAcquired()) {
-								lease.setExpireTime(response.getLease().getExpireTime());
+			@Override
+			public void run() {
+				Lease lease = m_lease.get();
+				if (lease != null) {
+					if (lease.getRemainingTime() > 0) {
+						LeaseAcquireResponse response = m_leaseManager.tryRenewLease(key, lease);
+						if (response != null && response.isAcquired()) {
+							lease.setExpireTime(response.getLease().getExpireTime());
+							scheduleRenewLeaseTask(key,
+							      lease.getRemainingTime() - m_config.getRenewLeaseTimeMillisBeforeExpired());
+						} else {
+							if (response != null && response.getNextTryTime() > 0) {
+								scheduleRenewLeaseTask(key, response.getNextTryTime() - m_systemClockService.now());
 							} else {
-								if (response != null && response.getNextTryTime() > 0) {
-									m_nextRenewLeaseTime.set(response.getNextTryTime());
-								} else {
-									// TODO configable delay
-									m_nextRenewLeaseTime.set(System.currentTimeMillis() + 500L);
-								}
+								scheduleRenewLeaseTask(key, m_config.getDefaultLeaseRenewDelay());
 							}
 						}
-					} finally {
-						m_renewLeaseTaskRunning.set(false);
 					}
 				}
-			});
-		}
+			}
+		}, delay, TimeUnit.MILLISECONDS);
 	}
 
 	private void acquireLease(ConsumerLeaseKey key) {
-		long nextTryTime = System.currentTimeMillis();
+		long nextTryTime = m_systemClockService.now();
 		while (!Thread.currentThread().isInterrupted()) {
 			try {
 				while (true) {
 					if (!Thread.currentThread().isInterrupted()) {
-						if (nextTryTime > System.currentTimeMillis()) {
+						if (nextTryTime > m_systemClockService.now()) {
 							LockSupport.parkUntil(nextTryTime);
 						} else {
 							break;
@@ -259,13 +237,14 @@ public class LongPollingConsumerTask implements Runnable {
 
 				if (response != null && response.isAcquired()) {
 					m_lease.set(response.getLease());
+					scheduleRenewLeaseTask(key,
+					      m_lease.get().getRemainingTime() - m_config.getRenewLeaseTimeMillisBeforeExpired());
 					return;
 				} else {
 					if (response != null) {
 						nextTryTime = response.getNextTryTime();
 					} else {
-						// TODO
-						nextTryTime = System.currentTimeMillis() + 500L;
+						nextTryTime = m_systemClockService.now() + m_config.getDefaultLeaseAcquireDelay();
 					}
 				}
 			} catch (Exception e) {
@@ -332,16 +311,14 @@ public class LongPollingConsumerTask implements Runnable {
 		@Override
 		public void run() {
 			try {
-				// TODO
-				if (m_msgs.size() >= 10) {
+				if (m_msgs.size() >= m_config.getPullMessagesThreshold()) {
 					return;
 				}
 
 				Endpoint endpoint = m_endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
 
 				if (endpoint == null) {
-					// TODO
-					TimeUnit.SECONDS.sleep(1);
+					TimeUnit.MILLISECONDS.sleep(m_config.getNoEndpointWaitInterval());
 					return;
 				}
 
@@ -349,15 +326,13 @@ public class LongPollingConsumerTask implements Runnable {
 
 				final SettableFuture<PullMessageAckCommand> future = SettableFuture.create();
 
-				long now = System.currentTimeMillis();
-
 				Lease lease = m_lease.get();
 				if (lease != null) {
-					long timeout = lease.getExpireTime() - now;
+					long timeout = lease.getRemainingTime();
 
 					if (timeout > 0) {
 						PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
-						      m_context.getGroupId(), m_cacheSize - m_msgs.size(), now + timeout);
+						      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout);
 
 						cmd.getHeader().setCorrelationId(m_correlationId);
 						cmd.setFuture(future);
@@ -371,10 +346,13 @@ public class LongPollingConsumerTask implements Runnable {
 							}
 							List<TppConsumerMessageBatch> batches = ack.getBatches();
 							if (batches != null && !batches.isEmpty()) {
-								Class<?> bodyClazz = m_consumerNotifier.find(m_correlationId).getMessageClazz();
+								ConsumerContext context = m_consumerNotifier.find(m_correlationId);
+								if (context != null) {
+									Class<?> bodyClazz = context.getMessageClazz();
 
-								List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
-								m_msgs.addAll(msgs);
+									List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
+									m_msgs.addAll(msgs);
+								}
 							}
 						} finally {
 							if (ack != null) {

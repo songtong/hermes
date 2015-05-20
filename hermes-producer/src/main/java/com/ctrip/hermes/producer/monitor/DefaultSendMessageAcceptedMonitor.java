@@ -3,6 +3,7 @@ package com.ctrip.hermes.producer.monitor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.unidal.lookup.annotation.Named;
 
@@ -17,25 +18,32 @@ public class DefaultSendMessageAcceptedMonitor implements SendMessageAcceptedMon
 
 	private Map<Long, CancelableFuture> m_futures = new HashMap<>();
 
-	private Object m_lock = new Object();
+	private ReentrantLock m_lock = new ReentrantLock();
 
 	@Override
 	public Future<Boolean> monitor(long correlationId) {
 		CancelableFuture future = new CancelableFuture(correlationId);
-		synchronized (m_lock) {
+		m_lock.lock();
+		try {
 			m_futures.put(correlationId, future);
+		} finally {
+			m_lock.unlock();
 		}
 		return future;
 	}
 
 	@Override
 	public void received(long correlationId, boolean success) {
-		synchronized (m_lock) {
+		m_lock.lock();
+		try {
 			CancelableFuture future = m_futures.remove(correlationId);
 			if (future != null) {
 				future.set(success);
 			}
+		} finally {
+			m_lock.unlock();
 		}
+
 	}
 
 	private class CancelableFuture extends AbstractFuture<Boolean> {
@@ -58,8 +66,11 @@ public class DefaultSendMessageAcceptedMonitor implements SendMessageAcceptedMon
 		@Override
 		public boolean cancel(boolean mayInterruptIfRunning) {
 			super.cancel(mayInterruptIfRunning);
-			synchronized (m_lock) {
+			m_lock.lock();
+			try {
 				m_futures.remove(m_correlationId);
+			} finally {
+				m_lock.unlock();
 			}
 			return true;
 		}

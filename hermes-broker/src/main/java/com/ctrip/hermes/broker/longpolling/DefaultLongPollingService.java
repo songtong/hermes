@@ -22,15 +22,14 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
  *
  */
 @Named(type = LongPollingService.class)
-public class DefaultLongPollingService extends AbstractLongPollingService implements
-      Initializable {
+public class DefaultLongPollingService extends AbstractLongPollingService implements Initializable {
 
 	private ScheduledExecutorService m_scheduledThreadPool;
 
 	@Override
 	public void initialize() throws InitializationException {
 		m_scheduledThreadPool = Executors.newScheduledThreadPool(m_config.getLongPollingServiceThreadCount(),
-		      HermesThreadFactory.create(m_config.getBackgroundThreadGroup(), "LongPollingService", false));
+		      HermesThreadFactory.create("LongPollingService", false));
 	}
 
 	@Override
@@ -54,7 +53,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 			return;
 		}
 
-		if (pullMessageTask.getBrokerLease().getExpireTime() >= m_systemClockService.now()) {
+		if (!pullMessageTask.getBrokerLease().isExpired()) {
 			if (!queryAndResponseData(pullMessageTask)) {
 				m_scheduledThreadPool.schedule(new Runnable() {
 

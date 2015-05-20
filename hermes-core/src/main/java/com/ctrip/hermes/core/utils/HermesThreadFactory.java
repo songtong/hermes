@@ -16,7 +16,11 @@ public class HermesThreadFactory implements ThreadFactory {
 
 	private final boolean m_daemon;
 
-	public static ThreadFactory create(String groupName, String namePrefix, boolean daemon) {
+	public static ThreadFactory create(String namePrefix, boolean daemon) {
+		return create("Hermes", namePrefix, daemon);
+	}
+
+	private static ThreadFactory create(String groupName, String namePrefix, boolean daemon) {
 		return new HermesThreadFactory(groupName, namePrefix, daemon);
 	}
 

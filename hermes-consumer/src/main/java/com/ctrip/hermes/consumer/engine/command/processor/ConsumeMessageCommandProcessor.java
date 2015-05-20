@@ -10,6 +10,7 @@ import java.util.Map;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
@@ -58,11 +59,14 @@ public class ConsumeMessageCommandProcessor implements CommandProcessor {
 					long correlationId = entry.getKey();
 					List<TppConsumerMessageBatch> batches = entry.getValue();
 
-					Class<?> bodyClazz = m_consumerNotifier.find(correlationId).getMessageClazz();
+					ConsumerContext context = m_consumerNotifier.find(correlationId);
+					if (context != null) {
+						Class<?> bodyClazz = context.getMessageClazz();
 
-					List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ctx.getChannel());
+						List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ctx.getChannel());
 
-					m_consumerNotifier.messageReceived(correlationId, msgs);
+						m_consumerNotifier.messageReceived(correlationId, msgs);
+					}
 				}
 			} finally {
 				consumeMessageCommand.release();

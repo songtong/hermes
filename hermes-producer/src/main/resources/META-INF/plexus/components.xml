@@ -87,6 +87,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.producer.monitor.SendMessageResultMonitor</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.producer.config.ProducerConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -112,10 +115,19 @@
 		<component>
 			<role>com.ctrip.hermes.producer.monitor.SendMessageResultMonitor</role>
 			<implementation>com.ctrip.hermes.producer.monitor.DefaultSendMessageResultMonitor</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.producer.monitor.SendMessageAcceptedMonitor</role>
 			<implementation>com.ctrip.hermes.producer.monitor.DefaultSendMessageAcceptedMonitor</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.producer.config.ProducerConfig</role>
+			<implementation>com.ctrip.hermes.producer.config.ProducerConfig</implementation>
 		</component>
 	</components>
 </plexus>

@@ -9,10 +9,6 @@ import org.unidal.lookup.annotation.Named;
 @Named(type = CoreConfig.class)
 public class CoreConfig {
 
-	public String getBackgroundThreadGroup() {
-		return "Hermes-Core-Background";
-	}
-
 	public int getCommandProcessorThreadCount() {
 		return 10;
 	}

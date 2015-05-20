@@ -9,7 +9,6 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
-import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -22,9 +21,9 @@ public class DefaultMessageQueueDumper extends AbstractMessageQueueDumper {
 
 	private MessageQueueStorage m_storage;
 
-	public DefaultMessageQueueDumper(String topic, int partition, MessageQueueStorage storage,
-	      SystemClockService systemClockSerivce, BrokerConfig config, Lease lease) {
-		super(topic, partition, systemClockSerivce, config, lease);
+	public DefaultMessageQueueDumper(String topic, int partition, MessageQueueStorage storage, BrokerConfig config,
+	      Lease lease) {
+		super(topic, partition, config, lease);
 		m_storage = storage;
 	}
 

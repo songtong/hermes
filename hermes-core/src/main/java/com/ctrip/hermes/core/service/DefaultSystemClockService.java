@@ -40,7 +40,7 @@ public class DefaultSystemClockService implements SystemClockService, Initializa
 
 	private void scheduleClockUpdating() {
 		ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
-		      m_config.getBackgroundThreadGroup(), "SystemClock", true));
+		      "SystemClock", true));
 		scheduler.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {

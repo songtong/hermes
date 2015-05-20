@@ -15,7 +15,6 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.core.lease.Lease;
-import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.google.common.base.Function;
@@ -42,19 +41,14 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 	private Thread m_workerThread;
 
-	private SystemClockService m_systemClockService;
-
-	public AbstractMessageQueueDumper(String topic, int partition, SystemClockService systemClockService,
-	      BrokerConfig config, Lease lease) {
+	public AbstractMessageQueueDumper(String topic, int partition, BrokerConfig config, Lease lease) {
 		m_topic = topic;
 		m_partition = partition;
 		m_lease = lease;
-		m_systemClockService = systemClockService;
 		m_config = config;
 
 		String threadName = String.format("MessageQueueDumper-%s-%d", topic, partition);
-		m_workerThread = HermesThreadFactory.create(config.getBackgroundThreadGroup(), threadName, false).newThread(
-		      new DumperTask());
+		m_workerThread = HermesThreadFactory.create(threadName, false).newThread(new DumperTask());
 
 	}
 
@@ -145,10 +139,10 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 		public void run() {
 			List<FutureBatchPriorityWrapper> todos = new ArrayList<>(m_config.getDumperFetchSize());
 
-			while (!Thread.currentThread().isInterrupted() && m_lease.getExpireTime() >= m_systemClockService.now()) {
+			while (!Thread.currentThread().isInterrupted() && !m_lease.isExpired()) {
 				try {
 					if (!flushMsgs(todos)) {
-						TimeUnit.MILLISECONDS.sleep(m_config.getDumperMessageWaitInterval());
+						TimeUnit.MILLISECONDS.sleep(m_config.getDumperNoMessageWaitInterval());
 					}
 
 				} catch (InterruptedException e) {
