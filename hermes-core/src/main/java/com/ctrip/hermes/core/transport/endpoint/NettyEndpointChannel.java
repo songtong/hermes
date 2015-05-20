@@ -66,7 +66,9 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 			@Override
 			public Thread newThread(Runnable r) {
-				return new Thread(r, "PendingCmdsHouseKeeper");
+				Thread t = new Thread(r, "PendingCmdsHouseKeeper");
+				t.setDaemon(true);
+				return t;
 			}
 		});
 	}

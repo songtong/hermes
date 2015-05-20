@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -12,7 +11,6 @@ import org.unidal.lookup.annotation.Named;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.meta.remote.MetaServerLocator;
-import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.google.common.io.ByteStreams;
 
@@ -31,23 +29,10 @@ public class RemoteMetaLoader implements MetaLoader {
 
 	@Override
 	public Meta load() {
-		// TODO
 		String ipPort = null;
-		while (true) {
-			// TODO
-			System.out.println("try get metaserver ip port list");
-			List<String> ipPorts = m_metaServerLocator.getMetaServerIpPorts();
-			if (CollectionUtil.isNotEmpty(ipPorts)) {
-				ipPort = ipPorts.get(0);
-				break;
-			} else {
-				try {
-					TimeUnit.SECONDS.sleep(1);
-				} catch (InterruptedException e) {
-					return null;
-				}
-			}
-		}
+		List<String> ipPorts = m_metaServerLocator.getMetaServerIpPorts();
+		// TODO
+		ipPort = ipPorts.get(0);
 		System.out.println("Loading meta from server: " + ipPort);
 
 		try {

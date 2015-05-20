@@ -12,4 +12,8 @@ public class CoreConfig {
 	public int getCommandProcessorThreadCount() {
 		return 10;
 	}
+
+	public int getMetaServerIpFetchInterval() {
+		return 60;
+	}
 }
