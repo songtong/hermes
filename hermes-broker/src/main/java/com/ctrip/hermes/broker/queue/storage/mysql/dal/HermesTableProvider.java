@@ -32,25 +32,25 @@ public class HermesTableProvider implements TableProvider {
 		String db = toDbName(tpAware.getTopic(), tpAware.getPartition());
 		switch (logicalTableName) {
 		case "message-priority":
-			fmt = "%s.message_%s";
+			fmt = "%s_message_%s";
 			TopicPartitionPriorityAware tppAware = (TopicPartitionPriorityAware) tpAware;
 			return String.format(fmt, db, tppAware.getPriority());
 
 		case "resend-group-id":
-			fmt = "%s.resend_%s";
+			fmt = "%s_resend_%s";
 			TopicPartitionPriorityGroupAware tpgAware = (TopicPartitionPriorityGroupAware) tpAware;
 			return String.format(fmt, db, tpgAware.getGroupId());
 
 		case "offset-message":
-			fmt = "%s.offset_message";
+			fmt = "%s_offset_message";
 			return String.format(fmt, db);
 
 		case "offset-resend":
-			fmt = "%s.offset_resend";
+			fmt = "%s_offset_resend";
 			return String.format(fmt, db);
 
 		case "dead-letter":
-			fmt = "%s.dead_letter";
+			fmt = "%s_dead_letter";
 			return String.format(fmt, db);
 
 		default:
