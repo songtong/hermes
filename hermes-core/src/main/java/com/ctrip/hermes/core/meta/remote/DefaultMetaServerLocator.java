@@ -31,7 +31,7 @@ import com.ctrip.hermes.core.utils.DNSUtil;
 @Named(type = MetaServerLocator.class)
 public class DefaultMetaServerLocator implements MetaServerLocator, Initializable {
 
-	private static final int MASTER_META_SERVER_PORT = 80;
+	private static final int DEFAULT_MASTER_METASERVER_PORT = 80;
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
@@ -44,6 +44,8 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	@SuppressWarnings("unchecked")
 	private AtomicReference<List<String>> m_ipPorts = new AtomicReference<List<String>>(Collections.EMPTY_LIST);
+
+	private int m_masterMetaServerPort = DEFAULT_MASTER_METASERVER_PORT;
 
 	@Override
 	public List<String> getMetaServerIpPorts() {
@@ -68,7 +70,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 				try {
 					List<String> ips = DNSUtil.resolve(domain);
 					for (String ip : ips) {
-						curIpPorts.add(String.format("%s:%s", ip, MASTER_META_SERVER_PORT));
+						curIpPorts.add(String.format("%s:%s", ip, m_masterMetaServerPort));
 					}
 					dnsResolved = true;
 				} catch (Exception e) {
@@ -126,6 +128,8 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	@Override
 	public void initialize() throws InitializationException {
+		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig().getProperty("meta-port", "80").trim());
+
 		m_httpClient = HttpClients.createDefault();
 
 		Builder b = RequestConfig.custom();

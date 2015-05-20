@@ -61,7 +61,21 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 		      String.format("LongPollingExecutorThread-%s-%s-%s", context.getTopic().getName(), partitionId,
 		            context.getGroupId()), false).newThread(consumerTask);
 		thread.start();
-		// TODO
-		return null;
+		return new BrokerLongPollingSubscribeHandler(consumerTask);
+	}
+
+	private static class BrokerLongPollingSubscribeHandler implements SubscribeHandle {
+
+		private LongPollingConsumerTask m_consumerTask;
+
+		public BrokerLongPollingSubscribeHandler(LongPollingConsumerTask consumerTask) {
+			m_consumerTask = consumerTask;
+		}
+
+		@Override
+		public void close() {
+			m_consumerTask.close();
+		}
+
 	}
 }

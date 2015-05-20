@@ -5,6 +5,7 @@ import java.util.List;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.consumer.engine.CompositeSubscribeHandle;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategyRegistry;
@@ -24,12 +25,14 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 	@Override
 	protected SubscribeHandle doStart(final ConsumerContext context) {
 
+		CompositeSubscribeHandle handler = new CompositeSubscribeHandle();
+
 		List<Partition> partitions = m_metaService.getPartitions(context.getTopic().getName(), context.getGroupId());
 		for (final Partition partition : partitions) {
-			m_consumptionStrategyRegistry.findStrategy(context.getConsumerType()).start(context, partition.getId());
+			handler.addSubscribeHandle(m_consumptionStrategyRegistry.findStrategy(context.getConsumerType()).start(
+			      context, partition.getId()));
 		}
 
-		// TODO
-		return null;
+		return handler;
 	}
 }

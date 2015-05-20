@@ -77,6 +77,8 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private AtomicReference<Lease> m_lease = new AtomicReference<>(null);
 
+	private AtomicBoolean m_closed = new AtomicBoolean(false);
+
 	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize,
 	      SystemClockService systemClockService) {
 		m_context = context;
@@ -122,15 +124,19 @@ public class LongPollingConsumerTask implements Runnable {
 		m_leaseManager = leaseManager;
 	}
 
+	private boolean isClosed() {
+		return m_closed.get();
+	}
+
 	@Override
 	public void run() {
 		ConsumerLeaseKey key = new ConsumerLeaseKey(new Tpg(m_context.getTopic().getName(), m_partitionId,
 		      m_context.getGroupId()), m_context.getSessionId());
-		while (!Thread.currentThread().isInterrupted()) {
+		while (!isClosed() && !Thread.currentThread().isInterrupted()) {
 			try {
 				acquireLease(key);
 
-				if (m_lease.get() != null && !m_lease.get().isExpired()) {
+				if (!isClosed() && m_lease.get() != null && !m_lease.get().isExpired()) {
 					long correlationId = CorrelationIdGenerator.generateCorrelationId();
 					// TODO
 					System.out.println(String.format(
@@ -152,12 +158,17 @@ public class LongPollingConsumerTask implements Runnable {
 			}
 		}
 
+		m_pullMessageTaskExecutorService.shutdown();
+		m_renewLeaseTaskExecutorService.shutdown();
+		// TODO
+		System.out.println(String.format("Consumer closed...(topic=%s, partition=%s, consumerGroupId=%s, sessionId=%s)",
+		      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId()));
 	}
 
 	private void startConsumer(ConsumerLeaseKey key, long correlationId) {
 		m_consumerNotifier.register(correlationId, m_context);
 
-		while (!Thread.currentThread().isInterrupted() && !m_lease.get().isExpired()) {
+		while (!isClosed() && !Thread.currentThread().isInterrupted() && !m_lease.get().isExpired()) {
 
 			try {
 				// if leaseRemainingTime < stopConsumerTimeMillsBeforLeaseExpired, stop
@@ -196,6 +207,10 @@ public class LongPollingConsumerTask implements Runnable {
 
 			@Override
 			public void run() {
+				if (isClosed()) {
+					return;
+				}
+
 				Lease lease = m_lease.get();
 				if (lease != null) {
 					if (lease.getRemainingTime() > 0) {
@@ -219,10 +234,10 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private void acquireLease(ConsumerLeaseKey key) {
 		long nextTryTime = m_systemClockService.now();
-		while (!Thread.currentThread().isInterrupted()) {
+		while (!isClosed() && !Thread.currentThread().isInterrupted()) {
 			try {
 				while (true) {
-					if (!Thread.currentThread().isInterrupted()) {
+					if (!isClosed() && !Thread.currentThread().isInterrupted()) {
 						if (nextTryTime > m_systemClockService.now()) {
 							LockSupport.parkUntil(nextTryTime);
 						} else {
@@ -231,6 +246,10 @@ public class LongPollingConsumerTask implements Runnable {
 					} else {
 						return;
 					}
+				}
+
+				if (isClosed()) {
+					return;
 				}
 
 				LeaseAcquireResponse response = m_leaseManager.tryAcquireLease(key);
@@ -294,7 +313,7 @@ public class LongPollingConsumerTask implements Runnable {
 	}
 
 	private void schedulePullMessagesTask(long correlationId) {
-		if (m_pullTaskRunning.compareAndSet(false, true)) {
+		if (!isClosed() && m_pullTaskRunning.compareAndSet(false, true)) {
 			// TODO
 			System.out.println("Pull Messages...");
 			m_pullMessageTaskExecutorService.submit(new PullMessagesTask(correlationId));
@@ -311,7 +330,7 @@ public class LongPollingConsumerTask implements Runnable {
 		@Override
 		public void run() {
 			try {
-				if (m_msgs.size() >= m_config.getPullMessagesThreshold()) {
+				if (isClosed() || m_msgs.size() >= m_config.getPullMessagesThreshold()) {
 					return;
 				}
 
@@ -369,5 +388,9 @@ public class LongPollingConsumerTask implements Runnable {
 			}
 		}
 
+	}
+
+	public void close() {
+		m_closed.set(true);
 	}
 }
