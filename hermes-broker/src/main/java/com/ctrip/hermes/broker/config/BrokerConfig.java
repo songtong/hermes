@@ -51,10 +51,14 @@ public class BrokerConfig {
 	}
 
 	public int getLeaseContainerThreadCount() {
-		return 3;
+		return 10;
 	}
 
 	public long getDefaultLeaseRenewDelay() {
+		return 500L;
+	}
+
+	public long getDefaultLeaseAcquireDelay() {
 		return 100L;
 	}
 }
