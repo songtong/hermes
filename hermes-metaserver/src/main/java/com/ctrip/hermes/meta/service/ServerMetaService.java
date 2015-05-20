@@ -27,6 +27,7 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.transform.BaseVisitor2;
@@ -261,6 +262,11 @@ public class ServerMetaService implements MetaService, Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		this.refreshMeta();
+	}
+
+	@Override
+	public List<Server> getServers() {
+		return new ArrayList<Server>(this.m_meta.getServers().values());
 	}
 
 }

@@ -108,4 +108,7 @@
 			<property name='offsets.storage' value='kafka' />
 		</datasource>
 	</storage>
+	
+	<server id='meta1' host='localhost' port='8362'>
+	</server>
 </meta>

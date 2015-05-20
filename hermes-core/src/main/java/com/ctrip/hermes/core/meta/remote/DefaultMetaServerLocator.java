@@ -31,7 +31,7 @@ import com.ctrip.hermes.core.utils.DNSUtil;
 @Named(type = MetaServerLocator.class)
 public class DefaultMetaServerLocator implements MetaServerLocator, Initializable {
 
-	private static final int DEFAULT_META_SERVER_PORT = 1248;
+	private static final int MASTER_META_SERVER_PORT = 80;
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
@@ -68,7 +68,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 				try {
 					List<String> ips = DNSUtil.resolve(domain);
 					for (String ip : ips) {
-						curIpPorts.add(String.format("%s:%s", ip, DEFAULT_META_SERVER_PORT));
+						curIpPorts.add(String.format("%s:%s", ip, MASTER_META_SERVER_PORT));
 					}
 					dnsResolved = true;
 				} catch (Exception e) {
@@ -104,18 +104,17 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 	}
 
 	private String getMetaServerDomainName() {
-		// TODO choose domain name according to current env
 		Env env = m_clientEnv.getEnv();
 
 		switch (env) {
 		case DEV:
 			return "127.0.0.1";
 		case FWS:
-			return "";
+			return "10.3.8.63";
 		case UAT:
-			return "";
+			return "10.2.7.72";
 		case LPT:
-			return "";
+			return "10.2.7.72";
 		case PROD:
 			return "meta.hermes.fx.ctripcorp.com";
 
