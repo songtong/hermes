@@ -12,6 +12,7 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.build.BuildConstants;
 import com.ctrip.hermes.broker.config.BrokerConfig;
@@ -39,6 +40,8 @@ public class BrokerLeaseContainer implements Initializable {
 	private SystemClockService m_systemClockService;
 
 	private Map<BrokerLeaseKey, Lease> m_existingLeases = new ConcurrentHashMap<>();
+
+	private Map<Pair<String, Integer>, Long> m_nextAcquireTimes = new ConcurrentHashMap<>();
 
 	private ConcurrentMap<BrokerLeaseKey, AtomicBoolean> m_leaseAcquireTaskRunnings = new ConcurrentHashMap<>();
 
@@ -83,6 +86,12 @@ public class BrokerLeaseContainer implements Initializable {
 			return;
 		}
 
+		Pair<String, Integer> tp = new Pair<String, Integer>(key.getTopic(), key.getPartition());
+
+		if (m_nextAcquireTimes.containsKey(tp) && m_nextAcquireTimes.get(tp) > m_systemClockService.now()) {
+			return;
+		}
+
 		LeaseAcquireResponse response = m_leaseManager.tryAcquireLease(key);
 
 		if (response != null && response.isAcquired()) {
@@ -91,13 +100,14 @@ public class BrokerLeaseContainer implements Initializable {
 				m_existingLeases.put(key, lease);
 
 				long renewDelay = lease.getRemainingTime() - m_config.getLeaseRenewTimeMillsBeforeExpire();
+				m_nextAcquireTimes.remove(tp);
 				scheduleRenewLeaseTask(key, renewDelay);
 			}
 		} else {
-			try {
-				TimeUnit.MILLISECONDS.sleep(m_config.getDefaultLeaseAcquireDelay());
-			} catch (Exception e) {
-				// TODO
+			if (response != null) {
+				m_nextAcquireTimes.put(tp, response.getNextTryTime());
+			} else {
+				m_nextAcquireTimes.put(tp, m_config.getDefaultLeaseAcquireDelay() + m_systemClockService.now());
 			}
 		}
 	}

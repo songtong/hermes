@@ -30,7 +30,7 @@ public class RemoteMetaLoader implements MetaLoader {
 	@Override
 	public Meta load() {
 		String ipPort = null;
-		List<String> ipPorts = m_metaServerLocator.getMetaServerIpPorts();
+		List<String> ipPorts = m_metaServerLocator.getMetaServerList();
 		// TODO
 		ipPort = ipPorts.get(0);
 		System.out.println("Loading meta from server: " + ipPort);

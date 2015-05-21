@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface MetaServerLocator {
 
-	List<String> getMetaServerIpPorts();
+	List<String> getMetaServerList();
 
 }
