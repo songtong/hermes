@@ -151,7 +151,7 @@ public class LongPollingConsumerTask implements Runnable {
 					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), correlationId,
 					      m_context.getSessionId());
 
-					startConsume(key, correlationId);
+					startConsumingMessages(key, correlationId);
 
 					log.info(
 					      "Consumer pause(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease expired",
@@ -171,7 +171,7 @@ public class LongPollingConsumerTask implements Runnable {
 		      m_partitionId, m_context.getGroupId(), m_context.getSessionId());
 	}
 
-	private void startConsume(ConsumerLeaseKey key, long correlationId) {
+	private void startConsumingMessages(ConsumerLeaseKey key, long correlationId) {
 		m_consumerNotifier.register(correlationId, m_context);
 
 		while (!isClosed() && !Thread.currentThread().isInterrupted() && !m_lease.get().isExpired()) {
@@ -246,7 +246,7 @@ public class LongPollingConsumerTask implements Runnable {
 							}
 
 							if (log.isDebugEnabled()) {
-								log.debug("Unable to renew consumer lease(topic={}, partition={}, groupId={}, sessionId={})",
+								log.debug("Unable to renew consumer lease(topic={}, partition={}, groupId={}, sessionId={}), ignore it",
 								      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
 								      m_context.getSessionId());
 							}
@@ -300,7 +300,7 @@ public class LongPollingConsumerTask implements Runnable {
 					}
 
 					if (log.isDebugEnabled()) {
-						log.debug("Unable to acquire consumer lease(topic={}, partition={}, groupId={}, sessionId={})",
+						log.debug("Unable to acquire consumer lease(topic={}, partition={}, groupId={}, sessionId={}), ignore it",
 						      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId());
 					}
 				}
@@ -374,7 +374,7 @@ public class LongPollingConsumerTask implements Runnable {
 				Endpoint endpoint = m_endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
 
 				if (endpoint == null) {
-					log.warn("No endpoint found for topic {} partition {}", m_context.getTopic().getName(), m_partitionId);
+					log.warn("No endpoint found for topic {} partition {}, will retry later", m_context.getTopic().getName(), m_partitionId);
 					TimeUnit.MILLISECONDS.sleep(m_config.getNoEndpointWaitInterval());
 					return;
 				}
