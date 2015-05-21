@@ -21,6 +21,7 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.meta.MetaManager;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
@@ -260,7 +261,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		refreshMeta(m_manager.getMeta());
-		executor = Executors.newSingleThreadScheduledExecutor();
+		executor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("RefreshMeta", true));
 		executor.scheduleAtFixedRate(new Runnable() {
 
 			@Override
@@ -275,7 +276,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 		}, REFRESH_PERIOD_MINUTES, REFRESH_PERIOD_MINUTES, TimeUnit.MINUTES);
 	}
-	
+
 	@Override
 	public String findAvroSchemaRegistryUrl() {
 		Codec avroCodec = m_meta.get().findCodec("avro");

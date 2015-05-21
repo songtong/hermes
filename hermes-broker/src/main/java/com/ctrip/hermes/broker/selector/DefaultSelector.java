@@ -11,6 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 public class DefaultSelector implements Selector {
 
@@ -116,7 +117,7 @@ public class DefaultSelector implements Selector {
 
 	@Override
 	public void select() {
-		new Thread() {
+		HermesThreadFactory.create("HermesSelector", false).newThread(new Runnable() {
 			public void run() {
 				while (!Thread.interrupted()) {
 					try {
@@ -127,7 +128,6 @@ public class DefaultSelector implements Selector {
 				}
 
 			}
-		}.start();
+		}).start();
 	}
-
 }

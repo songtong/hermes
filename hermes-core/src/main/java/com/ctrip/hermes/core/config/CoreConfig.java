@@ -24,4 +24,8 @@ public class CoreConfig {
 	public int getMetaServerReadTimeout() {
 		return 5000;
 	}
+
+	public long getRunningStatusStatInterval() {
+		return 30;
+	}
 }
