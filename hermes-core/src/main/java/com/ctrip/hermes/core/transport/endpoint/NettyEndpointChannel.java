@@ -14,7 +14,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,6 +28,7 @@ import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelActiveEvent
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelEvent;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelExceptionCaughtEvent;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelInactiveEvent;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -62,15 +62,8 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	public NettyEndpointChannel(CommandProcessorManager cmdProcessorManager) {
 		m_cmdProcessorManager = cmdProcessorManager;
 
-		m_pendingCmdsHouseKepper = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-
-			@Override
-			public Thread newThread(Runnable r) {
-				Thread t = new Thread(r, "PendingCmdsHouseKeeper");
-				t.setDaemon(true);
-				return t;
-			}
-		});
+		m_pendingCmdsHouseKepper = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
+		      "PendingCmdsHouseKeeper", true));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -119,11 +112,8 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	}
 
 	private void startWriter() {
-		m_writer = new Thread(new NettyWriter());
+		m_writer = HermesThreadFactory.create("NettyWriter", true).newThread(new NettyWriter());
 
-		// TODO
-		m_writer.setDaemon(true);
-		m_writer.setName("NettyWriter");
 		m_writer.start();
 	}
 

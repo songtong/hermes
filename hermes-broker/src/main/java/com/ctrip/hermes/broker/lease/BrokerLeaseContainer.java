@@ -116,7 +116,7 @@ public class BrokerLeaseContainer implements Initializable {
 
 			m_nextAcquireTimes.put(tp, nextTryTime);
 			if (log.isDebugEnabled()) {
-				log.debug("Failed to acquire lease(topic={}, partition={}, sessionId={}), next retry time will be {}.",
+				log.debug("Unable to acquire lease(topic={}, partition={}, sessionId={}), next retry time will be {}.",
 				      key.getTopic(), key.getPartition(), key.getSessionId(), new Date(nextTryTime));
 			}
 		}
@@ -148,7 +148,7 @@ public class BrokerLeaseContainer implements Initializable {
 						scheduleRenewLeaseTask(key, delay);
 						if (log.isDebugEnabled()) {
 							log.debug(
-							      "Failed to renew lease((topic={}, partition={}, sessionId={}, leaseId={}), next retry will delay {} milliseconds.",
+							      "Unable to renew lease((topic={}, partition={}, sessionId={}, leaseId={}), next retry will delay {} milliseconds.",
 							      key.getTopic(), key.getPartition(), key.getSessionId(), existingLease.getId(), delay);
 						}
 					}

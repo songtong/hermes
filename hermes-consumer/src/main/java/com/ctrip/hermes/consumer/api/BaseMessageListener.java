@@ -2,6 +2,9 @@ package com.ctrip.hermes.consumer.api;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
@@ -14,6 +17,7 @@ import com.dianping.cat.message.Transaction;
 import com.dianping.cat.message.spi.MessageTree;
 
 public abstract class BaseMessageListener<T> implements MessageListener<T> {
+	private static final Logger log = LoggerFactory.getLogger(BaseMessageListener.class);
 
 	private String m_groupId;
 
@@ -58,6 +62,7 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 				} catch (RuntimeException | Error e) {
 					Cat.logError(e);
 					t.setStatus(e);
+					log.error("Exception occured while calling onMessage.", e);
 				} finally {
 					t.complete();
 				}
