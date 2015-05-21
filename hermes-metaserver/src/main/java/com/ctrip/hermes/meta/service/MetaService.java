@@ -1,6 +1,7 @@
 package com.ctrip.hermes.meta.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -98,4 +99,8 @@ public interface MetaService {
 	public Meta getMeta(boolean isForceLatest);
 	
 	public List<Server> getServers();
+
+	Map<String, Storage> getStorages();
+
+	Map<String, Codec> getCodecs();
 }

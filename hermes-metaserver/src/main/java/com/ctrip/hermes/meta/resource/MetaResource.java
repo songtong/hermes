@@ -12,6 +12,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -25,6 +26,8 @@ import com.ctrip.hermes.meta.service.ServerMetaService;
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class MetaResource {
+
+	private static final Logger logger = Logger.getLogger(MetaResource.class);
 
 	private MetaService metaService = PlexusComponentLocator.lookup(MetaService.class, ServerMetaService.ID);
 
@@ -40,6 +43,7 @@ public class MetaResource {
 				return Response.status(Status.NOT_MODIFIED).build();
 			}
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(meta).build();
@@ -55,6 +59,7 @@ public class MetaResource {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(meta).build();
@@ -70,6 +75,7 @@ public class MetaResource {
 		try {
 			meta = JSON.parseObject(content, Meta.class);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 		try {
@@ -78,6 +84,7 @@ public class MetaResource {
 				return Response.status(Status.NOT_MODIFIED).build();
 			}
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.CREATED).entity(meta).build();

@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -39,6 +40,8 @@ import com.google.common.io.ByteStreams;
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class SchemaResource {
+
+	private static final Logger logger = Logger.getLogger(SchemaResource.class);
 
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
 
@@ -66,6 +69,7 @@ public class SchemaResource {
 		try {
 			schemaView = JSON.parseObject(content, SchemaView.class);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
@@ -79,6 +83,7 @@ public class SchemaResource {
 			try {
 				fileContent = ByteStreams.toByteArray(fileInputStream);
 			} catch (IOException e) {
+				logger.warn(e);
 				throw new RestException(e, Status.BAD_REQUEST);
 			}
 		} else {
@@ -94,6 +99,7 @@ public class SchemaResource {
 			schemaView = schemaService.createSchema(schemaView, topic);
 			schemaView = schemaService.updateSchemaFile(schemaView, fileContent, fileHeader);
 		} catch (Exception e) {
+			logger.warn(e);
 			if (schemaView.getId() != null) {
 				try {
 					schemaService.deleteSchema(schemaView.getId());
@@ -119,6 +125,7 @@ public class SchemaResource {
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (DalException e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -139,6 +146,7 @@ public class SchemaResource {
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 
@@ -166,6 +174,7 @@ public class SchemaResource {
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 
@@ -192,6 +201,7 @@ public class SchemaResource {
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return schema;
@@ -212,6 +222,7 @@ public class SchemaResource {
 				returnResult.add(schemaView);
 			}
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return returnResult;
@@ -228,6 +239,7 @@ public class SchemaResource {
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 
@@ -236,6 +248,7 @@ public class SchemaResource {
 			byte[] fileContent = ByteStreams.toByteArray(fileInputStream);
 			result = schemaService.verifyCompatible(schema, fileContent);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		Map<String, Object> entity = new HashMap<>();
@@ -252,6 +265,7 @@ public class SchemaResource {
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 
@@ -259,6 +273,7 @@ public class SchemaResource {
 		try {
 			result = schemaService.getCompatible(schema);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(result).build();
