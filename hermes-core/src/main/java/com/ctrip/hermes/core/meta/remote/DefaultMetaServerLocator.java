@@ -56,17 +56,17 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		List<String> curIpPorts = getMetaServerIpPorts();
 
 		if (CollectionUtil.isNullOrEmpty(curIpPorts)) {
-			if (!resolveMetaServerDomain(curIpPorts)) {
+			if (!resolveMetaServerDomain()) {
 				throw new RuntimeException("Can not resolve meta server domain");
 			}
 		}
 
-		return fetchIpPortsFromExistingMetaServer(curIpPorts);
+		return fetchIpPortsFromExistingMetaServer();
 
 	}
 
-	private List<String> fetchIpPortsFromExistingMetaServer(List<String> curIpPorts) {
-		for (String ipPort : curIpPorts) {
+	private List<String> fetchIpPortsFromExistingMetaServer() {
+		for (String ipPort : m_ipPorts.get()) {
 			try {
 				List<String> result = doFetch(ipPort);
 				return result;
@@ -79,15 +79,17 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		throw new RuntimeException("Can not fetch meta server ip list");
 	}
 
-	private boolean resolveMetaServerDomain(List<String> curIpPorts) {
+	private boolean resolveMetaServerDomain() {
 		String domain = getMetaServerDomainName();
 		// TODO
 		System.out.println("Meta server domain " + domain);
 		try {
 			List<String> ips = DNSUtil.resolve(domain);
+			List<String> newIps = new LinkedList<>();
 			for (String ip : ips) {
-				curIpPorts.add(String.format("%s:%s", ip, m_masterMetaServerPort));
+				newIps.add(String.format("%s:%s", ip, m_masterMetaServerPort));
 			}
+			m_ipPorts.set(newIps);
 			return true;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

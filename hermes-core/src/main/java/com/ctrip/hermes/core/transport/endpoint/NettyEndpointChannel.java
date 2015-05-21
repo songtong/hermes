@@ -240,7 +240,6 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 		@Override
 		public void run() {
-			int times = 0;
 
 			Command cmd = null;
 			while (!m_closed.get() && !Thread.currentThread().isInterrupted()) {
@@ -256,20 +255,20 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 						ChannelFuture future = channel.writeAndFlush(cmd).sync();
 						if (future.isSuccess()) {
 							cmd = null;
-							times = 0;
 						}
-					}
-
-					// TODO
-					if (times++ == 500) {
-						times = 0;
-						Thread.sleep(5);
 					}
 
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				} catch (Exception e) {
 					// TODO
+
+					try {
+						TimeUnit.MILLISECONDS.sleep(50);
+					} catch (InterruptedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 				}
 			}
 		}
