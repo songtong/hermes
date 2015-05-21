@@ -17,11 +17,14 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.meta.MetaProxy;
@@ -29,6 +32,8 @@ import com.google.common.base.Function;
 
 @Named(type = MetaProxy.class, value = RemoteMetaProxy.ID)
 public class RemoteMetaProxy implements MetaProxy, Initializable {
+
+	private static final Logger log = LoggerFactory.getLogger(RemoteMetaProxy.class);
 
 	private static final String LEASE_ID = "leaseId";
 
@@ -43,6 +48,9 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 	@Inject
 	private MetaServerLocator m_metaServerLocator;
 
+	@Inject
+	private CoreConfig m_config;
+
 	private HttpClient m_httpClient;
 
 	private RequestConfig m_requestConfig;
@@ -55,6 +63,9 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
 		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("No response while posting meta server[tryAcquireConsumerLease]");
+			}
 			return null;
 		}
 	}
@@ -68,6 +79,9 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
 		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("No response while posting meta server[tryRenewConsumerLease]");
+			}
 			return null;
 		}
 	}
@@ -83,6 +97,9 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
 		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("No response while posting meta server[tryRenewBrokerLease]");
+			}
 			return null;
 		}
 	}
@@ -97,6 +114,9 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
 		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("No response while posting meta server[tryAcquireBrokerLease]");
+			}
 			return null;
 		}
 	}
@@ -144,13 +164,17 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 					if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 						return EntityUtils.toString(response.getEntity());
 					} else {
-						// TODO log
-						System.out.println("POST ERROR " + uriBuilder.build());
+						if (log.isDebugEnabled()) {
+							log.debug("Response error while posting meta server error({url={}, status={}}).",
+							      uriBuilder.build(), response.getStatusLine().getStatusCode());
+						}
 						return null;
 					}
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					// ignore
+					if (log.isDebugEnabled()) {
+						log.debug("Post meta server error.", e);
+					}
 					return null;
 				}
 
@@ -163,9 +187,8 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		m_httpClient = HttpClients.createDefault();
 
 		Builder b = RequestConfig.custom();
-		// TODO config
-		b.setConnectTimeout(2000);
-		b.setSocketTimeout(2000);
+		b.setConnectTimeout(m_config.getMetaServerConnectTimeout());
+		b.setSocketTimeout(m_config.getMetaServerReadTimeout());
 		m_requestConfig = b.build();
 	}
 

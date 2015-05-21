@@ -17,7 +17,7 @@ public class DefaultEndpointManager implements EndpointManager {
 	private MetaService m_metaService;
 
 	@Override
-	public Endpoint getEndpoint(String topic, int partitionNo) {
-		return m_metaService.findEndpoint(m_metaService.getPartitions(topic).get(partitionNo).getEndpoint());
+	public Endpoint getEndpoint(String topic, int partition) {
+		return m_metaService.findEndpoint(m_metaService.getPartitions(topic).get(partition).getEndpoint());
 	}
 }

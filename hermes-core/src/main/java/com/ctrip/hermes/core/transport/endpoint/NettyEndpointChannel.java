@@ -7,6 +7,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -18,6 +19,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ctrip.hermes.core.config.CoreConfig;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.transport.command.Ack;
 import com.ctrip.hermes.core.transport.command.AckAware;
@@ -29,12 +35,14 @@ import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelEvent;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelExceptionCaughtEvent;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelInactiveEvent;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
 public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<Command> implements EndpointChannel {
+	private static final Logger log = LoggerFactory.getLogger(NettyEndpointChannel.class);
 
 	private AtomicReference<Channel> m_channel = new AtomicReference<>(null);
 
@@ -46,9 +54,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 	private AtomicBoolean m_pendingCmdsHouseKeeperStarted = new AtomicBoolean(false);
 
-	private Thread m_writer;
-
-	private ScheduledExecutorService m_pendingCmdsHouseKepper;
+	private ScheduledExecutorService m_pendingCmdsHouseKeeper;
 
 	// TODO config size
 	private BlockingQueue<Command> m_writeQueue = new LinkedBlockingQueue<Command>();
@@ -59,11 +65,15 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 	protected AtomicBoolean m_closed = new AtomicBoolean(false);
 
+	protected CoreConfig m_config = PlexusComponentLocator.lookup(CoreConfig.class);
+
+	protected SystemClockService m_systemClockService = PlexusComponentLocator.lookup(SystemClockService.class);
+
 	public NettyEndpointChannel(CommandProcessorManager cmdProcessorManager) {
 		m_cmdProcessorManager = cmdProcessorManager;
 
-		m_pendingCmdsHouseKepper = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
-		      "PendingCmdsHouseKeeper", true));
+		m_pendingCmdsHouseKeeper = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
+		      "EndpointChannelPendingCmdsHouseKeeper", true));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -88,47 +98,31 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	}
 
 	private void startPendingCmdHouseKeeper() {
-		m_pendingCmdsHouseKepper.scheduleAtFixedRate(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					long now = System.currentTimeMillis();
-					synchronized (m_pendingCmdsLock) {
-						for (Map.Entry<Long, AckAware<Ack>> entry : m_pendingCommands.entrySet()) {
-							AckAware<Ack> ackAware = entry.getValue();
-							Long correlationId = entry.getKey();
-							if (ackAware.getExpireTime() < now) {
-								ackAware.onFail();
-								m_pendingCommands.remove(correlationId);
-							}
-						}
-					}
-				} catch (Exception e) {
-					// TODO
-				}
-			}
-		}, 3, 3, TimeUnit.SECONDS);
+		m_pendingCmdsHouseKeeper.scheduleAtFixedRate(new PendingCmdsHouseKeepingTask(),
+		      m_config.getChannelPendingCmdsHouseKeepingInterval(), m_config.getChannelPendingCmdsHouseKeepingInterval(),
+		      TimeUnit.SECONDS);
 	}
 
 	private void startWriter() {
-		m_writer = HermesThreadFactory.create("NettyWriter", true).newThread(new NettyWriter());
+		HermesThreadFactory.create("NettyWriter", true).newThread(new NettyWriter()).start();
 
-		m_writer.start();
 	}
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Command command) throws Exception {
 		if (command instanceof Ack) {
+			AckAware<Ack> reqCommand = null;
+
 			synchronized (m_pendingCmdsLock) {
 				long correlationId = command.getHeader().getCorrelationId();
-				AckAware<Ack> reqCommand = m_pendingCommands.remove(correlationId);
-				if (reqCommand != null) {
-					reqCommand.onAck((Ack) command);
-				} else {
-					if (command.getClass().isAnnotationPresent(ManualRelease.class)) {
-						command.release();
-					}
+				reqCommand = m_pendingCommands.remove(correlationId);
+			}
+
+			if (reqCommand != null) {
+				reqCommand.onAck((Ack) command);
+			} else {
+				if (command.getClass().isAnnotationPresent(ManualRelease.class)) {
+					command.release();
 				}
 			}
 		} else {
@@ -139,15 +133,13 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 	@Override
 	public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-		// TODO log
-		System.out.println("Writablity changed..." + ctx.channel().isWritable());
 		super.channelWritabilityChanged(ctx);
 	}
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		// TODO log
-		System.out.println("Channel inactive...");
+		// TODO log ip ports
+		log.warn("Channel inactive");
 		Channel channel = m_channel.getAndSet(null);
 		if (channel != null) {
 			channel.close();
@@ -158,8 +150,8 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		// TODO log
-		System.out.println("Channel active...");
+		// TODO log ip ports
+		log.warn("Channel active");
 		m_channel.set(ctx.channel());
 		notifyListener(new EndpointChannelActiveEvent(ctx, this));
 		super.channelActive(ctx);
@@ -168,8 +160,8 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		// TODO
-		cause.printStackTrace();
+		// TODO log ip ports
+		log.error("Exception caught in channel", cause);
 		Channel channel = m_channel.getAndSet(null);
 		if (channel != null) {
 			channel.close();
@@ -200,7 +192,10 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 			try {
 				listener.onEvent(event);
 			} catch (Exception e) {
-				// TODO
+				// ignore
+				if (log.isDebugEnabled()) {
+					log.debug("Exception occured while notify listener", e);
+				}
 			}
 		}
 	}
@@ -224,6 +219,38 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	@Override
 	public String getHost() {
 		return m_channel.get().remoteAddress().toString();
+	}
+
+	private class PendingCmdsHouseKeepingTask implements Runnable {
+
+		@Override
+		public void run() {
+			try {
+				long now = m_systemClockService.now();
+				List<AckAware<Ack>> timeoutCmds = new LinkedList<>();
+				synchronized (m_pendingCmdsLock) {
+
+					for (Map.Entry<Long, AckAware<Ack>> entry : m_pendingCommands.entrySet()) {
+						AckAware<Ack> ackAware = entry.getValue();
+						Long correlationId = entry.getKey();
+						if (ackAware.getExpireTime() < now) {
+							timeoutCmds.add(ackAware);
+							m_pendingCommands.remove(correlationId);
+						}
+					}
+
+				}
+				for (AckAware<Ack> ackAware : timeoutCmds) {
+					ackAware.onFail();
+				}
+			} catch (Exception e) {
+				// ignore
+				if (log.isDebugEnabled()) {
+					log.debug("Exception occured while executing pending cmd house keeper", e);
+				}
+			}
+		}
+
 	}
 
 	private class NettyWriter implements Runnable {
@@ -251,13 +278,15 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				} catch (Exception e) {
-					// TODO
+					// ignore it
+					if (log.isDebugEnabled()) {
+						log.debug("Exception occured in Netty writer", e);
+					}
 
 					try {
-						TimeUnit.MILLISECONDS.sleep(50);
+						TimeUnit.MILLISECONDS.sleep(m_config.getChannelWriteFailSleepTime());
 					} catch (InterruptedException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
+						Thread.currentThread().interrupt();
 					}
 				}
 			}

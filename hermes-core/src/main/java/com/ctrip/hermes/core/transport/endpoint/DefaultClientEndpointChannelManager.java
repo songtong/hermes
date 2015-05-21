@@ -7,9 +7,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelConnectFailedEvent;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelEvent;
@@ -24,13 +27,15 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 @Named(type = ClientEndpointChannelManager.class)
 public class DefaultClientEndpointChannelManager implements ClientEndpointChannelManager {
 
+	private static final Logger log = LoggerFactory.getLogger(DefaultClientEndpointChannelManager.class);
+
 	@Inject
 	private CommandProcessorManager m_cmdProcessorManager;
 
-	private ConcurrentMap<Endpoint, ClientEndpointChannel> m_channels = new ConcurrentHashMap<>();
+	@Inject
+	private CoreConfig m_config;
 
-	// TODO configable delay or with some strategy
-	private int RECONNECT_DELAY_SECONDS = 1;
+	private ConcurrentMap<Endpoint, ClientEndpointChannel> m_channels = new ConcurrentHashMap<>();
 
 	@Override
 	public ClientEndpointChannel getChannel(Endpoint endpoint) {
@@ -42,7 +47,7 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 						ClientEndpointChannel channel = new NettyClientEndpointChannel(endpoint.getHost(),
 						      endpoint.getPort(), m_cmdProcessorManager);
 
-						channel.addListener(new NettyChannelAutoReconnectListener(RECONNECT_DELAY_SECONDS));
+						channel.addListener(new NettyChannelAutoReconnectListener(m_config.getChannelAutoReconnectDelay()));
 						channel.start();
 						m_channels.put(endpoint, channel);
 					}
@@ -52,7 +57,6 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 			return m_channels.get(endpoint);
 
 		default:
-			// TODO
 			throw new IllegalArgumentException(String.format("unknow endpoint type: %s", endpoint.getType()));
 		}
 	}
@@ -78,8 +82,6 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 				} else if (event instanceof EndpointChannelExceptionCaughtEvent) {
 					ChannelHandlerContext ctx = event.getCtx();
 					reconnect(ctx.channel().eventLoop(), channel);
-
-					// TODO log exception
 				}
 			}
 		}
@@ -89,8 +91,8 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 
 				@Override
 				public void run() {
-					// TODO log
-					System.out.println("Reconnect...");
+					// TODO host port
+					log.info("Reconnect to {}:{}");
 					channel.start();
 				}
 			}, m_reconnectDelaySeconds, TimeUnit.SECONDS);

@@ -246,7 +246,8 @@ public class LongPollingConsumerTask implements Runnable {
 							}
 
 							if (log.isDebugEnabled()) {
-								log.debug("Unable to renew consumer lease(topic={}, partition={}, groupId={}, sessionId={}), ignore it",
+								log.debug(
+								      "Unable to renew consumer lease(topic={}, partition={}, groupId={}, sessionId={}), ignore it",
 								      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
 								      m_context.getSessionId());
 							}
@@ -300,7 +301,8 @@ public class LongPollingConsumerTask implements Runnable {
 					}
 
 					if (log.isDebugEnabled()) {
-						log.debug("Unable to acquire consumer lease(topic={}, partition={}, groupId={}, sessionId={}), ignore it",
+						log.debug(
+						      "Unable to acquire consumer lease(topic={}, partition={}, groupId={}, sessionId={}), ignore it",
 						      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId());
 					}
 				}
@@ -374,7 +376,8 @@ public class LongPollingConsumerTask implements Runnable {
 				Endpoint endpoint = m_endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
 
 				if (endpoint == null) {
-					log.warn("No endpoint found for topic {} partition {}, will retry later", m_context.getTopic().getName(), m_partitionId);
+					log.warn("No endpoint found for topic {} partition {}, will retry later",
+					      m_context.getTopic().getName(), m_partitionId);
 					TimeUnit.MILLISECONDS.sleep(m_config.getNoEndpointWaitInterval());
 					return;
 				}
@@ -414,7 +417,8 @@ public class LongPollingConsumerTask implements Runnable {
 									m_msgs.addAll(msgs);
 								} else {
 									log.warn("Can not find consumerContext(topic={}, partition={}, groupId={}, sessionId={})",
-									      m_context.getTopic(), m_partitionId, m_context.getGroupId(), m_context.getSessionId());
+									      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
+									      m_context.getSessionId());
 								}
 							}
 						} finally {
@@ -429,7 +433,7 @@ public class LongPollingConsumerTask implements Runnable {
 			} catch (Exception e) {
 				log.warn(String.format(
 				      "Exception occured while pulling message(topic=%s, partition=%s, groupId=%s, sessionId=%s).",
-				      m_context.getTopic(), m_partitionId, m_context.getGroupId(), m_context.getSessionId()), e);
+				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId()), e);
 			} finally {
 				m_pullTaskRunning.set(false);
 			}

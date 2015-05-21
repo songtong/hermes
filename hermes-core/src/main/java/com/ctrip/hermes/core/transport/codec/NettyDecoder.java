@@ -1,5 +1,8 @@
 package com.ctrip.hermes.core.transport.codec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -10,6 +13,7 @@ import com.ctrip.hermes.core.transport.command.parser.CommandParser;
 import com.ctrip.hermes.core.transport.command.parser.DefaultCommandParser;
 
 public class NettyDecoder extends LengthFieldBasedFrameDecoder {
+	private static final Logger log = LoggerFactory.getLogger(NettyDecoder.class);
 
 	private CommandParser m_commandParser = new DefaultCommandParser();
 
@@ -37,11 +41,10 @@ public class NettyDecoder extends LengthFieldBasedFrameDecoder {
 			cmd = m_commandParser.parse(frame);
 			return cmd;
 		} catch (Exception e) {
+			log.error("Exception occured while decoding in netty", e);
 			// TODO close channel
-			e.printStackTrace();
 		} finally {
 			if (null != frame) {
-				// TODO
 				if (cmd != null && !cmd.getClass().isAnnotationPresent(ManualRelease.class)) {
 					frame.release();
 				}

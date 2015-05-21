@@ -8,6 +8,6 @@ import com.ctrip.hermes.meta.entity.Endpoint;
  */
 public interface EndpointManager {
 
-	Endpoint getEndpoint(String topic, int partitionNo);
+	Endpoint getEndpoint(String topic, int partition);
 
 }
