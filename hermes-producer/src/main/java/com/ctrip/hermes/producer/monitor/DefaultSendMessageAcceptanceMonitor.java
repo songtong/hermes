@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
 import com.google.common.util.concurrent.AbstractFuture;
@@ -13,8 +15,9 @@ import com.google.common.util.concurrent.AbstractFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = SendMessageAcceptedMonitor.class)
-public class DefaultSendMessageAcceptedMonitor implements SendMessageAcceptedMonitor {
+@Named(type = SendMessageAcceptanceMonitor.class)
+public class DefaultSendMessageAcceptanceMonitor implements SendMessageAcceptanceMonitor {
+	private static final Logger log = LoggerFactory.getLogger(DefaultSendMessageAcceptanceMonitor.class);
 
 	private Map<Long, CancelableFuture> m_futures = new HashMap<>();
 
@@ -34,6 +37,10 @@ public class DefaultSendMessageAcceptedMonitor implements SendMessageAcceptedMon
 
 	@Override
 	public void received(long correlationId, boolean success) {
+		if (log.isDebugEnabled()) {
+			log.debug("Broker acceptance result is {} for correlationId {}", success, correlationId);
+		}
+
 		m_lock.lock();
 		try {
 			CancelableFuture future = m_futures.remove(correlationId);

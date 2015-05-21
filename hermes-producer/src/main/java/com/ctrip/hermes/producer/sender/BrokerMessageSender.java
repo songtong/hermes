@@ -16,6 +16,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
@@ -36,6 +38,8 @@ import com.google.common.util.concurrent.SettableFuture;
 @Named(type = MessageSender.class, value = Endpoint.BROKER)
 public class BrokerMessageSender extends AbstractMessageSender implements MessageSender {
 
+	private static Logger log = LoggerFactory.getLogger(BrokerMessageSender.class);
+
 	@Inject
 	private ProducerConfig m_config;
 
@@ -49,9 +53,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			startEndpointSender();
 		}
 
-		Pair<String, Integer> tp = new Pair<String, Integer>(msg.getTopic(), msg.getPartitionNo());
+		Pair<String, Integer> tp = new Pair<String, Integer>(msg.getTopic(), msg.getPartition());
 		m_taskQueues.putIfAbsent(tp,
-		      new TaskQueue(msg.getTopic(), msg.getPartitionNo(), m_config.getBrokerSenderTopicPartitionTaskQueueSize()));
+		      new TaskQueue(msg.getTopic(), msg.getPartition(), m_config.getBrokerSenderTopicPartitionTaskQueueSize()));
 
 		return m_taskQueues.get(tp).submit(msg);
 	}
@@ -84,22 +88,26 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 							scheduleTaskExecution(entry.getKey(), queue);
 						}
 					} catch (Exception e) {
-						// TODO
-						e.printStackTrace();
+						// ignore
+						if (log.isDebugEnabled()) {
+							log.debug("Exception occured, ignore it", e);
+						}
 					}
 				}
 			} catch (Exception e) {
-				// TODO
-				e.printStackTrace();
+				// ignore
+				if (log.isDebugEnabled()) {
+					log.debug("Exception occured, ignore it", e);
+				}
 			}
 
 		}
 
-		private void scheduleTaskExecution(Pair<String, Integer> key, TaskQueue queue) {
-			m_runnings.putIfAbsent(key, new AtomicBoolean(false));
+		private void scheduleTaskExecution(Pair<String, Integer> tp, TaskQueue queue) {
+			m_runnings.putIfAbsent(tp, new AtomicBoolean(false));
 
-			if (m_runnings.get(key).compareAndSet(false, true)) {
-				m_taskExecThreadPool.submit(new SendTask(key.getKey(), key.getValue(), queue, m_runnings.get(key)));
+			if (m_runnings.get(tp).compareAndSet(false, true)) {
+				m_taskExecThreadPool.submit(new SendTask(tp.getKey(), tp.getValue(), queue, m_runnings.get(tp)));
 			}
 		}
 
@@ -131,8 +139,10 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					m_taskQueue.pop();
 				}
 			} catch (Exception e) {
-				// TODO
-				e.printStackTrace();
+				// ignore
+				if (log.isDebugEnabled()) {
+					log.debug("Exception occured, ignore it", e);
+				}
 			} finally {
 				m_running.set(false);
 			}
@@ -145,7 +155,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			if (endpoint != null) {
 				EndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
 
-				Future<Boolean> future = m_messageAcceptedMonitor.monitor(cmd.getHeader().getCorrelationId());
+				Future<Boolean> future = m_messageAcceptanceMonitor.monitor(cmd.getHeader().getCorrelationId());
 				m_messageResultMonitor.monitor(cmd);
 
 				channel.writeCommand(cmd);
@@ -163,6 +173,10 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					return false;
 				}
 			} else {
+				// ignore
+				if (log.isDebugEnabled()) {
+					log.debug("No endpoint found, ignore it");
+				}
 				return false;
 			}
 		}

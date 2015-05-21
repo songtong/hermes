@@ -78,10 +78,10 @@ public class SendMessageCommand extends AbstractCommand {
 	}
 
 	private void validate(ProducerMessage<?> msg) {
-		if (!m_topic.equals(msg.getTopic()) || m_partition != msg.getPartitionNo()) {
+		if (!m_topic.equals(msg.getTopic()) || m_partition != msg.getPartition()) {
 			throw new IllegalArgumentException(String.format(
 			      "Illegal message[topic=%s, partition=%s] try to add to SendMessageCommand[topic=%s, partition=%s]",
-			      msg.getTopic(), msg.getPartitionNo(), m_topic, m_partition));
+			      msg.getTopic(), msg.getPartition(), m_topic, m_partition));
 		}
 	}
 

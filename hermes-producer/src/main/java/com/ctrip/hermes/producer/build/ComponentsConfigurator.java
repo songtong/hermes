@@ -17,9 +17,9 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.DefaultProducer;
 import com.ctrip.hermes.producer.HermesProducerModule;
 import com.ctrip.hermes.producer.config.ProducerConfig;
-import com.ctrip.hermes.producer.monitor.DefaultSendMessageAcceptedMonitor;
+import com.ctrip.hermes.producer.monitor.DefaultSendMessageAcceptanceMonitor;
 import com.ctrip.hermes.producer.monitor.DefaultSendMessageResultMonitor;
-import com.ctrip.hermes.producer.monitor.SendMessageAcceptedMonitor;
+import com.ctrip.hermes.producer.monitor.SendMessageAcceptanceMonitor;
 import com.ctrip.hermes.producer.monitor.SendMessageResultMonitor;
 import com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSink;
 import com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSinkManager;
@@ -60,21 +60,21 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(ClientEndpointChannelManager.class)//
 		      .req(PartitioningStrategy.class)//
 		      .req(MetaService.class)//
-		      .req(SendMessageAcceptedMonitor.class)//
+		      .req(SendMessageAcceptanceMonitor.class)//
 		      .req(SendMessageResultMonitor.class)//
 		      .req(ProducerConfig.class)//
 		);
 
 		// command processors
 		all.add(C(CommandProcessor.class, CommandType.ACK_MESSAGE_SEND.toString(), SendMessageAckCommandProcessor.class)//
-		      .req(SendMessageAcceptedMonitor.class));
+		      .req(SendMessageAcceptanceMonitor.class));
 		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_SEND.toString(),
 		      SendMessageResultCommandProcessor.class)//
 		      .req(SendMessageResultMonitor.class));
 
 		// monitors
 		all.add(A(DefaultSendMessageResultMonitor.class));
-		all.add(A(DefaultSendMessageAcceptedMonitor.class));
+		all.add(A(DefaultSendMessageAcceptanceMonitor.class));
 
 		all.add(A(ProducerConfig.class));
 

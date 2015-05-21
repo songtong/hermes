@@ -348,7 +348,7 @@ public class SendMessageCommandTest extends ComponentTestCase {
 		msg.setBornTime(System.currentTimeMillis());
 		msg.setKey(key);
 		msg.setPartitionKey(partition);
-		msg.setPartitionNo(partitionNo);
+		msg.setPartition(partitionNo);
 		msg.setPriority(priority);
 		PropertiesHolder propertiesHolder = new PropertiesHolder();
 		for (Map.Entry<String, String> entry : durableProperties.entrySet()) {
