@@ -147,14 +147,14 @@ public class LongPollingConsumerTask implements Runnable {
 				if (!isClosed() && m_lease.get() != null && !m_lease.get().isExpired()) {
 					long correlationId = CorrelationIdGenerator.generateCorrelationId();
 					log.info(
-					      "Consumer continue(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease acquired",
+					      "Consumer continue consuming(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease acquired",
 					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), correlationId,
 					      m_context.getSessionId());
 
 					startConsumingMessages(key, correlationId);
 
 					log.info(
-					      "Consumer pause(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease expired",
+					      "Consumer pause consuming(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease expired",
 					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), correlationId,
 					      m_context.getSessionId());
 				}

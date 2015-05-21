@@ -32,13 +32,14 @@ public class DefaultEngine extends Engine {
 		for (Subscriber s : subscribers) {
 			List<Topic> topics = m_metaService.findTopicsByPattern(s.getTopicPattern());
 
-			log.info("Found topics({}) matching pattern({}).", CollectionUtil.collect(topics, new Transformer() {
+			log.info("Found topics({}) matching pattern({}), groupId={}.",
+			      CollectionUtil.collect(topics, new Transformer() {
 
-				@Override
-				public Object transform(Object topic) {
-					return ((Topic) topic).getName();
-				}
-			}), s.getTopicPattern());
+				      @Override
+				      public Object transform(Object topic) {
+					      return ((Topic) topic).getName();
+				      }
+			      }), s.getTopicPattern(), s.getGroupId());
 
 			for (Topic topic : topics) {
 				ConsumerContext context = new ConsumerContext(topic, s.getGroupId(), s.getConsumer(), s.getMessageClass(),
@@ -48,8 +49,6 @@ public class DefaultEngine extends Engine {
 					ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(endpointType);
 					handle.addSubscribeHandle(consumerBootstrap.start(context));
 
-					log.info("Consumer started for topic {}(consumer: groupId={}, sessionId={})", topic.getName(),
-					      context.getGroupId(), context.getSessionId());
 				} catch (Exception e) {
 					log.error(
 					      String.format("Failed to start consumer for topic %s(consumer: groupId=%s, sessionId=%s)",
