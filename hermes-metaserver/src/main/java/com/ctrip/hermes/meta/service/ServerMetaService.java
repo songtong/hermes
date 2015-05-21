@@ -269,6 +269,7 @@ public class ServerMetaService implements MetaService, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
+      refreshMeta();
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("RefreshMeta", true))
 		      .scheduleWithFixedDelay(new Runnable() {
 
@@ -281,7 +282,7 @@ public class ServerMetaService implements MetaService, Initializable {
 				      }
 			      }
 
-		      }, 0, 60, TimeUnit.SECONDS);
+		      }, 1, 1, TimeUnit.SECONDS);
 	}
 
 	@Override
