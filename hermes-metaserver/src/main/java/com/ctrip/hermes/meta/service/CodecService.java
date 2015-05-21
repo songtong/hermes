@@ -1,5 +1,7 @@
 package com.ctrip.hermes.meta.service;
 
+import java.util.Map;
+
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -15,4 +17,7 @@ public class CodecService {
 		return m_metaService.getCodecByTopic(topicName);
 	}
 
+	public Map<String, Codec> getCodecs() {
+		return m_metaService.getCodecs();
+	}
 }

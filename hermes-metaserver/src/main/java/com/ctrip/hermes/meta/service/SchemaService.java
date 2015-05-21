@@ -10,14 +10,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema.Parser;
 import org.apache.avro.compiler.idl.ParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.codehaus.plexus.logging.LogEnabled;
-import org.codehaus.plexus.logging.Logger;
+import org.apache.log4j.Logger;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
@@ -25,25 +23,20 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.lookup.util.StringUtils;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.meta.dal.meta.Schema;
 import com.ctrip.hermes.meta.dal.meta.SchemaDao;
 import com.ctrip.hermes.meta.dal.meta.SchemaEntity;
+import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.pojo.SchemaView;
 
 @Named
-public class SchemaService implements LogEnabled {
+public class SchemaService {
 
-	private static final String DEFAULT_COMPABILITY = "FORWARD";
-
-	private Logger m_logger;
+	private static final Logger logger = Logger.getLogger(SchemaService.class);
 
 	private SchemaRegistryClient avroSchemaRegistry;
-
-	@Inject
-	private ClientEnvironment m_env;
 
 	@Inject
 	private SchemaDao m_schemaDao;
@@ -75,7 +68,7 @@ public class SchemaService implements LogEnabled {
 	 * @throws DalException
 	 */
 	public void compileAvro(Schema metaSchema, org.apache.avro.Schema avroSchema) throws IOException, DalException {
-		m_logger.info(String.format("Compile %s by %s", metaSchema.getName(), avroSchema.getName()));
+		logger.info(String.format("Compile %s by %s", metaSchema.getName(), avroSchema.getName()));
 		final Path destDir = Files.createTempDirectory("avroschema");
 		SpecificCompiler compiler = new SpecificCompiler(avroSchema);
 		compiler.compileToDestination(null, destDir.toFile());
@@ -144,7 +137,7 @@ public class SchemaService implements LogEnabled {
 	 */
 	public SchemaView createSchema(SchemaView schemaView, Topic topic) throws DalException, IOException,
 	      RestClientException {
-		m_logger.info(String.format("Create schema for %s", topic.getName()));
+		logger.info(String.format("Create schema for %s", topic.getName()));
 		Schema schema = schemaView.toMetaSchema();
 		schema.setCreateTime(new Date(System.currentTimeMillis()));
 		schema.setName(topic.getName() + "-value");
@@ -165,10 +158,9 @@ public class SchemaService implements LogEnabled {
 		m_metaService.updateMeta(meta);
 
 		if ("avro".equals(schema.getType())) {
-			if (StringUtils.isEmpty(schema.getCompatibility())) {
-				schema.setCompatibility(DEFAULT_COMPABILITY);
+			if (StringUtils.isNotEmpty(schema.getCompatibility())) {
+				getAvroSchemaRegistry().updateCompatibility(schema.getName(), schema.getCompatibility());
 			}
-			getAvroSchemaRegistry().updateCompatibility(schema.getName(), schema.getCompatibility());
 		}
 
 		return new SchemaView(schema);
@@ -211,11 +203,13 @@ public class SchemaService implements LogEnabled {
 
 	private SchemaRegistryClient getAvroSchemaRegistry() throws IOException {
 		if (avroSchemaRegistry == null) {
-			Properties m_properties = m_env.getGlobalConfig();
-			String schemaServerHost = m_properties.getProperty("schema-server-host");
-			String schemaServerPort = m_properties.getProperty("schema-server-port");
-			avroSchemaRegistry = new CachedSchemaRegistryClient("http://" + schemaServerHost + ":" + schemaServerPort,
-			      1000);
+			Codec avroCodec = m_metaService.getCodecByType("avro");
+			if (avroCodec == null) {
+				throw new RuntimeException("Could not get the avro codec");
+			}
+			String schemaRegistryUrl = avroCodec.getProperties().get("schema.registry.url").getValue();
+			logger.info("schema.registry.url:" + schemaRegistryUrl);
+			avroSchemaRegistry = new CachedSchemaRegistryClient(schemaRegistryUrl, 1000);
 		}
 		return avroSchemaRegistry;
 	}
@@ -401,11 +395,6 @@ public class SchemaService implements LogEnabled {
 		org.apache.avro.Schema avroSchema = parser.parse(new String(schemaContent));
 		boolean result = getAvroSchemaRegistry().testCompatibility(schema.getName(), avroSchema);
 		return result;
-	}
-
-	@Override
-	public void enableLogging(Logger logger) {
-		m_logger = logger;
 	}
 
 }

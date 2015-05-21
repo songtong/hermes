@@ -15,8 +15,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.UriBuilder;
 
-import org.codehaus.plexus.logging.LogEnabled;
-import org.codehaus.plexus.logging.Logger;
+import org.apache.log4j.Logger;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -29,15 +28,15 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.resource.TopicResource;
 
 @Named
-public class MetaRestServer implements LogEnabled {
+public class MetaRestServer {
 	public static final String META_HOST = "meta-host";
 
 	public static final String META_PORT = "meta-port";
 
-	private Logger m_logger;
+	private static final Logger logger = Logger.getLogger(MetaRestServer.class);
 
 	private HttpServer m_server;
-	
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -49,11 +48,6 @@ public class MetaRestServer implements LogEnabled {
 		rc.register(MultiPartFeature.class);
 		rc.packages(TopicResource.class.getPackage().getName());
 		return rc;
-	}
-
-	@Override
-	public void enableLogging(Logger logger) {
-		m_logger = logger;
 	}
 
 	private URI getBaseURI() throws IOException {
@@ -69,7 +63,7 @@ public class MetaRestServer implements LogEnabled {
 		for (Class<?> cls : classes) {
 			Path classPath = cls.getAnnotation(Path.class);
 			if (classPath != null) {
-				m_logger.debug("REST Root API: " + baseURI + classPath.value());
+				logger.debug("REST Root API: " + baseURI + classPath.value());
 			}
 			Method[] methods = cls.getDeclaredMethods();
 			for (Method method : methods) {
@@ -93,7 +87,7 @@ public class MetaRestServer implements LogEnabled {
 				}
 				Path methodPath = method.getAnnotation(Path.class);
 				if (methodPath != null && op != null) {
-					m_logger.info("REST API: " + op + " " + baseURI + classPath.value() + methodPath.value());
+					logger.info("REST API: " + op + " " + baseURI + classPath.value() + methodPath.value());
 				}
 			}
 		}
@@ -104,7 +98,7 @@ public class MetaRestServer implements LogEnabled {
 		URI baseURI = getBaseURI();
 		if (!baseURI.getHost().equals("localhost") && !baseURI.getHost().equals("0.0.0.0")
 		      && !baseURI.getHost().equals("127.0.0.1")) {
-			m_logger.info("invalid host: " + baseURI.getHost());
+			logger.info("invalid host: " + baseURI.getHost());
 			return;
 		}
 		m_server = GrizzlyHttpServerFactory.createHttpServer(baseURI, rc);
@@ -112,9 +106,9 @@ public class MetaRestServer implements LogEnabled {
 			m_server.start();
 			showPaths(rc, baseURI);
 		} catch (IOException e) {
-			m_logger.error(e.getMessage());
+			logger.error(e);
 		}
-		m_logger.info("Base URI: " + baseURI);
+		logger.info("Base URI: " + baseURI);
 	}
 
 	public void stop() {

@@ -100,7 +100,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 	}
 
 	private List<String> doFetch(String ipPort) throws IOException {
-		String url = String.format("http://%s%s", ipPort, "/metaserver");
+		String url = String.format("http://%s%s", ipPort, "/metaserver/servers");
 		HttpGet post = new HttpGet(url);
 		post.setConfig(m_requestConfig);
 
@@ -115,11 +115,11 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		switch (env) {
 		case DEV:
 			return "127.0.0.1";
-		case FWS:
-			return "10.3.8.63";
-		case UAT:
-			return "10.2.7.72";
 		case LPT:
+			return "10.3.8.63";
+		case FWS:
+			return "10.2.7.72";
+		case UAT:
 			return "10.2.7.72";
 		case PROD:
 			return "meta.hermes.fx.ctripcorp.com";

@@ -6,8 +6,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.dal.jdbc.DalException;
@@ -19,6 +22,7 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.DefaultLease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.dal.meta.MetaDao;
 import com.ctrip.hermes.meta.dal.meta.MetaEntity;
 import com.ctrip.hermes.meta.entity.Codec;
@@ -34,6 +38,8 @@ import com.ctrip.hermes.meta.transform.BaseVisitor2;
 
 @Named(type = MetaService.class, value = ServerMetaService.ID)
 public class ServerMetaService implements MetaService, Initializable {
+
+	private static final Logger logger = Logger.getLogger(ServerMetaService.class);
 
 	public static final String ID = "server-meta-service";
 
@@ -58,6 +64,7 @@ public class ServerMetaService implements MetaService, Initializable {
 			com.ctrip.hermes.meta.dal.meta.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
 			m_meta = JSON.parseObject(dalMeta.getValue(), Meta.class);
 		} catch (DalException e) {
+			logger.warn(e);
 			throw new RuntimeException("Get meta failed.", e);
 		}
 		return m_meta;
@@ -81,6 +88,7 @@ public class ServerMetaService implements MetaService, Initializable {
 			dalMeta.setDataChangeLastTime(new Date(System.currentTimeMillis()));
 			m_metaDao.insert(dalMeta);
 		} catch (DalException e) {
+			logger.warn(e);
 			throw new RuntimeException("Update meta failed.", e);
 		}
 		m_meta = meta;
@@ -261,7 +269,19 @@ public class ServerMetaService implements MetaService, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		this.refreshMeta();
+		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("RefreshMeta", true))
+		      .scheduleWithFixedDelay(new Runnable() {
+
+			      @Override
+			      public void run() {
+				      try {
+					      refreshMeta();
+				      } catch (RuntimeException e) {
+					      logger.warn(e);
+				      }
+			      }
+
+		      }, 0, 60, TimeUnit.SECONDS);
 	}
 
 	@Override
@@ -269,4 +289,13 @@ public class ServerMetaService implements MetaService, Initializable {
 		return new ArrayList<Server>(this.m_meta.getServers().values());
 	}
 
+	@Override
+	public Map<String, Storage> getStorages() {
+		return m_meta.getStorages();
+	}
+
+	@Override
+	public Map<String, Codec> getCodecs() {
+		return m_meta.getCodecs();
+	}
 }

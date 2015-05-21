@@ -20,7 +20,7 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.server.MetaRestServer;
 
-public class MetaServerTest extends ComponentTestCase {
+public class MetaResourceTest extends ComponentTestCase {
 
 	private MetaRestServer server;
 

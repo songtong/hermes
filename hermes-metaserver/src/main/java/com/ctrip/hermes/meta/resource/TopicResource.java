@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.StringUtils;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
@@ -41,6 +42,8 @@ import com.ctrip.hermes.meta.service.TopicService;
 @Produces(MediaType.APPLICATION_JSON)
 public class TopicResource {
 
+	private static final Logger logger = Logger.getLogger(TopicResource.class);
+
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
@@ -56,6 +59,7 @@ public class TopicResource {
 		try {
 			topicView = JSON.parseObject(content, TopicView.class);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
@@ -68,6 +72,7 @@ public class TopicResource {
 			topic = topicService.createTopic(topic);
 			topicView = new TopicView(topic);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.CREATED).entity(topicView).build();
@@ -84,10 +89,10 @@ public class TopicResource {
 		try {
 			for (Topic topic : topics) {
 				TopicView topicView = new TopicView(topic);
-				
+
 				Storage storage = topicService.findStorage(topic.getName());
 				topicView.setStorage(storage);
-				
+
 				if (topic.getSchemaId() != null) {
 					try {
 						SchemaView schemaView = schemaService.getSchemaView(topic.getSchemaId());
@@ -95,13 +100,14 @@ public class TopicResource {
 					} catch (DalNotFoundException e) {
 					}
 				}
-				
+
 				Codec codec = codecService.getCodec(topic.getName());
 				topicView.setCodec(codec);
-				
+
 				returnResult.add(topicView);
 			}
 		} catch (DalException | IOException | RestClientException e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return returnResult;
@@ -117,11 +123,11 @@ public class TopicResource {
 
 		TopicView topicView = new TopicView(topic);
 
-		//Fill Storage
+		// Fill Storage
 		Storage storage = topicService.findStorage(topic.getName());
 		topicView.setStorage(storage);
-		
-		//Fill Schema
+
+		// Fill Schema
 		if (topic.getSchemaId() != null) {
 			SchemaView schemaView;
 			try {
@@ -131,11 +137,11 @@ public class TopicResource {
 				throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 			}
 		}
-		
-		//Fill Codec
+
+		// Fill Codec
 		Codec codec = codecService.getCodec(topic.getName());
 		topicView.setCodec(codec);
-		
+
 		return topicView;
 	}
 
@@ -151,6 +157,7 @@ public class TopicResource {
 				returnResult.add(schemaView);
 			}
 		} catch (DalException e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return returnResult;
@@ -167,6 +174,7 @@ public class TopicResource {
 			topicView = JSON.parseObject(content, TopicView.class);
 			topicView.setName(name);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
@@ -179,6 +187,7 @@ public class TopicResource {
 			topic = topicService.updateTopic(topic);
 			topicView = new TopicView(topic);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(topicView).build();
@@ -190,6 +199,7 @@ public class TopicResource {
 		try {
 			topicService.deleteTopic(name);
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -205,6 +215,7 @@ public class TopicResource {
 				topicService.createTopicInKafka(topic);
 			}
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -220,11 +231,12 @@ public class TopicResource {
 				topicService.deleteTopicInKafka(topic);
 			}
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
 	}
-	
+
 	@POST
 	@Path("{name}/config")
 	public Response configTopic(@PathParam("name") String name) {
@@ -235,6 +247,7 @@ public class TopicResource {
 				topicService.configTopicInKafka(topic);
 			}
 		} catch (Exception e) {
+			logger.warn(e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
