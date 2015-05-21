@@ -13,7 +13,7 @@
 		<module>hermes-consumer</module>
 		<module>hermes-broker</module>
 		<module>hermes-container</module>
-		<!--<module>hermes-example</module>-->
+		<module>hermes-example</module>
 		<module>hermes-metaserver</module>
 		<module>hermes-kafka</module>
 		<module>hermes-rest</module>

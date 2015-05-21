@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
@@ -37,6 +39,8 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
  */
 @Named(type = AckManager.class)
 public class DefaultAckManager implements AckManager, Initializable {
+
+	private static final Logger log = LoggerFactory.getLogger(DefaultAckManager.class);
 
 	// TODO while consumer disconnect, clear holder and offset
 	private ConcurrentMap<Triple<Tpp, String, Boolean>, AckHolder<Integer>> m_holders = new ConcurrentHashMap<>();
@@ -69,10 +73,10 @@ public class DefaultAckManager implements AckManager, Initializable {
 	}
 
 	@Override
-	public void delivered(Tpp tpp, String groupId, boolean resend, List<Pair<Long, Integer>> msgSeqs) {
+	public void delivered(Tpp tpp, String groupId, boolean resend, List<Pair<Long, Integer>> msgSeqsAndRemainingRetries) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		ensureMapEntryExist(key);
-		m_opQueue.offer(new Operation(key, Type.DELIVERED, msgSeqs, m_systemClockService.now()));
+		m_opQueue.offer(new Operation(key, Type.DELIVERED, msgSeqsAndRemainingRetries, m_systemClockService.now()));
 	}
 
 	private void ensureMapEntryExist(Triple<Tpp, String, Boolean> key) {
@@ -83,19 +87,19 @@ public class DefaultAckManager implements AckManager, Initializable {
 	}
 
 	@Override
-	public void acked(Tpp tpp, String groupId, boolean resend, Map<Long, Integer> msgSeqs) {
+	public void acked(Tpp tpp, String groupId, boolean resend, Map<Long, Integer> msgSeqsAndRemainingRetries) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		ensureMapEntryExist(key);
-		for (Long msgSeq : msgSeqs.keySet()) {
+		for (Long msgSeq : msgSeqsAndRemainingRetries.keySet()) {
 			m_opQueue.offer(new Operation(key, Type.ACK, msgSeq, m_systemClockService.now()));
 		}
 	}
 
 	@Override
-	public void nacked(Tpp tpp, String groupId, boolean resend, Map<Long, Integer> msgSeqs) {
+	public void nacked(Tpp tpp, String groupId, boolean resend, Map<Long, Integer> msgSeqsAndRemainingRetries) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		ensureMapEntryExist(key);
-		for (Long msgSeq : msgSeqs.keySet()) {
+		for (Long msgSeq : msgSeqsAndRemainingRetries.keySet()) {
 			m_opQueue.offer(new Operation(key, Type.NACK, msgSeq, m_systemClockService.now()));
 		}
 	}
@@ -110,7 +114,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 				checkHolders();
 			} catch (Exception e) {
-				// TODO
+				log.error("Exception occured while executing ack task.", e);
 			}
 		}
 
@@ -144,8 +148,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 				m_todos.clear();
 			} catch (Exception e) {
-				// TODO
-				e.printStackTrace();
+				log.error("Exception occured while handling operations.", e);
 			}
 		}
 
@@ -168,22 +171,37 @@ public class DefaultAckManager implements AckManager, Initializable {
 			ContinuousRange doneRange = result.getDoneRange();
 			EnumRange<Integer> failRange = result.getFailRange();
 			if (failRange != null) {
+				if (log.isDebugEnabled()) {
+					log.debug(
+					      "Nack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, msgIdToRemainingRetries={}).",
+					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, failRange.getOffsets());
+				}
+
 				try {
 					m_queueManager.nack(tpp, groupId, isResend, failRange.getOffsets());
 				} catch (Exception e) {
-					// TODO
+					log.error(
+					      String.format(
+					            "Failed to nack messages(topic=%s, partition=%s, priority=%s, groupId=%s, isResend=%s, msgIdToRemainingRetries=%s).",
+					            tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend,
+					            failRange.getOffsets()), e);
 				}
 			}
 
 			if (doneRange != null) {
+				if (log.isDebugEnabled()) {
+					log.debug("Ack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, endOffset={}).",
+					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, doneRange.getEnd());
+				}
 				try {
 					m_queueManager.ack(tpp, groupId, isResend, doneRange.getEnd());
 				} catch (Exception e) {
-					// TODO
+					log.error(String.format(
+					      "Ack messages(topic=%s, partition=%s, priority=%s, groupId=%s, isResend=%s, endOffset=%s).",
+					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, doneRange.getEnd()), e);
 				}
 			}
 		}
-
 	}
 
 	static class Operation {

@@ -11,6 +11,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
@@ -26,6 +28,8 @@ import com.google.common.util.concurrent.SettableFuture;
  *
  */
 public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
+
+	private static final Logger log = LoggerFactory.getLogger(AbstractMessageQueueDumper.class);
 
 	private BlockingQueue<FutureBatchPriorityWrapper> m_queue = new LinkedBlockingQueue<>();
 
@@ -49,7 +53,6 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 		String threadName = String.format("MessageQueueDumper-%s-%d", topic, partition);
 		m_workerThread = HermesThreadFactory.create(threadName, false).newThread(new DumperTask());
-
 	}
 
 	public Lease getLease() {
@@ -148,8 +151,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				} catch (Exception e) {
-					// TODO
-					e.printStackTrace();
+					log.error("Exception occured while dumping data", e);
 				}
 			}
 

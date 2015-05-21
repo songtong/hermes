@@ -39,7 +39,7 @@ public class BrokerConfig {
 	}
 
 	public long getAckManagerCheckInterval() {
-		return 50;
+		return 100;
 	}
 
 	public int getAckManagerOperationHandlingBatchSize() {
@@ -60,5 +60,9 @@ public class BrokerConfig {
 
 	public long getDefaultLeaseAcquireDelay() {
 		return 100L;
+	}
+
+	public int getListenPort() {
+		return 4376;
 	}
 }
