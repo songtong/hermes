@@ -63,6 +63,6 @@ public class RunningStatusStatisticsService implements Initializable {
 			groups.get(group).add(new Pair<>(thread.getName(), thread.isDaemon()));
 		}
 
-		log.info("Background threads({})", JSON.toJSONString(groups));
+		log.info("Running threads({})", JSON.toJSONString(groups));
 	}
 }
