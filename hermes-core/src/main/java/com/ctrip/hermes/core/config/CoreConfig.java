@@ -16,4 +16,12 @@ public class CoreConfig {
 	public int getMetaServerIpFetchInterval() {
 		return 60;
 	}
+
+	public int getMetaServerConnectTimeout() {
+		return 2000;
+	}
+
+	public int getMetaServerReadTimeout() {
+		return 5000;
+	}
 }

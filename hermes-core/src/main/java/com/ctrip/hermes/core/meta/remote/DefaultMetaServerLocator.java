@@ -17,6 +17,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -31,6 +33,8 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 @Named(type = MetaServerLocator.class)
 public class DefaultMetaServerLocator implements MetaServerLocator, Initializable {
 
+	private static final Logger log = LoggerFactory.getLogger(DefaultMetaServerLocator.class);
+
 	private static final int DEFAULT_MASTER_METASERVER_PORT = 80;
 
 	@Inject
@@ -43,59 +47,57 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	private RequestConfig m_requestConfig;
 
-	private AtomicReference<List<String>> m_ipPorts = new AtomicReference<List<String>>(new LinkedList<String>());
+	private AtomicReference<List<String>> m_metaServerList = new AtomicReference<List<String>>(new LinkedList<String>());
 
 	private int m_masterMetaServerPort = DEFAULT_MASTER_METASERVER_PORT;
 
 	@Override
-	public List<String> getMetaServerIpPorts() {
-		return m_ipPorts.get();
+	public List<String> getMetaServerList() {
+		return m_metaServerList.get();
 	}
 
-	private List<String> fetchMetaServerIpPorts() {
-		List<String> curIpPorts = getMetaServerIpPorts();
-
-		if (CollectionUtil.isNullOrEmpty(curIpPorts)) {
-			if (!resolveMetaServerDomain()) {
-				throw new RuntimeException("Can not resolve meta server domain");
-			}
+	private List<String> updateMetaServerList() {
+		if (CollectionUtil.isNullOrEmpty(m_metaServerList.get())) {
+			m_metaServerList.set(domainToIpPorts());
 		}
 
-		return fetchIpPortsFromExistingMetaServer();
-
+		return fetchMetaServerListFromExistingMetaServer();
 	}
 
-	private List<String> fetchIpPortsFromExistingMetaServer() {
-		for (String ipPort : m_ipPorts.get()) {
+	private List<String> fetchMetaServerListFromExistingMetaServer() {
+		List<String> metaServerList = m_metaServerList.get();
+		log.info("Start fetching meta server ip from meta servers {}", metaServerList);
+
+		for (String ipPort : metaServerList) {
 			try {
 				List<String> result = doFetch(ipPort);
+				log.info("Successfully fetched meta server ip from meta server {}", ipPort);
 				return result;
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				System.out.println("Fetch meta server ip list failed");
-				continue;
+				// ignore it
 			}
 		}
-		throw new RuntimeException("Can not fetch meta server ip list");
+
+		throw new RuntimeException("Failed to fetch meta server ip list from any meta server");
 	}
 
-	private boolean resolveMetaServerDomain() {
+	private List<String> domainToIpPorts() {
 		String domain = getMetaServerDomainName();
-		// TODO
-		System.out.println("Meta server domain " + domain);
+		log.info("Meta server domain {}", domain);
 		try {
 			List<String> ips = DNSUtil.resolve(domain);
-			List<String> newIps = new LinkedList<>();
-			for (String ip : ips) {
-				newIps.add(String.format("%s:%s", ip, m_masterMetaServerPort));
+			if (CollectionUtil.isNullOrEmpty(ips)) {
+				throw new RuntimeException();
 			}
-			m_ipPorts.set(newIps);
-			return true;
+
+			List<String> ipPorts = new LinkedList<>();
+			for (String ip : ips) {
+				ipPorts.add(String.format("%s:%s", ip, m_masterMetaServerPort));
+			}
+
+			return ipPorts;
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.out.println(String.format("Can not resolve meta server domain %s", domain));
-			return false;
+			throw new RuntimeException("Can not resolve meta server domain " + domain, e);
 		}
 	}
 
@@ -106,7 +108,8 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 		HttpResponse response;
 		response = m_httpClient.execute(post);
-		return Arrays.asList(JSON.parseArray(EntityUtils.toString(response.getEntity())).toArray(new String[0]));
+		String json = EntityUtils.toString(response.getEntity());
+		return Arrays.asList(JSON.parseArray(json).toArray(new String[0]));
 	}
 
 	private String getMetaServerDomainName() {
@@ -135,29 +138,25 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig().getProperty("meta-port", "80").trim());
 
 		m_httpClient = HttpClients.createDefault();
-
 		Builder b = RequestConfig.custom();
-		// TODO config
-		b.setConnectTimeout(2000);
-		b.setSocketTimeout(2000);
+		b.setConnectTimeout(m_coreConfig.getMetaServerConnectTimeout());
+		b.setSocketTimeout(m_coreConfig.getMetaServerReadTimeout());
 		m_requestConfig = b.build();
 
-		m_ipPorts.set(fetchMetaServerIpPorts());
-
-		// TODO config interval
+		updateMetaServerList();
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MetaServerIpFetcher", true))
 		      .scheduleWithFixedDelay(new Runnable() {
 
 			      @Override
 			      public void run() {
 				      try {
-					      m_ipPorts.set(fetchMetaServerIpPorts());
+					      updateMetaServerList();
 				      } catch (RuntimeException e) {
-					      // TODO
-					      e.printStackTrace();
+					      log.warn("", e);
 				      }
 			      }
 
-		      }, 0, m_coreConfig.getMetaServerIpFetchInterval(), TimeUnit.SECONDS);
+		      }, m_coreConfig.getMetaServerIpFetchInterval(), m_coreConfig.getMetaServerIpFetchInterval(),
+		            TimeUnit.SECONDS);
 	}
 }

@@ -77,6 +77,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 			}
 		} else {
 			writeAck(ctx, false);
+			reqCmd.release();
 		}
 	}
 

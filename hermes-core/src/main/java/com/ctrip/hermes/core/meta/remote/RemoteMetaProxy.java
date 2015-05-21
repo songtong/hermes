@@ -102,7 +102,7 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 	}
 
 	private String pollMetaServer(Function<String, String> fun) {
-		List<String> metaServerIpPorts = m_metaServerLocator.getMetaServerIpPorts();
+		List<String> metaServerIpPorts = m_metaServerLocator.getMetaServerList();
 
 		for (String ipPort : metaServerIpPorts) {
 			String result = fun.apply(ipPort);
