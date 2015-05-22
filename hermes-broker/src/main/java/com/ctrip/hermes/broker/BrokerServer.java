@@ -8,9 +8,10 @@ import com.dianping.cat.Cat;
 
 public class BrokerServer {
 	public static void main(String[] args) throws Exception {
-		File catConfigFile = new File("/data/appdatas/cat/client.xml");
+		File catConfigFile = new File("/opt/ctrip/data/cat/client.xml");
 		if (!catConfigFile.isFile() || !catConfigFile.canRead()) {
-			throw new RuntimeException(String.format("Cat config file %s not found", catConfigFile.getCanonicalPath()));
+			throw new IllegalStateException(
+			      String.format("Cat config file %s not found", catConfigFile.getCanonicalPath()));
 		}
 
 		Cat.initialize(catConfigFile);
