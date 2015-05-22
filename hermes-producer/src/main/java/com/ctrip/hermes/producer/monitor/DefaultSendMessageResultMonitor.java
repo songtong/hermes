@@ -1,9 +1,9 @@
 package com.ctrip.hermes.producer.monitor;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,7 +36,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	@Inject
 	private SystemClockService m_systemClockService;
 
-	private Map<Long, SendMessageCommand> m_cmds = new HashMap<>();
+	private Map<Long, SendMessageCommand> m_cmds = new ConcurrentHashMap<>();
 
 	private ReentrantLock m_lock = new ReentrantLock();
 
@@ -97,7 +97,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	@Override
 	public void initialize() throws InitializationException {
 		Executors.newSingleThreadScheduledExecutor(
-		      HermesThreadFactory.create("SendMessageResultMonitor-HouseKeeper", true)).scheduleAtFixedRate(
+		      HermesThreadFactory.create("SendMessageResultMonitor-HouseKeeper", true)).scheduleWithFixedDelay(
 		      new Runnable() {
 
 			      @Override

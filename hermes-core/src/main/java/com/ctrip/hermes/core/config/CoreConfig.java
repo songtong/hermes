@@ -37,15 +37,32 @@ public class CoreConfig {
 		return 10 * 1000L;
 	}
 
-	public long getChannelPendingCmdsHouseKeepingInterval() {
-		return 3;
+	public int getNettySendBufferSize() {
+		return 65535;
 	}
 
-	public long getChannelWriteFailSleepTime() {
-		return 50L;
+	public int getNettyReceiveBufferSize() {
+		return 65535;
 	}
 
-	public int getChannelAutoReconnectDelay() {
+	public int getEndpointChannelSendBufferSize() {
+		return 1000;
+	}
+
+	public long getEndpointChannelWriterCheckInterval() {
+		return 20;
+	}
+
+	public long getEndpointChannelWriteRetryDealy() {
+		return 20;
+	}
+
+	public long getEndpointChannelAutoReconnectDelay() {
 		return 1;
 	}
+
+	public long getEndpointChannelDefaultWrtieTimeout() {
+		return 3600 * 1000L;
+	}
+
 }

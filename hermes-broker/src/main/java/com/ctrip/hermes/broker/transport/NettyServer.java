@@ -13,10 +13,11 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.transport.codec.NettyDecoder;
-import com.ctrip.hermes.core.transport.codec.NettyEncoder;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
-import com.ctrip.hermes.core.transport.endpoint.NettyServerEndpointChannel;
+import com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler;
+import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
+import com.ctrip.hermes.core.transport.netty.NettyDecoder;
+import com.ctrip.hermes.core.transport.netty.NettyEncoder;
 
 @Named(type = NettyServer.class)
 public class NettyServer extends ContainerHolder {
@@ -33,11 +34,12 @@ public class NettyServer extends ContainerHolder {
 			      @Override
 			      public void initChannel(SocketChannel ch) throws Exception {
 				      ch.pipeline().addLast( //
+				            new DefaultNettyChannelOutboundHandler(),//
 				            // TODO set max frame length
 				            new NettyDecoder(), //
 				            new LengthFieldPrepender(4), //
 				            new NettyEncoder(), //
-				            new NettyServerEndpointChannel(lookup(CommandProcessorManager.class)));
+				            new DefaultServerChannelInboundHandler(lookup(CommandProcessorManager.class)));
 			      }
 		      }).option(ChannelOption.SO_BACKLOG, 128) // TODO set tcp options
 		      .childOption(ChannelOption.SO_KEEPALIVE, true);

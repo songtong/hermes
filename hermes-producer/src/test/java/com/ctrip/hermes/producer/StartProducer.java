@@ -49,11 +49,5 @@ public class StartProducer extends ComponentTestCase {
 		} else {
 			future = Producer.getInstance().message(topic, null, msg).withRefKey(uuid).send();
 		}
-		try {
-			future.get();
-			System.out.println("Sent...");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 }

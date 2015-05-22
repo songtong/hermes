@@ -13,8 +13,8 @@ import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.transport.command.CommandType;
-import com.ctrip.hermes.core.transport.command.PullMessageAckCommand;
 import com.ctrip.hermes.core.transport.command.PullMessageCommand;
+import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 
@@ -53,10 +53,10 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 				      correlationId, reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId());
 			}
 			// can not acquire lease, response with empty result
-			PullMessageAckCommand cmd = new PullMessageAckCommand();
+			PullMessageResultCommand cmd = new PullMessageResultCommand();
 			cmd.getHeader().setCorrelationId(reqCmd.getHeader().getCorrelationId());
 
-			ctx.getChannel().writeCommand(cmd);
+			ctx.getChannel().writeAndFlush(cmd);
 		}
 	}
 }

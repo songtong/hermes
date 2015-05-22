@@ -1,6 +1,7 @@
 package com.ctrip.hermes.core.transport.command;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +17,15 @@ import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
  *
  */
 @ManualRelease
-public class PullMessageAckCommand extends AbstractCommand implements Ack {
+public class PullMessageResultCommand extends AbstractCommand {
 	private static final long serialVersionUID = 7125716603747372895L;
 
 	private List<TppConsumerMessageBatch> m_batches = new ArrayList<>();
 
-	public PullMessageAckCommand() {
-		super(CommandType.ACK_MESSAGE_PULL);
+	private transient Channel m_channel;
+
+	public PullMessageResultCommand() {
+		super(CommandType.RESULT_MESSAGE_PULL);
 	}
 
 	public List<TppConsumerMessageBatch> getBatches() {
@@ -33,6 +36,14 @@ public class PullMessageAckCommand extends AbstractCommand implements Ack {
 		if (batches != null) {
 			m_batches.addAll(batches);
 		}
+	}
+
+	public Channel getChannel() {
+		return m_channel;
+	}
+
+	public void setChannel(Channel channel) {
+		m_channel = channel;
 	}
 
 	@Override
