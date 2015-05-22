@@ -19,11 +19,11 @@ public class NettyServerEndpointChannel extends NettyEndpointChannel {
 			public void onEvent(EndpointChannelEvent event) {
 				if (event instanceof EndpointChannelInactiveEvent) {
 					// TODO get channel ip and port
-					log.warn("Channel inactive(host:{}, port:{})");
+					log.warn("Channel inactive(host:{}, port:{})" + event.getChannel().getHost());
 					close();
 				} else if (event instanceof EndpointChannelExceptionCaughtEvent) {
 					// TODO get channel ip and port
-					log.warn("Channel exception caught(host:{}, port:{})");
+					log.warn("Channel exception caught(host:{}, port:{})" + event.getChannel().getHost());
 					close();
 				}
 			}

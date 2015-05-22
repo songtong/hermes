@@ -139,7 +139,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		// TODO log ip ports
-		log.warn("Channel inactive");
+		log.warn("Channel inactive. ChannelHandlerContext: " +  ctx.channel().toString());
 		Channel channel = m_channel.getAndSet(null);
 		if (channel != null) {
 			channel.close();
@@ -151,7 +151,7 @@ public abstract class NettyEndpointChannel extends SimpleChannelInboundHandler<C
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		// TODO log ip ports
-		log.warn("Channel active");
+		log.warn("Channel active. ChannelHandlerContext: " +  ctx.channel().toString());
 		m_channel.set(ctx.channel());
 		notifyListener(new EndpointChannelActiveEvent(ctx, this));
 		super.channelActive(ctx);

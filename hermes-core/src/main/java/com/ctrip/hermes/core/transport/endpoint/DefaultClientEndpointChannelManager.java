@@ -92,7 +92,7 @@ public class DefaultClientEndpointChannelManager implements ClientEndpointChanne
 				@Override
 				public void run() {
 					// TODO host port
-					log.info("Reconnect to {}:{}");
+					log.info("Reconnect to {}:{}" + channel.getHost());
 					channel.start();
 				}
 			}, m_reconnectDelaySeconds, TimeUnit.SECONDS);

@@ -40,23 +40,32 @@ public class OneBoxTest extends ComponentTestCase {
 
 	@Test
 	public void testProduce() throws Exception {
-		startBroker();
+//		startBroker();
 		Producer p = Producer.getInstance();
 
-		p.message("order_new", "0", 1233213423L).withRefKey("key").withPriority().send();
+		Future<SendResult> future = p.message("order_new", "0", 1233213423L).withRefKey("key").withPriority().send();
+
+		SendResult sendResult = future.get();
+
+		if (sendResult.isSuccess()) {
+			System.out.println("Send Success");
+		} else {
+			System.out.println("Send Fail");
+
+		}
 
 		System.in.read();
 	}
 
 	@Test
 	public void testConsumer() throws Exception {
-		startBroker();
+//		startBroker();
 
 		Thread.sleep(2000);
 		Engine engine = lookup(Engine.class);
 		final AtomicLong counter = new AtomicLong(0);
 
-		String groupId = "sdf";
+		String groupId = "group1";
 		Subscriber s = new Subscriber("order_new", groupId, new BaseMessageListener<Long>(groupId) {
 
 			@Override
