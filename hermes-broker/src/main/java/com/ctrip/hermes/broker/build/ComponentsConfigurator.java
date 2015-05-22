@@ -5,16 +5,19 @@ import java.util.List;
 
 import org.unidal.dal.jdbc.configuration.AbstractJdbcResourceConfigurator;
 import org.unidal.dal.jdbc.mapping.TableProvider;
+import org.unidal.initialization.DefaultModuleManager;
+import org.unidal.initialization.ModuleManager;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.broker.HermesBrokerModule;
 import com.ctrip.hermes.broker.ack.AckManager;
 import com.ctrip.hermes.broker.ack.DefaultAckManager;
 import com.ctrip.hermes.broker.bootstrap.DefaultBrokerBootstrap;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.lease.BrokerLeaseManager;
-import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.longpolling.DefaultLongPollingService;
+import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory;
@@ -78,6 +81,9 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(MessageDataSourceProvider.class));
 
 		all.addAll(new HermesDatabaseConfigurator().defineComponents());
+
+		all.add(C(ModuleManager.class, DefaultModuleManager.class) //
+		      .config(E("topLevelModules").value(HermesBrokerModule.ID)));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

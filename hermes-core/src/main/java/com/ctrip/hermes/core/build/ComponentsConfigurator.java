@@ -6,7 +6,6 @@ import java.util.List;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
-import com.ctrip.hermes.HermesCoreModule;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.DefaultClientEnvironment;
 import com.ctrip.hermes.core.env.FileEnvProvider;
@@ -33,8 +32,6 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 	@Override
 	public List<Component> defineComponents() {
 		List<Component> all = new ArrayList<Component>();
-
-		all.add(A(HermesCoreModule.class));
 
 		// partition algo
 		all.add(A(HashPartitioningStrategy.class));

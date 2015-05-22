@@ -1,11 +1,6 @@
 <plexus>
 	<components>
 		<component>
-			<role>org.unidal.initialization.Module</role>
-			<role-hint>hermes-core</role-hint>
-			<implementation>com.ctrip.hermes.HermesCoreModule</implementation>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.core.message.partition.PartitioningStrategy</role>
 			<implementation>com.ctrip.hermes.core.message.partition.HashPartitioningStrategy</implementation>
 		</component>
