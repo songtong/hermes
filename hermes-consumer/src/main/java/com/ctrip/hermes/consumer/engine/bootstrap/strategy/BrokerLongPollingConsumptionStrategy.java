@@ -6,11 +6,12 @@ import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager.ConsumerLeaseKey;
+import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
@@ -29,7 +30,7 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	private EndpointManager m_endpointManager;
 
 	@Inject
-	private ClientEndpointChannelManager m_clientEndpointChannelManager;
+	private EndpointClient m_endpointClient;
 
 	@Inject
 	private MessageCodec m_messageCodec;
@@ -40,6 +41,9 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	@Inject
 	private SystemClockService m_systemClockService;
 
+	@Inject
+	private PullMessageResultMonitor m_pullMessageResultMonitor;
+
 	@Override
 	public SubscribeHandle start(ConsumerContext context, int partitionId) {
 
@@ -49,13 +53,14 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 		      m_config.getLocalCacheSize(), //
 		      m_systemClockService);
 
-		consumerTask.setClientEndpointChannelManager(m_clientEndpointChannelManager);
+		consumerTask.setEndpointClient(m_endpointClient);
 		consumerTask.setConsumerNotifier(m_consumerNotifier);
 		consumerTask.setEndpointManager(m_endpointManager);
 		consumerTask.setLeaseManager(m_leaseManager);
 		consumerTask.setMessageCodec(m_messageCodec);
 		consumerTask.setSystemClockService(m_systemClockService);
 		consumerTask.setConfig(m_config);
+		consumerTask.setPullMessageResultMonitor(m_pullMessageResultMonitor);
 
 		Thread thread = HermesThreadFactory.create(
 		      String.format("LongPollingExecutorThread-%s-%s-%s", context.getTopic().getName(), partitionId,

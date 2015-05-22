@@ -6,7 +6,7 @@ import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 
 /**
@@ -16,7 +16,7 @@ import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 public abstract class BaseConsumerBootstrap implements ConsumerBootstrap {
 
 	@Inject
-	protected ClientEndpointChannelManager m_clientEndpointChannelManager;
+	protected EndpointClient m_endpointClient;
 
 	@Inject
 	protected EndpointManager m_endpointManager;

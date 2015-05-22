@@ -1,6 +1,7 @@
 package com.ctrip.hermes.consumer.engine.bootstrap.strategy;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,6 +24,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager.ConsumerLeaseKey;
+import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -35,11 +37,9 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
-import com.ctrip.hermes.core.transport.command.PullMessageAckCommand;
 import com.ctrip.hermes.core.transport.command.PullMessageCommand;
-import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannel;
-import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
+import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
+import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -59,7 +59,7 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private EndpointManager m_endpointManager;
 
-	private ClientEndpointChannelManager m_clientEndpointChannelManager;
+	private EndpointClient m_endpointClient;
 
 	private LeaseManager<ConsumerLeaseKey> m_leaseManager;
 
@@ -70,6 +70,8 @@ public class LongPollingConsumerTask implements Runnable {
 	private ExecutorService m_pullMessageTaskExecutorService;
 
 	private ScheduledExecutorService m_renewLeaseTaskExecutorService;
+
+	private PullMessageResultMonitor m_pullMessageResultMonitor;
 
 	private BlockingQueue<ConsumerMessage<?>> m_msgs;
 
@@ -102,6 +104,10 @@ public class LongPollingConsumerTask implements Runnable {
 		            m_context.getGroupId()), false));
 	}
 
+	public void setPullMessageResultMonitor(PullMessageResultMonitor pullMessageResultMonitor) {
+		m_pullMessageResultMonitor = pullMessageResultMonitor;
+	}
+
 	public void setConfig(ConsumerConfig config) {
 		m_config = config;
 	}
@@ -122,8 +128,8 @@ public class LongPollingConsumerTask implements Runnable {
 		m_endpointManager = endpointManager;
 	}
 
-	public void setClientEndpointChannelManager(ClientEndpointChannelManager clientEndpointChannelManager) {
-		m_clientEndpointChannelManager = clientEndpointChannelManager;
+	public void setEndpointClient(EndpointClient endpointClient) {
+		m_endpointClient = endpointClient;
 	}
 
 	public void setLeaseManager(LeaseManager<ConsumerLeaseKey> leaseManager) {
@@ -328,7 +334,7 @@ public class LongPollingConsumerTask implements Runnable {
 
 	@SuppressWarnings("rawtypes")
 	private List<ConsumerMessage<?>> decodeBatches(List<TppConsumerMessageBatch> batches, Class bodyClazz,
-	      EndpointChannel channel) {
+	      Channel channel) {
 		List<ConsumerMessage<?>> msgs = new ArrayList<>();
 		for (TppConsumerMessageBatch batch : batches) {
 			List<Pair<Long, Integer>> msgSeqs = batch.getMsgSeqs();
@@ -382,9 +388,7 @@ public class LongPollingConsumerTask implements Runnable {
 					return;
 				}
 
-				ClientEndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
-
-				final SettableFuture<PullMessageAckCommand> future = SettableFuture.create();
+				final SettableFuture<PullMessageResultCommand> future = SettableFuture.create();
 
 				Lease lease = m_lease.get();
 				if (lease != null) {
@@ -392,15 +396,17 @@ public class LongPollingConsumerTask implements Runnable {
 
 					if (timeout > 0) {
 						PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
-						      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout);
+						      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout
+						            + 2000L);
 
 						cmd.getHeader().setCorrelationId(m_correlationId);
 						cmd.setFuture(future);
 
-						PullMessageAckCommand ack = null;
+						PullMessageResultCommand ack = null;
 
 						try {
-							channel.writeCommand(cmd);
+							m_pullMessageResultMonitor.monitor(cmd);
+							m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
 
 							ack = future.get(timeout, TimeUnit.MILLISECONDS);
 
@@ -413,7 +419,7 @@ public class LongPollingConsumerTask implements Runnable {
 								if (context != null) {
 									Class<?> bodyClazz = context.getMessageClazz();
 
-									List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, channel);
+									List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ack.getChannel());
 									m_msgs.addAll(msgs);
 								} else {
 									log.warn("Can not find consumerContext(topic={}, partition={}, groupId={}, sessionId={})",

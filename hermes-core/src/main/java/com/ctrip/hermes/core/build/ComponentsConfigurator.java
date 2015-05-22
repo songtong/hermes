@@ -24,7 +24,7 @@ import com.ctrip.hermes.core.service.DefaultSystemClockService;
 import com.ctrip.hermes.core.service.RunningStatusStatisticsService;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.command.processor.DefaultCommandProcessorRegistry;
-import com.ctrip.hermes.core.transport.endpoint.DefaultClientEndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointManager;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
@@ -48,8 +48,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		// endpoint manager
 		all.add(A(DefaultEndpointManager.class));
 
-		// endpoint channel
-		all.add(A(DefaultClientEndpointChannelManager.class));
+		// endpoint Client
+		all.add(A(DefaultEndpointClient.class));
 
 		// command processor
 		all.add(A(CommandProcessorManager.class));

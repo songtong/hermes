@@ -9,7 +9,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class PullMessageCommand extends AbstractCommand implements AckAware<PullMessageAckCommand> {
+public class PullMessageCommand extends AbstractCommand {
 
 	private static final long serialVersionUID = 8392887545356755515L;
 
@@ -23,7 +23,7 @@ public class PullMessageCommand extends AbstractCommand implements AckAware<Pull
 
 	private long m_expireTime;
 
-	private SettableFuture<PullMessageAckCommand> m_future;
+	private transient SettableFuture<PullMessageResultCommand> m_future;
 
 	public PullMessageCommand() {
 		this(null, -1, null, 0, -1L);
@@ -38,11 +38,11 @@ public class PullMessageCommand extends AbstractCommand implements AckAware<Pull
 		m_expireTime = expireTime;
 	}
 
-	public SettableFuture<PullMessageAckCommand> getFuture() {
+	public SettableFuture<PullMessageResultCommand> getFuture() {
 		return m_future;
 	}
 
-	public void setFuture(SettableFuture<PullMessageAckCommand> future) {
+	public void setFuture(SettableFuture<PullMessageResultCommand> future) {
 		m_future = future;
 	}
 
@@ -66,13 +66,11 @@ public class PullMessageCommand extends AbstractCommand implements AckAware<Pull
 		return m_partition;
 	}
 
-	@Override
-	public void onAck(PullMessageAckCommand ack) {
+	public void onResultReceived(PullMessageResultCommand ack) {
 		m_future.set(ack);
 	}
 
-	@Override
-	public void onFail() {
+	public void onTimeout() {
 		m_future.setException(new RuntimeException());
 	}
 

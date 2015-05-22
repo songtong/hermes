@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.transport.codec;
+package com.ctrip.hermes.core.transport.netty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

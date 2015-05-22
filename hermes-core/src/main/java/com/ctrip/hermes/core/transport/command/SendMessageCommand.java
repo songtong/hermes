@@ -40,9 +40,9 @@ public class SendMessageCommand extends AbstractCommand {
 
 	private ConcurrentMap<Integer, List<ProducerMessage<?>>> m_msgs = new ConcurrentHashMap<>();
 
-	private Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<>();
+	private transient Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<>();
 
-	private Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<>();
+	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<>();
 
 	public SendMessageCommand() {
 		super(CommandType.MESSAGE_SEND);

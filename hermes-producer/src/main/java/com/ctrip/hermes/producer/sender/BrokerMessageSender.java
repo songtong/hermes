@@ -25,7 +25,6 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.config.ProducerConfig;
@@ -62,7 +61,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 	private void startEndpointSender() {
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("ProducerEndpointSender", false))
-		      .scheduleAtFixedRate(new EndpointSender(), 0, m_config.getBrokerSenderCheckInterval(),
+		      .scheduleWithFixedDelay(new EndpointSender(), 0, m_config.getBrokerSenderCheckInterval(),
 		            TimeUnit.MILLISECONDS);
 	}
 
@@ -153,12 +152,10 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		      TimeoutException {
 			Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partition);
 			if (endpoint != null) {
-				EndpointChannel channel = m_clientEndpointChannelManager.getChannel(endpoint);
-
 				Future<Boolean> future = m_messageAcceptanceMonitor.monitor(cmd.getHeader().getCorrelationId());
 				m_messageResultMonitor.monitor(cmd);
 
-				channel.writeCommand(cmd);
+				m_endpointClient.writeCommand(endpoint, cmd, m_config.getBrokerSenderSendTimeout(), TimeUnit.MILLISECONDS);
 
 				Boolean brokerAccepted = null;
 				try {
