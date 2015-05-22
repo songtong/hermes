@@ -3,6 +3,8 @@ package com.ctrip.hermes.broker.queue;
 import java.util.Collection;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
@@ -18,6 +20,8 @@ import com.google.common.collect.Collections2;
  *
  */
 public class DefaultMessageQueueDumper extends AbstractMessageQueueDumper {
+
+	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueueDumper.class);
 
 	private MessageQueueStorage m_storage;
 
@@ -44,8 +48,7 @@ public class DefaultMessageQueueDumper extends AbstractMessageQueueDumper {
 			setBatchesResult(todos, true);
 		} catch (Exception e) {
 			setBatchesResult(todos, false);
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Failed to append messages.", e);
 		}
 	}
 

@@ -12,10 +12,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -78,10 +80,10 @@ public class SendMessageCommand extends AbstractCommand {
 	}
 
 	private void validate(ProducerMessage<?> msg) {
-		if (!m_topic.equals(msg.getTopic()) || m_partition != msg.getPartitionNo()) {
+		if (!m_topic.equals(msg.getTopic()) || m_partition != msg.getPartition()) {
 			throw new IllegalArgumentException(String.format(
 			      "Illegal message[topic=%s, partition=%s] try to add to SendMessageCommand[topic=%s, partition=%s]",
-			      msg.getTopic(), msg.getPartitionNo(), m_topic, m_partition));
+			      msg.getTopic(), msg.getPartition(), m_topic, m_partition));
 		}
 	}
 
@@ -249,8 +251,8 @@ public class SendMessageCommand extends AbstractCommand {
 	}
 
 	public long getExpireTime() {
-		// TODO config
-		return System.currentTimeMillis() + 10 * 1000L;
+		return PlexusComponentLocator.lookup(SystemClockService.class).now()
+		      + PlexusComponentLocator.lookup(CoreConfig.class).getSendMessageReadResultTimeout();
 	}
 
 	public Collection<List<ProducerMessage<?>>> getProducerMessages() {

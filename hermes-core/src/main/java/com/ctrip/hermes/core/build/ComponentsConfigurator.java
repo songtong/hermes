@@ -22,6 +22,7 @@ import com.ctrip.hermes.core.meta.internal.RemoteMetaLoader;
 import com.ctrip.hermes.core.meta.remote.DefaultMetaServerLocator;
 import com.ctrip.hermes.core.meta.remote.RemoteMetaProxy;
 import com.ctrip.hermes.core.service.DefaultSystemClockService;
+import com.ctrip.hermes.core.service.RunningStatusStatisticsService;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.command.processor.DefaultCommandProcessorRegistry;
 import com.ctrip.hermes.core.transport.endpoint.DefaultClientEndpointChannelManager;
@@ -68,6 +69,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(CoreConfig.class));
 		all.add(A(DefaultSystemClockService.class));
+
+		all.add(A(RunningStatusStatisticsService.class));
 
 		return all;
 	}

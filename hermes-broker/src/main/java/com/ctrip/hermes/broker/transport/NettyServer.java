@@ -11,7 +11,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldPrepender;
 
 import org.unidal.lookup.ContainerHolder;
-import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.transport.codec.NettyDecoder;
@@ -21,14 +20,12 @@ import com.ctrip.hermes.core.transport.endpoint.NettyServerEndpointChannel;
 
 @Named(type = NettyServer.class)
 public class NettyServer extends ContainerHolder {
-	@Inject
-	private NettyServerConfig m_serverConfig;
 
 	private EventLoopGroup m_bossGroup = new NioEventLoopGroup();
 
 	private EventLoopGroup m_workerGroup = new NioEventLoopGroup();
 
-	public ChannelFuture start() {
+	public ChannelFuture start(int port) {
 		ServerBootstrap b = new ServerBootstrap();
 		b.group(m_bossGroup, m_workerGroup)//
 		      .channel(NioServerSocketChannel.class)//
@@ -46,7 +43,7 @@ public class NettyServer extends ContainerHolder {
 		      .childOption(ChannelOption.SO_KEEPALIVE, true);
 
 		// Bind and start to accept incoming connections.
-		ChannelFuture f = b.bind(m_serverConfig.getListenPort());
+		ChannelFuture f = b.bind(port);
 
 		return f;
 	}

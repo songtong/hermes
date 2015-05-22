@@ -1,6 +1,7 @@
 package com.ctrip.hermes.producer.monitor;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -9,6 +10,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -28,6 +31,7 @@ import com.dianping.cat.message.spi.MessageTree;
  */
 @Named(type = SendMessageResultMonitor.class)
 public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor, Initializable {
+	private static final Logger log = LoggerFactory.getLogger(DefaultSendMessageResultMonitor.class);
 
 	@Inject
 	private SystemClockService m_systemClockService;
@@ -49,7 +53,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	}
 
 	@Override
-	public void received(SendMessageResultCommand result) {
+	public void resultReceived(SendMessageResultCommand result) {
 		if (result != null) {
 			SendMessageCommand sendMessageCommand = null;
 			m_lock.lock();
@@ -63,7 +67,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 					sendMessageCommand.onResultReceived(result);
 					tracking(sendMessageCommand);
 				} catch (Exception e) {
-					// TODO
+					log.warn("Exception occured while calling resultReceived", e);
 				}
 
 			}
@@ -99,21 +103,35 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 			      @Override
 			      public void run() {
 				      try {
+					      List<SendMessageCommand> timeoutCmds = new LinkedList<>();
+
 					      m_lock.lock();
 					      try {
 						      for (Map.Entry<Long, SendMessageCommand> entry : m_cmds.entrySet()) {
 							      SendMessageCommand cmd = entry.getValue();
 							      Long correlationId = entry.getKey();
 							      if (cmd.getExpireTime() < m_systemClockService.now()) {
-								      cmd.onTimeout();
-								      m_cmds.remove(correlationId);
+								      timeoutCmds.add(m_cmds.remove(correlationId));
 							      }
 						      }
+
 					      } finally {
 						      m_lock.unlock();
 					      }
+
+					      for (SendMessageCommand timeoutCmd : timeoutCmds) {
+						      if (log.isDebugEnabled()) {
+							      log.debug(
+							            "No result received for SendMessageCommand(correlationId={}) until timeout, will cancel waiting automatically",
+							            timeoutCmd.getHeader().getCorrelationId());
+						      }
+						      timeoutCmd.onTimeout();
+					      }
 				      } catch (Exception e) {
-					      // TODO
+					      // ignore
+					      if (log.isDebugEnabled()) {
+						      log.debug("Exception occured while running SendMessageResultMonitor-HouseKeeper", e);
+					      }
 				      }
 			      }
 		      }, 5, 5, TimeUnit.SECONDS);

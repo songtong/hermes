@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ctrip.hermes</groupId>
 	<artifactId>hermes</artifactId>
-	<version>0.2</version>
+	<version>0.3-SNAPSHOT</version>
 	<name>Hermes</name>
 	<packaging>pom</packaging>
 	<modules>
@@ -13,7 +13,7 @@
 		<module>hermes-consumer</module>
 		<module>hermes-broker</module>
 		<module>hermes-container</module>
-		<!--<module>hermes-example</module>-->
+		<module>hermes-example</module>
 		<module>hermes-metaserver</module>
 		<module>hermes-kafka</module>
 		<module>hermes-rest</module>

@@ -8,13 +8,6 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public abstract class Producer {
 
-	/**
-	 * 
-	 * @param topic
-	 * @param partitionKey
-	 * @param body
-	 * @return
-	 */
 	public abstract MessageHolder message(String topic, String partitionKey, Object body);
 	
 	public static Producer getInstance() {

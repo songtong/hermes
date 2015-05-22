@@ -9,6 +9,7 @@ import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
 import com.ctrip.hermes.core.result.Callback;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.build.BuildConstants;
 
@@ -16,6 +17,9 @@ import com.ctrip.hermes.producer.build.BuildConstants;
 public class DefaultProducer extends Producer {
 	@Inject(BuildConstants.PRODUCER)
 	private Pipeline<Future<SendResult>> m_pipeline;
+
+	@Inject
+	private SystemClockService m_systemClockService;
 
 	@Override
 	public DefaultMessageHolder message(String topic, String partitionKey, Object body) {
@@ -32,7 +36,7 @@ public class DefaultProducer extends Producer {
 
 		@Override
 		public Future<SendResult> send() {
-			m_msg.setBornTime(System.currentTimeMillis());
+			m_msg.setBornTime(m_systemClockService.now());
 			return m_pipeline.put(m_msg);
 		}
 

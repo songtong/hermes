@@ -24,4 +24,28 @@ public class CoreConfig {
 	public int getMetaServerReadTimeout() {
 		return 5000;
 	}
+
+	public long getRunningStatusStatInterval() {
+		return 30;
+	}
+
+	public long getMetaCacheRefreshIntervalMinutes() {
+		return 1;
+	}
+
+	public long getSendMessageReadResultTimeout() {
+		return 10 * 1000L;
+	}
+
+	public long getChannelPendingCmdsHouseKeepingInterval() {
+		return 3;
+	}
+
+	public long getChannelWriteFailSleepTime() {
+		return 50L;
+	}
+
+	public int getChannelAutoReconnectDelay() {
+		return 1;
+	}
 }

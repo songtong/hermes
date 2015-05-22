@@ -25,6 +25,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.remote.MetaServerLocator</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.config.CoreConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -63,6 +66,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaManager</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.config.CoreConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -77,6 +83,9 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.remote.MetaServerLocator</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.config.CoreConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -107,6 +116,9 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.config.CoreConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -160,6 +172,18 @@
 		<component>
 			<role>com.ctrip.hermes.core.service.SystemClockService</role>
 			<implementation>com.ctrip.hermes.core.service.DefaultSystemClockService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.config.CoreConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.RunningStatusStatisticsService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.service.RunningStatusStatisticsService</role>
+			<implementation>com.ctrip.hermes.core.service.RunningStatusStatisticsService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.config.CoreConfig</role>

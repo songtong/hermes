@@ -9,9 +9,8 @@ import java.util.Map;
  */
 public enum CommandType {
 	MESSAGE_SEND(101, SendMessageCommand.class), //
-	MESSAGE_CONSUME(102, ConsumeMessageCommand.class), //
-	MESSAGE_ACK(103, AckMessageCommand.class), //
-	MESSAGE_PULL(104, PullMessageCommand.class), //
+	MESSAGE_ACK(102, AckMessageCommand.class), //
+	MESSAGE_PULL(103, PullMessageCommand.class), //
 
 	ACK_MESSAGE_SEND(201, SendMessageAckCommand.class), //
 	ACK_MESSAGE_PULL(202, PullMessageAckCommand.class), //

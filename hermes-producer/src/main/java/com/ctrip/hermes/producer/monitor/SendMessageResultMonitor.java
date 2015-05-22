@@ -11,6 +11,6 @@ public interface SendMessageResultMonitor {
 
 	void monitor(SendMessageCommand cmd);
 
-	void received(SendMessageResultCommand result);
+	void resultReceived(SendMessageResultCommand result);
 
 }

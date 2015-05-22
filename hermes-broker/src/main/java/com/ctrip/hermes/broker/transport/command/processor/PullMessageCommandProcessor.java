@@ -3,6 +3,8 @@ package com.ctrip.hermes.broker.transport.command.processor;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
@@ -17,6 +19,8 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 
 public class PullMessageCommandProcessor implements CommandProcessor {
+
+	private static final Logger log = LoggerFactory.getLogger(PullMessageCommandProcessor.class);
 
 	@Inject
 	private LongPollingService m_longPollingService;
@@ -43,6 +47,11 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 			m_longPollingService.schedulePush(new Tpg(reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId()),
 			      correlationId, reqCmd.getSize(), ctx.getChannel(), reqCmd.getExpireTime(), lease);
 		} else {
+			if (log.isDebugEnabled()) {
+				log.debug(
+				      "No broker lease to handle client pull message reqeust(correlationId={}, topic={}, partition={}, groupId={})",
+				      correlationId, reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId());
+			}
 			// can not acquire lease, response with empty result
 			PullMessageAckCommand cmd = new PullMessageAckCommand();
 			cmd.getHeader().setCorrelationId(reqCmd.getHeader().getCorrelationId());

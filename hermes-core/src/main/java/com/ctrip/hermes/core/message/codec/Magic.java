@@ -11,8 +11,7 @@ public class Magic {
 		buf.readBytes(magic);
 		for (int i = 0; i < magic.length; i++) {
 			if (magic[i] != MAGIC[i]) {
-				// TODO
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("Magic number mismatch");
 			}
 		}
 	}

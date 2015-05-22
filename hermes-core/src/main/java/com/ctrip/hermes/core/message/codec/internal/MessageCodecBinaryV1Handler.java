@@ -130,8 +130,7 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 		long actualChecksum = ChecksumUtil.crc32(buf.slice(buf.readerIndex(), len));
 		long expectedChecksum = buf.getLong(buf.readerIndex() + len);
 		if (actualChecksum != expectedChecksum) {
-			// TODO
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("checksum mismatch");
 		}
 	}
 
