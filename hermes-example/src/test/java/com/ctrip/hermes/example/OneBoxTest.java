@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
-import org.unidal.lookup.LookupException;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
 import com.ctrip.hermes.consumer.ConsumerType;
@@ -262,21 +261,8 @@ public class OneBoxTest extends ComponentTestCase {
 	}
 
 	private void startBroker() throws Exception {
-		new Thread() {
-			public void run() {
 
-				try {
-					lookup(BrokerBootstrap.class).start();
-				} catch (LookupException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			};
-		}.start();
-
+		lookup(BrokerBootstrap.class).start();
 		Thread.sleep(2000);
 	}
 }

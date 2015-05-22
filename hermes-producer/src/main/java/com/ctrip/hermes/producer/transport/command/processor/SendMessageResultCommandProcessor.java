@@ -28,7 +28,7 @@ public class SendMessageResultCommandProcessor implements CommandProcessor {
 	@Override
 	public void process(CommandProcessorContext ctx) {
 		SendMessageResultCommand cmd = (SendMessageResultCommand) ctx.getCommand();
-		m_messageResultMonitor.received(cmd);
+		m_messageResultMonitor.resultReceived(cmd);
 	}
 
 }

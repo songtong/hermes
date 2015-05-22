@@ -12,17 +12,18 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldPrepender;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ctrip.hermes.core.transport.codec.NettyDecoder;
 import com.ctrip.hermes.core.transport.codec.NettyEncoder;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
-import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelActiveEvent;
 import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelConnectFailedEvent;
-import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelEvent;
-import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelExceptionCaughtEvent;
-import com.ctrip.hermes.core.transport.endpoint.event.EndpointChannelInactiveEvent;
 
 @Sharable
 public class NettyClientEndpointChannel extends NettyEndpointChannel implements ClientEndpointChannel {
+
+	private static final Logger log = LoggerFactory.getLogger(NettyClientEndpointChannel.class);
 
 	private EventLoopGroup m_eventLoopGroup = new NioEventLoopGroup();
 
@@ -62,7 +63,6 @@ public class NettyClientEndpointChannel extends NettyEndpointChannel implements 
 
 				@Override
 				public void operationComplete(ChannelFuture future) throws Exception {
-					// TODO log
 					if (!future.isSuccess()) {
 						notifyListener(new EndpointChannelConnectFailedEvent(future.channel().eventLoop(),
 						      NettyClientEndpointChannel.this));
@@ -73,29 +73,12 @@ public class NettyClientEndpointChannel extends NettyEndpointChannel implements 
 
 			future.sync();
 		} catch (Exception e) {
-			// TODO don't print log
+			// ignore it
+			if (log.isDebugEnabled()) {
+				log.debug("Exception occured while connecting to {}:{}", m_host, m_port);
+			}
 		} finally {
 		}
-	}
-
-	@Override
-	public void startVirtualChannel(final VirtualChannelEventListener listener) {
-		// TODO remove the listener
-		addListener(new EndpointChannelEventListener() {
-
-			@Override
-			public void onEvent(EndpointChannelEvent event) {
-				if (event instanceof EndpointChannelActiveEvent) {
-					listener.channelOpen(NettyClientEndpointChannel.this);
-				} else if (event instanceof EndpointChannelExceptionCaughtEvent) {
-					listener.channelClose();
-				} else if (event instanceof EndpointChannelInactiveEvent) {
-					listener.channelClose();
-				}
-			}
-		});
-
-		listener.channelOpen(this);
 	}
 
 }

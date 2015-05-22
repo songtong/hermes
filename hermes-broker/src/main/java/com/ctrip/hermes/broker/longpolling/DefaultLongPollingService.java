@@ -1,13 +1,19 @@
 package com.ctrip.hermes.broker.longpolling;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.MessageQueueCursor;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -24,6 +30,8 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 @Named(type = LongPollingService.class)
 public class DefaultLongPollingService extends AbstractLongPollingService implements Initializable {
 
+	private static final Logger log = LoggerFactory.getLogger(DefaultLongPollingService.class);
+
 	private ScheduledExecutorService m_scheduledThreadPool;
 
 	@Override
@@ -35,6 +43,11 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	@Override
 	public void schedulePush(Tpg tpg, long correlationId, int batchSize, EndpointChannel channel, long expireTime,
 	      Lease brokerLease) {
+		if (log.isDebugEnabled()) {
+			log.debug("Schedule push for client(correlationId={}, topic={}, partition={}, groupId={})", correlationId,
+			      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
+		}
+
 		final PullMessageTask pullMessageTask = new PullMessageTask(tpg, correlationId, batchSize, channel, expireTime,
 		      brokerLease);
 		m_scheduledThreadPool.submit(new Runnable() {
@@ -48,24 +61,38 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	}
 
 	private void executeTask(final PullMessageTask pullMessageTask) {
-		// skip expired task
-		if (pullMessageTask.getExpireTime() < m_systemClockService.now()) {
-			return;
-		}
-
-		if (!pullMessageTask.getBrokerLease().isExpired()) {
-			if (!queryAndResponseData(pullMessageTask)) {
-				m_scheduledThreadPool.schedule(new Runnable() {
-
-					@Override
-					public void run() {
-						executeTask(pullMessageTask);
-					}
-				}, m_config.getLongPollingCheckInterval(), TimeUnit.MILLISECONDS);
+		try {
+			// skip expired task
+			if (pullMessageTask.getExpireTime() < m_systemClockService.now()) {
+				if (log.isDebugEnabled()) {
+					log.debug("Client expired(correlationId={}, topic={}, partition={}, groupId={})", pullMessageTask
+					      .getCorrelationId(), pullMessageTask.getTpg().getTopic(), pullMessageTask.getTpg().getPartition(),
+					      pullMessageTask.getTpg().getGroupId());
+				}
+				return;
 			}
-		} else {
-			// no lease, return empty cmd
-			response(pullMessageTask, null);
+
+			if (!pullMessageTask.getBrokerLease().isExpired()) {
+				if (!queryAndResponseData(pullMessageTask)) {
+					m_scheduledThreadPool.schedule(new Runnable() {
+
+						@Override
+						public void run() {
+							executeTask(pullMessageTask);
+						}
+					}, m_config.getLongPollingCheckInterval(), TimeUnit.MILLISECONDS);
+				}
+			} else {
+				if (log.isDebugEnabled()) {
+					log.debug("Broker no lease for this request(correlationId={}, topic={}, partition={}, groupId={})",
+					      pullMessageTask.getCorrelationId(), pullMessageTask.getTpg().getTopic(), pullMessageTask.getTpg()
+					            .getPartition(), pullMessageTask.getTpg().getGroupId());
+				}
+				// no lease, return empty cmd
+				response(pullMessageTask, null);
+			}
+		} catch (Exception e) {
+			log.error("Exception occured while executing pull message task", e);
 		}
 	}
 
@@ -79,7 +106,25 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		batches = cursor.next(pullTask.getBatchSize());
 
 		if (batches != null && !batches.isEmpty()) {
-			// notify ack manager
+
+			if (log.isDebugEnabled()) {
+				Map<Boolean, List<Long>> msgIds = new HashMap<>();
+
+				for (TppConsumerMessageBatch batch : batches) {
+					if (msgIds.containsKey(batch.isPriority())) {
+						msgIds.put(batch.isPriority(), new LinkedList<Long>());
+					}
+
+					List<Long> ids = msgIds.get(batch.isPriority());
+
+					for (Pair<Long, Integer> pair : batch.getMsgSeqs()) {
+						ids.add(pair.getKey());
+					}
+				}
+				log.debug("Push Messages(msgIds={}) to client(correlationId={}, topic={}, partition={}, groupId={})",
+				      msgIds, pullTask.getCorrelationId(), tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
+			}
+
 			for (TppConsumerMessageBatch batch : batches) {
 				m_ackManager.delivered(new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority()),
 				      tpg.getGroupId(), batch.isResend(), batch.getMsgSeqs());

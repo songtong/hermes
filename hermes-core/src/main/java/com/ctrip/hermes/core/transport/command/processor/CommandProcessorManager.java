@@ -6,10 +6,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.codehaus.plexus.logging.LogEnabled;
-import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -19,7 +19,8 @@ import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 @Named(type = CommandProcessorManager.class)
-public class CommandProcessorManager implements Initializable, LogEnabled {
+public class CommandProcessorManager implements Initializable {
+	private static final Logger log = LoggerFactory.getLogger(CommandProcessorManager.class);
 
 	@Inject
 	private CommandProcessorRegistry m_registry;
@@ -29,15 +30,12 @@ public class CommandProcessorManager implements Initializable, LogEnabled {
 
 	private Map<CommandProcessor, ExecutorService> m_executors = new ConcurrentHashMap<>();
 
-	// TODO
-	private Logger m_logger;
-
 	public void offer(final CommandProcessorContext ctx) {
 		Command cmd = ctx.getCommand();
 		CommandType type = cmd.getHeader().getType();
 		final CommandProcessor processor = m_registry.findProcessor(type);
 		if (processor == null) {
-			m_logger.error(String.format("Command processor not found for type %s", type));
+			log.error("Command processor not found for type {}", type);
 		} else {
 			ExecutorService executorService = m_executors.get(processor);
 
@@ -80,8 +78,4 @@ public class CommandProcessorManager implements Initializable, LogEnabled {
 
 	}
 
-	@Override
-	public void enableLogging(Logger logger) {
-		m_logger = logger;
-	}
 }

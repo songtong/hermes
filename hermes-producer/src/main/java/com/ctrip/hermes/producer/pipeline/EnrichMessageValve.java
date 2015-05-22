@@ -1,5 +1,7 @@
 package com.ctrip.hermes.producer.pipeline;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.lookup.util.StringUtils;
 import org.unidal.net.Networks;
@@ -13,6 +15,7 @@ import com.dianping.cat.message.spi.MessageTree;
 
 @Named(type = Valve.class, value = EnrichMessageValve.ID)
 public class EnrichMessageValve implements Valve {
+	private static final Logger log = LoggerFactory.getLogger(EnrichMessageValve.class);
 
 	public static final String ID = "enrich";
 
@@ -22,7 +25,13 @@ public class EnrichMessageValve implements Valve {
 		String topic = msg.getTopic();
 		String partitionKey = msg.getPartitionKey();
 
+		if (StringUtils.isEmpty(topic)) {
+			log.error("Topic not set, won't send");
+			return;
+		}
+
 		if (StringUtils.isEmpty(partitionKey)) {
+			log.warn("Parition key not set, will set ip as default partition key automatically(topic={})", msg.getTopic());
 			partitionKey = Networks.forIp().getLocalHostAddress();
 			MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 			try {

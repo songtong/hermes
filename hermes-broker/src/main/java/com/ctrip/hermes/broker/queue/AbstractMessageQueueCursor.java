@@ -4,6 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
@@ -16,6 +19,8 @@ import com.ctrip.hermes.core.meta.MetaService;
  *
  */
 public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
+	private static final Logger log = LoggerFactory.getLogger(AbstractMessageQueueCursor.class);
+
 	protected Tpg m_tpg;
 
 	protected Tpp m_priorityTpp;
@@ -42,17 +47,20 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		m_priorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), true);
 		m_nonPriorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), false);
 		m_metaService = metaService;
-
-		// TODO
 		m_groupIdInt = m_metaService.getGroupIdInt(m_tpg.getGroupId());
 	}
 
 	@Override
 	public void init() {
 		if (inited.compareAndSet(false, true)) {
-			m_priorityOffset = loadLastPriorityOffset();
-			m_nonPriorityOffset = loadLastNonPriorityOffset();
-			m_resendOffset = loadLastResendOffset();
+			try {
+				m_priorityOffset = loadLastPriorityOffset();
+				m_nonPriorityOffset = loadLastNonPriorityOffset();
+				m_resendOffset = loadLastResendOffset();
+			} catch (Exception e) {
+				log.error("Failed to init cursor", e);
+				throw e;
+			}
 		}
 	}
 

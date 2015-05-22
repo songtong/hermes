@@ -22,19 +22,6 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
-			<role-hint>MESSAGE_CONSUME</role-hint>
-			<implementation>com.ctrip.hermes.consumer.engine.command.processor.ConsumeMessageCommandProcessor</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.core.message.codec.MessageCodec</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.consumer.engine.bootstrap.ConsumerBootstrapManager</role>
 			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.DefaultConsumerBootstrapManager</implementation>
 			<requirements>

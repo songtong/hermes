@@ -6,7 +6,7 @@ import java.util.concurrent.Future;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public interface SendMessageAcceptedMonitor {
+public interface SendMessageAcceptanceMonitor {
 
 	public Future<Boolean> monitor(long correlationId);
 

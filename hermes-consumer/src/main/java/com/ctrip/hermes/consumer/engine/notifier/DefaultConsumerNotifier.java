@@ -6,6 +6,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
@@ -25,6 +27,8 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 @Named(type = ConsumerNotifier.class)
 public class DefaultConsumerNotifier implements ConsumerNotifier {
 
+	private static final Logger log = LoggerFactory.getLogger(DefaultConsumerNotifier.class);
+
 	private ConcurrentMap<Long, Pair<ConsumerContext, ExecutorService>> m_consumerContexs = new ConcurrentHashMap<>();
 
 	@Inject(BuildConstants.CONSUMER)
@@ -35,6 +39,11 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 	@Override
 	public void register(long correlationId, final ConsumerContext context) {
+		if (log.isDebugEnabled()) {
+			log.debug("Registered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId,
+			      context.getTopic(), context.getGroupId(), context.getSessionId());
+		}
+
 		m_consumerContexs.putIfAbsent(
 		      correlationId,
 		      new Pair<>(context, Executors.newFixedThreadPool(m_config.getNotifierThreadCount(), HermesThreadFactory
@@ -44,7 +53,13 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 	@Override
 	public void deregister(long correlationId) {
+
 		Pair<ConsumerContext, ExecutorService> pair = m_consumerContexs.remove(correlationId);
+		ConsumerContext context = pair.getKey();
+		if (log.isDebugEnabled()) {
+			log.debug("Deregistered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId,
+			      context.getTopic(), context.getGroupId(), context.getSessionId());
+		}
 		pair.getValue().shutdown();
 		return;
 	}
@@ -60,15 +75,22 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void run() {
-				for (ConsumerMessage<?> msg : msgs) {
-					if (msg instanceof BrokerConsumerMessage) {
-						BrokerConsumerMessage bmsg = (BrokerConsumerMessage) msg;
-						bmsg.setCorrelationId(correlationId);
-						bmsg.setGroupId(context.getGroupId());
+				try {
+					for (ConsumerMessage<?> msg : msgs) {
+						if (msg instanceof BrokerConsumerMessage) {
+							BrokerConsumerMessage bmsg = (BrokerConsumerMessage) msg;
+							bmsg.setCorrelationId(correlationId);
+							bmsg.setGroupId(context.getGroupId());
+						}
 					}
-				}
 
-				m_pipeline.put(new Pair<ConsumerContext, List<ConsumerMessage<?>>>(context, msgs));
+					m_pipeline.put(new Pair<ConsumerContext, List<ConsumerMessage<?>>>(context, msgs));
+				} catch (Exception e) {
+					log.error(
+					      String.format(
+					            "Exception occured while calling messageReceived(correlationId=%s, topic=%s, groupId=%s, sessionId=%s)",
+					            correlationId, context.getTopic(), context.getGroupId(), context.getSessionId()), e);
+				}
 			}
 		});
 

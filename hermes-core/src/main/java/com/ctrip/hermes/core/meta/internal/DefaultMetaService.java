@@ -13,14 +13,18 @@ import java.util.regex.Pattern;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.meta.MetaManager;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
@@ -34,10 +38,13 @@ import com.ctrip.hermes.meta.transform.BaseVisitor2;
 @Named(type = MetaService.class)
 public class DefaultMetaService implements MetaService, Initializable {
 
-	private static final int REFRESH_PERIOD_MINUTES = 1;
+	private static final Logger log = LoggerFactory.getLogger(DefaultMetaService.class);
 
 	@Inject
 	private MetaManager m_manager;
+
+	@Inject
+	private CoreConfig m_config;
 
 	private ScheduledExecutorService executor;
 
@@ -260,22 +267,23 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		refreshMeta(m_manager.getMeta());
-		executor = Executors.newSingleThreadScheduledExecutor();
-		executor.scheduleAtFixedRate(new Runnable() {
+		executor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("RefreshMeta", true));
+		executor
+		      .scheduleAtFixedRate(new Runnable() {
 
-			@Override
-			public void run() {
-				try {
-					refreshMeta(m_manager.getMeta());
-				} catch (Exception e) {
-					// TODO
-					e.printStackTrace();
-				}
-			}
+			      @Override
+			      public void run() {
+				      try {
+					      refreshMeta(m_manager.getMeta());
+				      } catch (Exception e) {
+					      log.error("Failed to refresh meta", e);
+				      }
+			      }
 
-		}, REFRESH_PERIOD_MINUTES, REFRESH_PERIOD_MINUTES, TimeUnit.MINUTES);
+		      }, m_config.getMetaCacheRefreshIntervalMinutes(), m_config.getMetaCacheRefreshIntervalMinutes(),
+		            TimeUnit.MINUTES);
 	}
-	
+
 	@Override
 	public String findAvroSchemaRegistryUrl() {
 		Codec avroCodec = m_meta.get().findCodec("avro");

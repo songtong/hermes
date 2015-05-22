@@ -24,6 +24,10 @@ public class DefaultSystemClockService implements SystemClockService, Initializa
 	@Inject
 	private CoreConfig m_config;
 
+	// force plexus to init runningStatusStatisticsService
+	@Inject
+	private RunningStatusStatisticsService m_runningStatusStatService;
+
 	private long m_precision = 1;
 
 	private final AtomicLong m_now = new AtomicLong(System.currentTimeMillis());

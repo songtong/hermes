@@ -8,7 +8,9 @@ import java.util.TreeMap;
 
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.CollectionUtil;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public class DefaultAckHolder<T> implements AckHolder<T> {
 
@@ -54,8 +56,8 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 		Batch batch = findBatch(offset);
 
 		if (batch == null) {
-			// maybe do nothing, since DefaultAckManager can guarantee ack/nack happen after deliver. 
-			// If reach here, that must be the batch has been timeout in the last scan. 
+			// maybe do nothing, since DefaultAckManager can guarantee ack/nack happen after deliver.
+			// If reach here, that must be the batch has been timeout in the last scan.
 		} else {
 			batch.updateState(offset, success);
 		}
@@ -71,7 +73,7 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 	}
 
 	protected boolean isTimeout(long start, int timeout) {
-		return System.currentTimeMillis() > start + timeout;
+		return PlexusComponentLocator.lookup(SystemClockService.class).now() > start + timeout;
 	}
 
 	private enum State {

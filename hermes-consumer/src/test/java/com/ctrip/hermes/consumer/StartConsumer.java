@@ -14,7 +14,6 @@ import org.unidal.lookup.ComponentTestCase;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.consumer.api.MessageListener;
-import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 
 /**
@@ -26,8 +25,6 @@ public class StartConsumer extends ComponentTestCase {
 	@Test
 	public void test() throws Exception {
 		String topic = "order_new";
-
-		Engine engine = lookup(Engine.class);
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
 		subscribers.put("group1", Arrays.asList("1-a"));

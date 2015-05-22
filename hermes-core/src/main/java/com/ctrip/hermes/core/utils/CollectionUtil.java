@@ -1,6 +1,8 @@
 package com.ctrip.hermes.core.utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 public class CollectionUtil {
@@ -21,4 +23,45 @@ public class CollectionUtil {
 		return collection != null && !collection.isEmpty();
 	}
 
+	@SuppressWarnings("rawtypes")
+	public static Collection collect(Collection inputCollection, Transformer transformer) {
+		ArrayList answer = new ArrayList(inputCollection.size());
+		collect(inputCollection, transformer, answer);
+		return answer;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public static Collection collect(Iterator inputIterator, Transformer transformer) {
+		ArrayList answer = new ArrayList();
+		collect(inputIterator, transformer, answer);
+		return answer;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static Collection collect(Iterator inputIterator, final Transformer transformer,
+	      final Collection outputCollection) {
+		if (inputIterator != null && transformer != null) {
+			while (inputIterator.hasNext()) {
+				Object item = inputIterator.next();
+				Object value = transformer.transform(item);
+				outputCollection.add(value);
+			}
+		}
+		return outputCollection;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public static Collection collect(Collection inputCollection, final Transformer transformer,
+	      final Collection outputCollection) {
+		if (inputCollection != null) {
+			return collect(inputCollection.iterator(), transformer, outputCollection);
+		}
+		return outputCollection;
+	}
+
+	public interface Transformer {
+
+		public Object transform(Object input);
+
+	}
 }

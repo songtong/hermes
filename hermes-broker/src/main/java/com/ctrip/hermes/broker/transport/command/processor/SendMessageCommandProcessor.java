@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
@@ -31,6 +33,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  */
 @SingleThreaded
 public class SendMessageCommandProcessor implements CommandProcessor {
+	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessor.class);
 
 	@Inject
 	private MessageQueueManager m_queueManager;
@@ -53,6 +56,11 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(), m_config.getSessionId());
 
 		if (lease != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Send message reqeust arrived(topic={}, partition={}, msgCount)", reqCmd.getTopic(),
+				      reqCmd.getPartition(), reqCmd.getMessageCount());
+			}
+
 			writeAck(ctx, true);
 
 			Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
@@ -71,11 +79,15 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 					Futures.addCallback(future, completionCallback);
 
 				} catch (Exception e) {
-					// TODO
-					e.printStackTrace();
+					log.error("Failed to append messages async.", e);
 				}
 			}
 		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("No broker lease to handle client send message reqeust(topic={}, partition={})",
+				      reqCmd.getTopic(), reqCmd.getPartition());
+			}
+
 			writeAck(ctx, false);
 			reqCmd.release();
 		}

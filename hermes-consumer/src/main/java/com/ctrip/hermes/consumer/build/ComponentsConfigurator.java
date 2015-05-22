@@ -15,7 +15,6 @@ import com.ctrip.hermes.consumer.engine.bootstrap.DefaultConsumerBootstrapRegist
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategy;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerLongPollingConsumptionStrategy;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultBrokerConsumptionRegistry;
-import com.ctrip.hermes.consumer.engine.command.processor.ConsumeMessageCommandProcessor;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager;
@@ -27,8 +26,6 @@ import com.ctrip.hermes.consumer.engine.pipeline.DefaultConsumerPipelineSink;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.core.transport.command.CommandType;
-import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 
@@ -43,10 +40,6 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		// engine
 		all.add(A(DefaultEngine.class));
-
-		all.add(C(CommandProcessor.class, CommandType.MESSAGE_CONSUME.toString(), ConsumeMessageCommandProcessor.class) //
-		      .req(ConsumerNotifier.class)//
-		      .req(MessageCodec.class));
 
 		// bootstrap
 		all.add(A(DefaultConsumerBootstrapManager.class));

@@ -13,6 +13,9 @@
 					<role>com.ctrip.hermes.core.pipeline.Pipeline</role>
 					<role-hint>producer</role-hint>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -82,7 +85,7 @@
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.producer.monitor.SendMessageAcceptedMonitor</role>
+					<role>com.ctrip.hermes.producer.monitor.SendMessageAcceptanceMonitor</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.producer.monitor.SendMessageResultMonitor</role>
@@ -98,7 +101,7 @@
 			<implementation>com.ctrip.hermes.producer.transport.command.processor.SendMessageAckCommandProcessor</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.producer.monitor.SendMessageAcceptedMonitor</role>
+					<role>com.ctrip.hermes.producer.monitor.SendMessageAcceptanceMonitor</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -122,8 +125,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.producer.monitor.SendMessageAcceptedMonitor</role>
-			<implementation>com.ctrip.hermes.producer.monitor.DefaultSendMessageAcceptedMonitor</implementation>
+			<role>com.ctrip.hermes.producer.monitor.SendMessageAcceptanceMonitor</role>
+			<implementation>com.ctrip.hermes.producer.monitor.DefaultSendMessageAcceptanceMonitor</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.producer.config.ProducerConfig</role>

@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -53,6 +55,7 @@ import com.ctrip.hermes.meta.entity.Topic;
  */
 @Named(type = MessageQueueStorage.class, value = Storage.MYSQL)
 public class MySQLMessageQueueStorage implements MessageQueueStorage {
+	private static final Logger log = LoggerFactory.getLogger(MySQLMessageQueueStorage.class);
 
 	@Inject
 	private MessageCodec m_messageCodec;
@@ -184,8 +187,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				return result;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			// TODO
+			log.error(
+			      String.format("Failed to fetch message(topic=%s, partition=%s, priority=%s).", tpp.getTopic(),
+			            tpp.getPartition(), tpp.isPriority()), e);
 		}
 
 		return null;
@@ -194,37 +198,38 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	@Override
 	public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, Integer>> msgSeqs) {
 		if (CollectionUtil.isNotEmpty(msgSeqs)) {
-			Topic topic = m_metaService.findTopic(tpp.getTopic());
-			String retryPolicyValue = topic.findConsumerGroup(groupId).getRetryPolicy();
-			if (retryPolicyValue == null || "".equals(retryPolicyValue.trim())) {
-				retryPolicyValue = topic.getConsumerRetryPolicy();
-			}
-
-			RetryPolicy retryPolicy = RetryPolicyFactory.create(retryPolicyValue);
-
-			List<Pair<Long, Integer>> toDeadLetter = new ArrayList<>();
-			List<Pair<Long, Integer>> toResend = new ArrayList<>();
-			for (Pair<Long, Integer> pair : msgSeqs) {
-				if (resend) {
-					pair.setValue(pair.getValue() - 1);
-				} else {
-					pair.setValue(retryPolicy.getRetryTimes());
-				}
-
-				if (pair.getValue() <= 0) {
-					toDeadLetter.add(pair);
-				} else {
-					toResend.add(pair);
-				}
-
-			}
-
 			try {
+				Topic topic = m_metaService.findTopic(tpp.getTopic());
+				String retryPolicyValue = topic.findConsumerGroup(groupId).getRetryPolicy();
+				if (retryPolicyValue == null || "".equals(retryPolicyValue.trim())) {
+					retryPolicyValue = topic.getConsumerRetryPolicy();
+				}
+
+				RetryPolicy retryPolicy = RetryPolicyFactory.create(retryPolicyValue);
+
+				List<Pair<Long, Integer>> toDeadLetter = new ArrayList<>();
+				List<Pair<Long, Integer>> toResend = new ArrayList<>();
+				for (Pair<Long, Integer> pair : msgSeqs) {
+					if (resend) {
+						pair.setValue(pair.getValue() - 1);
+					} else {
+						pair.setValue(retryPolicy.getRetryTimes());
+					}
+
+					if (pair.getValue() <= 0) {
+						toDeadLetter.add(pair);
+					} else {
+						toResend.add(pair);
+					}
+
+				}
+
 				copyToDeadLetter(tpp, groupId, toDeadLetter, resend);
 				copyToResend(tpp, groupId, toResend, resend, retryPolicy);
-			} catch (DalException e) {
-				// TODO
-				e.printStackTrace();
+			} catch (Exception e) {
+				log.error(
+				      String.format("Failed to nack messages(topic=%s, partition=%s, priority=%s, groupId=%s).",
+				            tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId), e);
 			}
 		}
 	}
@@ -323,8 +328,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				m_offsetMessageDao.updateByPK(proto, OffsetMessageEntity.UPDATESET_OFFSET);
 			}
 		} catch (DalException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(String.format("Failed to ack messages(topic=%s, partition=%s, priority=%s, groupId=%s).",
+			      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId), e);
 		}
 	}
 
@@ -337,7 +342,6 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 					List<OffsetMessage> offsetMessageRow = m_offsetMessageDao.find(tpp.getTopic(), tpp.getPartition(),
 					      tpp.getPriorityInt(), intGroupId, OffsetMessageEntity.READSET_FULL);
 
-					// TODO ensure offsetMessageRow is inserted by findLastOffset
 					OffsetMessage proto = CollectionUtil.first(offsetMessageRow);
 					m_offsetMessageCache.put(key, proto);
 				}
@@ -355,7 +359,6 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 					List<OffsetResend> offsetResendRow = m_offsetResendDao.top(tpg.getFirst(), tpg.getMiddle(),
 					      tpg.getLast(), OffsetResendEntity.READSET_FULL);
 
-					// TODO ensure offsetResendRow is inserted by findLastResendOffset
 					OffsetResend proto = CollectionUtil.first(offsetResendRow);
 					m_offsetResendCache.put(tpg, proto);
 				}
@@ -439,8 +442,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			}
 			return result;
 		} catch (DalException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(String.format("Failed to fetch resend messages(topic=%s, partition=%s, groupId=%s).",
+			      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId()), e);
 		}
 
 		return null;

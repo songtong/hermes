@@ -5,10 +5,13 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.meta.remote.MetaServerLocator;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -16,6 +19,8 @@ import com.google.common.io.ByteStreams;
 
 @Named(type = MetaLoader.class, value = RemoteMetaLoader.ID)
 public class RemoteMetaLoader implements MetaLoader {
+
+	private static final Logger log = LoggerFactory.getLogger(RemoteMetaLoader.class);
 
 	public static final String ID = "remote-meta-loader";
 
@@ -25,15 +30,20 @@ public class RemoteMetaLoader implements MetaLoader {
 	@Inject
 	private MetaServerLocator m_metaServerLocator;
 
+	@Inject
+	private CoreConfig m_config;
+
 	private Meta m_meta;
 
 	@Override
 	public Meta load() {
 		String ipPort = null;
 		List<String> ipPorts = m_metaServerLocator.getMetaServerList();
-		// TODO
+		if (ipPorts == null || ipPorts.isEmpty()) {
+			throw new RuntimeException("No meta server found.");
+		}
 		ipPort = ipPorts.get(0);
-		System.out.println("Loading meta from server: " + ipPort);
+		log.info("Loading meta from server: {}", ipPort);
 
 		try {
 			String url;
@@ -44,9 +54,8 @@ public class RemoteMetaLoader implements MetaLoader {
 			}
 			URL metaURL = new URL(url);
 			HttpURLConnection connection = (HttpURLConnection) metaURL.openConnection();
-			// TODO
-			connection.setConnectTimeout(2000);
-			connection.setReadTimeout(2000);
+			connection.setConnectTimeout(m_config.getMetaServerConnectTimeout());
+			connection.setReadTimeout(m_config.getMetaServerReadTimeout());
 			connection.setRequestMethod("GET");
 			connection.connect();
 			if (connection.getResponseCode() == 200) {
@@ -57,7 +66,7 @@ public class RemoteMetaLoader implements MetaLoader {
 				return m_meta;
 			}
 		} catch (Exception e) {
-			throw new RuntimeException("Load remote meta failed", e);
+			throw new RuntimeException("Failed to load remote meta", e);
 		}
 		return m_meta;
 	}

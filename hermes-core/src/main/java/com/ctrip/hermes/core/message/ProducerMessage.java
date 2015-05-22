@@ -11,9 +11,9 @@ public class ProducerMessage<T> {
 
 	private boolean m_priority = false;
 
-	private String m_partition;
+	private String m_partitionKey;
 
-	private int m_partitionNo;
+	private int m_partition;
 
 	private int m_msgSeqNo;
 
@@ -40,12 +40,12 @@ public class ProducerMessage<T> {
 		m_msgSeqNo = msgSeqNo;
 	}
 
-	public int getPartitionNo() {
-		return m_partitionNo;
+	public int getPartition() {
+		return m_partition;
 	}
 
-	public void setPartitionNo(int partitionNo) {
-		m_partitionNo = partitionNo;
+	public void setPartition(int partition) {
+		m_partition = partition;
 	}
 
 	public T getBody() {
@@ -78,11 +78,11 @@ public class ProducerMessage<T> {
 	}
 
 	public String getPartitionKey() {
-		return m_partition;
+		return m_partitionKey;
 	}
 
-	public void setPartitionKey(String partition) {
-		m_partition = partition;
+	public void setPartitionKey(String partitionKey) {
+		m_partitionKey = partitionKey;
 	}
 
 	public void setTopic(String topic) {

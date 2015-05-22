@@ -23,7 +23,6 @@ public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 		try {
 			return m_storage.findLastOffset(m_priorityTpp, m_groupIdInt);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			throw new RuntimeException(String.format(
 			      "Load priority message queue offset failed.(topic=%s, partition=%d, groupId=%d)", m_tpg.getTopic(),
 			      m_tpg.getPartition(), m_groupIdInt), e);
@@ -35,7 +34,6 @@ public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 		try {
 			return m_storage.findLastOffset(m_nonPriorityTpp, m_groupIdInt);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			throw new RuntimeException(String.format(
 			      "Load non-priority message queue offset failed.(topic=%s, partition=%d, groupId=%d)", m_tpg.getTopic(),
 			      m_tpg.getPartition(), m_groupIdInt), e);
@@ -47,7 +45,6 @@ public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 		try {
 			return m_storage.findLastResendOffset(m_tpg);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			throw new RuntimeException(String.format(
 			      "Load resend message queue offset failed.(topic=%s, partition=%d, groupId=%d)", m_tpg.getTopic(),
 			      m_tpg.getPartition(), m_groupIdInt), e);
