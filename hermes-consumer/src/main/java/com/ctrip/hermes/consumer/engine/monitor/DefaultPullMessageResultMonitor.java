@@ -63,7 +63,8 @@ public class DefaultPullMessageResultMonitor implements PullMessageResultMonitor
 				} catch (Exception e) {
 					log.warn("Exception occured while calling resultReceived", e);
 				}
-
+			} else {
+				result.release();
 			}
 		}
 	}
