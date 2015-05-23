@@ -65,4 +65,8 @@ public class CoreConfig {
 		return 3600 * 1000L;
 	}
 
+	public int getEndpointChannelMaxIdleTime() {
+		return 60;
+	}
+
 }

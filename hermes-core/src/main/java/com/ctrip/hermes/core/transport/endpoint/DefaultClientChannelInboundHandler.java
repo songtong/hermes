@@ -2,6 +2,8 @@ package com.ctrip.hermes.core.transport.endpoint;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoop;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 
 import java.util.concurrent.TimeUnit;
 
@@ -49,16 +51,28 @@ public class DefaultClientChannelInboundHandler extends AbstractNettyChannelInbo
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		log.warn("Disconnected from broker(addr={})", NettyUtils.parseChannelRemoteAddr(ctx.channel()));
 
-		m_endpointChannel.setChannelFuture(null);
-		final EventLoop loop = ctx.channel().eventLoop();
-		loop.schedule(new Runnable() {
-			@Override
-			public void run() {
-				log.info("Reconnecting to broker({}:{})", m_endpoint.getHost(), m_endpoint.getPort());
-				m_endpointClient.connect(m_endpoint, m_endpointChannel);
-			}
-		}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
+		if (!m_endpointChannel.isClosed()) {
+			m_endpointChannel.setChannelFuture(null);
+			final EventLoop loop = ctx.channel().eventLoop();
+			loop.schedule(new Runnable() {
+				@Override
+				public void run() {
+					log.info("Reconnecting to broker({}:{})", m_endpoint.getHost(), m_endpoint.getPort());
+					m_endpointClient.connect(m_endpoint, m_endpointChannel);
+				}
+			}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
+		}
 		super.channelInactive(ctx);
+	}
+
+	@Override
+	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+		if (evt instanceof IdleStateEvent) {
+			IdleStateEvent e = (IdleStateEvent) evt;
+			if (e.state() == IdleState.ALL_IDLE) {
+				m_endpointClient.removeChannel(m_endpoint, m_endpointChannel);
+			}
+		}
 	}
 
 }
