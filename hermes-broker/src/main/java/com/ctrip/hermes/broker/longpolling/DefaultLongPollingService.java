@@ -112,7 +112,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				Map<Boolean, List<Long>> msgIds = new HashMap<>();
 
 				for (TppConsumerMessageBatch batch : batches) {
-					if (msgIds.containsKey(batch.isPriority())) {
+					if (!msgIds.containsKey(batch.isPriority())) {
 						msgIds.put(batch.isPriority(), new LinkedList<Long>());
 					}
 
