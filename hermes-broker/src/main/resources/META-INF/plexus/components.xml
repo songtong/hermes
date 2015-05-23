@@ -19,6 +19,11 @@
 		<component>
 			<role>com.ctrip.hermes.broker.transport.NettyServer</role>
 			<implementation>com.ctrip.hermes.broker.transport.NettyServer</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.broker.transport.NettyServerConfig</role>

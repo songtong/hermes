@@ -12,6 +12,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.timeout.IdleStateHandler;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -92,6 +93,30 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 		}
 	}
 
+	void removeChannel(Endpoint endpoint, EndpointChannel endpointChannel) {
+		EndpointChannel removedChannel = null;
+		if (Endpoint.BROKER.equals(endpoint.getType()) && m_channels.containsKey(endpoint)) {
+			synchronized (m_channels) {
+				if (m_channels.containsKey(endpoint)) {
+					EndpointChannel tmp = m_channels.get(endpoint);
+					if (tmp == endpointChannel) {
+						if (tmp.isClosed()) {
+							m_channels.remove(endpoint);
+						} else if (!tmp.isFlushing() && !tmp.hasUnflushOps()) {
+							m_channels.remove(endpoint);
+							removedChannel = endpointChannel;
+						}
+					}
+				}
+			}
+		}
+
+		if (removedChannel != null) {
+			log.info("Closing idle connection to broker({}:{})", endpoint.getHost(), endpoint.getPort());
+			removedChannel.close();
+		}
+	}
+
 	private EndpointChannel creatChannel(Endpoint endpoint) {
 		EndpointChannel endpointChannel = new EndpointChannel();
 		connect(endpoint, endpointChannel);
@@ -106,18 +131,24 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
-				if (!future.isSuccess()) {
-					endpointChannel.setChannelFuture(null);
-					final EventLoop loop = future.channel().eventLoop();
-					loop.schedule(new Runnable() {
-						@Override
-						public void run() {
-							log.info("Reconnecting to broker({}:{})", endpoint.getHost(), endpoint.getPort());
-							connect(endpoint, endpointChannel);
-						}
-					}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
+				if (!endpointChannel.isClosed()) {
+					if (!future.isSuccess()) {
+						endpointChannel.setChannelFuture(null);
+						final EventLoop loop = future.channel().eventLoop();
+						loop.schedule(new Runnable() {
+							@Override
+							public void run() {
+								log.info("Reconnecting to broker({}:{})", endpoint.getHost(), endpoint.getPort());
+								connect(endpoint, endpointChannel);
+							}
+						}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
+					} else {
+						endpointChannel.setChannelFuture(future);
+					}
 				} else {
-					endpointChannel.setChannelFuture(future);
+					if (future.isSuccess()) {
+						future.channel().close();
+					}
 				}
 			}
 
@@ -154,6 +185,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 				      new NettyDecoder(), //
 				      new LengthFieldPrepender(4), //
 				      new NettyEncoder(), //
+				      new IdleStateHandler(0, 0, m_config.getEndpointChannelMaxIdleTime()),//
 				      new DefaultClientChannelInboundHandler(m_commandProcessorManager, endpoint, endpointChannel,
 				            DefaultEndpointClient.this, m_config));
 			}
@@ -169,7 +201,9 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 			public void run() {
 				try {
 					for (EndpointChannel endpointChannel : m_channels.values()) {
-						endpointChannel.flush();
+						if (!endpointChannel.isClosed()) {
+							endpointChannel.flush();
+						}
 					}
 
 				} catch (Exception e) {
@@ -183,27 +217,53 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 		private AtomicReference<ChannelFuture> m_channelFuture = new AtomicReference<>(null);
 
-		private BlockingQueue<WriteOp> m_pendingCmds = new LinkedBlockingQueue<>(
-		      m_config.getEndpointChannelSendBufferSize());
+		private BlockingQueue<WriteOp> m_opQueue = new LinkedBlockingQueue<>(m_config.getEndpointChannelSendBufferSize());
 
-		private AtomicReference<WriteOp> m_flushingCmd = new AtomicReference<>(null);
+		private AtomicReference<WriteOp> m_flushingOp = new AtomicReference<>(null);
 
 		private AtomicBoolean m_flushing = new AtomicBoolean(false);
 
+		private AtomicBoolean m_closed = new AtomicBoolean(false);
+
 		public void setChannelFuture(ChannelFuture channelFuture) {
-			m_channelFuture.set(channelFuture);
+			if (!isClosed()) {
+				m_channelFuture.set(channelFuture);
+			}
+		}
+
+		public boolean hasUnflushOps() {
+			return !m_opQueue.isEmpty() || m_flushingOp.get() != null;
+		}
+
+		public boolean isFlushing() {
+			return m_flushing.get();
+		}
+
+		public boolean isClosed() {
+			return m_closed.get();
+		}
+
+		public void close() {
+			if (m_closed.compareAndSet(false, true)) {
+				ChannelFuture channelFuture = m_channelFuture.get();
+				if (channelFuture != null) {
+					channelFuture.channel().close();
+				}
+			}
 		}
 
 		public void flush() {
-			ChannelFuture channelFuture = m_channelFuture.get();
+			if (!isClosed()) {
+				ChannelFuture channelFuture = m_channelFuture.get();
 
-			if (channelFuture != null) {
-				Channel channel = channelFuture.channel();
-				if (channel != null && channel.isActive() && channel.isWritable() && !m_pendingCmds.isEmpty()) {
-					if (m_flushing.compareAndSet(false, true)) {
-						if (m_flushingCmd.compareAndSet(null, m_pendingCmds.peek())) {
-							m_pendingCmds.poll();
-							doFlush(channel, m_flushingCmd.get());
+				if (channelFuture != null) {
+					Channel channel = channelFuture.channel();
+					if (channel != null && channel.isActive() && channel.isWritable() && !m_opQueue.isEmpty()) {
+						if (m_flushing.compareAndSet(false, true)) {
+							if (m_flushingOp.compareAndSet(null, m_opQueue.peek())) {
+								m_opQueue.poll();
+								doFlush(channel, m_flushingOp.get());
+							}
 						}
 					}
 				}
@@ -222,28 +282,30 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 					public void operationComplete(final ChannelFuture future) throws Exception {
 
 						if (future.isSuccess()) {
-							m_flushingCmd.set(null);
+							m_flushingOp.set(null);
 							m_flushing.set(false);
 						} else {
-							future.channel().eventLoop().schedule(new Runnable() {
+							if (!isClosed()) {
+								future.channel().eventLoop().schedule(new Runnable() {
 
-								@Override
-								public void run() {
-									doFlush(future.channel(), op);
-								}
-							}, m_config.getEndpointChannelWriteRetryDealy(), TimeUnit.MILLISECONDS);
+									@Override
+									public void run() {
+										doFlush(future.channel(), op);
+									}
+								}, m_config.getEndpointChannelWriteRetryDealy(), TimeUnit.MILLISECONDS);
+							}
 						}
 
 					}
 				});
 			} else {
-				m_flushingCmd.set(null);
+				m_flushingOp.set(null);
 				m_flushing.set(false);
 			}
 		}
 
 		public void write(Command cmd, long timeout, TimeUnit timeUnit) {
-			if (!m_pendingCmds.offer(new WriteOp(cmd, timeout, timeUnit))) {
+			if (!isClosed() && !m_opQueue.offer(new WriteOp(cmd, timeout, timeUnit))) {
 				ChannelFuture channelFuture = m_channelFuture.get();
 				Channel channel = null;
 				if (channelFuture != null) {

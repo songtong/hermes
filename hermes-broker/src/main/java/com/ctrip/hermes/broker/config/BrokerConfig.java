@@ -65,4 +65,8 @@ public class BrokerConfig {
 	public int getListenPort() {
 		return 4376;
 	}
+
+	public int getClientMaxIdleTime() {
+		return 3600;
+	}
 }
