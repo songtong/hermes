@@ -11,6 +11,8 @@ import kafka.admin.AdminUtils;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.exception.ZkMarshallingError;
 import org.I0Itec.zkclient.serialize.ZkSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -24,6 +26,8 @@ import com.ctrip.hermes.meta.entity.Topic;
 
 @Named
 public class TopicService {
+
+	private static final Logger m_logger = LoggerFactory.getLogger(TopicService.class);
 
 	@Inject(ServerMetaService.ID)
 	private MetaService m_metaService;
@@ -97,6 +101,9 @@ public class TopicService {
 				topicProp.setProperty("retention.bytes", prop.getValue());
 			}
 		}
+
+		m_logger.debug("create topic in kafka, topic {}, partition {}, replication {}, prop {}", topic.getName(),
+		      partition, replication, topicProp);
 		AdminUtils.createTopic(zkClient, topic.getName(), partition, replication, topicProp);
 	}
 
@@ -131,6 +138,8 @@ public class TopicService {
 
 		ZkClient zkClient = new ZkClient(zkConnect);
 		zkClient.setZkSerializer(new ZKStringSerializer());
+
+		m_logger.debug("delete topic in kafka, topic {}", topic.getName());
 		AdminUtils.deleteTopic(zkClient, topic.getName());
 	}
 
@@ -173,6 +182,8 @@ public class TopicService {
 				topicProp.setProperty("retention.bytes", prop.getValue());
 			}
 		}
+
+		m_logger.debug("config topic in kafka, topic {}, prop {}", topic.getName(), topicProp);
 		AdminUtils.changeTopicConfig(zkClient, topic.getName(), topicProp);
 	}
 

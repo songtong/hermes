@@ -10,9 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -39,7 +40,7 @@ import com.ctrip.hermes.meta.transform.BaseVisitor2;
 @Named(type = MetaService.class, value = ServerMetaService.ID)
 public class ServerMetaService implements MetaService, Initializable {
 
-	private static final Logger logger = Logger.getLogger(ServerMetaService.class);
+	private static final Logger logger = LoggerFactory.getLogger(ServerMetaService.class);
 
 	public static final String ID = "server-meta-service";
 
@@ -64,7 +65,7 @@ public class ServerMetaService implements MetaService, Initializable {
 			com.ctrip.hermes.meta.dal.meta.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
 			m_meta = JSON.parseObject(dalMeta.getValue(), Meta.class);
 		} catch (DalException e) {
-			logger.warn(e);
+			logger.warn("get meta failed", e);
 			throw new RuntimeException("Get meta failed.", e);
 		}
 		return m_meta;
@@ -88,7 +89,7 @@ public class ServerMetaService implements MetaService, Initializable {
 			dalMeta.setDataChangeLastTime(new Date(System.currentTimeMillis()));
 			m_metaDao.insert(dalMeta);
 		} catch (DalException e) {
-			logger.warn(e);
+			logger.warn("update meta failed", e);
 			throw new RuntimeException("Update meta failed.", e);
 		}
 		m_meta = meta;
@@ -278,7 +279,7 @@ public class ServerMetaService implements MetaService, Initializable {
 				      try {
 					      refreshMeta();
 				      } catch (RuntimeException e) {
-					      logger.warn(e);
+					      logger.warn("refresh meta failed", e);
 				      }
 			      }
 

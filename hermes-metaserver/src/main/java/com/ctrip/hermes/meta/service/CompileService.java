@@ -22,10 +22,14 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
 @Named
 public class CompileService {
+
+	private static final Logger logger = LoggerFactory.getLogger(CompileService.class);
 
 	private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
@@ -35,6 +39,7 @@ public class CompileService {
 	 * @throws IOException
 	 */
 	public void compile(final Path destDir) throws IOException {
+		logger.debug("compile destDir {}", destDir.getFileName());
 		final List<File> files = new ArrayList<File>();
 		Files.walkFileTree(destDir, new SimpleFileVisitor<Path>() {
 
@@ -57,8 +62,9 @@ public class CompileService {
 		options.add("1.7");
 		compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits).call();
 		for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
-			System.out.format("%s on line %d in %s: %s%n", diagnostic.getKind().toString(), diagnostic.getLineNumber(),
-			      diagnostic.getSource() != null ? diagnostic.getSource().toUri() : "", diagnostic.getMessage(null));
+			logger.warn(String.format("%s on line %d in %s: %s%n", diagnostic.getKind().toString(),
+			      diagnostic.getLineNumber(), diagnostic.getSource() != null ? diagnostic.getSource().toUri() : "",
+			      diagnostic.getMessage(null)));
 		fileManager.close();
 	}
 
@@ -68,7 +74,8 @@ public class CompileService {
 	 * @param jarFile
 	 * @throws IOException
 	 */
-   public void jar(final Path destDir, Path jarFile) throws IOException {
+	public void jar(final Path destDir, Path jarFile) throws IOException {
+		logger.debug("jar destDir {}, jarFile {}", destDir.getFileName(), jarFile.getFileName());
 		Manifest manifest = new Manifest();
 		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 		manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VENDOR, "com.ctrip");
@@ -124,6 +131,7 @@ public class CompileService {
 	 * @throws IOException
 	 */
 	public void delete(final Path destDir) throws IOException {
+		logger.debug("delete path {}", destDir);
 		Files.walkFileTree(destDir, new SimpleFileVisitor<Path>() {
 
 			@Override

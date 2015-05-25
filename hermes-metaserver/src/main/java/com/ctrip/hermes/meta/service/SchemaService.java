@@ -15,8 +15,9 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema.Parser;
 import org.apache.avro.compiler.idl.ParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.log4j.Logger;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.lookup.annotation.Inject;
@@ -34,7 +35,7 @@ import com.ctrip.hermes.meta.pojo.SchemaView;
 @Named
 public class SchemaService {
 
-	private static final Logger logger = Logger.getLogger(SchemaService.class);
+	private static final Logger m_logger = LoggerFactory.getLogger(SchemaService.class);
 
 	private SchemaRegistryClient avroSchemaRegistry;
 
@@ -68,7 +69,7 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public void compileAvro(Schema metaSchema, org.apache.avro.Schema avroSchema) throws IOException, DalException {
-		logger.info(String.format("Compile %s by %s", metaSchema.getName(), avroSchema.getName()));
+		m_logger.info(String.format("Compile %s by %s", metaSchema.getName(), avroSchema.getName()));
 		final Path destDir = Files.createTempDirectory("avroschema");
 		SpecificCompiler compiler = new SpecificCompiler(avroSchema);
 		compiler.compileToDestination(null, destDir.toFile());
@@ -111,7 +112,7 @@ public class SchemaService {
 			Path compileDir = new File(destDir + schema.getNamespace().replace('.', '/')).toPath();
 			m_compileService.compile(compileDir);
 			m_compileService.jar(destDir, jarFile);
-			System.out.println(jarFile);
+			m_logger.info(jarFile.getFileName().toString());
 		}
 
 		byte[] jarContent = Files.readAllBytes(jarFile);
@@ -137,7 +138,7 @@ public class SchemaService {
 	 */
 	public SchemaView createSchema(SchemaView schemaView, Topic topic) throws DalException, IOException,
 	      RestClientException {
-		logger.info(String.format("Create schema for %s", topic.getName()));
+		m_logger.info(String.format("Create schema for %s", topic.getName()));
 		Schema schema = schemaView.toMetaSchema();
 		schema.setCreateTime(new Date(System.currentTimeMillis()));
 		schema.setName(topic.getName() + "-value");
@@ -208,7 +209,7 @@ public class SchemaService {
 				throw new RuntimeException("Could not get the avro codec");
 			}
 			String schemaRegistryUrl = avroCodec.getProperties().get("schema.registry.url").getValue();
-			logger.info("schema.registry.url:" + schemaRegistryUrl);
+			m_logger.info("schema.registry.url:" + schemaRegistryUrl);
 			avroSchemaRegistry = new CachedSchemaRegistryClient(schemaRegistryUrl, 1000);
 		}
 		return avroSchemaRegistry;
