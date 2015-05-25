@@ -9,10 +9,10 @@ import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
-import com.ctrip.hermes.core.message.codec.Magic;
 import com.ctrip.hermes.core.message.codec.MessageCodecHandler;
 import com.ctrip.hermes.core.message.payload.PayloadCodec;
 import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
+import com.ctrip.hermes.core.transport.netty.Magic;
 import com.ctrip.hermes.core.utils.ChecksumUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 

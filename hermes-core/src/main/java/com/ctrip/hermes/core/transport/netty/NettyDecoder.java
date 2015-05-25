@@ -1,24 +1,23 @@
 package com.ctrip.hermes.core.transport.netty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.parser.CommandParser;
 import com.ctrip.hermes.core.transport.command.parser.DefaultCommandParser;
 
-public class NettyDecoder extends LengthFieldBasedFrameDecoder {
+public class NettyDecoder extends HermesLengthFieldBasedFrameDecoder {
 	private static final Logger log = LoggerFactory.getLogger(NettyDecoder.class);
 
 	private CommandParser m_commandParser = new DefaultCommandParser();
 
 	public NettyDecoder() {
-		super(Integer.MAX_VALUE, 0, 4, 0, 4);
+		super(Integer.MAX_VALUE, Magic.length(), 4, 0, 4 + Magic.length());
 	}
 
 	@Override
@@ -26,6 +25,11 @@ public class NettyDecoder extends LengthFieldBasedFrameDecoder {
 		ByteBuf slicedBuffer = buffer.slice(index, length);
 		slicedBuffer.retain();
 		return slicedBuffer;
+	}
+
+	@Override
+	protected void validateMagicNumber(ByteBuf in) {
+		Magic.readAndCheckMagic(in);
 	}
 
 	@Override

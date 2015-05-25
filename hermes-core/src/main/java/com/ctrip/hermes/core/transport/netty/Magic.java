@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.message.codec;
+package com.ctrip.hermes.core.transport.netty;
 
 import io.netty.buffer.ByteBuf;
 
@@ -18,6 +18,10 @@ public class Magic {
 
 	public static void writeMagic(ByteBuf buf) {
 		buf.writeBytes(MAGIC);
+	}
+
+	public static int length() {
+		return MAGIC.length;
 	}
 
 }

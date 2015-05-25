@@ -19,6 +19,7 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler;
 import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
+import com.ctrip.hermes.core.transport.netty.MagicNumberPrepender;
 import com.ctrip.hermes.core.transport.netty.NettyDecoder;
 import com.ctrip.hermes.core.transport.netty.NettyEncoder;
 
@@ -40,10 +41,9 @@ public class NettyServer extends ContainerHolder {
 			      @Override
 			      public void initChannel(SocketChannel ch) throws Exception {
 				      ch.pipeline().addLast(
-				            //
 				            new DefaultNettyChannelOutboundHandler(),//
-				            // TODO set max frame length
 				            new NettyDecoder(), //
+				            new MagicNumberPrepender(), //
 				            new LengthFieldPrepender(4), //
 				            new NettyEncoder(), //
 				            new IdleStateHandler(0, 0, m_config.getClientMaxIdleTime()),//
