@@ -25,5 +25,5 @@ public interface ConsumerMessage<T> {
 	public MessageStatus getStatus();
 
 	public void ack();
-
+	
 }
