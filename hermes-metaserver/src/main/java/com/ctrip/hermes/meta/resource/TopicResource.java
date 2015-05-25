@@ -19,8 +19,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
@@ -42,7 +43,7 @@ import com.ctrip.hermes.meta.service.TopicService;
 @Produces(MediaType.APPLICATION_JSON)
 public class TopicResource {
 
-	private static final Logger logger = Logger.getLogger(TopicResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(TopicResource.class);
 
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
@@ -52,6 +53,7 @@ public class TopicResource {
 
 	@POST
 	public Response createTopic(String content) {
+		logger.debug("create topic, content {}", content);
 		if (StringUtils.isEmpty(content)) {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
@@ -59,7 +61,7 @@ public class TopicResource {
 		try {
 			topicView = JSON.parseObject(content, TopicView.class);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("parse topic failed, content: {}", content);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
@@ -72,7 +74,7 @@ public class TopicResource {
 			topic = topicService.createTopic(topic);
 			topicView = new TopicView(topic);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("create topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.CREATED).entity(topicView).build();
@@ -80,6 +82,7 @@ public class TopicResource {
 
 	@GET
 	public List<TopicView> findTopics(@QueryParam("pattern") String pattern) {
+		logger.debug("find topics, pattern {}", pattern);
 		if (StringUtils.isEmpty(pattern)) {
 			pattern = ".*";
 		}
@@ -107,7 +110,7 @@ public class TopicResource {
 				returnResult.add(topicView);
 			}
 		} catch (DalException | IOException | RestClientException e) {
-			logger.warn(e);
+			logger.warn("find topics failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return returnResult;
@@ -116,6 +119,7 @@ public class TopicResource {
 	@GET
 	@Path("{name}")
 	public TopicView getTopic(@PathParam("name") String name) {
+		logger.debug("get topic {}", name);
 		Topic topic = topicService.getTopic(name);
 		if (topic == null) {
 			throw new RestException("Topic not found: " + name, Status.NOT_FOUND);
@@ -148,6 +152,7 @@ public class TopicResource {
 	@GET
 	@Path("{name}/schemas")
 	public List<SchemaView> getSchemas(@PathParam("name") String name) {
+		logger.debug("get schemas, name: {}", name);
 		List<SchemaView> returnResult = new ArrayList<SchemaView>();
 		TopicView topic = getTopic(name);
 		try {
@@ -157,7 +162,7 @@ public class TopicResource {
 				returnResult.add(schemaView);
 			}
 		} catch (DalException e) {
-			logger.warn(e);
+			logger.warn("get schemas failed, name {}", name);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return returnResult;
@@ -166,6 +171,7 @@ public class TopicResource {
 	@PUT
 	@Path("{name}")
 	public Response updateTopic(@PathParam("name") String name, String content) {
+		logger.debug("update {} content {}", name, content);
 		if (StringUtils.isEmpty(content)) {
 			throw new RestException("HTTP PUT body is empty", Status.BAD_REQUEST);
 		}
@@ -174,7 +180,7 @@ public class TopicResource {
 			topicView = JSON.parseObject(content, TopicView.class);
 			topicView.setName(name);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("parse topic failed, content {}", content);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
@@ -187,7 +193,7 @@ public class TopicResource {
 			topic = topicService.updateTopic(topic);
 			topicView = new TopicView(topic);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("update topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(topicView).build();
@@ -196,10 +202,11 @@ public class TopicResource {
 	@DELETE
 	@Path("{name}")
 	public Response deleteTopic(@PathParam("name") String name) {
+		logger.debug("delete {}", name);
 		try {
 			topicService.deleteTopic(name);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("delete topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -208,6 +215,7 @@ public class TopicResource {
 	@POST
 	@Path("{name}/deploy")
 	public Response deployTopic(@PathParam("name") String name) {
+		logger.debug("deploy {}", name);
 		TopicView topicView = getTopic(name);
 		try {
 			Topic topic = topicView.toMetaTopic();
@@ -215,7 +223,7 @@ public class TopicResource {
 				topicService.createTopicInKafka(topic);
 			}
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("deploy topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -224,6 +232,7 @@ public class TopicResource {
 	@POST
 	@Path("{name}/undeploy")
 	public Response undeployTopic(@PathParam("name") String name) {
+		logger.debug("undeploy {}", name);
 		TopicView topicView = getTopic(name);
 		try {
 			Topic topic = topicView.toMetaTopic();
@@ -231,7 +240,7 @@ public class TopicResource {
 				topicService.deleteTopicInKafka(topic);
 			}
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("undeploy topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -240,6 +249,7 @@ public class TopicResource {
 	@POST
 	@Path("{name}/config")
 	public Response configTopic(@PathParam("name") String name) {
+		logger.debug("config {}", name);
 		TopicView topicView = getTopic(name);
 		try {
 			Topic topic = topicView.toMetaTopic();
@@ -247,7 +257,7 @@ public class TopicResource {
 				topicService.configTopicInKafka(topic);
 			}
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("config topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();

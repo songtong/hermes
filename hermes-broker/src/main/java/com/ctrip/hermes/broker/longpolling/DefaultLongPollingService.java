@@ -1,5 +1,7 @@
 package com.ctrip.hermes.broker.longpolling;
 
+import io.netty.channel.Channel;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,7 +22,6 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 /**
@@ -41,7 +42,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	}
 
 	@Override
-	public void schedulePush(Tpg tpg, long correlationId, int batchSize, EndpointChannel channel, long expireTime,
+	public void schedulePush(Tpg tpg, long correlationId, int batchSize, Channel channel, long expireTime,
 	      Lease brokerLease) {
 		if (log.isDebugEnabled()) {
 			log.debug("Schedule push for client(correlationId={}, topic={}, partition={}, groupId={})", correlationId,
@@ -111,7 +112,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				Map<Boolean, List<Long>> msgIds = new HashMap<>();
 
 				for (TppConsumerMessageBatch batch : batches) {
-					if (msgIds.containsKey(batch.isPriority())) {
+					if (!msgIds.containsKey(batch.isPriority())) {
 						msgIds.put(batch.isPriority(), new LinkedList<Long>());
 					}
 

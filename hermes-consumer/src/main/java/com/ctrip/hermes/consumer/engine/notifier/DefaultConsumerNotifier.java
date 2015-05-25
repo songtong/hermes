@@ -40,8 +40,8 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 	@Override
 	public void register(long correlationId, final ConsumerContext context) {
 		if (log.isDebugEnabled()) {
-			log.debug("Registered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId,
-			      context.getTopic(), context.getGroupId(), context.getSessionId());
+			log.debug("Registered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId, context
+			      .getTopic().getName(), context.getGroupId(), context.getSessionId());
 		}
 
 		m_consumerContexs.putIfAbsent(
@@ -57,8 +57,8 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 		Pair<ConsumerContext, ExecutorService> pair = m_consumerContexs.remove(correlationId);
 		ConsumerContext context = pair.getKey();
 		if (log.isDebugEnabled()) {
-			log.debug("Deregistered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId,
-			      context.getTopic(), context.getGroupId(), context.getSessionId());
+			log.debug("Deregistered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId, context
+			      .getTopic().getName(), context.getGroupId(), context.getSessionId());
 		}
 		pair.getValue().shutdown();
 		return;
@@ -89,7 +89,8 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 					log.error(
 					      String.format(
 					            "Exception occured while calling messageReceived(correlationId=%s, topic=%s, groupId=%s, sessionId=%s)",
-					            correlationId, context.getTopic(), context.getGroupId(), context.getSessionId()), e);
+					            correlationId, context.getTopic().getName(), context.getGroupId(), context.getSessionId()),
+					      e);
 				}
 			}
 		});

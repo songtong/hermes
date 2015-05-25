@@ -67,7 +67,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 		m_scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
 		      "AckManagerWorker", false));
-		m_scheduledExecutorService.scheduleAtFixedRate(new AckTask(), 0, m_config.getAckManagerCheckInterval(),
+		m_scheduledExecutorService.scheduleWithFixedDelay(new AckTask(), 0, m_config.getAckManagerCheckInterval(),
 		      TimeUnit.MILLISECONDS);
 
 	}

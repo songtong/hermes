@@ -133,7 +133,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		SendMessageAckCommand ack = new SendMessageAckCommand();
 		ack.correlate(req);
 		ack.setSuccess(success);
-		ctx.getChannel().writeCommand(ack);
+		ctx.getChannel().writeAndFlush(ack);
 	}
 
 }

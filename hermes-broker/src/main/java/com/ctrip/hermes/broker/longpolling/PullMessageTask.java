@@ -1,8 +1,9 @@
 package com.ctrip.hermes.broker.longpolling;
 
+import io.netty.channel.Channel;
+
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
 
 class PullMessageTask {
 	private Tpg m_tpg;
@@ -11,13 +12,13 @@ class PullMessageTask {
 
 	private int m_batchSize;
 
-	private EndpointChannel m_channel;
+	private Channel m_channel;
 
 	private long m_expireTime;
 
 	private Lease m_brokerLease;
 
-	public PullMessageTask(Tpg tpg, long correlationId, int batchSize, EndpointChannel channel, long expireTime,
+	public PullMessageTask(Tpg tpg, long correlationId, int batchSize, Channel channel, long expireTime,
 	      Lease brokerLease) {
 		m_tpg = tpg;
 		m_correlationId = correlationId;
@@ -43,7 +44,7 @@ class PullMessageTask {
 		return m_batchSize;
 	}
 
-	public EndpointChannel getChannel() {
+	public Channel getChannel() {
 		return m_channel;
 	}
 

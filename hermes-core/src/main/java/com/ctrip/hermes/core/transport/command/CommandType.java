@@ -13,8 +13,8 @@ public enum CommandType {
 	MESSAGE_PULL(103, PullMessageCommand.class), //
 
 	ACK_MESSAGE_SEND(201, SendMessageAckCommand.class), //
-	ACK_MESSAGE_PULL(202, PullMessageAckCommand.class), //
 
+	RESULT_MESSAGE_PULL(302, PullMessageResultCommand.class), //
 	RESULT_MESSAGE_SEND(301, SendMessageResultCommand.class), //
 	;
 

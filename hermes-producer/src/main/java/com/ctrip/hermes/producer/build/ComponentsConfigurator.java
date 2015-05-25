@@ -11,7 +11,7 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
-import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
+import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.DefaultProducer;
@@ -57,12 +57,12 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		// message sender
 		all.add(C(MessageSender.class, Endpoint.BROKER, BrokerMessageSender.class)//
 		      .req(EndpointManager.class)//
-		      .req(ClientEndpointChannelManager.class)//
 		      .req(PartitioningStrategy.class)//
 		      .req(MetaService.class)//
 		      .req(SendMessageAcceptanceMonitor.class)//
 		      .req(SendMessageResultMonitor.class)//
 		      .req(ProducerConfig.class)//
+		      .req(EndpointClient.class)//
 		);
 
 		// command processors

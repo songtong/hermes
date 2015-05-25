@@ -18,15 +18,20 @@ import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultBrokerConsumpt
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager;
+import com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.notifier.DefaultConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.pipeline.ConsumerPipeline;
 import com.ctrip.hermes.consumer.engine.pipeline.ConsumerValveRegistry;
 import com.ctrip.hermes.consumer.engine.pipeline.DefaultConsumerPipelineSink;
+import com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageResultCommandProcessor;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.core.transport.endpoint.ClientEndpointChannelManager;
+import com.ctrip.hermes.core.transport.command.CommandType;
+import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
+import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
@@ -52,13 +57,20 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      BrokerLongPollingConsumptionStrategy.class)//
 		      .req(ConsumerNotifier.class)//
 		      .req(EndpointManager.class)//
-		      .req(ClientEndpointChannelManager.class)//
+		      .req(EndpointClient.class)//
 		      .req(LeaseManager.class, BuildConstants.CONSUMER)//
 		      .req(ConsumerConfig.class)//
 		      .req(SystemClockService.class)//
-		      .req(MessageCodec.class));
+		      .req(MessageCodec.class)//
+		      .req(PullMessageResultMonitor.class));
 
 		all.add(A(DefaultConsumerPipelineSink.class));
+
+		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL.toString(),
+		      PullMessageResultCommandProcessor.class)//
+		      .req(PullMessageResultMonitor.class));
+
+		all.add(A(DefaultPullMessageResultMonitor.class));
 
 		// notifier
 		all.add(A(DefaultConsumerNotifier.class));

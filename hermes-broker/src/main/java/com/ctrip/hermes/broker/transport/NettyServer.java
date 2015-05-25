@@ -9,17 +9,25 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.timeout.IdleStateHandler;
 
 import org.unidal.lookup.ContainerHolder;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.transport.codec.NettyDecoder;
-import com.ctrip.hermes.core.transport.codec.NettyEncoder;
+import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
-import com.ctrip.hermes.core.transport.endpoint.NettyServerEndpointChannel;
+import com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler;
+import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
+import com.ctrip.hermes.core.transport.netty.MagicNumberPrepender;
+import com.ctrip.hermes.core.transport.netty.NettyDecoder;
+import com.ctrip.hermes.core.transport.netty.NettyEncoder;
 
 @Named(type = NettyServer.class)
 public class NettyServer extends ContainerHolder {
+
+	@Inject
+	private BrokerConfig m_config;
 
 	private EventLoopGroup m_bossGroup = new NioEventLoopGroup();
 
@@ -32,12 +40,15 @@ public class NettyServer extends ContainerHolder {
 		      .childHandler(new ChannelInitializer<SocketChannel>() {
 			      @Override
 			      public void initChannel(SocketChannel ch) throws Exception {
-				      ch.pipeline().addLast( //
-				            // TODO set max frame length
+				      ch.pipeline().addLast(
+				            new DefaultNettyChannelOutboundHandler(),//
 				            new NettyDecoder(), //
+				            new MagicNumberPrepender(), //
 				            new LengthFieldPrepender(4), //
 				            new NettyEncoder(), //
-				            new NettyServerEndpointChannel(lookup(CommandProcessorManager.class)));
+				            new IdleStateHandler(0, 0, m_config.getClientMaxIdleTime()),//
+				            new DefaultServerChannelInboundHandler(lookup(CommandProcessorManager.class), m_config
+				                  .getClientMaxIdleTime()));
 			      }
 		      }).option(ChannelOption.SO_BACKLOG, 128) // TODO set tcp options
 		      .childOption(ChannelOption.SO_KEEPALIVE, true);

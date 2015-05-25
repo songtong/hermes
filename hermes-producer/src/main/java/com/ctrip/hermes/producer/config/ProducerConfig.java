@@ -22,7 +22,7 @@ public class ProducerConfig {
 	}
 
 	public long getBrokerSenderSendTimeout() {
-		return 50;
+		return 200;
 	}
 
 	public int getBrokerSenderTopicPartitionTaskQueueSize() {

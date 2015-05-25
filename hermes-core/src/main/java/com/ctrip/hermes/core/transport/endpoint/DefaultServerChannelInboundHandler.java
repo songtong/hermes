@@ -1,0 +1,52 @@
+package com.ctrip.hermes.core.transport.endpoint;
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
+import com.ctrip.hermes.core.transport.netty.AbstractNettyChannelInboundHandler;
+import com.ctrip.hermes.core.transport.netty.NettyUtils;
+
+/**
+ * @author Leo Liang(jhliang@ctrip.com)
+ *
+ */
+public class DefaultServerChannelInboundHandler extends AbstractNettyChannelInboundHandler {
+	private static final Logger log = LoggerFactory.getLogger(DefaultServerChannelInboundHandler.class);
+
+	private int m_maxIdleTime;
+
+	public DefaultServerChannelInboundHandler(CommandProcessorManager cmdProcessorManager, int maxIdleTime) {
+		super(cmdProcessorManager);
+		m_maxIdleTime = maxIdleTime;
+	}
+
+	@Override
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		log.info("Client connected(addr={})", NettyUtils.parseChannelRemoteAddr(ctx.channel()));
+		super.channelActive(ctx);
+	}
+
+	@Override
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		log.warn("Client disconnected(addr={})", NettyUtils.parseChannelRemoteAddr(ctx.channel()));
+		super.channelInactive(ctx);
+	}
+
+	@Override
+	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+		if (evt instanceof IdleStateEvent) {
+			IdleStateEvent evnet = (IdleStateEvent) evt;
+			if (evnet.state().equals(IdleState.ALL_IDLE)) {
+				log.warn("Client idle for {} seconds, will remove it automatically(client addr={})", m_maxIdleTime,
+				      NettyUtils.parseChannelRemoteAddr(ctx.channel()));
+				ctx.channel().close();
+			}
+		}
+		super.userEventTriggered(ctx, evt);
+	}
+}

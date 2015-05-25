@@ -9,7 +9,7 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.core.transport.command.PullMessageAckCommand;
+import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -29,12 +29,12 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 	protected SystemClockService m_systemClockService;
 
 	protected void response(PullMessageTask pullTask, List<TppConsumerMessageBatch> batches) {
-		PullMessageAckCommand cmd = new PullMessageAckCommand();
+		PullMessageResultCommand cmd = new PullMessageResultCommand();
 		if (batches != null) {
 			cmd.addBatches(batches);
 		}
 		cmd.getHeader().setCorrelationId(pullTask.getCorrelationId());
 
-		pullTask.getChannel().writeCommand(cmd);
+		pullTask.getChannel().writeAndFlush(cmd);
 	}
 }

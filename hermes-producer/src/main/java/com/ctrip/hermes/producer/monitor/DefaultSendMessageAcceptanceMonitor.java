@@ -1,7 +1,7 @@
 package com.ctrip.hermes.producer.monitor;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,7 +19,7 @@ import com.google.common.util.concurrent.AbstractFuture;
 public class DefaultSendMessageAcceptanceMonitor implements SendMessageAcceptanceMonitor {
 	private static final Logger log = LoggerFactory.getLogger(DefaultSendMessageAcceptanceMonitor.class);
 
-	private Map<Long, CancelableFuture> m_futures = new HashMap<>();
+	private Map<Long, CancelableFuture> m_futures = new ConcurrentHashMap<>();
 
 	private ReentrantLock m_lock = new ReentrantLock();
 

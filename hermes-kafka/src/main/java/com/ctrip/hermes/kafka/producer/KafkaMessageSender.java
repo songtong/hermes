@@ -15,6 +15,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
@@ -35,6 +37,8 @@ import com.ctrip.hermes.producer.sender.MessageSender;
 @Named(type = MessageSender.class, value = Endpoint.KAFKA)
 public class KafkaMessageSender implements MessageSender {
 
+	private static final Logger m_logger = LoggerFactory.getLogger(KafkaMessageSender.class);
+
 	private Map<String, KafkaProducer<String, byte[]>> m_producers = new HashMap<>();;
 
 	@Inject
@@ -53,7 +57,7 @@ public class KafkaMessageSender implements MessageSender {
 			Properties envProperties = m_environment.getProducerConfig(topic);
 			configs.putAll(envProperties);
 		} catch (IOException e) {
-			e.printStackTrace();
+			m_logger.warn("read producer config failed", e);
 		}
 
 		List<Partition> partitions = m_metaService.getPartitions(topic);

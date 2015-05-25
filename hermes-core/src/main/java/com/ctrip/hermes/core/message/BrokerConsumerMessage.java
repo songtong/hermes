@@ -1,10 +1,11 @@
 package com.ctrip.hermes.core.message;
 
+import io.netty.channel.Channel;
+
 import java.util.Iterator;
 
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.transport.command.AckMessageCommand;
-import com.ctrip.hermes.core.transport.endpoint.EndpointChannel;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -26,7 +27,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 
 	private long m_correlationId;
 
-	private EndpointChannel m_channel;
+	private Channel m_channel;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public BrokerConsumerMessage(BaseConsumerMessage baseMsg) {
@@ -49,7 +50,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 		m_correlationId = correlationId;
 	}
 
-	public void setChannel(EndpointChannel channel) {
+	public void setChannel(Channel channel) {
 		m_channel = channel;
 	}
 
@@ -84,7 +85,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			Tpp tpp = new Tpp(getTopic(), getPartition(), m_priority);
 			cmd.addNackMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries());
-			m_channel.writeCommand(cmd);
+			m_channel.writeAndFlush(cmd);
 		}
 	}
 
@@ -125,7 +126,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			Tpp tpp = new Tpp(getTopic(), getPartition(), m_priority);
 			cmd.addAckMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries());
-			m_channel.writeCommand(cmd);
+			m_channel.writeAndFlush(cmd);
 		}
 	}
 
@@ -147,7 +148,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	}
 
 	@Override
-   public PropertiesHolder getPropertiesHolder() {
-	   return m_baseMsg.getPropertiesHolder();
-   }
+	public PropertiesHolder getPropertiesHolder() {
+		return m_baseMsg.getPropertiesHolder();
+	}
 }

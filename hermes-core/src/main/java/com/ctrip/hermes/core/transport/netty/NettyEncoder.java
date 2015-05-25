@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.transport.codec;
+package com.ctrip.hermes.core.transport.netty;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
