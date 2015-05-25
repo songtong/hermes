@@ -21,7 +21,7 @@ public class TracingMessageValve implements Valve {
 		ProducerMessage<?> msg = (ProducerMessage<?>) payload;
 		String topic = msg.getTopic();
 
-		Transaction t = Cat.newTransaction("Message.Produced", topic);
+		Transaction t = Cat.newTransaction("Message.Produce.Tried", topic);
 		t.addData("key", msg.getKey());
 
 		MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
