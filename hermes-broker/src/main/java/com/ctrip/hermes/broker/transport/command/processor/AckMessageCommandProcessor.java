@@ -12,6 +12,7 @@ import org.unidal.tuple.Triple;
 import com.ctrip.hermes.broker.ack.AckManager;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.transport.command.AckMessageCommand;
+import com.ctrip.hermes.core.transport.command.AckMessageCommand.AckContext;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
@@ -35,29 +36,29 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 	public void process(CommandProcessorContext ctx) {
 		AckMessageCommand cmd = (AckMessageCommand) ctx.getCommand();
 
-		for (Map.Entry<Triple<Tpp, String, Boolean>, Map<Long, Integer>> entry : cmd.getAckMsgs().entrySet()) {
+		for (Map.Entry<Triple<Tpp, String, Boolean>, List<AckContext>> entry : cmd.getAckMsgs().entrySet()) {
 			Tpp tpp = entry.getKey().getFirst();
 			String groupId = entry.getKey().getMiddle();
 			boolean isResend = entry.getKey().getLast();
-			Map<Long, Integer> msgSeqs = entry.getValue();
-			m_ackManager.acked(tpp, groupId, isResend, msgSeqs);
+			List<AckContext> ackContexts = entry.getValue();
+			m_ackManager.acked(tpp, groupId, isResend, ackContexts);
 
 			if (log.isDebugEnabled()) {
-				log.debug("Client acked(topic={}, partition={}, pirority={}, groupId={}, isResend={}, msgIds={})",
-				      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, msgSeqs.keySet());
+				log.debug("Client acked(topic={}, partition={}, pirority={}, groupId={}, isResend={}, contexts={})",
+				      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, ackContexts);
 			}
 		}
 
-		for (Map.Entry<Triple<Tpp, String, Boolean>, Map<Long, Integer>> entry : cmd.getNackMsgs().entrySet()) {
+		for (Map.Entry<Triple<Tpp, String, Boolean>, List<AckContext>> entry : cmd.getNackMsgs().entrySet()) {
 			Tpp tpp = entry.getKey().getFirst();
 			String groupId = entry.getKey().getMiddle();
 			boolean isResend = entry.getKey().getLast();
-			Map<Long, Integer> msgSeqs = entry.getValue();
-			m_ackManager.nacked(tpp, groupId, isResend, msgSeqs);
+			List<AckContext> nackContexts = entry.getValue();
+			m_ackManager.nacked(tpp, groupId, isResend, nackContexts);
 
 			if (log.isDebugEnabled()) {
-				log.debug("Client nacked(topic={}, partition={}, pirority={}, groupId={}, isResend={}, msgIds={})",
-				      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, msgSeqs.keySet());
+				log.debug("Client nacked(topic={}, partition={}, pirority={}, groupId={}, isResend={}, contexts={})",
+				      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, nackContexts);
 			}
 		}
 	}

@@ -15,9 +15,12 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
+import com.ctrip.hermes.core.message.BaseConsumerMessage;
+import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 /**
@@ -36,6 +39,9 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 	@Inject
 	private ConsumerConfig m_config;
+
+	@Inject
+	private SystemClockService m_systemClockService;
 
 	@Override
 	public void register(long correlationId, final ConsumerContext context) {
@@ -81,6 +87,11 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 							BrokerConsumerMessage bmsg = (BrokerConsumerMessage) msg;
 							bmsg.setCorrelationId(correlationId);
 							bmsg.setGroupId(context.getGroupId());
+						}
+
+						if (msg instanceof BaseConsumerMessageAware) {
+							((BaseConsumerMessageAware) msg).getBaseConsumerMessage().setOnMessageTimeMills(
+							      m_systemClockService.now());
 						}
 					}
 

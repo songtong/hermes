@@ -31,6 +31,7 @@ import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.core.transport.command.AckMessageCommand.AckContext;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 /**
@@ -87,20 +88,20 @@ public class DefaultAckManager implements AckManager, Initializable {
 	}
 
 	@Override
-	public void acked(Tpp tpp, String groupId, boolean resend, Map<Long, Integer> msgSeqsAndRemainingRetries) {
+	public void acked(Tpp tpp, String groupId, boolean resend, List<AckContext> ackContexts) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		ensureMapEntryExist(key);
-		for (Long msgSeq : msgSeqsAndRemainingRetries.keySet()) {
-			m_opQueue.offer(new Operation(key, Type.ACK, msgSeq, m_systemClockService.now()));
+		for (AckContext context : ackContexts) {
+			m_opQueue.offer(new Operation(key, Type.ACK, context.getMsgSeq(), m_systemClockService.now()));
 		}
 	}
 
 	@Override
-	public void nacked(Tpp tpp, String groupId, boolean resend, Map<Long, Integer> msgSeqsAndRemainingRetries) {
+	public void nacked(Tpp tpp, String groupId, boolean resend, List<AckContext> nackContexts) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		ensureMapEntryExist(key);
-		for (Long msgSeq : msgSeqsAndRemainingRetries.keySet()) {
-			m_opQueue.offer(new Operation(key, Type.NACK, msgSeq, m_systemClockService.now()));
+		for (AckContext context : nackContexts) {
+			m_opQueue.offer(new Operation(key, Type.NACK, context.getMsgSeq(), m_systemClockService.now()));
 		}
 	}
 

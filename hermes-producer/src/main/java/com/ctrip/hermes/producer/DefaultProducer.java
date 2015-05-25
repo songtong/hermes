@@ -42,6 +42,11 @@ public class DefaultProducer extends Producer {
 
 		@Override
 		public MessageHolder withRefKey(String key) {
+			if (key != null && key.length() > 90) {
+				throw new IllegalArgumentException(String.format("RefKey's length must not larger than 90 characters(refKey=%s)",
+				      key));
+			}
+
 			m_msg.setKey(key);
 			return this;
 		}

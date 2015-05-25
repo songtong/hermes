@@ -127,6 +127,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.consumer.engine.config.ConsumerConfig</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
