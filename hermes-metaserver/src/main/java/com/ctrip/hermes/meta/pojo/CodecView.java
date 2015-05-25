@@ -1,5 +1,6 @@
 package com.ctrip.hermes.meta.pojo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.ctrip.hermes.meta.entity.Codec;
@@ -16,6 +17,10 @@ public class CodecView {
 
 	public CodecView(Codec codec) {
 		this.type = codec.getType();
+		properties = new ArrayList<Property>();
+		for (Property property : codec.getProperties().values()) {
+			properties.add(property);
+		}
 	}
 
 	public List<Property> getProperties() {
@@ -37,6 +42,12 @@ public class CodecView {
 	public Codec toMetaCodec() {
 		Codec codec = new Codec();
 		codec.setType(this.type);
+		if (this.properties != null) {
+			for (Property prop : this.properties) {
+				if (prop != null)
+					codec.addProperty(prop);
+			}
+		}
 		return codec;
 	}
 

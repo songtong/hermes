@@ -29,6 +29,10 @@
 			<artifactId>hermes-metaserver</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-kafka</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>info.cukes</groupId>
 			<artifactId>cucumber-java</artifactId>
 		</dependency>
