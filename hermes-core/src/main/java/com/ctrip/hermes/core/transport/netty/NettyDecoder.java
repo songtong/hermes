@@ -45,8 +45,10 @@ public class NettyDecoder extends HermesLengthFieldBasedFrameDecoder {
 			cmd = m_commandParser.parse(frame);
 			return cmd;
 		} catch (Exception e) {
-			log.error("Exception occured while decoding in netty", e);
-			// TODO close channel
+			log.error(
+			      String.format("Exception occured while decoding in netty(client addr=%s)",
+			            NettyUtils.parseChannelRemoteAddr(ctx.channel())), e);
+			ctx.channel().close();
 		} finally {
 			if (null != frame) {
 				if (cmd != null && !cmd.getClass().isAnnotationPresent(ManualRelease.class)) {
