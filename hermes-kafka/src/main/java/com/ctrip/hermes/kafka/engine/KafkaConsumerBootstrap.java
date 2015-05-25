@@ -17,7 +17,8 @@ import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -41,7 +42,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 @Named(type = ConsumerBootstrap.class, value = Endpoint.KAFKA)
 public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
-	private static final Logger m_logger = Logger.getLogger(KafkaConsumerBootstrap.class);
+	private static final Logger m_logger = LoggerFactory.getLogger(KafkaConsumerBootstrap.class);
 
 	private ExecutorService m_executor = Executors.newCachedThreadPool();
 
@@ -123,10 +124,10 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 					msgs.add(kafkaMsg);
 					m_consumerNotifier.messageReceived(correlationId, msgs);
 				} catch (Exception e) {
-					m_logger.warn(String.format(
-					      "Kafka consumer failed Topic:{0} Partition:{1} Offset:{2} Group:{3} SesssionId:{4}",
+					m_logger.warn(
+					      "Kafka consumer failed Topic:{} Partition:{} Offset:{} Group:{} SesssionId:{} Exception:{}",
 					      msgAndMetadata.topic(), msgAndMetadata.partition(), msgAndMetadata.offset(),
-					      consumerContext.getGroupId(), consumerContext.getSessionId()), e);
+					      consumerContext.getGroupId(), consumerContext.getSessionId(), e.getMessage());
 				}
 			}
 		}
@@ -139,7 +140,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			Properties envProperties = m_environment.getConsumerConfig(topic);
 			configs.putAll(envProperties);
 		} catch (IOException e) {
-			e.printStackTrace();
+			m_logger.warn("kafka read consumer config failed", e);
 		}
 
 		List<Partition> partitions = m_metaService.getPartitions(topic);

@@ -7,14 +7,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.ConsumerTimeoutException;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import kafka.utils.ZkUtils;
-
-import org.apache.log4j.Logger;
 
 public class KafkaConsumerPerf {
 
@@ -87,7 +88,7 @@ public class KafkaConsumerPerf {
 		}
 	}
 
-	private static Logger logger = Logger.getLogger(KafkaConsumerPerf.class);
+	private static Logger logger = LoggerFactory.getLogger(KafkaConsumerPerf.class);
 
 	public static void main(String[] args) throws InterruptedException {
 		ConsumerPerfConfig config = new ConsumerPerfConfig(args);

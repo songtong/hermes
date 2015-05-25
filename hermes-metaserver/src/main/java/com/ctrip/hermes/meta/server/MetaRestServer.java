@@ -15,11 +15,12 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.log4j.Logger;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -33,7 +34,7 @@ public class MetaRestServer {
 
 	public static final String META_PORT = "meta-port";
 
-	private static final Logger logger = Logger.getLogger(MetaRestServer.class);
+	private static final Logger logger = LoggerFactory.getLogger(MetaRestServer.class);
 
 	private HttpServer m_server;
 
@@ -106,7 +107,7 @@ public class MetaRestServer {
 			m_server.start();
 			showPaths(rc, baseURI);
 		} catch (IOException e) {
-			logger.error(e);
+			logger.error("start MetaRestServer failed", e);
 		}
 		logger.info("Base URI: " + baseURI);
 	}

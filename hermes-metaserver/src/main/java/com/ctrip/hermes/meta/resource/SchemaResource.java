@@ -19,10 +19,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
@@ -41,7 +42,7 @@ import com.google.common.io.ByteStreams;
 @Produces(MediaType.APPLICATION_JSON)
 public class SchemaResource {
 
-	private static final Logger logger = Logger.getLogger(SchemaResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(SchemaResource.class);
 
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
 
@@ -62,6 +63,7 @@ public class SchemaResource {
 	public Response createSchema(@FormDataParam("file") InputStream fileInputStream,
 	      @FormDataParam("file") FormDataContentDisposition fileHeader, @FormDataParam("schema") String content,
 	      @FormDataParam("topicId") long topicId) {
+		logger.debug("create schema, topicId {}, content {}, fileHeader {}", topicId, content, fileHeader);
 		if (StringUtils.isEmpty(content)) {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
@@ -69,7 +71,7 @@ public class SchemaResource {
 		try {
 			schemaView = JSON.parseObject(content, SchemaView.class);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("parse schema failed, content {}", content);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
@@ -83,7 +85,7 @@ public class SchemaResource {
 			try {
 				fileContent = ByteStreams.toByteArray(fileInputStream);
 			} catch (IOException e) {
-				logger.warn(e);
+				logger.warn("Read file input stream failed", e);
 				throw new RestException(e, Status.BAD_REQUEST);
 			}
 		} else {
@@ -99,7 +101,7 @@ public class SchemaResource {
 			schemaView = schemaService.createSchema(schemaView, topic);
 			schemaView = schemaService.updateSchemaFile(schemaView, fileContent, fileHeader);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("Create schema failed", e);
 			if (schemaView.getId() != null) {
 				try {
 					schemaService.deleteSchema(schemaView.getId());
@@ -120,12 +122,13 @@ public class SchemaResource {
 	@DELETE
 	@Path("{id}")
 	public Response deleteSchema(@PathParam("id") long schemaId) {
+		logger.debug("delete schema {}", schemaId);
 		try {
 			schemaService.deleteSchema(schemaId);
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (DalException e) {
-			logger.warn(e);
+			logger.warn("Delete schema failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -140,13 +143,14 @@ public class SchemaResource {
 	@Path("{id}/schema")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response downloadSchema(@PathParam("id") long schemaId) {
+		logger.debug("download schema {}", schemaId);
 		Schema schema = null;
 		try {
 			schema = schemaService.getSchemaMeta(schemaId);
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("Download schema failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 
@@ -168,13 +172,14 @@ public class SchemaResource {
 	@Path("{id}/jar")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response downloadJar(@PathParam("id") long schemaId) {
+		logger.debug("download jar {}", schemaId);
 		Schema schema = null;
 		try {
 			schema = schemaService.getSchemaMeta(schemaId);
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("Download jar failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 
@@ -195,13 +200,14 @@ public class SchemaResource {
 	@GET
 	@Path("{id}")
 	public SchemaView getSchema(@PathParam("id") long schemaId) {
+		logger.debug("get schema {}", schemaId);
 		SchemaView schema = null;
 		try {
 			schema = schemaService.getSchemaView(schemaId);
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("get schema failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return schema;
@@ -222,7 +228,7 @@ public class SchemaResource {
 				returnResult.add(schemaView);
 			}
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("list latest schema failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return returnResult;
@@ -233,13 +239,14 @@ public class SchemaResource {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response compatibility(@PathParam("id") Long schemaId, @FormDataParam("file") InputStream fileInputStream,
 	      @FormDataParam("file") FormDataContentDisposition fileHeader) {
+		logger.debug("test compatilibity schemaId {} fileHeader {}", schemaId, fileHeader);
 		Schema schema = null;
 		try {
 			schema = schemaService.getSchemaMeta(schemaId);
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("get schema failed, schemaId {}", schemaId);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 
@@ -248,7 +255,7 @@ public class SchemaResource {
 			byte[] fileContent = ByteStreams.toByteArray(fileInputStream);
 			result = schemaService.verifyCompatible(schema, fileContent);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("Read input stream failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		Map<String, Object> entity = new HashMap<>();
@@ -259,13 +266,14 @@ public class SchemaResource {
 	@GET
 	@Path("{id}/compatibility")
 	public Response getCompatibility(@PathParam("id") Long schemaId) {
+		logger.debug("get compatibility {}", schemaId);
 		Schema schema = null;
 		try {
 			schema = schemaService.getSchemaMeta(schemaId);
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("get schema failed, schemaId {}", schemaId);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 
@@ -273,7 +281,7 @@ public class SchemaResource {
 		try {
 			result = schemaService.getCompatible(schema);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("get compatible failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(result).build();

@@ -12,9 +12,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.log4j.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Named;
 
@@ -43,7 +44,7 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	private Properties m_globalDefault;
 
-	private static final Logger logger = Logger.getLogger(DefaultClientEnvironment.class);
+	private static final Logger logger = LoggerFactory.getLogger(DefaultClientEnvironment.class);
 
 	private AtomicReference<Env> m_env = new AtomicReference<>();
 
@@ -80,13 +81,13 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	private Properties readConfigFile(String configPath, Properties defaults) throws IOException {
 		InputStream in = this.getClass().getResourceAsStream(configPath);
-		logger.info("Reading config from resource: " + configPath);
+		logger.info("Reading config from resource {}", configPath);
 		if (in == null) {
 			// load outside resource under current user path
 			Path path = new File(System.getProperty("user.dir") + configPath).toPath();
 			if (Files.isReadable(path)) {
 				in = new FileInputStream(path.toFile());
-				logger.info("Reading config from file: " + path);
+				logger.info("Reading config from file {} ", path);
 			}
 		}
 		Properties props = new Properties();

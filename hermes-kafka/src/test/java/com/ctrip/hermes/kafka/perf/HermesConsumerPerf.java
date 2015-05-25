@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
@@ -141,5 +142,5 @@ public class HermesConsumerPerf {
 		System.exit(0);
 	}
 
-	private static Logger logger = Logger.getLogger(HermesConsumerPerf.class);
+	private static Logger logger = LoggerFactory.getLogger(HermesConsumerPerf.class);
 }
