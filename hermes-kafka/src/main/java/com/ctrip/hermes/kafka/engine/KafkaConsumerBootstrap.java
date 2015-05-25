@@ -17,8 +17,7 @@ import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 
-import org.codehaus.plexus.logging.LogEnabled;
-import org.codehaus.plexus.logging.Logger;
+import org.apache.log4j.Logger;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -40,9 +39,9 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 
 @Named(type = ConsumerBootstrap.class, value = Endpoint.KAFKA)
-public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements LogEnabled {
+public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
-	private Logger m_logger;
+	private static final Logger m_logger = Logger.getLogger(KafkaConsumerBootstrap.class);
 
 	private ExecutorService m_executor = Executors.newCachedThreadPool();
 
@@ -124,7 +123,10 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Log
 					msgs.add(kafkaMsg);
 					m_consumerNotifier.messageReceived(correlationId, msgs);
 				} catch (Exception e) {
-					m_logger.warn("", e);
+					m_logger.warn(String.format(
+					      "Kafka consumer failed Topic:{0} Partition:{1} Offset:{2} Group:{3} SesssionId:{4}",
+					      msgAndMetadata.topic(), msgAndMetadata.partition(), msgAndMetadata.offset(),
+					      consumerContext.getGroupId(), consumerContext.getSessionId()), e);
 				}
 			}
 		}
@@ -162,11 +164,6 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Log
 		}
 		configs.put("group.id", group);
 		return configs;
-	}
-
-	@Override
-	public void enableLogging(Logger logger) {
-		m_logger = logger;
 	}
 
 }

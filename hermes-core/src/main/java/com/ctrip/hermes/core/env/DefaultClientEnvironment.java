@@ -12,8 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.codehaus.plexus.logging.LogEnabled;
-import org.codehaus.plexus.logging.Logger;
+import org.apache.log4j.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.ContainerHolder;
@@ -23,7 +22,7 @@ import com.ctrip.hermes.Hermes;
 import com.ctrip.hermes.Hermes.Env;
 
 @Named(type = ClientEnvironment.class)
-public class DefaultClientEnvironment extends ContainerHolder implements ClientEnvironment, Initializable, LogEnabled {
+public class DefaultClientEnvironment extends ContainerHolder implements ClientEnvironment, Initializable {
 	private final static String PRODUCER_DEFAULT_FILE = "/hermes-producer.properties";
 
 	private final static String PRODUCER_PATTERN = "/hermes-producer-%s.properties";
@@ -44,7 +43,7 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	private Properties m_globalDefault;
 
-	private Logger logger;
+	private static final Logger logger = Logger.getLogger(DefaultClientEnvironment.class);
 
 	private AtomicReference<Env> m_env = new AtomicReference<>();
 
@@ -111,11 +110,6 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 		} catch (IOException e) {
 			throw new InitializationException("Error read producer default config file", e);
 		}
-	}
-
-	@Override
-	public void enableLogging(Logger logger) {
-		this.logger = logger;
 	}
 
 	@Override
