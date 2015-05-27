@@ -3,8 +3,14 @@
 
 	<endpoint id='br0' type="broker" host="127.0.0.1" port="4376" />
 
+	<!--Prod machine-->
+	<!--<endpoint id='br0' type="broker" host="10.8.113.222" port="4376" />-->
+
+	<!--fws machine-->
+	<!--<endpoint id='br0' type="broker" host="10.2.7.83" port="4376" />-->
+
 	<!--Dev machine -->
-	<!--<endpoint id='br0' type="broker" host="10.3.8.63" port="4376" />-->
+	<endpoint id='br0' type="broker" host="10.3.8.63" port="4376" />
 
 	<endpoint id='kafka-endpoint' type="kafka" />
 
@@ -84,15 +90,15 @@
 		<datasource id='ds0'>
 			<!--Dev Machine -->
 
-			<!-- <property name='url' value='jdbc:mysql://10.3.6.237/' />
+			 <property name='url' value='jdbc:mysql://10.3.6.237/' />
 			<property name='user' value='root' />
-			<property name='password' value='Ctrip000' /> -->
+			<property name='password' value='Ctrip000' />
 
 			<!--Local Machine -->
 
-			<property name='url' value='jdbc:mysql://127.0.0.1/FxHermesShard01DB' />
-			<property name='user' value='root' />
-			<property name='password' value='' />
+			<!--<property name='url' value='jdbc:mysql://127.0.0.1/' />-->
+			<!--<property name='user' value='root' />-->
+			<!--<property name='password' value='' />-->
 			<!-- <property name='password' value='123456' /> -->
 		</datasource>
 	</storage>

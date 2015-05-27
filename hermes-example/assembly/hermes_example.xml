@@ -15,12 +15,12 @@
             </includes>
             <fileMode>0755</fileMode>
         </fileSet>
-        <!--configs based on env-->
+        <!--basic configs-->
         <fileSet>
-            <directory>${project.basedir}/conf/${package.environment}</directory>
+            <directory>${project.basedir}/src/main/resources</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
-                <include>*</include>
+                <include>*.properties</include>
             </includes>
             <fileMode>0666</fileMode>
         </fileSet>

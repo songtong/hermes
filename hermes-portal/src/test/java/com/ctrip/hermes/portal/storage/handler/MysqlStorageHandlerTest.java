@@ -1,0 +1,58 @@
+package com.ctrip.hermes.portal.storage.handler;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+import org.unidal.lookup.ComponentTestCase;
+
+import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
+import com.ctrip.hermes.portal.service.storage.model.*;
+
+public class MysqlStorageHandlerTest extends ComponentTestCase {
+
+	@Test
+	public void testCreateDatabase() throws Exception {
+
+	}
+
+	@Test
+	public void testCreateTable() throws Exception {
+
+	}
+
+	@Test
+	public void testBuildSqlCreateDatabase() throws Exception {
+
+	}
+
+	@Test
+	public void testCleanTable() throws Exception {
+
+	}
+
+	@Test
+	public void testValidateDataModel() throws Exception {
+
+	}
+
+	@Test
+	public void testBuildSqlCreateTable() throws Exception {
+		StorageHandler handler = lookup(StorageHandler.class);
+
+		handler.createTable("fxhermesshard01db", 100L, 0, buildTableModel());
+	}
+
+	private List<TableModel> buildTableModel() {
+		List<TableModel> tableModels = new ArrayList<>();
+
+
+		tableModels.add(new DeadLetterTableModel());   	// deadletter
+		tableModels.add(new MessageTableModel(0));			// message_0
+		tableModels.add(new MessageTableModel(1));			// message_1
+		tableModels.add(new OffsetMessageTableModel());				// offset_message
+		tableModels.add(new OffsetResendTableModel());				// offset_resend
+
+		return tableModels;
+	}
+}

@@ -55,6 +55,7 @@ public class CmessageResource {
 				throw new RuntimeException("invalid message");
 			}
 
+			// call service
 			service.transfer(topic, content, header);
 
 			t.setStatus(Message.SUCCESS);

@@ -44,18 +44,4 @@
         </dependency>
 
     </dependencies>
-    <distributionManagement>
-        <repository>
-            <id>releases</id>
-            <url>
-                http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/fxrelease
-            </url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <url>
-                http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/fxsnapshot
-            </url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>

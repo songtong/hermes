@@ -149,9 +149,22 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 		return m_baseMsg.getRemainingRetries();
 	}
 
+   public PropertiesHolder getPropertiesHolder() {
+	   return m_baseMsg.getPropertiesHolder();
+   }
+
 	@Override
-	public PropertiesHolder getPropertiesHolder() {
-		return m_baseMsg.getPropertiesHolder();
+	public String toString() {
+		return "BrokerConsumerMessage{" +
+				  "m_baseMsg=" + m_baseMsg +
+				  ", m_msgSeq=" + m_msgSeq +
+				  ", m_partition=" + m_partition +
+				  ", m_priority=" + m_priority +
+				  ", m_resend=" + m_resend +
+				  ", m_groupId='" + m_groupId + '\'' +
+				  ", m_correlationId=" + m_correlationId +
+				  ", m_channel=" + m_channel +
+				  '}';
 	}
 
 	@Override
