@@ -8,7 +8,7 @@ JAVA_OPTS="-Xms2g \
             -XX:MaxPermSize=256m \
             -XX:-DisableExplicitGC \
             -Djava.awt.headless=true \
-            -Dcom.sun.management.jmxremote.port=8301 \
+            -Dcom.sun.management.jmxremote.port=8302 \
             -Dcom.sun.management.jmxremote.authenticate=false \
             -Dcom.sun.management.jmxremote.ssl=false \
             -Dfile.encoding=utf-8 \

@@ -30,7 +30,6 @@
             <groupId>com.ctrip.hermes</groupId>
             <artifactId>hermes-broker</artifactId>
             <version>${project.version}</version>
-            <classifier>classes</classifier>
          </dependency>
          <dependency>
             <groupId>com.ctrip.hermes</groupId>
