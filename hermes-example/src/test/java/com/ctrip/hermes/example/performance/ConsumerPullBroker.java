@@ -79,6 +79,7 @@ public class ConsumerPullBroker extends ComponentTestCase {
 				try {
 					lookup(BrokerBootstrap.class).start();
 				} catch (Exception e) {
+					// todo: log!
 					System.out.println("Fail to start Broker: " + e.getMessage());
 				}
 			}

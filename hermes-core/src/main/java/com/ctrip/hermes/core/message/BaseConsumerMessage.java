@@ -122,4 +122,16 @@ public class BaseConsumerMessage<T> {
 		return m_propertiesHolder;
 	}
 
+	@Override
+	public String toString() {
+		return "BaseConsumerMessage{" +
+				  "m_bornTime=" + m_bornTime +
+				  ", m_key='" + m_key + '\'' +
+				  ", m_topic='" + m_topic + '\'' +
+				  ", m_body=" + m_body +
+				  ", m_propertiesHolder=" + m_propertiesHolder +
+				  ", m_status=" + m_status +
+				  ", m_remainingRetries=" + m_remainingRetries +
+				  '}';
+	}
 }
