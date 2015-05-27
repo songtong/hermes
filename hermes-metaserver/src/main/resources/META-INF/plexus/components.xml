@@ -63,13 +63,6 @@
 			</requirements>
 		</component>
 		<component>
-			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>
-			<implementation>org.unidal.dal.jdbc.datasource.DefaultDataSourceProvider</implementation>
-			<configuration>
-				<datasourceFile>/data/appdatas/hermes/datasources.xml</datasourceFile>
-			</configuration>
-		</component>
-		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>meta</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
@@ -104,6 +97,13 @@
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
 				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>
+			<implementation>org.unidal.dal.jdbc.datasource.DefaultDataSourceProvider</implementation>
+			<configuration>
+				<datasourceFile>/data/appdatas/hermes/datasources.xml</datasourceFile>
+			</configuration>
 		</component>
 	</components>
 </plexus>
