@@ -3,11 +3,12 @@ package com.ctrip.hermes.kafka.message;
 import java.util.Iterator;
 
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
+import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.message.PropertiesHolderAware;
 
-public class KafkaConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHolderAware {
+public class KafkaConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHolderAware, BaseConsumerMessageAware<T> {
 
 	private BaseConsumerMessage<T> m_baseMsg;
 
@@ -79,7 +80,12 @@ public class KafkaConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHo
 	}
 
 	@Override
-   public PropertiesHolder getPropertiesHolder() {
-	   return m_baseMsg.getPropertiesHolder();
-   }
+	public PropertiesHolder getPropertiesHolder() {
+		return m_baseMsg.getPropertiesHolder();
+	}
+
+	@Override
+	public BaseConsumerMessage<T> getBaseConsumerMessage() {
+		return m_baseMsg;
+	}
 }
