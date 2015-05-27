@@ -4,26 +4,62 @@
 			<role>org.unidal.web.mvc.model.ModuleRegistry</role>
 			<implementation>org.unidal.web.mvc.model.ModuleRegistry</implementation>
 			<configuration>
-				<defaultModule>com.ctrip.hermes.portal.topic.TopicModule</defaultModule>
+				<defaultModule>com.ctrip.hermes.portal.console.ConsoleModule</defaultModule>
 			</configuration>
 		</component>
 		<component>
 			<role>org.unidal.web.mvc.Module</role>
-			<role-hint>com.ctrip.hermes.portal.topic.TopicModule</role-hint>
-			<implementation>com.ctrip.hermes.portal.topic.TopicModule</implementation>
+			<role-hint>com.ctrip.hermes.portal.console.ConsoleModule</role-hint>
+			<implementation>com.ctrip.hermes.portal.console.ConsoleModule</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.topic.home.Handler</role>
-			<implementation>com.ctrip.hermes.portal.topic.home.Handler</implementation>
+			<role>com.ctrip.hermes.portal.console.topic.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.topic.Handler</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.topic.home.JspViewer</role>
+					<role>com.ctrip.hermes.portal.console.topic.JspViewer</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.topic.home.JspViewer</role>
-			<implementation>com.ctrip.hermes.portal.topic.home.JspViewer</implementation>
+			<role>com.ctrip.hermes.portal.console.topic.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.topic.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.consumer.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.consumer.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.consumer.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.consumer.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.consumer.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.dashboard.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.dashboard.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.dashboard.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.dashboard.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.dashboard.JspViewer</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.web.mvc.view.model.ModelHandler</role>

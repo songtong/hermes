@@ -1,12 +1,12 @@
-package com.ctrip.hermes.portal.topic.home;
+package com.ctrip.hermes.portal.console.topic;
 
-import com.ctrip.hermes.portal.topic.TopicPage;
+import com.ctrip.hermes.portal.console.ConsolePage;
 import org.unidal.web.mvc.ActionContext;
 import org.unidal.web.mvc.ActionPayload;
 import org.unidal.web.mvc.payload.annotation.FieldMeta;
 
-public class Payload implements ActionPayload<TopicPage, Action> {
-   private TopicPage m_page;
+public class Payload implements ActionPayload<ConsolePage, Action> {
+   private ConsolePage m_page;
 
    @FieldMeta("op")
    private Action m_action;
@@ -21,13 +21,13 @@ public class Payload implements ActionPayload<TopicPage, Action> {
    }
 
    @Override
-   public TopicPage getPage() {
+   public ConsolePage getPage() {
       return m_page;
    }
 
    @Override
    public void setPage(String page) {
-      m_page = TopicPage.getByName(page, TopicPage.HOME);
+      m_page = ConsolePage.getByName(page, ConsolePage.TOPIC);
    }
 
    @Override

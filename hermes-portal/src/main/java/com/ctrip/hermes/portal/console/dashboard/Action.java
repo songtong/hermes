@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.topic.home;
+package com.ctrip.hermes.portal.console.dashboard;
 
 public enum Action implements org.unidal.web.mvc.Action {
 	VIEW("view");

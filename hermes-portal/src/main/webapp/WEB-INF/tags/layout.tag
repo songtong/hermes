@@ -57,7 +57,7 @@
 	
 		<br />
 		<div class="container">
-			<footer><center>&copy;2015 Portal Team</center></footer>
+			<footer><center>&copy;2015 Hermes Team</center></footer>
 		</div>
 	</div>
 	<!--/.fluid-container-->

@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <wizard package="com.ctrip.hermes.portal">
    <webapp package="com.ctrip.hermes.portal" name="portal" module="false" webres="false" cat="true" plugin-management="false" jstl="true" layout="bootstrap">
-      <module name="topic" path="topic" default="true">
-         <page name="home" title="Home" default="true" path="home" template="default">
-            <description>Home</description>
+      <module name="console" path="console" default="true">
+         <page name="topic" title="Topic" default="true" path="topic" template="default">
+            <description>Topic</description>
+         </page>
+         <page name="consumer" title="Consumer" path="consumer" template="default">
+            <description>Consumer</description>
+         </page>
+         <page name="dashboard" title="Dashboard" path="dashboard" template="default">
+            <description>Dashboard</description>
          </page>
       </module>
    </webapp>

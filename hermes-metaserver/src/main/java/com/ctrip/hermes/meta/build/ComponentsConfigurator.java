@@ -12,6 +12,7 @@ import com.ctrip.hermes.meta.service.CompileService;
 import com.ctrip.hermes.meta.service.SchemaService;
 import com.ctrip.hermes.meta.service.ServerMetaService;
 import com.ctrip.hermes.meta.service.TopicService;
+import com.ctrip.hermes.core.build.FxhermesmetadbDatabaseConfigurator;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
@@ -24,10 +25,9 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(SchemaService.class));
 		all.add(A(CodecService.class));
 		all.add(A(CompileService.class));
-		
+
 		all.add(A(ServerMetaService.class));
-		
-		all.add(defineJdbcDataSourceConfigurationManagerComponent("/data/appdatas/hermes/datasources.xml"));
+
 		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
 
 		return all;
