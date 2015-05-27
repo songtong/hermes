@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -21,12 +20,10 @@ public class AckMessageCommand extends AbstractCommand {
 	private static final long serialVersionUID = 7009170887490443292L;
 
 	// key: tpp, groupId, isResend
-	// value:msgSeq==>remainingRetries
-	private ConcurrentMap<Triple<Tpp, String, Boolean>, Map<Long, Integer>> m_ackMsgSeqs = new ConcurrentHashMap<>();
+	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> m_ackMsgSeqs = new ConcurrentHashMap<>();
 
 	// key: tpp, groupId, isResend
-	// value:msgSeq==>remainingRetries
-	private ConcurrentMap<Triple<Tpp, String, Boolean>, Map<Long, Integer>> m_nackMsgSeqs = new ConcurrentHashMap<>();
+	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> m_nackMsgSeqs = new ConcurrentHashMap<>();
 
 	public AckMessageCommand() {
 		super(CommandType.MESSAGE_ACK);
@@ -48,7 +45,7 @@ public class AckMessageCommand extends AbstractCommand {
 	}
 
 	private void writeMsgSeqMap(HermesPrimitiveCodec codec,
-	      ConcurrentMap<Triple<Tpp, String, Boolean>, Map<Long, Integer>> msgSeqMap) {
+	      ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> msgSeqMap) {
 		if (msgSeqMap == null) {
 			codec.writeInt(0);
 		} else {
@@ -62,15 +59,25 @@ public class AckMessageCommand extends AbstractCommand {
 				codec.writeBoolean(tppgr.getLast());
 			}
 			for (Triple<Tpp, String, Boolean> tppgr : msgSeqMap.keySet()) {
-				Map<Long, Integer> msgSeqs = msgSeqMap.get(tppgr);
-				codec.writeLongIntMap(msgSeqs);
+				List<AckContext> contexts = msgSeqMap.get(tppgr);
+
+				if (contexts == null || contexts.isEmpty()) {
+					codec.writeInt(0);
+				} else {
+					codec.writeInt(contexts.size());
+					for (AckContext context : contexts) {
+						codec.writeLong(context.getMsgSeq());
+						codec.writeInt(context.getRemainingRetries());
+						codec.writeLong(context.getOnMessageTimeMillis());
+					}
+				}
 			}
 		}
 
 	}
 
-	private ConcurrentMap<Triple<Tpp, String, Boolean>, Map<Long, Integer>> readMsgSeqMap(HermesPrimitiveCodec codec) {
-		ConcurrentMap<Triple<Tpp, String, Boolean>, Map<Long, Integer>> msgSeqMap = new ConcurrentHashMap<>();
+	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> readMsgSeqMap(HermesPrimitiveCodec codec) {
+		ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> msgSeqMap = new ConcurrentHashMap<>();
 
 		int mapSize = codec.readInt();
 		if (mapSize != 0) {
@@ -83,34 +90,46 @@ public class AckMessageCommand extends AbstractCommand {
 			}
 			for (int i = 0; i < mapSize; i++) {
 				Triple<Tpp, String, Boolean> tppgr = tppgrs.get(i);
-				msgSeqMap.put(tppgr, codec.readLongIntMap());
+
+				int len = codec.readInt();
+				if (len == 0) {
+					msgSeqMap.put(tppgr, new ArrayList<AckContext>());
+				} else {
+					msgSeqMap.put(tppgr, new ArrayList<AckContext>(len));
+				}
+
+				for (int j = 0; j < len; j++) {
+					msgSeqMap.get(tppgr).add(new AckContext(codec.readLong(), codec.readInt(), codec.readLong()));
+				}
 			}
 		}
 
 		return msgSeqMap;
 	}
 
-	public void addAckMsg(Tpp tpp, String groupId, boolean resend, long msgSeq, int remainingRetries) {
+	public void addAckMsg(Tpp tpp, String groupId, boolean resend, long msgSeq, int remainingRetries,
+	      long onMessageTimeMillis) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		if (!m_ackMsgSeqs.containsKey(key)) {
-			m_ackMsgSeqs.putIfAbsent(key, new ConcurrentHashMap<Long, Integer>());
+			m_ackMsgSeqs.putIfAbsent(key, new ArrayList<AckContext>());
 		}
-		m_ackMsgSeqs.get(key).put(msgSeq, remainingRetries);
+		m_ackMsgSeqs.get(key).add(new AckContext(msgSeq, remainingRetries, onMessageTimeMillis));
 	}
 
-	public void addNackMsg(Tpp tpp, String groupId, boolean resend, long msgSeq, int remainingRetries) {
+	public void addNackMsg(Tpp tpp, String groupId, boolean resend, long msgSeq, int remainingRetries,
+	      long onMessageTimeMillis) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		if (!m_nackMsgSeqs.containsKey(key)) {
-			m_nackMsgSeqs.putIfAbsent(key, new ConcurrentHashMap<Long, Integer>());
+			m_nackMsgSeqs.putIfAbsent(key, new ArrayList<AckContext>());
 		}
-		m_nackMsgSeqs.get(key).put(msgSeq, remainingRetries);
+		m_nackMsgSeqs.get(key).add(new AckContext(msgSeq, remainingRetries, onMessageTimeMillis));
 	}
 
-	public ConcurrentMap<Triple<Tpp, String, Boolean>, Map<Long, Integer>> getAckMsgs() {
+	public ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> getAckMsgs() {
 		return m_ackMsgSeqs;
 	}
 
-	public ConcurrentMap<Triple<Tpp, String, Boolean>, Map<Long, Integer>> getNackMsgs() {
+	public ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> getNackMsgs() {
 		return m_nackMsgSeqs;
 	}
 
@@ -118,4 +137,36 @@ public class AckMessageCommand extends AbstractCommand {
 		return m_nackMsgSeqs.isEmpty() && m_ackMsgSeqs.isEmpty();
 	}
 
+	public static class AckContext {
+		private long m_msgSeq;
+
+		private int m_remainingRetries;
+
+		private long m_onMessageTimeMillis;
+
+		public AckContext(long msgSeq, int remainingRetries, long onMessageTimeMillis) {
+			m_msgSeq = msgSeq;
+			m_remainingRetries = remainingRetries;
+			m_onMessageTimeMillis = onMessageTimeMillis;
+		}
+
+		public long getMsgSeq() {
+			return m_msgSeq;
+		}
+
+		public int getRemainingRetries() {
+			return m_remainingRetries;
+		}
+
+		public long getOnMessageTimeMillis() {
+			return m_onMessageTimeMillis;
+		}
+
+		@Override
+		public String toString() {
+			return "AckContext [m_msgSeq=" + m_msgSeq + ", m_remainingRetries=" + m_remainingRetries
+			      + ", m_onMessageTimeMillis=" + m_onMessageTimeMillis + "]";
+		}
+
+	}
 }

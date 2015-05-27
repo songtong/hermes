@@ -7,6 +7,7 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
+import com.ctrip.hermes.core.transport.netty.Magic;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)

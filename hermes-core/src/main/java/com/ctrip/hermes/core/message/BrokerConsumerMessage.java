@@ -11,7 +11,7 @@ import com.ctrip.hermes.core.transport.command.AckMessageCommand;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHolderAware {
+public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHolderAware, BaseConsumerMessageAware<T> {
 
 	private BaseConsumerMessage<T> m_baseMsg;
 
@@ -84,7 +84,8 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 			AckMessageCommand cmd = new AckMessageCommand();
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			Tpp tpp = new Tpp(getTopic(), getPartition(), m_priority);
-			cmd.addNackMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries());
+			cmd.addNackMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries(),
+			      m_baseMsg.getOnMessageTimeMills());
 			m_channel.writeAndFlush(cmd);
 		}
 	}
@@ -125,7 +126,8 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 			AckMessageCommand cmd = new AckMessageCommand();
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			Tpp tpp = new Tpp(getTopic(), getPartition(), m_priority);
-			cmd.addAckMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries());
+			cmd.addAckMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries(),
+			      m_baseMsg.getOnMessageTimeMills());
 			m_channel.writeAndFlush(cmd);
 		}
 	}
@@ -150,5 +152,10 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	@Override
 	public PropertiesHolder getPropertiesHolder() {
 		return m_baseMsg.getPropertiesHolder();
+	}
+
+	@Override
+	public BaseConsumerMessage<T> getBaseConsumerMessage() {
+		return m_baseMsg;
 	}
 }

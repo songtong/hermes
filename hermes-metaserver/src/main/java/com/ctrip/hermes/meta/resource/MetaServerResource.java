@@ -10,7 +10,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Datasource;
@@ -25,13 +26,13 @@ import com.ctrip.hermes.meta.service.ServerMetaService;
 @Produces(MediaType.APPLICATION_JSON)
 public class MetaServerResource {
 
-	private static final Logger logger = Logger.getLogger(MetaServerResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(MetaServerResource.class);
 
 	private MetaService metaService = PlexusComponentLocator.lookup(MetaService.class, ServerMetaService.ID);
 
 	@GET
 	@Path("servers")
-	public List<String> getMetaServerIpPorts() {
+	public List<String> getServers() {
 		List<Server> servers = metaService.getServers();
 		List<String> result = new ArrayList<>();
 		for (Server server : servers) {

@@ -36,6 +36,7 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
+import com.ctrip.hermes.core.transport.netty.MagicNumberPrepender;
 import com.ctrip.hermes.core.transport.netty.NettyDecoder;
 import com.ctrip.hermes.core.transport.netty.NettyEncoder;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
@@ -181,8 +182,8 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 				ch.pipeline().addLast(
 				      //
 				      new DefaultNettyChannelOutboundHandler(),//
-				      // TODO set max frame length
 				      new NettyDecoder(), //
+				      new MagicNumberPrepender(), //
 				      new LengthFieldPrepender(4), //
 				      new NettyEncoder(), //
 				      new IdleStateHandler(0, 0, m_config.getEndpointChannelMaxIdleTime()),//

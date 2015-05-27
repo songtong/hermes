@@ -12,8 +12,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -27,12 +28,13 @@ import com.ctrip.hermes.meta.service.ServerMetaService;
 @Produces(MediaType.APPLICATION_JSON)
 public class MetaResource {
 
-	private static final Logger logger = Logger.getLogger(MetaResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(MetaResource.class);
 
 	private MetaService metaService = PlexusComponentLocator.lookup(MetaService.class, ServerMetaService.ID);
 
 	@GET
 	public Response getMeta(@QueryParam("hashCode") long hashCode) {
+		logger.debug("get meta, hashCode {}", hashCode);
 		Meta meta = null;
 		try {
 			meta = metaService.getMeta();
@@ -43,7 +45,7 @@ public class MetaResource {
 				return Response.status(Status.NOT_MODIFIED).build();
 			}
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("get meta failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(meta).build();
@@ -59,7 +61,7 @@ public class MetaResource {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("refresh meta failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(meta).build();
@@ -67,6 +69,7 @@ public class MetaResource {
 
 	@POST
 	public Response updateMeta(String content, @Context HttpServletRequest req) {
+		logger.debug("update meta, content {}", content);
 		if (StringUtils.isEmpty(content)) {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
@@ -75,7 +78,7 @@ public class MetaResource {
 		try {
 			meta = JSON.parseObject(content, Meta.class);
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("parse meta failed with content:{}", content);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 		try {
@@ -84,7 +87,7 @@ public class MetaResource {
 				return Response.status(Status.NOT_MODIFIED).build();
 			}
 		} catch (Exception e) {
-			logger.warn(e);
+			logger.warn("update meta failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.CREATED).entity(meta).build();

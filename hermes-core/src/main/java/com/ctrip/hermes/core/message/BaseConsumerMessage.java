@@ -24,6 +24,16 @@ public class BaseConsumerMessage<T> {
 
 	protected int m_remainingRetries = 0;
 
+	protected long m_onMessageTimeMills;
+
+	public long getOnMessageTimeMills() {
+		return m_onMessageTimeMills;
+	}
+
+	public void setOnMessageTimeMills(long onMessageTimeMills) {
+		m_onMessageTimeMills = onMessageTimeMills;
+	}
+
 	public int getRemainingRetries() {
 		return m_remainingRetries;
 	}
@@ -109,7 +119,7 @@ public class BaseConsumerMessage<T> {
 	}
 
 	public PropertiesHolder getPropertiesHolder() {
-	   return m_propertiesHolder;
-   }
+		return m_propertiesHolder;
+	}
 
 }
