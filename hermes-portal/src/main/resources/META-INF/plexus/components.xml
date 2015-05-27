@@ -1,18 +1,84 @@
 <plexus>
 	<components>
 		<component>
-			<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
-			<role-hint>topic-storage-service</role-hint>
-			<implementation>com.ctrip.hermes.portal.service.storage.TopicStorageService</implementation>
+			<role>org.unidal.web.mvc.model.ModuleRegistry</role>
+			<implementation>org.unidal.web.mvc.model.ModuleRegistry</implementation>
+			<configuration>
+				<defaultModule>com.ctrip.hermes.portal.console.ConsoleModule</defaultModule>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.web.mvc.Module</role>
+			<role-hint>com.ctrip.hermes.portal.console.ConsoleModule</role-hint>
+			<implementation>com.ctrip.hermes.portal.console.ConsoleModule</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.topic.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.topic.Handler</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
+					<role>com.ctrip.hermes.portal.console.topic.JspViewer</role>
 				</requirement>
 			</requirements>
 		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.topic.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.topic.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.consumer.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.consumer.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.consumer.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.consumer.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.consumer.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.dashboard.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.dashboard.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.dashboard.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.dashboard.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.dashboard.JspViewer</implementation>
+			<requirements>
+            <requirement>
+                <role>org.unidal.web.mvc.view.model.ModelHandler</role>
+            </requirement>
+            </requirements>
+        </component>
+		<component>
+        <role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
+        <role-hint>topic-storage-service</role-hint>
+        <implementation>com.ctrip.hermes.portal.service.storage.TopicStorageService</implementation>
+        <requirements>
+        <requirement>
+            <role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
+        </requirement>
+            <requirement>
+                <role>com.ctrip.hermes.core.meta.MetaService</role>
+            </requirement>
+        </requirements>
+        </component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
 			<implementation>com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler</implementation>
