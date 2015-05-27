@@ -19,7 +19,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 
 		// Please keep it as last
-//		all.addAll(new WebComponentConfigurator().defineComponents());
+		all.addAll(new WebComponentConfigurator().defineComponents());
 
 		return all;
 	}
