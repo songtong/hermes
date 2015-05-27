@@ -7,9 +7,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.ctrip.hermes.core.storage.TopicStorageService;
-import com.ctrip.hermes.core.storage.exception.TopicAlreadyExistsException;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.portal.service.storage.TopicStorageService;
+import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
 
 // todo: merge into hermes-portal API
 @Path("/topic")

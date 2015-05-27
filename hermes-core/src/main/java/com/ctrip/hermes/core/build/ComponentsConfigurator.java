@@ -18,8 +18,6 @@ import com.ctrip.hermes.core.meta.internal.DefaultMetaService;
 import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
 import com.ctrip.hermes.core.meta.internal.LocalMetaProxy;
 import com.ctrip.hermes.core.meta.internal.RemoteMetaLoader;
-import com.ctrip.hermes.core.storage.TopicStorageService;
-import com.ctrip.hermes.core.storage.handler.MysqlStorageHandler;
 import com.ctrip.hermes.core.meta.remote.DefaultMetaServerLocator;
 import com.ctrip.hermes.core.meta.remote.RemoteMetaProxy;
 import com.ctrip.hermes.core.service.DefaultSystemClockService;
@@ -69,9 +67,6 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(CoreConfig.class));
 		all.add(A(DefaultSystemClockService.class));
 
-		// storage handler
-		all.add(A(TopicStorageService.class));
-		all.add(A(MysqlStorageHandler.class));
 		all.add(A(RunningStatusStatisticsService.class));
 
 		return all;
