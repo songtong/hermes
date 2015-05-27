@@ -1,0 +1,17 @@
+<plexus>
+	<components>
+		<component>
+			<role>com.ctrip.hermes.rest.service.SubscribeRegistry</role>
+			<implementation>com.ctrip.hermes.rest.service.DefaultSubscribeRegistry</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.rest.service.MessagePushService</role>
+			<implementation>com.ctrip.hermes.rest.service.MessagePushService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.rest.service.SubscribeRegistry</role>
+				</requirement>
+			</requirements>
+		</component>
+	</components>
+</plexus>
