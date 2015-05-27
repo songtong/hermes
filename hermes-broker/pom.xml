@@ -13,12 +13,16 @@
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-core</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.googlecode.javaewah</groupId>
 			<artifactId>JavaEWAH</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.ctrip.hermes</groupId>
-			<artifactId>hermes-core</artifactId>
+			<groupId>com.dianping.cat</groupId>
+			<artifactId>cat-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.unidal.framework</groupId>
