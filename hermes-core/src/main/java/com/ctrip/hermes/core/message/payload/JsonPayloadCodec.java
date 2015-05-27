@@ -5,10 +5,10 @@ import org.unidal.lookup.annotation.Named;
 import com.alibaba.fastjson.JSON;
 
 @Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.JSON)
-public class JsonPayloadCodec implements PayloadCodec {
+public class JsonPayloadCodec extends AbstractPayloadCodec {
 
 	@Override
-	public <T> T decode(byte[] bytes, Class<T> clazz) {
+	public <T> T doDecode(byte[] bytes, Class<T> clazz) {
 		return JSON.parseObject(bytes, clazz);
 	}
 

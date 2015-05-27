@@ -12,11 +12,12 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.message.payload.AbstractPayloadCodec;
 import com.ctrip.hermes.core.message.payload.PayloadCodec;
 import com.ctrip.hermes.core.meta.MetaService;
 
 @Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.AVRO)
-public class AvroPayloadCodec implements PayloadCodec, Initializable {
+public class AvroPayloadCodec extends AbstractPayloadCodec implements Initializable {
 
 	private static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
 
@@ -29,7 +30,7 @@ public class AvroPayloadCodec implements PayloadCodec, Initializable {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T decode(byte[] raw, Class<T> clazz) {
+	public <T> T doDecode(byte[] raw, Class<T> clazz) {
 		return (T) avroDeserializer.deserialize(null, raw);
 	}
 
