@@ -16,10 +16,6 @@
 			<artifactId>hermes-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.unidal.framework</groupId>
-			<artifactId>dal-jdbc</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.dianping.cat</groupId>
 			<artifactId>cat-client</artifactId>
 		</dependency>
@@ -99,20 +95,6 @@
 				<groupId>org.unidal.maven.plugins</groupId>
 				<artifactId>codegen-maven-plugin</artifactId>
 				<version>2.2.0</version>
-				<executions>
-					<execution>
-						<id>generate dal jdbc model</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>dal-jdbc</goal>
-						</goals>
-						<configuration>
-							<manifest><![CDATA[,
-                        ${basedir}/src/main/resources/META-INF/dal/jdbc/meta-manifest.xml,
-                     ,]]></manifest>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.unidal.maven.plugins</groupId>
