@@ -1,7 +1,7 @@
-package com.ctrip.hermes.portal.topic.home;
+package com.ctrip.hermes.portal.console.topic;
 
 public enum JspFile {
-	VIEW("/jsp/topic/home.jsp"),
+	VIEW("/jsp/console/topic.jsp"),
 
 	;
 

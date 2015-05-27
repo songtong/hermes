@@ -1,11 +1,15 @@
-package com.ctrip.hermes.portal.topic;
+package com.ctrip.hermes.portal.console;
 
 import org.unidal.web.mvc.Page;
 import org.unidal.web.mvc.annotation.ModuleMeta;
 
-public enum TopicPage implements Page {
+public enum ConsolePage implements Page {
 
-   HOME("home", "home", "Home", "Home", true);
+   TOPIC("topic", "topic", "Topic", "Topic", true),
+
+   CONSUMER("consumer", "consumer", "Consumer", "Consumer", true),
+
+   DASHBOARD("dashboard", "dashboard", "Dashboard", "Dashboard", true);
 
    private String m_name;
 
@@ -17,7 +21,7 @@ public enum TopicPage implements Page {
 
    private boolean m_standalone;
 
-   private TopicPage(String name, String path, String title, String description, boolean standalone) {
+   private ConsolePage(String name, String path, String title, String description, boolean standalone) {
       m_name = name;
       m_path = path;
       m_title = title;
@@ -25,8 +29,8 @@ public enum TopicPage implements Page {
       m_standalone = standalone;
    }
 
-   public static TopicPage getByName(String name, TopicPage defaultPage) {
-      for (TopicPage action : TopicPage.values()) {
+   public static ConsolePage getByName(String name, ConsolePage defaultPage) {
+      for (ConsolePage action : ConsolePage.values()) {
          if (action.getName().equals(name)) {
             return action;
          }
@@ -40,7 +44,7 @@ public enum TopicPage implements Page {
    }
 
    public String getModuleName() {
-      ModuleMeta meta = TopicModule.class.getAnnotation(ModuleMeta.class);
+      ModuleMeta meta = ConsoleModule.class.getAnnotation(ModuleMeta.class);
 
       if (meta != null) {
          return meta.name();
@@ -67,7 +71,7 @@ public enum TopicPage implements Page {
       return m_standalone;
    }
 
-   public TopicPage[] getValues() {
-      return TopicPage.values();
+   public ConsolePage[] getValues() {
+      return ConsolePage.values();
    }
 }

@@ -1,10 +1,10 @@
-package com.ctrip.hermes.portal.topic.home;
+package com.ctrip.hermes.portal.console.topic;
 
 import java.io.IOException;
 
 import javax.servlet.ServletException;
 
-import com.ctrip.hermes.portal.topic.TopicPage;
+import com.ctrip.hermes.portal.console.ConsolePage;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.web.mvc.PageHandler;
 import org.unidal.web.mvc.annotation.InboundActionMeta;
@@ -17,18 +17,18 @@ public class Handler implements PageHandler<Context> {
 
 	@Override
 	@PayloadMeta(Payload.class)
-	@InboundActionMeta(name = "home")
+	@InboundActionMeta(name = "topic")
 	public void handleInbound(Context ctx) throws ServletException, IOException {
 		// display only, no action here
 	}
 
 	@Override
-	@OutboundActionMeta(name = "home")
+	@OutboundActionMeta(name = "topic")
 	public void handleOutbound(Context ctx) throws ServletException, IOException {
 		Model model = new Model(ctx);
 
 		model.setAction(Action.VIEW);
-		model.setPage(TopicPage.HOME);
+		model.setPage(ConsolePage.TOPIC);
 
 		if (!ctx.isProcessStopped()) {
 		   m_jspViewer.view(ctx, model);

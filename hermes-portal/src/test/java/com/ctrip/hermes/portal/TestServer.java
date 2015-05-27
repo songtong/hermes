@@ -38,13 +38,13 @@ public class TestServer extends JettyServer {
 
    @Override
    protected void postConfigure(WebAppContext context) {
-      context.addFilter(GzipFilter.class, "/topic/*", Handler.ALL);
+      context.addFilter(GzipFilter.class, "/console/*", Handler.ALL);
    }
 
    @Test
    public void startWebapp() throws Exception {
       // open the page in the default browser
-      display("/portal/topic");
+      display("/portal/console");
       waitForAnyKey();
    }
 }
