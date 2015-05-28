@@ -130,7 +130,7 @@ public class KafkaMessageSender implements MessageSender {
 				if (exception != null) {
 					m_callback.onFailure(exception);
 				} else {
-					m_callback.onSuccess(new SendResult(true));
+					m_callback.onSuccess(new SendResult());
 				}
 			}
 		}
@@ -152,7 +152,7 @@ public class KafkaMessageSender implements MessageSender {
 		@Override
 		public SendResult get() throws InterruptedException, ExecutionException {
 			this.m_recordMetadata.get();
-			SendResult sendResult = new SendResult(true);
+			SendResult sendResult = new SendResult();
 			return sendResult;
 		}
 
@@ -160,7 +160,7 @@ public class KafkaMessageSender implements MessageSender {
 		public SendResult get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException,
 		      TimeoutException {
 			this.m_recordMetadata.get(timeout, unit);
-			SendResult sendResult = new SendResult(true);
+			SendResult sendResult = new SendResult();
 			return sendResult;
 		}
 

@@ -98,7 +98,7 @@ public class SendMessageCommand extends AbstractCommand {
 	public void onResultReceived(SendMessageResultCommand result) {
 		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
 			if (result.isSuccess(entry.getKey())) {
-				entry.getValue().set(new SendResult(true));
+				entry.getValue().set(new SendResult());
 			} else {
 				entry.getValue().setException(new RuntimeException("Send failed"));
 			}
