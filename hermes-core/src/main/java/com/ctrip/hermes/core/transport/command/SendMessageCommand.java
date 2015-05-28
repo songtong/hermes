@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ctrip.hermes.core.config.CoreConfig;
+import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
@@ -100,7 +101,7 @@ public class SendMessageCommand extends AbstractCommand {
 			if (result.isSuccess(entry.getKey())) {
 				entry.getValue().set(new SendResult());
 			} else {
-				entry.getValue().setException(new RuntimeException("Send failed"));
+				entry.getValue().setException(new MessageSendException("Send failed"));
 			}
 		}
 	}
