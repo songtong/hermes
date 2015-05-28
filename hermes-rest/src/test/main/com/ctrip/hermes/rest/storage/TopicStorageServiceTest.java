@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.storage;
+package com.ctrip.hermes.rest.storage;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -6,8 +6,8 @@ import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.portal.service.storage.TopicStorageService;
-import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
+import com.ctrip.hermes.rest.service.storage.TopicStorageService;
+import com.ctrip.hermes.rest.service.storage.exception.TopicAlreadyExistsException;
 
 public class TopicStorageServiceTest extends ComponentTestCase {
 	MetaService metaService;

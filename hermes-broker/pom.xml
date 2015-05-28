@@ -17,6 +17,10 @@
 			<artifactId>hermes-core</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-rest</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.googlecode.javaewah</groupId>
 			<artifactId>JavaEWAH</artifactId>
 		</dependency>
@@ -27,10 +31,6 @@
 		<dependency>
 			<groupId>org.unidal.framework</groupId>
 			<artifactId>web-framework</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.dianping.cat</groupId>
-			<artifactId>cat-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.unidal.framework</groupId>

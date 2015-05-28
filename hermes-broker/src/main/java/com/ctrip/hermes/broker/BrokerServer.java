@@ -4,6 +4,7 @@ import java.io.File;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.rest.HermesRestServer;
 import com.dianping.cat.Cat;
 
 public class BrokerServer {
@@ -16,5 +17,8 @@ public class BrokerServer {
 
 		Cat.initialize(catConfigFile);
 		PlexusComponentLocator.lookup(BrokerBootstrap.class).start();
+
+		// start Hermes Rest Server
+		new HermesRestServer("com.ctrip.hermes.rest.resource").doStartup();
 	}
 }
