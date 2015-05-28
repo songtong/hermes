@@ -46,13 +46,11 @@ public class OneBoxTest extends ComponentTestCase {
 
 		Future<SendResult> future = p.message("order_new", "0", 1233213423L).withRefKey("key").withPriority().send();
 
-		SendResult sendResult = future.get();
-
-		if (sendResult.isSuccess()) {
+		try {
+			future.get();
 			System.out.println("Send Success");
-		} else {
+		} catch (Exception e) {
 			System.out.println("Send Fail");
-
 		}
 
 		System.in.read();
