@@ -11,6 +11,7 @@ import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsExcep
 
 public class TopicStorageServiceTest extends ComponentTestCase {
 	MetaService metaService;
+
 	TopicStorageService service;
 
 	@Before
@@ -22,7 +23,7 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 
 	@Test
 	public void createByDSAndTopicName() {
-		Topic topic = metaService.findTopic("cmessage_fws");
+		Topic topic = metaService.findTopicByName("cmessage_fws");
 		try {
 			service.createNewTopic("ds0", "order_new");
 		} catch (TopicAlreadyExistsException e) {
@@ -32,7 +33,7 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 
 	@Test
 	public void createByDatabaseNameandTopic() {
-		Topic topic = metaService.findTopic("cmessage_fws");
+		Topic topic = metaService.findTopicByName("cmessage_fws");
 		try {
 			service.createNewTopic("fxhermesshard01db", topic);
 		} catch (TopicAlreadyExistsException e) {

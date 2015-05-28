@@ -69,4 +69,8 @@ public class CoreConfig {
 		return 60;
 	}
 
+	public String getAvroSchemaRetryUrlKey() {
+		return "schema.registry.url";
+	}
+
 }

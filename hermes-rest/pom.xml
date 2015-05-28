@@ -23,18 +23,6 @@
 			<artifactId>hermes-consumer</artifactId>
 		</dependency>
 
-		<!--portal service-->
-		<dependency>
-			<groupId>com.ctrip.hermes</groupId>
-			<artifactId>hermes-portal</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.glassfish.jersey.media</groupId>
-					<artifactId>jersey-media-multipart</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-grizzly2</artifactId>

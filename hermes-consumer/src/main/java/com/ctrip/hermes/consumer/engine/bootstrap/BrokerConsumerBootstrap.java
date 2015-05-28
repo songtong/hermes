@@ -27,7 +27,7 @@ public class BrokerConsumerBootstrap extends BaseConsumerBootstrap {
 
 		CompositeSubscribeHandle handler = new CompositeSubscribeHandle();
 
-		List<Partition> partitions = m_metaService.getPartitions(context.getTopic().getName(), context.getGroupId());
+		List<Partition> partitions = m_metaService.listPartitionsByTopic(context.getTopic().getName());
 		for (final Partition partition : partitions) {
 			handler.addSubscribeHandle(m_consumptionStrategyRegistry.findStrategy(context.getConsumerType()).start(
 			      context, partition.getId()));

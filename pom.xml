@@ -56,6 +56,11 @@
             <artifactId>hermes-portal</artifactId>
             <version>${project.version}</version>
          </dependency>
+          <dependency>
+            <groupId>com.ctrip.hermes</groupId>
+            <artifactId>hermes-rest</artifactId>
+            <version>${project.version}</version>
+         </dependency>
          <dependency>
             <groupId>com.dianping.cat</groupId>
             <artifactId>cat-client</artifactId>

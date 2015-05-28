@@ -77,6 +77,8 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private int m_cacheSize;
 
+	private int m_localCachePrefetchThreshold;
+
 	private ConsumerContext m_context;
 
 	private int m_partitionId;
@@ -87,11 +89,12 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
-	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize,
+	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize, int prefetchThreshold,
 	      SystemClockService systemClockService) {
 		m_context = context;
 		m_partitionId = partitionId;
 		m_cacheSize = cacheSize;
+		m_localCachePrefetchThreshold = prefetchThreshold;
 		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
 		m_systemClockService = systemClockService;
 
@@ -194,14 +197,14 @@ public class LongPollingConsumerTask implements Runnable {
 					break;
 				}
 
-				if (m_msgs.size() < m_config.getPullMessagesThreshold()) {
+				if (m_msgs.size() <= m_localCachePrefetchThreshold) {
 					schedulePullMessagesTask(correlationId);
 				}
 
 				if (!m_msgs.isEmpty()) {
 					consumeMessages(correlationId, m_cacheSize);
 				} else {
-					TimeUnit.MILLISECONDS.sleep(m_config.getNoMessageWaitInterval());
+					TimeUnit.MILLISECONDS.sleep(m_config.getNoMessageWaitIntervalMillis());
 				}
 
 			} catch (InterruptedException e) {
@@ -248,7 +251,7 @@ public class LongPollingConsumerTask implements Runnable {
 							if (response != null && response.getNextTryTime() > 0) {
 								scheduleRenewLeaseTask(key, response.getNextTryTime() - m_systemClockService.now());
 							} else {
-								scheduleRenewLeaseTask(key, m_config.getDefaultLeaseRenewDelay());
+								scheduleRenewLeaseTask(key, m_config.getDefaultLeaseRenewDelayMillis());
 							}
 
 							if (log.isDebugEnabled()) {
@@ -303,7 +306,7 @@ public class LongPollingConsumerTask implements Runnable {
 					if (response != null) {
 						nextTryTime = response.getNextTryTime();
 					} else {
-						nextTryTime = m_systemClockService.now() + m_config.getDefaultLeaseAcquireDelay();
+						nextTryTime = m_systemClockService.now() + m_config.getDefaultLeaseAcquireDelayMillis();
 					}
 
 					if (log.isDebugEnabled()) {
@@ -375,7 +378,7 @@ public class LongPollingConsumerTask implements Runnable {
 		@Override
 		public void run() {
 			try {
-				if (isClosed() || m_msgs.size() >= m_config.getPullMessagesThreshold()) {
+				if (isClosed() || m_msgs.size() > m_localCachePrefetchThreshold) {
 					return;
 				}
 
@@ -384,7 +387,7 @@ public class LongPollingConsumerTask implements Runnable {
 				if (endpoint == null) {
 					log.warn("No endpoint found for topic {} partition {}, will retry later",
 					      m_context.getTopic().getName(), m_partitionId);
-					TimeUnit.MILLISECONDS.sleep(m_config.getNoEndpointWaitInterval());
+					TimeUnit.MILLISECONDS.sleep(m_config.getNoEndpointWaitIntervalMillis());
 					return;
 				}
 

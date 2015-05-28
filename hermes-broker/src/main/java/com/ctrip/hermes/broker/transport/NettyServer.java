@@ -46,9 +46,9 @@ public class NettyServer extends ContainerHolder {
 				            new MagicNumberPrepender(), //
 				            new LengthFieldPrepender(4), //
 				            new NettyEncoder(), //
-				            new IdleStateHandler(0, 0, m_config.getClientMaxIdleTime()),//
+				            new IdleStateHandler(0, 0, m_config.getClientMaxIdleSeconds()),//
 				            new DefaultServerChannelInboundHandler(lookup(CommandProcessorManager.class), m_config
-				                  .getClientMaxIdleTime()));
+				                  .getClientMaxIdleSeconds()));
 			      }
 		      }).option(ChannelOption.SO_BACKLOG, 128) // TODO set tcp options
 		      .childOption(ChannelOption.SO_KEEPALIVE, true);

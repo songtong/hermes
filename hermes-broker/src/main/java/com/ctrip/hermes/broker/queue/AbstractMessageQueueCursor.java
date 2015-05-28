@@ -47,7 +47,7 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		m_priorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), true);
 		m_nonPriorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), false);
 		m_metaService = metaService;
-		m_groupIdInt = m_metaService.getGroupIdInt(m_tpg.getGroupId());
+		m_groupIdInt = m_metaService.translateToIntGroupId(m_tpg.getTopic(), m_tpg.getGroupId());
 	}
 
 	@Override

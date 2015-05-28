@@ -20,6 +20,8 @@
     <attribute name="schema-id" value-type="int" />
     <attribute name="consumer-retry-policy" value-type="String" />
     <attribute name="create-by" value-type="String" />
+    <attribute name="endpoint-type" value-type="String" />
+    <attribute name="ack-timeout-seconds" value-type="int" />
     <attribute name="codec-type" value-type="String" />
     <entity-ref name="consumer-group" type="list" names="consumer-groups" />
     <entity-ref name="producer" type="list" names="producers" />
@@ -31,6 +33,7 @@
     <attribute name="name" value-type="String" />
     <attribute name="app-ids" value-type="String" />
     <attribute name="retry-policy" value-type="String" />
+    <attribute name="ack-timeout-seconds" value-type="int" />
   </entity>
   <entity name="producer">
     <attribute name="app-id" value-type="int" />

@@ -40,14 +40,12 @@ import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
-import com.ctrip.hermes.core.message.retry.RetryPolicyFactory;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.TransferCallback;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.meta.entity.Topic;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -199,13 +197,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, Integer>> msgSeqs) {
 		if (CollectionUtil.isNotEmpty(msgSeqs)) {
 			try {
-				Topic topic = m_metaService.findTopic(tpp.getTopic());
-				String retryPolicyValue = topic.findConsumerGroup(groupId).getRetryPolicy();
-				if (retryPolicyValue == null || "".equals(retryPolicyValue.trim())) {
-					retryPolicyValue = topic.getConsumerRetryPolicy();
-				}
 
-				RetryPolicy retryPolicy = RetryPolicyFactory.create(retryPolicyValue);
+				RetryPolicy retryPolicy = m_metaService.findRetryPolicyByTopicAndGroup(tpp.getTopic(), groupId);
 
 				List<Pair<Long, Integer>> toDeadLetter = new ArrayList<>();
 				List<Pair<Long, Integer>> toResend = new ArrayList<>();
@@ -244,7 +237,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				proto.setTopic(tpp.getTopic());
 				proto.setPartition(tpp.getPartition());
 				proto.setPriority(tpp.getPriorityInt());
-				proto.setGroupId(m_metaService.getGroupIdInt(groupId));
+				proto.setGroupId(m_metaService.translateToIntGroupId(tpp.getTopic(), groupId));
 				proto.setScheduleDate(new Date(retryPolicy.nextScheduleTimeMillis(0, now)));
 				proto.setMessageIds(collectOffset(msgSeqs));
 				proto.setRemainingRetries(retryPolicy.getRetryTimes());
@@ -257,7 +250,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 					proto.setTopic(tpp.getTopic());
 					proto.setPartition(tpp.getPartition());
 					proto.setPriority(tpp.getPriorityInt());
-					proto.setGroupId(m_metaService.getGroupIdInt(groupId));
+					proto.setGroupId(m_metaService.translateToIntGroupId(tpp.getTopic(), groupId));
 					int retryTimes = retryPolicy.getRetryTimes() - pair.getValue();
 					proto.setScheduleDate(new Date(retryPolicy.nextScheduleTimeMillis(retryTimes, now)));
 					proto.setId(pair.getKey());
@@ -278,7 +271,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			proto.setTopic(tpp.getTopic());
 			proto.setPartition(tpp.getPartition());
 			proto.setPriority(tpp.getPriorityInt());
-			proto.setGroupId(m_metaService.getGroupIdInt(groupId));
+			proto.setGroupId(m_metaService.translateToIntGroupId(tpp.getTopic(), groupId));
 			proto.setDeadDate(new Date());
 			proto.setMessageIds(collectOffset(msgSeqs));
 
@@ -306,7 +299,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		try {
 			String topic = tpp.getTopic();
 			int partition = tpp.getPartition();
-			int intGroupId = m_metaService.getGroupIdInt(groupId);
+			int intGroupId = m_metaService.translateToIntGroupId(tpp.getTopic(), groupId);
 			if (resend) {
 				OffsetResend proto = getOffsetResend(topic, partition, intGroupId);
 
@@ -369,7 +362,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 	@Override
 	public synchronized Object findLastResendOffset(Tpg tpg) throws Exception {
-		int groupId = m_metaService.getGroupIdInt(tpg.getGroupId());
+		int groupId = m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId());
 		List<OffsetResend> tops = m_offsetResendDao.top(tpg.getTopic(), tpg.getPartition(), groupId,
 		      OffsetResendEntity.READSET_FULL);
 		if (CollectionUtil.isNotEmpty(tops)) {
@@ -379,7 +372,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			OffsetResend proto = new OffsetResend();
 			proto.setTopic(tpg.getTopic());
 			proto.setPartition(tpg.getPartition());
-			proto.setGroupId(m_metaService.getGroupIdInt(tpg.getGroupId()));
+			proto.setGroupId(m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId()));
 			proto.setLastScheduleDate(new Date(0));
 			proto.setLastId(0L);
 			proto.setCreationDate(new Date());
@@ -397,8 +390,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 		try {
 			final List<ResendGroupId> dataObjs = m_resendDao.find(tpg.getTopic(), tpg.getPartition(),
-			      m_metaService.getGroupIdInt(tpg.getGroupId()), startPair.getKey(), batchSize, startPair.getValue(),
-			      new Date(), ResendGroupIdEntity.READSET_FULL);
+			      m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId()), startPair.getKey(), batchSize,
+			      startPair.getValue(), new Date(), ResendGroupIdEntity.READSET_FULL);
 
 			if (CollectionUtil.isNotEmpty(dataObjs)) {
 				TppConsumerMessageBatch batch = new TppConsumerMessageBatch();

@@ -81,7 +81,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 						public void run() {
 							executeTask(pullMessageTask);
 						}
-					}, m_config.getLongPollingCheckInterval(), TimeUnit.MILLISECONDS);
+					}, m_config.getLongPollingCheckIntervalMillis(), TimeUnit.MILLISECONDS);
 				}
 			} else {
 				if (log.isDebugEnabled()) {

@@ -97,7 +97,11 @@ public class SendMessageCommand extends AbstractCommand {
 
 	public void onResultReceived(SendMessageResultCommand result) {
 		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
-			entry.getValue().set(new SendResult(result.isSuccess(entry.getKey())));
+			if (result.isSuccess(entry.getKey())) {
+				entry.getValue().set(new SendResult(true));
+			} else {
+				entry.getValue().setException(new RuntimeException("Send failed"));
+			}
 		}
 	}
 
@@ -244,7 +248,7 @@ public class SendMessageCommand extends AbstractCommand {
 	}
 
 	public void onTimeout() {
-		Exception e = new RuntimeException();
+		Exception e = new RuntimeException("Send timeout");
 		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
 			entry.getValue().setException(e);
 		}

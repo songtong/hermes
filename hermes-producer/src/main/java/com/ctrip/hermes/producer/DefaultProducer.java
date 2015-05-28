@@ -7,7 +7,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
-import com.ctrip.hermes.core.result.Callback;
+import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.producer.api.Producer;
@@ -43,8 +43,8 @@ public class DefaultProducer extends Producer {
 		@Override
 		public MessageHolder withRefKey(String key) {
 			if (key != null && key.length() > 90) {
-				throw new IllegalArgumentException(String.format("RefKey's length must not larger than 90 characters(refKey=%s)",
-				      key));
+				throw new IllegalArgumentException(String.format(
+				      "RefKey's length must not larger than 90 characters(refKey=%s)", key));
 			}
 
 			m_msg.setKey(key);
@@ -64,7 +64,7 @@ public class DefaultProducer extends Producer {
 		}
 
 		@Override
-		public MessageHolder setCallback(Callback callback) {
+		public MessageHolder setCallback(CompletionCallback<SendResult> callback) {
 			m_msg.setCallback(callback);
 			return this;
 		}

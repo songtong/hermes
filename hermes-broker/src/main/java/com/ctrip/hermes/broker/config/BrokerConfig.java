@@ -26,27 +26,27 @@ public class BrokerConfig {
 		return 3;
 	}
 
-	public long getLongPollingCheckInterval() {
+	public long getLongPollingCheckIntervalMillis() {
 		return 100L;
 	}
 
-	public int getDumperFetchSize() {
+	public int getDumperBatchSize() {
 		return 20;
 	}
 
-	public long getDumperNoMessageWaitInterval() {
+	public long getDumperNoMessageWaitIntervalMillis() {
 		return 50L;
 	}
 
-	public long getAckManagerCheckInterval() {
+	public long getAckManagerCheckIntervalMillis() {
 		return 100;
 	}
 
-	public int getAckManagerOperationHandlingBatchSize() {
+	public int getAckManagerOpHandlingBatchSize() {
 		return 50;
 	}
 
-	public int getAckManagerOperationQueueSize() {
+	public int getAckManagerOpQueueSize() {
 		return 10000;
 	}
 
@@ -54,19 +54,19 @@ public class BrokerConfig {
 		return 10;
 	}
 
-	public long getDefaultLeaseRenewDelay() {
+	public long getDefaultLeaseRenewDelayMillis() {
 		return 500L;
 	}
 
-	public long getDefaultLeaseAcquireDelay() {
+	public long getDefaultLeaseAcquireDelayMillis() {
 		return 100L;
 	}
 
-	public int getListenPort() {
+	public int getListeningPort() {
 		return 4376;
 	}
 
-	public int getClientMaxIdleTime() {
+	public int getClientMaxIdleSeconds() {
 		return 3600;
 	}
 }

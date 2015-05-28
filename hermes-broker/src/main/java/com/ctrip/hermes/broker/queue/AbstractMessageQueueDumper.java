@@ -61,7 +61,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 	private boolean flushMsgs(List<FutureBatchPriorityWrapper> todos) {
 		if (todos.isEmpty()) {
-			m_queue.drainTo(todos, m_config.getDumperFetchSize());
+			m_queue.drainTo(todos, m_config.getDumperBatchSize());
 		}
 
 		if (!todos.isEmpty()) {
@@ -140,12 +140,12 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 		@Override
 		public void run() {
-			List<FutureBatchPriorityWrapper> todos = new ArrayList<>(m_config.getDumperFetchSize());
+			List<FutureBatchPriorityWrapper> todos = new ArrayList<>(m_config.getDumperBatchSize());
 
 			while (!Thread.currentThread().isInterrupted() && !m_lease.isExpired()) {
 				try {
 					if (!flushMsgs(todos)) {
-						TimeUnit.MILLISECONDS.sleep(m_config.getDumperNoMessageWaitInterval());
+						TimeUnit.MILLISECONDS.sleep(m_config.getDumperNoMessageWaitIntervalMillis());
 					}
 
 				} catch (InterruptedException e) {

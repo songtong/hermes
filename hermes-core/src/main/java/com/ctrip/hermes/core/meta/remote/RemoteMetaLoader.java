@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.meta.internal;
+package com.ctrip.hermes.core.meta.remote;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -13,7 +13,7 @@ import org.unidal.lookup.annotation.Named;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.meta.remote.MetaServerLocator;
+import com.ctrip.hermes.core.meta.internal.MetaLoader;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.google.common.io.ByteStreams;
 
