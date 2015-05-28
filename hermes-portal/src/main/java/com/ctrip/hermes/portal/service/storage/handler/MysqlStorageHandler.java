@@ -43,7 +43,7 @@ public class MysqlStorageHandler implements StorageHandler {
 
 		final String JDBC_URL = "jdbc:mysql://10.3.6.237:3306";
 		final String MYSQL_USER = "root";
-		final String MYSQL_USER_PSW = "xxxxxxx";
+		final String MYSQL_USER_PSW = "xxxxx";
 
 		Connection conn = null;
 		Statement stmt = null;
