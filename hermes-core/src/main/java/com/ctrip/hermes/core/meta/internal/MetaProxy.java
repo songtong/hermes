@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.meta;
+package com.ctrip.hermes.core.meta.internal;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;

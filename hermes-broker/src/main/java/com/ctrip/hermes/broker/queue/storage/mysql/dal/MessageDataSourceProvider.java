@@ -24,7 +24,7 @@ public class MessageDataSourceProvider implements DataSourceProvider {
 	public DataSourcesDef defineDatasources() {
 		DataSourcesDef def = new DataSourcesDef();
 
-		List<Datasource> dataSources = m_metaService.listMysqlDataSources();
+		List<Datasource> dataSources = m_metaService.listAllMysqlDataSources();
 		for (Datasource ds : dataSources) {
 			Map<String, Property> dsProps = ds.getProperties();
 			DataSourceDef dsDef = new DataSourceDef(ds.getId());
@@ -39,7 +39,7 @@ public class MessageDataSourceProvider implements DataSourceProvider {
 			if (dsProps.get("password") != null) {
 				props.setPassword(dsProps.get("password").getValue());
 			}
-			// TODO set other properties
+
 			props.setConnectionProperties("useUnicode=true&autoReconnect=true&rewriteBatchedStatements=true");
 			dsDef.setProperties(props);
 

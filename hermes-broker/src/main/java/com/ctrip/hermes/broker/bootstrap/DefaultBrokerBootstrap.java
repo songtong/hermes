@@ -31,14 +31,14 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 	public void start() throws Exception {
 		// TODO should move to start script -D cause ByteBufUtil will read in static initialization
 		System.setProperty("io.netty.allocator.type", "pooled");
-		ChannelFuture future = m_nettyServer.start(m_config.getListenPort());
+		ChannelFuture future = m_nettyServer.start(m_config.getListeningPort());
 
 		future.addListener(new ChannelFutureListener() {
 
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (future.isSuccess()) {
-					log.info("Broker started at port {}.", m_config.getListenPort());
+					log.info("Broker started at port {}.", m_config.getListeningPort());
 				} else {
 					log.error("Failed to start broker.");
 				}

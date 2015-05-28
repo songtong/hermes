@@ -9,13 +9,14 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.meta.MetaManager;
-import com.ctrip.hermes.core.meta.MetaProxy;
+import com.ctrip.hermes.core.meta.remote.RemoteMetaLoader;
 import com.ctrip.hermes.core.meta.remote.RemoteMetaProxy;
 import com.ctrip.hermes.meta.entity.Meta;
 
 @Named(type = MetaManager.class)
 public class DefaultMetaManager extends ContainerHolder implements MetaManager, Initializable {
+	private static final String KEY_IS_LOCAL_MODE = "isLocalMode";
+
 	private static final Logger log = LoggerFactory.getLogger(DefaultMetaManager.class);
 
 	@Inject(LocalMetaLoader.ID)
@@ -45,7 +46,7 @@ public class DefaultMetaManager extends ContainerHolder implements MetaManager, 
 	}
 
 	@Override
-	public Meta getMeta() {
+	public Meta loadMeta() {
 		if (isLocalMode()) {
 			return m_localMeta.load();
 		} else {
@@ -59,10 +60,10 @@ public class DefaultMetaManager extends ContainerHolder implements MetaManager, 
 
 	@Override
 	public void initialize() throws InitializationException {
-		if (System.getenv().containsKey("isLocalMode")) {
-			m_localMode = Boolean.parseBoolean(System.getenv("isLocalMode"));
-		} else if (m_env.getGlobalConfig().containsKey("isLocalMode")) {
-			m_localMode = Boolean.parseBoolean(m_env.getGlobalConfig().getProperty("isLocalMode"));
+		if (System.getenv().containsKey(KEY_IS_LOCAL_MODE)) {
+			m_localMode = Boolean.parseBoolean(System.getenv(KEY_IS_LOCAL_MODE));
+		} else if (m_env.getGlobalConfig().containsKey(KEY_IS_LOCAL_MODE)) {
+			m_localMode = Boolean.parseBoolean(m_env.getGlobalConfig().getProperty(KEY_IS_LOCAL_MODE));
 		} else {
 			m_localMode = false;
 		}

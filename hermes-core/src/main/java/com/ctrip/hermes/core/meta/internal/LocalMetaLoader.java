@@ -3,6 +3,8 @@ package com.ctrip.hermes.core.meta.internal;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 import org.xml.sax.SAXException;
 
@@ -10,8 +12,16 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 
+/**
+ * for test only
+ * 
+ * @author Leo Liang(jhliang@ctrip.com)
+ *
+ */
 @Named(type = MetaLoader.class, value = LocalMetaLoader.ID)
 public class LocalMetaLoader implements MetaLoader {
+
+	private static final Logger log = LoggerFactory.getLogger(LocalMetaLoader.class);
 
 	public static final String ID = "local-meta-loader";
 
@@ -19,7 +29,8 @@ public class LocalMetaLoader implements MetaLoader {
 
 	@Override
 	public Meta load() {
-		System.out.println("Loading meta from local: " + PATH);
+
+		log.info("Loading meta from local: " + PATH);
 		InputStream in = getClass().getResourceAsStream(PATH);
 
 		if (in == null) {

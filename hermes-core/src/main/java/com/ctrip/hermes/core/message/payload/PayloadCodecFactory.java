@@ -12,7 +12,7 @@ public class PayloadCodecFactory {
 	public static PayloadCodec getCodecByTopicName(String topic) {
 		MetaService metaService = PlexusComponentLocator.lookup(MetaService.class);
 
-		com.ctrip.hermes.meta.entity.Codec codecEntity = metaService.getCodecByTopic(topic);
+		com.ctrip.hermes.meta.entity.Codec codecEntity = metaService.findCodecByTopic(topic);
 		return getCodecByType(codecEntity.getType());
 	}
 

@@ -64,11 +64,11 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_opQueue = new LinkedBlockingQueue<>(m_config.getAckManagerOperationQueueSize());
+		m_opQueue = new LinkedBlockingQueue<>(m_config.getAckManagerOpQueueSize());
 
 		m_scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
 		      "AckManagerWorker", false));
-		m_scheduledExecutorService.scheduleWithFixedDelay(new AckTask(), 0, m_config.getAckManagerCheckInterval(),
+		m_scheduledExecutorService.scheduleWithFixedDelay(new AckTask(), 0, m_config.getAckManagerCheckIntervalMillis(),
 		      TimeUnit.MILLISECONDS);
 
 	}
@@ -82,8 +82,10 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 	private void ensureMapEntryExist(Triple<Tpp, String, Boolean> key) {
 		if (!m_holders.containsKey(key)) {
-			m_holders.putIfAbsent(key,
-			      new DefaultAckHolder<Integer>(m_metaService.getAckTimeoutSeconds(key.getFirst().getTopic()) * 1000));
+			m_holders.putIfAbsent(
+			      key,
+			      new DefaultAckHolder<Integer>(m_metaService.getAckTimeoutSecondsTopicAndConsumerGroup(key.getFirst()
+			            .getTopic(), key.getMiddle()) * 1000));
 		}
 	}
 
@@ -123,7 +125,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 		private void handleOperations() {
 			try {
 				if (m_todos.isEmpty()) {
-					m_opQueue.drainTo(m_todos, m_config.getAckManagerOperationHandlingBatchSize());
+					m_opQueue.drainTo(m_todos, m_config.getAckManagerOpHandlingBatchSize());
 				}
 
 				if (m_todos.isEmpty()) {

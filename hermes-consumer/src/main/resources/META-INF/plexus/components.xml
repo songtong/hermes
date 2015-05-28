@@ -88,6 +88,9 @@
 					<role>com.ctrip.hermes.core.message.codec.MessageCodec</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor</role>
 				</requirement>
 			</requirements>
@@ -129,6 +132,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>

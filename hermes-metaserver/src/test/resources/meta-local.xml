@@ -6,28 +6,32 @@
 	<endpoint id='kafka-endpoint' type="kafka" />
 
 	<topic name='order_new' id='100' partition-count='1'
-		storage-type='mysql' codec-type="json">
+		storage-type='mysql' codec-type="json" endpoint-type="broker"
+		ack-timeout-seconds="3">
 		<partition id='0' read-datasource='ds0' write-datasource='ds0'
 			endpoint='br0' />
 	</topic>
 
-	<topic name='topic' partition-count='1' codec-type="json">
+	<topic name='topic' partition-count='1' codec-type="json"
+		endpoint-type="broker" ack-timeout-seconds="3">
 		<partition id='0' read-datasource='ds0' write-datasource='ds0'
 			endpoint='br0' />
 	</topic>
 
-	<topic name='topic1' partition-count='1' codec-type="json">
+	<topic name='topic1' partition-count='1' codec-type="json"
+		endpoint-type="broker" ack-timeout-seconds="3">
 		<partition id='0' read-datasource='ds0' write-datasource='ds0'
 			endpoint='br0' />
 	</topic>
 
-	<topic name='topic2' partition-count='1' codec-type="json">
+	<topic name='topic2' partition-count='1' codec-type="json"
+		endpoint-type="broker" ack-timeout-seconds="3">
 		<partition id='0' read-datasource='ds0' write-datasource='ds0'
 			endpoint='br0' />
 	</topic>
 
 	<topic name='kafka.SimpleTopic' partition-count='1' storage-type='kafka'
-		codec-type="json">
+		codec-type="json" endpoint-type="kafka" ack-timeout-seconds="3">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-produer' endpoint='kafka-endpoint' />
 	</topic>
@@ -35,7 +39,7 @@
 	<topic name='kafka.AvroTopic' partition-count='1' storage-type='kafka'
 		id='101' description='topic for Avro Test' status='valid'
 		createTime='2015-01-01 00:00:00' lastModifiedTime='2015-04-01 00:00:00'
-		schemaName='ClickEvent'>
+		schemaName='ClickEvent' endpoint-type="kafka" ack-timeout-seconds="3">
 		<property name='replication-factor' value='3' />
 		<property name='partitions' value='5' codec-type="avro" />
 		<partition id='0' read-datasource='kafka-consumer'

@@ -15,7 +15,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
-import com.ctrip.hermes.core.message.BaseConsumerMessage;
+import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -43,18 +43,30 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 	@Inject
 	private SystemClockService m_systemClockService;
 
+	@Inject
+	private ClientEnvironment m_clientEnv;
+
 	@Override
 	public void register(long correlationId, final ConsumerContext context) {
-		if (log.isDebugEnabled()) {
-			log.debug("Registered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId, context
-			      .getTopic().getName(), context.getGroupId(), context.getSessionId());
-		}
+		try {
+			if (log.isDebugEnabled()) {
+				log.debug("Registered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId, context
+				      .getTopic().getName(), context.getGroupId(), context.getSessionId());
+			}
 
-		m_consumerContexs.putIfAbsent(
-		      correlationId,
-		      new Pair<>(context, Executors.newFixedThreadPool(m_config.getNotifierThreadCount(), HermesThreadFactory
-		            .create(String.format("ConsumerNotifier-%s-%s-%s", context.getTopic().getName(),
-		                  context.getGroupId(), correlationId), false))));
+			int threadCount = Integer.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
+			      "consumer.notifier.threadcount", m_config.getDefaultNotifierThreadCount()));
+
+			m_consumerContexs.putIfAbsent(
+			      correlationId,
+			      new Pair<>(context, Executors.newFixedThreadPool(
+			            threadCount,
+			            HermesThreadFactory.create(
+			                  String.format("ConsumerNotifier-%s-%s-%s", context.getTopic().getName(),
+			                        context.getGroupId(), correlationId), false))));
+		} catch (Exception e) {
+			throw new RuntimeException("Register consumer notifier failed", e);
+		}
 	}
 
 	@Override

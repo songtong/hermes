@@ -39,7 +39,7 @@ public class TopicStorageService {
 		if (ds.equals("ds0")) {
 			databaseName = "fxhermesshard01db";
 
-			Topic topic = metaService.findTopic(topicName);
+			Topic topic = metaService.findTopicByName(topicName);
 			if (null != topic) {
 				return createNewTopic(databaseName, topic);
 			}

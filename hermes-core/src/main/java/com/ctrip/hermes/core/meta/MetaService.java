@@ -5,6 +5,7 @@ import java.util.List;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
+import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -13,78 +14,38 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 
+/**
+ * 
+ * @author Leo Liang(jhliang@ctrip.com)
+ *
+ */
 public interface MetaService {
 
-	String getEndpointType(String topic);
+	Storage findStorageByTopic(String topic);
 
-	/**
-	 * @param topic
-	 * @return
-	 */
-	List<Partition> getPartitions(String topic);
+	List<Datasource> listAllMysqlDataSources();
 
-	/**
-	 * @param endpointId
-	 * @return
-	 */
-	Endpoint findEndpoint(String endpointId);
+	Endpoint findEndpointByTopicAndPartition(String topic, int partition);
 
-	/**
-	 * 
-	 * @param topic
-	 */
-	Storage findStorage(String topic);
+	String findEndpointTypeByTopic(String topic);
 
-	/**
-	 * @param topic
-	 * @return
-	 */
+	List<Partition> listPartitionsByTopic(String topic);
 
-	Partition findPartition(String topic, int shard);
+	Partition findPartitionByTopicAndPartition(String topic, int partition);
 
-	/**
-	 * @param topicPattern
-	 * @return
-	 */
-	List<Topic> findTopicsByPattern(String topicPattern);
+	Codec findCodecByTopic(String topic);
 
-	/**
-	 * 
-	 * @param topic
-	 * @return
-	 */
-	Topic findTopic(String topic);
+	List<Topic> listTopicsByPattern(String topicPattern);
 
-	/**
-	 * 
-	 * @param topic
-	 * @return
-	 */
-	Codec getCodecByTopic(String topic);
+	Topic findTopicByName(String topic);
 
-	/**
-	 * 
-	 * @param topic
-	 * @param groupId
-	 * @return
-	 */
-	List<Partition> getPartitions(String topic, String groupId);
+	int translateToIntGroupId(String topic, String groupId);
 
-	/**
-	 * @param groupId
-	 * @return
-	 */
-	int getGroupIdInt(String groupId);
+	int getAckTimeoutSecondsTopicAndConsumerGroup(String topic, String groupId);
 
-	List<Datasource> listMysqlDataSources();
+	void refreshMeta(Meta meta);
 
-	Topic findTopic(long topicId);
-
-	int getAckTimeoutSeconds(String topic);
-
-	Codec getCodecByType(String codecType);
-
-	public void refreshMeta(Meta meta);
+	RetryPolicy findRetryPolicyByTopicAndGroup(String topic, String groupId);
 
 	LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId);
 

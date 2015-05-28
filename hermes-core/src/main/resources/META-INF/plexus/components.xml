@@ -12,7 +12,7 @@
 		<component>
 			<role>com.ctrip.hermes.core.meta.internal.MetaLoader</role>
 			<role-hint>remote-meta-loader</role-hint>
-			<implementation>com.ctrip.hermes.core.meta.internal.RemoteMetaLoader</implementation>
+			<implementation>com.ctrip.hermes.core.meta.remote.RemoteMetaLoader</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
@@ -26,7 +26,7 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.meta.MetaManager</role>
+			<role>com.ctrip.hermes.core.meta.internal.MetaManager</role>
 			<implementation>com.ctrip.hermes.core.meta.internal.DefaultMetaManager</implementation>
 			<requirements>
 				<requirement>
@@ -43,12 +43,12 @@
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaProxy</role>
+					<role>com.ctrip.hermes.core.meta.internal.MetaProxy</role>
 					<role-hint>local</role-hint>
 					<field-name>m_localMetaProxy</field-name>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaProxy</role>
+					<role>com.ctrip.hermes.core.meta.internal.MetaProxy</role>
 					<role-hint>remote</role-hint>
 					<field-name>m_remoteMetaProxy</field-name>
 				</requirement>
@@ -59,7 +59,7 @@
 			<implementation>com.ctrip.hermes.core.meta.internal.DefaultMetaService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaManager</role>
+					<role>com.ctrip.hermes.core.meta.internal.MetaManager</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.config.CoreConfig</role>
@@ -67,12 +67,12 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.meta.MetaProxy</role>
+			<role>com.ctrip.hermes.core.meta.internal.MetaProxy</role>
 			<role-hint>local</role-hint>
 			<implementation>com.ctrip.hermes.core.meta.internal.LocalMetaProxy</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.meta.MetaProxy</role>
+			<role>com.ctrip.hermes.core.meta.internal.MetaProxy</role>
 			<role-hint>remote</role-hint>
 			<implementation>com.ctrip.hermes.core.meta.remote.RemoteMetaProxy</implementation>
 			<requirements>

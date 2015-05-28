@@ -143,13 +143,13 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			m_logger.warn("kafka read consumer config failed", e);
 		}
 
-		List<Partition> partitions = m_metaService.getPartitions(topic);
+		List<Partition> partitions = m_metaService.listPartitionsByTopic(topic);
 		if (partitions == null || partitions.size() < 1) {
 			return configs;
 		}
 
 		String consumerDatasource = partitions.get(0).getReadDatasource();
-		Storage targetStorage = m_metaService.findStorage(topic);
+		Storage targetStorage = m_metaService.findStorageByTopic(topic);
 		if (targetStorage == null) {
 			return configs;
 		}
