@@ -30,6 +30,7 @@
             <outputDirectory>/</outputDirectory>
             <includes>
                 <include>*.properties</include>
+                <include>log4j.xml</include>
             </includes>
             <fileMode>0666</fileMode>
         </fileSet>
