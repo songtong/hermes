@@ -17,10 +17,6 @@
 			<artifactId>hermes-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.ctrip.hermes</groupId>
-			<artifactId>hermes-rest</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.googlecode.javaewah</groupId>
 			<artifactId>JavaEWAH</artifactId>
 		</dependency>
