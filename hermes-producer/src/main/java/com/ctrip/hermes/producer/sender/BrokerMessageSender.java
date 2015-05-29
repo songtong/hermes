@@ -16,18 +16,23 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.config.ProducerConfig;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
@@ -35,16 +40,21 @@ import com.google.common.util.concurrent.SettableFuture;
  *
  */
 @Named(type = MessageSender.class, value = Endpoint.BROKER)
-public class BrokerMessageSender extends AbstractMessageSender implements MessageSender {
+public class BrokerMessageSender extends AbstractMessageSender implements MessageSender, Initializable {
 
 	private static Logger log = LoggerFactory.getLogger(BrokerMessageSender.class);
 
 	@Inject
 	private ProducerConfig m_config;
 
+	@Inject
+	private ClientEnvironment m_clientEnv;
+
 	private ConcurrentMap<Pair<String, Integer>, TaskQueue> m_taskQueues = new ConcurrentHashMap<>();
 
 	private AtomicBoolean m_workerStarted = new AtomicBoolean(false);
+
+	private ExecutorService m_callbackExecutorService;
 
 	@Override
 	public Future<SendResult> doSend(ProducerMessage<?> msg) {
@@ -53,16 +63,20 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 
 		Pair<String, Integer> tp = new Pair<String, Integer>(msg.getTopic(), msg.getPartition());
-		m_taskQueues.putIfAbsent(tp,
-		      new TaskQueue(msg.getTopic(), msg.getPartition(), m_config.getBrokerSenderTopicPartitionTaskQueueSize()));
+		m_taskQueues.putIfAbsent(
+		      tp,
+		      new TaskQueue(msg.getTopic(), msg.getPartition(), Integer.valueOf(m_clientEnv.getGlobalConfig()
+		            .getProperty("producer.sender.taskqueue.size", m_config.getDefaultBrokerSenderTaskQueueSize()))));
 
 		return m_taskQueues.get(tp).submit(msg);
 	}
 
 	private void startEndpointSender() {
+		long checkInterval = Long.valueOf(m_clientEnv.getGlobalConfig().getProperty("producer.networkio.interval",
+		      m_config.getDefaultBrokerSenderNetworkIoCheckIntervalMillis()));
+
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("ProducerEndpointSender", false))
-		      .scheduleWithFixedDelay(new EndpointSender(), 0, m_config.getBrokerSenderCheckInterval(),
-		            TimeUnit.MILLISECONDS);
+		      .scheduleWithFixedDelay(new EndpointSender(), 0, checkInterval, TimeUnit.MILLISECONDS);
 	}
 
 	private class EndpointSender implements Runnable {
@@ -72,7 +86,10 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		private ExecutorService m_taskExecThreadPool;
 
 		public EndpointSender() {
-			m_taskExecThreadPool = Executors.newFixedThreadPool(m_config.getBrokerSenderTaskExecThreadCount(),
+			int threadCount = Integer.valueOf(m_clientEnv.getGlobalConfig().getProperty("producer.networkio.threadcount",
+			      m_config.getDefaultBrokerSenderNetworkIoThreadCount()));
+
+			m_taskExecThreadPool = Executors.newFixedThreadPool(threadCount,
 			      HermesThreadFactory.create("BrokerMessageSender", false));
 		}
 
@@ -132,7 +149,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		@Override
 		public void run() {
 			try {
-				SendMessageCommand cmd = m_taskQueue.peek(m_config.getBrokerSenderBatchSize());
+				int batchSize = Integer.valueOf(m_clientEnv.getGlobalConfig().getProperty("producer.sender.batchsize",
+				      m_config.getDefaultBrokerSenderBatchSize()));
+				SendMessageCommand cmd = m_taskQueue.peek(batchSize);
 
 				if (cmd != null && sendMessagesToBroker(cmd)) {
 					m_taskQueue.pop();
@@ -155,11 +174,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				Future<Boolean> future = m_messageAcceptanceMonitor.monitor(cmd.getHeader().getCorrelationId());
 				m_messageResultMonitor.monitor(cmd);
 
-				m_endpointClient.writeCommand(endpoint, cmd, m_config.getBrokerSenderSendTimeout(), TimeUnit.MILLISECONDS);
+				long timeout = Long.valueOf(m_clientEnv.getGlobalConfig().getProperty("producer.sender.send.timeout",
+				      m_config.getDefaultBrokerSenderSendTimeoutMillis()));
+
+				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
 
 				Boolean brokerAccepted = null;
 				try {
-					brokerAccepted = future.get(m_config.getBrokerSenderSendTimeout(), TimeUnit.MILLISECONDS);
+					brokerAccepted = future.get(timeout, TimeUnit.MILLISECONDS);
 				} catch (TimeoutException e) {
 					future.cancel(true);
 				}
@@ -179,7 +201,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 	}
 
-	private static class TaskQueue {
+	private class TaskQueue {
 		private String m_topic;
 
 		private int m_partition;
@@ -222,14 +244,38 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			return m_cmd.get() != null || !m_queue.isEmpty();
 		}
 
-		public Future<SendResult> submit(ProducerMessage<?> msg) {
+		public Future<SendResult> submit(final ProducerMessage<?> msg) {
 			SettableFuture<SendResult> future = SettableFuture.create();
 
 			m_queue.offer(new ProducerWorkerContext(msg, future));
 
+			if (msg.getCallback() != null) {
+				Futures.addCallback(future, new FutureCallback<SendResult>() {
+
+					@Override
+					public void onSuccess(SendResult result) {
+						msg.getCallback().onSuccess(result);
+					}
+
+					@Override
+					public void onFailure(Throwable t) {
+						msg.getCallback().onFailure(t);
+					}
+				}, m_callbackExecutorService);
+			}
+
 			return future;
 		}
 
+	}
+
+	@Override
+	public void initialize() throws InitializationException {
+		int callbackThreadCount = Integer.valueOf(m_clientEnv.getGlobalConfig().getProperty(
+		      "producer.callback.threadcount", m_config.getDefaultProducerCallbackThreadCount()));
+
+		m_callbackExecutorService = Executors.newFixedThreadPool(callbackThreadCount,
+		      HermesThreadFactory.create("ProducerCallback", false));
 	}
 
 	private static class ProducerWorkerContext {

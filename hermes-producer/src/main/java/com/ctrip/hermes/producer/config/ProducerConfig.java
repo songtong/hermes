@@ -9,24 +9,28 @@ import org.unidal.lookup.annotation.Named;
 @Named(type = ProducerConfig.class)
 public class ProducerConfig {
 
-	public int getBrokerSenderTaskExecThreadCount() {
-		return 10;
+	public String getDefaultBrokerSenderNetworkIoThreadCount() {
+		return "10";
 	}
 
-	public long getBrokerSenderCheckInterval() {
-		return 50L;
+	public String getDefaultBrokerSenderNetworkIoCheckIntervalMillis() {
+		return "50";
 	}
 
-	public int getBrokerSenderBatchSize() {
-		return 3000;
+	public String getDefaultBrokerSenderBatchSize() {
+		return "300";
 	}
 
-	public long getBrokerSenderSendTimeout() {
-		return 200;
+	public String getDefaultBrokerSenderSendTimeoutMillis() {
+		return "200";
 	}
 
-	public int getBrokerSenderTopicPartitionTaskQueueSize() {
-		return 10000;
+	public String getDefaultBrokerSenderTaskQueueSize() {
+		return "10000";
+	}
+
+	public String getDefaultProducerCallbackThreadCount() {
+		return "3";
 	}
 
 }

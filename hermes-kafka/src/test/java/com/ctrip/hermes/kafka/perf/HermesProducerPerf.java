@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import com.ctrip.hermes.core.result.Callback;
+import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
@@ -25,7 +25,7 @@ public class HermesProducerPerf {
 		}
 
 		Cat.initializeByDomain("900777", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
-		
+
 		/* parse args */
 		String topicName = args[0];
 		long numRecords = Long.parseLong(args[1]);
@@ -41,7 +41,7 @@ public class HermesProducerPerf {
 		Stats stats = new Stats(numRecords, 5000);
 		for (int i = 0; i < numRecords; i++) {
 			long sendStart = System.currentTimeMillis();
-			Callback cb = stats.nextCompletion(sendStart, proMsg.getBytes().length, stats);
+			CompletionCallback<SendResult> cb = stats.nextCompletion(sendStart, proMsg.getBytes().length, stats);
 			MessageHolder message = producer.message(topicName, RandomStringUtils.random(1), proMsg);
 			message.setCallback(cb);
 			message.send();
@@ -136,8 +136,8 @@ public class HermesProducerPerf {
 			}
 		}
 
-		public Callback nextCompletion(long start, int bytes, Stats stats) {
-			Callback cb = new PerfCallback(this.iteration, start, bytes, stats);
+		public CompletionCallback<SendResult> nextCompletion(long start, int bytes, Stats stats) {
+			CompletionCallback<SendResult> cb = new PerfCallback(this.iteration, start, bytes, stats);
 			this.iteration++;
 			return cb;
 		}
@@ -182,7 +182,7 @@ public class HermesProducerPerf {
 		}
 	}
 
-	private static final class PerfCallback implements Callback {
+	private static final class PerfCallback implements CompletionCallback<SendResult> {
 		private final long start;
 
 		private final int iteration;
@@ -198,12 +198,16 @@ public class HermesProducerPerf {
 			this.bytes = bytes;
 		}
 
-		public void onCompletion(SendResult metadata, Exception exception) {
+		@Override
+		public void onSuccess(SendResult result) {
 			long now = System.currentTimeMillis();
 			int latency = (int) (now - start);
 			this.stats.record(iteration, latency, bytes, now);
-			if (exception != null)
-				exception.printStackTrace();
+		}
+
+		@Override
+		public void onFailure(Throwable t) {
+			t.printStackTrace();
 		}
 	}
 }

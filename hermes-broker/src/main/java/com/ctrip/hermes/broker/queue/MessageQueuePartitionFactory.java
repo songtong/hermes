@@ -24,7 +24,7 @@ public class MessageQueuePartitionFactory extends ContainerHolder {
 	private BrokerConfig m_config;
 
 	public MessageQueue getMessageQueue(String topic, int partition) {
-		Storage storage = m_metaService.findStorage(topic);
+		Storage storage = m_metaService.findStorageByTopic(topic);
 
 		if (Arrays.asList(Storage.MYSQL).contains(storage.getType())) {
 			return new DefaultMessageQueue(topic, partition, lookup(MessageQueueStorage.class, storage.getType()),

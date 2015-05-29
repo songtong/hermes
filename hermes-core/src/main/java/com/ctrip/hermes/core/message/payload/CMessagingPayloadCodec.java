@@ -5,7 +5,7 @@ import org.unidal.lookup.annotation.Named;
 import com.google.common.base.Charsets;
 
 @Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.CMESSAGING)
-public class CMessagingPayloadCodec implements PayloadCodec {
+public class CMessagingPayloadCodec extends AbstractPayloadCodec {
 
 	@Override
 	public byte[] encode(String topic, Object obj) {
@@ -19,7 +19,7 @@ public class CMessagingPayloadCodec implements PayloadCodec {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T decode(byte[] raw, Class<T> clazz) {
+	public <T> T doDecode(byte[] raw, Class<T> clazz) {
 		if (clazz == byte[].class) {
 			return (T) raw;
 		} else {

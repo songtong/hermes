@@ -25,7 +25,7 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.core.result.Callback;
+import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -60,13 +60,13 @@ public class KafkaMessageSender implements MessageSender {
 			m_logger.warn("read producer config failed", e);
 		}
 
-		List<Partition> partitions = m_metaService.getPartitions(topic);
+		List<Partition> partitions = m_metaService.listPartitionsByTopic(topic);
 		if (partitions == null || partitions.size() < 1) {
 			return configs;
 		}
 
 		String producerDatasource = partitions.get(0).getWriteDatasource();
-		Storage produerStorage = m_metaService.findStorage(topic);
+		Storage produerStorage = m_metaService.findStorageByTopic(topic);
 		if (produerStorage == null) {
 			return configs;
 		}
@@ -118,17 +118,20 @@ public class KafkaMessageSender implements MessageSender {
 
 	class KafkaCallback implements org.apache.kafka.clients.producer.Callback {
 
-		private Callback m_callback;
+		private CompletionCallback<SendResult> m_callback;
 
-		public KafkaCallback(Callback callback) {
+		public KafkaCallback(CompletionCallback<SendResult> callback) {
 			this.m_callback = callback;
 		}
 
 		@Override
 		public void onCompletion(RecordMetadata metadata, Exception exception) {
-			if (this.m_callback != null) {
-				SendResult sendResult = new SendResult(true);
-				this.m_callback.onCompletion(sendResult, exception);
+			if (m_callback != null) {
+				if (exception != null) {
+					m_callback.onFailure(exception);
+				} else {
+					m_callback.onSuccess(new SendResult());
+				}
 			}
 		}
 	}
@@ -149,7 +152,7 @@ public class KafkaMessageSender implements MessageSender {
 		@Override
 		public SendResult get() throws InterruptedException, ExecutionException {
 			this.m_recordMetadata.get();
-			SendResult sendResult = new SendResult(true);
+			SendResult sendResult = new SendResult();
 			return sendResult;
 		}
 
@@ -157,7 +160,7 @@ public class KafkaMessageSender implements MessageSender {
 		public SendResult get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException,
 		      TimeoutException {
 			this.m_recordMetadata.get(timeout, unit);
-			SendResult sendResult = new SendResult(true);
+			SendResult sendResult = new SendResult();
 			return sendResult;
 		}
 

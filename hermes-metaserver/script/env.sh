@@ -2,7 +2,7 @@
 
 # set jvm startup argument
 JAVA_OPTS="-Djava.awt.headless=true \
-            -Dcom.sun.management.jmxremote.port=8301 \
+            -Dcom.sun.management.jmxremote.port=8302 \
             -Dcom.sun.management.jmxremote.authenticate=false \
             -Dcom.sun.management.jmxremote.ssl=false \
             -Dfile.encoding=utf-8 \

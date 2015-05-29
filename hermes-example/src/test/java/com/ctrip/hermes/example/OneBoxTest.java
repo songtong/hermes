@@ -23,6 +23,7 @@ import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.producer.api.Producer;
 import com.dianping.cat.Cat;
@@ -40,23 +41,30 @@ public class OneBoxTest extends ComponentTestCase {
 
 	@Test
 	public void testProduce() throws Exception {
-		startBroker();
+		// startBroker();
 		Producer p = Producer.getInstance();
 
-		p.message("order_new", "0", 1233213423L).withRefKey("key").withPriority().send();
+		Future<SendResult> future = p.message("order_new", "0", 1233213423L).withRefKey("key").withPriority().send();
+
+		try {
+			future.get();
+			System.out.println("Send Success");
+		} catch (Exception e) {
+			System.out.println("Send Fail");
+		}
 
 		System.in.read();
 	}
 
 	@Test
 	public void testConsumer() throws Exception {
-		startBroker();
+		// startBroker();
 
 		Thread.sleep(2000);
 		Engine engine = lookup(Engine.class);
 		final AtomicLong counter = new AtomicLong(0);
 
-		String groupId = "sdf";
+		String groupId = "group1";
 		Subscriber s = new Subscriber("order_new", groupId, new BaseMessageListener<Long>(groupId) {
 
 			@Override
@@ -208,14 +216,24 @@ public class OneBoxTest extends ComponentTestCase {
 		Random random = new Random();
 
 		boolean priority = random.nextBoolean();
-		Future<SendResult> future;
-		if (priority) {
-			future = Producer.getInstance().message(topic, null, msg + " priority").withRefKey(uuid).withPriority().send();
-		} else {
-			future = Producer.getInstance().message(topic, null, msg + " non-priority").withRefKey(uuid).send();
-		}
 
-		future.get();
+		if (priority) {
+			Producer.getInstance().message(topic, null, msg + " priority").withRefKey(uuid).withPriority()
+			      .setCallback(new CompletionCallback<SendResult>() {
+
+				      @Override
+				      public void onSuccess(SendResult result) {
+					      System.out.println("Sent");
+				      }
+
+				      @Override
+				      public void onFailure(Throwable t) {
+					      System.out.println(t.getMessage());
+				      }
+			      }).send();
+		} else {
+			Producer.getInstance().message(topic, null, msg + " non-priority").withRefKey(uuid).send();
+		}
 
 	}
 

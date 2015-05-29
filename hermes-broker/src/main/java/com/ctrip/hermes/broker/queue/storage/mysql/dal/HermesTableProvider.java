@@ -60,7 +60,7 @@ public class HermesTableProvider implements TableProvider {
 	}
 
 	private long findTopicId(String topic) {
-		return m_metaService.findTopic(topic).getId();
+		return m_metaService.findTopicByName(topic).getId();
 	}
 
 	private String toDbName(String topic, int partition) {
@@ -71,16 +71,15 @@ public class HermesTableProvider implements TableProvider {
 	private String findDataSourceName(QueryDef def, TopicPartitionAware tpAware) {
 		QueryType queryType = def.getType();
 
-		// TODO cache the result in meta service for better performance
-		Partition p = m_metaService.findPartition(tpAware.getTopic(), tpAware.getPartition());
+		Partition p = m_metaService.findPartitionByTopicAndPartition(tpAware.getTopic(), tpAware.getPartition());
 
 		switch (queryType) {
 		case INSERT:
 		case DELETE:
 		case UPDATE:
-		case SELECT:
-			// TODO return read data source for select?
 			return p.getWriteDatasource();
+		case SELECT:
+			return p.getReadDatasource();
 
 		default:
 			throw new IllegalArgumentException(String.format("Unknown query type '%s'", queryType));

@@ -52,7 +52,7 @@ public abstract class AbstractMessageSender implements MessageSender {
 
 	protected void preSend(ProducerMessage<?> msg) {
 		int partitionNo = m_partitioningAlgo.computePartitionNo(msg.getPartitionKey(),
-		      m_metaService.getPartitions(msg.getTopic()).size());
+		      m_metaService.listPartitionsByTopic(msg.getTopic()).size());
 		msg.setPartition(partitionNo);
 	}
 

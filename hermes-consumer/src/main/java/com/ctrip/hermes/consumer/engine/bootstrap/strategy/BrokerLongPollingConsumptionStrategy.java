@@ -8,6 +8,7 @@ import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
+import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -20,6 +21,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
  *
  */
 public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionStrategy {
+
 	@Inject
 	private LeaseManager<ConsumerLeaseKey> m_leaseManager;
 
@@ -44,29 +46,45 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	@Inject
 	private PullMessageResultMonitor m_pullMessageResultMonitor;
 
+	@Inject
+	private ClientEnvironment m_clientEnv;
+
 	@Override
 	public SubscribeHandle start(ConsumerContext context, int partitionId) {
 
-		LongPollingConsumerTask consumerTask = new LongPollingConsumerTask(//
-		      context, //
-		      partitionId,//
-		      m_config.getLocalCacheSize(), //
-		      m_systemClockService);
+		try {
+			int localCachSize = Integer.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
+			      "consumer.localcache.size", m_config.getDefautlLocalCacheSize()));
 
-		consumerTask.setEndpointClient(m_endpointClient);
-		consumerTask.setConsumerNotifier(m_consumerNotifier);
-		consumerTask.setEndpointManager(m_endpointManager);
-		consumerTask.setLeaseManager(m_leaseManager);
-		consumerTask.setMessageCodec(m_messageCodec);
-		consumerTask.setSystemClockService(m_systemClockService);
-		consumerTask.setConfig(m_config);
-		consumerTask.setPullMessageResultMonitor(m_pullMessageResultMonitor);
+			int prefetchSize = Integer.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
+			      "consumer.localcache.prefetch.threshold.percentage",
+			      m_config.getDefaultLocalCachePrefetchThresholdPercentage()));
 
-		Thread thread = HermesThreadFactory.create(
-		      String.format("LongPollingExecutorThread-%s-%s-%s", context.getTopic().getName(), partitionId,
-		            context.getGroupId()), false).newThread(consumerTask);
-		thread.start();
-		return new BrokerLongPollingSubscribeHandler(consumerTask);
+			LongPollingConsumerTask consumerTask = new LongPollingConsumerTask(//
+			      context, //
+			      partitionId,//
+			      localCachSize, //
+			      prefetchSize,//
+			      m_systemClockService);
+
+			consumerTask.setEndpointClient(m_endpointClient);
+			consumerTask.setConsumerNotifier(m_consumerNotifier);
+			consumerTask.setEndpointManager(m_endpointManager);
+			consumerTask.setLeaseManager(m_leaseManager);
+			consumerTask.setMessageCodec(m_messageCodec);
+			consumerTask.setSystemClockService(m_systemClockService);
+			consumerTask.setConfig(m_config);
+			consumerTask.setPullMessageResultMonitor(m_pullMessageResultMonitor);
+
+			Thread thread = HermesThreadFactory.create(
+			      String.format("LongPollingExecutorThread-%s-%s-%s", context.getTopic().getName(), partitionId,
+			            context.getGroupId()), false).newThread(consumerTask);
+			thread.start();
+			return new BrokerLongPollingSubscribeHandler(consumerTask);
+		} catch (Exception e) {
+			throw new RuntimeException(String.format("Start Consumer failed(topic=%s, partition=%s, groupId=%s)", context
+			      .getTopic().getName(), partitionId, context.getGroupId()), e);
+		}
 	}
 
 	private static class BrokerLongPollingSubscribeHandler implements SubscribeHandle {

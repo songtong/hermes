@@ -20,7 +20,7 @@ public class CreateTables {
 
 	private final String MYSQL_USER = "root";
 
-	private final String MYSQL_USER_PSW = "";
+	private final String MYSQL_USER_PSW = "123456";
 
 	private String TOPIC = "order_new";
 

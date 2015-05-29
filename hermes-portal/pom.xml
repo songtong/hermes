@@ -107,12 +107,10 @@
 		<dependency>
 			<groupId>org.unidal.framework</groupId>
 			<artifactId>foundation-service</artifactId>
-			<version>2.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.unidal.framework</groupId>
 			<artifactId>test-framework</artifactId>
-			<version>2.1.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

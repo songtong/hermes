@@ -12,12 +12,18 @@ import com.ctrip.hermes.portal.service.CompileService;
 import com.ctrip.hermes.portal.service.SchemaService;
 import com.ctrip.hermes.portal.service.ServerMetaService;
 import com.ctrip.hermes.portal.service.TopicService;
+import com.ctrip.hermes.portal.service.storage.TopicStorageService;
+import com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 	
 	@Override
 	public List<Component> defineComponents() {
 		List<Component> all = new ArrayList<Component>();
+		// storage handler
+		all.add(A(TopicStorageService.class));
+		all.add(A(MysqlStorageHandler.class));
+
 
 		
 		all.add(A(TopicService.class));

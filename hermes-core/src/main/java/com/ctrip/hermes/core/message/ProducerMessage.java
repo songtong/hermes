@@ -1,6 +1,7 @@
 package com.ctrip.hermes.core.message;
 
-import com.ctrip.hermes.core.result.Callback;
+import com.ctrip.hermes.core.result.CompletionCallback;
+import com.ctrip.hermes.core.result.SendResult;
 
 public class ProducerMessage<T> {
 	private String m_topic;
@@ -21,7 +22,7 @@ public class ProducerMessage<T> {
 
 	private PropertiesHolder m_propertiesHolder = new PropertiesHolder();
 
-	private Callback callback;
+	private CompletionCallback<SendResult> m_callback;
 
 	public ProducerMessage() {
 
@@ -129,11 +130,11 @@ public class ProducerMessage<T> {
 		return m_propertiesHolder.getVolatileProperty(name);
 	}
 
-	public void setCallback(Callback callback) {
-		this.callback = callback;
+	public void setCallback(CompletionCallback<SendResult> callback) {
+		m_callback = callback;
 	}
 
-	public Callback getCallback() {
-		return this.callback;
+	public CompletionCallback<SendResult> getCallback() {
+		return m_callback;
 	}
 }

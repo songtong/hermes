@@ -25,7 +25,7 @@ public class DefaultProducerPipelineSinkManager extends ContainerHolder implemen
 
 	@Override
 	public PipelineSink<Future<SendResult>> getSink(String topic) {
-		String type = m_meta.getEndpointType(topic);
+		String type = m_meta.findEndpointTypeByTopic(topic);
 
 		if (m_sinks.containsKey(type)) {
 			return m_sinks.get(type);

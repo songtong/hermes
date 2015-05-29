@@ -27,7 +27,7 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
-import com.ctrip.hermes.core.meta.MetaProxy;
+import com.ctrip.hermes.core.meta.internal.MetaProxy;
 import com.google.common.base.Function;
 
 @Named(type = MetaProxy.class, value = RemoteMetaProxy.ID)

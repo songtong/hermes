@@ -30,7 +30,6 @@
             <groupId>com.ctrip.hermes</groupId>
             <artifactId>hermes-broker</artifactId>
             <version>${project.version}</version>
-            <classifier>classes</classifier>
          </dependency>
          <dependency>
             <groupId>com.ctrip.hermes</groupId>
@@ -50,6 +49,16 @@
          <dependency>
             <groupId>com.ctrip.hermes</groupId>
             <artifactId>hermes-kafka</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.ctrip.hermes</groupId>
+            <artifactId>hermes-portal</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+          <dependency>
+            <groupId>com.ctrip.hermes</groupId>
+            <artifactId>hermes-rest</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
