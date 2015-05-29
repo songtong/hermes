@@ -16,5 +16,6 @@ public class BrokerServer {
 
 		Cat.initialize(catConfigFile);
 		PlexusComponentLocator.lookup(BrokerBootstrap.class).start();
+
 	}
 }

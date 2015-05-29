@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service.storage.model;
+package com.ctrip.hermes.rest.service.storage.model;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -50,8 +50,8 @@ public class HermesRestServer {
 	}
 
 	public void init() {
-		Configuration.addResource("hermes-rest-default.properties"); // first load common & default properties
-		Configuration.addResource("hermes-rest.properties"); // then load env related properties
+		Configuration.addResource("hermes-rest-default.properties"); // first load defualt properties
+		Configuration.addResource("hermes-rest.properties"); 			 // then load env related properties
 
 		this.port = Configuration.getInt("server.port", 1357);
 		String catUrl = Configuration.get("cat.url", "cat.ctripcorp.com");

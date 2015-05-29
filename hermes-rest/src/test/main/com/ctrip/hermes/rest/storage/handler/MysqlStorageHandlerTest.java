@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.storage.handler;
+package com.ctrip.hermes.rest.storage.handler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,8 +6,9 @@ import java.util.List;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
-import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
-import com.ctrip.hermes.portal.service.storage.model.*;
+import com.ctrip.hermes.rest.service.storage.handler.StorageHandler;
+import com.ctrip.hermes.rest.service.storage.model.*;
+
 
 public class MysqlStorageHandlerTest extends ComponentTestCase {
 
