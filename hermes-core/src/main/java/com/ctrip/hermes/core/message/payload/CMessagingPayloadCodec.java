@@ -8,7 +8,7 @@ import com.google.common.base.Charsets;
 public class CMessagingPayloadCodec extends AbstractPayloadCodec {
 
 	@Override
-	public byte[] encode(String topic, Object obj) {
+	public byte[] doEncode(String topic, Object obj) {
 		if (obj instanceof String) {
 			return ((String) obj).getBytes(Charsets.UTF_8);
 		} else {
