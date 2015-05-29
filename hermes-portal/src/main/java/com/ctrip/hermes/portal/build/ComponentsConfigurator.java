@@ -12,6 +12,8 @@ import com.ctrip.hermes.portal.service.CompileService;
 import com.ctrip.hermes.portal.service.SchemaService;
 import com.ctrip.hermes.portal.service.ServerMetaService;
 import com.ctrip.hermes.portal.service.TopicService;
+import com.ctrip.hermes.portal.service.storage.TopicStorageService;
+import com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 	
@@ -27,6 +29,10 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(ServerMetaService.class));
 		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
+
+		// storage handler
+		all.add(A(TopicStorageService.class));
+		all.add(A(MysqlStorageHandler.class));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

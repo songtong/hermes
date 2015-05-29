@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.service.storage.handler;
+package com.ctrip.hermes.portal.service.storage.handler;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,9 +13,9 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.rest.service.storage.exception.DataModelNotMatchException;
-import com.ctrip.hermes.rest.service.storage.exception.StorageHandleErrorException;
-import com.ctrip.hermes.rest.service.storage.model.TableModel;
+import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
+import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.portal.service.storage.model.TableModel;
 
 
 @Named(type = StorageHandler.class)

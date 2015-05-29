@@ -69,7 +69,7 @@ public class CmessageResource {
 		Cat.logEvent(RestConstant.CAT_TYPE, RestConstant.CAT_NAME, Message.SUCCESS, map.toString());
 
 		map.remove("Content");
-		log.info("Content:" + content + ",Properties:" + map + "");
+		log.debug("Content:" + content + ",Properties:" + map + "");
 
 		return integer.addAndGet(1);
 	}
