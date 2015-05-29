@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.build;
+package com.ctrip.hermes.meta.build;
 
 import java.util.ArrayList;
 import java.util.List;
