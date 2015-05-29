@@ -22,6 +22,10 @@ Portal是用户管理消息的站点，用户可以在Portal申请Topic、消费
 * Kafka--适用于消息量大的场景
 * Broker分布式文件存储--用于替换Kafka，开发中
 
+## HTTP和SOA2支持
+![arch](http_soa2.png)
+对于没有原生客户端的语言，可以使用HTTP或者SOA2来发送和接收消息。
+
 # 性能
 
 # API
@@ -133,8 +137,16 @@ Hermes允许用户在Portal上修改消费者分组的offset，通过调整offse
 ![reset consumer offset](reset_offset.png)
 
 # 消息过滤
+后续会支持Broker端的消息过滤，和Consumer端过滤相比，Broker端的过滤更加轻量，也可以减少不必要的网络传输。
+
+# 消息发送模式
+## 同步
+## 异步
+### 基于内存
+### 基于文件
 
 # Topic命名规范
+只允许小写字母、数字和点号(.)，即[a-z,0-9,\.]。推荐的格式为: 产线.a.b.c
 
 # FAQ 
 1. 会不会丢消息?

@@ -4,16 +4,21 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
-import com.ctrip.hermes.portal.console.ConsolePage;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.web.mvc.PageHandler;
 import org.unidal.web.mvc.annotation.InboundActionMeta;
 import org.unidal.web.mvc.annotation.OutboundActionMeta;
 import org.unidal.web.mvc.annotation.PayloadMeta;
 
+import com.ctrip.hermes.portal.console.ConsolePage;
+import com.ctrip.hermes.portal.service.TopicService;
+
 public class Handler implements PageHandler<Context> {
 	@Inject
 	private JspViewer m_jspViewer;
+
+	@Inject
+	private TopicService m_topicService;
 
 	@Override
 	@PayloadMeta(Payload.class)
@@ -26,12 +31,11 @@ public class Handler implements PageHandler<Context> {
 	@OutboundActionMeta(name = "topic")
 	public void handleOutbound(Context ctx) throws ServletException, IOException {
 		Model model = new Model(ctx);
-
-		model.setAction(Action.VIEW);
+		model.setAction(ctx.getPayload().getAction());
 		model.setPage(ConsolePage.TOPIC);
 
 		if (!ctx.isProcessStopped()) {
-		   m_jspViewer.view(ctx, model);
+			m_jspViewer.view(ctx, model);
 		}
 	}
 }

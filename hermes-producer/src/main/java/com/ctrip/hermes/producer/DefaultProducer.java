@@ -1,10 +1,12 @@
 package com.ctrip.hermes.producer;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
 import com.ctrip.hermes.core.result.CompletionCallback;
@@ -67,6 +69,15 @@ public class DefaultProducer extends Producer {
 		public MessageHolder setCallback(CompletionCallback<SendResult> callback) {
 			m_msg.setCallback(callback);
 			return this;
+		}
+
+		@Override
+		public SendResult sendSync() throws MessageSendException {
+			try {
+				return send().get();
+			} catch (ExecutionException | InterruptedException e) {
+				throw new MessageSendException(e);
+			}
 		}
 	}
 }
