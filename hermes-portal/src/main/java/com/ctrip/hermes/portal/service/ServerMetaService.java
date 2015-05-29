@@ -24,8 +24,6 @@ import com.ctrip.hermes.core.lease.DefaultLease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.meta.dal.meta.MetaDao;
-import com.ctrip.hermes.meta.dal.meta.MetaEntity;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
@@ -36,6 +34,8 @@ import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.transform.BaseVisitor2;
+import com.ctrip.hermes.metaservice.model.MetaDao;
+import com.ctrip.hermes.metaservice.model.MetaEntity;
 
 @Named(type = MetaService.class, value = ServerMetaService.ID)
 public class ServerMetaService implements MetaService, Initializable {
@@ -62,7 +62,7 @@ public class ServerMetaService implements MetaService, Initializable {
 			return m_meta;
 		}
 		try {
-			com.ctrip.hermes.meta.dal.meta.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+			com.ctrip.hermes.metaservice.model.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
 			m_meta = JSON.parseObject(dalMeta.getValue(), Meta.class);
 		} catch (DalException e) {
 			logger.warn("get meta failed", e);
@@ -82,7 +82,7 @@ public class ServerMetaService implements MetaService, Initializable {
 			      m_meta.getVersion(), meta.getVersion()));
 		}
 
-		com.ctrip.hermes.meta.dal.meta.Meta dalMeta = new com.ctrip.hermes.meta.dal.meta.Meta();
+		com.ctrip.hermes.metaservice.model.Meta dalMeta = new com.ctrip.hermes.metaservice.model.Meta();
 		try {
 			meta.setVersion(meta.getVersion() + 1);
 			dalMeta.setValue(JSON.toJSONString(meta));

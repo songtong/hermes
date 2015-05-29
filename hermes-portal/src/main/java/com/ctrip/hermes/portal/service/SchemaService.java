@@ -24,12 +24,12 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.lookup.util.StringUtils;
 
-import com.ctrip.hermes.meta.dal.meta.Schema;
-import com.ctrip.hermes.meta.dal.meta.SchemaDao;
-import com.ctrip.hermes.meta.dal.meta.SchemaEntity;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.model.Schema;
+import com.ctrip.hermes.metaservice.model.SchemaDao;
+import com.ctrip.hermes.metaservice.model.SchemaEntity;
 import com.ctrip.hermes.portal.pojo.SchemaView;
 
 @Named

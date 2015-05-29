@@ -11,9 +11,9 @@ import org.xml.sax.SAXException;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.dal.meta.Meta;
-import com.ctrip.hermes.meta.dal.meta.MetaDao;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
+import com.ctrip.hermes.metaservice.model.Meta;
+import com.ctrip.hermes.metaservice.model.MetaDao;
 
 public class MetaServiceTest {
 

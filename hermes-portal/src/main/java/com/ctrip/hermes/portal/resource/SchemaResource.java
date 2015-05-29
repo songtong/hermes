@@ -29,8 +29,8 @@ import org.unidal.dal.jdbc.DalNotFoundException;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.dal.meta.Schema;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.portal.pojo.SchemaView;
 import com.ctrip.hermes.portal.server.RestException;
 import com.ctrip.hermes.portal.service.SchemaService;

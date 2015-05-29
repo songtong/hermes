@@ -1,6 +1,15 @@
 <plexus>
 	<components>
 		<component>
+			<role>com.ctrip.hermes.metaservice.service.MetaService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.DefaultMetaService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>meta</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
@@ -19,8 +28,8 @@
 			</configuration>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.meta.dal.meta.MetaDao</role>
-			<implementation>com.ctrip.hermes.meta.dal.meta.MetaDao</implementation>
+			<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
+			<implementation>com.ctrip.hermes.metaservice.model.MetaDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
@@ -28,8 +37,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.meta.dal.meta.SchemaDao</role>
-			<implementation>com.ctrip.hermes.meta.dal.meta.SchemaDao</implementation>
+			<role>com.ctrip.hermes.metaservice.model.SchemaDao</role>
+			<implementation>com.ctrip.hermes.metaservice.model.SchemaDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

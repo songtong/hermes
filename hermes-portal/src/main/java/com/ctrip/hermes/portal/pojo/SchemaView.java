@@ -3,8 +3,8 @@ package com.ctrip.hermes.portal.pojo;
 import java.util.Date;
 import java.util.List;
 
-import com.ctrip.hermes.meta.dal.meta.Schema;
 import com.ctrip.hermes.meta.entity.Property;
+import com.ctrip.hermes.metaservice.model.Schema;
 
 public class SchemaView {
 	private Long id;
