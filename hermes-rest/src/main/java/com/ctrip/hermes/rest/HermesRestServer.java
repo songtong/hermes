@@ -67,6 +67,12 @@ public class HermesRestServer {
 		logger.info("CAT started: URL--{}", catUrl);
 	}
 
+	public void stop() {
+		if (httpServer != null) {
+			httpServer.shutdown();
+		}
+	}
+
 	public static void main(String[] args) throws InterruptedException, IOException {
 		HermesRestServer hermesRestServer = PlexusComponentLocator.lookup(HermesRestServer.class);
 		hermesRestServer.start();
