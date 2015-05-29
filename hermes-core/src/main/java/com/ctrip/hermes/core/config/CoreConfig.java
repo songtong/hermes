@@ -33,10 +33,6 @@ public class CoreConfig {
 		return 1;
 	}
 
-	public long getSendMessageReadResultTimeout() {
-		return 10 * 1000L;
-	}
-
 	public int getNettySendBufferSize() {
 		return 65535;
 	}

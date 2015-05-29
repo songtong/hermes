@@ -27,6 +27,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -49,6 +50,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
+
+	@Inject
+	private SystemClockService m_systemClockService;
 
 	private ConcurrentMap<Pair<String, Integer>, TaskQueue> m_taskQueues = new ConcurrentHashMap<>();
 
@@ -171,6 +175,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		      TimeoutException {
 			Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partition);
 			if (endpoint != null) {
+				cmd.setExpireTime(m_systemClockService.now() + m_config.getSendMessageReadResultTimeoutMillis());
 				Future<Boolean> future = m_messageAcceptanceMonitor.monitor(cmd.getHeader().getCorrelationId());
 				m_messageResultMonitor.monitor(cmd);
 

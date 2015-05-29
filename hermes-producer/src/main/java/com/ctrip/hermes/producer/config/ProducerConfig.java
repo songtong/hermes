@@ -33,4 +33,8 @@ public class ProducerConfig {
 		return "3";
 	}
 
+	public long getSendMessageReadResultTimeoutMillis() {
+		return 10 * 1000L;
+	}
+
 }
