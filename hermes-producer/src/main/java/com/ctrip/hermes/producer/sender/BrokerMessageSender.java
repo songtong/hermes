@@ -214,7 +214,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		private AtomicReference<SendMessageCommand> m_cmd = new AtomicReference<>(null);
 
 		private BlockingQueue<ProducerWorkerContext> m_queue;
-
+		
 		public TaskQueue(String topic, int partition, int queueSize) {
 			m_topic = topic;
 			m_partition = partition;
@@ -234,7 +234,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		private SendMessageCommand createSendMessageCommand(int size) {
 			SendMessageCommand cmd = null;
-			List<ProducerWorkerContext> contexts = new ArrayList<>();
+			List<ProducerWorkerContext> contexts = new ArrayList<>(size);
 			m_queue.drainTo(contexts, size);
 			if (!contexts.isEmpty()) {
 				cmd = new SendMessageCommand(m_topic, m_partition);
