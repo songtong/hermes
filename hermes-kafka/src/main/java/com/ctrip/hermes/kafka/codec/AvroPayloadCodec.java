@@ -35,7 +35,7 @@ public class AvroPayloadCodec extends AbstractPayloadCodec implements Initializa
 	}
 
 	@Override
-	public byte[] encode(String topic, Object obj) {
+	public byte[] doEncode(String topic, Object obj) {
 		return avroSerializer.serialize(topic, obj);
 	}
 

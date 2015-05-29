@@ -13,7 +13,7 @@ public class JsonPayloadCodec extends AbstractPayloadCodec {
 	}
 
 	@Override
-	public byte[] encode(String topic, Object input) {
+	public byte[] doEncode(String topic, Object input) {
 		return JSON.toJSONBytes(input);
 	}
 

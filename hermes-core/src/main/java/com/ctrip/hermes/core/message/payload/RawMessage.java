@@ -2,14 +2,14 @@ package com.ctrip.hermes.core.message.payload;
 
 public class RawMessage {
 
-	private byte[] m_undecodedMessage;
+	private byte[] m_encodedMessage;
 
-	public RawMessage(byte[] undecodedMessage) {
-		m_undecodedMessage = undecodedMessage;
+	public RawMessage(byte[] ecodedMessage) {
+		m_encodedMessage = ecodedMessage;
 	}
 
-	public byte[] getUndecodedMessage() {
-		return m_undecodedMessage;
+	public byte[] getEncodedMessage() {
+		return m_encodedMessage;
 	}
 
 }

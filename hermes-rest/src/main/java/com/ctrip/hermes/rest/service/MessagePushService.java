@@ -78,7 +78,7 @@ public class MessagePushService implements Initializable {
 		HttpPost post = new HttpPost(url);
 
 		post.setConfig(m_requestConfig);
-		ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getUndecodedMessage());
+		ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
 		post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
 
 		m_httpClient.execute(post);
