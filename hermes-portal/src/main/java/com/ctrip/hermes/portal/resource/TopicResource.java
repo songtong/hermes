@@ -24,9 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
+import org.unidal.lookup.annotation.Inject;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.dal.meta.Schema;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -47,12 +47,17 @@ public class TopicResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(TopicResource.class);
 
-	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
+	@Inject
+	private TopicService topicService;
 
-	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
+	@Inject
+	private SchemaService schemaService;
 
-	private CodecService codecService = PlexusComponentLocator.lookup(CodecService.class);
-	private TopicStorageService service = PlexusComponentLocator.lookup(TopicStorageService.class);
+	@Inject
+	private CodecService codecService;
+	
+	@Inject
+	private TopicStorageService service;
 
 	@POST
 	public Response createTopic(String content) {

@@ -18,12 +18,18 @@
       <module>hermes-rest</module>
       <module>cmessaging.client</module>
       <module>hermes-portal</module>
+      <module>hermes-metaservice</module>
    </modules>
    <dependencyManagement>
       <dependencies>
          <dependency>
             <groupId>com.ctrip.hermes</groupId>
             <artifactId>hermes-core</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.ctrip.hermes</groupId>
+            <artifactId>hermes-metaservice</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
@@ -56,7 +62,7 @@
             <artifactId>hermes-portal</artifactId>
             <version>${project.version}</version>
          </dependency>
-          <dependency>
+         <dependency>
             <groupId>com.ctrip.hermes</groupId>
             <artifactId>hermes-rest</artifactId>
             <version>${project.version}</version>

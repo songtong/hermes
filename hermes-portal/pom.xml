@@ -11,18 +11,20 @@
 	<name>Hermes Portal</name>
 	<packaging>war</packaging>
 	<dependencies>
-		<dependency>
-			<groupId>com.dianping.cat</groupId>
-			<artifactId>cat-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+		<!-- hermes modules -->
 		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-metaservice</artifactId>
+		</dependency>
+
+		<!-- thirdparty dependencies -->
+		<dependency>
+			<groupId>com.dianping.cat</groupId>
+			<artifactId>cat-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.avro</groupId>

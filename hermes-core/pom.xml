@@ -20,10 +20,6 @@
 			<artifactId>fastjson</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.unidal.framework</groupId>
-			<artifactId>dal-jdbc</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
@@ -54,11 +50,6 @@
 			<groupId>org.unidal.framework</groupId>
 			<artifactId>test-framework</artifactId>
 			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
 	</dependencies>
 	<build>
@@ -95,18 +86,6 @@
 							<manifest><![CDATA[
                         ${basedir}/src/main/resources/META-INF/dal/model/meta-manifest.xml,
                      ]]></manifest>
-						</configuration>
-					</execution>
-					<execution>
-						<id>generate dal jdbc model</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>dal-jdbc</goal>
-						</goals>
-						<configuration>
-							<manifest><![CDATA[,
-                        ${basedir}/src/main/resources/META-INF/dal/jdbc/meta-manifest.xml,
-                     ,]]></manifest>
 						</configuration>
 					</execution>
 				</executions>
