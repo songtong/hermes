@@ -85,9 +85,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(ModuleManager.class, DefaultModuleManager.class) //
 		      .config(E("topLevelModules").value(HermesBrokerModule.ID)));
 
-		// Please keep it as last
-		all.addAll(new WebComponentConfigurator().defineComponents());
-
 		return all;
 	}
 
