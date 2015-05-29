@@ -1,6 +1,15 @@
 <plexus>
 	<components>
 		<component>
+			<role>com.ctrip.hermes.rest.HermesRestServer</role>
+			<implementation>com.ctrip.hermes.rest.HermesRestServer</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.rest.service.SubscribeRegistry</role>
 			<implementation>com.ctrip.hermes.rest.service.DefaultSubscribeRegistry</implementation>
 		</component>
@@ -11,7 +20,14 @@
 				<requirement>
 					<role>com.ctrip.hermes.rest.service.SubscribeRegistry</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.rest.service.ProducerService</role>
+			<implementation>com.ctrip.hermes.rest.service.ProducerService</implementation>
 		</component>
 	</components>
 </plexus>

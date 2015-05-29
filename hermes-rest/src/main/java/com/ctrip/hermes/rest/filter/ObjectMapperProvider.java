@@ -1,4 +1,4 @@
-package com.ctrip.hermes.meta.server;
+package com.ctrip.hermes.rest.filter;
 
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;

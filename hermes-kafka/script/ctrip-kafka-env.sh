@@ -1,0 +1,5 @@
+#!/bin/bash
+export LOG_DIR=/opt/logs/kafka
+export KAFKA_HEAP_OPTS="-Xms4g -Xmx4g"
+export KAFKA_JVM_PERFORMANCE_OPTS="-server -XX:PermSize=48m -XX:MaxPermSize=48m -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -Djava.awt.headless=true -Djava.rmi.server.hostname=localhost"
+export JMX_PORT=8302
