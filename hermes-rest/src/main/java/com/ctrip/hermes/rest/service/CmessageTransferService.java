@@ -60,7 +60,7 @@ public class CmessageTransferService {
 		try {
 			result = future.get(2, TimeUnit.SECONDS);
 
-			logger.info(String.format("SendTopic: [%s], Content: [%s]", topic, content));
+			logger.debug(String.format("SendTopic: [%s], Content: [%s]", topic, content));
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			logger.error("FailToGetMessageFuture: " + e.getMessage());
 		}

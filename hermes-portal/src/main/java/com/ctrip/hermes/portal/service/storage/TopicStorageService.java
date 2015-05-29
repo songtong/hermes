@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.service.storage;
+package com.ctrip.hermes.portal.service.storage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,15 +9,15 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.rest.service.storage.exception.DataModelNotMatchException;
-import com.ctrip.hermes.rest.service.storage.exception.StorageHandleErrorException;
-import com.ctrip.hermes.rest.service.storage.exception.TopicAlreadyExistsException;
-import com.ctrip.hermes.rest.service.storage.exception.TopicNotFoundException;
-import com.ctrip.hermes.rest.service.storage.handler.StorageHandler;
+import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
+import com.ctrip.hermes.portal.service.storage.exception.TopicNotFoundException;
+import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
+import com.ctrip.hermes.portal.service.storage.model.*;
+import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.rest.service.storage.model.*;
 
 @Named(type = TopicStorageService.class, value = TopicStorageService.ID)
 public class TopicStorageService {

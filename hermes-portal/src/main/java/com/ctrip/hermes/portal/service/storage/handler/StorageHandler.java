@@ -1,10 +1,10 @@
-package com.ctrip.hermes.rest.service.storage.handler;
+package com.ctrip.hermes.portal.service.storage.handler;
 
 import java.util.List;
 
-import com.ctrip.hermes.rest.service.storage.exception.DataModelNotMatchException;
-import com.ctrip.hermes.rest.service.storage.exception.StorageHandleErrorException;
-import com.ctrip.hermes.rest.service.storage.model.TableModel;
+import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
+import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.portal.service.storage.model.TableModel;
 
 public interface StorageHandler {
 
