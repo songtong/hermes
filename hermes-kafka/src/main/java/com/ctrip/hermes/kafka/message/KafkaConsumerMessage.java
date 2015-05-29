@@ -60,8 +60,8 @@ public class KafkaConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHo
 	}
 
 	@Override
-	public String getKey() {
-		return m_baseMsg.getKey();
+	public String getRefKey() {
+		return m_baseMsg.getRefKey();
 	}
 
 	@Override

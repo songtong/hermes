@@ -18,7 +18,7 @@ public interface ConsumerMessage<T> {
 
 	public String getTopic();
 
-	public String getKey();
+	public String getRefKey();
 
 	public T getBody();
 
