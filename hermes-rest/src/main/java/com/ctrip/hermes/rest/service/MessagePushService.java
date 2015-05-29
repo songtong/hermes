@@ -3,6 +3,7 @@ package com.ctrip.hermes.rest.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -18,15 +19,18 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
+import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.payload.RawMessage;
-import com.ctrip.hermes.rest.common.Configuration;
 
 @Named
 public class MessagePushService implements Initializable {
 
 	@Inject
 	private SubscribeRegistry m_subsRegistry;
+
+	@Inject
+	private ClientEnvironment m_env;
 
 	private HttpClient m_httpClient;
 
@@ -37,9 +41,10 @@ public class MessagePushService implements Initializable {
 		m_httpClient = HttpClients.createDefault();
 
 		Builder b = RequestConfig.custom();
+		Properties globalConfig = m_env.getGlobalConfig();
 		// TODO config
-		b.setConnectTimeout(Configuration.getInt("push.http.connect.timeout", 2000));
-		b.setSocketTimeout(Configuration.getInt("push.http.read.timeout", 5000));
+		b.setConnectTimeout(Integer.valueOf(globalConfig.getProperty("push.http.connect.timeout", "2000")));
+		b.setSocketTimeout(Integer.valueOf(globalConfig.getProperty("push.http.read.timeout", "5000")));
 		m_requestConfig = b.build();
 	}
 

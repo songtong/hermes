@@ -78,9 +78,9 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 			}
 		}
 
-		throw new RuntimeException("Failed to fetch meta server ip list from any meta server");
+		throw new RuntimeException("Failed to fetch meta server ip list from any meta server: " + metaServerList.toString());
 	}
-
+ 
 	private List<String> domainToIpPorts() {
 		String domain = getMetaServerDomainName();
 		log.info("Meta server domain {}", domain);
