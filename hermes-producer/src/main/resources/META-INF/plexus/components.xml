@@ -96,6 +96,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
