@@ -14,19 +14,22 @@ function normalize_topics(topics, filter, table_state) {
 	return topic_rows;
 }
 
-angular.module('hermes-topic', [ 'smart-table', 'topic-services' ]).controller('topic-controller',
-		[ '$scope', '$filter', 'TopicService', function(scope, filter, TopicService) {
+angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topic-controller',
+		[ '$scope', '$filter', '$resource', function(scope, filter, resource) {
+			topic_resource = resource('/api/topics', {}, {});
 			scope.is_loading = true;
 			scope.src_topics = [];
 			scope.topic_rows = [];
 			scope.get_topics = function get_topics(table_state) {
-				TopicService.query().$promise.then(function(data) {
+				topic_resource.query().$promise.then(function(data) {
 					scope.src_topics = data;
 					scope.topic_rows = normalize_topics(scope.src_topics, filter, table_state);
 					scope.is_loading = false;
 				});
 			};
 			scope.add_topic = function add_topic(new_topic) {
-				console.log(new_topic);
+				topic_resource.save(new_topic).$promise.then(function(data) {
+					console.log(data);
+				});
 			};
 		} ]);
