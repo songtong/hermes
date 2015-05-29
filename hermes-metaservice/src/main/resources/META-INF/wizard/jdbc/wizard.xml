@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<wizard package="com.ctrip.hermes.meta">
-   <jdbc package="com.ctrip.hermes.meta.dal" name="fxhermesmetadb">
+<wizard package="com.ctrip.hermes.metaservice">
+   <jdbc package="com.ctrip.hermes.metaservice.dal" name="fxhermesmetadb">
       <datasource>
          <driver>com.mysql.jdbc.Driver</driver>
          <url>jdbc:mysql://pub.mysql.db.dev.sh.ctripcorp.com:28747/fxhermesmetadb</url>
@@ -8,7 +8,7 @@
          <password>~{f4f672a59706b381c2c7c1f28380f810e9f8f0f0f0e427b0c3632}</password>
          <properties>useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</properties>
       </datasource>
-      <group name="meta" package="com.ctrip.hermes.meta.dal.meta">
+      <group name="meta" package="com.ctrip.hermes.metaservice.model">
          <table name="meta"/>
          <table name="schema"/>
       </group>

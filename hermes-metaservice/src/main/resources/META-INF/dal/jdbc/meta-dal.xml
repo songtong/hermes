@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<entities do-package="com.ctrip.hermes.meta.dal.meta" gen="true">
+<entities do-package="com.ctrip.hermes.metaservice.model" gen="true">
 	<entity name="meta">
 		<query-defs>
 			<query name="findLatest" type="SELECT">

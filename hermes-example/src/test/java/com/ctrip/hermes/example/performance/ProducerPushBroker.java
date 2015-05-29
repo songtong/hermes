@@ -8,11 +8,9 @@ import java.util.concurrent.TimeUnit;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
-import org.unidal.lookup.LookupException;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
 import com.ctrip.hermes.core.result.SendResult;
-import com.ctrip.hermes.meta.server.MetaRestServer;
 import com.ctrip.hermes.producer.api.Producer;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;

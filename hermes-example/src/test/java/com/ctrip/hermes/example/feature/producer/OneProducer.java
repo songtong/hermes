@@ -17,7 +17,6 @@ import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
-import com.ctrip.hermes.meta.server.MetaRestServer;
 import com.ctrip.hermes.producer.api.Producer;
 
 public class OneProducer extends ComponentTestCase {
