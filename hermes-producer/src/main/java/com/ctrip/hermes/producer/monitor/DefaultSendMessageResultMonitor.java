@@ -65,7 +65,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 			if (sendMessageCommand != null) {
 				try {
 					sendMessageCommand.onResultReceived(result);
-					tracking(sendMessageCommand);
+					tracking(sendMessageCommand, true);
 				} catch (Exception e) {
 					log.warn("Exception occured while calling resultReceived", e);
 				}
@@ -74,7 +74,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 		}
 	}
 
-	private void tracking(SendMessageCommand sendMessageCommand) {
+	private void tracking(SendMessageCommand sendMessageCommand, boolean success) {
 		for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
 			for (ProducerMessage<?> msg : msgs) {
 				Transaction t = Cat.newTransaction("Message.Produce.Acked", msg.getTopic());
@@ -88,7 +88,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 				tree.setParentMessageId(parentMsgId);
 				tree.setRootMessageId(rootMsgId);
 
-				t.setStatus(Transaction.SUCCESS);
+				t.setStatus(success ? Transaction.SUCCESS : "Timeout");
 				t.complete();
 			}
 		}
@@ -126,6 +126,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 							            timeoutCmd.getHeader().getCorrelationId());
 						      }
 						      timeoutCmd.onTimeout();
+						      tracking(timeoutCmd, false);
 					      }
 				      } catch (Exception e) {
 					      // ignore

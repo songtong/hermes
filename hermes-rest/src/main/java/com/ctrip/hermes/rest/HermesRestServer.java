@@ -50,15 +50,16 @@ public class HermesRestServer {
 	}
 
 	public void init() {
-		Configuration.addResource("hermes-rest-default.properties"); // first load common & default properties
-		Configuration.addResource("hermes-rest.properties"); // then load env related properties
+		Configuration.addResource("hermes-rest-default.properties"); // first load defualt properties
+		Configuration.addResource("hermes-rest.properties"); 			 // then load env related properties
 
 		this.port = Configuration.getInt("server.port", 1357);
 		String catUrl = Configuration.get("cat.url", "cat.ctripcorp.com");
 
-		Cat.initializeByDomain("900777", 2280, 80, catUrl);
+		Cat.initializeByDomain(Configuration.get("hermes.rest.appid", "hermes"), 2280, 80, catUrl);
 
-		log.warn("STARTING HermesRestPort--{} CATURL--{}", port, catUrl);
+		log.warn("STARTING HermesRest:\n\tPort -- {} CAT_URL--{} CAT_DOMAIN -- {}", port, catUrl,
+				  Configuration.get("hermes.rest.appid", "hermes"));
 	}
 
 	public static void main(String[] args) throws ServerException, InterruptedException {

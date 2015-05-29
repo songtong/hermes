@@ -9,6 +9,7 @@ import org.unidal.lookup.ComponentTestCase;
 import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
 import com.ctrip.hermes.portal.service.storage.model.*;
 
+
 public class MysqlStorageHandlerTest extends ComponentTestCase {
 
 	@Test

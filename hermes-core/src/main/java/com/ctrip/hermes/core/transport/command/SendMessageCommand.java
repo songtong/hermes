@@ -10,14 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
-import com.ctrip.hermes.core.config.CoreConfig;
+import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.result.SendResult;
-import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -43,6 +44,8 @@ public class SendMessageCommand extends AbstractCommand {
 	private transient Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<>();
 
 	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<>();
+
+	private transient AtomicLong m_expireTime = new AtomicLong(0);
 
 	public SendMessageCommand() {
 		super(CommandType.MESSAGE_SEND);
@@ -100,7 +103,7 @@ public class SendMessageCommand extends AbstractCommand {
 			if (result.isSuccess(entry.getKey())) {
 				entry.getValue().set(new SendResult());
 			} else {
-				entry.getValue().setException(new RuntimeException("Send failed"));
+				entry.getValue().setException(new MessageSendException("Send failed"));
 			}
 		}
 	}
@@ -248,15 +251,18 @@ public class SendMessageCommand extends AbstractCommand {
 	}
 
 	public void onTimeout() {
-		Exception e = new RuntimeException("Send timeout");
+		Exception e = new TimeoutException("Send timeout");
 		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
 			entry.getValue().setException(e);
 		}
 	}
 
 	public long getExpireTime() {
-		return PlexusComponentLocator.lookup(SystemClockService.class).now()
-		      + PlexusComponentLocator.lookup(CoreConfig.class).getSendMessageReadResultTimeout();
+		return m_expireTime.get();
+	}
+
+	public void setExpireTime(long expireTime) {
+		m_expireTime.set(expireTime);
 	}
 
 	public Collection<List<ProducerMessage<?>>> getProducerMessages() {

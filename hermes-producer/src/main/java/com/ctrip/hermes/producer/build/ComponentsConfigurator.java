@@ -10,6 +10,7 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
@@ -65,6 +66,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(ProducerConfig.class)//
 		      .req(EndpointClient.class)//
 		      .req(ClientEnvironment.class)//
+		      .req(SystemClockService.class)//
 		);
 
 		// command processors

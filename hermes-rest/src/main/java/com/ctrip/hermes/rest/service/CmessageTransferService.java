@@ -1,9 +1,9 @@
 package com.ctrip.hermes.rest.service;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.*;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.unidal.tuple.Triple;
 
 import com.ctrip.hermes.core.result.SendResult;
@@ -11,6 +11,7 @@ import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.rest.common.RestConstant;
 
 public class CmessageTransferService {
+	private static Logger logger = LogManager.getLogger(CmessageTransferService.class);
 	private Producer p;
 	private BlockingQueue<Triple<String, String, String>> queue = new LinkedBlockingDeque<>(5000);
 
@@ -54,7 +55,15 @@ public class CmessageTransferService {
 				  .addProperty(RestConstant.CMESSAGING_ORIGIN_TOPIC, topic)
 				  .addProperty(RestConstant.CMESSAGING_HEADER, header)
 				  .send();
-		// todo: handle the future: eg. the Exception in send().
+
+		SendResult result = null;
+		try {
+			result = future.get(2, TimeUnit.SECONDS);
+
+			logger.debug(String.format("SendTopic: [%s], Content: [%s]", topic, content));
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logger.error("FailToGetMessageFuture: " + e.getMessage());
+		}
 	}
 
 
