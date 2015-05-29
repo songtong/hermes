@@ -111,8 +111,8 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	}
 
 	@Override
-	public String getKey() {
-		return m_baseMsg.getKey();
+	public String getRefKey() {
+		return m_baseMsg.getRefKey();
 	}
 
 	@Override

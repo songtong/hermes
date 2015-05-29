@@ -45,7 +45,7 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 
 				try {
 					t.addData("topic", topic);
-					t.addData("key", msg.getKey());
+					t.addData("key", msg.getRefKey());
 					t.addData("groupId", m_groupId);
 					// TODO
 					t.addData("appId", "demo-app");
@@ -55,8 +55,8 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 					msg.ack();
 
 					String ip = NetworkInterfaceManager.INSTANCE.getLocalHostAddress();
-					Cat.logEvent("Consumer:" + ip, msg.getTopic() + ":" + m_groupId, Event.SUCCESS, "key=" + msg.getKey());
-					Cat.logEvent("Message:" + topic, "Consumed:" + ip, Event.SUCCESS, "key=" + msg.getKey());
+					Cat.logEvent("Consumer:" + ip, msg.getTopic() + ":" + m_groupId, Event.SUCCESS, "key=" + msg.getRefKey());
+					Cat.logEvent("Message:" + topic, "Consumed:" + ip, Event.SUCCESS, "key=" + msg.getRefKey());
 					Cat.logMetricForCount(msg.getTopic());
 					t.setStatus(MessageStatus.SUCCESS.equals(msg.getStatus()) ? Transaction.SUCCESS : "FAILED-WILL-RETRY");
 				} catch (RuntimeException | Error e) {

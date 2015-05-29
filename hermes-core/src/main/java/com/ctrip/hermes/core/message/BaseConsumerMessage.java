@@ -12,7 +12,7 @@ import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 public class BaseConsumerMessage<T> {
 	protected long m_bornTime;
 
-	protected String m_key;
+	protected String m_refKey;
 
 	protected String m_topic;
 
@@ -50,12 +50,12 @@ public class BaseConsumerMessage<T> {
 		m_bornTime = bornTime;
 	}
 
-	public String getKey() {
-		return m_key;
+	public String getRefKey() {
+		return m_refKey;
 	}
 
-	public void setKey(String key) {
-		m_key = key;
+	public void setRefKey(String key) {
+		m_refKey = key;
 	}
 
 	public String getTopic() {
@@ -126,7 +126,7 @@ public class BaseConsumerMessage<T> {
 	public String toString() {
 		return "BaseConsumerMessage{" +
 				  "m_bornTime=" + m_bornTime +
-				  ", m_key='" + m_key + '\'' +
+				  ", m_refKey='" + m_refKey + '\'' +
 				  ", m_topic='" + m_topic + '\'' +
 				  ", m_body=" + m_body +
 				  ", m_propertiesHolder=" + m_propertiesHolder +

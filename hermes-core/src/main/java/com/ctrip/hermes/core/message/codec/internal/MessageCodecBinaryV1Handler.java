@@ -141,7 +141,7 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 
 		PartialDecodedMessage decodedMessage = decodePartial(buf);
 		msg.setTopic(topic);
-		msg.setKey(decodedMessage.getKey());
+		msg.setRefKey(decodedMessage.getKey());
 		msg.setBornTime(decodedMessage.getBornTime());
 		msg.setRemainingRetries(decodedMessage.getRemainingRetries());
 		Map<String, String> durableProperties = readProperties(decodedMessage.getDurableProperties());

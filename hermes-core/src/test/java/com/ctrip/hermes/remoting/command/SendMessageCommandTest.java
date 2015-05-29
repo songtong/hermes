@@ -66,7 +66,7 @@ public class SendMessageCommandTest extends ComponentTestCase {
 
 		assertEquals(msg.getBody(), cmsg.getBody());
 		assertEquals(msg.getTopic(), cmsg.getTopic());
-		assertEquals(msg.getKey(), cmsg.getKey());
+		assertEquals(msg.getKey(), cmsg.getRefKey());
 		assertEquals(dvalue, cmsg.getDurableAppProperty(dkey));
 
 	}
