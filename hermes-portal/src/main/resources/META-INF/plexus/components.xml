@@ -18,6 +18,102 @@
 			<implementation>com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler</implementation>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.portal.service.TopicService</role>
+			<implementation>com.ctrip.hermes.portal.service.TopicService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.MetaService</role>
+					<role-hint>server-meta-service</role-hint>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.SchemaService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.service.SchemaService</role>
+			<implementation>com.ctrip.hermes.portal.service.SchemaService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.meta.dal.meta.SchemaDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.MetaService</role>
+					<role-hint>server-meta-service</role-hint>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.CompileService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.service.CodecService</role>
+			<implementation>com.ctrip.hermes.portal.service.CodecService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.MetaService</role>
+					<role-hint>server-meta-service</role-hint>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.service.CompileService</role>
+			<implementation>com.ctrip.hermes.portal.service.CompileService</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.service.MetaService</role>
+			<role-hint>server-meta-service</role-hint>
+			<implementation>com.ctrip.hermes.portal.service.ServerMetaService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.meta.dal.meta.MetaDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>meta</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>meta</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>schema</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>schema</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.meta.dal.meta.MetaDao</role>
+			<implementation>com.ctrip.hermes.meta.dal.meta.MetaDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.meta.dal.meta.SchemaDao</role>
+			<implementation>com.ctrip.hermes.meta.dal.meta.SchemaDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>
+			<implementation>org.unidal.dal.jdbc.datasource.DefaultDataSourceProvider</implementation>
+			<configuration>
+				<datasourceFile>/data/appdatas/hermes/datasources.xml</datasourceFile>
+			</configuration>
+		</component>
+		<component>
 			<role>org.unidal.web.mvc.model.ModuleRegistry</role>
 			<implementation>org.unidal.web.mvc.model.ModuleRegistry</implementation>
 			<configuration>
@@ -35,6 +131,9 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.portal.console.topic.JspViewer</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.TopicService</role>
 				</requirement>
 			</requirements>
 		</component>
