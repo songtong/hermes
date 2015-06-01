@@ -27,18 +27,17 @@
 						<th st-sort="consumerRetryPolicy">消费重试策略</th>
 						<th st-sort="ackTimeoutSeconds">ACK超时</th>
 						<th st-sort="endpointType">Endpoint</th>
-						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success"
-								style="text-align: center;">新增</button></th>
+						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;">新增</button></th>
 					</tr>
 					<tr>
-						<th><input st-search="name" placeholder="Topic" class="input-sm form-control" type="search" /></th>
-						<th><input st-search="codecType" placeholder="Codec" class="input-sm form-control" type="search" style="text-align: center;" /></th>
-						<th><input st-search="storageType" placeholder="Storage" class="input-sm form-control" type="search" style="text-align: center;" /></th>
-						<th><input st-search="schemaName" placeholder="Schema" class="input-sm form-control" type="search" /></th>
-						<th><input st-search="partitions" class="input-sm form-control" type="search" style="text-align: center;" /></th>
-						<th><input st-search="consumerRetryPolicy" placeholder="Policy" class="input-sm form-control" type="search" /></th>
-						<th><input st-search="ackTimeoutSeconds" placeholder="ACK Timeout" class="input-sm form-control" type="search" /></th>
-						<th><input st-search="endpointType" placeholder="Endpoint" class="input-sm form-control" type="search" /></th>
+						<th><input st-search="name" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="codecType" placeholder="Codec" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="storageType" placeholder="Storage" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="schemaName" placeholder="Schema" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="partitions" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="consumerRetryPolicy" placeholder="Policy" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="ackTimeoutSeconds" placeholder="ACK Timeout" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="endpointType" placeholder="Endpoint" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th></th>
 					</tr>
 				</thead>

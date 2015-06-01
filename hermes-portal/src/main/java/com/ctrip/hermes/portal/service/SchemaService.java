@@ -42,8 +42,8 @@ public class SchemaService {
 	@Inject
 	private SchemaDao m_schemaDao;
 
-	@Inject(ServerMetaService.ID)
-	private MetaService m_metaService;
+	@Inject
+	private MetaServiceWrapper m_metaService;
 
 	@Inject
 	private CompileService m_compileService;

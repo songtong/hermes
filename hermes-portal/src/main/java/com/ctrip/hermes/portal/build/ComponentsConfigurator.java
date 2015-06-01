@@ -8,8 +8,8 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.portal.service.CodecService;
 import com.ctrip.hermes.portal.service.CompileService;
+import com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper;
 import com.ctrip.hermes.portal.service.SchemaService;
-import com.ctrip.hermes.portal.service.ServerMetaService;
 import com.ctrip.hermes.portal.service.TopicService;
 import com.ctrip.hermes.portal.service.storage.TopicStorageService;
 import com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler;
@@ -29,7 +29,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(CodecService.class));
 		all.add(A(CompileService.class));
 
-		all.add(A(ServerMetaService.class));
+		all.add(A(DefaultMetaServiceWrapper.class));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

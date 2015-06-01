@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service;
+package com.ctrip.hermes.portal.spam;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,10 +37,10 @@ import com.ctrip.hermes.meta.transform.BaseVisitor2;
 import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
 
-@Named(type = MetaService.class, value = ServerMetaService.ID)
-public class ServerMetaService implements MetaService, Initializable {
+@Named(type = MetaServiceSpamed.class, value = ServerMetaServiceSpamed.ID)
+public class ServerMetaServiceSpamed implements MetaServiceSpamed, Initializable {
 
-	private static final Logger logger = LoggerFactory.getLogger(ServerMetaService.class);
+	private static final Logger logger = LoggerFactory.getLogger(ServerMetaServiceSpamed.class);
 
 	public static final String ID = "server-meta-service";
 
@@ -172,7 +172,7 @@ public class ServerMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public Topic findTopic(String topic) {
+	public Topic findTopicByName(String topic) {
 		return m_meta.findTopic(topic);
 	}
 

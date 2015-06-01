@@ -8,26 +8,33 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.portal.service.MetaServiceWrapper;
+import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
 import com.ctrip.hermes.portal.service.storage.exception.TopicNotFoundException;
 import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
-import com.ctrip.hermes.portal.service.storage.model.*;
-import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
-import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.portal.service.storage.model.DeadLetterTableModel;
+import com.ctrip.hermes.portal.service.storage.model.MessageTableModel;
+import com.ctrip.hermes.portal.service.storage.model.OffsetMessageTableModel;
+import com.ctrip.hermes.portal.service.storage.model.OffsetResendTableModel;
+import com.ctrip.hermes.portal.service.storage.model.ResendTableModel;
+import com.ctrip.hermes.portal.service.storage.model.TableModel;
 
 @Named(type = TopicStorageService.class, value = TopicStorageService.ID)
 public class TopicStorageService {
 	private static final Logger log = LoggerFactory.getLogger(TopicStorageService.class);
+
 	public static final String ID = "topic-storage-service";
 
 	@Inject
 	private StorageHandler handler;
+
 	@Inject
-	private MetaService metaService;
+	private MetaServiceWrapper metaService;
 
 	public TopicStorageService() {
 
@@ -49,30 +56,28 @@ public class TopicStorageService {
 
 	public boolean createNewTopic(String databaseName, Topic topic) throws TopicAlreadyExistsException {
 
-		if (!validateDatabaseName(databaseName) || ! validateTopicNotNull(topic)) {
+		if (!validateDatabaseName(databaseName) || !validateTopicNotNull(topic)) {
 			return false;
 		}
-
 
 		boolean isSucceeded = false;
 		try {
 			for (Partition partition : topic.getPartitions()) {
 				List<TableModel> tableModels = new ArrayList<>();
 
-				tableModels.add(new DeadLetterTableModel());   	// deadletter
-				tableModels.add(new MessageTableModel(0));			// message_0
-				tableModels.add(new MessageTableModel(1));			// message_1
-				tableModels.add(new OffsetMessageTableModel());				// offset_message
-				tableModels.add(new OffsetResendTableModel());				// offset_resend
-
+				tableModels.add(new DeadLetterTableModel()); // deadletter
+				tableModels.add(new MessageTableModel(0)); // message_0
+				tableModels.add(new MessageTableModel(1)); // message_1
+				tableModels.add(new OffsetMessageTableModel()); // offset_message
+				tableModels.add(new OffsetResendTableModel()); // offset_resend
 
 				for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
 					int groupId = consumerGroup.getId();
 
-					tableModels.add(new ResendTableModel(groupId));		// resend_<groupid>
+					tableModels.add(new ResendTableModel(groupId)); // resend_<groupid>
 				}
 				;
-				handler.createTable(databaseName, topic.getId(), partition.getId(),  tableModels);
+				handler.createTable(databaseName, topic.getId(), partition.getId(), tableModels);
 			}
 
 			isSucceeded = true;
@@ -93,7 +98,7 @@ public class TopicStorageService {
 
 	private boolean validateDatabaseName(String databaseName) {
 		if (databaseName == null || databaseName.length() == 0 || databaseName.equals("")) {
-			log.error("Invalided Database Name: " + databaseName );
+			log.error("Invalided Database Name: " + databaseName);
 			return false;
 		}
 		return true;
@@ -121,6 +126,7 @@ public class TopicStorageService {
 
 	/**
 	 * 校验给定数据模型是否与数据库中已存在的数据模型一致
+	 * 
 	 * @return 是否一致
 	 * @throws DataModelNotMatchException
 	 */
