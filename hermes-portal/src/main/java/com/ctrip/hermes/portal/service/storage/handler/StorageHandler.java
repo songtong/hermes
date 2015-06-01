@@ -10,16 +10,24 @@ public interface StorageHandler {
 
 
 	public boolean dropTables() throws StorageHandleErrorException;
-	public void createTable(String databaseName, Long topicId, Integer partitionId,  List<TableModel> models) throws
+
+	public void createTable(String databaseName, Long topicId, Integer partitionId, List<TableModel> models) throws
 			  StorageHandleErrorException;
 
-	public boolean cleanTable() throws  StorageHandleErrorException;
+	public boolean cleanTable() throws StorageHandleErrorException;
 
 
 	/**
 	 * 校验给定数据模型是否与数据库中已存在的数据模型一致
+	 *
 	 * @return
 	 * @throws DataModelNotMatchException
 	 */
 	public boolean validateDataModel() throws DataModelNotMatchException;
+
+	void addPartition(String databaseName, Long topicId, Integer partitionId, TableModel model, int range)
+			  throws StorageHandleErrorException;
+
+	void deletePartition(String databaseName, Long topicId, Integer partitionId, TableModel model)
+			  throws StorageHandleErrorException;
 }

@@ -11,18 +11,14 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.portal.pojo.storage.TopicStorageView;
 import com.ctrip.hermes.portal.service.MetaServiceWrapper;
 import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
 import com.ctrip.hermes.portal.service.storage.exception.TopicNotFoundException;
 import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
-import com.ctrip.hermes.portal.service.storage.model.DeadLetterTableModel;
-import com.ctrip.hermes.portal.service.storage.model.MessageTableModel;
-import com.ctrip.hermes.portal.service.storage.model.OffsetMessageTableModel;
-import com.ctrip.hermes.portal.service.storage.model.OffsetResendTableModel;
-import com.ctrip.hermes.portal.service.storage.model.ResendTableModel;
-import com.ctrip.hermes.portal.service.storage.model.TableModel;
+import com.ctrip.hermes.portal.service.storage.model.*;
 
 @Named(type = TopicStorageService.class, value = TopicStorageService.ID)
 public class TopicStorageService {
@@ -40,61 +36,127 @@ public class TopicStorageService {
 
 	}
 
-	public boolean createNewTopic(String ds, String topicName) throws TopicAlreadyExistsException {
-		String databaseName = null;
-		// todo: mock ds--database
-		if (ds.equals("ds0")) {
-			databaseName = "fxhermesshard01db";
+	public boolean createNewTopic(String ds, String topicName) throws TopicAlreadyExistsException, StorageHandleErrorException {
+		Topic topic = metaService.findTopicByName(topicName);
 
-			Topic topic = metaService.findTopicByName(topicName);
-			if (null != topic) {
-				return createNewTopic(databaseName, topic);
-			}
-		}
-		return false;
-	}
+		if (null != topic) {
+			String databaseName = mockDatabaseName(ds);
+			if (validateDatabaseName(databaseName)) {
+				for (Partition partition : filterPartition(ds, topic)) {
+					try {
+						createTables0(databaseName, topic, partition);
+						addPartitionByDatabaseName0(databaseName, topic, partition);
 
-	public boolean createNewTopic(String databaseName, Topic topic) throws TopicAlreadyExistsException {
-
-		if (!validateDatabaseName(databaseName) || !validateTopicNotNull(topic)) {
-			return false;
-		}
-
-		boolean isSucceeded = false;
-		try {
-			for (Partition partition : topic.getPartitions()) {
-				List<TableModel> tableModels = new ArrayList<>();
-
-				tableModels.add(new DeadLetterTableModel()); // deadletter
-				tableModels.add(new MessageTableModel(0)); // message_0
-				tableModels.add(new MessageTableModel(1)); // message_1
-				tableModels.add(new OffsetMessageTableModel()); // offset_message
-				tableModels.add(new OffsetResendTableModel()); // offset_resend
-
-				for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
-					int groupId = consumerGroup.getId();
-
-					tableModels.add(new ResendTableModel(groupId)); // resend_<groupid>
+					} catch (StorageHandleErrorException e) {
+						//todo: handle ex from createTables0 or addPartition.
+						System.out.println(e.getMessage());
+						return false;
+					}
 				}
-				;
-				handler.createTable(databaseName, topic.getId(), partition.getId(), tableModels);
 			}
-
-			isSucceeded = true;
-		} catch (StorageHandleErrorException e) {
-			log.error(String.format("Exception in CreateNewTopic: %s", e.getMessage()));
-		}
-
-		return isSucceeded;
-	}
-
-	private boolean validateTopicNotNull(Topic topic) {
-		if (null == topic) {
-			log.error("Invalided Topic: null.");
-			return false;
 		}
 		return true;
 	}
+
+
+	// todo: mockDatabaseName => MetaService.getDatabaseNameByDataSource()
+	private String mockDatabaseName(String ds) {
+		if (ds.equals("ds0")) {
+			return "fxhermesshard01db";
+		} else {
+			return null;
+		}
+	}
+
+	private void createTables0(String databaseName, Topic topic, Partition partition) throws StorageHandleErrorException {
+		List<TableModel> tableModels = new ArrayList<>();
+
+		tableModels.add(new DeadLetterTableModel());      // deadletter
+		tableModels.add(new MessageTableModel(0));         // message_0
+		tableModels.add(new MessageTableModel(1));         // message_1
+		tableModels.add(new OffsetMessageTableModel());      // offset_message
+		tableModels.add(new OffsetResendTableModel());      // offset_resend
+
+		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
+			int groupId = consumerGroup.getId();
+
+			tableModels.add(new ResendTableModel(groupId));      // resend_<groupid>
+		}
+		handler.createTable(databaseName, topic.getId(), partition.getId(), tableModels);
+	}
+
+	public TopicStorageView getTopicStorage(String topicName, String ds) {
+		return null;
+	}
+
+
+	public Boolean addPartition(String ds, String topicName) throws StorageHandleErrorException {
+		Topic topic = metaService.findTopicByName(topicName);
+
+		if (null != topic) {
+			String databaseName = mockDatabaseName(ds);
+			if (validateDatabaseName(databaseName)) {
+				for (Partition partition : filterPartition(ds, topic)) {
+					try {
+						addPartitionByDatabaseName0(databaseName, topic, partition);
+
+					} catch (StorageHandleErrorException e) {
+						//todo: handle ex from createTables0 or addPartition.
+						System.out.println(e.getMessage());
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	private void addPartitionByDatabaseName0(String databaseName, Topic topic, Partition partition) throws
+			  StorageHandleErrorException {
+		// 暂时只针对MessageTableModel(0), MessageTableModel(1)分partition
+
+		handler.addPartition(databaseName, topic.getId(), partition.getId(), new MessageTableModel(0), 100 * 10000);
+		handler.addPartition(databaseName, topic.getId(), partition.getId(), new MessageTableModel(1), 100 * 10000);
+	}
+
+	public Boolean deletePartition(String ds, String topicName) throws StorageHandleErrorException {
+		Topic topic = metaService.findTopicByName(topicName);
+
+		if (null != topic) {
+			String databaseName = mockDatabaseName(ds);
+			if (validateDatabaseName(databaseName)) {
+				for (Partition partition : filterPartition(ds, topic)) {
+					try {
+						deletePartition0(databaseName, topic, partition);
+					} catch (StorageHandleErrorException e) {
+						//todo: handle ex
+						System.out.println(e.getMessage());
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	private void deletePartition0(String databaseName, Topic topic, Partition partition) throws StorageHandleErrorException{
+		//todo: 先做备份，再做删除
+
+		handler.deletePartition(databaseName, topic.getId(), partition.getId(), new MessageTableModel(0));
+		handler.deletePartition(databaseName, topic.getId(), partition.getId(), new MessageTableModel(1));
+
+	}
+
+	private List<Partition> filterPartition(String ds, Topic topic) {
+		List<Partition> partitions = new ArrayList<>();
+		for (Partition partition : topic.getPartitions()) {
+			if (partition.getWriteDatasource().equals(ds)) {
+				partitions.add(partition);
+			}
+		}
+		return partitions;
+	}
+
 
 	private boolean validateDatabaseName(String databaseName) {
 		if (databaseName == null || databaseName.length() == 0 || databaseName.equals("")) {

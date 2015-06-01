@@ -7,6 +7,7 @@ import org.unidal.lookup.ComponentTestCase;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.portal.service.storage.TopicStorageService;
+import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
 
 public class TopicStorageServiceTest extends ComponentTestCase {
@@ -26,17 +27,7 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 		Topic topic = metaService.findTopicByName("cmessage_fws");
 		try {
 			service.createNewTopic("ds0", "order_new");
-		} catch (TopicAlreadyExistsException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Test
-	public void createByDatabaseNameandTopic() {
-		Topic topic = metaService.findTopicByName("cmessage_fws");
-		try {
-			service.createNewTopic("fxhermesshard01db", topic);
-		} catch (TopicAlreadyExistsException e) {
+		} catch (TopicAlreadyExistsException | StorageHandleErrorException e) {
 			e.printStackTrace();
 		}
 	}

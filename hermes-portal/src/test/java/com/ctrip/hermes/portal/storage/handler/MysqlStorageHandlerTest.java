@@ -56,4 +56,10 @@ public class MysqlStorageHandlerTest extends ComponentTestCase {
 
 		return tableModels;
 	}
+
+	@Test
+	public void addPartition() throws Exception {
+		StorageHandler handler = lookup(StorageHandler.class);
+		handler.addPartition("fxhermesshard01db", 100L, 0, new MessageTableModel(0), 1000);
+	}
 }

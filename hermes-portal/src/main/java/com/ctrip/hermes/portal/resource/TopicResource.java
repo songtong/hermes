@@ -37,8 +37,6 @@ import com.ctrip.hermes.portal.server.RestException;
 import com.ctrip.hermes.portal.service.CodecService;
 import com.ctrip.hermes.portal.service.SchemaService;
 import com.ctrip.hermes.portal.service.TopicService;
-import com.ctrip.hermes.portal.service.storage.TopicStorageService;
-import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
 
 @Path("/topics/")
 @Singleton
@@ -52,8 +50,6 @@ public class TopicResource {
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
 
 	private CodecService codecService = PlexusComponentLocator.lookup(CodecService.class);
-
-	private TopicStorageService service = PlexusComponentLocator.lookup(TopicStorageService.class);
 
 	@POST
 	public Response createTopic(String content) {
@@ -82,17 +78,6 @@ public class TopicResource {
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.CREATED).entity(topicView).build();
-	}
-
-	@GET
-	@Path("{name}/createdb")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Boolean createNewTopic(@QueryParam("ds") String ds, @PathParam("name") String topicName) {
-		try {
-			return service.createNewTopic(ds, topicName);
-		} catch (TopicAlreadyExistsException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	@GET
