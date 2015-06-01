@@ -1,0 +1,82 @@
+<link href="../../css/topic.css" type="text/css" rel="stylesheet">
+<link href="../../css/bootstrap.min.css" rel="stylesheet">
+<link href="../../css/dashboard.css" rel="stylesheet">
+
+<div ng-app="hermes-dashboard">
+    <div class="container" ng-controller="DashboardCtrl">
+        <div class="row board-header">
+            <div class="col-md-2"><h4>Status:</h4>
+                <button type="button" class="btn btn-md btn-success" disabled="disabled">All Healthy</button>
+            </div>
+            <div class="col-md-2">Message Qps
+                <iframe class="board-kibana-frame"
+                        src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
+                        height="90%" width="100%">
+                </iframe>
+            </div>
+            <div class="col-md-2">Running Topic Count
+                <iframe class="board-kibana-frame"
+                        src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
+                        height="90%" width="100%">
+                </iframe>
+            </div>
+            <div class="col-md-2">Producers Count
+                <iframe class="board-kibana-frame"
+                        src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
+                        height="90%" width="100%">
+                </iframe>
+            </div>
+            <div class="col-md-2">Consumers Count
+                <iframe class="board-kibana-frame"
+                        src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
+                        height="90%" width="100%">
+                </iframe>
+            </div>
+            <div class="col-md-2">Other info...</div>
+        </div>
+
+        <div class="row ">
+            <div class="col-md-6 board-block">Topic/Producer QPS Top10
+                <table class="table table-striped">
+                    <thead>
+                    <tr >
+                        <th>Name</th>
+                        <th>QPS</th>
+                        <th>Remaining</th>
+                        <th>IO</th>
+                        <th>Latency</th>
+                        <th>etc..</th>
+                    </tr>
+                    </thead>
+                    <tbody ng-repeat="topic in topics">
+                    <tr>
+                        <td><a href="#">
+                            {{topic.name}}</a>
+                        </td>
+                        <td>{{topic.qps}}</td>
+                        <td>{{topic.j}}</td>
+                        <td>{{topic.io}} KB</td>
+                        <td>{{topic.latency}}</td>
+                        <td>{{topic.etc}}</td>
+                        <!--<td><span class="label label-{{collector.isOk}}">{{collector.isOkMeg}}</span></td>-->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-md-6 board-block">Consumer QPS Top10</div>
+        </div>
+
+        <div class="row board-broker">
+            <div class="col-md-2">Broker List...</div>
+            <div class="col-md-6">Host, CPU, IO, Memory, etc.</div>
+        </div>
+    </div>
+</div>
+
+<script src="../../js/jquery-1.11.3.min.js"></script>
+<script src="../../js/bootstrap.min.js"></script>
+
+<script type="text/javascript" src="../../js/angular.min.js"></script>
+<script type="text/javascript" src="../../js/angular-resource.min.js"></script>
+<script type="text/javascript" src="../../js/dashboard/controller.js"></script>
+<script type="text/javascript" src="../../js/dashboard/service.js"></script>
