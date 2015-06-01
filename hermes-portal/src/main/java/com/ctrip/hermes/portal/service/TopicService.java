@@ -29,8 +29,8 @@ public class TopicService {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(TopicService.class);
 
-	@Inject(ServerMetaService.ID)
-	private MetaService m_metaService;
+	@Inject
+	private MetaServiceWrapper m_metaService;
 
 	@Inject
 	private SchemaService m_schemaService;
@@ -39,8 +39,9 @@ public class TopicService {
 	 * 
 	 * @param topic
 	 * @return
+	 * @throws DalException
 	 */
-	public Topic createTopic(Topic topic) {
+	public Topic createTopic(Topic topic) throws DalException {
 		Meta meta = m_metaService.getMeta();
 		topic.setCreateTime(new Date(System.currentTimeMillis()));
 		long maxTopicId = 0;
@@ -216,15 +217,16 @@ public class TopicService {
 	}
 
 	public Topic getTopic(String topic) {
-		return m_metaService.findTopic(topic);
+		return m_metaService.findTopicByName(topic);
 	}
 
 	/**
 	 * 
 	 * @param topic
 	 * @return
+	 * @throws DalException
 	 */
-	public Topic updateTopic(Topic topic) {
+	public Topic updateTopic(Topic topic) throws DalException {
 		Meta meta = m_metaService.getMeta();
 		meta.removeTopic(topic.getName());
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));

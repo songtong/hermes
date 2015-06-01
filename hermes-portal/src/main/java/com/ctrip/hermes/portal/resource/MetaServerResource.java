@@ -18,8 +18,8 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.portal.service.MetaService;
-import com.ctrip.hermes.portal.service.ServerMetaService;
+import com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper;
+import com.ctrip.hermes.portal.service.MetaServiceWrapper;
 
 @Path("/metaserver/")
 @Singleton
@@ -28,7 +28,8 @@ public class MetaServerResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(MetaServerResource.class);
 
-	private MetaService metaService = PlexusComponentLocator.lookup(MetaService.class, ServerMetaService.ID);
+	private MetaServiceWrapper metaService = PlexusComponentLocator.lookup(MetaServiceWrapper.class,
+	      DefaultMetaServiceWrapper.ID);
 
 	@GET
 	@Path("servers")

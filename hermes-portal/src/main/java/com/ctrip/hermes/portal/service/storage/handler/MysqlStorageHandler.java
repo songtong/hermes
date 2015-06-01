@@ -9,21 +9,16 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.portal.service.storage.model.TableModel;
-
 
 @Named(type = StorageHandler.class)
 public class MysqlStorageHandler implements StorageHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(MysqlStorageHandler.class);
-	@Inject
-	private MetaService metaService;
 
 	@Override
 	public boolean dropTables() throws StorageHandleErrorException {
@@ -32,7 +27,7 @@ public class MysqlStorageHandler implements StorageHandler {
 
 	@Override
 	public void createTable(String databaseName, Long topicId, Integer partitionId, List<TableModel> models)
-			  throws StorageHandleErrorException {
+	      throws StorageHandleErrorException {
 		StringBuilder sb = new StringBuilder();
 		sb.append(sqlUseDatabase(databaseName));
 
@@ -41,8 +36,7 @@ public class MysqlStorageHandler implements StorageHandler {
 
 		String tablePrefix = topicId + "_" + partitionId + "_";
 		for (TableModel model : models) {
-			sb.append(sqlCreateTable(tablePrefix, model.getTableName(), model, model.getPks(), model
-					  .getIndexMap()));
+			sb.append(sqlCreateTable(tablePrefix, model.getTableName(), model, model.getPks(), model.getIndexMap()));
 		}
 
 		// todo: log
@@ -111,15 +105,11 @@ public class MysqlStorageHandler implements StorageHandler {
 		return false;
 	}
 
-	public String sqlCreateTable(String tableNamePrefix, String tableName, TableModel tableModel, TableModel.MetaModel[]
-			  pks, Map<String /*indexName*/, String[] /*index key*/> indexMap) {
+	public String sqlCreateTable(String tableNamePrefix, String tableName, TableModel tableModel,
+	      TableModel.MetaModel[] pks, Map<String /* indexName */, String[] /* index key */> indexMap) {
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("CREATE TABLE `")
-				  .append(tableNamePrefix)
-				  .append(tableName)
-				  .append("` (\n");
-
+		sb.append("CREATE TABLE `").append(tableNamePrefix).append(tableName).append("` (\n");
 
 		sb.append(buildSql(tableModel.getMetaModels()));
 
@@ -138,8 +128,7 @@ public class MysqlStorageHandler implements StorageHandler {
 		}
 		sb.append(")");
 
-
-		// build: 	INDEX `key` (`ref_key`)
+		// build: INDEX `key` (`ref_key`)
 		for (Map.Entry<String, String[]> index : indexMap.entrySet()) {
 			String indexKey = index.getKey();
 			String[] indexValue = index.getValue();

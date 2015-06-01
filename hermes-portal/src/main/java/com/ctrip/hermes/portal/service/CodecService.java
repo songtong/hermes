@@ -9,9 +9,8 @@ import com.ctrip.hermes.meta.entity.Codec;
 
 @Named
 public class CodecService {
-
-	@Inject(ServerMetaService.ID)
-	private MetaService m_metaService;
+	@Inject
+	private MetaServiceWrapper m_metaService;
 
 	public Codec getCodec(String topicName) {
 		return m_metaService.getCodecByTopic(topicName);

@@ -1,7 +1,6 @@
 <plexus>
 	<components>
 		<component>
-<<<<<<< HEAD
 			<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
 			<role-hint>topic-storage-service</role-hint>
 			<implementation>com.ctrip.hermes.portal.service.storage.TopicStorageService</implementation>
@@ -10,28 +9,20 @@
 					<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
+					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
 			<implementation>com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
-				</requirement>
-			</requirements>
 		</component>
 		<component>
-=======
->>>>>>> Add producer/publish interface
 			<role>com.ctrip.hermes.portal.service.TopicService</role>
 			<implementation>com.ctrip.hermes.portal.service.TopicService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.MetaService</role>
-					<role-hint>server-meta-service</role-hint>
+					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.service.SchemaService</role>
@@ -43,11 +34,10 @@
 			<implementation>com.ctrip.hermes.portal.service.SchemaService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.meta.dal.meta.SchemaDao</role>
+					<role>com.ctrip.hermes.metaservice.model.SchemaDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.MetaService</role>
-					<role-hint>server-meta-service</role-hint>
+					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.service.CompileService</role>
@@ -59,8 +49,7 @@
 			<implementation>com.ctrip.hermes.portal.service.CodecService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.MetaService</role>
-					<role-hint>server-meta-service</role-hint>
+					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -69,12 +58,12 @@
 			<implementation>com.ctrip.hermes.portal.service.CompileService</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.MetaService</role>
-			<role-hint>server-meta-service</role-hint>
-			<implementation>com.ctrip.hermes.portal.service.ServerMetaService</implementation>
+			<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+			<role-hint>default-meta-service-wrapper</role-hint>
+			<implementation>com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.meta.dal.meta.MetaDao</role>
+					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 				</requirement>
 			</requirements>
 		</component>

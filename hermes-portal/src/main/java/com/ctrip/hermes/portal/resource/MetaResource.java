@@ -19,8 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.portal.service.MetaService;
-import com.ctrip.hermes.portal.service.ServerMetaService;
+import com.ctrip.hermes.metaservice.service.MetaService;
 import com.ctrip.hermes.portal.server.RestException;
 
 @Path("/meta/")
@@ -30,14 +29,14 @@ public class MetaResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(MetaResource.class);
 
-	private MetaService metaService = PlexusComponentLocator.lookup(MetaService.class, ServerMetaService.ID);
+	private MetaService metaService = PlexusComponentLocator.lookup(MetaService.class);
 
 	@GET
 	public Response getMeta(@QueryParam("hashCode") long hashCode) {
 		logger.debug("get meta, hashCode {}", hashCode);
 		Meta meta = null;
 		try {
-			meta = metaService.getMeta();
+			meta = metaService.findLatestMeta();
 			if (meta == null) {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}
@@ -56,7 +55,7 @@ public class MetaResource {
 	public Response refreshMeta() {
 		Meta meta = null;
 		try {
-			meta = metaService.getMeta(true);
+			meta = metaService.findLatestMeta();
 			if (meta == null) {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}

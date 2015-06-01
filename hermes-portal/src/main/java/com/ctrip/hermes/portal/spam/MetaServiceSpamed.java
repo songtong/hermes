@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service;
+package com.ctrip.hermes.portal.spam;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +15,7 @@ import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 
-public interface MetaService {
+public interface MetaServiceSpamed {
 
 	String getEndpointType(String topic);
 
@@ -55,7 +55,7 @@ public interface MetaService {
 	 * @param topic
 	 * @return
 	 */
-	Topic findTopic(String topic);
+	Topic findTopicByName(String topic);
 
 	/**
 	 * 
