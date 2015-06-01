@@ -8,6 +8,7 @@ import java.util.concurrent.Future;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.exception.MessageSendException;
+import com.ctrip.hermes.core.message.payload.RawMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
@@ -22,13 +23,11 @@ public class ProducerService {
 		return true;
 	}
 
-	public Future<SendResult> send(String topic, Map<String, String> params, Object content)
+	public Future<SendResult> send(String topic, Map<String, String> params, InputStream is)
 	      throws MessageSendException, IOException {
-		if (content instanceof InputStream) {
-			InputStream is = (InputStream) content;
-			content = ByteStreams.toByteArray(is);
-		}
-		MessageHolder messageHolder = producer.message(topic, params.get("partitionKey"), content);
+		byte[] payload = ByteStreams.toByteArray(is);
+		RawMessage rawMsg = new RawMessage(payload);
+		MessageHolder messageHolder = producer.message(topic, params.get("partitionKey"), rawMsg);
 		Future<SendResult> sendResult = messageHolder.send();
 		return sendResult;
 	}

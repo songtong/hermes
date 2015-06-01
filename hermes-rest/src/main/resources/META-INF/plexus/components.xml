@@ -12,14 +12,16 @@
 		<component>
 			<role>com.ctrip.hermes.rest.service.SubscribeRegistry</role>
 			<implementation>com.ctrip.hermes.rest.service.DefaultSubscribeRegistry</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.rest.service.MessagePushService</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.rest.service.MessagePushService</role>
 			<implementation>com.ctrip.hermes.rest.service.MessagePushService</implementation>
 			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.rest.service.SubscribeRegistry</role>
-				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>

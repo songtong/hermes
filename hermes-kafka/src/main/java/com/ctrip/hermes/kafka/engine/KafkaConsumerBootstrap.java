@@ -88,6 +88,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 	@Override
 	protected void doStop(ConsumerContext consumerContext) {
 		ConsumerConnector consumerConnector = consumers.remove(consumerContext);
+		consumerConnector.commitOffsets();
 		consumerConnector.shutdown();
 
 		Long correlationId = correlationIds.remove(consumerContext);
