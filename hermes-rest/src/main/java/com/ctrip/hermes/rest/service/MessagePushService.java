@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -14,9 +16,12 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.codahale.metrics.Meter;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
@@ -27,6 +32,8 @@ import com.ctrip.hermes.core.message.payload.RawMessage;
 @Named
 public class MessagePushService implements Initializable {
 
+	private static final Logger m_logger = LoggerFactory.getLogger(MessagePushService.class);
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -34,34 +41,50 @@ public class MessagePushService implements Initializable {
 
 	private RequestConfig m_requestConfig;
 
+	private ExecutorService m_executor;
+
+	@Inject
+	private MetricsManager m_metricsManager;
+
 	@Override
 	public void initialize() throws InitializationException {
 		m_httpClient = HttpClients.createDefault();
+		m_executor = Executors.newCachedThreadPool();
 
 		Builder b = RequestConfig.custom();
 		Properties globalConfig = m_env.getGlobalConfig();
 		// TODO config
-		b.setConnectTimeout(Integer.valueOf(globalConfig.getProperty("push.http.connect.timeout", "2000")));
-		b.setSocketTimeout(Integer.valueOf(globalConfig.getProperty("push.http.read.timeout", "5000")));
+		b.setConnectTimeout(Integer.valueOf(globalConfig.getProperty("gateway.subcription.connect.timeout", "2000")));
+		b.setSocketTimeout(Integer.valueOf(globalConfig.getProperty("gateway.subscription.socket.timeout", "5000")));
 		m_requestConfig = b.build();
 	}
 
 	public ConsumerHolder startPusher(Subscription sub) {
+		final Meter success_meter = m_metricsManager.meter("push_success", sub.getTopic(), sub.getGroupId(), sub
+		      .getEndpoints().toString());
+
+		final Meter failed_meter = m_metricsManager.meter("push_fail", sub.getTopic(), sub.getGroupId(), sub
+		      .getEndpoints().toString());
+
 		final List<String> urls = sub.getEndpoints();
 
-		ConsumerHolder consumerHolder = Consumer.getInstance().start(sub.getTopic(), sub.getGroupId(),
+		final ConsumerHolder consumerHolder = Consumer.getInstance().start(sub.getTopic(), sub.getGroupId(),
 		      new BaseMessageListener<RawMessage>(sub.getGroupId()) {
 
 			      @Override
-			      protected void onMessage(ConsumerMessage<RawMessage> msg) {
-				      for (String url : urls) {
-					      try {
-						      pushMessage(msg, url);
-					      } catch (IOException e) {
-						      // TODO
-					      } catch (RuntimeException e) {
-
-					      }
+			      protected void onMessage(final ConsumerMessage<RawMessage> msg) {
+				      for (final String url : urls) {
+					      m_executor.submit(new Runnable() {
+						      public void run() {
+							      try {
+								      pushMessage(msg, url);
+								      success_meter.mark();
+							      } catch (Exception e) {
+								      m_logger.warn("Push message failed", e);
+								      failed_meter.mark();
+							      }
+						      }
+					      });
 				      }
 			      }
 
