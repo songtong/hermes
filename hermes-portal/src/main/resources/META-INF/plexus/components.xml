@@ -1,6 +1,7 @@
 <plexus>
 	<components>
 		<component>
+<<<<<<< HEAD
 			<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
 			<role-hint>topic-storage-service</role-hint>
 			<implementation>com.ctrip.hermes.portal.service.storage.TopicStorageService</implementation>
@@ -23,6 +24,8 @@
 			</requirements>
 		</component>
 		<component>
+=======
+>>>>>>> Add producer/publish interface
 			<role>com.ctrip.hermes.portal.service.TopicService</role>
 			<implementation>com.ctrip.hermes.portal.service.TopicService</implementation>
 			<requirements>
