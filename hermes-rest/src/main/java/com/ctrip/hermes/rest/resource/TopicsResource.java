@@ -28,37 +28,37 @@ import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.rest.service.ProducerService;
 
-@Path("/producer/")
+@Path("/topics/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
-public class ProducerResource {
+public class TopicsResource {
 
-	private static final Logger logger = LoggerFactory.getLogger(ProducerResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(TopicsResource.class);
 
 	private ProducerService producerService = PlexusComponentLocator.lookup(ProducerService.class);
 
 	private ExecutorService executor = Executors.newCachedThreadPool();
 
-	@Path("publish/{topicName}")
-	@POST
-	@Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, MediaType.TEXT_HTML })
-	public void publishString(@PathParam("topicName") String topicName, @Context HttpHeaders headers, String content,
-	      @Suspended final AsyncResponse response) {
-		if (!producerService.topicExist(topicName)) {
-			throw new BadRequestException(String.format("Topic {0} does not exist", topicName));
-		}
+	private void publishAsync(final String topic, final Map<String, String> params, final InputStream content,
+	      final AsyncResponse response) {
+		executor.submit(new Runnable() {
 
-		if (logger.isTraceEnabled()) {
-			logger.trace("{} {} {}", topicName, headers.getRequestHeaders().toString(), content);
-		}
+			@Override
+			public void run() {
+				try {
+					Future<SendResult> sendResult = producerService.send(topic, params, content);
+					response.resume(sendResult.get());
+					// TODO timeout
+				} catch (Exception e) {
+					response.resume(e);
+					response.cancel();
+				}
+			}
 
-		MultivaluedMap<String, String> requestHeaders = headers.getRequestHeaders();
-		Map<String, String> params = new HashMap<>();
-		params.put("partitionKey", requestHeaders.getFirst("partitionKey"));
-		publishAsync(topicName, params, content, response);
+		});
 	}
 
-	@Path("publish/{topicName}")
+	@Path("{topicName}")
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public void publishBinary(@PathParam("topicName") String topicName, @Context HttpHeaders headers,
@@ -77,21 +77,22 @@ public class ProducerResource {
 		publishAsync(topicName, params, content, response);
 	}
 
-	private void publishAsync(final String topic, final Map<String, String> params, final Object content,
-	      final AsyncResponse response) {
-		executor.submit(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					Future<SendResult> sendResult = producerService.send(topic, params, content);
-					response.resume(sendResult.get());
-				} catch (Exception e) {
-					response.resume(e);
-					response.cancel();
-				}
-			}
-
-		});
-	}
+//	@Path("{topicName}")
+//	@POST
+//	@Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, MediaType.TEXT_HTML })
+//	public void publishString(@PathParam("topicName") String topicName, @Context HttpHeaders headers, String content,
+//	      @Suspended final AsyncResponse response) {
+//		if (!producerService.topicExist(topicName)) {
+//			throw new BadRequestException(String.format("Topic {0} does not exist", topicName));
+//		}
+//
+//		if (logger.isTraceEnabled()) {
+//			logger.trace("{} {} {}", topicName, headers.getRequestHeaders().toString(), content);
+//		}
+//
+//		MultivaluedMap<String, String> requestHeaders = headers.getRequestHeaders();
+//		Map<String, String> params = new HashMap<>();
+//		params.put("partitionKey", requestHeaders.getFirst("partitionKey"));
+//		publishAsync(topicName, params, content, response);
+//	}
 }

@@ -19,15 +19,13 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
+import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 
 @Named
 public class MessagePushService implements Initializable {
-
-	@Inject
-	private SubscribeRegistry m_subsRegistry;
 
 	@Inject
 	private ClientEnvironment m_env;
@@ -48,18 +46,10 @@ public class MessagePushService implements Initializable {
 		m_requestConfig = b.build();
 	}
 
-	public void start() {
-		List<Subscription> subs = m_subsRegistry.getSubscriptions();
+	public ConsumerHolder startPusher(Subscription sub) {
+		final List<String> urls = sub.getEndpoints();
 
-		for (Subscription sub : subs) {
-			startPusher(sub);
-		}
-	}
-
-	private void startPusher(Subscription sub) {
-		final List<String> urls = sub.getPushHttpUrls();
-
-		Consumer.getInstance().start(sub.getTopic(), sub.getGroupId(),
+		ConsumerHolder consumerHolder = Consumer.getInstance().start(sub.getTopic(), sub.getGroupId(),
 		      new BaseMessageListener<RawMessage>(sub.getGroupId()) {
 
 			      @Override
@@ -76,10 +66,10 @@ public class MessagePushService implements Initializable {
 			      }
 
 		      });
+		return consumerHolder;
 	}
 
 	private HttpPost pushMessage(ConsumerMessage<RawMessage> msg, String url) throws IOException {
-		System.out.println("push msg " + msg.getBody());
 		HttpPost post = new HttpPost(url);
 
 		post.setConfig(m_requestConfig);
