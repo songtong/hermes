@@ -24,8 +24,8 @@
 		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-kafka</artifactId>
-		</dependency>	
-		
+		</dependency>
+
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
@@ -45,6 +45,11 @@
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
 			<version>2.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.dropwizard.metrics</groupId>
+			<artifactId>metrics-core</artifactId>
+			<version>3.1.2</version>
 		</dependency>
 	</dependencies>
 	<profiles>

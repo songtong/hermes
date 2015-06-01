@@ -52,4 +52,10 @@ public class Subscription {
 		return Objects.equals(this.m_topic, other.m_topic) && Objects.equals(this.m_groupId, other.m_groupId)
 		      && Objects.equals(this.m_endpoints, other.m_endpoints);
 	}
+	
+	@Override
+	public String toString() {
+		return "Subscription {topic = " + Objects.toString(m_topic) + ", groupId = " + Objects.toString(m_groupId)
+		      + ", endpoints = " + Objects.toString(m_endpoints) + "}";
+	}
 }
