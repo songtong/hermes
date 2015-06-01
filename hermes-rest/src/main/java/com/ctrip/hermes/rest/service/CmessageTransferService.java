@@ -1,14 +1,12 @@
 package com.ctrip.hermes.rest.service;
 
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Triple;
@@ -20,17 +18,15 @@ import com.ctrip.hermes.rest.common.RestConstant;
 
 @Named
 public class CmessageTransferService {
+	private static Logger logger = LogManager.getLogger(CmessageTransferService.class);
+	private BlockingQueue<Triple<String, String, String>> queue = new LinkedBlockingDeque<>(20000);
 
 	@Inject
 	private ClientEnvironment env;
 
-	private static Logger logger = LoggerFactory.getLogger(CmessageTransferService.class);
-
 	private Producer producer;
 
 	private String defaultTopic;
-	
-	private BlockingQueue<Triple<String, String, String>> queue = new LinkedBlockingDeque<>(5000);
 
 	private CmessageTransferService() {
 		producer = Producer.getInstance();
@@ -42,8 +38,19 @@ public class CmessageTransferService {
 
 				while (true) {
 					try {
-						Triple<String, String, String> msg = queue.take();
-						doSend(msg.getFirst(), msg.getMiddle(), msg.getLast());
+						ArrayList<Triple<String, String, String>> msgs = new ArrayList<>(1000);
+						queue.drainTo(msgs, 1000);
+
+						if (msgs.size() == 0) {
+							Thread.sleep(50);
+							continue;
+						} else {
+							doSendBatch(msgs);
+							Thread.sleep(10);
+						}
+
+//						Triple<String, String, String> msg = queue.take();
+//						doSend(msg.getFirst(), msg.getMiddle(), msg.getLast());
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -51,6 +58,12 @@ public class CmessageTransferService {
 			}
 		}).start();
 
+	}
+
+	private void doSendBatch(ArrayList<Triple<String, String, String>> msgs) {
+		for (Triple<String, String, String> msg : msgs) {
+			doSend(msg.getFirst(), msg.getMiddle(), msg.getLast());
+		}
 	}
 
 	private static class ServiceHodler {
@@ -63,24 +76,19 @@ public class CmessageTransferService {
 	}
 
 	public void transfer(String topic, String content, String header) {
-		queue.offer(new Triple<>(topic, content, header));
+		boolean isSuccess = queue.offer(new Triple<>(topic, content, header));
+		if (!isSuccess) {
+			logger.error("CmessageTransferService Queue Is FULL! Queue size: " + queue.size());
+		}
 	}
 
 	@SuppressWarnings("unused")
 	private void doSend(String topic, String content, String header) {
 		// 由于开发初期的原因，全部放到RestConstant.CMESSAGEING_TOPIC这个topic下
 		Future<SendResult> future = producer.message(defaultTopic, null, content)
-		      .addProperty(RestConstant.CMESSAGING_ORIGIN_TOPIC, topic)
-		      .addProperty(RestConstant.CMESSAGING_HEADER, header).send();
-
-		SendResult result = null;
-		try {
-			result = future.get(2, TimeUnit.SECONDS);
-
-			logger.debug(String.format("SendTopic: [%s], Content: [%s]", topic, content));
-		} catch (InterruptedException | ExecutionException | TimeoutException e) {
-			logger.error("FailToGetMessageFuture: " + e.getMessage());
-		}
+				  .addProperty(RestConstant.CMESSAGING_ORIGIN_TOPIC, topic)
+				  .addProperty(RestConstant.CMESSAGING_HEADER, header)
+				  .send();
 	}
 
 	public static void main(String[] args) {
