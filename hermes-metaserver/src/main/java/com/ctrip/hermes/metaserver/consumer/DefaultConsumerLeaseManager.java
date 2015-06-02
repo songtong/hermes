@@ -271,7 +271,7 @@ public class DefaultConsumerLeaseManager implements ConsumerLeaseManager, Initia
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMills());
 				} else {
-					if (existingLease.getId() != leaseId) {
+					if (existingLease.getId() != leaseId || !consumerName.equals(existingLeasePair.getKey())) {
 						return new LeaseAcquireResponse(false, null, existingLease.getExpireTime());
 					} else {
 						// extend expire time

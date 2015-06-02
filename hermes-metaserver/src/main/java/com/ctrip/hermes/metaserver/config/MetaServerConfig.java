@@ -26,7 +26,7 @@ public class MetaServerConfig {
 	}
 
 	public long getConsumerHeartbeatTimeoutMillis() {
-		return getConsumerLeaseTimeMillis() * 2;
+		return getConsumerLeaseTimeMillis() + 5000L;
 	}
 
 }
