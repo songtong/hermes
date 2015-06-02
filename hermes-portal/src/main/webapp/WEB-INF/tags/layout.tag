@@ -34,8 +34,7 @@
 				<ul class="nav navbar-nav">
 					<c:forEach var="page" items="${navBar.visiblePages}">
 						<c:if test="${page.standalone}">
-							<li ${model.page.name == page.name ? 'class="active"' : ''}><a
-								href="${model.webapp}/${page.moduleName}/${page.path}">${page.title}</a></li>
+							<li ${model.page.name == page.name ? 'class="active"' : ''}><a href="${model.webapp}/${page.moduleName}/${page.path}">${page.title}</a></li>
 						</c:if>
 						<c:if test="${not page.standalone and model.page.name == page.name}">
 							<li class="active">${page.title}</li>
@@ -65,5 +64,6 @@
 	<!--/.fluid-container-->
 
 	<script src="${model.webapp}/js/bootstrap.min.js" type="text/javascript"></script>
+	<script src="${model.webapp}/js/portal-common.js" type="text/javascript"></script>
 </body>
 </html>

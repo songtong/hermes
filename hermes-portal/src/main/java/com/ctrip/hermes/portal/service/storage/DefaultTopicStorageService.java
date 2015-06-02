@@ -5,15 +5,12 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.portal.pojo.storage.TopicStorageView;
 import com.ctrip.hermes.portal.service.MetaServiceWrapper;
 import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
@@ -27,7 +24,7 @@ import com.ctrip.hermes.portal.service.storage.model.OffsetResendTableModel;
 import com.ctrip.hermes.portal.service.storage.model.ResendTableModel;
 import com.ctrip.hermes.portal.service.storage.model.TableModel;
 
-@Named(type = DefaultTopicStorageService.class, value = DefaultTopicStorageService.ID)
+@Named(type = TopicStorageService.class, value = DefaultTopicStorageService.ID)
 public class DefaultTopicStorageService implements TopicStorageService {
 	private static final Logger log = LoggerFactory.getLogger(DefaultTopicStorageService.class);
 
@@ -90,10 +87,6 @@ public class DefaultTopicStorageService implements TopicStorageService {
 			tableModels.add(new ResendTableModel(groupId)); // resend_<groupid>
 		}
 		handler.createTable(databaseName, topic.getId(), partition.getId(), tableModels);
-	}
-
-	public TopicStorageView getTopicStorage(String topicName, String ds) {
-		return null;
 	}
 
 	public Boolean addPartition(String ds, String topicName) throws StorageHandleErrorException {
@@ -201,4 +194,16 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	public boolean validateDataModel() throws DataModelNotMatchException {
 		return false;
 	}
+
+	@Override
+   public boolean initTopicStorage(Topic topic) {
+	   // TODO Auto-generated method stub
+	   return false;
+   }
+
+	@Override
+   public boolean addPartition(Topic topic, Partition partition) {
+	   // TODO Auto-generated method stub
+	   return false;
+   }
 }
