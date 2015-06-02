@@ -43,6 +43,10 @@ public class TopicView {
 
 	private String createBy;
 
+	private String endpointType;
+
+	private Integer ackTimeoutSeconds;
+
 	public TopicView() {
 
 	}
@@ -61,6 +65,8 @@ public class TopicView {
 		this.schemaId = topic.getSchemaId();
 		this.otherinfo = topic.getOtherInfo();
 		this.createBy = topic.getCreateBy();
+		this.setEndpointType(topic.getEndpointType());
+		this.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 	}
 
 	public Codec getCodec() {
@@ -191,6 +197,22 @@ public class TopicView {
 		this.storageType = type;
 	}
 
+	public String getEndpointType() {
+		return endpointType;
+	}
+
+	public void setEndpointType(String endpointType) {
+		this.endpointType = endpointType;
+	}
+
+	public Integer getAckTimeoutSeconds() {
+		return ackTimeoutSeconds;
+	}
+
+	public void setAckTimeoutSeconds(Integer ackTimeoutSeconds) {
+		this.ackTimeoutSeconds = ackTimeoutSeconds;
+	}
+
 	public Topic toMetaTopic() {
 		Topic topic = new Topic();
 		topic.setId(this.id);
@@ -216,6 +238,8 @@ public class TopicView {
 		topic.setSchemaId(this.schemaId);
 		topic.setOtherInfo(this.otherinfo);
 		topic.setCreateBy(this.createBy);
+		topic.setAckTimeoutSeconds(this.ackTimeoutSeconds);
+		topic.setEndpointType(this.endpointType);
 		return topic;
 	}
 }

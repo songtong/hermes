@@ -6,7 +6,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.portal.pojo.storage.TopicStorageView;
-import com.ctrip.hermes.portal.service.storage.TopicStorageService;
+import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
 
@@ -14,7 +14,7 @@ import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsExcep
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class TopicStorageResource {
-	private TopicStorageService service = PlexusComponentLocator.lookup(TopicStorageService.class);
+	private DefaultTopicStorageService service = PlexusComponentLocator.lookup(DefaultTopicStorageService.class);
 
 	@GET
 	@Path("{name}/createdb")

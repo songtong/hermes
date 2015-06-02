@@ -16,11 +16,6 @@
 		<component>
 			<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
 			<implementation>com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
-				</requirement>
-			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.TopicService</role>
