@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
@@ -27,8 +28,8 @@ public class StartConsumer extends ComponentTestCase {
 		String topic = "order_new";
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
-		subscribers.put("group1", Arrays.asList("1-a"));
-		subscribers.put("group2", Arrays.asList("2-a"));
+		subscribers.put("group1", Arrays.asList("1-" + new Random().nextInt()));
+//		subscribers.put("group2", Arrays.asList("2-a"));
 		// subscribers.put("group2", Arrays.asList("2-a", "2-b"));
 
 		List<ConsumerHolder> holders = new ArrayList<>();

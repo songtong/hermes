@@ -42,9 +42,9 @@ public class StartProducer extends ComponentTestCase {
 		msg += priority ? " priority" : " non-priority";
 		System.out.println(">>> " + msg);
 		if (priority) {
-			Producer.getInstance().message(topic, null, msg).withRefKey(uuid).withPriority().send();
+			Producer.getInstance().message(topic, uuid, msg).withRefKey(uuid).withPriority().send();
 		} else {
-			Producer.getInstance().message(topic, null, msg).withRefKey(uuid).send();
+			Producer.getInstance().message(topic, uuid, msg).withRefKey(uuid).send();
 		}
 	}
 }

@@ -1,7 +1,9 @@
 package com.ctrip.hermes.metaserver.consumer;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -51,23 +53,26 @@ public class DefaultActiveConsumerListHolder implements ActiveConsumerListHolder
 		long timeoutMillis = timeUnit.toMillis(timeout);
 		m_lock.writeLock().lock();
 		try {
-			for (Pair<String, String> topicGroup : m_activeConsumers.keySet()) {
-				ActiveConsumerList activeConsumerList = m_activeConsumers.get(topicGroup);
+			Iterator<Entry<Pair<String, String>, ActiveConsumerList>> iterator = m_activeConsumers.entrySet().iterator();
+
+			while (iterator.hasNext()) {
+				Entry<Pair<String, String>, ActiveConsumerList> entry = iterator.next();
+				ActiveConsumerList activeConsumerList = entry.getValue();
 				if (activeConsumerList != null) {
 					activeConsumerList.purgeExpired(timeoutMillis, m_systemClockService.now());
 
 					Set<String> activeConsumerNames = activeConsumerList.getActiveConsumerNames();
 
 					if (activeConsumerNames == null || activeConsumerNames.isEmpty()) {
-						m_activeConsumers.remove(topicGroup);
-						changedTopicGroupList.put(topicGroup, activeConsumerNames);
+						iterator.remove();
+						changedTopicGroupList.put(entry.getKey(), activeConsumerNames);
 					} else {
 						if (activeConsumerList.getAndResetChanged()) {
-							changedTopicGroupList.put(topicGroup, activeConsumerNames);
+							changedTopicGroupList.put(entry.getKey(), activeConsumerNames);
 						}
 					}
 				} else {
-					m_activeConsumers.remove(topicGroup);
+					iterator.remove();
 				}
 			}
 		} finally {

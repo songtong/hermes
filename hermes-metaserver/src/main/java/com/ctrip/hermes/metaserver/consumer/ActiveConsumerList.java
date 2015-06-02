@@ -1,7 +1,9 @@
 package com.ctrip.hermes.metaserver.consumer;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -21,10 +23,11 @@ public class ActiveConsumerList {
 	}
 
 	public void purgeExpired(long timeoutMillis, long now) {
-		for (String consumerName : m_consumers.keySet()) {
-			Long lastHeartbeatTime = m_consumers.get(consumerName);
-			if (lastHeartbeatTime + timeoutMillis < now) {
-				m_consumers.remove(consumerName);
+		Iterator<Entry<String, Long>> iterator = m_consumers.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Entry<String, Long> entry = iterator.next();
+			if (entry.getValue() + timeoutMillis < now) {
+				iterator.remove();
 				m_changed = true;
 			}
 		}
