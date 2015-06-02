@@ -34,7 +34,7 @@ public class TableModel {
 	}
 
 
-	//todo: 这个MetaModel是每个表自己分别建，但实际上有相同的设置(例:'id')，将来可抽成枚举.
+	//TODO: 这个MetaModel是每个表自己分别建，但实际上有相同的设置(例:'id')，将来可抽成枚举.
 	public class MetaModel {
 		public String columnName;
 		public String type;
