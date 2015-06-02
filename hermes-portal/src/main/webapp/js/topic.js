@@ -1,24 +1,3 @@
-var show_op_info = function() {
-	"use strict";
-
-	var info_elem, hideHandler, that = {};
-	that.init = function(options) {
-		info_elem = $(options.selector);
-	};
-	that.show = function(text) {
-		clearTimeout(hideHandler);
-		info_elem.find("span").html(text);
-		info_elem.delay(200).fadeIn().delay(4000).fadeOut();
-	};
-	return that;
-}();
-
-$(function() {
-	show_op_info.init({
-		"selector" : ".op-alert"
-	});
-});
-
 function to_topic_rows(topics) {
 	var rows = [];
 	for (var i = 0; i < topics.length; i++) {
@@ -59,11 +38,7 @@ function to_required_topic(data) {
 
 angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topic-controller',
 		[ '$scope', '$filter', '$resource', function(scope, filter, resource) {
-			topic_resource = resource('/api/topics/:name', {}, {
-				"remove" : {
-					method : 'DELETE'
-				}
-			});
+			topic_resource = resource('/api/topics/:name', {}, {});
 
 			scope.is_loading = true;
 			scope.src_topics = [];

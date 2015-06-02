@@ -23,7 +23,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
+import com.ctrip.hermes.portal.service.storage.TopicStorageService;
 
 @Named
 public class TopicService {
@@ -35,9 +35,6 @@ public class TopicService {
 
 	@Inject
 	private SchemaService m_schemaService;
-
-	@Inject
-	private DefaultTopicStorageService m_topicStorageService;
 
 	/**
 	 * 
@@ -57,7 +54,14 @@ public class TopicService {
 		topic.setId(maxTopicId + 1);
 		meta.addTopic(topic);
 
-		m_metaService.updateMeta(meta);
+//		if (!m_topicStorageService.initTopicStorage(topic)) {
+//			throw new RuntimeException("Init topic storage failed, please try later.");
+//		}
+//
+//		if (!m_metaService.updateMeta(meta)) {
+//			throw new RuntimeException("Update meta failed, please try later");
+//		}
+		
 		return topic;
 	}
 

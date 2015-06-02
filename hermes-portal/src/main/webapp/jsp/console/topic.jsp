@@ -19,11 +19,11 @@
 	</div>
 	<div ng-app="hermes-topic" ng-controller="topic-controller">
 		<div class="panel panel-info">
-			<div class="panel-heading">Hermes Topics</div>
+			<div class="panel-heading">Hermes消息主题列表</div>
 			<table class="table table-hover" st-pipe="get_topics" st-table="topic_table">
 				<thead>
 					<tr>
-						<th st-sort="name">Topic 名称</th>
+						<th st-sort="name">Topic名称</th>
 						<th st-sort="codecType" width="100px" style="text-align: center;">编码</th>
 						<th st-sort="storageType" width="100px" style="text-align: center;">存储</th>
 						<th st-sort="schemaName">Schema</th>
@@ -157,23 +157,6 @@
 					<div class="modal-footer">
 						<button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">关闭</button>
 						<button type="button" class="btn btn-sm btn-success" data-dismiss="modal" ng-click="add_topic(new_topic)">保存</button>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="modal fade" style="top: 20%;" id="del-topic-modal" tabindex="-1" role="dialog" aria-labelledby="del-topic-label" aria-hidden="true">
-			<div class="modal-dialog" style="width: 200px">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
-						<h4 class="modal-title" id="add-topic-label">确认删除 Topic: {{}}</h4>
-					</div>
-					<div class="modal-body">
-						<button type="button" class="btn btn-sm btn-danger" data-dismiss="modal" ng-click="del_topic(name)">确定</button>
-						<button type="button" class="btn btn-sm btn-success" data-dismiss="modal">取消</button>
 					</div>
 				</div>
 			</div>
