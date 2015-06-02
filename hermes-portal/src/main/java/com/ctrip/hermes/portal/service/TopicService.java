@@ -23,6 +23,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
 
 @Named
 public class TopicService {
@@ -34,6 +35,9 @@ public class TopicService {
 
 	@Inject
 	private SchemaService m_schemaService;
+
+	@Inject
+	private DefaultTopicStorageService m_topicStorageService;
 
 	/**
 	 * 

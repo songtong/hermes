@@ -100,6 +100,7 @@
 									<select name="storage-type" class="form-control" id="inputStorageType" ng-model="new_topic.storageType">
 										<option>mysql</option>
 										<option>kafka</option>
+										<option>memory</option>
 									</select>
 								</div>
 							</div>
@@ -115,7 +116,7 @@
 							<div class="form-group">
 								<label for="inputAckTimeout" class="col-sm-3 control-label">ACK 超时</label>
 								<div class="col-sm-4">
-									<input class="form-control" id="inputAckTimeout" placeholder="ACK Timeout" ng-model="new_topic.ackTimeout">
+									<input class="form-control" id="inputAckTimeout" placeholder="ACK Timeout" ng-model="new_topic.ackTimeoutSeconds">
 								</div>
 							</div>
 							<div class="form-group">
@@ -126,27 +127,27 @@
 							</div>
 							<div class="form-group">
 								<label for="inputReadDatasource" class="col-sm-3 control-label">Partition</label>
-								<div class="col-sm-8">
+								<div class="col-sm-6">
 									<div class="input-group">
-										<input class="form-control" id="inputReadDatasource" placeholder="Read Datasource" ng-model="new_topic.partition_readds">
+										<input class="form-control" id="inputReadDatasource" placeholder="Read Datasource" ng-model="new_topic.partition.readDatasource">
 										<div class="input-group-addon">读源</div>
 									</div>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="inputWriteDatasource" class="col-sm-3 control-label"></label>
-								<div class="col-sm-8">
+								<div class="col-sm-6">
 									<div class="input-group">
-										<input class="form-control" id="inputWriteDatasource" placeholder="Write Datasource" ng-model="new_topic.partition_writeds">
+										<input class="form-control" id="inputWriteDatasource" placeholder="Write Datasource" ng-model="new_topic.partition.writeDatasource">
 										<div class="input-group-addon">写源</div>
 									</div>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="inputEndpoint" class="col-sm-3 control-label"></label>
-								<div class="col-sm-8">
+								<div class="col-sm-6">
 									<div class="input-group">
-										<input class="form-control" id="inputEndpoint" placeholder="Endpoint" ng-model="new_topic.partition_endpoint">
+										<input class="form-control" id="inputEndpoint" placeholder="Endpoint" ng-model="new_topic.partition.endpoint">
 										<div class="input-group-addon">Endpoint</div>
 									</div>
 								</div>

@@ -41,6 +41,22 @@ function reload_table(scope, data) {
 	scope.src_topics = data;
 	scope.topic_rows = to_topic_rows(scope.src_topics);
 }
+
+function to_required_topic(data) {
+	var topic = {};
+	topic.name = data.name;
+	topic.codecType = data.codecType;
+	topic.storageType = data.storageType;
+	topic.endpointType = data.endpointType;
+	topic.ackTimeoutSeconds = data.ackTimeoutSeconds;
+	topic.consumeRetryPolicy = data.consumeRetryPolicy;
+
+	topic.partitions = [];
+	topic.partitions.push(data.partition);
+
+	return topic;
+}
+
 angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topic-controller',
 		[ '$scope', '$filter', '$resource', function(scope, filter, resource) {
 			topic_resource = resource('/api/topics/:name', {}, {
@@ -62,7 +78,8 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 			};
 
 			scope.add_topic = function add_topic(new_topic) {
-				topic_resource.save(new_topic).$promise.then(function(save_result) {
+				topic_resource.save(to_required_topic(new_topic)).$promise.then(function(save_result) {
+					console.log(save_result);
 					topic_resource.query().$promise.then(function(query_result) {
 						reload_table(scope, query_result);
 						show_op_info.show("新增Topic成功, Topic名称：" + new_topic.name);

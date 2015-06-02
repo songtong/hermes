@@ -12,13 +12,17 @@ import java.util.regex.Pattern;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.helper.Codes;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Codec;
+import com.ctrip.hermes.meta.entity.Datasource;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -161,4 +165,24 @@ public class DefaultMetaServiceWrapper extends DefaultMetaService implements Met
 		      }, 1, 1, TimeUnit.SECONDS);
 	}
 
+	@Override
+	public Endpoint getEndpoint(String name) {
+		return m_meta.getEndpoints().get(name);
+	}
+
+	@Override
+	public Datasource getDatasource(String storageType, String datasourceId) {
+		List<Datasource> datasources = m_meta.getStorages().get(storageType).getDatasources();
+		for (Datasource datasource : datasources) {
+			if (datasource.getId().equals(datasourceId)) {
+				Property p = datasource.getProperties().get("password");
+				if (p.getValue().startsWith("~{") && p.getValue().endsWith("}")) {
+					p.setValue(Codes.forDecode().decode(p.getValue().substring(2, p.getValue().length() - 1)));
+					datasource.getProperties().put("password", p);
+				}
+				return datasource;
+			}
+		}
+		return null;
+	}
 }

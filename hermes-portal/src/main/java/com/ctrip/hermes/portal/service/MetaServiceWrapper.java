@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.ctrip.hermes.meta.entity.Codec;
+import com.ctrip.hermes.meta.entity.Datasource;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Server;
@@ -34,4 +36,7 @@ public interface MetaServiceWrapper extends MetaService {
 
 	public List<Server> getServers();
 
+	public Endpoint getEndpoint(String endpointId);
+
+	public Datasource getDatasource(String storageType, String datasourceId);
 }
