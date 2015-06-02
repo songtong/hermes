@@ -15,8 +15,8 @@ import com.ctrip.hermes.meta.entity.Partition;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = PartitionConsumerAssigningStrategy.class)
-public class DefaultPartitionConsumerAssigningStrategy implements PartitionConsumerAssigningStrategy {
+@Named(type = OrderedConsumeConsumerPartitionAssigningStrategy.class)
+public class DefaultOrderedConsumeConsumerPartitionAssigningStrategy implements OrderedConsumeConsumerPartitionAssigningStrategy {
 
 	@Override
 	public Map<String, List<Integer>> assign(List<Partition> partitions, Set<String> consumers) {

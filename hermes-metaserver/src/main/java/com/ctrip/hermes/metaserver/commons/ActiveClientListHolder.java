@@ -1,4 +1,4 @@
-package com.ctrip.hermes.metaserver.client;
+package com.ctrip.hermes.metaserver.commons;
 
 import java.util.Map;
 import java.util.Set;

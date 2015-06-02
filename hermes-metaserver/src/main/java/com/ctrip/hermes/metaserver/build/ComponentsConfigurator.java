@@ -8,8 +8,10 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
-import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocationStrategyRegistry;
-import com.ctrip.hermes.metaserver.consumer.DefaultPartitionConsumerAssigningStrategy;
+import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
+import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
+import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocationStrategyLocator;
+import com.ctrip.hermes.metaserver.consumer.DefaultOrderedConsumeConsumerPartitionAssigningStrategy;
 import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocationStrategy;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
@@ -24,11 +26,15 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(MetaServerConfig.class));
 
 		all.add(A(ActiveConsumerListHolder.class));
-		all.add(A(DefaultPartitionConsumerAssigningStrategy.class));
+		all.add(A(DefaultOrderedConsumeConsumerPartitionAssigningStrategy.class));
+
+		all.add(A(ConsumerLeaseHolder.class));
 
 		all.add(A(OrderedConsumeConsumerLeaseAllocationStrategy.class));
 
-		all.add(A(DefaultConsumerLeaseAllocationStrategyRegistry.class));
+		all.add(A(DefaultConsumerLeaseAllocationStrategyLocator.class));
+
+		all.add(A(ConsumerAssignmentHolder.class));
 
 		return all;
 	}

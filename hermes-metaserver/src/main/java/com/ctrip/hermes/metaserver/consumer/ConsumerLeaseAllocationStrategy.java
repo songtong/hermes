@@ -11,4 +11,5 @@ public interface ConsumerLeaseAllocationStrategy {
 	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName);
 
 	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId);
+
 }
