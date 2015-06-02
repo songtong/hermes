@@ -12,6 +12,7 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.rest.common.MetricsConstant;
 import com.ctrip.hermes.rest.common.RestConstant;
 import com.ctrip.hermes.rest.service.CmessageTransferService;
@@ -26,7 +27,7 @@ public class CmessageResource {
 
 	private static AtomicInteger integer = new AtomicInteger(0);
 
-	CmessageTransferService service = CmessageTransferService.getInstance();
+	CmessageTransferService service = PlexusComponentLocator.lookup(CmessageTransferService.class);
 
 	/**
 	 * if you do post request via POSTMAN, remember to add Headers (Content-Type:application/json)

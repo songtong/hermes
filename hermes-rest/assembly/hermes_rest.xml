@@ -29,7 +29,6 @@
             <directory>${project.basedir}/src/main/resources</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
-                <include>*.properties</include>
                 <include>log4j.xml</include>
             </includes>
             <fileMode>0666</fileMode>
