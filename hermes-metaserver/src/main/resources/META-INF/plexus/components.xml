@@ -15,7 +15,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultActiveConsumerListHolder</implementation>
+			<implementation>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.service.SystemClockService</role>
@@ -30,8 +30,9 @@
 			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultPartitionConsumerAssigningStrategy</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseManager</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseManager</implementation>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocationStrategy</role>
+			<role-hint>orderedConsume</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocationStrategy</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
@@ -49,6 +50,10 @@
 					<role>com.ctrip.hermes.metaserver.consumer.PartitionConsumerAssigningStrategy</role>
 				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocationStrategyRegistry</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocationStrategyRegistry</implementation>
 		</component>
 	</components>
 </plexus>

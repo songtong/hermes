@@ -14,11 +14,11 @@ public class MetaServerConfig {
 	}
 
 	public long getConsumerLeaseTimeMillis() {
-		return 60 * 1000L;
+		return 20 * 1000L;
 	}
 
 	public long getConsumerLeaseClientSideAdjustmentTimeMills() {
-		return -3 * 1000L;
+		return -2 * 1000L;
 	}
 
 	public long getActiveConsumerCheckIntervalTimeMillis() {
@@ -26,7 +26,7 @@ public class MetaServerConfig {
 	}
 
 	public long getConsumerHeartbeatTimeoutMillis() {
-		return getConsumerLeaseTimeMillis() + 5000L;
+		return getConsumerLeaseTimeMillis() + 3000L;
 	}
 
 }

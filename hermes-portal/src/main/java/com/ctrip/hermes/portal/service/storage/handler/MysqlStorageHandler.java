@@ -1,6 +1,10 @@
 package com.ctrip.hermes.portal.service.storage.handler;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -9,9 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.portal.pojo.storage.PartitionView;
-import com.ctrip.hermes.portal.service.storage.TempFile;
 import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.portal.service.storage.model.TableModel;

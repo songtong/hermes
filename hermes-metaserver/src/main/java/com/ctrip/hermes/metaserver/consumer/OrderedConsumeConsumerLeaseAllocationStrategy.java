@@ -29,6 +29,7 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaserver.build.BuildConstants;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
@@ -36,10 +37,10 @@ import com.ctrip.hermes.metaserver.meta.MetaHolder;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = ConsumerLeaseManager.class)
-public class DefaultConsumerLeaseManager implements ConsumerLeaseManager, Initializable {
+@Named(type = ConsumerLeaseAllocationStrategy.class, value = BuildConstants.CONSUME_STRATEGY_ORDERED)
+public class OrderedConsumeConsumerLeaseAllocationStrategy implements ConsumerLeaseAllocationStrategy, Initializable {
 
-	private static final Logger log = LoggerFactory.getLogger(DefaultConsumerLeaseManager.class);
+	private static final Logger log = LoggerFactory.getLogger(OrderedConsumeConsumerLeaseAllocationStrategy.class);
 
 	@Inject
 	private MetaServerConfig m_config;
@@ -104,7 +105,7 @@ public class DefaultConsumerLeaseManager implements ConsumerLeaseManager, Initia
 	}
 
 	private void heartbeat(Tpg tpg, String consumerName) {
-		m_activeConsumerList.heartbeat(tpg.getTopic(), tpg.getGroupId(), consumerName);
+		m_activeConsumerList.heartbeat(new Pair<String, String>(tpg.getTopic(), tpg.getGroupId()), consumerName);
 	}
 
 	private LeaseAcquireResponse renewLease(Tpg tpg, String consumerName, long leaseId) {

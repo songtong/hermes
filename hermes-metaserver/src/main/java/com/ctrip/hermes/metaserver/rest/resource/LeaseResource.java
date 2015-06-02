@@ -22,7 +22,8 @@ import com.ctrip.hermes.core.lease.DefaultLease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseManager;
+import com.ctrip.hermes.metaserver.build.BuildConstants;
+import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocationStrategyRegistry;
 
 /**
  * 
@@ -34,7 +35,8 @@ import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseManager;
 @Produces(MediaType.APPLICATION_JSON)
 public class LeaseResource {
 
-	private ConsumerLeaseManager m_consumerLeaseManager = PlexusComponentLocator.lookup(ConsumerLeaseManager.class);
+	private ConsumerLeaseAllocationStrategyRegistry m_consumerLeaseAllocationStrategyRegistry = PlexusComponentLocator
+	      .lookup(ConsumerLeaseAllocationStrategyRegistry.class);
 
 	private static final long BROKER_LEASE_TIME = 60 * 1000L;
 
@@ -51,7 +53,8 @@ public class LeaseResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("consumer/acquire")
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, @QueryParam("sessionId") String sessionId) {
-		return m_consumerLeaseManager.tryAcquireLease(tpg, sessionId);
+		return m_consumerLeaseAllocationStrategyRegistry.findStrategy(BuildConstants.CONSUME_STRATEGY_ORDERED)
+		      .tryAcquireLease(tpg, sessionId);
 	}
 
 	@POST
@@ -59,7 +62,8 @@ public class LeaseResource {
 	@Path("consumer/renew")
 	public LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, @QueryParam("leaseId") long leaseId,
 	      @QueryParam("sessionId") String sessionId) {
-		return m_consumerLeaseManager.tryRenewLease(tpg, sessionId, leaseId);
+		return m_consumerLeaseAllocationStrategyRegistry.findStrategy(BuildConstants.CONSUME_STRATEGY_ORDERED)
+		      .tryRenewLease(tpg, sessionId, leaseId);
 	}
 
 	@POST
