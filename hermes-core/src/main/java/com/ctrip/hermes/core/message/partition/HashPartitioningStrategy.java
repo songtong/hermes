@@ -19,7 +19,7 @@ public class HashPartitioningStrategy implements PartitioningStrategy {
 		if (key == null) {
 			return m_random.nextInt() % partitionCount;
 		} else {
-			return key.hashCode() % partitionCount;
+			return Math.abs(key.hashCode()) % partitionCount;
 		}
 	}
 

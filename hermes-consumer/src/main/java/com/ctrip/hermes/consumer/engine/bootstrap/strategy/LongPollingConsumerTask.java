@@ -324,7 +324,7 @@ public class LongPollingConsumerTask implements Runnable {
 	}
 
 	private void consumeMessages(long correlationId, int maxItems) {
-		List<ConsumerMessage<?>> msgs = new ArrayList<>();
+		List<ConsumerMessage<?>> msgs = new ArrayList<>(maxItems <= 0 ? 100 : maxItems);
 
 		if (maxItems <= 0) {
 			m_msgs.drainTo(msgs);

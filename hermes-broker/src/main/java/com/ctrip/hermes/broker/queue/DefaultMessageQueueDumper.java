@@ -11,6 +11,7 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -54,8 +55,15 @@ public class DefaultMessageQueueDumper extends AbstractMessageQueueDumper {
 
 	private void setBatchesResult(Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos, boolean success) {
 		for (Pair<MessageBatchWithRawData, Map<Integer, Boolean>> todo : todos) {
+			log(todo.getKey(), success);
 			Map<Integer, Boolean> result = todo.getValue();
 			addResults(result, success);
+		}
+	}
+
+	private void log(MessageBatchWithRawData batch, boolean success) {
+		for (PartialDecodedMessage msg : batch.getMessages()) {
+			log.info("Message.Saved {} {}", msg.getKey(), success);
 		}
 	}
 

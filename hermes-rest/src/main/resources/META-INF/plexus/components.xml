@@ -38,6 +38,15 @@
 			<implementation>com.ctrip.hermes.rest.service.ProducerService</implementation>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.rest.service.CmessageTransferService</role>
+			<implementation>com.ctrip.hermes.rest.service.CmessageTransferService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.rest.service.MetricsManager</role>
 			<implementation>com.ctrip.hermes.rest.service.MetricsManager</implementation>
 		</component>

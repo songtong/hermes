@@ -9,5 +9,46 @@
 				</requirement>
 			</requirements>
 		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+			<implementation>com.ctrip.hermes.metaserver.config.MetaServerConfig</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultActiveConsumerListHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.PartitionConsumerAssigningStrategy</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultPartitionConsumerAssigningStrategy</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseManager</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseManager</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.PartitionConsumerAssigningStrategy</role>
+				</requirement>
+			</requirements>
+		</component>
 	</components>
 </plexus>

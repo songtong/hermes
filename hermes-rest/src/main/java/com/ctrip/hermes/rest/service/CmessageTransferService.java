@@ -7,6 +7,8 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Triple;
@@ -17,20 +19,11 @@ import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.rest.common.RestConstant;
 
 @Named
-public class CmessageTransferService {
-	private static Logger logger = LogManager.getLogger(CmessageTransferService.class);
-	private BlockingQueue<Triple<String, String, String>> queue = new LinkedBlockingDeque<>(20000);
-
-	@Inject
-	private ClientEnvironment env;
-
-	private Producer producer;
-
-	private String defaultTopic;
-
-	private CmessageTransferService() {
-		producer = Producer.getInstance();
+public class CmessageTransferService implements Initializable {
+	@Override
+	public void initialize() throws InitializationException {
 		defaultTopic = env.getGlobalConfig().getProperty("cmessage.topic");
+		producer = Producer.getInstance();
 
 		new Thread(new Runnable() {
 			@Override
@@ -57,22 +50,22 @@ public class CmessageTransferService {
 				}
 			}
 		}).start();
-
 	}
+	private static Logger logger = LogManager.getLogger(CmessageTransferService.class);
+
+	private BlockingQueue<Triple<String, String, String>> queue = new LinkedBlockingDeque<>(20000);
+
+	@Inject
+	private ClientEnvironment env;
+
+	private Producer producer;
+
+	private String defaultTopic;
 
 	private void doSendBatch(ArrayList<Triple<String, String, String>> msgs) {
 		for (Triple<String, String, String> msg : msgs) {
 			doSend(msg.getFirst(), msg.getMiddle(), msg.getLast());
 		}
-	}
-
-	private static class ServiceHodler {
-
-		private static CmessageTransferService instance = new CmessageTransferService();
-	}
-
-	public static CmessageTransferService getInstance() {
-		return ServiceHodler.instance;
 	}
 
 	public void transfer(String topic, String content, String header) {
