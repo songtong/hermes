@@ -196,9 +196,13 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public void deleteSchemas(Topic topic) throws DalException {
-		List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
-		for (Schema schema : schemas) {
-			m_schemaDao.deleteByPK(schema);
+		if (topic.getId() != null) {
+			List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
+			for (Schema schema : schemas) {
+				m_schemaDao.deleteByPK(schema);
+			}
+		} else {
+			throw new RuntimeException("Delete schema failed. topic hasn't ID: " + topic.getName());
 		}
 	}
 
