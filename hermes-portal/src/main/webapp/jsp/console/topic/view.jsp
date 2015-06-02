@@ -13,10 +13,14 @@
 
 	<script type="text/javascript" src="${model.webapp}/js/topic.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/smart-table.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/bootbox.min.js"></script>
+	<div class="op-alert alert alert-info" role="alert" style="display: none;">
+		<span>The examples populate this alert with dummy content</span>
+	</div>
 	<div ng-app="hermes-topic" ng-controller="topic-controller">
 		<div class="panel panel-info">
 			<div class="panel-heading">Hermes Topics</div>
-			<table class="table table-hover" st-pipe="get_topics" st-table="topic_rows">
+			<table class="table table-hover" st-pipe="get_topics" st-table="topic_table">
 				<thead>
 					<tr>
 						<th st-sort="name">Topic 名称</th>
@@ -53,7 +57,7 @@
 						<td>{{row.endpointType}}</td>
 						<td>
 							<button type="button" ng-click="updateTopic()" class="btn btn-xs btn-warning" style="text-align: center;">修改</button>
-							<button type="button" ng-click="removeTopic()" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
+							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
 						</td>
 					</tr>
 				</tbody>
@@ -151,7 +155,24 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">关闭</button>
-						<button type="button" class="btn btn-sm btn-success" ng-click="add_topic(new_topic)">保存</button>
+						<button type="button" class="btn btn-sm btn-success" data-dismiss="modal" ng-click="add_topic(new_topic)">保存</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" style="top: 20%;" id="del-topic-modal" tabindex="-1" role="dialog" aria-labelledby="del-topic-label" aria-hidden="true">
+			<div class="modal-dialog" style="width: 200px">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h4 class="modal-title" id="add-topic-label">确认删除 Topic: {{}}</h4>
+					</div>
+					<div class="modal-body">
+						<button type="button" class="btn btn-sm btn-danger" data-dismiss="modal" ng-click="del_topic(name)">确定</button>
+						<button type="button" class="btn btn-sm btn-success" data-dismiss="modal">取消</button>
 					</div>
 				</div>
 			</div>
