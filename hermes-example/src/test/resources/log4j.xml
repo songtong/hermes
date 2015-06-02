@@ -15,6 +15,32 @@
 		</filter>
 	</appender>
 
+	<appender name="FILE" class="org.apache.log4j.FileAppender">
+		<param name="File" value="/data/applogs/logstash/hermes.log" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%d{MM-dd HH:mm:ss.SSS}] [%p] [%c{1}] %m%n" />
+		</layout>
+	</appender>
+
+	<logger
+		name="com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor">
+		<level value="INFO" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<logger name="com.ctrip.hermes.broker.queue.DefaultMessageQueueDumper">
+		<level value="INFO" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<logger name="com.ctrip.hermes.broker.ack.DefaultAckManager">
+		<level value="INFO" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="FILE" />
+	</logger>
+
 	<logger name="com.mchange.v2">
 		<level value="INFO" />
 		<appender-ref ref="CONSOLE" />

@@ -107,7 +107,14 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		}
 
 		m_msgDao.insert(msgs.toArray(new MessagePriority[msgs.size()]));
+		
+		log(msgs);
 	}
+
+	private void log(List<MessagePriority> msgs) {
+	   // TODO Auto-generated method stub
+	   
+   }
 
 	@Override
 	public synchronized Object findLastOffset(Tpp tpp, int groupId) throws Exception {

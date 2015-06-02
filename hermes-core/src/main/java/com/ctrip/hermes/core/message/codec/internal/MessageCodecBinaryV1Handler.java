@@ -26,6 +26,7 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 	public byte[] encode(ProducerMessage<?> msg, byte version) {
 		PayloadCodec bodyCodec = PayloadCodecFactory.getCodecByTopicName(msg.getTopic());
 		byte[] body = bodyCodec.encode(msg.getTopic(), msg.getBody());
+		// TODO better estimate buf size
 		ByteBuf buf = Unpooled.buffer(body.length + 150);
 		Magic.writeMagic(buf);
 		buf.writeByte(version);
