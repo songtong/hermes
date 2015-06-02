@@ -1,7 +1,5 @@
 package com.ctrip.hermes.rest.service;
 
-import java.lang.management.ManagementFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;

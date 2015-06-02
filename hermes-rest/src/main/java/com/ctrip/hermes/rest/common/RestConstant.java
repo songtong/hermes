@@ -5,6 +5,6 @@ public class RestConstant {
 	public static final String CMESSAGING_HEADER = "cmessage.header";
 
 	public static final String CAT_TYPE = "Hermes-Rest";
-	public static final String CAT_NAME = "/cmessage";
+	public static final String CMESSAGE_TRANSCATION_NAME = "/cmessage";
 
 }

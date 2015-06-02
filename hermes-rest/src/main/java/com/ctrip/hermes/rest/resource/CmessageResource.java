@@ -37,7 +37,7 @@ public class CmessageResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Integer getCollectorInfo(Map<String, String> map) {
 
-		Transaction t = Cat.newTransaction(RestConstant.CAT_TYPE, RestConstant.CAT_NAME);
+		Transaction t = Cat.newTransaction(RestConstant.CAT_TYPE, RestConstant.CMESSAGE_TRANSCATION_NAME);
 
 		metricsAddCount(MetricsConstant.CmessageReceive);
 
@@ -52,7 +52,7 @@ public class CmessageResource {
 				sb.append(map);
 
 				log.error(sb.toString());
-				Cat.logEvent(RestConstant.CAT_TYPE, RestConstant.CAT_NAME, Message.SUCCESS, sb.toString());
+				Cat.logEvent(RestConstant.CAT_TYPE, RestConstant.CMESSAGE_TRANSCATION_NAME, Message.SUCCESS, sb.toString());
 				throw new RuntimeException("invalid message");
 			}
 
@@ -67,7 +67,7 @@ public class CmessageResource {
 		}
 		t.complete();
 
-		Cat.logEvent(RestConstant.CAT_TYPE, RestConstant.CAT_NAME, Message.SUCCESS, map.toString());
+		Cat.logEvent(RestConstant.CAT_TYPE, RestConstant.CMESSAGE_TRANSCATION_NAME, Message.SUCCESS, map.toString());
 
 		map.remove("Content");
 		log.debug("Content:" + content + ",Properties:" + map + "");
