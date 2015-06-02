@@ -21,9 +21,10 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.DefaultLease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaserver.build.BuildConstants;
-import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocationStrategyRegistry;
+import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocationStrategy;
+import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocationStrategyLocator;
 
 /**
  * 
@@ -35,8 +36,12 @@ import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocationStrategyRegis
 @Produces(MediaType.APPLICATION_JSON)
 public class LeaseResource {
 
-	private ConsumerLeaseAllocationStrategyRegistry m_consumerLeaseAllocationStrategyRegistry = PlexusComponentLocator
-	      .lookup(ConsumerLeaseAllocationStrategyRegistry.class);
+	private ConsumerLeaseAllocationStrategyLocator m_consumerLeaseAllocationStrategyLocator = PlexusComponentLocator
+	      .lookup(ConsumerLeaseAllocationStrategyLocator.class);
+
+	private SystemClockService m_systemClockService = PlexusComponentLocator.lookup(SystemClockService.class);
+
+	private static final long NO_STRATEGY_DELAY_TIME_MILLIS = 20 * 1000L;
 
 	private static final long BROKER_LEASE_TIME = 60 * 1000L;
 
@@ -53,8 +58,13 @@ public class LeaseResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("consumer/acquire")
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, @QueryParam("sessionId") String sessionId) {
-		return m_consumerLeaseAllocationStrategyRegistry.findStrategy(BuildConstants.CONSUME_STRATEGY_ORDERED)
-		      .tryAcquireLease(tpg, sessionId);
+		ConsumerLeaseAllocationStrategy leaseAllocationStrategy = m_consumerLeaseAllocationStrategyLocator.findStrategy(
+		      tpg.getTopic(), tpg.getGroupId());
+		if (leaseAllocationStrategy != null) {
+			return leaseAllocationStrategy.tryAcquireLease(tpg, sessionId);
+		} else {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
+		}
 	}
 
 	@POST
@@ -62,8 +72,14 @@ public class LeaseResource {
 	@Path("consumer/renew")
 	public LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, @QueryParam("leaseId") long leaseId,
 	      @QueryParam("sessionId") String sessionId) {
-		return m_consumerLeaseAllocationStrategyRegistry.findStrategy(BuildConstants.CONSUME_STRATEGY_ORDERED)
-		      .tryRenewLease(tpg, sessionId, leaseId);
+		ConsumerLeaseAllocationStrategy leaseAllocationStrategy = m_consumerLeaseAllocationStrategyLocator.findStrategy(
+		      tpg.getTopic(), tpg.getGroupId());
+		if (leaseAllocationStrategy != null) {
+			return leaseAllocationStrategy.tryRenewLease(tpg, sessionId, leaseId);
+		} else {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
+		}
+
 	}
 
 	@POST

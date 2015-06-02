@@ -3,7 +3,7 @@ package com.ctrip.hermes.metaserver.consumer;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.metaserver.client.BaseActiveClientListHolder;
+import com.ctrip.hermes.metaserver.commons.BaseActiveClientListHolder;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
