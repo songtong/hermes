@@ -13,6 +13,7 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.example.common.Configuration;
 import com.dianping.cat.Cat;
+import com.dianping.cat.message.Message;
 
 public class ConsumerExample {
 
@@ -33,7 +34,7 @@ public class ConsumerExample {
 	}
 
 	private static void runConsumer() {
-		System.out.println("Consumer Example Started");
+		logger.info(String.format("Consumer Example Started.\nTopic: %s, GroupId: %s", topic, groupId));
 
 		final AtomicInteger i = new AtomicInteger(0);
 		Engine engine = PlexusComponentLocator.lookup(Engine.class);
@@ -45,7 +46,7 @@ public class ConsumerExample {
 //				logger.info("==== ConsumedMessage ==== \n" + msg.toString());
 
 				if (i.incrementAndGet() %1000 ==0)
-				System.out.println("ConsumerReceived count: " + i.get());
+				logger.info("ConsumerReceived count: " + i.get());
 			}
 		});
 		engine.start(Arrays.asList(s));
