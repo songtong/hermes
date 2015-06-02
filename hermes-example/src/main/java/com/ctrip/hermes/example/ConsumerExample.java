@@ -45,6 +45,7 @@ public class ConsumerExample {
 			protected void onMessage(ConsumerMessage<String> msg) {
 //				logger.info("==== ConsumedMessage ==== \n" + msg.toString());
 
+				Cat.logEvent("Consumer-Example", "Group: " + groupId, Message.SUCCESS, msg.getBody());
 				if (i.incrementAndGet() %1000 ==0)
 				logger.info("ConsumerReceived count: " + i.get());
 			}
