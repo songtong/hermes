@@ -28,6 +28,7 @@ import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.payload.RawMessage;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 @Named
 public class MessagePushService implements Initializable {
@@ -49,7 +50,7 @@ public class MessagePushService implements Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		m_httpClient = HttpClients.createDefault();
-		m_executor = Executors.newCachedThreadPool();
+		m_executor = Executors.newCachedThreadPool(HermesThreadFactory.create("MessagePush", true));
 
 		Builder b = RequestConfig.custom();
 		Properties globalConfig = m_env.getGlobalConfig();
