@@ -1,0 +1,24 @@
+.board-header {
+    display: block;
+    height: 180px;
+    border: solid #bce8f1 1px;
+    padding: 10px;
+}
+
+.board-kibana-frame {
+    border: 0px;
+}
+
+.board-block {
+    display: block;
+    height: 300px;
+    border: solid #bce8f1 1px;
+
+}
+
+.board-broker {
+    display: block;
+    height: 300px;
+    border: solid #bce8f1 1px;
+
+}

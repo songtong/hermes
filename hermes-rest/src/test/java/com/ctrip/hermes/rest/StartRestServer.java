@@ -7,7 +7,6 @@ import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.rest.service.MessagePushService;
 
 public class StartRestServer extends ComponentTestCase {
 
@@ -22,10 +21,8 @@ public class StartRestServer extends ComponentTestCase {
 
 	@Test
 	public void start() throws Exception {
-		HermesRestServer hermesRestServer = new HermesRestServer();
+		HermesRestServer hermesRestServer = lookup(HermesRestServer.class);
 		hermesRestServer.start();
-
-		lookup(MessagePushService.class).start();
 
 		Thread.currentThread().join();
 	}

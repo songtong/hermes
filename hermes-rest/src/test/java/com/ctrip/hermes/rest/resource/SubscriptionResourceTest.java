@@ -1,25 +1,18 @@
 package com.ctrip.hermes.rest.resource;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -31,16 +24,11 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.rest.HermesRestServer;
 import com.ctrip.hermes.rest.StartRestServer;
 import com.ctrip.hermes.rest.service.Subscription;
-import com.google.common.base.Charsets;
 
 @Path("/onebox")
-public class OneBoxTest extends ComponentTestCase {
+public class SubscriptionResourceTest extends ComponentTestCase {
 
 	private HermesRestServer server;
-
-	private static List<byte[]> sent = new ArrayList<>();
-
-	private static List<byte[]> received = new ArrayList<>();
 
 	@Before
 	public void startServer() throws IOException {
@@ -54,7 +42,7 @@ public class OneBoxTest extends ComponentTestCase {
 	}
 
 	@Test
-	public void testOneBox() throws InterruptedException {
+	public void testSubscribe() throws InterruptedException {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(StartRestServer.HOST);
 
@@ -73,37 +61,16 @@ public class OneBoxTest extends ComponentTestCase {
 		Response response = request.post(Entity.entity(json, MediaType.APPLICATION_JSON));
 		Assert.assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
 
-		String base = UUID.randomUUID().toString();
-		System.out.println("Base: " + base);
-		for (int i = 0; i < 5; i++) {
-			sent.add(("Hello World " + base + " " + i).getBytes());
-			request = webTarget.path("topics/" + topic).request();
-
-			InputStream is = new ByteArrayInputStream(sent.get(i));
-			response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
-			Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		}
-
-		while (received.size() < sent.size()) {
-			TimeUnit.SECONDS.sleep(1);
-			System.out.println("Received: " + received.size());
-		}
-
+		request = webTarget.path("subscriptions/"+topic).request();
+		response = request.get();
+		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		List<Subscription> subs = response.readEntity(new GenericType<List<Subscription>>() {});
+		Assert.assertTrue(subs.contains(sub));
+		System.out.println(subs.toString());
+		
 		request = webTarget.path("subscriptions/" + topic + "/unsub").request();
 		response = request.post(Entity.entity(json, MediaType.APPLICATION_JSON));
 		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-
-		Assert.assertEquals(sent.size(), received.size());
-		Assert.assertArrayEquals(sent.get(0), received.get(0));
-		Assert.assertArrayEquals(sent.get(sent.size() - 1), received.get(received.size() - 1));
-	}
-
-	@POST
-	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	public Response push(byte[] b) {
-		System.out.println(new String(b, Charsets.UTF_8));
-		received.add(b);
-		return Response.ok().build();
 	}
 
 }
