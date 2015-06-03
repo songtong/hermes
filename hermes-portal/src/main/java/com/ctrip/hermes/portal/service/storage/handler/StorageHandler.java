@@ -8,11 +8,11 @@ import com.ctrip.hermes.portal.service.storage.model.TableModel;
 
 public interface StorageHandler {
 
+	public boolean dropTables(Long topicId, Integer partitionId, List<TableModel> model,
+									  String url, String user, String pwd) throws StorageHandleErrorException;
 
-	public boolean dropTables() throws StorageHandleErrorException;
-
-	public void createTable(String databaseName, Long topicId, Integer partitionId, List<TableModel> models) throws
-			  StorageHandleErrorException;
+	public void createTable(Long topicId, Integer partitionId, List<TableModel> model,
+									String url, String user, String pwd) throws StorageHandleErrorException;
 
 	public boolean cleanTable() throws StorageHandleErrorException;
 
@@ -25,9 +25,9 @@ public interface StorageHandler {
 	 */
 	public boolean validateDataModel() throws DataModelNotMatchException;
 
-	void addPartition(String databaseName, Long topicId, Integer partitionId, TableModel model, int range)
-			  throws StorageHandleErrorException;
+	void addPartition(Long topicId, Integer partitionId, TableModel model, int range,
+							String url, String user, String pwd) throws StorageHandleErrorException;
 
-	void deletePartition(String databaseName, Long topicId, Integer partitionId, TableModel model)
-			  throws StorageHandleErrorException;
+	void deletePartition(Long topicId, Integer partitionId, TableModel model,
+								String url, String user, String pwd) throws StorageHandleErrorException;
 }

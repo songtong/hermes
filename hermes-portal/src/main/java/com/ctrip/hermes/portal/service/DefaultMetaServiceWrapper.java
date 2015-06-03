@@ -13,9 +13,12 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.helper.Codes;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Datasource;
@@ -32,12 +35,14 @@ import com.ctrip.hermes.metaservice.service.DefaultMetaService;
 
 @Named(type = MetaServiceWrapper.class, value = DefaultMetaServiceWrapper.ID)
 public class DefaultMetaServiceWrapper extends DefaultMetaService implements MetaServiceWrapper, Initializable {
+	@Inject
+	private ClientEnvironment m_env;
+
 	public static final String ID = "default-meta-service-wrapper";
 
 	protected Meta m_meta;
 
 	protected Map<Long, Topic> m_topics;
-
 	@Override
 	public Codec getCodecByTopic(String topicName) {
 		Topic topic = m_meta.findTopic(topicName);
@@ -62,14 +67,31 @@ public class DefaultMetaServiceWrapper extends DefaultMetaService implements Met
 		if (!isForceLatest && m_meta != null) {
 			return m_meta;
 		}
-		try {
-			com.ctrip.hermes.metaservice.model.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
-			m_meta = JSON.parseObject(dalMeta.getValue(), Meta.class);
-		} catch (DalException e) {
-			m_logger.warn("get meta failed", e);
-			throw new RuntimeException("Get meta failed.", e);
+		if (isLocalMode()) {
+			m_meta = new LocalMetaLoader().load();
+		} else {
+			try {
+				com.ctrip.hermes.metaservice.model.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+				m_meta = JSON.parseObject(dalMeta.getValue(), Meta.class);
+			} catch (DalException e) {
+				m_logger.warn("get meta failed", e);
+				throw new RuntimeException("Get meta failed.", e);
+			}
 		}
 		return m_meta;
+	}
+
+	public boolean isLocalMode() {
+		boolean m_localMode;
+		final String KEY_IS_LOCAL_MODE = "isLocalMode";
+		if (System.getenv().containsKey(KEY_IS_LOCAL_MODE)) {
+			m_localMode = Boolean.parseBoolean(System.getenv(KEY_IS_LOCAL_MODE));
+		} else if (m_env.getGlobalConfig().containsKey(KEY_IS_LOCAL_MODE)) {
+			m_localMode = Boolean.parseBoolean(m_env.getGlobalConfig().getProperty(KEY_IS_LOCAL_MODE));
+		} else {
+			m_localMode = false;
+		}
+		return m_localMode;
 	}
 
 	@Override
