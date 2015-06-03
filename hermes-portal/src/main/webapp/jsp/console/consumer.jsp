@@ -25,6 +25,7 @@
 						<th st-sort="topic">Topic名称</th>
 						<th st-sort="groupName">消费集群</th>
 						<th st-sort="appId">应用</th>
+						<th st-sort="orderedConsume">有序</th>
 						<th st-sort="retryPolicy">消费重试策略</th>
 						<th st-sort="ackTimeoutSeconds">ACK超时</th>
 						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-consumer-modal" class="btn btn-xs btn-success" style="text-align: center;">新增</button></th>
@@ -32,6 +33,7 @@
 					<tr>
 						<th><input st-search="topic" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="groupName" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="orderedConsume" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="appId" placeholder="App" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="retryPolicy" placeholder="Retry" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="ackTimeoutSeconds" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -43,6 +45,7 @@
 						<td>{{row.topic}}</td>
 						<td>{{row.groupName}}</td>
 						<td>{{row.appId}}</td>
+						<td>{{row.orderedConsume}}</td>
 						<td>{{row.retryPolicy}}</td>
 						<td>{{row.ackTimeoutSeconds}}</td>
 						<td>
@@ -79,6 +82,15 @@
 								<label for="inputGroupName" class="col-sm-3 control-label">消费集群名称</label>
 								<div class="col-sm-8">
 									<input class="form-control" id="inputGroupName" placeholder="Consumer Group Name" ng-model="new_consumer.groupName">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inputOrderedConsume" class="col-sm-3 control-label">保证按序消费</label>
+								<div class="col-sm-3">
+									<select name="ordered-consume" class="form-control" id="inputOrderedConsume" ng-model="new_consumer.orderedConsume">
+										<option>true</option>
+										<option>false</option>
+									</select>
 								</div>
 							</div>
 							<div class="form-group">
