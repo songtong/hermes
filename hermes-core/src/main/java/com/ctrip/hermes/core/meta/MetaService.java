@@ -12,6 +12,7 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.meta.entity.Subscription;
 import com.ctrip.hermes.meta.entity.Topic;
 
 /**
@@ -21,40 +22,42 @@ import com.ctrip.hermes.meta.entity.Topic;
  */
 public interface MetaService {
 
-	Storage findStorageByTopic(String topic);
+	String findAvroSchemaRegistryUrl();
 
-	List<Datasource> listAllMysqlDataSources();
+	Codec findCodecByTopic(String topic);
 
 	Endpoint findEndpointByTopicAndPartition(String topic, int partition);
 
 	String findEndpointTypeByTopic(String topic);
 
-	List<Partition> listPartitionsByTopic(String topic);
-
 	Partition findPartitionByTopicAndPartition(String topic, int partition);
 
-	Codec findCodecByTopic(String topic);
+	RetryPolicy findRetryPolicyByTopicAndGroup(String topic, String groupId);
 
-	List<Topic> listTopicsByPattern(String topicPattern);
+	Storage findStorageByTopic(String topic);
 
 	Topic findTopicByName(String topic);
 
-	int translateToIntGroupId(String topic, String groupId);
-
 	int getAckTimeoutSecondsTopicAndConsumerGroup(String topic, String groupId);
+
+	List<Datasource> listAllMysqlDataSources();
+
+	List<Partition> listPartitionsByTopic(String topic);
+
+	List<Topic> listTopicsByPattern(String topicPattern);
+	
+	List<Subscription> listSubscriptions();
 
 	void refreshMeta(Meta meta);
 
-	RetryPolicy findRetryPolicyByTopicAndGroup(String topic, String groupId);
+	LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId, int brokerPort);
+
+	int translateToIntGroupId(String topic, String groupId);
+
+	LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort);
 
 	LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId);
 
 	LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId);
-
-	LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId, int brokerPort);
-
-	LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort);
-
-	String findAvroSchemaRegistryUrl();
 
 }
