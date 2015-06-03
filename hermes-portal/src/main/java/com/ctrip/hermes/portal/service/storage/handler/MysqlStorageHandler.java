@@ -295,8 +295,8 @@ public class MysqlStorageHandler implements StorageHandler {
 			try {
 				stmt = conn.createStatement();
 
-				String queryPartition =  sqlUseDatabase(databaseName)
-						  + "SELECT PARTITION_NAME, PARTITION_METHOD, PARTITION_DESCRIPTION, "
+				String queryPartition =  /*sqlUseDatabase(databaseName)*/
+						  "SELECT PARTITION_NAME, PARTITION_METHOD, PARTITION_DESCRIPTION, "
 						  + "TABLE_ROWS FROM INFORMATION_SCHEMA.PARTITIONS\n"
 						  + "WHERE TABLE_NAME = '" + tableName +"' order by PARTITION_NAME desc";
 

@@ -15,7 +15,6 @@ import com.ctrip.hermes.meta.entity.Meta;
 
 @Named(type = MetaManager.class)
 public class DefaultMetaManager extends ContainerHolder implements MetaManager, Initializable {
-	private static final String KEY_IS_LOCAL_MODE = "isLocalMode";
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultMetaManager.class);
 
@@ -60,13 +59,7 @@ public class DefaultMetaManager extends ContainerHolder implements MetaManager, 
 
 	@Override
 	public void initialize() throws InitializationException {
-		if (System.getenv().containsKey(KEY_IS_LOCAL_MODE)) {
-			m_localMode = Boolean.parseBoolean(System.getenv(KEY_IS_LOCAL_MODE));
-		} else if (m_env.getGlobalConfig().containsKey(KEY_IS_LOCAL_MODE)) {
-			m_localMode = Boolean.parseBoolean(m_env.getGlobalConfig().getProperty(KEY_IS_LOCAL_MODE));
-		} else {
-			m_localMode = false;
-		}
+		m_localMode = m_env.isLocalMode();
 
 		if (m_localMode) {
 			log.info("Meta manager started with local mode");
