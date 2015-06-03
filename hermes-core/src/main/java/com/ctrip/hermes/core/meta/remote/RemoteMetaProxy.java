@@ -87,12 +87,14 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 	}
 
 	@Override
-	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId) {
+	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId,
+	      int brokerPort) {
 		Map<String, String> params = new HashMap<>();
 		params.put(LEASE_ID, String.valueOf(lease.getId()));
 		params.put(SESSION_ID, sessionId);
 		params.put(TOPIC, topic);
 		params.put(PARTITION, Integer.toString(partition));
+		params.put("brokerPort", String.valueOf(brokerPort));
 		String response = post("/lease/broker/renew", params, null);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
@@ -105,11 +107,12 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 	}
 
 	@Override
-	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId) {
+	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort) {
 		Map<String, String> params = new HashMap<>();
 		params.put(SESSION_ID, sessionId);
 		params.put(TOPIC, topic);
 		params.put(PARTITION, Integer.toString(partition));
+		params.put("brokerPort", String.valueOf(brokerPort));
 		String response = post("/lease/broker/acquire", params, null);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);

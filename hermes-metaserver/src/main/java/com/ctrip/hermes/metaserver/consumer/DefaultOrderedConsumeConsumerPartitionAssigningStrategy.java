@@ -2,14 +2,14 @@ package com.ctrip.hermes.metaserver.consumer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.metaserver.commons.ActiveClientList.ClientContext;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -20,24 +20,24 @@ public class DefaultOrderedConsumeConsumerPartitionAssigningStrategy implements
       OrderedConsumeConsumerPartitionAssigningStrategy {
 
 	@Override
-	public Map<Integer, Set<String>> assign(List<Partition> partitions, Set<String> consumers,
-	      Map<Integer, Set<String>> originAssignment) {
-		Map<Integer, Set<String>> result = new HashMap<>();
-		int partitionCount = partitions.size();
-		int consumerCount = consumers.size();
-		List<String> consumerNameList = new ArrayList<>(consumers);
+	public Map<Integer, Map<String, ClientContext>> assign(List<Partition> partitions,
+	      Map<String, ClientContext> consumers, Map<Integer, Map<String, ClientContext>> originAssignment) {
+		Map<Integer, Map<String, ClientContext>> result = new HashMap<>();
 
-		if (partitionCount == 0 || consumerCount == 0) {
+		if (partitions == null || partitions.isEmpty() || consumers == null || consumers.isEmpty()) {
 			return result;
 		}
+		ArrayList<Entry<String, ClientContext>> consumerEntries = new ArrayList<>(consumers.entrySet());
+		int consumerCount = consumerEntries.size();
 
 		for (Partition partition : partitions) {
-			result.put(partition.getId(), new HashSet<String>());
+			result.put(partition.getId(), new HashMap<String, ClientContext>());
 		}
 
 		int consumerPos = 0;
 		for (Partition partition : partitions) {
-			result.get(partition.getId()).add(consumerNameList.get(consumerPos));
+			Entry<String, ClientContext> entry = consumerEntries.get(consumerPos);
+			result.get(partition.getId()).put(entry.getKey(), entry.getValue());
 			consumerPos = (consumerPos + 1) % consumerCount;
 		}
 

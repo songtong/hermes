@@ -221,13 +221,14 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId) {
-		return m_manager.getMetaProxy().tryRenewBrokerLease(topic, partition, lease, sessionId);
+	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId,
+	      int brokerPort) {
+		return m_manager.getMetaProxy().tryRenewBrokerLease(topic, partition, lease, sessionId, brokerPort);
 	}
 
 	@Override
-	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId) {
-		return m_manager.getMetaProxy().tryAcquireBrokerLease(topic, partition, sessionId);
+	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort) {
+		return m_manager.getMetaProxy().tryAcquireBrokerLease(topic, partition, sessionId, brokerPort);
 	}
 
 	@Override

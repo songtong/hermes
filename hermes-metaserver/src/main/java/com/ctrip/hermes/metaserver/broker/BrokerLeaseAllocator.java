@@ -7,8 +7,9 @@ import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
  *
  */
 public interface BrokerLeaseAllocator {
-	public LeaseAcquireResponse tryAcquireLease(String topic, int partition, String brokerName);
+	public LeaseAcquireResponse tryAcquireLease(String topic, int partition, String brokerName, String ip, int port);
 
-	public LeaseAcquireResponse tryRenewLease(String topic, int partition, String brokerName, long leaseId);
+	public LeaseAcquireResponse tryRenewLease(String topic, int partition, String brokerName, long leaseId, String ip,
+	      int port);
 
 }

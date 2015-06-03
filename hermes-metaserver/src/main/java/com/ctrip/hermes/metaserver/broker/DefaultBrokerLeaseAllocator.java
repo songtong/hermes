@@ -41,14 +41,14 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 	@Inject
 	private BrokerAssignmentHolder m_assignmentHolder;
 
-	private void heartbeat(String topic, String brokerName) {
-		m_activeBrokerList.heartbeat(topic, brokerName);
+	private void heartbeat(String topic, String brokerName, String ip, int port) {
+		m_activeBrokerList.heartbeat(topic, brokerName, ip, port);
 	}
 
 	@Override
-	public LeaseAcquireResponse tryAcquireLease(String topic, int partition, String brokerName) {
+	public LeaseAcquireResponse tryAcquireLease(String topic, int partition, String brokerName, String ip, int port) {
 
-		heartbeat(topic, brokerName);
+		heartbeat(topic, brokerName, ip, port);
 
 		BaseAssignmentHolder<String, Integer>.Assignment topicAssignment = m_assignmentHolder.getAssignment(topic);
 		if (topicAssignment == null) {
@@ -63,9 +63,10 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 	}
 
 	@Override
-	public LeaseAcquireResponse tryRenewLease(String topic, int partition, String brokerName, long leaseId) {
+	public LeaseAcquireResponse tryRenewLease(String topic, int partition, String brokerName, long leaseId, String ip,
+	      int port) {
 
-		heartbeat(topic, brokerName);
+		heartbeat(topic, brokerName, ip, port);
 
 		BaseAssignmentHolder<String, Integer>.Assignment topicAssignment = m_assignmentHolder.getAssignment(topic);
 		if (topicAssignment == null) {
