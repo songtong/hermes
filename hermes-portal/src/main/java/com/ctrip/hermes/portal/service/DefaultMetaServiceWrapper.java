@@ -166,8 +166,8 @@ public class DefaultMetaServiceWrapper extends DefaultMetaService implements Met
 	}
 
 	@Override
-	public Endpoint getEndpoint(String name) {
-		return m_meta.getEndpoints().get(name);
+	public Map<String, Endpoint> getEndpoints() {
+		return m_meta.getEndpoints();
 	}
 
 	@Override

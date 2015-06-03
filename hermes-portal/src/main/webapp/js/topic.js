@@ -38,14 +38,48 @@ function to_required_topic(data) {
 
 angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topic-controller',
 		[ '$scope', '$filter', '$resource', function(scope, filter, resource) {
-			topic_resource = resource('/api/topics/:name', {}, {});
+			var topic_resource = resource('/api/topics/:name', {}, {});
+			var meta_resource = resource('/api/meta/', {}, {
+				'get_codecs' : {
+					method : 'GET',
+					isArray : true,
+					url : '/api/meta/codecs'
+				},
+				'get_storages' : {
+					method : 'GET',
+					isArray : true,
+					url : '/api/meta/storages'
+				},
+				'get_endpoints' : {
+					method : 'GET',
+					isArray : true,
+					url : '/api/meta/endpoints'
+				}
+			});
 
 			scope.is_loading = true;
 			scope.src_topics = [];
 			scope.topic_rows = [];
 
+			scope.new_topic = {};
+
+			scope.codec_types = meta_resource.get_codecs({}, function(data) {
+				scope.codec_types = collect_schemas(data, 'type', true);
+				scope.new_topic.codecType = scope.codec_types[0];
+			});
+
+			scope.storage_types = meta_resource.get_storages({}, function(data) {
+				scope.storage_types = collect_schemas(data, 'type', true);
+				scope.new_topic.storageType = scope.storage_types[0];
+			});
+
+			scope.endpoint_types = meta_resource.get_endpoints({}, function(data) {
+				scope.endpoint_types = unique_array(collect_schemas(data, 'type', false));
+				scope.new_topic.endpointType = scope.endpoint_types[0];
+			});
+
 			scope.get_topics = function get_topics(table_state) {
-				topic_resource.query().$promise.then(function(query_result) {
+				topic_resource.query({}, function(query_result) {
 					scope.src_topics = query_result;
 					scope.topic_rows = filter_topic_rows(to_topic_rows(scope.src_topics), filter, table_state);
 					scope.is_loading = false;

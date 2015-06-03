@@ -64,6 +64,7 @@
 	<!--/.fluid-container-->
 
 	<script src="${model.webapp}/js/bootstrap.min.js" type="text/javascript"></script>
+	<script src="${model.webapp}/js/bootstrap3-typeahead.min.js" type="text/javascript"></script>
 	<script src="${model.webapp}/js/portal-common.js" type="text/javascript"></script>
 </body>
 </html>

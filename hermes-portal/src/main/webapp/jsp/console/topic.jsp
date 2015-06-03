@@ -28,7 +28,7 @@
 						<th st-sort="schemaName">Schema</th>
 						<th st-sort="partitions" width="60px" style="text-align: center;">分区</th>
 						<th st-sort="consumerRetryPolicy">消费重试策略</th>
-						<th st-sort="ackTimeoutSeconds">ACK超时</th>
+						<th st-sort="ackTimeoutSeconds">ACK超时(秒)</th>
 						<th st-sort="endpointType">Endpoint</th>
 						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;">新增</button></th>
 					</tr>
@@ -46,14 +46,14 @@
 				</thead>
 				<tbody ng-show="!is_loading">
 					<tr ng-repeat="row in topic_rows">
-						<td>{{row.name}}</td>
-						<td align="center">{{row.codecType}}</td>
-						<td align="center">{{row.storageType}}</td>
-						<td>{{row.schemaName}}</td>
-						<td align="center">{{row.partitions}}</td>
-						<td>{{row.consumerRetryPolicy}}</td>
-						<td>{{row.ackTimeoutSeconds}}</td>
-						<td>{{row.endpointType}}</td>
+						<td><span ng-bind="row.name"></span></td>
+						<td align="center"><span ng-bind="row.codecType"></td>
+						<td align="center"><span ng-bind="row.storageType"></td>
+						<td><span ng-bind="row.schemaName"></td>
+						<td align="center"><span ng-bind="row.partitions"></td>
+						<td><span ng-bind="row.consumerRetryPolicy"></td>
+						<td><span ng-bind="row.ackTimeoutSeconds"></td>
+						<td><span ng-bind="row.endpointType"></td>
 						<td>
 							<button type="button" ng-click="updateTopic()" class="btn btn-xs btn-warning" style="text-align: center;">修改</button>
 							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
@@ -87,33 +87,26 @@
 							<div class="form-group">
 								<label for="inputCodec" class="col-sm-3 control-label">编码类型</label>
 								<div class="col-sm-4">
-									<select name="codec-type" class="form-control" id="inputCodec" ng-model="new_topic.codecType">
-										<option>json</option>
-										<option>avro</option>
+									<select name="codec-type" class="form-control" id="inputCodec" ng-model="new_topic.codecType" ng-options="codec for codec in codec_types">
 									</select>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="inputStorageType" class="col-sm-3 control-label">存储类型</label>
 								<div class="col-sm-4">
-									<select name="storage-type" class="form-control" id="inputStorageType" ng-model="new_topic.storageType">
-										<option>mysql</option>
-										<option>kafka</option>
-										<option>memory</option>
+									<select name="storage-type" class="form-control" id="inputStorageType" ng-model="new_topic.storageType" ng-options="storage for storage in storage_types">
 									</select>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="inputEndpointType" class="col-sm-3 control-label">Endpoint 类型</label>
 								<div class="col-sm-4">
-									<select name="endpoint-type" class="form-control" id="inputEndpointType" ng-model="new_topic.endpointType">
-										<option>broker</option>
-										<option>kafka</option>
+									<select name="endpoint-type" class="form-control" id="inputEndpointType" ng-model="new_topic.endpointType" ng-options="endpoint for endpoint in endpoint_types">
 									</select>
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="inputAckTimeout" class="col-sm-3 control-label">ACK 超时</label>
+								<label for="inputAckTimeout" class="col-sm-3 control-label">ACK 超时(秒)</label>
 								<div class="col-sm-4">
 									<input class="form-control" id="inputAckTimeout" placeholder="ACK Timeout" ng-model="new_topic.ackTimeoutSeconds">
 								</div>
