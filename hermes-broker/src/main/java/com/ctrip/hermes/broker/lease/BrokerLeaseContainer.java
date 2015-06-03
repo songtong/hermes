@@ -99,7 +99,7 @@ public class BrokerLeaseContainer implements Initializable {
 
 		LeaseAcquireResponse response = m_leaseManager.tryAcquireLease(key);
 
-		if (response != null && response.isAcquired()) {
+		if (response != null && response.isAcquired() && !response.getLease().isExpired()) {
 			Lease lease = response.getLease();
 			if (!lease.isExpired()) {
 				m_existingLeases.put(key, lease);
@@ -111,8 +111,8 @@ public class BrokerLeaseContainer implements Initializable {
 				      key.getPartition(), key.getSessionId(), lease.getId(), new Date(lease.getExpireTime()));
 			}
 		} else {
-			long nextTryTime = response != null ? response.getNextTryTime() : m_config.getDefaultLeaseAcquireDelayMillis()
-			      + m_systemClockService.now();
+			long nextTryTime = response != null && response.getNextTryTime() > 0 ? response.getNextTryTime() : m_config
+			      .getDefaultLeaseAcquireDelayMillis() + m_systemClockService.now();
 
 			m_nextAcquireTimes.put(tp, nextTryTime);
 			if (log.isDebugEnabled()) {

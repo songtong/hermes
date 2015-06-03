@@ -289,7 +289,7 @@ public class LongPollingConsumerTask implements Runnable {
 
 				LeaseAcquireResponse response = m_leaseManager.tryAcquireLease(key);
 
-				if (response != null && response.isAcquired()) {
+				if (response != null && response.isAcquired() && !response.getLease().isExpired()) {
 					m_lease.set(response.getLease());
 					scheduleRenewLeaseTask(key,
 					      m_lease.get().getRemainingTime() - m_config.getRenewLeaseTimeMillisBeforeExpired());
@@ -303,7 +303,7 @@ public class LongPollingConsumerTask implements Runnable {
 					}
 					return;
 				} else {
-					if (response != null) {
+					if (response != null && response.getNextTryTime() > 0) {
 						nextTryTime = response.getNextTryTime();
 					} else {
 						nextTryTime = m_systemClockService.now() + m_config.getDefaultLeaseAcquireDelayMillis();

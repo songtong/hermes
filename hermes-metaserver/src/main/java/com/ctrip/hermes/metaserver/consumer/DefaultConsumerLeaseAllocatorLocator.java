@@ -7,34 +7,39 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaserver.build.BuildConstants;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = ConsumerLeaseAllocationStrategyLocator.class)
-public class DefaultConsumerLeaseAllocationStrategyLocator implements ConsumerLeaseAllocationStrategyLocator {
+@Named(type = ConsumerLeaseAllocatorLocator.class)
+public class DefaultConsumerLeaseAllocatorLocator implements ConsumerLeaseAllocatorLocator {
 
-	private static final Logger log = LoggerFactory.getLogger(DefaultConsumerLeaseAllocationStrategyLocator.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultConsumerLeaseAllocatorLocator.class);
 
 	@Inject
 	private MetaHolder m_metaHolder;
 
-	@Inject
-	private OrderedConsumeConsumerLeaseAllocationStrategy m_orderedConsumeStrategy;
+	@Inject(value = BuildConstants.LEASE_ALLOCATOR_ORDERED_CONSUME)
+	private ConsumerLeaseAllocator m_orderedConsumeStrategy;
+
+	@Inject(value = BuildConstants.LEASE_ALLOCATOR_NON_ORDERED_CONSUME)
+	private ConsumerLeaseAllocator m_nonOrderedConsumeStrategy;
 
 	@Override
-	public ConsumerLeaseAllocationStrategy findStrategy(String topicName, String consumerGroupName) {
+	public ConsumerLeaseAllocator findStrategy(String topicName, String consumerGroupName) {
 		ConsumerGroup consumerGroup = getConsumerGroup(topicName, consumerGroupName);
 		if (consumerGroup != null && consumerGroup.isOrderedConsume()) {
 			return m_orderedConsumeStrategy;
 		} else {
 			if (consumerGroup == null) {
 				log.warn("ConsumerGroup {} not found for topic {}", topicName, consumerGroupName);
+				return null;
+			} else {
+				return m_nonOrderedConsumeStrategy;
 			}
-
-			return null;
 		}
 	}
 
