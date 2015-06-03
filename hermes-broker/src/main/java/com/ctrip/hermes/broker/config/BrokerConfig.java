@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.utils.StringUtils;
+
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
@@ -13,6 +15,8 @@ public class BrokerConfig {
 	private String m_sessionId = UUID.randomUUID().toString();
 
 	private long m_leaseRenewTimeMillsBeforeExpire = 2 * 1000L;
+
+	private static final int DEFAULT_BROKER_PORT = 4376;
 
 	public String getSessionId() {
 		return m_sessionId;
@@ -63,7 +67,12 @@ public class BrokerConfig {
 	}
 
 	public int getListeningPort() {
-		return 4376;
+		String port = System.getProperty("brokerPort");
+		if (!StringUtils.isNumeric(port)) {
+			return DEFAULT_BROKER_PORT;
+		} else {
+			return Integer.valueOf(port);
+		}
 	}
 
 	public int getClientMaxIdleSeconds() {
