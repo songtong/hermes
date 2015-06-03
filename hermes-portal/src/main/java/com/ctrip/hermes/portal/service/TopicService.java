@@ -23,6 +23,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.portal.service.storage.TopicStorageService;
 
 @Named
 public class TopicService {
@@ -35,13 +36,16 @@ public class TopicService {
 	@Inject
 	private SchemaService m_schemaService;
 
+	@Inject
+	private TopicStorageService m_topicStorageService;
+
 	/**
 	 * 
 	 * @param topic
 	 * @return
 	 * @throws DalException
 	 */
-	public Topic createTopic(Topic topic) throws DalException {
+	public Topic createTopic(Topic topic) throws Exception {
 		Meta meta = m_metaService.getMeta();
 		topic.setCreateTime(new Date(System.currentTimeMillis()));
 		long maxTopicId = 0;
@@ -51,16 +55,22 @@ public class TopicService {
 			}
 		}
 		topic.setId(maxTopicId + 1);
+
+		int partitionId = 0;
+		for (Partition partition : topic.getPartitions()) {
+			partition.setId(partitionId++);
+		}
+
 		meta.addTopic(topic);
 
-//		if (!m_topicStorageService.initTopicStorage(topic)) {
-//			throw new RuntimeException("Init topic storage failed, please try later.");
-//		}
-//
+		if (!m_topicStorageService.initTopicStorage(topic)) {
+			throw new RuntimeException("Init topic storage failed, please try later.");
+		}
+
 		if (!m_metaService.updateMeta(meta)) {
 			throw new RuntimeException("Update meta failed, please try later");
 		}
-		
+
 		return topic;
 	}
 
@@ -200,7 +210,7 @@ public class TopicService {
 	 * @param name
 	 * @throws DalException
 	 */
-	public void deleteTopic(String name) throws DalException {
+	public void deleteTopic(String name) throws Exception {
 		Meta meta = m_metaService.getMeta();
 		Topic topic = meta.findTopic(name);
 		if (topic == null)
@@ -208,6 +218,7 @@ public class TopicService {
 		meta.removeTopic(name);
 		// Remove related schemas
 		m_schemaService.deleteSchemas(topic);
+		m_topicStorageService.dropTopicStorage(topic);
 		m_metaService.updateMeta(meta);
 	}
 

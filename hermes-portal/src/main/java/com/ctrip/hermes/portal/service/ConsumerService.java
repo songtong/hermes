@@ -56,7 +56,7 @@ public class ConsumerService {
 		for (ConsumerGroup c : t.getConsumerGroups()) {
 			if (c.getName().equals(consumer)) {
 				t.getConsumerGroups().remove(c);
-				// m_storageService.delConsumerStorage(t, c);
+				m_storageService.delConsumerStorage(t, c);
 				break;
 			}
 		}
@@ -73,7 +73,10 @@ public class ConsumerService {
 			}
 		}
 		consumer.setId(maxConsumerId + 1);
-		meta.getTopics().get(topic).addConsumerGroup(consumer);
+		Topic t = meta.getTopics().get(topic);
+		t.addConsumerGroup(consumer);
+
+		m_storageService.addConsumerStorage(t, consumer);
 
 		if (!m_metaService.updateMeta(meta)) {
 			throw new RuntimeException("Update meta failed, please try later");
@@ -81,5 +84,4 @@ public class ConsumerService {
 
 		return consumer;
 	}
-
 }
