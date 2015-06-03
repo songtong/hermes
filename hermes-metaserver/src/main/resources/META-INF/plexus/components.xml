@@ -14,31 +14,6 @@
 			<implementation>com.ctrip.hermes.metaserver.config.MetaServerConfig</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.service.SystemClockService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerPartitionAssigningStrategy</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultOrderedConsumeConsumerPartitionAssigningStrategy</implementation>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.service.SystemClockService</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator</role>
 			<role-hint>ordered-consume</role-hint>
 			<implementation>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator</implementation>
@@ -83,6 +58,49 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerPartitionAssigningStrategy</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultOrderedConsumeConsumerPartitionAssigningStrategy</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerPartitionAssigningStrategy</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocatorLocator</role>
 			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocatorLocator</implementation>
 			<requirements>
@@ -102,8 +120,45 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</implementation>
+			<role>com.ctrip.hermes.metaserver.broker.BrokerLeaseAllocator</role>
+			<implementation>com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
+			<implementation>com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
@@ -112,10 +167,19 @@
 					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerPartitionAssigningStrategy</role>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
+					<role>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
 				</requirement>
 			</requirements>
 		</component>

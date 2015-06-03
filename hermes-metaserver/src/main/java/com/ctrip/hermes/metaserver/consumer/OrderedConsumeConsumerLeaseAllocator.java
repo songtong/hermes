@@ -28,8 +28,8 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 			Lease newLease = m_leaseHolder.newLease(m_config.getConsumerLeaseTimeMillis());
 			existingValidLeases.put(consumerName, newLease);
 
-			log.info("Acquire lease success(topic={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
-			      tpg.getTopic(), tpg.getGroupId(), consumerName, newLease.getExpireTime());
+			log.info("Acquire lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
+			      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, newLease.getExpireTime());
 
 			return new LeaseAcquireResponse(true, new DefaultLease(newLease.getId(), newLease.getExpireTime()
 			      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
@@ -61,7 +61,7 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 	      Map<String, Lease> existingValidLeases) {
 		if (existingValidLeases.isEmpty()) {
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-			      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMills());
+			      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 		} else {
 			Lease existingLease = null;
 
@@ -76,14 +76,15 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 
 			if (existingLease != null) {
 				existingLease.setExpireTime(existingLease.getExpireTime() + m_config.getConsumerLeaseTimeMillis());
-				log.info("Renew lease success(topic={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
-				      tpg.getTopic(), tpg.getGroupId(), consumerName, existingLease.getExpireTime());
+				log.info(
+				      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
+				      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingLease.getExpireTime());
 
 				return new LeaseAcquireResponse(true, new DefaultLease(leaseId, existingLease.getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1L);
 			} else {
 				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMills());
+				      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 			}
 		}
 	}

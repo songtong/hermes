@@ -1,6 +1,5 @@
 package com.ctrip.hermes.metaserver.consumer;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +9,6 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.utils.CollectionUtil;
-import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -40,7 +37,8 @@ public class ConsumerAssignmentHolder extends BaseAssignmentHolder<Pair<String, 
 	private ActiveConsumerListHolder m_activeConsumerListHolder;
 
 	@Override
-	protected Assignment createNewAssignment(Pair<String, String> topicGroup, Set<String> consumers) {
+	protected Assignment createNewAssignment(Pair<String, String> topicGroup, Set<String> consumers,
+	      BaseAssignmentHolder<Pair<String, String>, Integer>.Assignment originAssignment) {
 		Topic topic = m_metaHolder.getMeta().findTopic(topicGroup.getKey());
 		if (topic != null) {
 			List<Partition> partitions = topic.getPartitions();
@@ -53,9 +51,10 @@ public class ConsumerAssignmentHolder extends BaseAssignmentHolder<Pair<String, 
 				return null;
 			}
 
-			Map<String, List<Integer>> assigns = null;
+			Map<Integer, Set<String>> assigns = null;
 			if (consumerGroup.isOrderedConsume()) {
-				assigns = m_partitionAssigningStrategy.assign(partitions, consumers);
+				assigns = m_partitionAssigningStrategy.assign(partitions, consumers, originAssignment == null ? null
+				      : originAssignment.getAssigment());
 			} else {
 				assigns = nonOrderedConsumeAssign(partitions, consumers);
 			}
@@ -66,10 +65,8 @@ public class ConsumerAssignmentHolder extends BaseAssignmentHolder<Pair<String, 
 
 			Assignment assignment = new Assignment();
 
-			for (Map.Entry<String, List<Integer>> entry : assigns.entrySet()) {
-				for (Integer partition : entry.getValue()) {
-					assignment.addAssignment(partition, entry.getKey());
-				}
+			for (Map.Entry<Integer, Set<String>> entry : assigns.entrySet()) {
+				assignment.addAssignment(entry.getKey(), entry.getValue());
 			}
 
 			return assignment;
@@ -78,21 +75,11 @@ public class ConsumerAssignmentHolder extends BaseAssignmentHolder<Pair<String, 
 		}
 	}
 
-	private Map<String, List<Integer>> nonOrderedConsumeAssign(List<Partition> partitions, Set<String> consumers) {
-		Map<String, List<Integer>> result = new HashMap<>();
+	private Map<Integer, Set<String>> nonOrderedConsumeAssign(List<Partition> partitions, Set<String> consumers) {
+		Map<Integer, Set<String>> result = new HashMap<>();
 
-		List<Integer> partitionIds = new ArrayList<>();
-
-		CollectionUtil.collect(partitions, new Transformer() {
-
-			@Override
-			public Object transform(Object partition) {
-				return ((Partition) partition).getId();
-			}
-		}, partitionIds);
-
-		for (String consumer : consumers) {
-			result.put(consumer, partitionIds);
+		for (Partition partition : partitions) {
+			result.put(partition.getId(), consumers);
 		}
 
 		return result;

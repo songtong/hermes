@@ -1,4 +1,4 @@
-package com.ctrip.hermes.metaserver.consumer;
+package com.ctrip.hermes.metaserver.broker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,19 +15,18 @@ import com.ctrip.hermes.meta.entity.Partition;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = OrderedConsumeConsumerPartitionAssigningStrategy.class)
-public class DefaultOrderedConsumeConsumerPartitionAssigningStrategy implements
-      OrderedConsumeConsumerPartitionAssigningStrategy {
+@Named(type = BrokerPartitionAssigningStrategy.class)
+public class DefaultBrokerPartitionAssigningStrategy implements BrokerPartitionAssigningStrategy {
 
 	@Override
-	public Map<Integer, Set<String>> assign(List<Partition> partitions, Set<String> consumers,
+	public Map<Integer, Set<String>> assign(List<Partition> partitions, Set<String> brokers,
 	      Map<Integer, Set<String>> originAssignment) {
 		Map<Integer, Set<String>> result = new HashMap<>();
 		int partitionCount = partitions.size();
-		int consumerCount = consumers.size();
-		List<String> consumerNameList = new ArrayList<>(consumers);
+		int brokerCount = brokers.size();
+		List<String> brokerNameList = new ArrayList<>(brokers);
 
-		if (partitionCount == 0 || consumerCount == 0) {
+		if (partitionCount == 0 || brokerCount == 0) {
 			return result;
 		}
 
@@ -35,10 +34,10 @@ public class DefaultOrderedConsumeConsumerPartitionAssigningStrategy implements
 			result.put(partition.getId(), new HashSet<String>());
 		}
 
-		int consumerPos = 0;
+		int brokerPos = 0;
 		for (Partition partition : partitions) {
-			result.get(partition.getId()).add(consumerNameList.get(consumerPos));
-			consumerPos = (consumerPos + 1) % consumerCount;
+			result.get(partition.getId()).add(brokerNameList.get(brokerPos));
+			brokerPos = (brokerPos + 1) % brokerCount;
 		}
 
 		return result;
