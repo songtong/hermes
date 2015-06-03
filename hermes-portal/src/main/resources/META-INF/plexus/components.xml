@@ -3,7 +3,7 @@
 		<component>
 			<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
 			<role-hint>topic-storage-service</role-hint>
-			<implementation>com.ctrip.hermes.portal.service.storage.TopicStorageService</implementation>
+			<implementation>com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
@@ -56,6 +56,15 @@
 		<component>
 			<role>com.ctrip.hermes.portal.service.CompileService</role>
 			<implementation>com.ctrip.hermes.portal.service.CompileService</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.service.ConsumerService</role>
+			<implementation>com.ctrip.hermes.portal.service.ConsumerService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>

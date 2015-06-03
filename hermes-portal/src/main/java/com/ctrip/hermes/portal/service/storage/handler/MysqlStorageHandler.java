@@ -11,7 +11,6 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.portal.pojo.storage.PartitionView;
-import com.ctrip.hermes.portal.service.storage.TempFile;
 import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.portal.service.storage.model.TableModel;
