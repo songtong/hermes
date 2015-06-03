@@ -79,7 +79,7 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 
 	protected LeaseAcquireResponse topicConsumerGroupNoAssignment() {
 		return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-		      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMills());
+		      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 	}
 
 	protected LeaseAcquireResponse topicPartitionNotAssignToConsumer(Tpg tpg) {
@@ -89,7 +89,7 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 			public LeaseAcquireResponse execute(Map<String, Lease> existingValidLeases) {
 				if (existingValidLeases.isEmpty()) {
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-					      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMills());
+					      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 				} else {
 					Collection<Lease> leases = existingValidLeases.values();
 					// use the first lease's exp time

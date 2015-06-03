@@ -50,7 +50,7 @@ public abstract class BaseAssignmentHolder<Key1, Key2> implements Initializable 
 							      if (clientList == null || clientList.isEmpty()) {
 								      newAssignments.remove(key1);
 							      } else {
-								      Assignment newAssignment = createNewAssignment(key1, clientList);
+								      Assignment newAssignment = createNewAssignment(key1, clientList, newAssignments.get(key1));
 								      if (newAssignment != null) {
 									      newAssignments.put(key1, newAssignment);
 								      }
@@ -82,7 +82,8 @@ public abstract class BaseAssignmentHolder<Key1, Key2> implements Initializable 
 
 	protected abstract ActiveClientListHolder<Key1> getActiveClientListHolder();
 
-	protected abstract Assignment createNewAssignment(Key1 key1, Set<String> clientList);
+	protected abstract Assignment createNewAssignment(Key1 key1, Set<String> clientList,
+	      BaseAssignmentHolder<Key1, Key2>.Assignment originAssignment);
 
 	protected abstract long getClientTimeoutMillis();
 
@@ -98,11 +99,15 @@ public abstract class BaseAssignmentHolder<Key1, Key2> implements Initializable 
 			return clients != null && !clients.isEmpty() && clients.contains(client);
 		}
 
-		public void addAssignment(Key2 key2, String clients) {
+		public void addAssignment(Key2 key2, Set<String> clients) {
 			if (!m_assigment.containsKey(key2)) {
 				m_assigment.put(key2, new HashSet<String>());
 			}
-			m_assigment.get(key2).add(clients);
+			m_assigment.get(key2).addAll(clients);
+		}
+
+		public Map<Key2, Set<String>> getAssigment() {
+			return m_assigment;
 		}
 
 		@Override

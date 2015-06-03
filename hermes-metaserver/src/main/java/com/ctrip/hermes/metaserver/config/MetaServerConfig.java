@@ -9,7 +9,7 @@ import org.unidal.lookup.annotation.Named;
 @Named(type = MetaServerConfig.class)
 public class MetaServerConfig {
 
-	public long getDefaultLeaseAcquireOrRenewRetryDelayMills() {
+	public long getDefaultLeaseAcquireOrRenewRetryDelayMillis() {
 		return 1000L;
 	}
 
@@ -27,6 +27,22 @@ public class MetaServerConfig {
 
 	public long getConsumerHeartbeatTimeoutMillis() {
 		return getConsumerLeaseTimeMillis() + 3000L;
+	}
+
+	public long getBrokerHeartbeatTimeoutMillis() {
+		return getBrokerLeaseTimeMillis() + 5000L;
+	}
+
+	public long getActiveBrokerCheckIntervalTimeMillis() {
+		return 1000L;
+	}
+
+	public long getBrokerLeaseTimeMillis() {
+		return 30 * 1000L;
+	}
+
+	public long getBrokerLeaseClientSideAdjustmentTimeMills() {
+		return -3 * 1000L;
 	}
 
 }

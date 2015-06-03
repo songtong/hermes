@@ -6,6 +6,11 @@ import java.util.List;
 import org.unidal.dal.jdbc.configuration.AbstractJdbcResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder;
+import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
+import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
+import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator;
+import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
@@ -23,20 +28,23 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		List<Component> all = new ArrayList<Component>();
 
 		all.add(A(MetaHolder.class));
-
 		all.add(A(MetaServerConfig.class));
 
-		all.add(A(ActiveConsumerListHolder.class));
-		all.add(A(DefaultOrderedConsumeConsumerPartitionAssigningStrategy.class));
-
-		all.add(A(ConsumerLeaseHolder.class));
-
+		// consumer lease
 		all.add(A(OrderedConsumeConsumerLeaseAllocator.class));
 		all.add(A(NonOrderedConsumeConsumerLeaseAllocator.class));
-
+		all.add(A(ActiveConsumerListHolder.class));
+		all.add(A(DefaultOrderedConsumeConsumerPartitionAssigningStrategy.class));
+		all.add(A(ConsumerAssignmentHolder.class));
+		all.add(A(ConsumerLeaseHolder.class));
 		all.add(A(DefaultConsumerLeaseAllocatorLocator.class));
 
-		all.add(A(ConsumerAssignmentHolder.class));
+		// broker lease
+		all.add(A(DefaultBrokerLeaseAllocator.class));
+		all.add(A(ActiveBrokerListHolder.class));
+		all.add(A(DefaultBrokerPartitionAssigningStrategy.class));
+		all.add(A(BrokerAssignmentHolder.class));
+		all.add(A(BrokerLeaseHolder.class));
 
 		return all;
 	}
