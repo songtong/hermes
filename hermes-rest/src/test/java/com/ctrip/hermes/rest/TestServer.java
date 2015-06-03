@@ -1,5 +1,9 @@
 package com.ctrip.hermes.rest;
 
+import java.util.EnumSet;
+
+import javax.servlet.DispatcherType;
+
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.Before;
 import org.junit.Test;

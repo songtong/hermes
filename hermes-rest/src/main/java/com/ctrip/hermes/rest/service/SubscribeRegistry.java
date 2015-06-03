@@ -1,13 +1,8 @@
 package com.ctrip.hermes.rest.service;
 
-import java.util.List;
-import java.util.Map;
+import com.ctrip.hermes.meta.entity.Subscription;
 
 public interface SubscribeRegistry {
-
-	public List<Subscription> getSubscriptions(String topicName);
-
-	public Map<String, List<Subscription>> getSubscriptions();
 
 	public void register(Subscription subscription);
 

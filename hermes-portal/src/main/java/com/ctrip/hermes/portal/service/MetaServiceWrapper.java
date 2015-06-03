@@ -10,6 +10,7 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.meta.entity.Subscription;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.MetaService;
 
@@ -28,15 +29,17 @@ public interface MetaServiceWrapper extends MetaService {
 
 	public Map<String, Codec> getCodecs();
 
+	public Datasource getDatasource(String storageType, String datasourceId);
+
 	public Meta getMeta();
 
 	public List<Partition> getPartitions(String topic);
-
-	public Map<String, Storage> getStorages();
 
 	public List<Server> getServers();
 
 	public Map<String, Endpoint> getEndpoints();
 
-	public Datasource getDatasource(String storageType, String datasourceId);
+	public Map<String, Storage> getStorages();
+	
+	public Map<String, Subscription> getSubscriptions();
 }

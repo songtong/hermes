@@ -1,10 +1,10 @@
-package com.ctrip.hermes.rest.resource;
+package com.ctrip.hermes.portal.resource;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.rest.service.SubscribeRegistry;
-import com.ctrip.hermes.rest.service.Subscription;
+import com.ctrip.hermes.meta.entity.Subscription;
+import com.ctrip.hermes.portal.service.SubscriptionService;
 
 @Path("/subscriptions/")
 @Singleton
@@ -30,24 +30,18 @@ public class SubscriptionsResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubscriptionsResource.class);
 
-	private SubscribeRegistry subscribeRegistry = PlexusComponentLocator.lookup(SubscribeRegistry.class);
+	private SubscriptionService subscriptionService = PlexusComponentLocator.lookup(SubscriptionService.class);
 
 	@Path("")
 	@GET
-	public Map<String, List<Subscription>> getAll() {
-		return subscribeRegistry.getSubscriptions();
+	public Map<String, Subscription> getAll() {
+		return subscriptionService.getSubscriptions();
 	}
 
-	@Path("{topicName}")
-	@GET
-	public List<Subscription> getByTopic(@PathParam("topicName") String topicName) {
-		return subscribeRegistry.getSubscriptions(topicName);
-	}
-
-	@Path("{topicName}/sub")
+	@Path("/")
 	@POST
-	public Response subscribe(@PathParam("topicName") String topicName, String content) {
-		logger.debug("subscribe {} {}", topicName, content);
+	public Response subscribe(String content) {
+		logger.debug("subscribe {}", content);
 
 		Subscription subscription = null;
 		try {
@@ -57,7 +51,7 @@ public class SubscriptionsResource {
 		}
 
 		try {
-			subscribeRegistry.register(subscription);
+			subscriptionService.create(subscription);
 		} catch (Exception e) {
 			throw new InternalServerErrorException(e);
 		}
@@ -65,20 +59,13 @@ public class SubscriptionsResource {
 		return Response.status(Status.CREATED).build();
 	}
 
-	@Path("{topicName}/unsub")
-	@POST
-	public Response unsubscribe(@PathParam("topicName") String topicName, String content) {
-		logger.debug("unsubscribe {} {}", topicName, content);
-
-		Subscription subscription = null;
-		try {
-			subscription = JSON.parseObject(content, Subscription.class);
-		} catch (Exception e) {
-			throw new BadRequestException("Parse subscription failed", e);
-		}
+	@Path("{id}")
+	@DELETE
+	public Response unsubscribe(@PathParam("id") String id) {
+		logger.debug("unsubscribe {} {}", id);
 
 		try {
-			subscribeRegistry.unregister(subscription);
+			subscriptionService.remove(id);
 		} catch (Exception e) {
 			throw new InternalServerErrorException(e);
 		}

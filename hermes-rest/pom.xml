@@ -26,7 +26,7 @@
 			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-kafka</artifactId>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>

@@ -3,7 +3,6 @@ package com.ctrip.hermes.rest.resource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -25,8 +24,8 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.meta.entity.Subscription;
 import com.ctrip.hermes.rest.TestServer;
-import com.ctrip.hermes.rest.service.Subscription;
 import com.google.common.base.Charsets;
 
 @Path("/onebox")
@@ -41,16 +40,18 @@ public class OneBoxTest extends ComponentTestCase {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestServer.HOST);
 
+		String id = "mysub";
 		String topic = "kafka.SimpleTopic";
 		String group = "OneBoxGroup";
-		List<String> urls = Arrays.asList(new String[] { "http://localhost:1357/onebox" });
+		String urls = "http://localhost:1357/onebox";
 
 		Subscription sub = new Subscription();
+		sub.setId(id);
 		sub.setTopic(topic);
-		sub.setGroupId(group);
+		sub.setGroup(group);
 		sub.setEndpoints(urls);
 
-		Builder request = webTarget.path("subscriptions/" + topic + "/sub").request();
+		Builder request = webTarget.path("subscriptions/").request();
 		String json = JSON.toJSONString(sub);
 		System.out.println("Post: " + json);
 		Response response = request.post(Entity.entity(json, MediaType.APPLICATION_JSON));
@@ -72,8 +73,8 @@ public class OneBoxTest extends ComponentTestCase {
 			System.out.println("Received: " + received.size());
 		}
 
-		request = webTarget.path("subscriptions/" + topic + "/unsub").request();
-		response = request.post(Entity.entity(json, MediaType.APPLICATION_JSON));
+		request = webTarget.path("subscriptions/" + id).request();
+		response = request.delete();
 		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
 		Assert.assertEquals(sent.size(), received.size());

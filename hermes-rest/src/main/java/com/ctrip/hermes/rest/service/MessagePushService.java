@@ -2,7 +2,6 @@ package com.ctrip.hermes.rest.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,6 +28,7 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.meta.entity.Subscription;
 
 @Named
 public class MessagePushService implements Initializable {
@@ -61,16 +61,16 @@ public class MessagePushService implements Initializable {
 	}
 
 	public ConsumerHolder startPusher(Subscription sub) {
-		final Meter success_meter = m_metricsManager.meter("push_success", sub.getTopic(), sub.getGroupId(), sub
+		final Meter success_meter = m_metricsManager.meter("push_success", sub.getTopic(), sub.getGroup(), sub
 		      .getEndpoints().toString());
 
-		final Meter failed_meter = m_metricsManager.meter("push_fail", sub.getTopic(), sub.getGroupId(), sub
-		      .getEndpoints().toString());
+		final Meter failed_meter = m_metricsManager.meter("push_fail", sub.getTopic(), sub.getGroup(), sub.getEndpoints()
+		      .toString());
 
-		final List<String> urls = sub.getEndpoints();
+		final String[] urls = sub.getEndpoints().split(",");
 
-		final ConsumerHolder consumerHolder = Consumer.getInstance().start(sub.getTopic(), sub.getGroupId(),
-		      new BaseMessageListener<RawMessage>(sub.getGroupId()) {
+		final ConsumerHolder consumerHolder = Consumer.getInstance().start(sub.getTopic(), sub.getGroup(),
+		      new BaseMessageListener<RawMessage>(sub.getGroup()) {
 
 			      @Override
 			      protected void onMessage(final ConsumerMessage<RawMessage> msg) {
