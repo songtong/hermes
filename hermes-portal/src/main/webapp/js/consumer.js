@@ -18,12 +18,23 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller('c
 			scope.is_loading = true;
 			scope.src_consumers = [];
 			scope.consumer_rows = [];
+			scope.new_consumer = {
+				orderedConsume : true
+			};
+
+			scope.order_opts = [ true, false ];
 
 			scope.get_consumers = function get_consumers(table_state) {
 				consumer_resource.query().$promise.then(function(query_result) {
 					scope.src_consumers = query_result;
 					scope.consumer_rows = filter_consumer_rows(scope.src_consumers, filter, table_state);
 					scope.is_loading = false;
+					scope.topic_names = unique_array(collect_schemas(query_result, 'topic', false));
+					console.log(scope.topic_names);
+					$('#inputTopicName').typeahead({
+						name : 'topics',
+						source : substringMatcher(scope.topic_names)
+					});
 				});
 			};
 

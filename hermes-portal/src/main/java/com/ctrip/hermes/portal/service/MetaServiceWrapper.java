@@ -36,7 +36,7 @@ public interface MetaServiceWrapper extends MetaService {
 
 	public List<Server> getServers();
 
-	public Endpoint getEndpoint(String endpointId);
+	public Map<String, Endpoint> getEndpoints();
 
 	public Datasource getDatasource(String storageType, String datasourceId);
 }

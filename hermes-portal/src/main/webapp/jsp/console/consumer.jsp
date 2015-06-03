@@ -6,13 +6,6 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.consumer.Model" scope="request" />
 
 <a:layout>
-	<%-- <link href="${model.webapp}/css/consumer.css" type="text/css" rel="stylesheet"> --%>
-	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
-
-	<script type="text/javascript" src="${model.webapp}/js/consumer.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/smart-table.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/bootbox.min.js"></script>
 	<div class="op-alert alert alert-info" role="alert" style="display: none;">
 		<span>The examples populate this alert with dummy content</span>
 	</div>
@@ -42,12 +35,12 @@
 				</thead>
 				<tbody ng-show="!is_loading">
 					<tr ng-repeat="row in consumer_rows">
-						<td>{{row.topic}}</td>
-						<td>{{row.groupName}}</td>
-						<td>{{row.appId}}</td>
-						<td>{{row.orderedConsume}}</td>
-						<td>{{row.retryPolicy}}</td>
-						<td>{{row.ackTimeoutSeconds}}</td>
+						<td><span ng-bind="row.topic"></td>
+						<td><span ng-bind="row.groupName"></td>
+						<td><span ng-bind="row.appId"></td>
+						<td><span ng-bind="row.orderedConsume"></td>
+						<td><span ng-bind="row.retryPolicy"></td>
+						<td><span ng-bind="row.ackTimeoutSeconds"></td>
 						<td>
 							<button type="button" ng-click="update_consumer()" class="btn btn-xs btn-warning" style="text-align: center;">修改</button>
 							<button type="button" ng-click="del_consumer(row.topic, row.groupName)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
@@ -75,8 +68,10 @@
 							<div class="form-group">
 								<label for="inputTopicName" class="col-sm-3 control-label">Topic名称</label>
 								<div class="col-sm-8">
-									<input class="form-control" id="inputTopicName" placeholder="Topic Name" ng-model="new_consumer.topic">
-								</div>
+									<input type="text" class="form-control" id="inputTopicName" data-provide="typeahead" placeholder="Topic Name" ng-model="new_consumer.topic">
+<!-- 									<select name="topic-name" class="form-control" id="inputOrderedConsume" ng-model="new_consumer.topic" ng-options="topic for topic in topic_names">
+									</select>
+ -->								</div>
 							</div>
 							<div class="form-group">
 								<label for="inputGroupName" class="col-sm-3 control-label">消费集群名称</label>
@@ -87,9 +82,7 @@
 							<div class="form-group">
 								<label for="inputOrderedConsume" class="col-sm-3 control-label">保证按序消费</label>
 								<div class="col-sm-3">
-									<select name="ordered-consume" class="form-control" id="inputOrderedConsume" ng-model="new_consumer.orderedConsume">
-										<option>true</option>
-										<option>false</option>
+									<select name="ordered-consume" class="form-control" id="inputOrderedConsume" ng-model="new_consumer.orderedConsume" ng-options="order for order in order_opts">
 									</select>
 								</div>
 							</div>
@@ -121,4 +114,11 @@
 			</div>
 		</div>
 	</div>
+
+	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/smart-table.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/bootbox.min.js"></script>
+
+	<script type="text/javascript" src="${model.webapp}/js/consumer.js"></script>
 </a:layout>

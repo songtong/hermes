@@ -1,5 +1,11 @@
 package com.ctrip.hermes.portal.resource;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map.Entry;
+
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -18,9 +24,12 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Codec;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.metaservice.service.MetaService;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.portal.server.RestException;
+import com.ctrip.hermes.portal.service.MetaServiceWrapper;
 
 @Path("/meta/")
 @Singleton
@@ -29,7 +38,46 @@ public class MetaResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(MetaResource.class);
 
-	private MetaService metaService = PlexusComponentLocator.lookup(MetaService.class);
+	private MetaServiceWrapper metaService = PlexusComponentLocator.lookup(MetaServiceWrapper.class);
+
+	@GET
+	@Path("codecs")
+	public Response getCodecs() {
+		List<Codec> codecs = new ArrayList<Codec>(metaService.getCodecs().values());
+		Collections.sort(codecs, new Comparator<Codec>() {
+			@Override
+			public int compare(Codec o1, Codec o2) {
+				return o1.getType().compareTo(o2.getType());
+			}
+		});
+		return Response.status(Status.OK).entity(codecs).build();
+	}
+
+	@GET
+	@Path("storages")
+	public Response getStorages() {
+		List<Storage> storages = new ArrayList<Storage>(metaService.getStorages().values());
+		Collections.sort(storages, new Comparator<Storage>() {
+			@Override
+			public int compare(Storage o1, Storage o2) {
+				return o1.getType().compareTo(o2.getType());
+			}
+		});
+		return Response.status(Status.OK).entity(storages).build();
+	}
+
+	@GET
+	@Path("endpoints")
+	public Response getEndpoints() {
+		List<Endpoint> endpoints = new ArrayList<Endpoint>(metaService.getEndpoints().values());
+		Collections.sort(endpoints, new Comparator<Endpoint>() {
+			@Override
+			public int compare(Endpoint o1, Endpoint o2) {
+				return o1.getType().compareTo(o2.getType());
+			}
+		});
+		return Response.status(Status.OK).entity(endpoints).build();
+	}
 
 	@GET
 	public Response getMeta(@QueryParam("hashCode") long hashCode) {
