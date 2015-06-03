@@ -10,9 +10,10 @@ import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
-import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocationStrategyLocator;
+import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocatorLocator;
 import com.ctrip.hermes.metaserver.consumer.DefaultOrderedConsumeConsumerPartitionAssigningStrategy;
-import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocationStrategy;
+import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAllocator;
+import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
@@ -30,9 +31,10 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(ConsumerLeaseHolder.class));
 
-		all.add(A(OrderedConsumeConsumerLeaseAllocationStrategy.class));
+		all.add(A(OrderedConsumeConsumerLeaseAllocator.class));
+		all.add(A(NonOrderedConsumeConsumerLeaseAllocator.class));
 
-		all.add(A(DefaultConsumerLeaseAllocationStrategyLocator.class));
+		all.add(A(DefaultConsumerLeaseAllocatorLocator.class));
 
 		all.add(A(ConsumerAssignmentHolder.class));
 

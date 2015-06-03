@@ -30,7 +30,7 @@ public class StartConsumer extends ComponentTestCase {
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
 		subscribers.put("group1", Arrays.asList("1-" + new Random().nextInt()));
-		// subscribers.put("group2", Arrays.asList("2-a"));
+		subscribers.put("group2", Arrays.asList("2-" + new Random().nextInt()));
 		// subscribers.put("group2", Arrays.asList("2-a", "2-b"));
 
 		List<ConsumerHolder> holders = new ArrayList<>();

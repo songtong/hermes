@@ -7,7 +7,7 @@ import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public interface ConsumerLeaseAllocationStrategy {
+public interface ConsumerLeaseAllocator {
 	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName);
 
 	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId);
