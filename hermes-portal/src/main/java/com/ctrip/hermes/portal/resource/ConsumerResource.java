@@ -6,15 +6,22 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.inject.Singleton;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.codehaus.plexus.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.tuple.Pair;
 
+import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.portal.pojo.ConsumerView;
@@ -31,6 +38,7 @@ public class ConsumerResource {
 
 	@GET
 	public List<ConsumerView> getConsumers() {
+		logger.debug("Get consumers");
 		List<ConsumerView> returnResult = new ArrayList<ConsumerView>();
 		try {
 			Map<String, List<ConsumerGroup>> consumers = consumerService.getConsumers();
@@ -44,5 +52,67 @@ public class ConsumerResource {
 		}
 
 		return returnResult;
+	}
+
+	@GET
+	@Path("{topic}")
+	public List<ConsumerView> getConsumers(@PathParam("topic") String topic) {
+		logger.debug("Get consumers of topic: {}", topic);
+		List<ConsumerView> returnResult = new ArrayList<ConsumerView>();
+		try {
+			List<ConsumerGroup> consumers = consumerService.getConsumers(topic);
+			for (ConsumerGroup c : consumers) {
+				returnResult.add(new ConsumerView(topic, c));
+			}
+		} catch (Exception e) {
+			throw new RestException(e, Status.NOT_FOUND);
+		}
+
+		return returnResult;
+	}
+
+	@DELETE
+	@Path("{topic}/{consumer}")
+	public Response deleteConsumer(@PathParam("topic") String topic, @PathParam("consumer") String consumer) {
+		logger.debug("Delete consumer: {} {}", topic, consumer);
+		try {
+			consumerService.deleteConsumerFromTopic(topic, consumer);
+		} catch (Exception e) {
+			logger.warn("delete topic failed", e);
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		return Response.status(Status.OK).build();
+	}
+
+	@POST
+	@Path("{topic}/{consumer}")
+	public Response addConsumer(@PathParam("topic") String topic, @PathParam("consumer") String consumer, String content) {
+		logger.debug("Create consumer: {} {}", topic, consumer);
+		if (StringUtils.isEmpty(content)) {
+			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
+		}
+
+		ConsumerView consumerView = null;
+		try {
+			consumerView = JSON.parseObject(content, ConsumerView.class);
+		} catch (Exception e) {
+			logger.error("Parse consumer failed, content: {}", content, e);
+			throw new RestException(e, Status.BAD_REQUEST);
+		}
+
+		Pair<String, ConsumerGroup> pair = consumerView.toMetaConsumer();
+
+		if (consumerService.getConsumer(topic, consumer) != null) {
+			throw new RestException("Consumer already exists.", Status.CONFLICT);
+		}
+
+		try {
+			ConsumerGroup c = consumerService.addConsumerForTopic(pair.getKey(), pair.getValue());
+			consumerView = new ConsumerView(topic, c);
+		} catch (Exception e) {
+			logger.warn("Create consumer failed", e);
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
 }

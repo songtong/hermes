@@ -15,6 +15,9 @@ public class ConsumerView {
 
 	private Integer ackTimeoutSeconds;
 
+	public ConsumerView() {
+	}
+
 	public ConsumerView(String topic, ConsumerGroup consumer) {
 		this.topic = topic;
 		this.groupName = consumer.getName();
@@ -71,5 +74,11 @@ public class ConsumerView {
 
 	public void setAckTimeoutSeconds(Integer ackTimeoutSeconds) {
 		this.ackTimeoutSeconds = ackTimeoutSeconds;
+	}
+
+	@Override
+	public String toString() {
+		return "ConsumerView [topic=" + topic + ", groupName=" + groupName + ", appId=" + appId + ", retryPolicy="
+		      + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + "]";
 	}
 }

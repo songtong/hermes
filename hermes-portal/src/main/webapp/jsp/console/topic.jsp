@@ -7,7 +7,6 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.topic.Model" scope="request" />
 
 <a:layout>
-	<link href="${model.webapp}/css/topic.css" type="text/css" rel="stylesheet">
 	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
 
