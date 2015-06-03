@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -18,15 +19,16 @@ import org.unidal.lookup.annotation.Named;
 
 import com.codahale.metrics.Meter;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 @Named(type = SubscribeRegistry.class)
 public class DefaultSubscribeRegistry implements SubscribeRegistry, Initializable {
 
 	private static final Logger logger = LoggerFactory.getLogger(DefaultSubscribeRegistry.class);
 
-	private Map<String, List<Subscription>> registries = new HashMap<>();
+	private Map<String, List<Subscription>> registries = new ConcurrentHashMap<>();
 
-	private Map<Subscription, ConsumerHolder> consumerHolders = new HashMap<>();
+	private Map<Subscription, ConsumerHolder> consumerHolders = new ConcurrentHashMap<>();
 
 	@Inject
 	private MessagePushService pushService;
@@ -72,7 +74,8 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry, Initializabl
 
 	@Override
 	public void initialize() throws InitializationException {
-		scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+		scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("SubscriptionChecker",
+		      true));
 
 		scheduledExecutor.scheduleAtFixedRate(new Runnable() {
 

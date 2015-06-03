@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.filter;
+package com.ctrip.hermes.rest.common;
 
 import java.io.IOException;
 

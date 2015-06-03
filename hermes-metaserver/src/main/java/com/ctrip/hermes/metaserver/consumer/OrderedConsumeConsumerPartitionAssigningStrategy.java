@@ -10,7 +10,7 @@ import com.ctrip.hermes.meta.entity.Partition;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public interface PartitionConsumerAssigningStrategy {
+public interface OrderedConsumeConsumerPartitionAssigningStrategy {
 
 	public Map<String, List<Integer>> assign(List<Partition> partitions, Set<String> consumers);
 }

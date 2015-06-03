@@ -1,29 +1,29 @@
-package com.ctrip.hermes.metaserver.consumer;
+package com.ctrip.hermes.metaserver.commons;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class ActiveConsumerList {
+public class ActiveClientList {
 	private boolean m_changed = true;
 
-	private Map<String, Long> m_consumers = new HashMap<>();
+	private Map<String, Long> m_clients = new HashMap<>();
 
-	public void heartbeat(String consumerName, long heartbeatTime) {
-		if (!m_consumers.containsKey(consumerName)) {
+	public void heartbeat(String clientName, long heartbeatTime) {
+		if (!m_clients.containsKey(clientName)) {
 			m_changed = true;
 		}
-		m_consumers.put(consumerName, heartbeatTime);
+		m_clients.put(clientName, heartbeatTime);
 	}
 
 	public void purgeExpired(long timeoutMillis, long now) {
-		Iterator<Entry<String, Long>> iterator = m_consumers.entrySet().iterator();
+		Iterator<Entry<String, Long>> iterator = m_clients.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, Long> entry = iterator.next();
 			if (entry.getValue() + timeoutMillis < now) {
@@ -39,7 +39,7 @@ public class ActiveConsumerList {
 		return changed;
 	}
 
-	public Set<String> getActiveConsumerNames() {
-		return m_consumers.keySet();
+	public Set<String> getActiveClientNames() {
+		return m_clients.keySet();
 	}
 }

@@ -34,6 +34,7 @@
     <attribute name="app-ids" value-type="String" />
     <attribute name="retry-policy" value-type="String" />
     <attribute name="ack-timeout-seconds" value-type="int" />
+    <attribute name="ordered-consume" value-type="boolean" />
   </entity>
   <entity name="producer">
     <attribute name="app-id" value-type="int" />

@@ -15,7 +15,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultActiveConsumerListHolder</implementation>
+			<implementation>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.service.SystemClockService</role>
@@ -26,18 +26,25 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.consumer.PartitionConsumerAssigningStrategy</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultPartitionConsumerAssigningStrategy</implementation>
+			<role>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerPartitionAssigningStrategy</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultOrderedConsumeConsumerPartitionAssigningStrategy</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseManager</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseManager</implementation>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator</role>
+			<role-hint>ordered-consume</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.service.SystemClockService</role>
@@ -46,7 +53,69 @@
 					<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.consumer.PartitionConsumerAssigningStrategy</role>
+					<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator</role>
+			<role-hint>non-ordered-consume</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAllocator</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocatorLocator</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocatorLocator</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator</role>
+					<role-hint>ordered-consume</role-hint>
+					<field-name>m_orderedConsumeStrategy</field-name>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator</role>
+					<role-hint>non-ordered-consume</role-hint>
+					<field-name>m_nonOrderedConsumeStrategy</field-name>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerPartitionAssigningStrategy</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder</role>
 				</requirement>
 			</requirements>
 		</component>

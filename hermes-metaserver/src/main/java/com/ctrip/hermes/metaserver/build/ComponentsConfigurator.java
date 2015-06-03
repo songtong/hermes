@@ -7,9 +7,13 @@ import org.unidal.dal.jdbc.configuration.AbstractJdbcResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
-import com.ctrip.hermes.metaserver.consumer.DefaultActiveConsumerListHolder;
-import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseManager;
-import com.ctrip.hermes.metaserver.consumer.DefaultPartitionConsumerAssigningStrategy;
+import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
+import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
+import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
+import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocatorLocator;
+import com.ctrip.hermes.metaserver.consumer.DefaultOrderedConsumeConsumerPartitionAssigningStrategy;
+import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAllocator;
+import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
@@ -22,10 +26,17 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(MetaServerConfig.class));
 
-		all.add(A(DefaultActiveConsumerListHolder.class));
-		all.add(A(DefaultPartitionConsumerAssigningStrategy.class));
+		all.add(A(ActiveConsumerListHolder.class));
+		all.add(A(DefaultOrderedConsumeConsumerPartitionAssigningStrategy.class));
 
-		all.add(A(DefaultConsumerLeaseManager.class));
+		all.add(A(ConsumerLeaseHolder.class));
+
+		all.add(A(OrderedConsumeConsumerLeaseAllocator.class));
+		all.add(A(NonOrderedConsumeConsumerLeaseAllocator.class));
+
+		all.add(A(DefaultConsumerLeaseAllocatorLocator.class));
+
+		all.add(A(ConsumerAssignmentHolder.class));
 
 		return all;
 	}

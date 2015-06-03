@@ -1,7 +1,6 @@
 package com.ctrip.hermes.rest.resource;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,42 +20,26 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.rest.HermesRestServer;
-import com.ctrip.hermes.rest.StartRestServer;
+import com.ctrip.hermes.rest.TestServer;
 import com.ctrip.hermes.rest.service.Subscription;
 import com.google.common.base.Charsets;
 
 @Path("/onebox")
 public class OneBoxTest extends ComponentTestCase {
 
-	private HermesRestServer server;
-
 	private static List<byte[]> sent = new ArrayList<>();
 
 	private static List<byte[]> received = new ArrayList<>();
 
-	@Before
-	public void startServer() throws IOException {
-		server = lookup(HermesRestServer.class);
-		server.start();
-	}
-
-	@After
-	public void stopServer() {
-		server.stop();
-	}
-
 	@Test
 	public void testOneBox() throws InterruptedException {
 		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(StartRestServer.HOST);
+		WebTarget webTarget = client.target(TestServer.HOST);
 
 		String topic = "kafka.SimpleTopic";
 		String group = "OneBoxGroup";

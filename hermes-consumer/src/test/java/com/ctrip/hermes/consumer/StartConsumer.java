@@ -15,6 +15,7 @@ import org.unidal.lookup.ComponentTestCase;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.consumer.api.MessageListener;
+import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 
 /**
@@ -29,7 +30,7 @@ public class StartConsumer extends ComponentTestCase {
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
 		subscribers.put("group1", Arrays.asList("1-" + new Random().nextInt()));
-//		subscribers.put("group2", Arrays.asList("2-a"));
+		subscribers.put("group2", Arrays.asList("2-" + new Random().nextInt()));
 		// subscribers.put("group2", Arrays.asList("2-a", "2-b"));
 
 		List<ConsumerHolder> holders = new ArrayList<>();
@@ -100,7 +101,8 @@ public class StartConsumer extends ComponentTestCase {
 		public void onMessage(List<ConsumerMessage<String>> msgs) {
 			for (ConsumerMessage<String> msg : msgs) {
 				String body = msg.getBody();
-				System.out.println(m_id + "<<< " + body);
+				System.out.println(m_id + "<<< " + body + " partition: "
+				      + ((BrokerConsumerMessage<String>) msg).getPartition());
 
 				msg.ack();
 			}
