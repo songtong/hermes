@@ -109,8 +109,8 @@
 		<datasource id='ds0'>
 			<!--Dev Machine -->
 
-			<!-- <property name='url' value='jdbc:mysql://10.3.6.237/fxhermesshard01db' 
-				/> <property name='user' value='root' /> <property name='password' value='Ctrip000' 
+			<!-- <property name='url' value='jdbc:mysql://10.3.6.237/fxhermesshard01db'
+				/> <property name='user' value='root' /> <property name='password' value='Ctrip000'
 				/> -->
 
 			<!--Local Machine -->

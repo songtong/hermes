@@ -7,27 +7,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Triple;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.portal.pojo.storage.StorageTopic;
 import com.ctrip.hermes.portal.service.MetaServiceWrapper;
-import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
-import com.ctrip.hermes.portal.service.storage.exception.TopicNotFoundException;
+import com.ctrip.hermes.portal.service.storage.exception.TopicIsNullException;
 import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
-import com.ctrip.hermes.portal.service.storage.model.DeadLetterTableModel;
-import com.ctrip.hermes.portal.service.storage.model.MessageTableModel;
-import com.ctrip.hermes.portal.service.storage.model.OffsetMessageTableModel;
-import com.ctrip.hermes.portal.service.storage.model.OffsetResendTableModel;
-import com.ctrip.hermes.portal.service.storage.model.ResendTableModel;
-import com.ctrip.hermes.portal.service.storage.model.TableModel;
+import com.ctrip.hermes.portal.service.storage.model.*;
 
-@Named(type = TopicStorageService.class, value = DefaultTopicStorageService.ID)
+@Named(type = DefaultTopicStorageService.class, value = DefaultTopicStorageService.ID)
 public class DefaultTopicStorageService implements TopicStorageService {
-	private static final Logger log = LoggerFactory.getLogger(DefaultTopicStorageService.class);
-
 	public static final String ID = "topic-storage-service";
 
 	@Inject
@@ -36,43 +31,32 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	@Inject
 	private MetaServiceWrapper metaService;
 
-	public DefaultTopicStorageService() {
+	private static final Logger log = LoggerFactory.getLogger(DefaultTopicStorageService.class);
 
-	}
-
-	public boolean createNewTopic(String ds, String topicName) throws TopicAlreadyExistsException,
-	      StorageHandleErrorException {
-		Topic topic = metaService.findTopicByName(topicName);
-
+	@Override
+	public boolean initTopicStorage(Topic topic) throws TopicAlreadyExistsException, TopicIsNullException, StorageHandleErrorException {
 		if (null != topic) {
-			String databaseName = mockDatabaseName(ds);
-			if (validateDatabaseName(databaseName)) {
-				for (Partition partition : filterPartition(ds, topic)) {
-					try {
-						createTables0(databaseName, topic, partition);
-						addPartitionByDatabaseName0(databaseName, topic, partition);
+			for (Partition partition : topic.getPartitions()) {
+				Datasource datasource = getDatasource(partition);
+				Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo = getDatabaseName(datasource);
 
-					} catch (StorageHandleErrorException e) {
-						// todo: handle ex from createTables0 or addPartition.
-						System.out.println(e.getMessage());
-						return false;
-					}
-				}
+				createTables0(dbInfo, topic, partition);
+//				addPartitionByDatabaseName0(dbInfo, topic, partition);
 			}
-		}
-		return true;
-	}
-
-	// todo: mockDatabaseName => MetaService.getDatabaseNameByDataSource()
-	private String mockDatabaseName(String ds) {
-		if (ds.equals("ds0")) {
-			return "fxhermesshard01db";
+			return true;
 		} else {
-			return null;
+			throw new TopicIsNullException("Topic is Null!");
 		}
 	}
 
-	private void createTables0(String databaseName, Topic topic, Partition partition) throws StorageHandleErrorException {
+	private void createTables0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
+										Topic topic, Partition partition) throws StorageHandleErrorException {
+		List<TableModel> tableModels = buildTableModels(topic);
+		handler.createTable(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(),
+				  dbInfo.getLast());
+	}
+
+	private List<TableModel> buildTableModels(Topic topic) {
 		List<TableModel> tableModels = new ArrayList<>();
 
 		tableModels.add(new DeadLetterTableModel()); // deadletter
@@ -86,75 +70,153 @@ public class DefaultTopicStorageService implements TopicStorageService {
 
 			tableModels.add(new ResendTableModel(groupId)); // resend_<groupid>
 		}
-		handler.createTable(databaseName, topic.getId(), partition.getId(), tableModels);
+		return tableModels;
 	}
 
-	public Boolean addPartition(String ds, String topicName) throws StorageHandleErrorException {
-		Topic topic = metaService.findTopicByName(topicName);
-
+	@Override
+	public boolean addPartitionStorage(Topic topic, Partition partition) throws TopicIsNullException, StorageHandleErrorException {
 		if (null != topic) {
-			String databaseName = mockDatabaseName(ds);
-			if (validateDatabaseName(databaseName)) {
-				for (Partition partition : filterPartition(ds, topic)) {
-					try {
-						addPartitionByDatabaseName0(databaseName, topic, partition);
+			Datasource datasource = getDatasource(partition);
+			Triple<String/*database url*/, String/*usr*/, String/*password*/> databaseName = getDatabaseName(datasource);
 
-					} catch (StorageHandleErrorException e) {
-						// todo: handle ex from createTables0 or addPartition.
-						System.out.println(e.getMessage());
-						return false;
-					}
-				}
-			}
+			addPartitionByDatabaseName0(databaseName, topic, partition);
+			return true;
+		} else {
+			throw new TopicIsNullException("Topic is Null!");
 		}
-		return true;
 	}
 
-	private void addPartitionByDatabaseName0(String databaseName, Topic topic, Partition partition)
-	      throws StorageHandleErrorException {
+
+	private void addPartitionByDatabaseName0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
+														  Topic topic, Partition partition)
+			  throws StorageHandleErrorException {
 		// 暂时只针对MessageTableModel(0), MessageTableModel(1)分partition
 
-		handler.addPartition(databaseName, topic.getId(), partition.getId(), new MessageTableModel(0), 100 * 10000);
-		handler.addPartition(databaseName, topic.getId(), partition.getId(), new MessageTableModel(1), 100 * 10000);
+		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(0), 100 *
+				  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
+		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(1), 100 *
+				  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
 	}
 
 	public Boolean deletePartition(String ds, String topicName) throws StorageHandleErrorException {
-		Topic topic = metaService.findTopicByName(topicName);
+		//todo:
+		throw new RuntimeException("Not Implemented!");
+	}
 
+	@Override
+	public StorageTopic getTopicStorage(Topic topic) throws TopicIsNullException, StorageHandleErrorException {
+		//todo:
+		throw new RuntimeException("Not Implemented!");
+	}
+
+	@Override
+	public boolean dropTopicStorage(Topic topic) throws StorageHandleErrorException, TopicIsNullException {
 		if (null != topic) {
-			String databaseName = mockDatabaseName(ds);
-			if (validateDatabaseName(databaseName)) {
-				for (Partition partition : filterPartition(ds, topic)) {
-					try {
-						deletePartition0(databaseName, topic, partition);
-					} catch (StorageHandleErrorException e) {
-						// todo: handle ex
-						System.out.println(e.getMessage());
-						return false;
-					}
-				}
+			for (Partition partition : topic.getPartitions()) {
+				Datasource datasource = getDatasource(partition);
+				Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo = getDatabaseName(datasource);
+				// todo: 先做备份，再做删除
+				deleteTables0(dbInfo, topic, partition);
 			}
+			return true;
+		} else {
+			throw new TopicIsNullException("Topic is Null!");
 		}
-		return true;
 	}
 
-	private void deletePartition0(String databaseName, Topic topic, Partition partition)
-	      throws StorageHandleErrorException {
+	private void deleteTables0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
+										Topic topic, Partition partition) throws StorageHandleErrorException {
+		List<TableModel> tableModels = buildTableModels(topic);
+		handler.dropTables(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo
+				  .getLast());
+	}
+
+	@Override
+	public boolean delPartitionStorage(Topic topic, Partition partition) throws StorageHandleErrorException, TopicIsNullException {
+		if (null != topic) {
+			Datasource datasource = getDatasource(partition);
+			Triple<String/*database url*/, String/*usr*/, String/*password*/> databaseName = getDatabaseName(datasource);
+
+			deletePartition0(databaseName, topic, partition);
+			return true;
+		} else {
+			throw new TopicIsNullException("Topic is Null!");
+		}
+	}
+
+	private void deletePartition0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
+											Topic topic, Partition partition)
+			  throws StorageHandleErrorException {
 		// todo: 先做备份，再做删除
-
-		handler.deletePartition(databaseName, topic.getId(), partition.getId(), new MessageTableModel(0));
-		handler.deletePartition(databaseName, topic.getId(), partition.getId(), new MessageTableModel(1));
-
+		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(0), dbInfo.getFirst(), dbInfo
+				  .getMiddle(), dbInfo.getLast());
+		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(1), dbInfo.getFirst(), dbInfo
+				  .getMiddle(), dbInfo.getLast());
 	}
 
-	private List<Partition> filterPartition(String ds, Topic topic) {
-		List<Partition> partitions = new ArrayList<>();
-		for (Partition partition : topic.getPartitions()) {
-			if (partition.getWriteDatasource().equals(ds)) {
-				partitions.add(partition);
+	@Override
+	public boolean addConsumerStorage(Topic topic, ConsumerGroup group) throws StorageHandleErrorException, TopicIsNullException {
+		if (null != topic) {
+			for (Partition partition : topic.getPartitions()) {
+				Datasource datasource = getDatasource(partition);
+				Triple<String/*database url*/, String/*usr*/, String/*password*/> databaseName = getDatabaseName(datasource);
+
+				addConsumerStorage0(databaseName, topic, partition, group);
 			}
+			return true;
+		} else {
+			throw new TopicIsNullException("Topic is Null!");
 		}
-		return partitions;
+	}
+
+	private void addConsumerStorage0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
+												Topic topic, Partition partition, ConsumerGroup group)
+			  throws StorageHandleErrorException {
+		List<TableModel> tableModels = new ArrayList<>();
+
+		tableModels.add(new ResendTableModel(group.getId()));
+		handler.createTable(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo
+				  .getLast());
+	}
+
+	@Override
+	public boolean delConsumerStorage(Topic topic, ConsumerGroup group) throws StorageHandleErrorException, TopicIsNullException {
+		if (null != topic) {
+			for (Partition partition : topic.getPartitions()) {
+				Datasource datasource = getDatasource(partition);
+				Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo = getDatabaseName(datasource);
+				delConsumerStorage0(dbInfo, topic, partition, group);
+			}
+			return true;
+		} else {
+			throw new TopicIsNullException("Topic is Null!");
+		}
+	}
+
+	private void delConsumerStorage0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
+												Topic topic, Partition partition, ConsumerGroup group) throws StorageHandleErrorException {
+		List<TableModel> tableModels = new ArrayList<>();
+
+		tableModels.add(new ResendTableModel(group.getId()));
+		handler.dropTables(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo
+				  .getLast());
+	}
+
+	private Triple<String/*database url*/, String/*usr*/, String/*password*/> getDatabaseName(Datasource datasource)
+			  throws StorageHandleErrorException {
+		String jdbcUrl = datasource.getProperties().get("url").getValue();
+		String user = datasource.getProperties().get("user").getValue();
+		String pwd = datasource.getProperties().get("password").getValue();
+		if (null != jdbcUrl && null != user && null != pwd) {
+			return new Triple<>(jdbcUrl, user, pwd);
+		} else {
+			throw new StorageHandleErrorException("Error Config on Datasource: " + datasource.getProperties().toString());
+		}
+	}
+
+	private Datasource getDatasource(Partition partition) {
+		String writeDs = partition.getWriteDatasource();
+		return metaService.getDatasource("mysql", writeDs);
 	}
 
 	private boolean validateDatabaseName(String databaseName) {
@@ -164,70 +226,4 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		}
 		return true;
 	}
-
-	public boolean cleanThenCreateNewTopic(Topic topic) {
-		boolean isSuccessed = false;
-		return isSuccessed;
-	}
-
-	public boolean modifyTopicConfig(Topic topic) {
-		boolean isSuccessed = false;
-		return isSuccessed;
-	}
-
-	/**
-	 * query topic infos in storage, like topic & partition, mysql/H2 instance info
-	 *
-	 * @param topic
-	 * @return the info about this topic
-	 */
-	public String getTopicConfig(Topic topic) throws TopicNotFoundException {
-		return null;
-	}
-
-	/**
-	 * 校验给定数据模型是否与数据库中已存在的数据模型一致
-	 * 
-	 * @return 是否一致
-	 * @throws DataModelNotMatchException
-	 */
-	public boolean validateDataModel() throws DataModelNotMatchException {
-		return false;
-	}
-
-	@Override
-   public boolean initTopicStorage(Topic topic) {
-	   // TODO Auto-generated method stub
-	   return false;
-   }
-
-	@Override
-   public boolean dropTopicStorage(Topic topic) {
-	   // TODO Auto-generated method stub
-	   return false;
-   }
-
-	@Override
-   public boolean addPartitionStorage(Topic topic, Partition partition) {
-	   // TODO Auto-generated method stub
-	   return false;
-   }
-
-	@Override
-   public boolean delPartitionStorage(Topic topic, Partition partition) {
-	   // TODO Auto-generated method stub
-	   return false;
-   }
-
-	@Override
-   public boolean addConsumerStorage(Topic topic, ConsumerGroup group) {
-	   // TODO Auto-generated method stub
-	   return false;
-   }
-
-	@Override
-   public boolean delConsumerStorage(Topic topic, ConsumerGroup group) {
-	   // TODO Auto-generated method stub
-	   return false;
-   }
 }

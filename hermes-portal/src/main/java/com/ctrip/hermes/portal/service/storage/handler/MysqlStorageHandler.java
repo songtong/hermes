@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.portal.pojo.storage.PartitionView;
+import com.ctrip.hermes.portal.pojo.storage.StoragePartition;
 import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.portal.service.storage.model.TableModel;
@@ -23,15 +23,8 @@ public class MysqlStorageHandler implements StorageHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(MysqlStorageHandler.class);
 
-	private Connection getMysqlConnection() {
-		final String jdbcUrl = "jdbc:mysql://10.3.6.237:3306";
-		final String usr = "root";
-		final String pwd = "xxxxx";
-//
-//		final String jdbcUrl = TempFile.url;
-//		final String usr = TempFile.usr;
-//		final String pwd = TempFile.pwd;
 
+	private Connection getMysqlConnection(String jdbcUrl, String usr, String pwd) {
 		Connection conn = null;
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
@@ -44,13 +37,28 @@ public class MysqlStorageHandler implements StorageHandler {
 	}
 
 	@Override
-	public boolean dropTables() throws StorageHandleErrorException {
-		return false;
+	public boolean dropTables(Long topicId, Integer partitionId, List<TableModel> models,
+									  String url, String user, String pwd) throws StorageHandleErrorException {
+		String databaseName = getDabaseName(url);
+		StringBuilder sb = new StringBuilder();
+		sb.append(sqlUseDatabase(databaseName));
+
+		String tablePrefix = getTablePrefix(topicId, partitionId);
+		for (TableModel model : models) {
+			sb.append(sqlDropTable(tablePrefix, model.getTableName()));
+		}
+
+		log.warn("Drop Table Sql: \n" + sb.toString());
+		executeSql(url, user, pwd, sb.toString());
+		return true;
 	}
 
 	@Override
-	public void createTable(String databaseName, Long topicId, Integer partitionId, List<TableModel> models)
+	public void createTable(Long topicId, Integer partitionId, List<TableModel> models,
+									String url, String user, String pwd)
 	      throws StorageHandleErrorException {
+		String databaseName = getDabaseName(url);
+
 		StringBuilder sb = new StringBuilder();
 		sb.append(sqlUseDatabase(databaseName));
 
@@ -62,9 +70,8 @@ public class MysqlStorageHandler implements StorageHandler {
 			sb.append(sqlCreateTable(tablePrefix, model.getTableName(), model, model.getPks(), model.getIndexMap()));
 		}
 
-		// todo: log
 		log.debug("Build Table Sql: \n" + sb.toString());
-		executeSql(sb.toString());
+		executeSql(url, user, pwd, sb.toString());
 	}
 
 	/**
@@ -103,33 +110,34 @@ public class MysqlStorageHandler implements StorageHandler {
 	 * 后续状态是往后新增一个partition.
 	 */
 	@Override
-	public void addPartition(String databaseName, Long topicId, Integer partitionId, TableModel model, int range)
+	public void addPartition(Long topicId, Integer partitionId, TableModel model, int range,
+									 String url, String user, String pwd)
 			  throws StorageHandleErrorException {
-
+		String databaseName = getDabaseName(url);
 		String tableName = getTablePrefix(topicId, partitionId) + model.getTableName();
-		List<PartitionView> partitionViews = queryPartitionDESC(databaseName, tableName);
+		List<StoragePartition> storagePartitions = queryPartitionDESC(databaseName, tableName, url, user, pwd);
 
 
 		StringBuilder sb = new StringBuilder();
 		sb.append(sqlUseDatabase(databaseName));
 
-		if (partitionViews.size() == 0) {
+		if (storagePartitions.size() == 0) {
 			sb.append(sqlInitPartition(tableName, "p0", range));
 		} else {
-			PartitionView higherParittion = partitionViews.get(partitionViews.size());
+			StoragePartition higherPartition = storagePartitions.get(storagePartitions.size());
 			String partitionName;
 			try {
-				partitionName = higherParittion.getName().charAt(0) +
-						  String.valueOf(Integer.parseInt(higherParittion.getName().substring(1)) + 1);
+				partitionName = higherPartition.getName().charAt(0) +
+						  String.valueOf(Integer.parseInt(higherPartition.getName().substring(1)) + 1);
 			} catch (NumberFormatException e) {
-				throw new StorageHandleErrorException("Fail to Parse Partition Name: " + higherParittion.getName());
+				throw new StorageHandleErrorException("Fail to Parse Partition Name: " + higherPartition.getName());
 			}
 
-			int newRange = higherParittion.getRange() + range;
+			int newRange = higherPartition.getRange() + range;
 			sb.append(sqlAddPartition(tableName, partitionName, newRange));
 		}
 
-		executeSql(sb.toString());
+		executeSql(url, user, pwd, sb.toString());
 	}
 
 	/**
@@ -153,25 +161,28 @@ public class MysqlStorageHandler implements StorageHandler {
 	 * 删除一个最小的partition
 	 */
 	@Override
-	public void deletePartition(String databaseName, Long topicId, Integer partitionId, TableModel model)
+	public void deletePartition(Long topicId, Integer partitionId, TableModel model,
+										 String url, String user, String pwd)
 			  throws StorageHandleErrorException {
-
+		String databaseName = getDabaseName(url);
 		String tableName = getTablePrefix(topicId, partitionId) + model.getTableName();
-		List<PartitionView> partitionViews = queryPartitionDESC(databaseName, tableName);
+		List<StoragePartition> storagePartitions = queryPartitionDESC(databaseName, tableName, url, user, pwd);
 
 		StringBuilder sb = new StringBuilder();
 		sb.append(sqlUseDatabase(databaseName));
 
-		if (partitionViews.size() == 0) {
+		if (storagePartitions.size() == 0) {
 			throw new StorageHandleErrorException("No Partition Existed in Table: " + tableName);
 		} else {
-			if (partitionViews.size() > 2) {
-				PartitionView lowestPartition = partitionViews.get(partitionViews.size());
+			if (storagePartitions.size() > 2) {
+				StoragePartition lowestPartition = storagePartitions.get(storagePartitions.size());
 
 				sb.append(sqlDeletePartition(tableName, lowestPartition.getName()));
 			}
 		}
-		executeSql(sb.toString());
+		log.warn("Drop Partition Sql: \n" + sb.toString());
+
+		executeSql(url, user, pwd, sb.toString());
 	}
 
 	private String sqlDeletePartition(String tableName, String partitionName) {
@@ -234,8 +245,15 @@ public class MysqlStorageHandler implements StorageHandler {
 		return sb.toString();
 	}
 
-	private void executeSql(String sql) throws StorageHandleErrorException {
-		Connection conn = getMysqlConnection();
+	/**
+	 * drop table tablename;
+	 */
+	private String sqlDropTable(String tablePrefix, String tableName) {
+		return "DROP TABLE " + tablePrefix + tableName + ";";
+	}
+
+	private void executeSql(String jdbcUrl, String usr, String pwd, String sql) throws StorageHandleErrorException {
+		Connection conn = getMysqlConnection(jdbcUrl, usr, pwd);
 		Statement stmt = null;
 		if (null == conn) {
 			throw new StorageHandleErrorException("Fail To Get MySql Connection");
@@ -265,10 +283,11 @@ public class MysqlStorageHandler implements StorageHandler {
 		}
 	}
 
-	private List<PartitionView> queryPartitionDESC(String databaseName, String tableName)
+	private List<StoragePartition> queryPartitionDESC(String databaseName, String tableName, String jdbcUrl, String
+			  usr, String pwd)
 			  throws StorageHandleErrorException {
-		List<PartitionView> partitionViews = new ArrayList<>();
-		Connection conn = getMysqlConnection();
+		List<StoragePartition> storagePartitions = new ArrayList<>();
+		Connection conn = getMysqlConnection(jdbcUrl, usr, pwd);
 		Statement stmt = null;
 		if (null == conn) {
 			throw new StorageHandleErrorException("Fail To Get MySql Connection");
@@ -288,7 +307,7 @@ public class MysqlStorageHandler implements StorageHandler {
 					if (null == partitionName) {
 						continue;
 					} else {
-						partitionViews.add(new PartitionView(rs.getString(0),
+						storagePartitions.add(new StoragePartition(rs.getString(0),
 								  rs.getString(1), Integer.parseInt(rs.getString(2)), rs.getBigDecimal(3).intValue()));
 					}
 				}
@@ -307,7 +326,7 @@ public class MysqlStorageHandler implements StorageHandler {
 				}
 			}
 		}
-		return partitionViews;
+		return storagePartitions;
 	}
 
 	private String buildSql(TableModel.MetaModel[] metaModels) {
@@ -328,5 +347,10 @@ public class MysqlStorageHandler implements StorageHandler {
 			sb.append("\n");
 		}
 		return sb.toString();
+	}
+
+	private String getDabaseName(String jdbcUrl) {
+		String[] strings = jdbcUrl.split("/");
+		return strings[strings.length - 1];
 	}
 }

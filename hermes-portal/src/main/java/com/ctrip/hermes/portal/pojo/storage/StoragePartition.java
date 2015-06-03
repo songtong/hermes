@@ -1,12 +1,12 @@
 package com.ctrip.hermes.portal.pojo.storage;
 
-public class PartitionView {
+public class StoragePartition {
 	String info; // like: Range from..to..
 	String name;
 	Integer range;
 	Integer tableRows;
 
-	public PartitionView(String name, String info, Integer range, Integer tableRows) {
+	public StoragePartition(String name, String info, Integer range, Integer tableRows) {
 		this.info = info;
 		this.name = name;
 		this.range = range;
