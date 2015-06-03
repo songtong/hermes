@@ -34,6 +34,8 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	private final static String GLOBAL_DEFAULT_FILE = "/hermes.properties";
 
+	private static final String KEY_IS_LOCAL_MODE = "isLocalMode";
+
 	private ConcurrentMap<String, Properties> m_producerCache = new ConcurrentHashMap<>();
 
 	private ConcurrentMap<String, Properties> m_consumerCache = new ConcurrentHashMap<>();
@@ -141,6 +143,19 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 		}
 
 		return m_env.get();
+	}
+
+	@Override
+	public boolean isLocalMode() {
+		boolean isLocalMode;
+		if (System.getenv().containsKey(KEY_IS_LOCAL_MODE)) {
+			isLocalMode = Boolean.parseBoolean(System.getenv(KEY_IS_LOCAL_MODE));
+		} else if (getGlobalConfig().containsKey(KEY_IS_LOCAL_MODE)) {
+			isLocalMode = Boolean.parseBoolean(getGlobalConfig().getProperty(KEY_IS_LOCAL_MODE));
+		} else {
+			isLocalMode = false;
+		}
+		return isLocalMode;
 	}
 
 }

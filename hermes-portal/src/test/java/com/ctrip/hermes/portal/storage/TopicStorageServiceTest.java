@@ -55,13 +55,15 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	}
 
 	@Test
-	public void addPartiitionsStorage() throws Exception {
-		service.addPartitionStorage(buildTopic(), buildPartition());
+	public void addPartitionsStorage() throws Exception {
+		Topic topic = buildTopic();
+		service.addPartitionStorage(topic, topic.getPartitions().get(0));
 	}
 
 	@Test
 	public void delPartitionStorage() throws Exception {
-		service.delPartitionStorage(buildTopic(), buildPartition());
+		Topic topic = buildTopic();
+		service.delPartitionStorage(buildTopic(), topic.getPartitions().get(0));
 	}
 
 	@Test
@@ -82,10 +84,6 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 		return group;
 	}
 
-
-	private Partition buildPartition() {
-		return null;
-	}
 
 	private Topic buildTopic() {
 		return metaService.findTopicByName("cmessage_fws");

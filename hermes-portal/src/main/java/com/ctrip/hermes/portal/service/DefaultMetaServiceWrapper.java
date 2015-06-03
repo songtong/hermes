@@ -67,7 +67,7 @@ public class DefaultMetaServiceWrapper extends DefaultMetaService implements Met
 		if (!isForceLatest && m_meta != null) {
 			return m_meta;
 		}
-		if (isLocalMode()) {
+		if (m_env.isLocalMode()) {
 			m_meta = new LocalMetaLoader().load();
 		} else {
 			try {
@@ -79,19 +79,6 @@ public class DefaultMetaServiceWrapper extends DefaultMetaService implements Met
 			}
 		}
 		return m_meta;
-	}
-
-	public boolean isLocalMode() {
-		boolean m_localMode;
-		final String KEY_IS_LOCAL_MODE = "isLocalMode";
-		if (System.getenv().containsKey(KEY_IS_LOCAL_MODE)) {
-			m_localMode = Boolean.parseBoolean(System.getenv(KEY_IS_LOCAL_MODE));
-		} else if (m_env.getGlobalConfig().containsKey(KEY_IS_LOCAL_MODE)) {
-			m_localMode = Boolean.parseBoolean(m_env.getGlobalConfig().getProperty(KEY_IS_LOCAL_MODE));
-		} else {
-			m_localMode = false;
-		}
-		return m_localMode;
 	}
 
 	@Override

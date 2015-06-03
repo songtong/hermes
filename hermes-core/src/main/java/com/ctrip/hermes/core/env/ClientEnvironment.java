@@ -14,4 +14,6 @@ public interface ClientEnvironment {
 	Properties getGlobalConfig();
 
 	Env getEnv();
+
+	boolean isLocalMode();
 }
