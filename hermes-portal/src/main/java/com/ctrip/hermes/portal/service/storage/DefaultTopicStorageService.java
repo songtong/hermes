@@ -202,7 +202,31 @@ public class DefaultTopicStorageService implements TopicStorageService {
    }
 
 	@Override
-   public boolean addPartition(Topic topic, Partition partition) {
+   public boolean dropTopicStorage(Topic topic) {
+	   // TODO Auto-generated method stub
+	   return false;
+   }
+
+	@Override
+   public boolean addPartitionStorage(Topic topic, Partition partition) {
+	   // TODO Auto-generated method stub
+	   return false;
+   }
+
+	@Override
+   public boolean delPartitionStorage(Topic topic, Partition partition) {
+	   // TODO Auto-generated method stub
+	   return false;
+   }
+
+	@Override
+   public boolean addConsumerStorage(Topic topic, ConsumerGroup group) {
+	   // TODO Auto-generated method stub
+	   return false;
+   }
+
+	@Override
+   public boolean delConsumerStorage(Topic topic, ConsumerGroup group) {
 	   // TODO Auto-generated method stub
 	   return false;
    }
