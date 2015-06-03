@@ -14,7 +14,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 <meta name="description" content="Portal">
 <link href="${model.webapp}/css/bootstrap.min.css" type="text/css" rel="stylesheet">
-<%-- <link href="${model.webapp}/css/bootstrap-theme.min.css" type="text/css" rel="stylesheet"> --%>
+<link href="${model.webapp}/css/portal-common.css" type="text/css" rel="stylesheet">
 <script src="${model.webapp}/js/jquery-1.11.3.min.js" type="text/javascript"></script>
 <script type="text/javascript">
 	var contextpath = "${model.webapp}";

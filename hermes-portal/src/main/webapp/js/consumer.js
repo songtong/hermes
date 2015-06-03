@@ -28,11 +28,14 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller('c
 			};
 
 			scope.add_consumer = function add_consumer(new_consumer) {
-				consumer_resource.save(new_consumer).$promise.then(function(save_result) {
+				consumer_resource.save({
+					topic : new_consumer.topic,
+					consumer : new_consumer.groupName
+				}, new_consumer).$promise.then(function(save_result) {
 					console.log(save_result);
 					consumer_resource.query().$promise.then(function(query_result) {
 						reload_table(scope, query_result);
-						show_op_info.show("新增Consumer成功, Topic名称：" + new_consumer.name + ", Consumer名称：" + new_consumer.groupName);
+						show_op_info.show("新增Consumer成功, Topic名称：" + new_consumer.topic + ", Consumer名称：" + new_consumer.groupName);
 					});
 				});
 			};

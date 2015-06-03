@@ -58,9 +58,9 @@ public class TopicService {
 //			throw new RuntimeException("Init topic storage failed, please try later.");
 //		}
 //
-//		if (!m_metaService.updateMeta(meta)) {
-//			throw new RuntimeException("Update meta failed, please try later");
-//		}
+		if (!m_metaService.updateMeta(meta)) {
+			throw new RuntimeException("Update meta failed, please try later");
+		}
 		
 		return topic;
 	}

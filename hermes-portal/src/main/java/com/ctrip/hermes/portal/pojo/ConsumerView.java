@@ -15,12 +15,18 @@ public class ConsumerView {
 
 	private Integer ackTimeoutSeconds;
 
+	private boolean orderedConsume;
+
+	public ConsumerView() {
+	}
+
 	public ConsumerView(String topic, ConsumerGroup consumer) {
 		this.topic = topic;
 		this.groupName = consumer.getName();
 		this.appId = consumer.getAppIds();
 		this.retryPolicy = consumer.getRetryPolicy();
 		this.ackTimeoutSeconds = consumer.getAckTimeoutSeconds();
+		this.orderedConsume = consumer.getOrderedConsume();
 	}
 
 	public Pair<String, ConsumerGroup> toMetaConsumer() {
@@ -29,6 +35,7 @@ public class ConsumerView {
 		consumer.setAppIds(this.appId);
 		consumer.setName(this.groupName);
 		consumer.setRetryPolicy(this.retryPolicy);
+		consumer.setOrderedConsume(this.orderedConsume);
 
 		return new Pair<String, ConsumerGroup>(this.topic, consumer);
 	}
@@ -71,5 +78,19 @@ public class ConsumerView {
 
 	public void setAckTimeoutSeconds(Integer ackTimeoutSeconds) {
 		this.ackTimeoutSeconds = ackTimeoutSeconds;
+	}
+	
+	public boolean isOrderedConsume() {
+		return orderedConsume;
+	}
+
+	public void setOrderedConsume(boolean orderedConsume) {
+		this.orderedConsume = orderedConsume;
+	}
+
+	@Override
+	public String toString() {
+		return "ConsumerView [topic=" + topic + ", groupName=" + groupName + ", appId=" + appId + ", retryPolicy="
+		      + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume=" + orderedConsume + "]";
 	}
 }
