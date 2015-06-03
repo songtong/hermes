@@ -14,6 +14,7 @@ import com.ctrip.hermes.core.lease.DefaultLease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.metaserver.build.BuildConstants;
 import com.ctrip.hermes.metaserver.commons.BaseAssignmentHolder;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.LeaseOperationCallback;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
@@ -22,7 +23,7 @@ import com.ctrip.hermes.metaserver.config.MetaServerConfig;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = OrderedConsumeConsumerLeaseAllocationStrategy.class)
+@Named(type = ConsumerLeaseAllocationStrategy.class, value = BuildConstants.LEASE_ALLOCATION_STRATEGY_ORDERED_CONSUME)
 public class OrderedConsumeConsumerLeaseAllocationStrategy implements ConsumerLeaseAllocationStrategy {
 
 	private static final Logger log = LoggerFactory.getLogger(OrderedConsumeConsumerLeaseAllocationStrategy.class);

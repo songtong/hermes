@@ -7,6 +7,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaserver.build.BuildConstants;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
 /**
@@ -21,8 +22,8 @@ public class DefaultConsumerLeaseAllocationStrategyLocator implements ConsumerLe
 	@Inject
 	private MetaHolder m_metaHolder;
 
-	@Inject
-	private OrderedConsumeConsumerLeaseAllocationStrategy m_orderedConsumeStrategy;
+	@Inject(value = BuildConstants.LEASE_ALLOCATION_STRATEGY_ORDERED_CONSUME)
+	private ConsumerLeaseAllocationStrategy m_orderedConsumeStrategy;
 
 	@Override
 	public ConsumerLeaseAllocationStrategy findStrategy(String topicName, String consumerGroupName) {

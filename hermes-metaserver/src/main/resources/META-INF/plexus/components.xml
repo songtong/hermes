@@ -39,7 +39,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocationStrategy</role>
+			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocationStrategy</role>
+			<role-hint>ordered-consume</role-hint>
 			<implementation>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocationStrategy</implementation>
 			<requirements>
 				<requirement>
@@ -67,7 +68,8 @@
 					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocationStrategy</role>
+					<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocationStrategy</role>
+					<role-hint>ordered-consume</role-hint>
 				</requirement>
 			</requirements>
 		</component>
