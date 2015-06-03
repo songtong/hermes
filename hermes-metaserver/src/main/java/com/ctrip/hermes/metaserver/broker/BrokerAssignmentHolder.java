@@ -2,13 +2,13 @@ package com.ctrip.hermes.metaserver.broker;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaserver.commons.ActiveClientList.ClientContext;
 import com.ctrip.hermes.metaserver.commons.ActiveClientListHolder;
 import com.ctrip.hermes.metaserver.commons.BaseAssignmentHolder;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
@@ -34,8 +34,8 @@ public class BrokerAssignmentHolder extends BaseAssignmentHolder<String, Integer
 	private ActiveBrokerListHolder m_activeBrokerListHolder;
 
 	@Override
-	protected Assignment createNewAssignment(String topicName, Set<String> brokers,
-	      BaseAssignmentHolder<String, Integer>.Assignment originAssignment) {
+	protected BaseAssignmentHolder<String, Integer>.Assignment createNewAssignment(String topicName,
+	      Map<String, ClientContext> brokers, BaseAssignmentHolder<String, Integer>.Assignment originAssignment) {
 		Topic topic = m_metaHolder.getMeta().findTopic(topicName);
 		if (topic != null) {
 			List<Partition> partitions = topic.getPartitions();
@@ -43,7 +43,7 @@ public class BrokerAssignmentHolder extends BaseAssignmentHolder<String, Integer
 				return null;
 			}
 
-			Map<Integer, Set<String>> assigns = m_partitionAssigningStrategy.assign(partitions, brokers,
+			Map<Integer, Map<String, ClientContext>> assigns = m_partitionAssigningStrategy.assign(partitions, brokers,
 			      originAssignment == null ? null : originAssignment.getAssigment());
 
 			if (assigns == null) {
@@ -52,7 +52,7 @@ public class BrokerAssignmentHolder extends BaseAssignmentHolder<String, Integer
 
 			Assignment assignment = new Assignment();
 
-			for (Map.Entry<Integer, Set<String>> entry : assigns.entrySet()) {
+			for (Map.Entry<Integer, Map<String, ClientContext>> entry : assigns.entrySet()) {
 				assignment.addAssignment(entry.getKey(), entry.getValue());
 			}
 

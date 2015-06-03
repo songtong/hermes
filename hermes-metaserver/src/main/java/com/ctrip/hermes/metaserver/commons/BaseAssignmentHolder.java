@@ -1,9 +1,7 @@
 package com.ctrip.hermes.metaserver.commons;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,7 +44,7 @@ public abstract class BaseAssignmentHolder<Key1, Key2> implements Initializable 
 						      HashMap<Key1, Assignment> newAssignments = new HashMap<>(m_assignments.get());
 						      for (Map.Entry<Key1, Map<String, ClientContext>> change : changes.entrySet()) {
 							      Key1 key1 = change.getKey();
-							      Set<String> clientList = change.getValue().keySet();
+							      Map<String, ClientContext> clientList = change.getValue();
 
 							      if (clientList == null || clientList.isEmpty()) {
 								      newAssignments.remove(key1);
@@ -83,7 +81,7 @@ public abstract class BaseAssignmentHolder<Key1, Key2> implements Initializable 
 
 	protected abstract ActiveClientListHolder<Key1> getActiveClientListHolder();
 
-	protected abstract Assignment createNewAssignment(Key1 key1, Set<String> clientList,
+	protected abstract Assignment createNewAssignment(Key1 key1, Map<String, ClientContext> clientList,
 	      BaseAssignmentHolder<Key1, Key2>.Assignment originAssignment);
 
 	protected abstract long getClientTimeoutMillis();
@@ -93,21 +91,21 @@ public abstract class BaseAssignmentHolder<Key1, Key2> implements Initializable 
 	protected abstract String getAssignmentCheckerName();
 
 	public class Assignment {
-		private Map<Key2, Set<String>> m_assigment = new ConcurrentHashMap<>();
+		private Map<Key2, Map<String, ClientContext>> m_assigment = new ConcurrentHashMap<>();
 
 		public boolean isAssignTo(Key2 key2, String client) {
-			Set<String> clients = m_assigment.get(key2);
-			return clients != null && !clients.isEmpty() && clients.contains(client);
+			Map<String, ClientContext> clients = m_assigment.get(key2);
+			return clients != null && !clients.isEmpty() && clients.keySet().contains(client);
 		}
 
-		public void addAssignment(Key2 key2, Set<String> clients) {
+		public void addAssignment(Key2 key2, Map<String, ClientContext> clients) {
 			if (!m_assigment.containsKey(key2)) {
-				m_assigment.put(key2, new HashSet<String>());
+				m_assigment.put(key2, new HashMap<String, ClientContext>());
 			}
-			m_assigment.get(key2).addAll(clients);
+			m_assigment.get(key2).putAll(clients);
 		}
 
-		public Map<Key2, Set<String>> getAssigment() {
+		public Map<Key2, Map<String, ClientContext>> getAssigment() {
 			return m_assigment;
 		}
 

@@ -92,5 +92,11 @@ public class ActiveClientList {
 			this.lastHeartbeatTime = lastHeartbeatTime;
 		}
 
+		@Override
+		public String toString() {
+			return "ClientContext [m_name=" + m_name + ", m_ip=" + m_ip + ", m_port=" + m_port + ", lastHeartbeatTime="
+			      + lastHeartbeatTime + "]";
+		}
+
 	}
 }
