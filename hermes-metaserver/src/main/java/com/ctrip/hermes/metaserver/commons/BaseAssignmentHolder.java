@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.metaserver.commons.ActiveClientList.ClientContext;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -38,14 +39,14 @@ public abstract class BaseAssignmentHolder<Key1, Key2> implements Initializable 
 			      @Override
 			      public void run() {
 				      try {
-					      Map<Key1, Set<String>> changes = getActiveClientListHolder().scanChanges(getClientTimeoutMillis(),
-					            TimeUnit.MILLISECONDS);
+					      Map<Key1, Map<String, ClientContext>> changes = getActiveClientListHolder().scanChanges(
+					            getClientTimeoutMillis(), TimeUnit.MILLISECONDS);
 
 					      if (changes != null && !changes.isEmpty()) {
 						      HashMap<Key1, Assignment> newAssignments = new HashMap<>(m_assignments.get());
-						      for (Map.Entry<Key1, Set<String>> change : changes.entrySet()) {
+						      for (Map.Entry<Key1, Map<String, ClientContext>> change : changes.entrySet()) {
 							      Key1 key1 = change.getKey();
-							      Set<String> clientList = change.getValue();
+							      Set<String> clientList = change.getValue().keySet();
 
 							      if (clientList == null || clientList.isEmpty()) {
 								      newAssignments.remove(key1);

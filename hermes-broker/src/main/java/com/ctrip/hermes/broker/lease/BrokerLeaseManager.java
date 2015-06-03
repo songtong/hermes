@@ -4,6 +4,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.broker.build.BuildConstants;
+import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseManager.BrokerLeaseKey;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
@@ -20,14 +21,19 @@ public class BrokerLeaseManager implements LeaseManager<BrokerLeaseKey> {
 	@Inject
 	private MetaService m_metaService;
 
+	@Inject
+	private BrokerConfig m_config;
+
 	@Override
 	public LeaseAcquireResponse tryAcquireLease(BrokerLeaseKey key) {
-		return m_metaService.tryAcquireBrokerLease(key.getTopic(), key.getPartition(), key.getSessionId());
+		return m_metaService.tryAcquireBrokerLease(key.getTopic(), key.getPartition(), key.getSessionId(),
+		      m_config.getListeningPort());
 	}
 
 	@Override
 	public LeaseAcquireResponse tryRenewLease(BrokerLeaseKey key, Lease lease) {
-		return m_metaService.tryRenewBrokerLease(key.getTopic(), key.getPartition(), lease, key.getSessionId());
+		return m_metaService.tryRenewBrokerLease(key.getTopic(), key.getPartition(), lease, key.getSessionId(),
+		      m_config.getListeningPort());
 	}
 
 	public static class BrokerLeaseKey implements SessionIdAware {

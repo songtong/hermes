@@ -51,9 +51,9 @@ public interface MetaService {
 
 	LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId);
 
-	LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId);
+	LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId, int brokerPort);
 
-	LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId);
+	LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort);
 
 	String findAvroSchemaRegistryUrl();
 

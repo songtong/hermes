@@ -35,14 +35,15 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	@Inject
 	protected ConsumerAssignmentHolder m_assignmentHolder;
 
-	protected void heartbeat(Tpg tpg, String consumerName) {
-		m_activeConsumerList.heartbeat(new Pair<String, String>(tpg.getTopic(), tpg.getGroupId()), consumerName);
+	protected void heartbeat(Tpg tpg, String consumerName, String ip, int port) {
+		m_activeConsumerList
+		      .heartbeat(new Pair<String, String>(tpg.getTopic(), tpg.getGroupId()), consumerName, ip, port);
 	}
 
 	@Override
-	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName) {
+	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName, String ip, int port) {
 
-		heartbeat(tpg, consumerName);
+		heartbeat(tpg, consumerName, ip, port);
 
 		Pair<String, String> key = new Pair<>(tpg.getTopic(), tpg.getGroupId());
 		BaseAssignmentHolder<Pair<String, String>, Integer>.Assignment topicAssignment = m_assignmentHolder
@@ -59,9 +60,9 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	@Override
-	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId) {
+	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId, String ip, int port) {
 
-		heartbeat(tpg, consumerName);
+		heartbeat(tpg, consumerName, ip, port);
 
 		Pair<String, String> key = new Pair<>(tpg.getTopic(), tpg.getGroupId());
 		BaseAssignmentHolder<Pair<String, String>, Integer>.Assignment topicAssignment = m_assignmentHolder

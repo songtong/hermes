@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.metaserver.commons.ActiveClientList.ClientContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 
 /**
@@ -29,14 +29,14 @@ public class BaseActiveClientListHolder<Key> implements ActiveClientListHolder<K
 	private ReentrantReadWriteLock m_lock = new ReentrantReadWriteLock();
 
 	@Override
-	public void heartbeat(Key key, String clientName) {
+	public void heartbeat(Key key, String clientName, String ip, int port) {
 		m_lock.writeLock().lock();
 		try {
 			if (!m_activeClientLists.containsKey(key)) {
 				m_activeClientLists.put(key, new ActiveClientList());
 			}
 			ActiveClientList activeClientList = m_activeClientLists.get(key);
-			activeClientList.heartbeat(clientName, m_systemClockService.now());
+			activeClientList.heartbeat(clientName, m_systemClockService.now(), ip, port);
 		} finally {
 			m_lock.writeLock().unlock();
 		}
@@ -44,8 +44,8 @@ public class BaseActiveClientListHolder<Key> implements ActiveClientListHolder<K
 	}
 
 	@Override
-	public Map<Key, Set<String>> scanChanges(long timeout, TimeUnit timeUnit) {
-		Map<Key, Set<String>> changes = new HashMap<>();
+	public Map<Key, Map<String, ClientContext>> scanChanges(long timeout, TimeUnit timeUnit) {
+		Map<Key, Map<String, ClientContext>> changes = new HashMap<>();
 		long timeoutMillis = timeUnit.toMillis(timeout);
 		m_lock.writeLock().lock();
 		try {
@@ -57,14 +57,14 @@ public class BaseActiveClientListHolder<Key> implements ActiveClientListHolder<K
 				if (activeClientList != null) {
 					activeClientList.purgeExpired(timeoutMillis, m_systemClockService.now());
 
-					Set<String> activeClientNames = activeClientList.getActiveClientNames();
+					Map<String, ClientContext> activeClients = activeClientList.getActiveClients();
 
-					if (activeClientNames == null || activeClientNames.isEmpty()) {
+					if (activeClients == null || activeClients.isEmpty()) {
 						iterator.remove();
-						changes.put(entry.getKey(), activeClientNames);
+						changes.put(entry.getKey(), activeClients);
 					} else {
 						if (activeClientList.getAndResetChanged()) {
-							changes.put(entry.getKey(), activeClientNames);
+							changes.put(entry.getKey(), activeClients);
 						}
 					}
 				} else {

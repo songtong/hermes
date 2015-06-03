@@ -35,14 +35,15 @@ public class LocalMetaProxy implements MetaProxy {
 	}
 
 	@Override
-	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId) {
+	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId,
+	      int brokerPort) {
 		long expireTime = System.currentTimeMillis() + 10 * 1000L;
 		long leaseId = m_leaseId.incrementAndGet();
 		return new LeaseAcquireResponse(true, new DefaultLease(leaseId, expireTime), expireTime);
 	}
 
 	@Override
-	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId) {
+	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort) {
 		long expireTime = System.currentTimeMillis() + 10 * 1000L;
 		long leaseId = m_leaseId.incrementAndGet();
 		return new LeaseAcquireResponse(true, new DefaultLease(leaseId, expireTime), expireTime);
