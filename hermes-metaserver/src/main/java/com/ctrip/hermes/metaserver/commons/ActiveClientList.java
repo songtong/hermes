@@ -19,7 +19,16 @@ public class ActiveClientList {
 			m_changed = true;
 			m_clients.put(clientName, new ClientContext(clientName, ip, port, heartbeatTime));
 		} else {
-			m_clients.get(clientName).setLastHeartbeatTime(heartbeatTime);
+			ClientContext clientContext = m_clients.get(clientName);
+			if (!clientContext.getIp().equals(ip)) {
+				m_changed = true;
+				clientContext.setIp(ip);
+			}
+			if (clientContext.getPort() != port) {
+				m_changed = true;
+				clientContext.setPort(port);
+			}
+			clientContext.setLastHeartbeatTime(heartbeatTime);
 		}
 	}
 
