@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
@@ -77,25 +76,6 @@ public class MetaResource {
 			}
 		});
 		return Response.status(Status.OK).entity(endpoints).build();
-	}
-
-	@GET
-	public Response getMeta(@QueryParam("hashCode") long hashCode) {
-		logger.debug("get meta, hashCode {}", hashCode);
-		Meta meta = null;
-		try {
-			meta = metaService.findLatestMeta();
-			if (meta == null) {
-				throw new RestException("Meta not found", Status.NOT_FOUND);
-			}
-			if (meta.hashCode() == hashCode) {
-				return Response.status(Status.NOT_MODIFIED).build();
-			}
-		} catch (Exception e) {
-			logger.warn("get meta failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-		}
-		return Response.status(Status.OK).entity(meta).build();
 	}
 
 	@GET

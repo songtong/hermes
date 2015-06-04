@@ -22,7 +22,7 @@ import com.ctrip.hermes.portal.service.storage.exception.TopicIsNullException;
 import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
 import com.ctrip.hermes.portal.service.storage.model.*;
 
-@Named(type = DefaultTopicStorageService.class, value = DefaultTopicStorageService.ID)
+@Named(type = TopicStorageService.class, value = DefaultTopicStorageService.ID)
 public class DefaultTopicStorageService implements TopicStorageService {
 	public static final String ID = "topic-storage-service";
 

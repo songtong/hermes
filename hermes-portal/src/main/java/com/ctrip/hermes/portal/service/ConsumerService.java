@@ -1,7 +1,5 @@
 package com.ctrip.hermes.portal.service;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,12 +37,6 @@ public class ConsumerService {
 	public Map<String, List<ConsumerGroup>> getConsumers() {
 		Map<String, List<ConsumerGroup>> map = new LinkedHashMap<String, List<ConsumerGroup>>();
 		for (Entry<String, Topic> entry : m_metaService.getMeta().getTopics().entrySet()) {
-			Collections.sort(entry.getValue().getConsumerGroups(), new Comparator<ConsumerGroup>() {
-				@Override
-				public int compare(ConsumerGroup cl, ConsumerGroup cr) {
-					return cl.getName().compareTo(cr.getName());
-				}
-			});
 			map.put(entry.getKey(), entry.getValue().getConsumerGroups());
 		}
 		return map;
@@ -56,7 +48,7 @@ public class ConsumerService {
 		for (ConsumerGroup c : t.getConsumerGroups()) {
 			if (c.getName().equals(consumer)) {
 				t.getConsumerGroups().remove(c);
-				// m_storageService.delConsumerStorage(t, c);
+				m_storageService.delConsumerStorage(t, c);
 				break;
 			}
 		}
@@ -73,7 +65,10 @@ public class ConsumerService {
 			}
 		}
 		consumer.setId(maxConsumerId + 1);
-		meta.getTopics().get(topic).addConsumerGroup(consumer);
+		Topic t = meta.getTopics().get(topic);
+		t.addConsumerGroup(consumer);
+
+		m_storageService.addConsumerStorage(t, consumer);
 
 		if (!m_metaService.updateMeta(meta)) {
 			throw new RuntimeException("Update meta failed, please try later");
@@ -81,5 +76,4 @@ public class ConsumerService {
 
 		return consumer;
 	}
-
 }

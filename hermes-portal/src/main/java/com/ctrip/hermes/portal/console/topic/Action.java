@@ -1,7 +1,7 @@
 package com.ctrip.hermes.portal.console.topic;
 
 public enum Action implements org.unidal.web.mvc.Action {
-	VIEW("view");
+	VIEW("view"), DETAIL("detail");
 
 	private String m_name;
 

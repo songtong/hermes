@@ -1,7 +1,7 @@
 <plexus>
 	<components>
 		<component>
-			<role>com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService</role>
+			<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
 			<role-hint>topic-storage-service</role-hint>
 			<implementation>com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService</implementation>
 			<requirements>
@@ -15,6 +15,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
+			<role-hint>mysql-storage-handler</role-hint>
 			<implementation>com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler</implementation>
 		</component>
 		<component>
@@ -26,6 +27,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.service.SchemaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
 				</requirement>
 			</requirements>
 		</component>

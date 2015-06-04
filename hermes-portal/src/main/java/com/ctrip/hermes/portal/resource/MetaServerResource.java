@@ -1,7 +1,5 @@
 package com.ctrip.hermes.portal.resource;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
@@ -16,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Property;
-import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper;
 import com.ctrip.hermes.portal.service.MetaServiceWrapper;
@@ -30,17 +27,6 @@ public class MetaServerResource {
 
 	private MetaServiceWrapper metaService = PlexusComponentLocator.lookup(MetaServiceWrapper.class,
 	      DefaultMetaServiceWrapper.ID);
-
-	@GET
-	@Path("servers")
-	public List<String> getServers() {
-		List<Server> servers = metaService.getServers();
-		List<String> result = new ArrayList<>();
-		for (Server server : servers) {
-			result.add(String.format("%s:%s", server.getHost(), server.getPort()));
-		}
-		return result;
-	}
 
 	@GET
 	@Path("kafka/zookeeper")
