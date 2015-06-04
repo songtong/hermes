@@ -135,6 +135,9 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	@Override
 	public void initialize() throws InitializationException {
+		if(m_clientEnv.isLocalMode())
+			return ;
+		
 		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig().getProperty("meta-port", "80").trim());
 
 		m_httpClient = HttpClients.createDefault();

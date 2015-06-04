@@ -16,14 +16,14 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
-import com.ctrip.hermes.rest.TestServer;
+import com.ctrip.hermes.rest.TestGatewayServer;
 
 public class TopicsResourceTest extends ComponentTestCase {
 
 	@Test
 	public void testPostToKafka() {
 		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(TestServer.HOST);
+		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
 		String topic = "kafka.SimpleTopic";
 
@@ -37,7 +37,7 @@ public class TopicsResourceTest extends ComponentTestCase {
 	@Test
 	public void testPostToKafkaWithHeader() {
 		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(TestServer.HOST);
+		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
 		String topic = "kafka.SimpleTopic";
 
@@ -55,7 +55,7 @@ public class TopicsResourceTest extends ComponentTestCase {
 	@Test
 	public void testPostWrongTopic() {
 		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(TestServer.HOST);
+		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
 		String topic = "kafka.WrongTopic";
 
@@ -69,7 +69,7 @@ public class TopicsResourceTest extends ComponentTestCase {
 	@Test
 	public void testPostWrongType() {
 		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(TestServer.HOST);
+		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
 		String topic = "kafka.SimpleTopic";
 

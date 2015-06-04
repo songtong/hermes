@@ -8,8 +8,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -24,7 +22,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
 @Named(type = SubscribeRegistry.class)
-public class DefaultSubscribeRegistry implements SubscribeRegistry, Initializable {
+public class DefaultSubscribeRegistry implements SubscribeRegistry {
 
 	private static final Logger logger = LoggerFactory.getLogger(DefaultSubscribeRegistry.class);
 
@@ -44,27 +42,7 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry, Initializabl
 	private ScheduledExecutorService scheduledExecutor;
 
 	@Override
-	public synchronized void register(Subscription subscription) {
-		if (!subscriptions.contains(subscription)) {
-			subscriptions.add(subscription);
-		}
-
-		ConsumerHolder consumerHolder = pushService.startPusher(subscription);
-		consumerHolders.put(subscription, consumerHolder);
-	}
-
-	@Override
-	public synchronized void unregister(Subscription subscription) {
-		if (subscriptions.contains(subscription)) {
-			subscriptions.remove(subscription);
-
-			ConsumerHolder consumerHolder = consumerHolders.remove(subscription);
-			consumerHolder.close();
-		}
-	}
-
-	@Override
-	public void initialize() throws InitializationException {
+	public void start() {
 		scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("SubscriptionChecker",
 		      true));
 
@@ -78,7 +56,9 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry, Initializabl
 					      .getEndpoints().toString());
 					if (failed_meter.getOneMinuteRate() > 0.5) {
 						logger.warn("Too many failed in the past minute {}, unregister it", failed_meter.getOneMinuteRate());
-						unregister(sub);
+						ConsumerHolder consumerHolder = consumerHolders.remove(sub);
+						consumerHolder.close();
+						subscriptions.remove(sub);
 					}
 				}
 			}
@@ -93,14 +73,30 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry, Initializabl
 				SetView<Subscription> created = Sets.difference(newSubscriptions, subscriptions);
 				SetView<Subscription> removed = Sets.difference(subscriptions, newSubscriptions);
 				for (Subscription sub : created) {
-					register(sub);
+					logger.info("register: " + sub);
+
+					ConsumerHolder consumerHolder = pushService.startPusher(sub);
+					consumerHolders.put(sub, consumerHolder);
 				}
+				subscriptions.addAll(created);
 				for (Subscription sub : removed) {
-					unregister(sub);
+					logger.info("unregister: " + sub);
+					ConsumerHolder consumerHolder = consumerHolders.remove(sub);
+					consumerHolder.close();
 				}
+				subscriptions.removeAll(removed);
 			}
 
 		}, 5, 5, TimeUnit.SECONDS);
+	}
+
+	@Override
+	public void stop() {
+		scheduledExecutor.shutdown();
+		for (Subscription sub : subscriptions) {
+			ConsumerHolder consumerHolder = consumerHolders.remove(sub);
+			consumerHolder.close();
+		}
 	}
 
 }

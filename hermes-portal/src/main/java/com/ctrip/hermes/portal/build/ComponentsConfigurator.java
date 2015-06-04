@@ -11,6 +11,7 @@ import com.ctrip.hermes.portal.service.CompileService;
 import com.ctrip.hermes.portal.service.ConsumerService;
 import com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper;
 import com.ctrip.hermes.portal.service.SchemaService;
+import com.ctrip.hermes.portal.service.SubscriptionService;
 import com.ctrip.hermes.portal.service.TopicService;
 import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler;
@@ -30,6 +31,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(CodecService.class));
 		all.add(A(CompileService.class));
 		all.add(A(ConsumerService.class));
+		all.add(A(SubscriptionService.class));
 
 		all.add(A(DefaultMetaServiceWrapper.class));
 
