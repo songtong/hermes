@@ -3,10 +3,10 @@ package com.ctrip.hermes.portal.pojo.storage;
 public class StoragePartition {
 	String info; // like: Range from..to..
 	String name;
-	Integer range;
+	String range;
 	Integer tableRows;
 
-	public StoragePartition(String name, String info, Integer range, Integer tableRows) {
+	public StoragePartition(String name, String info, String range, Integer tableRows) {
 		this.info = info;
 		this.name = name;
 		this.range = range;
@@ -38,11 +38,21 @@ public class StoragePartition {
 		this.info = info;
 	}
 
-	public Integer getRange() {
+	public String getRange() {
 		return range;
 	}
 
-	public void setRange(Integer range) {
+	public void setRange(String range) {
 		this.range = range;
+	}
+
+	@Override
+	public String toString() {
+		return "StoragePartition{" +
+				  "info='" + info + '\'' +
+				  ", name='" + name + '\'' +
+				  ", range='" + range + '\'' +
+				  ", tableRows=" + tableRows +
+				  '}';
 	}
 }
