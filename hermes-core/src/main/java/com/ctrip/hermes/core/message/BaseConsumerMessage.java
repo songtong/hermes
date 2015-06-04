@@ -24,14 +24,24 @@ public class BaseConsumerMessage<T> {
 
 	protected int m_remainingRetries = 0;
 
-	protected long m_onMessageTimeMills;
+	protected long m_onMessageStartTimeMills;
 
-	public long getOnMessageTimeMills() {
-		return m_onMessageTimeMills;
+	protected long m_onMessageEndTimeMills;
+
+	public long getOnMessageStartTimeMills() {
+		return m_onMessageStartTimeMills;
 	}
 
-	public void setOnMessageTimeMills(long onMessageTimeMills) {
-		m_onMessageTimeMills = onMessageTimeMills;
+	public void setOnMessageStartTimeMills(long onMessageStartTimeMills) {
+		m_onMessageStartTimeMills = onMessageStartTimeMills;
+	}
+
+	public long getOnMessageEndTimeMills() {
+		return m_onMessageEndTimeMills;
+	}
+
+	public void setOnMessageEndTimeMills(long onMessageEndTimeMills) {
+		m_onMessageEndTimeMills = onMessageEndTimeMills;
 	}
 
 	public int getRemainingRetries() {
@@ -79,11 +89,21 @@ public class BaseConsumerMessage<T> {
 	}
 
 	public boolean ack() {
-		return m_status.compareAndSet(MessageStatus.NOT_SET, MessageStatus.SUCCESS);
+		boolean setSuccess = m_status.compareAndSet(MessageStatus.NOT_SET, MessageStatus.SUCCESS);
+		if (setSuccess) {
+			m_onMessageEndTimeMills = System.currentTimeMillis();
+		}
+
+		return setSuccess;
 	}
 
 	public boolean nack() {
-		return m_status.compareAndSet(MessageStatus.NOT_SET, MessageStatus.FAIL);
+		boolean setSuccess = m_status.compareAndSet(MessageStatus.NOT_SET, MessageStatus.FAIL);
+		if (setSuccess) {
+			m_onMessageEndTimeMills = System.currentTimeMillis();
+		}
+
+		return setSuccess;
 	}
 
 	public void setPropertiesHolder(PropertiesHolder propertiesHolder) {
@@ -122,16 +142,14 @@ public class BaseConsumerMessage<T> {
 		return m_propertiesHolder;
 	}
 
+	public boolean isAck() {
+		return m_status.get() != MessageStatus.FAIL;
+	}
+
 	@Override
 	public String toString() {
-		return "BaseConsumerMessage{" +
-				  "m_bornTime=" + m_bornTime +
-				  ", m_refKey='" + m_refKey + '\'' +
-				  ", m_topic='" + m_topic + '\'' +
-				  ", m_body=" + m_body +
-				  ", m_propertiesHolder=" + m_propertiesHolder +
-				  ", m_status=" + m_status +
-				  ", m_remainingRetries=" + m_remainingRetries +
-				  '}';
+		return "BaseConsumerMessage{" + "m_bornTime=" + m_bornTime + ", m_refKey='" + m_refKey + '\'' + ", m_topic='"
+		      + m_topic + '\'' + ", m_body=" + m_body + ", m_propertiesHolder=" + m_propertiesHolder + ", m_status="
+		      + m_status + ", m_remainingRetries=" + m_remainingRetries + '}';
 	}
 }

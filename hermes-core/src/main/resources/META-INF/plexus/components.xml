@@ -180,6 +180,10 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.core.log.BizLogger</role>
+			<implementation>com.ctrip.hermes.core.log.DefaultBizLogger</implementation>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.core.service.RunningStatusStatisticsService</role>
 			<implementation>com.ctrip.hermes.core.service.RunningStatusStatisticsService</implementation>
 			<requirements>

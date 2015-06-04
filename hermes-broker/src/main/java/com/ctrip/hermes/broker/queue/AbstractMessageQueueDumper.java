@@ -17,8 +17,10 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.util.concurrent.SettableFuture;
@@ -30,6 +32,8 @@ import com.google.common.util.concurrent.SettableFuture;
 public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractMessageQueueDumper.class);
+
+	protected BizLogger m_bizLogger;
 
 	private BlockingQueue<FutureBatchPriorityWrapper> m_queue = new LinkedBlockingQueue<>();
 
@@ -50,6 +54,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 		m_partition = partition;
 		m_lease = lease;
 		m_config = config;
+		m_bizLogger = PlexusComponentLocator.lookup(BizLogger.class);
 
 		String threadName = String.format("MessageQueueDumper-%s-%d", topic, partition);
 		m_workerThread = HermesThreadFactory.create(threadName, false).newThread(new DumperTask());

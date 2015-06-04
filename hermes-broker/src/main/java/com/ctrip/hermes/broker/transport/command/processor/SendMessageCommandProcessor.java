@@ -15,6 +15,8 @@ import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.log.BizEvent;
+import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
@@ -37,6 +39,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 @SingleThreaded
 public class SendMessageCommandProcessor implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessor.class);
+
+	@Inject
+	private BizLogger m_bizLogger;
 
 	@Inject
 	private MessageQueueManager m_queueManager;
@@ -68,7 +73,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 			Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
 
-			log(ctx, rawBatches);
+			bizLog(ctx, rawBatches);
 
 			final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
 			result.correlate(reqCmd);
@@ -98,12 +103,17 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		}
 	}
 
-	private void log(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches) {
-		String ip = NettyUtils.parseChannelRemoteAddr(ctx.getChannel());
+	private void bizLog(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches) {
+		String ip = NettyUtils.parseChannelRemoteAddr(ctx.getChannel(), false);
 		for (Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
 			List<PartialDecodedMessage> msgs = entry.getValue().getMessages();
 			for (PartialDecodedMessage msg : msgs) {
-				log.info("Message.Received {} {} {}", ip, msg.getBornTime(), msg.getKey());
+				BizEvent event = new BizEvent("Message.Received");
+				event.addData("producerIp", ip);
+				event.addData("bornTime", msg.getBornTime());
+				event.addData("refKey", msg.getKey());
+
+				m_bizLogger.log(event);
 			}
 		}
 	}

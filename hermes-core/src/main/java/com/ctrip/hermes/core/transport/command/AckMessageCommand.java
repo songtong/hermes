@@ -68,7 +68,8 @@ public class AckMessageCommand extends AbstractCommand {
 					for (AckContext context : contexts) {
 						codec.writeLong(context.getMsgSeq());
 						codec.writeInt(context.getRemainingRetries());
-						codec.writeLong(context.getOnMessageTimeMillis());
+						codec.writeLong(context.getOnMessageStartTimeMillis());
+						codec.writeLong(context.getOnMessageEndTimeMillis());
 					}
 				}
 			}
@@ -99,7 +100,8 @@ public class AckMessageCommand extends AbstractCommand {
 				}
 
 				for (int j = 0; j < len; j++) {
-					msgSeqMap.get(tppgr).add(new AckContext(codec.readLong(), codec.readInt(), codec.readLong()));
+					msgSeqMap.get(tppgr).add(
+					      new AckContext(codec.readLong(), codec.readInt(), codec.readLong(), codec.readLong()));
 				}
 			}
 		}
@@ -108,21 +110,23 @@ public class AckMessageCommand extends AbstractCommand {
 	}
 
 	public void addAckMsg(Tpp tpp, String groupId, boolean resend, long msgSeq, int remainingRetries,
-	      long onMessageTimeMillis) {
+	      long onMessageStartTimeMillis, long onMessageEndTimeMillis) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		if (!m_ackMsgSeqs.containsKey(key)) {
 			m_ackMsgSeqs.putIfAbsent(key, new ArrayList<AckContext>());
 		}
-		m_ackMsgSeqs.get(key).add(new AckContext(msgSeq, remainingRetries, onMessageTimeMillis));
+		m_ackMsgSeqs.get(key).add(
+		      new AckContext(msgSeq, remainingRetries, onMessageStartTimeMillis, onMessageEndTimeMillis));
 	}
 
 	public void addNackMsg(Tpp tpp, String groupId, boolean resend, long msgSeq, int remainingRetries,
-	      long onMessageTimeMillis) {
+	      long onMessageStartTimeMillis, long onMessageEndTimeMillis) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		if (!m_nackMsgSeqs.containsKey(key)) {
 			m_nackMsgSeqs.putIfAbsent(key, new ArrayList<AckContext>());
 		}
-		m_nackMsgSeqs.get(key).add(new AckContext(msgSeq, remainingRetries, onMessageTimeMillis));
+		m_nackMsgSeqs.get(key).add(
+		      new AckContext(msgSeq, remainingRetries, onMessageStartTimeMillis, onMessageEndTimeMillis));
 	}
 
 	public ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> getAckMsgs() {
@@ -142,12 +146,15 @@ public class AckMessageCommand extends AbstractCommand {
 
 		private int m_remainingRetries;
 
-		private long m_onMessageTimeMillis;
+		private long m_onMessageStartTimeMillis;
 
-		public AckContext(long msgSeq, int remainingRetries, long onMessageTimeMillis) {
+		private long m_onMessageEndTimeMillis;
+
+		public AckContext(long msgSeq, int remainingRetries, long onMessageStartTimeMillis, long onMessageEndTimeMillis) {
 			m_msgSeq = msgSeq;
 			m_remainingRetries = remainingRetries;
-			m_onMessageTimeMillis = onMessageTimeMillis;
+			m_onMessageStartTimeMillis = onMessageStartTimeMillis;
+			m_onMessageEndTimeMillis = onMessageEndTimeMillis;
 		}
 
 		public long getMsgSeq() {
@@ -158,14 +165,19 @@ public class AckMessageCommand extends AbstractCommand {
 			return m_remainingRetries;
 		}
 
-		public long getOnMessageTimeMillis() {
-			return m_onMessageTimeMillis;
+		public long getOnMessageStartTimeMillis() {
+			return m_onMessageStartTimeMillis;
+		}
+
+		public long getOnMessageEndTimeMillis() {
+			return m_onMessageEndTimeMillis;
 		}
 
 		@Override
 		public String toString() {
 			return "AckContext [m_msgSeq=" + m_msgSeq + ", m_remainingRetries=" + m_remainingRetries
-			      + ", m_onMessageTimeMillis=" + m_onMessageTimeMillis + "]";
+			      + ", m_onMessageStartTimeMillis=" + m_onMessageStartTimeMillis + ", m_onMessageEndTimeMillis="
+			      + m_onMessageEndTimeMillis + "]";
 		}
 
 	}

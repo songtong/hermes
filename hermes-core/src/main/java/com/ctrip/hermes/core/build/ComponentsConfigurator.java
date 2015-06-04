@@ -9,6 +9,7 @@ import org.unidal.lookup.configuration.Component;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.DefaultClientEnvironment;
 import com.ctrip.hermes.core.env.FileEnvProvider;
+import com.ctrip.hermes.core.log.DefaultBizLogger;
 import com.ctrip.hermes.core.message.codec.DefaultMessageCodec;
 import com.ctrip.hermes.core.message.partition.HashPartitioningStrategy;
 import com.ctrip.hermes.core.message.payload.CMessagingPayloadCodec;
@@ -66,6 +67,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(CoreConfig.class));
 		all.add(A(DefaultSystemClockService.class));
+		
+		all.add(A(DefaultBizLogger.class));
 
 		all.add(A(RunningStatusStatisticsService.class));
 

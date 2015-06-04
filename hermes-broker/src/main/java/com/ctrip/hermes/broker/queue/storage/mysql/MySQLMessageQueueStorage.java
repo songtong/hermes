@@ -36,6 +36,8 @@ import com.ctrip.hermes.broker.dal.hermes.ResendGroupIdEntity;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.log.BizEvent;
+import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
@@ -54,6 +56,9 @@ import com.ctrip.hermes.meta.entity.Storage;
 @Named(type = MessageQueueStorage.class, value = Storage.MYSQL)
 public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	private static final Logger log = LoggerFactory.getLogger(MySQLMessageQueueStorage.class);
+
+	@Inject
+	private BizLogger m_bizLogger;
 
 	@Inject
 	private MessageCodec m_messageCodec;
@@ -107,14 +112,19 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		}
 
 		m_msgDao.insert(msgs.toArray(new MessagePriority[msgs.size()]));
-		
-		log(msgs);
+
+		bizLog(msgs);
 	}
 
-	private void log(List<MessagePriority> msgs) {
-	   // TODO Auto-generated method stub
-	   
-   }
+	private void bizLog(List<MessagePriority> msgs) {
+		for (MessagePriority msg : msgs) {
+			BizEvent event = new BizEvent("RefKey.Transformed");
+			event.addData("refKey", msg.getRefKey());
+			event.addData("msgId", msg.getId());
+
+			m_bizLogger.log(event);
+		}
+	}
 
 	@Override
 	public synchronized Object findLastOffset(Tpp tpp, int groupId) throws Exception {

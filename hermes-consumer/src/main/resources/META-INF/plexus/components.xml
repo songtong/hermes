@@ -99,6 +99,11 @@
 			<role>com.ctrip.hermes.core.pipeline.PipelineSink</role>
 			<role-hint>consumer</role-hint>
 			<implementation>com.ctrip.hermes.consumer.engine.pipeline.DefaultConsumerPipelineSink</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
