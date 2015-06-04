@@ -14,6 +14,7 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
@@ -21,7 +22,10 @@ import com.ctrip.hermes.broker.queue.MessageQueueCursor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.log.BizEvent;
+import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 /**
@@ -30,6 +34,9 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
  */
 @Named(type = LongPollingService.class)
 public class DefaultLongPollingService extends AbstractLongPollingService implements Initializable {
+
+	@Inject
+	private BizLogger m_bizLogger;
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultLongPollingService.class);
 
@@ -126,15 +133,29 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				      msgIds, pullTask.getCorrelationId(), tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
 			}
 
+			String ip = NettyUtils.parseChannelRemoteAddr(pullTask.getChannel(), false);
 			for (TppConsumerMessageBatch batch : batches) {
 				m_ackManager.delivered(new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority()),
 				      tpg.getGroupId(), batch.isResend(), batch.getMsgSeqs());
+
+				bizLogDelivered(ip, batch.getMsgSeqs(), tpg);
 			}
 
 			response(pullTask, batches);
 			return true;
 		} else {
 			return false;
+		}
+	}
+
+	private void bizLogDelivered(String ip, List<Pair<Long, Integer>> msgSeqs, Tpg tpg) {
+		for (Pair<Long, Integer> pair : msgSeqs) {
+			BizEvent event = new BizEvent("Message.Delivered");
+			event.addData("msgId", pair.getKey());
+			event.addData("consumerIp", ip);
+			event.addData("consumerGroup", tpg.getGroupId());
+
+			m_bizLogger.log(event);
 		}
 	}
 }

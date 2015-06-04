@@ -11,9 +11,9 @@ import org.mortbay.servlet.GzipFilter;
 import org.unidal.test.jetty.JettyServer;
 
 @RunWith(JUnit4.class)
-public class TestServer extends JettyServer {
+public class StartMetaServer extends JettyServer {
 	public static void main(String[] args) throws Exception {
-		TestServer server = new TestServer();
+		StartMetaServer server = new StartMetaServer();
 
 		server.startServer();
 		server.startWebapp();

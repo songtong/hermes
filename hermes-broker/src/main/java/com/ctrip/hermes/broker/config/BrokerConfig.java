@@ -43,7 +43,7 @@ public class BrokerConfig {
 	}
 
 	public long getAckManagerCheckIntervalMillis() {
-		return 100;
+		return 50;
 	}
 
 	public int getAckManagerOpHandlingBatchSize() {
@@ -51,7 +51,7 @@ public class BrokerConfig {
 	}
 
 	public int getAckManagerOpQueueSize() {
-		return 10000;
+		return 500000;
 	}
 
 	public int getLeaseContainerThreadCount() {

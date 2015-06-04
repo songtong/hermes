@@ -29,6 +29,7 @@ import com.ctrip.hermes.broker.transport.NettyServerConfig;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor;
+import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
@@ -49,6 +50,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//
+		      .req(BizLogger.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL.toString(), PullMessageCommandProcessor.class)//
 		      .req(LongPollingService.class)//
@@ -56,7 +58,9 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(BrokerConfig.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
-		      .req(AckManager.class));
+		      .req(AckManager.class) //
+		      .req(BizLogger.class) //
+		);
 
 		all.add(A(DefaultLongPollingService.class));
 		all.add(A(BrokerLeaseManager.class));
