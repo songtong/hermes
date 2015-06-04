@@ -48,9 +48,9 @@ public class RemoteMetaLoader implements MetaLoader {
 		try {
 			String url;
 			if (m_meta != null) {
-				url = "http://" + ipPort + "/api/meta?hashCode=" + m_meta.hashCode();
+				url = "http://" + ipPort + "/meta?hashCode=" + m_meta.hashCode();
 			} else {
-				url = "http://" + ipPort + "/api/meta";
+				url = "http://" + ipPort + "/meta";
 			}
 			URL metaURL = new URL(url);
 			HttpURLConnection connection = (HttpURLConnection) metaURL.openConnection();

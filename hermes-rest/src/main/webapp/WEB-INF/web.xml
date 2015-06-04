@@ -25,10 +25,10 @@
 		<servlet-name>Jersey REST Service</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
-	<!-- 
 	<filter>
 		<filter-name>cat-filter</filter-name>
 		<filter-class>com.dianping.cat.servlet.CatFilter</filter-class>
+		<async-supported>true</async-supported>
 	</filter>
 	<filter-mapping>
 		<filter-name>cat-filter</filter-name>
@@ -36,5 +36,4 @@
 		<dispatcher>REQUEST</dispatcher>
 		<dispatcher>FORWARD</dispatcher>
 	</filter-mapping>
-	-->
 </web-app>

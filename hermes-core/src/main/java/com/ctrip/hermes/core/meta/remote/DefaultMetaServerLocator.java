@@ -102,7 +102,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 	}
 
 	private List<String> doFetch(String ipPort) throws IOException {
-		String url = String.format("http://%s%s", ipPort, "/api/metaserver/servers");
+		String url = String.format("http://%s%s", ipPort, "/metaserver/servers");
 		HttpGet post = new HttpGet(url);
 		post.setConfig(m_requestConfig);
 
@@ -135,6 +135,9 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	@Override
 	public void initialize() throws InitializationException {
+		if(m_clientEnv.isLocalMode())
+			return ;
+		
 		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig().getProperty("meta-port", "80").trim());
 
 		m_httpClient = HttpClients.createDefault();

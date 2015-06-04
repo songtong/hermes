@@ -42,26 +42,6 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 	private ScheduledExecutorService scheduledExecutor;
 
 	@Override
-	public synchronized void register(Subscription subscription) {
-		if (!subscriptions.contains(subscription)) {
-			subscriptions.add(subscription);
-		}
-
-		ConsumerHolder consumerHolder = pushService.startPusher(subscription);
-		consumerHolders.put(subscription, consumerHolder);
-	}
-
-	@Override
-	public synchronized void unregister(Subscription subscription) {
-		if (subscriptions.contains(subscription)) {
-			subscriptions.remove(subscription);
-
-			ConsumerHolder consumerHolder = consumerHolders.remove(subscription);
-			consumerHolder.close();
-		}
-	}
-
-	@Override
 	public void start() {
 		scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("SubscriptionChecker",
 		      true));
@@ -76,7 +56,9 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 					      .getEndpoints().toString());
 					if (failed_meter.getOneMinuteRate() > 0.5) {
 						logger.warn("Too many failed in the past minute {}, unregister it", failed_meter.getOneMinuteRate());
-						unregister(sub);
+						ConsumerHolder consumerHolder = consumerHolders.remove(sub);
+						consumerHolder.close();
+						subscriptions.remove(sub);
 					}
 				}
 			}
@@ -92,12 +74,17 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 				SetView<Subscription> removed = Sets.difference(subscriptions, newSubscriptions);
 				for (Subscription sub : created) {
 					logger.info("register: " + sub);
-					register(sub);
+
+					ConsumerHolder consumerHolder = pushService.startPusher(sub);
+					consumerHolders.put(sub, consumerHolder);
 				}
+				subscriptions.addAll(created);
 				for (Subscription sub : removed) {
 					logger.info("unregister: " + sub);
-					unregister(sub);
+					ConsumerHolder consumerHolder = consumerHolders.remove(sub);
+					consumerHolder.close();
 				}
+				subscriptions.removeAll(removed);
 			}
 
 		}, 5, 5, TimeUnit.SECONDS);
@@ -107,7 +94,8 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 	public void stop() {
 		scheduledExecutor.shutdown();
 		for (Subscription sub : subscriptions) {
-			unregister(sub);
+			ConsumerHolder consumerHolder = consumerHolders.remove(sub);
+			consumerHolder.close();
 		}
 	}
 

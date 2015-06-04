@@ -9,7 +9,7 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class TestGatewayServer extends JettyServer {
-	public static String PORTAL_HOST = "http://localhost:7678/api";
+	public static String PORTAL_HOST = "http://localhost:7678";
 
 	public static String GATEWAY_HOST = "http://localhost:1357";
 

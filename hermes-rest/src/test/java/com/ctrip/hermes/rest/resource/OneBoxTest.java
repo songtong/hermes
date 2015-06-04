@@ -67,7 +67,7 @@ public class OneBoxTest extends ComponentTestCase {
 		sub.setGroup(group);
 		sub.setEndpoints(urls);
 
-		Builder request = portalWebTarget.path("/subscriptions/").request();
+		Builder request = portalWebTarget.path("/api/subscriptions/").request();
 		String json = JSON.toJSONString(sub);
 		System.out.println("Post: " + json);
 		Response response = request.post(Entity.entity(json, MediaType.APPLICATION_JSON));
@@ -92,7 +92,7 @@ public class OneBoxTest extends ComponentTestCase {
 			System.out.println("Received: " + received.size());
 		}
 
-		request = portalWebTarget.path("/subscriptions/" + id).request();
+		request = portalWebTarget.path("/api/subscriptions/" + id).request();
 		response = request.delete();
 		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
