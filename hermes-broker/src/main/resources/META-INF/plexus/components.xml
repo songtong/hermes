@@ -43,6 +43,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.log.BizLogger</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -69,12 +72,18 @@
 				<requirement>
 					<role>com.ctrip.hermes.broker.ack.AckManager</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.log.BizLogger</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.broker.longpolling.LongPollingService</role>
 			<implementation>com.ctrip.hermes.broker.longpolling.DefaultLongPollingService</implementation>
 			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.log.BizLogger</role>
+				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
 				</requirement>
@@ -162,6 +171,9 @@
 			<role-hint>mysql</role-hint>
 			<implementation>com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage</implementation>
 			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.log.BizLogger</role>
+				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.message.codec.MessageCodec</role>
 				</requirement>

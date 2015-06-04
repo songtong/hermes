@@ -1,19 +1,20 @@
-package com.ctrip.hermes.metaserver;
+package com.ctrip.hermes.rest;
 
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mortbay.jetty.Handler;
-import org.mortbay.jetty.webapp.WebAppContext;
-import org.mortbay.servlet.GzipFilter;
-
-import org.unidal.test.jetty.JettyServer;
 
 @RunWith(JUnit4.class)
-public class TestServer extends JettyServer {
+public class TestGatewayServer extends JettyServer {
+	public static String PORTAL_HOST = "http://localhost:7678";
+
+	public static String GATEWAY_HOST = "http://localhost:1357";
+
 	public static void main(String[] args) throws Exception {
-		TestServer server = new TestServer();
+		TestGatewayServer server = new TestGatewayServer();
 
 		server.startServer();
 		server.startWebapp();
@@ -21,11 +22,16 @@ public class TestServer extends JettyServer {
 	}
 
 	@Before
-	public void before() throws Exception {
-		System.setProperty("devMode", "true");
+	public void startServer() throws Exception {
+		// System.setProperty("devMode", "true");
 		super.startServer();
 	}
 
+	@After
+	public void stopServer() throws Exception {
+		super.stopServer();
+	}
+	
 	@Override
 	protected String getContextPath() {
 		return "/";
@@ -33,12 +39,11 @@ public class TestServer extends JettyServer {
 
 	@Override
 	protected int getServerPort() {
-		return 1248;
+		return 1357;
 	}
 
 	@Override
 	protected void postConfigure(WebAppContext context) {
-		context.addFilter(GzipFilter.class, "/*", Handler.ALL);
 	}
 
 	@Test

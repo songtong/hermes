@@ -15,6 +15,11 @@
 		</filter>
 	</appender>
 
+	<logger name="biz">
+		<level value="ERROR" />
+		<appender-ref ref="CONSOLE" />
+	</logger>
+
 	<logger name="com.mchange.v2">
 		<level value="INFO" />
 		<appender-ref ref="CONSOLE" />

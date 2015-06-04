@@ -31,6 +31,7 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.meta.entity.Subscription;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.transform.BaseVisitor2;
 
@@ -281,6 +282,12 @@ public class DefaultMetaService implements MetaService, Initializable {
 		}
 
 		return RetryPolicyFactory.create(retryPolicyValue);
+	}
+
+	@Override
+	public List<Subscription> listSubscriptions() {
+		Meta meta = m_metaCache.get();
+		return new ArrayList<Subscription>(meta.getSubscriptions().values());
 	}
 
 }

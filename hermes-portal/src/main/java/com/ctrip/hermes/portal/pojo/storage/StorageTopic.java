@@ -1,43 +1,33 @@
 package com.ctrip.hermes.portal.pojo.storage;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Topic;
 
 public class StorageTopic {
 
 	Topic topic;
-	Datasource datasource;
-	List<StoragePartition> storagePartitions;
+	Map<String /*ds name*/, List<StorageTable>/*tables info*/> storageTables;
 
-	public StorageTopic(Topic topic, Datasource datasource, List<StoragePartition> storagePartitions) {
-		this.topic = topic;
-		this.datasource = datasource;
-		this.storagePartitions = storagePartitions;
-	}
 
-	public Topic getTopic() {
-		return topic;
-	}
-
-	public void setTopic(Topic topic) {
+	public StorageTopic(Topic topic) {
 		this.topic = topic;
 	}
 
-	public Datasource getDatasource() {
-		return datasource;
+	public void addInfo(String dsName, List<StorageTable> tables) {
+		if (null == storageTables) {
+			storageTables = new HashMap<>();
+		}
+		storageTables.put(dsName, tables);
 	}
 
-	public void setDatasource(Datasource datasource) {
-		this.datasource = datasource;
-	}
-
-	public List<StoragePartition> getStoragePartitions() {
-		return storagePartitions;
-	}
-
-	public void setStoragePartitions(List<StoragePartition> storagePartitions) {
-		this.storagePartitions = storagePartitions;
+	@Override
+	public String toString() {
+		return "StorageTopic{" +
+				  "topic=" + topic +
+				  ", storageTables=" + storageTables +
+				  '}';
 	}
 }

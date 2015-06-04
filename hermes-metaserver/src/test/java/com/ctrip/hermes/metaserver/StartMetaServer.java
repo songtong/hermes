@@ -1,17 +1,19 @@
-package com.ctrip.hermes.rest;
+package com.ctrip.hermes.metaserver;
 
-import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mortbay.jetty.Handler;
+import org.mortbay.jetty.webapp.WebAppContext;
+import org.mortbay.servlet.GzipFilter;
+
+import org.unidal.test.jetty.JettyServer;
 
 @RunWith(JUnit4.class)
-public class TestServer extends JettyServer {
-	public static String HOST = "http://localhost:1357";
-
+public class StartMetaServer extends JettyServer {
 	public static void main(String[] args) throws Exception {
-		TestServer server = new TestServer();
+		StartMetaServer server = new StartMetaServer();
 
 		server.startServer();
 		server.startWebapp();
@@ -20,7 +22,7 @@ public class TestServer extends JettyServer {
 
 	@Before
 	public void before() throws Exception {
-		// System.setProperty("devMode", "true");
+		System.setProperty("devMode", "true");
 		super.startServer();
 	}
 
@@ -31,11 +33,12 @@ public class TestServer extends JettyServer {
 
 	@Override
 	protected int getServerPort() {
-		return 1357;
+		return 1248;
 	}
 
 	@Override
 	protected void postConfigure(WebAppContext context) {
+		context.addFilter(GzipFilter.class, "/*", Handler.ALL);
 	}
 
 	@Test

@@ -16,7 +16,6 @@ import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
@@ -99,11 +98,6 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 							BrokerConsumerMessage bmsg = (BrokerConsumerMessage) msg;
 							bmsg.setCorrelationId(correlationId);
 							bmsg.setGroupId(context.getGroupId());
-						}
-
-						if (msg instanceof BaseConsumerMessageAware) {
-							((BaseConsumerMessageAware) msg).getBaseConsumerMessage().setOnMessageTimeMills(
-							      m_systemClockService.now());
 						}
 					}
 

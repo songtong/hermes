@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.constants.CatConstants;
+import com.ctrip.hermes.core.message.BaseConsumerMessage;
+import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.PropertiesHolder;
@@ -50,7 +52,9 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 					// TODO
 					t.addData("appId", "demo-app");
 
+					setOnMessageStartTime(msg);
 					onMessage(msg);
+					setOnMessageEndTime(msg);
 					// by design, if nacked, no effect
 					msg.ack();
 
@@ -68,6 +72,20 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 				}
 			}
 
+		}
+	}
+
+	private void setOnMessageEndTime(ConsumerMessage<T> msg) {
+		if (msg instanceof BaseConsumerMessageAware) {
+			BaseConsumerMessage<?> baseMsg = ((BaseConsumerMessageAware<?>) msg).getBaseConsumerMessage();
+			baseMsg.setOnMessageEndTimeMills(System.currentTimeMillis());
+		}
+	}
+
+	private void setOnMessageStartTime(ConsumerMessage<T> msg) {
+		if (msg instanceof BaseConsumerMessageAware) {
+			BaseConsumerMessage<?> baseMsg = ((BaseConsumerMessageAware<?>) msg).getBaseConsumerMessage();
+			baseMsg.setOnMessageStartTimeMills(System.currentTimeMillis());
 		}
 	}
 

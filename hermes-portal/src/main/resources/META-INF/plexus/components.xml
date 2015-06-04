@@ -74,6 +74,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.portal.service.SubscriptionService</role>
+			<implementation>com.ctrip.hermes.portal.service.SubscriptionService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
 			<role-hint>default-meta-service-wrapper</role-hint>
 			<implementation>com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper</implementation>
