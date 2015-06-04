@@ -1,6 +1,8 @@
 package com.ctrip.hermes.portal.resource;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,7 +52,15 @@ public class ConsumerResource {
 		} catch (Exception e) {
 			throw new RestException(e, Status.NOT_FOUND);
 		}
-
+		Collections.sort(returnResult, new Comparator<ConsumerView>() {
+			@Override
+			public int compare(ConsumerView o1, ConsumerView o2) {
+				int ret = o1.getGroupName().compareTo(o2.getGroupName());
+				ret = ret == 0 ? o1.getAppId().compareTo(o2.getAppId()) : ret;
+				ret = ret == 0 ? o1.getTopic().compareTo(o2.getTopic()) : ret;
+				return ret;
+			}
+		});
 		return returnResult;
 	}
 

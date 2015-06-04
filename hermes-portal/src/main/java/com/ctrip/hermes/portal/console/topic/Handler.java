@@ -34,6 +34,14 @@ public class Handler implements PageHandler<Context> {
 		model.setAction(ctx.getPayload().getAction());
 		model.setPage(ConsolePage.TOPIC);
 
+		switch (model.getAction()) {
+		case DETAIL:
+			model.setTopicName(ctx.getHttpServletRequest().getParameter("topic"));
+			break;
+		default:
+			break;
+		}
+
 		if (!ctx.isProcessStopped()) {
 			m_jspViewer.view(ctx, model);
 		}

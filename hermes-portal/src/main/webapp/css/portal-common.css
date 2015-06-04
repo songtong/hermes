@@ -15,3 +15,8 @@
 	padding: 1em 1.3em;
 	z-index: 2000;
 }
+
+.detail-label {
+	line-height: 2.3;
+	text-align: right;
+}

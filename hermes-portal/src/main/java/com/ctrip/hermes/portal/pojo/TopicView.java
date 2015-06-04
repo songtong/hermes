@@ -47,6 +47,8 @@ public class TopicView {
 
 	private Integer ackTimeoutSeconds;
 
+	private String consumerRetryPolicy;
+
 	public TopicView() {
 
 	}
@@ -65,6 +67,7 @@ public class TopicView {
 		this.schemaId = topic.getSchemaId();
 		this.otherinfo = topic.getOtherInfo();
 		this.createBy = topic.getCreateBy();
+		this.consumerRetryPolicy = topic.getConsumerRetryPolicy();
 		this.setEndpointType(topic.getEndpointType());
 		this.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 	}
@@ -240,6 +243,15 @@ public class TopicView {
 		topic.setCreateBy(this.createBy);
 		topic.setAckTimeoutSeconds(this.ackTimeoutSeconds);
 		topic.setEndpointType(this.endpointType);
+		topic.setConsumerRetryPolicy(this.consumerRetryPolicy);
 		return topic;
+	}
+
+	public String getConsumerRetryPolicy() {
+		return consumerRetryPolicy;
+	}
+
+	public void setConsumerRetryPolicy(String consumerRetryPolicy) {
+		this.consumerRetryPolicy = consumerRetryPolicy;
 	}
 }
