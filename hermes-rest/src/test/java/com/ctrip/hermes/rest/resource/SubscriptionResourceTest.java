@@ -1,6 +1,6 @@
 package com.ctrip.hermes.rest.resource;
 
-import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -17,14 +17,14 @@ import org.unidal.lookup.ComponentTestCase;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Subscription;
-import com.ctrip.hermes.rest.TestServer;
+import com.ctrip.hermes.rest.TestGatewayServer;
 
 public class SubscriptionResourceTest extends ComponentTestCase {
 
 	@Test
 	public void testSubscribe() throws InterruptedException {
 		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(TestServer.HOST);
+		WebTarget webTarget = client.target(TestGatewayServer.PORTAL_HOST);
 
 		String id = "myid";
 		String topic = "kafka.SimpleTopic";
@@ -43,12 +43,12 @@ public class SubscriptionResourceTest extends ComponentTestCase {
 		Response response = request.post(Entity.entity(json, MediaType.APPLICATION_JSON));
 		Assert.assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
 
-		request = webTarget.path("subscriptions/" + topic).request();
+		request = webTarget.path("subscriptions/").request();
 		response = request.get();
 		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-		List<Subscription> subs = response.readEntity(new GenericType<List<Subscription>>() {
+		Map<String, Subscription> subs = response.readEntity(new GenericType<Map<String, Subscription>>() {
 		});
-		Assert.assertTrue(subs.contains(sub));
+		Assert.assertTrue(subs.containsKey(sub.getId()));
 		System.out.println(subs.toString());
 
 		request = webTarget.path("subscriptions/" + id).request();

@@ -8,8 +8,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -24,7 +22,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
 @Named(type = SubscribeRegistry.class)
-public class DefaultSubscribeRegistry implements SubscribeRegistry, Initializable {
+public class DefaultSubscribeRegistry implements SubscribeRegistry {
 
 	private static final Logger logger = LoggerFactory.getLogger(DefaultSubscribeRegistry.class);
 
@@ -64,7 +62,7 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry, Initializabl
 	}
 
 	@Override
-	public void initialize() throws InitializationException {
+	public void start() {
 		scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("SubscriptionChecker",
 		      true));
 
@@ -93,14 +91,24 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry, Initializabl
 				SetView<Subscription> created = Sets.difference(newSubscriptions, subscriptions);
 				SetView<Subscription> removed = Sets.difference(subscriptions, newSubscriptions);
 				for (Subscription sub : created) {
+					logger.info("register: " + sub);
 					register(sub);
 				}
 				for (Subscription sub : removed) {
+					logger.info("unregister: " + sub);
 					unregister(sub);
 				}
 			}
 
 		}, 5, 5, TimeUnit.SECONDS);
+	}
+
+	@Override
+	public void stop() {
+		scheduledExecutor.shutdown();
+		for (Subscription sub : subscriptions) {
+			unregister(sub);
+		}
 	}
 
 }

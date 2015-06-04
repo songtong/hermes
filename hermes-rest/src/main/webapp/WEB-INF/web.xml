@@ -7,6 +7,10 @@
 		<display-name>cat-listener</display-name>
 		<listener-class>com.dianping.cat.servlet.CatListener</listener-class>
 	</listener>
+	<listener>
+		<display-name>gateway-listener</display-name>
+		<listener-class>com.ctrip.hermes.rest.common.GatewayListener</listener-class>
+	</listener>
 	<servlet>
 		<servlet-name>Jersey REST Service</servlet-name>
 		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
@@ -14,13 +18,14 @@
 			<param-name>javax.ws.rs.Application</param-name>
 			<param-value>com.ctrip.hermes.rest.common.HermesRestConfig</param-value>
 		</init-param>
-
+		<async-supported>true</async-supported>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>Jersey REST Service</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
+	<!-- 
 	<filter>
 		<filter-name>cat-filter</filter-name>
 		<filter-class>com.dianping.cat.servlet.CatFilter</filter-class>
@@ -31,4 +36,5 @@
 		<dispatcher>REQUEST</dispatcher>
 		<dispatcher>FORWARD</dispatcher>
 	</filter-mapping>
+	-->
 </web-app>
