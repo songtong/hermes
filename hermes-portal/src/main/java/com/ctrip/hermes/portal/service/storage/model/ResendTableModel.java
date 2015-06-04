@@ -19,6 +19,7 @@ public class ResendTableModel extends TableModel {
 				  schedule_date, remaining_retries);
 		setPrimaryKey(id);
 		setIndexKey("key", ref_key.columnName);
+		setIndexKey("id_schedule_date", id.columnName, schedule_date.columnName);
 
 		setTableName("resend_" + groupId);
 	}

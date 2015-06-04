@@ -13,6 +13,7 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.portal.pojo.storage.StorageTable;
 import com.ctrip.hermes.portal.pojo.storage.StorageTopic;
 import com.ctrip.hermes.portal.service.MetaServiceWrapper;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
@@ -41,7 +42,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 				Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo = getDatabaseName(datasource);
 
 				createTables0(dbInfo, topic, partition);
-//				addPartitionByDatabaseName0(dbInfo, topic, partition);
+				addPartition0(dbInfo, topic, partition);
 			}
 			return true;
 		} else {
@@ -79,7 +80,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 			Datasource datasource = getDatasource(partition);
 			Triple<String/*database url*/, String/*usr*/, String/*password*/> databaseName = getDatabaseName(datasource);
 
-			addPartitionByDatabaseName0(databaseName, topic, partition);
+			addPartition0(databaseName, topic, partition);
 			return true;
 		} else {
 			throw new TopicIsNullException("Topic is Null!");
@@ -87,8 +88,8 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	}
 
 
-	private void addPartitionByDatabaseName0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
-														  Topic topic, Partition partition)
+	private void addPartition0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
+										Topic topic, Partition partition)
 			  throws StorageHandleErrorException {
 		// 暂时只针对MessageTableModel(0), MessageTableModel(1)分partition
 
@@ -105,8 +106,23 @@ public class DefaultTopicStorageService implements TopicStorageService {
 
 	@Override
 	public StorageTopic getTopicStorage(Topic topic) throws TopicIsNullException, StorageHandleErrorException {
-		//todo:
-		throw new RuntimeException("Not Implemented!");
+		if (null != topic) {
+			StorageTopic storageTopic = new StorageTopic(topic);
+			for (Partition partition : topic.getPartitions()) {
+				Datasource datasource = getDatasource(partition);
+				Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo = getDatabaseName(datasource);
+
+				List<StorageTable> storageTables = handler.queryTable(topic.getId(), partition.getId(), dbInfo.getFirst(),
+						  dbInfo.getMiddle(), dbInfo.getLast());
+
+				if (storageTables.size() > 0) {
+					storageTopic.addInfo(datasource.getId(), storageTables);
+				}
+			}
+			return storageTopic;
+		} else {
+			throw new TopicIsNullException("Topic is Null!");
+		}
 	}
 
 	@Override

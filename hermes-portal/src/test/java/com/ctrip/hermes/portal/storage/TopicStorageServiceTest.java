@@ -5,8 +5,8 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.portal.pojo.storage.StorageTopic;
 import com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper;
 import com.ctrip.hermes.portal.service.MetaServiceWrapper;
 import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
@@ -28,18 +28,7 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	}
 
 	@Test
-	public void devTest() {
-//		Topic topic = metaService.findTopicByName("cmessage_fws");
-//		try {
-//			service.createNewTopic("ds0", "order_new");
-//		} catch (TopicAlreadyExistsException | StorageHandleErrorException e) {
-//			e.printStackTrace();
-//		}
-	}
-
-	@Test
 	public void createNewTopic() throws Exception {
-//		Topic topic = metaService.findTopicByName("cmessage_fws");
 
 		service.initTopicStorage(buildTopic());
 	}
@@ -57,13 +46,15 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	@Test
 	public void addPartitionsStorage() throws Exception {
 		Topic topic = buildTopic();
+
 		service.addPartitionStorage(topic, topic.getPartitions().get(0));
 	}
 
 	@Test
 	public void delPartitionStorage() throws Exception {
 		Topic topic = buildTopic();
-		service.delPartitionStorage(buildTopic(), topic.getPartitions().get(0));
+
+		service.delPartitionStorage(topic, topic.getPartitions().get(0));
 	}
 
 	@Test
@@ -74,6 +65,12 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	@Test
 	public void delConsumerGroup() throws Exception {
 		service.delConsumerStorage(buildTopic(), buildGroup());
+	}
+
+	@Test
+	public void showStorageTopic() throws Exception {
+		StorageTopic storageTopic = service.getTopicStorage(buildTopic());
+		System.out.println(storageTopic.toString());
 	}
 
 	private ConsumerGroup buildGroup() {
