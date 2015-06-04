@@ -19,7 +19,6 @@ import java.util.concurrent.locks.LockSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
@@ -34,6 +33,7 @@ import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
@@ -340,20 +340,20 @@ public class LongPollingConsumerTask implements Runnable {
 	      Channel channel) {
 		List<ConsumerMessage<?>> msgs = new ArrayList<>();
 		for (TppConsumerMessageBatch batch : batches) {
-			List<Pair<Long, Integer>> msgSeqs = batch.getMsgSeqs();
+			List<MessageMeta> msgMetas = batch.getMessageMetas();
 			ByteBuf batchData = batch.getData();
 
 			int partition = batch.getPartition();
-			boolean priority = batch.isPriority();
 
-			for (int j = 0; j < msgSeqs.size(); j++) {
+			for (int j = 0; j < msgMetas.size(); j++) {
 				BaseConsumerMessage baseMsg = m_messageCodec.decode(batch.getTopic(), batchData, bodyClazz);
 				BrokerConsumerMessage brokerMsg = new BrokerConsumerMessage(baseMsg);
+				MessageMeta messageMeta = msgMetas.get(j);
 				brokerMsg.setPartition(partition);
-				brokerMsg.setPriority(priority);
-				brokerMsg.setResend(batch.isResend());
+				brokerMsg.setPriority(messageMeta.getPriority() == 0 ? true : false);
+				brokerMsg.setResend(messageMeta.isResend());
 				brokerMsg.setChannel(channel);
-				brokerMsg.setMsgSeq(msgSeqs.get(j).getKey());
+				brokerMsg.setMsgSeq(messageMeta.getId());
 
 				msgs.add(brokerMsg);
 			}

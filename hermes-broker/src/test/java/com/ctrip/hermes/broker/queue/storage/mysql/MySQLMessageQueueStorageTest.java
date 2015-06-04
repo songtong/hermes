@@ -11,7 +11,6 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
-import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
@@ -48,7 +47,7 @@ public class MySQLMessageQueueStorageTest extends ComponentTestCase {
 		ByteBuf out = Unpooled.buffer();
 		result.getBatch().getTransferCallback().transfer(out);
 		assertTrue(out.readableBytes() > 0);
-		assertTrue(!result.getBatch().getMsgSeqs().isEmpty());
+		assertTrue(!result.getBatch().getMessageMetas().isEmpty());
 	}
 
 	@Test
@@ -77,14 +76,14 @@ public class MySQLMessageQueueStorageTest extends ComponentTestCase {
 
 	@Test
 	public void testNackMessage() throws Exception {
-		Tpp tpp = new Tpp("order_new", 0, true);
-		s.nack(tpp, "group1", false, Arrays.asList(new Pair<>(1L, 1), new Pair<>(2L, 2)));
+		// Tpp tpp = new Tpp("order_new", 0, true);
+		// s.nack(tpp, "group1", false, Arrays.asList(new Pair<>(1L, 1), new Pair<>(2L, 2)));
 	}
 
 	@Test
 	public void testNackResend() throws Exception {
-		Tpp tpp = new Tpp("order_new", 0, true);
-		s.nack(tpp, "group1", true, Arrays.asList(new Pair<>(1L, 1), new Pair<>(2L, 2)));
+		// Tpp tpp = new Tpp("order_new", 0, true);
+		// s.nack(tpp, "group1", true, Arrays.asList(new Pair<>(1L, 1), new Pair<>(2L, 2)));
 	}
 
 }

@@ -8,6 +8,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 
 /**
@@ -26,7 +27,7 @@ public interface MessageQueueStorage {
 
 	FetchResult fetchResendMessages(Tpg tpg, Object startOffset, int batchSize);
 
-	void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, Integer>> msgSeqs);
+	void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, MessageMeta>> msgId2Metas);
 
 	void ack(Tpp tpp, String groupId, boolean resend, long msgSeq);
 

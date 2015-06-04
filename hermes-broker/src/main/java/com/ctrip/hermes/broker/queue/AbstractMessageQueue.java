@@ -10,6 +10,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -70,8 +71,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	}
 
 	@Override
-	public void nack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, Integer>> msgSeqs) {
-		doNack(resend, isPriority, groupId, msgSeqs);
+	public void nack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas) {
+		doNack(resend, isPriority, groupId, msgId2Metas);
 	}
 
 	@Override
@@ -83,7 +84,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	protected abstract MessageQueueCursor create(String groupId, Lease lease);
 
-	protected abstract void doNack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, Integer>> msgSeqs);
+	protected abstract void doNack(boolean resend, boolean isPriority, String groupId,
+	      List<Pair<Long, MessageMeta>> msgId2Metas);
 
 	protected abstract void doAck(boolean resend, boolean isPriority, String groupId, long msgSeq);
 }

@@ -29,6 +29,7 @@ import com.ctrip.hermes.broker.ack.internal.EnumRange;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.AckMessageCommand.AckContext;
@@ -44,7 +45,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 	private static final Logger log = LoggerFactory.getLogger(DefaultAckManager.class);
 
 	// TODO while consumer disconnect, clear holder and offset
-	private ConcurrentMap<Triple<Tpp, String, Boolean>, AckHolder<Integer>> m_holders = new ConcurrentHashMap<>();
+	private ConcurrentMap<Triple<Tpp, String, Boolean>, AckHolder<MessageMeta>> m_holders = new ConcurrentHashMap<>();
 
 	private BlockingQueue<Operation> m_opQueue;
 
@@ -74,17 +75,23 @@ public class DefaultAckManager implements AckManager, Initializable {
 	}
 
 	@Override
-	public void delivered(Tpp tpp, String groupId, boolean resend, List<Pair<Long, Integer>> msgSeqsAndRemainingRetries) {
+	public void delivered(Tpp tpp, String groupId, boolean resend, List<MessageMeta> msgMetas) {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		ensureMapEntryExist(key);
-		m_opQueue.offer(new Operation(key, Type.DELIVERED, msgSeqsAndRemainingRetries, m_systemClockService.now()));
+
+		List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>(msgMetas.size());
+		for (MessageMeta msgMeta : msgMetas) {
+			msgId2Metas.add(new Pair<>(msgMeta.getId(), msgMeta));
+		}
+
+		m_opQueue.offer(new Operation(key, Type.DELIVERED, msgId2Metas, m_systemClockService.now()));
 	}
 
 	private void ensureMapEntryExist(Triple<Tpp, String, Boolean> key) {
 		if (!m_holders.containsKey(key)) {
 			m_holders.putIfAbsent(
 			      key,
-			      new DefaultAckHolder<Integer>(m_metaService.getAckTimeoutSecondsTopicAndConsumerGroup(key.getFirst()
+			      new DefaultAckHolder<MessageMeta>(m_metaService.getAckTimeoutSecondsTopicAndConsumerGroup(key.getFirst()
 			            .getTopic(), key.getMiddle()) * 1000));
 		}
 	}
@@ -141,7 +148,8 @@ public class DefaultAckManager implements AckManager, Initializable {
 						m_holders.get(op.getKey()).acked((Long) op.getData(), false);
 						break;
 					case DELIVERED:
-						m_holders.get(op.getKey()).delivered((List<Pair<Long, Integer>>) op.getData(), op.getCreateTime());
+						m_holders.get(op.getKey())
+						      .delivered((List<Pair<Long, MessageMeta>>) op.getData(), op.getCreateTime());
 						break;
 
 					default:
@@ -156,13 +164,13 @@ public class DefaultAckManager implements AckManager, Initializable {
 		}
 
 		private void checkHolders() {
-			for (Map.Entry<Triple<Tpp, String, Boolean>, AckHolder<Integer>> entry : m_holders.entrySet()) {
-				AckHolder<Integer> holder = entry.getValue();
+			for (Map.Entry<Triple<Tpp, String, Boolean>, AckHolder<MessageMeta>> entry : m_holders.entrySet()) {
+				AckHolder<MessageMeta> holder = entry.getValue();
 				Tpp tpp = entry.getKey().getFirst();
 				String groupId = entry.getKey().getMiddle();
 				boolean isResend = entry.getKey().getLast();
 
-				BatchResult<Integer> result = holder.scan();
+				BatchResult<MessageMeta> result = holder.scan();
 
 				if (result != null) {
 					ackOrNackMessageQueue(tpp, groupId, isResend, result);
@@ -170,9 +178,9 @@ public class DefaultAckManager implements AckManager, Initializable {
 			}
 		}
 
-		private void ackOrNackMessageQueue(Tpp tpp, String groupId, boolean isResend, BatchResult<Integer> result) {
+		private void ackOrNackMessageQueue(Tpp tpp, String groupId, boolean isResend, BatchResult<MessageMeta> result) {
 			ContinuousRange doneRange = result.getDoneRange();
-			EnumRange<Integer> failRange = result.getFailRange();
+			EnumRange<MessageMeta> failRange = result.getFailRange();
 			if (failRange != null) {
 				if (log.isDebugEnabled()) {
 					log.debug(

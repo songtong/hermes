@@ -6,6 +6,7 @@ import java.util.Map;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -20,7 +21,7 @@ public interface MessageQueue {
 
 	MessageQueueCursor getCursor(String groupId, Lease lease);
 
-	void nack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, Integer>> msgSeqs);
+	void nack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas);
 
 	void ack(boolean resend, boolean isPriority, String groupId, long msgSeq);
 

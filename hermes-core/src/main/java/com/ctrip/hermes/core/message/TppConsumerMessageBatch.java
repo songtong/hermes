@@ -5,8 +5,6 @@ import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.unidal.tuple.Pair;
-
 import com.ctrip.hermes.core.transport.TransferCallback;
 
 /**
@@ -20,11 +18,11 @@ public class TppConsumerMessageBatch {
 
 	private int m_partition;
 
-	private boolean m_priority;
+	private boolean m_resend;
 
-	private boolean m_resend = false;
+	private int m_priority;
 
-	private List<Pair<Long, Integer>> m_msgSeqs = new ArrayList<>();
+	private List<MessageMeta> m_messageMetas = new ArrayList<>();
 
 	private TransferCallback m_transferCallback;
 
@@ -41,20 +39,20 @@ public class TppConsumerMessageBatch {
 		m_resend = resend;
 	}
 
+	public int getPriority() {
+		return m_priority;
+	}
+
+	public void setPriority(int priority) {
+		m_priority = priority;
+	}
+
 	public int getPartition() {
 		return m_partition;
 	}
 
 	public void setPartition(int partition) {
 		m_partition = partition;
-	}
-
-	public boolean isPriority() {
-		return m_priority;
-	}
-
-	public void setPriority(boolean priority) {
-		m_priority = priority;
 	}
 
 	public ByteBuf getData() {
@@ -73,16 +71,16 @@ public class TppConsumerMessageBatch {
 		m_topic = topic;
 	}
 
-	public List<Pair<Long, Integer>> getMsgSeqs() {
-		return m_msgSeqs;
+	public List<MessageMeta> getMessageMetas() {
+		return m_messageMetas;
 	}
 
-	public void addMsgSeq(long msgSeq, int remainingRetries) {
-		m_msgSeqs.add(new Pair<Long, Integer>(msgSeq, remainingRetries));
+	public void addMessageMeta(MessageMeta msgMeta) {
+		m_messageMetas.add(msgMeta);
 	}
 
-	public void addMsgSeqs(List<Pair<Long, Integer>> msgSeqs) {
-		m_msgSeqs.addAll(msgSeqs);
+	public void addMessageMetas(List<MessageMeta> msgMetas) {
+		m_messageMetas.addAll(msgMetas);
 	}
 
 	public TransferCallback getTransferCallback() {
@@ -94,7 +92,55 @@ public class TppConsumerMessageBatch {
 	}
 
 	public int size() {
-		return m_msgSeqs.size();
+		return m_messageMetas.size();
 	}
 
+	public static class MessageMeta {
+		private long m_id;
+
+		private int m_remainingRetries;
+
+		private long m_originId;
+
+		private int m_priority;
+
+		private boolean m_resend;
+
+		public MessageMeta(long id, int remainingRetries, long originId, int priority, boolean isResend) {
+			m_id = id;
+			m_remainingRetries = remainingRetries;
+			m_originId = originId;
+			m_priority = priority;
+			m_resend = isResend;
+		}
+
+		public boolean isResend() {
+			return m_resend;
+		}
+
+		public int getRemainingRetries() {
+			return m_remainingRetries;
+		}
+
+		public long getId() {
+			return m_id;
+		}
+
+		public long getOriginId() {
+			return m_originId;
+		}
+
+		public int getPriority() {
+			return m_priority;
+		}
+
+		public void setRemainingRetries(int remainingRetries) {
+			m_remainingRetries = remainingRetries;
+		}
+
+	}
+
+	public boolean isPriority() {
+		return m_priority == 0;
+	}
 }

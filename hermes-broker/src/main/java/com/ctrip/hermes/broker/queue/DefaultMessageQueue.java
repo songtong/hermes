@@ -9,6 +9,7 @@ import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.meta.MetaService;
 
 /**
@@ -39,8 +40,8 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	}
 
 	@Override
-	protected void doNack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, Integer>> msgSeqs) {
-		m_storage.nack(new Tpp(m_topic, m_partition, isPriority), groupId, resend, msgSeqs);
+	protected void doNack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas) {
+		m_storage.nack(new Tpp(m_topic, m_partition, isPriority), groupId, resend, msgId2Metas);
 	}
 
 	@Override
