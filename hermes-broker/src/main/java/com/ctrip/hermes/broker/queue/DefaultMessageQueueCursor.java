@@ -63,11 +63,7 @@ public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 
 	@Override
 	protected FetchResult fetchResendMessages(int batchSize) {
-		FetchResult result = m_storage.fetchResendMessages(m_tpg, m_resendOffset, batchSize);
-		if (result != null && result.getBatch() != null) {
-			result.getBatch().setResend(true);
-		}
-		return result;
+		return m_storage.fetchResendMessages(m_tpg, m_resendOffset, batchSize);
 	}
 
 }

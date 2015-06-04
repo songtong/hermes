@@ -2,10 +2,7 @@ package com.ctrip.hermes.broker.longpolling;
 
 import io.netty.channel.Channel;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.MessageQueueCursor;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -25,6 +21,7 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
@@ -115,30 +112,12 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 		if (batches != null && !batches.isEmpty()) {
 
-			if (log.isDebugEnabled()) {
-				Map<Boolean, List<Long>> msgIds = new HashMap<>();
-
-				for (TppConsumerMessageBatch batch : batches) {
-					if (!msgIds.containsKey(batch.isPriority())) {
-						msgIds.put(batch.isPriority(), new LinkedList<Long>());
-					}
-
-					List<Long> ids = msgIds.get(batch.isPriority());
-
-					for (Pair<Long, Integer> pair : batch.getMsgSeqs()) {
-						ids.add(pair.getKey());
-					}
-				}
-				log.debug("Push Messages(msgIds={}) to client(correlationId={}, topic={}, partition={}, groupId={})",
-				      msgIds, pullTask.getCorrelationId(), tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
-			}
-
 			String ip = NettyUtils.parseChannelRemoteAddr(pullTask.getChannel(), false);
 			for (TppConsumerMessageBatch batch : batches) {
 				m_ackManager.delivered(new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority()),
-				      tpg.getGroupId(), batch.isResend(), batch.getMsgSeqs());
+				      tpg.getGroupId(), batch.isResend(), batch.getMessageMetas());
 
-				bizLogDelivered(ip, batch.getMsgSeqs(), tpg);
+				bizLogDelivered(ip, batch.getMessageMetas(), tpg);
 			}
 
 			response(pullTask, batches);
@@ -148,10 +127,10 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		}
 	}
 
-	private void bizLogDelivered(String ip, List<Pair<Long, Integer>> msgSeqs, Tpg tpg) {
-		for (Pair<Long, Integer> pair : msgSeqs) {
+	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg) {
+		for (MessageMeta meta : metas) {
 			BizEvent event = new BizEvent("Message.Delivered");
-			event.addData("msgId", pair.getKey());
+			event.addData("msgId", meta.getOriginId());
 			event.addData("consumerIp", ip);
 			event.addData("consumerGroup", tpg.getGroupId());
 

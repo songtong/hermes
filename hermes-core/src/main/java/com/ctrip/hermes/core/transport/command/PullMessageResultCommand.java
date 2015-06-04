@@ -6,9 +6,8 @@ import io.netty.channel.Channel;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.unidal.tuple.Pair;
-
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 
@@ -93,16 +92,15 @@ public class PullMessageResultCommand extends AbstractCommand {
 		int batchSize = codec.readInt();
 		for (int i = 0; i < batchSize; i++) {
 			TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
-			int seqSize = codec.readInt();
+			int msgSize = codec.readInt();
 			batch.setTopic(codec.readString());
 			batch.setPartition(codec.readInt());
-			batch.setPriority(codec.readInt() == 0 ? true : false);
+			batch.setPriority(codec.readInt());
 			batch.setResend(codec.readBoolean());
 
-			for (int j = 0; j < seqSize; j++) {
-				long msgSeq = codec.readLong();
-				int remainingRetries = codec.readInt();
-				batch.addMsgSeq(msgSeq, remainingRetries);
+			for (int j = 0; j < msgSize; j++) {
+				batch.addMessageMeta(new MessageMeta(codec.readLong(), codec.readInt(), codec.readLong(), codec.readInt(),
+				      codec.readBoolean()));
 			}
 			batches.add(batch);
 		}
@@ -114,11 +112,16 @@ public class PullMessageResultCommand extends AbstractCommand {
 			codec.writeInt(batch.size());
 			codec.writeString(batch.getTopic());
 			codec.writeInt(batch.getPartition());
-			codec.writeInt(batch.isPriority() ? 0 : 1);
+			codec.writeInt(batch.getPriority());
 			codec.writeBoolean(batch.isResend());
-			for (Pair<Long, Integer> pair : batch.getMsgSeqs()) {
-				codec.writeLong(pair.getKey());
-				codec.writeInt(pair.getValue());
+			if (batch.size() > 0) {
+				for (MessageMeta msgMeta : batch.getMessageMetas()) {
+					codec.writeLong(msgMeta.getId());
+					codec.writeInt(msgMeta.getRemainingRetries());
+					codec.writeLong(msgMeta.getOriginId());
+					codec.writeInt(msgMeta.getPriority());
+					codec.writeBoolean(msgMeta.isResend());
+				}
 			}
 		}
 	}

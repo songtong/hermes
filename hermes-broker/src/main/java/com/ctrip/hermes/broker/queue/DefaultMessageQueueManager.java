@@ -12,6 +12,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -49,12 +50,12 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	}
 
 	@Override
-	public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, Integer>> msgSeqs) {
-		getMessageQueue(tpp.getTopic(), tpp.getPartition()).nack(resend, tpp.isPriority(), groupId, msgSeqs);
-	}
-
-	@Override
 	public void ack(Tpp tpp, String groupId, boolean resend, long msgSeq) {
 		getMessageQueue(tpp.getTopic(), tpp.getPartition()).ack(resend, tpp.isPriority(), groupId, msgSeq);
 	}
+
+	@Override
+   public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, MessageMeta>> msgId2Metas) {
+		getMessageQueue(tpp.getTopic(), tpp.getPartition()).nack(resend, tpp.isPriority(), groupId, msgId2Metas);
+   }
 }
