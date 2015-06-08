@@ -43,7 +43,9 @@ public class RemoteMetaLoader implements MetaLoader {
 			throw new RuntimeException("No meta server found.");
 		}
 		ipPort = ipPorts.get(0);
-		log.info("Loading meta from server: {}", ipPort);
+		if (log.isDebugEnabled()) {
+			log.debug("Loading meta from server: {}", ipPort);
+		}
 
 		try {
 			String url;

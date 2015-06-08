@@ -2,7 +2,7 @@ package com.ctrip.hermes.broker.queue;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +20,14 @@ import com.ctrip.hermes.core.meta.MetaService;
  */
 public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 	private static final Logger log = LoggerFactory.getLogger(AbstractMessageQueueCursor.class);
+
+	protected static final int STATE_NOT_INITED = 0;
+
+	protected static final int STATE_INITING = 1;
+
+	protected static final int STATE_INITED = 2;
+
+	protected static final int STATE_INIT_ERROR = 0;
 
 	protected Tpg m_tpg;
 
@@ -39,7 +47,7 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	protected Lease m_lease;
 
-	protected AtomicBoolean inited = new AtomicBoolean(false);
+	protected AtomicInteger m_state = new AtomicInteger(STATE_NOT_INITED);
 
 	public AbstractMessageQueueCursor(Tpg tpg, Lease lease, MetaService metaService) {
 		m_tpg = tpg;
@@ -52,13 +60,15 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	@Override
 	public void init() {
-		if (inited.compareAndSet(false, true)) {
+		if (m_state.compareAndSet(STATE_NOT_INITED, STATE_INITING)) {
 			try {
 				m_priorityOffset = loadLastPriorityOffset();
 				m_nonPriorityOffset = loadLastNonPriorityOffset();
 				m_resendOffset = loadLastResendOffset();
+				m_state.set(STATE_INITED);
 			} catch (Exception e) {
 				log.error("Failed to init cursor", e);
+				m_state.set(STATE_INIT_ERROR);
 				throw e;
 			}
 		}
@@ -66,6 +76,14 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	public Lease getLease() {
 		return m_lease;
+	}
+
+	public boolean hasError() {
+		return m_state.get() == STATE_INIT_ERROR;
+	}
+
+	public boolean isInited() {
+		return m_state.get() == STATE_INITED;
 	}
 
 	protected abstract Object loadLastPriorityOffset();

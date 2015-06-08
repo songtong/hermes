@@ -1,6 +1,5 @@
 package com.ctrip.hermes.core.bo;
 
-
 /**
  * Topic-Partition-Priority Wrapper
  * 
@@ -67,6 +66,11 @@ public class Tpp {
 		} else if (!m_topic.equals(other.m_topic))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "Tpp [m_topic=" + m_topic + ", m_partition=" + m_partition + ", m_priority=" + m_priority + "]";
 	}
 
 }

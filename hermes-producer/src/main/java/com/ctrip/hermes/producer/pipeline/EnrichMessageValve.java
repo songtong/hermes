@@ -3,12 +3,12 @@ package com.ctrip.hermes.producer.pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.lookup.util.StringUtils;
 import org.unidal.net.Networks;
 
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
 import com.ctrip.hermes.core.pipeline.spi.Valve;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
 import com.dianping.cat.message.spi.MessageTree;
@@ -31,6 +31,7 @@ public class EnrichMessageValve implements Valve {
 		}
 
 		if (StringUtils.isEmpty(partitionKey)) {
+			System.out.println("Parition key not set, will set ip as default partition key automatically(topic={})");
 			log.warn("Parition key not set, will set ip as default partition key automatically(topic={})", msg.getTopic());
 			partitionKey = Networks.forIp().getLocalHostAddress();
 			MessageTree tree = Cat.getManager().getThreadLocalMessageTree();

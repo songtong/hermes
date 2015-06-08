@@ -216,9 +216,9 @@ public class OneBoxTest extends ComponentTestCase {
 		Random random = new Random();
 
 		boolean priority = random.nextBoolean();
-
+		
 		if (priority) {
-			Producer.getInstance().message(topic, null, msg + " priority").withRefKey(uuid).withPriority()
+			Producer.getInstance().message(topic, msg, msg + " priority").withRefKey(uuid).withPriority()
 			      .setCallback(new CompletionCallback<SendResult>() {
 
 				      @Override
@@ -232,7 +232,7 @@ public class OneBoxTest extends ComponentTestCase {
 				      }
 			      }).send();
 		} else {
-			Producer.getInstance().message(topic, null, msg + " non-priority").withRefKey(uuid).send();
+			Producer.getInstance().message(topic, msg, msg + " non-priority").withRefKey(uuid).send();
 		}
 
 	}
