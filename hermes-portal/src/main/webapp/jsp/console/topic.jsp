@@ -16,6 +16,7 @@
 			<table class="table table-hover" st-pipe="get_topics" st-table="topic_table">
 				<thead>
 					<tr>
+						<th>#</th>
 						<th st-sort="name">Topic名称</th>
 						<th st-sort="codecType" width="100px" style="text-align: center;">编码</th>
 						<th st-sort="storageType" width="100px" style="text-align: center;">存储</th>
@@ -28,6 +29,7 @@
 							</button></th>
 					</tr>
 					<tr>
+						<th><label><span ng-bind="topic_rows.length"></span></label></th>
 						<th><input st-search="name" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="codecType" placeholder="Codec" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="storageType" placeholder="Storage" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
@@ -40,6 +42,7 @@
 				</thead>
 				<tbody ng-show="!is_loading">
 					<tr ng-repeat="row in topic_rows">
+						<td><spanl ng-bind="$index + 1"> </span></td>
 						<td><a href="${model.webapp}/console/topic?op=detail&topic={{row.name}}" ng-bind="row.name" /></td>
 						<td align="center"><span ng-bind="row.codecType"></span></td>
 						<td align="center"><span ng-bind="row.storageType"></td>
@@ -108,7 +111,7 @@
 							<div class="form-group">
 								<label for="inputConsumeRetryPolicy" class="col-sm-4 control-label">消费重试策略</label>
 								<div class="col-sm-6">
-									<input class="form-control" id="inputConsumeRetryPolicy" placeholder="Consume Retry Policy" ng-model="new_topic.consumeRetryPolicy">
+									<input class="form-control" id="inputConsumeRetryPolicy" placeholder="Consume Retry Policy" ng-model="new_topic.consumerRetryPolicy">
 								</div>
 							</div>
 						</form>

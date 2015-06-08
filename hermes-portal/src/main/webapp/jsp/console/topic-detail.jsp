@@ -74,6 +74,10 @@
 								<label class="control-label col-sm-3 detail-label">状态</label>
 								<input disabled style="width: 150px" class="form-control col-sm-6" ng-model="topic.status">
 							</div>
+							<div class="form-group">
+								<label class="control-label col-sm-3 detail-label">描述</label>
+								<input disabled style="width: 150px" class="form-control col-sm-6" ng-model="topic.description">
+							</div>
 						</form>
 					</div>
 				</div>

@@ -48,6 +48,7 @@ public class TopicService {
 	public Topic createTopic(Topic topic) throws Exception {
 		Meta meta = m_metaService.getMeta();
 		topic.setCreateTime(new Date(System.currentTimeMillis()));
+		topic.setLastModifiedTime(topic.getCreateTime());
 		long maxTopicId = 0;
 		for (Topic topic2 : meta.getTopics().values()) {
 			if (topic2.getId() != null && topic2.getId() > maxTopicId) {
