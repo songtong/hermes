@@ -64,35 +64,6 @@ public class SchemaService {
 	/**
 	 * 
 	 * @param metaSchema
-	 * @param avroSchema
-	 * @throws IOException
-	 * @throws DalException
-	 */
-	public void compileAvro(Schema metaSchema, org.apache.avro.Schema avroSchema) throws IOException, DalException {
-		m_logger.info(String.format("Compile %s by %s", metaSchema.getName(), avroSchema.getName()));
-		final Path destDir = Files.createTempDirectory("avroschema");
-		SpecificCompiler compiler = new SpecificCompiler(avroSchema);
-		compiler.compileToDestination(null, destDir.toFile());
-
-		m_compileService.compile(destDir);
-		Path jarFile = Files.createTempFile(metaSchema.getName(), ".jar");
-		m_compileService.jar(destDir, jarFile);
-
-		byte[] jarContent = Files.readAllBytes(jarFile);
-		metaSchema.setJarContent(jarContent);
-		FormDataContentDisposition disposition = FormDataContentDisposition.name(metaSchema.getName())
-		      .creationDate(new Date(System.currentTimeMillis()))
-		      .fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar").size(jarFile.toFile().length())
-		      .build();
-		metaSchema.setJarProperties(disposition.toString());
-		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
-		Files.delete(jarFile);
-		m_compileService.delete(destDir);
-	}
-
-	/**
-	 * 
-	 * @param metaSchema
 	 * @param Idl
 	 * @throws ParseException
 	 * @throws IOException
@@ -114,6 +85,35 @@ public class SchemaService {
 			m_compileService.jar(destDir, jarFile);
 			m_logger.info(jarFile.getFileName().toString());
 		}
+
+		byte[] jarContent = Files.readAllBytes(jarFile);
+		metaSchema.setJarContent(jarContent);
+		FormDataContentDisposition disposition = FormDataContentDisposition.name(metaSchema.getName())
+		      .creationDate(new Date(System.currentTimeMillis()))
+		      .fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar").size(jarFile.toFile().length())
+		      .build();
+		metaSchema.setJarProperties(disposition.toString());
+		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
+		Files.delete(jarFile);
+		m_compileService.delete(destDir);
+	}
+
+	/**
+	 * 
+	 * @param metaSchema
+	 * @param avroSchema
+	 * @throws IOException
+	 * @throws DalException
+	 */
+	public void compileAvro(Schema metaSchema, org.apache.avro.Schema avroSchema) throws IOException, DalException {
+		m_logger.info(String.format("Compile %s by %s", metaSchema.getName(), avroSchema.getName()));
+		final Path destDir = Files.createTempDirectory("avroschema");
+		SpecificCompiler compiler = new SpecificCompiler(avroSchema);
+		compiler.compileToDestination(null, destDir.toFile());
+
+		m_compileService.compile(destDir);
+		Path jarFile = Files.createTempFile(metaSchema.getName(), ".jar");
+		m_compileService.jar(destDir, jarFile);
 
 		byte[] jarContent = Files.readAllBytes(jarFile);
 		metaSchema.setJarContent(jarContent);
@@ -203,6 +203,18 @@ public class SchemaService {
 			}
 		} else {
 			throw new RuntimeException("Delete schema failed. topic hasn't ID: " + topic.getName());
+		}
+	}
+
+	public void deployToMaven(Schema metaSchema, String groupId, String artifactId, String version)
+	      throws NumberFormatException, IOException, java.text.ParseException {
+		Path jarPath = Files.createTempFile(metaSchema.getName(), ".jar");
+		com.google.common.io.Files.write(metaSchema.getJarContent(), jarPath.toFile());
+		try {
+			m_compileService.deployToMaven(jarPath, groupId, artifactId, version, "snapshots");
+		} finally {
+			m_compileService.delete(jarPath);
+			// m_compileService.deploy(jarPath, groupId, artifactId, version, "releases");
 		}
 	}
 

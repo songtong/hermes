@@ -15,6 +15,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -190,6 +191,25 @@ public class SchemaResource {
 
 		return Response.status(Status.OK).header("content-disposition", fileProperties).entity(schema.getJarContent())
 		      .build();
+	}
+
+	@POST
+	@Path("{id}/deploy")
+	public Response deployMaven(@PathParam("id") long schemaId, @QueryParam("groupId") String groupId,
+	      @QueryParam("artifactId") String artifactId, @QueryParam("version") String version) {
+		logger.debug("deploy maven {} {} {} {}", schemaId, groupId, artifactId, version);
+		Schema schema = null;
+		try {
+			schema = schemaService.getSchemaMeta(schemaId);
+			schemaService.deployToMaven(schema, groupId, artifactId, version);
+		} catch (DalNotFoundException e) {
+			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
+		} catch (Exception e) {
+			logger.warn("Deploy jar failed", e);
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+
+		return Response.status(Status.OK).build();
 	}
 
 	/**
