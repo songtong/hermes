@@ -11,6 +11,8 @@
     <member name="payload" field="payload" value-type="byte[]" length="16777215" nullable="false" />
     <member name="dead-date" field="dead_date" value-type="Date" nullable="false" />
     <member name="group-id" field="group_id" value-type="int" length="10" nullable="false" />
+    <member name="priority" field="priority" value-type="int" length="3" nullable="false" />
+    <member name="origin-id" field="origin_id" value-type="long" length="19" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="key" members="ref_key ASC" />
@@ -95,6 +97,7 @@
     <member name="last-modified-date" field="last_modified_date" value-type="Date" nullable="false" insert-expr="NOW()" update-expr="NOW()" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="priority_group_id" unique="true" members="priority ASC, group_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -134,6 +137,7 @@
     <member name="last-modified-date" field="last_modified_date" value-type="Date" nullable="false" insert-expr="NOW()" update-expr="NOW()" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="group" unique="true" members="group_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -175,6 +179,8 @@
     <member name="payload" field="payload" value-type="byte[]" length="16777215" nullable="false" />
     <member name="schedule-date" field="schedule_date" value-type="Date" nullable="false" />
     <member name="remaining-retries" field="remaining_retries" value-type="int" length="3" nullable="false" />
+    <member name="priority" field="priority" value-type="int" length="3" nullable="false" />
+    <member name="origin-id" field="origin_id" value-type="long" length="19" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="key" members="ref_key ASC" />

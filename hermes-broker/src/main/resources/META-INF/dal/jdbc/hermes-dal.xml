@@ -71,7 +71,6 @@
 
 		<var name="topic" value-type="String" />
 		<var name="partition" value-type="int" />
-		<var name="priority" value-type="int" />
 		<var name="group-id" value-type="int" />
 		<var name="batch-size" value-type="int" />
 		<var name="message-ids" value-type="Long[]" />
@@ -111,8 +110,9 @@
 				<param name="schedule-date" />
 				<param name="message-ids" />
 				<param name="remaining-retries" />
-				<statement><![CDATA[INSERT INTO <TABLE/> (<FIELDS/>) 
-        		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${schedule-date},${remaining-retries}
+				<statement><![CDATA[INSERT INTO <TABLE/> 
+					  (producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,schedule_date,remaining_retries,priority,origin_id) 
+        		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${schedule-date},${remaining-retries},${priority},id
         		FROM <TABLE name="message-priority"/>
         		WHERE id IN <IN>${message-ids}</IN>]]>
 				</statement>
@@ -125,8 +125,8 @@
 				<param name="schedule-date" />
 				<param name="id" />
 				<statement><![CDATA[INSERT INTO <TABLE/> 
-				(producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,schedule_date,remaining_retries) 
-        		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${schedule-date},remaining_retries-1
+				(producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,schedule_date,remaining_retries,priority,origin_id) 
+        		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${schedule-date},remaining_retries-1,priority,origin_id
         		FROM <TABLE name="resend-group-id"/>
         		WHERE id = ${id}]]>
 				</statement>
@@ -177,7 +177,6 @@
 			entity-alias="rgi" />
 		<var name="topic" value-type="String" />
 		<var name="partition" value-type="int" />
-		<var name="priority" value-type="int" />
 		<var name="message-ids" value-type="Long[]" />
 
 		<query-defs>
@@ -188,8 +187,9 @@
 				<param name="group-id" />
 				<param name="dead-date" />
 				<param name="message-ids" />
-				<statement><![CDATA[INSERT INTO <TABLE/> (<FIELDS/>) 
-        		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${dead-date},${group-id}
+				<statement><![CDATA[INSERT INTO <TABLE/> 
+					(producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,dead_date,group_id,priority,origin_id) 
+        		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${dead-date},${group-id},${priority},id
         		FROM <TABLE name="message-priority"/>
         		WHERE id IN <IN>${message-ids}</IN>]]>
 				</statement>
@@ -201,8 +201,9 @@
 				<param name="group-id" />
 				<param name="dead-date" />
 				<param name="message-ids" />
-				<statement><![CDATA[INSERT INTO <TABLE/> (<FIELDS/>) 
-        		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${dead-date},${group-id}
+				<statement><![CDATA[INSERT INTO <TABLE/> 
+					(producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,dead_date,group_id,priority,origin_id) 
+        		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${dead-date},${group-id},${priority},origin_id
         		FROM <TABLE name="resend-group-id"/>
         		WHERE id IN <IN>${message-ids}</IN>]]>
 				</statement>
