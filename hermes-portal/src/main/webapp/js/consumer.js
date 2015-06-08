@@ -14,6 +14,13 @@ function reload_table(scope, data) {
 angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller('consumer-controller',
 		[ '$scope', '$filter', '$resource', function(scope, filter, resource) {
 			consumer_resource = resource('/api/consumers/:topic/:consumer', {}, {});
+			meta_resource = resource('/api/meta', {}, {
+				'get_topic_names' : {
+					method : 'GET',
+					isArray : true,
+					url : '/api/meta/topics/names'
+				}
+			})
 
 			scope.is_loading = true;
 			scope.src_consumers = [];
@@ -24,17 +31,18 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller('c
 
 			scope.order_opts = [ true, false ];
 
+			meta_resource.get_topic_names({}, function(result) {
+				$('#inputTopicName').typeahead({
+					name : 'topics',
+					source : substringMatcher(result)
+				});
+			});
+
 			scope.get_consumers = function get_consumers(table_state) {
 				consumer_resource.query().$promise.then(function(query_result) {
 					scope.src_consumers = query_result;
 					scope.consumer_rows = filter_consumer_rows(scope.src_consumers, filter, table_state);
 					scope.is_loading = false;
-					scope.topic_names = unique_array(collect_schemas(query_result, 'topic', false));
-					console.log(scope.topic_names);
-					$('#inputTopicName').typeahead({
-						name : 'topics',
-						source : substringMatcher(scope.topic_names)
-					});
 				});
 			};
 

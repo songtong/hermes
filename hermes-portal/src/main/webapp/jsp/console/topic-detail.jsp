@@ -16,12 +16,17 @@
 
 	<div class="panel panel-info">
 		<div class="panel-heading">
-			<span>Topic 详情【 ${model.topicName} 】</span>
-			<button class="btn btn-xs btn-success" style="float: right;">修改</button>
+			<span class="label label-primary">${model.topicName}</span>
+
+			<button class="btn btn-xs btn-success" style="float: right;">
+				<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 修改
+			</button>
 		</div>
 		<div class="panel-body">
 			<div ng-app="hermes-topic-detail" ng-controller="topic-detail-controller">
-				<h4>基本信息</h4>
+				<h4>
+					<span class="label label-primary">基本信息</span>
+				</h4>
 				<hr>
 				<div class="container row">
 					<div class="col-sm-6">
@@ -72,7 +77,9 @@
 						</form>
 					</div>
 				</div>
-				<h4>Partitions</h4>
+				<h4>
+					<span class="label label-primary">Partitions</span>
+				</h4>
 				<hr>
 				<table class="table table-condensed table-responsive">
 					<thead>
@@ -92,6 +99,10 @@
 						</tr>
 					</tbody>
 				</table>
+				<h4>
+					<span class="label label-primary">Consumers</span>
+				</h4>
+				<hr>
 			</div>
 		</div>
 	</div>

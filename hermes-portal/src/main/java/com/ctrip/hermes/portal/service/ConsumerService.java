@@ -55,13 +55,15 @@ public class ConsumerService {
 		m_metaService.updateMeta(meta);
 	}
 
-	public ConsumerGroup addConsumerForTopic(String topic, ConsumerGroup consumer) throws Exception {
+	public synchronized ConsumerGroup addConsumerForTopic(String topic, ConsumerGroup consumer) throws Exception {
 		Meta meta = m_metaService.getMeta();
 
 		int maxConsumerId = 0;
-		for (ConsumerGroup cg : meta.getTopics().get(topic).getConsumerGroups()) {
-			if (cg.getId() != null && cg.getId() > maxConsumerId) {
-				maxConsumerId = cg.getId();
+		for (Entry<String, Topic> entry : meta.getTopics().entrySet()) {
+			for (ConsumerGroup cg : entry.getValue().getConsumerGroups()) {
+				if (cg.getId() != null && cg.getId() > maxConsumerId) {
+					maxConsumerId = cg.getId();
+				}
 			}
 		}
 		consumer.setId(maxConsumerId + 1);

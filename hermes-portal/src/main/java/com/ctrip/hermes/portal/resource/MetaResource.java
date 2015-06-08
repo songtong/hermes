@@ -11,7 +11,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -27,6 +26,7 @@ import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.portal.server.RestException;
 import com.ctrip.hermes.portal.service.MetaServiceWrapper;
 
@@ -76,6 +76,17 @@ public class MetaResource {
 			}
 		});
 		return Response.status(Status.OK).entity(endpoints).build();
+	}
+
+	@GET
+	@Path("topics/names")
+	public Response getTopicNames() {
+		List<String> topicNames = new ArrayList<String>();
+		for (Topic topic : metaService.findTopicsByPattern(".*")) {
+			topicNames.add(topic.getName());
+		}
+		Collections.sort(topicNames);
+		return Response.status(Status.OK).entity(topicNames).build();
 	}
 
 	@GET
