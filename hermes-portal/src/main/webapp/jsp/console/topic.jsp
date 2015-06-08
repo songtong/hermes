@@ -23,7 +23,9 @@
 						<th st-sort="consumerRetryPolicy">消费重试策略</th>
 						<th st-sort="ackTimeoutSeconds">ACK超时(秒)</th>
 						<th st-sort="endpointType">Endpoint</th>
-						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;">新增</button></th>
+						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;">
+								<span class="glyphicon glyphicon-plus"></span> 新增
+							</button></th>
 					</tr>
 					<tr>
 						<th><input st-search="name" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -46,7 +48,9 @@
 						<td><span ng-bind="row.ackTimeoutSeconds"></td>
 						<td><span ng-bind="row.endpointType"></td>
 						<td>
-							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
+							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;">
+								<span class="glyphicon glyphicon-remove"></span> 删除
+							</button>
 						</td>
 					</tr>
 				</tbody>
