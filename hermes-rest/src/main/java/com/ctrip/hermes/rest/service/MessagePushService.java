@@ -3,9 +3,10 @@ package com.ctrip.hermes.rest.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
+import javax.ws.rs.core.Response;
+
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.config.RequestConfig.Builder;
@@ -26,8 +27,8 @@ import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
-import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Subscription;
 
 @Named
@@ -42,15 +43,12 @@ public class MessagePushService implements Initializable {
 
 	private RequestConfig m_requestConfig;
 
-	private ExecutorService m_executor;
-
 	@Inject
 	private MetricsManager m_metricsManager;
 
 	@Override
 	public void initialize() throws InitializationException {
 		m_httpClient = HttpClients.createDefault();
-		m_executor = Executors.newCachedThreadPool(HermesThreadFactory.create("MessagePush", true));
 
 		Builder b = RequestConfig.custom();
 		Properties globalConfig = m_env.getGlobalConfig();
@@ -74,34 +72,46 @@ public class MessagePushService implements Initializable {
 
 			      @Override
 			      protected void onMessage(final ConsumerMessage<RawMessage> msg) {
-				      for (final String url : urls) {
-					      m_executor.submit(new Runnable() {
-						      public void run() {
-							      try {
-								      pushMessage(msg, url);
+				      while (msg.getStatus() != MessageStatus.SUCCESS) {
+					      for (final String url : urls) {
+						      try {
+							      HttpResponse pushResponse = pushMessage(msg, url);
+							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
+								      msg.ack();
+								      System.out.println("ack");
 								      success_meter.mark();
-							      } catch (Exception e) {
-								      m_logger.warn("Push message failed", e);
+								      return;
+							      } else if (pushResponse.getStatusLine().getStatusCode() == Response.Status.INTERNAL_SERVER_ERROR
+							            .getStatusCode()) {
+								      msg.nack();
+								      System.out.println("nack");
 								      failed_meter.mark();
+								      return;
+							      } else {
+								      m_logger.warn("Push message failed", pushResponse.getStatusLine().getReasonPhrase());
+								      failed_meter.mark();
+								      continue;
 							      }
+						      } catch (Exception e) {
+							      m_logger.warn("Push message failed", e);
+							      failed_meter.mark();
 						      }
-					      });
+					      }
 				      }
 			      }
-
 		      });
 		return consumerHolder;
 	}
 
-	private HttpPost pushMessage(ConsumerMessage<RawMessage> msg, String url) throws IOException {
+	private HttpResponse pushMessage(ConsumerMessage<RawMessage> msg, String url) throws IOException {
 		HttpPost post = new HttpPost(url);
 
 		post.setConfig(m_requestConfig);
 		ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
 		post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
 
-		m_httpClient.execute(post);
+		HttpResponse response = m_httpClient.execute(post);
 
-		return post;
+		return response;
 	}
 }

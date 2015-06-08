@@ -199,7 +199,7 @@ public class SchemaResource {
 	public Response deployMaven(@PathParam("id") long schemaId, @QueryParam("groupId") String groupId,
 	      @QueryParam("artifactId") String artifactId, @QueryParam("version") String version,
 	      @QueryParam("repositoryId") @DefaultValue("snapshots") String repositoryId) {
-		logger.debug("deploy maven {} {} {} {}", schemaId, groupId, artifactId, version);
+		logger.debug("deploy maven {} {} {} {} {}", schemaId, groupId, artifactId, version, repositoryId);
 		Schema schema = null;
 		try {
 			schema = schemaService.getSchemaMeta(schemaId);
