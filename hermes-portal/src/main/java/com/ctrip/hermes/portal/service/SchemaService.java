@@ -206,15 +206,29 @@ public class SchemaService {
 		}
 	}
 
-	public void deployToMaven(Schema metaSchema, String groupId, String artifactId, String version)
+	/**
+	 * 
+	 * @param metaSchema
+	 * @param groupId
+	 * @param artifactId
+	 * @param version
+	 * @param repositoryId
+	 * @throws NumberFormatException
+	 * @throws IOException
+	 * @throws java.text.ParseException
+	 */
+	public void deployToMaven(Schema metaSchema, String groupId, String artifactId, String version, String repositoryId)
 	      throws NumberFormatException, IOException, java.text.ParseException {
 		Path jarPath = Files.createTempFile(metaSchema.getName(), ".jar");
 		com.google.common.io.Files.write(metaSchema.getJarContent(), jarPath.toFile());
 		try {
-			m_compileService.deployToMaven(jarPath, groupId, artifactId, version, "snapshots");
+			if ("snapshots".equals(repositoryId)) {
+				m_compileService.deployToMaven(jarPath, groupId, artifactId, version, "snapshots");
+			} else if ("releases".equals(repositoryId)) {
+				m_compileService.deployToMaven(jarPath, groupId, artifactId, version, "releases");
+			}
 		} finally {
 			m_compileService.delete(jarPath);
-			// m_compileService.deploy(jarPath, groupId, artifactId, version, "releases");
 		}
 	}
 

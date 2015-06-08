@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -196,12 +197,13 @@ public class SchemaResource {
 	@POST
 	@Path("{id}/deploy")
 	public Response deployMaven(@PathParam("id") long schemaId, @QueryParam("groupId") String groupId,
-	      @QueryParam("artifactId") String artifactId, @QueryParam("version") String version) {
+	      @QueryParam("artifactId") String artifactId, @QueryParam("version") String version,
+	      @QueryParam("repositoryId") @DefaultValue("snapshots") String repositoryId) {
 		logger.debug("deploy maven {} {} {} {}", schemaId, groupId, artifactId, version);
 		Schema schema = null;
 		try {
 			schema = schemaService.getSchemaMeta(schemaId);
-			schemaService.deployToMaven(schema, groupId, artifactId, version);
+			schemaService.deployToMaven(schema, groupId, artifactId, version, repositoryId);
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
 		} catch (Exception e) {
