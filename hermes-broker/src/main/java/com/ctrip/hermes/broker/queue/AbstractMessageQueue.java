@@ -60,14 +60,16 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 		MessageQueueCursor existingCursor = m_cursors.get(groupId).get();
 
-		if (existingCursor == null || existingCursor.getLease().getId() != lease.getId()) {
+		if (existingCursor == null || existingCursor.getLease().getId() != lease.getId() || existingCursor.hasError()) {
 			MessageQueueCursor newCursor = create(groupId, lease);
 			if (m_cursors.get(groupId).compareAndSet(existingCursor, newCursor)) {
 				newCursor.init();
 			}
 		}
 
-		return m_cursors.get(groupId).get();
+		MessageQueueCursor cursor = m_cursors.get(groupId).get();
+
+		return cursor.isInited() ? cursor : new NoopMessageQueueCursor();
 	}
 
 	@Override

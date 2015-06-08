@@ -13,7 +13,8 @@ public class ProducerValveRegistry extends AbstractValveRegistry implements Init
 
 	@Override
 	public void initialize() throws InitializationException {
-		doRegister(TracingMessageValve.ID, 0);
+		doRegister(EnrichMessageValve.ID, 0);
+		doRegister(TracingMessageValve.ID, 1);
 	}
 
 }

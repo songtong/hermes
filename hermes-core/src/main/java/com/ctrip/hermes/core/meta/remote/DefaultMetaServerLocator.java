@@ -66,21 +66,26 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	private List<String> fetchMetaServerListFromExistingMetaServer() {
 		List<String> metaServerList = m_metaServerList.get();
-		log.info("Start fetching meta server ip from meta servers {}", metaServerList);
+		if (log.isDebugEnabled()) {
+			log.debug("Start fetching meta server ip from meta servers {}", metaServerList);
+		}
 
 		for (String ipPort : metaServerList) {
 			try {
 				List<String> result = doFetch(ipPort);
-				log.info("Successfully fetched meta server ip from meta server {}", ipPort);
+				if (log.isDebugEnabled()) {
+					log.debug("Successfully fetched meta server ip from meta server {}", ipPort);
+				}
 				return result;
 			} catch (Exception e) {
 				// ignore it
 			}
 		}
 
-		throw new RuntimeException("Failed to fetch meta server ip list from any meta server: " + metaServerList.toString());
+		throw new RuntimeException("Failed to fetch meta server ip list from any meta server: "
+		      + metaServerList.toString());
 	}
- 
+
 	private List<String> domainToIpPorts() {
 		String domain = getMetaServerDomainName();
 		log.info("Meta server domain {}", domain);
@@ -135,9 +140,9 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	@Override
 	public void initialize() throws InitializationException {
-		if(m_clientEnv.isLocalMode())
-			return ;
-		
+		if (m_clientEnv.isLocalMode())
+			return;
+
 		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig().getProperty("meta-port", "80").trim());
 
 		m_httpClient = HttpClients.createDefault();

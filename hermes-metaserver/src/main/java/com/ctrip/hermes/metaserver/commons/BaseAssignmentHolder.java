@@ -61,12 +61,12 @@ public abstract class BaseAssignmentHolder<Key1, Key2> implements Initializable 
 						      if (log.isDebugEnabled()) {
 							      StringBuilder sb = new StringBuilder();
 
+							      sb.append("[");
 							      for (Map.Entry<Key1, Assignment> entry : newAssignments.entrySet()) {
-								      sb.append("[");
 								      sb.append("key1=").append(entry.getKey()).append(",");
 								      sb.append("assignment=").append(entry.getValue());
-								      sb.append("]");
 							      }
+							      sb.append("]");
 
 							      log.debug("Assignment changed.(new assignment={})", sb.toString());
 						      }

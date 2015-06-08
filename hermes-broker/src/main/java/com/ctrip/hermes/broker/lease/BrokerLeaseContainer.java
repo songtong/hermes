@@ -137,9 +137,12 @@ public class BrokerLeaseContainer implements Initializable {
 
 					if (response != null && response.isAcquired()) {
 						existingLease.setExpireTime(response.getLease().getExpireTime());
-						log.info("Successfully renew lease(topic={}, partition={}, sessionId={}, leaseId={}, expireTime={})",
-						      key.getTopic(), key.getPartition(), key.getSessionId(), existingLease.getId(), new Date(
-						            existingLease.getExpireTime()));
+						if (log.isDebugEnabled()) {
+							log.debug(
+							      "Successfully renew lease(topic={}, partition={}, sessionId={}, leaseId={}, expireTime={})",
+							      key.getTopic(), key.getPartition(), key.getSessionId(), existingLease.getId(), new Date(
+							            existingLease.getExpireTime()));
+						}
 					} else {
 						long delay = m_config.getDefaultLeaseRenewDelayMillis();
 						if (response != null && response.getNextTryTime() > 0) {
