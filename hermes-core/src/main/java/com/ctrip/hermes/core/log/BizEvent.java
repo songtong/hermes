@@ -21,8 +21,10 @@ public class BizEvent {
 		m_eventTime = eventTime;
 	}
 
-	public void addData(String key, Object value) {
+	public BizEvent addData(String key, Object value) {
 		m_datas.put(key, value);
+
+		return this;
 	}
 
 	public String getEventType() {
