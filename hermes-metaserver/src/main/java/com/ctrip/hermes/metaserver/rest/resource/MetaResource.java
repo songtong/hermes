@@ -1,6 +1,7 @@
 package com.ctrip.hermes.metaserver.rest.resource;
 
 import javax.inject.Singleton;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -27,7 +28,8 @@ public class MetaResource {
 	private MetaHolder m_metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
 
 	@GET
-	public Response getMeta(@QueryParam("version") int version) {
+	public Response getMeta(@QueryParam("version") @DefaultValue("0") int version,
+	      @QueryParam("hashCode") @DefaultValue("0") long hashCode) {
 		logger.debug("get meta, version {}", version);
 		Meta meta = null;
 		try {
@@ -35,7 +37,10 @@ public class MetaResource {
 			if (meta == null) {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}
-			if (meta.getVersion().equals(version)) {
+			if (version > 0 && meta.getVersion().equals(version)) {
+				return Response.status(Status.NOT_MODIFIED).build();
+			}
+			if (hashCode > 0 && meta.hashCode() == hashCode) {
 				return Response.status(Status.NOT_MODIFIED).build();
 			}
 		} catch (Exception e) {
