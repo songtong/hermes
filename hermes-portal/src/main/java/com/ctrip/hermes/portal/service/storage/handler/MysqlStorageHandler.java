@@ -46,7 +46,7 @@ public class MysqlStorageHandler implements StorageHandler {
 			sb.append(sqlDropTable(tablePrefix, model.getTableName()));
 		}
 
-		log.warn("Drop Table Sql: \n" + sb.toString());
+		log.warn("URL: " + url + " as " + user + "\nDrop Table Sql: \n" + sb.toString());
 		executeSql(url, user, pwd, sb.toString());
 		return true;
 	}

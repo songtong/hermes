@@ -22,7 +22,7 @@ import com.ctrip.hermes.portal.service.storage.exception.TopicIsNullException;
 import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
 import com.ctrip.hermes.portal.service.storage.model.*;
 
-@Named(type = TopicStorageService.class, value = DefaultTopicStorageService.ID)
+@Named(type = DefaultTopicStorageService.class, value = DefaultTopicStorageService.ID)
 public class DefaultTopicStorageService implements TopicStorageService {
 	public static final String ID = "topic-storage-service";
 
@@ -55,6 +55,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		List<TableModel> tableModels = buildTableModels(topic);
 		handler.createTable(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(),
 				  dbInfo.getLast());
+		doLog("CreateTable", topic, partition, dbInfo);
 	}
 
 	private List<TableModel> buildTableModels(Topic topic) {
@@ -87,22 +88,29 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		}
 	}
 
-
 	private void addPartition0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
 										Topic topic, Partition partition)
 			  throws StorageHandleErrorException {
 		// 暂时只针对MessageTableModel(0), MessageTableModel(1)分partition
 
+		handler.addPartition(topic.getId(), partition.getId(), new DeadLetterTableModel(), 1 *
+				  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
+
 		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(0), 100 *
 				  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
 		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(1), 100 *
 				  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
+
+		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
+			int groupId = consumerGroup.getId();
+
+			handler.addPartition(topic.getId(), partition.getId(), new ResendTableModel(groupId), 5 *
+					  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
+		}
+
+		doLog("AddPartition", topic, partition, dbInfo);
 	}
 
-	public Boolean deletePartition(String ds, String topicName) throws StorageHandleErrorException {
-		//todo:
-		throw new RuntimeException("Not Implemented!");
-	}
 
 	@Override
 	public StorageTopic getTopicStorage(Topic topic) throws TopicIsNullException, StorageHandleErrorException {
@@ -145,6 +153,8 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		List<TableModel> tableModels = buildTableModels(topic);
 		handler.dropTables(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo
 				  .getLast());
+
+		doLog("DeleteTables", topic, partition, dbInfo);
 	}
 
 	@Override
@@ -163,11 +173,23 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	private void deletePartition0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
 											Topic topic, Partition partition)
 			  throws StorageHandleErrorException {
+		handler.deletePartition(topic.getId(), partition.getId(), new DeadLetterTableModel(), dbInfo.getFirst(),
+				  dbInfo.getMiddle(), dbInfo.getLast());
+
 		// todo: 先做备份，再做删除
 		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(0), dbInfo.getFirst(), dbInfo
 				  .getMiddle(), dbInfo.getLast());
 		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(1), dbInfo.getFirst(), dbInfo
 				  .getMiddle(), dbInfo.getLast());
+
+		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
+			int groupId = consumerGroup.getId();
+
+			handler.deletePartition(topic.getId(), partition.getId(), new ResendTableModel(groupId), dbInfo.getFirst(),
+					  dbInfo.getMiddle(), dbInfo.getLast());
+		}
+
+		doLog("DeletePartition", topic, partition, dbInfo);
 	}
 
 	@Override
@@ -193,6 +215,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		tableModels.add(new ResendTableModel(group.getId()));
 		handler.createTable(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo
 				  .getLast());
+		doLog("AddConsumerStorage", topic, partition, dbInfo);
 	}
 
 	@Override
@@ -216,6 +239,8 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		tableModels.add(new ResendTableModel(group.getId()));
 		handler.dropTables(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo
 				  .getLast());
+		doLog("DelConsumerStorage", topic, partition, dbInfo);
+
 	}
 
 	private Triple<String/*database url*/, String/*usr*/, String/*password*/> getDatabaseName(Datasource datasource)
@@ -235,11 +260,9 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		return metaService.getDatasource("mysql", writeDs);
 	}
 
-	private boolean validateDatabaseName(String databaseName) {
-		if (databaseName == null || databaseName.length() == 0 || databaseName.equals("")) {
-			log.error("Invalided Database Name: " + databaseName);
-			return false;
-		}
-		return true;
+	private void doLog(String method, Topic topic, Partition partition, Triple<String, String, String> dbInfo) {
+		log.info(String.format("DefaultTopicStorageService: %s is done. On Topic[%s_%d], Partition[%d] on DB [%s] as " +
+							 "User [%s]",
+				  method, topic.getName(), topic.getId(), partition.getId(), dbInfo.getFirst(), dbInfo.getMiddle()));
 	}
 }

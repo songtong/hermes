@@ -33,11 +33,6 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 		service.initTopicStorage(buildTopic());
 	}
 
-	@Test(expected = TopicIsNullException.class)
-	public void createNullTopic() throws TopicAlreadyExistsException, StorageHandleErrorException, TopicIsNullException {
-		service.initTopicStorage(null);
-	}
-
 	@Test
 	public void deleteTopic() throws Exception {
 		service.dropTopicStorage(buildTopic());
@@ -81,9 +76,15 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 		return group;
 	}
 
-
 	private Topic buildTopic() {
 		return metaService.findTopicByName("cmessage_fws");
+	}
+
+
+	@Test(expected = TopicIsNullException.class)
+	public void createNullTopic() throws TopicAlreadyExistsException, StorageHandleErrorException, TopicIsNullException {
+		System.out.println("Try to Create Null Topic.");
+		service.initTopicStorage(null);
 	}
 
 }
