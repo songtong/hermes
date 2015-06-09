@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
-import org.unidal.tuple.Triple;
 
 import com.ctrip.hermes.broker.ack.DefaultAckManager.Operation.Type;
 import com.ctrip.hermes.broker.ack.internal.AckHolder;
@@ -45,7 +44,9 @@ public class DefaultAckManager implements AckManager, Initializable {
 	private static final Logger log = LoggerFactory.getLogger(DefaultAckManager.class);
 
 	// TODO while consumer disconnect, clear holder and offset
-	private ConcurrentMap<Triple<Tpp, String, Boolean>, AckHolder<MessageMeta>> m_holders = new ConcurrentHashMap<>();
+	private ConcurrentMap<Pair<Tpp, String>, AckHolder<MessageMeta>> m_holders = new ConcurrentHashMap<>();
+
+	private ConcurrentMap<Pair<Tpp, String>, AckHolder<MessageMeta>> m_resendHolders = new ConcurrentHashMap<>();
 
 	private BlockingQueue<Operation> m_opQueue;
 
@@ -76,53 +77,70 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 	@Override
 	public void delivered(Tpp tpp, String groupId, boolean resend, List<MessageMeta> msgMetas) {
-		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
-		ensureMapEntryExist(key);
+		resetTppIfResend(tpp, resend);
+
+		Pair<Tpp, String> key = new Pair<>(tpp, groupId);
+		ensureMapEntryExist(key, resend);
 
 		List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>(msgMetas.size());
 		for (MessageMeta msgMeta : msgMetas) {
 			msgId2Metas.add(new Pair<>(msgMeta.getId(), msgMeta));
 		}
 
-		boolean offered = m_opQueue.offer(new Operation(key, Type.DELIVERED, msgId2Metas, m_systemClockService.now()));
-		logOffered("delivered", offered);
+		boolean offered = m_opQueue.offer(new Operation(key, resend, Type.DELIVERED, msgId2Metas, m_systemClockService
+		      .now()));
+		logOfferFail("delivered", offered);
 	}
 
-	private void logOffered(String type, boolean offered) {
+	private void logOfferFail(String type, boolean offered) {
 		if (!offered) {
-			log.warn("operation queue full when doing {}", type);
+			log.warn("Operation queue full when doing {}", type);
 		}
 	}
 
-	private void ensureMapEntryExist(Triple<Tpp, String, Boolean> key) {
-		if (!m_holders.containsKey(key)) {
-			m_holders.putIfAbsent(
-			      key,
-			      new DefaultAckHolder<MessageMeta>(m_metaService.getAckTimeoutSecondsTopicAndConsumerGroup(key.getFirst()
-			            .getTopic(), key.getMiddle()) * 1000));
+	private void resetTppIfResend(Tpp tpp, boolean resend) {
+		if (resend) {
+			tpp.setPriority(false);
 		}
+	}
+
+	private void ensureMapEntryExist(Pair<Tpp, String> key, boolean isResend) {
+		ConcurrentMap<Pair<Tpp, String>, AckHolder<MessageMeta>> holders = getHolders(isResend);
+
+		if (!holders.containsKey(key)) {
+			int timeout = m_metaService.getAckTimeoutSecondsTopicAndConsumerGroup(key.getKey().getTopic(), key.getValue()) * 1000;
+			DefaultAckHolder<MessageMeta> newHolder = new DefaultAckHolder<MessageMeta>(timeout);
+			holders.putIfAbsent(key, newHolder);
+		}
+
 	}
 
 	@Override
 	public void acked(Tpp tpp, String groupId, boolean resend, List<AckContext> ackContexts) {
-		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
-		ensureMapEntryExist(key);
+		resetTppIfResend(tpp, resend);
+		Pair<Tpp, String> key = new Pair<>(tpp, groupId);
+		ensureMapEntryExist(key, resend);
 		for (AckContext context : ackContexts) {
-			boolean offered = m_opQueue
-			      .offer(new Operation(key, Type.ACK, context.getMsgSeq(), m_systemClockService.now()));
-			logOffered("acked", offered);
+			boolean offered = m_opQueue.offer(new Operation(key, resend, Type.ACK, context.getMsgSeq(),
+			      m_systemClockService.now()));
+			logOfferFail("acked", offered);
 		}
 	}
 
 	@Override
 	public void nacked(Tpp tpp, String groupId, boolean resend, List<AckContext> nackContexts) {
-		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
-		ensureMapEntryExist(key);
+		resetTppIfResend(tpp, resend);
+		Pair<Tpp, String> key = new Pair<>(tpp, groupId);
+		ensureMapEntryExist(key, resend);
 		for (AckContext context : nackContexts) {
-			boolean offered = m_opQueue.offer(new Operation(key, Type.NACK, context.getMsgSeq(), m_systemClockService
-			      .now()));
-			logOffered("nacked", offered);
+			boolean offered = m_opQueue.offer(new Operation(key, resend, Type.NACK, context.getMsgSeq(),
+			      m_systemClockService.now()));
+			logOfferFail("nacked", offered);
 		}
+	}
+
+	private ConcurrentMap<Pair<Tpp, String>, AckHolder<MessageMeta>> getHolders(boolean isResend) {
+		return isResend ? m_resendHolders : m_holders;
 	}
 
 	private class AckTask implements Runnable {
@@ -132,8 +150,8 @@ public class DefaultAckManager implements AckManager, Initializable {
 		public void run() {
 			try {
 				handleOperations();
-
-				checkHolders();
+				checkHolders(false);
+				checkHolders(true);
 			} catch (Exception e) {
 				log.error("Exception occured while executing ack task.", e);
 			}
@@ -151,16 +169,17 @@ public class DefaultAckManager implements AckManager, Initializable {
 				}
 
 				for (Operation op : m_todos) {
+					ConcurrentMap<Pair<Tpp, String>, AckHolder<MessageMeta>> holder = getHolders(op.isResend());
+
 					switch (op.getType()) {
 					case ACK:
-						m_holders.get(op.getKey()).acked((Long) op.getData(), true);
+						holder.get(op.getKey()).acked((Long) op.getData(), true);
 						break;
 					case NACK:
-						m_holders.get(op.getKey()).acked((Long) op.getData(), false);
+						holder.get(op.getKey()).acked((Long) op.getData(), false);
 						break;
 					case DELIVERED:
-						m_holders.get(op.getKey())
-						      .delivered((List<Pair<Long, MessageMeta>>) op.getData(), op.getCreateTime());
+						holder.get(op.getKey()).delivered((List<Pair<Long, MessageMeta>>) op.getData(), op.getCreateTime());
 						break;
 
 					default:
@@ -174,12 +193,13 @@ public class DefaultAckManager implements AckManager, Initializable {
 			}
 		}
 
-		private void checkHolders() {
-			for (Map.Entry<Triple<Tpp, String, Boolean>, AckHolder<MessageMeta>> entry : m_holders.entrySet()) {
+		private void checkHolders(boolean isResend) {
+			ConcurrentMap<Pair<Tpp, String>, AckHolder<MessageMeta>> holders = getHolders(isResend);
+
+			for (Map.Entry<Pair<Tpp, String>, AckHolder<MessageMeta>> entry : holders.entrySet()) {
 				AckHolder<MessageMeta> holder = entry.getValue();
-				Tpp tpp = entry.getKey().getFirst();
-				String groupId = entry.getKey().getMiddle();
-				boolean isResend = entry.getKey().getLast();
+				Tpp tpp = entry.getKey().getKey();
+				String groupId = entry.getKey().getValue();
 
 				BatchResult<MessageMeta> result = holder.scan();
 
@@ -231,7 +251,9 @@ public class DefaultAckManager implements AckManager, Initializable {
 			ACK, NACK, DELIVERED;
 		}
 
-		private Triple<Tpp, String, Boolean> m_key;
+		private Pair<Tpp, String> m_key;
+
+		private boolean m_resend;
 
 		private Object m_data;
 
@@ -239,14 +261,19 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 		private long m_createTime;
 
-		Operation(Triple<Tpp, String, Boolean> key, Type type, Object data, long createTime) {
+		Operation(Pair<Tpp, String> key, boolean isResend, Type type, Object data, long createTime) {
 			m_key = key;
+			m_resend = isResend;
 			m_data = data;
 			m_type = type;
 			m_createTime = createTime;
 		}
 
-		public Triple<Tpp, String, Boolean> getKey() {
+		public boolean isResend() {
+			return m_resend;
+		}
+
+		public Pair<Tpp, String> getKey() {
 			return m_key;
 		}
 

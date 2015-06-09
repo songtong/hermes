@@ -153,14 +153,14 @@ public class DefaultMetaService implements MetaService, Initializable {
 			throw new RuntimeException(String.format("Topic %s not found", topicName));
 		}
 
-		for (ConsumerGroup group : topic.getConsumerGroups()) {
-			if (StringUtils.equalsIgnoreCase(group.getName(), groupName)) {
-				return group.getId();
-			}
-		}
+		ConsumerGroup consumerGroup = topic.findConsumerGroup(groupName);
 
-		throw new RuntimeException(String.format("Consumer group not found for topic %s and group %s", topicName,
-		      groupName));
+		if (consumerGroup != null) {
+			return consumerGroup.getId();
+		} else {
+			throw new RuntimeException(String.format("Consumer group not found for topic %s and group %s", topicName,
+			      groupName));
+		}
 	}
 
 	@Override

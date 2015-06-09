@@ -14,9 +14,20 @@ public class Tpp {
 	private boolean m_priority;
 
 	public Tpp(String topic, int partition, boolean priority) {
-		super();
 		m_topic = topic;
 		m_partition = partition;
+		m_priority = priority;
+	}
+
+	public void setTopic(String topic) {
+		m_topic = topic;
+	}
+
+	public void setPartition(int partition) {
+		m_partition = partition;
+	}
+
+	public void setPriority(boolean priority) {
 		m_priority = priority;
 	}
 
