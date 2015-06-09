@@ -11,9 +11,11 @@ public final class DeadLetterTableModel extends TableModel{
 		MetaModel payload = new MetaModel("payload", "MEDIUMBLOB", "NOT NULL");
 		MetaModel dead_date = new MetaModel("dead_date", "DATETIME", "NOT NULL");
 		MetaModel group_id = new MetaModel("group_id", "INT(11)", "NULL DEFAULT NULL");
+		MetaModel priority = new MetaModel("priority", "TINYINT(4)", "NOT NULL");
+		MetaModel origin_id = new MetaModel("origin_id", "BIGINT(20)", "NOT NULL");
 
 		setMetaModels(id, producer_ip, producer_id, ref_key, attributes, creation_date, payload,
-				  dead_date, group_id);
+				  dead_date, group_id, priority, origin_id);
 		setPrimaryKey(id);
 		setIndexKey("key", ref_key.columnName);
 		setTableName("dead_letter");
