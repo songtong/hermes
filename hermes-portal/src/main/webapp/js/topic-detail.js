@@ -41,8 +41,6 @@ angular.module('hermes-topic-detail', [ 'ngResource' ]).controller('topic-detail
 		}
 	});
 
-	scope.is_loading = true;
-
 	scope.codec_types = meta_resource.get_codecs({}, function(result) {
 		scope.codec_types = collect_schemas(result, 'type', true);
 	});
@@ -63,7 +61,6 @@ angular.module('hermes-topic-detail', [ 'ngResource' ]).controller('topic-detail
 		scope.topic = query_result;
 		scope.datasource_names = find_datasource_names(scope.src_storages, scope.topic.storageType);
 		scope.endpoint_names = find_endpoint_names(scope.src_endpoints, scope.topic.endpointType);
-		scope.is_loading = false;
 	});
 
 } ]);
