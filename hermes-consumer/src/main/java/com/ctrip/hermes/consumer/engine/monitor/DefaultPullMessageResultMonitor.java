@@ -85,7 +85,7 @@ public class DefaultPullMessageResultMonitor implements PullMessageResultMonitor
 						      for (Map.Entry<Long, PullMessageCommand> entry : m_cmds.entrySet()) {
 							      PullMessageCommand cmd = entry.getValue();
 							      Long correlationId = entry.getKey();
-							      if (cmd.getExpireTime() < m_systemClockService.now()) {
+							      if (cmd.getExpireTime() + 4000L < m_systemClockService.now()) {
 								      timeoutCmds.add(m_cmds.remove(correlationId));
 							      }
 						      }

@@ -400,7 +400,7 @@ public class LongPollingConsumerTask implements Runnable {
 					if (timeout > 0) {
 						PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
 						      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout
-						            + 2000L);
+						            - 500L);
 
 						cmd.getHeader().setCorrelationId(m_correlationId);
 						cmd.setFuture(future);

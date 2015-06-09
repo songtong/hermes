@@ -43,11 +43,11 @@ public class BrokerConfig {
 	}
 
 	public long getAckManagerCheckIntervalMillis() {
-		return 50;
+		return 10;
 	}
 
 	public int getAckManagerOpHandlingBatchSize() {
-		return 50;
+		return 5000;
 	}
 
 	public int getAckManagerOpQueueSize() {

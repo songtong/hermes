@@ -42,7 +42,7 @@ public class ConsumerConfig {
 	}
 
 	public String getDefaultNotifierThreadCount() {
-		return "10";
+		return "1";
 	}
 
 }

@@ -143,7 +143,8 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		if (m_clientEnv.isLocalMode())
 			return;
 
-		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig().getProperty("meta-port", "80").trim());
+		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig()
+		      .getProperty("meta-port", String.valueOf(DEFAULT_MASTER_METASERVER_PORT)).trim());
 
 		m_httpClient = HttpClients.createDefault();
 		Builder b = RequestConfig.custom();
