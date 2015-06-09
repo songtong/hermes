@@ -84,7 +84,14 @@ public class DefaultAckManager implements AckManager, Initializable {
 			msgId2Metas.add(new Pair<>(msgMeta.getId(), msgMeta));
 		}
 
-		m_opQueue.offer(new Operation(key, Type.DELIVERED, msgId2Metas, m_systemClockService.now()));
+		boolean offered = m_opQueue.offer(new Operation(key, Type.DELIVERED, msgId2Metas, m_systemClockService.now()));
+		logOffered("delivered", offered);
+	}
+
+	private void logOffered(String type, boolean offered) {
+		if (!offered) {
+			log.warn("operation queue full when doing {}", type);
+		}
 	}
 
 	private void ensureMapEntryExist(Triple<Tpp, String, Boolean> key) {
@@ -101,7 +108,9 @@ public class DefaultAckManager implements AckManager, Initializable {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		ensureMapEntryExist(key);
 		for (AckContext context : ackContexts) {
-			m_opQueue.offer(new Operation(key, Type.ACK, context.getMsgSeq(), m_systemClockService.now()));
+			boolean offered = m_opQueue
+			      .offer(new Operation(key, Type.ACK, context.getMsgSeq(), m_systemClockService.now()));
+			logOffered("acked", offered);
 		}
 	}
 
@@ -110,7 +119,9 @@ public class DefaultAckManager implements AckManager, Initializable {
 		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
 		ensureMapEntryExist(key);
 		for (AckContext context : nackContexts) {
-			m_opQueue.offer(new Operation(key, Type.NACK, context.getMsgSeq(), m_systemClockService.now()));
+			boolean offered = m_opQueue.offer(new Operation(key, Type.NACK, context.getMsgSeq(), m_systemClockService
+			      .now()));
+			logOffered("nacked", offered);
 		}
 	}
 
