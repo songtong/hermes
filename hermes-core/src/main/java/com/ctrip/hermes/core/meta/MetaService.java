@@ -9,7 +9,6 @@ import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Subscription;
@@ -48,8 +47,6 @@ public interface MetaService {
 	
 	List<Subscription> listSubscriptions();
 
-	void refreshMeta(Meta meta);
-
 	LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId, int brokerPort);
 
 	int translateToIntGroupId(String topic, String groupId);
@@ -60,4 +57,5 @@ public interface MetaService {
 
 	LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId);
 
+	void refresh();
 }

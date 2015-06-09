@@ -50,7 +50,7 @@ public class RemoteMetaLoader implements MetaLoader {
 		try {
 			String url;
 			if (m_meta != null) {
-				url = "http://" + ipPort + "/meta?hashCode=" + m_meta.hashCode();
+				url = "http://" + ipPort + "/meta?version=" + m_meta.getVersion();
 			} else {
 				url = "http://" + ipPort + "/meta";
 			}

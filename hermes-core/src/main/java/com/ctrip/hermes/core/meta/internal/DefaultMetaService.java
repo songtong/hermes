@@ -186,7 +186,11 @@ public class DefaultMetaService implements MetaService, Initializable {
 		return dataSources;
 	}
 
-	public void refreshMeta(Meta meta) {
+	public void refresh(){
+		refreshMeta(m_manager.loadMeta());
+	}
+	
+	private void refreshMeta(Meta meta) {
 		m_metaCache.set(meta);
 	}
 
@@ -242,7 +246,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 			      @Override
 			      public void run() {
 				      try {
-					      refreshMeta(m_manager.loadMeta());
+					      refresh();
 				      } catch (Exception e) {
 					      log.warn("Failed to refresh meta", e);
 				      }
