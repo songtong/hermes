@@ -27,15 +27,15 @@ public class MetaResource {
 	private MetaHolder m_metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
 
 	@GET
-	public Response getMeta(@QueryParam("hashCode") long hashCode) {
-		logger.debug("get meta, hashCode {}", hashCode);
+	public Response getMeta(@QueryParam("version") int version) {
+		logger.debug("get meta, version {}", version);
 		Meta meta = null;
 		try {
 			meta = m_metaHolder.getMeta();
 			if (meta == null) {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}
-			if (meta.hashCode() == hashCode) {
+			if (meta.getVersion().equals(version)) {
 				return Response.status(Status.NOT_MODIFIED).build();
 			}
 		} catch (Exception e) {

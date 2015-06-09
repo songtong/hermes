@@ -147,7 +147,7 @@ public class CompileService {
 				logger.error(pb.environment().toString());
 			}
 			if (process != null) {
-				process.destroyForcibly();
+				process.destroy();
 			}
 			if (hasErr) {
 				throw new RuntimeException(errorMsg.toString());

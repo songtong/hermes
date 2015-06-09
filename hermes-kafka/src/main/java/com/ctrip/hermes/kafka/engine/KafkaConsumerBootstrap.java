@@ -121,7 +121,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 					      consumerContext.getMessageClazz());
 					@SuppressWarnings("rawtypes")
 					ConsumerMessage kafkaMsg = new KafkaConsumerMessage(baseMsg);
-					List<ConsumerMessage<?>> msgs = new ArrayList<>();
+					List<ConsumerMessage<?>> msgs = new ArrayList<>(1);
 					msgs.add(kafkaMsg);
 					m_consumerNotifier.messageReceived(correlationId, msgs);
 				} catch (Exception e) {

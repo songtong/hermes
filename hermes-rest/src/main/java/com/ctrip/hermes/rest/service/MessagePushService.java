@@ -14,6 +14,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -22,6 +23,8 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
@@ -48,7 +51,10 @@ public class MessagePushService implements Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_httpClient = HttpClients.createDefault();
+		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+		cm.setMaxTotal(100);
+
+		m_httpClient = HttpClients.custom().setConnectionManager(cm).build();
 
 		Builder b = RequestConfig.custom();
 		Properties globalConfig = m_env.getGlobalConfig();
@@ -65,6 +71,9 @@ public class MessagePushService implements Initializable {
 		final Meter failed_meter = m_metricsManager.meter("push_fail", sub.getTopic(), sub.getGroup(), sub.getEndpoints()
 		      .toString());
 
+		final Timer push_timer = m_metricsManager.timer("push_timer", sub.getTopic(), sub.getGroup(), sub.getEndpoints()
+		      .toString());
+
 		final String[] urls = sub.getEndpoints().split(",");
 
 		final ConsumerHolder consumerHolder = Consumer.getInstance().start(sub.getTopic(), sub.getGroup(),
@@ -73,22 +82,30 @@ public class MessagePushService implements Initializable {
 			      @Override
 			      protected void onMessage(final ConsumerMessage<RawMessage> msg) {
 				      while (msg.getStatus() != MessageStatus.SUCCESS) {
+					      if (failed_meter.getOneMinuteRate() > 0.5) {
+						      m_logger.warn("Suspend current push");
+						      break;
+					      }
+
 					      for (final String url : urls) {
+						      HttpResponse pushResponse = null;
 						      try {
-							      HttpResponse pushResponse = pushMessage(msg, url);
+							      Context time = push_timer.time();
+							      pushResponse = pushMessage(msg, url);
+							      time.stop();
+							      System.out.println("OneMinuteRate: " + push_timer.getOneMinuteRate());
 							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
 								      msg.ack();
-								      System.out.println("ack");
 								      success_meter.mark();
 								      return;
-							      } else if (pushResponse.getStatusLine().getStatusCode() == Response.Status.INTERNAL_SERVER_ERROR
+							      } else if (pushResponse.getStatusLine().getStatusCode() >= Response.Status.INTERNAL_SERVER_ERROR
 							            .getStatusCode()) {
 								      msg.nack();
-								      System.out.println("nack");
 								      failed_meter.mark();
 								      return;
 							      } else {
-								      m_logger.warn("Push message failed", pushResponse.getStatusLine().getReasonPhrase());
+								      m_logger.warn("Push message failed, reason:{} msg:{} url:{}", pushResponse
+								            .getStatusLine().getReasonPhrase(), msg.getBody(), url);
 								      failed_meter.mark();
 								      continue;
 							      }
@@ -105,13 +122,15 @@ public class MessagePushService implements Initializable {
 
 	private HttpResponse pushMessage(ConsumerMessage<RawMessage> msg, String url) throws IOException {
 		HttpPost post = new HttpPost(url);
-
-		post.setConfig(m_requestConfig);
-		ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
-		post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
-
-		HttpResponse response = m_httpClient.execute(post);
-
+		HttpResponse response = null;
+		try {
+			post.setConfig(m_requestConfig);
+			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
+			post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
+			response = m_httpClient.execute(post);
+		} finally {
+			post.reset();
+		}
 		return response;
 	}
 }

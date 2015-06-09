@@ -59,7 +59,7 @@ public class OneBoxTest extends ComponentTestCase {
 		String id = "mysub_" + UUID.randomUUID().toString();
 		String topic = "kafka.SimpleTopic";
 		String group = "OneBoxGroup";
-		String urls = "http://localhost:1357/onebox/push1,http://localhost:1357/onebox/push2";
+		String urls = "http://localhost:1357/onebox/pushWrong,http://localhost:1357/onebox/push1";
 
 		Subscription sub = new Subscription();
 		sub.setId(id);
@@ -73,8 +73,8 @@ public class OneBoxTest extends ComponentTestCase {
 		Response response = request.post(Entity.entity(json, MediaType.APPLICATION_JSON));
 		Assert.assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
 
-		System.out.println("Sleep 65 seconds");
-		TimeUnit.SECONDS.sleep(65);
+		System.out.println("Sleep 10 seconds");
+		TimeUnit.SECONDS.sleep(10);
 
 		String base = UUID.randomUUID().toString();
 		System.out.println("Base: " + base);
@@ -93,9 +93,9 @@ public class OneBoxTest extends ComponentTestCase {
 			TimeUnit.SECONDS.sleep(1);
 			if (received.size() > 0)
 				System.out.println("Received: " + received.size());
-			if (System.currentTimeMillis() - startWait > 10000) {
-				break;
-			}
+//			if (System.currentTimeMillis() - startWait > 10000) {
+//				break;
+//			}
 		}
 
 		request = portalWebTarget.path("/api/subscriptions/" + id).request();
