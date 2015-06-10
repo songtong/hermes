@@ -6,7 +6,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -17,14 +17,21 @@ public class ZKClient implements Initializable {
 
 	private CuratorFramework m_client;
 
-	private ClientEnvironment m_env;
+	private MetaServerConfig m_config;
 
 	@Override
 	public void initialize() throws InitializationException {
 		Builder builder = CuratorFrameworkFactory.builder();
-		builder.connectionTimeoutMs(Integer.valueOf(m_env.getGlobalConfig().getProperty(
-		      CONFIG_PREFIX + "connection.timeout")));
-		builder.connectString(m_env.getGlobalConfig().getProperty(CONFIG_PREFIX + "connection.url"));
-//		builder.maxCloseWaitMs(m_env.getGlobalConfig().getProperty(CONFIG_PREFIX + "close.wait"));
+
+		builder.connectionTimeoutMs(m_config.getZkConnectionTimeoutMillis());
+		builder.connectString(m_config.getZkConnectionString());
+		builder.maxCloseWaitMs(m_config.getZkCloseWaitMillis());
+		builder.namespace(m_config.getZkNamespace());
+
+		m_client = builder.build();
+	}
+
+	public CuratorFramework getClient() {
+		return m_client;
 	}
 }

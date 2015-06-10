@@ -45,4 +45,20 @@ public class MetaServerConfig {
 		return -3 * 1000L;
 	}
 
+	public int getZkConnectionTimeoutMillis() {
+		return 3000;
+	}
+
+	public String getZkConnectionString() {
+		return "127.0.0.1:2181";
+	}
+
+	public int getZkCloseWaitMillis() {
+		return 1000;
+	}
+
+	public String getZkNamespace() {
+		return "hermes";
+	}
+
 }
