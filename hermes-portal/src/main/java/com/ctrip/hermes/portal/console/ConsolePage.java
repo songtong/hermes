@@ -13,7 +13,11 @@ public enum ConsolePage implements Page {
 
    ENDPOINT("endpoint", "endpoint", "Endpoint", "Endpoint", true),
 
-   STORAGE("storage", "storage", "Storage", "Storage", true);
+   STORAGE("storage", "storage", "Storage", "Storage", true),
+
+   SUBSCRIPTION("subscription", "subscription", "Subscription", "Subscription", true),
+
+   TRACER("tracer", "tracer", "Tracer", "Tracer", true);
 
    private String m_name;
 
