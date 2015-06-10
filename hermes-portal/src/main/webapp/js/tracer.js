@@ -70,6 +70,17 @@ function Trace() {
 	this.plotLines = function() {
 		var plotLines = [];
 
+		var minStartEvent = null;
+		var minEndEvent = null;
+		for(groupId in this.consumerEvents) {
+			if(!minStartEvent || this.consumerEvents[groupId][0].x < minStartEvent.x) { 
+				minStartEvent = this.consumerEvents[groupId][0];
+			}
+			if(!minEndEvent || this.consumerEvents[groupId][1].x < minEndEvent.x) { 
+				minEndEvent = this.consumerEvents[groupId][1];
+			}
+		}
+
 		var plots = [ {
 			text : "BORN",
 			value : 0
@@ -82,6 +93,12 @@ function Trace() {
 		}, {
 			text : "DELIVER",
 			value : this.commonEvents[2].x + this.commonEvents[2].width
+		}, {
+			text : "START",
+			value : minStartEvent.x + minStartEvent.width
+		} , {
+			text : "END",
+			value : minEndEvent.x + minEndEvent.width
 		} ];
 
 		plots.forEach(function(plot) {
@@ -150,9 +167,11 @@ function Trace() {
 
 	this.categories = function() {
 		var categories = [];
-		categories.push(this.commonEvents[1].datas.producerIp);
-		for (groupId in this.consumerEvents) {
-			categories.push(this.consumerEvents[groupId][0].datas.consumerIp);
+		categories.push("Producer@" + this.commonEvents[1].datas.producerIp);
+		
+		for(groupId in this.consumerEvents) {
+		 	var ce = this.consumerEvents[groupId][0];
+			categories.push("<b>" + groupId + "@" + ce.datas.consumerIp + "</b>");
 		}
 
 		return categories;
@@ -269,7 +288,7 @@ angular.module('hermes-tracer', [ 'ngResource' ]).controller(
 								},
 
 								subtitle : {
-									text : 'order-17465301'
+									text : refKey
 								},
 
 								xAxis : {

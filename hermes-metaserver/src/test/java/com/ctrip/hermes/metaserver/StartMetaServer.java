@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaserver;
 
+import org.apache.curator.test.TestingServer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +15,8 @@ import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 
 @RunWith(JUnit4.class)
 public class StartMetaServer extends JettyServer {
+	private TestingServer m_zkServer = null;
+
 	public static void main(String[] args) throws Exception {
 		StartMetaServer server = new StartMetaServer();
 
@@ -22,10 +25,28 @@ public class StartMetaServer extends JettyServer {
 		server.stopServer();
 	}
 
+	@Override
+	protected void startServer() throws Exception {
+		String zkMode = System.getProperty("zkMode");
+		if (!"real".equalsIgnoreCase(zkMode)) {
+			m_zkServer = new TestingServer(2181);
+			System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
+		}
+		super.startServer();
+	}
+
+	@Override
+	protected void stopServer() throws Exception {
+		super.stopServer();
+		if (m_zkServer != null) {
+			m_zkServer.stop();
+		}
+	}
+
 	@Before
 	public void before() throws Exception {
 		System.setProperty("devMode", "true");
-		super.startServer();
+		startServer();
 	}
 
 	@Override
