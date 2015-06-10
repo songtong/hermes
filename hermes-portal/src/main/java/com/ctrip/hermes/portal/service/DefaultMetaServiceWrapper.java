@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -44,6 +45,7 @@ public class DefaultMetaServiceWrapper extends DefaultMetaService implements Met
 	protected Meta m_meta;
 
 	protected Map<Long, Topic> m_topics;
+
 	@Override
 	public Codec getCodecByTopic(String topicName) {
 		Topic topic = m_meta.findTopic(topicName);
@@ -200,5 +202,36 @@ public class DefaultMetaServiceWrapper extends DefaultMetaService implements Met
 	public Map<String, Subscription> getSubscriptions() {
 		return m_meta.getSubscriptions();
 	}
+
+	@Override
+	public synchronized boolean addEndpoint(Endpoint endpoint) throws Exception {
+		m_meta.getEndpoints().put(endpoint.getId(), endpoint);
+
+		if (!updateMeta(m_meta)) {
+			throw new RuntimeException("Update meta failed, please try later");
+		}
+		return true;
+	}
+
+	@Override
+	public void deleteEndpoint(String id) throws Exception {
+		for (Entry<String, Endpoint> entry : m_meta.getEndpoints().entrySet()) {
+			if (entry.getValue().getId().equals(id)) {
+				m_meta.getEndpoints().remove(entry.getKey());
+				break;
+			}
+		}
+		updateMeta(m_meta);
+	}
+
+	@Override
+   public boolean addDatasource(Datasource datasource) throws Exception {
+		return true;
+   }
+
+	@Override
+   public void deleteDatasource(String id) throws Exception {
+	   
+   }
 
 }

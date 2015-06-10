@@ -11,7 +11,7 @@
 	</div>
 	<div ng-app="hermes-consumer" ng-controller="consumer-controller">
 		<div class="panel panel-info">
-			<div class="panel-heading">Hermes消费者列表</div>
+			<div class="panel-heading">Hermes 消费者列表</div>
 			<table class="table table-hover" st-pipe="get_consumers" st-table="consumer_table">
 				<thead>
 					<tr>
@@ -69,9 +69,7 @@
 								<label for="inputTopicName" class="col-sm-3 control-label">Topic名称</label>
 								<div class="col-sm-8">
 									<input type="text" class="form-control" id="inputTopicName" data-provide="typeahead" placeholder="Topic Name" ng-model="new_consumer.topic">
-<!-- 									<select name="topic-name" class="form-control" id="inputOrderedConsume" ng-model="new_consumer.topic" ng-options="topic for topic in topic_names">
-									</select>
- -->								</div>
+								</div>
 							</div>
 							<div class="form-group">
 								<label for="inputGroupName" class="col-sm-3 control-label">消费集群名称</label>

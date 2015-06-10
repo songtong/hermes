@@ -11,6 +11,12 @@
          <page name="dashboard" title="Dashboard" path="dashboard" template="default">
             <description>Dashboard</description>
          </page>
+         <page name="endpoint" title="Endpoint" path="endpoint" template="default">
+            <description>Endpoint</description>
+         </page>
+         <page name="storage" title="Storage" path="storage" template="default">
+            <description>Storage</description>
+         </page>
       </module>
    </webapp>
 </wizard>

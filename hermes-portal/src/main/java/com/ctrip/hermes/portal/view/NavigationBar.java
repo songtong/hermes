@@ -7,7 +7,7 @@ public class NavigationBar {
 	public Page[] getVisiblePages() {
 		return new Page[] {
 
-		ConsolePage.TOPIC, ConsolePage.CONSUMER, ConsolePage.DASHBOARD };
+		ConsolePage.TOPIC, ConsolePage.CONSUMER, ConsolePage.STORAGE, ConsolePage.ENDPOINT, ConsolePage.DASHBOARD };
 
 	}
 }

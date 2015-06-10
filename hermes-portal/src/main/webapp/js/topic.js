@@ -80,7 +80,9 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 			scope.topic_rows = [];
 
 			scope.new_topic = {
-				partitions : [ {} ]
+				partitions : [ {} ],
+				consumerRetryPolicy : '1:[3,6,9]',
+				ackTimeoutSeconds : 5
 			};
 
 			scope.codec_types = meta_resource.get_codecs({}, function(data) {

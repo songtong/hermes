@@ -9,7 +9,11 @@ public enum ConsolePage implements Page {
 
    CONSUMER("consumer", "consumer", "Consumer", "Consumer", true),
 
-   DASHBOARD("dashboard", "dashboard", "Dashboard", "Dashboard", true);
+   DASHBOARD("dashboard", "dashboard", "Dashboard", "Dashboard", true),
+
+   ENDPOINT("endpoint", "endpoint", "Endpoint", "Endpoint", true),
+
+   STORAGE("storage", "storage", "Storage", "Storage", true);
 
    private String m_name;
 
