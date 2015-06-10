@@ -1,6 +1,11 @@
 package com.ctrip.hermes.metaserver.config;
 
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.net.Networks;
+
+import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.utils.StringUtils;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -8,6 +13,9 @@ import org.unidal.lookup.annotation.Named;
  */
 @Named(type = MetaServerConfig.class)
 public class MetaServerConfig {
+
+	@Inject
+	private ClientEnvironment m_env;
 
 	public long getDefaultLeaseAcquireOrRenewRetryDelayMillis() {
 		return 1000L;
@@ -61,4 +69,37 @@ public class MetaServerConfig {
 		return "hermes";
 	}
 
+	public int getZkRetryBaseSleepTimeMillis() {
+		return 1000;
+	}
+
+	public int getZkRetryMaxRetries() {
+		return 3;
+	}
+
+	public int getZkSessionTimeoutMillis() {
+		return 15 * 1000;
+	}
+
+	public String getMetaServerName() {
+		return Networks.forIp().getLocalHostAddress() + ":" + getMetaServerPort();
+	}
+
+	public int getMetaServerPort() {
+		String port = System.getProperty("metaServerPort");
+		if (StringUtils.isBlank(port)) {
+			port = m_env.getGlobalConfig().getProperty("metaserver-port", "80");
+		}
+
+		if (StringUtils.isNumeric(port)) {
+			return Integer.valueOf(port);
+		} else {
+			return 80;
+		}
+
+	}
+
+	public String getMetaServerLeaderElectionZkPath() {
+		return "/meta-servers";
+	}
 }

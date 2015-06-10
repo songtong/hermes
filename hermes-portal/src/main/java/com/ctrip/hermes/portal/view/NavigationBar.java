@@ -1,7 +1,8 @@
 package com.ctrip.hermes.portal.view;
 
-import com.ctrip.hermes.portal.console.ConsolePage;
 import org.unidal.web.mvc.Page;
+
+import com.ctrip.hermes.portal.console.ConsolePage;
 
 public class NavigationBar {
 	public Page[] getVisiblePages() {
