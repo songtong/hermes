@@ -22,9 +22,8 @@
 		</layout>
 	</appender>
 
-	<logger name="biz">
+	<logger name="biz" additivity="false">
 		<level value="INFO" />
-		<appender-ref ref="CONSOLE" />
 		<appender-ref ref="FILE" />
 	</logger>
 
@@ -39,7 +38,7 @@
 	</logger>
 
 	<root>
-		<priority value="info" />
+		<level value="info" />
 		<appender-ref ref="CONSOLE" />
 	</root>
 
