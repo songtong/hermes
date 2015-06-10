@@ -66,21 +66,26 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	private List<String> fetchMetaServerListFromExistingMetaServer() {
 		List<String> metaServerList = m_metaServerList.get();
-		log.info("Start fetching meta server ip from meta servers {}", metaServerList);
+		if (log.isDebugEnabled()) {
+			log.debug("Start fetching meta server ip from meta servers {}", metaServerList);
+		}
 
 		for (String ipPort : metaServerList) {
 			try {
 				List<String> result = doFetch(ipPort);
-				log.info("Successfully fetched meta server ip from meta server {}", ipPort);
+				if (log.isDebugEnabled()) {
+					log.debug("Successfully fetched meta server ip from meta server {}", ipPort);
+				}
 				return result;
 			} catch (Exception e) {
 				// ignore it
 			}
 		}
 
-		throw new RuntimeException("Failed to fetch meta server ip list from any meta server: " + metaServerList.toString());
+		throw new RuntimeException("Failed to fetch meta server ip list from any meta server: "
+		      + metaServerList.toString());
 	}
- 
+
 	private List<String> domainToIpPorts() {
 		String domain = getMetaServerDomainName();
 		log.info("Meta server domain {}", domain);
@@ -116,14 +121,16 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		Env env = m_clientEnv.getEnv();
 
 		switch (env) {
-		case DEV:
+		case LOCAL:
 			return "127.0.0.1";
+		case DEV:
+			return "10.3.8.63";
 		case LPT:
 			return "10.3.8.63";
 		case FWS:
-			return "10.2.7.72";
+			return "meta.hermes.fws.qa.nt.ctripcorp.com";
 		case UAT:
-			return "10.2.7.72";
+			return "meta.hermes.fx.uat.qa.nt.ctripcorp.com";
 		case PROD:
 			return "meta.hermes.fx.ctripcorp.com";
 
@@ -135,10 +142,11 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	@Override
 	public void initialize() throws InitializationException {
-		if(m_clientEnv.isLocalMode())
-			return ;
-		
-		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig().getProperty("meta-port", "80").trim());
+		if (m_clientEnv.isLocalMode())
+			return;
+
+		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig()
+		      .getProperty("meta-port", String.valueOf(DEFAULT_MASTER_METASERVER_PORT)).trim());
 
 		m_httpClient = HttpClients.createDefault();
 		Builder b = RequestConfig.custom();

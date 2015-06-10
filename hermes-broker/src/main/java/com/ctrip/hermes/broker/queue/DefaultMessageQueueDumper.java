@@ -65,6 +65,7 @@ public class DefaultMessageQueueDumper extends AbstractMessageQueueDumper {
 	private void bizLog(MessageBatchWithRawData batch, boolean success) {
 		for (PartialDecodedMessage msg : batch.getMessages()) {
 			BizEvent event = new BizEvent("Message.Saved");
+			event.addData("topic", batch.getTopic());
 			event.addData("refKey", msg.getKey());
 			event.addData("success", success);
 

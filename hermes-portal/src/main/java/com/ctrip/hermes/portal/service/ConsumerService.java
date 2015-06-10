@@ -1,5 +1,6 @@
 package com.ctrip.hermes.portal.service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,13 +32,13 @@ public class ConsumerService {
 	}
 
 	public List<ConsumerGroup> getConsumers(String topic) {
-		return m_metaService.getMeta().getTopics().get(topic).getConsumerGroups();
+		return new ArrayList<>(m_metaService.getMeta().getTopics().get(topic).getConsumerGroups().values());
 	}
 
 	public Map<String, List<ConsumerGroup>> getConsumers() {
 		Map<String, List<ConsumerGroup>> map = new LinkedHashMap<String, List<ConsumerGroup>>();
 		for (Entry<String, Topic> entry : m_metaService.getMeta().getTopics().entrySet()) {
-			map.put(entry.getKey(), entry.getValue().getConsumerGroups());
+			map.put(entry.getKey(), new ArrayList<>(entry.getValue().getConsumerGroups().values()));
 		}
 		return map;
 	}
@@ -45,11 +46,11 @@ public class ConsumerService {
 	public void deleteConsumerFromTopic(String topic, String consumer) throws Exception {
 		Meta meta = m_metaService.getMeta();
 		Topic t = meta.getTopics().get(topic);
-		for (ConsumerGroup c : t.getConsumerGroups()) {
-			if (c.getName().equals(consumer)) {
-				t.getConsumerGroups().remove(c);
-				m_storageService.delConsumerStorage(t, c);
-				break;
+		ConsumerGroup consumerGroup = t.findConsumerGroup(consumer);
+		if (consumerGroup != null) {
+			boolean removed = t.removeConsumerGroup(consumer);
+			if (removed) {
+				m_storageService.delConsumerStorage(t, consumerGroup);
 			}
 		}
 		m_metaService.updateMeta(meta);
@@ -60,7 +61,7 @@ public class ConsumerService {
 
 		int maxConsumerId = 0;
 		for (Entry<String, Topic> entry : meta.getTopics().entrySet()) {
-			for (ConsumerGroup cg : entry.getValue().getConsumerGroups()) {
+			for (ConsumerGroup cg : entry.getValue().getConsumerGroups().values()) {
 				if (cg.getId() != null && cg.getId() > maxConsumerId) {
 					maxConsumerId = cg.getId();
 				}

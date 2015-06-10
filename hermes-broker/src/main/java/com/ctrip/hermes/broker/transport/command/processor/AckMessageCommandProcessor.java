@@ -49,7 +49,7 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 			boolean isResend = entry.getKey().getLast();
 			List<AckContext> ackContexts = entry.getValue();
 			m_ackManager.acked(tpp, groupId, isResend, ackContexts);
-			bizLogAcked(consumerIp, ackContexts, isResend, true);
+			bizLogAcked(tpp, consumerIp, groupId, ackContexts, isResend, true);
 
 			if (log.isDebugEnabled()) {
 				log.debug("Client acked(topic={}, partition={}, pirority={}, groupId={}, isResend={}, contexts={})",
@@ -63,7 +63,7 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 			boolean isResend = entry.getKey().getLast();
 			List<AckContext> nackContexts = entry.getValue();
 			m_ackManager.nacked(tpp, groupId, isResend, nackContexts);
-			bizLogAcked(consumerIp, nackContexts, isResend, false);
+			bizLogAcked(tpp, consumerIp, groupId, nackContexts, isResend, false);
 
 			if (log.isDebugEnabled()) {
 				log.debug("Client nacked(topic={}, partition={}, pirority={}, groupId={}, isResend={}, contexts={})",
@@ -72,20 +72,33 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 		}
 	}
 
-	private void bizLogAcked(String consumerIp, List<AckContext> ackContexts, boolean isResend, boolean ack) {
+	private void bizLogAcked(Tpp tpp, String consumerIp, String groupId, List<AckContext> ackContexts, boolean isResend,
+	      boolean ack) {
 		for (AckContext ctx : ackContexts) {
-			m_bizLogger.log(new BizEvent("Message.BizProcessStart", ctx.getOnMessageStartTimeMillis()));
-			m_bizLogger.log(new BizEvent("Message.BizProcessEnd", ctx.getOnMessageEndTimeMillis()));
+			BizEvent bizStartEvent = new BizEvent("Message.BizProcessStart", ctx.getOnMessageStartTimeMillis());
+			addBizData(bizStartEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
+			m_bizLogger.log(bizStartEvent);
 
-			BizEvent event = new BizEvent("Message.Acked");
-			event.addData("msgId", ctx.getMsgSeq());
-			event.addData("isResend", isResend);
-			event.addData("ack", ack);
-			if (isResend) {
-				event.addData("remainingRetries", ctx.getRemainingRetries());
-			}
+			BizEvent bizEndEvent = new BizEvent("Message.BizProcessEnd", ctx.getOnMessageEndTimeMillis());
+			addBizData(bizEndEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
+			m_bizLogger.log(bizEndEvent);
 
-			m_bizLogger.log(event);
+			BizEvent ackEvent = new BizEvent("Message.Acked");
+			addBizData(ackEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
+			m_bizLogger.log(ackEvent);
+		}
+	}
+
+	private void addBizData(BizEvent event, Tpp tpp, String consumerIp, String groupId, AckContext ctx,
+	      boolean isResend, boolean ack) {
+		event.addData("topic", tpp.getTopic());
+		event.addData("msgId", ctx.getMsgSeq());
+		event.addData("consumerIp", consumerIp);
+		event.addData("groupId", groupId);
+		event.addData("isResend", isResend);
+		event.addData("ack", ack);
+		if (isResend) {
+			event.addData("remainingRetries", ctx.getRemainingRetries());
 		}
 	}
 }

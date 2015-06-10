@@ -18,4 +18,8 @@ public interface MessageQueueCursor {
 
 	Lease getLease();
 
+	boolean hasError();
+
+	boolean isInited();
+
 }

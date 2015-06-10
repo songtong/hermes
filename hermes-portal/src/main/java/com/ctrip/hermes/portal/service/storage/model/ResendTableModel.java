@@ -14,9 +14,11 @@ public class ResendTableModel extends TableModel {
 		MetaModel creation_date = new MetaModel("creation_date", "DATETIME", "NOT NULL");
 		MetaModel schedule_date = new MetaModel("schedule_date", "DATETIME", "NOT NULL");
 		MetaModel remaining_retries = new MetaModel("remaining_retries", "TINYINT(11)", "NOT NULL");
+		MetaModel priority = new MetaModel("priority", "TINYINT(4)", "NOT NULL");
+		MetaModel origin_id = new MetaModel("origin_id", "BIGINT(20)", "NOT NULL");
 
 		setMetaModels(id, producer_ip, producer_id, ref_key, attributes, codec_type, creation_date, payload,
-				  schedule_date, remaining_retries);
+				  schedule_date, remaining_retries, priority, origin_id);
 		setPrimaryKey(id);
 		setIndexKey("key", ref_key.columnName);
 		setIndexKey("id_schedule_date", id.columnName, schedule_date.columnName);

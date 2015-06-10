@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -13,6 +15,8 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public class DefaultAckHolder<T> implements AckHolder<T> {
+
+	private final static Logger log = LoggerFactory.getLogger(DefaultAckHolder.class);
 
 	private List<Batch> m_batches = new LinkedList<>();
 
@@ -122,6 +126,12 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 				if (entry.getValue() != State.SUCCESS) {
 					long offset = entry.getKey();
 					failRange.addOffset(offset, m_ctxMap.get(offset));
+				}
+				if (entry.getValue() == State.INIT) {
+					log.warn("message {} didn't receive ack or nack before timeout, treat as nack", entry.getKey());
+				}
+				if (entry.getValue() == State.FAIL) {
+					log.warn("message {} received nack ", entry.getKey());
 				}
 			}
 

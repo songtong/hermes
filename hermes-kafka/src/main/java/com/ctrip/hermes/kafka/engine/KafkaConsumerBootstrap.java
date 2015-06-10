@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,11 +13,16 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import kafka.admin.AdminUtils;
+import kafka.api.TopicMetadata;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 
+import org.I0Itec.zkclient.ZkClient;
+import org.I0Itec.zkclient.exception.ZkMarshallingError;
+import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -60,19 +66,22 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 	protected SubscribeHandle doStart(final ConsumerContext consumerContext) {
 		Topic topic = consumerContext.getTopic();
 
+		int kafkaPartitionCount = getKafkaPartitionCount(topic.getName());
+
 		Properties prop = getConsumerProperties(topic.getName(), consumerContext.getGroupId());
 		ConsumerConnector consumerConnector = kafka.consumer.Consumer
 		      .createJavaConsumerConnector(new ConsumerConfig(prop));
 		Map<String, Integer> topicCountMap = new HashMap<>();
-		topicCountMap.put(topic.getName(), 1);
+		topicCountMap.put(topic.getName(), kafkaPartitionCount);
 		List<KafkaStream<byte[], byte[]>> streams = consumerConnector.createMessageStreams(topicCountMap).get(
 		      topic.getName());
-		KafkaStream<byte[], byte[]> stream = streams.get(0);
 
 		long correlationId = CorrelationIdGenerator.generateCorrelationId();
-
 		m_consumerNotifier.register(correlationId, consumerContext);
-		m_executor.submit(new KafkaConsumerThread(stream, consumerContext, correlationId));
+		for (KafkaStream<byte[], byte[]> stream : streams) {
+			m_executor.submit(new KafkaConsumerThread(stream, consumerContext, correlationId));
+		}
+
 		consumers.put(consumerContext, consumerConnector);
 		correlationIds.put(consumerContext, correlationId);
 
@@ -121,7 +130,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 					      consumerContext.getMessageClazz());
 					@SuppressWarnings("rawtypes")
 					ConsumerMessage kafkaMsg = new KafkaConsumerMessage(baseMsg);
-					List<ConsumerMessage<?>> msgs = new ArrayList<>();
+					List<ConsumerMessage<?>> msgs = new ArrayList<>(1);
 					msgs.add(kafkaMsg);
 					m_consumerNotifier.messageReceived(correlationId, msgs);
 				} catch (Exception e) {
@@ -166,6 +175,63 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 		}
 		configs.put("group.id", group);
 		return configs;
+	}
+
+	private int getKafkaPartitionCount(String topic) {
+		List<Partition> partitions = m_metaService.listPartitionsByTopic(topic);
+		if (partitions == null || partitions.size() < 1) {
+			return 1;
+		}
+
+		String consumerDatasource = partitions.get(0).getReadDatasource();
+		Storage targetStorage = m_metaService.findStorageByTopic(topic);
+		if (targetStorage == null) {
+			return 1;
+		}
+
+		String zkConnect = null;
+		for (Datasource datasource : targetStorage.getDatasources()) {
+			if (consumerDatasource.equals(datasource.getId())) {
+				Map<String, Property> properties = datasource.getProperties();
+				for (Map.Entry<String, Property> prop : properties.entrySet()) {
+					if ("zookeeper.connect".equals(prop.getValue().getName())) {
+						zkConnect = prop.getValue().getValue();
+						break;
+					}
+				}
+			}
+		}
+
+		ZkClient zkClient = new ZkClient(zkConnect);
+		zkClient.setZkSerializer(new ZKStringSerializer());
+		TopicMetadata topicMeta = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient);
+		return topicMeta.partitionsMetadata().size();
+	}
+}
+
+class ZKStringSerializer implements ZkSerializer {
+
+	@Override
+	public Object deserialize(byte[] bytes) throws ZkMarshallingError {
+		if (bytes == null)
+			return null;
+		else
+			try {
+				return new String(bytes, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				throw new ZkMarshallingError(e);
+			}
+	}
+
+	@Override
+	public byte[] serialize(Object data) throws ZkMarshallingError {
+		byte[] bytes = null;
+		try {
+			bytes = data.toString().getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new ZkMarshallingError(e);
+		}
+		return bytes;
 	}
 
 }

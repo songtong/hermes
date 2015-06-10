@@ -55,10 +55,10 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 					Meter failed_meter = m_metricsManager.meter("push_fail", sub.getTopic(), sub.getGroup(), sub
 					      .getEndpoints().toString());
 					if (failed_meter.getOneMinuteRate() > 0.5) {
-						logger.warn("Too many failed in the past minute {}, unregister it", failed_meter.getOneMinuteRate());
+						logger.warn("Too many failed in the past minute {}, suspend {}", failed_meter.getOneMinuteRate(),
+						      sub.getId());
 						ConsumerHolder consumerHolder = consumerHolders.remove(sub);
 						consumerHolder.close();
-						subscriptions.remove(sub);
 					}
 				}
 			}
@@ -69,6 +69,7 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 
 			@Override
 			public void run() {
+				m_metaService.refresh();
 				Set<Subscription> newSubscriptions = new HashSet<>(m_metaService.listSubscriptions());
 				SetView<Subscription> created = Sets.difference(newSubscriptions, subscriptions);
 				SetView<Subscription> removed = Sets.difference(subscriptions, newSubscriptions);
@@ -81,6 +82,7 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 				subscriptions.addAll(created);
 				for (Subscription sub : removed) {
 					logger.info("unregister: " + sub);
+
 					ConsumerHolder consumerHolder = consumerHolders.remove(sub);
 					consumerHolder.close();
 				}

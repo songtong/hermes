@@ -59,7 +59,7 @@ public class OneBoxTest extends ComponentTestCase {
 		String id = "mysub_" + UUID.randomUUID().toString();
 		String topic = "kafka.SimpleTopic";
 		String group = "OneBoxGroup";
-		String urls = "http://localhost:1357/onebox";
+		String urls = "http://localhost:1357/onebox/pushWrong,http://localhost:1357/onebox/push1";
 
 		Subscription sub = new Subscription();
 		sub.setId(id);
@@ -73,8 +73,8 @@ public class OneBoxTest extends ComponentTestCase {
 		Response response = request.post(Entity.entity(json, MediaType.APPLICATION_JSON));
 		Assert.assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
 
-		System.out.println("Sleep 65 seconds");
-		TimeUnit.SECONDS.sleep(65);
+		System.out.println("Sleep 10 seconds");
+		TimeUnit.SECONDS.sleep(10);
 
 		String base = UUID.randomUUID().toString();
 		System.out.println("Base: " + base);
@@ -85,11 +85,17 @@ public class OneBoxTest extends ComponentTestCase {
 			InputStream is = new ByteArrayInputStream(sent.get(i));
 			response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
 			Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
+			System.out.println("Sent: " + new String(sent.get(i)));
 		}
 
+		long startWait = System.currentTimeMillis();
 		while (received.size() < sent.size()) {
 			TimeUnit.SECONDS.sleep(1);
-			System.out.println("Received: " + received.size());
+			if (received.size() > 0)
+				System.out.println("Received: " + received.size());
+//			if (System.currentTimeMillis() - startWait > 10000) {
+//				break;
+//			}
 		}
 
 		request = portalWebTarget.path("/api/subscriptions/" + id).request();
@@ -101,6 +107,7 @@ public class OneBoxTest extends ComponentTestCase {
 		Assert.assertArrayEquals(sent.get(sent.size() - 1), received.get(received.size() - 1));
 	}
 
+	@Path("push")
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public Response push(byte[] b) {
@@ -109,4 +116,21 @@ public class OneBoxTest extends ComponentTestCase {
 		return Response.ok().build();
 	}
 
+	@Path("push1")
+	@POST
+	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	public Response push1(byte[] b) {
+		System.out.println("Received1: " + new String(b, Charsets.UTF_8));
+		received.add(b);
+		return Response.ok().build();
+	}
+
+	@Path("push2")
+	@POST
+	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	public Response push2(byte[] b) {
+		System.out.println("Received2: " + new String(b, Charsets.UTF_8));
+		received.add(b);
+		return Response.ok().build();
+	}
 }

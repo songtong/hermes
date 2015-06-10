@@ -44,8 +44,33 @@ public class LocalMetaLoader implements MetaLoader {
 		}
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException, SAXException {
+		outputMetaStringFromMeta_Local();
+
+
+		// put meta XML here:
+		String metaXML = "";
+//		outputMetaStringByMetaXML(metaXML);
+
+
+		// put meta String (mostly from db) here:
+		String metaString = "";
+//		outputMetaXMLFromMetaString(metaString);
+	}
+
+	private static void outputMetaStringFromMeta_Local() {
 		LocalMetaLoader loader = new LocalMetaLoader();
 		System.out.println(JSON.toJSONString(loader.load()));
+	}
+
+	private static void outputMetaXMLFromMetaString(String metaString) {
+		Meta meta = JSON.parseObject(metaString,
+				  Meta.class);
+		System.out.println(meta);
+	}
+
+	private static void outputMetaStringByMetaXML(String metaXML) throws SAXException, IOException {
+		Meta meta = DefaultSaxParser.parse(metaXML);
+		System.out.println(JSON.toJSONString(meta));
 	}
 }

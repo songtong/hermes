@@ -106,9 +106,11 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	private void bizLog(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches) {
 		String ip = NettyUtils.parseChannelRemoteAddr(ctx.getChannel(), false);
 		for (Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
-			List<PartialDecodedMessage> msgs = entry.getValue().getMessages();
+			MessageBatchWithRawData batch = entry.getValue();
+			List<PartialDecodedMessage> msgs = batch.getMessages();
 			for (PartialDecodedMessage msg : msgs) {
 				BizEvent event = new BizEvent("Message.Received");
+				event.addData("topic", batch.getTopic());
 				event.addData("producerIp", ip);
 				event.addData("bornTime", msg.getBornTime());
 				event.addData("refKey", msg.getKey());
