@@ -18,6 +18,7 @@
       <module>cmessaging.client</module>
       <module>hermes-portal</module>
       <module>hermes-metaservice</module>
+      <module>hermes-misc</module>
    </modules>
    <dependencyManagement>
       <dependencies>
