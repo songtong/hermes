@@ -7,8 +7,10 @@ import org.junit.runners.JUnit4;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.webapp.WebAppContext;
 import org.mortbay.servlet.GzipFilter;
-
 import org.unidal.test.jetty.JettyServer;
+
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 
 @RunWith(JUnit4.class)
 public class StartMetaServer extends JettyServer {
@@ -33,7 +35,7 @@ public class StartMetaServer extends JettyServer {
 
 	@Override
 	protected int getServerPort() {
-		return 1248;
+		return PlexusComponentLocator.lookup(MetaServerConfig.class).getMetaServerPort();
 	}
 
 	@Override
