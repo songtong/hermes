@@ -20,7 +20,12 @@ import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorExcep
 import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
 import com.ctrip.hermes.portal.service.storage.exception.TopicIsNullException;
 import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
-import com.ctrip.hermes.portal.service.storage.model.*;
+import com.ctrip.hermes.portal.service.storage.model.DeadLetterTableModel;
+import com.ctrip.hermes.portal.service.storage.model.MessageTableModel;
+import com.ctrip.hermes.portal.service.storage.model.OffsetMessageTableModel;
+import com.ctrip.hermes.portal.service.storage.model.OffsetResendTableModel;
+import com.ctrip.hermes.portal.service.storage.model.ResendTableModel;
+import com.ctrip.hermes.portal.service.storage.model.TableModel;
 
 @Named(type = DefaultTopicStorageService.class, value = DefaultTopicStorageService.ID)
 public class DefaultTopicStorageService implements TopicStorageService {
@@ -35,11 +40,12 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	private static final Logger log = LoggerFactory.getLogger(DefaultTopicStorageService.class);
 
 	@Override
-	public boolean initTopicStorage(Topic topic) throws TopicAlreadyExistsException, TopicIsNullException, StorageHandleErrorException {
+	public boolean initTopicStorage(Topic topic) throws TopicAlreadyExistsException, TopicIsNullException,
+	      StorageHandleErrorException {
 		if (null != topic) {
 			for (Partition partition : topic.getPartitions()) {
 				Datasource datasource = getDatasource(partition);
-				Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo = getDatabaseName(datasource);
+				Triple<String/* database url */, String/* usr */, String/* password */> dbInfo = getDatabaseName(datasource);
 
 				createTables0(dbInfo, topic, partition);
 				addPartition0(dbInfo, topic, partition);
@@ -50,11 +56,11 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		}
 	}
 
-	private void createTables0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
-										Topic topic, Partition partition) throws StorageHandleErrorException {
+	private void createTables0(Triple<String/* database url */, String/* usr */, String/* password */> dbInfo,
+	      Topic topic, Partition partition) throws StorageHandleErrorException {
 		List<TableModel> tableModels = buildTableModels(topic);
 		handler.createTable(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(),
-				  dbInfo.getLast());
+		      dbInfo.getLast());
 		doLog("CreateTable", topic, partition, dbInfo);
 	}
 
@@ -67,7 +73,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		tableModels.add(new OffsetMessageTableModel()); // offset_message
 		tableModels.add(new OffsetResendTableModel()); // offset_resend
 
-		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
+		for (ConsumerGroup consumerGroup : topic.getConsumerGroups().values()) {
 			int groupId = consumerGroup.getId();
 
 			tableModels.add(new ResendTableModel(groupId)); // resend_<groupid>
@@ -76,10 +82,11 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	}
 
 	@Override
-	public boolean addPartitionStorage(Topic topic, Partition partition) throws TopicIsNullException, StorageHandleErrorException {
+	public boolean addPartitionStorage(Topic topic, Partition partition) throws TopicIsNullException,
+	      StorageHandleErrorException {
 		if (null != topic) {
 			Datasource datasource = getDatasource(partition);
-			Triple<String/*database url*/, String/*usr*/, String/*password*/> databaseName = getDatabaseName(datasource);
+			Triple<String/* database url */, String/* usr */, String/* password */> databaseName = getDatabaseName(datasource);
 
 			addPartition0(databaseName, topic, partition);
 			return true;
@@ -88,29 +95,27 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		}
 	}
 
-	private void addPartition0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
-										Topic topic, Partition partition)
-			  throws StorageHandleErrorException {
+	private void addPartition0(Triple<String/* database url */, String/* usr */, String/* password */> dbInfo,
+	      Topic topic, Partition partition) throws StorageHandleErrorException {
 		// 暂时只针对MessageTableModel(0), MessageTableModel(1)分partition
 
-		handler.addPartition(topic.getId(), partition.getId(), new DeadLetterTableModel(), 1 *
-				  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
+		handler.addPartition(topic.getId(), partition.getId(), new DeadLetterTableModel(), 1 * 10000, dbInfo.getFirst(),
+		      dbInfo.getMiddle(), dbInfo.getLast());
 
-		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(0), 100 *
-				  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
-		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(1), 100 *
-				  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
+		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(0), 100 * 10000, dbInfo.getFirst(),
+		      dbInfo.getMiddle(), dbInfo.getLast());
+		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(1), 100 * 10000, dbInfo.getFirst(),
+		      dbInfo.getMiddle(), dbInfo.getLast());
 
-		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
+		for (ConsumerGroup consumerGroup : topic.getConsumerGroups().values()) {
 			int groupId = consumerGroup.getId();
 
-			handler.addPartition(topic.getId(), partition.getId(), new ResendTableModel(groupId), 5 *
-					  10000, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
+			handler.addPartition(topic.getId(), partition.getId(), new ResendTableModel(groupId), 5 * 10000,
+			      dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo.getLast());
 		}
 
 		doLog("AddPartition", topic, partition, dbInfo);
 	}
-
 
 	@Override
 	public StorageTopic getTopicStorage(Topic topic) throws TopicIsNullException, StorageHandleErrorException {
@@ -118,10 +123,10 @@ public class DefaultTopicStorageService implements TopicStorageService {
 			StorageTopic storageTopic = new StorageTopic(topic);
 			for (Partition partition : topic.getPartitions()) {
 				Datasource datasource = getDatasource(partition);
-				Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo = getDatabaseName(datasource);
+				Triple<String/* database url */, String/* usr */, String/* password */> dbInfo = getDatabaseName(datasource);
 
 				List<StorageTable> storageTables = handler.queryTable(topic.getId(), partition.getId(), dbInfo.getFirst(),
-						  dbInfo.getMiddle(), dbInfo.getLast());
+				      dbInfo.getMiddle(), dbInfo.getLast());
 
 				if (storageTables.size() > 0) {
 					storageTopic.addInfo(datasource.getId(), storageTables);
@@ -138,7 +143,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		if (null != topic) {
 			for (Partition partition : topic.getPartitions()) {
 				Datasource datasource = getDatasource(partition);
-				Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo = getDatabaseName(datasource);
+				Triple<String/* database url */, String/* usr */, String/* password */> dbInfo = getDatabaseName(datasource);
 				// todo: 先做备份，再做删除
 				deleteTables0(dbInfo, topic, partition);
 			}
@@ -148,20 +153,21 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		}
 	}
 
-	private void deleteTables0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
-										Topic topic, Partition partition) throws StorageHandleErrorException {
+	private void deleteTables0(Triple<String/* database url */, String/* usr */, String/* password */> dbInfo,
+	      Topic topic, Partition partition) throws StorageHandleErrorException {
 		List<TableModel> tableModels = buildTableModels(topic);
-		handler.dropTables(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo
-				  .getLast());
+		handler.dropTables(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(),
+		      dbInfo.getLast());
 
 		doLog("DeleteTables", topic, partition, dbInfo);
 	}
 
 	@Override
-	public boolean delPartitionStorage(Topic topic, Partition partition) throws StorageHandleErrorException, TopicIsNullException {
+	public boolean delPartitionStorage(Topic topic, Partition partition) throws StorageHandleErrorException,
+	      TopicIsNullException {
 		if (null != topic) {
 			Datasource datasource = getDatasource(partition);
-			Triple<String/*database url*/, String/*usr*/, String/*password*/> databaseName = getDatabaseName(datasource);
+			Triple<String/* database url */, String/* usr */, String/* password */> databaseName = getDatabaseName(datasource);
 
 			deletePartition0(databaseName, topic, partition);
 			return true;
@@ -170,34 +176,34 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		}
 	}
 
-	private void deletePartition0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
-											Topic topic, Partition partition)
-			  throws StorageHandleErrorException {
+	private void deletePartition0(Triple<String/* database url */, String/* usr */, String/* password */> dbInfo,
+	      Topic topic, Partition partition) throws StorageHandleErrorException {
 		handler.deletePartition(topic.getId(), partition.getId(), new DeadLetterTableModel(), dbInfo.getFirst(),
-				  dbInfo.getMiddle(), dbInfo.getLast());
+		      dbInfo.getMiddle(), dbInfo.getLast());
 
 		// todo: 先做备份，再做删除
-		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(0), dbInfo.getFirst(), dbInfo
-				  .getMiddle(), dbInfo.getLast());
-		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(1), dbInfo.getFirst(), dbInfo
-				  .getMiddle(), dbInfo.getLast());
+		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(0), dbInfo.getFirst(),
+		      dbInfo.getMiddle(), dbInfo.getLast());
+		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(1), dbInfo.getFirst(),
+		      dbInfo.getMiddle(), dbInfo.getLast());
 
-		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
+		for (ConsumerGroup consumerGroup : topic.getConsumerGroups().values()) {
 			int groupId = consumerGroup.getId();
 
 			handler.deletePartition(topic.getId(), partition.getId(), new ResendTableModel(groupId), dbInfo.getFirst(),
-					  dbInfo.getMiddle(), dbInfo.getLast());
+			      dbInfo.getMiddle(), dbInfo.getLast());
 		}
 
 		doLog("DeletePartition", topic, partition, dbInfo);
 	}
 
 	@Override
-	public boolean addConsumerStorage(Topic topic, ConsumerGroup group) throws StorageHandleErrorException, TopicIsNullException {
+	public boolean addConsumerStorage(Topic topic, ConsumerGroup group) throws StorageHandleErrorException,
+	      TopicIsNullException {
 		if (null != topic) {
 			for (Partition partition : topic.getPartitions()) {
 				Datasource datasource = getDatasource(partition);
-				Triple<String/*database url*/, String/*usr*/, String/*password*/> databaseName = getDatabaseName(datasource);
+				Triple<String/* database url */, String/* usr */, String/* password */> databaseName = getDatabaseName(datasource);
 
 				addConsumerStorage0(databaseName, topic, partition, group);
 			}
@@ -207,23 +213,23 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		}
 	}
 
-	private void addConsumerStorage0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
-												Topic topic, Partition partition, ConsumerGroup group)
-			  throws StorageHandleErrorException {
+	private void addConsumerStorage0(Triple<String/* database url */, String/* usr */, String/* password */> dbInfo,
+	      Topic topic, Partition partition, ConsumerGroup group) throws StorageHandleErrorException {
 		List<TableModel> tableModels = new ArrayList<>();
 
 		tableModels.add(new ResendTableModel(group.getId()));
-		handler.createTable(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo
-				  .getLast());
+		handler.createTable(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(),
+		      dbInfo.getLast());
 		doLog("AddConsumerStorage", topic, partition, dbInfo);
 	}
 
 	@Override
-	public boolean delConsumerStorage(Topic topic, ConsumerGroup group) throws StorageHandleErrorException, TopicIsNullException {
+	public boolean delConsumerStorage(Topic topic, ConsumerGroup group) throws StorageHandleErrorException,
+	      TopicIsNullException {
 		if (null != topic) {
 			for (Partition partition : topic.getPartitions()) {
 				Datasource datasource = getDatasource(partition);
-				Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo = getDatabaseName(datasource);
+				Triple<String/* database url */, String/* usr */, String/* password */> dbInfo = getDatabaseName(datasource);
 				delConsumerStorage0(dbInfo, topic, partition, group);
 			}
 			return true;
@@ -232,19 +238,19 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		}
 	}
 
-	private void delConsumerStorage0(Triple<String/*database url*/, String/*usr*/, String/*password*/> dbInfo,
-												Topic topic, Partition partition, ConsumerGroup group) throws StorageHandleErrorException {
+	private void delConsumerStorage0(Triple<String/* database url */, String/* usr */, String/* password */> dbInfo,
+	      Topic topic, Partition partition, ConsumerGroup group) throws StorageHandleErrorException {
 		List<TableModel> tableModels = new ArrayList<>();
 
 		tableModels.add(new ResendTableModel(group.getId()));
-		handler.dropTables(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(), dbInfo
-				  .getLast());
+		handler.dropTables(topic.getId(), partition.getId(), tableModels, dbInfo.getFirst(), dbInfo.getMiddle(),
+		      dbInfo.getLast());
 		doLog("DelConsumerStorage", topic, partition, dbInfo);
 
 	}
 
-	private Triple<String/*database url*/, String/*usr*/, String/*password*/> getDatabaseName(Datasource datasource)
-			  throws StorageHandleErrorException {
+	private Triple<String/* database url */, String/* usr */, String/* password */> getDatabaseName(
+	      Datasource datasource) throws StorageHandleErrorException {
 		String jdbcUrl = datasource.getProperties().get("url").getValue();
 		String user = datasource.getProperties().get("user").getValue();
 		String pwd = datasource.getProperties().get("password").getValue();
@@ -261,8 +267,8 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	}
 
 	private void doLog(String method, Topic topic, Partition partition, Triple<String, String, String> dbInfo) {
-		log.info(String.format("DefaultTopicStorageService: %s is done. On Topic[%s_%d], Partition[%d] on DB [%s] as " +
-							 "User [%s]",
-				  method, topic.getName(), topic.getId(), partition.getId(), dbInfo.getFirst(), dbInfo.getMiddle()));
+		log.info(String.format("DefaultTopicStorageService: %s is done. On Topic[%s_%d], Partition[%d] on DB [%s] as "
+		      + "User [%s]", method, topic.getName(), topic.getId(), partition.getId(), dbInfo.getFirst(),
+		      dbInfo.getMiddle()));
 	}
 }
