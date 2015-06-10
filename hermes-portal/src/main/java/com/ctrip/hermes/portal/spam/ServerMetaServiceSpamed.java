@@ -186,7 +186,7 @@ public class ServerMetaServiceSpamed implements MetaServiceSpamed, Initializable
 	public int getGroupIdInt(String groupName) {
 		// TODO groupIdStr唯一
 		for (Topic topic : m_meta.getTopics().values()) {
-			for (ConsumerGroup group : topic.getConsumerGroups()) {
+			for (ConsumerGroup group : topic.getConsumerGroups().values()) {
 				if (group.getName().equals(groupName)) {
 					return group.getId();
 				}
