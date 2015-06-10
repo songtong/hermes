@@ -17,6 +17,12 @@
          <page name="storage" title="Storage" path="storage" template="default">
             <description>Storage</description>
          </page>
+         <page name="subscription" title="Subscription" path="subscription" template="default">
+            <description>Subscription</description>
+         </page>
+         <page name="tracer" title="Tracer" path="tracer" template="default">
+            <description>Tracer</description>
+         </page>
       </module>
    </webapp>
 </wizard>
