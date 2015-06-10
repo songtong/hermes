@@ -147,14 +147,14 @@ function Trace() {
 			return event.eventTime;
 		});
 	};
-	
+
 	this.categories = function() {
 		var categories = [];
 		categories.push(this.commonEvents[1].datas.producerIp);
-		for(groupId in this.consumerEvents) {
+		for (groupId in this.consumerEvents) {
 			categories.push(this.consumerEvents[groupId][0].datas.consumerIp);
 		}
-		
+
 		return categories;
 	};
 
@@ -199,105 +199,114 @@ function Trace() {
 	};
 }
 
-angular.module('hermes-tracer', [ 'ngResource' ]).controller('tracer-controller', [ '$scope', '$resource', function(scope, resource) {
-	scope.ref_key = '';
-	scope.show_message = function show_message(refKey) {
-		// var refKey = "5c5c8744-bbe3-4ce9-b8f4-ed793634c664";
-		var esIndex = "logstash-2015.06.10";
-		var esServer = "http://10.32.21.5:9200/";
-		var refKeySearchUrl = esServer + esIndex + "/hermes/_search?q=datas.refKey:" + refKey;
-		get(refKeySearchUrl, function(data) {
-			var hits = data.hits.hits;
-			var eventMap = {};
-			hits.forEach(function(hit) {
-				var event = hit._source;
-				eventMap[event.eventType] = event;
-			});
+angular.module('hermes-tracer', [ 'ngResource' ]).controller(
+		'tracer-controller',
+		[
+				'$scope',
+				'$resource',
+				function(scope, resource) {
+					scope.ref_key = '';
+					scope.msg_date = new Date();
+					scope.show_message = function show_message(refKey, msg_date) {
+						// var refKey = "5c5c8744-bbe3-4ce9-b8f4-ed793634c664";
+						console.log(('0' + (msg_date.getMonth() + 1)).slice(-2));
+						var esIndex = "logstash-" + msg_date.getFullYear() + '.' + ('0' + (msg_date.getMonth() + 1)).slice(-2) + '.'
+								+ ('0' + msg_date.getDate()).slice(-2);
+						console.log(esIndex);
+						var esServer = "http://10.32.21.5:9200/";
+						var refKeySearchUrl = esServer + esIndex + "/hermes/_search?q=datas.refKey:" + refKey;
+						get(refKeySearchUrl, function(data) {
+							var hits = data.hits.hits;
+							var eventMap = {};
+							hits.forEach(function(hit) {
+								var event = hit._source;
+								eventMap[event.eventType] = event;
+							});
 
-			var trace = new Trace();
-			trace.bornTime = eventMap["Message.Received"].datas.bornTime;
+							var trace = new Trace();
+							trace.bornTime = eventMap["Message.Received"].datas.bornTime;
 
-			// common events
-			trace.appendCommonEvent({
-				eventTime : trace.bornTime,
-				eventType : "Message.Born"
-			});
-			trace.appendCommonEvent(eventMap["Message.Received"]);
-			trace.appendCommonEvent(eventMap["Message.Saved"]);
-			var transformEvent = eventMap["RefKey.Transformed"];
+							// common events
+							trace.appendCommonEvent({
+								eventTime : trace.bornTime,
+								eventType : "Message.Born"
+							});
+							trace.appendCommonEvent(eventMap["Message.Received"]);
+							trace.appendCommonEvent(eventMap["Message.Saved"]);
+							var transformEvent = eventMap["RefKey.Transformed"];
 
-			var msgIdSearchUrl = esServer + esIndex + "/hermes/_search?size=20&q=datas.msgId:" + transformEvent.datas.msgId;
-			get(msgIdSearchUrl, function(data) {
-				var hits = data.hits.hits;
-				hits.forEach(function(hit) {
-					var event = hit._source;
-					if (/^Message/.test(event.eventType)) {
-						trace.appendConsumerEvent(event);
-					}
-				});
+							var msgIdSearchUrl = esServer + esIndex + "/hermes/_search?size=20&q=datas.msgId:" + transformEvent.datas.msgId;
+							get(msgIdSearchUrl, function(data) {
+								var hits = data.hits.hits;
+								hits.forEach(function(hit) {
+									var event = hit._source;
+									if (/^Message/.test(event.eventType)) {
+										trace.appendConsumerEvent(event);
+									}
+								});
 
-				visualize(trace);
-			});
-		});
+								visualize(trace);
+							});
+						});
 
-		function visualize(trace) {
-			trace.plot();
-			var eventTimeRange = trace.eventTimeRange();
-			scale = d3.scale.linear().domain([ 0, eventTimeRange[1] - trace.bornTime ]).range([ 0, 400 ]);
-			cscale = d3.scale.linear().domain([ 0, eventTimeRange[1] - trace.bornTime ]).range([ "blue", "red" ]);
+						function visualize(trace) {
+							trace.plot();
+							var eventTimeRange = trace.eventTimeRange();
+							scale = d3.scale.linear().domain([ 0, eventTimeRange[1] - trace.bornTime ]).range([ 0, 400 ]);
+							cscale = d3.scale.linear().domain([ 0, eventTimeRange[1] - trace.bornTime ]).range([ "blue", "red" ]);
 
-			var allEvents = trace.allEvents();
-			console.log(trace.consumerEvents);
-			$('#container').highcharts({
+							var allEvents = trace.allEvents();
+							console.log(trace.consumerEvents);
+							$('#container').highcharts({
 
-				chart : {
-					type : 'columnrange',
-					inverted : true
-				},
+								chart : {
+									type : 'columnrange',
+									inverted : true
+								},
 
-				title : {
-					text : 'Message trace'
-				},
+								title : {
+									text : 'Message trace'
+								},
 
-				subtitle : {
-					text : 'order-17465301'
-				},
+								subtitle : {
+									text : 'order-17465301'
+								},
 
-				xAxis : {
-					categories: trace.categories()
-				},
+								xAxis : {
+									categories : trace.categories()
+								},
 
-				yAxis : {
-					title : {
-						text : "Millisecond sine " + new Date(trace.commonEvents[0].eventTime)
-					},
-					min : 0,
-					max: trace.maxEventTime() - trace.bornTime + 10,
-					minColor : "#ff0000",
-					plotLines : trace.plotLines()
-				},
+								yAxis : {
+									title : {
+										text : "Millisecond sine " + new Date(trace.commonEvents[0].eventTime)
+									},
+									min : 0,
+									max : trace.maxEventTime() - trace.bornTime + 10,
+									minColor : "#ff0000",
+									plotLines : trace.plotLines()
+								},
 
-				tooltip : {
-					valueSuffix : ''
-				},
+								tooltip : {
+									valueSuffix : ''
+								},
 
-				plotOptions : {
-					columnrange : {
-						dataLabels : {
-							enabled : true,
-							formatter : function() {
-								return this.y;
-							}
+								plotOptions : {
+									columnrange : {
+										dataLabels : {
+											enabled : true,
+											formatter : function() {
+												return this.y;
+											}
+										}
+									}
+								},
+
+								legend : {
+									enabled : false
+								},
+
+								series : trace.series(),
+							});
 						}
-					}
-				},
-
-				legend : {
-					enabled : false
-				},
-
-				series : trace.series(),
-			});
-		}
-	};
-} ]);
+					};
+				} ]);
