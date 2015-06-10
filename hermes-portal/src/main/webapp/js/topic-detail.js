@@ -16,7 +16,9 @@ function find_endpoint_names(data, type) {
 	return names;
 }
 
-angular.module('hermes-topic-detail', [ 'ngResource' ]).controller('topic-detail-controller', [ '$scope', '$resource', function(scope, resource) {
+angular.module('hermes-topic-detail', [ 'ngResource', 'xeditable' ]).run(function(editableOptions) {
+	editableOptions.theme = 'bs3';
+}).controller('topic-detail-controller', [ '$scope', '$resource', function(scope, resource) {
 	var topic_resource = resource('/api/topics/:name', {}, {
 		get_topic : {
 			method : 'GET',
@@ -50,7 +52,7 @@ angular.module('hermes-topic-detail', [ 'ngResource' ]).controller('topic-detail
 		scope.storage_types = collect_schemas(result, 'type', true);
 	});
 
-	scope.endpoint_types = meta_resource.get_endpoints({}, function(result) {
+	meta_resource.get_endpoints({}, function(result) {
 		scope.src_endpoints = result;
 		scope.endpoint_types = collect_schemas(result, 'type', true);
 	});
@@ -59,6 +61,9 @@ angular.module('hermes-topic-detail', [ 'ngResource' ]).controller('topic-detail
 		name : topic_name
 	}, function(query_result) {
 		scope.topic = query_result;
+		scope.topic.createTime = new Date(scope.topic.createTime).toLocaleString();
+		scope.topic.lastModifiedTime = scope.topic.lastModifiedTime ? new Date(scope.topic.lastModifiedTime).toLocaleString() : 'Not Set';
+		scope.topic.status = scope.topic.status ? scope.topic.status : 'Not Set';
 		scope.datasource_names = find_datasource_names(scope.src_storages, scope.topic.storageType);
 		scope.endpoint_names = find_endpoint_names(scope.src_endpoints, scope.topic.endpointType);
 	});

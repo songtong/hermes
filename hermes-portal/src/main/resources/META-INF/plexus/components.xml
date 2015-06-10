@@ -164,5 +164,41 @@
 				</requirement>
 			</requirements>
 		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.endpoint.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.endpoint.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.endpoint.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.endpoint.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.endpoint.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.storage.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.storage.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.storage.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.storage.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.storage.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
 	</components>
 </plexus>

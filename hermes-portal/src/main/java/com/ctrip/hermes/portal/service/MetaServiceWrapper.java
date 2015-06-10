@@ -40,6 +40,14 @@ public interface MetaServiceWrapper extends MetaService {
 	public Map<String, Endpoint> getEndpoints();
 
 	public Map<String, Storage> getStorages();
-	
+
 	public Map<String, Subscription> getSubscriptions();
+
+	public boolean addEndpoint(Endpoint endpoint) throws Exception;
+
+	public void deleteEndpoint(String id) throws Exception;
+
+	public boolean addDatasource(Datasource datasource) throws Exception;
+
+	public void deleteDatasource(String id) throws Exception;
 }

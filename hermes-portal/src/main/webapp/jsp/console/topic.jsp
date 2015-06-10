@@ -24,9 +24,8 @@
 						<th st-sort="consumerRetryPolicy">消费重试策略</th>
 						<th st-sort="ackTimeoutSeconds">ACK超时(秒)</th>
 						<th st-sort="endpointType">Endpoint</th>
-						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;">
-								<span class="glyphicon glyphicon-plus"></span> 新增
-							</button></th>
+						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;"><span
+								class="glyphicon glyphicon-plus"></span> 新增</button></th>
 					</tr>
 					<tr>
 						<th><label><span ng-bind="topic_rows.length"></span></label></th>
@@ -51,9 +50,7 @@
 						<td><span ng-bind="row.ackTimeoutSeconds"></td>
 						<td><span ng-bind="row.endpointType"></td>
 						<td>
-							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;">
-								<span class="glyphicon glyphicon-remove"></span> 删除
-							</button>
+							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;"><span class="glyphicon glyphicon-remove"></span> 删除</button>
 						</td>
 					</tr>
 				</tbody>
@@ -68,9 +65,7 @@
 			<div class="modal-dialog" style="width: 50%">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 						<h4 class="modal-title" id="add-topic-label">新增 Topic</h4>
 					</div>
 					<div class="modal-body">
@@ -105,13 +100,19 @@
 							<div class="form-group">
 								<label for="inputAckTimeout" class="col-sm-4 control-label">ACK 超时(秒)</label>
 								<div class="col-sm-4">
-									<input class="form-control" id="inputAckTimeout" placeholder="ACK Timeout" ng-model="new_topic.ackTimeoutSeconds">
+									<input type="number" class="form-control" id="inputAckTimeout" placeholder="ACK Timeout" ng-model="new_topic.ackTimeoutSeconds">
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="inputConsumeRetryPolicy" class="col-sm-4 control-label">消费重试策略</label>
 								<div class="col-sm-6">
 									<input class="form-control" id="inputConsumeRetryPolicy" placeholder="Consume Retry Policy" ng-model="new_topic.consumerRetryPolicy">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inputDescription" class="col-sm-4 control-label">描述</label>
+								<div class="col-sm-6">
+									<input class="form-control" id="inputDescription" placeholder="Topic Description" ng-model="new_topic.description">
 								</div>
 							</div>
 						</form>
