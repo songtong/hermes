@@ -27,7 +27,7 @@ import com.ctrip.hermes.portal.service.storage.model.OffsetResendTableModel;
 import com.ctrip.hermes.portal.service.storage.model.ResendTableModel;
 import com.ctrip.hermes.portal.service.storage.model.TableModel;
 
-@Named(type = DefaultTopicStorageService.class, value = DefaultTopicStorageService.ID)
+@Named(type = TopicStorageService.class, value = DefaultTopicStorageService.ID)
 public class DefaultTopicStorageService implements TopicStorageService {
 	public static final String ID = "topic-storage-service";
 

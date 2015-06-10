@@ -1,7 +1,7 @@
 <plexus>
 	<components>
 		<component>
-			<role>com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService</role>
+			<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
 			<role-hint>topic-storage-service</role-hint>
 			<implementation>com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService</implementation>
 			<requirements>
