@@ -5,7 +5,7 @@ public class Hermes {
 	private static Env m_env;
 
 	public enum Env {
-		DEV, FWS, UAT, LPT, PROD
+		LOCAL, DEV, FWS, UAT, LPT, PROD
 	}
 
 	public static void initialize(Env env) {

@@ -116,8 +116,10 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		Env env = m_clientEnv.getEnv();
 
 		switch (env) {
-		case DEV:
+		case LOCAL:
 			return "127.0.0.1";
+		case DEV:
+			return "10.3.8.63";
 		case LPT:
 			return "10.3.8.63";
 		case FWS:
