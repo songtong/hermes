@@ -19,7 +19,9 @@ com.ctrip.hermes.portal.console.storage.Handler.class,
 
 com.ctrip.hermes.portal.console.subscription.Handler.class,
 
-com.ctrip.hermes.portal.console.tracer.Handler.class
+com.ctrip.hermes.portal.console.tracer.Handler.class,
+
+com.ctrip.hermes.portal.console.resender.Handler.class
 })
 public class ConsoleModule extends AbstractModule {
 

@@ -23,6 +23,9 @@
          <page name="tracer" title="Tracer" path="tracer" template="default">
             <description>Tracer</description>
          </page>
+         <page name="resender" title="Resender" path="resender" template="default">
+            <description>Resender</description>
+         </page>
       </module>
    </webapp>
 </wizard>

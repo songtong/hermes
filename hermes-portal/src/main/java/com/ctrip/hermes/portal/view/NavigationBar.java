@@ -8,7 +8,7 @@ public class NavigationBar {
 		return new Page[] {
 
 		ConsolePage.TOPIC, ConsolePage.CONSUMER, ConsolePage.SUBSCRIPTION, ConsolePage.STORAGE, ConsolePage.ENDPOINT,
-		      ConsolePage.DASHBOARD, ConsolePage.TRACER };
+		      ConsolePage.DASHBOARD, ConsolePage.TRACER, ConsolePage.RESENDER };
 
 	}
 }
