@@ -32,13 +32,13 @@ public class ConsumerService {
 	}
 
 	public List<ConsumerGroup> getConsumers(String topic) {
-		return new ArrayList<>(m_metaService.getMeta().getTopics().get(topic).getConsumerGroups().values());
+		return new ArrayList<>(m_metaService.getMeta().getTopics().get(topic).getConsumerGroups());
 	}
 
 	public Map<String, List<ConsumerGroup>> getConsumers() {
 		Map<String, List<ConsumerGroup>> map = new LinkedHashMap<String, List<ConsumerGroup>>();
 		for (Entry<String, Topic> entry : m_metaService.getMeta().getTopics().entrySet()) {
-			map.put(entry.getKey(), new ArrayList<>(entry.getValue().getConsumerGroups().values()));
+			map.put(entry.getKey(), new ArrayList<>(entry.getValue().getConsumerGroups()));
 		}
 		return map;
 	}
@@ -61,7 +61,7 @@ public class ConsumerService {
 
 		int maxConsumerId = 0;
 		for (Entry<String, Topic> entry : meta.getTopics().entrySet()) {
-			for (ConsumerGroup cg : entry.getValue().getConsumerGroups().values()) {
+			for (ConsumerGroup cg : entry.getValue().getConsumerGroups()) {
 				if (cg.getId() != null && cg.getId() > maxConsumerId) {
 					maxConsumerId = cg.getId();
 				}

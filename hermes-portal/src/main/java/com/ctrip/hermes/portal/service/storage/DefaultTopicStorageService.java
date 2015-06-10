@@ -73,7 +73,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		tableModels.add(new OffsetMessageTableModel()); // offset_message
 		tableModels.add(new OffsetResendTableModel()); // offset_resend
 
-		for (ConsumerGroup consumerGroup : topic.getConsumerGroups().values()) {
+		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
 			int groupId = consumerGroup.getId();
 
 			tableModels.add(new ResendTableModel(groupId)); // resend_<groupid>
@@ -107,7 +107,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(1), 100 * 10000, dbInfo.getFirst(),
 		      dbInfo.getMiddle(), dbInfo.getLast());
 
-		for (ConsumerGroup consumerGroup : topic.getConsumerGroups().values()) {
+		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
 			int groupId = consumerGroup.getId();
 
 			handler.addPartition(topic.getId(), partition.getId(), new ResendTableModel(groupId), 5 * 10000,
@@ -187,7 +187,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(1), dbInfo.getFirst(),
 		      dbInfo.getMiddle(), dbInfo.getLast());
 
-		for (ConsumerGroup consumerGroup : topic.getConsumerGroups().values()) {
+		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
 			int groupId = consumerGroup.getId();
 
 			handler.deletePartition(topic.getId(), partition.getId(), new ResendTableModel(groupId), dbInfo.getFirst(),
