@@ -14,6 +14,18 @@
 			<param name="LevelMin" value="TRACE" />
 		</filter>
 	</appender>
+	
+	<appender name="FILE" class="org.apache.log4j.FileAppender">
+		<param name="File" value="/data/applogs/logstash/hermes.log" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m%n" />
+		</layout>
+	</appender>
+	
+	<logger name="biz" additivity="false">
+		<level value="INFO" />
+		<appender-ref ref="FILE" />
+	</logger>
 
 	<logger name="com.mchange.v2">
 		<level value="WARN" />

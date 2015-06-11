@@ -297,7 +297,7 @@ angular.module('hermes-tracer', [ 'ngResource' ]).controller(
 
 								yAxis : {
 									title : {
-										text : "Millisecond sine " + new Date(trace.commonEvents[0].eventTime)
+										text : "Millisecond since " + new Date(trace.commonEvents[0].eventTime).toISOString()
 									},
 									min : 0,
 									max : trace.maxEventTime() - trace.bornTime + 10,

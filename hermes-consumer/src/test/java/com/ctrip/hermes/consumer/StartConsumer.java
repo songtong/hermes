@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
@@ -99,6 +100,11 @@ public class StartConsumer extends ComponentTestCase {
 
 		@Override
 		public void onMessage(List<ConsumerMessage<String>> msgs) {
+			try {
+				TimeUnit.MILLISECONDS.sleep(15 + new Random().nextInt(50));
+			} catch (InterruptedException e) {
+			}
+
 			for (ConsumerMessage<String> msg : msgs) {
 				String body = msg.getBody();
 				System.out.println(m_id + "<<< " + body + " partition: "
