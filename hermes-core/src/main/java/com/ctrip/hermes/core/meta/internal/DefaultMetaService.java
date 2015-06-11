@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.bo.SchemaView;
+import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.lease.Lease;
@@ -31,7 +33,6 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.meta.entity.Subscription;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.transform.BaseVisitor2;
 
@@ -289,9 +290,15 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public List<Subscription> listSubscriptions() {
-		Meta meta = m_metaCache.get();
-		return new ArrayList<Subscription>(meta.getSubscriptions().values());
-	}
+   public List<SubscriptionView> listSubscriptions() {
+	   // TODO Auto-generated method stub
+	   return null;
+   }
+
+	@Override
+   public List<SchemaView> listSchemas() {
+	   // TODO Auto-generated method stub
+	   return null;
+   }
 
 }

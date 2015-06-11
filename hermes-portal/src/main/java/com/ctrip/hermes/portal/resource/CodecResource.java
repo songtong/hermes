@@ -16,9 +16,9 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ctrip.hermes.core.bo.CodecView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Codec;
-import com.ctrip.hermes.portal.pojo.CodecView;
 import com.ctrip.hermes.portal.server.RestException;
 import com.ctrip.hermes.portal.service.CodecService;
 

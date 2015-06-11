@@ -15,9 +15,9 @@ import org.unidal.lookup.annotation.Named;
 
 import com.codahale.metrics.Meter;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
+import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.meta.entity.Subscription;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
@@ -26,9 +26,9 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 
 	private static final Logger logger = LoggerFactory.getLogger(DefaultSubscribeRegistry.class);
 
-	private Set<Subscription> subscriptions = new HashSet<>();
+	private Set<SubscriptionView> subscriptions = new HashSet<>();
 
-	private Map<Subscription, ConsumerHolder> consumerHolders = new ConcurrentHashMap<>();
+	private Map<SubscriptionView, ConsumerHolder> consumerHolders = new ConcurrentHashMap<>();
 
 	@Inject
 	private MessagePushService pushService;
@@ -50,8 +50,8 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 
 			@Override
 			public void run() {
-				for (Map.Entry<Subscription, ConsumerHolder> entry : consumerHolders.entrySet()) {
-					Subscription sub = entry.getKey();
+				for (Map.Entry<SubscriptionView, ConsumerHolder> entry : consumerHolders.entrySet()) {
+					SubscriptionView sub = entry.getKey();
 					Meter failed_meter = m_metricsManager.meter("push_fail", sub.getTopic(), sub.getGroup(), sub
 					      .getEndpoints().toString());
 					if (failed_meter.getOneMinuteRate() > 0.5) {
@@ -69,18 +69,17 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 
 			@Override
 			public void run() {
-				m_metaService.refresh();
-				Set<Subscription> newSubscriptions = new HashSet<>(m_metaService.listSubscriptions());
-				SetView<Subscription> created = Sets.difference(newSubscriptions, subscriptions);
-				SetView<Subscription> removed = Sets.difference(subscriptions, newSubscriptions);
-				for (Subscription sub : created) {
+				Set<SubscriptionView> newSubscriptions = new HashSet<>(m_metaService.listSubscriptions());
+				SetView<SubscriptionView> created = Sets.difference(newSubscriptions, subscriptions);
+				SetView<SubscriptionView> removed = Sets.difference(subscriptions, newSubscriptions);
+				for (SubscriptionView sub : created) {
 					logger.info("register: " + sub);
 
 					ConsumerHolder consumerHolder = pushService.startPusher(sub);
 					consumerHolders.put(sub, consumerHolder);
 				}
 				subscriptions.addAll(created);
-				for (Subscription sub : removed) {
+				for (SubscriptionView sub : removed) {
 					logger.info("unregister: " + sub);
 
 					ConsumerHolder consumerHolder = consumerHolders.remove(sub);
@@ -95,7 +94,7 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 	@Override
 	public void stop() {
 		scheduledExecutor.shutdown();
-		for (Subscription sub : subscriptions) {
+		for (SubscriptionView sub : subscriptions) {
 			ConsumerHolder consumerHolder = consumerHolders.remove(sub);
 			consumerHolder.close();
 		}

@@ -10,7 +10,6 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.meta.entity.Subscription;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.MetaService;
 
@@ -40,8 +39,6 @@ public interface MetaServiceWrapper extends MetaService {
 	public Map<String, Endpoint> getEndpoints();
 
 	public Map<String, Storage> getStorages();
-
-	public Map<String, Subscription> getSubscriptions();
 
 	public boolean addEndpoint(Endpoint endpoint) throws Exception;
 

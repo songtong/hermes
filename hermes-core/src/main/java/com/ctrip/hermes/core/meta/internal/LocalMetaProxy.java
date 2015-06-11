@@ -1,9 +1,13 @@
 package com.ctrip.hermes.core.meta.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.bo.SchemaView;
+import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.DefaultLease;
 import com.ctrip.hermes.core.lease.Lease;
@@ -47,6 +51,16 @@ public class LocalMetaProxy implements MetaProxy {
 		long expireTime = System.currentTimeMillis() + 10 * 1000L;
 		long leaseId = m_leaseId.incrementAndGet();
 		return new LeaseAcquireResponse(true, new DefaultLease(leaseId, expireTime), expireTime);
+	}
+
+	@Override
+	public List<SchemaView> listSchemas() {
+		return new ArrayList<SchemaView>();
+	}
+
+	@Override
+	public List<SubscriptionView> listSubscriptions() {
+		return new ArrayList<SubscriptionView>();
 	}
 
 }

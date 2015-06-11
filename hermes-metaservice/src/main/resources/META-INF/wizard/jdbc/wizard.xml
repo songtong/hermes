@@ -11,6 +11,7 @@
       <group name="meta" package="com.ctrip.hermes.metaservice.model">
          <table name="meta"/>
          <table name="schema"/>
+         <table name="subscription"/>
       </group>
    </jdbc>
 </wizard>

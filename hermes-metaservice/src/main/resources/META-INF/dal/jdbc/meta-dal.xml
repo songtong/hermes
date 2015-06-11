@@ -39,5 +39,14 @@
 			</query>
 		</query-defs>
 	</entity>
+	<entity name="subscription">
+		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        ORDER BY <FIELD name='id'/> DESC]]></statement>
+			</query>
+		</query-defs>
+	</entity>
 </entities>
 

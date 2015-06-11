@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.pojo;
+package com.ctrip.hermes.core.bo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +7,7 @@ import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Property;
 
 public class CodecView {
+	
 	private String type;
 
 	private List<Property> properties;

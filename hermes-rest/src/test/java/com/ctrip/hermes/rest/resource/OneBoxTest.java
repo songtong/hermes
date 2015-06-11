@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.meta.entity.Subscription;
+import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.rest.TestGatewayServer;
 import com.google.common.base.Charsets;
 
@@ -56,16 +56,15 @@ public class OneBoxTest extends ComponentTestCase {
 		WebTarget portalWebTarget = client.target(TestGatewayServer.PORTAL_HOST);
 		WebTarget gatewayWebTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String id = "mysub_" + UUID.randomUUID().toString();
 		String topic = "kafka.SimpleTopic";
 		String group = "OneBoxGroup";
 		String urls = "http://localhost:1357/onebox/pushWrong,http://localhost:1357/onebox/push1";
 
-		Subscription sub = new Subscription();
-		sub.setId(id);
+		SubscriptionView sub = new SubscriptionView();
 		sub.setTopic(topic);
 		sub.setGroup(group);
 		sub.setEndpoints(urls);
+		Long id = null;
 
 		Builder request = portalWebTarget.path("/api/subscriptions/").request();
 		String json = JSON.toJSONString(sub);
@@ -85,6 +84,8 @@ public class OneBoxTest extends ComponentTestCase {
 			InputStream is = new ByteArrayInputStream(sent.get(i));
 			response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
 			Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
+			SubscriptionView createdSub = response.readEntity(SubscriptionView.class);
+			id = createdSub.getId();
 			System.out.println("Sent: " + new String(sent.get(i)));
 		}
 
@@ -93,9 +94,9 @@ public class OneBoxTest extends ComponentTestCase {
 			TimeUnit.SECONDS.sleep(1);
 			if (received.size() > 0)
 				System.out.println("Received: " + received.size());
-//			if (System.currentTimeMillis() - startWait > 10000) {
-//				break;
-//			}
+			if (System.currentTimeMillis() - startWait > 10000) {
+				break;
+			}
 		}
 
 		request = portalWebTarget.path("/api/subscriptions/" + id).request();

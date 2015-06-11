@@ -1,6 +1,6 @@
 package com.ctrip.hermes.portal.resource;
 
-import java.util.Map;
+import java.util.List;
 
 import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
@@ -17,10 +17,11 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.entity.Subscription;
 import com.ctrip.hermes.portal.service.SubscriptionService;
 
 @Path("/subscriptions/")
@@ -34,8 +35,12 @@ public class SubscriptionsResource {
 
 	@Path("")
 	@GET
-	public Map<String, Subscription> getAll() {
-		return subscriptionService.getSubscriptions();
+	public List<SubscriptionView> getAll() {
+		try {
+			return subscriptionService.getSubscriptions();
+		} catch (DalException e) {
+			throw new InternalServerErrorException(e);
+		}
 	}
 
 	@Path("/")
@@ -43,9 +48,9 @@ public class SubscriptionsResource {
 	public Response subscribe(String content) {
 		logger.debug("subscribe {}", content);
 
-		Subscription subscription = null;
+		SubscriptionView subscription = null;
 		try {
-			subscription = JSON.parseObject(content, Subscription.class);
+			subscription = JSON.parseObject(content, SubscriptionView.class);
 		} catch (Exception e) {
 			throw new BadRequestException("Parse subscription failed", e);
 		}
@@ -61,8 +66,8 @@ public class SubscriptionsResource {
 
 	@Path("{id}")
 	@DELETE
-	public Response unsubscribe(@PathParam("id") String id) {
-		logger.debug("unsubscribe {} {}", id);
+	public Response unsubscribe(@PathParam("id") long id) {
+		logger.debug("unsubscribe {}", id);
 
 		try {
 			subscriptionService.remove(id);

@@ -24,13 +24,13 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.lookup.util.StringUtils;
 
+import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.model.SchemaDao;
 import com.ctrip.hermes.metaservice.model.SchemaEntity;
-import com.ctrip.hermes.portal.pojo.SchemaView;
 
 @Named
 public class SchemaService {
@@ -139,7 +139,7 @@ public class SchemaService {
 	public SchemaView createSchema(SchemaView schemaView, Topic topic) throws DalException, IOException,
 	      RestClientException {
 		m_logger.info(String.format("Create schema for %s", topic.getName()));
-		Schema schema = schemaView.toMetaSchema();
+		Schema schema = toSchema(schemaView);
 		schema.setCreateTime(new Date(System.currentTimeMillis()));
 		schema.setName(topic.getName() + "-value");
 		schema.setTopicId(topic.getId());
@@ -164,7 +164,7 @@ public class SchemaService {
 			}
 		}
 
-		return new SchemaView(schema);
+		return toSchemaView(schema);
 	}
 
 	/**
@@ -277,7 +277,7 @@ public class SchemaService {
 	 */
 	public SchemaView getSchemaView(long schemaId) throws DalException, IOException, RestClientException {
 		Schema schema = getSchemaMeta(schemaId);
-		SchemaView schemaView = new SchemaView(schema);
+		SchemaView schemaView = toSchemaView(schema);
 		return schemaView;
 	}
 
@@ -342,7 +342,7 @@ public class SchemaService {
 		}
 
 		boolean isUpdated = false;
-		Schema metaSchema = schemaView.toMetaSchema();
+		Schema metaSchema = toSchema(schemaView);
 		if (schemaContent != null) {
 			metaSchema.setSchemaContent(schemaContent);
 			metaSchema.setSchemaProperties(schemaHeader.toString());
@@ -365,7 +365,7 @@ public class SchemaService {
 
 		if (isUpdated) {
 			m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
-			return new SchemaView(metaSchema);
+			return toSchemaView(metaSchema);
 		} else {
 			return schemaView;
 		}
@@ -389,7 +389,7 @@ public class SchemaService {
 		}
 
 		boolean isUpdated = false;
-		Schema metaSchema = schemaView.toMetaSchema();
+		Schema metaSchema = toSchema(schemaView);
 		if (schemaContent != null) {
 			metaSchema.setSchemaContent(schemaContent);
 			metaSchema.setSchemaProperties(schemaHeader.toString());
@@ -404,7 +404,7 @@ public class SchemaService {
 
 		if (isUpdated) {
 			m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
-			return new SchemaView(metaSchema);
+			return toSchemaView(metaSchema);
 		} else {
 			return schemaView;
 		}
@@ -428,4 +428,48 @@ public class SchemaService {
 		return result;
 	}
 
+	/**
+	 * 
+	 * @param schemaView
+	 * @return
+	 */
+	public static Schema toSchema(SchemaView schemaView) {
+		Schema schema = new Schema();
+		if (schemaView.getId() != null) {
+			schema.setId(schemaView.getId());
+		}
+		schema.setName(schemaView.getName());
+		schema.setType(schemaView.getType());
+		if (schemaView.getVersion() != null) {
+			schema.setVersion(schemaView.getVersion());
+		}
+		schema.setCreateTime(schemaView.getCreateTime());
+		schema.setCompatibility(schemaView.getCompatibility());
+		schema.setDescription(schemaView.getDescription());
+		if (schemaView.getTopicId() != null) {
+			schema.setTopicId(schemaView.getTopicId());
+		}
+		return schema;
+	}
+
+	/**
+	 * 
+	 * @param schema
+	 * @return
+	 */
+	public static SchemaView toSchemaView(Schema schema) {
+		SchemaView view = new SchemaView();
+		view.setId(schema.getId());
+		view.setName(schema.getName());
+		view.setType(schema.getType());
+		view.setVersion(schema.getVersion());
+		view.setCreateTime(schema.getCreateTime());
+		view.setDescription(schema.getDescription());
+		view.setCompatibility(schema.getCompatibility());
+		view.setTopicId(schema.getTopicId());
+		if (schema.getSchemaContent() != null) {
+			view.setSchemaPreview(new String(schema.getSchemaContent()));
+		}
+		return view;
+	}
 }

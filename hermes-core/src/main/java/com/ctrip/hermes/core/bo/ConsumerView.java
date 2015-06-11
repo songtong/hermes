@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.pojo;
+package com.ctrip.hermes.core.bo;
 
 import org.unidal.tuple.Pair;
 
