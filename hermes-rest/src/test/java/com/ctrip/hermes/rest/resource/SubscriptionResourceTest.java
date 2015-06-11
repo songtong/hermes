@@ -1,6 +1,6 @@
 package com.ctrip.hermes.rest.resource;
 
-import java.util.Map;
+import java.util.List;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.meta.entity.Subscription;
+import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.rest.TestGatewayServer;
 
 public class SubscriptionResourceTest extends ComponentTestCase {
@@ -31,8 +31,7 @@ public class SubscriptionResourceTest extends ComponentTestCase {
 		String group = "OneBoxGroup";
 		String urls = "http://localhost:1357/onebox";
 
-		Subscription sub = new Subscription();
-		sub.setId(id);
+		SubscriptionView sub = new SubscriptionView();
 		sub.setTopic(topic);
 		sub.setGroup(group);
 		sub.setEndpoints(urls);
@@ -46,9 +45,8 @@ public class SubscriptionResourceTest extends ComponentTestCase {
 		request = webTarget.path("subscriptions/").request();
 		response = request.get();
 		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-		Map<String, Subscription> subs = response.readEntity(new GenericType<Map<String, Subscription>>() {
+		List<SubscriptionView> subs = response.readEntity(new GenericType<List<SubscriptionView>>() {
 		});
-		Assert.assertTrue(subs.containsKey(sub.getId()));
 		System.out.println(subs.toString());
 
 		request = webTarget.path("subscriptions/" + id).request();

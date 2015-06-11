@@ -14,7 +14,6 @@ final class FxhermesmetadbDatabaseConfigurator extends AbstractJdbcResourceConfi
 
       defineSimpleTableProviderComponents(all, "fxhermesmetadb", com.ctrip.hermes.metaservice.model._INDEX.getEntityClasses());
       defineDaoComponents(all, com.ctrip.hermes.metaservice.model._INDEX.getDaoClasses());
-      all.add(defineJdbcDataSourceConfigurationManagerComponent("/data/appdatas/hermes/datasources.xml"));
 
       return all;
    }

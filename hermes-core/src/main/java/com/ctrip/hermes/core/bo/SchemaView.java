@@ -1,10 +1,9 @@
-package com.ctrip.hermes.portal.pojo;
+package com.ctrip.hermes.core.bo;
 
 import java.util.Date;
 import java.util.List;
 
 import com.ctrip.hermes.meta.entity.Property;
-import com.ctrip.hermes.metaservice.model.Schema;
 
 public class SchemaView {
 	private Long id;
@@ -29,20 +28,6 @@ public class SchemaView {
 
 	public SchemaView() {
 
-	}
-
-	public SchemaView(Schema schema) {
-		this.id = schema.getId();
-		this.name = schema.getName();
-		this.type = schema.getType();
-		this.version = schema.getVersion();
-		this.createTime = schema.getCreateTime();
-		this.description = schema.getDescription();
-		this.compatibility = schema.getCompatibility();
-		this.topicId = schema.getTopicId();
-		if (schema.getSchemaContent() != null) {
-			this.schemaPreview = new String(schema.getSchemaContent());
-		}
 	}
 
 	public String getCompatibility() {
@@ -123,25 +108,6 @@ public class SchemaView {
 
 	public void setVersion(int version) {
 		this.version = version;
-	}
-
-	public Schema toMetaSchema() {
-		Schema schema = new Schema();
-		if (this.id != null) {
-			schema.setId(this.id);
-		}
-		schema.setName(this.name);
-		schema.setType(this.type);
-		if (this.version != null) {
-			schema.setVersion(this.version);
-		}
-		schema.setCreateTime(this.createTime);
-		schema.setCompatibility(this.compatibility);
-		schema.setDescription(this.description);
-		if (this.topicId != null) {
-			schema.setTopicId(this.topicId);
-		}
-		return schema;
 	}
 
 }

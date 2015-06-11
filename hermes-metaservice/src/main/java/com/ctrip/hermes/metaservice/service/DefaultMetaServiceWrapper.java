@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service;
+package com.ctrip.hermes.metaservice.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,11 +29,9 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.meta.entity.Subscription;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.transform.BaseVisitor2;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
-import com.ctrip.hermes.metaservice.service.DefaultMetaService;
 
 @Named(type = MetaServiceWrapper.class, value = DefaultMetaServiceWrapper.ID)
 public class DefaultMetaServiceWrapper extends DefaultMetaService implements MetaServiceWrapper, Initializable {
@@ -196,11 +194,6 @@ public class DefaultMetaServiceWrapper extends DefaultMetaService implements Met
 			}
 		}
 		return null;
-	}
-
-	@Override
-	public Map<String, Subscription> getSubscriptions() {
-		return m_meta.getSubscriptions();
 	}
 
 	@Override
