@@ -22,6 +22,7 @@ import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAlloca
 import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.zk.ZKClient;
+import com.ctrip.hermes.metaservice.service.SubscriptionService;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
@@ -51,6 +52,9 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		// cluster
 		all.add(A(ZKClient.class));
 		all.add(A(ClusterStatusHolder.class));
+		
+		// subscription service
+		all.add(A(SubscriptionService.class));
 
 		return all;
 	}

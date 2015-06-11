@@ -12,6 +12,7 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
 import com.ctrip.hermes.portal.service.storage.TopicStorageService;
 
 @Named

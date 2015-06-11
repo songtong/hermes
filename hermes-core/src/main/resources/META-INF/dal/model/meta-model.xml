@@ -8,7 +8,6 @@
 		<entity-ref name="codec" type="map" names="codecs" />
 		<entity-ref name="app" type="map" names="apps" />
 		<entity-ref name="server" type="map" names="servers" />
-		<entity-ref name="subscription" type="map" names="subscriptions" />
 	</entity>
 
 	<entity name="consumer-group">
@@ -84,12 +83,6 @@
 		<attribute name="id" value-type="String" key="true" />
 		<attribute name="host" value-type="String" />
 		<attribute name="port" value-type="int" />
-	</entity>
-	<entity name="subscription">
-		<attribute name="id" value-type="String" key="true" />
-		<attribute name="topic" value-type="String" />
-		<attribute name="group" value-type="String" />
-		<attribute name="endpoints" value-type="String" />
 	</entity>
 </model>
 

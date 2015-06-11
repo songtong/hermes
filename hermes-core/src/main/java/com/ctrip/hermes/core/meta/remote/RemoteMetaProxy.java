@@ -9,6 +9,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.config.RequestConfig.Builder;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
@@ -23,6 +24,8 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.bo.SchemaView;
+import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.lease.Lease;
@@ -140,11 +143,12 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 
 	}
 
-	private String post(final String path, final Map<String, String> requestParams, final Object payload) {
+	private String get(final String path, final Map<String, String> requestParams) {
 		return pollMetaServer(new Function<String, String>() {
 
 			@Override
 			public String apply(String ip) {
+				HttpGet get = null;
 				try {
 					URIBuilder uriBuilder = new URIBuilder()//
 					      .setScheme("http")//
@@ -156,7 +160,54 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 						}
 					}
 
-					HttpPost post = new HttpPost(uriBuilder.build());
+					get = new HttpGet(uriBuilder.build());
+					get.setConfig(m_requestConfig);
+
+					HttpResponse response;
+					response = m_httpClient.execute(get);
+					if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+						return EntityUtils.toString(response.getEntity());
+					} else {
+						if (log.isDebugEnabled()) {
+							log.debug("Response error while getting meta server error({url={}, status={}}).",
+							      uriBuilder.build(), response.getStatusLine().getStatusCode());
+						}
+						return null;
+					}
+				} catch (Exception e) {
+					// ignore
+					if (log.isDebugEnabled()) {
+						log.debug("Get meta server error.", e);
+					}
+					return null;
+				} finally {
+					if (get != null) {
+						get.reset();
+					}
+				}
+
+			}
+		});
+	}
+
+	private String post(final String path, final Map<String, String> requestParams, final Object payload) {
+		return pollMetaServer(new Function<String, String>() {
+
+			@Override
+			public String apply(String ip) {
+				HttpPost post = null;
+				try {
+					URIBuilder uriBuilder = new URIBuilder()//
+					      .setScheme("http")//
+					      .setHost(ip)//
+					      .setPath(path);
+					if (requestParams != null) {
+						for (Map.Entry<String, String> entry : requestParams.entrySet()) {
+							uriBuilder.addParameter(entry.getKey(), entry.getValue());
+						}
+					}
+
+					post = new HttpPost(uriBuilder.build());
 					post.setConfig(m_requestConfig);
 
 					HttpResponse response;
@@ -179,6 +230,10 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 						log.debug("Post meta server error.", e);
 					}
 					return null;
+				} finally {
+					if (post != null) {
+						post.reset();
+					}
 				}
 
 			}
@@ -193,6 +248,32 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		b.setConnectTimeout(m_config.getMetaServerConnectTimeout());
 		b.setSocketTimeout(m_config.getMetaServerReadTimeout());
 		m_requestConfig = b.build();
+	}
+
+	@Override
+	public List<SchemaView> listSchemas() {
+		String response = get("/schemas/", null);
+		if (response != null) {
+			return JSON.parseArray(response, SchemaView.class);
+		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("No response while getting meta server[listSchemas]");
+			}
+			return null;
+		}
+	}
+
+	@Override
+	public List<SubscriptionView> listSubscriptions() {
+		String response = get("/subscriptions/", null);
+		if (response != null) {
+			return JSON.parseArray(response, SubscriptionView.class);
+		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("No response while getting meta server[listSubscriptions]");
+			}
+			return null;
+		}
 	}
 
 }

@@ -30,12 +30,12 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
-import com.ctrip.hermes.portal.pojo.SchemaView;
+import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.portal.server.RestException;
-import com.ctrip.hermes.portal.service.SchemaService;
 import com.ctrip.hermes.portal.service.TopicService;
 import com.google.common.io.ByteStreams;
 
@@ -246,7 +246,7 @@ public class SchemaResource {
 		try {
 			List<Schema> schemaMetas = schemaService.listLatestSchemaMeta();
 			for (Schema schema : schemaMetas) {
-				SchemaView schemaView = new SchemaView(schema);
+				SchemaView schemaView = SchemaService.toSchemaView(schema);
 				returnResult.add(schemaView);
 			}
 		} catch (Exception e) {

@@ -9,7 +9,7 @@
 					<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+					<role>com.ctrip.hermes.metaservice.service.MetaServiceWrapper</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -23,10 +23,10 @@
 			<implementation>com.ctrip.hermes.portal.service.TopicService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+					<role>com.ctrip.hermes.metaservice.service.MetaServiceWrapper</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.SchemaService</role>
+					<role>com.ctrip.hermes.metaservice.service.SchemaService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
@@ -34,39 +34,39 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.SchemaService</role>
-			<implementation>com.ctrip.hermes.portal.service.SchemaService</implementation>
+			<role>com.ctrip.hermes.metaservice.service.SchemaService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.SchemaService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.SchemaDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+					<role>com.ctrip.hermes.metaservice.service.MetaServiceWrapper</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.CompileService</role>
+					<role>com.ctrip.hermes.metaservice.service.CompileService</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.CodecService</role>
-			<implementation>com.ctrip.hermes.portal.service.CodecService</implementation>
+			<role>com.ctrip.hermes.metaservice.service.CodecService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.CodecService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+					<role>com.ctrip.hermes.metaservice.service.MetaServiceWrapper</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.CompileService</role>
-			<implementation>com.ctrip.hermes.portal.service.CompileService</implementation>
+			<role>com.ctrip.hermes.metaservice.service.CompileService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.CompileService</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.ConsumerService</role>
 			<implementation>com.ctrip.hermes.portal.service.ConsumerService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+					<role>com.ctrip.hermes.metaservice.service.MetaServiceWrapper</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
@@ -74,18 +74,18 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.SubscriptionService</role>
-			<implementation>com.ctrip.hermes.portal.service.SubscriptionService</implementation>
+			<role>com.ctrip.hermes.metaservice.service.SubscriptionService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.SubscriptionService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+					<role>com.ctrip.hermes.metaservice.model.SubscriptionDao</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.MetaServiceWrapper</role>
+			<role>com.ctrip.hermes.metaservice.service.MetaServiceWrapper</role>
 			<role-hint>default-meta-service-wrapper</role-hint>
-			<implementation>com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper</implementation>
+			<implementation>com.ctrip.hermes.metaservice.service.DefaultMetaServiceWrapper</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>

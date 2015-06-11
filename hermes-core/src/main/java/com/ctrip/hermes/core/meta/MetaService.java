@@ -2,6 +2,8 @@ package com.ctrip.hermes.core.meta;
 
 import java.util.List;
 
+import com.ctrip.hermes.core.bo.SchemaView;
+import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
@@ -11,7 +13,6 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.meta.entity.Subscription;
 import com.ctrip.hermes.meta.entity.Topic;
 
 /**
@@ -45,8 +46,6 @@ public interface MetaService {
 
 	List<Topic> listTopicsByPattern(String topicPattern);
 	
-	List<Subscription> listSubscriptions();
-
 	LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId, int brokerPort);
 
 	int translateToIntGroupId(String topic, String groupId);
@@ -57,5 +56,9 @@ public interface MetaService {
 
 	LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId);
 
+	List<SubscriptionView> listSubscriptions();
+	
+	List<SchemaView> listSchemas();
+	
 	void refresh();
 }

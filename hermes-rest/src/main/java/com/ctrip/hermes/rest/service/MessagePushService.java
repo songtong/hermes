@@ -28,11 +28,11 @@ import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
+import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
-import com.ctrip.hermes.meta.entity.Subscription;
 
 @Named
 public class MessagePushService implements Initializable {
@@ -64,7 +64,7 @@ public class MessagePushService implements Initializable {
 		m_requestConfig = b.build();
 	}
 
-	public ConsumerHolder startPusher(Subscription sub) {
+	public ConsumerHolder startPusher(SubscriptionView sub) {
 		final Meter success_meter = m_metricsManager.meter("push_success", sub.getTopic(), sub.getGroup(), sub
 		      .getEndpoints().toString());
 

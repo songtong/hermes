@@ -6,9 +6,9 @@ import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.service.DefaultMetaServiceWrapper;
+import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
 import com.ctrip.hermes.portal.pojo.storage.StorageTopic;
-import com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper;
-import com.ctrip.hermes.portal.service.MetaServiceWrapper;
 import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.portal.service.storage.TopicStorageService;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;

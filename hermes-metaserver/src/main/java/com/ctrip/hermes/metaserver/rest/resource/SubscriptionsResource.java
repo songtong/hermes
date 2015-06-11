@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.resource;
+package com.ctrip.hermes.metaserver.rest.resource;
 
 import java.util.List;
 
