@@ -7,6 +7,8 @@ import org.unidal.dal.jdbc.configuration.AbstractJdbcResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.metaservice.service.DefaultMetaService;
+import com.ctrip.hermes.metaservice.zk.ZKClient;
+import com.ctrip.hermes.metaservice.zk.ZKConfig;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 	@Override
@@ -14,6 +16,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		List<Component> all = new ArrayList<Component>();
 
 		all.add(A(DefaultMetaService.class));
+		all.add(A(ZKConfig.class));
+		all.add(A(ZKClient.class));
 
 		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
       all.add(defineJdbcDataSourceConfigurationManagerComponent("/data/appdatas/hermes/datasources.xml"));

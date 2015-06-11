@@ -11,7 +11,8 @@ import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy;
-import com.ctrip.hermes.metaserver.cluster.ClusterStatusHolder;
+import com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer;
+import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
@@ -20,8 +21,8 @@ import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocatorLocator
 import com.ctrip.hermes.metaserver.consumer.DefaultOrderedConsumeConsumerPartitionAssigningStrategy;
 import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator;
+import com.ctrip.hermes.metaserver.meta.LeaderMetaUpdate;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
-import com.ctrip.hermes.metaserver.zk.ZKClient;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
@@ -49,12 +50,15 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(BrokerAssignmentHolder.class));
 		all.add(A(BrokerLeaseHolder.class));
 
-		// cluster
-		all.add(A(ZKClient.class));
-		all.add(A(ClusterStatusHolder.class));
-		
 		// subscription service
 		all.add(A(SubscriptionService.class));
+
+		// cluster
+		all.add(A(ClusterStateHolder.class));
+		all.add(A(ClusterStateChangeListenerContainer.class));
+//		all.add(A(MetaUpdaterBootstrapListener.class));
+
+		all.add(A(LeaderMetaUpdate.class));
 
 		return all;
 	}
