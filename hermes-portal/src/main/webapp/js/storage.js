@@ -1,16 +1,3 @@
-function filter_endpoint_rows(rows, filter, table_state) {
-	rows = table_state.search.predicateObject ? filter('filter')(rows, table_state.search.predicateObject) : rows;
-	if (table_state.sort.predicate) {
-		rows = filter('orderBy')(rows, table_state.sort.predicate, table_state.sort.reverse);
-	}
-	return rows;
-}
-
-function reload_table(scope, data) {
-	scope.src_endpoints = data;
-	scope.endpoint_rows = scope.src_endpoints;
-}
-
 angular.module('hermes-storage', [ 'ngResource', 'xeditable' ]).run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
 }).controller('storage-controller', [ '$scope', '$resource', function(scope, resource) {

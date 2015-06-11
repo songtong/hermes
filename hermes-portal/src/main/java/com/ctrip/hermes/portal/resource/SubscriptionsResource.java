@@ -1,6 +1,10 @@
 package com.ctrip.hermes.portal.resource;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
@@ -34,8 +38,20 @@ public class SubscriptionsResource {
 
 	@Path("")
 	@GET
-	public Map<String, Subscription> getAll() {
-		return subscriptionService.getSubscriptions();
+	public List<Subscription> getAll() {
+		List<Subscription> l = new ArrayList<Subscription>();
+		for (Entry<String, Subscription> entry : subscriptionService.getSubscriptions().entrySet()) {
+			l.add(entry.getValue());
+		}
+		Collections.sort(l, new Comparator<Subscription>() {
+			@Override
+			public int compare(Subscription o1, Subscription o2) {
+				int ret = o1.getTopic().compareTo(o2.getTopic());
+				ret = ret == 0 ? o1.getGroup().compareTo(o2.getGroup()) : ret;
+				return ret;
+			}
+		});
+		return l;
 	}
 
 	@Path("/")
