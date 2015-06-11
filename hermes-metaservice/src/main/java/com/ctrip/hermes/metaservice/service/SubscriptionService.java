@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service;
+package com.ctrip.hermes.metaservice.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,23 +22,16 @@ public class SubscriptionService {
 		List<Subscription> daoList = m_subscriptionDao.list(SubscriptionEntity.READSET_FULL);
 		List<SubscriptionView> result = new ArrayList<>();
 		for (Subscription sub : daoList) {
-			SubscriptionView view = new SubscriptionView();
-			view.setId(sub.getId());
-			view.setGroup(sub.getGroup());
-			view.setTopic(sub.getTopic());
-			view.setEndpoints(sub.getEndpoints());
+			SubscriptionView view = toSubscriptionView(sub);
 			result.add(view);
 		}
 		return result;
 	}
 
-	public void create(SubscriptionView view) throws DalException {
-		Subscription sub = new Subscription();
-		sub.setId(view.getId());
-		sub.setGroup(view.getGroup());
-		sub.setTopic(view.getTopic());
-		sub.setEndpoints(view.getEndpoints());
+	public SubscriptionView create(SubscriptionView view) throws DalException {
+		Subscription sub = toSubscription(view);
 		m_subscriptionDao.insert(sub);
+		return toSubscriptionView(sub);
 	}
 
 	public void remove(long id) throws DalException {
@@ -46,5 +39,25 @@ public class SubscriptionService {
 		if (subscription != null) {
 			m_subscriptionDao.deleteByPK(subscription);
 		}
+	}
+
+	public static Subscription toSubscription(SubscriptionView view) {
+		Subscription sub = new Subscription();
+		sub.setId(view.getId());
+		sub.setGroup(view.getGroup());
+		sub.setTopic(view.getTopic());
+		sub.setEndpoints(view.getEndpoints());
+		sub.setName(view.getName());
+		return sub;
+	}
+
+	public static SubscriptionView toSubscriptionView(Subscription sub) {
+		SubscriptionView view = new SubscriptionView();
+		view.setId(sub.getId());
+		view.setGroup(sub.getGroup());
+		view.setTopic(sub.getTopic());
+		view.setEndpoints(sub.getEndpoints());
+		view.setName(sub.getName());
+		return view;
 	}
 }

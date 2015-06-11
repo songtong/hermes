@@ -291,14 +291,12 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
    public List<SubscriptionView> listSubscriptions() {
-	   // TODO Auto-generated method stub
-	   return null;
-   }
+		return m_manager.getMetaProxy().listSubscriptions();
+	}
 
 	@Override
    public List<SchemaView> listSchemas() {
-	   // TODO Auto-generated method stub
-	   return null;
-   }
+		return m_manager.getMetaProxy().listSchemas();
+	}
 
 }

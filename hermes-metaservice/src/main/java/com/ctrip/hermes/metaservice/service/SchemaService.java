@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service;
+package com.ctrip.hermes.metaservice.service;
 
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;

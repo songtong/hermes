@@ -87,6 +87,7 @@
   </entity>
   <entity name="subscription" table="subscription" alias="s2">
     <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
+    <member name="name" field="name" value-type="String" length="500" nullable="false" />
     <member name="topic" field="topic" value-type="String" length="500" nullable="false" />
     <member name="group" field="group" value-type="String" length="500" nullable="false" />
     <member name="endpoints" field="endpoints" value-type="String" length="500" nullable="false" />

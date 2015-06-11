@@ -2,12 +2,13 @@ package com.ctrip.hermes.core.bo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Property;
 
 public class CodecView {
-	
+
 	private String type;
 
 	private List<Property> properties;
@@ -52,4 +53,7 @@ public class CodecView {
 		return codec;
 	}
 
+	public int hashCode() {
+		return Objects.hash(this.type, this.properties);
+	}
 }

@@ -6,12 +6,12 @@ import java.util.List;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
-import com.ctrip.hermes.portal.service.CodecService;
-import com.ctrip.hermes.portal.service.CompileService;
+import com.ctrip.hermes.metaservice.service.CodecService;
+import com.ctrip.hermes.metaservice.service.CompileService;
+import com.ctrip.hermes.metaservice.service.DefaultMetaServiceWrapper;
+import com.ctrip.hermes.metaservice.service.SchemaService;
+import com.ctrip.hermes.metaservice.service.SubscriptionService;
 import com.ctrip.hermes.portal.service.ConsumerService;
-import com.ctrip.hermes.portal.service.DefaultMetaServiceWrapper;
-import com.ctrip.hermes.portal.service.SchemaService;
-import com.ctrip.hermes.portal.service.SubscriptionService;
 import com.ctrip.hermes.portal.service.TopicService;
 import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler;

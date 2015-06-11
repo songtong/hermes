@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service;
+package com.ctrip.hermes.metaservice.service;
 
 import java.util.Map;
 

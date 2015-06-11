@@ -28,6 +28,15 @@
 			</configuration>
 		</component>
 		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>subscription</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>subscription</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.MetaDao</implementation>
 			<requirements>
@@ -39,6 +48,15 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.model.SchemaDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.SchemaDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.model.SubscriptionDao</role>
+			<implementation>com.ctrip.hermes.metaservice.model.SubscriptionDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

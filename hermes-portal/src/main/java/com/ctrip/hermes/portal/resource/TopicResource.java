@@ -34,9 +34,9 @@ import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
+import com.ctrip.hermes.metaservice.service.CodecService;
+import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.portal.server.RestException;
-import com.ctrip.hermes.portal.service.CodecService;
-import com.ctrip.hermes.portal.service.SchemaService;
 import com.ctrip.hermes.portal.service.TopicService;
 import com.ctrip.hermes.producer.api.Producer;
 

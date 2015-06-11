@@ -50,42 +50,51 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 
 			@Override
 			public void run() {
-				for (Map.Entry<SubscriptionView, ConsumerHolder> entry : consumerHolders.entrySet()) {
-					SubscriptionView sub = entry.getKey();
-					Meter failed_meter = m_metricsManager.meter("push_fail", sub.getTopic(), sub.getGroup(), sub
-					      .getEndpoints().toString());
-					if (failed_meter.getOneMinuteRate() > 0.5) {
-						logger.warn("Too many failed in the past minute {}, suspend {}", failed_meter.getOneMinuteRate(),
-						      sub.getId());
-						ConsumerHolder consumerHolder = consumerHolders.remove(sub);
-						consumerHolder.close();
+				try {
+					for (Map.Entry<SubscriptionView, ConsumerHolder> entry : consumerHolders.entrySet()) {
+						SubscriptionView sub = entry.getKey();
+						Meter failed_meter = m_metricsManager.meter("push_fail", sub.getTopic(), sub.getGroup(), sub
+						      .getEndpoints().toString());
+						if (failed_meter.getOneMinuteRate() > 0.5) {
+							logger.warn("Too many failed in the past minute {}, suspend {}", failed_meter.getOneMinuteRate(),
+							      sub.getId());
+							ConsumerHolder consumerHolder = consumerHolders.remove(sub);
+							consumerHolder.close();
+						}
 					}
+				} catch (Exception e) {
+					logger.warn("Check subscription healthy failed", e);
 				}
 			}
 
 		}, 5, 5, TimeUnit.SECONDS);
 
-		scheduledExecutor.scheduleAtFixedRate(new Runnable() {
+		scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
 
 			@Override
 			public void run() {
-				Set<SubscriptionView> newSubscriptions = new HashSet<>(m_metaService.listSubscriptions());
-				SetView<SubscriptionView> created = Sets.difference(newSubscriptions, subscriptions);
-				SetView<SubscriptionView> removed = Sets.difference(subscriptions, newSubscriptions);
-				for (SubscriptionView sub : created) {
-					logger.info("register: " + sub);
+				try {
+					Set<SubscriptionView> newSubscriptions = new HashSet<>(m_metaService.listSubscriptions());
+					SetView<SubscriptionView> created = Sets.difference(newSubscriptions, subscriptions);
+					SetView<SubscriptionView> removed = Sets.difference(subscriptions, newSubscriptions);
 
-					ConsumerHolder consumerHolder = pushService.startPusher(sub);
-					consumerHolders.put(sub, consumerHolder);
-				}
-				subscriptions.addAll(created);
-				for (SubscriptionView sub : removed) {
-					logger.info("unregister: " + sub);
+					for (SubscriptionView sub : created) {
+						logger.info("register: " + sub);
 
-					ConsumerHolder consumerHolder = consumerHolders.remove(sub);
-					consumerHolder.close();
+						ConsumerHolder consumerHolder = pushService.startPusher(sub);
+						consumerHolders.put(sub, consumerHolder);
+					}
+					subscriptions.addAll(created);
+					for (SubscriptionView sub : removed) {
+						logger.info("unregister: " + sub);
+
+						ConsumerHolder consumerHolder = consumerHolders.remove(sub);
+						consumerHolder.close();
+					}
+					subscriptions.removeAll(removed);
+				} catch (Exception e) {
+					logger.warn("SubscriptionChecker failed", e);
 				}
-				subscriptions.removeAll(removed);
 			}
 
 		}, 5, 5, TimeUnit.SECONDS);
