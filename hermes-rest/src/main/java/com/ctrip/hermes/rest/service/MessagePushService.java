@@ -13,6 +13,7 @@ import org.apache.http.client.config.RequestConfig.Builder;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -125,8 +126,10 @@ public class MessagePushService implements Initializable {
 		HttpResponse response = null;
 		try {
 			post.setConfig(m_requestConfig);
-			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
-			post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
+			//TODO: temp operations for show
+//			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
+			post.setEntity(new StringEntity(new String(msg.getBody().getEncodedMessage())));
+//			post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
 			response = m_httpClient.execute(post);
 		} finally {
 			post.reset();
