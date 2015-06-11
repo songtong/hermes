@@ -11,6 +11,11 @@
 ## 消息发送
 消息由Producer(生产者)创建，然后发送到Broker(消息服务器)，Broker根据消息所属Topic的配置信息确定消息的存储，将消息保存到相应的存储。
 
+## 设计特点
+* Append Only
+* Zero Copy
+* Pluggable Storage Engine
+
 ## 消息接收
 Consumer(消费者)向Broker订阅Topic，然后Broker将Topic对应的消息投递到Consumer进行处理。
 
