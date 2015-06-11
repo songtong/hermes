@@ -66,7 +66,8 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 	protected SubscribeHandle doStart(final ConsumerContext consumerContext) {
 		Topic topic = consumerContext.getTopic();
 
-		int kafkaPartitionCount = getKafkaPartitionCount(topic.getName());
+		int kafkaPartitionCount = 1;
+		// getKafkaPartitionCount(topic.getName());
 
 		Properties prop = getConsumerProperties(topic.getName(), consumerContext.getGroupId());
 		ConsumerConnector consumerConnector = kafka.consumer.Consumer
