@@ -93,6 +93,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>

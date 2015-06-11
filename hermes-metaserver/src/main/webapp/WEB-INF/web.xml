@@ -7,7 +7,7 @@
 	</listener>
 	<listener>
 		<display-name>cluster-info-listener</display-name>
-		<listener-class>com.ctrip.hermes.metaserver.cluster.ClusterStatusServletListener</listener-class>
+		<listener-class>com.ctrip.hermes.metaserver.cluster.ClusterStateServletListener</listener-class>
 	</listener>
 	<servlet>
 		<servlet-name>Jersey REST Service</servlet-name>

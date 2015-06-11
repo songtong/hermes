@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response.Status;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
-import com.ctrip.hermes.metaserver.cluster.ClusterStatusHolder;
+import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.rest.commons.RestException;
 
@@ -25,7 +25,7 @@ public class MetaServerResource {
 
 	private MetaHolder m_metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
 
-	private ClusterStatusHolder m_clusterStatusHolder = PlexusComponentLocator.lookup(ClusterStatusHolder.class);
+	private ClusterStateHolder m_clusterStatusHolder = PlexusComponentLocator.lookup(ClusterStateHolder.class);
 
 	@GET
 	@Path("servers")

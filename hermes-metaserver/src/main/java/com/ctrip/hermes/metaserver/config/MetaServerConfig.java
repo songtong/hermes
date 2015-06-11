@@ -53,34 +53,6 @@ public class MetaServerConfig {
 		return -3 * 1000L;
 	}
 
-	public int getZkConnectionTimeoutMillis() {
-		return 3000;
-	}
-
-	public String getZkConnectionString() {
-		return "127.0.0.1:2181";
-	}
-
-	public int getZkCloseWaitMillis() {
-		return 1000;
-	}
-
-	public String getZkNamespace() {
-		return "hermes";
-	}
-
-	public int getZkRetryBaseSleepTimeMillis() {
-		return 1000;
-	}
-
-	public int getZkRetryMaxRetries() {
-		return 3;
-	}
-
-	public int getZkSessionTimeoutMillis() {
-		return 15 * 1000;
-	}
-
 	public String getMetaServerName() {
 		return Networks.forIp().getLocalHostAddress() + ":" + getMetaServerPort();
 	}

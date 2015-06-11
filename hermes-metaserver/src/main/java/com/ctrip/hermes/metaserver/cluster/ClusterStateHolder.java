@@ -10,20 +10,23 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
-import com.ctrip.hermes.metaserver.zk.ZKClient;
+import com.ctrip.hermes.metaservice.zk.ZKClient;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = ClusterStatusHolder.class)
-public class ClusterStatusHolder {
+@Named(type = ClusterStateHolder.class)
+public class ClusterStateHolder {
 
 	@Inject
 	private MetaServerConfig m_config;
 
 	@Inject
 	private ZKClient m_client;
+
+	@Inject
+	private ClusterStateChangeListenerContainer m_listenerContainer;
 
 	private LeaderLatch m_leaderLatch;
 
@@ -42,13 +45,13 @@ public class ClusterStatusHolder {
 			@Override
 			public void notLeader() {
 				m_hasLeadership.set(false);
-				System.out.println("not leader");
+				m_listenerContainer.notLeader(ClusterStateHolder.this);
 			}
 
 			@Override
 			public void isLeader() {
 				m_hasLeadership.set(true);
-				System.out.println("is leader");
+				m_listenerContainer.isLeader(ClusterStateHolder.this);
 			}
 		}, Executors.newSingleThreadExecutor(HermesThreadFactory.create("LeaderLatchListenerPool", true)));
 
