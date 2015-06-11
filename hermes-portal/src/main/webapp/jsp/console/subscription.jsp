@@ -16,6 +16,7 @@
 				<thead>
 					<tr>
 						<th style="width: 5%">#</th>
+						<th>Name</th>
 						<th>Topic</th>
 						<th>Consumer</th>
 						<th>Endpoints</th>
@@ -25,6 +26,7 @@
 				<tbody>
 					<tr ng-repeat="sb in subscribers">
 						<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
+						<td><span editable-text="sb.name" ng-bind="sb.name || 'Not Set'" e-name="name" e-form="rowform"></span></td>
 						<td><span editable-text="sb.topic" ng-bind="sb.topic || 'Not Set'" e-name="topic" e-form="rowform" e-typeahead="topic for topic in topic_names | filter:$viewValue | limitTo:8"></span></td>
 						<td><span editable-text="sb.group" ng-bind="sb.group || 'Not Set'" e-name="group" e-form="rowform" e-typeahead="consumer for consumer in consumer_names | filter:$viewValue | limitTo:8"></span></td>
 						<td><span editable-text="sb.endpoints" ng-bind="sb.endpoints || 'Not Set'" e-name="endpoints" e-form="rowform"></span></td>
@@ -35,7 +37,7 @@
 							</form>
 							<div class="buttons" ng-show="!rowform.$visible">
 								<button class="btn btn-warning btn-xs" ng-click="rowform.$show()"><span class="glyphicon glyphicon-edit"></span> 修改</button>
-								<button class="btn btn-danger btn-xs" ng-click="del_row(subscriber)"><span class="glyphicon glyphicon-remove"></span> 删除</button>
+								<button class="btn btn-danger btn-xs" ng-click="del_row(sb)"><span class="glyphicon glyphicon-remove"></span> 删除</button>
 							</div>
 						</td>
 					</tr>

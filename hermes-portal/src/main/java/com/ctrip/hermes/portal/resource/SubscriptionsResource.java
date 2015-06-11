@@ -1,5 +1,7 @@
 package com.ctrip.hermes.portal.resource;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.inject.Singleton;
@@ -37,7 +39,17 @@ public class SubscriptionsResource {
 	@GET
 	public List<SubscriptionView> getAll() {
 		try {
-			return subscriptionService.getSubscriptions();
+			List<SubscriptionView> l = subscriptionService.getSubscriptions();
+			Collections.sort(l, new Comparator<SubscriptionView>() {
+				@Override
+				public int compare(SubscriptionView o1, SubscriptionView o2) {
+					int ret = o1.getName().compareTo(o2.getName());
+					ret = ret == 0 ? o1.getTopic().compareTo(o2.getTopic()) : ret;
+					ret = ret == 0 ? o1.getGroup().compareTo(o2.getGroup()) : ret;
+					return ret;
+				}
+			});
+			return l;
 		} catch (DalException e) {
 			throw new InternalServerErrorException(e);
 		}

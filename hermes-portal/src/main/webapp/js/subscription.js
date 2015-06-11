@@ -39,17 +39,20 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 
 	scope.add_row = function add_row() {
 		scope.inserted = {
-			id : undefined,
+			name : undefined,
 			topic : undefined,
+			group : undefined,
 			endpoints : undefined
 		};
 		scope.subscribers.push(scope.inserted);
 	};
 
 	scope.add_subscriber = function add_subscriber(subscriber) {
-		console.log(subscriber);
 		subscription_resource.save(subscriber, function(data) {
-			console.log(data);
+			scope.subscribers = subscription_resource.get_subscribers({}, function(data) {
+				scope.subscribers = data;
+			});
+
 			show_op_info.show("保存Subscription成功！");
 		});
 	};
@@ -57,7 +60,7 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 	scope.del_row = function del_row(subscriber) {
 		bootbox.confirm("确认删除Subscription?", function(result) {
 			if (result) {
-				subscription_resource.remove({
+				subscription_resource.delete_subscriber({
 					id : subscriber.id
 				}, function(data) {
 					show_op_info.show("删除成功！");
