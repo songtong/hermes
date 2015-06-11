@@ -19,7 +19,7 @@ import com.ctrip.hermes.core.meta.MetaService;
 @Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.AVRO)
 public class AvroPayloadCodec extends AbstractPayloadCodec implements Initializable {
 
-	private static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
+	static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
 
 	@Inject
 	private MetaService m_metaService;
