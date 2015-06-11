@@ -11,7 +11,8 @@
 		<div class="form-group form-inline" align="center" style="margin-left: 100px">
 			<label>输入 Ref-Key</label>
 			<input type="text" class="form-control" style="width: 400px" ng-model="ref_key" />
-			<button class="btn btn-success" ng-click="show_message(ref_key)"><span class="glyphicon glyphicon-arrow-up"></span> 提交</button>
+			<input type="date" class="form-control" ng-model="msg_date" placeholder="yyyy-MM-dd" min="2015-05-01" max="2115-12-31" />
+			<button class="btn btn-success" ng-click="show_message(ref_key, msg_date)"><span class="glyphicon glyphicon-arrow-up"></span> 提交</button>
 		</div>
 	</div>
 	<script type="text/javascript" src="${model.webapp}/js/d3/d3.min.js" type="text/JavaScript"></script>

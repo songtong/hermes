@@ -236,5 +236,23 @@
 				</requirement>
 			</requirements>
 		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.resender.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.resender.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.resender.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.resender.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.resender.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
 	</components>
 </plexus>

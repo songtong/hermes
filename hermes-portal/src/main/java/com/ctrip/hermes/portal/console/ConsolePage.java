@@ -17,7 +17,9 @@ public enum ConsolePage implements Page {
 
 	SUBSCRIPTION("subscription", "subscription", "Subscription", "Subscription", true),
 
-	TRACER("tracer", "tracer", "Tracer", "Tracer", true);
+	TRACER("tracer", "tracer", "Tracer", "Tracer", true),
+
+	RESENDER("resender", "resender", "Resender", "Resender", true);
 
 	private String m_name;
 

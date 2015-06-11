@@ -26,6 +26,7 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -37,6 +38,7 @@ import com.ctrip.hermes.portal.server.RestException;
 import com.ctrip.hermes.portal.service.CodecService;
 import com.ctrip.hermes.portal.service.SchemaService;
 import com.ctrip.hermes.portal.service.TopicService;
+import com.ctrip.hermes.producer.api.Producer;
 
 @Path("/topics/")
 @Singleton
@@ -78,6 +80,17 @@ public class TopicResource {
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.CREATED).entity(topicView).build();
+	}
+
+	@POST
+	@Path("{topic}/send")
+	public Response sendMessage(@PathParam("topic") String topic, String content) {
+		try {
+			Producer.getInstance().message(topic, "0", content).withRefKey(content).sendSync();
+		} catch (MessageSendException e) {
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		return Response.status(Status.OK).build();
 	}
 
 	@GET
