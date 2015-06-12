@@ -36,7 +36,7 @@ public class ZKPathUtils {
 			List<Integer> partitionIds = collectPartitionIds(topic);
 
 			for (Integer partitionId : partitionIds) {
-				paths.add(String.format(BROKER_LEASE_PATH_PATTERN, topicName, partitionId));
+				paths.add(getBrokerLeaseZkPath(topicName, partitionId));
 			}
 		}
 
@@ -45,6 +45,10 @@ public class ZKPathUtils {
 
 	public static String getBrokerLeaseZkPath(String topicName) {
 		return String.format(BROKER_LEASE_PATH_PREFIX_PATTERN, topicName);
+	}
+
+	public static String getBrokerLeaseZkPath(String topicName, int partition) {
+		return String.format(BROKER_LEASE_PATH_PATTERN, topicName, partition);
 	}
 
 	public static List<String> getConsumerLeaseZkPaths(Topic topic) {
@@ -68,6 +72,10 @@ public class ZKPathUtils {
 		return String.format(CONSUMER_LEASE_PATH_PREFIX_PATTERN, topicName);
 	}
 
+	public static String getConsumerLeaseZkPath(String topicName, int partition, String groupName) {
+		return String.format(CONSUMER_LEASE_PATH_PATTERN, topicName, partition, groupName);
+	}
+
 	public static List<String> getConsumerLeaseZkPaths(Topic topic, String consumerGroupName) {
 		List<String> paths = new LinkedList<>();
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
@@ -75,7 +83,7 @@ public class ZKPathUtils {
 			List<Integer> partitionIds = collectPartitionIds(topic);
 
 			for (Integer partitionId : partitionIds) {
-				paths.add(String.format(CONSUMER_LEASE_PATH_PATTERN, topicName, partitionId, consumerGroupName));
+				paths.add(getConsumerLeaseZkPath(topicName, partitionId, consumerGroupName));
 			}
 		}
 

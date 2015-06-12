@@ -21,7 +21,8 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 	private static final Logger log = LoggerFactory.getLogger(NonOrderedConsumeConsumerLeaseAllocator.class);
 
 	@Override
-	protected LeaseAcquireResponse doAcquireLease(Tpg tpg, String consumerName, Map<String, Lease> existingValidLeases) {
+	protected LeaseAcquireResponse doAcquireLease(Tpg tpg, String consumerName, Map<String, Lease> existingValidLeases)
+	      throws Exception {
 		if (existingValidLeases.isEmpty()) {
 			return newLease(tpg, consumerName, existingValidLeases);
 		} else {
@@ -47,7 +48,7 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 
 	@Override
 	protected LeaseAcquireResponse doRenewLease(Tpg tpg, String consumerName, long leaseId,
-	      Map<String, Lease> existingValidLeases) {
+	      Map<String, Lease> existingValidLeases) throws Exception {
 		if (existingValidLeases.isEmpty()) {
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 			      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
@@ -64,7 +65,8 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 			}
 
 			if (existingLease != null) {
-				existingLease.setExpireTime(existingLease.getExpireTime() + m_config.getConsumerLeaseTimeMillis());
+				m_leaseHolder.renewLease(tpg, consumerName, existingValidLeases, existingLease,
+				      m_config.getConsumerLeaseTimeMillis());
 				log.info(
 				      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
 				      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingLease.getExpireTime());
@@ -78,8 +80,10 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 		}
 	}
 
-	private LeaseAcquireResponse newLease(Tpg tpg, String consumerName, Map<String, Lease> existingValidLeases) {
-		Lease newLease = m_leaseHolder.newLease(m_config.getConsumerLeaseTimeMillis());
+	private LeaseAcquireResponse newLease(Tpg tpg, String consumerName, Map<String, Lease> existingValidLeases)
+	      throws Exception {
+		Lease newLease = m_leaseHolder.newLease(tpg, consumerName, existingValidLeases,
+		      m_config.getConsumerLeaseTimeMillis());
 		existingValidLeases.put(consumerName, newLease);
 
 		log.info("Acquire lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",

@@ -19,4 +19,6 @@ public interface ZookeeperService {
 
 	public void updateZkMetaVersion(int version) throws Exception;
 
+	public void persist(String path, Object data) throws Exception;
+
 }

@@ -41,7 +41,7 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	@Override
-	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName, String ip, int port) {
+	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName, String ip, int port) throws Exception {
 
 		heartbeat(tpg, consumerName, ip, port);
 
@@ -60,7 +60,8 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	@Override
-	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId, String ip, int port) {
+	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId, String ip, int port)
+	      throws Exception {
 
 		heartbeat(tpg, consumerName, ip, port);
 
@@ -83,7 +84,7 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 	}
 
-	protected LeaseAcquireResponse topicPartitionNotAssignToConsumer(Tpg tpg) {
+	protected LeaseAcquireResponse topicPartitionNotAssignToConsumer(Tpg tpg) throws Exception {
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
@@ -102,11 +103,11 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 
 	}
 
-	protected LeaseAcquireResponse acquireLease(final Tpg tpg, final String consumerName) {
+	protected LeaseAcquireResponse acquireLease(final Tpg tpg, final String consumerName) throws Exception {
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, Lease> existingValidLeases) {
+			public LeaseAcquireResponse execute(Map<String, Lease> existingValidLeases) throws Exception {
 				return doAcquireLease(tpg, consumerName, existingValidLeases);
 			}
 
@@ -114,12 +115,13 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 
 	}
 
-	protected LeaseAcquireResponse renewLease(final Tpg tpg, final String consumerName, final long leaseId) {
+	protected LeaseAcquireResponse renewLease(final Tpg tpg, final String consumerName, final long leaseId)
+	      throws Exception {
 
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, Lease> existingValidLeases) {
+			public LeaseAcquireResponse execute(Map<String, Lease> existingValidLeases) throws Exception {
 				return doRenewLease(tpg, consumerName, leaseId, existingValidLeases);
 			}
 
@@ -128,9 +130,9 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	protected abstract LeaseAcquireResponse doAcquireLease(final Tpg tpg, final String consumerName,
-	      Map<String, Lease> existingValidLeases);
+	      Map<String, Lease> existingValidLeases) throws Exception;
 
 	protected abstract LeaseAcquireResponse doRenewLease(final Tpg tpg, final String consumerName, final long leaseId,
-	      Map<String, Lease> existingValidLeases);
+	      Map<String, Lease> existingValidLeases) throws Exception;
 
 }
