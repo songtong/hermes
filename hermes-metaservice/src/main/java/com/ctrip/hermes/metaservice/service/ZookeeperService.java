@@ -9,7 +9,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 public interface ZookeeperService {
 	public void ensureConsumerLeaseZkPath(Topic topic);
 
-	public void deleteConsumerLeaseZkPath(Topic topic);
+	public void deleteConsumerLeaseZkPath(String topicName);
 
 	public void deleteConsumerLeaseZkPath(Topic t, String consumerGroupName);
 

@@ -3,6 +3,9 @@ package com.ctrip.hermes.metaservice.service;
 import java.util.List;
 
 import org.apache.curator.utils.EnsurePath;
+import org.apache.curator.utils.PathUtils;
+import org.apache.curator.utils.ZKPaths;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -49,16 +52,14 @@ public class DefaultZookeeperService implements ZookeeperService {
 	}
 
 	@Override
-	public void deleteConsumerLeaseZkPath(Topic topic) {
-		List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic);
+	public void deleteConsumerLeaseZkPath(String topicName) {
+		String path = ZKPathUtils.getConsumerLeaseZkPath(topicName);
 
-		for (String path : paths) {
-			try {
-				m_zkClient.getClient().delete().forPath(path);
-			} catch (Exception e) {
-				log.error("Exception occured in deleteConsumerLeaseZkPath", e);
-				throw new RuntimeException(e);
-			}
+		try {
+			deleteChildren(path, true);
+		} catch (Exception e) {
+			log.error("Exception occured in deleteConsumerLeaseZkPath", e);
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -75,6 +76,27 @@ public class DefaultZookeeperService implements ZookeeperService {
 			}
 		}
 
+	}
+
+	private void deleteChildren(String path, boolean deleteSelf) throws Exception {
+		PathUtils.validatePath(path);
+
+		List<String> children = m_zkClient.getClient().getChildren().forPath(path);
+		for (String child : children) {
+			String fullPath = ZKPaths.makePath(path, child);
+			deleteChildren(fullPath, true);
+		}
+
+		if (deleteSelf) {
+			try {
+				m_zkClient.getClient().delete().forPath(path);
+			} catch (KeeperException.NotEmptyException e) {
+				// someone has created a new child since we checked ... delete again.
+				deleteChildren(path, true);
+			} catch (KeeperException.NoNodeException e) {
+				// ignore... someone else has deleted the node it since we checked
+			}
+		}
 	}
 
 }

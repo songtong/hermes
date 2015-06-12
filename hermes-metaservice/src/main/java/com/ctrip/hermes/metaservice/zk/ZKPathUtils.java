@@ -17,7 +17,9 @@ import com.ctrip.hermes.meta.entity.Topic;
  */
 public class ZKPathUtils {
 
-	private static final String CONSUMER_LEASE_PATH_PATTERN = "/consumer-lease/%s/%s/%s";
+	private static final String CONSUMER_LEASE_PATH_PREFIX_PATTERN = "/consumer-lease/%s";
+
+	private static final String CONSUMER_LEASE_PATH_PATTERN = CONSUMER_LEASE_PATH_PREFIX_PATTERN + "/%s/%s";
 
 	public static String getMetaVersionPath() {
 		return "/meta-version";
@@ -38,6 +40,10 @@ public class ZKPathUtils {
 		}
 
 		return paths;
+	}
+
+	public static String getConsumerLeaseZkPath(String topicName) {
+		return String.format(CONSUMER_LEASE_PATH_PREFIX_PATTERN, topicName);
 	}
 
 	public static List<String> getConsumerLeaseZkPaths(Topic topic, String consumerGroupName) {

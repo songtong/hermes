@@ -231,7 +231,7 @@ public class TopicService {
 		// Remove related schemas
 		m_schemaService.deleteSchemas(topic);
 		m_topicStorageService.dropTopicStorage(topic);
-		m_zookeeperService.deleteConsumerLeaseZkPath(topic);
+		m_zookeeperService.deleteConsumerLeaseZkPath(topic.getName());
 		m_metaService.updateMeta(meta);
 	}
 
