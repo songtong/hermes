@@ -231,9 +231,11 @@ public class TopicService {
 		meta.removeTopic(name);
 		// Remove related schemas
 		m_schemaService.deleteSchemas(topic);
-		m_topicStorageService.dropTopicStorage(topic);
-		m_zookeeperService.deleteConsumerLeaseZkPath(topic.getName());
-		m_zookeeperService.deleteBrokerLeaseZkPath(topic.getName());
+		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+			m_topicStorageService.dropTopicStorage(topic);
+			m_zookeeperService.deleteConsumerLeaseZkPath(topic.getName());
+			m_zookeeperService.deleteBrokerLeaseZkPath(topic.getName());
+		}
 		m_metaService.updateMeta(meta);
 	}
 
