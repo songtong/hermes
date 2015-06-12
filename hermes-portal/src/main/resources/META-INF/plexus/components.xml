@@ -31,6 +31,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -71,6 +74,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -94,7 +100,7 @@
 					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
 			</requirements>
 		</component>

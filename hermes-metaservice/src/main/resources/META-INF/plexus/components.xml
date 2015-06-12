@@ -8,6 +8,15 @@
 					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.DefaultZookeeperService</implementation>
+			<requirements>
+				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
 			</requirements>

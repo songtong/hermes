@@ -18,6 +18,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Datasource;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
@@ -25,6 +26,7 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
 import com.ctrip.hermes.metaservice.service.SchemaService;
+import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.portal.service.storage.TopicStorageService;
 
 @Named
@@ -40,6 +42,9 @@ public class TopicService {
 
 	@Inject
 	private TopicStorageService m_topicStorageService;
+
+	@Inject
+	private ZookeeperService m_zookeeperService;
 
 	/**
 	 * 
@@ -66,8 +71,12 @@ public class TopicService {
 
 		meta.addTopic(topic);
 
-		if (!m_topicStorageService.initTopicStorage(topic)) {
-			throw new RuntimeException("Init topic storage failed, please try later.");
+		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+			if (!m_topicStorageService.initTopicStorage(topic)) {
+				throw new RuntimeException("Init topic storage failed, please try later.");
+			}
+
+			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 		}
 
 		if (!m_metaService.updateMeta(meta)) {
@@ -222,6 +231,7 @@ public class TopicService {
 		// Remove related schemas
 		m_schemaService.deleteSchemas(topic);
 		m_topicStorageService.dropTopicStorage(topic);
+		m_zookeeperService.deleteConsumerLeaseZkPath(topic);
 		m_metaService.updateMeta(meta);
 	}
 
@@ -252,6 +262,10 @@ public class TopicService {
 		meta.removeTopic(topic.getName());
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 		meta.addTopic(topic);
+		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
+		}
+
 		m_metaService.updateMeta(meta);
 		return topic;
 	}
