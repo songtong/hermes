@@ -2,6 +2,7 @@ package com.ctrip.hermes.core.lease;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
@@ -38,10 +39,12 @@ public class Lease {
 		return m_expireTime.get();
 	}
 
+	@JSONField(serialize = false)
 	public boolean isExpired() {
 		return getRemainingTime() <= 0;
 	}
 
+	@JSONField(serialize = false)
 	public long getRemainingTime() {
 		SystemClockService systemClockService = PlexusComponentLocator.lookup(SystemClockService.class);
 		return m_expireTime.get() - systemClockService.now();
