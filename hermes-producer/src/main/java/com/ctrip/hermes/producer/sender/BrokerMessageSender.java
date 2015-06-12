@@ -58,8 +58,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 	private ExecutorService m_callbackExecutorService;
 
+	private AtomicBoolean m_started = new AtomicBoolean(false);
+
 	@Override
 	public Future<SendResult> doSend(ProducerMessage<?> msg) {
+
+		if (m_started.compareAndSet(false, true)) {
+			startEndpointSender();
+		}
 
 		Pair<String, Integer> tp = new Pair<String, Integer>(msg.getTopic(), msg.getPartition());
 		m_taskQueues.putIfAbsent(
@@ -277,7 +283,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		m_callbackExecutorService = Executors.newFixedThreadPool(callbackThreadCount,
 		      HermesThreadFactory.create("ProducerCallback", false));
 
-		startEndpointSender();
 	}
 
 	private static class ProducerWorkerContext {
