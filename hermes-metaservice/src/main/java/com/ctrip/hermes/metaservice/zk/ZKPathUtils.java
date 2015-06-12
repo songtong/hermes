@@ -21,8 +21,30 @@ public class ZKPathUtils {
 
 	private static final String CONSUMER_LEASE_PATH_PATTERN = CONSUMER_LEASE_PATH_PREFIX_PATTERN + "/%s/%s";
 
+	private static final String BROKER_LEASE_PATH_PREFIX_PATTERN = "/broker-lease/%s";
+
+	private static final String BROKER_LEASE_PATH_PATTERN = BROKER_LEASE_PATH_PREFIX_PATTERN + "/%s";
+
 	public static String getMetaVersionPath() {
 		return "/meta-version";
+	}
+
+	public static List<String> getBrokerLeaseZkPaths(Topic topic) {
+		List<String> paths = new LinkedList<>();
+		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+			String topicName = topic.getName();
+			List<Integer> partitionIds = collectPartitionIds(topic);
+
+			for (Integer partitionId : partitionIds) {
+				paths.add(String.format(BROKER_LEASE_PATH_PATTERN, topicName, partitionId));
+			}
+		}
+
+		return paths;
+	}
+
+	public static String getBrokerLeaseZkPath(String topicName) {
+		return String.format(BROKER_LEASE_PATH_PREFIX_PATTERN, topicName);
 	}
 
 	public static List<String> getConsumerLeaseZkPaths(Topic topic) {

@@ -99,4 +99,32 @@ public class DefaultZookeeperService implements ZookeeperService {
 		}
 	}
 
+	@Override
+	public void ensureBrokerLeaseZkPath(Topic topic) {
+		List<String> paths = ZKPathUtils.getBrokerLeaseZkPaths(topic);
+
+		for (String path : paths) {
+			try {
+				EnsurePath ensurePath = m_zkClient.getClient().newNamespaceAwareEnsurePath(path);
+				ensurePath.ensure(m_zkClient.getClient().getZookeeperClient());
+			} catch (Exception e) {
+				log.error("Exception occured in ensureBrokerLeaseZkPath", e);
+				throw new RuntimeException(e);
+			}
+		}
+
+	}
+
+	@Override
+	public void deleteBrokerLeaseZkPath(String topicName) {
+		String path = ZKPathUtils.getBrokerLeaseZkPath(topicName);
+
+		try {
+			deleteChildren(path, true);
+		} catch (Exception e) {
+			log.error("Exception occured in deleteConsumerLeaseZkPath", e);
+			throw new RuntimeException(e);
+		}
+	}
+
 }
