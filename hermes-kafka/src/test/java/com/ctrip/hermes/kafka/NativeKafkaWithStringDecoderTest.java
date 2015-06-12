@@ -10,7 +10,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import kafka.admin.AdminUtils;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.KafkaStream;
@@ -19,7 +18,6 @@ import kafka.message.MessageAndMetadata;
 import kafka.serializer.StringDecoder;
 
 import org.I0Itec.zkclient.ZkClient;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -27,22 +25,19 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class NativeKafkaTest {
+public class NativeKafkaWithStringDecoderTest {
 
 	static {
-		MockKafka.LOCALHOST_BROKER = "103.6.237:9092,10.3.6.239:9092,10.3.6.24:9092";
+		MockKafka.LOCALHOST_BROKER = "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092";
 		MockZookeeper.ZOOKEEPER_CONNECT = "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181";
 	}
 
 	@Test
 	public void testNative() throws IOException, InterruptedException, ExecutionException {
-		String topic = RandomStringUtils.randomAlphabetic(5);
+		String topic = "kafka.SimpleTopic";
 		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		int partition = 1;
-		int replication = 1;
-		AdminUtils.createTopic(zkClient, topic, partition, replication, new Properties());
-		int msgNum = 100;
+		int msgNum = 100000;
 		final CountDownLatch countDown = new CountDownLatch(msgNum);
 
 		Properties produerProps = new Properties();
@@ -54,7 +49,7 @@ public class NativeKafkaTest {
 		// Consumer
 		Properties consumerProps = new Properties();
 		consumerProps.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
-		consumerProps.put("group.id", "GROUP_" + RandomStringUtils.randomAlphabetic(5));
+		consumerProps.put("group.id", "GROUP_" + topic);
 
 		final List<String> actualResult = new ArrayList<>();
 		final List<String> expectedResult = new ArrayList<>();
@@ -98,6 +93,5 @@ public class NativeKafkaTest {
 
 		consumerConnector.shutdown();
 		producer.close();
-		AdminUtils.deleteTopic(zkClient, topic);
 	}
 }
