@@ -13,6 +13,7 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
+import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.portal.service.storage.TopicStorageService;
 
 @Named
@@ -22,6 +23,9 @@ public class ConsumerService {
 
 	@Inject
 	private TopicStorageService m_storageService;
+
+	@Inject
+	private ZookeeperService m_zookeeperService;
 
 	public ConsumerGroup getConsumer(String topic, String consumer) {
 		for (ConsumerGroup c : getConsumers(topic)) {
@@ -52,6 +56,7 @@ public class ConsumerService {
 			boolean removed = t.removeConsumerGroup(consumer);
 			if (removed) {
 				m_storageService.delConsumerStorage(t, consumerGroup);
+				m_zookeeperService.deleteConsumerLeaseZkPath(t, consumer);
 			}
 		}
 		m_metaService.updateMeta(meta);
@@ -73,6 +78,8 @@ public class ConsumerService {
 		t.addConsumerGroup(consumer);
 
 		m_storageService.addConsumerStorage(t, consumer);
+
+		m_zookeeperService.ensureConsumerLeaseZkPath(t);
 
 		if (!m_metaService.updateMeta(meta)) {
 			throw new RuntimeException("Update meta failed, please try later");
