@@ -77,6 +77,7 @@ public class TopicService {
 			}
 
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
+			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 		}
 
 		if (!m_metaService.updateMeta(meta)) {
@@ -230,8 +231,11 @@ public class TopicService {
 		meta.removeTopic(name);
 		// Remove related schemas
 		m_schemaService.deleteSchemas(topic);
-		m_topicStorageService.dropTopicStorage(topic);
-		m_zookeeperService.deleteConsumerLeaseZkPath(topic.getName());
+		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+			m_topicStorageService.dropTopicStorage(topic);
+			m_zookeeperService.deleteConsumerLeaseZkPath(topic.getName());
+			m_zookeeperService.deleteBrokerLeaseZkPath(topic.getName());
+		}
 		m_metaService.updateMeta(meta);
 	}
 
@@ -264,6 +268,7 @@ public class TopicService {
 		meta.addTopic(topic);
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
+			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 		}
 
 		m_metaService.updateMeta(meta);
