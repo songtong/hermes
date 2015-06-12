@@ -23,7 +23,6 @@ import kafka.message.MessageAndMetadata;
 import kafka.utils.VerifiableProperties;
 
 import org.I0Itec.zkclient.ZkClient;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -34,7 +33,7 @@ import com.ctrip.hermes.kafka.avro.KafkaAvroTest;
 
 public class NativeKafkaWithAvroDecoderTest {
 	static {
-		MockKafka.LOCALHOST_BROKER = "103.6.237:9092,10.3.6.239:9092,10.3.6.24:9092";
+		MockKafka.LOCALHOST_BROKER = "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092";
 		MockZookeeper.ZOOKEEPER_CONNECT = "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181";
 	}
 
@@ -43,7 +42,7 @@ public class NativeKafkaWithAvroDecoderTest {
 		String topic = "kafka.AvroTopic";
 		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		int msgNum = 100;
+		int msgNum = 100000;
 		final CountDownLatch countDown = new CountDownLatch(msgNum);
 
 		Properties produerProps = new Properties();
@@ -71,7 +70,7 @@ public class NativeKafkaWithAvroDecoderTest {
 		// Consumer
 		Properties consumerProps = new Properties();
 		consumerProps.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
-		consumerProps.put("group.id", "GROUP_" + RandomStringUtils.randomAlphabetic(5));
+		consumerProps.put("group.id", "GROUP_" + topic);
 
 		final List<Object> actualResult = new ArrayList<>();
 		final List<Object> expectedResult = new ArrayList<>();
