@@ -48,7 +48,10 @@ public class DefaultTopicStorageService implements TopicStorageService {
 				Triple<String/* database url */, String/* usr */, String/* password */> dbInfo = getDatabaseName(datasource);
 
 				createTables0(dbInfo, topic, partition);
-				addPartition0(dbInfo, topic, partition);
+
+				for (int i = 0; i < 5; i++) {
+					addPartition0(dbInfo, topic, partition);
+				}
 			}
 			return true;
 		} else {
@@ -97,7 +100,6 @@ public class DefaultTopicStorageService implements TopicStorageService {
 
 	private void addPartition0(Triple<String/* database url */, String/* usr */, String/* password */> dbInfo,
 	      Topic topic, Partition partition) throws StorageHandleErrorException {
-		// 暂时只针对MessageTableModel(0), MessageTableModel(1)分partition
 
 		handler.addPartition(topic.getId(), partition.getId(), new DeadLetterTableModel(), 1 * 10000, dbInfo.getFirst(),
 		      dbInfo.getMiddle(), dbInfo.getLast());

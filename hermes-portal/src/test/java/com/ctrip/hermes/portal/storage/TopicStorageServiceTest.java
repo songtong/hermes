@@ -1,5 +1,6 @@
 package com.ctrip.hermes.portal.storage;
 
+import org.apache.curator.test.TestingServer;
 import org.junit.Before;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
@@ -20,10 +21,15 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	TopicStorageService service;
 
 	@Before
-	public void before(){
+	public void before() throws Exception {
+		String zkMode = System.getProperty("zkMode");
+		if (!"real".equalsIgnoreCase(zkMode)) {
+			TestingServer m_zkServer = new TestingServer(2181);
+			System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
+		}
 
 //		defineComponent(StorageHandler.class, MockStorageHandler.class);
-		service = lookup(DefaultTopicStorageService.class, DefaultTopicStorageService.ID);
+		service = lookup(TopicStorageService.class, DefaultTopicStorageService.ID);
 		metaService = lookup(MetaServiceWrapper.class, DefaultMetaServiceWrapper.ID);
 	}
 

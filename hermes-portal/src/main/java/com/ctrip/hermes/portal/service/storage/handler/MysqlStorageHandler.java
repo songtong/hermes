@@ -4,10 +4,12 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.portal.pojo.storage.StoragePartition;
 import com.ctrip.hermes.portal.pojo.storage.StorageTable;
@@ -28,15 +30,14 @@ public class MysqlStorageHandler implements StorageHandler {
 			Class.forName("com.mysql.jdbc.Driver");
 			conn = DriverManager.getConnection(jdbcUrl, usr, pwd);
 		} catch (ClassNotFoundException | SQLException e) {
-			// todo: log
-			e.printStackTrace();
+			log.error("Fail to get MySql connection. jdbc:{}, usr:{}", jdbcUrl, usr);
 		}
 		return conn;
 	}
 
 	@Override
 	public boolean dropTables(Long topicId, Integer partitionId, List<TableModel> models, String url, String user,
-	      String pwd) throws StorageHandleErrorException {
+									  String pwd) throws StorageHandleErrorException {
 		String databaseName = getDabaseName(url);
 		StringBuilder sb = new StringBuilder();
 		sb.append(sqlUseDatabase(databaseName));
@@ -53,7 +54,7 @@ public class MysqlStorageHandler implements StorageHandler {
 
 	@Override
 	public void createTable(Long topicId, Integer partitionId, List<TableModel> models, String url, String user,
-	      String pwd) throws StorageHandleErrorException {
+									String pwd) throws StorageHandleErrorException {
 		String databaseName = getDabaseName(url);
 
 		StringBuilder sb = new StringBuilder();
@@ -104,8 +105,8 @@ public class MysqlStorageHandler implements StorageHandler {
 	 * 初始状态是1个100W的partition和1个maxValue的partition和1个minValue的partition. 后续状态是往后新增一个partition.
 	 */
 	@Override
-	public void addPartition(Long topicId, Integer partitionId, TableModel model, int range, String url, String user,
-	      String pwd) throws StorageHandleErrorException {
+	public void addPartition(Long topicId, Integer partitionId, TableModel model, int newSapn, String url, String user,
+									 String pwd) throws StorageHandleErrorException {
 		String databaseName = getDabaseName(url);
 		String tableName = getTablePrefix(topicId, partitionId) + model.getTableName();
 		List<StoragePartition> storagePartitions = queryPartitionDESC(databaseName, tableName, url, user, pwd);
@@ -114,25 +115,32 @@ public class MysqlStorageHandler implements StorageHandler {
 
 		// if there is no Partitions or only Partition pMax left.
 		if (storagePartitions.size() == 0
-		      || (storagePartitions.size() == 1 && storagePartitions.get(0).getName().equals("pMax"))) {
-			sb.append(sqlInitPartition(tableName, "p0", range));
+				  || (storagePartitions.size() == 1 && storagePartitions.get(0).getName().equals("pMax"))) {
+			sb.append(sqlInitPartition(tableName, "p0", newSapn));
 		} else {
-			StoragePartition higherPartition = storagePartitions.get(storagePartitions.size() - 1);
-			String partitionName;
-			int threshold;
-			try {
-				partitionName = higherPartition.getName().charAt(0)
-				      + String.valueOf(Integer.parseInt(higherPartition.getName().substring(1)) + 1);
-				threshold = Integer.parseInt(higherPartition.getRange()) + range;
-			} catch (NumberFormatException e) {
-				throw new StorageHandleErrorException("Fail to Parse Partition(Name: " + higherPartition.getName()
-				      + ", Range: " + higherPartition.getRange() + ")");
-			}
+			Pair<String /*partitionName*/, Integer /*range*/> highestPartition = getNextHigherPartition
+					  (storagePartitions);
 
-			sb.append(sqlAddPartition(tableName, partitionName, threshold));
+			sb.append(sqlAddPartition(tableName, highestPartition.getKey(), highestPartition.getValue() + newSapn));
 		}
 
 		executeSql(url, user, pwd, sb.toString());
+	}
+
+	private Pair<String /*partitionName*/, Integer /*range*/> getNextHigherPartition
+			  (List<StoragePartition> storagePartitions) throws StorageHandleErrorException {
+		TreeMap<Integer, StoragePartition> ids = buildPartitionTreeMap(storagePartitions);
+
+		Integer higherId = ids.lastKey() + 1;
+		StoragePartition lastPartition = ids.lastEntry().getValue();
+
+		String partitionName = lastPartition.getName().charAt(0) + String.valueOf(higherId);
+		int threshold = Integer.parseInt(lastPartition.getRange());
+		return new Pair<>(partitionName, threshold);
+	}
+
+	private StoragePartition filterHighestStoragePartition(List<StoragePartition> storagePartitions) {
+		return storagePartitions.get(storagePartitions.size() - 1);
 	}
 
 	/**
@@ -141,8 +149,8 @@ public class MysqlStorageHandler implements StorageHandler {
 	 */
 	private String sqlInitPartition(String tableName, String partitionName, int threshold) {
 		return "ALTER TABLE " + tableName + " PARTITION BY RANGE (id) (\n" + " PARTITION " + partitionName
-		      + " VALUES LESS THAN (" + threshold + ") ENGINE = innodb,"
-		      + " PARTITION pMax VALUES LESS THAN MAXVALUE ENGINE = innodb);";
+				  + " VALUES LESS THAN (" + threshold + ") ENGINE = innodb,"
+				  + " PARTITION pMax VALUES LESS THAN MAXVALUE ENGINE = innodb);";
 	}
 
 	/**
@@ -150,8 +158,8 @@ public class MysqlStorageHandler implements StorageHandler {
 	 */
 	private String sqlAddPartition(String tableName, String partitionName, int threshold) {
 		return "ALTER TABLE " + tableName + " REORGANIZE PARTITION pMax INTO " + "( PARTITION " + partitionName
-		      + " VALUES LESS THAN (" + threshold + ") ENGINE = innodb,"
-		      + "PARTITION pMax VALUES LESS THAN MAXVALUE ENGINE = innodb);";
+				  + " VALUES LESS THAN (" + threshold + ") ENGINE = innodb,"
+				  + "PARTITION pMax VALUES LESS THAN MAXVALUE ENGINE = innodb);";
 	}
 
 	/**
@@ -159,7 +167,7 @@ public class MysqlStorageHandler implements StorageHandler {
 	 */
 	@Override
 	public void deletePartition(Long topicId, Integer partitionId, TableModel model, String url, String user, String pwd)
-	      throws StorageHandleErrorException {
+			  throws StorageHandleErrorException {
 		String databaseName = getDabaseName(url);
 		String tableName = getTablePrefix(topicId, partitionId) + model.getTableName();
 		List<StoragePartition> storagePartitions = queryPartitionDESC(databaseName, tableName, url, user, pwd);
@@ -171,7 +179,7 @@ public class MysqlStorageHandler implements StorageHandler {
 			throw new StorageHandleErrorException("No Partition Existed in Table: " + tableName);
 		} else {
 			if (storagePartitions.size() >= 2) {
-				StoragePartition lowestPartition = storagePartitions.get(storagePartitions.size() - 1);
+				StoragePartition lowestPartition = filterLowestPartition(storagePartitions);
 
 				sb.append(sqlDeletePartition(tableName, lowestPartition.getName()));
 			}
@@ -181,9 +189,30 @@ public class MysqlStorageHandler implements StorageHandler {
 		executeSql(url, user, pwd, sb.toString());
 	}
 
+	private StoragePartition filterLowestPartition(List<StoragePartition> storagePartitions) {
+
+		TreeMap<Integer, StoragePartition> ids = buildPartitionTreeMap(storagePartitions);
+
+		return ids.firstEntry().getValue();
+	}
+
+	private TreeMap<Integer, StoragePartition> buildPartitionTreeMap(List<StoragePartition> storagePartitions) {
+		TreeMap<Integer /*parittion id*/, StoragePartition> ids = new TreeMap<>();
+
+		for (StoragePartition storagePartition : storagePartitions) {
+			try {
+				Integer id = (Integer.parseInt(storagePartition.getName().substring(1)));
+				ids.put(id, storagePartition);
+			} catch (NumberFormatException e) {
+				// ignore "pMax" or other not Integer id.
+			}
+		}
+		return ids;
+	}
+
 	@Override
 	public List<StorageTable> queryTable(Long topicId, Integer partitionId, String url, String user, String pwd)
-	      throws StorageHandleErrorException {
+			  throws StorageHandleErrorException {
 
 		String databaseName = getDabaseName(url);
 
@@ -203,7 +232,7 @@ public class MysqlStorageHandler implements StorageHandler {
 	}
 
 	private String sqlCreateTable(String tableNamePrefix, String tableName, TableModel tableModel,
-	      TableModel.MetaModel[] pks, Map<String /* indexName */, String[] /* index key */> indexMap) {
+											TableModel.MetaModel[] pks, Map<String /* indexName */, String[] /* index key */> indexMap) {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("CREATE TABLE `").append(tableNamePrefix).append(tableName).append("` (\n");
@@ -297,7 +326,7 @@ public class MysqlStorageHandler implements StorageHandler {
 	}
 
 	private List<StorageTable> queryTables(String databaseName, String tableNamePrefix, String jdbcUrl, String usr,
-	      String pwd) throws StorageHandleErrorException {
+														String pwd) throws StorageHandleErrorException {
 		List<StorageTable> storageTables = new ArrayList<>();
 		Connection conn = getMysqlConnection(jdbcUrl, usr, pwd);
 		Statement stmt = null;
@@ -308,16 +337,16 @@ public class MysqlStorageHandler implements StorageHandler {
 				stmt = conn.createStatement();
 
 				String queryPartition = "SELECT TABLE_NAME, TABLE_ROWS, DATA_LENGTH, INDEX_LENGTH, CREATE_TIME, CREATE_OPTIONS "
-				      + " FROM information_schema.`TABLES`\n"
-				      + " WHERE TABLE_NAME LIKE '"
-				      + tableNamePrefix
-				      + "%' AND TABLE_SCHEMA = '" + databaseName + "';";
+						  + " FROM information_schema.`TABLES`\n"
+						  + " WHERE TABLE_NAME LIKE '"
+						  + tableNamePrefix
+						  + "%' AND TABLE_SCHEMA = '" + databaseName + "';";
 
 				ResultSet rs = stmt.executeQuery(queryPartition);
 
 				while (rs.next()) {
 					storageTables.add(new StorageTable(rs.getString(1), rs.getBigDecimal(2).intValue(), rs.getBigDecimal(3)
-					      .intValue(), rs.getBigDecimal(4).intValue(), rs.getDate(5), rs.getString(6)));
+							  .intValue(), rs.getBigDecimal(4).intValue(), rs.getDate(5), rs.getString(6)));
 				}
 				rs.close();
 
@@ -338,7 +367,7 @@ public class MysqlStorageHandler implements StorageHandler {
 	}
 
 	private List<StoragePartition> queryPartitionDESC(String databaseName, String tableName, String jdbcUrl, String usr,
-	      String pwd) throws StorageHandleErrorException {
+																	  String pwd) throws StorageHandleErrorException {
 		List<StoragePartition> storagePartitions = new ArrayList<>();
 		Connection conn = getMysqlConnection(jdbcUrl, usr, pwd);
 		Statement stmt = null;
@@ -349,8 +378,8 @@ public class MysqlStorageHandler implements StorageHandler {
 				stmt = conn.createStatement();
 
 				String queryPartition = "SELECT PARTITION_NAME, PARTITION_METHOD, PARTITION_DESCRIPTION, "
-				      + "TABLE_ROWS FROM INFORMATION_SCHEMA.PARTITIONS\nWHERE TABLE_NAME = '" + tableName
-				      + "' AND TABLE_SCHEMA = '" + databaseName + "' order by PARTITION_NAME desc";
+						  + "TABLE_ROWS FROM INFORMATION_SCHEMA.PARTITIONS\nWHERE TABLE_NAME = '" + tableName
+						  + "' AND TABLE_SCHEMA = '" + databaseName + "' order by PARTITION_NAME desc";
 
 				ResultSet rs = stmt.executeQuery(queryPartition);
 
@@ -360,7 +389,7 @@ public class MysqlStorageHandler implements StorageHandler {
 						continue;
 					} else {
 						storagePartitions.add(new StoragePartition(rs.getString(1), rs.getString(2), rs.getString(3), rs
-						      .getBigDecimal(4).intValue()));
+								  .getBigDecimal(4).intValue()));
 					}
 				}
 				rs.close();
