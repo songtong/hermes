@@ -127,4 +127,16 @@ public class DefaultZookeeperService implements ZookeeperService {
 		}
 	}
 
+	@Override
+	public void persist(String path, Object data) throws Exception {
+		try {
+			EnsurePath ensurePath = m_zkClient.getClient().newNamespaceAwareEnsurePath(path);
+			ensurePath.ensure(m_zkClient.getClient().getZookeeperClient());
+			m_zkClient.getClient().setData().forPath(path, ZKSerializeUtils.serialize(data));
+		} catch (Exception e) {
+			log.error("Exception occured in persist", e);
+			throw e;
+		}
+	}
+
 }

@@ -18,7 +18,7 @@ import javax.ws.rs.core.MediaType;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.Tpg;
-import com.ctrip.hermes.core.lease.DefaultLease;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 
@@ -66,8 +66,8 @@ public class LeaseResource {
 				      new Date(), tpg, sessionId));
 				long id = now;
 				m_consumerLeases.put(tpg,
-				      new DefaultLease(id, now + CONSUMER_LEASE_TIME + CONSUMER_LEASE_SERVER_DELAY_TIME));
-				return new LeaseAcquireResponse(true, new DefaultLease(id, now + CONSUMER_LEASE_TIME), -1L);
+				      new Lease(id, now + CONSUMER_LEASE_TIME + CONSUMER_LEASE_SERVER_DELAY_TIME));
+				return new LeaseAcquireResponse(true, new Lease(id, now + CONSUMER_LEASE_TIME), -1L);
 			} else {
 				// TODO
 				System.out.println(String.format("[%s]Try acquire consumer lease fail(tpg=%s, sessionId=%s)", new Date(),
@@ -99,7 +99,7 @@ public class LeaseResource {
 				      tpg, sessionId));
 				existsLease.setExpireTime(existsLease.getExpireTime() + CONSUMER_LEASE_TIME
 				      + CONSUMER_LEASE_SERVER_DELAY_TIME);
-				return new LeaseAcquireResponse(true, new DefaultLease(leaseId, existsLease.getExpireTime()
+				return new LeaseAcquireResponse(true, new Lease(leaseId, existsLease.getExpireTime()
 				      - CONSUMER_LEASE_SERVER_DELAY_TIME), -1L);
 			}
 		} finally {
@@ -126,8 +126,8 @@ public class LeaseResource {
 				      "[%s]Try acquire broker lease success(topic=%s, partition=%s, sessionId=%s)", new Date(), topic,
 				      partition, sessionId));
 				long id = now;
-				m_brokerLeases.put(key, new DefaultLease(id, now + BROKER_LEASE_TIME + BROKER_LEASE_SERVER_DELAY_TIME));
-				return new LeaseAcquireResponse(true, new DefaultLease(id, now + BROKER_LEASE_TIME), -1L);
+				m_brokerLeases.put(key, new Lease(id, now + BROKER_LEASE_TIME + BROKER_LEASE_SERVER_DELAY_TIME));
+				return new LeaseAcquireResponse(true, new Lease(id, now + BROKER_LEASE_TIME), -1L);
 			} else {
 				// TODO
 				System.out.println(String.format("[%s]Try acquire broker lease fail(topic=%s, partition=%s, sessionId=%s)",
@@ -165,7 +165,7 @@ public class LeaseResource {
 				      "[%s]Try renew broker lease success(topic=%s, partition=%s, sessionId=%s)", new Date(), topic,
 				      partition, sessionId));
 				existsLease.setExpireTime(existsLease.getExpireTime() + BROKER_LEASE_TIME + BROKER_LEASE_SERVER_DELAY_TIME);
-				return new LeaseAcquireResponse(true, new DefaultLease(leaseId, existsLease.getExpireTime()
+				return new LeaseAcquireResponse(true, new Lease(leaseId, existsLease.getExpireTime()
 				      - BROKER_LEASE_SERVER_DELAY_TIME), -1L);
 			}
 		} finally {

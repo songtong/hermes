@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.bo.Tpg;
-import com.ctrip.hermes.core.lease.DefaultLease;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.metaserver.build.BuildConstants;
@@ -23,15 +23,16 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 	private static final Logger log = LoggerFactory.getLogger(OrderedConsumeConsumerLeaseAllocator.class);
 
 	@Override
-	protected LeaseAcquireResponse doAcquireLease(Tpg tpg, String consumerName, Map<String, Lease> existingValidLeases) {
+	protected LeaseAcquireResponse doAcquireLease(Tpg tpg, String consumerName, Map<String, Lease> existingValidLeases)
+	      throws Exception {
 		if (existingValidLeases.isEmpty()) {
-			Lease newLease = m_leaseHolder.newLease(m_config.getConsumerLeaseTimeMillis());
-			existingValidLeases.put(consumerName, newLease);
+			Lease newLease = m_leaseHolder.newLease(tpg, consumerName, existingValidLeases,
+			      m_config.getConsumerLeaseTimeMillis());
 
 			log.info("Acquire lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
 			      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, newLease.getExpireTime());
 
-			return new LeaseAcquireResponse(true, new DefaultLease(newLease.getId(), newLease.getExpireTime()
+			return new LeaseAcquireResponse(true, new Lease(newLease.getId(), newLease.getExpireTime()
 			      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
 		} else {
 			Lease existingLease = null;
@@ -46,7 +47,7 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 			}
 
 			if (existingLease != null) {
-				return new LeaseAcquireResponse(true, new DefaultLease(existingLease.getId(), existingLease.getExpireTime()
+				return new LeaseAcquireResponse(true, new Lease(existingLease.getId(), existingLease.getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
 			} else {
 				Collection<Lease> leases = existingValidLeases.values();
@@ -58,7 +59,7 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 
 	@Override
 	protected LeaseAcquireResponse doRenewLease(Tpg tpg, String consumerName, long leaseId,
-	      Map<String, Lease> existingValidLeases) {
+	      Map<String, Lease> existingValidLeases) throws Exception {
 		if (existingValidLeases.isEmpty()) {
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 			      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
@@ -75,12 +76,14 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 			}
 
 			if (existingLease != null) {
-				existingLease.setExpireTime(existingLease.getExpireTime() + m_config.getConsumerLeaseTimeMillis());
+				m_leaseHolder.renewLease(tpg, consumerName, existingValidLeases, existingLease,
+				      m_config.getConsumerLeaseTimeMillis());
+
 				log.info(
 				      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
 				      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingLease.getExpireTime());
 
-				return new LeaseAcquireResponse(true, new DefaultLease(leaseId, existingLease.getExpireTime()
+				return new LeaseAcquireResponse(true, new Lease(leaseId, existingLease.getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1L);
 			} else {
 				return new LeaseAcquireResponse(false, null, m_systemClockService.now()

@@ -66,6 +66,8 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 	@Inject
 	private SystemClockService m_systemClockService;
 
+	private AtomicBoolean m_started = new AtomicBoolean(false);
+
 	@Override
 	public void writeCommand(Endpoint endpoint, Command cmd) {
 		writeCommand(endpoint, cmd, m_config.getEndpointChannelDefaultWrtieTimeout(), TimeUnit.MILLISECONDS);
@@ -73,6 +75,10 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 	@Override
 	public void writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
+		if (m_started.compareAndSet(false, true)) {
+			scheduleWriterTask();
+		}
+
 		getChannel(endpoint).write(cmd, timeout, timeUnit);
 	}
 
@@ -160,7 +166,6 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 	public void initialize() throws InitializationException {
 		m_writerThreadPool = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
 		      "EndpointChannelWriter", false));
-		scheduleWriterTask();
 
 		m_eventLoopGroup = new NioEventLoopGroup(1, HermesThreadFactory.create("NettyWriterEventLoop", false));
 

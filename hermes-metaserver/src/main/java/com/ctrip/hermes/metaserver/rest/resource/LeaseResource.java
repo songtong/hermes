@@ -30,6 +30,8 @@ public class LeaseResource {
 
 	private static final long NO_STRATEGY_DELAY_TIME_MILLIS = 20 * 1000L;
 
+	private static final long EXCEPTION_CAUGHT_DELAY_TIME_MILLIS = 5 * 1000L;
+
 	private ConsumerLeaseAllocatorLocator m_consumerLeaseAllocatorLocator = PlexusComponentLocator
 	      .lookup(ConsumerLeaseAllocatorLocator.class);
 
@@ -44,10 +46,14 @@ public class LeaseResource {
 	      @Context HttpServletRequest req) {
 		ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findStrategy(tpg.getTopic(),
 		      tpg.getGroupId());
-		if (leaseAllocator != null) {
-			return leaseAllocator.tryAcquireLease(tpg, sessionId, req.getRemoteAddr(), req.getRemotePort());
-		} else {
-			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
+		try {
+			if (leaseAllocator != null) {
+				return leaseAllocator.tryAcquireLease(tpg, sessionId, req.getRemoteAddr(), req.getRemotePort());
+			} else {
+				return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
+			}
+		} catch (Exception e) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 		}
 	}
 
@@ -58,10 +64,14 @@ public class LeaseResource {
 	      @QueryParam("sessionId") String sessionId, @Context HttpServletRequest req) {
 		ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findStrategy(tpg.getTopic(),
 		      tpg.getGroupId());
-		if (leaseAllocator != null) {
-			return leaseAllocator.tryRenewLease(tpg, sessionId, leaseId, req.getRemoteAddr(), req.getRemotePort());
-		} else {
-			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
+		try {
+			if (leaseAllocator != null) {
+				return leaseAllocator.tryRenewLease(tpg, sessionId, leaseId, req.getRemoteAddr(), req.getRemotePort());
+			} else {
+				return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
+			}
+		} catch (Exception e) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 		}
 
 	}
@@ -72,7 +82,11 @@ public class LeaseResource {
 	public LeaseAcquireResponse tryAcquireBrokerLease(@QueryParam("topic") String topic,
 	      @QueryParam("partition") int partition, @QueryParam("sessionId") String sessionId,
 	      @QueryParam("brokerPort") int port, @Context HttpServletRequest req) {
-		return m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId, req.getRemoteAddr(), port);
+		try {
+			return m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId, req.getRemoteAddr(), port);
+		} catch (Exception e) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+		}
 	}
 
 	@POST
@@ -81,8 +95,11 @@ public class LeaseResource {
 	public LeaseAcquireResponse tryRenewBrokerLease(@QueryParam("topic") String topic,
 	      @QueryParam("partition") int partition, @QueryParam("leaseId") long leaseId,
 	      @QueryParam("sessionId") String sessionId, @QueryParam("brokerPort") int port, @Context HttpServletRequest req) {
-
-		return m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId, req.getRemoteAddr(), port);
+		try {
+			return m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId, req.getRemoteAddr(), port);
+		} catch (Exception e) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+		}
 	}
 
 }

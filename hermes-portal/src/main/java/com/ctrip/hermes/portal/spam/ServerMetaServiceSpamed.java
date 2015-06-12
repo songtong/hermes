@@ -20,7 +20,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.Tpg;
-import com.ctrip.hermes.core.lease.DefaultLease;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -259,7 +259,7 @@ public class ServerMetaServiceSpamed implements MetaServiceSpamed, Initializable
 		// TODO Auto-generated method stub
 		long expireTime = System.currentTimeMillis() + 10 * 1000L;
 		long leaseId = 123L;
-		return new LeaseAcquireResponse(true, new DefaultLease(leaseId, expireTime), expireTime);
+		return new LeaseAcquireResponse(true, new Lease(leaseId, expireTime), expireTime);
 	}
 
 	@Override
