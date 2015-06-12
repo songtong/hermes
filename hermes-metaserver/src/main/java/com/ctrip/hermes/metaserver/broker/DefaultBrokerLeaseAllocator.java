@@ -9,7 +9,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.lease.DefaultLease;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -122,7 +122,7 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 					log.info("Acquire lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).", topic,
 					      partition, brokerName, newLease.getExpireTime());
 
-					return new LeaseAcquireResponse(true, new DefaultLease(newLease.getId(), newLease.getExpireTime()
+					return new LeaseAcquireResponse(true, new Lease(newLease.getId(), newLease.getExpireTime()
 					      + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1);
 				} else {
 					Lease existingLease = null;
@@ -137,7 +137,7 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 					}
 
 					if (existingLease != null) {
-						return new LeaseAcquireResponse(true, new DefaultLease(existingLease.getId(), existingLease
+						return new LeaseAcquireResponse(true, new Lease(existingLease.getId(), existingLease
 						      .getExpireTime() + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1);
 					} else {
 						Collection<Lease> leases = existingValidLeases.values();
@@ -182,7 +182,7 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 						log.info("Renew lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).", topic,
 						      partition, brokerName, existingLease.getExpireTime());
 
-						return new LeaseAcquireResponse(true, new DefaultLease(leaseId, existingLease.getExpireTime()
+						return new LeaseAcquireResponse(true, new Lease(leaseId, existingLease.getExpireTime()
 						      + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1L);
 					} else {
 						return new LeaseAcquireResponse(false, null, m_systemClockService.now()

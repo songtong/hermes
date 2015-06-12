@@ -9,7 +9,7 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
-import com.ctrip.hermes.core.lease.DefaultLease;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 
@@ -30,7 +30,7 @@ public class LocalMetaProxy implements MetaProxy {
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
 		long expireTime = System.currentTimeMillis() + 10 * 1000L;
 		long leaseId = m_leaseId.incrementAndGet();
-		return new LeaseAcquireResponse(true, new DefaultLease(leaseId, expireTime), expireTime);
+		return new LeaseAcquireResponse(true, new Lease(leaseId, expireTime), expireTime);
 	}
 
 	@Override
@@ -43,14 +43,14 @@ public class LocalMetaProxy implements MetaProxy {
 	      int brokerPort) {
 		long expireTime = System.currentTimeMillis() + 10 * 1000L;
 		long leaseId = m_leaseId.incrementAndGet();
-		return new LeaseAcquireResponse(true, new DefaultLease(leaseId, expireTime), expireTime);
+		return new LeaseAcquireResponse(true, new Lease(leaseId, expireTime), expireTime);
 	}
 
 	@Override
 	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort) {
 		long expireTime = System.currentTimeMillis() + 10 * 1000L;
 		long leaseId = m_leaseId.incrementAndGet();
-		return new LeaseAcquireResponse(true, new DefaultLease(leaseId, expireTime), expireTime);
+		return new LeaseAcquireResponse(true, new Lease(leaseId, expireTime), expireTime);
 	}
 
 	@Override

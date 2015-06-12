@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.bo.Tpg;
-import com.ctrip.hermes.core.lease.DefaultLease;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.metaserver.build.BuildConstants;
@@ -32,7 +32,7 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 			log.info("Acquire lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
 			      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, newLease.getExpireTime());
 
-			return new LeaseAcquireResponse(true, new DefaultLease(newLease.getId(), newLease.getExpireTime()
+			return new LeaseAcquireResponse(true, new Lease(newLease.getId(), newLease.getExpireTime()
 			      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
 		} else {
 			Lease existingLease = null;
@@ -47,7 +47,7 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 			}
 
 			if (existingLease != null) {
-				return new LeaseAcquireResponse(true, new DefaultLease(existingLease.getId(), existingLease.getExpireTime()
+				return new LeaseAcquireResponse(true, new Lease(existingLease.getId(), existingLease.getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
 			} else {
 				Collection<Lease> leases = existingValidLeases.values();
@@ -83,7 +83,7 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 				      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
 				      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingLease.getExpireTime());
 
-				return new LeaseAcquireResponse(true, new DefaultLease(leaseId, existingLease.getExpireTime()
+				return new LeaseAcquireResponse(true, new Lease(leaseId, existingLease.getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1L);
 			} else {
 				return new LeaseAcquireResponse(false, null, m_systemClockService.now()

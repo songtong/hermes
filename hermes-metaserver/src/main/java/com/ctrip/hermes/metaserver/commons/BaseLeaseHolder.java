@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
-import com.ctrip.hermes.core.lease.DefaultLease;
+import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -65,7 +65,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 
 	public Lease newLease(Key contextKey, String clientKey, Map<String, Lease> existingValidLeases, long leaseTimeMillis)
 	      throws Exception {
-		Lease newLease = new DefaultLease(m_leaseIdGenerator.incrementAndGet(), m_systemClockService.now()
+		Lease newLease = new Lease(m_leaseIdGenerator.incrementAndGet(), m_systemClockService.now()
 		      + leaseTimeMillis);
 		existingValidLeases.put(clientKey, newLease);
 		persistToZK(contextKey, existingValidLeases);
