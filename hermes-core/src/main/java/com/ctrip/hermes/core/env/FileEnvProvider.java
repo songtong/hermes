@@ -4,9 +4,9 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.lookup.util.StringUtils;
 
 import com.ctrip.hermes.Hermes.Env;
+import com.ctrip.hermes.core.utils.StringUtils;
 
 @Named(type = EnvProvider.class)
 public class FileEnvProvider implements EnvProvider, Initializable {
@@ -24,7 +24,7 @@ public class FileEnvProvider implements EnvProvider, Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		String strEnv = m_clientEnv.getGlobalConfig().getProperty("env");
-		if (StringUtils.isNotEmpty(strEnv)) {
+		if (!StringUtils.isBlank(strEnv)) {
 			try {
 				m_env = Env.valueOf(strEnv.trim().toUpperCase());
 			} catch (RuntimeException e) {
