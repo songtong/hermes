@@ -35,7 +35,7 @@ import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.service.SchemaService;
-import com.ctrip.hermes.portal.server.RestException;
+import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.TopicService;
 import com.google.common.io.ByteStreams;
 

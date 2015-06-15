@@ -24,7 +24,8 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	public void before() throws Exception {
 		String zkMode = System.getProperty("zkMode");
 		if (!"real".equalsIgnoreCase(zkMode)) {
-			TestingServer m_zkServer = new TestingServer(2181);
+         @SuppressWarnings("resource")
+         TestingServer m_zkServer = new TestingServer(2181);
 			System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
 		}
 

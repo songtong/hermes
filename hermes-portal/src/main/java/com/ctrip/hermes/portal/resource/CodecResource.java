@@ -20,7 +20,7 @@ import com.ctrip.hermes.core.bo.CodecView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.metaservice.service.CodecService;
-import com.ctrip.hermes.portal.server.RestException;
+import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/codecs/")
 @Singleton
