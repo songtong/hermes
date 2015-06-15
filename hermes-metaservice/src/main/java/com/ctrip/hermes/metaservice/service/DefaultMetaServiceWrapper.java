@@ -218,13 +218,19 @@ public class DefaultMetaServiceWrapper extends DefaultMetaService implements Met
 	}
 
 	@Override
-   public boolean addDatasource(Datasource datasource) throws Exception {
+	public boolean addDatasource(Datasource datasource) throws Exception {
 		return true;
-   }
+	}
 
 	@Override
-   public void deleteDatasource(String id) throws Exception {
-	   
-   }
+	public void deleteDatasource(String id) throws Exception {
 
+	}
+
+	@Override
+	public synchronized boolean updateMeta(Meta meta) throws DalException {
+		boolean success = super.updateMeta(meta);
+		refreshMeta();
+		return success;
+	}
 }

@@ -73,6 +73,7 @@ public class TopicService {
 
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 			if (!m_topicStorageService.initTopicStorage(topic)) {
+				m_logger.error("Init topic storage failed, please try later.");
 				throw new RuntimeException("Init topic storage failed, please try later.");
 			}
 
