@@ -1,8 +1,5 @@
 package com.ctrip.hermes.portal.resource;
 
-import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.codehaus.plexus.util.StringUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -30,10 +27,10 @@ import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.TopicView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.portal.server.RestException;
@@ -122,7 +119,7 @@ public class TopicResource {
 
 				returnResult.add(topicView);
 			}
-		} catch (DalException | IOException | RestClientException e) {
+		} catch (Exception e) {
 			logger.warn("find topics failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
@@ -150,7 +147,7 @@ public class TopicResource {
 			try {
 				schemaView = schemaService.getSchemaView(topic.getSchemaId());
 				topicView.setSchema(schemaView);
-			} catch (DalException | IOException | RestClientException e) {
+			} catch (Exception e) {
 				throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 			}
 		}
@@ -166,14 +163,10 @@ public class TopicResource {
 	@Path("{name}/schemas")
 	public List<SchemaView> getSchemas(@PathParam("name") String name) {
 		logger.debug("get schemas, name: {}", name);
-		List<SchemaView> returnResult = new ArrayList<SchemaView>();
+		List<SchemaView> returnResult = null;
 		TopicView topic = getTopic(name);
 		try {
-			List<Schema> schemaMetas = schemaService.listSchemaView(topic.toMetaTopic());
-			for (Schema schema : schemaMetas) {
-				SchemaView schemaView = SchemaService.toSchemaView(schema);
-				returnResult.add(schemaView);
-			}
+			returnResult = schemaService.listSchemaView(topic.toMetaTopic());
 		} catch (DalException e) {
 			logger.warn("get schemas failed, name {}", name);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);

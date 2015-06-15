@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -54,11 +55,33 @@ public class SchemaService {
 	 * @param schemaContent
 	 * @throws IOException
 	 * @throws RestClientException
+	 * @return avroid
 	 */
-	public void checkAvroSchema(String schemaName, byte[] schemaContent) throws IOException, RestClientException {
+	public int checkAvroSchema(String schemaName, byte[] schemaContent) throws IOException, RestClientException {
 		Parser parser = new Parser();
 		org.apache.avro.Schema avroSchema = parser.parse(new String(schemaContent));
-		getAvroSchemaRegistry().register(schemaName, avroSchema);
+		int avroid = getAvroSchemaRegistry().register(schemaName, avroSchema);
+		return avroid;
+	}
+
+	/**
+	 * 
+	 * @param topic
+	 * @param avroid
+	 * @return
+	 * @throws DalException
+	 */
+	public boolean isAvroSchemaExist(Topic topic, int avroid) throws DalException {
+		List<Schema> schemas = listSchemaMeta(topic);
+		if (schemas == null || schemas.size() == 0) {
+			return false;
+		}
+		for (Schema schema : schemas) {
+			if (schema.getAvroid() == avroid) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -299,9 +322,25 @@ public class SchemaService {
 	 * @return
 	 * @throws DalException
 	 */
-	public List<Schema> listSchemaView(Topic topic) throws DalException {
+	public List<Schema> listSchemaMeta(Topic topic) throws DalException {
 		List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
 		return schemas;
+	}
+
+	/**
+	 * 
+	 * @param topic
+	 * @return
+	 * @throws DalException
+	 */
+	public List<SchemaView> listSchemaView(Topic topic) throws DalException {
+		List<SchemaView> result = new ArrayList<SchemaView>();
+		List<Schema> schemaMetas = listSchemaMeta(topic);
+		for (Schema schema : schemaMetas) {
+			SchemaView schemaView = SchemaService.toSchemaView(schema);
+			result.add(schemaView);
+		}
+		return result;
 	}
 
 	/**

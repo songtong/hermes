@@ -18,7 +18,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.codehaus.plexus.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
@@ -26,6 +25,7 @@ import org.unidal.tuple.Pair;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.ConsumerView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.portal.server.RestException;
 import com.ctrip.hermes.portal.service.ConsumerService;
