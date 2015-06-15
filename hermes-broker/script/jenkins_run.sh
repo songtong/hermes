@@ -3,16 +3,23 @@ set -e
 set -u
 
 APP_PREFIX="broker"
-APP_PATH="/opt/ctrip/app/hermes-${APP_PREFIX}/"
+APP_PATH="/opt/ctrip/app/hermes-${APP_PREFIX}"
 
 # copy tar
-mkdir ${APP_PATH}/old-deployment
-mv ${APP_PATH}/*.tar ${APP_PATH}/old-deployment
+OLD_DEPLOY="${APP_PATH}/old-deployment/"
+
+echo "Move ["${APP_PATH}/*.tar"] into "${OLD_DEPLOY}
+mkdir -p ${OLD_DEPLOY}
+mv ${APP_PATH}/*.tar ${OLD_DEPLOY}
+
+echo "Copy ["hermes-${APP_PREFIX}/target/*.tar"] to " ${APP_PATH}
 cp hermes-${APP_PREFIX}/target/*.tar ${APP_PATH}
 
 
 cd ${APP_PATH}
-rm -rf `ls | grep -v ".*${APP_PREFIX}.*tar"`
+
+echo "Remove [" `ls | grep -v ".*${APP_PREFIX}.*tar\|old-deployment"`"]"
+rm -rf `ls | grep -v ".*${APP_PREFIX}.*tar\|old-deployment"`
 tar -xf  *${APP_PREFIX}*.tar
 cd h*/bin
 bash ./startup.sh stop

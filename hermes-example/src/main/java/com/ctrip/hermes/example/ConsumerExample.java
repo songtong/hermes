@@ -13,7 +13,6 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.example.common.Configuration;
 import com.dianping.cat.Cat;
-import com.dianping.cat.message.Message;
 
 public class ConsumerExample {
 
