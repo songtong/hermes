@@ -146,7 +146,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 			return;
 
 		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig()
-		      .getProperty("meta-port", String.valueOf(DEFAULT_MASTER_METASERVER_PORT)).trim());
+		      .getProperty("meta.port", String.valueOf(DEFAULT_MASTER_METASERVER_PORT)).trim());
 
 		m_httpClient = HttpClients.createDefault();
 		Builder b = RequestConfig.custom();

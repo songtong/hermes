@@ -14,8 +14,8 @@ package com.ctrip.hermes.meta.rest;
 //	static {
 //		Properties load;
 //		load = PlexusComponentLocator.lookup(ClientEnvironment.class).getGlobalConfig();
-//		String host = load.getProperty("meta-host");
-//		String port = load.getProperty("meta-port");
+//		String host = load.getProperty("meta.host");
+//		String port = load.getProperty("meta.port");
 //		HOST = "http://" + host + ":" + port + "/";
 //
 //	}

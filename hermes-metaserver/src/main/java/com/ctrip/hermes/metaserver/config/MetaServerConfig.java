@@ -60,7 +60,7 @@ public class MetaServerConfig {
 	public int getMetaServerPort() {
 		String port = System.getProperty("metaServerPort");
 		if (StringUtils.isBlank(port)) {
-			port = m_env.getGlobalConfig().getProperty("meta-port", "80");
+			port = m_env.getGlobalConfig().getProperty("meta.port", "80");
 		}
 
 		if (StringUtils.isNumeric(port)) {

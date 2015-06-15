@@ -21,8 +21,8 @@ public class SchemaRegistryTest {
 	public static void main(String[] args) throws IOException, RestClientException {
 		ClientEnvironment m_env = PlexusComponentLocator.lookup(ClientEnvironment.class);
 		Properties globalConfig = m_env.getGlobalConfig();
-		String schemaServerHost = globalConfig.getProperty("schema-server-host");
-		String schemaServerPort = globalConfig.getProperty("schema-server-port");
+		String schemaServerHost = globalConfig.getProperty("schema.server.host");
+		String schemaServerPort = globalConfig.getProperty("schema.server.port");
 		SchemaRegistryClient avroSchemaRegistry = new CachedSchemaRegistryClient("http://" + schemaServerHost + ":"
 		      + schemaServerPort, 1000);
 		String schemaName = "AvroVisitEventMore-value";
