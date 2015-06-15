@@ -8,9 +8,9 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
-import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.metaserver.build.BuildConstants;
+import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -21,15 +21,16 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 	private static final Logger log = LoggerFactory.getLogger(NonOrderedConsumeConsumerLeaseAllocator.class);
 
 	@Override
-	protected LeaseAcquireResponse doAcquireLease(Tpg tpg, String consumerName, Map<String, Lease> existingValidLeases)
-	      throws Exception {
+	protected LeaseAcquireResponse doAcquireLease(Tpg tpg, String consumerName,
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception {
 		if (existingValidLeases.isEmpty()) {
-			return newLease(tpg, consumerName, existingValidLeases);
+			return newLease(tpg, consumerName, existingValidLeases, ip, port);
 		} else {
 			Lease existingLease = null;
 
-			for (Map.Entry<String, Lease> entry : existingValidLeases.entrySet()) {
-				Lease lease = entry.getValue();
+			for (Map.Entry<String, ClientLeaseInfo> entry : existingValidLeases.entrySet()) {
+				ClientLeaseInfo clientLeaseInfo = entry.getValue();
+				Lease lease = clientLeaseInfo.getLease();
 				String leaseConsumerName = entry.getKey();
 				if (leaseConsumerName.equals(consumerName)) {
 					existingLease = lease;
@@ -41,37 +42,39 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 				return new LeaseAcquireResponse(true, new Lease(existingLease.getId(), existingLease.getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
 			} else {
-				return newLease(tpg, consumerName, existingValidLeases);
+				return newLease(tpg, consumerName, existingValidLeases, ip, port);
 			}
 		}
 	}
 
 	@Override
 	protected LeaseAcquireResponse doRenewLease(Tpg tpg, String consumerName, long leaseId,
-	      Map<String, Lease> existingValidLeases) throws Exception {
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception {
 		if (existingValidLeases.isEmpty()) {
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 			      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 		} else {
-			Lease existingLease = null;
+			ClientLeaseInfo existingLeaseInfo = null;
 
-			for (Map.Entry<String, Lease> entry : existingValidLeases.entrySet()) {
-				Lease lease = entry.getValue();
+			for (Map.Entry<String, ClientLeaseInfo> entry : existingValidLeases.entrySet()) {
+				ClientLeaseInfo clientLeaseInfo = entry.getValue();
+				Lease lease = clientLeaseInfo.getLease();
 				String leaseConsumerName = entry.getKey();
 				if (lease.getId() == leaseId && leaseConsumerName.equals(consumerName)) {
-					existingLease = lease;
+					existingLeaseInfo = clientLeaseInfo;
 					break;
 				}
 			}
 
-			if (existingLease != null) {
-				m_leaseHolder.renewLease(tpg, consumerName, existingValidLeases, existingLease,
-				      m_config.getConsumerLeaseTimeMillis());
+			if (existingLeaseInfo != null) {
+				m_leaseHolder.renewLease(tpg, consumerName, existingValidLeases, existingLeaseInfo,
+				      m_config.getConsumerLeaseTimeMillis(), ip, port);
 				log.info(
 				      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
-				      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingLease.getExpireTime());
+				      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingLeaseInfo.getLease()
+				            .getExpireTime());
 
-				return new LeaseAcquireResponse(true, new Lease(leaseId, existingLease.getExpireTime()
+				return new LeaseAcquireResponse(true, new Lease(leaseId, existingLeaseInfo.getLease().getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1L);
 			} else {
 				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
@@ -80,11 +83,10 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 		}
 	}
 
-	private LeaseAcquireResponse newLease(Tpg tpg, String consumerName, Map<String, Lease> existingValidLeases)
-	      throws Exception {
+	private LeaseAcquireResponse newLease(Tpg tpg, String consumerName,
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception {
 		Lease newLease = m_leaseHolder.newLease(tpg, consumerName, existingValidLeases,
-		      m_config.getConsumerLeaseTimeMillis());
-		existingValidLeases.put(consumerName, newLease);
+		      m_config.getConsumerLeaseTimeMillis(), ip, port);
 
 		log.info("Acquire lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
 		      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, newLease.getExpireTime());

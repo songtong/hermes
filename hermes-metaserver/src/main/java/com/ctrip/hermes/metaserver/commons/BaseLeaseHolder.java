@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -16,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
-import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -63,22 +64,23 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		}
 	}
 
-	public Lease newLease(Key contextKey, String clientKey, Map<String, Lease> existingValidLeases, long leaseTimeMillis)
-	      throws Exception {
-		Lease newLease = new Lease(m_leaseIdGenerator.incrementAndGet(), m_systemClockService.now()
-		      + leaseTimeMillis);
-		existingValidLeases.put(clientKey, newLease);
+	public Lease newLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
+	      long leaseTimeMillis, String ip, int port) throws Exception {
+		Lease newLease = new Lease(m_leaseIdGenerator.incrementAndGet(), m_systemClockService.now() + leaseTimeMillis);
+		existingValidLeases.put(clientKey, new ClientLeaseInfo(newLease, ip, port));
 		persistToZK(contextKey, existingValidLeases);
 		return newLease;
 	}
 
-	public void renewLease(Key contextKey, String clientKey, Map<String, Lease> existingValidLeases,
-	      Lease existingLease, long leaseTimeMillis) throws Exception {
-		existingLease.setExpireTime(existingLease.getExpireTime() + leaseTimeMillis);
+	public void renewLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
+	      ClientLeaseInfo existingLeaseInfo, long leaseTimeMillis, String ip, int port) throws Exception {
+		existingLeaseInfo.getLease().setExpireTime(existingLeaseInfo.getLease().getExpireTime() + leaseTimeMillis);
+		existingLeaseInfo.setIp(ip);
+		existingLeaseInfo.setPort(port);
 		persistToZK(contextKey, existingValidLeases);
 	}
 
-	protected void persistToZK(Key contextKey, Map<String, Lease> existingValidLeases) throws Exception {
+	protected void persistToZK(Key contextKey, Map<String, ClientLeaseInfo> existingValidLeases) throws Exception {
 		String path = convertToZkPath(contextKey);
 
 		m_zookeeperService.persist(path, existingValidLeases);
@@ -87,14 +89,14 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 	protected abstract String convertToZkPath(Key contextKey);
 
 	public static interface LeaseOperationCallback {
-		public LeaseAcquireResponse execute(Map<String, Lease> existingValidLeases) throws Exception;
+		public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) throws Exception;
 	}
 
-	private void clearExpiredLeases(Map<String, Lease> existingLeases) {
-		Iterator<Entry<String, Lease>> iterator = existingLeases.entrySet().iterator();
+	private void clearExpiredLeases(Map<String, ClientLeaseInfo> existingLeases) {
+		Iterator<Entry<String, ClientLeaseInfo>> iterator = existingLeases.entrySet().iterator();
 		while (iterator.hasNext()) {
-			Entry<String, Lease> entry = iterator.next();
-			if (entry.getValue().isExpired()) {
+			Entry<String, ClientLeaseInfo> entry = iterator.next();
+			if (entry.getValue().getLease().isExpired()) {
 				iterator.remove();
 			}
 		}
@@ -117,7 +119,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 	private static class LeaseContext {
 		private ReentrantLock m_lock = new ReentrantLock();
 
-		private Map<String, Lease> m_existingLeases = new HashMap<>();
+		private Map<String, ClientLeaseInfo> m_existingLeases = new HashMap<>();
 
 		public void lock() {
 			m_lock.lock();
@@ -127,8 +129,47 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 			m_lock.unlock();
 		}
 
-		public Map<String, Lease> getExistingLeases() {
+		public Map<String, ClientLeaseInfo> getExistingLeases() {
 			return m_existingLeases;
+		}
+
+	}
+
+	public static class ClientLeaseInfo {
+		private Lease m_lease;
+
+		private AtomicReference<String> m_ip = new AtomicReference<>(null);
+
+		private AtomicInteger m_port = new AtomicInteger();
+
+		public ClientLeaseInfo(Lease lease, String ip, int port) {
+			m_lease = lease;
+			m_ip.set(ip);
+			m_port.set(port);
+		}
+
+		public Lease getLease() {
+			return m_lease;
+		}
+
+		public void setLease(Lease lease) {
+			m_lease = lease;
+		}
+
+		public String getIp() {
+			return m_ip.get();
+		}
+
+		public void setIp(String ip) {
+			m_ip.set(ip);
+		}
+
+		public int getPort() {
+			return m_port.get();
+		}
+
+		public void setPort(int port) {
+			m_port.set(port);
 		}
 
 	}
