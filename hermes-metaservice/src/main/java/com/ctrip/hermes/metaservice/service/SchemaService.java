@@ -140,7 +140,9 @@ public class SchemaService {
 	      RestClientException {
 		m_logger.info(String.format("Create schema for %s", topic.getName()));
 		Schema schema = toSchema(schemaView);
-		schema.setCreateTime(new Date(System.currentTimeMillis()));
+		Date now = new Date(System.currentTimeMillis());
+		schema.setCreateTime(now);
+		schema.setDataChangeLastTime(now);
 		schema.setName(topic.getName() + "-value");
 		schema.setTopicId(topic.getId());
 		try {

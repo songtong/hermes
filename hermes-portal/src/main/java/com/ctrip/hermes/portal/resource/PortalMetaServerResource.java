@@ -21,9 +21,9 @@ import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
 @Path("/metaserver/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
-public class MetaServerResource {
+public class PortalMetaServerResource {
 
-	private static final Logger logger = LoggerFactory.getLogger(MetaServerResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(PortalMetaServerResource.class);
 
 	private MetaServiceWrapper metaService = PlexusComponentLocator.lookup(MetaServiceWrapper.class,
 	      DefaultMetaServiceWrapper.ID);

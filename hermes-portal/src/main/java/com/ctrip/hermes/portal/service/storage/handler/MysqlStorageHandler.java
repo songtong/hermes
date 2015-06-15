@@ -139,10 +139,6 @@ public class MysqlStorageHandler implements StorageHandler {
 		return new Pair<>(partitionName, threshold);
 	}
 
-	private StoragePartition filterHighestStoragePartition(List<StoragePartition> storagePartitions) {
-		return storagePartitions.get(storagePartitions.size() - 1);
-	}
-
 	/**
 	 * 初始化时额外建1个partitin: pMax (MAXVALUE). ALTER TABLE %{tableName} PARTITION BY RANGE (id)( PARTITION %{partitionName} VALUES LESS
 	 * THAN %{range} );

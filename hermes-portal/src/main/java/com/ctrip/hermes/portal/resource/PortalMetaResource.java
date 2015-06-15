@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -14,7 +13,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -39,9 +37,9 @@ import com.ctrip.hermes.portal.server.RestException;
 @Path("/meta/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
-public class MetaResource {
+public class PortalMetaResource {
 
-	private static final Logger logger = LoggerFactory.getLogger(MetaResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(PortalMetaResource.class);
 
 	private MetaServiceWrapper metaService = PlexusComponentLocator.lookup(MetaServiceWrapper.class);
 
@@ -220,31 +218,5 @@ public class MetaResource {
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
-	}
-
-	@POST
-	public Response updateMeta(String content, @Context HttpServletRequest req) {
-		logger.debug("update meta, content {}", content);
-		if (StringUtils.isEmpty(content)) {
-			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
-		}
-
-		Meta meta = null;
-		try {
-			meta = JSON.parseObject(content, Meta.class);
-		} catch (Exception e) {
-			logger.warn("parse meta failed with content:{}", content);
-			throw new RestException(e, Status.BAD_REQUEST);
-		}
-		try {
-			boolean result = metaService.updateMeta(meta);
-			if (result == false) {
-				return Response.status(Status.NOT_MODIFIED).build();
-			}
-		} catch (Exception e) {
-			logger.warn("update meta failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-		}
-		return Response.status(Status.CREATED).entity(meta).build();
 	}
 }
