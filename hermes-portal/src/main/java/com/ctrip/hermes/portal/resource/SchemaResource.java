@@ -21,7 +21,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.codehaus.plexus.util.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
@@ -32,6 +31,7 @@ import org.unidal.dal.jdbc.DalNotFoundException;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.service.SchemaService;
@@ -97,8 +97,14 @@ public class SchemaResource {
 		}
 
 		try {
+			int avroid = -1;
+			//If the avro schema has been created, return CONFLICT
 			if ("avro".equalsIgnoreCase(schemaView.getType())) {
-				schemaService.checkAvroSchema(topic.getName() + "-value", fileContent);
+				avroid = schemaService.checkAvroSchema(topic.getName() + "-value", fileContent);
+				if (schemaService.isAvroSchemaExist(topic, avroid)) {
+					schemaView = schemaService.getSchemaView(topic.getSchemaId());
+					return Response.status(Status.CONFLICT).entity(schemaView).build();
+				}
 			}
 			schemaView = schemaService.createSchema(schemaView, topic);
 			schemaView = schemaService.updateSchemaFile(schemaView, fileContent, fileHeader);

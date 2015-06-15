@@ -17,13 +17,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.codehaus.plexus.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -169,7 +169,7 @@ public class PortalMetaResource {
 		List<Property> properties = new ArrayList<Property>(ds.getProperties().values());
 		ds.getProperties().clear();
 		for (Property p : properties) {
-			if (StringUtils.isNotBlank(p.getName())) {
+			if (!StringUtils.isBlank(p.getName())) {
 				ds.getProperties().put(p.getName(), p);
 			}
 		}
