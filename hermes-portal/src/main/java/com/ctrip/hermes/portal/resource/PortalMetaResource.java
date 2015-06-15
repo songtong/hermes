@@ -32,7 +32,7 @@ import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
-import com.ctrip.hermes.portal.server.RestException;
+import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/meta/")
 @Singleton

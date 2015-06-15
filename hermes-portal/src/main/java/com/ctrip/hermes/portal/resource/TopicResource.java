@@ -16,7 +16,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -33,7 +32,7 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
-import com.ctrip.hermes.portal.server.RestException;
+import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.TopicService;
 import com.ctrip.hermes.producer.api.Producer;
 
