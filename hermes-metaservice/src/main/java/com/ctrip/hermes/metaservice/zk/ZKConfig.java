@@ -19,7 +19,7 @@ public class ZKConfig {
 	}
 
 	public String getZkConnectionString() {
-		return env.getGlobalConfig().getProperty("meta.zk.uri");
+		return env.getGlobalConfig().getProperty("meta.zk.connectionString");
 	}
 
 	public int getZkCloseWaitMillis() {
