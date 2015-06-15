@@ -232,7 +232,7 @@ angular.module('hermes-tracer', [ 'ngResource' ]).controller(
 						var esIndex = "logstash-" + msg_date.getFullYear() + '.' + ('0' + (msg_date.getMonth() + 1)).slice(-2) + '.'
 								+ ('0' + msg_date.getDate()).slice(-2);
 						console.log(esIndex);
-						var esServer = "http://10.32.21.5:9200/";
+						var esServer = "http://127.0.0.1:9200/";
 						var refKeySearchUrl = esServer + esIndex + "/hermes/_search?q=datas.refKey:" + refKey;
 						get(refKeySearchUrl, function(data) {
 							var hits = data.hits.hits;
