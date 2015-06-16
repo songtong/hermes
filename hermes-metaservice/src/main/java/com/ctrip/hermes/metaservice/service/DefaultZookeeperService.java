@@ -6,6 +6,7 @@ import org.apache.curator.utils.EnsurePath;
 import org.apache.curator.utils.PathUtils;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -81,20 +82,23 @@ public class DefaultZookeeperService implements ZookeeperService {
 	private void deleteChildren(String path, boolean deleteSelf) throws Exception {
 		PathUtils.validatePath(path);
 
-		List<String> children = m_zkClient.getClient().getChildren().forPath(path);
-		for (String child : children) {
-			String fullPath = ZKPaths.makePath(path, child);
-			deleteChildren(fullPath, true);
-		}
+		Stat stat = m_zkClient.getClient().checkExists().forPath(path);
+		if (stat != null) {
+			List<String> children = m_zkClient.getClient().getChildren().forPath(path);
+			for (String child : children) {
+				String fullPath = ZKPaths.makePath(path, child);
+				deleteChildren(fullPath, true);
+			}
 
-		if (deleteSelf) {
-			try {
-				m_zkClient.getClient().delete().forPath(path);
-			} catch (KeeperException.NotEmptyException e) {
-				// someone has created a new child since we checked ... delete again.
-				deleteChildren(path, true);
-			} catch (KeeperException.NoNodeException e) {
-				// ignore... someone else has deleted the node it since we checked
+			if (deleteSelf) {
+				try {
+					m_zkClient.getClient().delete().forPath(path);
+				} catch (KeeperException.NotEmptyException e) {
+					// someone has created a new child since we checked ... delete again.
+					deleteChildren(path, true);
+				} catch (KeeperException.NoNodeException e) {
+					// ignore... someone else has deleted the node it since we checked
+				}
 			}
 		}
 	}
