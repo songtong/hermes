@@ -6,6 +6,7 @@
 }
 
 .board-kibana-frame {
+    height: 220px;
     margin-top: 10px;
     border: 0px;
 }
