@@ -2,6 +2,8 @@ package com.ctrip.hermes.metaservice.service;
 
 import java.util.List;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.transaction.CuratorTransactionBridge;
 import org.apache.curator.utils.EnsurePath;
 import org.apache.curator.utils.PathUtils;
 import org.apache.curator.utils.ZKPaths;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
@@ -28,6 +31,9 @@ public class DefaultZookeeperService implements ZookeeperService {
 	@Inject
 	private ZKClient m_zkClient;
 
+	@Inject
+	private SystemClockService m_systemClockService;
+
 	@Override
 	public void ensureConsumerLeaseZkPath(Topic topic) {
 
@@ -35,8 +41,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 		for (String path : paths) {
 			try {
-				EnsurePath ensurePath = m_zkClient.getClient().newNamespaceAwareEnsurePath(path);
-				ensurePath.ensure(m_zkClient.getClient().getZookeeperClient());
+				ensurePath(path);
 			} catch (Exception e) {
 				log.error("Exception occured in ensureConsumerLeaseZkPath", e);
 				throw new RuntimeException(e);
@@ -46,15 +51,14 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 	@Override
 	public void updateZkMetaVersion(int version) throws Exception {
-		EnsurePath ensurePath = m_zkClient.getClient().newNamespaceAwareEnsurePath(ZKPathUtils.getMetaVersionPath());
-		ensurePath.ensure(m_zkClient.getClient().getZookeeperClient());
+		ensurePath(ZKPathUtils.getMetaVersionPath());
 
 		m_zkClient.getClient().setData().forPath(ZKPathUtils.getMetaVersionPath(), ZKSerializeUtils.serialize(version));
 	}
 
 	@Override
-	public void deleteConsumerLeaseZkPath(String topicName) {
-		String path = ZKPathUtils.getConsumerLeaseZkPath(topicName);
+	public void deleteConsumerLeaseTopicParentZkPath(String topicName) {
+		String path = ZKPathUtils.getConsumerLeaseTopicParentZkPath(topicName);
 
 		try {
 			deleteChildren(path, true);
@@ -67,10 +71,16 @@ public class DefaultZookeeperService implements ZookeeperService {
 	@Override
 	public void deleteConsumerLeaseZkPath(Topic topic, String consumerGroupName) {
 		List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic, consumerGroupName);
+		String topicParentPath = ZKPathUtils.getConsumerLeaseTopicParentZkPath(topic.getName());
+
+		long now = m_systemClockService.now();
 
 		for (String path : paths) {
 			try {
-				m_zkClient.getClient().delete().forPath(path);
+				m_zkClient.getClient().inTransaction()//
+				      .delete().forPath(path)//
+				      .and().setData().forPath(topicParentPath, ZKSerializeUtils.serialize(now))//
+				      .and().commit();
 			} catch (Exception e) {
 				log.error("Exception occured in deleteConsumerLeaseZkPath", e);
 				throw new RuntimeException(e);
@@ -82,9 +92,10 @@ public class DefaultZookeeperService implements ZookeeperService {
 	private void deleteChildren(String path, boolean deleteSelf) throws Exception {
 		PathUtils.validatePath(path);
 
-		Stat stat = m_zkClient.getClient().checkExists().forPath(path);
+		CuratorFramework curatorFramework = m_zkClient.getClient();
+		Stat stat = curatorFramework.checkExists().forPath(path);
 		if (stat != null) {
-			List<String> children = m_zkClient.getClient().getChildren().forPath(path);
+			List<String> children = curatorFramework.getChildren().forPath(path);
 			for (String child : children) {
 				String fullPath = ZKPaths.makePath(path, child);
 				deleteChildren(fullPath, true);
@@ -92,13 +103,14 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 			if (deleteSelf) {
 				try {
-					m_zkClient.getClient().delete().forPath(path);
+					curatorFramework.delete().forPath(path);
 				} catch (KeeperException.NotEmptyException e) {
 					// someone has created a new child since we checked ... delete again.
 					deleteChildren(path, true);
 				} catch (KeeperException.NoNodeException e) {
 					// ignore... someone else has deleted the node it since we checked
 				}
+
 			}
 		}
 	}
@@ -109,8 +121,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 		for (String path : paths) {
 			try {
-				EnsurePath ensurePath = m_zkClient.getClient().newNamespaceAwareEnsurePath(path);
-				ensurePath.ensure(m_zkClient.getClient().getZookeeperClient());
+				ensurePath(path);
 			} catch (Exception e) {
 				log.error("Exception occured in ensureBrokerLeaseZkPath", e);
 				throw new RuntimeException(e);
@@ -120,8 +131,8 @@ public class DefaultZookeeperService implements ZookeeperService {
 	}
 
 	@Override
-	public void deleteBrokerLeaseZkPath(String topicName) {
-		String path = ZKPathUtils.getBrokerLeaseZkPath(topicName);
+	public void deleteBrokerLeaseTopicParentZkPath(String topicName) {
+		String path = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topicName);
 
 		try {
 			deleteChildren(path, true);
@@ -132,15 +143,37 @@ public class DefaultZookeeperService implements ZookeeperService {
 	}
 
 	@Override
-	public void persist(String path, Object data) throws Exception {
+	public void persist(String path, Object data, String... touchPaths) throws Exception {
 		try {
-			EnsurePath ensurePath = m_zkClient.getClient().newNamespaceAwareEnsurePath(path);
-			ensurePath.ensure(m_zkClient.getClient().getZookeeperClient());
-			m_zkClient.getClient().setData().forPath(path, ZKSerializeUtils.serialize(data));
+			ensurePath(path);
+
+			if (touchPaths != null && touchPaths.length > 0) {
+				for (String touchPath : touchPaths) {
+					ensurePath(touchPath);
+				}
+			}
+
+			CuratorTransactionBridge curatorTransactionBridge = m_zkClient.getClient().inTransaction().setData()
+			      .forPath(path, ZKSerializeUtils.serialize(data));
+
+			long now = m_systemClockService.now();
+			if (touchPaths != null && touchPaths.length > 0) {
+				for (String touchPath : touchPaths) {
+					curatorTransactionBridge.and().setData().forPath(touchPath, ZKSerializeUtils.serialize(now));
+				}
+			}
+
+			curatorTransactionBridge.and().commit();
+
 		} catch (Exception e) {
 			log.error("Exception occured in persist", e);
 			throw e;
 		}
+	}
+
+	public void ensurePath(String path) throws Exception {
+		EnsurePath ensurePath = m_zkClient.getClient().newNamespaceAwareEnsurePath(path);
+		ensurePath.ensure(m_zkClient.getClient().getZookeeperClient());
 	}
 
 }

@@ -19,6 +19,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
