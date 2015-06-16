@@ -11,14 +11,16 @@ public interface ZookeeperService {
 
 	public void ensureBrokerLeaseZkPath(Topic topic);
 
-	public void deleteConsumerLeaseZkPath(String topicName);
+	public void deleteConsumerLeaseTopicParentZkPath(String topicName);
 
-	public void deleteBrokerLeaseZkPath(String topicName);
+	public void deleteBrokerLeaseTopicParentZkPath(String topicName);
 
 	public void deleteConsumerLeaseZkPath(Topic t, String consumerGroupName);
 
 	public void updateZkMetaVersion(int version) throws Exception;
 
-	public void persist(String path, Object data) throws Exception;
+	public void persist(String path, Object data, String... touchPaths) throws Exception;
+
+	public void ensurePath(String path) throws Exception;
 
 }

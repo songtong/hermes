@@ -242,8 +242,8 @@ public class TopicService {
 
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 			m_topicStorageService.dropTopicStorage(topic);
-			m_zookeeperService.deleteConsumerLeaseZkPath(topic.getName());
-			m_zookeeperService.deleteBrokerLeaseZkPath(topic.getName());
+			m_zookeeperService.deleteConsumerLeaseTopicParentZkPath(topic.getName());
+			m_zookeeperService.deleteBrokerLeaseTopicParentZkPath(topic.getName());
 		}
 		m_metaService.updateMeta(meta);
 	}

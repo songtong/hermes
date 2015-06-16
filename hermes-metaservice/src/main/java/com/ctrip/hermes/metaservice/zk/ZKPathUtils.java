@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.unidal.tuple.Pair;
+
+import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
@@ -17,11 +20,17 @@ import com.ctrip.hermes.meta.entity.Topic;
  */
 public class ZKPathUtils {
 
-	private static final String CONSUMER_LEASE_PATH_PREFIX_PATTERN = "/consumer-lease/%s";
+	private static final String PATH_SEPARATOR = "/";
+
+	private static final String CONSUMER_LEASE_PATH_ROOT = "/consumer-lease";
+
+	private static final String CONSUMER_LEASE_PATH_PREFIX_PATTERN = CONSUMER_LEASE_PATH_ROOT + "/%s";
 
 	private static final String CONSUMER_LEASE_PATH_PATTERN = CONSUMER_LEASE_PATH_PREFIX_PATTERN + "/%s/%s";
 
-	private static final String BROKER_LEASE_PATH_PREFIX_PATTERN = "/broker-lease/%s";
+	private static final String BROKER_LEASE_PATH_ROOT = "/broker-lease";
+
+	private static final String BROKER_LEASE_PATH_PREFIX_PATTERN = BROKER_LEASE_PATH_ROOT + "/%s";
 
 	private static final String BROKER_LEASE_PATH_PATTERN = BROKER_LEASE_PATH_PREFIX_PATTERN + "/%s";
 
@@ -43,7 +52,7 @@ public class ZKPathUtils {
 		return paths;
 	}
 
-	public static String getBrokerLeaseZkPath(String topicName) {
+	public static String getBrokerLeaseTopicParentZkPath(String topicName) {
 		return String.format(BROKER_LEASE_PATH_PREFIX_PATTERN, topicName);
 	}
 
@@ -68,7 +77,7 @@ public class ZKPathUtils {
 		return paths;
 	}
 
-	public static String getConsumerLeaseZkPath(String topicName) {
+	public static String getConsumerLeaseTopicParentZkPath(String topicName) {
 		return String.format(CONSUMER_LEASE_PATH_PREFIX_PATTERN, topicName);
 	}
 
@@ -134,4 +143,36 @@ public class ZKPathUtils {
 		}
 	}
 
+	public static String getBrokerLeaseRootZkPath() {
+		return BROKER_LEASE_PATH_ROOT;
+	}
+
+	public static Pair<String, Integer> parseBrokerLeaseZkPath(String path) {
+		int partitionSeparatorStart = path.lastIndexOf(PATH_SEPARATOR);
+		int partition = Integer.valueOf(path.substring(partitionSeparatorStart + 1));
+		String newPath = path.substring(0, partitionSeparatorStart);
+		int topicSeparatorStart = newPath.lastIndexOf(PATH_SEPARATOR);
+		String topic = newPath.substring(topicSeparatorStart + 1);
+
+		return new Pair<>(topic, partition);
+	}
+
+	public static Tpg parseConsumerLeaseZkPath(String path) {
+		int groupSeparatorStart = path.lastIndexOf(PATH_SEPARATOR);
+		String group = path.substring(groupSeparatorStart + 1);
+
+		String newPath = path.substring(0, groupSeparatorStart);
+		int partitionSeparatorStart = newPath.lastIndexOf(PATH_SEPARATOR);
+		int partition = Integer.valueOf(newPath.substring(partitionSeparatorStart + 1));
+
+		newPath = newPath.substring(0, partitionSeparatorStart);
+		int topicSeparatorStart = newPath.lastIndexOf(PATH_SEPARATOR);
+		String topic = newPath.substring(topicSeparatorStart + 1);
+
+		return new Tpg(topic, partition, group);
+	}
+
+	public static String getConsumerLeaseRootZkPath() {
+		return CONSUMER_LEASE_PATH_ROOT;
+	}
 }
