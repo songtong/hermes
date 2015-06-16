@@ -60,7 +60,7 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 		List<String> topics = m_zkReader.listTopics();
 
 		for (String topic : topics) {
-			String path = ZKPathUtils.getBrokerLeaseZkPath(topic);
+			String path = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic);
 			TopicWatcher watcher = new TopicWatcher(m_watcherGuard.getVersion(), m_watcherGuard);
 			m_zkClient.getClient().getData().usingWatcher(watcher).forPath(path);
 		}
