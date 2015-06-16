@@ -116,7 +116,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 
 	}
 
-	private static class LeaseContext {
+	public static class LeaseContext {
 		private ReentrantLock m_lock = new ReentrantLock();
 
 		private Map<String, ClientLeaseInfo> m_existingLeases = new HashMap<>();
@@ -141,6 +141,9 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		private AtomicReference<String> m_ip = new AtomicReference<>(null);
 
 		private AtomicInteger m_port = new AtomicInteger();
+
+		public ClientLeaseInfo() {
+		}
 
 		public ClientLeaseInfo(Lease lease, String ip, int port) {
 			m_lease = lease;

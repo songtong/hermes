@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class CollectionUtil {
 
@@ -21,6 +22,10 @@ public class CollectionUtil {
 
 	public static boolean isNotEmpty(Collection<?> collection) {
 		return collection != null && !collection.isEmpty();
+	}
+
+	public static boolean isNotEmpty(Map<?, ?> map) {
+		return map != null && !map.isEmpty();
 	}
 
 	@SuppressWarnings("rawtypes")

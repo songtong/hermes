@@ -1,5 +1,7 @@
 package com.ctrip.hermes.metaservice.zk;
 
+import java.lang.reflect.Type;
+
 import com.alibaba.fastjson.JSON;
 
 /**
@@ -13,5 +15,9 @@ public class ZKSerializeUtils {
 
 	public static <T> T deserialize(byte[] bytes, Class<T> clazz) {
 		return JSON.parseObject(bytes, clazz);
+	}
+
+	public static <T> T deserialize(byte[] bytes, Type type) {
+		return JSON.parseObject(bytes, type);
 	}
 }
