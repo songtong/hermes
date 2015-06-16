@@ -44,7 +44,7 @@ public class SchemaService {
 	private SchemaDao m_schemaDao;
 
 	@Inject
-	private MetaServiceWrapper m_metaService;
+	private PortalMetaService m_metaService;
 
 	@Inject
 	private CompileService m_compileService;
@@ -199,7 +199,7 @@ public class SchemaService {
 	 */
 	public void deleteSchema(long id) throws DalException {
 		Schema schema = m_schemaDao.findByPK(id, SchemaEntity.READSET_FULL);
-		Topic topic = m_metaService.findTopic(schema.getTopicId());
+		Topic topic = m_metaService.findTopicById(schema.getTopicId());
 		if (topic != null) {
 			List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
 			if (schemas.size() > 1) {
@@ -227,13 +227,9 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public void deleteSchemas(Topic topic) throws DalException {
-		if (topic.getId() != null) {
-			List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
-			for (Schema schema : schemas) {
-				m_schemaDao.deleteByPK(schema);
-			}
-		} else {
-			throw new RuntimeException("Delete schema failed. topic hasn't ID: " + topic.getName());
+		List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
+		for (Schema schema : schemas) {
+			m_schemaDao.deleteByPK(schema);
 		}
 	}
 
@@ -265,7 +261,7 @@ public class SchemaService {
 
 	private SchemaRegistryClient getAvroSchemaRegistry() throws IOException {
 		if (avroSchemaRegistry == null) {
-			Codec avroCodec = m_metaService.getCodecByType("avro");
+			Codec avroCodec = m_metaService.findCodecByType("avro");
 			if (avroCodec == null) {
 				throw new RuntimeException("Could not get the avro codec");
 			}

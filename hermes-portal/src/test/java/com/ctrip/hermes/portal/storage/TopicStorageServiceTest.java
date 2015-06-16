@@ -7,8 +7,8 @@ import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.DefaultMetaServiceWrapper;
-import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
+import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
+import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.pojo.storage.StorageTopic;
 import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.portal.service.storage.TopicStorageService;
@@ -17,20 +17,21 @@ import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsExcep
 import com.ctrip.hermes.portal.service.storage.exception.TopicIsNullException;
 
 public class TopicStorageServiceTest extends ComponentTestCase {
-	MetaServiceWrapper metaService;
+	PortalMetaService metaService;
 	TopicStorageService service;
 
 	@Before
 	public void before() throws Exception {
 		String zkMode = System.getProperty("zkMode");
 		if (!"real".equalsIgnoreCase(zkMode)) {
-			TestingServer m_zkServer = new TestingServer(2181);
+         @SuppressWarnings("resource")
+         TestingServer m_zkServer = new TestingServer(2181);
 			System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
 		}
 
 //		defineComponent(StorageHandler.class, MockStorageHandler.class);
 		service = lookup(TopicStorageService.class, DefaultTopicStorageService.ID);
-		metaService = lookup(MetaServiceWrapper.class, DefaultMetaServiceWrapper.ID);
+		metaService = lookup(PortalMetaService.class, DefaultPortalMetaService.ID);
 	}
 
 	@Test

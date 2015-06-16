@@ -31,8 +31,8 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
-import com.ctrip.hermes.portal.server.RestException;
+import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/meta/")
 @Singleton
@@ -41,7 +41,7 @@ public class PortalMetaResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(PortalMetaResource.class);
 
-	private MetaServiceWrapper metaService = PlexusComponentLocator.lookup(MetaServiceWrapper.class);
+	private PortalMetaService metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
 
 	@GET
 	@Path("codecs")
@@ -86,7 +86,7 @@ public class PortalMetaResource {
 	@Path("topics/names")
 	public Response getTopicNames() {
 		List<String> topicNames = new ArrayList<String>();
-		for (Topic topic : metaService.findTopicsByPattern(".*")) {
+		for (Topic topic : metaService.getTopics().values()) {
 			topicNames.add(topic.getName());
 		}
 		Collections.sort(topicNames);
@@ -197,14 +197,12 @@ public class PortalMetaResource {
 		}
 
 		try {
-			if (metaService.addEndpoint(endpoint)) {
-				return Response.status(Status.CREATED).build();
-			}
+			metaService.addEndpoint(endpoint);
+			return Response.status(Status.CREATED).build();
 		} catch (Exception e) {
 			logger.error("Add endpoint failed.", e);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
-		return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 	}
 
 	@DELETE

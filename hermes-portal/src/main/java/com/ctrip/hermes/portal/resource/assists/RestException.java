@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.server;
+package com.ctrip.hermes.portal.resource.assists;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;

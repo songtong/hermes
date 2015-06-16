@@ -8,7 +8,7 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.CompileService;
-import com.ctrip.hermes.metaservice.service.DefaultMetaServiceWrapper;
+import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
 import com.ctrip.hermes.portal.service.ConsumerService;
@@ -33,7 +33,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(ConsumerService.class));
 		all.add(A(SubscriptionService.class));
 
-		all.add(A(DefaultMetaServiceWrapper.class));
+		all.add(A(DefaultPortalMetaService.class));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

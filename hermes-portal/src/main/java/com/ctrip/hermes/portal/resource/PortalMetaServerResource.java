@@ -15,8 +15,8 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.service.DefaultMetaServiceWrapper;
-import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
+import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
+import com.ctrip.hermes.metaservice.service.PortalMetaService;
 
 @Path("/metaserver/")
 @Singleton
@@ -25,8 +25,8 @@ public class PortalMetaServerResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(PortalMetaServerResource.class);
 
-	private MetaServiceWrapper metaService = PlexusComponentLocator.lookup(MetaServiceWrapper.class,
-	      DefaultMetaServiceWrapper.ID);
+	private PortalMetaService metaService = PlexusComponentLocator.lookup(PortalMetaService.class,
+	      DefaultPortalMetaService.ID);
 
 	@GET
 	@Path("kafka/zookeeper")

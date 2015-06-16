@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.server;
+package com.ctrip.hermes.portal.resource.assists;
 
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;

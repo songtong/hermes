@@ -1,10 +1,14 @@
 package com.ctrip.hermes.portal.service;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import kafka.admin.AdminUtils;
 
@@ -24,7 +28,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
+import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.portal.service.storage.TopicStorageService;
@@ -35,7 +39,7 @@ public class TopicService {
 	private static final Logger m_logger = LoggerFactory.getLogger(TopicService.class);
 
 	@Inject
-	private MetaServiceWrapper m_metaService;
+	private PortalMetaService m_metaService;
 
 	@Inject
 	private SchemaService m_schemaService;
@@ -93,13 +97,13 @@ public class TopicService {
 	 * @param topic
 	 */
 	public void createTopicInKafka(Topic topic) {
-		List<Partition> partitions = m_metaService.getPartitions(topic.getName());
+		List<Partition> partitions = m_metaService.findPartitionsByTopic(topic.getName());
 		if (partitions == null || partitions.size() < 1) {
 			return;
 		}
 
 		String consumerDatasource = partitions.get(0).getReadDatasource();
-		Storage targetStorage = m_metaService.findStorage(topic.getName());
+		Storage targetStorage = m_metaService.findStorageByTopic(topic.getName());
 		if (targetStorage == null) {
 			return;
 		}
@@ -144,13 +148,13 @@ public class TopicService {
 	 * @param topic
 	 */
 	public void deleteTopicInKafka(Topic topic) {
-		List<Partition> partitions = m_metaService.getPartitions(topic.getName());
+		List<Partition> partitions = m_metaService.findPartitionsByTopic(topic.getName());
 		if (partitions == null || partitions.size() < 1) {
 			return;
 		}
 
 		String consumerDatasource = partitions.get(0).getReadDatasource();
-		Storage targetStorage = m_metaService.findStorage(topic.getName());
+		Storage targetStorage = m_metaService.findStorageByTopic(topic.getName());
 		if (targetStorage == null) {
 			return;
 		}
@@ -180,13 +184,13 @@ public class TopicService {
 	 * @param topic
 	 */
 	public void configTopicInKafka(Topic topic) {
-		List<Partition> partitions = m_metaService.getPartitions(topic.getName());
+		List<Partition> partitions = m_metaService.findPartitionsByTopic(topic.getName());
 		if (partitions == null || partitions.size() < 1) {
 			return;
 		}
 
 		String consumerDatasource = partitions.get(0).getReadDatasource();
-		Storage targetStorage = m_metaService.findStorage(topic.getName());
+		Storage targetStorage = m_metaService.findStorageByTopic(topic.getName());
 		if (targetStorage == null) {
 			return;
 		}
@@ -230,8 +234,12 @@ public class TopicService {
 		if (topic == null)
 			return;
 		meta.removeTopic(name);
+
 		// Remove related schemas
-		m_schemaService.deleteSchemas(topic);
+		if (topic.getId() != null && topic.getId() > 0) {
+			m_schemaService.deleteSchemas(topic);
+		}
+
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 			m_topicStorageService.dropTopicStorage(topic);
 			m_zookeeperService.deleteConsumerLeaseZkPath(topic.getName());
@@ -240,20 +248,31 @@ public class TopicService {
 		m_metaService.updateMeta(meta);
 	}
 
-	public Storage findStorage(String topic) {
-		return m_metaService.findStorage(topic);
-	}
-
 	public List<Topic> findTopics(String pattern) {
-		return m_metaService.findTopicsByPattern(pattern);
+		List<Topic> filtered = new ArrayList<Topic>();
+
+		for (Topic topic : m_metaService.getTopics().values()) {
+			if (Pattern.matches(pattern, topic.getName())) {
+				filtered.add(topic);
+			}
+		}
+
+		Collections.sort(filtered, new Comparator<Topic>() {
+			@Override
+			public int compare(Topic o1, Topic o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
+
+		return filtered;
 	}
 
 	public Topic getTopic(long topicId) {
-		return m_metaService.findTopic(topicId);
+		return m_metaService.findTopicById(topicId);
 	}
 
-	public Topic getTopic(String topic) {
-		return m_metaService.findTopicByName(topic);
+	public Topic getTopic(String topicName) {
+		return m_metaService.findTopicByName(topicName);
 	}
 
 	/**

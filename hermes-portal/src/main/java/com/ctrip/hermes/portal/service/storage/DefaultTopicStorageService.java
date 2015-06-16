@@ -13,7 +13,7 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
+import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.pojo.storage.StorageTable;
 import com.ctrip.hermes.portal.pojo.storage.StorageTopic;
 import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
@@ -35,7 +35,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	private StorageHandler handler;
 
 	@Inject
-	private MetaServiceWrapper metaService;
+	private PortalMetaService metaService;
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultTopicStorageService.class);
 
@@ -265,7 +265,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 
 	private Datasource getDatasource(Partition partition) {
 		String writeDs = partition.getWriteDatasource();
-		return metaService.getDatasource("mysql", writeDs);
+		return metaService.findDatasource("mysql", writeDs);
 	}
 
 	private void doLog(String method, Topic topic, Partition partition, Triple<String, String, String> dbInfo) {

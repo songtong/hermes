@@ -1,11 +1,11 @@
-package com.ctrip.hermes.portal.resource;
+package com.ctrip.hermes.portal.resource.application;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import com.ctrip.hermes.portal.server.CORSResponseFilter;
-import com.ctrip.hermes.portal.server.CharsetResponseFilter;
-import com.ctrip.hermes.portal.server.ObjectMapperProvider;
+import com.ctrip.hermes.portal.resource.assists.CORSResponseFilter;
+import com.ctrip.hermes.portal.resource.assists.CharsetResponseFilter;
+import com.ctrip.hermes.portal.resource.assists.ObjectMapperProvider;
 
 public class PortalRestApplication extends ResourceConfig {
 	public PortalRestApplication() {
