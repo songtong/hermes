@@ -4,48 +4,56 @@
 
 <div ng-app="hermes-dashboard">
     <div class="container" ng-controller="DashboardCtrl">
-        <div class="row board-header">
-            <div class="col-md-2"><h4>Status:</h4>
-                <button type="button" class="btn btn-md btn-success" disabled="disabled">All Healthy</button>
+        <div class="row board-header panel panel-info">
+            <div class="panel-heading">Hermes Status
+
             </div>
-            <div class="col-md-2">Message Qps
-                <iframe class="board-kibana-frame"
-                        src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
-                        height="90%" width="100%">
-                </iframe>
+
+            <div class="panel-body">
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-md btn-success" disabled="disabled"
+                            style="margin-top: 50px">All Healthy
+                    </button>
+                </div>
+                <div class="col-md-2">Message Qps
+                    <iframe class="board-kibana-frame"
+                            src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
+                            height="90%" width="100%">
+                    </iframe>
+                </div>
+                <div class="col-md-2">Topic Count
+                    <iframe class="board-kibana-frame"
+                            src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
+                            height="90%" width="100%">
+                    </iframe>
+                </div>
+                <div class="col-md-2">Producers Count
+                    <iframe class="board-kibana-frame"
+                            src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
+                            height="90%" width="100%">
+                    </iframe>
+                </div>
+                <div class="col-md-2">Consumers Count
+                    <iframe class="board-kibana-frame"
+                            src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
+                            height="90%" width="100%">
+                    </iframe>
+                </div>
+                <div class="col-md-2">Other info...</div>
             </div>
-            <div class="col-md-2">Running Topic Count
-                <iframe class="board-kibana-frame"
-                        src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
-                        height="90%" width="100%">
-                </iframe>
-            </div>
-            <div class="col-md-2">Producers Count
-                <iframe class="board-kibana-frame"
-                        src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
-                        height="90%" width="100%">
-                </iframe>
-            </div>
-            <div class="col-md-2">Consumers Count
-                <iframe class="board-kibana-frame"
-                        src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
-                        height="90%" width="100%">
-                </iframe>
-            </div>
-            <div class="col-md-2">Other info...</div>
         </div>
 
         <div class="row ">
-            <div class="col-md-6 board-block">Topic/Producer QPS Top10
+            <div class="col-md-6 board-block panel panel-info">
+                <div class="panel-heading">Topic/Producer QPS Top10</div>
                 <table class="table table-striped">
                     <thead>
-                    <tr >
+                    <tr>
                         <th>Name</th>
                         <th>QPS</th>
                         <th>Remaining</th>
                         <th>IO</th>
                         <th>Latency</th>
-                        <th>etc..</th>
                     </tr>
                     </thead>
                     <tbody ng-repeat="topic in topics">
@@ -57,20 +65,66 @@
                         <td>{{topic.j}}</td>
                         <td>{{topic.io}} KB</td>
                         <td>{{topic.latency}}</td>
-                        <td>{{topic.etc}}</td>
-                        <!--<td><span class="label label-{{collector.isOk}}">{{collector.isOkMeg}}</span></td>-->
                     </tbody>
                 </table>
             </div>
 
-            <div class="col-md-6 board-block">Consumer QPS Top10</div>
+            <div class="col-md-6 board-block panel panel-info">
+                <div class="panel-heading">Consumer QPS Top10</div>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Group</th>
+                        <th>Name</th>
+                        <th>Topic</th>
+                        <th>QPS</th>
+                        <th>Latency</th>
+                    </tr>
+                    </thead>
+                    <tbody ng-repeat="consumer in consumers">
+                    <tr>
+                        <td><a href="#">
+                            {{consumer.group}}</a>
+                        </td>
+                        <td>{{consumer.name}}</td>
+                        <td>{{consumer.topic}}</td>
+                        <td>{{consumer.qps}}</td>
+                        <td>{{consumer.latency}}</td>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="row board-broker">
-            <div class="col-md-2">Broker List...</div>
-            <div class="col-md-6">Host, CPU, IO, Memory, etc.</div>
+        <div class="row board-broker panel panel-info">
+            <div class="panel-heading">Brokers</div>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>IP</th>
+                    <th>Load</th>
+                    <th>IO</th>
+                    <th>QPS</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="broker in brokers">
+                <tr>
+                    <td><a href="#">
+                        {{broker.name}}</a>
+                    </td>
+                    <td>{{broker.ip}}</td>
+                    <td>{{broker.load}}</td>
+                    <td>{{broker.io}}</td>
+                    <td>{{broker.qps}}</td>
+                    <td>
+                        <button type="button" class="btn btn-success"> Healthy</button>
+                    </td>
+                </tbody>
+            </table>
         </div>
     </div>
+
 </div>
 
 <script src="../../js/jquery-1.11.3.min.js"></script>

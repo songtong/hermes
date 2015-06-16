@@ -1,24 +1,78 @@
 .board-header {
     display: block;
-    height: 180px;
+    height: 100%;
     border: solid #bce8f1 1px;
-    padding: 10px;
+    overflow: auto;
 }
 
 .board-kibana-frame {
+    margin-top: 10px;
     border: 0px;
 }
 
 .board-block {
-    display: block;
-    height: 300px;
+    /*display: block;*/
+    height: 100%;
     border: solid #bce8f1 1px;
-
+    padding: 0px 0px;
 }
 
 .board-broker {
     display: block;
-    height: 300px;
+    height: 100%;
     border: solid #bce8f1 1px;
+}
 
+.title-2 {
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.producer {
+    height: 400px;
+    padding: 5px 15px;
+    margin-bottom: 5px;
+    color: inherit;
+    background-color: #f5f5f5;
+    border: 1px solid #e3e3e3;
+    border-radius: 4px;
+}
+
+.queue {
+    height: 400px;
+    padding: 5px 15px;
+    margin-bottom: 5px;
+    color: inherit;
+    background-color: #f5f5f5;
+    border: 1px solid #e3e3e3;
+    border-radius: 4px;
+}
+
+.producer-msg-history-table {
+    height: 280px !important;
+    /*border: 1px solid #c5c5c5;*/
+    overflow: auto;
+}
+
+.queue-msg-table {
+    height: 340px !important;
+    overflow: auto;
+}
+
+.consumer-group {
+    float: left;
+}
+
+.consumer {
+    height: 100%;
+    /*width: 500px;*/
+    padding: 5px 15px;
+    margin-bottom: 5px;
+    color: inherit;
+    background-color: #f5f5f5;
+    border: 1px solid #e3e3e3;
+}
+
+.consumer-msg-table {
+    overflow: auto;
 }
