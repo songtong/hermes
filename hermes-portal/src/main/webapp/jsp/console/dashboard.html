@@ -15,7 +15,7 @@
                             style="margin-top: 50px">All Healthy
                     </button>
                 </div>
-                <div class="col-md-2">Message Qps
+                <div class="col-md-2 col-md-offset-1">Message Qps
                     <iframe class="board-kibana-frame"
                             src="http://10.2.7.73:5601/#/visualize/edit/Consumed-Message-QPS?embed&_g=()&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:'40'),type:metric))"
                             height="90%" width="100%">
@@ -39,13 +39,12 @@
                             height="90%" width="100%">
                     </iframe>
                 </div>
-                <div class="col-md-2">Other info...</div>
             </div>
         </div>
 
         <div class="row ">
             <div class="col-md-6 board-block panel panel-info">
-                <div class="panel-heading">Topic/Producer QPS Top10</div>
+                <div class="panel-heading">Topic QPS Top10</div>
                 <table class="table table-striped">
                     <thead>
                     <tr>
