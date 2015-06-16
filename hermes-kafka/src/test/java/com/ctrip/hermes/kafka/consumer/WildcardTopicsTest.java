@@ -19,9 +19,9 @@ public class WildcardTopicsTest {
 
 	@Test
 	public void testWildcardTopics() throws IOException {
-		String topicPattern = "kafka.SimpleTopic.*";
-		String sendTopic1 = "kafka.SimpleTopic1";
-		String sendTopic2 = "kafka.SimpleTopic2";
+		String topicPattern = "kafka.SimpleTextTopic.*";
+		String sendTopic1 = "kafka.SimpleTextTopic1";
+		String sendTopic2 = "kafka.SimpleTextTopic2";
 		String group = "group1";
 
 		Producer producer = Producer.getInstance();
