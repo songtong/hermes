@@ -13,14 +13,14 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.MetaServiceWrapper;
+import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.portal.service.storage.TopicStorageService;
 
 @Named
 public class ConsumerService {
 	@Inject
-	private MetaServiceWrapper m_metaService;
+	private PortalMetaService m_metaService;
 
 	@Inject
 	private TopicStorageService m_storageService;

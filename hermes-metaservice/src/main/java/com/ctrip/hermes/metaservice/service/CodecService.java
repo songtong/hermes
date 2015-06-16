@@ -10,10 +10,10 @@ import com.ctrip.hermes.meta.entity.Codec;
 @Named
 public class CodecService {
 	@Inject
-	private MetaServiceWrapper m_metaService;
+	private PortalMetaService m_metaService;
 
 	public Codec getCodec(String topicName) {
-		return m_metaService.getCodecByTopic(topicName);
+		return m_metaService.findCodecByTopic(topicName);
 	}
 
 	public Map<String, Codec> getCodecs() {
