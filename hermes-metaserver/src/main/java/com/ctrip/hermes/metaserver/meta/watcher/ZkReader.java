@@ -30,7 +30,7 @@ public class ZkReader {
 		Map<Integer, Endpoint> result = new HashMap<>();
 		CuratorFramework client = m_zkClient.getClient();
 
-		String topicPath = ZKPathUtils.getBrokerLeaseZkPath(topic);
+		String topicPath = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic);
 		List<String> partitionPaths = client.getChildren().forPath(topicPath);
 		for (String partitionPath : partitionPaths) {
 			// TODO

@@ -31,7 +31,7 @@ public class TopicWatcher extends GuardedWatcher {
 
 			Map<String, Map<Integer, Endpoint>> topicPartitionMap = new HashMap<>();
 			String topic = ZKPathUtils.lastSegment(event.getPath());
-			client.getData().usingWatcher(this).forPath(ZKPathUtils.getBrokerLeaseZkPath(topic));
+			client.getData().usingWatcher(this).forPath(ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic));
 			topicPartitionMap.put(topic, fetchPartition2Endpoint(topic));
 			metaHolder.update(topicPartitionMap);
 		} catch (Exception e) {
