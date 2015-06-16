@@ -223,18 +223,69 @@
 			<implementation>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.meta.LeaderMetaUpdate</role>
+			<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
 			<role-hint>leader</role-hint>
-			<implementation>com.ctrip.hermes.metaserver.meta.LeaderMetaUpdate</implementation>
+			<implementation>com.ctrip.hermes.metaserver.meta.LeaderMetaUpdater</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+					<role>com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.MetaService</role>
+					<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
+			<role-hint>follower</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.meta.FollowerMetaUpdater</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListener</role>
+			<role-hint>MetaUpdaterBootstrapListener</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.cluster.MetaUpdaterBootstrapListener</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
+					<role-hint>leader</role-hint>
+					<field-name>m_leaderMetaUpdater</field-name>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
+					<role-hint>follower</role-hint>
+					<field-name>m_followerMetaUpdater</field-name>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard</role>
+			<implementation>com.ctrip.hermes.metaserver.meta.watcher.DefaultWatcherGuard</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
+			<implementation>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
+			<role-hint>leader</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.meta.LeaderMetaUpdater</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
 				</requirement>
 			</requirements>
 		</component>

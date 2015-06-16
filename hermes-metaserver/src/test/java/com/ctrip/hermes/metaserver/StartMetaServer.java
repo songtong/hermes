@@ -11,7 +11,13 @@ import org.mortbay.servlet.GzipFilter;
 import org.unidal.test.jetty.JettyServer;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
+import com.ctrip.hermes.metaservice.service.MetaService;
+import com.ctrip.hermes.metaservice.service.ZookeeperService;
+import com.dianping.cat.Cat;
 
 @RunWith(JUnit4.class)
 public class StartMetaServer extends JettyServer {
@@ -32,7 +38,24 @@ public class StartMetaServer extends JettyServer {
 			m_zkServer = new TestingServer(2181);
 			System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
 		}
+		setupZKNodes();
+
 		super.startServer();
+	}
+
+	private void setupZKNodes() throws Exception {
+		ZookeeperService zkService = PlexusComponentLocator.lookup(ZookeeperService.class);
+		MetaService metaService = PlexusComponentLocator.lookup(MetaService.class);
+
+		Meta meta = metaService.findLatestMeta();
+		for (Topic topic : meta.getTopics().values()) {
+			if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+				zkService.ensureBrokerLeaseZkPath(topic);
+				zkService.ensureConsumerLeaseZkPath(topic);
+			}
+		}
+		zkService.updateZkMetaVersion(meta.getVersion());
+
 	}
 
 	@Override
@@ -45,7 +68,8 @@ public class StartMetaServer extends JettyServer {
 
 	@Before
 	public void before() throws Exception {
-		System.setProperty("devMode", "true");
+		System.setProperty("devMode", "false");
+		Cat.initialize("cat.fws.qa.nt.ctripcorp.com");
 		startServer();
 	}
 

@@ -4,6 +4,8 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
+import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.StringUtils;
 
@@ -54,7 +56,7 @@ public class MetaServerConfig {
 	}
 
 	public String getMetaServerName() {
-		return Networks.forIp().getLocalHostAddress() + ":" + getMetaServerPort();
+		return JSON.toJSONString(new HostPort(Networks.forIp().getLocalHostAddress(), getMetaServerPort()));
 	}
 
 	public int getMetaServerPort() {

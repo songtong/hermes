@@ -116,4 +116,22 @@ public class ZKPathUtils {
 		return partitionIds;
 	}
 
+	public static String getMetaServersPath() {
+		return "/meta-servers";
+	}
+
+	public static String getBrokerLeasesPath() {
+		return "/broker-lease";
+	}
+
+	public static String lastSegment(String path) {
+		int lastSlashIdx = path.lastIndexOf("/");
+
+		if (lastSlashIdx >= 0) {
+			return path.substring(lastSlashIdx + 1);
+		} else {
+			return path;
+		}
+	}
+
 }
