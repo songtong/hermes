@@ -56,8 +56,10 @@ public class ConsumerResource {
 			@Override
 			public int compare(ConsumerView o1, ConsumerView o2) {
 				int ret = o1.getGroupName().compareTo(o2.getGroupName());
-				ret = ret == 0 ? o1.getAppId().compareTo(o2.getAppId()) : ret;
-				ret = ret == 0 ? o1.getTopic().compareTo(o2.getTopic()) : ret;
+				if (!StringUtils.isEmpty(o1.getAppId()) && !StringUtils.isEmpty(o2.getAppId()))
+					ret = ret == 0 ? o1.getAppId().compareTo(o2.getAppId()) : ret;
+				if (!StringUtils.isEmpty(o1.getTopic()) && !StringUtils.isEmpty(o2.getTopic()))
+					ret = ret == 0 ? o1.getTopic().compareTo(o2.getTopic()) : ret;
 				return ret;
 			}
 		});

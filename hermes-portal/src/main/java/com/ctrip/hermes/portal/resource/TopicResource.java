@@ -22,9 +22,9 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.TopicView;
+import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Codec;
