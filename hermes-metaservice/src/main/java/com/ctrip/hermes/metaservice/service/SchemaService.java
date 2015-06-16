@@ -203,13 +203,19 @@ public class SchemaService {
 		if (topic != null) {
 			List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
 			if (schemas.size() > 1) {
-				schemas.remove(0);
-				topic.setSchemaId(schemas.get(0).getId());
-				Meta meta = m_metaService.getMeta();
-				meta.removeTopic(topic.getName());
-				topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
-				meta.addTopic(topic);
-				m_metaService.updateMeta(meta);
+				for (Schema s : schemas) {
+					if (s.getId() == id) {
+						schemas.remove(s);
+					}
+				}
+				if (topic.getSchemaId() != schemas.get(0).getId()) {
+					topic.setSchemaId(schemas.get(0).getId());
+					Meta meta = m_metaService.getMeta();
+					meta.removeTopic(topic.getName());
+					topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
+					meta.addTopic(topic);
+					m_metaService.updateMeta(meta);
+				}
 			}
 		}
 		m_schemaDao.deleteByPK(schema);
