@@ -1,12 +1,15 @@
 package com.ctrip.hermes.metaserver.meta;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.build.BuildConstants;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.meta.watcher.MetaServerListWatcher;
@@ -33,13 +36,15 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 	@Inject
 	private ZkReader m_zkReader;
 
+	private ExecutorService m_watcherExecutor;
+
 	@Override
-	public void stop(ClusterStateHolder stateHolder) {
+	public synchronized void stop(ClusterStateHolder stateHolder) {
 		m_watcherGuard.updateVersion();
 	}
 
 	@Override
-	public void start(ClusterStateHolder stateHolder) {
+	public synchronized void start(ClusterStateHolder stateHolder) {
 		try {
 			addMetaVersionWatcher();
 			addTopicWatchers();
@@ -52,7 +57,8 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 
 	private void addMetaServerListWatcher() throws Exception {
 		String path = ZKPathUtils.getMetaServersPath();
-		MetaServerListWatcher watcher = new MetaServerListWatcher(m_watcherGuard.getVersion(), m_watcherGuard);
+		MetaServerListWatcher watcher = new MetaServerListWatcher(m_watcherGuard.getVersion(), m_watcherGuard,
+		      m_watcherExecutor);
 		m_zkClient.getClient().getChildren().usingWatcher(watcher).forPath(path);
 	}
 
@@ -61,18 +67,20 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 
 		for (String topic : topics) {
 			String path = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic);
-			TopicWatcher watcher = new TopicWatcher(m_watcherGuard.getVersion(), m_watcherGuard);
+			TopicWatcher watcher = new TopicWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor);
 			m_zkClient.getClient().getData().usingWatcher(watcher).forPath(path);
 		}
 	}
 
 	private void addMetaVersionWatcher() throws Exception {
 		String path = ZKPathUtils.getMetaVersionPath();
-		MetaVersionWatcher watcher = new MetaVersionWatcher(m_watcherGuard.getVersion(), m_watcherGuard);
+		MetaVersionWatcher watcher = new MetaVersionWatcher(m_watcherGuard.getVersion(), m_watcherGuard,
+		      m_watcherExecutor);
 		m_zkClient.getClient().getData().usingWatcher(watcher).forPath(path);
 	}
 
 	@Override
 	public void initialize() throws InitializationException {
+		m_watcherExecutor = Executors.newFixedThreadPool(1, HermesThreadFactory.create("ZKWatcher", true));
 	}
 }
