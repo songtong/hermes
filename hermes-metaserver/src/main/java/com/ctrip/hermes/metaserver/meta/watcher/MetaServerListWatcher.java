@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher.Event.EventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ public class MetaServerListWatcher extends GuardedWatcher {
 	private final static Logger log = LoggerFactory.getLogger(MetaServerListWatcher.class);
 
 	public MetaServerListWatcher(int version, WatcherGuard guard, ExecutorService executor) {
-		super(version, guard, executor);
+		super(version, guard, executor, EventType.NodeChildrenChanged);
 	}
 
 	@Override
