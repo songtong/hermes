@@ -81,6 +81,6 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_watcherExecutor = Executors.newFixedThreadPool(1, HermesThreadFactory.create("ZKWatcher", true));
+		m_watcherExecutor = Executors.newFixedThreadPool(1, HermesThreadFactory.create("MetaWatcher", true));
 	}
 }

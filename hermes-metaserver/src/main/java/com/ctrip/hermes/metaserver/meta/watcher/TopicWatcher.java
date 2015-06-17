@@ -17,7 +17,7 @@ import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 
 public class TopicWatcher extends GuardedWatcher {
 
-	private final static Logger log = LoggerFactory.getLogger(MetaServerListWatcher.class);
+	private final static Logger log = LoggerFactory.getLogger(TopicWatcher.class);
 
 	public TopicWatcher(int version, WatcherGuard guard, ExecutorService executor) {
 		super(version, guard, executor);

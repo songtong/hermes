@@ -104,10 +104,9 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 					m_pipeline.put(new Pair<ConsumerContext, List<ConsumerMessage<?>>>(context, msgs));
 				} catch (Exception e) {
 					log.error(
-					      String.format(
-					            "Exception occured while calling messageReceived(correlationId=%s, topic=%s, groupId=%s, sessionId=%s)",
-					            correlationId, context.getTopic().getName(), context.getGroupId(), context.getSessionId()),
-					      e);
+
+					"Exception occured while calling messageReceived(correlationId={}, topic={}, groupId={}, sessionId={})",
+					      correlationId, context.getTopic().getName(), context.getGroupId(), context.getSessionId(), e);
 				}
 			}
 		});

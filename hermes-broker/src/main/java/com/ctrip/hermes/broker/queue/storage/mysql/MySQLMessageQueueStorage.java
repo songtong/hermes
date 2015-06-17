@@ -204,9 +204,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				return result;
 			}
 		} catch (Exception e) {
-			log.error(
-			      String.format("Failed to fetch message(topic=%s, partition=%s, priority=%s).", tpp.getTopic(),
-			            tpp.getPartition(), tpp.isPriority()), e);
+			log.error("Failed to fetch message(topic={}, partition={}, priority={}).", tpp.getTopic(), tpp.getPartition(),
+			      tpp.isPriority(), e);
 		}
 
 		return null;
@@ -240,9 +239,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				copyToDeadLetter(tpp, groupId, toDeadLetter, resend);
 				copyToResend(tpp, groupId, toResend, resend, retryPolicy);
 			} catch (Exception e) {
-				log.error(
-				      String.format("Failed to nack messages(topic=%s, partition=%s, priority=%s, groupId=%s).",
-				            tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId), e);
+				log.error("Failed to nack messages(topic={}, partition={}, priority={}, groupId={}).", tpp.getTopic(),
+				      tpp.getPartition(), tpp.isPriority(), groupId, e);
 			}
 		}
 	}
@@ -341,8 +339,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				m_offsetMessageDao.updateByPK(proto, OffsetMessageEntity.UPDATESET_OFFSET);
 			}
 		} catch (DalException e) {
-			log.error(String.format("Failed to ack messages(topic=%s, partition=%s, priority=%s, groupId=%s).",
-			      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId), e);
+			log.error("Failed to ack messages(topic={}, partition={}, priority={}, groupId={}).", tpp.getTopic(),
+			      tpp.getPartition(), tpp.isPriority(), groupId, e);
 		}
 	}
 
@@ -459,8 +457,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			}
 			return result;
 		} catch (DalException e) {
-			log.error(String.format("Failed to fetch resend messages(topic=%s, partition=%s, groupId=%s).",
-			      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId()), e);
+			log.error("Failed to fetch resend messages(topic={}, partition={}, groupId={}).", tpg.getTopic(),
+			      tpg.getPartition(), tpg.getGroupId(), e);
 		}
 
 		return null;

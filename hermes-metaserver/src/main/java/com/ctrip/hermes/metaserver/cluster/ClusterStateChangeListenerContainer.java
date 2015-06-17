@@ -36,9 +36,8 @@ public class ClusterStateChangeListenerContainer extends ContainerHolder impleme
 				try {
 					entry.getValue().notLeader(stateHolder);
 				} catch (Exception e) {
-					log.error(String.format(
-					      "Exception occured while calling ClusterStateChangeListener's notLeader(listener=%s).",
-					      entry.getKey()), e);
+					log.error("Exception occured while calling ClusterStateChangeListener's notLeader(listener={}).",
+					      entry.getKey(), e);
 				}
 			}
 		}
@@ -50,9 +49,8 @@ public class ClusterStateChangeListenerContainer extends ContainerHolder impleme
 				try {
 					entry.getValue().isLeader(stateHolder);
 				} catch (Exception e) {
-					log.error(String.format(
-					      "Exception occured while calling ClusterStateChangeListener's isLeader(listener=%s).",
-					      entry.getKey()), e);
+					log.error("Exception occured while calling ClusterStateChangeListener's isLeader(listener={}).",
+					      entry.getKey(), e);
 				}
 			}
 		}
