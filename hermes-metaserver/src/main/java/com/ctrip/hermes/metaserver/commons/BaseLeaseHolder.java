@@ -58,7 +58,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		try {
 			try {
 				leaseContext.lock();
-				clearExpiredLeases(leaseContext.getExistingLeases());
+				removeExpiredLeases(leaseContext.getExistingLeases());
 
 				return callback.execute(leaseContext.getExistingLeases());
 			} finally {
@@ -93,7 +93,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		m_zookeeperService.persist(path, ZKSerializeUtils.serialize(existingValidLeases), touchPaths);
 	}
 
-	private void clearExpiredLeases(Map<String, ClientLeaseInfo> existingLeases) {
+	private void removeExpiredLeases(Map<String, ClientLeaseInfo> existingLeases) {
 		Iterator<Entry<String, ClientLeaseInfo>> iterator = existingLeases.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, ClientLeaseInfo> entry = iterator.next();
