@@ -148,31 +148,32 @@ public class ZKPathUtils {
 	}
 
 	public static Pair<String, Integer> parseBrokerLeaseZkPath(String path) {
-		int partitionSeparatorStart = path.lastIndexOf(PATH_SEPARATOR);
-		int partition = Integer.valueOf(path.substring(partitionSeparatorStart + 1));
-		String newPath = path.substring(0, partitionSeparatorStart);
-		int topicSeparatorStart = newPath.lastIndexOf(PATH_SEPARATOR);
-		String topic = newPath.substring(topicSeparatorStart + 1);
+		String[] pathSegments = path.split(PATH_SEPARATOR);
 
-		return new Pair<>(topic, partition);
+		int len = pathSegments == null ? 0 : pathSegments.length;
+
+		if (len > 2) {
+			return new Pair<>(pathSegments[len - 2], Integer.valueOf(pathSegments[len - 1]));
+		} else {
+			return null;
+		}
 	}
 
 	public static Tpg parseConsumerLeaseZkPath(String path) {
-		int groupSeparatorStart = path.lastIndexOf(PATH_SEPARATOR);
-		String group = path.substring(groupSeparatorStart + 1);
+		String[] pathSegments = path.split(PATH_SEPARATOR);
 
-		String newPath = path.substring(0, groupSeparatorStart);
-		int partitionSeparatorStart = newPath.lastIndexOf(PATH_SEPARATOR);
-		int partition = Integer.valueOf(newPath.substring(partitionSeparatorStart + 1));
+		int len = pathSegments == null ? 0 : pathSegments.length;
 
-		newPath = newPath.substring(0, partitionSeparatorStart);
-		int topicSeparatorStart = newPath.lastIndexOf(PATH_SEPARATOR);
-		String topic = newPath.substring(topicSeparatorStart + 1);
+		if (len > 3) {
+			return new Tpg(pathSegments[len - 3], Integer.valueOf(pathSegments[len - 2]), pathSegments[len - 1]);
+		} else {
+			return null;
+		}
 
-		return new Tpg(topic, partition, group);
 	}
 
 	public static String getConsumerLeaseRootZkPath() {
 		return CONSUMER_LEASE_PATH_ROOT;
 	}
+
 }

@@ -92,10 +92,10 @@ public class DefaultZookeeperService implements ZookeeperService {
 	private void deleteChildren(String path, boolean deleteSelf) throws Exception {
 		PathUtils.validatePath(path);
 
-		CuratorFramework curatorFramework = m_zkClient.getClient();
-		Stat stat = curatorFramework.checkExists().forPath(path);
+		CuratorFramework client = m_zkClient.getClient();
+		Stat stat = client.checkExists().forPath(path);
 		if (stat != null) {
-			List<String> children = curatorFramework.getChildren().forPath(path);
+			List<String> children = client.getChildren().forPath(path);
 			for (String child : children) {
 				String fullPath = ZKPaths.makePath(path, child);
 				deleteChildren(fullPath, true);
@@ -103,7 +103,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 			if (deleteSelf) {
 				try {
-					curatorFramework.delete().forPath(path);
+					client.delete().forPath(path);
 				} catch (KeeperException.NotEmptyException e) {
 					// someone has created a new child since we checked ... delete again.
 					deleteChildren(path, true);

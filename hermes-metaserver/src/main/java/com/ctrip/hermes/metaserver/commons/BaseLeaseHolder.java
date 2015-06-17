@@ -205,6 +205,10 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 	protected void loadAndWatchContexts() throws Exception {
 		Map<String, Map<String, ClientLeaseInfo>> path2ExistingLeases = loadExistingLeases();
 
+		updateContexts(path2ExistingLeases);
+	}
+
+	public void updateContexts(Map<String, Map<String, ClientLeaseInfo>> path2ExistingLeases) {
 		for (Map.Entry<String, Map<String, ClientLeaseInfo>> entry : path2ExistingLeases.entrySet()) {
 			updateLeaseContext(entry.getKey(), entry.getValue());
 		}
@@ -217,24 +221,30 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		}.getType());
 	}
 
-	public void updateLeaseContext(String path, Map<String, ClientLeaseInfo> existingLeases) {
+	private void updateLeaseContext(String path, Map<String, ClientLeaseInfo> existingLeases) {
+		if (existingLeases == null) {
+			return;
+		}
+
 		Key contextKey = convertZkPathToKey(path);
 
-		LeaseContext leaseContext = getLeaseContext(contextKey);
+		if (contextKey != null) {
+			LeaseContext leaseContext = getLeaseContext(contextKey);
 
-		m_LeaseContextsLock.readLock().lock();
-		try {
+			m_LeaseContextsLock.readLock().lock();
 			try {
-				leaseContext.lock();
-				leaseContext.setExistingLeases(existingLeases);
+				try {
+					leaseContext.lock();
+					leaseContext.setExistingLeases(existingLeases);
 
-				m_LeaseContexts.put(contextKey, leaseContext);
+					m_LeaseContexts.put(contextKey, leaseContext);
+				} finally {
+					leaseContext.unlock();
+				}
 			} finally {
-				leaseContext.unlock();
-			}
-		} finally {
-			m_LeaseContextsLock.readLock().unlock();
+				m_LeaseContextsLock.readLock().unlock();
 
+			}
 		}
 	}
 
@@ -249,7 +259,9 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 					      Iterator<Entry<Key, LeaseContext>> iterator = m_LeaseContexts.entrySet().iterator();
 					      while (iterator.hasNext()) {
 						      Entry<Key, LeaseContext> entry = iterator.next();
-						      if (entry.getValue().getExistingLeases().isEmpty()) {
+						      Map<String, ClientLeaseInfo> existingLeases = entry.getValue().getExistingLeases();
+						      removeExpiredLeases(existingLeases);
+						      if (existingLeases.isEmpty()) {
 							      iterator.remove();
 						      }
 					      }
