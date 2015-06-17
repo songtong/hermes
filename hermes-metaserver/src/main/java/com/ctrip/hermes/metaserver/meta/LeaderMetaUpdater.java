@@ -4,14 +4,18 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.zookeeper.Watcher;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.build.BuildConstants;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.meta.watcher.BrokerLeaseWatcher;
 import com.ctrip.hermes.metaserver.meta.watcher.MetaServerListWatcher;
 import com.ctrip.hermes.metaserver.meta.watcher.MetaVersionWatcher;
 import com.ctrip.hermes.metaserver.meta.watcher.TopicWatcher;
@@ -26,6 +30,8 @@ import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
  */
 @Named(type = MetaUpdater.class, value = BuildConstants.LEADER)
 public class LeaderMetaUpdater implements MetaUpdater, Initializable {
+
+	private final static Logger log = LoggerFactory.getLogger(LeaderMetaUpdater.class);
 
 	@Inject
 	private ZKClient m_zkClient;
@@ -50,32 +56,35 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 			addTopicWatchers();
 			addMetaServerListWatcher();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Error add watcher to zk", e);
 		}
 	}
 
 	private void addMetaServerListWatcher() throws Exception {
 		String path = ZKPathUtils.getMetaServersPath();
-		MetaServerListWatcher watcher = new MetaServerListWatcher(m_watcherGuard.getVersion(), m_watcherGuard,
-		      m_watcherExecutor);
+		Watcher watcher = new MetaServerListWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor);
 		m_zkClient.getClient().getChildren().usingWatcher(watcher).forPath(path);
 	}
 
 	private void addTopicWatchers() throws Exception {
 		List<String> topics = m_zkReader.listTopics();
 
+		// watch every topic node
 		for (String topic : topics) {
 			String path = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic);
-			TopicWatcher watcher = new TopicWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor);
+			Watcher watcher = new TopicWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor);
 			m_zkClient.getClient().getData().usingWatcher(watcher).forPath(path);
 		}
+
+		// watch topic's parent node to add watcher to newly added topic
+		String path = ZKPathUtils.getBrokerLeaseRootZkPath();
+		Watcher watcher = new BrokerLeaseWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor, topics);
+		m_zkClient.getClient().getChildren().usingWatcher(watcher).forPath(path);
 	}
 
 	private void addMetaVersionWatcher() throws Exception {
 		String path = ZKPathUtils.getMetaVersionPath();
-		MetaVersionWatcher watcher = new MetaVersionWatcher(m_watcherGuard.getVersion(), m_watcherGuard,
-		      m_watcherExecutor);
+		Watcher watcher = new MetaVersionWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor);
 		m_zkClient.getClient().getData().usingWatcher(watcher).forPath(path);
 	}
 
