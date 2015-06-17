@@ -64,7 +64,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	@Override
 	public Topic findTopicById(long id) {
 		for (Entry<String, Topic> entry : m_meta.getTopics().entrySet()) {
-			if (id == entry.getValue().getId()) {
+			if (entry.getValue().getId() != null && id == entry.getValue().getId()) {
 				return entry.getValue();
 			}
 		}
