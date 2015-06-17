@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service.storage.exception;
+package com.ctrip.hermes.metaservice.service.storage.exception;
 
 public class TopicIsNullException extends Exception {
 	/**

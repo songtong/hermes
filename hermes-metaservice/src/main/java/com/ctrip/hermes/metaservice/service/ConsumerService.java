@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service;
+package com.ctrip.hermes.metaservice.service;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -13,9 +13,7 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
-import com.ctrip.hermes.metaservice.service.ZookeeperService;
-import com.ctrip.hermes.portal.service.storage.TopicStorageService;
+import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 
 @Named
 public class ConsumerService {

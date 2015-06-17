@@ -27,7 +27,6 @@ import org.unidal.lookup.util.StringUtils;
 
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.meta.entity.Codec;
-import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.model.SchemaDao;
@@ -48,6 +47,9 @@ public class SchemaService {
 
 	@Inject
 	private CompileService m_compileService;
+
+	@Inject
+	private TopicService m_topicService;
 
 	/**
 	 * 
@@ -177,11 +179,7 @@ public class SchemaService {
 		m_schemaDao.insert(schema);
 
 		topic.setSchemaId(schema.getId());
-		Meta meta = m_metaService.getMeta();
-		meta.removeTopic(topic.getName());
-		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
-		meta.addTopic(topic);
-		m_metaService.updateMeta(meta);
+		m_topicService.updateTopic(topic);
 
 		if ("avro".equals(schema.getType())) {
 			if (StringUtils.isNotEmpty(schema.getCompatibility())) {
@@ -199,26 +197,24 @@ public class SchemaService {
 	 */
 	public void deleteSchema(long id) throws DalException {
 		Schema schema = m_schemaDao.findByPK(id, SchemaEntity.READSET_FULL);
-		Topic topic = m_metaService.findTopicById(schema.getTopicId());
+		Topic topic = m_topicService.findTopicById(schema.getTopicId());
 		if (topic != null) {
 			List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
-			if (schemas.size() > 1) {
-				for (Schema s : schemas) {
-					if (s.getId() == id) {
-						schemas.remove(s);
-					}
-				}
-				if (topic.getSchemaId() != schemas.get(0).getId()) {
-					topic.setSchemaId(schemas.get(0).getId());
-					Meta meta = m_metaService.getMeta();
-					meta.removeTopic(topic.getName());
-					topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
-					meta.addTopic(topic);
-					m_metaService.updateMeta(meta);
+			for (Schema s : schemas) {
+				if (s.getId() == id) {
+					schemas.remove(s);
+					break;
 				}
 			}
+			if (schemas.size() > 0 && topic.getSchemaId() != schemas.get(0).getId()) {
+				topic.setSchemaId(schemas.get(0).getId());
+				m_topicService.updateTopic(topic);
+			} else if (schemas.size() == 0) {
+				topic.setSchemaId(null);
+				m_topicService.updateTopic(topic);
+			}
+			m_schemaDao.deleteByPK(schema);
 		}
-		m_schemaDao.deleteByPK(schema);
 	}
 
 	/**

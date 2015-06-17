@@ -8,13 +8,13 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.CompileService;
+import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
-import com.ctrip.hermes.portal.service.ConsumerService;
-import com.ctrip.hermes.portal.service.TopicService;
-import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
-import com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler;
+import com.ctrip.hermes.metaservice.service.TopicService;
+import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
+import com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 

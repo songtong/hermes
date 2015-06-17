@@ -9,12 +9,12 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
-import com.ctrip.hermes.portal.pojo.storage.StorageTopic;
-import com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService;
-import com.ctrip.hermes.portal.service.storage.TopicStorageService;
-import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
-import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
-import com.ctrip.hermes.portal.service.storage.exception.TopicIsNullException;
+import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
+import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
+import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.metaservice.service.storage.exception.TopicAlreadyExistsException;
+import com.ctrip.hermes.metaservice.service.storage.exception.TopicIsNullException;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTopic;
 
 public class TopicStorageServiceTest extends ComponentTestCase {
 	PortalMetaService metaService;

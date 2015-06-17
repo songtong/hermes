@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.pojo.storage;
+package com.ctrip.hermes.metaservice.service.storage.pojo;
 
 import java.sql.Date;
 import java.util.List;

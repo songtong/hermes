@@ -6,8 +6,12 @@ import java.util.List;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
-import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
-import com.ctrip.hermes.portal.service.storage.model.*;
+import com.ctrip.hermes.metaservice.service.storage.handler.StorageHandler;
+import com.ctrip.hermes.metaservice.service.storage.model.DeadLetterTableModel;
+import com.ctrip.hermes.metaservice.service.storage.model.MessageTableModel;
+import com.ctrip.hermes.metaservice.service.storage.model.OffsetMessageTableModel;
+import com.ctrip.hermes.metaservice.service.storage.model.OffsetResendTableModel;
+import com.ctrip.hermes.metaservice.service.storage.model.TableModel;
 
 
 public class MysqlStorageHandlerTest extends ComponentTestCase {

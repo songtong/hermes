@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.pojo.storage;
+package com.ctrip.hermes.metaservice.service.storage.pojo;
 
 public class StoragePartition {
 	String info; // like: Range from..to..

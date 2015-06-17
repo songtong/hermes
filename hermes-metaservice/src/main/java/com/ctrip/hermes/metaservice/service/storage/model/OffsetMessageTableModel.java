@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service.storage.model;
+package com.ctrip.hermes.metaservice.service.storage.model;
 
 public class OffsetMessageTableModel extends TableModel {
 	public OffsetMessageTableModel(){

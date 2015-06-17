@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service.storage;
+package com.ctrip.hermes.metaservice.service.storage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,18 +14,18 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
-import com.ctrip.hermes.portal.pojo.storage.StorageTable;
-import com.ctrip.hermes.portal.pojo.storage.StorageTopic;
-import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
-import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
-import com.ctrip.hermes.portal.service.storage.exception.TopicIsNullException;
-import com.ctrip.hermes.portal.service.storage.handler.StorageHandler;
-import com.ctrip.hermes.portal.service.storage.model.DeadLetterTableModel;
-import com.ctrip.hermes.portal.service.storage.model.MessageTableModel;
-import com.ctrip.hermes.portal.service.storage.model.OffsetMessageTableModel;
-import com.ctrip.hermes.portal.service.storage.model.OffsetResendTableModel;
-import com.ctrip.hermes.portal.service.storage.model.ResendTableModel;
-import com.ctrip.hermes.portal.service.storage.model.TableModel;
+import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.metaservice.service.storage.exception.TopicAlreadyExistsException;
+import com.ctrip.hermes.metaservice.service.storage.exception.TopicIsNullException;
+import com.ctrip.hermes.metaservice.service.storage.handler.StorageHandler;
+import com.ctrip.hermes.metaservice.service.storage.model.DeadLetterTableModel;
+import com.ctrip.hermes.metaservice.service.storage.model.MessageTableModel;
+import com.ctrip.hermes.metaservice.service.storage.model.OffsetMessageTableModel;
+import com.ctrip.hermes.metaservice.service.storage.model.OffsetResendTableModel;
+import com.ctrip.hermes.metaservice.service.storage.model.ResendTableModel;
+import com.ctrip.hermes.metaservice.service.storage.model.TableModel;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTopic;
 
 @Named(type = TopicStorageService.class, value = DefaultTopicStorageService.ID)
 public class DefaultTopicStorageService implements TopicStorageService {

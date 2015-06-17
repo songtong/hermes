@@ -10,8 +10,8 @@ import org.unidal.web.mvc.annotation.InboundActionMeta;
 import org.unidal.web.mvc.annotation.OutboundActionMeta;
 import org.unidal.web.mvc.annotation.PayloadMeta;
 
+import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.console.ConsolePage;
-import com.ctrip.hermes.portal.service.TopicService;
 
 public class Handler implements PageHandler<Context> {
 	@Inject
