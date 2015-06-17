@@ -57,7 +57,9 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 							for (String group : groups) {
 								String path = ZKPaths.makePath(rootPath, topic, partition, group);
 								byte[] data = curatorFramework.getData().forPath(path);
-								existingLeases.put(path, deserializeExistingLeases(data));
+								if (data != null && data.length != 0) {
+									existingLeases.put(path, deserializeExistingLeases(data));
+								}
 							}
 						}
 					}

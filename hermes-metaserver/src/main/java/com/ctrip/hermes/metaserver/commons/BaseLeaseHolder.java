@@ -189,12 +189,17 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		try {
+			doInitialize();
 			startHouseKeeper();
 			loadAndWatchContexts();
 		} catch (Exception e) {
 			log.error("Failed to init LeaseHolder", e);
 			throw new InitializationException("Failed to init LeaseHolder", e);
 		}
+	}
+
+	protected void doInitialize() {
+
 	}
 
 	protected void loadAndWatchContexts() throws Exception {
@@ -212,7 +217,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		}.getType());
 	}
 
-	protected void updateLeaseContext(String path, Map<String, ClientLeaseInfo> existingLeases) {
+	public void updateLeaseContext(String path, Map<String, ClientLeaseInfo> existingLeases) {
 		Key contextKey = convertZkPathToKey(path);
 
 		LeaseContext leaseContext = getLeaseContext(contextKey);
