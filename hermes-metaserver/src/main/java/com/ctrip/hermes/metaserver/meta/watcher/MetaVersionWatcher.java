@@ -16,7 +16,7 @@ import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 
 public class MetaVersionWatcher extends GuardedWatcher {
 
-	private final static Logger log = LoggerFactory.getLogger(MetaServerListWatcher.class);
+	private final static Logger log = LoggerFactory.getLogger(MetaVersionWatcher.class);
 
 	public MetaVersionWatcher(int version, WatcherGuard guard, ExecutorService executor) {
 		super(version, guard, executor);

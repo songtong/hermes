@@ -1,10 +1,10 @@
 package com.ctrip.hermes.metaserver.consumer;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.utils.ZKPaths;
 import org.unidal.lookup.annotation.Named;
 
@@ -25,7 +25,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 	}
 
 	@Override
-	protected String[] getZkTouchPaths(Tpg tpg) {
+	protected String[] getZkPersistTouchPaths(Tpg tpg) {
 		return new String[] { ZKPathUtils.getConsumerLeaseTopicParentZkPath(tpg.getTopic()) };
 	}
 
@@ -35,32 +35,31 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 	}
 
 	@Override
-	protected List<String> getAllLeavesPaths(CuratorWatcher rootPathWatcher) throws Exception {
-		String rootPath = ZKPathUtils.getConsumerLeaseRootZkPath();
+	protected Map<String, Map<String, ClientLeaseInfo>> loadExistingLeases() throws Exception {
+		// TODO add watcher for root node and all topics node
 		CuratorFramework curatorFramework = m_zkClient.getClient();
+		String rootPath = ZKPathUtils.getConsumerLeaseRootZkPath();
 
-		List<String> paths = new ArrayList<>();
+		Map<String, Map<String, ClientLeaseInfo>> existingLeases = new HashMap<>();
 
-		List<String> topics = null;
-		if (rootPathWatcher != null) {
-			topics = curatorFramework.getChildren().usingWatcher(rootPathWatcher).forPath(rootPath);
-		} else {
-			topics = curatorFramework.getChildren().forPath(rootPath);
-		}
-
+		List<String> topics = curatorFramework.getChildren().forPath(rootPath);
 		if (topics != null && !topics.isEmpty()) {
 			for (String topic : topics) {
 				List<String> partitions = curatorFramework.getChildren().forPath(ZKPaths.makePath(rootPath, topic));
 
 				if (partitions != null && !partitions.isEmpty()) {
 					for (String partition : partitions) {
-						// TODO add partition watcher in case new consumer group connected
+
 						List<String> groups = curatorFramework.getChildren().forPath(
 						      ZKPaths.makePath(rootPath, topic, partition));
 
 						if (groups != null && !groups.isEmpty()) {
 							for (String group : groups) {
-								paths.add(ZKPaths.makePath(rootPath, topic, partition, group));
+								String path = ZKPaths.makePath(rootPath, topic, partition, group);
+								byte[] data = curatorFramework.getData().forPath(path);
+								if (data != null && data.length != 0) {
+									existingLeases.put(path, deserializeExistingLeases(data));
+								}
 							}
 						}
 					}
@@ -68,6 +67,6 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			}
 		}
 
-		return paths;
+		return existingLeases;
 	}
 }

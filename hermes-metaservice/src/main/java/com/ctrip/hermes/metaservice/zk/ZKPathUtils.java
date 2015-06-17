@@ -134,7 +134,7 @@ public class ZKPathUtils {
 	}
 
 	public static String lastSegment(String path) {
-		int lastSlashIdx = path.lastIndexOf("/");
+		int lastSlashIdx = path.lastIndexOf(PATH_SEPARATOR);
 
 		if (lastSlashIdx >= 0) {
 			return path.substring(lastSlashIdx + 1);
