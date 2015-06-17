@@ -206,6 +206,7 @@ public class SchemaService {
 				for (Schema s : schemas) {
 					if (s.getId() == id) {
 						schemas.remove(s);
+						break;
 					}
 				}
 				if (topic.getSchemaId() != schemas.get(0).getId()) {
