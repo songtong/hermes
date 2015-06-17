@@ -209,14 +209,7 @@ public class SchemaService {
 						break;
 					}
 				}
-				if (schemas.size() == 0) {
-					topic.setSchemaId(null);
-					Meta meta = m_metaService.getMeta();
-					meta.removeTopic(topic.getName());
-					topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
-					meta.addTopic(topic);
-					m_metaService.updateMeta(meta);
-				} else if (schemas.size() > 0 && topic.getSchemaId() != schemas.get(0).getId()) {
+				if (schemas.size() > 0 && topic.getSchemaId() != schemas.get(0).getId()) {
 					topic.setSchemaId(schemas.get(0).getId());
 					Meta meta = m_metaService.getMeta();
 					meta.removeTopic(topic.getName());
@@ -225,8 +218,16 @@ public class SchemaService {
 					m_metaService.updateMeta(meta);
 				}
 			}
+			if (schemas.size() == 0) {
+				topic.setSchemaId(null);
+				Meta meta = m_metaService.getMeta();
+				meta.removeTopic(topic.getName());
+				topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
+				meta.addTopic(topic);
+				m_metaService.updateMeta(meta);
+			}
+			m_schemaDao.deleteByPK(schema);
 		}
-		m_schemaDao.deleteByPK(schema);
 	}
 
 	/**

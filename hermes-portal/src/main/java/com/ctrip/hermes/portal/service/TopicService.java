@@ -236,7 +236,11 @@ public class TopicService {
 
 		// Remove related schemas
 		if (topic.getId() != null && topic.getId() > 0) {
-			m_schemaService.deleteSchemas(topic);
+			try {
+				m_schemaService.deleteSchemas(topic);
+			} catch (Throwable e) {
+				m_logger.error(String.format("delete schema failed for topic: %s", topic.getName()), e);
+			}
 		}
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
