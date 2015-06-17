@@ -1,7 +1,7 @@
 package com.ctrip.hermes.metaserver.commons;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.zookeeper.WatchedEvent;
@@ -16,7 +16,7 @@ public abstract class BaseZkWatcher implements Watcher {
 
 	private ExecutorService m_executorService;
 
-	private List<EventType> m_acceptedEventTypes = new ArrayList<>();
+	private Set<EventType> m_acceptedEventTypes = new HashSet<>();
 
 	protected BaseZkWatcher(ExecutorService executorService, EventType... acceptedEventTypes) {
 		m_executorService = executorService;
@@ -27,7 +27,7 @@ public abstract class BaseZkWatcher implements Watcher {
 
 	@Override
 	public void process(final WatchedEvent event) {
-		if (m_acceptedEventTypes.contains(event.getType())) {
+		if (m_acceptedEventTypes.isEmpty() || m_acceptedEventTypes.contains(event.getType())) {
 			m_executorService.submit(new Runnable() {
 
 				@Override
