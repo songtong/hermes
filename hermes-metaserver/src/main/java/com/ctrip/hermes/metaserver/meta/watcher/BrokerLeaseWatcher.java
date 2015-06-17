@@ -30,6 +30,7 @@ public class BrokerLeaseWatcher extends GuardedWatcher {
 
 	@Override
 	protected void doProcess(WatchedEvent event) {
+		log.info("Topic list updated on ZK");
 		try {
 			CuratorFramework client = PlexusComponentLocator.lookup(ZKClient.class).getClient();
 
