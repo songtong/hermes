@@ -2,6 +2,7 @@ package com.ctrip.hermes.metaserver.meta.watcher;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.WatchedEvent;
@@ -18,8 +19,8 @@ public class TopicWatcher extends GuardedWatcher {
 
 	private final static Logger log = LoggerFactory.getLogger(MetaServerListWatcher.class);
 
-	public TopicWatcher(int version, WatcherGuard guard) {
-		super(version, guard);
+	public TopicWatcher(int version, WatcherGuard guard, ExecutorService executor) {
+		super(version, guard, executor);
 	}
 
 	@Override
