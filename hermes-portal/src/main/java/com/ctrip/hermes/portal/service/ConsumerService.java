@@ -10,8 +10,8 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
@@ -55,7 +55,7 @@ public class ConsumerService {
 		ConsumerGroup consumerGroup = t.findConsumerGroup(consumer);
 		if (consumerGroup != null) {
 			boolean removed = t.removeConsumerGroup(consumer);
-			if (removed && Endpoint.BROKER.equals(t.getEndpointType())) {
+			if (removed && Storage.MYSQL.equals(t.getStorageType())) {
 				m_storageService.delConsumerStorage(t, consumerGroup);
 				m_zookeeperService.deleteConsumerLeaseZkPath(t, consumer);
 			}
@@ -78,7 +78,7 @@ public class ConsumerService {
 		Topic t = meta.getTopics().get(topic);
 		t.addConsumerGroup(consumer);
 
-		if (Endpoint.BROKER.equals(t.getEndpointType())) {
+		if (Storage.MYSQL.equals(t.getStorageType())) {
 			m_storageService.addConsumerStorage(t, consumer);
 			m_zookeeperService.ensureConsumerLeaseZkPath(t);
 		}

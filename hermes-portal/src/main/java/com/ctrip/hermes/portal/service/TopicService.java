@@ -22,7 +22,6 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Datasource;
-import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
@@ -240,7 +239,7 @@ public class TopicService {
 			m_schemaService.deleteSchemas(topic);
 		}
 
-		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			m_topicStorageService.dropTopicStorage(topic);
 			m_zookeeperService.deleteConsumerLeaseTopicParentZkPath(topic.getName());
 			m_zookeeperService.deleteBrokerLeaseTopicParentZkPath(topic.getName());
@@ -286,7 +285,7 @@ public class TopicService {
 		meta.removeTopic(topic.getName());
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 		meta.addTopic(topic);
-		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 		}
