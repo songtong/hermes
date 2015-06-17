@@ -40,7 +40,7 @@ public class ConsumerResource {
 
 	@GET
 	public List<ConsumerView> getConsumers() {
-		logger.debug("Get consumers");
+		logger.info("Get consumers");
 		List<ConsumerView> returnResult = new ArrayList<ConsumerView>();
 		try {
 			Map<String, List<ConsumerGroup>> consumers = consumerService.getConsumers();
@@ -55,7 +55,9 @@ public class ConsumerResource {
 		Collections.sort(returnResult, new Comparator<ConsumerView>() {
 			@Override
 			public int compare(ConsumerView o1, ConsumerView o2) {
-				int ret = o1.getGroupName().compareTo(o2.getGroupName());
+				int ret = 0;
+				if (!StringUtils.isEmpty(o1.getGroupName()) && !StringUtils.isEmpty(o2.getGroupName()))
+					ret = ret == 0 ? o1.getGroupName().compareTo(o2.getGroupName()) : ret;
 				if (!StringUtils.isEmpty(o1.getAppId()) && !StringUtils.isEmpty(o2.getAppId()))
 					ret = ret == 0 ? o1.getAppId().compareTo(o2.getAppId()) : ret;
 				if (!StringUtils.isEmpty(o1.getTopic()) && !StringUtils.isEmpty(o2.getTopic()))
