@@ -143,7 +143,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 	}
 
 	@Override
-	public void persist(String path, Object data, String... touchPaths) throws Exception {
+	public void persist(String path, byte[] data, String... touchPaths) throws Exception {
 		try {
 			ensurePath(path);
 
@@ -154,7 +154,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 			}
 
 			CuratorTransactionBridge curatorTransactionBridge = m_zkClient.getClient().inTransaction().setData()
-			      .forPath(path, ZKSerializeUtils.serialize(data));
+			      .forPath(path, data);
 
 			long now = m_systemClockService.now();
 			if (touchPaths != null && touchPaths.length > 0) {

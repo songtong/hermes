@@ -19,7 +19,7 @@ public interface ZookeeperService {
 
 	public void updateZkMetaVersion(int version) throws Exception;
 
-	public void persist(String path, Object data, String... touchPaths) throws Exception;
+	public void persist(String path, byte[] data, String... touchPaths) throws Exception;
 
 	public void ensurePath(String path) throws Exception;
 
