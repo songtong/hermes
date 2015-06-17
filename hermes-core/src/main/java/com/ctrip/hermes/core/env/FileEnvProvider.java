@@ -29,7 +29,7 @@ public class FileEnvProvider implements EnvProvider, Initializable {
 				m_env = Env.valueOf(strEnv.trim().toUpperCase());
 			} catch (RuntimeException e) {
 				throw new InitializationException(
-				      String.format("%s is not a valid hermes env, valid values are (dev, fws, uat, lpt, prod)"));
+				      String.format("%s is not a valid hermes env, valid values are (dev, fws, uat, lpt, prod)", strEnv));
 			}
 		}
 	}

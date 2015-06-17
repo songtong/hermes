@@ -2,18 +2,12 @@
 set -e
 set -u
 
-APP_PREFIX="metaserver"
-APP_PATH="/opt/ctrip/app/hermes-${APP_PREFIX}"
+mkdir -p /opt/ctrip/app/hermes/metaserver/old-deployment
+mv /opt/ctrip/app/tomcat/webapps/ROOT/hermes-metaserver*.war /opt/ctrip/app/hermes/metaserver/old-deployment
 
-# copy jar
-now=$(date +"%F_%T")
-mkdir -p ${APP_PATH}/${now}
-mv ${APP_PATH}/*.jar ${APP_PATH}/$now/
-mv ${APP_PATH}/*.sh ${APP_PATH}/$now/
-cp hermes-${APP_PREFIX}/target/*.jar ${APP_PATH}
-cp hermes-${APP_PREFIX}/script/*.sh ${APP_PATH}
-
-
-cd ${APP_PATH}
-bash ./startup.sh stop
-bash ./startup.sh start
+mv hermes-metaserver/target/hermes-metaserver*.war  /opt/ctrip/app/tomcat/webapps/ROOT
+cd /opt/ctrip/app/tomcat/webapps/ROOT
+jar -xf /opt/ctrip/app/tomcat/webapps/ROOT/hermes-metaserver*.war
+sudo /opt/ctrip/app/tomcat/bin/shutdown.sh
+sleep 10
+sudo /opt/ctrip/app/tomcat/bin/startup.sh
