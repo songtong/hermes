@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaserver.meta.watcher;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -23,7 +24,7 @@ public abstract class GuardedWatcher implements Watcher {
 		m_executor = executor;
 
 		if (acceptedEventTypes != null && acceptedEventTypes.length != 0) {
-			m_acceptedEventTypes.addAll(m_acceptedEventTypes);
+			m_acceptedEventTypes.addAll(Arrays.asList(acceptedEventTypes));
 		}
 	}
 

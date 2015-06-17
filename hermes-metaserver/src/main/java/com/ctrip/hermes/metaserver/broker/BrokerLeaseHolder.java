@@ -14,8 +14,8 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.metaserver.broker.watcher.LeaseWatcher;
-import com.ctrip.hermes.metaserver.broker.watcher.TopicAddWatcher;
+import com.ctrip.hermes.metaserver.broker.watcher.BrokerLeaseChangedWatcher;
+import com.ctrip.hermes.metaserver.broker.watcher.BrokerLeaseAddedWatcher;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 
@@ -28,7 +28,11 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 
 	private ExecutorService m_watcherExecutorService;
 
-	private Set<String> m_topics = new HashSet<>();
+	private Set<String> m_watchedTopics = new HashSet<>();
+
+	private BrokerLeaseChangedWatcher m_brokerLeaseChangedWatcher;
+
+	private BrokerLeaseAddedWatcher m_brokerLeaseAddedWatcher;
 
 	@Override
 	protected String convertKeyToZkPath(Pair<String, Integer> topicPartition) {
@@ -47,43 +51,66 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 
 	@Override
 	protected Map<String, Map<String, ClientLeaseInfo>> loadExistingLeases() throws Exception {
-		// TODO add watcher for root node and all topics node
-		CuratorFramework curatorFramework = m_zkClient.getClient();
-		String rootPath = ZKPathUtils.getBrokerLeaseRootZkPath();
+		CuratorFramework client = m_zkClient.getClient();
 
 		Map<String, Map<String, ClientLeaseInfo>> existingLeases = new HashMap<>();
 
-		List<String> topics = curatorFramework.getChildren()
-		      .usingWatcher(new TopicAddWatcher(m_watcherExecutorService, this)).forPath(rootPath);
+		List<String> topics = client.getChildren()//
+		      .usingWatcher(m_brokerLeaseAddedWatcher)//
+		      .forPath(ZKPathUtils.getBrokerLeaseRootZkPath());
+
 		if (topics != null && !topics.isEmpty()) {
 			for (String topic : topics) {
-				List<String> partitions = curatorFramework.getChildren().forPath(ZKPaths.makePath(rootPath, topic));
-
-				if (partitions != null && !partitions.isEmpty()) {
-					for (String partition : partitions) {
-						String path = ZKPaths.makePath(rootPath, topic, partition);
-						byte[] data = curatorFramework.getData().usingWatcher(new LeaseWatcher(m_watcherExecutorService))
-						      .forPath(path);
-						if (data != null && data.length != 0) {
-							existingLeases.put(path, deserializeExistingLeases(data));
-						}
-					}
-				}
+				Map<String, Map<String, ClientLeaseInfo>> topicExistingLeases = loadAndWatchTopicExistingLeases(topic);
+				existingLeases.putAll(topicExistingLeases);
 			}
 		}
 
 		return existingLeases;
 	}
 
+	public Map<String, Map<String, ClientLeaseInfo>> loadAndWatchTopicExistingLeases(String topic) throws Exception {
+		Map<String, Map<String, ClientLeaseInfo>> topicExistingLeases = new HashMap<>();
+
+		CuratorFramework client = m_zkClient.getClient();
+		String topicPath = ZKPaths.makePath(ZKPathUtils.getBrokerLeaseRootZkPath(), topic);
+
+		client.getData().usingWatcher(m_brokerLeaseChangedWatcher).forPath(topicPath);
+		addWatchedTopic(topic);
+
+		List<String> partitions = client.getChildren().forPath(topicPath);
+
+		if (partitions != null && !partitions.isEmpty()) {
+			for (String partition : partitions) {
+				String partitionPath = ZKPaths.makePath(topicPath, partition);
+				byte[] data = client.getData().forPath(partitionPath);
+				if (data != null && data.length != 0) {
+					topicExistingLeases.put(partitionPath, deserializeExistingLeases(data));
+				}
+			}
+		}
+
+		return topicExistingLeases;
+	}
+
 	@Override
 	protected void doInitialize() {
 		m_watcherExecutorService = Executors.newSingleThreadExecutor(HermesThreadFactory.create("BrokerLeaseWatcher",
 		      true));
+		m_brokerLeaseChangedWatcher = new BrokerLeaseChangedWatcher(m_watcherExecutorService, this);
+		m_brokerLeaseAddedWatcher = new BrokerLeaseAddedWatcher(m_watcherExecutorService, this);
 	}
 
-	public boolean containsTopic(String topic) {
-		// TODO Auto-generated method stub
-		return false;
+	public synchronized boolean topicWatched(String topic) {
+		return m_watchedTopics.contains(topic);
+	}
+
+	public synchronized void addWatchedTopic(String topic) {
+		m_watchedTopics.add(topic);
+	}
+
+	public synchronized void removeWatchedTopic(String topic) {
+		m_watchedTopics.remove(topic);
 	}
 
 }
