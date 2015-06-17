@@ -1,12 +1,12 @@
-package com.ctrip.hermes.portal.service.storage;
+package com.ctrip.hermes.metaservice.service.storage;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.portal.pojo.storage.StorageTopic;
-import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
-import com.ctrip.hermes.portal.service.storage.exception.TopicAlreadyExistsException;
-import com.ctrip.hermes.portal.service.storage.exception.TopicIsNullException;
+import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.metaservice.service.storage.exception.TopicAlreadyExistsException;
+import com.ctrip.hermes.metaservice.service.storage.exception.TopicIsNullException;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTopic;
 
 public interface TopicStorageService {
 	/**

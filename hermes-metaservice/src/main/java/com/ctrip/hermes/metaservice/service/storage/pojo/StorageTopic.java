@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.pojo.storage;
+package com.ctrip.hermes.metaservice.service.storage.pojo;
 
 import java.util.HashMap;
 import java.util.List;

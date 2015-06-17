@@ -27,8 +27,8 @@ import com.ctrip.hermes.core.bo.ConsumerView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
-import com.ctrip.hermes.portal.service.ConsumerService;
 
 @Path("/consumers/")
 @Singleton

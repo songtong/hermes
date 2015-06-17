@@ -1,12 +1,12 @@
 <plexus>
 	<components>
 		<component>
-			<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
+			<role>com.ctrip.hermes.metaservice.service.storage.TopicStorageService</role>
 			<role-hint>topic-storage-service</role-hint>
-			<implementation>com.ctrip.hermes.portal.service.storage.DefaultTopicStorageService</implementation>
+			<implementation>com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
+					<role>com.ctrip.hermes.metaservice.service.storage.handler.StorageHandler</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
@@ -14,13 +14,13 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.storage.handler.StorageHandler</role>
+			<role>com.ctrip.hermes.metaservice.service.storage.handler.StorageHandler</role>
 			<role-hint>mysql-storage-handler</role-hint>
-			<implementation>com.ctrip.hermes.portal.service.storage.handler.MysqlStorageHandler</implementation>
+			<implementation>com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.TopicService</role>
-			<implementation>com.ctrip.hermes.portal.service.TopicService</implementation>
+			<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.TopicService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
@@ -29,7 +29,7 @@
 					<role>com.ctrip.hermes.metaservice.service.SchemaService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
+					<role>com.ctrip.hermes.metaservice.service.storage.TopicStorageService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
@@ -65,14 +65,14 @@
 			<implementation>com.ctrip.hermes.metaservice.service.CompileService</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.ConsumerService</role>
-			<implementation>com.ctrip.hermes.portal.service.ConsumerService</implementation>
+			<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.ConsumerService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.storage.TopicStorageService</role>
+					<role>com.ctrip.hermes.metaservice.service.storage.TopicStorageService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
@@ -124,7 +124,7 @@
 					<role>com.ctrip.hermes.portal.console.topic.JspViewer</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.TopicService</role>
+					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
 				</requirement>
 			</requirements>
 		</component>

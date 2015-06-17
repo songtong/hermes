@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service;
+package com.ctrip.hermes.metaservice.service;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -27,10 +27,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
-import com.ctrip.hermes.metaservice.service.SchemaService;
-import com.ctrip.hermes.metaservice.service.ZookeeperService;
-import com.ctrip.hermes.portal.service.storage.TopicStorageService;
+import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 
 @Named
 public class TopicService {
@@ -270,11 +267,11 @@ public class TopicService {
 		return filtered;
 	}
 
-	public Topic getTopic(long topicId) {
+	public Topic findTopicById(long topicId) {
 		return m_metaService.findTopicById(topicId);
 	}
 
-	public Topic getTopic(String topicName) {
+	public Topic findTopicByName(String topicName) {
 		return m_metaService.findTopicByName(topicName);
 	}
 

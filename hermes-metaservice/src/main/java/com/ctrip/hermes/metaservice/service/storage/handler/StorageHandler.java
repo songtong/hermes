@@ -1,11 +1,11 @@
-package com.ctrip.hermes.portal.service.storage.handler;
+package com.ctrip.hermes.metaservice.service.storage.handler;
 
 import java.util.List;
 
-import com.ctrip.hermes.portal.pojo.storage.StorageTable;
-import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
-import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
-import com.ctrip.hermes.portal.service.storage.model.TableModel;
+import com.ctrip.hermes.metaservice.service.storage.exception.DataModelNotMatchException;
+import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.metaservice.service.storage.model.TableModel;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
 
 public interface StorageHandler {
 

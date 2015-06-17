@@ -35,8 +35,8 @@ import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.service.SchemaService;
+import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
-import com.ctrip.hermes.portal.service.TopicService;
 import com.google.common.io.ByteStreams;
 
 @Path("/schemas/")
@@ -77,7 +77,7 @@ public class SchemaResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
-		Topic topic = topicService.getTopic(topicId);
+		Topic topic = topicService.findTopicById(topicId);
 		if (topic == null) {
 			throw new RestException("Topic not found: " + topicId, Status.NOT_FOUND);
 		}

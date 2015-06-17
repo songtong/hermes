@@ -1,6 +1,10 @@
-package com.ctrip.hermes.portal.service.storage.handler;
+package com.ctrip.hermes.metaservice.service.storage.handler;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,11 +15,11 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.portal.pojo.storage.StoragePartition;
-import com.ctrip.hermes.portal.pojo.storage.StorageTable;
-import com.ctrip.hermes.portal.service.storage.exception.DataModelNotMatchException;
-import com.ctrip.hermes.portal.service.storage.exception.StorageHandleErrorException;
-import com.ctrip.hermes.portal.service.storage.model.TableModel;
+import com.ctrip.hermes.metaservice.service.storage.exception.DataModelNotMatchException;
+import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.metaservice.service.storage.model.TableModel;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
 
 @Named(type = StorageHandler.class, value = MysqlStorageHandler.ID)
 public class MysqlStorageHandler implements StorageHandler {

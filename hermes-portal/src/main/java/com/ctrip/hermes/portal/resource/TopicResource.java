@@ -33,8 +33,8 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
+import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
-import com.ctrip.hermes.portal.service.TopicService;
 import com.ctrip.hermes.producer.api.Producer;
 
 @Path("/topics/")
@@ -68,7 +68,7 @@ public class TopicResource {
 
 		Topic topic = topicView.toMetaTopic();
 
-		if (topicService.getTopic(topic.getName()) != null) {
+		if (topicService.findTopicByName(topic.getName()) != null) {
 			throw new RestException("Topic already exists.", Status.CONFLICT);
 		}
 		try {
@@ -132,7 +132,7 @@ public class TopicResource {
 	@Path("{name}")
 	public TopicView getTopic(@PathParam("name") String name) {
 		logger.debug("get topic {}", name);
-		Topic topic = topicService.getTopic(name);
+		Topic topic = topicService.findTopicByName(name);
 		if (topic == null) {
 			throw new RestException("Topic not found: " + name, Status.NOT_FOUND);
 		}
@@ -194,7 +194,7 @@ public class TopicResource {
 
 		Topic topic = topicView.toMetaTopic();
 
-		if (topicService.getTopic(topic.getName()) == null) {
+		if (topicService.findTopicByName(topic.getName()) == null) {
 			throw new RestException("Topic does not exists.", Status.NOT_FOUND);
 		}
 		try {
