@@ -38,12 +38,15 @@ public class BrokerLeaseWatcher extends GuardedWatcher {
 			String path = ZKPathUtils.getBrokerLeaseRootZkPath();
 			List<String> newTopics = client.getChildren().usingWatcher(this).forPath(path);
 
-			List<String> addTopics = findAddedTopics(newTopics);
-			for (String topic : addTopics) {
+			List<String> addedTopics = findAddedTopics(newTopics);
+			for (String topic : addedTopics) {
 				String topicPath = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic);
 				Watcher watcher = new TopicWatcher(m_version, m_guard, m_executor);
 				client.getData().usingWatcher(watcher).forPath(topicPath);
 			}
+
+			m_watchedTopics.clear();
+			m_watchedTopics.addAll(newTopics);
 		} catch (Exception e) {
 			log.error("Error update topic list from ZK", e);
 		}
