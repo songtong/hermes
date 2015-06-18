@@ -30,11 +30,6 @@
 		<appender-ref ref="CONSOLE" />
 	</logger>
 
-	<logger name="com.ctrip.hermes.core.meta.remote">
-		<level value="WARN" />
-		<appender-ref ref="CONSOLE" />
-	</logger>
-
 	<root>
 		<priority value="info" />
 		<appender-ref ref="CONSOLE" />
