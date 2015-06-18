@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
@@ -20,8 +19,8 @@ public class OneBoxTest {
 
 	@Test
 	public void simpleTextMessageTest() throws IOException {
-		String topic = "kafka.OneBox";
-		String group = "group" + RandomStringUtils.randomAlphabetic(5);
+		String topic = "kafka.SimpleTextTopic";
+		String group = "simpleTextMessageTest";
 
 		Producer producer = Producer.getInstance();
 
@@ -43,7 +42,7 @@ public class OneBoxTest {
 					break;
 				}
 
-				String proMsg = RandomStringUtils.randomAlphanumeric(10) + System.currentTimeMillis();
+				String proMsg = "Hello Ctrip " + System.currentTimeMillis();
 				MessageHolder holder = producer.message(topic, null, proMsg);
 				holder.send();
 				System.out.println("Sent: " + proMsg);
@@ -55,8 +54,8 @@ public class OneBoxTest {
 
 	@Test
 	public void simpleAvroMessageTest() throws IOException {
-		String topic = "kafka.AvroTopic";
-		String group = "group" + RandomStringUtils.randomAlphabetic(5);
+		String topic = "kafka.SimpleAvroTopic";
+		String group = "simpleTextMessageTest";
 
 		Producer producer = Producer.getInstance();
 

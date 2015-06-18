@@ -25,7 +25,7 @@ public class KafkaAvroTest {
 
 	// @Test
 	public void testByConsole() throws InterruptedException, ExecutionException, IOException {
-		String topic = "kafka.AvroTopic";
+		String topic = "kafka.SimpleAvroTopic";
 		String group = "avroGroup";
 
 		Producer producer = Producer.getInstance();
@@ -70,7 +70,7 @@ public class KafkaAvroTest {
 
 	@Test
 	public void testByBatch() throws InterruptedException, ExecutionException, IOException {
-		String topic = "kafka.AvroTopic";
+		String topic = "kafka.SimleAvroTopic";
 		String group = "avroGroup";
 
 		Producer producer = Producer.getInstance();

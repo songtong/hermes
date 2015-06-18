@@ -19,7 +19,7 @@ public class ConsumerTest {
 
 	@Test
 	public void testOneConsumerOneGroup() throws IOException {
-		String topic = "kafka.SimpleTopic";
+		String topic = "kafka.SimpleTextTopic";
 		String group = "group1";
 
 		Producer producer = Producer.getInstance();
@@ -55,7 +55,7 @@ public class ConsumerTest {
 
 	@Test
 	public void testTwoConsumerOneGroup() throws IOException {
-		String topic = "kafka.SimpleTopic";
+		String topic = "kafka.SimpleTextTopic";
 		String group = "group1";
 
 		Producer producer = Producer.getInstance();
@@ -106,7 +106,7 @@ public class ConsumerTest {
 
 	@Test
 	public void testTwoConsumerTwoGroup() throws IOException {
-		String topic = "kafka.SimpleTopic";
+		String topic = "kafka.SimpleTextTopic";
 		String group1 = "group1";
 		String group2 = "group2";
 

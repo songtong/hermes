@@ -39,7 +39,7 @@ public class NativeKafkaWithAvroDecoderTest {
 
 	@Test
 	public void testNative() throws IOException, InterruptedException, ExecutionException {
-		String topic = "kafka.AvroTopic";
+		String topic = "kafka.SimpleAvroTopic";
 		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		int msgNum = 100000;

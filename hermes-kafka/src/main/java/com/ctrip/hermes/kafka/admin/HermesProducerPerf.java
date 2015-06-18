@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka.perf;
+package com.ctrip.hermes.kafka.admin;
 
 import java.util.Arrays;
 
@@ -8,7 +8,6 @@ import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
-import com.dianping.cat.Cat;
 
 public class HermesProducerPerf {
 	private static final long NS_PER_MS = 1000000L;
@@ -17,21 +16,14 @@ public class HermesProducerPerf {
 
 	private static final long MIN_SLEEP_NS = 2 * NS_PER_MS;
 
-	public static void main(String[] args) throws Exception {
-		if (args.length < 4) {
-			System.err.println("USAGE: java " + HermesProducerPerf.class.getName()
-			      + " topic_name num_records record_size target_records_sec [prop_name=prop_value]*");
-			System.exit(1);
-		}
+	public HermesProducerPerf(String topicName, long numRecords, int recordSize, int throughput) {
+		this.topicName = topicName;
+		this.numRecords = numRecords;
+		this.recordSize = recordSize;
+		this.throughput = throughput;
+	}
 
-		Cat.initializeByDomain("900777", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
-
-		/* parse args */
-		String topicName = args[0];
-		long numRecords = Long.parseLong(args[1]);
-		int recordSize = Integer.parseInt(args[2]);
-		int throughput = Integer.parseInt(args[3]);
-
+	public void run() {
 		Producer producer = Producer.getInstance();
 
 		/* setup perf test */
@@ -56,7 +48,10 @@ public class HermesProducerPerf {
 				if (sleepDeficitNs >= MIN_SLEEP_NS) {
 					long sleepMs = sleepDeficitNs / 1000000;
 					long sleepNs = sleepDeficitNs - sleepMs * 1000000;
-					Thread.sleep(sleepMs, (int) sleepNs);
+					try {
+						Thread.sleep(sleepMs, (int) sleepNs);
+					} catch (InterruptedException e) {
+					}
 					sleepDeficitNs = 0;
 				}
 			}
@@ -64,6 +59,35 @@ public class HermesProducerPerf {
 
 		/* print final results */
 		stats.printTotal();
+	}
+
+	private String topicName;
+
+	private long numRecords;
+
+	private int recordSize;
+
+	private int throughput;
+
+	public static void showHelp() {
+		System.out.println("USAGE: java " + HermesProducerPerf.class.getName()
+		      + " topic_name num_records record_size target_records_sec [prop_name=prop_value]*");
+	}
+
+	public static void main(String[] args) throws Exception {
+		if (args.length < 4) {
+			showHelp();
+			System.exit(1);
+		}
+
+		/* parse args */
+		String topicName = args[0];
+		long numRecords = Long.parseLong(args[1]);
+		int recordSize = Integer.parseInt(args[2]);
+		int throughput = Integer.parseInt(args[3]);
+
+		HermesProducerPerf perfTest = new HermesProducerPerf(topicName, numRecords, recordSize, throughput);
+		perfTest.run();
 		System.exit(0);
 	}
 
