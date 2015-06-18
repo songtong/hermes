@@ -26,7 +26,7 @@ public class ConsumerExample {
 	}
 
 	private static void init() {
-		Configuration.addResource("hermes-example.properties");
+		Configuration.addResource("hermes.properties");
 		topic = Configuration.get("consumer.topic", "cmessage_fws");
 		groupId = Configuration.get("consumer.groupid", "group1");
 		Cat.initializeByDomain("hermes", 2280, 80, "cat.ctripcorp.com");

@@ -9,6 +9,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Triple;
@@ -20,9 +21,19 @@ import com.ctrip.hermes.rest.common.RestConstant;
 
 @Named
 public class CmessageTransferService implements Initializable {
+
+	private static final org.slf4j.Logger log = LoggerFactory.getLogger(CmessageTransferService.class);
+
 	@Override
 	public void initialize() throws InitializationException {
 		defaultTopic = env.getGlobalConfig().getProperty("cmessage.topic");
+
+		if (null == defaultTopic) {
+			defaultTopic = "cmessage_fws";
+			log.error("Cmessage's defaultTopic haven't been set. Initialise that to [cmessage_fws]." +
+					  " Set \"cmessage.topic\" in hermes.properties to fix this.");
+		}
+
 		producer = Producer.getInstance();
 
 		new Thread(new Runnable() {
@@ -51,6 +62,7 @@ public class CmessageTransferService implements Initializable {
 			}
 		}).start();
 	}
+
 	private static Logger logger = LogManager.getLogger(CmessageTransferService.class);
 
 	private BlockingQueue<Triple<String, String, String>> queue = new LinkedBlockingDeque<>(20000);

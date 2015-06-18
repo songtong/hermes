@@ -37,6 +37,10 @@
 		<appender-ref ref="CONSOLE" />
 	</logger>
 
+	<logger name="com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler">
+		<level value="ERROR" />
+		<appender-ref ref="CONSOLE" />
+	</logger>
 	<root>
 		<priority value="info" />
 		<appender-ref ref="CONSOLE" />

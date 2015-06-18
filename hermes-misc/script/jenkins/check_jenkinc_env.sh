@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 DATASOURCE_FILE="/data/appdatas/hermes/datasources.xml"
 CAT_FILE="/opt/ctrip/data/cat/client.xml"
 MAVEN_PATH="/opt/ctrip/maven/apache-maven-3.2.5"
