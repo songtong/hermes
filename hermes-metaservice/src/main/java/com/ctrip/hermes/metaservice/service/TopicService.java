@@ -241,9 +241,13 @@ public class TopicService {
 		}
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
-			m_topicStorageService.dropTopicStorage(topic);
-			m_zookeeperService.deleteConsumerLeaseTopicParentZkPath(topic.getName());
-			m_zookeeperService.deleteBrokerLeaseTopicParentZkPath(topic.getName());
+			try {
+				m_topicStorageService.dropTopicStorage(topic);
+				m_zookeeperService.deleteConsumerLeaseTopicParentZkPath(topic.getName());
+				m_zookeeperService.deleteBrokerLeaseTopicParentZkPath(topic.getName());
+			} catch (Exception e) {
+				throw new RuntimeException("Delete topic failedddd:" + e.getMessage());
+			}
 		}
 		m_metaService.updateMeta(meta);
 	}

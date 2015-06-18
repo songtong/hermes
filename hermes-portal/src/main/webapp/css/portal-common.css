@@ -9,10 +9,10 @@
 .op-alert {
 	position: fixed;
 	bottom: 25%;
-	right: 0;
+	right: 2%;
 	margin-bottom: 0;
-	font-size: 1.2em;
-	padding: 1em 1.3em;
+	font-size: 0.8em;
+	padding: 1em 1em;
 	z-index: 2000;
 }
 
