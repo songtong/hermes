@@ -141,11 +141,13 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 					if (result) {
 						topic_resource.remove({
 							"name" : name
-						}).$promise.then(function(remove_result) {
+						}, function(remove_result) {
 							topic_resource.query().$promise.then(function(query_result) {
 								reload_table(scope, query_result);
 								show_op_info.show("删除Topic：" + name + "成功！");
 							});
+						}, function(error_result) {
+							show_op_info.show("删除" + name + "失败: " + error_result.data);
 						});
 					}
 				});

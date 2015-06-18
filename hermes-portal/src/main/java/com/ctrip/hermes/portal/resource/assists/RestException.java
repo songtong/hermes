@@ -6,6 +6,8 @@ import javax.ws.rs.core.Response;
 
 import org.codehaus.plexus.util.ExceptionUtils;
 
+import com.alibaba.fastjson.JSON;
+
 public class RestException extends WebApplicationException {
 	private static final long serialVersionUID = -5416250813243019949L;
 
@@ -26,6 +28,6 @@ public class RestException extends WebApplicationException {
 	}
 
 	public RestException(String content, Response.Status status) {
-		super(Response.status(status).entity(content).type(MediaType.APPLICATION_JSON).build());
+		super(Response.status(status).entity(JSON.toJSONString(content)).type(MediaType.APPLICATION_JSON).build());
 	}
 }

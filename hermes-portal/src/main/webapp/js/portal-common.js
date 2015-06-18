@@ -7,6 +7,8 @@ var show_op_info = function() {
 	};
 	that.show = function(text) {
 		clearTimeout(hideHandler);
+//		info_elem.attr('class', 'op-alert alert alert-'
+//				+ (success ? 'success' : 'danger'));
 		info_elem.find("span").html(text);
 		info_elem.delay(200).fadeIn().delay(4000).fadeOut();
 	};
