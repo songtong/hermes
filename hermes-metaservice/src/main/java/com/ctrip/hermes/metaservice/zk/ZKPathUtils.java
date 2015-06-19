@@ -34,8 +34,12 @@ public class ZKPathUtils {
 
 	private static final String BROKER_LEASE_PATH_PATTERN = BROKER_LEASE_PATH_PREFIX_PATTERN + "/%s";
 
-	public static String getMetaVersionPath() {
-		return "/meta-version";
+	public static String getBaseMetaVersionPath() {
+		return "/base-meta-version";
+	}
+
+	public static String getMetaInfoPath() {
+		return "/meta-info";
 	}
 
 	public static List<String> getBrokerLeaseZkPaths(Topic topic) {

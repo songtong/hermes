@@ -25,6 +25,7 @@ import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator
 import com.ctrip.hermes.metaserver.meta.FollowerMetaUpdater;
 import com.ctrip.hermes.metaserver.meta.LeaderMetaUpdater;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
+import com.ctrip.hermes.metaserver.meta.MetaLoader;
 import com.ctrip.hermes.metaserver.meta.watcher.DefaultWatcherGuard;
 import com.ctrip.hermes.metaserver.meta.watcher.ZkReader;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
@@ -65,6 +66,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(MetaUpdaterBootstrapListener.class));
 		all.add(A(DefaultWatcherGuard.class));
 		all.add(A(ZkReader.class));
+		all.add(A(MetaLoader.class));
 
 		all.add(A(LeaderMetaUpdater.class));
 

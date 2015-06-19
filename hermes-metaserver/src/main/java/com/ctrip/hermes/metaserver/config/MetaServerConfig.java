@@ -59,6 +59,10 @@ public class MetaServerConfig {
 		return JSON.toJSONString(new HostPort(Networks.forIp().getLocalHostAddress(), getMetaServerPort()));
 	}
 
+	public String getMetaServerHost() {
+		return Networks.forIp().getLocalHostAddress();
+	}
+
 	public int getMetaServerPort() {
 		String port = System.getProperty("metaServerPort");
 		if (StringUtils.isBlank(port)) {

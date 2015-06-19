@@ -50,10 +50,10 @@ public class DefaultZookeeperService implements ZookeeperService {
 	}
 
 	@Override
-	public void updateZkMetaVersion(int version) throws Exception {
-		ensurePath(ZKPathUtils.getMetaVersionPath());
+	public void updateZkBaseMetaVersion(long version) throws Exception {
+		ensurePath(ZKPathUtils.getBaseMetaVersionPath());
 
-		m_zkClient.getClient().setData().forPath(ZKPathUtils.getMetaVersionPath(), ZKSerializeUtils.serialize(version));
+		m_zkClient.getClient().setData().forPath(ZKPathUtils.getBaseMetaVersionPath(), ZKSerializeUtils.serialize(version));
 	}
 
 	@Override
