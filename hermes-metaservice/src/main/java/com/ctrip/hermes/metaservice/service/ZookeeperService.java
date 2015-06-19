@@ -17,7 +17,7 @@ public interface ZookeeperService {
 
 	public void deleteConsumerLeaseZkPath(Topic t, String consumerGroupName);
 
-	public void updateZkMetaVersion(int version) throws Exception;
+	public void updateZkBaseMetaVersion(long version) throws Exception;
 
 	public void persist(String path, byte[] data, String... touchPaths) throws Exception;
 

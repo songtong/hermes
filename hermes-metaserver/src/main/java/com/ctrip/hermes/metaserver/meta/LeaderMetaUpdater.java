@@ -13,16 +13,20 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.metaserver.build.BuildConstants;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.meta.watcher.BrokerLeaseWatcher;
 import com.ctrip.hermes.metaserver.meta.watcher.MetaServerListWatcher;
 import com.ctrip.hermes.metaserver.meta.watcher.MetaVersionWatcher;
 import com.ctrip.hermes.metaserver.meta.watcher.TopicWatcher;
 import com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard;
 import com.ctrip.hermes.metaserver.meta.watcher.ZkReader;
+import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
+import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -42,6 +46,18 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 	@Inject
 	private ZkReader m_zkReader;
 
+	@Inject
+	private MetaLoader m_metaLoader;
+
+	@Inject
+	private MetaHolder m_metaHolder;
+
+	@Inject
+	private MetaServerConfig m_config;
+
+	@Inject
+	private ZookeeperService m_zkService;
+
 	private ExecutorService m_watcherExecutor;
 
 	@Override
@@ -52,12 +68,37 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 	@Override
 	public synchronized void start(ClusterStateHolder stateHolder) {
 		try {
+			long newMetaVersion = loadMeta();
+			saveMetaVersionToZk(newMetaVersion);
 			addMetaVersionWatcher();
 			addTopicWatchers();
 			addMetaServerListWatcher();
 		} catch (Exception e) {
 			log.error("Error add watcher to zk", e);
 		}
+	}
+
+	private void saveMetaVersionToZk(long newMetaVersion) throws Exception {
+		MetaInfo metaInfo = new MetaInfo(m_config.getMetaServerHost(), m_config.getMetaServerPort(), newMetaVersion);
+		m_zkService.persist(ZKPathUtils.getMetaInfoPath(), ZKSerializeUtils.serialize(metaInfo));
+	}
+
+	private long loadMeta() throws Exception {
+		Meta mergedMeta = m_metaLoader.load();
+		MetaInfo curMetaInfo = ZKSerializeUtils.deserialize(
+		      m_zkClient.getClient().getData().forPath(ZKPathUtils.getMetaInfoPath()), MetaInfo.class);
+
+		long newMetaVersion = System.currentTimeMillis();
+		// may be same due to different machine time
+		if (curMetaInfo != null && curMetaInfo.getTimestamp() == newMetaVersion) {
+			newMetaVersion++;
+		}
+
+		// bump version to make new meta effective
+		mergedMeta.setVersion(newMetaVersion);
+		m_metaHolder.setMeta(mergedMeta);
+
+		return newMetaVersion;
 	}
 
 	private void addMetaServerListWatcher() throws Exception {
@@ -83,7 +124,7 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 	}
 
 	private void addMetaVersionWatcher() throws Exception {
-		String path = ZKPathUtils.getMetaVersionPath();
+		String path = ZKPathUtils.getBaseMetaVersionPath();
 		Watcher watcher = new MetaVersionWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor);
 		m_zkClient.getClient().getData().usingWatcher(watcher).forPath(path);
 	}

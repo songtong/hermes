@@ -41,9 +41,7 @@ public class ZkReader {
 			int partitionId = Integer.parseInt(partitionPath);
 			Endpoint endpoint = makeEndpoint(leaseMap);
 
-			if (endpoint != null) {
-				result.put(partitionId, endpoint);
-			}
+			result.put(partitionId, endpoint);
 		}
 
 		return result;

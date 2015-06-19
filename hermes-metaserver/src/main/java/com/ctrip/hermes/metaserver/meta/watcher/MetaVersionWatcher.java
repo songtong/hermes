@@ -35,7 +35,7 @@ public class MetaVersionWatcher extends GuardedWatcher {
 
 	private void innerProcess(WatchedEvent event) throws Exception {
 		CuratorFramework client = PlexusComponentLocator.lookup(ZKClient.class).getClient();
-		client.getData().usingWatcher(this).forPath(ZKPathUtils.getMetaVersionPath());
+		client.getData().usingWatcher(this).forPath(ZKPathUtils.getBaseMetaVersionPath());
 
 		MetaService metaService = PlexusComponentLocator.lookup(MetaService.class);
 		Meta meta = metaService.findLatestMeta();

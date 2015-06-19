@@ -8,6 +8,7 @@
 		<entity-ref name="codec" type="map" names="codecs" />
 		<entity-ref name="app" type="map" names="apps" />
 		<entity-ref name="server" type="map" names="servers" />
+		<attribute name="version" value-type="long" />
 	</entity>
 
 	<entity name="consumer-group">

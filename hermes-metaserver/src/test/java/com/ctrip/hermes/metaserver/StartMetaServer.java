@@ -17,6 +17,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaservice.service.MetaService;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
+import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 import com.dianping.cat.Cat;
 
 @RunWith(JUnit4.class)
@@ -54,8 +55,9 @@ public class StartMetaServer extends JettyServer {
 				zkService.ensureConsumerLeaseZkPath(topic);
 			}
 		}
-		zkService.updateZkMetaVersion(meta.getVersion());
+		zkService.updateZkBaseMetaVersion(meta.getVersion());
 
+		zkService.ensurePath(ZKPathUtils.getMetaInfoPath());
 	}
 
 	@Override

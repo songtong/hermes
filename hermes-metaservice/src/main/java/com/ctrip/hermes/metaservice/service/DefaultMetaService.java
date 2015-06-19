@@ -47,7 +47,7 @@ public class DefaultMetaService implements MetaService {
 			dalMeta.setValue(JSON.toJSONString(meta));
 			dalMeta.setDataChangeLastTime(new Date(System.currentTimeMillis()));
 			m_metaDao.insert(dalMeta);
-			m_zookeeperService.updateZkMetaVersion(meta.getVersion());
+			m_zookeeperService.updateZkBaseMetaVersion(meta.getVersion());
 		} catch (Exception e) {
 			m_logger.warn("Update meta failed", e);
 			throw new RuntimeException("Update meta failed.", e);
