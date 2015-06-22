@@ -39,6 +39,7 @@ public class DefaultBrokerRegistry implements BrokerRegistry, Initializable {
 			      .name(m_config.getRegistryName(null))//
 			      .address(Networks.forIp().getLocalHostAddress())//
 			      .port(m_config.getListeningPort())//
+			      .id(m_config.getSessionId())//
 			      .build();
 
 			m_serviceDiscovery = ServiceDiscoveryBuilder.builder(Void.class)//

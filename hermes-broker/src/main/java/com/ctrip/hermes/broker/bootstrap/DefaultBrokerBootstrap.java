@@ -43,7 +43,7 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (future.isSuccess()) {
 					m_registry.start();
-					log.info("Broker started at port {}.", m_config.getListeningPort());
+					log.info("Broker started at port {} with name {}.", m_config.getListeningPort(), m_config.getSessionId());
 				} else {
 					log.error("Failed to start broker.");
 				}
