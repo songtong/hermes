@@ -45,8 +45,11 @@ public class ConsumerAssignmentHolder implements Initializable {
 	@Inject
 	private ActiveConsumerListHolder m_activeConsumerListHolder;
 
-	private AtomicReference<HashMap<Pair<String, String>, Assignment<Integer>>> m_assignments = new AtomicReference<>(
-	      new HashMap<Pair<String, String>, Assignment<Integer>>());
+	private AtomicReference<Map<Pair<String, String>, Assignment<Integer>>> m_assignments = new AtomicReference<>();
+
+	public ConsumerAssignmentHolder() {
+		m_assignments.set(new HashMap<Pair<String, String>, Assignment<Integer>>());
+	}
 
 	public Assignment<Integer> getAssignment(Pair<String, String> topicGroup) {
 		return m_assignments.get().get(topicGroup);
@@ -120,8 +123,8 @@ public class ConsumerAssignmentHolder implements Initializable {
 
 				Map<Integer, Map<String, ClientContext>> newAssignment = null;
 				if (consumerGroup.isOrderedConsume()) {
-					newAssignment = m_partitionAssigningStrategy.assign(partitions, consumers, originAssignment == null ? null
-					      : originAssignment.getAssigment());
+					newAssignment = m_partitionAssigningStrategy.assign(partitions, consumers,
+					      originAssignment == null ? null : originAssignment.getAssigment());
 				} else {
 					newAssignment = nonOrderedConsumeAssign(partitions, consumers);
 				}

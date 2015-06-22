@@ -17,6 +17,10 @@ public class Assignment<Key> {
 		return clients != null && !clients.isEmpty() && clients.keySet().contains(client);
 	}
 
+	public Map<String, ClientContext> getAssignment(Key key) {
+		return m_assigment.get(key);
+	}
+
 	public void addAssignment(Key key, Map<String, ClientContext> clients) {
 		if (!m_assigment.containsKey(key)) {
 			m_assigment.put(key, new HashMap<String, ClientContext>());

@@ -13,6 +13,9 @@ public class ClientContext {
 
 	private long lastHeartbeatTime;
 
+	public ClientContext() {
+	}
+
 	public ClientContext(String name, String ip, int port, long lastHeartbeatTime) {
 		m_name = name;
 		m_ip = ip;

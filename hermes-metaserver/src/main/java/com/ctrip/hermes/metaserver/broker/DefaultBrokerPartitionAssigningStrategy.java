@@ -8,7 +8,10 @@ import java.util.Map.Entry;
 
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 
 /**
@@ -19,27 +22,37 @@ import com.ctrip.hermes.metaserver.commons.ClientContext;
 public class DefaultBrokerPartitionAssigningStrategy implements BrokerPartitionAssigningStrategy {
 
 	@Override
-	public Map<Integer, Map<String, ClientContext>> assign(List<Partition> partitions,
-	      Map<String, ClientContext> brokers, Map<Integer, Map<String, ClientContext>> originAssignment) {
-		Map<Integer, Map<String, ClientContext>> result = new HashMap<>();
+	public Map<String, Assignment<Integer>> assign(Map<String, ClientContext> brokers, List<Topic> topics,
+	      Map<String, Assignment<Integer>> originAssignment) {
+		Map<String, Assignment<Integer>> newAssignments = new HashMap<>();
+		if (brokers != null && !brokers.isEmpty()) {
+			if (topics != null && !topics.isEmpty()) {
+				List<Entry<String, ClientContext>> brokerEntries = new ArrayList<>(brokers.entrySet());
 
-		if (partitions == null || partitions.isEmpty() || brokers == null || brokers.isEmpty()) {
-			return result;
+				int brokerPos = 0;
+				int brokerCount = brokers.size();
+				for (Topic topic : topics) {
+					if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+						List<Partition> partitions = topic.getPartitions();
+						if (partitions != null && !partitions.isEmpty()) {
+
+							Assignment<Integer> assignment = new Assignment<>();
+							newAssignments.put(topic.getName(), assignment);
+
+							for (Partition partition : partitions) {
+								Entry<String, ClientContext> brokerEntry = brokerEntries.get(brokerPos);
+								brokerPos = (brokerPos + 1) % brokerCount;
+								Map<String, ClientContext> broker = new HashMap<>();
+								broker.put(brokerEntry.getKey(), brokerEntry.getValue());
+								assignment.addAssignment(partition.getId(), broker);
+							}
+
+						}
+					}
+				}
+			}
 		}
-		ArrayList<Entry<String, ClientContext>> brokerEntries = new ArrayList<>(brokers.entrySet());
-		int brokerCount = brokerEntries.size();
 
-		for (Partition partition : partitions) {
-			result.put(partition.getId(), new HashMap<String, ClientContext>());
-		}
-
-		int brokerPos = 0;
-		for (Partition partition : partitions) {
-			Entry<String, ClientContext> entry = brokerEntries.get(brokerPos);
-			result.get(partition.getId()).put(entry.getKey(), entry.getValue());
-			brokerPos = (brokerPos + 1) % brokerCount;
-		}
-
-		return result;
+		return newAssignments;
 	}
 }

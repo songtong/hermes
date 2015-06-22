@@ -80,13 +80,13 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 
 	private void saveMetaVersionToZk(long newMetaVersion) throws Exception {
 		MetaInfo metaInfo = new MetaInfo(m_config.getMetaServerHost(), m_config.getMetaServerPort(), newMetaVersion);
-		m_zkService.persist(ZKPathUtils.getMetaInfoPath(), ZKSerializeUtils.serialize(metaInfo));
+		m_zkService.persist(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
 	}
 
 	private long loadMeta() throws Exception {
 		Meta mergedMeta = m_metaLoader.load();
 		MetaInfo curMetaInfo = ZKSerializeUtils.deserialize(
-		      m_zkClient.getClient().getData().forPath(ZKPathUtils.getMetaInfoPath()), MetaInfo.class);
+		      m_zkClient.getClient().getData().forPath(ZKPathUtils.getMetaInfoZkPath()), MetaInfo.class);
 
 		long newMetaVersion = System.currentTimeMillis();
 		// may be same due to different machine time
@@ -102,7 +102,7 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 	}
 
 	private void addMetaServerListWatcher() throws Exception {
-		String path = ZKPathUtils.getMetaServersPath();
+		String path = ZKPathUtils.getMetaServersZkPath();
 		Watcher watcher = new MetaServerListWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor);
 		m_zkClient.getClient().getChildren().usingWatcher(watcher).forPath(path);
 	}
@@ -116,7 +116,6 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 			Watcher watcher = new TopicWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor);
 			m_zkClient.getClient().getData().usingWatcher(watcher).forPath(path);
 		}
-
 		// watch topic's parent node to add watcher to newly added topic
 		String path = ZKPathUtils.getBrokerLeaseRootZkPath();
 		Watcher watcher = new BrokerLeaseWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor, topics);
@@ -124,7 +123,7 @@ public class LeaderMetaUpdater implements MetaUpdater, Initializable {
 	}
 
 	private void addMetaVersionWatcher() throws Exception {
-		String path = ZKPathUtils.getBaseMetaVersionPath();
+		String path = ZKPathUtils.getBaseMetaVersionZkPath();
 		Watcher watcher = new MetaVersionWatcher(m_watcherGuard.getVersion(), m_watcherGuard, m_watcherExecutor);
 		m_zkClient.getClient().getData().usingWatcher(watcher).forPath(path);
 	}

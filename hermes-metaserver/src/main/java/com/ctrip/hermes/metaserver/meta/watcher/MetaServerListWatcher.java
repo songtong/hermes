@@ -30,7 +30,7 @@ public class MetaServerListWatcher extends GuardedWatcher {
 			MetaHolder metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
 			ZkReader zkReader = PlexusComponentLocator.lookup(ZkReader.class);
 			CuratorFramework client = PlexusComponentLocator.lookup(ZKClient.class).getClient();
-			client.getChildren().usingWatcher(this).forPath(ZKPathUtils.getMetaServersPath());
+			client.getChildren().usingWatcher(this).forPath(ZKPathUtils.getMetaServersZkPath());
 			metaHolder.update(zkReader.listMetaServers());
 		} catch (Exception e) {
 			log.error("Error update metaserver list from zk", e);

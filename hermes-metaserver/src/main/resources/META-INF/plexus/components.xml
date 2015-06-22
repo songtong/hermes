@@ -173,6 +173,17 @@
 		<component>
 			<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
 			<implementation>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.SubscriptionService</role>
@@ -272,6 +283,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -283,6 +297,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -299,6 +316,28 @@
 		<component>
 			<role>com.ctrip.hermes.metaserver.broker.BrokerAssigner</role>
 			<implementation>com.ctrip.hermes.metaserver.broker.DefaultBrokerAssigner</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentChangedWatcher</role>
+			<role-hint>EndpointUpdater</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.meta.watcher.EndpointUpdateBrokerAssignmentChangedWatcher</implementation>
 		</component>
 	</components>
 </plexus>

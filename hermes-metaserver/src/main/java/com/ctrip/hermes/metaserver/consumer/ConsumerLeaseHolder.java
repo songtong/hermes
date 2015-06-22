@@ -90,8 +90,9 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 					for (String group : groups) {
 						String groupPath = ZKPaths.makePath(partitionPath, group);
 						byte[] data = client.getData().forPath(groupPath);
-						if (data != null && data.length != 0) {
-							topicExistingLeases.put(groupPath, deserializeExistingLeases(data));
+						Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(data);
+						if (existingLeases != null) {
+							topicExistingLeases.put(groupPath, existingLeases);
 						}
 					}
 				}

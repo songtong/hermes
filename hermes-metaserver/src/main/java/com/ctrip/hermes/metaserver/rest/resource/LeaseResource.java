@@ -226,25 +226,27 @@ public class LeaseResource {
 
 	private LeaseAcquireResponse proxyToAnotherMetaServerIfNecessary(String topic, String uri,
 	      Map<String, String> params, Object payload) {
-		TopicAssignmentResult assignment = m_topicAssignmentHolder.findAssignment(topic);
-
-		if (assignment != null) {
-			if (assignment.isAssignToMe()) {
-				return null;
-			} else {
-				String host = assignment.getResponsorHost();
-				int port = assignment.getResponsorPort();
-
-				if (!StringUtils.isBlank(host) && port > 0) {
-					if (log.isDebugEnabled()) {
-						log.debug("Proxy passing to http://{}:{}{}.(status={}}).", host, port, uri);
-					}
-					return proxyPass(host, port, uri, params, payload);
-				}
-			}
-		}
-
-		return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_ASSIGNMENT_DELAY_TIME_MILLIS);
+		// TopicAssignmentResult assignment = m_topicAssignmentHolder.findAssignment(topic);
+		//
+		// if (assignment != null) {
+		// if (assignment.isAssignToMe()) {
+		// return null;
+		// } else {
+		// String host = assignment.getResponsorHost();
+		// int port = assignment.getResponsorPort();
+		//
+		// if (!StringUtils.isBlank(host) && port > 0) {
+		// if (log.isDebugEnabled()) {
+		// log.debug("Proxy passing to http://{}:{}{}.(status={}}).", host, port, uri);
+		// }
+		// return proxyPass(host, port, uri, params, payload);
+		// }
+		// }
+		// }
+		//
+		// return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_ASSIGNMENT_DELAY_TIME_MILLIS);
+		// TODO
+		return null;
 	}
 
 	private LeaseAcquireResponse proxyPass(String host, int port, String uri, Map<String, String> params, Object payload) {

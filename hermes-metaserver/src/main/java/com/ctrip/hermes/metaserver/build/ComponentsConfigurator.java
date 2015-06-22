@@ -29,6 +29,7 @@ import com.ctrip.hermes.metaserver.meta.FollowerMetaUpdater;
 import com.ctrip.hermes.metaserver.meta.LeaderMetaUpdater;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaLoader;
+import com.ctrip.hermes.metaserver.meta.watcher.EndpointUpdateBrokerAssignmentChangedWatcher;
 import com.ctrip.hermes.metaserver.meta.watcher.ZkReader;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
 
@@ -75,6 +76,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(BrokerAssignerBootstrapListener.class));
 		all.add(A(DefaultBrokerAssigner.class));
+
+		all.add(A(EndpointUpdateBrokerAssignmentChangedWatcher.class));
 
 		return all;
 	}

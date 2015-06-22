@@ -88,4 +88,12 @@ public class MetaServerConfig {
 	public int getProxyPassReadTimeout() {
 		return 5000;
 	}
+
+	public String getBrokerRegistryBasePath() {
+		return "brokers";
+	}
+
+	public String getBrokerRegistryName(String name) {
+		return "default";
+	}
 }
