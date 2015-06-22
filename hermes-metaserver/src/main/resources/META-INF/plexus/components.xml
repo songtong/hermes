@@ -144,49 +144,13 @@
 					<role>com.ctrip.hermes.core.service.SystemClockService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</role>
-			<implementation>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.service.SystemClockService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
 			<implementation>com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy</implementation>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
-			<implementation>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</role>
-				</requirement>
-			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</role>

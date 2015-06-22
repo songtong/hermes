@@ -9,7 +9,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.metaserver.commons.BaseAssignmentHolder;
+import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.LeaseOperationCallback;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
@@ -45,13 +45,12 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 
 		heartbeat(tpg, consumerName, ip, port);
 
-		Pair<String, String> key = new Pair<>(tpg.getTopic(), tpg.getGroupId());
-		BaseAssignmentHolder<Pair<String, String>, Integer>.Assignment topicAssignment = m_assignmentHolder
-		      .getAssignment(key);
-		if (topicAssignment == null) {
+		Pair<String, String> topicGroup = new Pair<>(tpg.getTopic(), tpg.getGroupId());
+		Assignment<Integer> topicGroupAssignment = m_assignmentHolder.getAssignment(topicGroup);
+		if (topicGroupAssignment == null) {
 			return topicConsumerGroupNoAssignment();
 		} else {
-			if (topicAssignment.isAssignTo(tpg.getPartition(), consumerName)) {
+			if (topicGroupAssignment.isAssignTo(tpg.getPartition(), consumerName)) {
 				return acquireLease(tpg, consumerName, ip, port);
 			} else {
 				return topicPartitionNotAssignToConsumer(tpg);
@@ -65,13 +64,12 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 
 		heartbeat(tpg, consumerName, ip, port);
 
-		Pair<String, String> key = new Pair<>(tpg.getTopic(), tpg.getGroupId());
-		BaseAssignmentHolder<Pair<String, String>, Integer>.Assignment topicAssignment = m_assignmentHolder
-		      .getAssignment(key);
-		if (topicAssignment == null) {
+		Pair<String, String> topicGroup = new Pair<>(tpg.getTopic(), tpg.getGroupId());
+		Assignment<Integer> topicGroupAssignment = m_assignmentHolder.getAssignment(topicGroup);
+		if (topicGroupAssignment == null) {
 			return topicConsumerGroupNoAssignment();
 		} else {
-			if (topicAssignment.isAssignTo(tpg.getPartition(), consumerName)) {
+			if (topicGroupAssignment.isAssignTo(tpg.getPartition(), consumerName)) {
 				return renewLease(tpg, consumerName, leaseId, ip, port);
 			} else {
 				return topicPartitionNotAssignToConsumer(tpg);

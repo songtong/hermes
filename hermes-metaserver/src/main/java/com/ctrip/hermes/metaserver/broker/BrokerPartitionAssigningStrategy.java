@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.metaserver.commons.ActiveClientList.ClientContext;
+import com.ctrip.hermes.metaserver.commons.ClientContext;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
