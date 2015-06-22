@@ -21,6 +21,11 @@
 			<artifactId>cat-client</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
@@ -80,11 +85,6 @@
 			<groupId>org.unidal.framework</groupId>
 			<artifactId>test-framework</artifactId>
 			<version>2.1.0</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.curator</groupId>
-			<artifactId>curator-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -168,7 +168,7 @@
 				</executions>
 				<inherited>true</inherited>
 			</plugin>
-			<!--Configure hermes.properties and war name-->
+			<!--Configure hermes.properties and war name -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>

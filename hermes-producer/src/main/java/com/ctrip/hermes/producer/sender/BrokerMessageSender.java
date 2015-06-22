@@ -111,14 +111,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					} catch (Exception e) {
 						// ignore
 						if (log.isDebugEnabled()) {
-							log.debug("Exception occured, ignore it", e);
+							log.debug("Exception occurred, ignore it", e);
 						}
 					}
 				}
 			} catch (Exception e) {
 				// ignore
 				if (log.isDebugEnabled()) {
-					log.debug("Exception occured, ignore it", e);
+					log.debug("Exception occurred, ignore it", e);
 				}
 			}
 
@@ -164,7 +164,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			} catch (Exception e) {
 				// ignore
 				if (log.isDebugEnabled()) {
-					log.debug("Exception occured, ignore it", e);
+					log.debug("Exception occurred, ignore it", e);
 				}
 			} finally {
 				m_running.set(false);

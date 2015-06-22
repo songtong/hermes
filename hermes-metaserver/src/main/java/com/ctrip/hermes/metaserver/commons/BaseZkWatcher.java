@@ -15,7 +15,7 @@ import org.apache.zookeeper.Watcher.Event.EventType;
  */
 public abstract class BaseZkWatcher implements Watcher {
 
-	private ExecutorService m_executorService;
+	protected ExecutorService m_executorService;
 
 	private Set<EventType> m_acceptedEventTypes = new HashSet<>();
 
@@ -28,7 +28,7 @@ public abstract class BaseZkWatcher implements Watcher {
 
 	@Override
 	public void process(final WatchedEvent event) {
-		if (m_acceptedEventTypes.isEmpty() || m_acceptedEventTypes.contains(event.getType())) {
+		if (conditionSatisfy(event) && eventTypeMatch(event)) {
 			m_executorService.submit(new Runnable() {
 
 				@Override
@@ -37,6 +37,14 @@ public abstract class BaseZkWatcher implements Watcher {
 				}
 			});
 		}
+	}
+
+	protected boolean conditionSatisfy(final WatchedEvent event) {
+		return true;
+	}
+
+	protected boolean eventTypeMatch(final WatchedEvent event) {
+		return m_acceptedEventTypes.isEmpty() || m_acceptedEventTypes.contains(event.getType());
 	}
 
 	protected abstract void doProcess(WatchedEvent event);

@@ -42,7 +42,7 @@ public class DefaultConsumerPipelineSink implements PipelineSink<Void> {
 			consumer.onMessage(msgs);
 		} catch (Throwable e) {
 			log.error(
-			      "Uncaught exception occured while calling MessageListener's onMessage method, will nack all messages which handled by this call.",
+			      "Uncaught exception occurred while calling MessageListener's onMessage method, will nack all messages which handled by this call.",
 			      e);
 			for (ConsumerMessage<?> msg : msgs) {
 				msg.nack();

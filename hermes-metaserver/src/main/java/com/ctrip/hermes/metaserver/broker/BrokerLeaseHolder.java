@@ -84,8 +84,9 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			for (String partition : partitions) {
 				String partitionPath = ZKPaths.makePath(topicPath, partition);
 				byte[] data = client.getData().forPath(partitionPath);
-				if (data != null && data.length != 0) {
-					topicExistingLeases.put(partitionPath, deserializeExistingLeases(data));
+				Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(data);
+				if (existingLeases != null) {
+					topicExistingLeases.put(partitionPath, existingLeases);
 				}
 			}
 		}

@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metaserver.commons.GuardedWatcher;
+import com.ctrip.hermes.metaserver.commons.WatcherGuard;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 
@@ -41,7 +43,7 @@ public class BrokerLeaseWatcher extends GuardedWatcher {
 			List<String> addedTopics = findAddedTopics(newTopics);
 			for (String topic : addedTopics) {
 				String topicPath = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic);
-				Watcher watcher = new TopicWatcher(m_version, m_guard, m_executor);
+				Watcher watcher = new TopicWatcher(m_version, m_guard, m_executorService);
 				client.getData().usingWatcher(watcher).forPath(topicPath);
 			}
 

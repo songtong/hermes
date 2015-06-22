@@ -27,6 +27,11 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.zk.ZKConfig</role>
 			<implementation>com.ctrip.hermes.metaservice.zk.ZKConfig</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>

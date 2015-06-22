@@ -50,7 +50,7 @@ public class ConsumerLeaseChangedWatcher extends BaseZkWatcher {
 			}
 
 		} catch (Exception e) {
-			log.error("Exception occured while handling consumer lease topic changed check.", e);
+			log.error("Exception occurred while handling consumer lease topic changed check.", e);
 		}
 	}
 

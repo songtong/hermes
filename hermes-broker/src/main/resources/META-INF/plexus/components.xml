@@ -14,6 +14,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.registry.BrokerRegistry</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -257,6 +260,36 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.broker.registry.BrokerRegistry</role>
+			<implementation>com.ctrip.hermes.broker.registry.DefaultBrokerRegistry</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.zk.ZKClient</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.broker.zk.ZKClient</role>
+			<implementation>com.ctrip.hermes.broker.zk.ZKClient</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.zk.ZKConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.broker.zk.ZKConfig</role>
+			<implementation>com.ctrip.hermes.broker.zk.ZKConfig</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>

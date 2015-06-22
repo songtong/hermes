@@ -54,7 +54,11 @@ public class MetaHolder implements Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_updateTaskExecutor = Executors.newFixedThreadPool(1, HermesThreadFactory.create("RefreshMeta", true));
+		m_updateTaskExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("RefreshMeta", true));
+	}
+
+	public void setBaseMeta(Meta baseMeta) {
+		m_baseCache.set(baseMeta);
 	}
 
 	public void update(final Meta meta) {
@@ -69,6 +73,7 @@ public class MetaHolder implements Initializable {
 	}
 
 	public void update(final List<Server> newServers) {
+		m_serverCache.set(newServers);
 		m_updateTaskExecutor.submit(new Runnable() {
 
 			@Override
@@ -80,6 +85,7 @@ public class MetaHolder implements Initializable {
 	}
 
 	public void update(final Map<String, Map<Integer, Endpoint>> newEndpoints) {
+		m_endpointCache.set(newEndpoints);
 		m_updateTaskExecutor.submit(new Runnable() {
 
 			@Override

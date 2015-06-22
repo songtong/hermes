@@ -168,7 +168,7 @@ public class LongPollingConsumerTask implements Runnable {
 					      m_context.getSessionId());
 				}
 			} catch (Exception e) {
-				log.error("Exception occured in consumer's run method(topic={}, partition={}, groupId={}, sessionId={})",
+				log.error("Exception occurred in consumer's run method(topic={}, partition={}, groupId={}, sessionId={})",
 				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
 			}
 		}
@@ -209,7 +209,7 @@ public class LongPollingConsumerTask implements Runnable {
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 			} catch (Exception e) {
-				log.error("Exception occured while consuming message(topic={}, partition={}, groupId={}, sessionId={})",
+				log.error("Exception occurred while consuming message(topic={}, partition={}, groupId={}, sessionId={})",
 				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
 			}
 		}
@@ -314,7 +314,7 @@ public class LongPollingConsumerTask implements Runnable {
 					}
 				}
 			} catch (Exception e) {
-				log.error("Exception occured while acquiring lease(topic={}, partition={}, groupId={}, sessionId={})",
+				log.error("Exception occurred while acquiring lease(topic={}, partition={}, groupId={}, sessionId={})",
 				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
 			}
 		}
@@ -437,7 +437,7 @@ public class LongPollingConsumerTask implements Runnable {
 			} catch (TimeoutException e) {
 				// ignore
 			} catch (Exception e) {
-				log.warn("Exception occured while pulling message(topic={}, partition={}, groupId={}, sessionId={}).",
+				log.warn("Exception occurred while pulling message(topic={}, partition={}, groupId={}, sessionId={}).",
 				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
 			} finally {
 				m_pullTaskRunning.set(false);

@@ -80,4 +80,20 @@ public class MetaServerConfig {
 	public String getMetaServerLeaderElectionZkPath() {
 		return "/meta-servers";
 	}
+
+	public int getProxyPassConnectTimeout() {
+		return 2000;
+	}
+
+	public int getProxyPassReadTimeout() {
+		return 5000;
+	}
+
+	public String getBrokerRegistryBasePath() {
+		return "brokers";
+	}
+
+	public String getBrokerRegistryName(String name) {
+		return "default";
+	}
 }

@@ -9,8 +9,10 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.commons.BaseZkWatcher;
@@ -22,6 +24,9 @@ import com.ctrip.hermes.metaservice.zk.ZKClient;
  */
 public class BrokerLeaseAddedWatcher extends BaseZkWatcher {
 	private final static Logger log = LoggerFactory.getLogger(BrokerLeaseAddedWatcher.class);
+
+	@Inject
+	private BrokerAssignmentHolder m_brokerAssignment;
 
 	private BrokerLeaseHolder m_leaseHolder;
 
@@ -37,7 +42,7 @@ public class BrokerLeaseAddedWatcher extends BaseZkWatcher {
 			CuratorFramework client = PlexusComponentLocator.lookup(ZKClient.class).getClient();
 
 			List<String> topics = client.getChildren().usingWatcher(this).forPath(path);
-
+			
 			for (String topic : topics) {
 				if (!m_leaseHolder.topicWatched(topic)) {
 					log.info("Broker lease added for topic {}.", topic);
@@ -50,7 +55,7 @@ public class BrokerLeaseAddedWatcher extends BaseZkWatcher {
 			}
 
 		} catch (Exception e) {
-			log.error("Exception occured while handling broker lease added.", e);
+			log.error("Exception occurred while handling broker lease added.", e);
 		}
 	}
 }

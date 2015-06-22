@@ -97,7 +97,8 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		Iterator<Entry<String, ClientLeaseInfo>> iterator = existingLeases.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, ClientLeaseInfo> entry = iterator.next();
-			if (entry.getValue().getLease().isExpired()) {
+			Lease lease = entry.getValue().getLease();
+			if (lease != null && lease.isExpired()) {
 				iterator.remove();
 			}
 		}
@@ -266,7 +267,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 						      }
 					      }
 				      } catch (Exception e) {
-					      log.warn("Exception occured while doing housekeeping", e);
+					      log.warn("Exception occurred while doing housekeeping", e);
 				      } finally {
 					      m_LeaseContextsLock.writeLock().unlock();
 				      }

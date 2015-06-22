@@ -213,7 +213,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 					}
 
 				} catch (Exception e) {
-					log.warn("Exception occured in EndpointChannelWriter loop", e);
+					log.warn("Exception occurred in EndpointChannelWriter loop", e);
 				}
 			}
 		}, 0, m_config.getEndpointChannelWriterCheckInterval(), TimeUnit.MILLISECONDS);

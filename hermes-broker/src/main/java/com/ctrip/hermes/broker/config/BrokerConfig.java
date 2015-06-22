@@ -22,6 +22,14 @@ public class BrokerConfig {
 		return m_sessionId;
 	}
 
+	public String getRegistryName(String name) {
+		return "default";
+	}
+
+	public String getRegistryBasePath() {
+		return "brokers";
+	}
+
 	public long getLeaseRenewTimeMillsBeforeExpire() {
 		return m_leaseRenewTimeMillsBeforeExpire;
 	}

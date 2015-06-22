@@ -61,7 +61,7 @@ public class DefaultPullMessageResultMonitor implements PullMessageResultMonitor
 				try {
 					pullMessageCommand.onResultReceived(result);
 				} catch (Exception e) {
-					log.warn("Exception occured while calling resultReceived", e);
+					log.warn("Exception occurred while calling resultReceived", e);
 				}
 			} else {
 				result.release();
@@ -105,7 +105,7 @@ public class DefaultPullMessageResultMonitor implements PullMessageResultMonitor
 				      } catch (Exception e) {
 					      // ignore
 					      if (log.isDebugEnabled()) {
-						      log.debug("Exception occured while running PullMessageResultMonitor-HouseKeeper", e);
+						      log.debug("Exception occurred while running PullMessageResultMonitor-HouseKeeper", e);
 					      }
 				      }
 			      }

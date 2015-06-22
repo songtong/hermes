@@ -12,7 +12,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.metaserver.commons.BaseAssignmentHolder;
+import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.LeaseOperationCallback;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
@@ -33,25 +33,16 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 	private SystemClockService m_systemClockService;
 
 	@Inject
-	private ActiveBrokerListHolder m_activeBrokerList;
-
-	@Inject
 	private BrokerLeaseHolder m_leaseHolder;
 
 	@Inject
 	private BrokerAssignmentHolder m_assignmentHolder;
 
-	private void heartbeat(String topic, String brokerName, String ip, int port) {
-		m_activeBrokerList.heartbeat(topic, brokerName, ip, port);
-	}
-
 	@Override
 	public LeaseAcquireResponse tryAcquireLease(String topic, int partition, String brokerName, String ip, int port)
 	      throws Exception {
 
-		heartbeat(topic, brokerName, ip, port);
-
-		BaseAssignmentHolder<String, Integer>.Assignment topicAssignment = m_assignmentHolder.getAssignment(topic);
+		Assignment<Integer> topicAssignment = m_assignmentHolder.getAssignment(topic);
 		if (topicAssignment == null) {
 			return topicNoAssignment();
 		} else {
@@ -67,9 +58,7 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 	public LeaseAcquireResponse tryRenewLease(String topic, int partition, String brokerName, long leaseId, String ip,
 	      int port) throws Exception {
 
-		heartbeat(topic, brokerName, ip, port);
-
-		BaseAssignmentHolder<String, Integer>.Assignment topicAssignment = m_assignmentHolder.getAssignment(topic);
+		Assignment<Integer> topicAssignment = m_assignmentHolder.getAssignment(topic);
 		if (topicAssignment == null) {
 			return topicNoAssignment();
 		} else {
@@ -172,7 +161,7 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 						ClientLeaseInfo clientLeaseInfo = entry.getValue();
 						Lease lease = clientLeaseInfo.getLease();
 						String leaseBrokerName = entry.getKey();
-						if (lease.getId() == leaseId && leaseBrokerName.equals(brokerName)) {
+						if (lease != null && lease.getId() == leaseId && leaseBrokerName.equals(brokerName)) {
 							existingClientLeaseInfo = clientLeaseInfo;
 							break;
 						}
