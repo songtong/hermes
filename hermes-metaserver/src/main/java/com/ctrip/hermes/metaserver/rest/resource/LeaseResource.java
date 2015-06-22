@@ -36,7 +36,6 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder;
-import com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder.TopicAssignmentResult;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocatorLocator;
@@ -96,10 +95,12 @@ public class LeaseResource {
 	public LeaseAcquireResponse tryAcquireConsumerLease(//
 	      Tpg tpg, //
 	      @QueryParam("sessionId") String sessionId,//
+	      @QueryParam("host") @DefaultValue("-") String host,//
 	      @Context HttpServletRequest req) {
 
 		Map<String, String> params = new HashMap<>();
 		params.put("sessionId", sessionId);
+		params.put("host", getRemoteAddr(host, req));
 		LeaseAcquireResponse leaseAcquireResponse = proxyToAnotherMetaServerIfNecessary(tpg.getTopic(),
 		      "consumer/acquire", params, tpg);
 
@@ -108,7 +109,7 @@ public class LeaseResource {
 			      tpg.getGroupId());
 			try {
 				if (leaseAllocator != null) {
-					return leaseAllocator.tryAcquireLease(tpg, sessionId, req.getRemoteAddr(), req.getRemotePort());
+					return leaseAllocator.tryAcquireLease(tpg, sessionId, getRemoteAddr(host, req), req.getRemotePort());
 				} else {
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
 				}
@@ -128,11 +129,13 @@ public class LeaseResource {
 	      Tpg tpg, //
 	      @QueryParam("leaseId") long leaseId,//
 	      @QueryParam("sessionId") String sessionId,//
+	      @QueryParam("host") @DefaultValue("-") String host,//
 	      @Context HttpServletRequest req) {
 
 		Map<String, String> params = new HashMap<>();
 		params.put("sessionId", sessionId);
 		params.put("leaseId", Long.toString(leaseId));
+		params.put("host", getRemoteAddr(host, req));
 		LeaseAcquireResponse leaseAcquireResponse = proxyToAnotherMetaServerIfNecessary(tpg.getTopic(), "consumer/renew",
 		      params, tpg);
 
@@ -141,7 +144,8 @@ public class LeaseResource {
 			      tpg.getGroupId());
 			try {
 				if (leaseAllocator != null) {
-					return leaseAllocator.tryRenewLease(tpg, sessionId, leaseId, req.getRemoteAddr(), req.getRemotePort());
+					return leaseAllocator.tryRenewLease(tpg, sessionId, leaseId, getRemoteAddr(host, req),
+					      req.getRemotePort());
 				} else {
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
 				}
@@ -165,20 +169,18 @@ public class LeaseResource {
 	      @QueryParam("host") @DefaultValue("-") String host,//
 	      @Context HttpServletRequest req) {
 
-		String remoteAddr = "-".equals(host) ? req.getRemoteAddr() : host;
-
 		Map<String, String> params = new HashMap<>();
 		params.put("topic", topic);
 		params.put("partition", Integer.toString(partition));
 		params.put("sessionId", sessionId);
 		params.put("brokerPort", Integer.toString(port));
-		params.put("host", remoteAddr);
+		params.put("host", getRemoteAddr(host, req));
 		LeaseAcquireResponse leaseAcquireResponse = proxyToAnotherMetaServerIfNecessary(topic, "broker/acquire", params,
 		      null);
 
 		if (leaseAcquireResponse == null) {
 			try {
-				return m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId, remoteAddr, port);
+				return m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId, getRemoteAddr(host, req), port);
 			} catch (Exception e) {
 				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
@@ -200,21 +202,20 @@ public class LeaseResource {
 	      @QueryParam("host") @DefaultValue("-") String host,//
 	      @Context HttpServletRequest req) {
 
-		String remoteAddr = "-".equals(host) ? req.getRemoteAddr() : host;
-
 		Map<String, String> params = new HashMap<>();
 		params.put("topic", topic);
 		params.put("partition", Integer.toString(partition));
 		params.put("leaseId", Long.toString(leaseId));
 		params.put("sessionId", sessionId);
 		params.put("brokerPort", Integer.toString(port));
-		params.put("host", remoteAddr);
+		params.put("host", getRemoteAddr(host, req));
 		LeaseAcquireResponse leaseAcquireResponse = proxyToAnotherMetaServerIfNecessary(topic, "broker/renew", params,
 		      null);
 
 		if (leaseAcquireResponse == null) {
 			try {
-				return m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId, remoteAddr, port);
+				return m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId, getRemoteAddr(host, req),
+				      port);
 			} catch (Exception e) {
 				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
@@ -298,5 +299,9 @@ public class LeaseResource {
 			}
 		}
 
+	}
+
+	private String getRemoteAddr(String host, HttpServletRequest req) {
+		return "-".equals(host) ? req.getRemoteAddr() : host;
 	}
 }

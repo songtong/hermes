@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.net.Networks;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SchemaView;
@@ -35,6 +36,10 @@ import com.google.common.base.Function;
 
 @Named(type = MetaProxy.class, value = RemoteMetaProxy.ID)
 public class RemoteMetaProxy implements MetaProxy, Initializable {
+
+	private static final String HOST = "host";
+
+	private static final String BROKER_PORT = "brokerPort";
 
 	private static final Logger log = LoggerFactory.getLogger(RemoteMetaProxy.class);
 
@@ -62,6 +67,7 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
 		Map<String, String> params = new HashMap<>();
 		params.put(SESSION_ID, sessionId);
+		params.put(HOST, Networks.forIp().getLocalHostAddress());
 		String response = post("/lease/consumer/acquire", params, tpg);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
@@ -78,6 +84,7 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		Map<String, String> params = new HashMap<>();
 		params.put(LEASE_ID, String.valueOf(lease.getId()));
 		params.put(SESSION_ID, sessionId);
+		params.put(HOST, Networks.forIp().getLocalHostAddress());
 		String response = post("/lease/consumer/renew", params, tpg);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
@@ -97,7 +104,8 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		params.put(SESSION_ID, sessionId);
 		params.put(TOPIC, topic);
 		params.put(PARTITION, Integer.toString(partition));
-		params.put("brokerPort", String.valueOf(brokerPort));
+		params.put(BROKER_PORT, String.valueOf(brokerPort));
+		params.put(HOST, Networks.forIp().getLocalHostAddress());
 		String response = post("/lease/broker/renew", params, null);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
@@ -115,7 +123,8 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 		params.put(SESSION_ID, sessionId);
 		params.put(TOPIC, topic);
 		params.put(PARTITION, Integer.toString(partition));
-		params.put("brokerPort", String.valueOf(brokerPort));
+		params.put(BROKER_PORT, String.valueOf(brokerPort));
+		params.put(HOST, Networks.forIp().getLocalHostAddress());
 		String response = post("/lease/broker/acquire", params, null);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
