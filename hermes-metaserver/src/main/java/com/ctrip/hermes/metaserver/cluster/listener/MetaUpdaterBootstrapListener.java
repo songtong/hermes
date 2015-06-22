@@ -1,9 +1,11 @@
-package com.ctrip.hermes.metaserver.cluster;
+package com.ctrip.hermes.metaserver.cluster.listener;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.metaserver.build.BuildConstants;
+import com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListener;
+import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.meta.MetaUpdater;
 
 /**
