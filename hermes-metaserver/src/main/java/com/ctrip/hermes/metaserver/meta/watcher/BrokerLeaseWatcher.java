@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metaserver.commons.GuardedWatcher;
+import com.ctrip.hermes.metaserver.commons.WatcherGuard;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 

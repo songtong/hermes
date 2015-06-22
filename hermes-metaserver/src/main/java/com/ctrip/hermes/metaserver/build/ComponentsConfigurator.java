@@ -15,6 +15,7 @@ import com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.MetaUpdaterBootstrapListener;
+import com.ctrip.hermes.metaserver.commons.DefaultWatcherGuard;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
@@ -27,7 +28,6 @@ import com.ctrip.hermes.metaserver.meta.FollowerMetaUpdater;
 import com.ctrip.hermes.metaserver.meta.LeaderMetaUpdater;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaLoader;
-import com.ctrip.hermes.metaserver.meta.watcher.DefaultWatcherGuard;
 import com.ctrip.hermes.metaserver.meta.watcher.ZkReader;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
 

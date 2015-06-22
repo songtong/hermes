@@ -249,7 +249,7 @@
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard</role>
+					<role>com.ctrip.hermes.metaserver.commons.WatcherGuard</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
@@ -291,8 +291,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard</role>
-			<implementation>com.ctrip.hermes.metaserver.meta.watcher.DefaultWatcherGuard</implementation>
+			<role>com.ctrip.hermes.metaserver.commons.WatcherGuard</role>
+			<implementation>com.ctrip.hermes.metaserver.commons.DefaultWatcherGuard</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
@@ -324,7 +324,7 @@
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard</role>
+					<role>com.ctrip.hermes.metaserver.commons.WatcherGuard</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
