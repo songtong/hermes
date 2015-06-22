@@ -6,6 +6,7 @@ import java.util.List;
 import org.unidal.dal.jdbc.configuration.AbstractJdbcResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy;
@@ -51,6 +52,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultBrokerLeaseAllocator.class));
 		all.add(A(DefaultBrokerPartitionAssigningStrategy.class));
 		all.add(A(BrokerLeaseHolder.class));
+		all.add(A(BrokerAssignmentHolder.class));
 
 		// subscription service
 		all.add(A(SubscriptionService.class));
