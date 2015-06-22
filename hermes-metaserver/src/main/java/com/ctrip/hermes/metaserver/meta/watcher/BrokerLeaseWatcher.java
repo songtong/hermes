@@ -41,7 +41,7 @@ public class BrokerLeaseWatcher extends GuardedWatcher {
 			List<String> addedTopics = findAddedTopics(newTopics);
 			for (String topic : addedTopics) {
 				String topicPath = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic);
-				Watcher watcher = new TopicWatcher(m_version, m_guard, m_executor);
+				Watcher watcher = new TopicWatcher(m_version, m_guard, m_executorService);
 				client.getData().usingWatcher(watcher).forPath(topicPath);
 			}
 

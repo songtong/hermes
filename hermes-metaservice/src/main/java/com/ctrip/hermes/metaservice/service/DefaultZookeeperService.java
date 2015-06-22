@@ -43,7 +43,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 			try {
 				ensurePath(path);
 			} catch (Exception e) {
-				log.error("Exception occured in ensureConsumerLeaseZkPath", e);
+				log.error("Exception occurred in ensureConsumerLeaseZkPath", e);
 				throw new RuntimeException(e);
 			}
 		}
@@ -63,7 +63,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 		try {
 			deleteChildren(path, true);
 		} catch (Exception e) {
-			log.error("Exception occured in deleteConsumerLeaseZkPath", e);
+			log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -82,7 +82,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 				      .and().setData().forPath(topicParentPath, ZKSerializeUtils.serialize(now))//
 				      .and().commit();
 			} catch (Exception e) {
-				log.error("Exception occured in deleteConsumerLeaseZkPath", e);
+				log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
 				throw new RuntimeException(e);
 			}
 		}
@@ -123,7 +123,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 			try {
 				ensurePath(path);
 			} catch (Exception e) {
-				log.error("Exception occured in ensureBrokerLeaseZkPath", e);
+				log.error("Exception occurred in ensureBrokerLeaseZkPath", e);
 				throw new RuntimeException(e);
 			}
 		}
@@ -137,7 +137,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 		try {
 			deleteChildren(path, true);
 		} catch (Exception e) {
-			log.error("Exception occured in deleteConsumerLeaseZkPath", e);
+			log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -166,7 +166,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 			curatorTransactionBridge.and().commit();
 
 		} catch (Exception e) {
-			log.error("Exception occured in persist", e);
+			log.error("Exception occurred in persist", e);
 			throw e;
 		}
 	}

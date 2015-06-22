@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -35,7 +36,7 @@ public class ZkReader {
 		for (String partitionPath : partitionPaths) {
 			// TODO
 			Map<String, ClientLeaseInfo> leaseMap = ZKSerializeUtils.deserialize(
-			      client.getData().forPath(topicPath + "/" + partitionPath),
+			      client.getData().forPath(ZKPaths.makePath(topicPath, partitionPath)),
 			      new TypeReference<Map<String, ClientLeaseInfo>>() {
 			      }.getType());
 			int partitionId = Integer.parseInt(partitionPath);
@@ -77,8 +78,8 @@ public class ZkReader {
 		List<String> serverPaths = client.getChildren().forPath(metaServersPath);
 
 		for (String serverPath : serverPaths) {
-			HostPort hostPort = ZKSerializeUtils.deserialize(client.getData().forPath(metaServersPath + "/" + serverPath),
-			      HostPort.class);
+			HostPort hostPort = ZKSerializeUtils.deserialize(
+			      client.getData().forPath(ZKPaths.makePath(metaServersPath, serverPath)), HostPort.class);
 
 			Server s = new Server();
 			s.setHost(hostPort.getHost());

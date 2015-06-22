@@ -153,7 +153,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 				checkHolders(false);
 				checkHolders(true);
 			} catch (Exception e) {
-				log.error("Exception occured while executing ack task.", e);
+				log.error("Exception occurred while executing ack task.", e);
 			}
 		}
 
@@ -189,7 +189,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 				m_todos.clear();
 			} catch (Exception e) {
-				log.error("Exception occured while handling operations.", e);
+				log.error("Exception occurred while handling operations.", e);
 			}
 		}
 

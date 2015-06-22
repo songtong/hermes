@@ -228,6 +228,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</role>
 			<implementation>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</implementation>
 		</component>

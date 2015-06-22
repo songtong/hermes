@@ -172,7 +172,7 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 						ClientLeaseInfo clientLeaseInfo = entry.getValue();
 						Lease lease = clientLeaseInfo.getLease();
 						String leaseBrokerName = entry.getKey();
-						if (lease.getId() == leaseId && leaseBrokerName.equals(brokerName)) {
+						if (lease != null && lease.getId() == leaseId && leaseBrokerName.equals(brokerName)) {
 							existingClientLeaseInfo = clientLeaseInfo;
 							break;
 						}

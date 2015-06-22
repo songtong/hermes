@@ -1,4 +1,4 @@
-package com.ctrip.hermes.metaservice.zk;
+package com.ctrip.hermes.broker.zk;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -34,7 +34,7 @@ public class ZKClient implements Initializable {
 		builder.retryPolicy(new ExponentialBackoffRetry(m_config.getZkRetryBaseSleepTimeMillis(), m_config
 		      .getZkRetryMaxRetries()));
 		builder.sessionTimeoutMs(m_config.getZkSessionTimeoutMillis());
-		builder.threadFactory(HermesThreadFactory.create("MetaService-Zk", true));
+		builder.threadFactory(HermesThreadFactory.create("Broker-Zk", true));
 
 		m_client = builder.build();
 		m_client.start();

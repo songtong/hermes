@@ -72,7 +72,7 @@ public abstract class BaseAssignmentHolder<Key1, Key2> implements Initializable 
 						      }
 					      }
 				      } catch (Exception e) {
-					      log.warn("Error occured while doing assignment check in {}", getAssignmentCheckerName(), e);
+					      log.warn("Error occurred while doing assignment check in {}", getAssignmentCheckerName(), e);
 				      }
 			      }
 		      }, 0, getAssignmentCheckIntervalMillis(), TimeUnit.MILLISECONDS);

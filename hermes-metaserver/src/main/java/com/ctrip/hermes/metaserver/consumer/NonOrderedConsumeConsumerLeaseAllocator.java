@@ -60,7 +60,7 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 				ClientLeaseInfo clientLeaseInfo = entry.getValue();
 				Lease lease = clientLeaseInfo.getLease();
 				String leaseConsumerName = entry.getKey();
-				if (lease.getId() == leaseId && leaseConsumerName.equals(consumerName)) {
+				if (lease != null && lease.getId() == leaseId && leaseConsumerName.equals(consumerName)) {
 					existingLeaseInfo = clientLeaseInfo;
 					break;
 				}

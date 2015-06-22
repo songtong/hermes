@@ -1,51 +1,27 @@
 package com.ctrip.hermes.metaserver.meta.watcher;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.Watcher.Event.EventType;
 
-public abstract class GuardedWatcher implements Watcher {
+import com.ctrip.hermes.metaserver.commons.BaseZkWatcher;
+
+public abstract class GuardedWatcher extends BaseZkWatcher {
 	protected int m_version;
 
 	protected WatcherGuard m_guard;
 
-	protected ExecutorService m_executor;
-
-	private Set<EventType> m_acceptedEventTypes = new HashSet<>();
-
 	public GuardedWatcher(int version, WatcherGuard guard, ExecutorService executor, EventType... acceptedEventTypes) {
+		super(executor, acceptedEventTypes);
+
 		m_version = version;
 		m_guard = guard;
-		m_executor = executor;
-
-		if (acceptedEventTypes != null && acceptedEventTypes.length != 0) {
-			m_acceptedEventTypes.addAll(Arrays.asList(acceptedEventTypes));
-		}
 	}
 
 	@Override
-	public void process(final WatchedEvent event) {
-		if (m_guard.pass(m_version) && eventTypeMatch(event.getType())) {
-			m_executor.submit(new Runnable() {
-
-				@Override
-				public void run() {
-					doProcess(event);
-				}
-
-			});
-		}
+	protected boolean conditionSatisfy(WatchedEvent event) {
+		return m_guard.pass(m_version);
 	}
-
-	private boolean eventTypeMatch(EventType type) {
-		return m_acceptedEventTypes.isEmpty() || m_acceptedEventTypes.contains(type);
-	}
-
-	protected abstract void doProcess(WatchedEvent event);
 
 }

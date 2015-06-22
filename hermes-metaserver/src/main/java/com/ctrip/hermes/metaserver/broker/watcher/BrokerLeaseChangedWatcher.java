@@ -50,7 +50,7 @@ public class BrokerLeaseChangedWatcher extends BaseZkWatcher {
 			}
 
 		} catch (Exception e) {
-			log.error("Exception occured while handling broker lease topic changed check.", e);
+			log.error("Exception occurred while handling broker lease topic changed check.", e);
 		}
 	}
 

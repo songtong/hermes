@@ -13,6 +13,7 @@ import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.MetaUpdaterBootstrapListener;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
@@ -60,6 +61,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		// cluster
 		all.add(A(ClusterStateHolder.class));
+		all.add(A(ClusterTopicAssignmentHolder.class));
+
 		all.add(A(ClusterStateChangeListenerContainer.class));
 		all.add(A(LeaderMetaUpdater.class));
 		all.add(A(FollowerMetaUpdater.class));

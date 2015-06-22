@@ -1,4 +1,4 @@
-package com.ctrip.hermes.metaservice.zk;
+package com.ctrip.hermes.broker.zk;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
