@@ -80,15 +80,40 @@ public class KafkaMessageSender implements MessageSender {
 				break;
 			}
 		}
-		configs.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
-		configs.put("key.serializer", StringSerializer.class.getCanonicalName());
 
-		if (!configs.containsKey("client.id")) {
-			configs.put("client.id", Networks.forIp().getLocalHostAddress() + "_" + topic);
-		}
-		return configs;
+		return overrideByCtripDefaultSetting(configs);
 	}
 
+	/**
+	 * 
+	 * @param producerProp
+	 * @return
+	 */
+	private Properties overrideByCtripDefaultSetting(Properties producerProp) {
+		producerProp.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
+		producerProp.put("key.serializer", StringSerializer.class.getCanonicalName());
+
+		if (!producerProp.containsKey("client.id")) {
+			producerProp.put("client.id", Networks.forIp().getLocalHostAddress());
+		}
+		if (!producerProp.containsKey("block.on.buffer.full")) {
+			producerProp.put("block.on.buffer.full", false);
+		}
+		if (!producerProp.containsKey("linger.ms")) {
+			producerProp.put("linger.ms", 50);
+		}
+		if (!producerProp.containsKey("retries")) {
+			producerProp.put("retries", 3);
+		}
+
+		return producerProp;
+	}
+
+	/**
+	 * 
+	 * @param msg
+	 * @return
+	 */
 	@Override
 	public Future<SendResult> send(ProducerMessage<?> msg) {
 		String topic = msg.getTopic();
@@ -116,6 +141,10 @@ public class KafkaMessageSender implements MessageSender {
 		return new KafkaFuture(sendResult);
 	}
 
+	/**
+	 * 
+	 *
+	 */
 	class KafkaCallback implements org.apache.kafka.clients.producer.Callback {
 
 		private CompletionCallback<SendResult> m_callback;
@@ -136,6 +165,10 @@ public class KafkaMessageSender implements MessageSender {
 		}
 	}
 
+	/**
+	 * 
+	 *
+	 */
 	class KafkaFuture implements Future<SendResult> {
 
 		private Future<RecordMetadata> m_recordMetadata;
