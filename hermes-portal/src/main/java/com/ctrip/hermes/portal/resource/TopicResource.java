@@ -54,15 +54,17 @@ public class TopicResource {
 
 	@POST
 	public Response createTopic(String content) {
-		logger.debug("create topic, content {}", content);
+		logger.info("Creating topic with payload {}.", content);
 		if (StringUtils.isEmpty(content)) {
+			logger.error("Payload content is empty, create topic failed.");
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
+
 		TopicView topicView = null;
 		try {
 			topicView = JSON.parseObject(content, TopicView.class);
 		} catch (Exception e) {
-			logger.warn("parse topic failed, content: {}", content);
+			logger.error("Can not parse payload: {}, create topic failed.", content);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
@@ -71,11 +73,11 @@ public class TopicResource {
 		if (topicService.findTopicByName(topic.getName()) != null) {
 			throw new RestException("Topic already exists.", Status.CONFLICT);
 		}
+
 		try {
-			topic = topicService.createTopic(topic);
-			topicView = new TopicView(topic);
+			topicView = new TopicView(topicService.createTopic(topic));
 		} catch (Exception e) {
-			logger.warn("create topic failed", e);
+			logger.error("Create topic failed: {}.", content, e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.CREATED).entity(topicView).build();

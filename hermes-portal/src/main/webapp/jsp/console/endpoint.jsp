@@ -5,9 +5,6 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.endpoint.Model" scope="request" />
 
 <a:layout>
-	<div class="op-alert alert alert-info" role="alert" style="display: none;">
-		<span>The examples populate this alert with dummy content</span>
-	</div>
 	<div ng-app="hermes-endpoint" ng-controller="endpoint-controller">
 		<div class="panel panel-info">
 			<div class="panel-heading">Hermes Endpoint 列表</div>

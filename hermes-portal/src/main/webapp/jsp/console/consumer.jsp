@@ -6,9 +6,6 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.consumer.Model" scope="request" />
 
 <a:layout>
-	<div class="op-alert alert alert-info" role="alert" style="display: none;">
-		<span>The examples populate this alert with dummy content</span>
-	</div>
 	<div ng-app="hermes-consumer" ng-controller="consumer-controller">
 		<div class="panel panel-info">
 			<div class="panel-heading">Hermes 消费者列表</div>

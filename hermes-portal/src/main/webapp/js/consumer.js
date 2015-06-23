@@ -50,26 +50,30 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller('c
 				consumer_resource.save({
 					topic : new_consumer.topic,
 					consumer : new_consumer.groupName
-				}, new_consumer).$promise.then(function(save_result) {
+				}, new_consumer, function(save_result) {
 					console.log(save_result);
 					consumer_resource.query().$promise.then(function(query_result) {
 						reload_table(scope, query_result);
-						show_op_info.show("新增Consumer成功, Topic名称：" + new_consumer.topic + ", Consumer名称：" + new_consumer.groupName);
+						show_op_info.show("新增成功: " + new_consumer.groupName + "(" + new_consumer.topic + ")", true);
 					});
+				}, function(error_result) {
+					show_op_info.show("新增失败: " + new_consumer.groupName + "(" + new_consumer.topic + "), " + error_result.data, false);
 				});
 			};
 
 			scope.del_consumer = function del_consumer(topic, consumer) {
-				bootbox.confirm("确认删除Consumer: " + consumer + "(" + topic + ")?", function(result) {
+				bootbox.confirm("确认删除 Consumer: " + consumer + "(" + topic + ")?", function(result) {
 					if (result) {
 						consumer_resource.remove({
 							"topic" : topic,
 							"consumer" : consumer
-						}).$promise.then(function(remove_result) {
-							consumer_resource.query().$promise.then(function(query_result) {
+						}, function(remove_result) {
+							consumer_resource.query({}, function(query_result) {
 								reload_table(scope, query_result);
-								show_op_info.show("删除Consumer：" + consumer + "(" + topic + ") 成功！");
+								show_op_info.show("删除成功: " + consumer + "(" + topic + ")", true);
 							});
+						}, function(error_result) {
+							show_op_info.show("删除失败: " + consumer + "(" + topic + "), " + error_result.data, false);
 						});
 					}
 				});

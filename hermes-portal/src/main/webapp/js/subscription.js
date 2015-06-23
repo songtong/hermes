@@ -53,7 +53,9 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 				scope.subscribers = data;
 			});
 
-			show_op_info.show("保存Subscription成功！");
+			show_op_info.show("保存Subscription成功", true);
+		}, function(error_result) {
+			show_op_info.show("保存失败: " + error_result.data, false);
 		});
 	};
 
@@ -63,7 +65,9 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 				subscription_resource.delete_subscriber({
 					id : subscriber.id
 				}, function(data) {
-					show_op_info.show("删除成功！");
+					show_op_info.show("删除成功", true);
+				}, function(error_result) {
+					show_op_info.show("删除失败: " + error_result.data, false);
 				});
 				var index = scope.subscribers.indexOf(subscriber);
 				if (index > -1) {

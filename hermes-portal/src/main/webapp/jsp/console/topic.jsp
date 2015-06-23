@@ -7,9 +7,6 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.topic.Model" scope="request" />
 
 <a:layout>
-	<div class="op-alert alert alert-info" role="alert" style="display: none;">
-		<span>The examples populate this alert with dummy content</span>
-	</div>
 	<div ng-app="hermes-topic" ng-controller="topic-controller">
 		<div class="panel panel-info">
 			<div class="panel-heading">Hermes 消息主题列表</div>
@@ -24,8 +21,9 @@
 						<th st-sort="consumerRetryPolicy">消费重试策略</th>
 						<th st-sort="ackTimeoutSeconds">ACK超时(秒)</th>
 						<th st-sort="endpointType">Endpoint</th>
-						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;"><span
-								class="glyphicon glyphicon-plus"></span> 新增</button></th>
+						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;">
+								<span class="glyphicon glyphicon-plus"></span> 新增
+							</button></th>
 					</tr>
 					<tr>
 						<th><label><span ng-bind="topic_rows.length"></span></label></th>
@@ -50,7 +48,9 @@
 						<td><span ng-bind="row.ackTimeoutSeconds"></td>
 						<td><span ng-bind="row.endpointType"></td>
 						<td>
-							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;"><span class="glyphicon glyphicon-remove"></span> 删除</button>
+							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;">
+								<span class="glyphicon glyphicon-remove"></span> 删除
+							</button>
 						</td>
 					</tr>
 				</tbody>
@@ -65,7 +65,9 @@
 			<div class="modal-dialog" style="width: 50%">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
 						<h4 class="modal-title" id="add-topic-label">新增 Topic</h4>
 					</div>
 					<div class="modal-body">
@@ -93,7 +95,8 @@
 							<div class="form-group">
 								<label for="inputEndpointType" class="col-sm-4 control-label">Endpoint 类型</label>
 								<div class="col-sm-4">
-									<select class="form-control" id="inputEndpointType" ng-model="new_topic.endpointType" ng-options="endpoint for endpoint in endpoint_types" ng-change="endpoint_type_changed()">
+									<select class="form-control" id="inputEndpointType" ng-model="new_topic.endpointType" ng-options="endpoint for endpoint in endpoint_types"
+										ng-change="endpoint_type_changed()">
 									</select>
 								</div>
 							</div>
@@ -135,8 +138,10 @@
 							<tbody>
 								<tr ng-repeat="partition in new_topic.partitions">
 									<td style="border: none; width: 5%;"><label style="line-height: 2.2" ng-bind="$index + 1"></label></td>
-									<td style="border: none;"><select name="rds" class="form-control" id="inputReadDatasource" ng-model="partition.readDatasource" ng-options="ds for ds in datasource_names"></select></td>
-									<td style="border: none;"><select name="wds" class="form-control" id="inputWriteDatasource" ng-model="partition.writeDatasource" ng-options="ds for ds in datasource_names"></select></td>
+									<td style="border: none;"><select name="rds" class="form-control" id="inputReadDatasource" ng-model="partition.readDatasource"
+										ng-options="ds for ds in datasource_names"></select></td>
+									<td style="border: none;"><select name="wds" class="form-control" id="inputWriteDatasource" ng-model="partition.writeDatasource"
+										ng-options="ds for ds in datasource_names"></select></td>
 									<td style="border: none;"><select name="edp" class="form-control" id="inputEndpoint" ng-model="partition.endpoint" ng-options="ep for ep in endpoint_names"></select></td>
 								</tr>
 							</tbody>

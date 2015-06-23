@@ -5,10 +5,11 @@ var show_op_info = function() {
 	that.init = function(options) {
 		info_elem = $(options.selector);
 	};
-	that.show = function(text) {
+	that.show = function(text, success) {
 		clearTimeout(hideHandler);
-		info_elem.find("span").html(text);
-		info_elem.delay(200).fadeIn().delay(4000).fadeOut();
+		info_elem.attr('class', 'op-alert alert alert-' + (success ? 'success' : 'danger'));
+		info_elem.find("#op_info").html(text);
+		info_elem.delay(200).fadeIn().delay(5000).fadeOut();
 	};
 	return that;
 }();

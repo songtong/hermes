@@ -116,12 +116,14 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 			};
 
 			scope.add_topic = function add_topic(new_topic) {
-				topic_resource.save(new_topic).$promise.then(function(save_result) {
+				topic_resource.save(new_topic, function(save_result) {
 					console.log(save_result);
-					topic_resource.query().$promise.then(function(query_result) {
+					topic_resource.query({}, function(query_result) {
 						reload_table(scope, query_result);
-						show_op_info.show("新增Topic成功, Topic名称：" + new_topic.name);
+						show_op_info.show("新增 " + new_topic.name + " 成功！", true);
 					});
+				}, function(error_result) {
+					show_op_info.show("新增 " + new_topic.name + " 失败: " + error_result.data, false);
 				});
 			};
 
@@ -137,15 +139,17 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 			}
 
 			scope.del_topic = function del_topic(name) {
-				bootbox.confirm("确认删除 Topic: " + name + "?", function(result) {
+				bootbox.confirm("确认删除: " + name + " ?", function(result) {
 					if (result) {
 						topic_resource.remove({
 							"name" : name
-						}).$promise.then(function(remove_result) {
-							topic_resource.query().$promise.then(function(query_result) {
+						}, function(remove_result) {
+							topic_resource.query({}, function(query_result) {
 								reload_table(scope, query_result);
-								show_op_info.show("删除Topic：" + name + "成功！");
+								show_op_info.show("删除 " + name + " 成功！", true);
 							});
+						}, function(error_result) {
+							show_op_info.show("删除 " + name + " 失败: " + error_result.data, false);
 						});
 					}
 				});
