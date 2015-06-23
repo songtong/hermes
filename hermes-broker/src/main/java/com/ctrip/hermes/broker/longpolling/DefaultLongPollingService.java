@@ -97,7 +97,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				response(pullMessageTask, null);
 			}
 		} catch (Exception e) {
-			log.error("Exception occured while executing pull message task", e);
+			log.error("Exception occurred while executing pull message task", e);
 		}
 	}
 

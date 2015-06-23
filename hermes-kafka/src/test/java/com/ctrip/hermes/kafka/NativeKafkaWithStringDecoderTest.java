@@ -34,7 +34,7 @@ public class NativeKafkaWithStringDecoderTest {
 
 	@Test
 	public void testNative() throws IOException, InterruptedException, ExecutionException {
-		String topic = "kafka.SimpleTopic";
+		String topic = "kafka.SimpleTextTopic";
 		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		int msgNum = 100000;

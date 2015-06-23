@@ -43,17 +43,17 @@ public class DefaultZookeeperService implements ZookeeperService {
 			try {
 				ensurePath(path);
 			} catch (Exception e) {
-				log.error("Exception occured in ensureConsumerLeaseZkPath", e);
+				log.error("Exception occurred in ensureConsumerLeaseZkPath", e);
 				throw new RuntimeException(e);
 			}
 		}
 	}
 
 	@Override
-	public void updateZkMetaVersion(int version) throws Exception {
-		ensurePath(ZKPathUtils.getMetaVersionPath());
+	public void updateZkBaseMetaVersion(long version) throws Exception {
+		ensurePath(ZKPathUtils.getBaseMetaVersionZkPath());
 
-		m_zkClient.getClient().setData().forPath(ZKPathUtils.getMetaVersionPath(), ZKSerializeUtils.serialize(version));
+		m_zkClient.getClient().setData().forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(version));
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 		try {
 			deleteChildren(path, true);
 		} catch (Exception e) {
-			log.error("Exception occured in deleteConsumerLeaseZkPath", e);
+			log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -82,7 +82,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 				      .and().setData().forPath(topicParentPath, ZKSerializeUtils.serialize(now))//
 				      .and().commit();
 			} catch (Exception e) {
-				log.error("Exception occured in deleteConsumerLeaseZkPath", e);
+				log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
 				throw new RuntimeException(e);
 			}
 		}
@@ -92,10 +92,10 @@ public class DefaultZookeeperService implements ZookeeperService {
 	private void deleteChildren(String path, boolean deleteSelf) throws Exception {
 		PathUtils.validatePath(path);
 
-		CuratorFramework curatorFramework = m_zkClient.getClient();
-		Stat stat = curatorFramework.checkExists().forPath(path);
+		CuratorFramework client = m_zkClient.getClient();
+		Stat stat = client.checkExists().forPath(path);
 		if (stat != null) {
-			List<String> children = curatorFramework.getChildren().forPath(path);
+			List<String> children = client.getChildren().forPath(path);
 			for (String child : children) {
 				String fullPath = ZKPaths.makePath(path, child);
 				deleteChildren(fullPath, true);
@@ -103,7 +103,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 			if (deleteSelf) {
 				try {
-					curatorFramework.delete().forPath(path);
+					client.delete().forPath(path);
 				} catch (KeeperException.NotEmptyException e) {
 					// someone has created a new child since we checked ... delete again.
 					deleteChildren(path, true);
@@ -123,7 +123,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 			try {
 				ensurePath(path);
 			} catch (Exception e) {
-				log.error("Exception occured in ensureBrokerLeaseZkPath", e);
+				log.error("Exception occurred in ensureBrokerLeaseZkPath", e);
 				throw new RuntimeException(e);
 			}
 		}
@@ -137,13 +137,13 @@ public class DefaultZookeeperService implements ZookeeperService {
 		try {
 			deleteChildren(path, true);
 		} catch (Exception e) {
-			log.error("Exception occured in deleteConsumerLeaseZkPath", e);
+			log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
 			throw new RuntimeException(e);
 		}
 	}
 
 	@Override
-	public void persist(String path, Object data, String... touchPaths) throws Exception {
+	public void persist(String path, byte[] data, String... touchPaths) throws Exception {
 		try {
 			ensurePath(path);
 
@@ -154,7 +154,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 			}
 
 			CuratorTransactionBridge curatorTransactionBridge = m_zkClient.getClient().inTransaction().setData()
-			      .forPath(path, ZKSerializeUtils.serialize(data));
+			      .forPath(path, data);
 
 			long now = m_systemClockService.now();
 			if (touchPaths != null && touchPaths.length > 0) {
@@ -166,7 +166,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 			curatorTransactionBridge.and().commit();
 
 		} catch (Exception e) {
-			log.error("Exception occured in persist", e);
+			log.error("Exception occurred in persist", e);
 			throw e;
 		}
 	}

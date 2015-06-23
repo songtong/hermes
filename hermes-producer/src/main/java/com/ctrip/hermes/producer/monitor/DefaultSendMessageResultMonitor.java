@@ -67,7 +67,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 					sendMessageCommand.onResultReceived(result);
 					tracking(sendMessageCommand, true);
 				} catch (Exception e) {
-					log.warn("Exception occured while calling resultReceived", e);
+					log.warn("Exception occurred while calling resultReceived", e);
 				}
 
 			}
@@ -131,7 +131,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 				      } catch (Exception e) {
 					      // ignore
 					      if (log.isDebugEnabled()) {
-						      log.debug("Exception occured while running SendMessageResultMonitor-HouseKeeper", e);
+						      log.debug("Exception occurred while running SendMessageResultMonitor-HouseKeeper", e);
 					      }
 				      }
 			      }

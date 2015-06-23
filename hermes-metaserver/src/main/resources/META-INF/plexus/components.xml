@@ -7,6 +7,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.MetaService</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -141,9 +144,6 @@
 					<role>com.ctrip.hermes.core.service.SystemClockService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</role>
 				</requirement>
 				<requirement>
@@ -152,38 +152,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</role>
-			<implementation>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.service.SystemClockService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
 			<implementation>com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy</implementation>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
-			<implementation>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.broker.ActiveBrokerListHolder</role>
-				</requirement>
-			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</role>
@@ -197,6 +167,21 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -225,34 +210,26 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</role>
-			<implementation>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</implementation>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
-			<role-hint>leader</role-hint>
-			<implementation>com.ctrip.hermes.metaserver.meta.LeaderMetaUpdater</implementation>
+			<role>com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder</role>
+			<implementation>com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
-			<role-hint>follower</role-hint>
-			<implementation>com.ctrip.hermes.metaserver.meta.FollowerMetaUpdater</implementation>
+			<role>com.ctrip.hermes.metaserver.commons.WatcherGuard</role>
+			<implementation>com.ctrip.hermes.metaserver.commons.DefaultWatcherGuard</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</role>
+			<implementation>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListener</role>
 			<role-hint>MetaUpdaterBootstrapListener</role-hint>
-			<implementation>com.ctrip.hermes.metaserver.cluster.MetaUpdaterBootstrapListener</implementation>
+			<implementation>com.ctrip.hermes.metaserver.cluster.listener.MetaUpdaterBootstrapListener</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
@@ -267,19 +244,6 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard</role>
-			<implementation>com.ctrip.hermes.metaserver.meta.watcher.DefaultWatcherGuard</implementation>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
-			<implementation>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
 			<role-hint>leader</role-hint>
 			<implementation>com.ctrip.hermes.metaserver.meta.LeaderMetaUpdater</implementation>
@@ -288,12 +252,92 @@
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.meta.watcher.WatcherGuard</role>
+					<role>com.ctrip.hermes.metaserver.commons.WatcherGuard</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaLoader</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.meta.MetaUpdater</role>
+			<role-hint>follower</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.meta.FollowerMetaUpdater</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
+			<implementation>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.meta.MetaLoader</role>
+			<implementation>com.ctrip.hermes.metaserver.meta.MetaLoader</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.watcher.ZkReader</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListener</role>
+			<role-hint>BrokerAssignerBootstrapListener</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.cluster.listener.BrokerAssignerBootstrapListener</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerAssigner</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.broker.BrokerAssigner</role>
+			<implementation>com.ctrip.hermes.metaserver.broker.DefaultBrokerAssigner</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentChangedWatcher</role>
+			<role-hint>EndpointUpdater</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.meta.watcher.EndpointUpdateBrokerAssignmentChangedWatcher</implementation>
 		</component>
 	</components>
 </plexus>

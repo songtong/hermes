@@ -156,7 +156,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				} catch (Exception e) {
-					log.error("Exception occured while dumping data", e);
+					log.error("Exception occurred while dumping data", e);
 				}
 			}
 

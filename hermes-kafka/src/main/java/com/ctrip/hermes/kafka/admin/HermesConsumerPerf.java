@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka.perf;
+package com.ctrip.hermes.kafka.admin;
 
 import java.util.ArrayList;
 import java.util.List;

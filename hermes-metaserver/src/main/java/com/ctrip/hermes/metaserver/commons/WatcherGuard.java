@@ -1,4 +1,4 @@
-package com.ctrip.hermes.metaserver.meta.watcher;
+package com.ctrip.hermes.metaserver.commons;
 
 public interface WatcherGuard {
 

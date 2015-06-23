@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<groupId>com.ctrip.hermes</groupId>
 		<artifactId>hermes</artifactId>
@@ -27,21 +28,10 @@
 			<artifactId>cat-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.curator</groupId>
-			<artifactId>curator-recipes</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.curator</groupId>
-			<artifactId>curator-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
 			<version>2.17</version>
 		</dependency>
-		<!-- <dependency> <groupId>org.glassfish.jersey.containers</groupId> <artifactId>jersey-container-grizzly2-http</artifactId> <version>2.17</version> 
-			</dependency> -->
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
 			<artifactId>jersey-container-servlet-core</artifactId>
@@ -71,6 +61,11 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.8.1</version>
@@ -98,6 +93,37 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<properties>
+				<package.environment>dev</package.environment>
+			</properties>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<id>fws</id>
+			<properties>
+				<package.environment>fws</package.environment>
+			</properties>
+		</profile>
+		<profile>
+			<id>uat</id>
+			<properties>
+				<package.environment>uat</package.environment>
+			</properties>
+		</profile>
+		<profile>
+			<id>prod</id>
+			<properties>
+				<package.environment>prod</package.environment>
+			</properties>
+		</profile>
+	</profiles>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -115,6 +141,43 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>com.keyboardsamurais.maven</groupId>
+				<artifactId>maven-timestamp-plugin</artifactId>
+				<version>1.0</version>
+				<configuration>
+					<propertyName>build.time</propertyName>
+					<timestampPattern>MMdd-HH.mm</timestampPattern>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+				<inherited>true</inherited>
+			</plugin>
+			<!--Configure hermes.properties and war name -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<webResources>
+						<resource>
+							<directory>${project.basedir}/conf/${package.environment}</directory>
+							<targetPath>WEB-INF/classes</targetPath>
+							<includes>
+								<include>hermes.properties</include>
+							</includes>
+						</resource>
+					</webResources>
+					<warName>${project.artifactId}-${project.version}-${build.time}</warName>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

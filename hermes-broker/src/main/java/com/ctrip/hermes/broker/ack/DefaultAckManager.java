@@ -153,7 +153,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 				checkHolders(false);
 				checkHolders(true);
 			} catch (Exception e) {
-				log.error("Exception occured while executing ack task.", e);
+				log.error("Exception occurred while executing ack task.", e);
 			}
 		}
 
@@ -189,7 +189,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 				m_todos.clear();
 			} catch (Exception e) {
-				log.error("Exception occured while handling operations.", e);
+				log.error("Exception occurred while handling operations.", e);
 			}
 		}
 
@@ -223,10 +223,8 @@ public class DefaultAckManager implements AckManager, Initializable {
 					m_queueManager.nack(tpp, groupId, isResend, failRange.getOffsets());
 				} catch (Exception e) {
 					log.error(
-					      String.format(
-					            "Failed to nack messages(topic=%s, partition=%s, priority=%s, groupId=%s, isResend=%s, msgIdToRemainingRetries=%s).",
-					            tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend,
-					            failRange.getOffsets()), e);
+					      "Failed to nack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, msgIdToRemainingRetries={}).",
+					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, failRange.getOffsets(), e);
 				}
 			}
 
@@ -238,9 +236,8 @@ public class DefaultAckManager implements AckManager, Initializable {
 				try {
 					m_queueManager.ack(tpp, groupId, isResend, doneRange.getEnd());
 				} catch (Exception e) {
-					log.error(String.format(
-					      "Ack messages(topic=%s, partition=%s, priority=%s, groupId=%s, isResend=%s, endOffset=%s).",
-					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, doneRange.getEnd()), e);
+					log.error("Ack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, endOffset={}).",
+					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, doneRange.getEnd(), e);
 				}
 			}
 		}

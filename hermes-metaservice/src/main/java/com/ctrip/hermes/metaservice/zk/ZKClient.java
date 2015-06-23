@@ -34,7 +34,7 @@ public class ZKClient implements Initializable {
 		builder.retryPolicy(new ExponentialBackoffRetry(m_config.getZkRetryBaseSleepTimeMillis(), m_config
 		      .getZkRetryMaxRetries()));
 		builder.sessionTimeoutMs(m_config.getZkSessionTimeoutMillis());
-		builder.threadFactory(HermesThreadFactory.create("MetaServer-Zk", true));
+		builder.threadFactory(HermesThreadFactory.create("MetaService-Zk", true));
 
 		m_client = builder.build();
 		m_client.start();

@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka.perf;
+package com.ctrip.hermes.kafka.admin;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -15,21 +15,21 @@ import kafka.tools.PerfConfig;
 
 public class ConsumerPerfConfig extends PerfConfig {
 
-	ConsumerConfig consumerConfig;
+	public ConsumerConfig consumerConfig;
 
-	int numThreads;
+	public int numThreads;
 
-	String topic;
+	public String topic;
 
-	long numMessages;
+	public long numMessages;
 
-	int reportingInterval;
+	public int reportingInterval;
 
-	boolean showDetailedStats;
+	public boolean showDetailedStats;
 
-	SimpleDateFormat dateFormat;
+	public SimpleDateFormat dateFormat;
 
-	boolean hideHeader;
+	public boolean hideHeader;
 
 	public ConsumerPerfConfig(String[] args) {
 		super(args);

@@ -22,6 +22,12 @@ public class ZKPathUtils {
 
 	private static final String PATH_SEPARATOR = "/";
 
+	private static final String BROKER_ASSIGNMENT_PATH_ROOT = "/broker-assignment";
+
+	private static final String BROKER_ASSIGNMENT_PATH_PREFIX_PATTERN = BROKER_ASSIGNMENT_PATH_ROOT + "/%s";
+
+	private static final String BROKER_ASSIGNMENT_PATH_PATTERN = BROKER_ASSIGNMENT_PATH_PREFIX_PATTERN + "/%s";
+
 	private static final String CONSUMER_LEASE_PATH_ROOT = "/consumer-lease";
 
 	private static final String CONSUMER_LEASE_PATH_PREFIX_PATTERN = CONSUMER_LEASE_PATH_ROOT + "/%s";
@@ -34,8 +40,12 @@ public class ZKPathUtils {
 
 	private static final String BROKER_LEASE_PATH_PATTERN = BROKER_LEASE_PATH_PREFIX_PATTERN + "/%s";
 
-	public static String getMetaVersionPath() {
-		return "/meta-version";
+	public static String getBaseMetaVersionZkPath() {
+		return "/base-meta-version";
+	}
+
+	public static String getMetaInfoZkPath() {
+		return "/meta-info";
 	}
 
 	public static List<String> getBrokerLeaseZkPaths(Topic topic) {
@@ -125,16 +135,16 @@ public class ZKPathUtils {
 		return partitionIds;
 	}
 
-	public static String getMetaServersPath() {
+	public static String getMetaServersZkPath() {
 		return "/meta-servers";
 	}
 
-	public static String getBrokerLeasesPath() {
+	public static String getBrokerLeasesZkPath() {
 		return "/broker-lease";
 	}
 
 	public static String lastSegment(String path) {
-		int lastSlashIdx = path.lastIndexOf("/");
+		int lastSlashIdx = path.lastIndexOf(PATH_SEPARATOR);
 
 		if (lastSlashIdx >= 0) {
 			return path.substring(lastSlashIdx + 1);
@@ -148,31 +158,44 @@ public class ZKPathUtils {
 	}
 
 	public static Pair<String, Integer> parseBrokerLeaseZkPath(String path) {
-		int partitionSeparatorStart = path.lastIndexOf(PATH_SEPARATOR);
-		int partition = Integer.valueOf(path.substring(partitionSeparatorStart + 1));
-		String newPath = path.substring(0, partitionSeparatorStart);
-		int topicSeparatorStart = newPath.lastIndexOf(PATH_SEPARATOR);
-		String topic = newPath.substring(topicSeparatorStart + 1);
+		String[] pathSegments = path.split(PATH_SEPARATOR);
 
-		return new Pair<>(topic, partition);
+		int len = pathSegments == null ? 0 : pathSegments.length;
+
+		if (len > 2) {
+			return new Pair<>(pathSegments[len - 2], Integer.valueOf(pathSegments[len - 1]));
+		} else {
+			return null;
+		}
 	}
 
 	public static Tpg parseConsumerLeaseZkPath(String path) {
-		int groupSeparatorStart = path.lastIndexOf(PATH_SEPARATOR);
-		String group = path.substring(groupSeparatorStart + 1);
+		String[] pathSegments = path.split(PATH_SEPARATOR);
 
-		String newPath = path.substring(0, groupSeparatorStart);
-		int partitionSeparatorStart = newPath.lastIndexOf(PATH_SEPARATOR);
-		int partition = Integer.valueOf(newPath.substring(partitionSeparatorStart + 1));
+		int len = pathSegments == null ? 0 : pathSegments.length;
 
-		newPath = newPath.substring(0, partitionSeparatorStart);
-		int topicSeparatorStart = newPath.lastIndexOf(PATH_SEPARATOR);
-		String topic = newPath.substring(topicSeparatorStart + 1);
+		if (len > 3) {
+			return new Tpg(pathSegments[len - 3], Integer.valueOf(pathSegments[len - 2]), pathSegments[len - 1]);
+		} else {
+			return null;
+		}
 
-		return new Tpg(topic, partition, group);
 	}
 
 	public static String getConsumerLeaseRootZkPath() {
 		return CONSUMER_LEASE_PATH_ROOT;
 	}
+
+	public static String getBrokerAssignmentZkPath(String topic, int partition) {
+		return String.format(BROKER_ASSIGNMENT_PATH_PATTERN, topic, partition);
+	}
+
+	public static String getBrokerAssignmentRootZkPath() {
+		return BROKER_ASSIGNMENT_PATH_ROOT;
+	}
+
+	public static String getBrokerAssignmentTopicParentZkPath(String topic) {
+		return String.format(BROKER_ASSIGNMENT_PATH_PREFIX_PATTERN, topic);
+	}
+
 }

@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
-import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -16,6 +15,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
+import com.ctrip.hermes.metaserver.meta.watcher.ZkReader;
 import com.ctrip.hermes.metaservice.service.MetaService;
 
 /**
@@ -27,6 +27,9 @@ public class MetaHolder implements Initializable {
 
 	@Inject
 	private MetaService m_metaService;
+
+	@Inject
+	private ZkReader m_zkReader;
 
 	private AtomicReference<Meta> m_mergedCache = new AtomicReference<>();
 
@@ -45,18 +48,17 @@ public class MetaHolder implements Initializable {
 		return m_mergedCache.get();
 	}
 
+	public void setMeta(Meta meta) {
+		m_mergedCache.set(meta);
+	}
+
 	@Override
 	public void initialize() throws InitializationException {
-		m_updateTaskExecutor = Executors.newFixedThreadPool(1, HermesThreadFactory.create("RefreshMeta", true));
+		m_updateTaskExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("RefreshMeta", true));
+	}
 
-		try {
-			// TODO
-			m_mergedCache.set(m_metaService.findLatestMeta());
-			m_baseCache.set(m_mergedCache.get());
-		} catch (DalException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void setBaseMeta(Meta baseMeta) {
+		m_baseCache.set(baseMeta);
 	}
 
 	public void update(final Meta meta) {
@@ -71,6 +73,7 @@ public class MetaHolder implements Initializable {
 	}
 
 	public void update(final List<Server> newServers) {
+		m_serverCache.set(newServers);
 		m_updateTaskExecutor.submit(new Runnable() {
 
 			@Override
@@ -82,6 +85,7 @@ public class MetaHolder implements Initializable {
 	}
 
 	public void update(final Map<String, Map<Integer, Endpoint>> newEndpoints) {
+		m_endpointCache.set(newEndpoints);
 		m_updateTaskExecutor.submit(new Runnable() {
 
 			@Override

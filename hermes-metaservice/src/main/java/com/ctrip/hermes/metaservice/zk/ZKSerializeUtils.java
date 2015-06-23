@@ -14,10 +14,18 @@ public class ZKSerializeUtils {
 	}
 
 	public static <T> T deserialize(byte[] bytes, Class<T> clazz) {
-		return JSON.parseObject(bytes, clazz);
+		if (bytes != null && bytes.length > 0) {
+			return JSON.parseObject(bytes, clazz);
+		} else {
+			return null;
+		}
 	}
 
 	public static <T> T deserialize(byte[] bytes, Type type) {
-		return JSON.parseObject(bytes, type);
+		if (bytes != null && bytes.length > 0) {
+			return JSON.parseObject(bytes, type);
+		} else {
+			return null;
+		}
 	}
 }

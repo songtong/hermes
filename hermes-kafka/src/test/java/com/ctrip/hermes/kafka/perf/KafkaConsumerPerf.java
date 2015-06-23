@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ctrip.hermes.kafka.admin.ConsumerPerfConfig;
+
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.ConsumerTimeoutException;
 import kafka.consumer.KafkaStream;

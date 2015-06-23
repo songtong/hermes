@@ -51,8 +51,8 @@ public class DefaultEngine extends Engine {
 						handle.addSubscribeHandle(consumerBootstrap.start(context));
 
 					} catch (Exception e) {
-						log.error(String.format("Failed to start consumer for topic %s(consumer: groupId=%s, sessionId=%s)",
-						      topic.getName(), context.getGroupId(), context.getSessionId()), e);
+						log.error("Failed to start consumer for topic {}(consumer: groupId={}, sessionId={})",
+						      topic.getName(), context.getGroupId(), context.getSessionId(), e);
 					}
 				}
 			} else {
@@ -62,5 +62,4 @@ public class DefaultEngine extends Engine {
 
 		return handle;
 	}
-
 }

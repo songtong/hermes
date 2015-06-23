@@ -10,6 +10,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
+import com.ctrip.hermes.broker.registry.BrokerRegistry;
 import com.ctrip.hermes.broker.transport.NettyServer;
 
 /**
@@ -27,6 +28,9 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 	@Inject
 	private BrokerConfig m_config;
 
+	@Inject
+	private BrokerRegistry m_registry;
+
 	@Override
 	public void start() throws Exception {
 		// TODO should move to start script -D cause ByteBufUtil will read in static initialization
@@ -38,7 +42,8 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (future.isSuccess()) {
-					log.info("Broker started at port {}.", m_config.getListeningPort());
+					m_registry.start();
+					log.info("Broker started at port {} with name {}.", m_config.getListeningPort(), m_config.getSessionId());
 				} else {
 					log.error("Failed to start broker.");
 				}
@@ -51,6 +56,7 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
 				log.info("Broker stopped.");
+				m_registry.stop();
 			}
 		});
 	}

@@ -175,7 +175,15 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			}
 		}
 		configs.put("group.id", group);
-		return configs;
+		return overrideByCtripDefaultSetting(configs);
+	}
+
+	private Properties overrideByCtripDefaultSetting(Properties consumerProp) {
+		if (!consumerProp.containsKey("offsets.storage")) {
+			consumerProp.put("offsets.storage", "kafka");
+			consumerProp.put("dual.commit.enabled", true);
+		}
+		return consumerProp;
 	}
 
 	private int getKafkaPartitionCount(String topic) {

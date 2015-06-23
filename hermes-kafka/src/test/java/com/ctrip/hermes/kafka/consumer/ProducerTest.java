@@ -18,7 +18,7 @@ public class ProducerTest {
 
 	@Test
 	public void testSimpleProducer() throws InterruptedException, ExecutionException {
-		String topic = "kafka.SimpleTopic";
+		String topic = "kafka.SimpleTextTopic";
 
 		Producer producer = Producer.getInstance();
 

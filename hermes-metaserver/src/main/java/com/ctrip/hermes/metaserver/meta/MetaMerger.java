@@ -1,6 +1,5 @@
 package com.ctrip.hermes.metaserver.meta;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -42,23 +41,24 @@ public class MetaMerger {
 			for (Map.Entry<String, Map<Integer, Endpoint>> topicEntry : newPartition2Endpoint.entrySet()) {
 				Topic topic = newMeta.findTopic(topicEntry.getKey());
 
-				List<Partition> newPartitions = new ArrayList<>();
 				for (Map.Entry<Integer, Endpoint> partitionEntry : topicEntry.getValue().entrySet()) {
 					Endpoint endpoint = partitionEntry.getValue();
-					newMeta.addEndpoint(endpoint);
+					if (endpoint != null) {
+						newMeta.addEndpoint(endpoint);
+					}
 
 					int partitionId = partitionEntry.getKey();
 					Partition p = topic.findPartition(partitionId);
 					if (p == null) {
 						log.warn("partition {} not found in topic {}, ignore", partitionId, topic);
 					} else {
-						p.setEndpoint(endpoint.getId());
-						newPartitions.add(p);
+						if (endpoint != null) {
+							p.setEndpoint(endpoint.getId());
+						} else {
+							p.setEndpoint(null);
+						}
 					}
 				}
-
-				topic.getPartitions().clear();
-				topic.getPartitions().addAll(newPartitions);
 			}
 		}
 

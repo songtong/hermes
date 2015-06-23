@@ -1,9 +1,9 @@
 package com.ctrip.hermes.metaservice.zk;
 
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -12,7 +12,8 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 @Named(type = ZKConfig.class)
 public class ZKConfig {
 
-	ClientEnvironment env = PlexusComponentLocator.lookup(ClientEnvironment.class);
+	@Inject
+	ClientEnvironment env;
 
 	public int getZkConnectionTimeoutMillis() {
 		return 3000;

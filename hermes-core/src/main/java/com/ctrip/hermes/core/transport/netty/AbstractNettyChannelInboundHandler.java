@@ -31,9 +31,8 @@ public abstract class AbstractNettyChannelInboundHandler extends SimpleChannelIn
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		log.error(
-		      String.format("Exception occurred in netty channel, will close channel(addr=%s)",
-		            NettyUtils.parseChannelRemoteAddr(ctx.channel())), cause);
+		log.error("Exception occurred in netty channel, will close channel(addr={})",
+		      NettyUtils.parseChannelRemoteAddr(ctx.channel()), cause);
 		ctx.channel().close();
 	}
 
