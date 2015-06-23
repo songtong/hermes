@@ -25,7 +25,7 @@ public class TopicsResourceTest extends ComponentTestCase {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String topic = "kafka.SimpleTopic";
+		String topic = "kafka.SimpleTextTopic";
 
 		Builder request = webTarget.path("topics/" + topic).request();
 		String content = "Hello World " + System.currentTimeMillis();
@@ -39,7 +39,7 @@ public class TopicsResourceTest extends ComponentTestCase {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String topic = "kafka.SimpleTopic";
+		String topic = "kafka.SimpleTextTopic";
 
 		Builder request = webTarget.path("topics/" + topic).request();
 		request.header("priority", "true");
@@ -50,6 +50,7 @@ public class TopicsResourceTest extends ComponentTestCase {
 		InputStream is = new ByteArrayInputStream(content.getBytes());
 		Response response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		System.out.println(response.readEntity(String.class));
 	}
 
 	@Test
@@ -71,7 +72,7 @@ public class TopicsResourceTest extends ComponentTestCase {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String topic = "kafka.SimpleTopic";
+		String topic = "kafka.SimpleTextTopic";
 
 		Builder request = webTarget.path("topics/" + topic).request();
 		String content = "Hello World " + System.currentTimeMillis();
