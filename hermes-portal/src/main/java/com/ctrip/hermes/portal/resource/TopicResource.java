@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SchemaView;
@@ -28,6 +29,7 @@ import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Codec;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.CodecService;
@@ -52,6 +54,26 @@ public class TopicResource {
 
 	private CodecService codecService = PlexusComponentLocator.lookup(CodecService.class);
 
+	private Pair<Boolean, ?> validateTopicView(TopicView topic) {
+		boolean passed = true;
+		String reason = "";
+		if (StringUtils.isBlank(topic.getStorageType())) {
+			reason = "Storage type is required";
+			passed = false;
+		} else if (StringUtils.isBlank(topic.getEndpointType())) {
+			switch (topic.getStorageType()) {
+			case Storage.KAFKA:
+				topic.setEndpointType(Endpoint.KAFKA);
+				break;
+			case Storage.MYSQL:
+				topic.setEndpointType(Endpoint.BROKER);
+				break;
+			}
+		}
+
+		return new Pair<>(passed, passed ? topic : reason);
+	}
+
 	@POST
 	public Response createTopic(String content) {
 		logger.info("Creating topic with payload {}.", content);
@@ -62,7 +84,11 @@ public class TopicResource {
 
 		TopicView topicView = null;
 		try {
-			topicView = JSON.parseObject(content, TopicView.class);
+			Pair<Boolean, ?> result = validateTopicView(JSON.parseObject(content, TopicView.class));
+			if (!result.getKey()) {
+				throw new RestException("Bad Request: " + result.getValue());
+			}
+			topicView = (TopicView) result.getValue();
 		} catch (Exception e) {
 			logger.error("Can not parse payload: {}, create topic failed.", content);
 			throw new RestException(e, Status.BAD_REQUEST);
