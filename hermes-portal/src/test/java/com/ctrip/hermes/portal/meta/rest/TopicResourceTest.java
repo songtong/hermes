@@ -26,6 +26,7 @@ import org.junit.Test;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.TopicView;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.portal.TestServer;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -80,7 +81,6 @@ public class TopicResourceTest extends TestServer {
 		String jsonString = Files.toString(new File("src/test/resources/topic-sample.json"), Charsets.UTF_8);
 		TopicView topicView = JSON.parseObject(jsonString, TopicView.class);
 		topicView.setName(topicView.getName() + "_" + UUID.randomUUID());
-
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(SERVER_HOST);
 		Builder request = webTarget.path("/api/topics/").request();
@@ -89,6 +89,7 @@ public class TopicResourceTest extends TestServer {
 		TopicView createdTopic = response.readEntity(TopicView.class);
 		request = webTarget.path("/api/topics/" + createdTopic.getName()).request();
 		response = request.delete();
+		Assert.assertEquals(createdTopic.getEndpointType(), Endpoint.KAFKA);
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 	}
 

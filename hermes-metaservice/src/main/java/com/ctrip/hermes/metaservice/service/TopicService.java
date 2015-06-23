@@ -28,6 +28,7 @@ import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
+import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
 
 @Named
 public class TopicService {
@@ -246,7 +247,11 @@ public class TopicService {
 				m_zookeeperService.deleteConsumerLeaseTopicParentZkPath(topic.getName());
 				m_zookeeperService.deleteBrokerLeaseTopicParentZkPath(topic.getName());
 			} catch (Exception e) {
-				throw new RuntimeException("Delete topic failed:" + e.getMessage());
+				if (e instanceof StorageHandleErrorException) {
+					m_logger.warn("Delete topic tables failed", e);
+				} else {
+					throw new RuntimeException("Delete topic failed.", e);
+				}
 			}
 		}
 		m_metaService.updateMeta(meta);
