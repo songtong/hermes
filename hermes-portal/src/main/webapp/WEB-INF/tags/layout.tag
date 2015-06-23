@@ -50,6 +50,9 @@
 		<div class="row-fluid">
 			<div class="span12">
 				<br> <br> <br>
+				<div class="op-alert" role="alert" style="display: none;">
+					<span id="op_info" style="line-height: 1.8">The examples populate this alert with dummy content</span>
+				</div>
 				<jsp:doBody />
 			</div>
 		</div>

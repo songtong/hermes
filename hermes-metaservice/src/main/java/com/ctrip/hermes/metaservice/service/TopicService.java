@@ -246,7 +246,7 @@ public class TopicService {
 				m_zookeeperService.deleteConsumerLeaseTopicParentZkPath(topic.getName());
 				m_zookeeperService.deleteBrokerLeaseTopicParentZkPath(topic.getName());
 			} catch (Exception e) {
-				throw new RuntimeException("Delete topic failedddd:" + e.getMessage());
+				throw new RuntimeException("Delete topic failed:" + e.getMessage());
 			}
 		}
 		m_metaService.updateMeta(meta);

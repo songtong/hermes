@@ -11,10 +11,6 @@
 	<script type="text/javascript">
 		var topic_name = "${model.topicName}";
 	</script>
-	<div class="op-alert alert alert-info" role="alert" style="display: none;">
-		<span>The examples populate this alert with dummy content</span>
-	</div>
-
 	<div class="panel panel-info" ng-app="hermes-topic-detail" ng-controller="topic-detail-controller">
 		<div class="panel-heading">
 			<span class="label label-primary">${model.topicName}</span>

@@ -5,9 +5,6 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.resender.Model" scope="request" />
 
 <a:layout>
-	<div class="op-alert alert alert-info" role="alert" style="display: none;">
-		<span>The examples populate this alert with dummy content</span>
-	</div>
 	<div class="container row" ng-app="hermes-resender" ng-controller="resender-controller">
 		<br>
 		<form class="form-horizontal">

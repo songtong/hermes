@@ -52,23 +52,27 @@ angular.module('hermes-endpoint', [ 'ngResource', 'smart-table' ]).controller('e
 			scope.add_endpoint = function add_endpoint(new_endpoint) {
 				meta_resource.add_endpoint({}, new_endpoint).$promise.then(function(save_result) {
 					console.log(save_result);
-					meta_resource.get_endpoints().$promise.then(function(query_result) {
+					meta_resource.get_endpoints({}, function(query_result) {
 						reload_table(scope, query_result);
-						show_op_info.show("新增Endpoint成功, 名称：" + new_endpoint.id);
+						show_op_info.show("新增成功, 名称: " + new_endpoint.id, true);
+					}, function(error_result) {
+						show_op_info.show("新增失败: " + error_result.data, false);
 					});
 				});
 			};
 
 			scope.del_endpoint = function del_endpoint(id) {
-				bootbox.confirm("确认删除Endpoint: " + id + "?", function(result) {
+				bootbox.confirm("确认删除 Endpoint: " + id + "?", function(result) {
 					if (result) {
 						meta_resource.delete_endpoint({
 							"id" : id
-						}).$promise.then(function(remove_result) {
+						}, function(remove_result) {
 							meta_resource.get_endpoints().$promise.then(function(query_result) {
 								reload_table(scope, query_result);
-								show_op_info.show("删除Endpoint：" + id + "成功！");
+								show_op_info.show("删除成功: " + id, true);
 							});
+						}, function(error_result) {
+							show_op_info.show("删除失败: " + error_result.data, false);
 						});
 					}
 				});

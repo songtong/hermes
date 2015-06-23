@@ -24,9 +24,11 @@ angular.module('hermes-resender', [ 'ngResource' ]).controller('resender-control
 		topic_resource.send_message({
 			name : scope.topic
 		}, scope.message_content, function() {
-			show_op_info.show("发送消息成功！");
+			show_op_info.show("发送消息成功", true);
 			scope.topic = "";
 			scope.message_content = "";
+		}, function(error_result) {
+			show_op_info.show("发送消息失败: " + error_result.data, false);
 		});
 	}
 } ]);
