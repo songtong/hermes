@@ -26,8 +26,8 @@ public class SubscriptionResourceTest extends ComponentTestCase {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestGatewayServer.PORTAL_HOST);
 
-		String id = "myid";
-		String topic = "kafka.SimpleTopic";
+		String name = "myid";
+		String topic = "kafka.SimpleTextTopic";
 		String group = "OneBoxGroup";
 		String urls = "http://localhost:1357/onebox";
 
@@ -35,12 +35,15 @@ public class SubscriptionResourceTest extends ComponentTestCase {
 		sub.setTopic(topic);
 		sub.setGroup(group);
 		sub.setEndpoints(urls);
+		sub.setName(name);
 
 		Builder request = webTarget.path("subscriptions/").request();
 		String json = JSON.toJSONString(sub);
 		System.out.println("Post: " + json);
 		Response response = request.post(Entity.entity(json, MediaType.APPLICATION_JSON));
 		Assert.assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+		
+		sub = response.readEntity(SubscriptionView.class);
 
 		request = webTarget.path("subscriptions/").request();
 		response = request.get();
@@ -49,7 +52,7 @@ public class SubscriptionResourceTest extends ComponentTestCase {
 		});
 		System.out.println(subs.toString());
 
-		request = webTarget.path("subscriptions/" + id).request();
+		request = webTarget.path("subscriptions/" + sub.getId()).request();
 		response = request.delete();
 		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 	}

@@ -12,7 +12,7 @@ public class TestGatewayServer extends JettyServer {
 	public static String PORTAL_HOST = "http://localhost:7678";
 
 	public static String GATEWAY_HOST = "http://localhost:1357";
-
+	
 	public static void main(String[] args) throws Exception {
 		TestGatewayServer server = new TestGatewayServer();
 

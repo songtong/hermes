@@ -5,10 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -25,7 +22,6 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -141,71 +137,4 @@ public class KafkaMessageSender implements MessageSender {
 		return new KafkaFuture(sendResult);
 	}
 
-	/**
-	 * 
-	 *
-	 */
-	class KafkaCallback implements org.apache.kafka.clients.producer.Callback {
-
-		private CompletionCallback<SendResult> m_callback;
-
-		public KafkaCallback(CompletionCallback<SendResult> callback) {
-			this.m_callback = callback;
-		}
-
-		@Override
-		public void onCompletion(RecordMetadata metadata, Exception exception) {
-			if (m_callback != null) {
-				if (exception != null) {
-					m_callback.onFailure(exception);
-				} else {
-					m_callback.onSuccess(new SendResult());
-				}
-			}
-		}
-	}
-
-	/**
-	 * 
-	 *
-	 */
-	class KafkaFuture implements Future<SendResult> {
-
-		private Future<RecordMetadata> m_recordMetadata;
-
-		public KafkaFuture(Future<RecordMetadata> recordMetadata) {
-			this.m_recordMetadata = recordMetadata;
-		}
-
-		@Override
-		public boolean cancel(boolean mayInterruptIfRunning) {
-			return this.m_recordMetadata.cancel(mayInterruptIfRunning);
-		}
-
-		@Override
-		public SendResult get() throws InterruptedException, ExecutionException {
-			this.m_recordMetadata.get();
-			SendResult sendResult = new SendResult();
-			return sendResult;
-		}
-
-		@Override
-		public SendResult get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException,
-		      TimeoutException {
-			this.m_recordMetadata.get(timeout, unit);
-			SendResult sendResult = new SendResult();
-			return sendResult;
-		}
-
-		@Override
-		public boolean isCancelled() {
-			return this.m_recordMetadata.isCancelled();
-		}
-
-		@Override
-		public boolean isDone() {
-			return this.m_recordMetadata.isDone();
-		}
-
-	}
 }
