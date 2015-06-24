@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -57,6 +58,7 @@ public class MetaServerResource {
 	public MetaStatusStatusResponse getStatus() throws Exception {
 		MetaStatusStatusResponse response = new MetaStatusStatusResponse();
 		response.setLeader(m_clusterStatusHolder.hasLeadership());
+		response.setLeaderInfo(m_clusterStatusHolder.getLeader());
 		response.setBrokerAssignments(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getAssignments());
 		response.setBrokerLeases(PlexusComponentLocator.lookup(BrokerLeaseHolder.class).getAllValidLeases());
 		response.setConsumerLeases(PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).getAllValidLeases());
@@ -65,6 +67,8 @@ public class MetaServerResource {
 
 	public static class MetaStatusStatusResponse {
 		private boolean m_leader;
+
+		private HostPort m_leaderInfo;
 
 		private Map<String, Assignment<Integer>> m_brokerAssignments;
 
@@ -102,6 +106,14 @@ public class MetaServerResource {
 
 		public void setConsumerLeases(Map<Tpg, Map<String, ClientLeaseInfo>> consumerLeases) {
 			m_consumerLeases = consumerLeases;
+		}
+
+		public HostPort getLeaderInfo() {
+			return m_leaderInfo;
+		}
+
+		public void setLeaderInfo(HostPort leaderInfo) {
+			m_leaderInfo = leaderInfo;
 		}
 
 	}
