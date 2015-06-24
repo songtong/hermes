@@ -32,6 +32,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.config.CoreConfig;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
@@ -65,6 +66,9 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 	@Inject
 	private SystemClockService m_systemClockService;
+
+	@Inject
+	private MetaService m_metaService;
 
 	private AtomicBoolean m_started = new AtomicBoolean(false);
 
@@ -141,14 +145,17 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 				if (!endpointChannel.isClosed()) {
 					if (!future.isSuccess()) {
 						endpointChannel.setChannelFuture(null);
-						final EventLoop loop = future.channel().eventLoop();
-						loop.schedule(new Runnable() {
-							@Override
-							public void run() {
-								log.info("Reconnecting to broker({}:{})", endpoint.getHost(), endpoint.getPort());
-								connect(endpoint, endpointChannel);
-							}
-						}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
+						
+						if (m_metaService.containsEndpoint(endpoint)) {
+							final EventLoop loop = future.channel().eventLoop();
+							loop.schedule(new Runnable() {
+								@Override
+								public void run() {
+									log.info("Reconnecting to broker({}:{})", endpoint.getHost(), endpoint.getPort());
+									connect(endpoint, endpointChannel);
+								}
+							}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
+						}
 					} else {
 						endpointChannel.setChannelFuture(future);
 					}

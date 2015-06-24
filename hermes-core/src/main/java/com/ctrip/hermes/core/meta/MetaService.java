@@ -61,4 +61,6 @@ public interface MetaService {
 	List<SchemaView> listSchemas();
 	
 	void refresh();
+
+	boolean containsEndpoint(Endpoint endpoint);
 }
