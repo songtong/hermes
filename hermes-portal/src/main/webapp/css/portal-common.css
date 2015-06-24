@@ -20,3 +20,9 @@
 	line-height: 2.3;
 	text-align: right;
 }
+
+.panel-info>.storage-heading {
+    /*color: #31708f;*/
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+}

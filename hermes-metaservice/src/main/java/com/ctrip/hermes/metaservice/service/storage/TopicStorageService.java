@@ -1,11 +1,15 @@
 package com.ctrip.hermes.metaservice.service.storage;
 
+import java.util.List;
+
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.metaservice.service.storage.exception.TopicAlreadyExistsException;
 import com.ctrip.hermes.metaservice.service.storage.exception.TopicIsNullException;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTopic;
 
 public interface TopicStorageService {
@@ -30,24 +34,44 @@ public interface TopicStorageService {
 	public boolean dropTopicStorage(Topic topic) throws StorageHandleErrorException, TopicIsNullException;
 
 	/**
-	 * 针对一个TP的MySql存储增加一个partition
+	 * 针对一个TP的MySql存储批量对多个表增加一个partition
 	 */
-	public boolean addPartitionStorage(Topic topic, Partition partition) throws TopicIsNullException, StorageHandleErrorException;
+	public void addPartitionStorage(Topic topic, Partition partition) throws TopicIsNullException, StorageHandleErrorException;
 
 	/**
-	 * 针对一个TP的MySql存储删除一个partition
+	 * 针对DataSource下的一个表增加一个partition
 	 */
-	public boolean delPartitionStorage(Topic topic, Partition partition) throws TopicIsNullException, StorageHandleErrorException;
+	public void addPartitionStorage(String ds, String table, int span) throws  StorageHandleErrorException;
+
+	/**
+	 * 针对一个TP的MySql存储批量对多个表删除一个partition
+	 */
+	public void delPartitionStorage(Topic topic, Partition partition) throws TopicIsNullException,
+			  StorageHandleErrorException;
+
+	/**
+	 * 针对DataSource下的一个表删除一个partition
+	 */
+	public void delPartitionStorage(String ds, String table) throws StorageHandleErrorException;
 
 	/**
 	 * 针对已存在的Topic,到每个TP上,新增ConsumerGroup
 	 * 若Topic不存在,抛TopicNotExistedException
 	 */
-	public boolean addConsumerStorage(Topic topic, ConsumerGroup group) throws StorageHandleErrorException, TopicIsNullException;
+	public boolean addConsumerStorage(Topic topic, ConsumerGroup group)
+			  throws StorageHandleErrorException, TopicIsNullException;
 
 	/**
 	 * 针对已存在的Topic,到每个TP上,删除ConsumerGroup
 	 * 若Topic不存在,抛TopicNotExistedException
 	 */
 	public boolean delConsumerStorage(Topic topic, ConsumerGroup group) throws StorageHandleErrorException, TopicIsNullException;
+
+	public Integer queryStorageSize(String ds) throws StorageHandleErrorException;
+
+	public Integer queryStorageSize(String ds, String table) throws StorageHandleErrorException;
+
+	public List<StorageTable> queryStorageTables(String ds) throws StorageHandleErrorException;
+
+	public List<StoragePartition> queryTablePartitions(String ds, String table) throws StorageHandleErrorException;
 }

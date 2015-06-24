@@ -1,4 +1,5 @@
-angular.module('hermes-storage', [ 'ngResource', 'xeditable' ]).run(function(editableOptions) {
+var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage']);
+hermes_storage.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
 }).controller('storage-controller', [ '$scope', '$resource', function(scope, resource) {
 	var meta_resource = resource('/api/meta/', {}, {
@@ -66,4 +67,10 @@ angular.module('hermes-storage', [ 'ngResource', 'xeditable' ]).run(function(edi
 			}
 		});
 	}
+
+    scope.is_mysql = function (type) {
+        return type == 'mysql';
+    }
 } ]);
+
+
