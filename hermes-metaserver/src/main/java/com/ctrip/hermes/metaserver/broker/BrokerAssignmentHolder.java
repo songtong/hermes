@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -44,16 +45,28 @@ public class BrokerAssignmentHolder {
 
 	private AtomicReference<List<Topic>> m_topicsCache = new AtomicReference<>();
 
+	private ReentrantReadWriteLock m_lock = new ReentrantReadWriteLock();
+
 	public BrokerAssignmentHolder() {
 		m_assignments.set(new HashMap<String, Assignment<Integer>>());
 	}
 
 	public Assignment<Integer> getAssignment(String topic) {
-		return m_assignments.get().get(topic);
+		m_lock.readLock().lock();
+		try {
+			return m_assignments.get().get(topic);
+		} finally {
+			m_lock.readLock().unlock();
+		}
 	}
 
 	public Map<String, Assignment<Integer>> getAssignments() {
-		return m_assignments.get();
+		m_lock.readLock().lock();
+		try {
+			return m_assignments.get();
+		} finally {
+			m_lock.readLock().unlock();
+		}
 	}
 
 	public void reassign(Map<String, ClientContext> brokers) {
@@ -65,12 +78,17 @@ public class BrokerAssignmentHolder {
 	}
 
 	public void reassign(Map<String, ClientContext> brokers, List<Topic> topics) {
-		if (brokers != null) {
-			m_brokersCache.set(brokers);
-		}
+		m_lock.writeLock().lock();
+		try {
+			if (brokers != null) {
+				m_brokersCache.set(brokers);
+			}
 
-		if (topics != null) {
-			m_topicsCache.set(topics);
+			if (topics != null) {
+				m_topicsCache.set(topics);
+			}
+		} finally {
+			m_lock.writeLock().unlock();
 		}
 		Map<String, Assignment<Integer>> newAssignments = m_brokerassigningStrategy.assign(m_brokersCache.get(),
 		      m_topicsCache.get(), getAssignments());
@@ -92,7 +110,12 @@ public class BrokerAssignmentHolder {
 
 	private void setAssignments(Map<String, Assignment<Integer>> newAssignments) {
 		if (newAssignments != null) {
-			m_assignments.set(newAssignments);
+			m_lock.writeLock().lock();
+			try {
+				m_assignments.set(newAssignments);
+			} finally {
+				m_lock.writeLock().unlock();
+			}
 
 			persistToZk(newAssignments);
 		}
@@ -118,9 +141,15 @@ public class BrokerAssignmentHolder {
 	}
 
 	public void reload() {
+
 		Map<String, Assignment<Integer>> assignments = loadFromZk();
 		if (assignments != null) {
-			m_assignments.set(assignments);
+			m_lock.writeLock().lock();
+			try {
+				m_assignments.set(assignments);
+			} finally {
+				m_lock.writeLock().unlock();
+			}
 		}
 	}
 
