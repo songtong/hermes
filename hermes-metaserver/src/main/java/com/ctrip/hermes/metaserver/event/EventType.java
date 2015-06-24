@@ -10,5 +10,6 @@ public enum EventType {
 	LEADER_INIT, //
 	FOLLOWER_INIT, //
 	BROKER_LIST_CHANGED, //
+	BROKER_LEASE_CHANGED, //
 	;
 }

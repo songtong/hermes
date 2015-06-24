@@ -75,6 +75,10 @@ public class MetaHolder implements Initializable {
 		update(baseMeta, null, null);
 	}
 
+	public void update() {
+		update(null, null, null);
+	}
+
 	public void update(final List<Server> metaServerList) {
 		update(null, metaServerList, null);
 	}

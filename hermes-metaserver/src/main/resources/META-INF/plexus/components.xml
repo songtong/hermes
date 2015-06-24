@@ -316,5 +316,21 @@
 				</requirement>
 			</requirements>
 		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.event.EventHandler</role>
+			<role-hint>BrokerLeaseChangedEventHandler</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.event.impl.BrokerLeaseChangedEventHandler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.commons.EndpointMaker</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+			</requirements>
+		</component>
 	</components>
 </plexus>

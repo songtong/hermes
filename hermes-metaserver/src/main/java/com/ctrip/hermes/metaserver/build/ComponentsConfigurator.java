@@ -25,6 +25,7 @@ import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAlloca
 import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.event.DefaultEventHandlerRegistry;
 import com.ctrip.hermes.metaserver.event.impl.BaseMetaChangedEventHandler;
+import com.ctrip.hermes.metaserver.event.impl.BrokerLeaseChangedEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.BrokerListChangedEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.LeaderInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.MetaServerListChangedEventHandler;
@@ -73,6 +74,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(BaseMetaChangedEventHandler.class));
 		all.add(A(BrokerListChangedEventHandler.class));
 		all.add(A(MetaServerListChangedEventHandler.class));
+		all.add(A(BrokerLeaseChangedEventHandler.class));
 
 		return all;
 	}
