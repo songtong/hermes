@@ -7,6 +7,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
+import com.ctrip.hermes.broker.queue.kafka.KafkaMessageQueue;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -28,6 +29,9 @@ public class MessageQueuePartitionFactory extends ContainerHolder {
 
 		if (Arrays.asList(Storage.MYSQL).contains(storage.getType())) {
 			return new DefaultMessageQueue(topic, partition, lookup(MessageQueueStorage.class, storage.getType()),
+			      m_metaService, m_config);
+		} else if (Arrays.asList(Storage.KAFKA).contains(storage.getType())) {
+			return new KafkaMessageQueue(topic, partition, lookup(MessageQueueStorage.class, storage.getType()),
 			      m_metaService, m_config);
 		} else {
 			throw new IllegalArgumentException("Unsupported storage type " + storage.getType());

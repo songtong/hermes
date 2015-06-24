@@ -204,6 +204,16 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.broker.queue.storage.MessageQueueStorage</role>
+			<role-hint>kafka</role-hint>
+			<implementation>com.ctrip.hermes.broker.queue.kafka.KafkaMessageQueueStorage</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.log.BizLogger</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>message-priority</role-hint>
 			<implementation>com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider</implementation>

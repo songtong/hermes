@@ -21,6 +21,7 @@ import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory;
+import com.ctrip.hermes.broker.queue.kafka.KafkaMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.MessageDataSourceProvider;
@@ -73,6 +74,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultMessageQueueManager.class));
 		all.add(A(DefaultAckManager.class));
 		all.add(A(MySQLMessageQueueStorage.class));
+		all.add(A(KafkaMessageQueueStorage.class));
 
 		all.add(C(TableProvider.class, "message-priority", HermesTableProvider.class) //
 		      .req(MetaService.class));

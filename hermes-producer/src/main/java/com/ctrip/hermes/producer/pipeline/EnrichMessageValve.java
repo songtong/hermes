@@ -31,7 +31,6 @@ public class EnrichMessageValve implements Valve {
 		}
 
 		if (StringUtils.isEmpty(partitionKey)) {
-			System.out.println("Parition key not set, will set ip as default partition key automatically(topic={})");
 			log.warn("Parition key not set, will set ip as default partition key automatically(topic={})", msg.getTopic());
 			partitionKey = Networks.forIp().getLocalHostAddress();
 			MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
