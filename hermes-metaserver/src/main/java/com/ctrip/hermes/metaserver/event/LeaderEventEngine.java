@@ -15,7 +15,7 @@ public class LeaderEventEngine implements EventEngine {
 	private EventBus m_eventBus = new DefaultEventBus();
 
 	private ExecutorService m_watcherExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create(
-	      "watcherExecutor", true));
+	      "leaderWatcherExecutor", true));
 
 	@Override
 	public void start(ClusterStateHolder clusterStateHolder) throws Exception {
