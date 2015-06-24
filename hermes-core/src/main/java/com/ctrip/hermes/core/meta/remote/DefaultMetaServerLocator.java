@@ -56,12 +56,12 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		return m_metaServerList.get();
 	}
 
-	private List<String> updateMetaServerList() {
+	private void updateMetaServerList() {
 		if (CollectionUtil.isNullOrEmpty(m_metaServerList.get())) {
 			m_metaServerList.set(domainToIpPorts());
 		}
 
-		return fetchMetaServerListFromExistingMetaServer();
+		m_metaServerList.set(fetchMetaServerListFromExistingMetaServer());
 	}
 
 	private List<String> fetchMetaServerListFromExistingMetaServer() {

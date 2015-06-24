@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,44 +34,46 @@ public class RemoteMetaLoader implements MetaLoader {
 	@Inject
 	private CoreConfig m_config;
 
-	private Meta m_meta;
+	private AtomicReference<Meta> m_metaCache = new AtomicReference<>(null);
 
 	@Override
 	public Meta load() {
-		String ipPort = null;
 		List<String> ipPorts = m_metaServerLocator.getMetaServerList();
 		if (ipPorts == null || ipPorts.isEmpty()) {
 			throw new RuntimeException("No meta server found.");
 		}
-		ipPort = ipPorts.get(0);
-		if (log.isDebugEnabled()) {
-			log.debug("Loading meta from server: {}", ipPort);
-		}
 
-		try {
-			String url;
-			if (m_meta != null) {
-				url = "http://" + ipPort + "/meta?version=" + m_meta.getVersion();
-			} else {
-				url = "http://" + ipPort + "/meta";
+		for (String ipPort : ipPorts) {
+			if (log.isDebugEnabled()) {
+				log.debug("Loading meta from server: {}", ipPort);
 			}
-			URL metaURL = new URL(url);
-			HttpURLConnection connection = (HttpURLConnection) metaURL.openConnection();
-			connection.setConnectTimeout(m_config.getMetaServerConnectTimeout());
-			connection.setReadTimeout(m_config.getMetaServerReadTimeout());
-			connection.setRequestMethod("GET");
-			connection.connect();
-			if (connection.getResponseCode() == 200) {
-				InputStream is = connection.getInputStream();
-				String jsonString = new String(ByteStreams.toByteArray(is));
-				m_meta = JSON.parseObject(jsonString, Meta.class);
-			} else if (connection.getResponseCode() == 304) {
-				return m_meta;
+
+			try {
+				String url = null;
+				if (m_metaCache.get() != null) {
+					url = "http://" + ipPort + "/meta?version=" + m_metaCache.get().getVersion();
+				} else {
+					url = "http://" + ipPort + "/meta";
+				}
+				URL metaURL = new URL(url);
+				HttpURLConnection connection = (HttpURLConnection) metaURL.openConnection();
+				connection.setConnectTimeout(m_config.getMetaServerConnectTimeout());
+				connection.setReadTimeout(m_config.getMetaServerReadTimeout());
+				connection.setRequestMethod("GET");
+				connection.connect();
+				if (connection.getResponseCode() == 200) {
+					InputStream is = connection.getInputStream();
+					String jsonString = new String(ByteStreams.toByteArray(is));
+					m_metaCache.set(JSON.parseObject(jsonString, Meta.class));
+					return m_metaCache.get();
+				} else if (connection.getResponseCode() == 304) {
+					return m_metaCache.get();
+				}
+			} catch (Exception e) {
+				// ignore
 			}
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to load remote meta", e);
 		}
-		return m_meta;
+		throw new RuntimeException(String.format("Failed to load remote meta from %s", ipPorts));
 	}
 
 }
