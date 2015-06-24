@@ -6,11 +6,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -28,7 +25,7 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
  *
  */
 @Named(type = BrokerAssignmentHolder.class)
-public class BrokerAssignmentHolder extends ContainerHolder implements Initializable {
+public class BrokerAssignmentHolder {
 
 	private static final Logger log = LoggerFactory.getLogger(BrokerAssignmentHolder.class);
 
@@ -46,8 +43,6 @@ public class BrokerAssignmentHolder extends ContainerHolder implements Initializ
 	private AtomicReference<Map<String, ClientContext>> m_brokersCache = new AtomicReference<>();
 
 	private AtomicReference<List<Topic>> m_topicsCache = new AtomicReference<>();
-
-	private Map<String, BrokerAssignmentChangedWatcher> m_changedWatchers = new HashMap<>();
 
 	public BrokerAssignmentHolder() {
 		m_assignments.set(new HashMap<String, Assignment<Integer>>());
@@ -100,8 +95,6 @@ public class BrokerAssignmentHolder extends ContainerHolder implements Initializ
 			m_assignments.set(newAssignments);
 
 			persistToZk(newAssignments);
-
-			notifyWatchers(newAssignments);
 		}
 	}
 
@@ -122,6 +115,13 @@ public class BrokerAssignmentHolder extends ContainerHolder implements Initializ
 			}
 		}
 
+	}
+
+	public void reload() {
+		Map<String, Assignment<Integer>> assignments = loadFromZk();
+		if (assignments != null) {
+			m_assignments.set(assignments);
+		}
 	}
 
 	private Map<String, Assignment<Integer>> loadFromZk() {
@@ -164,34 +164,6 @@ public class BrokerAssignmentHolder extends ContainerHolder implements Initializ
 		}
 
 		return assignments;
-	}
-
-	public void stop() {
-		m_assignments.set(new HashMap<String, Assignment<Integer>>());
-	}
-
-	public void start() {
-		Map<String, Assignment<Integer>> assignments = loadFromZk();
-		if (assignments != null) {
-			m_assignments.set(assignments);
-			notifyWatchers(assignments);
-		}
-	}
-
-	private void notifyWatchers(Map<String, Assignment<Integer>> newAssignments) {
-		for (Map.Entry<String, BrokerAssignmentChangedWatcher> entry : m_changedWatchers.entrySet()) {
-			try {
-				entry.getValue().assignmentChanged(newAssignments);
-			} catch (Exception e) {
-				log.error("Exception occurred while notifying broker assignment changed watcher {}.", entry.getKey(), e);
-			}
-		}
-	}
-
-	@Override
-	public void initialize() throws InitializationException {
-		Map<String, BrokerAssignmentChangedWatcher> watchers = lookupMap(BrokerAssignmentChangedWatcher.class);
-		m_changedWatchers.putAll(watchers);
 	}
 
 }

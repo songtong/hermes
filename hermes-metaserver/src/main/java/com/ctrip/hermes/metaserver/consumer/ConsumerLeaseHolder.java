@@ -26,7 +26,7 @@ import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 @Named(type = ConsumerLeaseHolder.class)
 public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 
-	private ExecutorService m_watcherExecutorService;
+	private ExecutorService m_watcherExecutor;
 
 	private Set<String> m_watchedTopics = new HashSet<>();
 
@@ -104,10 +104,10 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 
 	@Override
 	protected void doInitialize() {
-		m_watcherExecutorService = Executors.newSingleThreadExecutor(HermesThreadFactory.create("ConsumerLeaseWatcher",
+		m_watcherExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("ConsumerLeaseWatcher",
 		      true));
-		m_consumerLeaseChangedWatcher = new ConsumerLeaseChangedWatcher(m_watcherExecutorService, this);
-		m_consumerLeaseAddedWatcher = new ConsumerLeaseAddedWatcher(m_watcherExecutorService, this);
+		m_consumerLeaseChangedWatcher = new ConsumerLeaseChangedWatcher(m_watcherExecutor, this);
+		m_consumerLeaseAddedWatcher = new ConsumerLeaseAddedWatcher(m_watcherExecutor, this);
 	}
 
 	public synchronized boolean topicWatched(String topic) {
