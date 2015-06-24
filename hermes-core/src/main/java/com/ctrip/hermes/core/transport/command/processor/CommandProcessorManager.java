@@ -50,7 +50,7 @@ public class CommandProcessorManager implements Initializable {
 						try {
 							processor.process(ctx);
 						} catch (Exception e) {
-							e.printStackTrace();
+							log.error("Exception occurred while process command.", e);
 						}
 					}
 				});

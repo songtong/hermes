@@ -187,10 +187,10 @@ public class DefaultMetaService implements MetaService, Initializable {
 		return dataSources;
 	}
 
-	public void refresh(){
+	public void refresh() {
 		refreshMeta(m_manager.loadMeta());
 	}
-	
+
 	private void refreshMeta(Meta meta) {
 		m_metaCache.set(meta);
 	}
@@ -290,13 +290,18 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-   public List<SubscriptionView> listSubscriptions() {
+	public List<SubscriptionView> listSubscriptions() {
 		return m_manager.getMetaProxy().listSubscriptions();
 	}
 
 	@Override
-   public List<SchemaView> listSchemas() {
+	public List<SchemaView> listSchemas() {
 		return m_manager.getMetaProxy().listSchemas();
+	}
+
+	@Override
+	public boolean containsEndpoint(Endpoint endpoint) {
+		return m_metaCache.get().getEndpoints().containsKey(endpoint.getId());
 	}
 
 }

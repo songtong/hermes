@@ -96,4 +96,12 @@ public class MetaServerConfig {
 	public String getBrokerRegistryName(String name) {
 		return "default";
 	}
+
+	public int getLeaseExpireRebalanceTriggerThreadCount() {
+		return 5;
+	}
+
+	public long getleaseExpireRebalanceTriggerDelayMillis() {
+		return 5;
+	}
 }

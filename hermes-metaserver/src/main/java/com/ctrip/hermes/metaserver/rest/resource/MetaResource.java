@@ -28,7 +28,7 @@ public class MetaResource {
 	private MetaHolder m_metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
 
 	@GET
-	public Response getMeta(@QueryParam("version") @DefaultValue("0") int version,
+	public Response getMeta(@QueryParam("version") @DefaultValue("0") long version,
 	      @QueryParam("hashCode") @DefaultValue("0") long hashCode) {
 		logger.debug("get meta, version {}", version);
 		Meta meta = null;
