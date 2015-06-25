@@ -135,6 +135,11 @@ public class MetaHolder implements Initializable {
 		}
 
 		meta.setVersion(newMetaVersion);
+
+		if (metaInfo == null) {
+			metaInfo = new MetaInfo();
+		}
+
 		metaInfo.setTimestamp(newMetaVersion);
 		metaInfo.setHost(Networks.forIp().getLocalHostAddress());
 		metaInfo.setPort(m_config.getMetaServerPort());
