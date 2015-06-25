@@ -36,7 +36,9 @@ public class ConsumerLeaseChangedWatcher extends BaseZkWatcher {
 
 			EventType type = event.getType();
 			if (type == EventType.NodeDataChanged) {
-				log.info("Consumer lease changed for topic {}", topic);
+				if (log.isDebugEnabled()) {
+					log.info("Consumer lease changed for topic {}", topic);
+				}
 
 				Map<String, Map<String, ClientLeaseInfo>> topicExistingLeases = m_leaseHolder
 				      .loadAndWatchTopicExistingLeases(topic);

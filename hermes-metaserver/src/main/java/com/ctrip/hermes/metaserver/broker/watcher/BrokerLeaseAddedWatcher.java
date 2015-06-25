@@ -42,10 +42,12 @@ public class BrokerLeaseAddedWatcher extends BaseZkWatcher {
 			CuratorFramework client = PlexusComponentLocator.lookup(ZKClient.class).getClient();
 
 			List<String> topics = client.getChildren().usingWatcher(this).forPath(path);
-			
+
 			for (String topic : topics) {
 				if (!m_leaseHolder.topicWatched(topic)) {
-					log.info("Broker lease added for topic {}.", topic);
+					if (log.isDebugEnabled()) {
+						log.debug("Broker lease added for topic {}.", topic);
+					}
 
 					Map<String, Map<String, ClientLeaseInfo>> topicExistingLeases = m_leaseHolder
 					      .loadAndWatchTopicExistingLeases(topic);

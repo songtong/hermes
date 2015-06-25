@@ -29,8 +29,11 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 			Lease newLease = m_leaseHolder.newLease(tpg, consumerName, existingValidLeases,
 			      m_config.getConsumerLeaseTimeMillis(), ip, port);
 
-			log.info("Acquire lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
-			      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, newLease.getExpireTime());
+			if (log.isDebugEnabled()) {
+				log.debug(
+				      "Acquire lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
+				      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, newLease.getExpireTime());
+			}
 
 			return new LeaseAcquireResponse(true, new Lease(newLease.getId(), newLease.getExpireTime()
 			      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
@@ -81,10 +84,12 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 				m_leaseHolder.renewLease(tpg, consumerName, existingValidLeases, existingClientLeaseInfo,
 				      m_config.getConsumerLeaseTimeMillis(), ip, port);
 
-				log.info(
-				      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
-				      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingClientLeaseInfo
-				            .getLease().getExpireTime());
+				if (log.isDebugEnabled()) {
+					log.debug(
+					      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
+					      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingClientLeaseInfo
+					            .getLease().getExpireTime());
+				}
 
 				return new LeaseAcquireResponse(true, new Lease(leaseId, existingClientLeaseInfo.getLease().getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1L);

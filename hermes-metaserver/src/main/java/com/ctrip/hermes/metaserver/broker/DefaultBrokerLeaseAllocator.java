@@ -108,8 +108,10 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 					Lease newLease = m_leaseHolder.newLease(contextKey, brokerName, existingValidLeases,
 					      m_config.getBrokerLeaseTimeMillis(), ip, port);
 
-					log.info("Acquire lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).", topic,
-					      partition, brokerName, newLease.getExpireTime());
+					if (log.isDebugEnabled()) {
+						log.debug("Acquire lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).", topic,
+						      partition, brokerName, newLease.getExpireTime());
+					}
 
 					return new LeaseAcquireResponse(true, new Lease(newLease.getId(), newLease.getExpireTime()
 					      + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1);
@@ -170,8 +172,10 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 					if (existingClientLeaseInfo != null) {
 						m_leaseHolder.renewLease(contextKey, brokerName, existingValidLeases, existingClientLeaseInfo,
 						      m_config.getBrokerLeaseTimeMillis(), ip, port);
-						log.info("Renew lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).", topic,
-						      partition, brokerName, existingClientLeaseInfo.getLease().getExpireTime());
+						if (log.isDebugEnabled()) {
+							log.debug("Renew lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).", topic,
+							      partition, brokerName, existingClientLeaseInfo.getLease().getExpireTime());
+						}
 
 						return new LeaseAcquireResponse(true, new Lease(leaseId, existingClientLeaseInfo.getLease()
 						      .getExpireTime() + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1L);
