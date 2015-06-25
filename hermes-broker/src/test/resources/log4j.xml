@@ -5,7 +5,7 @@
 
 	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
 		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="[%d{MM-dd HH:mm:ss.SSS}] [%p] [%c] [%t] %m%n" />
+			<param name="ConversionPattern" value="[%d{MM-dd HH:mm:ss.SSS}] [%p] [%C{1}] [%t] %m%n" />
 		</layout>
 
 		<!--限制输出级别 -->
@@ -16,7 +16,7 @@
 	</appender>
 
 	<appender name="FILE" class="org.apache.log4j.FileAppender">
-		<param name="File" value="/data/applogs/logstash/hermes.log" />
+		<param name="File" value="/opt/logs/hermes/es.log" />
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%m%n" />
 		</layout>
