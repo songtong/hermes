@@ -3,25 +3,35 @@ package com.ctrip.hermes.producer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.Pipeline;
 import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.build.BuildConstants;
 
 @Named(type = Producer.class)
 public class DefaultProducer extends Producer {
+
+	private static final Logger log = LoggerFactory.getLogger(DefaultProducer.class);
+
 	@Inject(BuildConstants.PRODUCER)
 	private Pipeline<Future<SendResult>> m_pipeline;
 
 	@Inject
 	private SystemClockService m_systemClockService;
+
+	@Inject
+	private MetaService m_metaService;
 
 	@Override
 	public DefaultMessageHolder message(String topic, String partitionKey, Object body) {
@@ -38,6 +48,13 @@ public class DefaultProducer extends Producer {
 
 		@Override
 		public Future<SendResult> send() {
+			Topic topic = m_metaService.findTopicByName(m_msg.getTopic());
+
+			if (topic == null) {
+				log.error("Topic {} not found.", m_msg.getTopic());
+				throw new IllegalArgumentException(String.format("Topic %s not found.", m_msg.getTopic()));
+			}
+
 			m_msg.setBornTime(m_systemClockService.now());
 			return m_pipeline.put(m_msg);
 		}

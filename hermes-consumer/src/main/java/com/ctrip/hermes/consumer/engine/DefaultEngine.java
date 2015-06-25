@@ -70,7 +70,8 @@ public class DefaultEngine extends Engine {
 	private boolean validate(Topic topic, ConsumerContext context) {
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 			if (!m_metaService.containsConsumerGroup(topic.getName(), context.getGroupId())) {
-				log.error("Consumer group {} not found for topic {}, please add consumer group in Hermes-Portal first.");
+				log.error("Consumer group {} not found for topic {}, please add consumer group in Hermes-Portal first.",
+				      context.getGroupId(), topic.getName());
 				return false;
 			}
 		}
