@@ -102,8 +102,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				msg.setPayload(pdmsg.readBody());
 				msg.setPriority(tpp.isPriority() ? 0 : 1);
 				// TODO set producer id and producer id in producer
-				msg.setProducerId(101);
-				msg.setProducerIp("1.1.1.1");
+				msg.setProducerId(0);
+				msg.setProducerIp("");
 				msg.setRefKey(pdmsg.getKey());
 				msg.setTopic(tpp.getTopic());
 				msg.setCodecType(pdmsg.getBodyCodecType());
