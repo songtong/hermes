@@ -60,6 +60,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(LongPollingService.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//
+		      .req(MetaService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(AckManager.class) //

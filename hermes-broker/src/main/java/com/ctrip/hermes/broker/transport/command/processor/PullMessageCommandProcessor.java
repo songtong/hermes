@@ -12,6 +12,7 @@ import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.PullMessageCommand;
 import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
@@ -31,6 +32,9 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 	@Inject
 	private BrokerConfig m_config;
 
+	@Inject
+	private MetaService m_metaService;
+
 	@Override
 	public List<CommandType> commandTypes() {
 		return Arrays.asList(CommandType.MESSAGE_PULL);
@@ -41,22 +45,40 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 		PullMessageCommand reqCmd = (PullMessageCommand) ctx.getCommand();
 		long correlationId = reqCmd.getHeader().getCorrelationId();
 
-		Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(), m_config.getSessionId());
+		try {
+			if (m_metaService.containsConsumerGroup(reqCmd.getTopic(), reqCmd.getGroupId())) {
+				Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(),
+				      m_config.getSessionId());
 
-		if (lease != null) {
-			m_longPollingService.schedulePush(new Tpg(reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId()),
-			      correlationId, reqCmd.getSize(), ctx.getChannel(), reqCmd.getExpireTime(), lease);
-		} else {
+				if (lease != null) {
+					m_longPollingService.schedulePush(
+					      new Tpg(reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId()), correlationId,
+					      reqCmd.getSize(), ctx.getChannel(), reqCmd.getExpireTime(), lease);
+					return;
+				} else {
+					if (log.isDebugEnabled()) {
+						log.debug(
+						      "No broker lease to handle client pull message reqeust(correlationId={}, topic={}, partition={}, groupId={})",
+						      correlationId, reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId());
+					}
+				}
+			} else {
+				if (log.isDebugEnabled()) {
+					log.debug("Consumer group not found for topic (correlationId={}, topic={}, partition={}, groupId={})",
+					      correlationId, reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId());
+				}
+			}
+		} catch (Exception e) {
 			if (log.isDebugEnabled()) {
 				log.debug(
-				      "No broker lease to handle client pull message reqeust(correlationId={}, topic={}, partition={}, groupId={})",
-				      correlationId, reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId());
+				      "Exception occurred while handling client pull message reqeust(correlationId={}, topic={}, partition={}, groupId={})",
+				      correlationId, reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId(), e);
 			}
-			// can not acquire lease, response with empty result
-			PullMessageResultCommand cmd = new PullMessageResultCommand();
-			cmd.getHeader().setCorrelationId(reqCmd.getHeader().getCorrelationId());
-
-			ctx.getChannel().writeAndFlush(cmd);
 		}
+		// can not acquire lease, response with empty result
+		PullMessageResultCommand cmd = new PullMessageResultCommand();
+		cmd.getHeader().setCorrelationId(reqCmd.getHeader().getCorrelationId());
+
+		ctx.getChannel().writeAndFlush(cmd);
 	}
 }
