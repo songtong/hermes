@@ -36,14 +36,18 @@ public class BrokerLeaseChangedWatcher extends BaseZkWatcher {
 
 			EventType type = event.getType();
 			if (type == EventType.NodeDataChanged) {
-				log.info("Broker lease changed for topic {}", topic);
+				if (log.isDebugEnabled()) {
+					log.debug("Broker lease changed for topic {}", topic);
+				}
 
 				Map<String, Map<String, ClientLeaseInfo>> topicExistingLeases = m_leaseHolder
 				      .loadAndWatchTopicExistingLeases(topic);
 
 				m_leaseHolder.updateContexts(topicExistingLeases);
 			} else {
-				log.info("Broker lease removed for topic {}", topic);
+				if (log.isDebugEnabled()) {
+					log.debug("Broker lease removed for topic {}", topic);
+				}
 
 				// we don't need to remove it from the lease holder, since it will be removed by housekeeper
 				m_leaseHolder.removeWatchedTopic(topic);
