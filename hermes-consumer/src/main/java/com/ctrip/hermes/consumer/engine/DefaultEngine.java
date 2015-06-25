@@ -12,6 +12,7 @@ import com.ctrip.hermes.consumer.engine.bootstrap.ConsumerBootstrapManager;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Topic;
 
 @Named(type = Engine.class)
@@ -45,14 +46,17 @@ public class DefaultEngine extends Engine {
 				for (Topic topic : topics) {
 					ConsumerContext context = new ConsumerContext(topic, s.getGroupId(), s.getConsumer(),
 					      s.getMessageClass(), s.getConsumerType());
-					try {
-						String endpointType = m_metaService.findEndpointTypeByTopic(topic.getName());
-						ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(endpointType);
-						handle.addSubscribeHandle(consumerBootstrap.start(context));
 
-					} catch (Exception e) {
-						log.error("Failed to start consumer for topic {}(consumer: groupId={}, sessionId={})",
-						      topic.getName(), context.getGroupId(), context.getSessionId(), e);
+					if (validate(topic, context)) {
+						try {
+							String endpointType = m_metaService.findEndpointTypeByTopic(topic.getName());
+							ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(endpointType);
+							handle.addSubscribeHandle(consumerBootstrap.start(context));
+
+						} catch (Exception e) {
+							log.error("Failed to start consumer for topic {}(consumer: groupId={}, sessionId={})",
+							      topic.getName(), context.getGroupId(), context.getSessionId(), e);
+						}
 					}
 				}
 			} else {
@@ -61,5 +65,16 @@ public class DefaultEngine extends Engine {
 		}
 
 		return handle;
+	}
+
+	private boolean validate(Topic topic, ConsumerContext context) {
+		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+			if (!m_metaService.containsConsumerGroup(topic.getName(), context.getGroupId())) {
+				log.error("Consumer group {} not found for topic {}, please add consumer group in Hermes-Portal first.");
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

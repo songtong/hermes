@@ -45,7 +45,7 @@ public interface MetaService {
 	List<Partition> listPartitionsByTopic(String topic);
 
 	List<Topic> listTopicsByPattern(String topicPattern);
-	
+
 	LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId, int brokerPort);
 
 	int translateToIntGroupId(String topic, String groupId);
@@ -57,10 +57,12 @@ public interface MetaService {
 	LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId);
 
 	List<SubscriptionView> listSubscriptions();
-	
+
 	List<SchemaView> listSchemas();
-	
+
 	void refresh();
 
 	boolean containsEndpoint(Endpoint endpoint);
+
+	boolean containsConsumerGroup(String topicName, String groupId);
 }

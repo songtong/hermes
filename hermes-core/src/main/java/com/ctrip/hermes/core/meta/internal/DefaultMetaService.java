@@ -304,4 +304,20 @@ public class DefaultMetaService implements MetaService, Initializable {
 		return m_metaCache.get().getEndpoints().containsKey(endpoint.getId());
 	}
 
+	@Override
+	public boolean containsConsumerGroup(String topicName, String groupId) {
+		Topic topic = findTopicByName(topicName);
+		if (topic == null) {
+			throw new RuntimeException(String.format("Topic %s not found", topicName));
+		}
+
+		ConsumerGroup consumerGroup = topic.findConsumerGroup(groupId);
+
+		if (consumerGroup == null) {
+			return false;
+		}
+
+		return true;
+	}
+
 }
