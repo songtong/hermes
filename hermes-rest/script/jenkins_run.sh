@@ -12,7 +12,7 @@ mkdir -p ${OLD_DEPLOYMENT}
 
 if [ -f ${TOMCAT_PATH}/hermes-${APP_PREFIX}*.war ]
 then
-    ls ${TOMCAT_PATH} | grep hermes-${APP_PREFIX}*.war
+    ls ${TOMCAT_PATH}
 
     echo "Old-Deployment: Moving ["`ls ${TOMCAT_PATH} | grep hermes-${APP_PREFIX}*.war`"] to "${OLD_DEPLOYMENT}
     mv ${TOMCAT_PATH}/hermes-${APP_PREFIX}*.war ${OLD_DEPLOYMENT}
@@ -26,6 +26,6 @@ echo "Remove all under "${TOMCAT_PATH} " except *.war."
 echo "Removing: ["`ls | grep -v ".*${APP_PREFIX}.*war"`]
 rm -rf `ls | grep -v ".*${APP_PREFIX}.*war"`
 jar -xf hermes-${APP_PREFIX}*.war
-sudo ${TOMCAT_BIN}/shutdown.sh
+${TOMCAT_BIN}/shutdown.sh
 sleep 10
-sudo ${TOMCAT_BIN}/startup.sh
+${TOMCAT_BIN}/startup.sh
