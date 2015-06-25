@@ -1,6 +1,7 @@
 package com.ctrip.hermes.rest.service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,7 +75,11 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 			@Override
 			public void run() {
 				try {
-					Set<SubscriptionView> newSubscriptions = new HashSet<>(m_metaService.listSubscriptions());
+					List<SubscriptionView> remoteSubscriptions = m_metaService.listSubscriptions();
+					if (remoteSubscriptions == null) {
+						return;
+					}
+					Set<SubscriptionView> newSubscriptions = new HashSet<>(remoteSubscriptions);
 					SetView<SubscriptionView> created = Sets.difference(newSubscriptions, subscriptions);
 					SetView<SubscriptionView> removed = Sets.difference(subscriptions, newSubscriptions);
 

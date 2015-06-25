@@ -40,12 +40,12 @@ public class NativeKafkaWithStringDecoderTest {
 		int msgNum = 100000;
 		final CountDownLatch countDown = new CountDownLatch(msgNum);
 
-		Properties produerProps = new Properties();
+		Properties producerProps = new Properties();
 		// Producer
-		produerProps.put("metadata.broker.list", MockKafka.LOCALHOST_BROKER);
-		produerProps.put("bootstrap.servers", MockKafka.LOCALHOST_BROKER);
-		produerProps.put("value.serializer", StringSerializer.class.getCanonicalName());
-		produerProps.put("key.serializer", StringSerializer.class.getCanonicalName());
+		producerProps.put("metadata.broker.list", MockKafka.LOCALHOST_BROKER);
+		producerProps.put("bootstrap.servers", MockKafka.LOCALHOST_BROKER);
+		producerProps.put("value.serializer", StringSerializer.class.getCanonicalName());
+		producerProps.put("key.serializer", StringSerializer.class.getCanonicalName());
 		// Consumer
 		Properties consumerProps = new Properties();
 		consumerProps.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
@@ -75,7 +75,7 @@ public class NativeKafkaWithStringDecoderTest {
 			}.start();
 		}
 
-		KafkaProducer<String, String> producer = new KafkaProducer<String, String>(produerProps);
+		KafkaProducer<String, String> producer = new KafkaProducer<String, String>(producerProps);
 		int i = 0;
 		while (i < msgNum) {
 			ProducerRecord<String, String> data = new ProducerRecord<String, String>(topic, "test-message" + i++);

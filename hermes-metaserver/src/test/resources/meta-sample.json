@@ -16,7 +16,7 @@
     "kafka": {
       "datasources": [
         {
-          "id": "kafka-produer",
+          "id": "kafka-producer",
           "properties": {
             "bootstrap.servers": {
               "name": "bootstrap.servers",
@@ -183,7 +183,7 @@
           "endpoint": "kafka-endpoint",
           "id": 0,
           "readDatasource": "kafka-consumer",
-          "writeDatasource": "kafka-produer"
+          "writeDatasource": "kafka-producer"
         }
       ],
       "properties": [],
@@ -235,7 +235,7 @@
           "endpoint": "kafka-endpoint",
           "id": 0,
           "readDatasource": "kafka-consumer",
-          "writeDatasource": "kafka-produer"
+          "writeDatasource": "kafka-producer"
         }
       ],
       "properties": [

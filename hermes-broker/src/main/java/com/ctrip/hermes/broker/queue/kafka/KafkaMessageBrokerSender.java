@@ -29,12 +29,12 @@ public class KafkaMessageBrokerSender {
 
 	public KafkaMessageBrokerSender(String topic, MetaService metaService) {
 		this.m_metaService = metaService;
-		Properties configs = getProduerProperties(topic);
+		Properties configs = getProducerProperties(topic);
 		m_producer = new KafkaProducer<>(configs);
 		m_logger.debug("Kafka broker sender for {} initialized.", topic);
 	}
 
-	private Properties getProduerProperties(String topic) {
+	private Properties getProducerProperties(String topic) {
 		Properties configs = new Properties();
 
 		List<Partition> partitions = m_metaService.listPartitionsByTopic(topic);
@@ -43,12 +43,12 @@ public class KafkaMessageBrokerSender {
 		}
 
 		String producerDatasource = partitions.get(0).getWriteDatasource();
-		Storage produerStorage = m_metaService.findStorageByTopic(topic);
-		if (produerStorage == null) {
+		Storage producerStorage = m_metaService.findStorageByTopic(topic);
+		if (producerStorage == null) {
 			return configs;
 		}
 
-		for (Datasource datasource : produerStorage.getDatasources()) {
+		for (Datasource datasource : producerStorage.getDatasources()) {
 			if (producerDatasource.equals(datasource.getId())) {
 				Map<String, Property> properties = datasource.getProperties();
 				for (Map.Entry<String, Property> prop : properties.entrySet()) {
