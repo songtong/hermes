@@ -14,6 +14,7 @@ import com.ctrip.hermes.metaserver.event.EventEngineContext;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
+import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaservice.service.MetaService;
 
 /**
@@ -27,6 +28,9 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 
 	@Inject
 	private BrokerAssignmentHolder m_brokerAssignmentHolder;
+
+	@Inject
+	private MetaServerAssignmentHolder m_metaServerAssignmentHolder;
 
 	@Inject
 	private EndpointMaker m_endpointMaker;
@@ -43,10 +47,13 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 	protected void processEvent(EventEngineContext context, Event event) throws Exception {
 		Meta baseMeta = m_metaService.findLatestMeta();
 
-		m_brokerAssignmentHolder.reassign(new ArrayList<Topic>(baseMeta.getTopics().values()));
+		ArrayList<Topic> topics = new ArrayList<Topic>(baseMeta.getTopics().values());
+		m_brokerAssignmentHolder.reassign(topics);
 
 		m_metaHolder.setBaseMeta(baseMeta);
 		m_metaHolder.update(m_endpointMaker.makeEndpoints(context, m_brokerAssignmentHolder.getAssignments()));
+
+		m_metaServerAssignmentHolder.reassign(null, topics);
 	}
 
 	@Override

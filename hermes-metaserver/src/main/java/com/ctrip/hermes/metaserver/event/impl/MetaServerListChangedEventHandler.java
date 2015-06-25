@@ -11,6 +11,7 @@ import com.ctrip.hermes.metaserver.event.EventEngineContext;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
+import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -21,6 +22,9 @@ public class MetaServerListChangedEventHandler extends BaseEventHandler {
 
 	@Inject
 	private MetaHolder m_metaHolder;
+
+	@Inject
+	private MetaServerAssignmentHolder m_metaServerAssignmentHolder;
 
 	@Override
 	public EventType eventType() {
@@ -34,6 +38,7 @@ public class MetaServerListChangedEventHandler extends BaseEventHandler {
 		if (data != null) {
 			List<Server> metaServers = (List<Server>) data;
 			m_metaHolder.update(metaServers);
+			m_metaServerAssignmentHolder.reassign(metaServers, null);
 		}
 	}
 

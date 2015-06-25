@@ -37,7 +37,7 @@ public class BrokerAssignmentHolder {
 	private ZKClient m_zkClient;
 
 	@Inject
-	private BrokerPartitionAssigningStrategy m_brokerassigningStrategy;
+	private BrokerPartitionAssigningStrategy m_brokerAssigningStrategy;
 
 	private AtomicReference<Map<String, Assignment<Integer>>> m_assignments = new AtomicReference<>();
 
@@ -90,7 +90,7 @@ public class BrokerAssignmentHolder {
 		} finally {
 			m_lock.writeLock().unlock();
 		}
-		Map<String, Assignment<Integer>> newAssignments = m_brokerassigningStrategy.assign(m_brokersCache.get(),
+		Map<String, Assignment<Integer>> newAssignments = m_brokerAssigningStrategy.assign(m_brokersCache.get(),
 		      m_topicsCache.get(), getAssignments());
 		setAssignments(newAssignments);
 
@@ -193,6 +193,10 @@ public class BrokerAssignmentHolder {
 		}
 
 		return assignments;
+	}
+
+	public void clear() {
+		setAssignments(new HashMap<String, Assignment<Integer>>());
 	}
 
 }

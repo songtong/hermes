@@ -26,6 +26,7 @@ import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
+import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaserver.rest.commons.RestException;
 
 @Path("/metaserver/")
@@ -60,6 +61,8 @@ public class MetaServerResource {
 		response.setLeader(m_clusterStatusHolder.hasLeadership());
 		response.setLeaderInfo(m_clusterStatusHolder.getLeader());
 		response.setBrokerAssignments(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getAssignments());
+		response.setMetaServerAssignments(PlexusComponentLocator.lookup(MetaServerAssignmentHolder.class)
+		      .getAssignments());
 		response.setBrokerLeases(PlexusComponentLocator.lookup(BrokerLeaseHolder.class).getAllValidLeases());
 		response.setConsumerLeases(PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).getAllValidLeases());
 		return response;
@@ -75,6 +78,8 @@ public class MetaServerResource {
 		private Map<Pair<String, Integer>, Map<String, ClientLeaseInfo>> m_brokerLeases;
 
 		private Map<Tpg, Map<String, ClientLeaseInfo>> m_consumerLeases;
+
+		private Assignment<String> m_metaServerAssignments;
 
 		public boolean isLeader() {
 			return m_leader;
@@ -114,6 +119,14 @@ public class MetaServerResource {
 
 		public void setLeaderInfo(HostPort leaderInfo) {
 			m_leaderInfo = leaderInfo;
+		}
+
+		public Assignment<String> getMetaServerAssignments() {
+			return m_metaServerAssignments;
+		}
+
+		public void setMetaServerAssignments(Assignment<String> metaServerAssignments) {
+			m_metaServerAssignments = metaServerAssignments;
 		}
 
 	}

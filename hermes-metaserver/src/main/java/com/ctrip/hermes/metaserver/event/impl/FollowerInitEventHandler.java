@@ -15,6 +15,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.commons.BaseEventBasedZkWatcher;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.event.Event;
@@ -23,6 +24,7 @@ import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaInfo;
+import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
@@ -44,6 +46,12 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	private MetaHolder m_metaHolder;
 
 	@Inject
+	private BrokerAssignmentHolder m_brokerAssignmentHolder;
+
+	@Inject
+	private MetaServerAssignmentHolder m_metaServerAssignmentHolder;
+
+	@Inject
 	private ZKClient m_zkClient;
 
 	@Override
@@ -57,7 +65,15 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 	@Override
 	protected void processEvent(EventEngineContext context, Event event) throws Exception {
-		loadAndaddMetaInfoWatcher(new LeaderMetaUpdateWatcher(context));
+		m_brokerAssignmentHolder.clear();
+		loadAndaddMetaInfoWatcher(new LeaderMetaChangedWatcher(context));
+
+		loadAndAddMetaServerAssignmentWatcher(new MetaServerAssignmentChangedWatcher(context));
+	}
+
+	private void loadAndAddMetaServerAssignmentWatcher(MetaServerAssignmentChangedWatcher watcher) throws Exception {
+		m_zkClient.getClient().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
+		m_metaServerAssignmentHolder.reload();
 	}
 
 	private void loadAndaddMetaInfoWatcher(Watcher watcher) throws Exception {
@@ -104,9 +120,9 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		return Role.FOLLOWER;
 	}
 
-	private class LeaderMetaUpdateWatcher extends BaseEventBasedZkWatcher {
+	private class LeaderMetaChangedWatcher extends BaseEventBasedZkWatcher {
 
-		protected LeaderMetaUpdateWatcher(EventEngineContext context) {
+		protected LeaderMetaChangedWatcher(EventEngineContext context) {
 			super(context.getEventBus(), context.getWatcherExecutor(), context.getClusterStateHolder(),
 			      org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
 		}
@@ -122,4 +138,21 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 	}
 
+	private class MetaServerAssignmentChangedWatcher extends BaseEventBasedZkWatcher {
+
+		protected MetaServerAssignmentChangedWatcher(EventEngineContext context) {
+			super(context.getEventBus(), context.getWatcherExecutor(), context.getClusterStateHolder(),
+			      org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
+		}
+
+		@Override
+		protected void doProcess(WatchedEvent event) {
+			try {
+				loadAndAddMetaServerAssignmentWatcher(this);
+			} catch (Exception e) {
+				log.error("Exception occurred while handling meta server assignment watcher event.", e);
+			}
+		}
+
+	}
 }

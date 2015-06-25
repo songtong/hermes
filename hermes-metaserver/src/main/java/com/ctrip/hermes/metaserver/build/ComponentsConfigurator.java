@@ -12,7 +12,6 @@ import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
-import com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.listener.EventEngineBootstrapListener;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
@@ -30,7 +29,9 @@ import com.ctrip.hermes.metaserver.event.impl.BrokerListChangedEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.LeaderInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.MetaServerListChangedEventHandler;
+import com.ctrip.hermes.metaserver.meta.DefaultMetaServerAssigningStrategy;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
+import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
@@ -46,25 +47,28 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(OrderedConsumeConsumerLeaseAllocator.class));
 		all.add(A(NonOrderedConsumeConsumerLeaseAllocator.class));
 		all.add(A(ActiveConsumerListHolder.class));
-		all.add(A(DefaultOrderedConsumeConsumerPartitionAssigningStrategy.class));
-		all.add(A(ConsumerAssignmentHolder.class));
 		all.add(A(ConsumerLeaseHolder.class));
 		all.add(A(DefaultConsumerLeaseAllocatorLocator.class));
 
 		// broker lease
 		all.add(A(DefaultBrokerLeaseAllocator.class));
-		all.add(A(DefaultBrokerPartitionAssigningStrategy.class));
 		all.add(A(BrokerLeaseHolder.class));
-		all.add(A(BrokerAssignmentHolder.class));
 
 		// subscription service
 		all.add(A(SubscriptionService.class));
 
 		// cluster
 		all.add(A(ClusterStateHolder.class));
-		all.add(A(ClusterTopicAssignmentHolder.class));
 
 		all.add(A(ClusterStateChangeListenerContainer.class));
+
+		// assignment
+		all.add(A(ConsumerAssignmentHolder.class));
+		all.add(A(DefaultOrderedConsumeConsumerPartitionAssigningStrategy.class));
+		all.add(A(BrokerAssignmentHolder.class));
+		all.add(A(DefaultBrokerPartitionAssigningStrategy.class));
+		all.add(A(MetaServerAssignmentHolder.class));
+		all.add(A(DefaultMetaServerAssigningStrategy.class));
 
 		// event handler
 		all.add(A(EventEngineBootstrapListener.class));

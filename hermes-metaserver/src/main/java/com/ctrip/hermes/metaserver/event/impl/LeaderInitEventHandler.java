@@ -30,6 +30,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
+import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.commons.BaseEventBasedZkWatcher;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
@@ -41,6 +42,7 @@ import com.ctrip.hermes.metaserver.event.EventEngineContext;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
+import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaservice.service.MetaService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
@@ -72,6 +74,9 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	@Inject
 	private BrokerAssignmentHolder m_brokerAssignmentHolder;
+
+	@Inject
+	private MetaServerAssignmentHolder m_metaServerAssignmentHolder;
 
 	@Inject
 	private EndpointMaker m_endpointMaker;
@@ -117,9 +122,10 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		List<Server> metaServers = loadAndAddMetaServerListWatcher(new MetaServerListWatcher(context));
 
 		Map<String, ClientContext> brokers = loadAndAddBrokerListWatcher(new BrokerChangedListener(context));
+		ArrayList<Topic> topics = new ArrayList<>(baseMeta.getTopics().values());
 
 		m_brokerAssignmentHolder.reload();
-		m_brokerAssignmentHolder.reassign(brokers, new ArrayList<>(baseMeta.getTopics().values()));
+		m_brokerAssignmentHolder.reassign(brokers, topics);
 
 		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoint = m_endpointMaker.makeEndpoints(context,
 		      m_brokerAssignmentHolder.getAssignments());
@@ -128,6 +134,8 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		m_metaHolder.setMetaServers(metaServers);
 		m_metaHolder.update(topicPartition2Endpoint);
 
+		m_metaServerAssignmentHolder.reload();
+		m_metaServerAssignmentHolder.reassign(metaServers, topics);
 	}
 
 	private Map<String, ClientContext> loadAndAddBrokerListWatcher(ServiceCacheListener listener) {

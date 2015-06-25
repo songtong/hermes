@@ -37,10 +37,11 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
-import com.ctrip.hermes.metaserver.cluster.ClusterTopicAssignmentHolder;
+import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocatorLocator;
+import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 
 /**
  * 
@@ -72,7 +73,7 @@ public class LeaseResource {
 
 	private SystemClockService m_systemClockService;
 
-	private ClusterTopicAssignmentHolder m_topicAssignmentHolder;
+	private MetaServerAssignmentHolder m_metaServerAssignmentHolder;
 
 	private ClusterStateHolder m_clusterStateHolder;
 
@@ -82,7 +83,7 @@ public class LeaseResource {
 		m_consumerLeaseAllocatorLocator = PlexusComponentLocator.lookup(ConsumerLeaseAllocatorLocator.class);
 		m_brokerLeaseAllocator = PlexusComponentLocator.lookup(BrokerLeaseAllocator.class);
 		m_systemClockService = PlexusComponentLocator.lookup(SystemClockService.class);
-		m_topicAssignmentHolder = PlexusComponentLocator.lookup(ClusterTopicAssignmentHolder.class);
+		m_metaServerAssignmentHolder = PlexusComponentLocator.lookup(MetaServerAssignmentHolder.class);
 		m_config = PlexusComponentLocator.lookup(MetaServerConfig.class);
 		m_clusterStateHolder = PlexusComponentLocator.lookup(ClusterStateHolder.class);
 
@@ -240,27 +241,22 @@ public class LeaseResource {
 
 	private LeaseAcquireResponse proxyConsumerLeaseRequestIfNecessary(String topic, String uri,
 	      Map<String, String> params, Object payload) {
-		// TopicAssignmentResult assignment = m_topicAssignmentHolder.findAssignment(topic);
-		//
-		// if (assignment != null) {
-		// if (assignment.isAssignToMe()) {
-		// return null;
-		// } else {
-		// String host = assignment.getResponsorHost();
-		// int port = assignment.getResponsorPort();
-		//
-		// if (!StringUtils.isBlank(host) && port > 0) {
-		// if (log.isDebugEnabled()) {
-		// log.debug("Proxy passing to http://{}:{}{}.(status={}}).", host, port, uri);
-		// }
-		// return proxyPass(host, port, uri, params, payload);
-		// }
-		// }
-		// }
-		//
-		// return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_ASSIGNMENT_DELAY_TIME_MILLIS);
-		// TODO
-		return null;
+
+		Map<String, ClientContext> responsors = m_metaServerAssignmentHolder.getAssignment(topic);
+
+		if (responsors != null && !responsors.isEmpty()) {
+			ClientContext responsor = responsors.values().iterator().next();
+			if (responsor != null) {
+				if (m_config.getMetaServerHost().equals(responsor.getIp())
+				      && m_config.getMetaServerPort() == responsor.getPort()) {
+					return null;
+				} else {
+					return proxyPass(responsor.getIp(), responsor.getPort(), uri, params, payload);
+				}
+			}
+		}
+		return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_ASSIGNMENT_DELAY_TIME_MILLIS);
+
 	}
 
 	private LeaseAcquireResponse proxyPass(String host, int port, String uri, Map<String, String> params, Object payload) {
