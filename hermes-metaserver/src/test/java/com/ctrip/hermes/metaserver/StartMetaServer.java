@@ -58,6 +58,8 @@ public class StartMetaServer extends JettyServer {
 		zkService.updateZkBaseMetaVersion(meta.getVersion());
 
 		zkService.ensurePath(ZKPathUtils.getMetaInfoZkPath());
+		zkService.ensurePath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
+		zkService.ensurePath(ZKPathUtils.getBrokerAssignmentRootZkPath());
 	}
 
 	@Override

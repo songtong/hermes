@@ -17,10 +17,13 @@ public class StartBroker extends ComponentTestCase {
 
 	@Before
 	public void before() {
-		try {
-			m_zkServer = new TestingServer(2181);
-		} catch (Exception e) {
-			System.out.println("Start zk fake server failed, may be already started.");
+		String zkMode = System.getProperty("zkMode");
+		if (!"real".equalsIgnoreCase(zkMode)) {
+			try {
+				m_zkServer = new TestingServer(2181);
+			} catch (Exception e) {
+				System.out.println("Start zk fake server failed, may be already started.");
+			}
 		}
 	}
 

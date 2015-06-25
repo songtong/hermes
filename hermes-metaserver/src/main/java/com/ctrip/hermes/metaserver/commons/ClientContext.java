@@ -11,7 +11,7 @@ public class ClientContext {
 
 	private int m_port;
 
-	private long lastHeartbeatTime;
+	private long m_lastHeartbeatTime;
 
 	public ClientContext() {
 	}
@@ -20,7 +20,7 @@ public class ClientContext {
 		m_name = name;
 		m_ip = ip;
 		m_port = port;
-		this.lastHeartbeatTime = lastHeartbeatTime;
+		m_lastHeartbeatTime = lastHeartbeatTime;
 	}
 
 	public String getName() {
@@ -48,17 +48,17 @@ public class ClientContext {
 	}
 
 	public long getLastHeartbeatTime() {
-		return lastHeartbeatTime;
+		return m_lastHeartbeatTime;
 	}
 
 	public void setLastHeartbeatTime(long lastHeartbeatTime) {
-		this.lastHeartbeatTime = lastHeartbeatTime;
+		m_lastHeartbeatTime = lastHeartbeatTime;
 	}
 
 	@Override
 	public String toString() {
-		return "ClientContext [m_name=" + m_name + ", m_ip=" + m_ip + ", m_port=" + m_port + ", lastHeartbeatTime="
-		      + lastHeartbeatTime + "]";
+		return "ClientContext [m_name=" + m_name + ", m_ip=" + m_ip + ", m_port=" + m_port + ", m_lastHeartbeatTime="
+		      + m_lastHeartbeatTime + "]";
 	}
 
 }
