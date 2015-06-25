@@ -39,7 +39,7 @@
 				</thead>
 				<tbody ng-show="!is_loading">
 					<tr ng-repeat="row in topic_rows">
-						<td><spanl ng-bind="$index + 1"> </span></td>
+						<td><span ng-bind="$index + 1"> </span></td>
 						<td><a href="${model.webapp}/console/topic?op=detail&topic={{row.name}}" ng-bind="row.name" /></td>
 						<td align="center"><span ng-bind="row.codecType"></span></td>
 						<td align="center"><span ng-bind="row.storageType"></td>

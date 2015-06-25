@@ -18,7 +18,7 @@
 					</a></li>
 			</ul>
 		</div>
-		<div id="content" role="tabpanel" class="tab-content col-md-10 tab-pane fade in active">
+        <div id="content" role="tabpanel" class="tab-content col-md-10 tab-pane fade in active">
 			<div class="panel panel-primary">
 				<div class="panel-heading">
 					<label><span style="text-transform: capitalize;" ng-bind="selected.type"></span> Datasource 列表</label>
@@ -26,8 +26,10 @@
 				<div class="panel-body">
 					<div ng-repeat="ds in selected.datasources">
 						<div class="panel panel-info">
-							<div class="panel-heading">
-								<span ng-bind="ds.id"></span>
+							<div class="storage-heading">
+                                <storage id="ds.id" type="selected.type" ng-if="is_mysql(selected.type)">
+                                </storage>
+                                <span ng-bind="ds.id" ng-if="!is_mysql(selected.type)"></span>
 							</div>
 							<table class="table table-condensed table-responsive table-bordered">
 								<thead>
@@ -65,8 +67,12 @@
 
 	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular-strap.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular-strap.tpl.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/bootbox.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/xeditable.min.js"></script>
 
 	<script type="text/javascript" src="${model.webapp}/js/storage.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/storage/service.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/storage/controller.js"></script>
 </a:layout>

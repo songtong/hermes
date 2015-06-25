@@ -40,7 +40,6 @@ public class ConsumerResource {
 
 	@GET
 	public List<ConsumerView> getConsumers() {
-		logger.info("Get consumers");
 		List<ConsumerView> returnResult = new ArrayList<ConsumerView>();
 		try {
 			Map<String, List<ConsumerGroup>> consumers = consumerService.getConsumers();

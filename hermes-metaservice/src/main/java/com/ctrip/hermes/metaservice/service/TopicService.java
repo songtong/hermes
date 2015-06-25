@@ -1,16 +1,8 @@
 package com.ctrip.hermes.metaservice.service;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Pattern;
-
-import kafka.admin.AdminUtils;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.exception.ZkMarshallingError;
@@ -21,14 +13,13 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.meta.entity.Datasource;
-import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.meta.entity.Property;
-import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.meta.entity.*;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
+import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
+
+import kafka.admin.AdminUtils;
 
 @Named
 public class TopicService {
@@ -48,7 +39,6 @@ public class TopicService {
 	private ZookeeperService m_zookeeperService;
 
 	/**
-	 * 
 	 * @param topic
 	 * @return
 	 * @throws DalException
@@ -90,7 +80,6 @@ public class TopicService {
 	}
 
 	/**
-	 * 
 	 * @param topic
 	 */
 	public void createTopicInKafka(Topic topic) {
@@ -136,12 +125,11 @@ public class TopicService {
 		}
 
 		m_logger.debug("create topic in kafka, topic {}, partition {}, replication {}, prop {}", topic.getName(),
-		      partition, replication, topicProp);
+				  partition, replication, topicProp);
 		AdminUtils.createTopic(zkClient, topic.getName(), partition, replication, topicProp);
 	}
 
 	/**
-	 * 
 	 * @param topic
 	 */
 	public void deleteTopicInKafka(Topic topic) {
@@ -177,7 +165,6 @@ public class TopicService {
 	}
 
 	/**
-	 * 
 	 * @param topic
 	 */
 	public void configTopicInKafka(Topic topic) {
@@ -221,7 +208,6 @@ public class TopicService {
 	}
 
 	/**
-	 * 
 	 * @param name
 	 * @throws DalException
 	 */
@@ -285,7 +271,6 @@ public class TopicService {
 	}
 
 	/**
-	 * 
 	 * @param topic
 	 * @return
 	 * @throws DalException
@@ -303,6 +288,33 @@ public class TopicService {
 		m_metaService.updateMeta(meta);
 		return topic;
 	}
+
+	public Integer queryStorageSize(String ds) throws StorageHandleErrorException {
+		return m_topicStorageService.queryStorageSize(ds);
+	}
+
+	public Integer queryStorageSize(String ds, String table) throws StorageHandleErrorException {
+		return m_topicStorageService.queryStorageSize(ds, table);
+	}
+
+
+	public List<StorageTable> queryStorageTables(String ds) throws StorageHandleErrorException {
+		return m_topicStorageService.queryStorageTables(ds);
+	}
+
+	public List<StoragePartition> queryStorageTablePartitions(String ds, String table)
+			  throws StorageHandleErrorException {
+		return m_topicStorageService.queryTablePartitions(ds, table);
+	}
+
+	public void addPartition(String ds, String table, int span) throws StorageHandleErrorException {
+		m_topicStorageService.addPartitionStorage(ds, table, span);
+	}
+
+	public void delPartition(String ds, String table)  throws StorageHandleErrorException {
+		m_topicStorageService.delPartitionStorage(ds, table);
+	}
+
 }
 
 class ZKStringSerializer implements ZkSerializer {

@@ -1,16 +1,37 @@
 package com.ctrip.hermes.metaservice.service.storage.pojo;
 
 public class StoragePartition {
-	String info; // like: Range from..to..
 	String name;
+	String info; // like: Range from..to..
 	String range;
 	Integer tableRows;
+	Integer dataLength;
+	Integer indexLength;
 
-	public StoragePartition(String name, String info, String range, Integer tableRows) {
+	public Integer getDataLength() {
+		return dataLength;
+	}
+
+	public void setDataLength(Integer dataLength) {
+		this.dataLength = dataLength;
+	}
+
+	public Integer getIndexLength() {
+		return indexLength;
+	}
+
+	public void setIndexLength(Integer indexLength) {
+		this.indexLength = indexLength;
+	}
+
+	public StoragePartition(String name, String info, String range, Integer tableRows, Integer dataLength, Integer
+			  indexLength) {
 		this.info = info;
 		this.name = name;
 		this.range = range;
 		this.tableRows = tableRows;
+		this.dataLength = dataLength;
+		this.indexLength = indexLength;
 	}
 
 
@@ -49,10 +70,12 @@ public class StoragePartition {
 	@Override
 	public String toString() {
 		return "StoragePartition{" +
-				  "info='" + info + '\'' +
-				  ", name='" + name + '\'' +
+				  "name='" + name + '\'' +
+				  ", info='" + info + '\'' +
 				  ", range='" + range + '\'' +
 				  ", tableRows=" + tableRows +
+				  ", dataLength=" + dataLength +
+				  ", indexLength=" + indexLength +
 				  '}';
 	}
 }

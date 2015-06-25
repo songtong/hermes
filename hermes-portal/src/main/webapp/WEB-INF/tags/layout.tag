@@ -27,7 +27,7 @@
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="container-fluid">
 			<div class="navbar-header">
-				<a class="navbar-brand">HERMES</a>
+				<a class="navbar-brand">Hermes <span class="badge">${navBar.environment}</span></a>
 			</div>
 
 			<div class="collapse navbar-collapse">
