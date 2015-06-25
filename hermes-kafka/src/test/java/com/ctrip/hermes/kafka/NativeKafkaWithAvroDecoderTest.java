@@ -45,10 +45,10 @@ public class NativeKafkaWithAvroDecoderTest {
 		int msgNum = 100000;
 		final CountDownLatch countDown = new CountDownLatch(msgNum);
 
-		Properties produerProps = new Properties();
+		Properties producerProps = new Properties();
 		// Producer
-		produerProps.put("metadata.broker.list", MockKafka.LOCALHOST_BROKER);
-		produerProps.put("bootstrap.servers", MockKafka.LOCALHOST_BROKER);
+		producerProps.put("metadata.broker.list", MockKafka.LOCALHOST_BROKER);
+		producerProps.put("bootstrap.servers", MockKafka.LOCALHOST_BROKER);
 
 		// Avro Decoder/Encoder
 		CachedSchemaRegistryClient schemaRegistry = new CachedSchemaRegistryClient("http://10.3.8.63:8081/",
@@ -96,7 +96,7 @@ public class NativeKafkaWithAvroDecoderTest {
 			}.start();
 		}
 
-		KafkaProducer<Object, Object> producer = new KafkaProducer<>(produerProps, avroKeySerializer, avroValueSerializer);
+		KafkaProducer<Object, Object> producer = new KafkaProducer<>(producerProps, avroKeySerializer, avroValueSerializer);
 		int i = 0;
 		while (i++ < msgNum) {
 			ProducerRecord<Object, Object> data = new ProducerRecord<>(topic, null, (Object) KafkaAvroTest.generateEvent());

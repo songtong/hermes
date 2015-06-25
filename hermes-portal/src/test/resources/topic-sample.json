@@ -39,7 +39,7 @@
       "endpoint": "kafka-endpoint",
       "id": 0,
       "readDatasource": "kafka-consumer",
-      "writeDatasource": "kafka-produer"
+      "writeDatasource": "kafka-producer"
     }
   ]
 }

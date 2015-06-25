@@ -46,7 +46,7 @@ public class KafkaMessageSender implements MessageSender {
 	@Inject
 	private ClientEnvironment m_environment;
 
-	private Properties getProduerProperties(String topic) {
+	private Properties getProducerProperties(String topic) {
 		Properties configs = new Properties();
 
 		try {
@@ -62,12 +62,12 @@ public class KafkaMessageSender implements MessageSender {
 		}
 
 		String producerDatasource = partitions.get(0).getWriteDatasource();
-		Storage produerStorage = m_metaService.findStorageByTopic(topic);
-		if (produerStorage == null) {
+		Storage producerStorage = m_metaService.findStorageByTopic(topic);
+		if (producerStorage == null) {
 			return configs;
 		}
 
-		for (Datasource datasource : produerStorage.getDatasources()) {
+		for (Datasource datasource : producerStorage.getDatasources()) {
 			if (producerDatasource.equals(datasource.getId())) {
 				Map<String, Property> properties = datasource.getProperties();
 				for (Map.Entry<String, Property> prop : properties.entrySet()) {
@@ -116,7 +116,7 @@ public class KafkaMessageSender implements MessageSender {
 		String partition = msg.getPartitionKey();
 
 		if (!m_producers.containsKey(topic)) {
-			Properties configs = getProduerProperties(topic);
+			Properties configs = getProducerProperties(topic);
 			KafkaProducer<String, byte[]> producer = new KafkaProducer<>(configs);
 			m_producers.put(topic, producer);
 		}

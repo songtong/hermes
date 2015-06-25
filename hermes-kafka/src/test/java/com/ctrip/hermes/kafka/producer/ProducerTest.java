@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka.produer;
+package com.ctrip.hermes.kafka.producer;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -33,7 +33,7 @@
 	<topic name='kafka.SimpleTopic' partition-count='1' storage-type='kafka'
 		codec-type="json" endpoint-type="kafka" ack-timeout-seconds="3">
 		<partition id='0' read-datasource='kafka-consumer'
-			write-datasource='kafka-produer' endpoint='kafka-endpoint' />
+			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
 	</topic>
 
 	<topic name='kafka.AvroTopic' partition-count='1' storage-type='kafka'
@@ -43,7 +43,7 @@
 		<property name='replication-factor' value='3' />
 		<property name='partitions' value='5' codec-type="avro" />
 		<partition id='0' read-datasource='kafka-consumer'
-			write-datasource='kafka-produer' endpoint='kafka-endpoint' />
+			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
 	</topic>
 
 	<codec type="json" />
@@ -65,7 +65,7 @@
 	</storage>
 
 	<storage type='kafka'>
-		<datasource id='kafka-produer'>
+		<datasource id='kafka-producer'>
 			<property name='bootstrap.servers'
 				value='10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092' />
 		</datasource>
