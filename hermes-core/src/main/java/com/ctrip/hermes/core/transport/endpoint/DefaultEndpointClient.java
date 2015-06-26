@@ -100,7 +100,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 			return m_channels.get(endpoint);
 
 		default:
-			throw new IllegalArgumentException(String.format("Unknow endpoint type: %s", endpoint.getType()));
+			throw new IllegalArgumentException(String.format("Unknown endpoint type: %s", endpoint.getType()));
 		}
 	}
 
