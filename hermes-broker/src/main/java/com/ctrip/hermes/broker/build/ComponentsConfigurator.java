@@ -55,6 +55,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//
 		      .req(BizLogger.class)//
+		      .req(MetaService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL.toString(), PullMessageCommandProcessor.class)//
 		      .req(LongPollingService.class)//
