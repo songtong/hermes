@@ -18,6 +18,7 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
@@ -52,6 +53,9 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	@Inject
 	private BrokerConfig m_config;
 
+	@Inject
+	private MetaService m_metaService;
+
 	@Override
 	public List<CommandType> commandTypes() {
 		return Arrays.asList(CommandType.MESSAGE_SEND);
@@ -63,44 +67,53 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 		Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(), m_config.getSessionId());
 
-		if (lease != null) {
-			if (log.isDebugEnabled()) {
-				log.debug("Send message reqeust arrived(topic={}, partition={}, msgCount)", reqCmd.getTopic(),
-				      reqCmd.getPartition(), reqCmd.getMessageCount());
-			}
+		if (m_metaService.findTopicByName(reqCmd.getTopic()) != null) {
+			if (lease != null) {
+				if (log.isDebugEnabled()) {
+					log.debug("Send message reqeust arrived(topic={}, partition={}, msgCount)", reqCmd.getTopic(),
+					      reqCmd.getPartition(), reqCmd.getMessageCount());
+				}
 
-			writeAck(ctx, true);
+				writeAck(ctx, true);
 
-			Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
+				Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
 
-			bizLog(ctx, rawBatches);
+				bizLog(ctx, rawBatches);
 
-			final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
-			result.correlate(reqCmd);
+				final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
+				result.correlate(reqCmd);
 
-			FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx);
+				FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx);
 
-			for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
-				MessageBatchWithRawData batch = entry.getValue();
-				Tpp tpp = new Tpp(reqCmd.getTopic(), reqCmd.getPartition(), entry.getKey() == 0 ? true : false);
-				try {
-					ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(tpp, batch, lease);
+				for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
+					MessageBatchWithRawData batch = entry.getValue();
+					Tpp tpp = new Tpp(reqCmd.getTopic(), reqCmd.getPartition(), entry.getKey() == 0 ? true : false);
+					try {
+						ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(tpp, batch, lease);
 
-					Futures.addCallback(future, completionCallback);
+						Futures.addCallback(future, completionCallback);
 
-				} catch (Exception e) {
-					log.error("Failed to append messages async.", e);
+					} catch (Exception e) {
+						log.error("Failed to append messages async.", e);
+					}
+				}
+
+				return;
+
+			} else {
+				if (log.isDebugEnabled()) {
+					log.debug("No broker lease to handle client send message reqeust(topic={}, partition={})",
+					      reqCmd.getTopic(), reqCmd.getPartition());
 				}
 			}
 		} else {
 			if (log.isDebugEnabled()) {
-				log.debug("No broker lease to handle client send message reqeust(topic={}, partition={})",
-				      reqCmd.getTopic(), reqCmd.getPartition());
+				log.debug("Topic {} not found", reqCmd.getTopic());
 			}
-
-			writeAck(ctx, false);
-			reqCmd.release();
 		}
+
+		writeAck(ctx, false);
+		reqCmd.release();
 	}
 
 	private void bizLog(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches) {
