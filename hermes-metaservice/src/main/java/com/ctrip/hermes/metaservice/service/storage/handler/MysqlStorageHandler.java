@@ -1,10 +1,7 @@
 package com.ctrip.hermes.metaservice.service.storage.handler;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +13,7 @@ import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleError
 import com.ctrip.hermes.metaservice.service.storage.model.TableModel;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 @Named(type = StorageHandler.class, value = MysqlStorageHandler.ID)
 public class MysqlStorageHandler implements StorageHandler {
@@ -24,13 +22,60 @@ public class MysqlStorageHandler implements StorageHandler {
 
 	public static final String ID = "mysql-storage-handler";
 
-	private Connection getMysqlConnection(String jdbcUrl, String usr, String pwd) {
-		Connection conn = null;
+	private ComboPooledDataSource buildConnectionPool(String jdbcUrl, String usr, String pwd) throws StorageHandleErrorException {
+		String driver = "com.mysql.jdbc.Driver";
+		ComboPooledDataSource cpds = new ComboPooledDataSource();
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection(jdbcUrl, usr, pwd);
-		} catch (ClassNotFoundException | SQLException e) {
-			log.error("Fail to get MySql connection. jdbc:{}, usr:{}", jdbcUrl, usr);
+			cpds.setDriverClass(driver);
+			cpds.setJdbcUrl(jdbcUrl);
+			cpds.setUser(usr);
+			cpds.setPassword(pwd);
+			cpds.setMinPoolSize(1);
+			cpds.setMaxPoolSize(3);
+			cpds.setInitialPoolSize(1);
+			cpds.setMaxIdleTime(10 * 60);
+			cpds.setIdleConnectionTestPeriod(60);
+			cpds.setAcquireRetryAttempts(1);
+			cpds.setAcquireRetryDelay(30);
+			cpds.setMaxStatements(0);
+			cpds.setMaxStatementsPerConnection(1000);
+			cpds.setNumHelperThreads(6);
+			cpds.setMaxAdministrativeTaskTime(5);
+			cpds.setPreferredTestQuery("SELECT 1");
+			cpds.setLoginTimeout(30);
+
+			cpds.getConnection().close();
+		} catch (Throwable e) {
+			cpds.close();
+			throw new StorageHandleErrorException(String.format("Error when connecting to JDBC data source "
+					  + "with properties (driver=%s, url=%s, user=%s). Error message=%s", driver, jdbcUrl, usr, e));
+		}
+
+		return cpds;
+	}
+
+	Map<String, ComboPooledDataSource> connectionPools = new HashMap<>();
+
+	private Connection getMysqlConnection(String jdbcUrl, String usr, String pwd) {
+		ComboPooledDataSource cpds = null;
+		Connection conn = null;
+		String key = jdbcUrl + usr + pwd;
+		if (connectionPools.containsKey(key)) {
+			cpds = connectionPools.get(key);
+		} else {
+			try {
+				cpds = buildConnectionPool(jdbcUrl, usr, pwd);
+			} catch (StorageHandleErrorException e) {
+				log.error("Fail to create ConnectionPool to {} as {}.\n{}", jdbcUrl, usr, e);
+			}
+			connectionPools.put(key, cpds);
+			log.info("Created ConnectionPool to {} as {}", jdbcUrl, usr);
+		}
+
+		try {
+			conn = cpds.getConnection();
+		} catch (SQLException e) {
+			log.error("Fail to get connection from ConnectionPool to {} as {}.\n{}", jdbcUrl, usr, e);
 		}
 		return conn;
 	}
@@ -38,7 +83,7 @@ public class MysqlStorageHandler implements StorageHandler {
 	@Override
 	public boolean dropTables(Long topicId, Integer partitionId, List<TableModel> models, String url, String user,
 									  String pwd) throws StorageHandleErrorException {
-		String databaseName = getDabaseName(url);
+		String databaseName = getDatabaseName(url);
 		StringBuilder sb = new StringBuilder();
 		sb.append(sqlUseDatabase(databaseName));
 
@@ -55,7 +100,7 @@ public class MysqlStorageHandler implements StorageHandler {
 	@Override
 	public void createTable(Long topicId, Integer partitionId, List<TableModel> models, String url, String user,
 									String pwd) throws StorageHandleErrorException {
-		String databaseName = getDabaseName(url);
+		String databaseName = getDatabaseName(url);
 
 		StringBuilder sb = new StringBuilder();
 		sb.append(sqlUseDatabase(databaseName));
@@ -112,7 +157,7 @@ public class MysqlStorageHandler implements StorageHandler {
 	}
 
 	private void addPartition0(String tableName, int newSapn, String url, String user, String pwd) throws StorageHandleErrorException {
-		String databaseName = getDabaseName(url);
+		String databaseName = getDatabaseName(url);
 		List<StoragePartition> storagePartitions = queryPartitionDESC(databaseName, tableName, url, user, pwd);
 
 		StringBuilder sb = new StringBuilder();
@@ -179,7 +224,7 @@ public class MysqlStorageHandler implements StorageHandler {
 
 	private void deletaPartition0(String tableName, String url, String user, String pwd) throws
 			  StorageHandleErrorException {
-		String databaseName = getDabaseName(url);
+		String databaseName = getDatabaseName(url);
 		List<StoragePartition> storagePartitions = queryPartitionDESC(databaseName, tableName, url, user, pwd);
 
 		StringBuilder sb = new StringBuilder();
@@ -229,7 +274,7 @@ public class MysqlStorageHandler implements StorageHandler {
 	public List<StorageTable> queryTable(Long topicId, Integer partitionId, String url, String user, String pwd)
 			  throws StorageHandleErrorException {
 
-		String databaseName = getDabaseName(url);
+		String databaseName = getDatabaseName(url);
 
 		List<StorageTable> tables = queryTables(databaseName, getTablePrefix(topicId, partitionId), url, user, pwd);
 
@@ -244,26 +289,26 @@ public class MysqlStorageHandler implements StorageHandler {
 
 	@Override
 	public List<StorageTable> queryAllTablesInDatasourceWithoutPartition(String url, String user, String pwd) throws StorageHandleErrorException {
-		String databaseName = getDabaseName(url);
+		String databaseName = getDatabaseName(url);
 
 		return queryTables(databaseName, "", url, user, pwd);
 	}
 
 	@Override
 	public Integer queryAllSizeInDatasource(String url, String user, String pwd) throws StorageHandleErrorException {
-		String databaseName = getDabaseName(url);
+		String databaseName = getDatabaseName(url);
 		return querySize(databaseName, null, url, user, pwd);
 	}
 
 	@Override
 	public Integer queryTableSize(String table, String url, String user, String pwd) throws StorageHandleErrorException {
-		String databaseName = getDabaseName(url);
+		String databaseName = getDatabaseName(url);
 		return querySize(databaseName, table, url, user, pwd);
 	}
 
 	@Override
 	public List<StoragePartition> queryTablePartitions(String table, String url, String user, String pwd) throws StorageHandleErrorException {
-		String databaseName = getDabaseName(url);
+		String databaseName = getDatabaseName(url);
 		return queryPartitionDESC(databaseName, table, url, user, pwd);
 	}
 
@@ -277,7 +322,7 @@ public class MysqlStorageHandler implements StorageHandler {
 
 		sb.append("CREATE TABLE `").append(tableNamePrefix).append(tableName).append("` (\n");
 
-		sb.append(buildSql(tableModel.getMetaModels()));
+		sb.append(sqlCreateTable(tableModel.getMetaModels()));
 
 		// build: PRIMARY KEY (`id`),
 		int tempPKCount = 1;
@@ -416,39 +461,38 @@ public class MysqlStorageHandler implements StorageHandler {
 	private List<StorageTable> queryTables(String databaseName, String tableNamePrefix, String jdbcUrl, String usr,
 														String pwd) throws StorageHandleErrorException {
 		List<StorageTable> storageTables = new ArrayList<>();
-		Connection conn = getMysqlConnection(jdbcUrl, usr, pwd);
-		Statement stmt = null;
-		if (null == conn) {
-			throw new StorageHandleErrorException("Fail To Get MySql Connection");
-		} else {
+		PreparedStatement stmt = null;
+
+		Connection conn = null;
+		try {
+			conn = getMysqlConnection(jdbcUrl, usr, pwd);
+			stmt = conn.prepareStatement("SELECT TABLE_NAME, TABLE_ROWS, DATA_LENGTH, INDEX_LENGTH, CREATE_TIME, CREATE_OPTIONS "
+					  + " FROM information_schema.`TABLES`\n"
+					  + " WHERE TABLE_NAME LIKE ? AND TABLE_SCHEMA = ? ;");
+
+			stmt.setString(1, tableNamePrefix + "%");
+			stmt.setString(2, databaseName);
+
+			ResultSet rs = stmt.executeQuery();
+
+			while (rs.next()) {
+				storageTables.add(new StorageTable(rs.getString(1), rs.getBigDecimal(2).longValue(), rs.getBigDecimal(3)
+						  .longValue(), rs.getBigDecimal(4).longValue(), rs.getDate(5), rs.getString(6)));
+			}
+			rs.close();
+
+		} catch (SQLException e) {
+			throw new StorageHandleErrorException(e);
+		} finally {
 			try {
-				stmt = conn.createStatement();
-
-				String queryPartition = "SELECT TABLE_NAME, TABLE_ROWS, DATA_LENGTH, INDEX_LENGTH, CREATE_TIME, CREATE_OPTIONS "
-						  + " FROM information_schema.`TABLES`\n"
-						  + " WHERE TABLE_NAME LIKE '"
-						  + tableNamePrefix
-						  + "%' AND TABLE_SCHEMA = '" + databaseName + "';";
-
-				ResultSet rs = stmt.executeQuery(queryPartition);
-
-				while (rs.next()) {
-					storageTables.add(new StorageTable(rs.getString(1), rs.getBigDecimal(2).intValue(), rs.getBigDecimal(3)
-							  .intValue(), rs.getBigDecimal(4).intValue(), rs.getDate(5), rs.getString(6)));
+				if (stmt != null) {
+					stmt.close();
 				}
-				rs.close();
-
-			} catch (SQLException e) {
-				throw new StorageHandleErrorException(e);
-			} finally {
-				try {
-					if (stmt != null) {
-						stmt.close();
-					}
+				if (conn != null) {
 					conn.close();
-				} catch (SQLException e) {
-					throw new StorageHandleErrorException(e);
 				}
+			} catch (Exception e) {
+				// ignore it
 			}
 		}
 		return storageTables;
@@ -457,49 +501,48 @@ public class MysqlStorageHandler implements StorageHandler {
 	private List<StoragePartition> queryPartitionDESC(String databaseName, String tableName, String jdbcUrl, String usr,
 																	  String pwd) throws StorageHandleErrorException {
 		List<StoragePartition> storagePartitions = new ArrayList<>();
-		Connection conn = getMysqlConnection(jdbcUrl, usr, pwd);
-		Statement stmt = null;
-		if (null == conn) {
-			throw new StorageHandleErrorException("Fail To Get MySql Connection");
-		} else {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		try {
+			conn = getMysqlConnection(jdbcUrl, usr, pwd);
+			stmt = conn.prepareStatement("SELECT PARTITION_NAME, PARTITION_METHOD, PARTITION_DESCRIPTION," +
+					  "TABLE_ROWS, DATA_LENGTH, INDEX_LENGTH FROM INFORMATION_SCHEMA.PARTITIONS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ? ORDER" +
+					  " BY PARTITION_NAME DESC");
+
+			stmt.setString(1, tableName);
+			stmt.setString(2, databaseName);
+
+			ResultSet rs = stmt.executeQuery();
+
+			while (rs.next()) {
+				String partitionName = rs.getString(1);
+				if (null == partitionName) {
+					continue;
+				} else {
+					storagePartitions.add(new StoragePartition(rs.getString(1), rs.getString(2), rs.getString(3), rs
+							  .getBigDecimal(4).longValue(), rs.getBigDecimal(5).longValue(), rs.getBigDecimal(6).longValue()));
+				}
+			}
+			rs.close();
+
+		} catch (SQLException e) {
+			throw new StorageHandleErrorException(e);
+		} finally {
 			try {
-				stmt = conn.createStatement();
-
-				String queryPartition = "SELECT PARTITION_NAME, PARTITION_METHOD, PARTITION_DESCRIPTION, "
-						  + "TABLE_ROWS, DATA_LENGTH, INDEX_LENGTH FROM INFORMATION_SCHEMA.PARTITIONS\nWHERE TABLE_NAME = '" + tableName
-						  + "' AND TABLE_SCHEMA = '" + databaseName + "' order by PARTITION_NAME desc";
-
-				ResultSet rs = stmt.executeQuery(queryPartition);
-
-				while (rs.next()) {
-					String partitionName = rs.getString(1);
-					if (null == partitionName) {
-						continue;
-					} else {
-						storagePartitions.add(new StoragePartition(rs.getString(1), rs.getString(2), rs.getString(3), rs
-								  .getBigDecimal(4).intValue(), rs.getBigDecimal(5).intValue(), rs
-								  .getBigDecimal(6).intValue()));
-					}
+				if (stmt != null) {
+					stmt.close();
 				}
-				rs.close();
-
-			} catch (SQLException e) {
-				throw new StorageHandleErrorException(e);
-			} finally {
-				try {
-					if (stmt != null) {
-						stmt.close();
-					}
+				if (conn != null) {
 					conn.close();
-				} catch (SQLException e) {
-					throw new StorageHandleErrorException(e);
 				}
+			} catch (Exception e) {
+				// ignore it
 			}
 		}
 		return storagePartitions;
 	}
 
-	private String buildSql(TableModel.MetaModel[] metaModels) {
+	private String sqlCreateTable(TableModel.MetaModel[] metaModels) {
 
 		StringBuilder sb = new StringBuilder();
 
@@ -519,7 +562,7 @@ public class MysqlStorageHandler implements StorageHandler {
 		return sb.toString();
 	}
 
-	private String getDabaseName(String jdbcUrl) {
+	private String getDatabaseName(String jdbcUrl) {
 		String[] strings = jdbcUrl.split("/");
 		return strings[strings.length - 1];
 	}

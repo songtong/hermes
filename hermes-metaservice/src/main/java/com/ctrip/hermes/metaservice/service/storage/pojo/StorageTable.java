@@ -6,7 +6,7 @@ import java.util.List;
 public class StorageTable {
 
 	String name;
-	int tableRows;
+	long tableRows;
 	// data length in byte.
 	long dataLength;
 
@@ -32,8 +32,12 @@ public class StorageTable {
 		this.name = name;
 	}
 
-	public int getTableRows() {
+	public long getTableRows() {
 		return tableRows;
+	}
+
+	public void setTableRows(long tableRows) {
+		this.tableRows = tableRows;
 	}
 
 	public void setTableRows(int tableRows) {
@@ -74,7 +78,8 @@ public class StorageTable {
 
 	List<StoragePartition> partitions;
 
-	public StorageTable(String name, int tableRows, long dataLength, long indexLength, Date createdTime, String createOptions) {
+	public StorageTable(String name, Long tableRows, Long dataLength, Long indexLength, Date createdTime, String
+			  createOptions) {
 		this.name = name;
 		this.tableRows = tableRows;
 		this.dataLength = dataLength;
