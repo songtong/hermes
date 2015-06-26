@@ -88,7 +88,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 	private Meta fetchMetaInfo(MetaInfo metaInfo) {
 		try {
-			String url = String.format("http://host:port/meta", metaInfo.getHost(), metaInfo.getPort());
+			String url = String.format("http://%s:%s/meta", metaInfo.getHost(), metaInfo.getPort());
 			Meta meta = m_metaHolder.getMeta();
 
 			if (meta != null) {

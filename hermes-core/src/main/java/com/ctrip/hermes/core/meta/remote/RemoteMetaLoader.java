@@ -17,7 +17,6 @@ import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.meta.internal.MetaLoader;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.google.common.io.ByteStreams;
 
 @Named(type = MetaLoader.class, value = RemoteMetaLoader.ID)
 public class RemoteMetaLoader implements MetaLoader {

@@ -247,7 +247,7 @@ public class LeaseResource {
 	private LeaseAcquireResponse proxyPass(String host, int port, String uri, Map<String, String> params, Object payload) {
 		uri = "/lease" + uri;
 		if (log.isDebugEnabled()) {
-			log.debug("Proxy pass request to http://{}:{}/{}(params={}, payload={})", host, port, uri, params,
+			log.debug("Proxy pass request to http://{}:{}{}(params={}, payload={})", host, port, uri, params,
 			      JSON.toJSONString(payload));
 		}
 		try {
