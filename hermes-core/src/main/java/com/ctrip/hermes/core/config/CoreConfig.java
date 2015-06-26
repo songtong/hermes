@@ -49,7 +49,7 @@ public class CoreConfig {
 		return 20;
 	}
 
-	public long getEndpointChannelWriteRetryDealy() {
+	public long getEndpointChannelWriteRetryDelay() {
 		return 20;
 	}
 

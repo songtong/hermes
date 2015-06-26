@@ -305,7 +305,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 									public void run() {
 										doFlush(future.channel(), op);
 									}
-								}, m_config.getEndpointChannelWriteRetryDealy(), TimeUnit.MILLISECONDS);
+								}, m_config.getEndpointChannelWriteRetryDelay(), TimeUnit.MILLISECONDS);
 							}
 						}
 
