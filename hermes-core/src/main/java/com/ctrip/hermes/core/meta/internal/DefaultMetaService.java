@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -36,6 +35,11 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.transform.BaseVisitor2;
 
+/**
+ * 
+ * @author Leo Liang(jhliang@ctrip.com)
+ *
+ */
 @Named(type = MetaService.class)
 public class DefaultMetaService implements MetaService, Initializable {
 
@@ -46,8 +50,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Inject
 	private CoreConfig m_config;
-
-	private ScheduledExecutorService executor;
 
 	private AtomicReference<Meta> m_metaCache = new AtomicReference<>();
 
@@ -196,7 +198,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public int getAckTimeoutSecondsTopicAndConsumerGroup(String topicName, String groupId) {
+	public int getAckTimeoutSecondsByTopicAndConsumerGroup(String topicName, String groupId) {
 		Topic topic = findTopicByName(topicName);
 		if (topic == null) {
 			throw new RuntimeException(String.format("Topic %s not found", topicName));
@@ -240,8 +242,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		refreshMeta(m_manager.loadMeta());
-		executor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("RefreshMeta", true));
-		executor
+		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("RefreshMeta", true))
 		      .scheduleWithFixedDelay(new Runnable() {
 
 			      @Override
@@ -253,8 +254,8 @@ public class DefaultMetaService implements MetaService, Initializable {
 				      }
 			      }
 
-		      }, m_config.getMetaCacheRefreshIntervalMinutes(), m_config.getMetaCacheRefreshIntervalMinutes(),
-		            TimeUnit.MINUTES);
+		      }, m_config.getMetaCacheRefreshIntervalSeconds(), m_config.getMetaCacheRefreshIntervalSeconds(),
+		            TimeUnit.SECONDS);
 	}
 
 	@Override

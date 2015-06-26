@@ -8,13 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.config.RequestConfig.Builder;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import org.apache.http.client.fluent.Request;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -42,10 +36,6 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	@Inject
 	private CoreConfig m_coreConfig;
-
-	private HttpClient m_httpClient;
-
-	private RequestConfig m_requestConfig;
 
 	private AtomicReference<List<String>> m_metaServerList = new AtomicReference<List<String>>(new LinkedList<String>());
 
@@ -108,13 +98,13 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	private List<String> doFetch(String ipPort) throws IOException {
 		String url = String.format("http://%s%s", ipPort, "/metaserver/servers");
-		HttpGet post = new HttpGet(url);
-		post.setConfig(m_requestConfig);
+		String response = Request.Get(url)//
+		      .connectTimeout(m_coreConfig.getMetaServerConnectTimeout())//
+		      .socketTimeout(m_coreConfig.getMetaServerReadTimeout())//
+		      .execute()//
+		      .returnContent().asString();
 
-		HttpResponse response;
-		response = m_httpClient.execute(post);
-		String json = EntityUtils.toString(response.getEntity());
-		return Arrays.asList(JSON.parseArray(json).toArray(new String[0]));
+		return Arrays.asList(JSON.parseArray(response).toArray(new String[0]));
 	}
 
 	private String getMetaServerDomainName() {
@@ -147,12 +137,6 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig()
 		      .getProperty("meta.port", String.valueOf(DEFAULT_MASTER_METASERVER_PORT)).trim());
-
-		m_httpClient = HttpClients.createDefault();
-		Builder b = RequestConfig.custom();
-		b.setConnectTimeout(m_coreConfig.getMetaServerConnectTimeout());
-		b.setSocketTimeout(m_coreConfig.getMetaServerReadTimeout());
-		m_requestConfig = b.build();
 
 		updateMetaServerList();
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MetaServerIpFetcher", true))

@@ -1,11 +1,12 @@
 package com.ctrip.hermes.core.meta.remote;
 
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -49,26 +50,27 @@ public class RemoteMetaLoader implements MetaLoader {
 			}
 
 			try {
-				String url = null;
+				String url = String.format("http://%s/meta", ipPort);
 				if (m_metaCache.get() != null) {
-					url = "http://" + ipPort + "/meta?version=" + m_metaCache.get().getVersion();
-				} else {
-					url = "http://" + ipPort + "/meta";
+					url += "?version=" + m_metaCache.get().getVersion();
 				}
-				URL metaURL = new URL(url);
-				HttpURLConnection connection = (HttpURLConnection) metaURL.openConnection();
-				connection.setConnectTimeout(m_config.getMetaServerConnectTimeout());
-				connection.setReadTimeout(m_config.getMetaServerReadTimeout());
-				connection.setRequestMethod("GET");
-				connection.connect();
-				if (connection.getResponseCode() == 200) {
-					InputStream is = connection.getInputStream();
-					String jsonString = new String(ByteStreams.toByteArray(is));
-					m_metaCache.set(JSON.parseObject(jsonString, Meta.class));
+
+				HttpResponse response = Request.Get(url)//
+				      .connectTimeout(m_config.getMetaServerConnectTimeout())//
+				      .socketTimeout(m_config.getMetaServerReadTimeout())//
+				      .execute()//
+				      .returnResponse();
+
+				int statusCode = response.getStatusLine().getStatusCode();
+
+				if (statusCode == HttpStatus.SC_OK) {
+					String responseContent = EntityUtils.toString(response.getEntity());
+					m_metaCache.set(JSON.parseObject(responseContent, Meta.class));
 					return m_metaCache.get();
-				} else if (connection.getResponseCode() == 304) {
+				} else if (statusCode == HttpStatus.SC_NOT_MODIFIED) {
 					return m_metaCache.get();
 				}
+
 			} catch (Exception e) {
 				// ignore
 			}
