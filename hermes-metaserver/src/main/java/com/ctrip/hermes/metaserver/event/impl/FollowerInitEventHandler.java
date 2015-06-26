@@ -1,9 +1,9 @@
 package com.ctrip.hermes.metaserver.event.impl;
 
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.util.EntityUtils;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -28,7 +28,6 @@ import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
-import com.google.common.io.ByteStreams;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -89,26 +88,26 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 	private Meta fetchMetaInfo(MetaInfo metaInfo) {
 		try {
-			String url = null;
+			String url = String.format("http://%s:%s/meta", metaInfo.getHost(), metaInfo.getPort());
 			Meta meta = m_metaHolder.getMeta();
+
 			if (meta != null) {
-				url = "http://" + metaInfo.getHost() + ":" + metaInfo.getPort() + "/meta?version=" + meta.getVersion();
-			} else {
-				url = "http://" + metaInfo.getHost() + ":" + metaInfo.getPort() + "/meta";
+				url += "?version=" + meta.getVersion();
 			}
-			URL metaURL = new URL(url);
-			HttpURLConnection connection = (HttpURLConnection) metaURL.openConnection();
-			connection.setConnectTimeout(m_config.getFetcheMetaFromLeaderConnectTimeout());
-			connection.setReadTimeout(m_config.getFetcheMetaFromLeaderReadTimeout());
-			connection.setRequestMethod("GET");
-			connection.connect();
-			if (connection.getResponseCode() == 200) {
-				InputStream is = connection.getInputStream();
-				String jsonString = new String(ByteStreams.toByteArray(is));
-				return JSON.parseObject(jsonString, Meta.class);
-			} else if (connection.getResponseCode() == 304) {
+
+			HttpResponse response = Request.Get(url)//
+			      .connectTimeout(m_config.getFetcheMetaFromLeaderConnectTimeout())//
+			      .socketTimeout(m_config.getFetcheMetaFromLeaderReadTimeout())//
+			      .execute()//
+			      .returnResponse();
+
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+				String responseContent = EntityUtils.toString(response.getEntity());
+				return JSON.parseObject(responseContent, Meta.class);
+			} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
 				return null;
 			}
+
 		} catch (Exception e) {
 			log.error("Failed to fetch meta from leader({}:{})", metaInfo.getHost(), metaInfo.getPort(), e);
 		}

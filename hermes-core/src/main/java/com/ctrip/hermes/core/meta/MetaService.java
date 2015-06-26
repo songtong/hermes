@@ -38,7 +38,7 @@ public interface MetaService {
 
 	Topic findTopicByName(String topic);
 
-	int getAckTimeoutSecondsTopicAndConsumerGroup(String topic, String groupId);
+	int getAckTimeoutSecondsByTopicAndConsumerGroup(String topic, String groupId);
 
 	List<Datasource> listAllMysqlDataSources();
 

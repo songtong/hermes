@@ -29,8 +29,8 @@ public class CoreConfig {
 		return 30;
 	}
 
-	public long getMetaCacheRefreshIntervalMinutes() {
-		return 1;
+	public long getMetaCacheRefreshIntervalSeconds() {
+		return 20;
 	}
 
 	public int getNettySendBufferSize() {

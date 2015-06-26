@@ -108,7 +108,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 		ConcurrentMap<Pair<Tpp, String>, AckHolder<MessageMeta>> holders = getHolders(isResend);
 
 		if (!holders.containsKey(key)) {
-			int timeout = m_metaService.getAckTimeoutSecondsTopicAndConsumerGroup(key.getKey().getTopic(), key.getValue()) * 1000;
+			int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(key.getKey().getTopic(), key.getValue()) * 1000;
 			DefaultAckHolder<MessageMeta> newHolder = new DefaultAckHolder<MessageMeta>(timeout);
 			holders.putIfAbsent(key, newHolder);
 		}

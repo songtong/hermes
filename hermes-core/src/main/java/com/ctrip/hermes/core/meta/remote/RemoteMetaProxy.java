@@ -6,18 +6,10 @@ import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.config.RequestConfig.Builder;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -35,7 +27,7 @@ import com.ctrip.hermes.core.meta.internal.MetaProxy;
 import com.google.common.base.Function;
 
 @Named(type = MetaProxy.class, value = RemoteMetaProxy.ID)
-public class RemoteMetaProxy implements MetaProxy, Initializable {
+public class RemoteMetaProxy implements MetaProxy {
 
 	private static final String HOST = "host";
 
@@ -58,10 +50,6 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 
 	@Inject
 	private CoreConfig m_config;
-
-	private HttpClient m_httpClient;
-
-	private RequestConfig m_requestConfig;
 
 	@Override
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
@@ -157,7 +145,6 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 
 			@Override
 			public String apply(String ip) {
-				HttpGet get = null;
 				try {
 					URIBuilder uriBuilder = new URIBuilder()//
 					      .setScheme("http")//
@@ -169,12 +156,13 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 						}
 					}
 
-					get = new HttpGet(uriBuilder.build());
-					get.setConfig(m_requestConfig);
+					HttpResponse response = Request.Get(uriBuilder.build())//
+					      .connectTimeout(m_config.getMetaServerConnectTimeout())//
+					      .socketTimeout(m_config.getMetaServerReadTimeout())//
+					      .execute()//
+					      .returnResponse();
 
-					HttpResponse response;
-					response = m_httpClient.execute(get);
-					if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+					if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 						return EntityUtils.toString(response.getEntity());
 					} else {
 						if (log.isDebugEnabled()) {
@@ -183,16 +171,13 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 						}
 						return null;
 					}
+
 				} catch (Exception e) {
 					// ignore
 					if (log.isDebugEnabled()) {
 						log.debug("Get meta server error.", e);
 					}
 					return null;
-				} finally {
-					if (get != null) {
-						get.reset();
-					}
 				}
 
 			}
@@ -204,7 +189,6 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 
 			@Override
 			public String apply(String ip) {
-				HttpPost post = null;
 				try {
 					URIBuilder uriBuilder = new URIBuilder()//
 					      .setScheme("http")//
@@ -216,15 +200,24 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 						}
 					}
 
-					post = new HttpPost(uriBuilder.build());
-					post.setConfig(m_requestConfig);
+					HttpResponse response = null;
 
-					HttpResponse response;
 					if (payload != null) {
-						post.setEntity(new StringEntity(JSON.toJSONString(payload), ContentType.APPLICATION_JSON));
+						response = Request.Post(uriBuilder.build())//
+						      .connectTimeout(m_config.getMetaServerConnectTimeout())//
+						      .socketTimeout(m_config.getMetaServerReadTimeout())//
+						      .bodyString(JSON.toJSONString(payload), ContentType.APPLICATION_JSON)//
+						      .execute()//
+						      .returnResponse();
+					} else {
+						response = Request.Post(uriBuilder.build())//
+						      .connectTimeout(m_config.getMetaServerConnectTimeout())//
+						      .socketTimeout(m_config.getMetaServerReadTimeout())//
+						      .execute()//
+						      .returnResponse();
 					}
-					response = m_httpClient.execute(post);
-					if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+
+					if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 						return EntityUtils.toString(response.getEntity());
 					} else {
 						if (log.isDebugEnabled()) {
@@ -233,30 +226,16 @@ public class RemoteMetaProxy implements MetaProxy, Initializable {
 						}
 						return null;
 					}
+
 				} catch (Exception e) {
 					// ignore
 					if (log.isDebugEnabled()) {
 						log.debug("Post meta server error.", e);
 					}
 					return null;
-				} finally {
-					if (post != null) {
-						post.reset();
-					}
 				}
-
 			}
 		});
-	}
-
-	@Override
-	public void initialize() throws InitializationException {
-		m_httpClient = HttpClients.createDefault();
-
-		Builder b = RequestConfig.custom();
-		b.setConnectTimeout(m_config.getMetaServerConnectTimeout());
-		b.setSocketTimeout(m_config.getMetaServerReadTimeout());
-		m_requestConfig = b.build();
 	}
 
 	@Override

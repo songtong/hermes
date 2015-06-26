@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 import org.xml.sax.SAXException;
 
-import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 
@@ -29,7 +28,9 @@ public class LocalMetaLoader implements MetaLoader {
 
 	@Override
 	public Meta load() {
-		log.info("Loading meta from local: " + PATH);
+		if (log.isDebugEnabled()) {
+			log.debug("Loading meta from local: {}", PATH);
+		}
 		InputStream in = getClass().getResourceAsStream(PATH);
 
 		if (in == null) {
@@ -43,33 +44,33 @@ public class LocalMetaLoader implements MetaLoader {
 		}
 	}
 
-	public static void main(String[] args) throws IOException, SAXException {
-		outputMetaStringFromMeta_Local();
-
-
-		// put meta XML here:
-		String metaXML = "";
-//		outputMetaStringByMetaXML(metaXML);
-
-
-		// put meta String (mostly from db) here:
-		String metaString = "";
-//		outputMetaXMLFromMetaString(metaString);
-	}
-
-	private static void outputMetaStringFromMeta_Local() {
-		LocalMetaLoader loader = new LocalMetaLoader();
-		System.out.println(JSON.toJSONString(loader.load()));
-	}
-
-	private static void outputMetaXMLFromMetaString(String metaString) {
-		Meta meta = JSON.parseObject(metaString,
-				  Meta.class);
-		System.out.println(meta);
-	}
-
-	private static void outputMetaStringByMetaXML(String metaXML) throws SAXException, IOException {
-		Meta meta = DefaultSaxParser.parse(metaXML);
-		System.out.println(JSON.toJSONString(meta));
-	}
+	// public static void main(String[] args) throws IOException, SAXException {
+	// outputMetaStringFromMeta_Local();
+	//
+	//
+	// // put meta XML here:
+	// String metaXML = "";
+	// // outputMetaStringByMetaXML(metaXML);
+	//
+	//
+	// // put meta String (mostly from db) here:
+	// String metaString = "";
+	// // outputMetaXMLFromMetaString(metaString);
+	// }
+	//
+	// private static void outputMetaStringFromMeta_Local() {
+	// LocalMetaLoader loader = new LocalMetaLoader();
+	// System.out.println(JSON.toJSONString(loader.load()));
+	// }
+	//
+	// private static void outputMetaXMLFromMetaString(String metaString) {
+	// Meta meta = JSON.parseObject(metaString,
+	// Meta.class);
+	// System.out.println(meta);
+	// }
+	//
+	// private static void outputMetaStringByMetaXML(String metaXML) throws SAXException, IOException {
+	// Meta meta = DefaultSaxParser.parse(metaXML);
+	// System.out.println(JSON.toJSONString(meta));
+	// }
 }

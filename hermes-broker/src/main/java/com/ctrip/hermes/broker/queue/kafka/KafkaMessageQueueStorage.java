@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
@@ -25,8 +23,6 @@ import com.ctrip.hermes.meta.entity.Storage;
 
 @Named(type = MessageQueueStorage.class, value = Storage.KAFKA)
 public class KafkaMessageQueueStorage implements MessageQueueStorage {
-
-	private static final Logger logger = LoggerFactory.getLogger(KafkaMessageQueueStorage.class);
 
 	@Inject
 	private BizLogger m_bizLogger;
