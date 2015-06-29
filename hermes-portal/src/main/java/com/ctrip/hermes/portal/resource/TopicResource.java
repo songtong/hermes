@@ -57,7 +57,10 @@ public class TopicResource {
 	private Pair<Boolean, ?> validateTopicView(TopicView topic) {
 		boolean passed = true;
 		String reason = "";
-		if (StringUtils.isBlank(topic.getStorageType())) {
+		if (StringUtils.isBlank(topic.getName())) {
+			reason = "Topic name is required";
+			passed = false;
+		} else if (StringUtils.isBlank(topic.getStorageType())) {
 			reason = "Storage type is required";
 			passed = false;
 		} else if (StringUtils.isBlank(topic.getEndpointType())) {
@@ -82,20 +85,20 @@ public class TopicResource {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
 
-		TopicView topicView = null;
+		Pair<Boolean, ?> result = null;
 		try {
-			Pair<Boolean, ?> result = validateTopicView(JSON.parseObject(content, TopicView.class));
-			if (!result.getKey()) {
-				throw new RestException("Bad Request: " + result.getValue());
-			}
-			topicView = (TopicView) result.getValue();
+			result = validateTopicView(JSON.parseObject(content, TopicView.class));
 		} catch (Exception e) {
 			logger.error("Can not parse payload: {}, create topic failed.", content);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
+		if (!result.getKey()) {
+			throw new RestException((String) result.getValue());
+		}
+
+		TopicView topicView = (TopicView) result.getValue();
 
 		Topic topic = topicView.toMetaTopic();
-
 		if (topicService.findTopicByName(topic.getName()) != null) {
 			throw new RestException("Topic already exists.", Status.CONFLICT);
 		}

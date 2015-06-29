@@ -264,4 +264,32 @@ public class RemoteMetaProxy implements MetaProxy {
 		}
 	}
 
+	@Override
+	public int registerSchema(String schema, String subject) {
+		Map<String, String> params = new HashMap<>();
+		params.put("schema", schema);
+		params.put("subject", subject);
+		String response = post("/schema/register", null, params);
+		if (response != null) {
+			try {
+				return Integer.valueOf(response);
+			} catch (Exception e) {
+				log.error("Can not parse response, schema: {}, subject: {}\nResponse: {}", schema, subject, response);
+			}
+		}
+		log.error("No response while posting meta server[registerSchema]");
+		return -1;
+	}
+
+	@Override
+	public String getSchemaString(int schemaId) {
+		Map<String, String> params = new HashMap<>();
+		params.put("id", String.valueOf(schemaId));
+		String response = get("/schema/register", params);
+		if (response != null) {
+			return response;
+		}
+		log.error("No response while getting meta server[getSchemaString]");
+		return null;
+	}
 }
