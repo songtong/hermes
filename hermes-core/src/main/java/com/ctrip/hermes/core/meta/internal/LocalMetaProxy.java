@@ -64,7 +64,7 @@ public class LocalMetaProxy implements MetaProxy {
 
 	@Override
 	public int registerSchema(String schema, String subject) {
-		return 0;
+		return -1;
 	}
 
 	@Override

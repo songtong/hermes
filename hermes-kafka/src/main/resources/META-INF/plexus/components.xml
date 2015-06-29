@@ -53,8 +53,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.kafka.codec.assist.HermesSchemaRestService</role>
-			<implementation>com.ctrip.hermes.kafka.codec.assist.HermesSchemaRestService</implementation>
+			<role>com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient</role>
+			<implementation>com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient</implementation>
 			<instantiation-strategy>per-lookup</instantiation-strategy>
 			<requirements>
 				<requirement>
@@ -67,7 +67,7 @@
 			<implementation>com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroSerializer</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.kafka.codec.assist.HermesSchemaRestService</role>
+					<role>com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -76,7 +76,7 @@
 			<implementation>com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroDeserializer</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.kafka.codec.assist.HermesSchemaRestService</role>
+					<role>com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient</role>
 				</requirement>
 			</requirements>
 		</component>

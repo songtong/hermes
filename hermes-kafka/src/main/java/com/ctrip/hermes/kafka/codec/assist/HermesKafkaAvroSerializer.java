@@ -15,9 +15,9 @@ public class HermesKafkaAvroSerializer extends AbstractKafkaAvroSerializer imple
 	private boolean isKey;
 
 	@Inject
-	private HermesSchemaRestService m_schemaRestService;
+	private SchemaRegisterRestClient m_schemaRestService;
 
-	public void setSchemaRestService(HermesSchemaRestService restService) {
+	public void setSchemaRestService(SchemaRegisterRestClient restService) {
 		m_schemaRestService = restService;
 	}
 

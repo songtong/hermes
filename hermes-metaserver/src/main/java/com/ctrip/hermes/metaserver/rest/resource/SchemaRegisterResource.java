@@ -49,9 +49,7 @@ public class SchemaRegisterResource {
 				throw new RestException("Register schema failed.", e);
 			}
 		}
-		if (log.isDebugEnabled()) {
-			log.error("Register schema failed. Codec avro not found.");
-		}
+		log.warn("Register schema failed. Codec avro not found.");
 		return Response.status(Status.NOT_FOUND).build();
 	}
 
@@ -65,9 +63,8 @@ public class SchemaRegisterResource {
 			} catch (Exception e) {
 				throw new RestException("Get schema string failed.", e);
 			}
-		} else if (log.isDebugEnabled()) {
-			log.error("Get schema string failed. Codec avro not found.");
 		}
+		log.warn("Get schema string failed. Codec avro not found.");
 		return Response.status(Status.NOT_FOUND).build();
 	}
 }

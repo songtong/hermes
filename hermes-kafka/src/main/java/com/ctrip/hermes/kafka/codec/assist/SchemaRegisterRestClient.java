@@ -13,13 +13,13 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.meta.internal.MetaManager;
 
-@Named(type = HermesSchemaRestService.class)
-public class HermesSchemaRestService extends RestService {
+@Named(type = SchemaRegisterRestClient.class)
+public class SchemaRegisterRestClient extends RestService {
 
 	@Inject
 	private MetaManager m_metaManager;
 
-	public HermesSchemaRestService() {
+	public SchemaRegisterRestClient() {
 		super("http://127.0.0.1:8081");// faked, useless
 	}
 

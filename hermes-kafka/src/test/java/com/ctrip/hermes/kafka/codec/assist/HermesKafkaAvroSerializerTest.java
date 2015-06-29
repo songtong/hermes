@@ -26,7 +26,7 @@ public class HermesKafkaAvroSerializerTest extends ComponentTestCase {
 	public void init() throws Exception {
 		String schemaString = "{\"namespace\": \"com.ctrip.hermes.kafka.avro\", \"type\": \"record\", \"name\": \"AvroVisitEvent\", \"fields\": [ {\"name\": \"ip\", \"type\": \"string\"}, {\"name\": \"url\", \"type\": \"string\"}, {\"name\": \"tz\", \"type\": \"long\", \"java-class\":\"java.util.Date\"} ] }";
 
-		HermesSchemaRestService restService = Mockito.mock(HermesSchemaRestService.class);
+		SchemaRegisterRestClient restService = Mockito.mock(SchemaRegisterRestClient.class);
 		Mockito.when(restService.registerSchema(Mockito.anyString(), Mockito.anyString())).thenReturn(MOCK_ID);
 		Mockito.when(restService.getId(Mockito.anyInt())).thenReturn(new SchemaString(schemaString));
 

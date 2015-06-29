@@ -15,9 +15,9 @@ import org.unidal.lookup.annotation.Named;
 @Named(type = HermesKafkaAvroDeserializer.class)
 public class HermesKafkaAvroDeserializer extends AbstractKafkaAvroDeserializer implements Deserializer<Object> {
 	@Inject
-	private HermesSchemaRestService m_schemaRestService;
+	private SchemaRegisterRestClient m_schemaRestService;
 
-	public void setSchemaRestService(HermesSchemaRestService restService) {
+	public void setSchemaRestService(SchemaRegisterRestClient restService) {
 		m_schemaRestService = restService;
 	}
 
@@ -25,7 +25,7 @@ public class HermesKafkaAvroDeserializer extends AbstractKafkaAvroDeserializer i
 	@SuppressWarnings("unchecked")
 	public void configure(Map<String, ?> configs, boolean isKey) {
 		Map<String, String> m = new HashMap<String, String>();
-		m.put("schema.registry.url", "http://127.0.0.1:8081");
+		m.put("schema.registry.url", "http://xxx.xxx.xxx.xxx"); // faked, KafkaAvroDeserializerConfig need this property
 		m.putAll((Map<? extends String, ? extends String>) configs);
 
 		KafkaAvroDeserializerConfig config = new KafkaAvroDeserializerConfig(m);

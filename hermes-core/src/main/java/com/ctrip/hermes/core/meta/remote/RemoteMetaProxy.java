@@ -274,10 +274,11 @@ public class RemoteMetaProxy implements MetaProxy {
 			try {
 				return Integer.valueOf(response);
 			} catch (Exception e) {
-				log.error("Can not parse response, schema: {}, subject: {}\nResponse: {}", schema, subject, response);
+				log.warn("Can not parse response, schema: {}, subject: {}\nResponse: {}", schema, subject, response);
 			}
+		} else {
+			log.warn("No response while posting meta server[registerSchema]");
 		}
-		log.error("No response while posting meta server[registerSchema]");
 		return -1;
 	}
 
@@ -288,8 +289,9 @@ public class RemoteMetaProxy implements MetaProxy {
 		String response = get("/schema/register", params);
 		if (response != null) {
 			return response;
+		} else {
+			log.warn("No response while getting meta server[getSchemaString]");
 		}
-		log.error("No response while getting meta server[getSchemaString]");
 		return null;
 	}
 }
