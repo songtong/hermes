@@ -17,9 +17,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.ctrip.hermes.core.bo.CodecView;
-import com.ctrip.hermes.portal.TestServer;
+import com.ctrip.hermes.portal.StartPortal;
 
-public class CodecResourceTest extends TestServer {
+public class CodecResourceTest extends StartPortal {
 
 	@After
 	public void stop() throws Exception {

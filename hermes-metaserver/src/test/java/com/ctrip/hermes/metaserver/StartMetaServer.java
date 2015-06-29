@@ -33,7 +33,7 @@ public class StartMetaServer extends JettyServer {
 	}
 
 	@Override
-	protected void startServer() throws Exception {
+	public void startServer() throws Exception {
 		String zkMode = System.getProperty("zkMode");
 		if (!"real".equalsIgnoreCase(zkMode)) {
 			m_zkServer = new TestingServer(2181);
@@ -63,7 +63,7 @@ public class StartMetaServer extends JettyServer {
 	}
 
 	@Override
-	protected void stopServer() throws Exception {
+	public void stopServer() throws Exception {
 		super.stopServer();
 		if (m_zkServer != null) {
 			m_zkServer.stop();

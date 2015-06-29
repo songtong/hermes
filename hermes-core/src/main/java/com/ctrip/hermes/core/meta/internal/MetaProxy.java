@@ -19,6 +19,10 @@ public interface MetaProxy {
 	LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort);
 
 	List<SchemaView> listSchemas();
-	
+
 	List<SubscriptionView> listSubscriptions();
+
+	int registerSchema(String schema, String subject);
+
+	String getSchemaString(int schemaId);
 }

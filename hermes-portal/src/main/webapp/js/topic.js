@@ -104,7 +104,9 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 				scope.endpoint_types = unique_array(collect_schemas(data, 'type', false));
 				scope.new_topic.endpointType = scope.endpoint_types[0];
 				scope.endpoint_names = find_endpoint_names(scope, scope.new_topic.endpointType);
-				scope.new_topic.partitions[0].endpoint = scope.endpoint_names[0];
+				console.log(scope.new_topic.endpointType == "kafka");
+				scope.new_topic.partitions[0].endpoint = scope.new_topic.storageType == "kafka" ? scope.endpoint_names[0] : null;
+				console.log(scope.new_topic.partitions[0].endpoint);
 			});
 
 			scope.get_topics = function get_topics(table_state) {
@@ -131,7 +133,7 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 				var new_partition = {};
 				new_partition.readDatasource = scope.datasource_names[0];
 				new_partition.writeDatasource = scope.datasource_names[0];
-				new_partition.endpoint = scope.endpoint_names[0];
+				new_partition.endpoint = scope.new_topic.storageType == "kafka" ? scope.endpoint_names[0] : null;
 				scope.new_topic.partitions.push(new_partition);
 			}
 			scope.del_one_partition = function del_one_partition() {
@@ -160,13 +162,14 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 				for (var i = 0; i < scope.new_topic.partitions.length; i++) {
 					scope.new_topic.partitions[i].readDatasource = scope.datasource_names[0];
 					scope.new_topic.partitions[i].writeDatasource = scope.datasource_names[0];
+					scope.new_topic.partitions[i].endpoint = scope.new_topic.storageType == "kafka" ? scope.endpoint_names[0] : null;
 				}
 			}
 
 			scope.endpoint_type_changed = function endpoint_type_changed() {
 				scope.endpoint_names = find_endpoint_names(scope, scope.new_topic.endpointType);
 				for (var i = 0; i < scope.new_topic.partitions.length; i++) {
-					scope.new_topic.partitions[i].endpoint = scope.endpoint_names[0];
+					scope.new_topic.partitions[i].endpoint = scope.new_topic.storageType == "kafka" ? scope.endpoint_names[0] : null;
 				}
 			}
 		} ]);

@@ -27,11 +27,11 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.TopicView;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.portal.TestServer;
+import com.ctrip.hermes.portal.StartPortal;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class TopicResourceTest extends TestServer {
+public class TopicResourceTest extends StartPortal {
 
 	private final String SERVER_HOST = "http://localhost:" + getServerPort();
 
