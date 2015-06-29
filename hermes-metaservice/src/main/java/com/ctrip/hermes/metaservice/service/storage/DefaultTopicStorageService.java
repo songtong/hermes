@@ -22,7 +22,7 @@ import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTopic;
 
-@Named(type = TopicStorageService.class, value = DefaultTopicStorageService.ID)
+@Named(type = TopicStorageService.class)
 public class DefaultTopicStorageService implements TopicStorageService {
 	public static final String ID = "topic-storage-service";
 

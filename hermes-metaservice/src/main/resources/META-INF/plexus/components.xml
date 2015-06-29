@@ -49,7 +49,6 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.storage.TopicStorageService</role>
-			<role-hint>topic-storage-service</role-hint>
 			<implementation>com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService</implementation>
 			<requirements>
 				<requirement>
