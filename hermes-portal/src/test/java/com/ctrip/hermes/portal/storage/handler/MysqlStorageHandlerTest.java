@@ -45,7 +45,7 @@ public class MysqlStorageHandlerTest extends ComponentTestCase {
 	public void testBuildSqlCreateTable() throws Exception {
 		StorageHandler handler = lookup(StorageHandler.class);
 
-		handler.createTable( 100L, 0, buildTableModel(), "jdbc://",null, null);
+		handler.createTable( 100L, 0, buildTableModel(), null);
 	}
 
 	private List<TableModel> buildTableModel() {
@@ -64,6 +64,6 @@ public class MysqlStorageHandlerTest extends ComponentTestCase {
 	@Test
 	public void addPartition() throws Exception {
 		StorageHandler handler = lookup(StorageHandler.class);
-		handler.addPartition(100L, 0, new MessageTableModel(0), 1000, "jdbc://",null, null);
+		handler.addPartition(100L, 0, new MessageTableModel(0), 1000, null);
 	}
 }

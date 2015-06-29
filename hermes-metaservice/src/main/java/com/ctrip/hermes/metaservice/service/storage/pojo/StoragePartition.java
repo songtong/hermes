@@ -4,48 +4,47 @@ public class StoragePartition {
 	String name;
 	String info; // like: Range from..to..
 	String range;
-	Integer tableRows;
-	Integer dataLength;
-	Integer indexLength;
+	long tableRows;
+	long dataLength;
+	long indexLength;
 
-	public Integer getDataLength() {
-		return dataLength;
-	}
-
-	public void setDataLength(Integer dataLength) {
-		this.dataLength = dataLength;
-	}
-
-	public Integer getIndexLength() {
-		return indexLength;
-	}
-
-	public void setIndexLength(Integer indexLength) {
-		this.indexLength = indexLength;
-	}
-
-	public StoragePartition(String name, String info, String range, Integer tableRows, Integer dataLength, Integer
-			  indexLength) {
-		this.info = info;
+	public StoragePartition(String name, String info, String range, Long tableRows, Long dataLength, Long indexLength) {
 		this.name = name;
+		this.info = info;
 		this.range = range;
 		this.tableRows = tableRows;
 		this.dataLength = dataLength;
 		this.indexLength = indexLength;
 	}
 
+	public long getTableRows() {
+		return tableRows;
+	}
+
+	public long getDataLength() {
+		return dataLength;
+	}
+
+	public long getIndexLength() {
+		return indexLength;
+	}
+
+	public void setTableRows(long tableRows) {
+		this.tableRows = tableRows;
+	}
+
+	public void setDataLength(long dataLength) {
+		this.dataLength = dataLength;
+	}
+
+	public void setIndexLength(long indexLength) {
+		this.indexLength = indexLength;
+	}
 
 	public String getName() {
 		return name;
 	}
 
-	public Integer getTableRows() {
-		return tableRows;
-	}
-
-	public void setTableRows(Integer tableRows) {
-		this.tableRows = tableRows;
-	}
 
 	public void setName(String name) {
 		this.name = name;
