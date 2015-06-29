@@ -84,7 +84,7 @@ hermes_storage.controller('MysqlCtrl', function ($scope, $resource, $log, $attrs
 });
 
 function validateInput(span) {
-    if (parseInt(span) >=0 && span > 10000) {
+    if (parseInt(span) >=0 && span >= 10000) {
         return true;
     } else {
         alert("Please Input Write Number (min is 10000)! Your Input is " + span);

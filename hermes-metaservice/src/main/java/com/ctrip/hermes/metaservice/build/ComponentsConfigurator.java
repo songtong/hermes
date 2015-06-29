@@ -8,6 +8,8 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.metaservice.service.DefaultMetaService;
 import com.ctrip.hermes.metaservice.service.DefaultZookeeperService;
+import com.ctrip.hermes.metaservice.service.storage.*;
+import com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKConfig;
 
@@ -21,7 +23,13 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(ZKConfig.class));
 		all.add(A(ZKClient.class));
 
+		all.add(A(StorageDataSourceProvider.class));
+		all.add(A(DefaultTopicStorageService.class));
+
+		all.add(A(MysqlStorageHandler.class));
+
 		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
+
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/data/appdatas/hermes/datasources.xml"));
 
 		return all;
