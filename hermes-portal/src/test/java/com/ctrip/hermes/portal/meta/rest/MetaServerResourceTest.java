@@ -9,9 +9,9 @@ import javax.ws.rs.core.Response;
 import org.junit.After;
 import org.junit.Test;
 
-import com.ctrip.hermes.portal.TestServer;
+import com.ctrip.hermes.portal.StartPortal;
 
-public class MetaServerResourceTest extends TestServer {
+public class MetaServerResourceTest extends StartPortal {
 	private final String SERVER_HOST = "http://localhost:" + getServerPort();
 
 	@After

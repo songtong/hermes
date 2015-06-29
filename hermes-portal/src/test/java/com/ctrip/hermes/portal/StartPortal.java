@@ -11,11 +11,11 @@ import org.mortbay.servlet.GzipFilter;
 import org.unidal.test.jetty.JettyServer;
 
 @RunWith(JUnit4.class)
-public class TestServer extends JettyServer {
+public class StartPortal extends JettyServer {
 	private TestingServer m_zkServer = null;
 
 	public static void main(String[] args) throws Exception {
-		TestServer server = new TestServer();
+		StartPortal server = new StartPortal();
 
 		server.startServer();
 		server.startWebapp();
@@ -32,8 +32,12 @@ public class TestServer extends JettyServer {
 	protected void startServer() throws Exception {
 		String zkMode = System.getProperty("zkMode");
 		if (!"real".equalsIgnoreCase(zkMode)) {
-			m_zkServer = new TestingServer(2181);
-			System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
+			try {
+				m_zkServer = new TestingServer(2181);
+				System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
+			} catch (Throwable e) {
+				System.out.println("Zookeeper serer start failed, maybe started already.");
+			}
 		}
 		super.startServer();
 	}

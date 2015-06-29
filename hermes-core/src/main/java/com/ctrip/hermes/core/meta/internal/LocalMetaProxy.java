@@ -62,4 +62,14 @@ public class LocalMetaProxy implements MetaProxy {
 		return new ArrayList<SubscriptionView>();
 	}
 
+	@Override
+	public int registerSchema(String schema, String subject) {
+		return -1;
+	}
+
+	@Override
+	public String getSchemaString(int schemaId) {
+		return null;
+	}
+
 }
