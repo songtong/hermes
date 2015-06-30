@@ -33,19 +33,16 @@ public class KafkaMessageQueue extends AbstractMessageQueue {
 
 	@Override
 	protected MessageQueueCursor create(String groupId, Lease lease) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected void doNack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	protected void doAck(boolean resend, boolean isPriority, String groupId, long msgSeq) {
-		// TODO Auto-generated method stub
 
 	}
 

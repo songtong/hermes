@@ -43,8 +43,8 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 				msg.setPayload(pdmsg.readBody());
 				msg.setPriority(tpp.isPriority() ? 0 : 1);
 				// TODO set producer id and producer id in producer
-				msg.setProducerId(101);
-				msg.setProducerIp("1.1.1.1");
+				msg.setProducerId(0);
+				msg.setProducerIp("");
 				msg.setRefKey(pdmsg.getKey());
 				msg.setTopic(tpp.getTopic());
 				msg.setCodecType(pdmsg.getBodyCodecType());
@@ -69,37 +69,31 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 
 	@Override
 	public Object findLastOffset(Tpp tpp, int groupId) throws Exception {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object findLastResendOffset(Tpg tpg) throws Exception {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public FetchResult fetchResendMessages(Tpg tpg, Object startOffset, int batchSize) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, MessageMeta>> msgId2Metas) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void ack(Tpp tpp, String groupId, boolean resend, long msgSeq) {
-		// TODO Auto-generated method stub
 
 	}
 
