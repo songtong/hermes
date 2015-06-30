@@ -2,6 +2,7 @@ package com.ctrip.hermes.rest.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Properties;
 
 import javax.ws.rs.core.Response;
@@ -101,8 +102,10 @@ public class MessagePushService implements Initializable {
 							      pushEvent.addData("group", sub.getGroup());
 							      pushEvent.addData("refKey", msg.getRefKey());
 							      pushEvent.addData("endpoint", url);
+
 							      pushResponse = pushMessage(msg, url);
 							      time.stop();
+
 							      pushEvent.addData("result", pushResponse.getStatusLine().getStatusCode());
 							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
 								      msg.ack();
@@ -140,6 +143,18 @@ public class MessagePushService implements Initializable {
 			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
 			// TODO Leave here for future show
 			// post.setEntity(new StringEntity(new String(msg.getBody().getEncodedMessage())));
+			post.addHeader("X-Hermes-Topic", msg.getTopic());
+			post.addHeader("X-Hermes-Ref-Key", msg.getRefKey());
+			Iterator<String> propertyNames = msg.getPropertyNames();
+			StringBuffer sb = new StringBuffer();
+			while (propertyNames.hasNext()) {
+				String key = propertyNames.next();
+				String value = msg.getProperty(key);
+				sb.append(key).append('=').append(value);
+			}
+			if (sb.length() > 0) {
+				post.addHeader("X-Hermes-Message-Property", sb.toString());
+			}
 			post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
 			response = m_httpClient.execute(post);
 		} finally {
