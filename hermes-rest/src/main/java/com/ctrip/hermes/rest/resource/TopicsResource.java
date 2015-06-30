@@ -62,13 +62,13 @@ public class TopicsResource {
 
 	private ExecutorService executor = Executors.newCachedThreadPool(HermesThreadFactory.create("MessagePublish", true));
 
-	public static final String PARTITION_KEY = "partitionKey";
+	public static final String PARTITION_KEY = "X-Hermes-Partition-Key";
 
-	public static final String PRIORITY = "priority";
+	public static final String PRIORITY = "X-Hermes-Priority-Message";
 
-	public static final String REF_KEY = "refKey";
+	public static final String REF_KEY = "X-Hermes-Ref-Key";
 
-	public static final String PROPERTIES = "properties";
+	public static final String PROPERTIES = "X-Hermes-Message-Property";
 
 	private void publishAsync(final String topic, final Map<String, String> params, final InputStream content,
 	      final AsyncResponse response) {
@@ -110,22 +110,21 @@ public class TopicsResource {
 		MultivaluedMap<String, String> requestHeaders = headers.getRequestHeaders();
 		Map<String, String> params = new HashMap<>();
 		if (requestHeaders.containsKey(PARTITION_KEY)) {
-			params.put(PARTITION_KEY, requestHeaders.getFirst(PARTITION_KEY));
+			params.put("partitionKey", requestHeaders.getFirst(PARTITION_KEY));
 		}
 		if (requestHeaders.containsKey(PRIORITY)) {
-			params.put(PRIORITY, requestHeaders.getFirst(PRIORITY));
+			params.put("priority", requestHeaders.getFirst(PRIORITY));
 		}
 		if (requestHeaders.containsKey(REF_KEY)) {
-			params.put(REF_KEY, requestHeaders.getFirst(REF_KEY));
+			params.put("refKey", requestHeaders.getFirst(REF_KEY));
 		}
 		if (requestHeaders.containsKey(PROPERTIES)) {
-			params.put(PROPERTIES, requestHeaders.getFirst(PROPERTIES));
+			params.put("properties", requestHeaders.getFirst(PROPERTIES));
 		}
 
 		BizEvent receiveEvent = new BizEvent("Rest.received");
 		receiveEvent.addData("topic", topicName);
-		receiveEvent.addData(REF_KEY, requestHeaders.getFirst(REF_KEY));
-		receiveEvent.addData(PARTITION_KEY, requestHeaders.getFirst(PARTITION_KEY));
+		receiveEvent.addData("refKey", params.get("refKey"));
 		receiveEvent.addData("remoteHost", request.getRemoteHost());
 		bizLogger.log(receiveEvent);
 
