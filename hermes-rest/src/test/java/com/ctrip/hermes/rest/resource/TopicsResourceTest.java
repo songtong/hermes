@@ -42,10 +42,10 @@ public class TopicsResourceTest extends ComponentTestCase {
 		String topic = "kafka.SimpleTextTopic";
 
 		Builder request = webTarget.path("topics/" + topic).request();
-		request.header("priority", "true");
-		request.header("refKey", "mykey");
-		request.header("partitionKey", "myPartition");
-		request.header("properties", "key1=value1,key2=value2");
+		request.header("X-Hermes-Priority", "true");
+		request.header("X-Hermes-Ref-Key", "mykey");
+		request.header("X-Hermes-Partition-Key", "myPartition");
+		request.header("X-Hermes-Properties", "key1=value1,key2=value2");
 		String content = "Hello World " + System.currentTimeMillis();
 		InputStream is = new ByteArrayInputStream(content.getBytes());
 		Response response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));

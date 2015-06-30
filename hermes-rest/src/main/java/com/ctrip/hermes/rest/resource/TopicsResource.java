@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
@@ -30,6 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.Hermes.Env;
 import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.log.BizEvent;
+import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -51,19 +54,21 @@ public class TopicsResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(TopicsResource.class);
 
+	private static final BizLogger bizLogger = PlexusComponentLocator.lookup(BizLogger.class);
+
 	private ProducerService producerService = PlexusComponentLocator.lookup(ProducerService.class);
 
 	private ClientEnvironment env = PlexusComponentLocator.lookup(ClientEnvironment.class);
 
 	private ExecutorService executor = Executors.newCachedThreadPool(HermesThreadFactory.create("MessagePublish", true));
 
-	public static final String PARTITION_KEY = "partitionKey";
+	public static final String PARTITION_KEY = "X-Hermes-Partition-Key";
 
-	public static final String PRIORITY = "priority";
+	public static final String PRIORITY = "X-Hermes-Priority-Message";
 
-	public static final String REF_KEY = "refKey";
+	public static final String REF_KEY = "X-Hermes-Ref-Key";
 
-	public static final String PROPERTIES = "properties";
+	public static final String PROPERTIES = "X-Hermes-Message-Property";
 
 	private void publishAsync(final String topic, final Map<String, String> params, final InputStream content,
 	      final AsyncResponse response) {
@@ -93,7 +98,7 @@ public class TopicsResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public void publishBinary(@PathParam("topicName") String topicName, @Context HttpHeaders headers,
-	      InputStream content, @Suspended final AsyncResponse response) {
+	      @Context HttpServletRequest request, InputStream content, @Suspended final AsyncResponse response) {
 		if (!producerService.topicExist(topicName)) {
 			throw new NotFoundException(String.format("Topic {0} does not exist", topicName));
 		}
@@ -105,17 +110,24 @@ public class TopicsResource {
 		MultivaluedMap<String, String> requestHeaders = headers.getRequestHeaders();
 		Map<String, String> params = new HashMap<>();
 		if (requestHeaders.containsKey(PARTITION_KEY)) {
-			params.put(PARTITION_KEY, requestHeaders.getFirst(PARTITION_KEY));
+			params.put("partitionKey", requestHeaders.getFirst(PARTITION_KEY));
 		}
 		if (requestHeaders.containsKey(PRIORITY)) {
-			params.put(PRIORITY, requestHeaders.getFirst(PRIORITY));
+			params.put("priority", requestHeaders.getFirst(PRIORITY));
 		}
 		if (requestHeaders.containsKey(REF_KEY)) {
-			params.put(REF_KEY, requestHeaders.getFirst(REF_KEY));
+			params.put("refKey", requestHeaders.getFirst(REF_KEY));
 		}
 		if (requestHeaders.containsKey(PROPERTIES)) {
-			params.put(PROPERTIES, requestHeaders.getFirst(PROPERTIES));
+			params.put("properties", requestHeaders.getFirst(PROPERTIES));
 		}
+
+		BizEvent receiveEvent = new BizEvent("Rest.received");
+		receiveEvent.addData("topic", topicName);
+		receiveEvent.addData("refKey", params.get("refKey"));
+		receiveEvent.addData("remoteHost", request.getRemoteHost());
+		bizLogger.log(receiveEvent);
+
 		publishAsync(topicName, params, content, response);
 	}
 }

@@ -15,7 +15,6 @@ import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
-import com.ctrip.hermes.rest.resource.TopicsResource;
 import com.google.common.io.ByteStreams;
 
 @Named
@@ -37,19 +36,21 @@ public class ProducerService {
 		RawMessage rawMsg = new RawMessage(payload);
 
 		String partitionKey = null;
-		if (params.containsKey(TopicsResource.PARTITION_KEY)) {
-			partitionKey = params.get(TopicsResource.PARTITION_KEY);
+		if (params.containsKey("partitionKey")) {
+			partitionKey = params.get("partitionKey");
 		}
 		MessageHolder messageHolder = producer.message(topic, partitionKey, rawMsg);
-		if (params.containsKey(TopicsResource.PRIORITY)) {
-			messageHolder.withPriority();
+		if (params.containsKey("priority")) {
+			if (Boolean.valueOf(params.get("priority"))) {
+				messageHolder.withPriority();
+			}
 		}
-		if (params.containsKey(TopicsResource.REF_KEY)) {
-			String refKey = params.get(TopicsResource.REF_KEY);
+		if (params.containsKey("refKey")) {
+			String refKey = params.get("refKey");
 			messageHolder.withRefKey(refKey);
 		}
-		if (params.containsKey(TopicsResource.PROPERTIES)) {
-			String properties = params.get(TopicsResource.PROPERTIES);
+		if (params.containsKey("properties")) {
+			String properties = params.get("properties");
 			for (String pro : properties.split(",")) {
 				if (pro.contains("=")) {
 					String[] split = pro.split("=");
