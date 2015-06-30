@@ -112,7 +112,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 		switch (env) {
 		case LOCAL:
-			return "127.0.0.1";
+			return "meta.hermes.local";
 		case DEV:
 			return "10.3.8.63";
 		case LPT:

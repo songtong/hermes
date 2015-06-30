@@ -3,15 +3,16 @@ package com.ctrip.hermes.consumer;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
@@ -27,51 +28,116 @@ public class StartConsumer extends ComponentTestCase {
 
 	@Test
 	public void test() throws Exception {
-		String topic = "order_new";
-
-		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
-		subscribers.put("group1", Arrays.asList("1-" + new Random().nextInt()));
-		subscribers.put("group2", Arrays.asList("2-" + new Random().nextInt()));
-		// subscribers.put("group2", Arrays.asList("2-a", "2-b"));
-
-		List<ConsumerHolder> holders = new ArrayList<>();
-
-		for (Map.Entry<String, List<String>> entry : subscribers.entrySet()) {
-			String groupId = entry.getKey();
-			for (String id : entry.getValue()) {
-
-				holders.add(Consumer.getInstance().start(topic, groupId, new MyConsumer(id)));
-				System.out.println("Starting consumer " + groupId + ":" + id);
-			}
-
-		}
+		Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers = new HashMap<>();
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
 			String line = in.readLine();
-			if ("c".equals(line)) {
-				for (ConsumerHolder holder : holders) {
-					holder.close();
+
+			if ("quit".equals(line)) {
+				return;
+			} else if (line.startsWith("start consumer ")) {
+				createConsumer(topicGroup2Consumers, line);
+			} else if (line.equals("list consumers")) {
+				listConsumer(topicGroup2Consumers);
+			} else if (line.startsWith("stop consumer ")) {
+				stopConsumer(topicGroup2Consumers, line);
+			} else if (line.equals("status")) {
+				printAllThreads();
+			}
+
+		}
+
+	}
+
+	private void stopConsumer(Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers,
+	      String line) {
+		String[] args = line.split(" ");
+		if (args.length != 5) {
+			System.out.println("[ERROR]Command format: stop consumer {topic} {consumer-group} {name}");
+		} else {
+			String topic = args[2];
+			String consumerGroup = args[3];
+			String name = args[4];
+			Pair<String, String> topicGroup = new Pair<String, String>(topic, consumerGroup);
+
+			if (topicGroup2Consumers.containsKey(topicGroup)) {
+				ConsumerHolder consumerHolder = null;
+				for (Pair<String, ConsumerHolder> consumer : topicGroup2Consumers.get(topicGroup)) {
+					if (name.equals(consumer.getKey())) {
+						consumerHolder = consumer.getValue();
+						break;
+					}
 				}
+				if (consumerHolder != null) {
+					consumerHolder.close();
 
-				break;
+					System.out.println(String.format("Consumer stopped(topic=%s, consumer-group=%s, name=%s)", topic,
+					      consumerGroup, name));
+				} else {
+					System.out.println(String.format("Can not find consumer(topic=%s, consumer-group=%s, name=%s)", topic,
+					      consumerGroup, name));
+				}
 			} else {
-				System.out.println("Print Threads: ");
-				printAllThreads();
+				System.out.println(String.format("Can not find consumer(topic=%s, consumer-group=%s, name=%s)", topic,
+				      consumerGroup, name));
 			}
 		}
 
-		while (true) {
-			String line = in.readLine();
-			if ("q".equals(line)) {
-				break;
-			} else {
-				printAllThreads();
+	}
+
+	private void listConsumer(Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("Consumers:\n");
+		for (Map.Entry<Pair<String, String>, List<Pair<String, ConsumerHolder>>> entry : topicGroup2Consumers.entrySet()) {
+			sb.append(String.format("[Topic:%s, ConsumerGroup:%s]", entry.getKey().getKey(), entry.getKey().getValue()));
+			sb.append("{");
+			for (Pair<String, ConsumerHolder> consumer : entry.getValue()) {
+				sb.append(consumer.getKey()).append(",");
 			}
+			sb.deleteCharAt(sb.length() - 1).append("}");
 		}
 
-		System.in.read();
+		System.out.println(sb.toString());
 
+	}
+
+	private void createConsumer(Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers,
+	      String line) {
+		String[] args = line.split(" ");
+		if (args.length < 4) {
+			System.out.println("[ERROR]Command format: create consumer {topic} {consumer-group} ({nack-times})");
+		} else {
+			String topic = args[2];
+			String consumerGroup = args[3];
+			Pair<String, String> topicGroup = new Pair<String, String>(topic, consumerGroup);
+			if (!topicGroup2Consumers.containsKey(topicGroup)) {
+				topicGroup2Consumers.put(topicGroup, new ArrayList<Pair<String, ConsumerHolder>>());
+			}
+			int id = topicGroup2Consumers.get(topicGroup).size();
+			String name = topic + "_" + consumerGroup + "_" + id;
+
+			if (args.length == 4) {
+
+				topicGroup2Consumers.get(topicGroup).add(
+				      new Pair<String, ConsumerHolder>(name, Consumer.getInstance().start(topic, consumerGroup,
+				            new AckMessageListener(name))));
+
+				System.out.println(String.format("Ack consumer started(topic=%s, consumer-group=%s, name=%s)", topic,
+				      consumerGroup, name));
+			} else if (args.length >= 5) {
+				int nackTimes = Integer.valueOf(args[4]);
+
+				topicGroup2Consumers.get(topicGroup).add(
+				      new Pair<String, ConsumerHolder>(name, Consumer.getInstance().start(topic, consumerGroup,
+				            new NAckMessageListener(name, nackTimes))));
+
+				System.out.println(String.format(
+				      "Nack consumer started(topic=%s, consumer-group=%s, name=%s, nackTimes=%s)", topic, consumerGroup,
+				      name, nackTimes));
+			}
+		}
 	}
 
 	private void printAllThreads() {
@@ -90,27 +156,59 @@ public class StartConsumer extends ComponentTestCase {
 		}
 	}
 
-	static class MyConsumer implements MessageListener<String> {
+	static class AckMessageListener implements MessageListener<String> {
 
-		private String m_id;
+		private String m_name;
 
-		public MyConsumer(String id) {
-			m_id = id;
+		public AckMessageListener(String name) {
+			m_name = name;
 		}
 
 		@Override
 		public void onMessage(List<ConsumerMessage<String>> msgs) {
-			try {
-				TimeUnit.MILLISECONDS.sleep(15 + new Random().nextInt(50));
-			} catch (InterruptedException e) {
-			}
 
 			for (ConsumerMessage<String> msg : msgs) {
-				String body = msg.getBody();
-				System.out.println(m_id + "<<< " + body + " partition: "
-				      + ((BrokerConsumerMessage<String>) msg).getPartition());
-
+				System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)",
+				      m_name, msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
+				      ((BrokerConsumerMessage<String>) msg).isPriority()));
 				msg.ack();
+			}
+		}
+	}
+
+	static class NAckMessageListener implements MessageListener<String> {
+
+		private String m_name;
+
+		private int m_nackTimes;
+
+		private ConcurrentMap<String, AtomicInteger> m_nacks = new ConcurrentHashMap<>();
+
+		public NAckMessageListener(String name, int nackTimes) {
+			m_name = name;
+			m_nackTimes = nackTimes;
+		}
+
+		@Override
+		public void onMessage(List<ConsumerMessage<String>> msgs) {
+
+			for (ConsumerMessage<String> msg : msgs) {
+
+				m_nacks.putIfAbsent(msg.getRefKey(), new AtomicInteger(m_nackTimes));
+
+				System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)",
+				      m_name, msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
+				      ((BrokerConsumerMessage<String>) msg).isPriority()));
+
+				AtomicInteger nackTimes = m_nacks.get(msg.getRefKey());
+
+				if (nackTimes.get() == 0) {
+					m_nacks.remove(msg.getRefKey());
+					msg.ack();
+				} else {
+					nackTimes.decrementAndGet();
+					msg.nack();
+				}
 			}
 		}
 	}
