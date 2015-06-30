@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
@@ -30,6 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.Hermes.Env;
 import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.log.BizEvent;
+import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -50,6 +53,8 @@ public class TopicsResource {
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(TopicsResource.class);
+
+	private static final BizLogger bizLogger = PlexusComponentLocator.lookup(BizLogger.class);
 
 	private ProducerService producerService = PlexusComponentLocator.lookup(ProducerService.class);
 
@@ -93,7 +98,7 @@ public class TopicsResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public void publishBinary(@PathParam("topicName") String topicName, @Context HttpHeaders headers,
-	      InputStream content, @Suspended final AsyncResponse response) {
+	      @Context HttpServletRequest request, InputStream content, @Suspended final AsyncResponse response) {
 		if (!producerService.topicExist(topicName)) {
 			throw new NotFoundException(String.format("Topic {0} does not exist", topicName));
 		}
@@ -116,6 +121,14 @@ public class TopicsResource {
 		if (requestHeaders.containsKey(PROPERTIES)) {
 			params.put(PROPERTIES, requestHeaders.getFirst(PROPERTIES));
 		}
+
+		BizEvent receiveEvent = new BizEvent("Rest.received");
+		receiveEvent.addData("topic", topicName);
+		receiveEvent.addData(REF_KEY, requestHeaders.getFirst(REF_KEY));
+		receiveEvent.addData(PARTITION_KEY, requestHeaders.getFirst(PARTITION_KEY));
+		receiveEvent.addData("remoteHost", request.getRemoteHost());
+		bizLogger.log(receiveEvent);
+
 		publishAsync(topicName, params, content, response);
 	}
 }

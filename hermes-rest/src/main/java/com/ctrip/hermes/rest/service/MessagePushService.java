@@ -13,7 +13,6 @@ import org.apache.http.client.config.RequestConfig.Builder;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -31,6 +30,8 @@ import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.log.BizEvent;
+import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
@@ -39,6 +40,9 @@ import com.ctrip.hermes.core.message.payload.RawMessage;
 public class MessagePushService implements Initializable {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(MessagePushService.class);
+
+	@Inject
+	private BizLogger m_bizLogger;
 
 	@Inject
 	private ClientEnvironment m_env;
@@ -65,7 +69,7 @@ public class MessagePushService implements Initializable {
 		m_requestConfig = b.build();
 	}
 
-	public ConsumerHolder startPusher(SubscriptionView sub) {
+	public ConsumerHolder startPusher(final SubscriptionView sub) {
 		final Meter success_meter = m_metricsManager.meter("push_success", sub.getTopic(), sub.getGroup(), sub
 		      .getEndpoints().toString());
 
@@ -89,12 +93,17 @@ public class MessagePushService implements Initializable {
 					      }
 
 					      for (final String url : urls) {
+						      BizEvent pushEvent = new BizEvent("Rest.push");
 						      HttpResponse pushResponse = null;
 						      try {
 							      Context time = push_timer.time();
+							      pushEvent.addData("topic", sub.getTopic());
+							      pushEvent.addData("group", sub.getGroup());
+							      pushEvent.addData("refKey", msg.getRefKey());
+							      pushEvent.addData("endpoint", url);
 							      pushResponse = pushMessage(msg, url);
 							      time.stop();
-							      System.out.println("OneMinuteRate: " + push_timer.getOneMinuteRate());
+							      pushEvent.addData("result", pushResponse.getStatusLine().getStatusCode());
 							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
 								      msg.ack();
 								      success_meter.mark();
@@ -113,6 +122,8 @@ public class MessagePushService implements Initializable {
 						      } catch (Exception e) {
 							      m_logger.warn("Push message failed", e);
 							      failed_meter.mark();
+						      } finally {
+							      m_bizLogger.log(pushEvent);
 						      }
 					      }
 				      }
@@ -126,10 +137,10 @@ public class MessagePushService implements Initializable {
 		HttpResponse response = null;
 		try {
 			post.setConfig(m_requestConfig);
-			//TODO: temp operations for show
-//			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
-			post.setEntity(new StringEntity(new String(msg.getBody().getEncodedMessage())));
-//			post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
+			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
+			// TODO Leave here for future show
+			// post.setEntity(new StringEntity(new String(msg.getBody().getEncodedMessage())));
+			post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
 			response = m_httpClient.execute(post);
 		} finally {
 			post.reset();
