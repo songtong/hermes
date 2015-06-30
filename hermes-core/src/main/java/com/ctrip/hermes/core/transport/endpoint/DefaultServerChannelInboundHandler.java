@@ -33,7 +33,7 @@ public class DefaultServerChannelInboundHandler extends AbstractNettyChannelInbo
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		log.warn("Client disconnected(addr={})", NettyUtils.parseChannelRemoteAddr(ctx.channel()));
+		log.info("Client disconnected(addr={})", NettyUtils.parseChannelRemoteAddr(ctx.channel()));
 		super.channelInactive(ctx);
 	}
 

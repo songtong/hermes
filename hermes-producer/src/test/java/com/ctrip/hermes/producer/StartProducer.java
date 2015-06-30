@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.producer.api.Producer;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -25,15 +26,18 @@ public class StartProducer extends ComponentTestCase {
 
 	@Test
 	public void test() throws Exception {
-		String topic = "order_new";
-		System.out.println(String.format("Starting producer(topic=%s)...", topic));
+		System.out.println("Producer started...");
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
 			String line = in.readLine();
-			if ("q".equals(line)) {
+			if ("quit".equals(line)) {
 				break;
 			} else {
+				String topic = "order_new";
+				if (!StringUtils.isBlank(line)) {
+					topic = StringUtils.trim(line);
+				}
 				send(topic);
 			}
 
@@ -41,17 +45,24 @@ public class StartProducer extends ComponentTestCase {
 	}
 
 	private void send(String topic) throws Exception {
-		String uuid = UUID.randomUUID().toString();
 		Random random = new Random();
+		String uuid = UUID.randomUUID().toString();
 
 		boolean priority = random.nextBoolean();
-		final String msg = uuid + (priority ? " priority" : " non-priority");
-		System.out.println(">>> " + msg);
+		final String msg = String.format("%s %s %s", topic, uuid, priority ? "priority" : "non-priority");
+		System.out.println(String.format("Sending message to topic %s(body: %s)", topic, msg));
 		SettableFuture<SendResult> future = null;
 		if (priority) {
-			future = (SettableFuture<SendResult>) Producer.getInstance().message(topic, uuid, msg).withRefKey(uuid).withPriority().send();
+			future = (SettableFuture<SendResult>) Producer.getInstance()//
+			      .message(topic, uuid, msg)//
+			      .withRefKey(uuid)//
+			      .withPriority()//
+			      .send();
 		} else {
-			future = (SettableFuture<SendResult>) Producer.getInstance().message(topic, uuid, msg).withRefKey(uuid).send();
+			future = (SettableFuture<SendResult>) Producer.getInstance()//
+			      .message(topic, uuid, msg)//
+			      .withRefKey(uuid)//
+			      .send();
 		}
 
 		Futures.addCallback(future, new FutureCallback<SendResult>() {
@@ -63,7 +74,7 @@ public class StartProducer extends ComponentTestCase {
 
 			@Override
 			public void onFailure(Throwable t) {
-				System.out.println("Message " + msg + " sent.");
+				System.out.println(String.format("Failed to send message %s.", msg));
 
 			}
 		}, m_executors);

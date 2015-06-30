@@ -49,7 +49,7 @@ public class DefaultClientChannelInboundHandler extends AbstractNettyChannelInbo
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		log.warn("Disconnected from broker(addr={})", NettyUtils.parseChannelRemoteAddr(ctx.channel()));
+		log.info("Disconnected from broker(addr={})", NettyUtils.parseChannelRemoteAddr(ctx.channel()));
 
 		if (!m_endpointChannel.isClosed()) {
 			m_endpointChannel.setChannelFuture(null);

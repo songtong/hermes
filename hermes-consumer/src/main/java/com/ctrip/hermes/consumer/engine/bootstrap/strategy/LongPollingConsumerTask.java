@@ -422,7 +422,8 @@ public class LongPollingConsumerTask implements Runnable {
 									List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ack.getChannel());
 									m_msgs.addAll(msgs);
 								} else {
-									log.warn("Can not find consumerContext(topic={}, partition={}, groupId={}, sessionId={})",
+									log.info(
+									      "Can not find consumerContext(topic={}, partition={}, groupId={}, sessionId={}), maybe has been stopped.",
 									      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
 									      m_context.getSessionId());
 								}

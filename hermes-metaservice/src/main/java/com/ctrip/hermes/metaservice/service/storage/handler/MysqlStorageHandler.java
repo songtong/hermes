@@ -166,7 +166,6 @@ public class MysqlStorageHandler implements StorageHandler {
 	@Override
 	public void deletePartition(Long topicId, Integer partitionId, TableModel model, String datasource)
 			  throws StorageHandleErrorException {
-		String databaseName = getDatabaseName(datasource);
 		String tableName = getTablePrefix(topicId, partitionId) + model.getTableName();
 		deletePartition0(tableName, datasource);
 	}
