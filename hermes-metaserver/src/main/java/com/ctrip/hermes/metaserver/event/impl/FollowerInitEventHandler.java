@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.net.Networks;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -87,7 +88,16 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	}
 
 	private Meta fetchMetaInfo(MetaInfo metaInfo) {
+		if(metaInfo == null){
+			return null;
+		}
+
 		try {
+			if(Networks.forIp().getLocalHostAddress().equals(metaInfo.getHost()) && m_config.getMetaServerPort() == metaInfo
+					  .getPort()){
+				return null;
+			}
+
 			String url = String.format("http://%s:%s/meta", metaInfo.getHost(), metaInfo.getPort());
 			Meta meta = m_metaHolder.getMeta();
 
