@@ -128,7 +128,7 @@ public class MetaHolder implements Initializable {
 		MetaInfo metaInfo = ZKSerializeUtils.deserialize(
 		      m_zkClient.getClient().getData().forPath(ZKPathUtils.getMetaInfoZkPath()), MetaInfo.class);
 
-		long newMetaVersion = System.currentTimeMillis();
+		long newMetaVersion = System.currentTimeMillis() / 1000L;
 		// may be same due to different machine time
 		if (metaInfo != null && metaInfo.getTimestamp() == newMetaVersion) {
 			newMetaVersion++;

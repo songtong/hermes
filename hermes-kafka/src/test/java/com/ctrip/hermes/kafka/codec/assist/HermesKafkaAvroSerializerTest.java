@@ -12,7 +12,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.unidal.lookup.ComponentTestCase;
 
+import com.ctrip.hermes.core.message.payload.PayloadCodec;
 import com.ctrip.hermes.kafka.avro.AvroVisitEvent;
+import com.ctrip.hermes.meta.entity.Codec;
 
 public class HermesKafkaAvroSerializerTest extends ComponentTestCase {
 
@@ -63,6 +65,22 @@ public class HermesKafkaAvroSerializerTest extends ComponentTestCase {
 
 		byte[] serialized = m_serializer.serialize("topic", event);
 		AvroVisitEvent e = (AvroVisitEvent) m_deserializer.deserialize("no use", serialized);
+		Assert.assertEquals(event.getIp(), String.valueOf(e.getIp()));
+		Assert.assertEquals(event.getTz(), e.getTz());
+		Assert.assertEquals(event.getUrl(), String.valueOf(e.getUrl()));
+	}
+
+	@Test
+	public void testRealSerialize() {
+		AvroVisitEvent event = new AvroVisitEvent();
+		event.setIp("123.123.123.123");
+		event.setTz(12345678901234567L);
+		event.setUrl("http://127.0.0.1");
+
+		PayloadCodec codec = lookup(PayloadCodec.class, Codec.AVRO);
+		byte[] serialized = codec.encode("topic-songtong", event);
+		AvroVisitEvent e = codec.decode(serialized, AvroVisitEvent.class);
+		System.out.println(e);
 		Assert.assertEquals(event.getIp(), String.valueOf(e.getIp()));
 		Assert.assertEquals(event.getTz(), e.getTz());
 		Assert.assertEquals(event.getUrl(), String.valueOf(e.getUrl()));
