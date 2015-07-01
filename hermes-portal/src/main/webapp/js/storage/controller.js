@@ -17,7 +17,15 @@ hermes_storage.controller('MysqlCtrl', function ($scope, $resource, $log, $attrs
     StorageService.updateDBSize($scope.storage_id)
     StorageService.updateTables($scope.storage_id)
     $scope.$watch(StorageService.get_db_size, function (newValue, oldValue) {
-        $scope.db_size = StorageService.get_db_size();
+        if (newValue != oldValue) {
+            var db_size = StorageService.get_db_size();
+
+            for(var i = 0; i < $scope.$parent.selected.datasources.length; i ++) {
+                if ($scope.$parent.selected.datasources[i].id == $scope.storage_id) {
+                    $scope.$parent.selected.datasources[i].storage_size = db_size;
+                }
+            }
+        }
     })
 
     $scope.$watch(StorageService.get_db_tables, function () {
@@ -60,7 +68,9 @@ hermes_storage.controller('MysqlCtrl', function ($scope, $resource, $log, $attrs
 
 
     // for show main tables or show all tables
-    $scope.isShowAllTables = false;
+    $scope.$watch(function() {return $scope.$parent.isShowAllTables}, function(){
+        $scope.isShowAllTables = $scope.$parent.isShowAllTables;
+    })
 
     $scope.briefOrAll = function (table) {
         if ($scope.isShowAllTables) {

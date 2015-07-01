@@ -1,14 +1,5 @@
 <div>
-    <div style="font-size: 20px">
-    <span class="label label-info">ID</span>{{storage_id}}
-    <span class="label label-info">Size</span>{{db_size}}
-    <div style="float:right">
-        <button type="button" class="btn btn-default" ng-model="isShowAllTables"
-                bs-checkbox>显示所有表
-        </button>
-    </div>
-    </div>
-    <table class="table table-striped table-condensed">
+    <table class="table table-striped table-condensed smalltable">
         <thead>
         <tr>
             <th>Table name</th>
@@ -44,8 +35,8 @@
             </td>
         </tr>
         <tr ng-repeat="pa in table.partitions | orderBy: 'nameOrder'" ng-if="table.isShowPas">
-            <td>
-                {{pa.name}}
+            <td >
+                <span style="margin-left: 20px">{{pa.name}}</span>
             </td>
             <td>{{pa.size}}</td>
             <td>{{pa.tableRows}}</td>

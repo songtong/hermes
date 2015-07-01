@@ -1,13 +1,14 @@
 package com.ctrip.hermes.metaservice.service;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.helper.Codes;
 import org.unidal.lookup.annotation.Inject;
@@ -17,17 +18,12 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.ObjectUtils;
-import com.ctrip.hermes.meta.entity.Codec;
-import com.ctrip.hermes.meta.entity.Datasource;
-import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.meta.entity.Property;
-import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.meta.entity.*;
 
 @Named(type = PortalMetaService.class, value = DefaultPortalMetaService.ID)
 public class DefaultPortalMetaService extends DefaultMetaService implements PortalMetaService, Initializable {
+	protected static final Logger logger = LoggerFactory.getLogger(DefaultPortalMetaService.class);
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -108,6 +104,24 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	}
 
 	@Override
+	public Map<String, Datasource> getDatasources() {
+		Map<String, Datasource> idMap = new HashMap<>();
+		List<Datasource> dss = new ArrayList<>();
+
+		for (Storage storage : m_meta.getStorages().values()) {
+			dss.addAll(storage.getDatasources());
+		}
+
+		for (Datasource ds : dss) {
+			if (idMap.containsKey(ds.getId())) {
+				logger.warn("Duplicated Datasource: key {}, Datasource: {}", ds.getId(), ds.toString());
+			}
+			idMap.put(ds.getId(), ds);
+		}
+		return idMap;
+	}
+
+	@Override
 	public Storage findStorageByTopic(String topicName) {
 		Topic topic = m_meta.findTopic(topicName);
 		return topic != null ? m_meta.findStorage(topic.getStorageType()) : null;
@@ -146,12 +160,36 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	}
 
 	@Override
-	public void addDatasource(Datasource datasource) throws Exception {
+	public void addDatasource(Datasource datasource, String dsType) throws Exception {
+		Meta meta = getMeta();
+		Map<String, Storage> storages = meta.getStorages();
+		if (storages.containsKey(dsType)) {
+			meta.getStorages().get(dsType).addDatasource(datasource);
+			updateMeta(meta);
+			logger.info("Add Datasource: DS: {}, done.", datasource);
+		} else {
+			logger.warn("Add Datasource: unknown DSType: {}! DS: {}, won't update meta!", dsType, datasource);
+		}
 	}
 
 	@Override
-	public void deleteDatasource(String id) throws Exception {
+	public void deleteDatasource(String id, String dsType) throws Exception {
+		Meta meta = getMeta();
+		Storage storage = meta.getStorages().get(dsType);
+		if (null != storage) {
+			List<Datasource> dss = storage.getDatasources();
+			Iterator<Datasource> it = dss.iterator();
+			while (it.hasNext()) {
+				if (it.next().getId().equals(id)) {
+					it.remove();
+				}
+			}
 
+			updateMeta(meta);
+			logger.info("Delete Datasource: type:{}, id:{} done. updating Meta.", dsType, id);
+		} else {
+			logger.info("Delete Datasource: unknown type:{}, id:{}, won't delete anything.", dsType);
+		}
 	}
 
 	private void syncMetaFromDB() {

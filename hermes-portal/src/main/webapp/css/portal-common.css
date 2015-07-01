@@ -26,3 +26,7 @@
     background-color: #d9edf7;
     border-color: #bce8f1;
 }
+
+.smalltable>tbody>tr>td, .smalltable>tbody>tr>th, .smalltable>tfoot>tr>td, .smalltable>tfoot>tr>th, .smalltable>thead>tr>td, .smalltable>thead>tr>th {
+    padding: 0px;
+}
