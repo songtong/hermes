@@ -116,9 +116,13 @@ public class KafkaMessageSender implements MessageSender {
 		String partition = msg.getPartitionKey();
 
 		if (!m_producers.containsKey(topic)) {
-			Properties configs = getProducerProperties(topic);
-			KafkaProducer<String, byte[]> producer = new KafkaProducer<>(configs);
-			m_producers.put(topic, producer);
+			synchronized (m_producers) {
+				if (!m_producers.containsKey(topic)) {
+					Properties configs = getProducerProperties(topic);
+					KafkaProducer<String, byte[]> producer = new KafkaProducer<>(configs);
+					m_producers.put(topic, producer);
+				}
+			}
 		}
 
 		KafkaProducer<String, byte[]> producer = m_producers.get(topic);
@@ -136,5 +140,4 @@ public class KafkaMessageSender implements MessageSender {
 
 		return new KafkaFuture(sendResult);
 	}
-
 }

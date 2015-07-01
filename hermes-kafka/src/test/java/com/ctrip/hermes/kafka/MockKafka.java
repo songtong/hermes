@@ -1,15 +1,14 @@
 package com.ctrip.hermes.kafka;
 
 import java.util.Properties;
-
-import org.apache.commons.lang3.RandomStringUtils;
+import java.util.UUID;
 
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 
 public class MockKafka {
 
-	public static final String LOG_DIR = System.getProperty("java.io.tmpdir") + RandomStringUtils.randomAlphabetic(5);
+	public static final String LOG_DIR = System.getProperty("java.io.tmpdir") + UUID.randomUUID().toString();
 
 	public static final String BROKER_ID = "0";
 

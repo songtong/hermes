@@ -1,8 +1,7 @@
 package com.ctrip.hermes.kafka.admin;
 
 import java.util.Arrays;
-
-import org.apache.commons.lang3.RandomStringUtils;
+import java.util.Random;
 
 import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
@@ -27,14 +26,17 @@ public class HermesProducerPerf {
 		Producer producer = Producer.getInstance();
 
 		/* setup perf test */
-		String proMsg = RandomStringUtils.randomAlphanumeric(recordSize - 4) + System.currentTimeMillis();
+		Random random = new Random();
+		byte[] msgBuf = new byte[recordSize - 4];
+		Arrays.fill(msgBuf, (byte) random.nextInt(255));
+		String proMsg = new String(msgBuf) + System.currentTimeMillis();
 		long sleepTime = NS_PER_SEC / throughput;
 		long sleepDeficitNs = 0;
 		Stats stats = new Stats(numRecords, 5000);
 		for (int i = 0; i < numRecords; i++) {
 			long sendStart = System.currentTimeMillis();
 			CompletionCallback<SendResult> cb = stats.nextCompletion(sendStart, proMsg.getBytes().length, stats);
-			MessageHolder message = producer.message(topicName, RandomStringUtils.random(1), proMsg);
+			MessageHolder message = producer.message(topicName, String.valueOf(random.nextInt()), proMsg);
 			message.setCallback(cb);
 			message.send();
 

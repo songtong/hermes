@@ -25,20 +25,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
-			<artifactId>hermes-metaserver</artifactId>
-			<exclusions>
-				<exclusion>
-					<artifactId>slf4j-log4j12</artifactId>
-					<groupId>org.slf4j</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.ctrip.hermes</groupId>
-			<artifactId>hermes-rest</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-kafka</artifactId>
 		</dependency>
 		<dependency>
