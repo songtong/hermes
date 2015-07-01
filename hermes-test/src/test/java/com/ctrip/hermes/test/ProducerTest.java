@@ -3,7 +3,6 @@ package com.ctrip.hermes.test;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -24,21 +23,19 @@ public class ProducerTest extends HermesBaseTest {
 
 	private static String m_topic = "test_topic";
 
-	private static AtomicBoolean m_inited = new AtomicBoolean(false);
-
 	@Before
 	@Override
 	public void setUp() throws Exception {
-//		if (m_inited.compareAndSet(false, true)) {
-			super.setUp();
-			startBrokerMock();
-//		}
+		super.setUp();
+		startBrokerMock();
 	}
 
-//	@After
-//	@Override
-//	public void tearDown() throws Exception {
-//	}
+	@After
+	@Override
+	public void tearDown() throws Exception {
+		stopBrokerMock();
+		super.tearDown();
+	}
 
 	@Test
 	public void testSendSync() throws Exception {

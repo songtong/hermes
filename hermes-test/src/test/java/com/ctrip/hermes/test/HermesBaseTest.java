@@ -2,6 +2,8 @@ package com.ctrip.hermes.test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 
 import org.apache.curator.test.TestingServer;
 import org.junit.After;
@@ -10,6 +12,7 @@ import org.unidal.lookup.ComponentTestCase;
 import org.xml.sax.SAXException;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
+import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.message.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
@@ -26,6 +29,7 @@ import com.ctrip.hermes.test.core.DefaultSettableMetaHolder;
 import com.ctrip.hermes.test.core.DummyMetaProxy;
 import com.ctrip.hermes.test.core.SettableMetaHolder;
 import com.ctrip.hermes.test.core.TestableMetaManager;
+import com.google.common.base.Charsets;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -36,7 +40,7 @@ public class HermesBaseTest extends ComponentTestCase {
 	private static final String STORAGE_TEST = "test";
 
 	private TestingServer m_zkServer;
-	
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
@@ -97,6 +101,15 @@ public class HermesBaseTest extends ComponentTestCase {
 
 	protected void startBrokerMock() throws Exception {
 		lookup(BrokerBootstrap.class).start();
+	}
+
+	protected void stopBrokerMock() throws Exception {
+		BrokerConfig brokerConfig = lookup(BrokerConfig.class);
+		Socket s = new Socket("localhost", brokerConfig.getShutdownRequestPort());
+		OutputStream out = s.getOutputStream();
+		out.write("shutdown\n".getBytes(Charsets.UTF_8));
+		out.flush();
+		s.close();
 	}
 
 	protected int calPartition(String topic, String partitionKey) throws Exception {
