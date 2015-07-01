@@ -19,7 +19,8 @@
 	  <module>hermes-example</module>
       <module>hermes-misc</module>
       <module>cmessaging.client</module>
-	  </modules>
+	  <module>hermes-test</module>      
+   </modules>
    <dependencyManagement>
       <dependencies>
          <dependency>
@@ -65,6 +66,11 @@
          <dependency>
             <groupId>com.ctrip.hermes</groupId>
             <artifactId>hermes-rest</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.ctrip.hermes</groupId>
+            <artifactId>hermes-test</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>

@@ -212,10 +212,13 @@
 		<component>
 			<role>com.ctrip.hermes.broker.queue.storage.MessageQueueStorage</role>
 			<role-hint>kafka</role-hint>
-			<implementation>com.ctrip.hermes.broker.queue.kafka.KafkaMessageQueueStorage</implementation>
+			<implementation>com.ctrip.hermes.broker.queue.storage.kafka.KafkaMessageQueueStorage</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.log.BizLogger</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
 				</requirement>
 			</requirements>
 		</component>

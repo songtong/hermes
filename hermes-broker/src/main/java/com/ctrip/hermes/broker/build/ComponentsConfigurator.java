@@ -21,7 +21,7 @@ import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory;
-import com.ctrip.hermes.broker.queue.kafka.KafkaMessageQueueStorage;
+import com.ctrip.hermes.broker.queue.storage.kafka.KafkaMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.MessageDataSourceProvider;
