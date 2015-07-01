@@ -73,4 +73,9 @@ public class DefaultMessageQueueDumper extends AbstractMessageQueueDumper {
 		}
 	}
 
+	@Override
+	protected void doStop() {
+
+	}
+
 }

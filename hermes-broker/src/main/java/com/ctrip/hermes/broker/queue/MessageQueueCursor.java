@@ -22,4 +22,6 @@ public interface MessageQueueCursor {
 
 	boolean isInited();
 
+	void stop();
+
 }

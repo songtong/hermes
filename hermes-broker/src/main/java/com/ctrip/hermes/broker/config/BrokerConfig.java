@@ -18,6 +18,8 @@ public class BrokerConfig {
 
 	private static final int DEFAULT_BROKER_PORT = 4376;
 
+	private static final int DEFAULT_SHUTDOWN_PORT = 4888;
+
 	public String getSessionId() {
 		return m_sessionId;
 	}
@@ -85,5 +87,14 @@ public class BrokerConfig {
 
 	public int getClientMaxIdleSeconds() {
 		return 3600;
+	}
+
+	public int getShutdownRequestPort() {
+		String port = System.getProperty("brokerShutdownPort");
+		if (!StringUtils.isNumeric(port)) {
+			return DEFAULT_SHUTDOWN_PORT;
+		} else {
+			return Integer.valueOf(port);
+		}
 	}
 }

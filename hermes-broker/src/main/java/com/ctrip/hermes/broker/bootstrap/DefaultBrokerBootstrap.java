@@ -11,6 +11,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.registry.BrokerRegistry;
+import com.ctrip.hermes.broker.shutdown.ShutdownRequestMonitor;
 import com.ctrip.hermes.broker.transport.NettyServer;
 
 /**
@@ -31,6 +32,9 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 	@Inject
 	private BrokerRegistry m_registry;
 
+	@Inject
+	private ShutdownRequestMonitor m_shutdownReqMonitor;
+
 	@Override
 	public void start() throws Exception {
 		// TODO should move to start script -D cause ByteBufUtil will read in static initialization
@@ -42,6 +46,7 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (future.isSuccess()) {
+					m_shutdownReqMonitor.start();
 					m_registry.start();
 					log.info("Broker started at port {} with name {}.", m_config.getListeningPort(), m_config.getSessionId());
 				} else {
@@ -55,15 +60,10 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
-				log.info("Broker stopped.");
+				log.info("Broker stopped...");
 				m_registry.stop();
 			}
 		});
-	}
-
-	@Override
-	public void stop() throws Exception {
-		// TODO Auto-generated method stub
 	}
 
 }

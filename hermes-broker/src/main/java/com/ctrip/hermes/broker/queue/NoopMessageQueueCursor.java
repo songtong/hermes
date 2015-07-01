@@ -36,4 +36,9 @@ public class NoopMessageQueueCursor implements MessageQueueCursor {
 		return true;
 	}
 
+	@Override
+	public void stop() {
+
+	}
+
 }

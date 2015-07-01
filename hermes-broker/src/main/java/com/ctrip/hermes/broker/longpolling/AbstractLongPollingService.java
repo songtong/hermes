@@ -1,6 +1,7 @@
 package com.ctrip.hermes.broker.longpolling;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.lookup.annotation.Inject;
 
@@ -28,6 +29,8 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 	@Inject
 	protected SystemClockService m_systemClockService;
 
+	protected AtomicBoolean m_stopped = new AtomicBoolean(false);
+
 	protected void response(PullMessageTask pullTask, List<TppConsumerMessageBatch> batches) {
 		PullMessageResultCommand cmd = new PullMessageResultCommand();
 		if (batches != null) {
@@ -37,4 +40,13 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 
 		pullTask.getChannel().writeAndFlush(cmd);
 	}
+
+	@Override
+	public void stop() {
+		if (m_stopped.compareAndSet(false, true)) {
+			doStop();
+		}
+	}
+
+	protected abstract void doStop();
 }

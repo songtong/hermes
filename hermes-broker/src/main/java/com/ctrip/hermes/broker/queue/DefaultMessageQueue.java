@@ -49,4 +49,9 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 		m_storage.ack(new Tpp(m_topic, m_partition, isPriority), groupId, resend, msgSeq);
 	}
 
+	@Override
+	protected void doStop() {
+
+	}
+
 }

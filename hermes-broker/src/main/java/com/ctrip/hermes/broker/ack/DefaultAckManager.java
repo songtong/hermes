@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -64,19 +65,46 @@ public class DefaultAckManager implements AckManager, Initializable {
 	@Inject
 	private SystemClockService m_systemClockService;
 
+	private AckTask m_ackTask;
+
+	private AtomicBoolean m_stopped = new AtomicBoolean(false);
+
 	@Override
 	public void initialize() throws InitializationException {
 		m_opQueue = new LinkedBlockingQueue<>(m_config.getAckManagerOpQueueSize());
 
 		m_scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
 		      "AckManagerWorker", false));
-		m_scheduledExecutorService.scheduleWithFixedDelay(new AckTask(), 0, m_config.getAckManagerCheckIntervalMillis(),
+		m_ackTask = new AckTask();
+		m_scheduledExecutorService.scheduleWithFixedDelay(m_ackTask, 0, m_config.getAckManagerCheckIntervalMillis(),
 		      TimeUnit.MILLISECONDS);
 
 	}
 
 	@Override
+	public void stop() {
+		if (m_stopped.compareAndSet(false, true)) {
+			m_scheduledExecutorService.shutdown();
+
+			while (!m_scheduledExecutorService.isTerminated()) {
+				try {
+					m_scheduledExecutorService.awaitTermination(1, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					// ignore
+				}
+			}
+
+			// do the remaining job
+			m_ackTask.run();
+		}
+	}
+
+	@Override
 	public void delivered(Tpp tpp, String groupId, boolean resend, List<MessageMeta> msgMetas) {
+		if (m_stopped.get()) {
+			return;
+		}
+
 		resetTppIfResend(tpp, resend);
 
 		Pair<Tpp, String> key = new Pair<>(tpp, groupId);
@@ -108,7 +136,8 @@ public class DefaultAckManager implements AckManager, Initializable {
 		ConcurrentMap<Pair<Tpp, String>, AckHolder<MessageMeta>> holders = getHolders(isResend);
 
 		if (!holders.containsKey(key)) {
-			int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(key.getKey().getTopic(), key.getValue()) * 1000;
+			int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(key.getKey().getTopic(),
+			      key.getValue()) * 1000;
 			DefaultAckHolder<MessageMeta> newHolder = new DefaultAckHolder<MessageMeta>(timeout);
 			holders.putIfAbsent(key, newHolder);
 		}
@@ -117,6 +146,9 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 	@Override
 	public void acked(Tpp tpp, String groupId, boolean resend, List<AckContext> ackContexts) {
+		if (m_stopped.get()) {
+			return;
+		}
 		resetTppIfResend(tpp, resend);
 		Pair<Tpp, String> key = new Pair<>(tpp, groupId);
 		ensureMapEntryExist(key, resend);
@@ -129,6 +161,9 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 	@Override
 	public void nacked(Tpp tpp, String groupId, boolean resend, List<AckContext> nackContexts) {
+		if (m_stopped.get()) {
+			return;
+		}
 		resetTppIfResend(tpp, resend);
 		Pair<Tpp, String> key = new Pair<>(tpp, groupId);
 		ensureMapEntryExist(key, resend);

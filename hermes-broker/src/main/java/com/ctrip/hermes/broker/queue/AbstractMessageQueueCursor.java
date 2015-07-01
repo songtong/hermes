@@ -2,6 +2,7 @@ package com.ctrip.hermes.broker.queue;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -49,6 +50,8 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	protected AtomicInteger m_state = new AtomicInteger(STATE_NOT_INITED);
 
+	protected AtomicBoolean m_stopped = new AtomicBoolean(false);
+
 	public AbstractMessageQueueCursor(Tpg tpg, Lease lease, MetaService metaService) {
 		m_tpg = tpg;
 		m_lease = lease;
@@ -86,6 +89,8 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		return m_state.get() == STATE_INITED;
 	}
 
+	protected abstract void doStop();
+
 	protected abstract Object loadLastPriorityOffset();
 
 	protected abstract Object loadLastNonPriorityOffset();
@@ -100,6 +105,10 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	@Override
 	public synchronized List<TppConsumerMessageBatch> next(int batchSize) {
+		if (m_stopped.get() || m_lease.isExpired()) {
+			return null;
+		}
+
 		try {
 			List<TppConsumerMessageBatch> result = new LinkedList<>();
 			int remainingSize = batchSize;
@@ -149,4 +158,10 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	}
 
+	@Override
+	public void stop() {
+		if (m_stopped.compareAndSet(false, true)) {
+			doStop();
+		}
+	}
 }

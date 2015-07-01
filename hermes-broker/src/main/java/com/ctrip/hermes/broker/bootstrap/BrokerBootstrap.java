@@ -6,6 +6,4 @@ package com.ctrip.hermes.broker.bootstrap;
  */
 public interface BrokerBootstrap {
 	public void start() throws Exception;
-
-	public void stop() throws Exception;
 }

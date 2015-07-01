@@ -25,4 +25,5 @@ public interface MessageQueue {
 
 	void ack(boolean resend, boolean isPriority, String groupId, long msgSeq);
 
+	void stop();
 }

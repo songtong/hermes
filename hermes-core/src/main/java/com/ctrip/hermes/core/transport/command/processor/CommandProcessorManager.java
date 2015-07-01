@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -30,7 +31,13 @@ public class CommandProcessorManager implements Initializable {
 
 	private Map<CommandProcessor, ExecutorService> m_executors = new ConcurrentHashMap<>();
 
+	private AtomicBoolean m_stopped = new AtomicBoolean(false);
+
 	public void offer(final CommandProcessorContext ctx) {
+		if (m_stopped.get()) {
+			return;
+		}
+
 		Command cmd = ctx.getCommand();
 		CommandType type = cmd.getHeader().getType();
 		final CommandProcessor processor = m_registry.findProcessor(type);
@@ -78,4 +85,11 @@ public class CommandProcessorManager implements Initializable {
 
 	}
 
+	public void stop() {
+		if (m_stopped.compareAndSet(false, true)) {
+			for (ExecutorService executor : m_executors.values()) {
+				executor.shutdown();
+			}
+		}
+	}
 }

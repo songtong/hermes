@@ -172,6 +172,6 @@ public class BrokerLeaseContainer implements Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		m_scheduledExecutorService = Executors.newScheduledThreadPool(m_config.getLeaseContainerThreadCount(),
-		      HermesThreadFactory.create("BrokerLeaseContainer", false));
+		      HermesThreadFactory.create("BrokerLeaseContainer", true));
 	}
 }

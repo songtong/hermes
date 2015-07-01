@@ -53,17 +53,34 @@ public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 
 	@Override
 	protected FetchResult fetchPriortyMessages(int batchSize) {
-		return m_storage.fetchMessages(m_priorityTpp, m_priorityOffset, batchSize);
+		if (!m_stopped.get()) {
+			return m_storage.fetchMessages(m_priorityTpp, m_priorityOffset, batchSize);
+		} else {
+			return null;
+		}
 	}
 
 	@Override
 	protected FetchResult fetchNonPriortyMessages(int batchSize) {
-		return m_storage.fetchMessages(m_nonPriorityTpp, m_nonPriorityOffset, batchSize);
+		if (!m_stopped.get()) {
+			return m_storage.fetchMessages(m_nonPriorityTpp, m_nonPriorityOffset, batchSize);
+		} else {
+			return null;
+		}
 	}
 
 	@Override
 	protected FetchResult fetchResendMessages(int batchSize) {
-		return m_storage.fetchResendMessages(m_tpg, m_resendOffset, batchSize);
+		if (!m_stopped.get()) {
+			return m_storage.fetchResendMessages(m_tpg, m_resendOffset, batchSize);
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	protected void doStop() {
+
 	}
 
 }

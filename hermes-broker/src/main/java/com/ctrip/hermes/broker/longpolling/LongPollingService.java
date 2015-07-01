@@ -12,4 +12,6 @@ import com.ctrip.hermes.core.lease.Lease;
 public interface LongPollingService {
 
 	void schedulePush(Tpg tpg, long correlationId, int batchSize, Channel channel, long expireTime, Lease brokerLease);
+
+	void stop();
 }
