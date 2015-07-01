@@ -37,7 +37,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 	private BlockingQueue<FutureBatchPriorityWrapper> m_queue = new LinkedBlockingQueue<>();
 
-	private AtomicBoolean m_started = new AtomicBoolean(false);
+	private AtomicBoolean m_inited = new AtomicBoolean(false);
 
 	protected BrokerConfig m_config;
 
@@ -49,6 +49,8 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 	private Thread m_workerThread;
 
+	protected AtomicBoolean m_stopped = new AtomicBoolean(false);
+
 	public AbstractMessageQueueDumper(String topic, int partition, BrokerConfig config, Lease lease) {
 		m_topic = topic;
 		m_partition = partition;
@@ -58,6 +60,13 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 		String threadName = String.format("MessageQueueDumper-%s-%d", topic, partition);
 		m_workerThread = HermesThreadFactory.create(threadName, false).newThread(new DumperTask());
+	}
+
+	@Override
+	public void stop() {
+		if (m_stopped.compareAndSet(false, true)) {
+			doStop();
+		}
 	}
 
 	public Lease getLease() {
@@ -83,7 +92,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 	}
 
 	public void start() {
-		if (m_started.compareAndSet(false, true)) {
+		if (m_inited.compareAndSet(false, true)) {
 			m_workerThread.start();
 		}
 	}
@@ -138,6 +147,8 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 		}
 	}
 
+	protected abstract void doStop();
+
 	protected abstract void doAppendMessageSync(boolean isPriority,
 	      Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos);
 
@@ -147,7 +158,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 		public void run() {
 			List<FutureBatchPriorityWrapper> todos = new ArrayList<>(m_config.getDumperBatchSize());
 
-			while (!Thread.currentThread().isInterrupted() && !m_lease.isExpired()) {
+			while (!m_stopped.get() && !Thread.currentThread().isInterrupted() && !m_lease.isExpired()) {
 				try {
 					if (!flushMsgs(todos)) {
 						TimeUnit.MILLISECONDS.sleep(m_config.getDumperNoMessageWaitIntervalMillis());
@@ -160,7 +171,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 				}
 			}
 
-			// lease is expired, flush remaining msgs
+			// lease is expired or stopped, flush remaining msgs
 			while (!m_queue.isEmpty() || !todos.isEmpty()) {
 				flushMsgs(todos);
 			}

@@ -59,7 +59,7 @@ public class NettyServer extends ContainerHolder {
 		return f;
 	}
 
-	public void close() {
+	public void stop() {
 		m_workerGroup.shutdownGracefully();
 		m_bossGroup.shutdownGracefully();
 	}

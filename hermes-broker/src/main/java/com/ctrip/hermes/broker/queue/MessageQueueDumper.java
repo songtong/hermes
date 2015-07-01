@@ -17,4 +17,6 @@ public interface MessageQueueDumper {
 	void submit(SettableFuture<Map<Integer, Boolean>> future, MessageBatchWithRawData batch, boolean isPriority);
 
 	Lease getLease();
+
+	void stop();
 }

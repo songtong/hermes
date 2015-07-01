@@ -42,7 +42,7 @@ public class DefaultServerChannelInboundHandler extends AbstractNettyChannelInbo
 		if (evt instanceof IdleStateEvent) {
 			IdleStateEvent evnet = (IdleStateEvent) evt;
 			if (evnet.state().equals(IdleState.ALL_IDLE)) {
-				log.warn("Client idle for {} seconds, will remove it automatically(client addr={})", m_maxIdleTime,
+				log.info("Client idle for {} seconds, will remove it automatically(client addr={})", m_maxIdleTime,
 				      NettyUtils.parseChannelRemoteAddr(ctx.channel()));
 				ctx.channel().close();
 			}

@@ -55,6 +55,11 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 		final PullMessageTask pullMessageTask = new PullMessageTask(tpg, correlationId, batchSize, channel, expireTime,
 		      brokerLease);
+
+		if (m_stopped.get()) {
+			response(pullMessageTask, null);
+		}
+
 		m_scheduledThreadPool.submit(new Runnable() {
 
 			@Override
@@ -66,6 +71,9 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	}
 
 	private void executeTask(final PullMessageTask pullMessageTask) {
+		if (m_stopped.get()) {
+			return;
+		}
 		try {
 			// skip expired task
 			if (pullMessageTask.getExpireTime() < m_systemClockService.now()) {
@@ -79,13 +87,15 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 			if (!pullMessageTask.getBrokerLease().isExpired()) {
 				if (!queryAndResponseData(pullMessageTask)) {
-					m_scheduledThreadPool.schedule(new Runnable() {
+					if (!m_stopped.get()) {
+						m_scheduledThreadPool.schedule(new Runnable() {
 
-						@Override
-						public void run() {
-							executeTask(pullMessageTask);
-						}
-					}, m_config.getLongPollingCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+							@Override
+							public void run() {
+								executeTask(pullMessageTask);
+							}
+						}, m_config.getLongPollingCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+					}
 				}
 			} else {
 				if (log.isDebugEnabled()) {
@@ -105,6 +115,10 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		Tpg tpg = pullTask.getTpg();
 
 		MessageQueueCursor cursor = m_queueManager.getCursor(tpg, pullTask.getBrokerLease());
+
+		if (cursor == null) {
+			return false;
+		}
 
 		List<TppConsumerMessageBatch> batches = null;
 
@@ -137,5 +151,10 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 			m_bizLogger.log(event);
 		}
+	}
+
+	@Override
+	protected void doStop() {
+		m_scheduledThreadPool.shutdown();
 	}
 }

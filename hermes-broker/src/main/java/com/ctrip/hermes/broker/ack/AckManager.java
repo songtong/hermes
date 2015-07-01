@@ -18,4 +18,6 @@ public interface AckManager {
 
 	void nacked(Tpp tpp, String groupId, boolean resend, List<AckContext> nackContexts);
 
+	void stop();
+
 }

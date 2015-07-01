@@ -3,6 +3,7 @@ package com.ctrip.hermes.broker.queue;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Inject;
@@ -25,14 +26,24 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	// one <topic, partition, lease> mapping to one MessageQueue
 	private Map<Pair<String, Integer>, MessageQueue> m_messageQueues = new ConcurrentHashMap<>();
 
+	private AtomicBoolean m_stopped = new AtomicBoolean(false);
+
 	@Override
 	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data, Lease lease) {
-		return getMessageQueue(tpp.getTopic(), tpp.getPartition()).appendMessageAsync(tpp.isPriority(), data, lease);
+		if (!m_stopped.get()) {
+			return getMessageQueue(tpp.getTopic(), tpp.getPartition()).appendMessageAsync(tpp.isPriority(), data, lease);
+		} else {
+			return null;
+		}
 	}
 
 	@Override
 	public MessageQueueCursor getCursor(Tpg tpg, Lease lease) {
-		return getMessageQueue(tpg.getTopic(), tpg.getPartition()).getCursor(tpg.getGroupId(), lease);
+		if (!m_stopped.get()) {
+			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).getCursor(tpg.getGroupId(), lease);
+		} else {
+			return null;
+		}
 	}
 
 	private MessageQueue getMessageQueue(String topic, int partition) {
@@ -51,11 +62,22 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 	@Override
 	public void ack(Tpp tpp, String groupId, boolean resend, long msgSeq) {
-		getMessageQueue(tpp.getTopic(), tpp.getPartition()).ack(resend, tpp.isPriority(), groupId, msgSeq);
+		if (!m_stopped.get()) {
+			getMessageQueue(tpp.getTopic(), tpp.getPartition()).ack(resend, tpp.isPriority(), groupId, msgSeq);
+		}
 	}
 
 	@Override
-   public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, MessageMeta>> msgId2Metas) {
-		getMessageQueue(tpp.getTopic(), tpp.getPartition()).nack(resend, tpp.isPriority(), groupId, msgId2Metas);
-   }
+	public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, MessageMeta>> msgId2Metas) {
+		if (!m_stopped.get()) {
+			getMessageQueue(tpp.getTopic(), tpp.getPartition()).nack(resend, tpp.isPriority(), groupId, msgId2Metas);
+		}
+	}
+
+	@Override
+	public void stop() {
+		for (MessageQueue mq : m_messageQueues.values()) {
+			mq.stop();
+		}
+	}
 }

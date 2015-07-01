@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.unidal.tuple.Pair;
@@ -31,6 +32,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	protected ConcurrentMap<String, AtomicReference<MessageQueueCursor>> m_cursors = new ConcurrentHashMap<>();
 
+	protected AtomicBoolean m_stopped = new AtomicBoolean(false);
+
 	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage) {
 		m_topic = topic;
 		m_partition = partition;
@@ -40,6 +43,10 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	@Override
 	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch,
 	      Lease lease) {
+		if (m_stopped.get()) {
+			return null;
+		}
+
 		MessageQueueDumper existingDumper = m_dumper.get();
 		if (existingDumper == null || existingDumper.getLease().getId() != lease.getId()) {
 			MessageQueueDumper newDumper = createDumper(lease);
@@ -56,6 +63,10 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	@Override
 	public MessageQueueCursor getCursor(String groupId, Lease lease) {
+		if (m_stopped.get()) {
+			return null;
+		}
+
 		m_cursors.putIfAbsent(groupId, new AtomicReference<MessageQueueCursor>(null));
 
 		MessageQueueCursor existingCursor = m_cursors.get(groupId).get();
@@ -74,13 +85,38 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	@Override
 	public void nack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas) {
-		doNack(resend, isPriority, groupId, msgId2Metas);
+		if (!m_stopped.get()) {
+			doNack(resend, isPriority, groupId, msgId2Metas);
+		}
 	}
 
 	@Override
 	public void ack(boolean resend, boolean isPriority, String groupId, long msgSeq) {
-		doAck(resend, isPriority, groupId, msgSeq);
+		if (!m_stopped.get()) {
+			doAck(resend, isPriority, groupId, msgSeq);
+		}
 	}
+
+	@Override
+	public void stop() {
+		if (m_stopped.compareAndSet(false, true)) {
+			MessageQueueDumper dumper = m_dumper.get();
+			if (dumper != null) {
+				dumper.stop();
+			}
+
+			for (AtomicReference<MessageQueueCursor> cursorRef : m_cursors.values()) {
+				MessageQueueCursor cursor = cursorRef.get();
+				if (cursor != null) {
+					cursor.stop();
+				}
+			}
+
+			doStop();
+		}
+	}
+
+	protected abstract void doStop();
 
 	protected abstract MessageQueueDumper createDumper(Lease lease);
 

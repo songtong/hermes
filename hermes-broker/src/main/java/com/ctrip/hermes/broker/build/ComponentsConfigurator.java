@@ -26,6 +26,7 @@ import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.MessageDataSourceProvider;
 import com.ctrip.hermes.broker.registry.DefaultBrokerRegistry;
+import com.ctrip.hermes.broker.shutdown.ShutdownRequestMonitor;
 import com.ctrip.hermes.broker.transport.NettyServer;
 import com.ctrip.hermes.broker.transport.NettyServerConfig;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor;
@@ -49,6 +50,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultBrokerBootstrap.class));
 		all.add(A(NettyServer.class));
 		all.add(A(NettyServerConfig.class));
+
+		all.add(A(ShutdownRequestMonitor.class));
 
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND.toString(), SendMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class)//

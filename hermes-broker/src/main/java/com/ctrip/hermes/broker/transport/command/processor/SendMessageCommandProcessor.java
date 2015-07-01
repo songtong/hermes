@@ -91,8 +91,9 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 					try {
 						ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(tpp, batch, lease);
 
-						Futures.addCallback(future, completionCallback);
-
+						if (future != null) {
+							Futures.addCallback(future, completionCallback);
+						}
 					} catch (Exception e) {
 						log.error("Failed to append messages async.", e);
 					}
