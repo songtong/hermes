@@ -8,18 +8,18 @@
    <packaging>pom</packaging>
    <modules>
       <module>hermes-core</module>
+      <module>hermes-metaservice</module>
+      <module>hermes-metaserver</module>
       <module>hermes-producer</module>
       <module>hermes-consumer</module>
       <module>hermes-broker</module>
-      <module>hermes-example</module>
-      <module>hermes-metaserver</module>
       <module>hermes-kafka</module>
       <module>hermes-rest</module>
-      <module>cmessaging.client</module>
       <module>hermes-portal</module>
-      <module>hermes-metaservice</module>
+	  <module>hermes-example</module>
       <module>hermes-misc</module>
-   </modules>
+      <module>cmessaging.client</module>
+	  </modules>
    <dependencyManagement>
       <dependencies>
          <dependency>

@@ -11,10 +11,10 @@ POST {REST-Server}/topics/:topicName
 Name | Type | Description 
 -----|------|------------
 `Content-Type`|`string`| application/octet-stream
-`partitionKey`|`string`| optional, 
-`priority`|`boolean`| optional, default false
-`refKey`|`string`| optional, default empty
-`properties`|`string`| optional, comma separated, key-value pair.
+`X-Hermes-Partition-Key`|`string`| optional, 
+`X-Hermes-Priority-Message`|`boolean`| optional, default false
+`X-Hermes-Ref-Key`|`string`| optional, default empty
+`X-Hermes-Message-Property`|`string`| optional, comma separated, key-value pair.
 
 #### Request Body
 Binary only
@@ -27,10 +27,10 @@ WebTarget webTarget = client.target(RESTServer.HOST);
 String topic = "kafka.SimpleTextTopic";
 
 Builder request = webTarget.path("topics/" + topic).request();
-request.header("priority", "true");
-request.header("refKey", "mykey");
-request.header("partitionKey", "myPartition");
-request.header("properties", "key1=value1,key2=value2");
+request.header("X-Hermes-Priority-Message", "true");
+request.header("X-Hermes-Ref-Key", "mykey");
+request.header("X-Hermes-Partition-Key", "myPartition");
+request.header("X-Hermes-Message-Property", "key1=value1,key2=value2");
 String content = "Hello World " + System.currentTimeMillis();
 InputStream is = new ByteArrayInputStream(content.getBytes());
 Response response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
@@ -58,8 +58,8 @@ POST {PORTAL-Server}/subscriptions/
 ```json
 {
   "endpoints":"URL",
-  "group":"sub-group",
-  "topic":""
+  "group":"mygroup",
+  "topic":"mytopic"
 }
 ```
 
@@ -88,6 +88,14 @@ Assert.assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus(
 SubscriptionView createdSub = response.readEntity(SubscriptionView.class);
 System.out.println("ID :"+createdSub.getId());
 ```
+
+#### Endpoint 接受消息 Request Header 
+Name | Type | Description 
+-----|------|------------
+`Content-Type`|`string`| application/octet-stream
+`X-Hermes-Topic`|`string`| string
+`X-Hermes-Ref-Key`|`string`| optional, default empty
+`X-Hermes-Message-Property`|`string`| optional, comma separated, key-value pair.
 
 #### 注销消息订阅者
 ```
