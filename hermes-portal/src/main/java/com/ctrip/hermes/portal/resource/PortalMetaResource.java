@@ -217,4 +217,46 @@ public class PortalMetaResource {
 		}
 		return Response.status(Status.OK).build();
 	}
+
+	@POST
+	@Path("datasource/{type}")
+	public Response addDatasource(@PathParam("type") String dsType, String content) {
+
+		if (StringUtils.isEmpty(content)) {
+			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
+		}
+
+		Datasource datasource;
+		try {
+			datasource = JSON.parseObject(content, Datasource.class);
+		} catch (Exception e) {
+			logger.error("Parse consumer failed, content: {}", content, e);
+			throw new RestException(e, Status.BAD_REQUEST);
+		}
+
+		if (metaService.getDatasources().containsKey(datasource.getId())) {
+			throw new RestException(String.format("Datasource id: %s, type: %s, already exists.", datasource.getId(),
+					  dsType), Status.CONFLICT);
+		}
+
+		try {
+			metaService.addDatasource(datasource, dsType);
+			return Response.status(Status.CREATED).build();
+		} catch (Exception e) {
+			logger.error("Add Datasource failed.", e);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
+	}
+
+	@DELETE
+	@Path("datasource/{type}/{id}")
+	public Response deleteDatasource(@PathParam("id") String id, @PathParam("type") String dsType) {
+		try {
+			metaService.deleteDatasource(id, dsType);
+		} catch (Exception e) {
+			logger.warn("Delete Datasource failed", e);
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		return Response.status(Status.OK).build();
+	}
 }

@@ -6,9 +6,7 @@
 
 <a:layout>
 	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
-	<div class="op-alert alert alert-info" role="alert" style="display: none;">
-		<span>The examples populate this alert with dummy content</span>
-	</div>
+
 	<div class="row" ng-app="hermes-storage" ng-controller="storage-controller">
 		<div class="col-md-2">
 			<ul class="nav nav-pills nav-stacked" role="tablist">
@@ -22,14 +20,32 @@
 			<div class="panel panel-primary">
 				<div class="panel-heading">
 					<label><span style="text-transform: capitalize;" ng-bind="selected.type"></span> Datasource 列表</label>
+
+                    <div style="float:right">
+                        <button type="button" data-toggle="modal" data-target="#add-datasource-modal"
+                                class="btn btn-sm btn-success" style="text-align: center;font-size: 12px">
+                            新增</button>
+                    </div>
 				</div>
 				<div class="panel-body">
 					<div ng-repeat="ds in selected.datasources">
 						<div class="panel panel-info">
 							<div class="storage-heading">
+
+                                <div style="font-size: 20px; height:34px">
+                                    <span>ID: {{ds.id}}</span>
+                                    <span ng-if="is_mysql(selected.type)">Size: {{ds.storage_size}}</span>
+                                    <div style="float:right">
+                                        <button type="button" class="btn btn-default"
+                                                ng-if="is_mysql(selected.type)"  ng-click="isShowAll()">
+                                            显示所有表
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" ng-click="del_datasource(ds)">删除
+                                        </button>
+                                    </div>
+                                </div>
                                 <storage id="ds.id" type="selected.type" ng-if="is_mysql(selected.type)">
                                 </storage>
-                                <span ng-bind="ds.id" ng-if="!is_mysql(selected.type)"></span>
 							</div>
 							<table class="table table-condensed table-responsive table-bordered">
 								<thead>
@@ -63,6 +79,54 @@
 				</div>
 			</div>
 		</div>
+        <%--add-datasource-modal--%>
+        <div class="modal fade" id="add-datasource-modal" tabindex="-1" role="dialog" aria-labelledby="add-consumer-label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="add-consumer-label">新增 DataSource On {{selected.type.toUpperCase()
+                            }}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form class="form-horizontal">
+                            <div class="form-group" >
+                                <div class="col-sm-8" style="width: 30%;font-size: 14px;padding-left: 20px">
+                                    KEY
+                                </div>
+                                <div class="col-sm-8" style="width: 60%;font-size: 14px;padding-left: 20px">
+                                    Value
+                                </div>
+                                <button class="btn btn-success btn-sm" ng-click="add_kv($index)"
+                                        style="width:8%; font-size: 10px">增加</button>
+                            </div>
+                            <div class="form-group" ng-repeat="form in forms">
+
+                                <div class="col-sm-8" style="width: 30%">
+                                    <input type="text" class="form-control" data-provide="typeahead"
+                                           ng-model="form.key">
+                                </div>
+                                <div class="col-sm-8" style="width: 60%">
+                                    <input type="text" class="form-control" data-provide="typeahead" placeholder="{{form.placeholder}}"
+                                           ng-model="form.value">
+                                </div>
+                                <button class="btn btn-danger btn-sm" ng-click="del_kv($index)"
+                                        style="width:8%; font-size: 10px">删除</button>
+
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-warning" ng-click="reset()">重置</button>
+                        <button type="button" class="btn btn-sm btn-success" data-dismiss="modal"
+                                ng-click="add_datasource()">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 	</div>
 
 	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>

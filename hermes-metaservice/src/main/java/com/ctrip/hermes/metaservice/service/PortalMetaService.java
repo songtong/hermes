@@ -34,13 +34,15 @@ public interface PortalMetaService extends MetaService {
 
 	public Map<String, Storage> getStorages();
 
+	public Map<String, Datasource> getDatasources();
+
 	public void addEndpoint(Endpoint endpoint) throws Exception;
 
 	public void deleteEndpoint(String endpointId) throws Exception;
 
-	public void addDatasource(Datasource datasource) throws Exception;
+	public void addDatasource(Datasource datasource, String dsType) throws Exception;
 
-	public void deleteDatasource(String datasourceId) throws Exception;
+	public void deleteDatasource(String datasourceId, String dsType) throws Exception;
 
 	public Map<String, Topic> getTopics();
 }
