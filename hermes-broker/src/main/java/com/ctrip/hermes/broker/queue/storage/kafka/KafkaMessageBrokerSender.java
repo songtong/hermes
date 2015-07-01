@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.queue.kafka;
+package com.ctrip.hermes.broker.queue.storage.kafka;
 
 import java.util.List;
 import java.util.Map;

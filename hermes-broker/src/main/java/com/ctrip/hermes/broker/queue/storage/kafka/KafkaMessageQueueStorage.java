@@ -1,9 +1,11 @@
-package com.ctrip.hermes.broker.queue.kafka;
+package com.ctrip.hermes.broker.queue.storage.kafka;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -27,10 +29,16 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 	@Inject
 	private BizLogger m_bizLogger;
 
-	private KafkaMessageBrokerSender sender;
+	@Inject
+	private MetaService m_metaService;
+
+	// TODO housekeeping
+	private Map<String, KafkaMessageBrokerSender> m_senders = new HashMap<>();
 
 	@Override
 	public void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception {
+
+		KafkaMessageBrokerSender sender = getSender(tpp.getTopic());
 
 		List<MessagePriority> msgs = new ArrayList<>();
 		for (MessageBatchWithRawData batch : batches) {
@@ -97,8 +105,16 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 
 	}
 
-	public void configure(String topic, MetaService metaService) {
-		sender = new KafkaMessageBrokerSender(topic, metaService);
+	private KafkaMessageBrokerSender getSender(String topic) {
+		if (!m_senders.containsKey(topic)) {
+			synchronized (m_senders) {
+				if (!m_senders.containsKey(topic)) {
+					m_senders.put(topic, new KafkaMessageBrokerSender(topic, m_metaService));
+				}
+			}
+		}
+
+		return m_senders.get(topic);
 	}
 
 }
