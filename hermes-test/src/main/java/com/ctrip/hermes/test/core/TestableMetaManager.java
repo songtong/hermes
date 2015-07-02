@@ -1,6 +1,6 @@
 package com.ctrip.hermes.test.core;
 
-import javax.inject.Inject;
+import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.core.meta.internal.MetaManager;
 import com.ctrip.hermes.core.meta.internal.MetaProxy;
