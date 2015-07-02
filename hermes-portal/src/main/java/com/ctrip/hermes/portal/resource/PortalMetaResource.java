@@ -234,6 +234,10 @@ public class PortalMetaResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
+		if (StringUtils.isEmpty(datasource.getId())) {
+			throw new RestException("Datasource Id is empty", Status.BAD_REQUEST);
+		}
+
 		if (metaService.getDatasources().containsKey(datasource.getId())) {
 			throw new RestException(String.format("Datasource id: %s, type: %s, already exists.", datasource.getId(),
 					  dsType), Status.CONFLICT);
