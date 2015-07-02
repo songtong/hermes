@@ -14,8 +14,11 @@
 			<param name="LevelMin" value="TRACE" />
 		</filter>
 	</appender>
-	
-	<appender name="FILE" class="org.apache.log4j.FileAppender">
+
+	<appender name="FILE" class="org.apache.log4j.AsyncAppender">
+		<param name="Threshold" value="ALL" />
+		<param name="MaxBackupIndex" value="10" />
+		<param name="MaxFileSize" value="10MB" />
 		<param name="File" value="/opt/logs/hermes/es.log" />
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%m%n" />
@@ -26,7 +29,7 @@
 		<level value="INFO" />
 		<appender-ref ref="FILE" />
 	</logger>
-	
+
 	<logger name="com.mchange.v2">
 		<level value="INFO" />
 		<appender-ref ref="CONSOLE" />
