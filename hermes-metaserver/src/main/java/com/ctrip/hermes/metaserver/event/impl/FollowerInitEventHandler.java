@@ -98,7 +98,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 				return null;
 			}
 
-			String url = String.format("http://%s:%s/meta", metaInfo.getHost(), metaInfo.getPort());
+			String url = String.format("http://%s:%s/meta/complete", metaInfo.getHost(), metaInfo.getPort());
 			Meta meta = m_metaHolder.getMeta();
 
 			if (meta != null) {

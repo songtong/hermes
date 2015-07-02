@@ -1,5 +1,10 @@
 package com.ctrip.hermes.metaserver.rest.resource;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.inject.Singleton;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -13,8 +18,13 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.ValueFilter;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Property;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.rest.commons.RestException;
 
@@ -28,7 +38,8 @@ public class MetaResource {
 	private MetaHolder m_metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
 
 	@GET
-	public Response getMeta(@QueryParam("version") @DefaultValue("0") long version,
+	@Path("complete")
+	public Response getCompleteMeta(@QueryParam("version") @DefaultValue("0") long version,
 	      @QueryParam("hashCode") @DefaultValue("0") long hashCode) {
 		logger.debug("get meta, version {}", version);
 		Meta meta = null;
@@ -37,10 +48,7 @@ public class MetaResource {
 			if (meta == null) {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}
-			if (version > 0 && meta.getVersion().equals(version)) {
-				return Response.status(Status.NOT_MODIFIED).build();
-			}
-			if (hashCode > 0 && meta.hashCode() == hashCode) {
+			if (!isMetaModified(version, hashCode, meta)) {
 				return Response.status(Status.NOT_MODIFIED).build();
 			}
 		} catch (Exception e) {
@@ -50,4 +58,45 @@ public class MetaResource {
 		return Response.status(Status.OK).entity(meta).build();
 	}
 
+	@GET
+	public Response getMeta(@QueryParam("version") @DefaultValue("0") long version,
+	      @QueryParam("hashCode") @DefaultValue("0") long hashCode) {
+		Meta meta = m_metaHolder.getMeta();
+		if (meta == null) {
+			throw new RestException("Meta not found", Status.NOT_FOUND);
+		}
+		if (!isMetaModified(version, hashCode, meta)) {
+			return Response.status(Status.NOT_MODIFIED).build();
+		}
+
+		Storage storage = meta.findStorage(Storage.MYSQL);
+		final List<Datasource> dss = storage.getDatasources();
+
+		String json = JSON.toJSONString(meta, new ValueFilter() {
+			@Override
+			@SuppressWarnings("unchecked")
+			public Object process(Object object, String name, Object value) {
+				if (object instanceof Datasource && value instanceof Map) {
+					Datasource ds = (Datasource) object;
+					for (Datasource d : dss) {
+						if (d.getId().equals(ds.getId())) {
+							Map<String, Property> nps = new HashMap<String, Property>();
+							for (Entry<String, Property> entry : ((Map<String, Property>) value).entrySet()) {
+								nps.put(entry.getKey(), new Property(entry.getKey()).setValue("**********"));
+							}
+							return nps;
+						}
+					}
+				}
+				return value;
+			}
+		});
+
+		return Response.status(Status.OK).entity(json).build();
+	}
+
+	private boolean isMetaModified(long version, long hashCode, Meta meta) {
+		return version > 0 && meta.getVersion().equals(version) ? false
+		      : hashCode > 0 && meta.hashCode() == hashCode ? false : true;
+	}
 }
