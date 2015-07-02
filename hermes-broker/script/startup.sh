@@ -40,7 +40,9 @@ stop(){
     if [ "${serverPID}" == "" ]; then
         echo "no BrokerServer is running"
     else
-        kill -9 ${serverPID}
+        echo "telnet 127.0.0.1 4888 and shutdown"
+        { echo "shutdown"; sleep 1;} | { telnet 127.0.0.1 4888;}
+        #kill  ${serverPID}
         echo "BrokerServer Stopped"
     fi
 }
