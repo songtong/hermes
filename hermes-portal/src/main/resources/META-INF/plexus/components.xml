@@ -2,14 +2,10 @@
 	<components>
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.storage.TopicStorageService</role>
-			<role-hint>topic-storage-service</role-hint>
 			<implementation>com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.storage.handler.StorageHandler</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -17,6 +13,11 @@
 			<role>com.ctrip.hermes.metaservice.service.storage.handler.StorageHandler</role>
 			<role-hint>mysql-storage-handler</role-hint>
 			<implementation>com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.datasource.DataSourceManager</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.TopicService</role>

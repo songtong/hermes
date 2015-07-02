@@ -108,7 +108,6 @@ public class ShutdownRequestMonitor {
 		m_ackManager.stop();
 		m_bossGroup.shutdownGracefully();
 		m_workerGroup.shutdownGracefully();
-		Cat.destroy();
 	}
 
 	private class ShutdownRequestInboundHandler extends SimpleChannelInboundHandler<String> {
