@@ -21,13 +21,16 @@ hermes_storage.run(function(editableOptions) {
 	scope.src_storages = [];
 	scope.selected = {};
 
-	meta_resource.get_storages({}, function(data) {
-		scope.src_storages = data;
-		scope.storage_types = collect_schemas(scope.src_storages, 'type', false);
-		scope.selected = scope.src_storages[0];
-	});
+    function getDatasources() {
+        meta_resource.get_storages({}, function (data) {
+            scope.src_storages = data;
+            scope.storage_types = collect_schemas(scope.src_storages, 'type', false);
+            scope.selected = scope.src_storages[0];
+        });
+    }
+    getDatasources();
 
-	scope.set_selected = function set_selected(type) {
+    scope.set_selected = function set_selected(type) {
 		for (var idx = 0; idx < scope.src_storages.length; idx++) {
 			if (scope.src_storages[idx].type == type) {
 				scope.selected = scope.src_storages[idx];
@@ -91,13 +94,13 @@ hermes_storage.run(function(editableOptions) {
     }
 
     scope.add_datasource = function() {
-        StorageService.add_datasource(scope.forms, scope.selected.type);
+        StorageService.add_datasource(scope.forms, scope.selected.type, getDatasources);
     }
 
     scope.del_datasource = function(ds) {
         bootbox.confirm("确认删除该Datasource? ", function(result) {
             if (result) {
-                StorageService.delete_datasource(ds.id, scope.selected.type)
+                StorageService.delete_datasource(ds.id, scope.selected.type, getDatasources)
             }
         })
     }
