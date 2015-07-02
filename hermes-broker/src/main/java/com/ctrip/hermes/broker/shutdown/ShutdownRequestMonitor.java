@@ -100,7 +100,7 @@ public class ShutdownRequestMonitor {
 		});
 	}
 
-	private void stopBroker() {
+	public void stopBroker() {
 		m_commandProcessor.stop();
 		m_longPollingService.stop();
 		m_messageQueueManager.stop();
