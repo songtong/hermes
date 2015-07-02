@@ -29,6 +29,8 @@ import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.transport.NettyServer;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.dianping.cat.Cat;
 import com.google.common.base.Charsets;
 
 /**
@@ -59,9 +61,11 @@ public class ShutdownRequestMonitor {
 	@Inject
 	private BrokerConfig m_config;
 
-	private EventLoopGroup m_bossGroup = new NioEventLoopGroup();
+	private EventLoopGroup m_bossGroup = new NioEventLoopGroup(0, HermesThreadFactory.create("ShutdownMonitor-boss",
+	      false));
 
-	private EventLoopGroup m_workerGroup = new NioEventLoopGroup();
+	private EventLoopGroup m_workerGroup = new NioEventLoopGroup(0, HermesThreadFactory.create("ShutdownMonitor-worker",
+	      false));
 
 	public void start() {
 		ServerBootstrap b = new ServerBootstrap();
@@ -104,6 +108,7 @@ public class ShutdownRequestMonitor {
 		m_ackManager.stop();
 		m_bossGroup.shutdownGracefully();
 		m_workerGroup.shutdownGracefully();
+		Cat.destroy();
 	}
 
 	private class ShutdownRequestInboundHandler extends SimpleChannelInboundHandler<String> {

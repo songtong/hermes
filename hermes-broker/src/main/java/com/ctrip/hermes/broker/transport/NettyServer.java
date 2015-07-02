@@ -22,6 +22,7 @@ import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
 import com.ctrip.hermes.core.transport.netty.MagicNumberPrepender;
 import com.ctrip.hermes.core.transport.netty.NettyDecoder;
 import com.ctrip.hermes.core.transport.netty.NettyEncoder;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 @Named(type = NettyServer.class)
 public class NettyServer extends ContainerHolder {
@@ -29,9 +30,10 @@ public class NettyServer extends ContainerHolder {
 	@Inject
 	private BrokerConfig m_config;
 
-	private EventLoopGroup m_bossGroup = new NioEventLoopGroup();
+	private EventLoopGroup m_bossGroup = new NioEventLoopGroup(0, HermesThreadFactory.create("NettyServer-boss", false));
 
-	private EventLoopGroup m_workerGroup = new NioEventLoopGroup();
+	private EventLoopGroup m_workerGroup = new NioEventLoopGroup(0, HermesThreadFactory.create("NettyServer-worker",
+	      false));
 
 	public ChannelFuture start(int port) {
 		ServerBootstrap b = new ServerBootstrap();
