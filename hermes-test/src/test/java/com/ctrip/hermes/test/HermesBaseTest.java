@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.test.TestingServer;
 import org.junit.After;
@@ -23,6 +24,7 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
+import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.test.broker.TestableMessageQueueStorage;
 import com.ctrip.hermes.test.broker.TestableMessageQueueStorage.DataRecord;
 import com.ctrip.hermes.test.core.DefaultSettableMetaHolder;
@@ -75,7 +77,15 @@ public class HermesBaseTest extends ComponentTestCase {
 		if (m_zkServer != null) {
 			m_zkServer.stop();
 		}
+
+		killAllHermesThread();
 		super.tearDown();
+		TimeUnit.SECONDS.sleep(1);
+	}
+
+	protected void killAllHermesThread() throws Exception {
+		ThreadGroup threadGroup = new ThreadGroup("Hermes");
+		threadGroup.interrupt();
 	}
 
 	protected TestableMessageQueueStorage getMessageStorage() throws Exception {
@@ -101,15 +111,20 @@ public class HermesBaseTest extends ComponentTestCase {
 
 	protected void startBrokerMock() throws Exception {
 		lookup(BrokerBootstrap.class).start();
+		Producer.getInstance().message("prepare", "prepare", "prepare").sendSync();
 	}
 
 	protected void stopBrokerMock() throws Exception {
-		BrokerConfig brokerConfig = lookup(BrokerConfig.class);
-		Socket s = new Socket("localhost", brokerConfig.getShutdownRequestPort());
-		OutputStream out = s.getOutputStream();
-		out.write("shutdown\n".getBytes(Charsets.UTF_8));
-		out.flush();
-		s.close();
+		try {
+			BrokerConfig brokerConfig = lookup(BrokerConfig.class);
+			Socket s = new Socket("localhost", brokerConfig.getShutdownRequestPort());
+			OutputStream out = s.getOutputStream();
+			out.write("shutdown\n".getBytes(Charsets.UTF_8));
+			out.flush();
+			s.close();
+		} catch (Exception e) {
+			// ignore it
+		}
 	}
 
 	protected int calPartition(String topic, String partitionKey) throws Exception {

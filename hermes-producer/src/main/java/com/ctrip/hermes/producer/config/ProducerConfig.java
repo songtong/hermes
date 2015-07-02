@@ -21,8 +21,8 @@ public class ProducerConfig {
 		return "300";
 	}
 
-	public String getDefaultBrokerSenderSendTimeoutMillis() {
-		return "200";
+	public long getDefaultBrokerSenderSendTimeoutMillis() {
+		return 200;
 	}
 
 	public String getDefaultBrokerSenderTaskQueueSize() {

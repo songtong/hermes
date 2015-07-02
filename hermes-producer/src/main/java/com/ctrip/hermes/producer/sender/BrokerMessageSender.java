@@ -180,8 +180,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				Future<Boolean> future = m_messageAcceptanceMonitor.monitor(cmd.getHeader().getCorrelationId());
 				m_messageResultMonitor.monitor(cmd);
 
-				long timeout = Long.valueOf(m_clientEnv.getGlobalConfig().getProperty("producer.sender.send.timeout",
-				      m_config.getDefaultBrokerSenderSendTimeoutMillis()));
+				long timeout = m_config.getDefaultBrokerSenderSendTimeoutMillis();
 
 				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
 
