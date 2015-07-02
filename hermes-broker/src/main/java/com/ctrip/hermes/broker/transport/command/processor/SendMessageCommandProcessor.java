@@ -70,7 +70,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		if (m_metaService.findTopicByName(reqCmd.getTopic()) != null) {
 			if (lease != null) {
 				if (log.isDebugEnabled()) {
-					log.debug("Send message reqeust arrived(topic={}, partition={}, msgCount)", reqCmd.getTopic(),
+					log.debug("Send message reqeust arrived(topic={}, partition={}, msgCount={})", reqCmd.getTopic(),
 					      reqCmd.getPartition(), reqCmd.getMessageCount());
 				}
 

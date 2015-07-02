@@ -1,6 +1,5 @@
 package com.ctrip.hermes.producer.monitor;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -103,15 +102,13 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 			      @Override
 			      public void run() {
 				      try {
-					      List<SendMessageCommand> timeoutCmds = new LinkedList<>();
-
 					      m_lock.lock();
 					      try {
 						      for (Map.Entry<Long, SendMessageCommand> entry : m_cmds.entrySet()) {
 							      SendMessageCommand cmd = entry.getValue();
 							      Long correlationId = entry.getKey();
 							      if (cmd.getExpireTime() < m_systemClockService.now()) {
-								      timeoutCmds.add(m_cmds.remove(correlationId));
+								      m_cmds.remove(correlationId);
 							      }
 						      }
 
@@ -119,15 +116,6 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 						      m_lock.unlock();
 					      }
 
-					      for (SendMessageCommand timeoutCmd : timeoutCmds) {
-						      if (log.isDebugEnabled()) {
-							      log.debug(
-							            "No result received for SendMessageCommand(correlationId={}) until timeout, will cancel waiting automatically",
-							            timeoutCmd.getHeader().getCorrelationId());
-						      }
-						      timeoutCmd.onTimeout();
-						      tracking(timeoutCmd, false);
-					      }
 				      } catch (Exception e) {
 					      // ignore
 					      if (log.isDebugEnabled()) {

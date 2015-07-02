@@ -66,11 +66,6 @@ public class DefaultSendMessageAcceptanceMonitor implements SendMessageAcceptanc
 		}
 
 		@Override
-		public boolean setException(Throwable throwable) {
-			return super.setException(throwable);
-		}
-
-		@Override
 		public boolean cancel(boolean mayInterruptIfRunning) {
 			super.cancel(mayInterruptIfRunning);
 			m_lock.lock();

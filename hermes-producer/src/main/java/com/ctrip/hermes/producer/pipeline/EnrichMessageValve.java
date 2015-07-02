@@ -22,13 +22,7 @@ public class EnrichMessageValve implements Valve {
 	@Override
 	public void handle(PipelineContext<?> ctx, Object payload) {
 		ProducerMessage<?> msg = (ProducerMessage<?>) payload;
-		String topic = msg.getTopic();
 		String ip = Networks.forIp().getLocalHostAddress();
-
-		if (StringUtils.isEmpty(topic)) {
-			log.error("Topic not set, won't send");
-			return;
-		}
 
 		enrichPartitionKey(msg, ip);
 		enrichRefKey(msg);

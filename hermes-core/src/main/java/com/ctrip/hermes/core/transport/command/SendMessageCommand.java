@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -247,13 +246,6 @@ public class SendMessageCommand extends AbstractCommand {
 			}
 
 			return m_msgs;
-		}
-	}
-
-	public void onTimeout() {
-		Exception e = new TimeoutException("Send timeout");
-		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
-			entry.getValue().setException(e);
 		}
 	}
 

@@ -3,6 +3,7 @@ package com.ctrip.hermes.test.broker;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,10 @@ public class TestableMessageQueueStorage implements MessageQueueStorage {
 
 	}
 
+	public Map<Integer, List<DataRecord>> getMessages(String topic, boolean isPriority) {
+		return m_dataPool.getMessages(topic, isPriority);
+	}
+
 	public List<DataRecord> getMessages(Tpp tpp) {
 		List<DataRecord> msgs = new LinkedList<>();
 		List<DataRecord> records = m_dataPool.getMessages(tpp);
@@ -109,6 +114,21 @@ public class TestableMessageQueueStorage implements MessageQueueStorage {
 		private ConcurrentMap<TopicPartition, List<DataRecord>> m_resends = new ConcurrentHashMap<>();
 
 		private ConcurrentMap<TopicPartition, List<DataRecord>> m_deadLetters = new ConcurrentHashMap<>();
+
+		public Map<Integer, List<DataRecord>> getMessages(String topic, boolean isPriority) {
+
+			Map<Integer, List<DataRecord>> result = new HashMap<>();
+
+			ConcurrentMap<TopicPartition, List<DataRecord>> msgs = isPriority ? m_priorityMsgs : m_msgs;
+
+			for (Map.Entry<TopicPartition, List<DataRecord>> entry : msgs.entrySet()) {
+				if (entry.getKey().getTopic().equals(topic)) {
+					result.put(entry.getKey().getPartition(), entry.getValue());
+				}
+			}
+
+			return result;
+		}
 
 		public List<DataRecord> getMessages(Tpp tpp) {
 			TopicPartition tp = new TopicPartition(tpp.getTopic(), tpp.getPartition());
@@ -170,6 +190,14 @@ public class TestableMessageQueueStorage implements MessageQueueStorage {
 		public TopicPartition(String topic, int partition) {
 			m_topic = topic;
 			m_partition = partition;
+		}
+
+		public String getTopic() {
+			return m_topic;
+		}
+
+		public int getPartition() {
+			return m_partition;
 		}
 
 		@Override
