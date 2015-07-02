@@ -96,7 +96,7 @@ public class MetaResource {
 	}
 
 	private boolean isMetaModified(long version, long hashCode, Meta meta) {
-		return version > 0 && meta.getVersion().equals(version) ? false
-		      : hashCode > 0 && meta.hashCode() == hashCode ? false : true;
+		return (version > 0 && meta.getVersion().equals(version)) || (hashCode > 0 && meta.hashCode() == hashCode) ? false
+		      : true;
 	}
 }
