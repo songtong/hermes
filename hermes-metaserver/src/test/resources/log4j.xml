@@ -24,7 +24,7 @@
 		<level value="WARN" />
 		<appender-ref ref="CONSOLE" />
 	</logger>
-	
+
 	<logger name="org.apache.zookeeper">
 		<level value="WARN" />
 		<appender-ref ref="CONSOLE" />
@@ -46,7 +46,7 @@
 	</logger>
 
 	<root>
-		<level value="WARN" />
+		<level value="INFO" />
 		<appender-ref ref="CONSOLE" />
 	</root>
 
