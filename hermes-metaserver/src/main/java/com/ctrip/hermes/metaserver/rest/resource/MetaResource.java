@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.ValueFilter;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Datasource;
@@ -36,6 +37,8 @@ public class MetaResource {
 	private static final Logger logger = LoggerFactory.getLogger(MetaResource.class);
 
 	private MetaHolder m_metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
+
+	private static SerializeConfig jsonConfig = new SerializeConfig();
 
 	@GET
 	@Path("complete")
@@ -72,7 +75,10 @@ public class MetaResource {
 		Storage storage = meta.findStorage(Storage.MYSQL);
 		final List<Datasource> dss = storage.getDatasources();
 
-		String json = JSON.toJSONString(meta, new ValueFilter() {
+		// pass empty jsonConfig to make JSON.toJSONString use this overloaded function
+		// to skip serializer.config(SerializerFeature.WriteDateUseDateFormat, true);
+		// to make Date field serialize to timestamp instead of date string
+		String json = JSON.toJSONString(meta, jsonConfig, new ValueFilter() {
 			@Override
 			@SuppressWarnings("unchecked")
 			public Object process(Object object, String name, Object value) {
