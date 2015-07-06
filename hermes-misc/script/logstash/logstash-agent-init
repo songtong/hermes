@@ -1,0 +1,76 @@
+#! /bin/sh
+# From The Logstash Book
+# The original of this file can be found at: http://logstashbook.com/code/index.html
+#
+#
+# Logstash Start/Stop logstash
+#
+# chkconfig: 345 99 99
+# description: Logstash
+# processname: logstash
+
+name="logstash-agent"
+logstash_bin="/opt/ctrip/app/logstash-1.4.2/bin/logstash"
+logstash_conf="/opt/ctrip/app/logstash-1.4.2/shipper.conf"
+logstash_log="/opt/logs/logstash/shipper.log"
+
+find_logstash_process () {
+    PIDTEMP=`ps ux | grep logstash | grep java | awk '{ print $2 }'`
+    # Pid not found
+    if [ "x$PIDTEMP" = "x" ]; then
+        PID=-1
+    else
+        PID=$PIDTEMP
+    fi
+}
+
+start () {
+    LOG_DIR=`dirname ${logstash_log}`
+    if [ ! -d $LOG_DIR ]; then
+      echo "Log dir ${LOG_DIR} doesn't exist. Creating"
+      mkdir $LOG_DIR
+    fi
+    nohup ${logstash_bin} agent --verbose -f ${logstash_conf} --log ${logstash_log} > /dev/null 2>&
+1 &
+}
+
+stop () {
+    find_logstash_process
+    if [ $PID -ne -1 ]; then
+        kill $PID
+    fi
+}
+
+case $1 in
+start)
+        start
+        ;;
+stop)
+        stop
+        exit 0
+        ;;
+reload)
+        stop
+        sleep 2
+        start
+        ;;
+restart)
+        stop
+        sleep 2
+        start
+        ;;
+status)
+        find_logstash_process
+        if [ $PID -gt 0 ]; then
+          echo "logstash running: $PID"
+          exit 0
+        else
+          echo "logstash not running"
+          exit 1
+        fi
+        ;;
+*)
+        echo $"Usage: $0 {start|stop|restart|reload|status}"
+        RETVAL=1
+esac
+exit 0
