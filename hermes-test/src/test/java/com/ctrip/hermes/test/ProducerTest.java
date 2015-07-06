@@ -17,9 +17,11 @@ import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 import com.ctrip.hermes.test.broker.TestableMessageQueueStorage.DataRecord;
+import com.ctrip.hermes.test.core.SettableMetaHolder;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -31,7 +33,7 @@ public class ProducerTest extends HermesBaseTest {
 
 	@Test
 	public void testSendSync() throws Exception {
-		startBrokerMock();
+		startBrokerMock(true);
 
 		String body = "body";
 		String partitionKey = "pkey";
@@ -53,7 +55,7 @@ public class ProducerTest extends HermesBaseTest {
 
 	@Test
 	public void testSendAsync() throws Exception {
-		startBrokerMock();
+		startBrokerMock(true);
 		String body = "body";
 		String partitionKey = "pkey";
 		String refKey = "refKey";
@@ -77,8 +79,59 @@ public class ProducerTest extends HermesBaseTest {
 	}
 
 	@Test
+	public void testSendWithMetaChanged() throws Exception {
+		SettableMetaHolder metaHolder = lookup(SettableMetaHolder.class);
+		Endpoint endpoint = metaHolder.getMeta().findEndpoint("br0");
+		endpoint.setHost("1.1.1.1");
+
+		startBrokerMock(false);
+
+		String body = "body";
+		String partitionKey = "pkey";
+		String refKey = "refKey";
+
+		final AtomicInteger success = new AtomicInteger(-1);
+
+		Future<SendResult> future1 = sendAsync(TEST_TOPIC, partitionKey, body, refKey,
+		      Arrays.asList(new Pair<String, String>("a", "A")), false, new CompletionCallback<SendResult>() {
+
+			      @Override
+			      public void onSuccess(SendResult result) {
+				      success.set(0);
+			      }
+
+			      @Override
+			      public void onFailure(Throwable t) {
+				      success.set(-1);
+			      }
+		      });
+
+		TimeUnit.SECONDS.sleep(3);
+
+		Assert.assertNull(getMessageStorage().getMessage(
+		      new Tpp(TEST_TOPIC, calPartition(TEST_TOPIC, partitionKey), false), refKey));
+		Assert.assertFalse(future1.isDone());
+
+		endpoint.setHost("127.0.0.1");
+		reloadMeta();
+
+		prepareBroker();
+
+		future1.get();
+
+		DataRecord msg1 = getMessageStorage().getMessage(
+		      new Tpp(TEST_TOPIC, calPartition(TEST_TOPIC, partitionKey), false), refKey);
+
+		assertMsg(msg1, body, refKey, false, 0, Arrays.asList(new Pair<String, String>("a", "A")));
+
+		Assert.assertEquals(0, success.get());
+
+		stopBrokerMock();
+	}
+
+	@Test
 	public void testSendWithCallback() throws Exception {
-		startBrokerMock();
+		startBrokerMock(true);
 		String body = "body";
 		String partitionKey = "pkey";
 		String refKey = "refKey";
@@ -137,8 +190,9 @@ public class ProducerTest extends HermesBaseTest {
 
 		Assert.assertNull(getMessageStorage().getMessage(
 		      new Tpp(TEST_TOPIC, calPartition(TEST_TOPIC, partitionKey), false), refKey));
+		Assert.assertFalse(future1.isDone());
 
-		startBrokerMock();
+		startBrokerMock(true);
 
 		future1.get();
 
@@ -154,7 +208,7 @@ public class ProducerTest extends HermesBaseTest {
 
 	@Test
 	public void testSendWithoutRefkey() throws Exception {
-		startBrokerMock();
+		startBrokerMock(true);
 		String body = "body";
 		String partitionKey = "pkey";
 
@@ -181,7 +235,7 @@ public class ProducerTest extends HermesBaseTest {
 
 	@Test
 	public void testSendWithoutPartitionKey() throws Exception {
-		startBrokerMock();
+		startBrokerMock(true);
 		String body = "body";
 		String refKey = "refKey";
 

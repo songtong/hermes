@@ -17,6 +17,7 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.message.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.meta.internal.MetaManager;
 import com.ctrip.hermes.core.meta.internal.MetaProxy;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -109,9 +110,19 @@ public class HermesBaseTest extends ComponentTestCase {
 		defineComponent(MetaManager.class, TestableMetaManager.class).req(SettableMetaHolder.class).req(MetaProxy.class);
 	}
 
-	protected void startBrokerMock() throws Exception {
+	protected void startBrokerMock(boolean prepare) throws Exception {
 		lookup(BrokerBootstrap.class).start();
+		if (prepare) {
+			prepareBroker();
+		}
+	}
+
+	protected void prepareBroker() throws Exception {
 		Producer.getInstance().message("prepare", "prepare", "prepare").sendSync();
+	}
+
+	protected void reloadMeta() throws Exception {
+		lookup(MetaService.class).refresh();
 	}
 
 	protected void stopBrokerMock() throws Exception {
