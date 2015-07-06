@@ -19,9 +19,11 @@ public abstract class Producer {
 		public MessageHolder withRefKey(String key);
 
 		public Future<SendResult> send();
-
+		
 		public SendResult sendSync() throws MessageSendException;
 
+		public MessageHolder withoutHeader();
+		
 		public MessageHolder withPriority();
 
 		public MessageHolder addProperty(String key, String value);

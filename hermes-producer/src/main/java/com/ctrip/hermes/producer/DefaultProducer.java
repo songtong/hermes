@@ -96,5 +96,11 @@ public class DefaultProducer extends Producer {
 				throw new MessageSendException(e);
 			}
 		}
+
+		@Override
+      public MessageHolder withoutHeader() {
+			m_msg.setWithHeader(false);
+			return this;
+		}
 	}
 }

@@ -44,7 +44,7 @@ public class OneBoxTest {
 
 				String proMsg = "Hello Ctrip " + System.currentTimeMillis();
 				MessageHolder holder = producer.message(topic, null, proMsg);
-				holder.send();
+				holder.withoutHeader().send();
 				System.out.println("Sent: " + proMsg);
 			}
 		}
@@ -80,7 +80,7 @@ public class OneBoxTest {
 
 				AvroVisitEvent proMsg = KafkaAvroTest.generateEvent();
 				MessageHolder holder = producer.message(topic, null, proMsg);
-				holder.send();
+				holder.withoutHeader().send();
 				System.out.println("Sent: " + proMsg);
 			}
 		}
