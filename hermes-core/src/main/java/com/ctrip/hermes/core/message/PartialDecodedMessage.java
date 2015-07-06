@@ -18,7 +18,7 @@ public class PartialDecodedMessage {
 
 	private ByteBuf m_volatileProperties;
 	
-	private boolean isWithHeader;
+	private boolean m_isWithHeader;
 
 	public String getBodyCodecType() {
 		return m_bodyCodecType;
@@ -99,11 +99,11 @@ public class PartialDecodedMessage {
 	}
 
 	public boolean isWithHeader() {
-	   return isWithHeader;
+	   return m_isWithHeader;
    }
 
 	public void setWithHeader(boolean isWithHeader) {
-	   this.isWithHeader = isWithHeader;
+	   this.m_isWithHeader = isWithHeader;
    }
 
 }

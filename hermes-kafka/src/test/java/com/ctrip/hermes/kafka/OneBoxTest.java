@@ -35,6 +35,7 @@ public class OneBoxTest {
 
 		System.out.println("Starting consumer...");
 
+		boolean hasHeader = true;
 		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
 			while (true) {
 				String line = in.readLine();
@@ -44,7 +45,11 @@ public class OneBoxTest {
 
 				String proMsg = "Hello Ctrip " + System.currentTimeMillis();
 				MessageHolder holder = producer.message(topic, null, proMsg);
-				holder.withoutHeader().send();
+				if (!hasHeader) {
+					holder = holder.withoutHeader();
+				}
+				hasHeader = !hasHeader;
+				holder.send();
 				System.out.println("Sent: " + proMsg);
 			}
 		}
@@ -71,6 +76,7 @@ public class OneBoxTest {
 
 		System.out.println("Starting consumer...");
 
+		boolean hasHeader = true;
 		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
 			while (true) {
 				String line = in.readLine();
@@ -80,7 +86,11 @@ public class OneBoxTest {
 
 				AvroVisitEvent proMsg = KafkaAvroTest.generateEvent();
 				MessageHolder holder = producer.message(topic, null, proMsg);
-				holder.withoutHeader().send();
+				if (!hasHeader) {
+					holder = holder.withoutHeader();
+				}
+				hasHeader = !hasHeader;
+				holder.send();
 				System.out.println("Sent: " + proMsg);
 			}
 		}
