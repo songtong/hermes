@@ -70,6 +70,8 @@ public class TopicsResource {
 
 	public static final String PROPERTIES = "X-Hermes-Message-Property";
 
+	public static final String WITHOUT_HEADER = "X-Hermes-Without-Header";
+
 	private void publishAsync(final String topic, final Map<String, String> params, final InputStream content,
 	      final AsyncResponse response) {
 		executor.submit(new Runnable() {
@@ -120,6 +122,9 @@ public class TopicsResource {
 		}
 		if (requestHeaders.containsKey(PROPERTIES)) {
 			params.put("properties", requestHeaders.getFirst(PROPERTIES));
+		}
+		if (requestHeaders.containsKey(WITHOUT_HEADER)) {
+			params.put("withoutHeader", requestHeaders.getFirst(WITHOUT_HEADER));
 		}
 
 		BizEvent receiveEvent = new BizEvent("Rest.received");

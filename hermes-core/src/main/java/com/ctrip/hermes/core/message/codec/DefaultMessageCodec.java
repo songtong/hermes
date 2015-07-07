@@ -15,7 +15,7 @@ import com.ctrip.hermes.core.transport.netty.Magic;
  */
 @Named(type = MessageCodec.class)
 public class DefaultMessageCodec implements MessageCodec {
-	private static MessageCodecVersion CURRENT_VERSION = MessageCodecVersion.BINARY_V2;
+	private static MessageCodecVersion CURRENT_VERSION = MessageCodecVersion.BINARY_V1;
 	
 	@Override
 	public void encode(ProducerMessage<?> msg, ByteBuf buf) {

@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ctrip.hermes.core.message.codec.internal.MessageCodecBinaryV1Handler;
-import com.ctrip.hermes.core.message.codec.internal.MessageCodecBinaryV2Handler;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -12,7 +11,6 @@ import com.ctrip.hermes.core.message.codec.internal.MessageCodecBinaryV2Handler;
  */
 public enum MessageCodecVersion {
 	BINARY_V1((byte) 1, new MessageCodecBinaryV1Handler()), //
-	BINARY_V2((byte) 2, new MessageCodecBinaryV2Handler()), //
 	;
 
 	private byte m_version;
