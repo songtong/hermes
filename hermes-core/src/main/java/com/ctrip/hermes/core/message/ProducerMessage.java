@@ -19,6 +19,8 @@ public class ProducerMessage<T> {
 	private int m_msgSeqNo;
 
 	private long m_bornTime;
+	
+	private boolean m_withHeader = true;
 
 	private PropertiesHolder m_propertiesHolder = new PropertiesHolder();
 
@@ -137,5 +139,13 @@ public class ProducerMessage<T> {
 	public CompletionCallback<SendResult> getCallback() {
 		return m_callback;
 	}
+
+	public boolean isWithHeader() {
+	   return m_withHeader;
+   }
+
+	public void setWithHeader(boolean withHeader) {
+	   this.m_withHeader = withHeader;
+   }
 
 }

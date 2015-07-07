@@ -15,6 +15,7 @@ Name | Type | Description
 `X-Hermes-Priority-Message`|`boolean`| optional, default false
 `X-Hermes-Ref-Key`|`string`| optional, default empty
 `X-Hermes-Message-Property`|`string`| optional, comma separated, key-value pair.
+`X-Hermes-Without-Header`|`boolean`| optional, default false
 
 #### Request Body
 Binary only
@@ -31,6 +32,7 @@ request.header("X-Hermes-Priority-Message", "true");
 request.header("X-Hermes-Ref-Key", "mykey");
 request.header("X-Hermes-Partition-Key", "myPartition");
 request.header("X-Hermes-Message-Property", "key1=value1,key2=value2");
+request.header("X-Herems-Without-Header", "true");
 String content = "Hello World " + System.currentTimeMillis();
 InputStream is = new ByteArrayInputStream(content.getBytes());
 Response response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));

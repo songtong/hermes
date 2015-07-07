@@ -24,22 +24,23 @@ public class TracingMessageValve implements Valve {
 		Transaction t = Cat.newTransaction("Message.Produce.Tried", topic);
 		t.addData("key", msg.getKey());
 
-		MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 		try {
-			String childMsgId = Cat.createMessageId();
-			String rootMsgId = tree.getRootMessageId();
-			String msgId = Cat.getCurrentMessageId();
-			rootMsgId = rootMsgId == null ? msgId : rootMsgId;
+			if (msg.isWithHeader()) {
+				MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
+				String childMsgId = Cat.createMessageId();
+				String rootMsgId = tree.getRootMessageId();
+				String msgId = Cat.getCurrentMessageId();
+				rootMsgId = rootMsgId == null ? msgId : rootMsgId;
 
-			String ip = Networks.forIp().getLocalHostAddress();;
-			Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
-			Cat.logEvent("Producer:" + ip, topic, Event.SUCCESS, "key=" + msg.getKey());
+				String ip = Networks.forIp().getLocalHostAddress();
+				Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
+				Cat.logEvent("Producer:" + ip, topic, Event.SUCCESS, "key=" + msg.getKey());
 
-			msg.addDurableSysProperty(CatConstants.CURRENT_MESSAGE_ID, msgId);
-			msg.addDurableSysProperty(CatConstants.SERVER_MESSAGE_ID, childMsgId);
-			msg.addDurableSysProperty(CatConstants.ROOT_MESSAGE_ID, rootMsgId);
-			Cat.logEvent(CatConstants.TYPE_REMOTE_CALL, "", Event.SUCCESS, childMsgId);
-
+				msg.addDurableSysProperty(CatConstants.CURRENT_MESSAGE_ID, msgId);
+				msg.addDurableSysProperty(CatConstants.SERVER_MESSAGE_ID, childMsgId);
+				msg.addDurableSysProperty(CatConstants.ROOT_MESSAGE_ID, rootMsgId);
+				Cat.logEvent(CatConstants.TYPE_REMOTE_CALL, "", Event.SUCCESS, childMsgId);
+			}
 			ctx.next(payload);
 
 			t.setStatus(Transaction.SUCCESS);

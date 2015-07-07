@@ -23,11 +23,12 @@ public class EnrichMessageValve implements Valve {
 	public void handle(PipelineContext<?> ctx, Object payload) {
 		ProducerMessage<?> msg = (ProducerMessage<?>) payload;
 		String ip = Networks.forIp().getLocalHostAddress();
-
 		enrichPartitionKey(msg, ip);
-		enrichRefKey(msg);
-		enrichMessageProperties(msg, ip);
 
+		if (msg.isWithHeader()) {
+			enrichRefKey(msg);
+			enrichMessageProperties(msg, ip);
+		}
 		ctx.next(payload);
 	}
 
