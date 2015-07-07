@@ -25,16 +25,16 @@ public class TracingMessageValve implements Valve {
 		t.addData("key", msg.getKey());
 
 		try {
+			String ip = Networks.forIp().getLocalHostAddress();
+			Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
+			Cat.logEvent("Producer:" + ip, topic, Event.SUCCESS, "key=" + msg.getKey());
+			
 			if (msg.isWithHeader()) {
 				MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 				String childMsgId = Cat.createMessageId();
 				String rootMsgId = tree.getRootMessageId();
 				String msgId = Cat.getCurrentMessageId();
 				rootMsgId = rootMsgId == null ? msgId : rootMsgId;
-
-				String ip = Networks.forIp().getLocalHostAddress();
-				Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
-				Cat.logEvent("Producer:" + ip, topic, Event.SUCCESS, "key=" + msg.getKey());
 
 				msg.addDurableSysProperty(CatConstants.CURRENT_MESSAGE_ID, msgId);
 				msg.addDurableSysProperty(CatConstants.SERVER_MESSAGE_ID, childMsgId);

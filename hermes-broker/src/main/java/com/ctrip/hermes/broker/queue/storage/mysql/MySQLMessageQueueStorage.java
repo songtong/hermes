@@ -193,7 +193,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 							partialMsg.setKey(dataObj.getRefKey());
 							partialMsg.setBodyCodecType(dataObj.getCodecType());
 
-							m_messageCodec.encode(partialMsg, out);
+							m_messageCodec.encodePartial(partialMsg, out);
 						}
 					}
 
@@ -446,7 +446,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 							partialMsg.setKey(dataObj.getRefKey());
 							partialMsg.setBodyCodecType(dataObj.getCodecType());
 
-							m_messageCodec.encode(partialMsg, out);
+							m_messageCodec.encodePartial(partialMsg, out);
 						}
 					}
 
