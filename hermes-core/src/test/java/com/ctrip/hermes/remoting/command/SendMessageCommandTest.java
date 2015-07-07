@@ -60,7 +60,7 @@ public class SendMessageCommandTest extends ComponentTestCase {
 		pdMsg.setVolatileProperties(null);
 
 		ByteBuf buf2 = Unpooled.buffer();
-		codec.encode(pdMsg, buf2);
+		codec.encodePartial(pdMsg, buf2);
 
 		BaseConsumerMessage<?> cmsg = codec.decode(topic, buf2, String.class);
 

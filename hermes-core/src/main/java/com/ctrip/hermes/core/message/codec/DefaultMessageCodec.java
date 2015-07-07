@@ -45,7 +45,7 @@ public class DefaultMessageCodec implements MessageCodec {
 	}
 
 	@Override
-	public void encode(PartialDecodedMessage msg, ByteBuf buf) {
+	public void encodePartial(PartialDecodedMessage msg, ByteBuf buf) {
 		Magic.writeMagic(buf);
 		buf.writeByte(CURRENT_VERSION.getVersion());
 
