@@ -25,6 +25,7 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -56,7 +57,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 	private ConcurrentMap<Pair<String, Integer>, TaskQueue> m_taskQueues = new ConcurrentHashMap<>();
 
-	private ExecutorService m_callbackExecutorService;
+	private ExecutorService m_callbackExecutor;
 
 	private AtomicBoolean m_started = new AtomicBoolean(false);
 
@@ -252,8 +253,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		public Future<SendResult> submit(final ProducerMessage<?> msg) {
 			SettableFuture<SendResult> future = SettableFuture.create();
 
-			m_queue.offer(new ProducerWorkerContext(msg, future));
-
 			if (msg.getCallback() != null) {
 				Futures.addCallback(future, new FutureCallback<SendResult>() {
 
@@ -266,7 +265,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					public void onFailure(Throwable t) {
 						msg.getCallback().onFailure(t);
 					}
-				}, m_callbackExecutorService);
+				}, m_callbackExecutor);
+			}
+
+			if (!m_queue.offer(new ProducerWorkerContext(msg, future))) {
+				String warning = "Producer task queue is full, will drop this message.";
+				log.warn(warning);
+				MessageSendException throwable = new MessageSendException(warning);
+				future.setException(throwable);
 			}
 
 			return future;
@@ -279,7 +285,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		int callbackThreadCount = Integer.valueOf(m_clientEnv.getGlobalConfig().getProperty(
 		      "producer.callback.threadcount", m_config.getDefaultProducerCallbackThreadCount()));
 
-		m_callbackExecutorService = Executors.newFixedThreadPool(callbackThreadCount,
+		m_callbackExecutor = Executors.newFixedThreadPool(callbackThreadCount,
 		      HermesThreadFactory.create("ProducerCallback", false));
 
 	}

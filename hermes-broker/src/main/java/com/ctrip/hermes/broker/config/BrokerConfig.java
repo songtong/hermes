@@ -45,7 +45,7 @@ public class BrokerConfig {
 	}
 
 	public int getDumperBatchSize() {
-		return 20;
+		return 10000;
 	}
 
 	public long getDumperNoMessageWaitIntervalMillis() {
