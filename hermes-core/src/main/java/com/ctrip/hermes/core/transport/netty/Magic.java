@@ -1,12 +1,12 @@
 package com.ctrip.hermes.core.transport.netty;
 
-import java.nio.ByteBuffer;
-
 import io.netty.buffer.ByteBuf;
+
+import java.nio.ByteBuffer;
 
 public class Magic {
 
-	private final static byte[] MAGIC = new byte[] { 'h', 'e', 'm', 's' };
+	final static byte[] MAGIC = new byte[] { 'h', 'e', 'm', 's' };
 
 	public static void readAndCheckMagic(ByteBuffer buf) {
 		byte[] magic = new byte[MAGIC.length];
@@ -17,7 +17,7 @@ public class Magic {
 			}
 		}
 	}
-	
+
 	public static void readAndCheckMagic(ByteBuf buf) {
 		byte[] magic = new byte[MAGIC.length];
 		buf.readBytes(magic);

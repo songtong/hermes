@@ -355,6 +355,39 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 	}
 
 	@Test
+	public void testSendWithBrokerNotAccept() throws Exception {
+		brokerActionsWhenReceivedSendMessageCmd(//
+		MessageSendAnswer.NotAccept);
+
+		List<Pair<String, String>> appProperties = Arrays.asList(new Pair<String, String>("a", "A"));
+		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
+
+		try {
+			future.get(lookup(ProducerConfig.class).getDefaultBrokerSenderSendTimeoutMillis() + 1000L,
+			      TimeUnit.MILLISECONDS);
+			Assert.fail();
+		} catch (TimeoutException e) {
+			// do nothing
+		} catch (Exception e) {
+			Assert.fail();
+		}
+		Assert.assertFalse(future.isDone());
+
+		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
+		Assert.assertTrue(brokerReceivedCmds.size() > 1);
+
+		SendMessageCommand sendCmd = null;
+		for (Command cmd : brokerReceivedCmds) {
+			Assert.assertTrue(cmd instanceof SendMessageCommand);
+			if (sendCmd == null) {
+				sendCmd = (SendMessageCommand) cmd;
+			} else {
+				Assert.assertTrue(cmd == sendCmd);
+			}
+		}
+	}
+
+	@Test
 	public void testSendWithBrokerAcceptButNoResponse() throws Exception {
 		brokerActionsWhenReceivedSendMessageCmd(//
 		      MessageSendAnswer.Accept,//

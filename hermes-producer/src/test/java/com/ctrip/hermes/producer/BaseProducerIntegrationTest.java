@@ -239,7 +239,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 
 		}, //
 
-		Accept() {
+		NotAccept() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
 				SendMessageCommand sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommand.class);
@@ -247,11 +247,28 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 				      CommandType.ACK_MESSAGE_SEND.toString());
 
 				SendMessageAckCommand acceptCmd = new SendMessageAckCommand();
-				acceptCmd.setSuccess(true);
+				acceptCmd.setSuccess(false);
 				acceptCmd.correlate(sendMessageCmd);
 
 				commandProcessor.process(new CommandProcessorContext(acceptCmd, null));
 
+				return null;
+			}
+		}, //
+		
+		Accept() {
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				SendMessageCommand sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommand.class);
+				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
+						CommandType.ACK_MESSAGE_SEND.toString());
+				
+				SendMessageAckCommand acceptCmd = new SendMessageAckCommand();
+				acceptCmd.setSuccess(true);
+				acceptCmd.correlate(sendMessageCmd);
+				
+				commandProcessor.process(new CommandProcessorContext(acceptCmd, null));
+				
 				return null;
 			}
 		}, //

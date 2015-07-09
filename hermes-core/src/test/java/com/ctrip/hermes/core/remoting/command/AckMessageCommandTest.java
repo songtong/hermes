@@ -1,4 +1,4 @@
-package com.ctrip.hermes.remoting.command;
+package com.ctrip.hermes.core.remoting.command;
 
 
 /**

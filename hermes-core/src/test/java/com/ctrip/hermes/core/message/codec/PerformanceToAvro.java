@@ -1,4 +1,4 @@
-package com.ctrip.hermes.message.codec;
+package com.ctrip.hermes.core.message.codec;
 
 import org.unidal.lookup.ComponentTestCase;
 

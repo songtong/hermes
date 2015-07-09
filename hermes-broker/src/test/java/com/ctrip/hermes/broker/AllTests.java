@@ -4,9 +4,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-@RunWith(Suite.class)
-@SuiteClasses({
+import com.ctrip.hermes.broker.ack.internal.DefaultAckHolderTest;
 
+@RunWith(Suite.class)
+@SuiteClasses({//
+DefaultAckHolderTest.class,//
 // add test classes here
 
 })

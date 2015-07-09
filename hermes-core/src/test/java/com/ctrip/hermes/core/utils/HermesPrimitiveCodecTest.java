@@ -1,4 +1,4 @@
-package com.ctrip.hermes.utils;
+package com.ctrip.hermes.core.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
