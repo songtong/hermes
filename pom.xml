@@ -68,11 +68,6 @@
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>com.ctrip.hermes</groupId>
-            <artifactId>hermes-test</artifactId>
-            <version>${project.version}</version>
-         </dependency>
-         <dependency>
             <groupId>com.dianping.cat</groupId>
             <artifactId>cat-client</artifactId>
             <version>1.3.6</version>
