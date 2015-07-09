@@ -17,9 +17,9 @@ import io.netty.handler.timeout.IdleStateHandler;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,6 +33,8 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
+import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
@@ -56,7 +58,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 	private EventLoopGroup m_eventLoopGroup;
 
-	private ScheduledExecutorService m_writerThreadPool;
+	private ExecutorService m_writerThreadPool;
 
 	@Inject
 	private CoreConfig m_config;
@@ -145,7 +147,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 				if (!endpointChannel.isClosed()) {
 					if (!future.isSuccess()) {
 						endpointChannel.setChannelFuture(null);
-						
+
 						if (m_metaService.containsEndpoint(endpoint)) {
 							final EventLoop loop = future.channel().eventLoop();
 							loop.schedule(new Runnable() {
@@ -171,8 +173,8 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_writerThreadPool = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
-		      "EndpointChannelWriter", false));
+		m_writerThreadPool = Executors
+		      .newSingleThreadExecutor(HermesThreadFactory.create("EndpointChannelWriter", false));
 
 		m_eventLoopGroup = new NioEventLoopGroup(1, HermesThreadFactory.create("NettyWriterEventLoop", false));
 
@@ -208,22 +210,34 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 	}
 
 	private void scheduleWriterTask() {
-		m_writerThreadPool.scheduleWithFixedDelay(new Runnable() {
+		m_writerThreadPool.submit(new Runnable() {
 
 			@Override
 			public void run() {
-				try {
-					for (EndpointChannel endpointChannel : m_channels.values()) {
-						if (!endpointChannel.isClosed()) {
-							endpointChannel.flush();
-						}
-					}
+				int checkBase = m_config.getEndpointChannelWriterCheckIntervalBase();
+				int checkMax = m_config.getEndpointChannelWriterCheckIntervalMax();
 
-				} catch (Exception e) {
-					log.warn("Exception occurred in EndpointChannelWriter loop", e);
+				SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkBase, checkMax);
+
+				while (!Thread.currentThread().isInterrupted()) {
+					boolean flushed = false;
+					try {
+						for (EndpointChannel endpointChannel : m_channels.values()) {
+							if (!endpointChannel.isClosed()) {
+								flushed = flushed || endpointChannel.flush();
+							}
+						}
+					} catch (Exception e) {
+						log.warn("Exception occurred in EndpointChannelWriter loop", e);
+					}
+					if (flushed) {
+						schedulePolicy.succeess();
+					} else {
+						schedulePolicy.fail(true);
+					}
 				}
 			}
-		}, 0, m_config.getEndpointChannelWriterCheckInterval(), TimeUnit.MILLISECONDS);
+		});
 	}
 
 	class EndpointChannel {
@@ -265,7 +279,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 			}
 		}
 
-		public void flush() {
+		public boolean flush() {
 			if (!isClosed()) {
 				ChannelFuture channelFuture = m_channelFuture.get();
 
@@ -276,11 +290,13 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 							if (m_flushingOp.compareAndSet(null, m_opQueue.peek())) {
 								m_opQueue.poll();
 								doFlush(channel, m_flushingOp.get());
+								return true;
 							}
 						}
 					}
 				}
 			}
+			return false;
 		}
 
 		private void doFlush(Channel channel, final WriteOp op) {

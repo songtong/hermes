@@ -30,7 +30,6 @@ import com.ctrip.hermes.broker.transport.NettyServer;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.dianping.cat.Cat;
 import com.google.common.base.Charsets;
 
 /**

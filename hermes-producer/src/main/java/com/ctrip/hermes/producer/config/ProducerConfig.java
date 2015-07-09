@@ -13,20 +13,24 @@ public class ProducerConfig {
 		return "10";
 	}
 
-	public String getDefaultBrokerSenderNetworkIoCheckIntervalMillis() {
+	public String getDefaultBrokerSenderNetworkIoCheckIntervalBaseMillis() {
+		return "5";
+	}
+	
+	public String getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis() {
 		return "50";
 	}
 
 	public String getDefaultBrokerSenderBatchSize() {
-		return "300";
+		return "10000";
 	}
 
 	public long getDefaultBrokerSenderSendTimeoutMillis() {
-		return 200;
+		return 2000;
 	}
 
 	public String getDefaultBrokerSenderTaskQueueSize() {
-		return "10000";
+		return "500000";
 	}
 
 	public String getDefaultProducerCallbackThreadCount() {
