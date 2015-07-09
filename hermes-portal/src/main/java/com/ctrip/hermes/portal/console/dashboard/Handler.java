@@ -10,11 +10,15 @@ import org.unidal.web.mvc.annotation.InboundActionMeta;
 import org.unidal.web.mvc.annotation.OutboundActionMeta;
 import org.unidal.web.mvc.annotation.PayloadMeta;
 
+import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.console.ConsolePage;
 
 public class Handler implements PageHandler<Context> {
 	@Inject
 	private JspViewer m_jspViewer;
+
+	@Inject
+	private PortalConfig m_config;
 
 	@Override
 	@PayloadMeta(Payload.class)
@@ -31,6 +35,7 @@ public class Handler implements PageHandler<Context> {
 		Model model = new Model(ctx);
 		model.setAction(action);
 		model.setPage(ConsolePage.DASHBOARD);
+		model.setKibanaUrl(m_config.getKibanaBaseUrl());
 
 		switch (action) {
 		case TOPIC_DETAIL:

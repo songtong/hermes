@@ -8,6 +8,8 @@ public class Model extends ViewModel<ConsolePage, Action, Context> {
 
 	private String consumer;
 
+	private String kibanaUrl;
+
 	public Model(Context ctx) {
 		super(ctx);
 	}
@@ -31,5 +33,13 @@ public class Model extends ViewModel<ConsolePage, Action, Context> {
 
 	public void setConsumer(String consumer) {
 		this.consumer = consumer;
+	}
+
+	public String getKibanaUrl() {
+		return kibanaUrl;
+	}
+
+	public void setKibanaUrl(String kibanaUrl) {
+		this.kibanaUrl = kibanaUrl;
 	}
 }

@@ -11,7 +11,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.BeforeClass;
@@ -169,42 +168,36 @@ public class OneBoxTest extends ComponentTestCase {
 		}
 
 		System.out.println("Starting producer...");
-		// send(topic, "ACK-");
+		send(topic, "ACK-");
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-		Random rand = new Random();
 		while (true) {
-			// String line = in.readLine();
+			String line = in.readLine();
 			String prefix = "ACK-";
-			for (int i = 0; i < rand.nextInt(100); i++) {
+			if ("q".equals(line)) {
+				break;
+			} else if (line.startsWith("n")) {
+				int nackCnt = 1;
+				try {
+					nackCnt = Integer.parseInt(line.substring(1).trim());
+				} catch (Exception e) {
+				}
+
+				prefix = "NACK-" + nackCnt + "-";
+
 				send(topic, prefix);
-				TimeUnit.MILLISECONDS.sleep(20);
+			} else if (line.startsWith("c")) {
+				String[] parts = line.split(" ");
+				if (parts.length == 3) {
+					String groupId = parts[1];
+					String id = parts[2];
+					Map<String, Integer> nacks = findNacks(groupId);
+					System.out.println(String.format("Starting consumer with groupId %s and id %s", groupId, id));
+					engine.start(Arrays.asList((new Subscriber(topic, groupId, new MyConsumer(groupId, nacks, id)))));
+				}
+			} else {
+				send(topic, prefix);
 			}
-			TimeUnit.SECONDS.sleep(5);
-			// if ("q".equals(line)) {
-			// break;
-			// } else if (line.startsWith("n")) {
-			// int nackCnt = 1;
-			// try {
-			// nackCnt = Integer.parseInt(line.substring(1).trim());
-			// } catch (Exception e) {
-			// }
-			//
-			// prefix = "NACK-" + nackCnt + "-";
-			//
-			// send(topic, prefix);
-			// } else if (line.startsWith("c")) {
-			// String[] parts = line.split(" ");
-			// if (parts.length == 3) {
-			// String groupId = parts[1];
-			// String id = parts[2];
-			// Map<String, Integer> nacks = findNacks(groupId);
-			// System.out.println(String.format("Starting consumer with groupId %s and id %s", groupId, id));
-			// engine.start(Arrays.asList((new Subscriber(topic, groupId, new MyConsumer(groupId, nacks, id)))));
-			// }
-			// } else {
-			// send(topic, prefix);
-			// }
 
 		}
 	}

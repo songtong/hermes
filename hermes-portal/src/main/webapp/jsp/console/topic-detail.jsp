@@ -79,68 +79,6 @@
 				</div>
 			</form>
 			<h4>
-				<span class="label label-primary">Informations</span>
-			</h4>
-			<hr>
-			<div class="container row">
-				<div class="col-md-6">
-					<div class="panel panel-success">
-						<div class="panel-heading">
-							<span class="label label-danger">生产</span>
-							<button type="button" data-toggle="modal" data-target="#top-producer-modal" class="btn btn-xs btn-success" style="text-align: center;"><span class="glyphicon glyphicon-th-lists"></span>
-								详情</button>
-						</div>
-						<div class="panel-body">
-							<iframe style="border: 0"
-								src="${model.kibanaUrl}/#/visualize/edit/Message-Received?embed&_g=(refreshInterval:(display:'10%20seconds',pause:!f,section:1,value:5000),time:(from:now-1h,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Received')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count),(id:'3',params:(customInterval:'2h',extended_bounds:(),field:'@timestamp',interval:auto,min_doc_count:1),schema:segment,type:date_histogram),(id:'2',params:(filters:!((input:(query:(query_string:(analyze_wildcard:!t,query:'datas.topic:${model.topicName}')))))),schema:group,type:filters)),listeners:(),params:(addLegend:!t,addTimeMarker:!f,addTooltip:!t,defaultYExtents:!f,mode:stacked,scale:linear,setYExtents:!f,shareYAxis:!t,times:!(),yAxis:()),type:histogram))"
-								height="200" width="500"></iframe>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="panel panel-success">
-						<div class="panel-heading">
-							<span class="label label-danger">生产速率(分钟)</span>
-						</div>
-						<div class="panel-body">
-							<iframe style="border: 0"
-								src="${model.kibanaUrl}/#/visualize/edit/Produced-slash-min?embed&_g=(refreshInterval:(display:'10%20seconds',pause:!f,section:1,value:10000),time:(from:now-1m,mode:relative,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'datas.topic:${model.topicName}%20AND%20eventType:Message.Received')),vis:(aggs:!((id:'1',params:(json:''),schema:metric,type:count)),listeners:(),params:(fontSize:'50'),type:metric))"
-								height="200" width="500"></iframe>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="container row">
-				<c:forEach var="consumer" items="${model.consumers}">
-					<div class="col-md-6">
-						<div class="panel panel-success">
-							<div class="panel-heading">
-								<span class="label label-danger">消费：${consumer}</span>
-							</div>
-							<div class="panel-body">
-
-								<iframe style="border: 0"
-									src="${model.kibanaUrl}/#/visualize/edit/Message-Acked?embed&_g=(refreshInterval:(display:'10%20seconds',pause:!f,section:1,value:10000),time:(from:now-1h,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Acked')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count),(id:'2',params:(customInterval:'2h',extended_bounds:(),field:'@timestamp',interval:auto,min_doc_count:1),schema:segment,type:date_histogram),(id:'3',params:(filters:!((input:(query:(query_string:(analyze_wildcard:!t,query:'datas.groupId:${consumer}')))))),schema:group,type:filters)),listeners:(),params:(addLegend:!t,addTimeMarker:!f,addTooltip:!t,defaultYExtents:!f,mode:stacked,scale:linear,setYExtents:!f,shareYAxis:!t,times:!(),yAxis:()),type:histogram))"
-									height="200" width="500"></iframe>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-6">
-						<div class="panel panel-success">
-							<div class="panel-heading">
-								<span class="label label-danger">${consumer} 速率(分钟)</span>
-							</div>
-							<div class="panel-body">
-								<iframe style="border: 0"
-									src="${model.kibanaUrl}/#/visualize/edit/Consumed-slash-min?embed&_g=(refreshInterval:(display:'10%20seconds',pause:!f,section:1,value:10000),time:(from:now-1m,mode:relative,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'datas.topic:${model.topicName}%20AND%20datas.groupId:${consumer}%20AND%20eventType:Message.Acked')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count)),listeners:(),params:(fontSize:60),type:metric))"
-									height="200" width="500"></iframe>
-							</div>
-						</div>
-					</div>
-				</c:forEach>
-			</div>
-
-			<h4>
 				<span class="label label-primary">Partitions</span>
 			</h4>
 			<hr>
@@ -176,21 +114,6 @@
 				<span class="label label-primary">Consumers</span>
 			</h4>
 			<hr>
-		</div>
-		<div class="modal fade" id="top-producer-modal" tabindex="-1" role="dialog" aria-labelledby="top-producer-label" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h4 class="modal-title" id="top-producer-label">Top 100 Producers</h4>
-					</div>
-					<div class="modal-body">
-						<iframe style="border: 0"
-							src="${model.kibanaUrl}/#/visualize/edit/Top-Producer?embed&_g=(filters:!(),refreshInterval:(display:'10%20seconds',pause:!f,section:1,value:10000),time:(from:now-1m,mode:relative,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Received%20AND%20datas.topic:${model.topicName}')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count),(id:'2',params:(field:datas.producerIp.raw,order:desc,orderBy:'1',size:100),schema:bucket,type:terms)),listeners:(),params:(perPage:10,showMeticsAtAllLevels:!f,showPartialRows:!f),type:table))"
-							width="100%" height="400"></iframe>
-					</div>
-				</div>
-			</div>
 		</div>
 	</div>
 
