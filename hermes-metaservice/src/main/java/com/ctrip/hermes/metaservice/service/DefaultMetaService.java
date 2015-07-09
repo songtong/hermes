@@ -30,6 +30,10 @@ public class DefaultMetaService implements MetaService {
 	@Override
 	public Meta findLatestMeta() throws DalException {
 		com.ctrip.hermes.metaservice.model.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+		if (dalMeta == null) {
+			dalMeta = new com.ctrip.hermes.metaservice.model.Meta();
+			dalMeta.setValue(JSON.toJSONString(new Meta()));
+		}
 		return JSON.parseObject(dalMeta.getValue(), Meta.class);
 	}
 

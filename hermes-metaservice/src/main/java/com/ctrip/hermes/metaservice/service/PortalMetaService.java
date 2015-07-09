@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ctrip.hermes.meta.entity.Codec;
+import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -26,6 +27,8 @@ public interface PortalMetaService extends MetaService {
 
 	public Datasource findDatasource(String storageType, String datasourceId);
 
+	public List<Datasource> findDatasources(String storageType);
+
 	public Meta getMeta();
 
 	public List<Partition> findPartitionsByTopic(String topicName);
@@ -45,4 +48,8 @@ public interface PortalMetaService extends MetaService {
 	public void deleteDatasource(String datasourceId, String dsType) throws Exception;
 
 	public Map<String, Topic> getTopics();
+
+	public Partition findPartition(String topic, int partitionId);
+
+	public List<ConsumerGroup> findConsumersByTopic(String topicName);
 }

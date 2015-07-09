@@ -3,11 +3,11 @@ package com.ctrip.hermes.core.bo;
 import java.util.Date;
 import java.util.List;
 
+import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.meta.entity.Codec;
 
 public class TopicView {
 
@@ -48,6 +48,10 @@ public class TopicView {
 	private Integer ackTimeoutSeconds;
 
 	private String consumerRetryPolicy;
+
+	private Long averageDelaySeconds;
+
+	private Date latestProduced;
 
 	public TopicView() {
 
@@ -253,5 +257,21 @@ public class TopicView {
 
 	public void setConsumerRetryPolicy(String consumerRetryPolicy) {
 		this.consumerRetryPolicy = consumerRetryPolicy;
+	}
+
+	public Long getAverageDelaySeconds() {
+		return averageDelaySeconds;
+	}
+
+	public void setAverageDelaySeconds(Long averageDelaySeconds) {
+		this.averageDelaySeconds = averageDelaySeconds;
+	}
+
+	public Date getLatestProduced() {
+		return latestProduced;
+	}
+
+	public void setLatestProduced(Date latestProduced) {
+		this.latestProduced = latestProduced;
 	}
 }

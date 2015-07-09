@@ -4,7 +4,7 @@ import org.unidal.web.mvc.AbstractModule;
 import org.unidal.web.mvc.annotation.ModuleMeta;
 import org.unidal.web.mvc.annotation.ModulePagesMeta;
 
-@ModuleMeta(name = "console", defaultInboundAction = "topic", defaultTransition = "default", defaultErrorAction = "default")
+@ModuleMeta(name = "console", defaultInboundAction = "dashboard", defaultTransition = "default", defaultErrorAction = "default")
 @ModulePagesMeta({
 
 com.ctrip.hermes.portal.console.topic.Handler.class,

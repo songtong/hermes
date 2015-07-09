@@ -22,11 +22,48 @@
 }
 
 .panel-info>.storage-heading {
-    /*color: #31708f;*/
-    background-color: #d9edf7;
-    border-color: #bce8f1;
+	/*color: #31708f;*/
+	background-color: #d9edf7;
+	border-color: #bce8f1;
 }
 
-.smalltable>tbody>tr>td, .smalltable>tbody>tr>th, .smalltable>tfoot>tr>td, .smalltable>tfoot>tr>th, .smalltable>thead>tr>td, .smalltable>thead>tr>th {
-    padding: 0px;
+.smalltable>tbody>tr>td, .smalltable>tbody>tr>th, .smalltable>tfoot>tr>td,
+	.smalltable>tfoot>tr>th, .smalltable>thead>tr>td, .smalltable>thead>tr>th
+	{
+	padding: 0px;
+}
+
+.status-ok {
+	border-radius: 50%;
+	display: inline-block;
+	border-radius: 50%;
+	background: green;
+	width: 10px;
+	height: 10px;
+}
+
+.status-warn {
+	border-radius: 50%;
+	display: inline-block;
+	border-radius: 50%;
+	background: rgb(240, 173, 78);
+	width: 10px;
+	height: 10px;
+}
+
+.status-danger {
+	border-radius: 50%;
+	display: inline-block;
+	border-radius: 50%;
+	background: red;
+	width: 10px;
+	height: 10px;
+}
+
+body {
+	padding-top: 60px;
+}
+
+.navbar-fixed-top {
+	border: 0;
 }

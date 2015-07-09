@@ -7,7 +7,7 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.topic.Model" scope="request" />
 
 <a:layout>
-	<div ng-app="hermes-topic" ng-controller="topic-controller">
+	<div ng-app="hermes-topic" ng-controller="topic-controller" ng-init="delayLimit=300;noProduceLimit=432000000">
 		<div class="panel panel-info">
 			<div class="panel-heading">Hermes 消息主题列表</div>
 			<table class="table table-hover" st-pipe="get_topics" st-table="topic_table">
@@ -21,8 +21,9 @@
 						<th st-sort="consumerRetryPolicy">消费重试策略</th>
 						<th st-sort="ackTimeoutSeconds">ACK超时(秒)</th>
 						<th st-sort="endpointType">Endpoint</th>
+						<th st-sort="averageDelaySeconds" style="text-align: center">状态</th>
 						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;"><span
-								class="glyphicon glyphicon-plus"></span> 新增</button></th>
+									class="glyphicon glyphicon-plus"></span> 新增</button></th>
 					</tr>
 					<tr>
 						<th><label><span ng-bind="topic_rows.length"></span></label></th>
@@ -34,10 +35,11 @@
 						<th><input st-search="ackTimeoutSeconds" placeholder="ACK Timeout" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="endpointType" placeholder="Endpoint" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th></th>
+						<th></th>
 					</tr>
 				</thead>
-				<tbody ng-show="!is_loading">
-					<tr ng-repeat="row in topic_rows">
+				<tbody ng-if="!is_loading">
+					<tr ng-click="" ng-repeat="row in topic_rows">
 						<td><span ng-bind="$index + 1"> </span></td>
 						<td><a href="${model.webapp}/console/topic?op=detail&topic={{row.name}}" ng-bind="row.name" /></td>
 						<td align="center"><span ng-bind="row.codecType"></span></td>
@@ -46,12 +48,17 @@
 						<td><span ng-bind="row.consumerRetryPolicy"></td>
 						<td><span ng-bind="row.ackTimeoutSeconds"></td>
 						<td><span ng-bind="row.endpointType"></td>
+						<td align="center"><span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-ok"
+								ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.averageDelaySeconds&lt;delayLimit"></span> <span
+								tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-danger"
+								ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.averageDelaySeconds&gt;=delayLimit"></span> <span
+								tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-warn" ng-if="cur_time-row.latestProduced&gt;noProduceLimit"></span></td>
 						<td>
 							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;"><span class="glyphicon glyphicon-remove"></span> 删除</button>
 						</td>
 					</tr>
 				</tbody>
-				<tbody ng-show="is_loading">
+				<tbody ng-if="is_loading">
 					<tr>
 						<td colspan="9" class="text-center">Loading ...</td>
 					</tr>
@@ -134,8 +141,8 @@
 									<td style="border: none; width: 5%;"><label style="line-height: 2.2" ng-bind="$index + 1"></label></td>
 									<td style="border: none;"><select name="rds" class="form-control" id="inputReadDatasource" ng-model="partition.readDatasource" ng-options="ds for ds in datasource_names"></select></td>
 									<td style="border: none;"><select name="wds" class="form-control" id="inputWriteDatasource" ng-model="partition.writeDatasource" ng-options="ds for ds in datasource_names"></select></td>
-									<td ng-if="new_topic.storageType=='kafka' || new_topic.endpointType=='kafka'" style="border: none;"><select name="edp" class="form-control" id="inputEndpoint" ng-model="partition.endpoint"
-										ng-options="ep for ep in endpoint_names"></select></td>
+									<td ng-if="new_topic.storageType=='kafka' || new_topic.endpointType=='kafka'" style="border: none;"><select name="edp" class="form-control" id="inputEndpoint"
+										ng-model="partition.endpoint" ng-options="ep for ep in endpoint_names"></select></td>
 								</tr>
 							</tbody>
 						</table>
@@ -151,6 +158,8 @@
 
 	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular-route.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/ui-bootstrap-tpls-0.13.0.min.js"></script>
 
 	<script type="text/javascript" src="${model.webapp}/js/topic.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/smart-table.min.js"></script>

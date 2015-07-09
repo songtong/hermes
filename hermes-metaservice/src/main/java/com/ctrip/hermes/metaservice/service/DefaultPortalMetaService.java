@@ -1,6 +1,11 @@
 package com.ctrip.hermes.metaservice.service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -18,16 +23,24 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.ObjectUtils;
-import com.ctrip.hermes.meta.entity.*;
+import com.ctrip.hermes.meta.entity.Codec;
+import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Datasource;
+import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Property;
+import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.meta.entity.Topic;
 
 @Named(type = PortalMetaService.class, value = DefaultPortalMetaService.ID)
 public class DefaultPortalMetaService extends DefaultMetaService implements PortalMetaService, Initializable {
+	public static final String ID = "portal-meta-service";
+
 	protected static final Logger logger = LoggerFactory.getLogger(DefaultPortalMetaService.class);
 
 	@Inject
 	private ClientEnvironment m_env;
-
-	public static final String ID = "default-meta-service-wrapper";
 
 	protected Meta m_meta;
 
@@ -221,5 +234,30 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				      syncMetaFromDB();
 			      }
 		      }, 1, 1, TimeUnit.MINUTES); // sync from db with interval: 1 mins
+	}
+
+	@Override
+	public Partition findPartition(String topic, int partitionId) {
+		for (Partition partition : getTopics().get(topic).getPartitions()) {
+			if (partitionId == partition.getId()) {
+				return partition;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public List<Datasource> findDatasources(String storageType) {
+		Storage storage = getStorages().get(storageType);
+		return storage == null ? new ArrayList<Datasource>() : storage.getDatasources();
+	}
+
+	@Override
+	public List<ConsumerGroup> findConsumersByTopic(String topicName) {
+		Topic topic = m_meta.findTopic(topicName);
+		if (topic != null) {
+			return topic.getConsumerGroups();
+		}
+		return new ArrayList<ConsumerGroup>();
 	}
 }
