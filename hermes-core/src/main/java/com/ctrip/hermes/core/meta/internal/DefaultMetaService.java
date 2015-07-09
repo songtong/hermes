@@ -53,9 +53,17 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	private AtomicReference<Meta> m_metaCache = new AtomicReference<>();
 
+	protected Meta getMeta() {
+		return m_metaCache.get();
+	}
+
+	protected MetaProxy getMetaProxy() {
+		return m_manager.getMetaProxy();
+	}
+
 	@Override
 	public String findEndpointTypeByTopic(String topicName) {
-		Meta meta = m_metaCache.get();
+		Meta meta = getMeta();
 		Topic topic = meta.getTopics().get(topicName);
 		if (topic == null) {
 			throw new RuntimeException(String.format("Topic %s not found", topicName));
@@ -66,7 +74,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public List<Partition> listPartitionsByTopic(String topicName) {
-		Meta meta = m_metaCache.get();
+		Meta meta = getMeta();
 		Topic topic = meta.findTopic(topicName);
 		if (topic != null) {
 			return topic.getPartitions();
@@ -77,7 +85,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public Storage findStorageByTopic(String topicName) {
-		Meta meta = m_metaCache.get();
+		Meta meta = getMeta();
 		Topic topic = meta.findTopic(topicName);
 		if (topic == null) {
 			throw new RuntimeException(String.format("Topic %s not found", topicName));
@@ -88,7 +96,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public Codec findCodecByTopic(String topicName) {
-		Meta meta = m_metaCache.get();
+		Meta meta = getMeta();
 		Topic topic = meta.findTopic(topicName);
 		if (topic != null) {
 			String codeType = topic.getCodecType();
@@ -100,7 +108,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public Partition findPartitionByTopicAndPartition(String topicName, int partitionId) {
-		Meta meta = m_metaCache.get();
+		Meta meta = getMeta();
 		Topic topic = meta.findTopic(topicName);
 		if (topic != null) {
 			return topic.findPartition(partitionId);
@@ -122,7 +130,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 			topicPattern = topicPattern.substring(0, topicPattern.length() - 1);
 		}
 
-		Meta meta = m_metaCache.get();
+		Meta meta = getMeta();
 		List<Topic> matchedTopics = new ArrayList<>();
 
 		Collection<Topic> topics = meta.getTopics().values();
@@ -144,7 +152,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public Topic findTopicByName(String topic) {
-		Meta meta = m_metaCache.get();
+		Meta meta = getMeta();
 		return meta.findTopic(topic);
 	}
 
@@ -168,7 +176,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public List<Datasource> listAllMysqlDataSources() {
-		Meta meta = m_metaCache.get();
+		Meta meta = getMeta();
 		final List<Datasource> dataSources = new ArrayList<>();
 
 		meta.accept(new BaseVisitor2() {
@@ -220,23 +228,23 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
-		return m_manager.getMetaProxy().tryAcquireConsumerLease(tpg, sessionId);
+		return getMetaProxy().tryAcquireConsumerLease(tpg, sessionId);
 	}
 
 	@Override
 	public LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId) {
-		return m_manager.getMetaProxy().tryRenewConsumerLease(tpg, lease, sessionId);
+		return getMetaProxy().tryRenewConsumerLease(tpg, lease, sessionId);
 	}
 
 	@Override
 	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId,
 	      int brokerPort) {
-		return m_manager.getMetaProxy().tryRenewBrokerLease(topic, partition, lease, sessionId, brokerPort);
+		return getMetaProxy().tryRenewBrokerLease(topic, partition, lease, sessionId, brokerPort);
 	}
 
 	@Override
 	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort) {
-		return m_manager.getMetaProxy().tryAcquireBrokerLease(topic, partition, sessionId, brokerPort);
+		return getMetaProxy().tryAcquireBrokerLease(topic, partition, sessionId, brokerPort);
 	}
 
 	@Override
@@ -260,13 +268,13 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public String findAvroSchemaRegistryUrl() {
-		Codec avroCodec = m_metaCache.get().findCodec(Codec.AVRO);
+		Codec avroCodec = getMeta().findCodec(Codec.AVRO);
 		return avroCodec.getProperties().get(m_config.getAvroSchemaRetryUrlKey()).getValue();
 	}
 
 	@Override
 	public Endpoint findEndpointByTopicAndPartition(String topic, int partition) {
-		return m_metaCache.get().findEndpoint(findTopicByName(topic).findPartition(partition).getEndpoint());
+		return getMeta().findEndpoint(findTopicByName(topic).findPartition(partition).getEndpoint());
 	}
 
 	@Override
@@ -292,17 +300,17 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public List<SubscriptionView> listSubscriptions() {
-		return m_manager.getMetaProxy().listSubscriptions();
+		return getMetaProxy().listSubscriptions();
 	}
 
 	@Override
 	public List<SchemaView> listSchemas() {
-		return m_manager.getMetaProxy().listSchemas();
+		return getMetaProxy().listSchemas();
 	}
 
 	@Override
 	public boolean containsEndpoint(Endpoint endpoint) {
-		return m_metaCache.get().getEndpoints().containsKey(endpoint.getId());
+		return getMeta().getEndpoints().containsKey(endpoint.getId());
 	}
 
 	@Override
