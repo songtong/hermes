@@ -7,10 +7,10 @@ import org.junit.Test;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.message.ProducerMessage;
-import com.ctrip.hermes.core.message.codec.CodecUtils;
+import com.ctrip.hermes.core.message.codec.MessageCodecUtils;
 import com.ctrip.hermes.core.message.codec.DefaultMessageCodec;
 
-public class CodecUtilsTest {
+public class MessageCodecUtilsTest {
 
 	@Test
 	public void getJsonPayloadByByteBuffer() {
@@ -24,7 +24,7 @@ public class CodecUtilsTest {
 		DefaultMessageCodec codec = new DefaultMessageCodec();
 		byte[] proMsgByte = codec.encode(proMsg);
 		ByteBuffer byteBuffer = ByteBuffer.wrap(proMsgByte);
-		ByteBuffer payload = CodecUtils.getPayload(byteBuffer);
+		ByteBuffer payload = MessageCodecUtils.getPayload(byteBuffer);
 		Object actual = JSON.parseObject(payload.array(), String.class);
 		Assert.assertEquals(expected, actual);
 	}
@@ -40,7 +40,7 @@ public class CodecUtilsTest {
 		proMsg.setBornTime(System.currentTimeMillis());
 		DefaultMessageCodec codec = new DefaultMessageCodec();
 		byte[] proMsgByte = codec.encode(proMsg);
-		byte[] payload = CodecUtils.getPayload(proMsgByte);
+		byte[] payload = MessageCodecUtils.getPayload(proMsgByte);
 		Object actual = JSON.parseObject(payload, String.class);
 		Assert.assertEquals(expected, actual);
 	}

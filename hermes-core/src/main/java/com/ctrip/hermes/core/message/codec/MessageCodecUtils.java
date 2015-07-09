@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 import com.ctrip.hermes.core.transport.netty.Magic;
 
-public class CodecUtils {
+public class MessageCodecUtils {
 
 	/**
 	 * 
