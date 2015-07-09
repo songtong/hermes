@@ -56,6 +56,10 @@ public class SendMessageCommand extends AbstractCommand {
 		m_partition = partition;
 	}
 
+	public ConcurrentMap<Integer, List<ProducerMessage<?>>> getMsgs() {
+		return m_msgs;
+	}
+
 	public String getTopic() {
 		return m_topic;
 	}
