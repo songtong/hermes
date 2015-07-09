@@ -1,4 +1,4 @@
-package com.ctrip.hermes.utils;
+package com.ctrip.hermes.core.utils;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

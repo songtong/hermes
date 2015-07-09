@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.deliver;
+package com.ctrip.hermes.broker.ack.internal;
 
 import static org.junit.Assert.assertEquals;
 
@@ -20,7 +20,7 @@ import com.ctrip.hermes.broker.ack.internal.ContinuousRange;
 import com.ctrip.hermes.broker.ack.internal.DefaultAckHolder;
 import com.ctrip.hermes.broker.ack.internal.EnumRange;
 
-public class DefaultAckMonitorTest {
+public class DefaultAckHolderTest {
 
 	private DefaultAckHolder<String> m;
 
