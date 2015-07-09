@@ -14,8 +14,27 @@ public class Payload implements ActionPayload<ConsolePage, Action> {
 	@FieldMeta("topic")
 	private String m_topic;
 
-	@FieldMeta("consumer")
-	private String m_consumer;
+	@FieldMeta("broker")
+	private String m_broker;
+
+	@FieldMeta("client")
+	private String m_client;
+
+	public String getBroker() {
+		return m_broker;
+	}
+
+	public void setBroker(String broker) {
+		m_broker = broker;
+	}
+
+	public String getClient() {
+		return m_client;
+	}
+
+	public void setClient(String client) {
+		m_client = client;
+	}
 
 	public String getTopic() {
 		return m_topic;
@@ -23,14 +42,6 @@ public class Payload implements ActionPayload<ConsolePage, Action> {
 
 	public void setTopic(String topic) {
 		m_topic = topic;
-	}
-
-	public String getConsumer() {
-		return m_consumer;
-	}
-
-	public void setConsumer(String consumer) {
-		m_consumer = consumer;
 	}
 
 	public void setAction(String action) {

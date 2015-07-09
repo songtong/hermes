@@ -13,6 +13,8 @@
 					生产速度</button>
 				<button type="button" data-toggle="modal" data-target="#top-consumer-modal" class="btn btn-xs btn-warning" style="text-align: center;"><span class="glyphicon glyphicon-th-list"></span>
 					消费速度</button>
+				<button type="button" data-toggle="modal" data-target="#top-process-modal" class="btn btn-xs btn-primary" style="text-align: center;"><span class="glyphicon glyphicon-th-list"></span>
+					消费时间</button>
 			</div>
 			<div class="panel-body">
 				<iframe style="border: 0" ng-src="{{get_produced_kibana('${model.kibanaUrl}')}}" height="200" width="100%"></iframe>
@@ -51,8 +53,8 @@
 		</div>
 	</div>
 </div>
-<div class="row">
-	<div class="col-md-6" ng-repeat="delay in topic_delays">
+<div class="row" ng-repeat="delay in topic_delays">
+	<div class="col-md-6">
 		<div class="panel panel-success">
 			<div class="panel-heading">
 				<span class="label label-danger">
@@ -62,6 +64,16 @@
 			</div>
 			<div class="panel-body">
 				<iframe style="border: 0" ng-src="{{get_consumed_kibana('${model.kibanaUrl}', delay.consumer)}}" height="200" width="100%"></iframe>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<span class="label label-danger"> 消费时间 </span>
+			</div>
+			<div class="panel-body">
+				<iframe style="border: 0" ng-src="{{get_consumed_process_kibana('${model.kibanaUrl}', delay.consumer)}}" height="200" width="100%"></iframe>
 			</div>
 		</div>
 	</div>
@@ -127,6 +139,53 @@
 							</div>
 							<div class="panel-body" style="height: 300px">
 								<iframe ng-src="{{get_bottom_consumer_kibana('${model.kibanaUrl}')}}" style="border: 0" width="100%" height="100%"></iframe>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="top-process-modal" tabindex="-1" role="dialog" aria-labelledby="top-process-label" aria-hidden="true">
+	<div class="modal-dialog" style="width: 800px">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="top-process-label">消费时间</h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-sm-12">
+						<div class="panel panel-success">
+							<div class="panel-heading">
+								<span class="label label-danger">消费最慢排行</span>
+							</div>
+							<div class="panel-body" style="height: 300px">
+								<iframe ng-src="{{get_process_kibana('${model.kibanaUrl}')}}" style="border: 0" width="100%" height="100%"></iframe>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-6">
+						<div class="panel panel-success">
+							<div class="panel-heading">
+								<span class="label label-danger">最大投递ID</span>
+							</div>
+							<div class="panel-body" style="height: 100px">
+								<iframe ng-src="{{get_max_did_kibana('${model.kibanaUrl}')}}" style="border: 0" width="100%" height="100%"></iframe>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-6">
+						<div class="panel panel-success">
+							<div class="panel-heading">
+								<span class="label label-danger">最大ACK ID</span>
+							</div>
+							<div class="panel-body" style="height: 100px">
+								<iframe ng-src="{{get_max_aid_kibana('${model.kibanaUrl}')}}" style="border: 0" width="100%" height="100%"></iframe>
 							</div>
 						</div>
 					</div>

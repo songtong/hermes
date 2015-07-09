@@ -18,8 +18,10 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.meta.internal.MetaManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
@@ -40,6 +42,11 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 
 	@Inject
 	private ElasticClient m_elasticClient;
+
+	@Inject
+	private MetaManager m_metaManager;
+
+	private List<String> m_latestBroker = new ArrayList<String>();
 
 	// Map<Pair<Topic, Group-ID>, Map<Paritition-ID, Pair<Latest-prouced, Latest-consumed>>>
 	private Map<Pair<String, Integer>, Map<Integer, Pair<Date, Date>>> m_delays = new HashMap<>();
@@ -83,6 +90,21 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	@Override
 	public Map<String, List<String>> getProducerIP2Topics() {
 		return m_producer2topics;
+	}
+
+	@Override
+	public List<String> getLatestBrokers() {
+		return m_latestBroker;
+	}
+
+	private void updateLatestBroker() {
+		List<String> list = new ArrayList<String>();
+		for (Entry<String, Endpoint> entry : m_metaManager.loadMeta().getEndpoints().entrySet()) {
+			if (Endpoint.BROKER.equals(entry.getValue().getType())) {
+				list.add(entry.getValue().getHost());
+			}
+		}
+		m_latestBroker = list;
 	}
 
 	@Override
@@ -209,15 +231,19 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		// updateDelayDetails();
-		// updateLatestProduced();
+		updateLatestBroker();
 
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_MYSQL_UPDATE_TASK", true))
 		      .scheduleWithFixedDelay(new Runnable() {
 			      @Override
 			      public void run() {
-				      updateDelayDetails();
-				      updateLatestProduced();
+				      try {
+					      updateDelayDetails();
+					      updateLatestProduced();
+					      updateLatestBroker();
+				      } catch (Throwable e) {
+					      log.error("Update mysql monitor information failed.", e);
+				      }
 			      }
 		      }, 0, 1, TimeUnit.MINUTES);
 
@@ -225,8 +251,12 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		      .scheduleWithFixedDelay(new Runnable() {
 			      @Override
 			      public void run() {
-				      updateProducerTopicRelationship();
-				      updateConsumerTopicRelationship();
+				      try {
+					      updateProducerTopicRelationship();
+					      updateConsumerTopicRelationship();
+				      } catch (Throwable e) {
+					      log.error("Update elastic monitor information failed.", e);
+				      }
 			      }
 		      }, 0, 30, TimeUnit.MINUTES);
 	}

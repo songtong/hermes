@@ -2,7 +2,9 @@ package com.ctrip.hermes.portal.dal;
 
 import java.util.Date;
 
+import org.mortbay.log.Log;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
@@ -31,13 +33,19 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 	public Date getLatestProduced(String topic, int partition) throws DalException {
 		Date latestProduced = new Date(0);
 
-		MessagePriority msg = null;
+		try {
+			MessagePriority msg = null;
 
-		msg = m_msgDao.top(topic, partition, PortalConstants.PRIORITY_TRUE, MessagePriorityEntity.READSET_FULL);
-		latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
+			msg = m_msgDao.top(topic, partition, PortalConstants.PRIORITY_TRUE, MessagePriorityEntity.READSET_FULL);
+			latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
 
-		msg = m_msgDao.top(topic, partition, PortalConstants.PRIORITY_FALSE, MessagePriorityEntity.READSET_FULL);
-		latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
+			msg = m_msgDao.top(topic, partition, PortalConstants.PRIORITY_FALSE, MessagePriorityEntity.READSET_FULL);
+			latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
+		} catch (DalNotFoundException e) {
+			if (Log.isDebugEnabled()) {
+				Log.debug("Table has no records: {} {}", topic, partition);
+			}
+		}
 
 		return latestProduced;
 	}
@@ -46,13 +54,21 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 	public Date getLatestConsumed(String topic, int partition, int group) throws DalException {
 		Date latestConsumed = new Date(0);
 
-		OffsetMessage off = null;
+		try {
+			OffsetMessage off = null;
 
-		off = m_offsetDao.find(topic, partition, PortalConstants.PRIORITY_TRUE, group, OffsetMessageEntity.READSET_FULL);
-		latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
+			off = m_offsetDao.find(topic, partition, PortalConstants.PRIORITY_TRUE, group,
+			      OffsetMessageEntity.READSET_FULL);
+			latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
 
-		off = m_offsetDao.find(topic, partition, PortalConstants.PRIORITY_FALSE, group, OffsetMessageEntity.READSET_FULL);
-		latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
+			off = m_offsetDao.find(topic, partition, PortalConstants.PRIORITY_FALSE, group,
+			      OffsetMessageEntity.READSET_FULL);
+			latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
+		} catch (DalNotFoundException e) {
+			if (Log.isDebugEnabled()) {
+				Log.debug("Table has no records: {} {}", topic, partition);
+			}
+		}
 
 		return latestConsumed;
 	}

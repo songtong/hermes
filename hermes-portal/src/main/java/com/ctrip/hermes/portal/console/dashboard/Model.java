@@ -10,6 +10,26 @@ public class Model extends ViewModel<ConsolePage, Action, Context> {
 
 	private String kibanaUrl;
 
+	private String brokerIP;
+
+	private String clientIP;
+
+	public String getBrokerIP() {
+		return brokerIP;
+	}
+
+	public void setBrokerIP(String brokerIP) {
+		this.brokerIP = brokerIP;
+	}
+
+	public String getClientIP() {
+		return clientIP;
+	}
+
+	public void setClientIP(String clientIP) {
+		this.clientIP = clientIP;
+	}
+
 	public Model(Context ctx) {
 		super(ctx);
 	}

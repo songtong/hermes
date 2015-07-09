@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -62,6 +60,12 @@ public class MonitorResource {
 		});
 
 		return Response.status(Status.OK).entity(list).build();
+	}
+
+	@GET
+	@Path("brief/brokers")
+	public Response getBrokerBriefs() {
+		return Response.status(Status.OK).entity(m_monitorService.getLatestBrokers()).build();
 	}
 
 	@GET

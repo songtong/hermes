@@ -41,6 +41,12 @@ public class Handler implements PageHandler<Context> {
 		case TOPIC_DETAIL:
 			model.setTopic(payload.getTopic());
 			break;
+		case BROKER_DETAIL:
+			model.setBrokerIP(payload.getBroker());
+			break;
+		case CLIENT_DETAIL:
+			model.setClientIP(payload.getClient());
+			break;
 		default:
 			break;
 		}

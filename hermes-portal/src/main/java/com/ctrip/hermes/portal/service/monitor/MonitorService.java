@@ -21,4 +21,6 @@ public interface MonitorService {
 	public Map<String, List<String>> getConsumerIP2Topics();
 
 	public Map<String, List<String>> getProducerIP2Topics();
+
+	public List<String> getLatestBrokers();
 }
