@@ -45,8 +45,12 @@ public class CoreConfig {
 		return 1000;
 	}
 
-	public long getEndpointChannelWriterCheckInterval() {
-		return 20;
+	public int getEndpointChannelWriterCheckIntervalBase() {
+		return 5;
+	}
+	
+	public int getEndpointChannelWriterCheckIntervalMax() {
+		return 50;
 	}
 
 	public long getEndpointChannelWriteRetryDelay() {

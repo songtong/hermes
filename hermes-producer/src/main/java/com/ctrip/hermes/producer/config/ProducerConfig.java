@@ -13,7 +13,11 @@ public class ProducerConfig {
 		return "10";
 	}
 
-	public String getDefaultBrokerSenderNetworkIoCheckIntervalMillis() {
+	public String getDefaultBrokerSenderNetworkIoCheckIntervalBaseMillis() {
+		return "5";
+	}
+	
+	public String getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis() {
 		return "50";
 	}
 

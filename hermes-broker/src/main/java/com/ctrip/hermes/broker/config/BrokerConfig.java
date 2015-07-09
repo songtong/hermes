@@ -48,8 +48,12 @@ public class BrokerConfig {
 		return 10000;
 	}
 
-	public long getDumperNoMessageWaitIntervalMillis() {
-		return 50L;
+	public int getDumperNoMessageWaitIntervalBaseMillis() {
+		return 5;
+	}
+	
+	public int getDumperNoMessageWaitIntervalMaxMillis() {
+		return 50;
 	}
 
 	public long getAckManagerCheckIntervalMillis() {

@@ -28,6 +28,8 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
+import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -63,7 +65,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 	@Override
 	public Future<SendResult> doSend(ProducerMessage<?> msg) {
-
 		if (m_started.compareAndSet(false, true)) {
 			startEndpointSender();
 		}
@@ -78,11 +79,8 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 	}
 
 	private void startEndpointSender() {
-		long checkInterval = Long.valueOf(m_clientEnv.getGlobalConfig().getProperty("producer.networkio.interval",
-		      m_config.getDefaultBrokerSenderNetworkIoCheckIntervalMillis()));
-
-		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("ProducerEndpointSender", false))
-		      .scheduleWithFixedDelay(new EndpointSender(), 0, checkInterval, TimeUnit.MILLISECONDS);
+		Executors.newSingleThreadExecutor(HermesThreadFactory.create("ProducerEndpointSender", false)).submit(
+		      new EndpointSender());
 	}
 
 	private class EndpointSender implements Runnable {
@@ -101,12 +99,32 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		@Override
 		public void run() {
+			int checkIntervalBase = Integer.valueOf(m_clientEnv.getGlobalConfig().getProperty(
+			      "producer.networkio.interval.base", m_config.getDefaultBrokerSenderNetworkIoCheckIntervalBaseMillis()));
+			int checkIntervalMax = Integer.valueOf(m_clientEnv.getGlobalConfig().getProperty(
+			      "producer.networkio.interval.max", m_config.getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis()));
+
+			SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkIntervalBase, checkIntervalMax);
+			while (!Thread.currentThread().isInterrupted()) {
+				boolean hasTask = scanTaskQueues();
+				if (hasTask) {
+					schedulePolicy.succeess();
+				} else {
+					schedulePolicy.fail(true);
+				}
+			}
+
+		}
+
+		private boolean scanTaskQueues() {
+			boolean hasTask = false;
 			try {
 				for (Map.Entry<Pair<String, Integer>, TaskQueue> entry : m_taskQueues.entrySet()) {
 					try {
 						TaskQueue queue = entry.getValue();
 
 						if (queue.hasTask()) {
+							hasTask = true;
 							scheduleTaskExecution(entry.getKey(), queue);
 						}
 					} catch (Exception e) {
@@ -123,6 +141,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				}
 			}
 
+			return hasTask;
 		}
 
 		private void scheduleTaskExecution(Pair<String, Integer> tp, TaskQueue queue) {
@@ -157,10 +176,12 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			try {
 				int batchSize = Integer.valueOf(m_clientEnv.getGlobalConfig().getProperty("producer.sender.batchsize",
 				      m_config.getDefaultBrokerSenderBatchSize()));
-				SendMessageCommand cmd = m_taskQueue.peek(batchSize);
+				SendMessageCommand cmd = m_taskQueue.pop(batchSize);
 
-				if (cmd != null && sendMessagesToBroker(cmd)) {
-					m_taskQueue.pop();
+				if (cmd != null) {
+					if (!sendMessagesToBroker(cmd)) {
+						m_taskQueue.push(cmd);
+					}
 				}
 			} catch (Exception e) {
 				// ignore
@@ -222,15 +243,15 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			m_queue = new LinkedBlockingQueue<>(queueSize);
 		}
 
-		public void pop() {
-			m_cmd.set(null);
+		public void push(SendMessageCommand cmd) {
+			m_cmd.set(cmd);
 		}
 
-		public SendMessageCommand peek(int size) {
+		public SendMessageCommand pop(int size) {
 			if (m_cmd.get() == null) {
-				m_cmd.set(createSendMessageCommand(size));
+				return createSendMessageCommand(size);
 			}
-			return m_cmd.get();
+			return m_cmd.getAndSet(null);
 		}
 
 		private SendMessageCommand createSendMessageCommand(int size) {

@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -18,6 +17,8 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizLogger;
+import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
+import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -158,14 +159,17 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 		public void run() {
 			List<FutureBatchPriorityWrapper> todos = new ArrayList<>(m_config.getDumperBatchSize());
 
+			int checkIntervalBase = m_config.getDumperNoMessageWaitIntervalBaseMillis();
+			int checkIntervalMax = m_config.getDumperNoMessageWaitIntervalMaxMillis();
+
+			SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkIntervalBase, checkIntervalMax);
 			while (!m_stopped.get() && !Thread.currentThread().isInterrupted() && !m_lease.isExpired()) {
 				try {
-					if (!flushMsgs(todos)) {
-						TimeUnit.MILLISECONDS.sleep(m_config.getDumperNoMessageWaitIntervalMillis());
+					if (flushMsgs(todos)) {
+						schedulePolicy.succeess();
+					} else {
+						schedulePolicy.fail(true);
 					}
-
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
 				} catch (Exception e) {
 					log.error("Exception occurred while dumping data", e);
 				}
