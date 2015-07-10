@@ -167,7 +167,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		return holder;
 	}
 
-	protected void brokerActionsWhenReceivedSendMessageCmd(MessageSendAnswer... answers) {
+	protected void brokerActionsWhenReceivedSendMessageCmd(Answer<?>... answers) {
 		doAnswer(new CompositeAnswer(answers))//
 		      .when(m_endpointClient)//
 		      .writeCommand(any(Endpoint.class), //
@@ -209,9 +209,9 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 	}
 
 	private class CompositeAnswer implements Answer<Void> {
-		private List<MessageSendAnswer> m_answers = new LinkedList<>();
+		private List<Answer<?>> m_answers = new LinkedList<>();
 
-		public CompositeAnswer(MessageSendAnswer... answers) {
+		public CompositeAnswer(Answer<?>... answers) {
 			if (answers != null && answers.length > 0) {
 				m_answers.addAll(Arrays.asList(answers));
 			}
@@ -220,7 +220,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		@Override
 		public Void answer(InvocationOnMock invocation) throws Throwable {
 			m_receivedCmds.add(invocation.getArgumentAt(1, Command.class));
-			for (Answer<Void> answer : m_answers) {
+			for (Answer<?> answer : m_answers) {
 				answer.answer(invocation);
 			}
 			return null;
@@ -255,20 +255,20 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 				return null;
 			}
 		}, //
-		
+
 		Accept() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
 				SendMessageCommand sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommand.class);
 				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
-						CommandType.ACK_MESSAGE_SEND.toString());
-				
+				      CommandType.ACK_MESSAGE_SEND.toString());
+
 				SendMessageAckCommand acceptCmd = new SendMessageAckCommand();
 				acceptCmd.setSuccess(true);
 				acceptCmd.correlate(sendMessageCmd);
-				
+
 				commandProcessor.process(new CommandProcessorContext(acceptCmd, null));
-				
+
 				return null;
 			}
 		}, //
