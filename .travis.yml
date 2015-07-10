@@ -1,8 +1,8 @@
 language: java
-install:
-  mvn install -Dmaven.test.skip -B -fae
-script:
-  mvn test -B -fae
+jdk:
+  - oraclejdk7
+  - openjdk7
+  - oraclejdk8
 after_success:
   - mvn clean cobertura:cobertura coveralls:report
 branches:
