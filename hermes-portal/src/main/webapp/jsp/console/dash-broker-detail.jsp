@@ -12,7 +12,7 @@
 					<span class="label label-primary">接收速度(分钟)</span>
 				</div>
 				<div class="panel-body">
-					<iframe style="border: 0" ng-src="{{get_br_received_qps_kibana('${model.kibanaUrl}')}}" height="100px" width="100%"></iframe>
+					<iframe style="border: 0" ng-src="{{get_br_received_qps_kibana('${model.kibanaUrl}')}}" height="150px" width="100%"></iframe>
 				</div>
 			</div>
 		</div>
@@ -22,7 +22,7 @@
 					<span class="label label-primary">投递速度(分钟)</span>
 				</div>
 				<div class="panel-body">
-					<iframe style="border: 0" ng-src="{{get_br_received_qps_kibana('${model.kibanaUrl}')}}" height="100px" width="100%"></iframe>
+					<iframe style="border: 0" ng-src="{{get_br_delivered_qps_kibana('${model.kibanaUrl}')}}" height="150px" width="100%"></iframe>
 				</div>
 			</div>
 		</div>
@@ -32,7 +32,7 @@
 		<div class="col-md-6">
 			<div class="panel panel-success">
 				<div class="panel-heading">
-					<span class="label label-primary">Received Top</span>
+					<span class="label label-primary">接收最多</span>
 				</div>
 				<div class="panel-body">
 					<iframe style="border: 0" ng-src="{{get_br_received_top_kibana('${model.kibanaUrl}')}}" height="200px" width="100%"></iframe>
@@ -42,10 +42,32 @@
 		<div class="col-md-6">
 			<div class="panel panel-success">
 				<div class="panel-heading">
-					<span class="label label-primary">Delivered Top</span>
+					<span class="label label-primary">接收最少</span>
 				</div>
 				<div class="panel-body">
 					<iframe style="border: 0" ng-src="{{get_br_received_bottom_kibana('${model.kibanaUrl}')}}" height="200px" width="100%"></iframe>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-6">
+			<div class="panel panel-success">
+				<div class="panel-heading">
+					<span class="label label-primary">投递最快</span>
+				</div>
+				<div class="panel-body">
+					<iframe style="border: 0" ng-src="{{get_br_delivered_top_kibana('${model.kibanaUrl}')}}" height="200px" width="100%"></iframe>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-6">
+			<div class="panel panel-success">
+				<div class="panel-heading">
+					<span class="label label-primary">投递最慢</span>
+				</div>
+				<div class="panel-body">
+					<iframe style="border: 0" ng-src="{{get_br_delivered_bottom_kibana('${model.kibanaUrl}')}}" height="200px" width="100%"></iframe>
 				</div>
 			</div>
 		</div>

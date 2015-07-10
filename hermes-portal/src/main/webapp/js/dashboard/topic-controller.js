@@ -104,23 +104,19 @@ dashtopic
 						return $sce.trustAsResourceUrl(url);
 					};
 
-					$scope.get_max_did_kibana = function(kibanaUrl, consumer) {
+					$scope.get_max_did_kibana = function(kibanaUrl) {
 						var url = kibanaUrl
-								+ "/#/visualize/edit/Max-Delivered?embed&_g=(refreshInterval:(display:'1%20minute',pause:!f,section:2,value:60000),time:(from:now-7d,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Delivered%20AND%20datas.topic:"
+								+ "/#/visualize/edit/Max-Delivered-MID?embed&_g=(refreshInterval:(display:'1%20minute',pause:!f,section:2,value:60000),time:(from:now-7d,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Delivered%20AND%20datas.topic:"
 								+ $scope.current_topic
-								+ "%20AND%20datas.groupId:"
-								+ consumer
-								+ "')),vis:(aggs:!((id:'1',params:(field:datas.msgId),schema:metric,type:max)),listeners:(),params:(fontSize:'20'),type:metric))";
+								+ "')),vis:(aggs:!((id:'1',params:(field:datas.msgId),schema:metric,type:max),(id:'2',params:(field:datas.groupId.raw,order:desc,orderBy:'1',size:5),schema:bucket,type:terms)),listeners:(),params:(perPage:10,showMeticsAtAllLevels:!f,showPartialRows:!f),type:table))";
 						return $sce.trustAsResourceUrl(url);
 					};
 
-					$scope.get_max_aid_kibana = function(kibanaUrl, consumer) {
+					$scope.get_max_aid_kibana = function(kibanaUrl) {
 						var url = kibanaUrl
-								+ "/#/visualize/edit/Max-Acked?embed&_g=(refreshInterval:(display:'1%20minute',pause:!f,section:2,value:60000),time:(from:now-7d,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Acked%20AND%20datas.topic:"
+								+ "/#/visualize/edit/Max-Acked-MID?embed&_g=(refreshInterval:(display:'1%20minute',pause:!f,section:2,value:60000),time:(from:now-7d,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Acked%20AND%20datas.topic:"
 								+ $scope.current_topic
-								+ "%20AND%20datas.groupId:"
-								+ consumer
-								+ "')),vis:(aggs:!((id:'1',params:(field:datas.msgId),schema:metric,type:max)),listeners:(),params:(fontSize:'20'),type:metric))";
+								+ "')),vis:(aggs:!((id:'1',params:(field:datas.msgId),schema:metric,type:max),(id:'2',params:(field:datas.groupId.raw,order:desc,orderBy:'1',size:20),schema:bucket,type:terms)),listeners:(),params:(perPage:10,showMeticsAtAllLevels:!f,showPartialRows:!f),type:table))";
 						return $sce.trustAsResourceUrl(url);
 					};
 

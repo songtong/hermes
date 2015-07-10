@@ -74,6 +74,22 @@ angular
 						return $sce.trustAsResourceUrl(url);
 					};
 
+					$scope.get_br_delivered_top_kibana = function(kibanaUrl) {
+						var url = kibanaUrl
+								+ "/#/visualize/edit/Broker-Topic-Delivered-Top?embed&_g=(refreshInterval:(display:'10%20seconds',pause:!f,section:1,value:10000),time:(from:now-1m,mode:relative,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'datas.brokerIp:"
+								+ $scope.current_broker
+								+ "%20AND%20eventType:Message.Delivered')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count),(id:'2',params:(field:datas.topic.raw,order:desc,orderBy:'1',size:50),schema:bucket,type:terms),(id:'3',params:(field:datas.consumerIp.raw,order:desc,orderBy:'1',size:50),schema:bucket,type:terms)),listeners:(),params:(perPage:10,showMeticsAtAllLevels:!f,showPartialRows:!f),type:table))";
+						return $sce.trustAsResourceUrl(url);
+					};
+
+					$scope.get_br_delivered_bottom_kibana = function(kibanaUrl) {
+						var url = kibanaUrl
+								+ "/#/visualize/edit/Broker-Topic-Delivered-Bottom?embed&_g=(refreshInterval:(display:'10%20seconds',pause:!f,section:1,value:10000),time:(from:now-1m,mode:relative,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'datas.brokerIp:"
+								+ $scope.current_broker
+								+ "%20AND%20eventType:Message.Delivered')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count),(id:'2',params:(field:datas.topic.raw,order:asc,orderBy:'1',size:50),schema:bucket,type:terms),(id:'3',params:(field:datas.consumerIp.raw,order:asc,orderBy:'1',size:50),schema:bucket,type:terms)),listeners:(),params:(perPage:10,showMeticsAtAllLevels:!f,showPartialRows:!f),type:table))";
+						return $sce.trustAsResourceUrl(url);
+					};
+
 					$scope.get_br_received_qps_kibana = function(kibanaUrl) {
 						var url = kibanaUrl
 								+ "/#/visualize/edit/BR-QPS?embed&_g=(refreshInterval:(display:'5%20seconds',pause:!f,section:1,value:5000),time:(from:now-1m,mode:relative,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Received%20AND%20datas.brokerIp:"
@@ -82,7 +98,7 @@ angular
 						return $sce.trustAsResourceUrl(url);
 					};
 
-					$scope.get_br_deliver_qps_kibana = function(kibanaUrl) {
+					$scope.get_br_delivered_qps_kibana = function(kibanaUrl) {
 						var url = kibanaUrl
 								+ "/#/visualize/edit/BD-QPS?embed&_g=(refreshInterval:(display:'5%20seconds',pause:!f,section:1,value:5000),time:(from:now-1m,mode:relative,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Delivered%20AND%20datas.brokerIp:"
 								+ $scope.current_broker

@@ -149,7 +149,7 @@
 </div>
 
 <div class="modal fade" id="top-process-modal" tabindex="-1" role="dialog" aria-labelledby="top-process-label" aria-hidden="true">
-	<div class="modal-dialog" style="width: 800px">
+	<div class="modal-dialog" style="width: 900px">
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -157,7 +157,7 @@
 			</div>
 			<div class="modal-body">
 				<div class="row">
-					<div class="col-sm-12">
+					<div class="col-sm-4">
 						<div class="panel panel-success">
 							<div class="panel-heading">
 								<span class="label label-danger">消费最慢排行</span>
@@ -167,24 +167,22 @@
 							</div>
 						</div>
 					</div>
-				</div>
-				<div class="row">
-					<div class="col-sm-6">
+					<div class="col-sm-4">
 						<div class="panel panel-success">
 							<div class="panel-heading">
 								<span class="label label-danger">最大投递ID</span>
 							</div>
-							<div class="panel-body" style="height: 100px">
+							<div class="panel-body" style="height: 300px">
 								<iframe ng-src="{{get_max_did_kibana('${model.kibanaUrl}')}}" style="border: 0" width="100%" height="100%"></iframe>
 							</div>
 						</div>
 					</div>
-					<div class="col-sm-6">
+					<div class="col-sm-4">
 						<div class="panel panel-success">
 							<div class="panel-heading">
 								<span class="label label-danger">最大ACK ID</span>
 							</div>
-							<div class="panel-body" style="height: 100px">
+							<div class="panel-body" style="height: 300px">
 								<iframe ng-src="{{get_max_aid_kibana('${model.kibanaUrl}')}}" style="border: 0" width="100%" height="100%"></iframe>
 							</div>
 						</div>
