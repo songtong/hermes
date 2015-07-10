@@ -3,6 +3,8 @@ install:
   mvn install -Dmaven.test.skip -B -fae
 script:
   mvn test -B -fae
+after_success:
+  - mvn clean cobertura:cobertura coveralls:report
 branches:
   except:
     - mvn-repo
