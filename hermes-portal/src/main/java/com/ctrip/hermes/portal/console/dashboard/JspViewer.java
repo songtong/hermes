@@ -21,8 +21,6 @@ public class JspViewer extends BaseJspViewer<ConsolePage, Action, Context, Model
 			return JspFile.BROKER_DETAIL_HOME.getPath();
 		case CLIENT:
 			return JspFile.CLIENT.getPath();
-		case CLIENT_DETAIL:
-			return JspFile.CLIENT_DETAIL.getPath();
 		}
 
 		throw new RuntimeException("Unknown action: " + action);

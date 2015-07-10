@@ -1,11 +1,14 @@
 package com.ctrip.hermes.portal.service.monitor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +51,8 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 
 	private List<String> m_latestBroker = new ArrayList<String>();
 
+	private Set<String> m_latestClients = new HashSet<String>();
+
 	// Map<Pair<Topic, Group-ID>, Map<Paritition-ID, Pair<Latest-prouced, Latest-consumed>>>
 	private Map<Pair<String, Integer>, Map<Integer, Pair<Date, Date>>> m_delays = new HashMap<>();
 
@@ -55,16 +60,16 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	private Map<String, Date> m_latestProduced = new HashMap<>();
 
 	// key: topic, value: ips
-	private Map<String, List<String>> m_topic2producers = new HashMap<>();
+	private Map<String, Set<String>> m_topic2producers = new HashMap<>();
 
 	// key: topic, vlaue: <consumer, ips>
-	private Map<String, Map<String, List<String>>> m_topic2consumers = new HashMap<>();
+	private Map<String, Map<String, Set<String>>> m_topic2consumers = new HashMap<>();
 
 	// key:ip, value: topics
-	private Map<String, List<String>> m_producer2topics = new HashMap<>();
+	private Map<String, Set<String>> m_producer2topics = new HashMap<>();
 
 	// key:ip, value:topics
-	private Map<String, List<String>> m_consumer2topics = new HashMap<>();
+	private Map<String, Map<String, Set<String>>> m_consumer2topics = new HashMap<>();
 
 	@Override
 	public Date getLatestProduced(String topic) {
@@ -73,22 +78,22 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	}
 
 	@Override
-	public Map<String, List<String>> getTopic2ProducerIPs() {
+	public Map<String, Set<String>> getTopic2ProducerIPs() {
 		return m_topic2producers;
 	}
 
 	@Override
-	public Map<String, Map<String, List<String>>> getTopic2ConsumerIPs() {
+	public Map<String, Map<String, Set<String>>> getTopic2ConsumerIPs() {
 		return m_topic2consumers;
 	}
 
 	@Override
-	public Map<String, List<String>> getConsumerIP2Topics() {
+	public Map<String, Map<String, Set<String>>> getConsumerIP2Topics() {
 		return m_consumer2topics;
 	}
 
 	@Override
-	public Map<String, List<String>> getProducerIP2Topics() {
+	public Map<String, Set<String>> getProducerIP2Topics() {
 		return m_producer2topics;
 	}
 
@@ -179,19 +184,19 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	}
 
 	private void updateProducerTopicRelationship() {
-		Map<String, List<String>> topic2producers = new HashMap<String, List<String>>();
+		Map<String, Set<String>> topic2producers = new HashMap<String, Set<String>>();
 		for (String topic : m_metaService.getTopics().keySet()) {
-			topic2producers.put(topic, m_elasticClient.getLastWeekProducers(topic));
+			topic2producers.put(topic, new HashSet<String>(m_elasticClient.getLastWeekProducers(topic)));
 		}
 		m_topic2producers = topic2producers;
 
-		Map<String, List<String>> producer2topics = new HashMap<String, List<String>>();
-		for (Entry<String, List<String>> entry : topic2producers.entrySet()) {
+		Map<String, Set<String>> producer2topics = new HashMap<String, Set<String>>();
+		for (Entry<String, Set<String>> entry : topic2producers.entrySet()) {
 			String topicName = entry.getKey();
 			for (String ip : entry.getValue()) {
-				List<String> topics = producer2topics.get(ip);
+				Set<String> topics = producer2topics.get(ip);
 				if (topics == null) {
-					producer2topics.put(ip, topics = new ArrayList<String>());
+					producer2topics.put(ip, topics = new HashSet<String>());
 				}
 				topics.add(topicName);
 			}
@@ -200,33 +205,45 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	}
 
 	private void updateConsumerTopicRelationship() {
-		Map<String, Map<String, List<String>>> topic2consumers = new HashMap<>();
+		Map<String, Map<String, Set<String>>> topic2consumers = new HashMap<>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
 			String topic = entry.getKey();
 			for (ConsumerGroup c : entry.getValue().getConsumerGroups()) {
 				String consumer = c.getName();
 				if (!topic2consumers.containsKey(topic)) {
-					topic2consumers.put(topic, new HashMap<String, List<String>>());
+					topic2consumers.put(topic, new HashMap<String, Set<String>>());
 				}
-				topic2consumers.get(topic).put(consumer, m_elasticClient.getLastWeekConsumers(topic, consumer));
+				HashSet<String> set = new HashSet<String>(m_elasticClient.getLastWeekConsumers(topic, consumer));
+				topic2consumers.get(topic).put(consumer, set);
 			}
 		}
 		m_topic2consumers = topic2consumers;
 
-		Map<String, List<String>> consumer2topics = new HashMap<String, List<String>>();
-		for (Entry<String, Map<String, List<String>>> entry : topic2consumers.entrySet()) {
+		Map<String, Map<String, Set<String>>> consumer2topics = new HashMap<String, Map<String, Set<String>>>();
+		for (Entry<String, Map<String, Set<String>>> entry : topic2consumers.entrySet()) {
 			String topicName = entry.getKey();
-			for (Entry<String, List<String>> ips : entry.getValue().entrySet()) {
+			for (Entry<String, Set<String>> ips : entry.getValue().entrySet()) {
+				String groupName = ips.getKey();
 				for (String ip : ips.getValue()) {
-					List<String> topics = consumer2topics.get(ip);
+					Map<String, Set<String>> topics = consumer2topics.get(ip);
 					if (topics == null) {
-						consumer2topics.put(ip, topics = new ArrayList<String>());
+						consumer2topics.put(ip, topics = new HashMap<String, Set<String>>());
 					}
-					topics.add(topicName);
+					Set<String> set = topics.get(groupName);
+					if (set == null) {
+						topics.put(groupName, set = new HashSet<String>());
+					}
+					set.add(topicName);
 				}
 			}
 		}
 		m_consumer2topics = consumer2topics;
+	}
+
+	private void updateLatestClients() {
+		Set<String> set = new HashSet<String>(m_consumer2topics.keySet());
+		set.addAll(m_producer2topics.keySet());
+		m_latestClients = set;
 	}
 
 	@Override
@@ -254,10 +271,23 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 				      try {
 					      updateProducerTopicRelationship();
 					      updateConsumerTopicRelationship();
+					      updateLatestClients();
 				      } catch (Throwable e) {
 					      log.error("Update elastic monitor information failed.", e);
 				      }
 			      }
 		      }, 0, 30, TimeUnit.MINUTES);
+	}
+
+	@Override
+	public List<String> getRelatedClients(String part) {
+		List<String> list = new ArrayList<String>();
+		for (String client : m_latestClients) {
+			if (client.contains(part)) {
+				list.add(client);
+			}
+		}
+		Collections.sort(list);
+		return list;
 	}
 }

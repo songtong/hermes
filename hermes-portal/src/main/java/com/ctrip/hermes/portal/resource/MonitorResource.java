@@ -4,15 +4,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -24,6 +27,7 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
+import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.MonitorTopicBriefView;
 import com.ctrip.hermes.portal.resource.view.MonitorTopicDelayDetailView;
 import com.ctrip.hermes.portal.service.monitor.MonitorService;
@@ -32,6 +36,7 @@ import com.ctrip.hermes.portal.service.monitor.MonitorService;
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class MonitorResource {
+
 	private MonitorService m_monitorService = PlexusComponentLocator.lookup(MonitorService.class);
 
 	private PortalMetaService m_metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
@@ -85,6 +90,46 @@ public class MonitorResource {
 		}
 
 		return Response.status(Status.OK).entity(list).build();
+	}
+
+	@GET
+	@Path("clients")
+	public Response findClients(@QueryParam("part") String part) {
+		return Response.status(Status.OK).entity(m_monitorService.getRelatedClients(part)).build();
+	}
+
+	@GET
+	@Path("topics/{ip}")
+	public Response getDeclaredTopics(@PathParam("ip") String ip) {
+		MonitorClientView view = new MonitorClientView(ip);
+		view.setProduceTopics(getProduceTopicsList(m_monitorService.getProducerIP2Topics(), ip));
+		view.setConsumeTopics(getConsumeTopicsList(m_monitorService.getConsumerIP2Topics(), ip));
+		return Response.status(Status.OK).entity(view).build();
+	}
+
+	private List<String> getProduceTopicsList(Map<String, Set<String>> map, String key) {
+		Set<String> set = map.get(key);
+		List<String> list = set == null ? new ArrayList<String>() : new ArrayList<String>(set);
+		Collections.sort(list);
+		return list;
+	}
+
+	private List<Pair<String, List<String>>> getConsumeTopicsList(Map<String, Map<String, Set<String>>> m, String ip) {
+		List<Pair<String, List<String>>> list = new ArrayList<Pair<String, List<String>>>();
+		Map<String, Set<String>> ms = m.get(ip);
+		ms = ms == null ? new HashMap<String, Set<String>>() : ms;
+		for (Entry<String, Set<String>> entry : ms.entrySet()) {
+			ArrayList<String> l = new ArrayList<String>(entry.getValue());
+			Collections.sort(l);
+			list.add(new Pair<String, List<String>>(entry.getKey(), l));
+		}
+		Collections.sort(list, new Comparator<Pair<String, List<String>>>() {
+			@Override
+			public int compare(Pair<String, List<String>> o1, Pair<String, List<String>> o2) {
+				return o1.getKey().compareTo(o2.getKey());
+			}
+		});
+		return list;
 	}
 
 	@GET
