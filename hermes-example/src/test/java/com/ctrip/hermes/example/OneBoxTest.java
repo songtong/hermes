@@ -168,7 +168,7 @@ public class OneBoxTest extends ComponentTestCase {
 		}
 
 		System.out.println("Starting producer...");
-		// send(topic, "ACK-");
+		send(topic, "ACK-");
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
@@ -216,7 +216,7 @@ public class OneBoxTest extends ComponentTestCase {
 		Random random = new Random();
 
 		boolean priority = random.nextBoolean();
-		
+
 		if (priority) {
 			Producer.getInstance().message(topic, msg, msg + " priority").withRefKey(uuid).withPriority()
 			      .setCallback(new CompletionCallback<SendResult>() {

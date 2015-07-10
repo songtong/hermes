@@ -1,6 +1,7 @@
 package com.ctrip.hermes.portal.resource;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Singleton;
@@ -29,6 +30,7 @@ import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Codec;
+import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -37,6 +39,7 @@ import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
+import com.ctrip.hermes.portal.service.monitor.MonitorService;
 import com.ctrip.hermes.producer.api.Producer;
 
 @Path("/topics/")
@@ -53,6 +56,8 @@ public class TopicResource {
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
 
 	private CodecService codecService = PlexusComponentLocator.lookup(CodecService.class);
+
+	private MonitorService monitorService = PlexusComponentLocator.lookup(MonitorService.class);
 
 	private Pair<Boolean, ?> validateTopicView(TopicView topic) {
 		boolean passed = true;
@@ -134,7 +139,7 @@ public class TopicResource {
 		List<TopicView> returnResult = new ArrayList<TopicView>();
 		try {
 			for (Topic topic : topics) {
-				TopicView topicView = new TopicView(topic);
+				TopicView topicView = prepareTopicView(topic);
 
 				Storage storage = metaService.findStorageByTopic(topic.getName());
 				topicView.setStorage(storage);
@@ -159,6 +164,19 @@ public class TopicResource {
 		return returnResult;
 	}
 
+	private TopicView prepareTopicView(Topic topic) {
+		TopicView topicView = new TopicView(topic);
+		List<ConsumerGroup> consumers = metaService.findConsumersByTopic(topic.getName());
+		long sum = 0;
+		for (ConsumerGroup consumer : consumers) {
+			Pair<Date, Date> delay = monitorService.getDelay(topic.getName(), consumer.getId());
+			sum += (delay.getKey().getTime() - delay.getValue().getTime()) / 1000;
+		}
+		topicView.setAverageDelaySeconds(consumers.size() > 0 ? sum / consumers.size() : 0);
+		topicView.setLatestProduced(monitorService.getLatestProduced(topic.getName()));
+		return topicView;
+	}
+
 	@GET
 	@Path("{name}")
 	public TopicView getTopic(@PathParam("name") String name) {
@@ -168,7 +186,7 @@ public class TopicResource {
 			throw new RestException("Topic not found: " + name, Status.NOT_FOUND);
 		}
 
-		TopicView topicView = new TopicView(topic);
+		TopicView topicView = prepareTopicView(topic);
 
 		// Fill Storage
 		Storage storage = metaService.findStorageByTopic(topic.getName());

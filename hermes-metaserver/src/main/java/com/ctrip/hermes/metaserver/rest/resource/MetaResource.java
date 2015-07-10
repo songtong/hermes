@@ -1,7 +1,6 @@
 package com.ctrip.hermes.metaserver.rest.resource;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -72,8 +71,7 @@ public class MetaResource {
 			return Response.status(Status.NOT_MODIFIED).build();
 		}
 
-		Storage storage = meta.findStorage(Storage.MYSQL);
-		final List<Datasource> dss = storage.getDatasources();
+		final Storage storage = meta.findStorage(Storage.MYSQL);
 
 		// pass empty jsonConfig to make JSON.toJSONString use this overloaded function
 		// to skip serializer.config(SerializerFeature.WriteDateUseDateFormat, true);
@@ -81,20 +79,19 @@ public class MetaResource {
 		String json = JSON.toJSONString(meta, jsonConfig, new ValueFilter() {
 			@Override
 			@SuppressWarnings("unchecked")
-			public Object process(Object object, String name, Object value) {
-				if (object instanceof Datasource && value instanceof Map) {
-					Datasource ds = (Datasource) object;
-					for (Datasource d : dss) {
-						if (d.getId().equals(ds.getId())) {
-							Map<String, Property> nps = new HashMap<String, Property>();
-							for (Entry<String, Property> entry : ((Map<String, Property>) value).entrySet()) {
-								nps.put(entry.getKey(), new Property(entry.getKey()).setValue("**********"));
+			public Object process(Object owner, String fieldName, Object fieldValue) {
+				if (storage != null && owner instanceof Datasource && fieldValue instanceof Map) {
+					for (Datasource d : storage.getDatasources()) {
+						if (d.getId().equals(((Datasource) owner).getId())) {
+							Map<String, Property> newFieldValue = new HashMap<String, Property>();
+							for (Entry<String, Property> entry : ((Map<String, Property>) fieldValue).entrySet()) {
+								newFieldValue.put(entry.getKey(), new Property(entry.getKey()).setValue("**********"));
 							}
-							return nps;
+							return newFieldValue;
 						}
 					}
 				}
-				return value;
+				return fieldValue;
 			}
 		});
 

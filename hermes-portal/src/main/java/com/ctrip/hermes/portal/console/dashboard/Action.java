@@ -1,7 +1,12 @@
 package com.ctrip.hermes.portal.console.dashboard;
 
 public enum Action implements org.unidal.web.mvc.Action {
-	VIEW("view");
+	TOPIC("topic"), //
+	CLIENT("client"), //
+	BROKER("broker"), //
+	TOPIC_DETAIL("topic-detail"), //
+	BROKER_DETAIL("broker-detail"), //
+	BROKER_DETAIL_HOME("broker-detail-home");
 
 	private String m_name;
 

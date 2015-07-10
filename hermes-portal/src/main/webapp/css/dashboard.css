@@ -1,79 +1,169 @@
 .board-header {
-    display: block;
-    height: 100%;
-    border: solid #bce8f1 1px;
-    overflow: auto;
+	display: block;
+	height: 100%;
+	border: solid #bce8f1 1px;
+	overflow: auto;
 }
 
 .board-kibana-frame {
-    height: 220px;
-    margin-top: 10px;
-    border: 0px;
+	height: 220px;
+	margin-top: 10px;
+	border: 0px;
 }
 
 .board-block {
-    /*display: block;*/
-    height: 100%;
-    border: solid #bce8f1 1px;
-    padding: 0px 0px;
+	/*display: block;*/
+	height: 100%;
+	border: solid #bce8f1 1px;
+	padding: 0px 0px;
 }
 
 .board-broker {
-    display: block;
-    height: 100%;
-    border: solid #bce8f1 1px;
+	display: block;
+	height: 100%;
+	border: solid #bce8f1 1px;
 }
 
 .title-2 {
-    margin-top: 10px;
-    margin-bottom: 5px;
+	margin-top: 10px;
+	margin-bottom: 5px;
 }
 
 .producer {
-    height: 400px;
-    padding: 5px 15px;
-    margin-bottom: 5px;
-    color: inherit;
-    background-color: #f5f5f5;
-    border: 1px solid #e3e3e3;
-    border-radius: 4px;
+	height: 400px;
+	padding: 5px 15px;
+	margin-bottom: 5px;
+	color: inherit;
+	background-color: #f5f5f5;
+	border: 1px solid #e3e3e3;
+	border-radius: 4px;
 }
 
 .queue {
-    height: 400px;
-    padding: 5px 15px;
-    margin-bottom: 5px;
-    color: inherit;
-    background-color: #f5f5f5;
-    border: 1px solid #e3e3e3;
-    border-radius: 4px;
+	height: 400px;
+	padding: 5px 15px;
+	margin-bottom: 5px;
+	color: inherit;
+	background-color: #f5f5f5;
+	border: 1px solid #e3e3e3;
+	border-radius: 4px;
 }
 
 .producer-msg-history-table {
-    height: 280px !important;
-    /*border: 1px solid #c5c5c5;*/
-    overflow: auto;
+	height: 280px !important;
+	/*border: 1px solid #c5c5c5;*/
+	overflow: auto;
 }
 
 .queue-msg-table {
-    height: 340px !important;
-    overflow: auto;
+	height: 340px !important;
+	overflow: auto;
 }
 
 .consumer-group {
-    float: left;
+	float: left;
 }
 
 .consumer {
-    height: 100%;
-    /*width: 500px;*/
-    padding: 5px 15px;
-    margin-bottom: 5px;
-    color: inherit;
-    background-color: #f5f5f5;
-    border: 1px solid #e3e3e3;
+	height: 100%;
+	/*width: 500px;*/
+	padding: 5px 15px;
+	margin-bottom: 5px;
+	color: inherit;
+	background-color: #f5f5f5;
+	border: 1px solid #e3e3e3;
 }
 
 .consumer-msg-table {
-    overflow: auto;
+	overflow: auto;
+}
+
+/*
+ * Global add-ons
+ */
+.sub-header {
+	padding-bottom: 10px;
+	border-bottom: 1px solid #eee;
+}
+
+/*
+ * Sidebar
+ */
+
+/* Hide for mobile, show later */
+.sidebar {
+	display: none;
+}
+
+@media ( min-width : 768px) {
+	.sidebar {
+		position: fixed;
+		top: 51px;
+		bottom: 0;
+		left: 0;
+		z-index: 1000;
+		display: block;
+		padding: 20px;
+		overflow-x: hidden;
+		overflow-y: auto;
+		/* Scrollable contents if viewport is shorter than content. */
+		background-color: #f5f5f5;
+		border-right: 1px solid #eee;
+	}
+}
+
+/* Sidebar navigation */
+.nav-sidebar {
+	margin-right: -21px; /* 20px padding + 1px border */
+	margin-bottom: 20px;
+	margin-left: -20px;
+}
+
+.nav-sidebar>li>a {
+	padding-right: 20px;
+	padding-left: 20px;
+}
+
+.nav-sidebar>.active>a, .nav-sidebar>.active>a:hover, .nav-sidebar>.active>a:focus
+	{
+	color: #fff;
+	background-color: #428bca;
+}
+
+/*
+ * Main content
+ */
+.main {
+	padding-top: 20px;
+}
+
+@media ( min-width : 768px) {
+	.main {
+		padding-right: 40px;
+	}
+}
+
+.main .page-header {
+	margin-top: 0;
+}
+
+/*
+ * Placeholder dashboard ideas
+ */
+.placeholders {
+	margin-bottom: 30px;
+	text-align: center;
+}
+
+.placeholders h4 {
+	margin-bottom: 0;
+}
+
+.placeholder {
+	margin-bottom: 20px;
+}
+
+.placeholder img {
+	display: inline-block;
+	border-radius: 50%;
 }

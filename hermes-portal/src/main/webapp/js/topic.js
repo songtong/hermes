@@ -54,7 +54,7 @@ function to_required_topic(data) {
 	return topic;
 }
 
-angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topic-controller',
+angular.module('hermes-topic', [ 'ngResource', 'ui.bootstrap', 'smart-table' ]).controller('topic-controller',
 		[ '$scope', '$filter', '$resource', function(scope, filter, resource) {
 			var topic_resource = resource('/api/topics/:name', {}, {});
 			var meta_resource = resource('/api/meta/', {}, {
@@ -74,6 +74,8 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 					url : '/api/meta/endpoints'
 				}
 			});
+
+			scope.cur_time = new Date();
 
 			scope.is_loading = true;
 			scope.src_topics = [];
@@ -104,9 +106,7 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 				scope.endpoint_types = unique_array(collect_schemas(data, 'type', false));
 				scope.new_topic.endpointType = scope.endpoint_types[0];
 				scope.endpoint_names = find_endpoint_names(scope, scope.new_topic.endpointType);
-				console.log(scope.new_topic.endpointType == "kafka");
 				scope.new_topic.partitions[0].endpoint = scope.new_topic.storageType == "kafka" ? scope.endpoint_names[0] : null;
-				console.log(scope.new_topic.partitions[0].endpoint);
 			});
 
 			scope.get_topics = function get_topics(table_state) {
@@ -128,6 +128,10 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 					show_op_info.show("新增 " + new_topic.name + " 失败: " + error_result.data, false);
 				});
 			};
+			
+			scope.show_something = function show_something(){
+				console.log('fuckoff');
+			}
 
 			scope.add_new_partition = function add_new_partition() {
 				var new_partition = {};
@@ -136,6 +140,7 @@ angular.module('hermes-topic', [ 'ngResource', 'smart-table' ]).controller('topi
 				new_partition.endpoint = scope.new_topic.storageType == "kafka" ? scope.endpoint_names[0] : null;
 				scope.new_topic.partitions.push(new_partition);
 			}
+			
 			scope.del_one_partition = function del_one_partition() {
 				scope.new_topic.partitions.splice(scope.new_topic.partitions.length - 1, 1);
 			}

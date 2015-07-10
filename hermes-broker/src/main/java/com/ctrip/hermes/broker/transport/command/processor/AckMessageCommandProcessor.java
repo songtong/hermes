@@ -85,8 +85,13 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 
 			BizEvent ackEvent = new BizEvent("Message.Acked");
 			addBizData(ackEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
+			addConsumerProcessTime(ackEvent, ctx.getOnMessageEndTimeMillis() - ctx.getOnMessageStartTimeMillis());
 			m_bizLogger.log(ackEvent);
 		}
+	}
+
+	private void addConsumerProcessTime(BizEvent event, long processTime) {
+		event.addData("processTime", processTime);
 	}
 
 	private void addBizData(BizEvent event, Tpp tpp, String consumerIp, String groupId, AckContext ctx,

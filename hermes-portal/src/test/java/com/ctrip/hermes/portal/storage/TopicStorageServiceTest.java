@@ -18,18 +18,19 @@ import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTopic;
 
 public class TopicStorageServiceTest extends ComponentTestCase {
 	PortalMetaService metaService;
+
 	TopicStorageService service;
 
 	@Before
 	public void before() throws Exception {
 		String zkMode = System.getProperty("zkMode");
 		if (!"real".equalsIgnoreCase(zkMode)) {
-         @SuppressWarnings("resource")
-         TestingServer m_zkServer = new TestingServer(2181);
+			@SuppressWarnings("resource")
+			TestingServer m_zkServer = new TestingServer(2181);
 			System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
 		}
 
-//		defineComponent(StorageHandler.class, MockStorageHandler.class);
+		// defineComponent(StorageHandler.class, MockStorageHandler.class);
 		service = lookup(TopicStorageService.class, DefaultTopicStorageService.ID);
 		metaService = lookup(PortalMetaService.class, DefaultPortalMetaService.ID);
 	}
@@ -86,7 +87,6 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	private Topic buildTopic() {
 		return metaService.findTopicByName("cmessage_fws");
 	}
-
 
 	@Test(expected = TopicIsNullException.class)
 	public void createNullTopic() throws TopicAlreadyExistsException, StorageHandleErrorException, TopicIsNullException {

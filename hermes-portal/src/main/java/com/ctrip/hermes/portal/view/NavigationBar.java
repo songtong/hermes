@@ -10,12 +10,12 @@ public class NavigationBar {
 	public Page[] getVisiblePages() {
 		return new Page[] {
 
-		ConsolePage.TOPIC, ConsolePage.CONSUMER, ConsolePage.SUBSCRIPTION, ConsolePage.STORAGE, ConsolePage.ENDPOINT,
-		      ConsolePage.DASHBOARD, ConsolePage.TRACER, ConsolePage.RESENDER };
+		ConsolePage.DASHBOARD, ConsolePage.TOPIC, ConsolePage.CONSUMER, ConsolePage.SUBSCRIPTION, ConsolePage.STORAGE,
+		      ConsolePage.ENDPOINT, ConsolePage.TRACER, ConsolePage.RESENDER };
 
 	}
 
-	public String getEnvironment(){
+	public String getEnvironment() {
 		return PlexusComponentLocator.lookup(ClientEnvironment.class).getEnv().name();
 	}
 }
