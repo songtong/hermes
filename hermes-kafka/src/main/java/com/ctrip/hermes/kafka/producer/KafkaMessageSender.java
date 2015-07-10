@@ -29,6 +29,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.producer.sender.MessageSender;
+import com.google.common.util.concurrent.SettableFuture;
 
 @Named(type = MessageSender.class, value = Endpoint.KAFKA)
 public class KafkaMessageSender implements MessageSender {
@@ -139,5 +140,10 @@ public class KafkaMessageSender implements MessageSender {
 		}
 
 		return new KafkaFuture(sendResult);
+	}
+
+	@Override
+	public void resend(ProducerMessage<?> msg, SettableFuture<SendResult> future) {
+		// do nothing
 	}
 }

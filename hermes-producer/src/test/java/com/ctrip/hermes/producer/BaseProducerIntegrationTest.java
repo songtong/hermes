@@ -110,7 +110,10 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 
 		defineComponent(MetaService.class, TestMetaService.class);
 
-		defineComponent(SendMessageResultMonitor.class, TestSendMessageResultMonitor.class);
+		defineComponent(SendMessageResultMonitor.class, TestSendMessageResultMonitor.class)//
+		      .req(SystemClockService.class)//
+		      .req(ProducerConfig.class)//
+		;
 
 		((TestMessageSender) lookup(MessageSender.class, Endpoint.BROKER)).setEndpointClient(m_endpointClient);
 		((TestMetaService) lookup(MetaService.class)).setMetaHolder(m_metaHolder);
@@ -329,6 +332,11 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		}
 
 		@Override
+		public long getSendMessageReadResultTimeoutMillis() {
+			return 1 * 1000L;
+		}
+
+		@Override
 		public String getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis() {
 			return "10";
 		}
@@ -343,6 +351,11 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		@Override
 		public void initialize() throws InitializationException {
 			// do nothing
+		}
+
+		@Override
+		public void scanAndResendTimeoutCommands() {
+			super.scanAndResendTimeoutCommands();
 		}
 	}
 

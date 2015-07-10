@@ -30,6 +30,7 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.producer.config.ProducerConfig;
+import com.ctrip.hermes.producer.monitor.SendMessageResultMonitor;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -276,8 +277,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, null, "body", "rKey", appProperties);
 	}
 
-	// TODO sometimes fail in travis
-//	@Test
+	@Test
 	public void testSendWithCallback() throws Exception {
 		brokerActionsWhenReceivedSendMessageCmd(//
 		      MessageSendAnswer.Accept, //
@@ -293,14 +293,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 
 			      @Override
 			      public void onSuccess(SendResult result) {
-				      latch.countDown();
 				      success.set(0);
+				      latch.countDown();
 			      }
 
 			      @Override
 			      public void onFailure(Throwable t) {
-				      latch.countDown();
 				      success.set(-1);
+				      latch.countDown();
 			      }
 		      });
 
@@ -408,8 +408,15 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		}
 		Assert.assertFalse(future.isDone());
 
+		TimeUnit.MILLISECONDS.sleep(lookup(ProducerConfig.class).getSendMessageReadResultTimeoutMillis() + 1);
+
+		((TestSendMessageResultMonitor) lookup(SendMessageResultMonitor.class)).scanAndResendTimeoutCommands();
+
+		TimeUnit.MILLISECONDS.sleep(Integer.valueOf(lookup(ProducerConfig.class)
+		      .getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis()) + 50);
+
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		Assert.assertEquals(2, brokerReceivedCmds.size());
 	}
 
 	@Test
