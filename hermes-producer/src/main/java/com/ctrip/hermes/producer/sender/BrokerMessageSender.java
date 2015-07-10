@@ -78,6 +78,12 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		return m_taskQueues.get(tp).submit(msg);
 	}
 
+	@Override
+	public void resend(ProducerMessage<?> msg, SettableFuture<SendResult> future) {
+		Pair<String, Integer> tp = new Pair<String, Integer>(msg.getTopic(), msg.getPartition());
+		m_taskQueues.get(tp).resubmit(msg, future);
+	}
+
 	private void startEndpointSender() {
 		Executors.newSingleThreadExecutor(HermesThreadFactory.create("ProducerEndpointSender", false)).submit(
 		      new EndpointSender());
@@ -118,26 +124,19 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		private boolean scanTaskQueues() {
 			boolean hasTask = false;
-			try {
-				for (Map.Entry<Pair<String, Integer>, TaskQueue> entry : m_taskQueues.entrySet()) {
-					try {
-						TaskQueue queue = entry.getValue();
+			for (Map.Entry<Pair<String, Integer>, TaskQueue> entry : m_taskQueues.entrySet()) {
+				try {
+					TaskQueue queue = entry.getValue();
 
-						if (queue.hasTask()) {
-							hasTask = true;
-							scheduleTaskExecution(entry.getKey(), queue);
-						}
-					} catch (Exception e) {
-						// ignore
-						if (log.isDebugEnabled()) {
-							log.debug("Exception occurred, ignore it", e);
-						}
+					if (queue.hasTask()) {
+						hasTask = true;
+						scheduleTaskExecution(entry.getKey(), queue);
 					}
-				}
-			} catch (Exception e) {
-				// ignore
-				if (log.isDebugEnabled()) {
-					log.debug("Exception occurred, ignore it", e);
+				} catch (Exception e) {
+					// ignore
+					if (log.isDebugEnabled()) {
+						log.debug("Exception occurred, ignore it", e);
+					}
 				}
 			}
 
@@ -179,7 +178,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				SendMessageCommand cmd = m_taskQueue.pop(batchSize);
 
 				if (cmd != null) {
-					if (!sendMessagesToBroker(cmd)) {
+					if (sendMessagesToBroker(cmd)) {
+						cmd.accepted(m_systemClockService.now());
+					} else {
 						m_taskQueue.push(cmd);
 					}
 				}
@@ -198,7 +199,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		      TimeoutException {
 			Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partition);
 			if (endpoint != null) {
-				cmd.setExpireTime(m_systemClockService.now() + m_config.getSendMessageReadResultTimeoutMillis());
 				Future<Boolean> future = m_messageAcceptanceMonitor.monitor(cmd.getHeader().getCorrelationId());
 				m_messageResultMonitor.monitor(cmd);
 
@@ -289,14 +289,22 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				}, m_callbackExecutor);
 			}
 
+			offer(msg, future);
+
+			return future;
+		}
+
+		private void offer(final ProducerMessage<?> msg, SettableFuture<SendResult> future) {
 			if (!m_queue.offer(new ProducerWorkerContext(msg, future))) {
 				String warning = "Producer task queue is full, will drop this message.";
 				log.warn(warning);
 				MessageSendException throwable = new MessageSendException(warning);
 				future.setException(throwable);
 			}
+		}
 
-			return future;
+		public void resubmit(final ProducerMessage<?> msg, SettableFuture<SendResult> future) {
+			offer(msg, future);
 		}
 
 	}

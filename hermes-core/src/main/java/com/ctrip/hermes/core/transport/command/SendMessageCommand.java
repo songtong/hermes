@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
+
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
@@ -44,7 +45,9 @@ public class SendMessageCommand extends AbstractCommand {
 
 	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<>();
 
-	private transient AtomicLong m_expireTime = new AtomicLong(0);
+	private transient boolean m_accepted = false;
+
+	private transient long m_acceptedTime = -1L;
 
 	public SendMessageCommand() {
 		super(CommandType.MESSAGE_SEND);
@@ -253,16 +256,31 @@ public class SendMessageCommand extends AbstractCommand {
 		}
 	}
 
-	public long getExpireTime() {
-		return m_expireTime.get();
+	public synchronized void accepted(long acceptedTime) {
+		m_acceptedTime = acceptedTime;
+		m_accepted = true;
 	}
 
-	public void setExpireTime(long expireTime) {
-		m_expireTime.set(expireTime);
+	public synchronized boolean isExpired(long now, long timeoutMillis) {
+		return m_accepted && (now - m_acceptedTime > timeoutMillis);
 	}
 
 	public Collection<List<ProducerMessage<?>>> getProducerMessages() {
 		return m_msgs.values();
 	}
 
+	public List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> getProducerMessageFuturePairs() {
+		List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> pairs = new LinkedList<>();
+		Collection<List<ProducerMessage<?>>> msgsList = getProducerMessages();
+		for (List<ProducerMessage<?>> msgs : msgsList) {
+			for (ProducerMessage<?> msg : msgs) {
+				SettableFuture<SendResult> future = m_futures.get(msg.getMsgSeqNo());
+				if (future != null) {
+					pairs.add(new Pair<ProducerMessage<?>, SettableFuture<SendResult>>(msg, future));
+				}
+			}
+		}
+
+		return pairs;
+	}
 }
