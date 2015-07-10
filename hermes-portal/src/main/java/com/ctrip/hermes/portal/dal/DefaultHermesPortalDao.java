@@ -2,7 +2,8 @@ package com.ctrip.hermes.portal.dal;
 
 import java.util.Date;
 
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.lookup.annotation.Inject;
@@ -13,6 +14,7 @@ import com.ctrip.hermes.portal.config.PortalConstants;
 
 @Named(type = HermesPortalDao.class)
 public class DefaultHermesPortalDao implements HermesPortalDao {
+	private static final Logger log = LoggerFactory.getLogger(DefaultHermesPortalDao.class);
 
 	@Inject
 	private MessagePriorityDao m_msgDao;
@@ -42,8 +44,8 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 			msg = m_msgDao.top(topic, partition, PortalConstants.PRIORITY_FALSE, MessagePriorityEntity.READSET_FULL);
 			latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
 		} catch (DalNotFoundException e) {
-			if (Log.isDebugEnabled()) {
-				Log.debug("Table has no records: {} {}", topic, partition);
+			if (log.isDebugEnabled()) {
+				log.debug("Table has no records: {} {}", topic, partition);
 			}
 		}
 
@@ -65,8 +67,8 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 			      OffsetMessageEntity.READSET_FULL);
 			latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
 		} catch (DalNotFoundException e) {
-			if (Log.isDebugEnabled()) {
-				Log.debug("Table has no records: {} {}", topic, partition);
+			if (log.isDebugEnabled()) {
+				log.debug("Table has no records: {} {}", topic, partition);
 			}
 		}
 
