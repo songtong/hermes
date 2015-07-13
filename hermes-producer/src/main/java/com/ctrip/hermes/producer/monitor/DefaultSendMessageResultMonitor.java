@@ -155,7 +155,10 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 			List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> msgFuturePairs = cmd
 			      .getProducerMessageFuturePairs();
 			for (Pair<ProducerMessage<?>, SettableFuture<SendResult>> pair : msgFuturePairs) {
-				PlexusComponentLocator.lookup(MessageSender.class).resend(pair.getKey(), pair.getValue());
+				MessageSender messageSender = PlexusComponentLocator.lookup(MessageSender.class);
+				if (messageSender != null) {
+					messageSender.resend(pair.getKey(), pair.getValue());
+				}
 			}
 		}
 	}
