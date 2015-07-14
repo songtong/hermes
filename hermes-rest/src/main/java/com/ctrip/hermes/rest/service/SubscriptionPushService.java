@@ -76,8 +76,9 @@ public class SubscriptionPushService implements Initializable {
 							      pushEvent.addData("refKey", msg.getRefKey());
 							      pushEvent.addData("endpoint", url);
 
-							      pushResponse = new SubscriptionPushCommand(m_httpClient, m_requestConfig, sub.getId(), msg,
-							            url).execute();
+							      SubscriptionPushCommand command = new SubscriptionPushCommand(m_httpClient, m_requestConfig,
+							            sub.getId(), msg, url);
+							      pushResponse = command.execute();
 
 							      pushEvent.addData("result", pushResponse.getStatusLine().getStatusCode());
 							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
@@ -91,7 +92,12 @@ public class SubscriptionPushService implements Initializable {
 								      m_logger.warn("Push message failed, reason:{} topic:{} partition:{} offset:{} url:{}",
 								            pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(), msg.getPartition(),
 								            msg.getOffset(), url);
-								      continue;
+							      }
+
+							      if (command.isCircuitBreakerOpen()) {
+								      long errorCount = command.getMetrics().getHealthCounts().getErrorCount();
+								      m_logger.warn("Pubsh message CircuitBreak is open, sleep {} seconds", errorCount);
+								      Thread.sleep(1000 * errorCount);
 							      }
 						      } catch (Exception e) {
 							      m_logger.warn("Push message failed", e);

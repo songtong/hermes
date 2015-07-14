@@ -10,6 +10,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -83,6 +84,34 @@ public class SubscriptionsResource {
 
 		try {
 			subscriptionService.remove(id);
+		} catch (Exception e) {
+			throw new InternalServerErrorException(e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+	
+	@Path("{id}/start")
+	@PUT
+	public Response start(@PathParam("id") long id) {
+		logger.debug("start {}", id);
+
+		try {
+			subscriptionService.start(id);
+		} catch (Exception e) {
+			throw new InternalServerErrorException(e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+
+	@Path("{id}/stop")
+	@PUT
+	public Response stop(@PathParam("id") long id) {
+		logger.debug("stop {}", id);
+
+		try {
+			subscriptionService.stop(id);
 		} catch (Exception e) {
 			throw new InternalServerErrorException(e);
 		}
