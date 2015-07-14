@@ -4,11 +4,13 @@ import org.unidal.web.mvc.Page;
 import org.unidal.web.mvc.annotation.ModuleMeta;
 
 public enum ConsolePage implements Page {
-	DASHBOARD("dashboard", "dashboard", "Dashboard", "Dashboard", true),
+	HOME("home", "home", "Home", "Home", true),
 
 	TOPIC("topic", "topic", "Topic", "Topic", true),
 
 	CONSUMER("consumer", "consumer", "Consumer", "Consumer", true),
+
+	DASHBOARD("dashboard", "dashboard", "Dashboard", "Dashboard", true),
 
 	ENDPOINT("endpoint", "endpoint", "Endpoint", "Endpoint", true),
 

@@ -4,7 +4,7 @@ import org.unidal.web.mvc.AbstractModule;
 import org.unidal.web.mvc.annotation.ModuleMeta;
 import org.unidal.web.mvc.annotation.ModulePagesMeta;
 
-@ModuleMeta(name = "console", defaultInboundAction = "dashboard", defaultTransition = "default", defaultErrorAction = "default")
+@ModuleMeta(name = "console", defaultInboundAction = "home", defaultTransition = "default", defaultErrorAction = "default")
 @ModulePagesMeta({
 
 com.ctrip.hermes.portal.console.topic.Handler.class,
@@ -21,7 +21,9 @@ com.ctrip.hermes.portal.console.subscription.Handler.class,
 
 com.ctrip.hermes.portal.console.tracer.Handler.class,
 
-com.ctrip.hermes.portal.console.resender.Handler.class })
+com.ctrip.hermes.portal.console.resender.Handler.class,
+
+com.ctrip.hermes.portal.console.home.Handler.class })
 public class ConsoleModule extends AbstractModule {
 
 }

@@ -2,6 +2,7 @@ package com.ctrip.hermes.portal.service.monitor;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +29,9 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.dal.HermesPortalDao;
+import com.ctrip.hermes.portal.resource.view.BrokerQPSBriefView;
+import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
+import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.service.elastic.ElasticClient;
 
 @Named(type = MonitorService.class)
@@ -51,6 +55,8 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	private List<String> m_latestBroker = new ArrayList<String>();
 
 	private Set<String> m_latestClients = new HashSet<String>();
+
+	private List<TopicDelayDetailView> m_topDelays = new ArrayList<TopicDelayDetailView>();
 
 	// Map<Pair<Topic, Group-ID>, Map<Paritition-ID, Pair<Latest-prouced, Latest-consumed>>>
 	private Map<Pair<String, Integer>, Map<Integer, Pair<Date, Date>>> m_delays = new HashMap<>();
@@ -102,6 +108,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	}
 
 	private void updateLatestBroker() {
+//		m_metaManager.loadMeta();
 		List<String> list = new ArrayList<String>();
 //	 TODO remove comment
 //		for (Entry<String, Endpoint> entry : m_metaManager.loadMeta().getEndpoints().entrySet()) {
@@ -240,6 +247,48 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		m_consumer2topics = consumer2topics;
 	}
 
+	private void updateTopDelays() {
+		Map<Integer, String> m = getConsumerNameMap();
+		Map<String, TopicDelayDetailView> delayMap = new HashMap<String, TopicDelayDetailView>();
+
+		for (Entry<Pair<String, Integer>, Map<Integer, Pair<Date, Date>>> entry : m_delays.entrySet()) {
+			String topic = entry.getKey().getKey();
+			String consumer = m.get(entry.getKey().getValue());
+			TopicDelayDetailView view = delayMap.get(topic);
+			if (view == null) {
+				delayMap.put(topic, view = new TopicDelayDetailView(topic));
+			}
+			int sum = 0;
+			for (Entry<Integer, Pair<Date, Date>> pEntry : entry.getValue().entrySet()) {
+				int partitionId = pEntry.getKey();
+				int delayInSeconds = (int) ((pEntry.getValue().getKey().getTime() - pEntry.getValue().getValue().getTime()) / 1000L);
+				view.addDelay(consumer, partitionId, delayInSeconds);
+				sum += delayInSeconds;
+			}
+			view.setAverageDelay(view.getDetails().size() > 0 ? sum / view.getDetails().size() : 0);
+		}
+
+		List<TopicDelayDetailView> list = new ArrayList<TopicDelayDetailView>(delayMap.values());
+		Collections.sort(list, new Comparator<TopicDelayDetailView>() {
+			@Override
+			public int compare(TopicDelayDetailView o1, TopicDelayDetailView o2) {
+				return o2.getAverageDelay() - o1.getAverageDelay();
+			}
+		});
+
+		m_topDelays = list;
+	}
+
+	private Map<Integer, String> getConsumerNameMap() {
+		Map<Integer, String> map = new HashMap<Integer, String>();
+		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
+			for (ConsumerGroup consumerGroup : entry.getValue().getConsumerGroups()) {
+				map.put(consumerGroup.getId(), consumerGroup.getName());
+			}
+		}
+		return map;
+	}
+
 	private void updateLatestClients() {
 		Set<String> set = new HashSet<String>(m_consumer2topics.keySet());
 		set.addAll(m_producer2topics.keySet());
@@ -256,6 +305,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 			      public void run() {
 				      try {
 					      updateDelayDetails();
+					      updateTopDelays();
 					      updateLatestProduced();
 					      updateLatestBroker();
 				      } catch (Throwable e) {
@@ -289,5 +339,53 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		}
 		Collections.sort(list);
 		return list;
+	}
+
+	@Override
+	public List<TopicDelayDetailView> getTopDelays(int top) {
+		top = top > m_topDelays.size() ? m_topDelays.size() : top;
+		return m_topDelays.subList(0, top > 0 ? top : 0);
+	}
+
+	@Override
+	public List<Entry<String, Date>> getTopOutdateTopic(int top) {
+		List<Entry<String, Date>> list = new ArrayList<Entry<String, Date>>(m_latestProduced.entrySet());
+		Collections.sort(list, new Comparator<Entry<String, Date>>() {
+			@Override
+			public int compare(Entry<String, Date> o1, Entry<String, Date> o2) {
+				return o1.getValue().compareTo(o2.getValue());
+			}
+		});
+		top = top > list.size() ? list.size() : top;
+		return list.subList(0, top > 0 ? top : 0);
+	}
+
+	private Map<String, Integer> normalizeBrokerQPSMap(Map<String, Integer> map) {
+		for (String broker : m_latestBroker) {
+			if (!map.containsKey(broker)) {
+				map.put(broker, 0);
+			}
+		}
+		return map;
+	}
+
+	@Override
+	public List<BrokerQPSBriefView> getBrokerReceivedQPS() {
+		return BrokerQPSBriefView.convertFromMap(normalizeBrokerQPSMap(m_elasticClient.getBrokerReceived()));
+	}
+
+	@Override
+	public List<BrokerQPSBriefView> getBrokerDeliveredQPS() {
+		return BrokerQPSBriefView.convertFromMap(normalizeBrokerQPSMap(m_elasticClient.getBrokerDelivered()));
+	}
+
+	@Override
+	public BrokerQPSDetailView getBrokerReceivedDetailQPS(String brokerIp) {
+		return new BrokerQPSDetailView(brokerIp, m_elasticClient.getBrokerTopicReceived(brokerIp, 50));
+	}
+
+	@Override
+	public BrokerQPSDetailView getBrokerDeliveredDetailQPS(String brokerIp) {
+		return new BrokerQPSDetailView(brokerIp, m_elasticClient.getBrokerTopicDelivered(brokerIp, 50));
 	}
 }

@@ -9,7 +9,11 @@ public interface ElasticClient {
 
 	public List<String> getLastWeekConsumers(String topic, String consumer);
 
-	public Map<String, Integer> getTopBrokerReceived();
+	public Map<String, Integer> getBrokerReceived();
 
-	public Map<String, Integer> getTopBrokerDelivered();
+	public Map<String, Integer> getBrokerTopicReceived(String broker, int size);
+
+	public Map<String, Integer> getBrokerDelivered();
+
+	public Map<String, Integer> getBrokerTopicDelivered(String broker, int size);
 }

@@ -1,6 +1,6 @@
 var dashtopic = angular.module("dash-topic", [ 'ngResource', 'ui.bootstrap', 'smart-table' ]);
 
-dashtopic.service("DashtopicService", [ "$http", "$resource",  function($http, $resource) {
+dashtopic.service("DashtopicService", [ "$http", "$resource", function($http, $resource) {
 	var topic_briefs = [];
 	var main_board_content = {};
 	var topic_delays = [];
@@ -14,7 +14,7 @@ dashtopic.service("DashtopicService", [ "$http", "$resource",  function($http, $
 		},
 		get_topic_delays : {
 			method : "GET",
-			isArray : true,
+			isArray : false,
 			url : "/api/monitor/detail/topics/:topic/delay"
 		}
 	});
@@ -54,7 +54,7 @@ dashtopic.service("DashtopicService", [ "$http", "$resource",  function($http, $
 				monitor_resource.get_topic_delays({
 					'topic' : topic
 				}, function(data) {
-					topic_delays = data;
+					topic_delays = data['details'];
 				});
 			}
 		},

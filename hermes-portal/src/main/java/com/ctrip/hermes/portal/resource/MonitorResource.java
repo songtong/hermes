@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -28,8 +29,8 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.resource.view.MonitorClientView;
-import com.ctrip.hermes.portal.resource.view.MonitorTopicBriefView;
-import com.ctrip.hermes.portal.resource.view.MonitorTopicDelayDetailView;
+import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
+import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.service.monitor.MonitorService;
 
 @Path("/monitor/")
@@ -44,7 +45,7 @@ public class MonitorResource {
 	@GET
 	@Path("brief/topics")
 	public Response getTopics() {
-		List<MonitorTopicBriefView> list = new ArrayList<MonitorTopicBriefView>();
+		List<TopicDelayBriefView> list = new ArrayList<TopicDelayBriefView>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
 			Topic t = entry.getValue();
 			int avgDelay = 0;
@@ -53,12 +54,12 @@ public class MonitorResource {
 				avgDelay += delay.getKey().getTime() - delay.getValue().getTime();
 			}
 			avgDelay /= t.getConsumerGroups().size() == 0 ? 1 : t.getConsumerGroups().size();
-			list.add(new MonitorTopicBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), avgDelay));
+			list.add(new TopicDelayBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), avgDelay));
 		}
 
-		Collections.sort(list, new Comparator<MonitorTopicBriefView>() {
+		Collections.sort(list, new Comparator<TopicDelayBriefView>() {
 			@Override
-			public int compare(MonitorTopicBriefView left, MonitorTopicBriefView right) {
+			public int compare(TopicDelayBriefView left, TopicDelayBriefView right) {
 				int ret = right.getDangerLevel() - left.getDangerLevel();
 				return ret = ret == 0 ? left.getTopic().compareTo(right.getTopic()) : ret;
 			}
@@ -76,20 +77,52 @@ public class MonitorResource {
 	@GET
 	@Path("detail/topics/{topic}/delay")
 	public Response getTopicDelay(@PathParam("topic") String name) {
-		List<MonitorTopicDelayDetailView> list = new ArrayList<MonitorTopicDelayDetailView>();
-
 		Topic topic = m_metaService.findTopicByName(name);
+		TopicDelayDetailView view = new TopicDelayDetailView(name);
 		for (ConsumerGroup consumer : topic.getConsumerGroups()) {
 			for (Entry<Integer, Pair<Date, Date>> e : m_monitorService.getDelayDetails(name, consumer.getId()).entrySet()) {
-				MonitorTopicDelayDetailView view = new MonitorTopicDelayDetailView();
-				view.setPartitionId(e.getKey());
-				view.setConsumer(consumer.getName());
-				view.setDelay((int) (e.getValue().getKey().getTime() - e.getValue().getValue().getTime()));
-				list.add(view);
+				int delay = (int) (e.getValue().getKey().getTime() - e.getValue().getValue().getTime());
+				view.addDelay(consumer.getName(), e.getKey(), delay);
 			}
 		}
 
-		return Response.status(Status.OK).entity(list).build();
+		return Response.status(Status.OK).entity(view).build();
+	}
+
+	@GET
+	@Path("top/delays")
+	public Response getTopDelays(@QueryParam("top") @DefaultValue("100") int top) {
+		return Response.status(Status.OK).entity(m_monitorService.getTopDelays(top)).build();
+	}
+
+	@GET
+	@Path("top/outdate-topics")
+	public Response getTopOutdateTopic(@QueryParam("top") @DefaultValue("100") int top) {
+		return Response.status(Status.OK).entity(m_monitorService.getTopOutdateTopic(top)).build();
+	}
+
+	@GET
+	@Path("top/broker/qps/received")
+	public Response getTopBrokerReceived() {
+		return Response.status(Status.OK).entity(m_monitorService.getBrokerReceivedQPS()).build();
+	}
+
+	@GET
+	@Path("top/broker/qps/delivered")
+	public Response getTopBrokerDelivered() {
+		return Response.status(Status.OK).entity(m_monitorService.getBrokerDeliveredQPS()).build();
+	}
+
+	@GET
+	@Path("top/broker/qps/received/{brokerIp}")
+	public Response getTopBrokerTopicReceived(@PathParam("brokerIp") String ip) {
+		return Response.status(Status.OK).entity(m_monitorService.getBrokerReceivedDetailQPS(ip)).build();
+	}
+
+	@GET
+	@Path("top/broker/qps/delivered/{brokerIp}")
+	public Response getTopBrokerTopicDelivered(@PathParam("brokerIp") String ip) {
+		return Response.status(Status.OK).entity(m_monitorService.getBrokerDeliveredDetailQPS(ip)).build();
 	}
 
 	@GET
