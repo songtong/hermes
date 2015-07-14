@@ -13,7 +13,6 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.producer.api.Producer;
-import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
 
 @Named
 public class ProducerSendService {
@@ -30,11 +29,6 @@ public class ProducerSendService {
 
 	public Future<SendResult> send(String topic, Map<String, String> params, InputStream is)
 	      throws MessageSendException, IOException {
-		HystrixRequestContext context = HystrixRequestContext.initializeContext();
-		try {
-			return new ProducerSendCommand(producer, topic, params, is).execute();
-		} finally {
-			context.shutdown();
-		}
+		return new ProducerSendCommand(producer, topic, params, is).execute();
 	}
 }
