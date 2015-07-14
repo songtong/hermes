@@ -1,8 +1,9 @@
 package com.ctrip.hermes.core.message.partition;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.Random;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,16 +25,16 @@ public class HashPartitioningStrategyTest {
 	public void testNormal() throws Exception {
 		for (int i = 0; i < 100000; i++) {
 			int partitionNo = strategy.computePartitionNo(generateRandomString(100), 5);
-			Assert.assertTrue(partitionNo < 5);
-			Assert.assertTrue(partitionNo >= 0);
+			assertTrue(partitionNo < 5);
+			assertTrue(partitionNo >= 0);
 		}
 	}
 
 	@Test
 	public void testNull() throws Exception {
 		int partitionNo = strategy.computePartitionNo(null, 5);
-		Assert.assertTrue(partitionNo < 5);
-		Assert.assertTrue(partitionNo >= 0);
+		assertTrue(partitionNo < 5);
+		assertTrue(partitionNo >= 0);
 	}
 
 	private String generateRandomString(int maxLen) {

@@ -1,5 +1,7 @@
 package com.ctrip.hermes.producer;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
@@ -19,7 +21,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -185,28 +186,28 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 
 	protected void assertMsg(ProducerMessage<?> msg, String topic, String partitionKey, Object body, String refKey,
 	      List<Pair<String, String>> appProperties) {
-		Assert.assertEquals(topic, msg.getTopic());
-		Assert.assertEquals(body, msg.getBody());
+		assertEquals(topic, msg.getTopic());
+		assertEquals(body, msg.getBody());
 		if (refKey != null) {
-			Assert.assertEquals(refKey, msg.getKey());
+			assertEquals(refKey, msg.getKey());
 		} else {
-			Assert.assertFalse(StringUtils.isEmpty(msg.getKey()));
+			assertFalse(StringUtils.isEmpty(msg.getKey()));
 		}
 		if (partitionKey != null) {
-			Assert.assertEquals(partitionKey, msg.getPartitionKey());
+			assertEquals(partitionKey, msg.getPartitionKey());
 		} else {
-			Assert.assertFalse(StringUtils.isEmpty(msg.getPartitionKey()));
+			assertFalse(StringUtils.isEmpty(msg.getPartitionKey()));
 		}
 		Map<String, String> durableProperties = msg.getPropertiesHolder().getDurableProperties();
 		if (appProperties == null) {
 			for (String key : durableProperties.keySet()) {
-				Assert.assertFalse(key.startsWith(PropertiesHolder.APP));
+				assertFalse(key.startsWith(PropertiesHolder.APP));
 			}
 		} else {
 			for (Pair<String, String> kv : appProperties) {
 				String key = kv.getKey();
 				String value = kv.getValue();
-				Assert.assertEquals(value, durableProperties.get(PropertiesHolder.APP + key));
+				assertEquals(value, durableProperties.get(PropertiesHolder.APP + key));
 			}
 		}
 	}

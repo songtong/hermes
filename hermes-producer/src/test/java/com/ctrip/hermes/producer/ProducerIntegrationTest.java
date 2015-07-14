@@ -1,5 +1,10 @@
 package com.ctrip.hermes.producer;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
@@ -14,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -52,17 +56,17 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
 
 		future.get();
-		Assert.assertTrue(future.isDone());
+		assertTrue(future.isDone());
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertNull(msgs.get(0));
+		assertNull(msgs.get(0));
 		// non-priority
-		Assert.assertEquals(1, msgs.get(1).size());
+		assertEquals(1, msgs.get(1).size());
 
 		assertMsg(msgs.get(1).get(0), TEST_TOPIC, "pKey", "body", "rKey", appProperties);
 	}
@@ -78,17 +82,17 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, true, null);
 
 		future.get();
-		Assert.assertTrue(future.isDone());
+		assertTrue(future.isDone());
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertEquals(1, msgs.get(0).size());
+		assertEquals(1, msgs.get(0).size());
 		// non-priority
-		Assert.assertNull(msgs.get(1));
+		assertNull(msgs.get(1));
 
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, "pKey", "body", "rKey", appProperties);
 	}
@@ -104,14 +108,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		sendSync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertNull(msgs.get(0));
+		assertNull(msgs.get(0));
 		// non-priority
-		Assert.assertEquals(1, msgs.get(1).size());
+		assertEquals(1, msgs.get(1).size());
 
 		assertMsg(msgs.get(1).get(0), TEST_TOPIC, "pKey", "body", "rKey", appProperties);
 	}
@@ -127,14 +131,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		sendSync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, true);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertEquals(1, msgs.get(0).size());
+		assertEquals(1, msgs.get(0).size());
 		// non-priority
-		Assert.assertNull(msgs.get(1));
+		assertNull(msgs.get(1));
 
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, "pKey", "body", "rKey", appProperties);
 	}
@@ -150,14 +154,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		sendSync(TEST_TOPIC, "pKey", "body", "", appProperties, true);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertEquals(1, msgs.get(0).size());
+		assertEquals(1, msgs.get(0).size());
 		// non-priority
-		Assert.assertNull(msgs.get(1));
+		assertNull(msgs.get(1));
 
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, "pKey", "body", null, appProperties);
 	}
@@ -173,14 +177,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		sendSync(TEST_TOPIC, "pKey", "body", null, appProperties, true);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertEquals(1, msgs.get(0).size());
+		assertEquals(1, msgs.get(0).size());
 		// non-priority
-		Assert.assertNull(msgs.get(1));
+		assertNull(msgs.get(1));
 
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, "pKey", "body", null, appProperties);
 	}
@@ -196,14 +200,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		sendSync(TEST_TOPIC, "pKey", "body", "             ", appProperties, true);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertEquals(1, msgs.get(0).size());
+		assertEquals(1, msgs.get(0).size());
 		// non-priority
-		Assert.assertNull(msgs.get(1));
+		assertNull(msgs.get(1));
 
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, "pKey", "body", null, appProperties);
 	}
@@ -219,14 +223,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		sendSync(TEST_TOPIC, "", "body", "rKey", appProperties, true);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertEquals(1, msgs.get(0).size());
+		assertEquals(1, msgs.get(0).size());
 		// non-priority
-		Assert.assertNull(msgs.get(1));
+		assertNull(msgs.get(1));
 
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, null, "body", "rKey", appProperties);
 	}
@@ -242,14 +246,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		sendSync(TEST_TOPIC, null, "body", "rKey", appProperties, true);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertEquals(1, msgs.get(0).size());
+		assertEquals(1, msgs.get(0).size());
 		// non-priority
-		Assert.assertNull(msgs.get(1));
+		assertNull(msgs.get(1));
 
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, null, "body", "rKey", appProperties);
 	}
@@ -265,14 +269,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		sendSync(TEST_TOPIC, "               ", "body", "rKey", appProperties, true);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertEquals(1, msgs.get(0).size());
+		assertEquals(1, msgs.get(0).size());
 		// non-priority
-		Assert.assertNull(msgs.get(1));
+		assertNull(msgs.get(1));
 
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, null, "body", "rKey", appProperties);
 	}
@@ -305,19 +309,19 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		      });
 
 		future.get();
-		Assert.assertTrue(future.isDone());
+		assertTrue(future.isDone());
 		latch.await();
-		Assert.assertEquals(0, success.get());
+		assertEquals(0, success.get());
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommand sendCmd = (SendMessageCommand) brokerReceivedCmds.get(0);
 		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
-		Assert.assertEquals(1, msgs.get(0).size());
+		assertEquals(1, msgs.get(0).size());
 		// non-priority
-		Assert.assertNull(msgs.get(1));
+		assertNull(msgs.get(1));
 
 		assertMsg(msgs.get(0).get(0), TEST_TOPIC, "pKey", "body", "rKey", appProperties);
 	}
@@ -333,24 +337,24 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		try {
 			future.get(lookup(ProducerConfig.class).getDefaultBrokerSenderSendTimeoutMillis() + 1000L,
 			      TimeUnit.MILLISECONDS);
-			Assert.fail();
+			fail();
 		} catch (TimeoutException e) {
 			// do nothing
 		} catch (Exception e) {
-			Assert.fail();
+			fail();
 		}
-		Assert.assertFalse(future.isDone());
+		assertFalse(future.isDone());
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertTrue(brokerReceivedCmds.size() > 1);
+		assertTrue(brokerReceivedCmds.size() > 1);
 
 		SendMessageCommand sendCmd = null;
 		for (Command cmd : brokerReceivedCmds) {
-			Assert.assertTrue(cmd instanceof SendMessageCommand);
+			assertTrue(cmd instanceof SendMessageCommand);
 			if (sendCmd == null) {
 				sendCmd = (SendMessageCommand) cmd;
 			} else {
-				Assert.assertTrue(cmd == sendCmd);
+				assertTrue(cmd == sendCmd);
 			}
 		}
 	}
@@ -366,24 +370,24 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		try {
 			future.get(lookup(ProducerConfig.class).getDefaultBrokerSenderSendTimeoutMillis() + 1000L,
 			      TimeUnit.MILLISECONDS);
-			Assert.fail();
+			fail();
 		} catch (TimeoutException e) {
 			// do nothing
 		} catch (Exception e) {
-			Assert.fail();
+			fail();
 		}
-		Assert.assertFalse(future.isDone());
+		assertFalse(future.isDone());
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertTrue(brokerReceivedCmds.size() > 1);
+		assertTrue(brokerReceivedCmds.size() > 1);
 
 		SendMessageCommand sendCmd = null;
 		for (Command cmd : brokerReceivedCmds) {
-			Assert.assertTrue(cmd instanceof SendMessageCommand);
+			assertTrue(cmd instanceof SendMessageCommand);
 			if (sendCmd == null) {
 				sendCmd = (SendMessageCommand) cmd;
 			} else {
-				Assert.assertTrue(cmd == sendCmd);
+				assertTrue(cmd == sendCmd);
 			}
 		}
 	}
@@ -400,13 +404,13 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		try {
 			future.get(lookup(ProducerConfig.class).getDefaultBrokerSenderSendTimeoutMillis() + 1000L,
 			      TimeUnit.MILLISECONDS);
-			Assert.fail();
+			fail();
 		} catch (TimeoutException e) {
 			// do nothing
 		} catch (Exception e) {
-			Assert.fail();
+			fail();
 		}
-		Assert.assertFalse(future.isDone());
+		assertFalse(future.isDone());
 
 		TimeUnit.MILLISECONDS.sleep(lookup(ProducerConfig.class).getSendMessageReadResultTimeoutMillis() + 1);
 
@@ -416,7 +420,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		      .getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis()) + 50);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(2, brokerReceivedCmds.size());
+		assertEquals(2, brokerReceivedCmds.size());
 	}
 
 	@Test
@@ -431,18 +435,18 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 
 		try {
 			future.get();
-			Assert.fail();
+			fail();
 		} catch (ExecutionException e) {
 			if (!(e.getCause() instanceof MessageSendException)) {
-				Assert.fail();
+				fail();
 			}
 		} catch (Exception e) {
-			Assert.fail();
+			fail();
 		}
-		Assert.assertTrue(future.isDone());
+		assertTrue(future.isDone());
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 	}
 
 	@Test
@@ -456,15 +460,15 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 
 		try {
 			sendSync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false);
-			Assert.fail();
+			fail();
 		} catch (MessageSendException e) {
 			// do nothing
 		} catch (Exception e) {
-			Assert.fail();
+			fail();
 		}
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(1, brokerReceivedCmds.size());
+		assertEquals(1, brokerReceivedCmds.size());
 	}
 
 	@Test
@@ -484,18 +488,18 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		}
 
 		for (int i = 0; i < times - 1; i++) {
-			Assert.assertFalse(futures.get(i).isDone());
+			assertFalse(futures.get(i).isDone());
 		}
 
 		try {
 			futures.get(times - 1).get();
-			Assert.fail();
+			fail();
 		} catch (ExecutionException e) {
 			if (!(e.getCause() instanceof MessageSendException)) {
-				Assert.fail();
+				fail();
 			}
 		} catch (Exception e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -518,16 +522,16 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		try {
 			future.get(lookup(ProducerConfig.class).getDefaultBrokerSenderSendTimeoutMillis() + 1000L,
 			      TimeUnit.MILLISECONDS);
-			Assert.fail();
+			fail();
 		} catch (TimeoutException e) {
 			// do nothing
 		} catch (Exception e) {
-			Assert.fail();
+			fail();
 		}
-		Assert.assertFalse(future.isDone());
+		assertFalse(future.isDone());
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
-		Assert.assertEquals(0, brokerReceivedCmds.size());
+		assertEquals(0, brokerReceivedCmds.size());
 
 	}
 

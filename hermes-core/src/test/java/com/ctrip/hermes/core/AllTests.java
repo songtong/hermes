@@ -9,6 +9,9 @@ import com.ctrip.hermes.core.message.partition.HashPartitioningStrategyTest;
 import com.ctrip.hermes.core.message.retry.FrequencySpecifiedRetryPolicyTest;
 import com.ctrip.hermes.core.message.retry.RetryPolicyFactoryTest;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicyTest;
+import com.ctrip.hermes.core.transport.command.AckMessageCommandTest;
+import com.ctrip.hermes.core.transport.command.PullMessageResultCommandTest;
+import com.ctrip.hermes.core.transport.command.SendMessageCommandTest;
 import com.ctrip.hermes.core.transport.netty.MagicTest;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodecTest;
 
@@ -21,7 +24,10 @@ FrequencySpecifiedRetryPolicyTest.class,//
       HashPartitioningStrategyTest.class, //
       ExponentialSchedulePolicyTest.class, //
       DefaultMessageCodecTest.class, //
-      // add test classes here
+      SendMessageCommandTest.class, //
+      PullMessageResultCommandTest.class, //
+      AckMessageCommandTest.class, //
+// add test classes here
 
 })
 public class AllTests {
