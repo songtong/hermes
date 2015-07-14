@@ -299,8 +299,8 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public List<SubscriptionView> listSubscriptions() {
-		return getMetaProxy().listSubscriptions();
+	public List<SubscriptionView> listSubscriptions(String status) {
+		return getMetaProxy().listSubscriptions(status);
 	}
 
 	@Override

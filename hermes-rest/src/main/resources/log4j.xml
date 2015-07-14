@@ -15,7 +15,7 @@
 		</filter>
 	</appender>
 
-	<appender name="FILE" class="org.apache.log4j.AsyncAppender">
+	<appender name="FILE" class="org.apache.log4j.RollingFileAppender">
 		<param name="Threshold" value="ALL" />
 		<param name="MaxBackupIndex" value="10" />
 		<param name="MaxFileSize" value="10MB" />

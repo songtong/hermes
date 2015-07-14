@@ -438,7 +438,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		}
 
 		@Override
-		public List<SubscriptionView> listSubscriptions() {
+		public List<SubscriptionView> listSubscriptions(String status) {
 			return new ArrayList<SubscriptionView>();
 		}
 

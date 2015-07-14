@@ -20,7 +20,7 @@ public interface MetaProxy {
 
 	List<SchemaView> listSchemas();
 
-	List<SubscriptionView> listSubscriptions();
+	List<SubscriptionView> listSubscriptions(String status);
 
 	int registerSchema(String schema, String subject);
 

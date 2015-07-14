@@ -14,6 +14,12 @@ public class SubscriptionView {
 
 	private String endpoints;
 
+	private String status;
+
+	public String getStatus() {
+		return status;
+	}
+
 	public String getEndpoints() {
 		return endpoints;
 	}
@@ -32,6 +38,10 @@ public class SubscriptionView {
 
 	public String getTopic() {
 		return topic;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 	public void setEndpoints(String endpoints) {
@@ -55,7 +65,7 @@ public class SubscriptionView {
 	}
 
 	public int hashCode() {
-		return Objects.hash(this.id, this.name, this.topic, this.group, this.endpoints);
+		return Objects.hash(this.id, this.name);
 	}
 
 	public boolean equals(Object obj) {
@@ -68,8 +78,12 @@ public class SubscriptionView {
 		}
 
 		SubscriptionView other = (SubscriptionView) obj;
-		return Objects.equals(this.id, other.id) && Objects.equals(this.name, other.name)
-		      && Objects.equals(this.topic, other.topic) && Objects.equals(this.group, other.group)
-		      && Objects.equals(this.endpoints, other.endpoints);
+		return Objects.equals(this.id, other.id) && Objects.equals(this.name, other.name);
+	}
+
+	public String toString() {
+		return new StringBuilder().append("SubscriptionView{").append("id=").append(this.id).append(",name=")
+		      .append(name).append(",topic=").append(topic).append(",group=").append(group).append(",endpoints=")
+		      .append(endpoints).append(",status=").append(status).append("}").toString();
 	}
 }

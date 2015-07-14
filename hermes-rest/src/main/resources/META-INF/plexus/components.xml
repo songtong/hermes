@@ -1,14 +1,11 @@
 <plexus>
 	<components>
 		<component>
-			<role>com.ctrip.hermes.rest.service.SubscribeRegistry</role>
-			<implementation>com.ctrip.hermes.rest.service.DefaultSubscribeRegistry</implementation>
+			<role>com.ctrip.hermes.rest.service.SubscriptionRegisterService</role>
+			<implementation>com.ctrip.hermes.rest.service.SubscriptionRegisterService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.rest.service.MessagePushService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.rest.service.MetricsManager</role>
+					<role>com.ctrip.hermes.rest.service.SubscriptionPushService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
@@ -16,20 +13,20 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.rest.service.MessagePushService</role>
-			<implementation>com.ctrip.hermes.rest.service.MessagePushService</implementation>
+			<role>com.ctrip.hermes.rest.service.SubscriptionPushService</role>
+			<implementation>com.ctrip.hermes.rest.service.SubscriptionPushService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.core.log.BizLogger</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.rest.service.MetricsManager</role>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.rest.service.ProducerService</role>
-			<implementation>com.ctrip.hermes.rest.service.ProducerService</implementation>
+			<role>com.ctrip.hermes.rest.service.ProducerSendService</role>
+			<implementation>com.ctrip.hermes.rest.service.ProducerSendService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
@@ -44,10 +41,6 @@
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.rest.service.MetricsManager</role>
-			<implementation>com.ctrip.hermes.rest.service.MetricsManager</implementation>
 		</component>
 	</components>
 </plexus>

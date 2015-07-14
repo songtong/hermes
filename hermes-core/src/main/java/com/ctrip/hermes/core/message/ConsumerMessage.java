@@ -26,4 +26,7 @@ public interface ConsumerMessage<T> {
 
 	public void ack();
 	
+	public int getPartition();
+	
+	public long getOffset();
 }

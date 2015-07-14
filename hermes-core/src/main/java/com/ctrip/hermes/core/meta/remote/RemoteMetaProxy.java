@@ -252,8 +252,8 @@ public class RemoteMetaProxy implements MetaProxy {
 	}
 
 	@Override
-	public List<SubscriptionView> listSubscriptions() {
-		String response = get("/subscriptions/", null);
+	public List<SubscriptionView> listSubscriptions(String status) {
+		String response = get("/subscriptions/" + status, null);
 		if (response != null) {
 			return JSON.parseArray(response, SubscriptionView.class);
 		} else {

@@ -40,11 +40,18 @@
 		</query-defs>
 	</entity>
 	<entity name="subscription">
+		<var name="tStatus" value-type="String" />
 		<query-defs>
 			<query name="list" type="SELECT" multiple="true">
 				<statement><![CDATA[SELECT <FIELDS/>
         FROM <TABLE/>
         ORDER BY <FIELD name='id'/> DESC]]></statement>
+			</query>
+			<query name="findByStatus" type="SELECT" multiple="true">
+				<param name="tStatus" />
+				<statement><![CDATA[SELECT <FIELDS/>
+      	FROM <TABLE/>
+      	WHERE <FIELD name='status'/> = ${tStatus} ]]></statement>
 			</query>
 		</query-defs>
 	</entity>

@@ -8,6 +8,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -23,6 +24,7 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
+import com.ctrip.hermes.metaservice.service.SubscriptionService.SubscriptionStatus;
 
 @Path("/subscriptions/")
 @Singleton
@@ -33,11 +35,31 @@ public class SubscriptionsResource {
 
 	private SubscriptionService subscriptionService = PlexusComponentLocator.lookup(SubscriptionService.class);
 
-	@Path("")
+	@Path("/")
 	@GET
 	public List<SubscriptionView> getAll() {
 		try {
 			return subscriptionService.getSubscriptions();
+		} catch (DalException e) {
+			throw new InternalServerErrorException(e);
+		}
+	}
+
+	@Path("RUNNING")
+	@GET
+	public List<SubscriptionView> getRunning() {
+		try {
+			return subscriptionService.getSubscriptions(SubscriptionStatus.RUNNING);
+		} catch (DalException e) {
+			throw new InternalServerErrorException(e);
+		}
+	}
+
+	@Path("STOPPED")
+	@GET
+	public List<SubscriptionView> getStopped() {
+		try {
+			return subscriptionService.getSubscriptions(SubscriptionStatus.STOPPED);
 		} catch (DalException e) {
 			throw new InternalServerErrorException(e);
 		}
@@ -71,6 +93,34 @@ public class SubscriptionsResource {
 
 		try {
 			subscriptionService.remove(id);
+		} catch (Exception e) {
+			throw new InternalServerErrorException(e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+
+	@Path("{id}/start")
+	@PUT
+	public Response start(@PathParam("id") long id) {
+		logger.debug("start {}", id);
+
+		try {
+			subscriptionService.start(id);
+		} catch (Exception e) {
+			throw new InternalServerErrorException(e);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+
+	@Path("{id}/stop")
+	@PUT
+	public Response stop(@PathParam("id") long id) {
+		logger.debug("stop {}", id);
+
+		try {
+			subscriptionService.stop(id);
 		} catch (Exception e) {
 			throw new InternalServerErrorException(e);
 		}

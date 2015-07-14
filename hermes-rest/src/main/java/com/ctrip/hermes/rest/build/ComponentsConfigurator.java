@@ -7,10 +7,9 @@ import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.rest.service.CmessageTransferService;
-import com.ctrip.hermes.rest.service.DefaultSubscribeRegistry;
-import com.ctrip.hermes.rest.service.MessagePushService;
-import com.ctrip.hermes.rest.service.MetricsManager;
-import com.ctrip.hermes.rest.service.ProducerService;
+import com.ctrip.hermes.rest.service.SubscriptionRegisterService;
+import com.ctrip.hermes.rest.service.SubscriptionPushService;
+import com.ctrip.hermes.rest.service.ProducerSendService;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -18,11 +17,10 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 	public List<Component> defineComponents() {
 		List<Component> all = new ArrayList<Component>();
 
-		all.add(A(DefaultSubscribeRegistry.class));
-		all.add(A(MessagePushService.class));
-		all.add(A(ProducerService.class));
+		all.add(A(SubscriptionRegisterService.class));
+		all.add(A(SubscriptionPushService.class));
+		all.add(A(ProducerSendService.class));
 		all.add(A(CmessageTransferService.class));
-		all.add(A(MetricsManager.class));
 
 		return all;
 	}
