@@ -21,10 +21,8 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.meta.internal.MetaManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
@@ -46,8 +44,9 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	@Inject
 	private ElasticClient m_elasticClient;
 
-	@Inject
-	private MetaManager m_metaManager;
+//	 TODO remove comment
+//	@Inject
+//	private MetaManager m_metaManager;
 
 	private List<String> m_latestBroker = new ArrayList<String>();
 
@@ -104,11 +103,12 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 
 	private void updateLatestBroker() {
 		List<String> list = new ArrayList<String>();
-		for (Entry<String, Endpoint> entry : m_metaManager.loadMeta().getEndpoints().entrySet()) {
-			if (Endpoint.BROKER.equals(entry.getValue().getType())) {
-				list.add(entry.getValue().getHost());
-			}
-		}
+//	 TODO remove comment
+//		for (Entry<String, Endpoint> entry : m_metaManager.loadMeta().getEndpoints().entrySet()) {
+//			if (Endpoint.BROKER.equals(entry.getValue().getType())) {
+//				list.add(entry.getValue().getHost());
+//			}
+//		}
 		m_latestBroker = list;
 	}
 

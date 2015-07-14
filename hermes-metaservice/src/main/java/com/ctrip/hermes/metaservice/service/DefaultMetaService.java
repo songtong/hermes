@@ -5,6 +5,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -29,7 +30,12 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public Meta findLatestMeta() throws DalException {
-		com.ctrip.hermes.metaservice.model.Meta dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+		com.ctrip.hermes.metaservice.model.Meta dalMeta = null;
+		try {
+			dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+		} catch (DalNotFoundException e) {
+			// ignore if no record
+		}
 		if (dalMeta == null) {
 			dalMeta = new com.ctrip.hermes.metaservice.model.Meta();
 			dalMeta.setValue(JSON.toJSONString(new Meta()));
