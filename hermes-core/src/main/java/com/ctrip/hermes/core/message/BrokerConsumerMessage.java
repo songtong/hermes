@@ -164,4 +164,8 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	public BaseConsumerMessage<T> getBaseConsumerMessage() {
 		return m_baseMsg;
 	}
+	
+	public long getOffset(){
+		return this.getMsgSeq();
+	}
 }

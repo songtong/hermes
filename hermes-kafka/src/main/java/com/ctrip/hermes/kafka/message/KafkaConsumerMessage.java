@@ -14,12 +14,15 @@ public class KafkaConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHo
 
 	private long m_msgSeq;
 
-	/**
-	 * @param baseMsg
-	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public KafkaConsumerMessage(BaseConsumerMessage baseMsg) {
+	private int partition;
+
+	private long offset;
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public KafkaConsumerMessage(BaseConsumerMessage baseMsg, int partition, long offset) {
 		m_baseMsg = baseMsg;
+		this.partition = partition;
+		this.offset = offset;
 	}
 
 	public BaseConsumerMessage<T> getBaseMsg() {
@@ -87,5 +90,14 @@ public class KafkaConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHo
 	@Override
 	public BaseConsumerMessage<T> getBaseConsumerMessage() {
 		return m_baseMsg;
+	}
+
+	@Override
+	public int getPartition() {
+		return partition;
+	}
+
+	public long getOffset() {
+		return offset;
 	}
 }

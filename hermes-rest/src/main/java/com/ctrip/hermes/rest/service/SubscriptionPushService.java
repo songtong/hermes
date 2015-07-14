@@ -1,6 +1,5 @@
 package com.ctrip.hermes.rest.service;
 
-import java.io.IOException;
 import java.util.Properties;
 
 import javax.ws.rs.core.Response;
@@ -30,9 +29,9 @@ import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 
 @Named
-public class MessagePushService implements Initializable {
+public class SubscriptionPushService implements Initializable {
 
-	private static final Logger m_logger = LoggerFactory.getLogger(MessagePushService.class);
+	private static final Logger m_logger = LoggerFactory.getLogger(SubscriptionPushService.class);
 
 	@Inject
 	private BizLogger m_bizLogger;
@@ -77,8 +76,8 @@ public class MessagePushService implements Initializable {
 							      pushEvent.addData("refKey", msg.getRefKey());
 							      pushEvent.addData("endpoint", url);
 
-							      pushResponse = new HttpPushCommand(m_httpClient, m_requestConfig, sub.getId(), msg, url)
-							            .execute();
+							      pushResponse = new SubscriptionPushCommand(m_httpClient, m_requestConfig, sub.getId(), msg,
+							            url).execute();
 
 							      pushEvent.addData("result", pushResponse.getStatusLine().getStatusCode());
 							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
@@ -89,8 +88,9 @@ public class MessagePushService implements Initializable {
 								      msg.nack();
 								      return;
 							      } else {
-								      m_logger.warn("Push message failed, reason:{} msg:{} url:{}", pushResponse
-								            .getStatusLine().getReasonPhrase(), msg.getBody(), url);
+								      m_logger.warn("Push message failed, reason:{} topic:{} partition:{} offset:{} url:{}",
+								            pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(), msg.getPartition(),
+								            msg.getOffset(), url);
 								      continue;
 							      }
 						      } catch (Exception e) {

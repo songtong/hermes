@@ -16,7 +16,7 @@ import com.ctrip.hermes.producer.api.Producer;
 import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
 
 @Named
-public class ProducerService {
+public class ProducerSendService {
 
 	@Inject
 	private MetaService metaService;

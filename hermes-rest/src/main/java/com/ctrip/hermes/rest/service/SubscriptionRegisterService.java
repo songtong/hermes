@@ -21,24 +21,23 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
-@Named(type = SubscribeRegistry.class)
-public class DefaultSubscribeRegistry implements SubscribeRegistry {
+@Named
+public class SubscriptionRegisterService {
 
-	private static final Logger logger = LoggerFactory.getLogger(DefaultSubscribeRegistry.class);
+	private static final Logger logger = LoggerFactory.getLogger(SubscriptionRegisterService.class);
 
 	private Set<SubscriptionView> subscriptions = new HashSet<>();
 
 	private Map<SubscriptionView, ConsumerHolder> consumerHolders = new ConcurrentHashMap<>();
 
 	@Inject
-	private MessagePushService pushService;
+	private SubscriptionPushService pushService;
 
 	@Inject
 	private MetaService m_metaService;
 
 	private ScheduledExecutorService scheduledExecutor;
 
-	@Override
 	public void start() {
 		scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("SubscriptionChecker",
 		      true));
@@ -85,7 +84,7 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 					if (removed.size() > 0) {
 						Set<SubscriptionView> toRemove = new HashSet<>();
 						for (SubscriptionView sub : removed) {
-							logger.info("Stopping {}" + sub);
+							logger.info("Stopping {}", sub);
 
 							ConsumerHolder consumerHolder = consumerHolders.get(sub);
 							boolean isClosed = true;
@@ -111,7 +110,6 @@ public class DefaultSubscribeRegistry implements SubscribeRegistry {
 		}, 5, 5, TimeUnit.SECONDS);
 	}
 
-	@Override
 	public void stop() {
 		scheduledExecutor.shutdown();
 		for (SubscriptionView sub : subscriptions) {

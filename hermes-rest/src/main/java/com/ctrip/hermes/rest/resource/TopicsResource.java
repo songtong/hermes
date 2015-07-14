@@ -36,7 +36,7 @@ import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.rest.service.ProducerService;
+import com.ctrip.hermes.rest.service.ProducerSendService;
 
 @Path("/topics/")
 @Singleton
@@ -56,7 +56,7 @@ public class TopicsResource {
 
 	private static final BizLogger bizLogger = PlexusComponentLocator.lookup(BizLogger.class);
 
-	private ProducerService producerService = PlexusComponentLocator.lookup(ProducerService.class);
+	private ProducerSendService producerService = PlexusComponentLocator.lookup(ProducerSendService.class);
 
 	private ClientEnvironment env = PlexusComponentLocator.lookup(ClientEnvironment.class);
 
