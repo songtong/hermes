@@ -117,6 +117,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 			return "10.3.8.63";
 		case LPT:
 			return "10.3.8.63";
+		case FAT:
 		case FWS:
 			return "meta.hermes.fws.qa.nt.ctripcorp.com";
 		case UAT:

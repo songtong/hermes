@@ -8,9 +8,6 @@
 					<role>com.ctrip.hermes.rest.service.MessagePushService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.rest.service.MetricsManager</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
 				</requirement>
 			</requirements>
@@ -20,10 +17,10 @@
 			<implementation>com.ctrip.hermes.rest.service.MessagePushService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.core.log.BizLogger</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.rest.service.MetricsManager</role>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -44,10 +41,6 @@
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.rest.service.MetricsManager</role>
-			<implementation>com.ctrip.hermes.rest.service.MetricsManager</implementation>
 		</component>
 	</components>
 </plexus>

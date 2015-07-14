@@ -33,34 +33,35 @@ public class DefaultEngine extends Engine {
 		for (Subscriber s : subscribers) {
 			List<Topic> topics = m_metaService.listTopicsByPattern(s.getTopicPattern());
 
-			if (topics != null && !topics.isEmpty()) {
-				log.info("Found topics({}) matching pattern({}), groupId={}.",
-				      CollectionUtil.collect(topics, new Transformer() {
+			if (topics == null || topics.isEmpty()) {
+				throw new RuntimeException(
+				      String.format("Can not find any topics matching pattern %s", s.getTopicPattern()));
+			}
 
-					      @Override
-					      public Object transform(Object topic) {
-						      return ((Topic) topic).getName();
-					      }
-				      }), s.getTopicPattern(), s.getGroupId());
+			log.info("Found topics({}) matching pattern({}), groupId={}.",
+			      CollectionUtil.collect(topics, new Transformer() {
 
-				for (Topic topic : topics) {
-					ConsumerContext context = new ConsumerContext(topic, s.getGroupId(), s.getConsumer(),
-					      s.getMessageClass(), s.getConsumerType());
+				      @Override
+				      public Object transform(Object topic) {
+					      return ((Topic) topic).getName();
+				      }
+			      }), s.getTopicPattern(), s.getGroupId());
 
-					if (validate(topic, context)) {
-						try {
-							String endpointType = m_metaService.findEndpointTypeByTopic(topic.getName());
-							ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(endpointType);
-							handle.addSubscribeHandle(consumerBootstrap.start(context));
+			for (Topic topic : topics) {
+				ConsumerContext context = new ConsumerContext(topic, s.getGroupId(), s.getConsumer(), s.getMessageClass(),
+				      s.getConsumerType());
 
-						} catch (Exception e) {
-							log.error("Failed to start consumer for topic {}(consumer: groupId={}, sessionId={})",
-							      topic.getName(), context.getGroupId(), context.getSessionId(), e);
-						}
+				if (validate(topic, context)) {
+					try {
+						String endpointType = m_metaService.findEndpointTypeByTopic(topic.getName());
+						ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(endpointType);
+						handle.addSubscribeHandle(consumerBootstrap.start(context));
+
+					} catch (Exception e) {
+						log.error("Failed to start consumer for topic {}(consumer: groupId={}, sessionId={})",
+						      topic.getName(), context.getGroupId(), context.getSessionId(), e);
 					}
 				}
-			} else {
-				log.error("Can not find any topics matching pattern {}", s.getTopicPattern());
 			}
 		}
 

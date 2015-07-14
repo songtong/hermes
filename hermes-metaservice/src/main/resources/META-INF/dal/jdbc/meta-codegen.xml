@@ -91,9 +91,11 @@
     <member name="topic" field="topic" value-type="String" length="500" nullable="false" />
     <member name="group" field="group" value-type="String" length="500" nullable="false" />
     <member name="endpoints" field="endpoints" value-type="String" length="500" nullable="false" />
-    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" />
+    <member name="status" field="status" value-type="String" length="500" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

@@ -56,7 +56,7 @@ public interface MetaService {
 
 	LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId);
 
-	List<SubscriptionView> listSubscriptions();
+	List<SubscriptionView> listSubscriptions(String status);
 
 	List<SchemaView> listSchemas();
 

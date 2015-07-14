@@ -16,7 +16,7 @@ public class ProducerTest {
 
 	@Test
 	public void kafkaThroughBrokerTest() throws IOException, InterruptedException, ExecutionException {
-		String topic = "kafka.PerfTest";
+		String topic = "kafka.SimpleTextTopic";
 
 		Producer producer = Producer.getInstance();
 

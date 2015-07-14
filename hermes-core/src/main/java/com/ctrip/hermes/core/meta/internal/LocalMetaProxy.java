@@ -58,7 +58,7 @@ public class LocalMetaProxy implements MetaProxy {
 	}
 
 	@Override
-	public List<SubscriptionView> listSubscriptions() {
+	public List<SubscriptionView> listSubscriptions(String status) {
 		return new ArrayList<SubscriptionView>();
 	}
 

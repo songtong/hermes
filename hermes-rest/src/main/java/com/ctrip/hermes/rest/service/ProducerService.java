@@ -9,13 +9,11 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.exception.MessageSendException;
-import com.ctrip.hermes.core.message.payload.RawMessage;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.producer.api.Producer;
-import com.ctrip.hermes.producer.api.Producer.MessageHolder;
-import com.google.common.io.ByteStreams;
+import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
 
 @Named
 public class ProducerService {
@@ -32,42 +30,11 @@ public class ProducerService {
 
 	public Future<SendResult> send(String topic, Map<String, String> params, InputStream is)
 	      throws MessageSendException, IOException {
-		byte[] payload = ByteStreams.toByteArray(is);
-		RawMessage rawMsg = new RawMessage(payload);
-
-		String partitionKey = null;
-		if (params.containsKey("partitionKey")) {
-			partitionKey = params.get("partitionKey");
+		HystrixRequestContext context = HystrixRequestContext.initializeContext();
+		try {
+			return new ProducerSendCommand(producer, topic, params, is).execute();
+		} finally {
+			context.shutdown();
 		}
-		MessageHolder messageHolder = producer.message(topic, partitionKey, rawMsg);
-		if (params.containsKey("priority")) {
-			if (Boolean.valueOf(params.get("priority"))) {
-				messageHolder.withPriority();
-			}
-		}
-		if (params.containsKey("refKey")) {
-			String refKey = params.get("refKey");
-			messageHolder.withRefKey(refKey);
-		}
-		if (params.containsKey("properties")) {
-			String properties = params.get("properties");
-			for (String pro : properties.split(",")) {
-				if (pro.contains("=")) {
-					String[] split = pro.split("=");
-					if (split.length == 2) {
-						messageHolder.addProperty(split[0], split[1]);
-					}
-				}
-			}
-		}
-		if (params.containsKey("withoutHeader")) {
-			if (Boolean.valueOf(params.get("withoutHeader"))) {
-				messageHolder.withoutHeader();
-			}
-		}
-
-		Future<SendResult> sendResult = messageHolder.send();
-		return sendResult;
 	}
-
 }
