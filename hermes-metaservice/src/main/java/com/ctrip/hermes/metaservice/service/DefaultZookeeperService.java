@@ -37,15 +37,16 @@ public class DefaultZookeeperService implements ZookeeperService {
 	@Override
 	public void ensureConsumerLeaseZkPath(Topic topic) {
 
-		List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic);
+		try {
+			ensurePath(ZKPathUtils.getConsumerLeaseRootZkPath());
+			List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic);
 
-		for (String path : paths) {
-			try {
+			for (String path : paths) {
 				ensurePath(path);
-			} catch (Exception e) {
-				log.error("Exception occurred in ensureConsumerLeaseZkPath", e);
-				throw new RuntimeException(e);
 			}
+		} catch (Exception e) {
+			log.error("Exception occurred in ensureConsumerLeaseZkPath", e);
+			throw new RuntimeException(e);
 		}
 	}
 
