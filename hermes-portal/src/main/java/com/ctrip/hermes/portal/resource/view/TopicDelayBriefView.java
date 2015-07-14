@@ -3,7 +3,7 @@ package com.ctrip.hermes.portal.resource.view;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public class MonitorTopicBriefView {
+public class TopicDelayBriefView {
 	private static final long NON_PRODUCE_LIMIT = TimeUnit.DAYS.toMillis(7);
 
 	private static final long DELAY_LIMIT = TimeUnit.MINUTES.toMillis(3);
@@ -15,12 +15,12 @@ public class MonitorTopicBriefView {
 	private int averageDelay = 0;
 
 	private int dangerLevel = 0;
-
-	public MonitorTopicBriefView() {
+	
+	public TopicDelayBriefView() {
 
 	}
 
-	public MonitorTopicBriefView(String topic, Date date, int delay) {
+	public TopicDelayBriefView(String topic, Date date, int delay) {
 		this.topic = topic;
 		this.latestProduced = date;
 		this.averageDelay = delay;
@@ -81,7 +81,7 @@ public class MonitorTopicBriefView {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		MonitorTopicBriefView other = (MonitorTopicBriefView) obj;
+		TopicDelayBriefView other = (TopicDelayBriefView) obj;
 		if (topic == null) {
 			if (other.topic != null)
 				return false;

@@ -1,7 +1,7 @@
 package com.ctrip.hermes.portal.service.elastic;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -10,6 +10,7 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -21,6 +22,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms.Order;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,18 +50,19 @@ public class DefaultElasticClient implements Initializable, ElasticClient {
 		return sb;
 	}
 
-	public Map<String, Integer> getLastMinuteCount(String field, String eventType, int size) {
-		Map<String, Integer> map = new HashMap<>();
+	public Map<String, Integer> getLastMinuteCount(String field, String query, int size) {
+		Map<String, Integer> map = new LinkedHashMap<>();
 
 		long _1MinAgo = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1);
-		QueryBuilder qb = QueryBuilders.queryStringQuery("eventType:" + eventType);
+		QueryBuilder qb = QueryBuilders.queryStringQuery(query);
 		FilterBuilder fb = FilterBuilders.rangeFilter("@timestamp").from(_1MinAgo);
-		TermsBuilder tb = new TermsBuilder(AGG_NAME).field(field);
+		TermsBuilder tb = new TermsBuilder(AGG_NAME).field(field).order(Order.count(false));
 		if (size > 0) {
 			tb.size(size);
 		}
 
 		SearchRequestBuilder sb = prepareSearch();
+		sb.setSearchType(SearchType.COUNT);
 		sb.setQuery(QueryBuilders.filteredQuery(qb, fb));
 		sb.addAggregation(tb);
 		try {
@@ -72,7 +75,7 @@ public class DefaultElasticClient implements Initializable, ElasticClient {
 				log.warn("Elastic clusters response error: {}", sr.status());
 			}
 		} catch (Exception e) {
-			log.warn("Find latest count failed: {} {}", field, eventType, e);
+			log.warn("Find latest count failed: {} {}", field, query, e);
 		}
 		return map;
 	}
@@ -85,6 +88,7 @@ public class DefaultElasticClient implements Initializable, ElasticClient {
 		FilterBuilder fb = FilterBuilders.rangeFilter("@timestamp").from(fromWhen);
 
 		SearchRequestBuilder sb = prepareSearch();
+		sb.setSearchType(SearchType.COUNT);
 		sb.setQuery(QueryBuilders.filteredQuery(qb, fb));
 		sb.addAggregation(new TermsBuilder(AGG_NAME).field(field));
 		try {
@@ -116,6 +120,28 @@ public class DefaultElasticClient implements Initializable, ElasticClient {
 		return getUniqueFields(_7daysAgo, "datas.consumerIp", q);
 	}
 
+	@Override
+	public Map<String, Integer> getBrokerReceived() {
+		return getLastMinuteCount("datas.brokerIp", "eventType:Message.Received", -1);
+	}
+
+	@Override
+	public Map<String, Integer> getBrokerTopicReceived(String broker, int size) {
+		String query = "eventType:Message.Received AND datas.brokerIp:" + broker;
+		return getLastMinuteCount("datas.topic", query, size);
+	}
+
+	@Override
+	public Map<String, Integer> getBrokerDelivered() {
+		return getLastMinuteCount("datas.brokerIp", "eventType:Message.Delivered", -1);
+	}
+
+	@Override
+	public Map<String, Integer> getBrokerTopicDelivered(String broker, int size) {
+		String query = "eventType:Message.Delivered AND datas.brokerIp:" + broker;
+		return getLastMinuteCount("datas.topic", query, size);
+	}
+
 	private void initClient() {
 		TransportClient client = new TransportClient(ImmutableSettings.settingsBuilder().build());
 		for (Pair<String, Integer> pair : m_config.getElasticClusterNodes()) {
@@ -127,15 +153,5 @@ public class DefaultElasticClient implements Initializable, ElasticClient {
 	@Override
 	public void initialize() throws InitializationException {
 		initClient();
-	}
-
-	@Override
-	public Map<String, Integer> getTopBrokerReceived() {
-		return getLastMinuteCount("datas.brokerIp", "Message.Received", -1);
-	}
-
-	@Override
-	public Map<String, Integer> getTopBrokerDelivered() {
-		return getLastMinuteCount("datas.brokerIp", "Message.Delivered", -1);
 	}
 }

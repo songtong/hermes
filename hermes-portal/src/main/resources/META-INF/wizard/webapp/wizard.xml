@@ -26,6 +26,9 @@
          <page name="resender" title="Resender" path="resender" template="default">
             <description>Resender</description>
          </page>
+         <page name="home" title="Home" path="home" template="default">
+            <description>Home</description>
+         </page>
       </module>
    </webapp>
 </wizard>

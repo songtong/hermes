@@ -415,5 +415,23 @@
 				</requirement>
 			</requirements>
 		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.home.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.home.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.home.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.home.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.home.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
 	</components>
 </plexus>
