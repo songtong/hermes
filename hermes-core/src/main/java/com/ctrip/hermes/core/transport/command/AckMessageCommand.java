@@ -137,10 +137,6 @@ public class AckMessageCommand extends AbstractCommand {
 		return m_nackMsgSeqs;
 	}
 
-	public boolean isEmpty() {
-		return m_nackMsgSeqs.isEmpty() && m_ackMsgSeqs.isEmpty();
-	}
-
 	public static class AckContext {
 		private long m_msgSeq;
 
@@ -178,6 +174,37 @@ public class AckMessageCommand extends AbstractCommand {
 			return "AckContext [m_msgSeq=" + m_msgSeq + ", m_remainingRetries=" + m_remainingRetries
 			      + ", m_onMessageStartTimeMillis=" + m_onMessageStartTimeMillis + ", m_onMessageEndTimeMillis="
 			      + m_onMessageEndTimeMillis + "]";
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + (int) (m_msgSeq ^ (m_msgSeq >>> 32));
+			result = prime * result + (int) (m_onMessageEndTimeMillis ^ (m_onMessageEndTimeMillis >>> 32));
+			result = prime * result + (int) (m_onMessageStartTimeMillis ^ (m_onMessageStartTimeMillis >>> 32));
+			result = prime * result + m_remainingRetries;
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			AckContext other = (AckContext) obj;
+			if (m_msgSeq != other.m_msgSeq)
+				return false;
+			if (m_onMessageEndTimeMillis != other.m_onMessageEndTimeMillis)
+				return false;
+			if (m_onMessageStartTimeMillis != other.m_onMessageStartTimeMillis)
+				return false;
+			if (m_remainingRetries != other.m_remainingRetries)
+				return false;
+			return true;
 		}
 
 	}

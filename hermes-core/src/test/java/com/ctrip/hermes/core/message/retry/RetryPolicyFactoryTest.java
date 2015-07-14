@@ -1,11 +1,9 @@
 package com.ctrip.hermes.core.message.retry;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import com.ctrip.hermes.core.message.retry.FrequencySpecifiedRetryPolicy;
-import com.ctrip.hermes.core.message.retry.RetryPolicy;
-import com.ctrip.hermes.core.message.retry.RetryPolicyFactory;
+import org.junit.Test;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -41,7 +39,7 @@ public class RetryPolicyFactoryTest {
 	@Test
 	public void testValid() throws Exception {
 		RetryPolicy policy = RetryPolicyFactory.create("1:[1,2]");
-		Assert.assertTrue(policy instanceof FrequencySpecifiedRetryPolicy);
-		Assert.assertEquals(2, policy.getRetryTimes());
+		assertTrue(policy instanceof FrequencySpecifiedRetryPolicy);
+		assertEquals(2, policy.getRetryTimes());
 	}
 }

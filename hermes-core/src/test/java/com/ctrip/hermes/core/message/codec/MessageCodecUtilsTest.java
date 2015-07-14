@@ -1,14 +1,13 @@
 package com.ctrip.hermes.core.message.codec;
 
+import static org.junit.Assert.assertEquals;
+
 import java.nio.ByteBuffer;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.message.ProducerMessage;
-import com.ctrip.hermes.core.message.codec.MessageCodecUtils;
-import com.ctrip.hermes.core.message.codec.DefaultMessageCodec;
 
 public class MessageCodecUtilsTest {
 
@@ -26,9 +25,9 @@ public class MessageCodecUtilsTest {
 		ByteBuffer byteBuffer = ByteBuffer.wrap(proMsgByte);
 		ByteBuffer payload = MessageCodecUtils.getPayload(byteBuffer);
 		Object actual = JSON.parseObject(payload.array(), String.class);
-		Assert.assertEquals(expected, actual);
+		assertEquals(expected, actual);
 	}
-	
+
 	@Test
 	public void getJsonPayloadByByteArray() {
 		ProducerMessage<String> proMsg = new ProducerMessage<String>();
@@ -42,6 +41,6 @@ public class MessageCodecUtilsTest {
 		byte[] proMsgByte = codec.encode(proMsg);
 		byte[] payload = MessageCodecUtils.getPayload(proMsgByte);
 		Object actual = JSON.parseObject(payload, String.class);
-		Assert.assertEquals(expected, actual);
+		assertEquals(expected, actual);
 	}
 }
