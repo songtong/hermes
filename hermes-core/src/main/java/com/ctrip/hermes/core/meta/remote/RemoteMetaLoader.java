@@ -48,7 +48,8 @@ public class RemoteMetaLoader implements MetaLoader {
 			if (log.isDebugEnabled()) {
 				log.debug("Loading meta from server: {}", ipPort);
 			}
-
+			
+			String url =null; 
 			try {
 				String uri = m_clientEnvironment.getGlobalConfig().getProperty("meta.fetch.remote.uri");
 				if (StringUtils.isBlank(uri)) {
@@ -57,7 +58,8 @@ public class RemoteMetaLoader implements MetaLoader {
 					}
 					uri = "/meta";
 				}
-				String url = String.format("http://%s%s", ipPort, uri);
+				
+				url = String.format("http://%s%s", ipPort, uri);
 				if (m_metaCache.get() != null) {
 					url += "?version=" + m_metaCache.get().getVersion();
 				}
@@ -79,6 +81,7 @@ public class RemoteMetaLoader implements MetaLoader {
 				}
 
 			} catch (Exception e) {
+				log.debug("Load meta failed, from URL " + url, e);
 				// ignore
 			}
 		}

@@ -34,7 +34,7 @@ public class MetricsResource {
 		return subMetrics;
 	}
 
-	@Path("/")
+	@Path("all")
 	@GET
 	public Collection<HystrixCommandMetrics> getHystrixMetrics() {
 		Collection<HystrixCommandMetrics> metrics = HystrixCommandMetrics.getInstances();

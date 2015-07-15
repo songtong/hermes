@@ -5,10 +5,12 @@ import javax.servlet.ServletContextListener;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.rest.service.SubscriptionRegisterService;
+import com.yammer.metrics.Metrics;
 
 public class GatewayListener implements ServletContextListener {
 
-	private SubscriptionRegisterService subsribeRegistry = PlexusComponentLocator.lookup(SubscriptionRegisterService.class);
+	private SubscriptionRegisterService subsribeRegistry = PlexusComponentLocator
+	      .lookup(SubscriptionRegisterService.class);
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
@@ -18,6 +20,9 @@ public class GatewayListener implements ServletContextListener {
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
 		subsribeRegistry.stop();
+
+		Metrics.defaultRegistry().shutdown();
+		
 	}
 
 }
