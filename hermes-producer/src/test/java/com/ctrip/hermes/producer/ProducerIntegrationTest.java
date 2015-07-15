@@ -412,7 +412,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		}
 		assertFalse(future.isDone());
 
-		TimeUnit.MILLISECONDS.sleep(lookup(ProducerConfig.class).getSendMessageReadResultTimeoutMillis() + 1);
+		TimeUnit.MILLISECONDS.sleep(lookup(ProducerConfig.class).getSendMessageReadResultTimeoutMillis() + 1000L);
 
 		((TestSendMessageResultMonitor) lookup(SendMessageResultMonitor.class)).scanAndResendTimeoutCommands();
 
