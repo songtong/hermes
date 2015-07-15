@@ -5,8 +5,6 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.tracer.Model" scope="request" />
 
 <a:layout>
-	<br>
-	<br>
 	<div class="container row" ng-app="hermes-tracer" ng-controller="tracer-controller">
 		<div class="form-group form-inline" align="center" style="margin-left: 100px">
 			<label>输入 Ref-Key</label>
@@ -19,9 +17,7 @@
 	<script type="text/javascript" src="${model.webapp}/js/highcharts/highcharts.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/highcharts/highcharts-more.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/highcharts/exporting.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
 
-	<script src="${model.webapp}/js/tracer.js"></script>
+	<script src="${model.webapp}/js/tracer/tracer.js"></script>
 	<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
 </a:layout>

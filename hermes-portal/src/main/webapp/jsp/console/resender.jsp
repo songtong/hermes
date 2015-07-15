@@ -27,7 +27,5 @@
 			</div>
 		</form>
 	</div>
-	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
-	<script src="${model.webapp}/js/resender.js"></script>
+	<script src="${model.webapp}/js/resender/resender.js"></script>
 </a:layout>

@@ -55,9 +55,7 @@
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 						<h4 class="modal-title" id="add-consumer-label">新增 Consumer</h4>
 					</div>
 					<div class="modal-body">
@@ -110,10 +108,6 @@
 		</div>
 	</div>
 
-	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/smart-table.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/bootbox.min.js"></script>
-
-	<script type="text/javascript" src="${model.webapp}/js/consumer.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/consumer/consumer.js"></script>
 </a:layout>

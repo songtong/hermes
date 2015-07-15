@@ -23,9 +23,6 @@
 			<div id="main_board" class="col-md-10 col-md-offset-2 main" style="margin-left: 15%"></div>
 		</div>
 	</div>
-	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/smart-table.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/ui-bootstrap-tpls-0.13.0.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/dashboard/broker-controller.js"></script>
 </a:layout>

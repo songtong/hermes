@@ -16,6 +16,15 @@
 <link href="${model.webapp}/css/bootstrap.min.css" type="text/css" rel="stylesheet">
 <link href="${model.webapp}/css/portal-common.css" type="text/css" rel="stylesheet">
 <script src="${model.webapp}/js/jquery-1.11.3.min.js" type="text/javascript"></script>
+<script src="${model.webapp}/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="${model.webapp}/js/bootstrap3-typeahead.min.js" type="text/javascript"></script>
+<script src="${model.webapp}/js/portal-common.js" type="text/javascript"></script>
+
+<script type="text/javascript" src="${model.webapp}/js/angular/angular.min.js"></script>
+<script type="text/javascript" src="${model.webapp}/js/angular/angular-resource.min.js"></script>
+<script type="text/javascript" src="${model.webapp}/js/angular/ui-bootstrap-tpls-0.13.0.min.js"></script>
+<script type="text/javascript" src="${model.webapp}/js/angular/bootbox.min.js"></script>
+
 <script type="text/javascript">
 	var contextpath = "${model.webapp}";
 </script>
@@ -87,9 +96,5 @@
 		</div>
 	</div>
 	<!--/.fluid-container-->
-
-	<script src="${model.webapp}/js/bootstrap.min.js" type="text/javascript"></script>
-	<script src="${model.webapp}/js/bootstrap3-typeahead.min.js" type="text/javascript"></script>
-	<script src="${model.webapp}/js/portal-common.js" type="text/javascript"></script>
 </body>
 </html>
