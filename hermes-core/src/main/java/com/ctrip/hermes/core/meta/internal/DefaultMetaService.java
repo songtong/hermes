@@ -61,35 +61,28 @@ public class DefaultMetaService implements MetaService, Initializable {
 		return m_manager.getMetaProxy();
 	}
 
-	@Override
-	public String findEndpointTypeByTopic(String topicName) {
-		Meta meta = getMeta();
-		Topic topic = meta.getTopics().get(topicName);
+	protected Topic findTopic(String topicName, Meta meta) {
+		Topic topic = meta.findTopic(topicName);
 		if (topic == null) {
 			throw new RuntimeException(String.format("Topic %s not found", topicName));
 		}
+		return topic;
+	}
 
-		return topic.getEndpointType();
+	@Override
+	public String findEndpointTypeByTopic(String topicName) {
+		return findTopic(topicName, getMeta()).getEndpointType();
 	}
 
 	@Override
 	public List<Partition> listPartitionsByTopic(String topicName) {
-		Meta meta = getMeta();
-		Topic topic = meta.findTopic(topicName);
-		if (topic != null) {
-			return topic.getPartitions();
-		} else {
-			throw new RuntimeException(String.format("Topic %s not found", topicName));
-		}
+		return findTopic(topicName, getMeta()).getPartitions();
 	}
 
 	@Override
 	public Storage findStorageByTopic(String topicName) {
 		Meta meta = getMeta();
-		Topic topic = meta.findTopic(topicName);
-		if (topic == null) {
-			throw new RuntimeException(String.format("Topic %s not found", topicName));
-		}
+		Topic topic = findTopic(topicName, meta);
 		String storageType = topic.getStorageType();
 		return meta.findStorage(storageType);
 	}
@@ -97,24 +90,14 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public Codec findCodecByTopic(String topicName) {
 		Meta meta = getMeta();
-		Topic topic = meta.findTopic(topicName);
-		if (topic != null) {
-			String codeType = topic.getCodecType();
-			return meta.getCodecs().get(codeType);
-		} else {
-			throw new RuntimeException(String.format("Topic %s not found", topicName));
-		}
+		Topic topic = findTopic(topicName, meta);
+		String codeType = topic.getCodecType();
+		return meta.getCodecs().get(codeType);
 	}
 
 	@Override
 	public Partition findPartitionByTopicAndPartition(String topicName, int partitionId) {
-		Meta meta = getMeta();
-		Topic topic = meta.findTopic(topicName);
-		if (topic != null) {
-			return topic.findPartition(partitionId);
-		} else {
-			throw new RuntimeException(String.format("Topic %s not found", topicName));
-		}
+		return findTopic(topicName, getMeta()).findPartition(partitionId);
 	}
 
 	public List<Topic> listTopicsByPattern(String topicPattern) {
@@ -151,22 +134,20 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public Topic findTopicByName(String topic) {
-		Meta meta = getMeta();
-		return meta.findTopic(topic);
+	public Topic findTopicByName(String topicName) {
+		try {
+			return findTopic(topicName, getMeta());
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	@Override
 	public int translateToIntGroupId(String topicName, String groupName) {
-		Topic topic = findTopicByName(topicName);
+		Topic topic = findTopic(topicName, getMeta());
 
-		if (topic == null) {
-			throw new RuntimeException(String.format("Topic %s not found", topicName));
-		}
-
-		ConsumerGroup consumerGroup = topic.findConsumerGroup(groupName);
-
-		if (consumerGroup != null) {
+		if (containsConsumerGroup(topicName, groupName)) {
+			ConsumerGroup consumerGroup = topic.findConsumerGroup(groupName);
 			return consumerGroup.getId();
 		} else {
 			throw new RuntimeException(String.format("Consumer group not found for topic %s and group %s", topicName,
@@ -197,31 +178,23 @@ public class DefaultMetaService implements MetaService, Initializable {
 		return dataSources;
 	}
 
-	public void refresh() {
-		refreshMeta(m_manager.loadMeta());
-	}
-
-	private void refreshMeta(Meta meta) {
-		m_metaCache.set(meta);
+	protected void refreshMeta() {
+		m_metaCache.set(m_manager.loadMeta());
 	}
 
 	@Override
 	public int getAckTimeoutSecondsByTopicAndConsumerGroup(String topicName, String groupId) {
-		Topic topic = findTopicByName(topicName);
-		if (topic == null) {
-			throw new RuntimeException(String.format("Topic %s not found", topicName));
-		}
+		Topic topic = findTopic(topicName, getMeta());
 
-		ConsumerGroup consumerGroup = topic.findConsumerGroup(groupId);
-
-		if (consumerGroup == null) {
-			throw new RuntimeException(String.format("Consumer group %s for topic %s not found", groupId, topicName));
-		}
-
-		if (consumerGroup.getAckTimeoutSeconds() == null) {
-			return topic.getAckTimeoutSeconds();
+		if (containsConsumerGroup(topicName, groupId)) {
+			ConsumerGroup consumerGroup = topic.findConsumerGroup(groupId);
+			if (consumerGroup.getAckTimeoutSeconds() == null) {
+				return topic.getAckTimeoutSeconds();
+			} else {
+				return consumerGroup.getAckTimeoutSeconds();
+			}
 		} else {
-			return consumerGroup.getAckTimeoutSeconds();
+			throw new RuntimeException(String.format("Consumer group %s for topic %s not found", groupId, topicName));
 		}
 
 	}
@@ -249,14 +222,14 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		refreshMeta(m_manager.loadMeta());
+		refreshMeta();
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("RefreshMeta", true))
 		      .scheduleWithFixedDelay(new Runnable() {
 
 			      @Override
 			      public void run() {
 				      try {
-					      refresh();
+					      refreshMeta();
 				      } catch (Exception e) {
 					      log.warn("Failed to refresh meta", e);
 				      }
@@ -274,28 +247,26 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public Endpoint findEndpointByTopicAndPartition(String topic, int partition) {
-		return getMeta().findEndpoint(findTopicByName(topic).findPartition(partition).getEndpoint());
+		return getMeta().findEndpoint(findTopic(topic, getMeta()).findPartition(partition).getEndpoint());
 	}
 
 	@Override
 	public RetryPolicy findRetryPolicyByTopicAndGroup(String topicName, String groupId) {
-		Topic topic = findTopicByName(topicName);
-		if (topic == null) {
-			throw new RuntimeException(String.format("Topic %s not found", topicName));
-		}
+		Topic topic = findTopic(topicName, getMeta());
 
-		ConsumerGroup consumerGroup = topic.findConsumerGroup(groupId);
+		if (containsConsumerGroup(topicName, groupId)) {
+			ConsumerGroup consumerGroup = topic.findConsumerGroup(groupId);
 
-		if (consumerGroup == null) {
+			String retryPolicyValue = consumerGroup.getRetryPolicy();
+			if (StringUtils.isBlank(retryPolicyValue)) {
+				retryPolicyValue = topic.getConsumerRetryPolicy();
+			}
+
+			return RetryPolicyFactory.create(retryPolicyValue);
+		} else {
+
 			throw new RuntimeException(String.format("Consumer group %s for topic %s not found", groupId, topicName));
 		}
-
-		String retryPolicyValue = consumerGroup.getRetryPolicy();
-		if (StringUtils.isBlank(retryPolicyValue)) {
-			retryPolicyValue = topic.getConsumerRetryPolicy();
-		}
-
-		return RetryPolicyFactory.create(retryPolicyValue);
 	}
 
 	@Override
@@ -315,10 +286,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 	@Override
 	public boolean containsConsumerGroup(String topicName, String groupId) {
-		Topic topic = findTopicByName(topicName);
-		if (topic == null) {
-			throw new RuntimeException(String.format("Topic %s not found", topicName));
-		}
+		Topic topic = findTopic(topicName, getMeta());
 
 		ConsumerGroup consumerGroup = topic.findConsumerGroup(groupId);
 

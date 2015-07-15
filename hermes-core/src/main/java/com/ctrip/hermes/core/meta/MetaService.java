@@ -60,8 +60,6 @@ public interface MetaService {
 
 	List<SchemaView> listSchemas();
 
-	void refresh();
-
 	boolean containsEndpoint(Endpoint endpoint);
 
 	boolean containsConsumerGroup(String topicName, String groupId);
