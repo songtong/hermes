@@ -1,12 +1,12 @@
 package com.ctrip.hermes.portal.console.dashboard;
 
 public enum JspFile {
-	TOPIC("/jsp/console/dash-topic.jsp"), //
-	TOPIC_DETAIL("/jsp/console/dash-topic-detail.jsp"), //
-	CLIENT("/jsp/console/dash-client.jsp"), //
-	BROKER("/jsp/console/dash-broker.jsp"), //
-	BROKER_DETAIL("/jsp/console/dash-broker-detail.jsp"), //
-	BROKER_DETAIL_HOME("/jsp/console/dash-broker-detail-home.jsp"); //
+	TOPIC("/jsp/console/dashboard/dash-topic.jsp"), //
+	TOPIC_DETAIL("/jsp/console/dashboard/dash-topic-detail.jsp"), //
+	CLIENT("/jsp/console/dashboard/dash-client.jsp"), //
+	BROKER("/jsp/console/dashboard/dash-broker.jsp"), //
+	BROKER_DETAIL("/jsp/console/dashboard/dash-broker-detail.jsp"), //
+	BROKER_DETAIL_HOME("/jsp/console/dashboard/dash-broker-detail-home.jsp"); //
 
 	private String m_path;
 

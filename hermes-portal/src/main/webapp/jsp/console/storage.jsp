@@ -112,14 +112,12 @@
 
 	</div>
 
-	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-strap.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-strap.tpl.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/bootbox.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/xeditable.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.tpl.min.js"></script>
+	
+	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
 
-	<script type="text/javascript" src="${model.webapp}/js/storage.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/storage/storage.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/storage/service.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/storage/controller.js"></script>
 </a:layout>

@@ -43,11 +43,6 @@
 		</div>
 	</div>
 
-	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/bootbox.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/ui-bootstrap-tpls-0.13.0.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/xeditable.min.js"></script>
-
-	<script type="text/javascript" src="${model.webapp}/js/subscription.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/subscription/subscription.js"></script>
 </a:layout>

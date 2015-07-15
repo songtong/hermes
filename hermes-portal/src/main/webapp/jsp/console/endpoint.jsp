@@ -88,10 +88,6 @@
 		</div>
 	</div>
 
-	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/smart-table.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/bootbox.min.js"></script>
-
-	<script type="text/javascript" src="${model.webapp}/js/endpoint.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/endpoint/endpoint.js"></script>
 </a:layout>
