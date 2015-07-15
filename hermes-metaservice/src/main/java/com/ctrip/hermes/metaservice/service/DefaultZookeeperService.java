@@ -54,7 +54,8 @@ public class DefaultZookeeperService implements ZookeeperService {
 	public void updateZkBaseMetaVersion(long version) throws Exception {
 		ensurePath(ZKPathUtils.getBaseMetaVersionZkPath());
 
-		m_zkClient.getClient().setData().forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(version));
+		m_zkClient.getClient().setData()
+		      .forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(version));
 	}
 
 	@Override
@@ -175,6 +176,24 @@ public class DefaultZookeeperService implements ZookeeperService {
 	public void ensurePath(String path) throws Exception {
 		EnsurePath ensurePath = m_zkClient.getClient().newNamespaceAwareEnsurePath(path);
 		ensurePath.ensure(m_zkClient.getClient().getZookeeperClient());
+	}
+
+	@Override
+	public void deleteMetaServerAssignmentZkPath(String topicName) {
+		long now = m_systemClockService.now();
+
+		try {
+			ensurePath(ZKPathUtils.getMetaServerAssignmentZkPath(topicName));
+
+			m_zkClient.getClient().inTransaction()//
+			      .delete().forPath(ZKPathUtils.getMetaServerAssignmentZkPath(topicName))//
+			      .and().setData()
+			      .forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath(), ZKSerializeUtils.serialize(now))//
+			      .and().commit();
+		} catch (Exception e) {
+			log.error("Exception occurred in deleteMetaServerAssignmentZkPath", e);
+			throw new RuntimeException(e);
+		}
 	}
 
 }

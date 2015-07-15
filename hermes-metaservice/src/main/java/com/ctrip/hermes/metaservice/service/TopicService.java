@@ -232,6 +232,7 @@ public class TopicService {
 				m_topicStorageService.dropTopicStorage(topic);
 				m_zookeeperService.deleteConsumerLeaseTopicParentZkPath(topic.getName());
 				m_zookeeperService.deleteBrokerLeaseTopicParentZkPath(topic.getName());
+				m_zookeeperService.deleteMetaServerAssignmentZkPath(topic.getName());
 			} catch (Exception e) {
 				if (e instanceof StorageHandleErrorException) {
 					m_logger.warn("Delete topic tables failed", e);
