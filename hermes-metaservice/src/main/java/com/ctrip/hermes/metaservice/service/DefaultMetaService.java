@@ -11,6 +11,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
 
@@ -30,17 +31,11 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public Meta findLatestMeta() throws DalException {
-		com.ctrip.hermes.metaservice.model.Meta dalMeta = null;
 		try {
-			dalMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+			return JSON.parseObject(m_metaDao.findLatest(MetaEntity.READSET_FULL).getValue(), Meta.class);
 		} catch (DalNotFoundException e) {
-			// ignore if no record
+			return new Meta().addStorage(new Storage(Storage.MYSQL)).addStorage(new Storage(Storage.KAFKA)).setVersion(0L);
 		}
-		if (dalMeta == null) {
-			dalMeta = new com.ctrip.hermes.metaservice.model.Meta();
-			dalMeta.setValue(JSON.toJSONString(new Meta()));
-		}
-		return JSON.parseObject(dalMeta.getValue(), Meta.class);
 	}
 
 	@Override

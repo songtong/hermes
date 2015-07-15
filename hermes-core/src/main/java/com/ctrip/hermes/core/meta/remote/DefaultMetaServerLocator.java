@@ -17,7 +17,6 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.Hermes.Env;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.CollectionUtil;
@@ -77,7 +76,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 	}
 
 	private List<String> domainToIpPorts() {
-		String domain = getMetaServerDomainName();
+		String domain = m_clientEnv.getMetaServerDomainName();
 		log.info("Meta server domain {}", domain);
 		try {
 			List<String> ips = DNSUtil.resolve(domain);
@@ -105,30 +104,6 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		      .returnContent().asString();
 
 		return Arrays.asList(JSON.parseArray(response).toArray(new String[0]));
-	}
-
-	private String getMetaServerDomainName() {
-		Env env = m_clientEnv.getEnv();
-
-		switch (env) {
-		case LOCAL:
-			return "meta.hermes.local";
-		case DEV:
-			return "10.3.8.63";
-		case LPT:
-			return "10.3.8.63";
-		case FAT:
-		case FWS:
-			return "meta.hermes.fws.qa.nt.ctripcorp.com";
-		case UAT:
-			return "meta.hermes.fx.uat.qa.nt.ctripcorp.com";
-		case PROD:
-			return "meta.hermes.fx.ctripcorp.com";
-
-		default:
-			throw new IllegalArgumentException(String.format("Unknown hermes env %s", env));
-		}
-
 	}
 
 	@Override

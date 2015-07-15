@@ -13,6 +13,10 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -22,8 +26,12 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
@@ -48,9 +56,8 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	@Inject
 	private ElasticClient m_elasticClient;
 
-//	 TODO remove comment
-//	@Inject
-//	private MetaManager m_metaManager;
+	@Inject
+	private ClientEnvironment m_env;
 
 	private List<String> m_latestBroker = new ArrayList<String>();
 
@@ -58,22 +65,22 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 
 	private List<TopicDelayDetailView> m_topDelays = new ArrayList<TopicDelayDetailView>();
 
-	// Map<Pair<Topic, Group-ID>, Map<Paritition-ID, Pair<Latest-prouced, Latest-consumed>>>
+	// key: topic & groupId, value.key: partitionId, value.value: latest produced date & latest consumed date
 	private Map<Pair<String, Integer>, Map<Integer, Pair<Date, Date>>> m_delays = new HashMap<>();
 
-	// key: topic, value: latest
+	// key: topic, value: latest produced date
 	private Map<String, Date> m_latestProduced = new HashMap<>();
 
 	// key: topic, value: ips
 	private Map<String, Set<String>> m_topic2producers = new HashMap<>();
 
-	// key: topic, vlaue: <consumer, ips>
+	// key: topic, vlaue.key: consumerName, value.value: ips>
 	private Map<String, Map<String, Set<String>>> m_topic2consumers = new HashMap<>();
 
-	// key:ip, value: topics
+	// key: producer ip, value: topics
 	private Map<String, Set<String>> m_producer2topics = new HashMap<>();
 
-	// key:ip, value:topics
+	// key: consumer ip, value.key: consumerName, value.value: topics
 	private Map<String, Map<String, Set<String>>> m_consumer2topics = new HashMap<>();
 
 	@Override
@@ -107,15 +114,39 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		return m_latestBroker;
 	}
 
+	private Meta loadMeta() {
+		try {
+			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
+			      .getProperty("meta.port", "1248").trim(), "/meta");
+			HttpResponse response = Request.Get(url).execute().returnResponse();
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode == HttpStatus.SC_OK) {
+				String responseContent = EntityUtils.toString(response.getEntity());
+				return JSON.parseObject(responseContent, Meta.class);
+			}
+			log.warn("Loading meta from meta-servers, status code is {}", statusCode);
+		} catch (Exception e) {
+			if (log.isDebugEnabled()) {
+				log.debug("Load meta from meta-servers faied.", e);
+			}
+		}
+		return m_metaService.getMeta();
+	}
+
 	private void updateLatestBroker() {
-//		m_metaManager.loadMeta();
 		List<String> list = new ArrayList<String>();
-//	 TODO remove comment
-//		for (Entry<String, Endpoint> entry : m_metaManager.loadMeta().getEndpoints().entrySet()) {
-//			if (Endpoint.BROKER.equals(entry.getValue().getType())) {
-//				list.add(entry.getValue().getHost());
-//			}
-//		}
+		Meta meta = loadMeta();
+		if (meta != null) {
+			for (Entry<String, Endpoint> entry : meta.getEndpoints().entrySet()) {
+				if (Endpoint.BROKER.equals(entry.getValue().getType())) {
+					String host = entry.getValue().getHost();
+					host = host.equals("localhost") || host.equals("127.0.0.1") ? PortalConstants.LOCALHOST : host;
+					list.add(host);
+				}
+			}
+		} else {
+			log.warn("Can not load meta from either meta-servers or db.");
+		}
 		m_latestBroker = list;
 	}
 

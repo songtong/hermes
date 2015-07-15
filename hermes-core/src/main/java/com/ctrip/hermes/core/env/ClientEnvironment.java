@@ -16,4 +16,6 @@ public interface ClientEnvironment {
 	Env getEnv();
 
 	boolean isLocalMode();
+	
+	String getMetaServerDomainName();
 }
