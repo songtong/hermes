@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -147,14 +148,18 @@ public class LongPollingConsumerTask implements Runnable {
 	public void run() {
 		log.info("Consumer started(topic={}, partition={}, groupId={}, sessionId={})", m_context.getTopic().getName(),
 		      m_partitionId, m_context.getGroupId(), m_context.getSessionId());
+
 		ConsumerLeaseKey key = new ConsumerLeaseKey(new Tpg(m_context.getTopic().getName(), m_partitionId,
 		      m_context.getGroupId()), m_context.getSessionId());
+
 		while (!isClosed() && !Thread.currentThread().isInterrupted()) {
 			try {
 				acquireLease(key);
 
 				if (!isClosed() && m_lease.get() != null && !m_lease.get().isExpired()) {
+
 					long correlationId = CorrelationIdGenerator.generateCorrelationId();
+
 					log.info(
 					      "Consumer continue consuming(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease acquired",
 					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), correlationId,
@@ -173,8 +178,13 @@ public class LongPollingConsumerTask implements Runnable {
 			}
 		}
 
+		stopConsumer();
+	}
+
+	private void stopConsumer() {
 		m_pullMessageTaskExecutorService.shutdown();
 		m_renewLeaseTaskExecutorService.shutdown();
+
 		log.info("Consumer stopped(topic={}, partition={}, groupId={}, sessionId={})", m_context.getTopic().getName(),
 		      m_partitionId, m_context.getGroupId(), m_context.getSessionId());
 	}
@@ -187,6 +197,7 @@ public class LongPollingConsumerTask implements Runnable {
 			try {
 				// if leaseRemainingTime < stopConsumerTimeMillsBeforLeaseExpired, stop
 				if (m_lease.get().getRemainingTime() <= m_config.getStopConsumerTimeMillsBeforLeaseExpired()) {
+
 					if (log.isDebugEnabled()) {
 						log.debug(
 						      "Consumer pre-pause(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease will be expired soon",
@@ -237,9 +248,11 @@ public class LongPollingConsumerTask implements Runnable {
 					if (lease.getRemainingTime() > 0) {
 						LeaseAcquireResponse response = m_leaseManager.tryRenewLease(key, lease);
 						if (response != null && response.isAcquired()) {
+
 							lease.setExpireTime(response.getLease().getExpireTime());
 							scheduleRenewLeaseTask(key,
 							      lease.getRemainingTime() - m_config.getRenewLeaseTimeMillisBeforeExpired());
+
 							if (log.isDebugEnabled()) {
 								log.debug("Consumer renew lease success(topic={}, partition={}, groupId={}, sessionId={})",
 								      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
@@ -269,17 +282,7 @@ public class LongPollingConsumerTask implements Runnable {
 		long nextTryTime = m_systemClockService.now();
 		while (!isClosed() && !Thread.currentThread().isInterrupted()) {
 			try {
-				while (true) {
-					if (!isClosed() && !Thread.currentThread().isInterrupted()) {
-						if (nextTryTime > m_systemClockService.now()) {
-							LockSupport.parkUntil(nextTryTime);
-						} else {
-							break;
-						}
-					} else {
-						return;
-					}
-				}
+				waitForNextTryTime(nextTryTime);
 
 				if (isClosed()) {
 					return;
@@ -316,6 +319,20 @@ public class LongPollingConsumerTask implements Runnable {
 			} catch (Exception e) {
 				log.error("Exception occurred while acquiring lease(topic={}, partition={}, groupId={}, sessionId={})",
 				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
+			}
+		}
+	}
+
+	private void waitForNextTryTime(long nextTryTime) {
+		while (true) {
+			if (!isClosed() && !Thread.currentThread().isInterrupted()) {
+				if (nextTryTime > m_systemClockService.now()) {
+					LockSupport.parkUntil(nextTryTime);
+				} else {
+					break;
+				}
+			} else {
+				return;
 			}
 		}
 	}
@@ -388,51 +405,12 @@ public class LongPollingConsumerTask implements Runnable {
 					return;
 				}
 
-				final SettableFuture<PullMessageResultCommand> future = SettableFuture.create();
-
 				Lease lease = m_lease.get();
 				if (lease != null) {
 					long timeout = lease.getRemainingTime();
 
 					if (timeout > 0) {
-						PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
-						      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout
-						            - 500L);
-
-						cmd.getHeader().setCorrelationId(m_correlationId);
-						cmd.setFuture(future);
-
-						PullMessageResultCommand ack = null;
-
-						try {
-							m_pullMessageResultMonitor.monitor(cmd);
-							m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
-
-							ack = future.get(timeout, TimeUnit.MILLISECONDS);
-
-							if (ack == null) {
-								return;
-							}
-							List<TppConsumerMessageBatch> batches = ack.getBatches();
-							if (batches != null && !batches.isEmpty()) {
-								ConsumerContext context = m_consumerNotifier.find(m_correlationId);
-								if (context != null) {
-									Class<?> bodyClazz = context.getMessageClazz();
-
-									List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ack.getChannel());
-									m_msgs.addAll(msgs);
-								} else {
-									log.info(
-									      "Can not find consumerContext(topic={}, partition={}, groupId={}, sessionId={}), maybe has been stopped.",
-									      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
-									      m_context.getSessionId());
-								}
-							}
-						} finally {
-							if (ack != null) {
-								ack.release();
-							}
-						}
+						pullMessages(endpoint, timeout);
 					}
 				}
 			} catch (TimeoutException e) {
@@ -442,6 +420,53 @@ public class LongPollingConsumerTask implements Runnable {
 				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
 			} finally {
 				m_pullTaskRunning.set(false);
+			}
+		}
+
+		private void pullMessages(Endpoint endpoint, long timeout) throws InterruptedException, TimeoutException,
+            ExecutionException {
+	      final SettableFuture<PullMessageResultCommand> future = SettableFuture.create();
+
+	      PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
+	            m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout
+	                  - 500L);
+
+	      cmd.getHeader().setCorrelationId(m_correlationId);
+	      cmd.setFuture(future);
+
+	      PullMessageResultCommand ack = null;
+
+	      try {
+	      	m_pullMessageResultMonitor.monitor(cmd);
+	      	m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
+
+	      	ack = future.get(timeout, TimeUnit.MILLISECONDS);
+
+	      	if (ack != null) {
+	      		appendToMsgQueue(ack);
+	      	}
+
+	      } finally {
+	      	if (ack != null) {
+	      		ack.release();
+	      	}
+	      }
+      }
+
+		private void appendToMsgQueue(PullMessageResultCommand ack) {
+			List<TppConsumerMessageBatch> batches = ack.getBatches();
+			if (batches != null && !batches.isEmpty()) {
+				ConsumerContext context = m_consumerNotifier.find(m_correlationId);
+				if (context != null) {
+					Class<?> bodyClazz = context.getMessageClazz();
+
+					List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ack.getChannel());
+					m_msgs.addAll(msgs);
+				} else {
+					log.info(
+					      "Can not find consumerContext(topic={}, partition={}, groupId={}, sessionId={}), maybe has been stopped.",
+					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId());
+				}
 			}
 		}
 
