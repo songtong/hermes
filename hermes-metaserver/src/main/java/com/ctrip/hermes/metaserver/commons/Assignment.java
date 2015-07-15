@@ -2,8 +2,8 @@ package com.ctrip.hermes.metaserver.commons;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.jboss.netty.util.internal.ConcurrentHashMap;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
