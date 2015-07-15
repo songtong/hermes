@@ -26,7 +26,7 @@
 									class="glyphicon glyphicon-plus"></span> 新增</button></th>
 					</tr>
 					<tr>
-						<th><label><span ng-bind="topic_rows.length"></span></label></th>
+						<th></th>
 						<th><input st-search="name" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="codecType" placeholder="Codec" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="storageType" placeholder="Storage" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
@@ -90,14 +90,14 @@
 							<div class="form-group">
 								<label for="inputStorageType" class="col-sm-4 control-label">存储类型</label>
 								<div class="col-sm-4">
-									<select class="form-control" id="inputStorageType" ng-model="new_topic.storageType" ng-options="storage for storage in storage_types" ng-change="storage_type_changed()">
+									<select class="form-control" id="inputStorageType" ng-model="new_topic.storageType" ng-options="storage for storage in storage_types">
 									</select>
 								</div>
 							</div>
 							<div class="form-group">
 								<label for="inputEndpointType" class="col-sm-4 control-label">Endpoint 类型</label>
 								<div class="col-sm-4">
-									<select class="form-control" id="inputEndpointType" ng-model="new_topic.endpointType" ng-options="endpoint for endpoint in endpoint_types" ng-change="endpoint_type_changed()">
+									<select class="form-control" id="inputEndpointType" ng-model="new_topic.endpointType" ng-options="endpoint for endpoint in endpoint_types">
 									</select>
 								</div>
 							</div>
@@ -139,10 +139,12 @@
 							<tbody>
 								<tr ng-repeat="partition in new_topic.partitions">
 									<td style="border: none; width: 5%;"><label style="line-height: 2.2" ng-bind="$index + 1"></label></td>
-									<td style="border: none;"><select name="rds" class="form-control" id="inputReadDatasource" ng-model="partition.readDatasource" ng-options="ds for ds in datasource_names"></select></td>
-									<td style="border: none;"><select name="wds" class="form-control" id="inputWriteDatasource" ng-model="partition.writeDatasource" ng-options="ds for ds in datasource_names"></select></td>
+									<td style="border: none;"><select name="rds" class="form-control" id="inputReadDatasource" ng-model="partition.readDatasource"
+										ng-options="ds for ds in datasource_names[new_topic.storageType]"></select></td>
+									<td style="border: none;"><select name="wds" class="form-control" id="inputWriteDatasource" ng-model="partition.writeDatasource"
+										ng-options="ds for ds in datasource_names[new_topic.storageType]"></select></td>
 									<td ng-if="new_topic.storageType=='kafka' || new_topic.endpointType=='kafka'" style="border: none;"><select name="edp" class="form-control" id="inputEndpoint"
-										ng-model="partition.endpoint" ng-options="ep for ep in endpoint_names"></select></td>
+										ng-model="partition.endpoint" ng-options="ep for ep in endpoint_names[new_topic.endpointType]"></select></td>
 								</tr>
 							</tbody>
 						</table>
@@ -158,7 +160,6 @@
 
 	<script type="text/javascript" src="${model.webapp}/js/angular.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular-resource.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/angular-route.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/ui-bootstrap-tpls-0.13.0.min.js"></script>
 
 	<script type="text/javascript" src="${model.webapp}/js/topic.js"></script>

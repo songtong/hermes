@@ -100,7 +100,7 @@ angular.module("dashboard", [ 'ngResource', 'ui.bootstrap', 'smart-table' ]).con
 
 			$scope.get_delay_to_now = function(before) {
 				if (before == 0) {
-					return "NOT_MSG_FOUND";
+					return "NO_MSG_FOUND";
 				}
 				return $scope.normalize_delay(parseInt(new Date().getTime()) - before);
 			}

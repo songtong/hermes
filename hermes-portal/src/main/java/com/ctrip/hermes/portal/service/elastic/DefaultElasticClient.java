@@ -75,7 +75,7 @@ public class DefaultElasticClient implements Initializable, ElasticClient {
 				log.warn("Elastic clusters response error: {}", sr.status());
 			}
 		} catch (Exception e) {
-			log.warn("Find latest count failed: {} {}", field, query, e);
+			log.warn("Find latest count failed: {} {}, {}", field, query, e.getMessage());
 		}
 		return map;
 	}
@@ -101,7 +101,7 @@ public class DefaultElasticClient implements Initializable, ElasticClient {
 				log.warn("Elastic clusters response error: {}", sr.status());
 			}
 		} catch (Exception e) {
-			log.warn("Get unique field [{}] failed.", field, e);
+			log.warn("Get unique field [{}] failed, {}", field, e.getMessage());
 		}
 		return list;
 	}
