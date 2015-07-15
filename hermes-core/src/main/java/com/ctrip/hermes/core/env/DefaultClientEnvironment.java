@@ -51,6 +51,28 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 	private AtomicReference<Env> m_env = new AtomicReference<>();
 
 	@Override
+	public String getMetaServerDomainName() {
+		switch (getEnv()) {
+		case LOCAL:
+			return "meta.hermes.local";
+		case DEV:
+			return "10.3.8.63";
+		case LPT:
+			return "10.3.8.63";
+		case FAT:
+		case FWS:
+			return "meta.hermes.fws.qa.nt.ctripcorp.com";
+		case UAT:
+			return "meta.hermes.fx.uat.qa.nt.ctripcorp.com";
+		case PROD:
+			return "meta.hermes.fx.ctripcorp.com";
+
+		default:
+			throw new IllegalArgumentException(String.format("Unknown hermes env %s", getEnv()));
+		}
+	}
+
+	@Override
 	public Properties getProducerConfig(String topic) throws IOException {
 		Properties properties = m_producerCache.get(topic);
 		if (properties == null) {
