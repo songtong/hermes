@@ -23,4 +23,6 @@ public interface ZookeeperService {
 
 	public void ensurePath(String path) throws Exception;
 
+	public void deleteMetaServerAssignmentZkPath(String topicName);
+
 }
