@@ -62,7 +62,7 @@ public class SubscriptionPushService implements Initializable {
 		final String[] urls = sub.getEndpoints().split(",");
 
 		final ConsumerHolder consumerHolder = Consumer.getInstance().start(sub.getTopic(), sub.getGroup(),
-		      new BaseMessageListener<RawMessage>(sub.getGroup()) {
+		      new BaseMessageListener<RawMessage>() {
 
 			      @Override
 			      protected void onMessage(final ConsumerMessage<RawMessage> msg) {

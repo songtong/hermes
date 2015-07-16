@@ -10,7 +10,7 @@ public class ConsumerTest {
 
 	@Test
 	public void test() throws IOException {
-		Consumer.getInstance().start("order_new", "group1", new BaseMessageListener<String>("group1") {
+		Consumer.getInstance().start("order_new", "group1", new BaseMessageListener<String>() {
 
 			@Override
 			protected void onMessage(ConsumerMessage<String> msg) {

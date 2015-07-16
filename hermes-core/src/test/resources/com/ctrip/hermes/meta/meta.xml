@@ -19,12 +19,12 @@
 		<property name='another' value='value' />
 	</topic>
 	<topic name='topic.6' />
-	<topic name='kafka.SimpleTopic' partition-count='1' codec-type="json"
+	<topic name='kafka.SimpleTextTopic' partition-count='1' codec-type="json"
 		endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-ds-read'
 			write-datasource='kafka-ds-write' endpoint='kafka-endpoint1' />
 	</topic>
-	<topic name='kafka.AvroTopic' partition-count='1' codec-type="avro"
+	<topic name='kafka.SimpleAvroTopic' partition-count='1' codec-type="avro"
 		endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-ds-read'
 			write-datasource='kafka-ds-write' endpoint='kafka-endpoint1' />

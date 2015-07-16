@@ -146,4 +146,10 @@ public class KafkaMessageSender implements MessageSender {
 	public void resend(ProducerMessage<?> msg, SettableFuture<SendResult> future) {
 		// do nothing
 	}
+
+	public void close() {
+		for (KafkaProducer producer : m_producers.values()) {
+			producer.close();
+		}
+	}
 }

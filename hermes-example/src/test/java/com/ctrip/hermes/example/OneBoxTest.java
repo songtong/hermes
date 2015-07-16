@@ -65,7 +65,7 @@ public class OneBoxTest extends ComponentTestCase {
 		final AtomicLong counter = new AtomicLong(0);
 
 		String groupId = "group1";
-		Subscriber s = new Subscriber("order_new", groupId, new BaseMessageListener<Long>(groupId) {
+		Subscriber s = new Subscriber("order_new", groupId, new BaseMessageListener<Long>() {
 
 			@Override
 			protected void onMessage(ConsumerMessage<Long> msg) {
@@ -160,7 +160,7 @@ public class OneBoxTest extends ComponentTestCase {
 			String groupId = entry.getKey();
 			Map<String, Integer> nacks = findNacks(groupId);
 			for (String id : entry.getValue()) {
-				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(groupId, nacks, id), ConsumerType.LONG_POLLING);
+				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(nacks, id), ConsumerType.LONG_POLLING);
 				System.out.println("Starting consumer " + groupId + ":" + id);
 				engine.start(Arrays.asList(s));
 			}
@@ -193,7 +193,7 @@ public class OneBoxTest extends ComponentTestCase {
 					String id = parts[2];
 					Map<String, Integer> nacks = findNacks(groupId);
 					System.out.println(String.format("Starting consumer with groupId %s and id %s", groupId, id));
-					engine.start(Arrays.asList((new Subscriber(topic, groupId, new MyConsumer(groupId, nacks, id)))));
+					engine.start(Arrays.asList((new Subscriber(topic, groupId, new MyConsumer(nacks, id)))));
 				}
 			} else {
 				send(topic, prefix);
@@ -243,8 +243,7 @@ public class OneBoxTest extends ComponentTestCase {
 
 		private String m_id;
 
-		public MyConsumer(String groupId, Map<String, Integer> nacks, String id) {
-			super(groupId);
+		public MyConsumer(Map<String, Integer> nacks, String id) {
 			m_nacks = nacks;
 			m_id = id;
 		}

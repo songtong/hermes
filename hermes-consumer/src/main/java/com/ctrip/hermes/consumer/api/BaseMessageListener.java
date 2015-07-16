@@ -23,8 +23,11 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 
 	private String m_groupId;
 
-	public BaseMessageListener(String groupId) {
-		m_groupId = groupId;
+	public BaseMessageListener() {
+	}
+
+	public void setGroupId(String groupId) {
+		this.m_groupId = groupId;
 	}
 
 	@Override
