@@ -36,7 +36,7 @@ public class KafkaMessageSender implements MessageSender {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(KafkaMessageSender.class);
 
-	private Map<String, KafkaProducer<String, byte[]>> m_producers = new HashMap<>();;
+	private Map<String, KafkaProducer<String, byte[]>> m_producers = new HashMap<String, KafkaProducer<String, byte[]>>();;
 
 	@Inject
 	private MessageCodec m_codec;
@@ -120,7 +120,7 @@ public class KafkaMessageSender implements MessageSender {
 			synchronized (m_producers) {
 				if (!m_producers.containsKey(topic)) {
 					Properties configs = getProducerProperties(topic);
-					KafkaProducer<String, byte[]> producer = new KafkaProducer<>(configs);
+					KafkaProducer<String, byte[]> producer = new KafkaProducer<String, byte[]>(configs);
 					m_producers.put(topic, producer);
 				}
 			}
@@ -130,7 +130,7 @@ public class KafkaMessageSender implements MessageSender {
 
 		byte[] bytes = m_codec.encode(msg);
 
-		ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, partition, bytes);
+		ProducerRecord<String, byte[]> record = new ProducerRecord<String, byte[]>(topic, partition, bytes);
 
 		Future<RecordMetadata> sendResult = null;
 		if (msg.getCallback() != null) {

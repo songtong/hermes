@@ -53,7 +53,7 @@ public class NativeKafkaWithAvroDecoderTest {
 		// Avro Decoder/Encoder
 		CachedSchemaRegistryClient schemaRegistry = new CachedSchemaRegistryClient("http://10.3.8.63:8081/",
 		      AbstractKafkaAvroSerDeConfig.MAX_SCHEMAS_PER_SUBJECT_DEFAULT);
-		Map<String, String> configs = new HashMap<>();
+		Map<String, String> configs = new HashMap<String, String>();
 		configs.put("schema.registry.url", "http://10.3.8.63:8081/");
 
 		KafkaAvroSerializer avroKeySerializer = new KafkaAvroSerializer();
@@ -72,11 +72,11 @@ public class NativeKafkaWithAvroDecoderTest {
 		consumerProps.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
 		consumerProps.put("group.id", "GROUP_" + topic);
 
-		final List<Object> actualResult = new ArrayList<>();
-		final List<Object> expectedResult = new ArrayList<>();
+		final List<Object> actualResult = new ArrayList<Object>();
+		final List<Object> expectedResult = new ArrayList<Object>();
 
 		ConsumerConnector consumerConnector = Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerProps));
-		Map<String, Integer> topicCountMap = new HashMap<>();
+		Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
 		topicCountMap.put(topic, 1);
 		final List<KafkaStream<Object, Object>> streams = consumerConnector.createMessageStreams(topicCountMap,
 		      avroDecoder, avroDecoder).get(topic);
@@ -96,10 +96,12 @@ public class NativeKafkaWithAvroDecoderTest {
 			}.start();
 		}
 
-		KafkaProducer<Object, Object> producer = new KafkaProducer<>(producerProps, avroKeySerializer, avroValueSerializer);
+		KafkaProducer<Object, Object> producer = new KafkaProducer<Object, Object>(producerProps, avroKeySerializer,
+		      avroValueSerializer);
 		int i = 0;
 		while (i++ < msgNum) {
-			ProducerRecord<Object, Object> data = new ProducerRecord<>(topic, null, (Object) KafkaAvroTest.generateEvent());
+			ProducerRecord<Object, Object> data = new ProducerRecord<Object, Object>(topic, null,
+			      (Object) KafkaAvroTest.generateEvent());
 			Future<RecordMetadata> send = producer.send(data);
 			send.get();
 			if (send.isDone()) {
@@ -115,5 +117,4 @@ public class NativeKafkaWithAvroDecoderTest {
 		consumerConnector.shutdown();
 		producer.close();
 	}
-
 }

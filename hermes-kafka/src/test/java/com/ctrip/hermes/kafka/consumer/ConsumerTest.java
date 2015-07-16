@@ -35,8 +35,9 @@ public class ConsumerTest {
 		      });
 
 		System.out.println("Starting consumer...");
-
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
 			while (true) {
 				String line = in.readLine();
 				if ("q".equals(line)) {
@@ -47,6 +48,10 @@ public class ConsumerTest {
 				MessageHolder holder = producer.message(topic, null, event);
 				holder.send();
 				System.out.println("Sent: " + event);
+			}
+		} finally {
+			if (in != null) {
+				in.close();
 			}
 		}
 
@@ -85,8 +90,9 @@ public class ConsumerTest {
 		});
 
 		System.out.println("Starting consumer2...");
-
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
 			while (true) {
 				String line = in.readLine();
 				if ("q".equals(line)) {
@@ -97,6 +103,10 @@ public class ConsumerTest {
 				MessageHolder holder = producer.message(topic, null, event);
 				holder.send();
 				System.out.println("Sent: " + event);
+			}
+		} finally {
+			if (in != null) {
+				in.close();
 			}
 		}
 
@@ -137,8 +147,9 @@ public class ConsumerTest {
 		});
 
 		System.out.println("Starting consumer2...");
-
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
 			while (true) {
 				String line = in.readLine();
 				if ("q".equals(line)) {
@@ -149,6 +160,10 @@ public class ConsumerTest {
 				MessageHolder holder = producer.message(topic, null, event);
 				holder.send();
 				System.out.println("Sent: " + event);
+			}
+		} finally {
+			if (in != null) {
+				in.close();
 			}
 		}
 

@@ -111,7 +111,7 @@ public class HermesConsumerPerf {
 
 		Engine engine = Engine.getInstance();
 
-		List<Subscriber> subscribers = new ArrayList<>();
+		List<Subscriber> subscribers = new ArrayList<Subscriber>();
 
 		for (int i = 0; i < numThreads; i++) {
 			Subscriber s = new Subscriber(topic, group, new ConsumerPerf(i, "kafka-zk-consumer-" + i, config,

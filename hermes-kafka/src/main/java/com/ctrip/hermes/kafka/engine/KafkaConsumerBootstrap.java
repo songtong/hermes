@@ -58,9 +58,9 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 	@Inject
 	private MessageCodec m_messageCodec;
 
-	private Map<ConsumerContext, ConsumerConnector> consumers = new HashMap<>();
+	private Map<ConsumerContext, ConsumerConnector> consumers = new HashMap<ConsumerContext, ConsumerConnector>();
 
-	private Map<ConsumerContext, Long> correlationIds = new HashMap<>();
+	private Map<ConsumerContext, Long> correlationIds = new HashMap<ConsumerContext, Long>();
 
 	@Override
 	protected SubscribeHandle doStart(final ConsumerContext consumerContext) {
@@ -72,7 +72,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 		Properties prop = getConsumerProperties(topic.getName(), consumerContext.getGroupId());
 		ConsumerConnector consumerConnector = kafka.consumer.Consumer
 		      .createJavaConsumerConnector(new ConsumerConfig(prop));
-		Map<String, Integer> topicCountMap = new HashMap<>();
+		Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
 		topicCountMap.put(topic.getName(), kafkaPartitionCount);
 		List<KafkaStream<byte[], byte[]>> streams = consumerConnector.createMessageStreams(topicCountMap).get(
 		      topic.getName());
@@ -132,7 +132,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 					@SuppressWarnings("rawtypes")
 					ConsumerMessage kafkaMsg = new KafkaConsumerMessage(baseMsg, msgAndMetadata.partition(),
 					      msgAndMetadata.offset());
-					List<ConsumerMessage<?>> msgs = new ArrayList<>(1);
+					List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>(1);
 					msgs.add(kafkaMsg);
 					m_consumerNotifier.messageReceived(correlationId, msgs);
 				} catch (Exception e) {

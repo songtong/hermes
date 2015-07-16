@@ -51,11 +51,11 @@ public class NativeKafkaWithStringDecoderTest {
 		consumerProps.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
 		consumerProps.put("group.id", "GROUP_" + topic);
 
-		final List<String> actualResult = new ArrayList<>();
-		final List<String> expectedResult = new ArrayList<>();
+		final List<String> actualResult = new ArrayList<String>();
+		final List<String> expectedResult = new ArrayList<String>();
 
 		ConsumerConnector consumerConnector = Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerProps));
-		Map<String, Integer> topicCountMap = new HashMap<>();
+		Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
 		topicCountMap.put(topic, 1);
 		final List<KafkaStream<String, String>> streams = consumerConnector.createMessageStreams(topicCountMap,
 		      new StringDecoder(null), new StringDecoder(null)).get(topic);

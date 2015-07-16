@@ -1,5 +1,6 @@
 package com.ctrip.hermes.producer;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
@@ -91,7 +92,9 @@ public class DefaultProducer extends Producer {
 		public SendResult sendSync() throws MessageSendException {
 			try {
 				return send().get();
-			} catch (Exception e) {
+			} catch (ExecutionException e) {
+				throw new MessageSendException(e);
+			} catch(InterruptedException e){
 				throw new MessageSendException(e);
 			}
 		}

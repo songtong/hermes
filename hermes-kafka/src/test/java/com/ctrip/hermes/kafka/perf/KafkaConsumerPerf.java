@@ -110,11 +110,11 @@ public class KafkaConsumerPerf {
 
 		ConsumerConnector consumerConnector = kafka.consumer.Consumer.createJavaConsumerConnector(config.consumerConfig);
 
-		Map<String, Integer> topicMap = new HashMap<>();
+		Map<String, Integer> topicMap = new HashMap<String, Integer>();
 		topicMap.put(config.topic, config.numThreads);
 		Map<String, List<KafkaStream<byte[], byte[]>>> topicMessageStreams = consumerConnector
 		      .createMessageStreams(topicMap);
-		List<ConsumerPerfThread> threadList = new ArrayList<>();
+		List<ConsumerPerfThread> threadList = new ArrayList<ConsumerPerfThread>();
 		for (Entry<String, List<KafkaStream<byte[], byte[]>>> entry : topicMessageStreams.entrySet()) {
 			for (int i = 0; i < entry.getValue().size(); i++) {
 				ConsumerPerfThread thread = new ConsumerPerfThread(i, "kafka-zk-consumer-" + i, entry.getValue().get(i),

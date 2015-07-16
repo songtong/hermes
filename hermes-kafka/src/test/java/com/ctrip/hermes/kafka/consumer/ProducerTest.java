@@ -22,7 +22,7 @@ public class ProducerTest {
 
 		Producer producer = Producer.getInstance();
 
-		List<Future<SendResult>> result = new ArrayList<>();
+		List<Future<SendResult>> result = new ArrayList<Future<SendResult>>();
 		for (int i = 0; i < 2; i++) {
 			VisitEvent event = generateEvent();
 			MessageHolder holder = producer.message(topic, null, event);
