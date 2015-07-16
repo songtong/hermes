@@ -3,6 +3,12 @@ package com.ctrip.hermes.kafka;
 import java.util.Properties;
 import java.util.UUID;
 
+import org.I0Itec.zkclient.ZkClient;
+
+import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
+
+import kafka.admin.AdminUtils;
+import kafka.api.TopicMetadata;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 
@@ -51,6 +57,16 @@ public class MockKafka {
 	public void stop() {
 		kafkaServer.shutdown();
 		System.out.println("embedded kafka down");
+	}
+
+	public void deleteTopic(String topic) {
+		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
+		zkClient.setZkSerializer(new ZKStringSerializer());
+		if (AdminUtils.topicExists(zkClient, topic)) {
+			TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient);
+			System.out.println(topicMetadata);
+			AdminUtils.deleteTopic(zkClient, topic);
+		}
 	}
 
 }

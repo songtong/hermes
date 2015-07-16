@@ -43,7 +43,8 @@ public class OneBoxTest {
 	public void simpleTextOneProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
 		String topic = "kafka.SimpleTextTopic";
 		String group = UUID.randomUUID().toString();
-
+		kafka.deleteTopic(topic);
+		
 		List<String> expected = new ArrayList<String>();
 		expected.add("abc");
 		expected.add("DEF");
@@ -98,12 +99,13 @@ public class OneBoxTest {
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-//	@Test
+	@Test
 	public void simpleTextOneProducerMultipleConsumerInOneGroupTest() throws IOException, InterruptedException,
 	      ExecutionException {
 		String topic = "kafka.SimpleTextTopic";
 		String group = UUID.randomUUID().toString();
-
+		kafka.deleteTopic(topic);
+		
 		List<String> expected = new ArrayList<String>();
 		expected.add("abc");
 		expected.add("DEF");
@@ -154,7 +156,7 @@ public class OneBoxTest {
 
 		if (actual.size() < expected.size()) {
 			System.out.println("Sleep 5 seconds for the last message");
-			Thread.sleep(5000000);
+			Thread.sleep(5000);
 		}
 
 		consumer1.close();
@@ -169,7 +171,8 @@ public class OneBoxTest {
 		String topic = "kafka.SimpleTextTopic";
 		String group1 = UUID.randomUUID().toString();
 		String group2 = UUID.randomUUID().toString();
-
+		kafka.deleteTopic(topic);
+		
 		List<String> expected = new ArrayList<String>();
 		expected.add("abc");
 		expected.add("DEF");
@@ -236,7 +239,8 @@ public class OneBoxTest {
 	public void simpleTextMultipleProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
 		final String topic = "kafka.SimpleTextTopic";
 		final String group = UUID.randomUUID().toString();
-
+		kafka.deleteTopic(topic);
+		
 		final List<String> expected = new ArrayList<String>();
 		expected.add("abc");
 		expected.add("DEF");
