@@ -381,6 +381,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-jar-plugin</artifactId>
+						<version>2.6</version>
 						<executions>
 							<execution>
 								<phase>package</phase>
@@ -406,6 +407,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-jar-plugin</artifactId>
+						<version>2.6</version>
 						<executions>
 							<execution>
 								<phase>package</phase>
@@ -433,9 +435,8 @@
                <artifactId>maven-compiler-plugin</artifactId>
                <version>3.2</version>
                <configuration>
-					<source>${jar.source}</source>
-          			<target>${jar.target}</target>
-          			<encoding>UTF-8</encoding>
+                    <source>${jar.source}</source>
+                    <target>${jar.target}</target>
                </configuration>
             </plugin>
             <plugin>
