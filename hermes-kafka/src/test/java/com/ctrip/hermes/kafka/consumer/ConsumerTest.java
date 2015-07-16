@@ -25,7 +25,7 @@ public class ConsumerTest {
 		Producer producer = Producer.getInstance();
 
 		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group,
-		      new BaseMessageListener<VisitEvent>(group) {
+		      new BaseMessageListener<VisitEvent>() {
 
 			      @Override
 			      protected void onMessage(ConsumerMessage<VisitEvent> msg) {

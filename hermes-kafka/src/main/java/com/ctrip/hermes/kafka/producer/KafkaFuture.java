@@ -23,7 +23,7 @@ public class KafkaFuture implements Future<SendResult> {
 	}
 
 	@Override
-	public SendResult get() throws InterruptedException, ExecutionException {
+	public KafkaSendResult get() throws InterruptedException, ExecutionException {
 		RecordMetadata recordMetadata = this.m_recordMetadata.get();
 		KafkaSendResult sendResult = new KafkaSendResult(recordMetadata.topic(), recordMetadata.partition(),
 		      recordMetadata.offset());
@@ -31,7 +31,7 @@ public class KafkaFuture implements Future<SendResult> {
 	}
 
 	@Override
-	public SendResult get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+	public KafkaSendResult get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		RecordMetadata recordMetadata = this.m_recordMetadata.get(timeout, unit);
 		KafkaSendResult sendResult = new KafkaSendResult(recordMetadata.topic(), recordMetadata.partition(),
 		      recordMetadata.offset());

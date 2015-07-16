@@ -38,7 +38,7 @@ public class ConsumerExample {
 		final AtomicInteger i = new AtomicInteger(0);
 		Engine engine = PlexusComponentLocator.lookup(Engine.class);
 
-		Subscriber s = new Subscriber(topic, groupId, new BaseMessageListener<String>(groupId) {
+		Subscriber s = new Subscriber(topic, groupId, new BaseMessageListener<String>() {
 
 			@Override
 			protected void onMessage(ConsumerMessage<String> msg) {

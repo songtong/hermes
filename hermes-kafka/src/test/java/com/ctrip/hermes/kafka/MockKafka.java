@@ -8,8 +8,6 @@ import kafka.server.KafkaServerStartable;
 
 public class MockKafka {
 
-	public static final String LOG_DIR = System.getProperty("java.io.tmpdir") + UUID.randomUUID().toString();
-
 	public static final String BROKER_ID = "0";
 
 	public static final String BROKER_HOSTNAME = "localhost";
@@ -21,7 +19,7 @@ public class MockKafka {
 	public KafkaServerStartable kafkaServer;
 
 	public MockKafka() {
-		this(LOG_DIR, BROKER_PORT, BROKER_ID);
+		this(System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString(), BROKER_PORT, BROKER_ID);
 		start();
 	}
 
@@ -32,13 +30,15 @@ public class MockKafka {
 
 	private MockKafka(String logDir, String port, String brokerId) {
 		this(createProperties(logDir, port, brokerId));
+		System.out.println("Kafka logdir: " + logDir);
 	}
 
 	private static Properties createProperties(String logDir, String port, String brokerId) {
 		Properties properties = new Properties();
 		properties.put("port", port);
 		properties.put("broker.id", brokerId);
-		properties.put("log.dirs", LOG_DIR);
+		properties.put("log.dirs", logDir);
+		properties.put("offsets.topic.replication.factor", "1");
 		properties.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
 		return properties;
 	}
@@ -50,7 +50,7 @@ public class MockKafka {
 
 	public void stop() {
 		kafkaServer.shutdown();
-		System.out.println("embedded kafka stop");
+		System.out.println("embedded kafka down");
 	}
 
 }

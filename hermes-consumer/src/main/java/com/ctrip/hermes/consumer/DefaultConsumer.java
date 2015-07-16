@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
@@ -17,6 +18,9 @@ public class DefaultConsumer extends com.ctrip.hermes.consumer.api.Consumer {
 	private Engine m_engine;
 
 	private ConsumerHolder start(String topic, String groupId, MessageListener<?> listener, ConsumerType consumerType) {
+		if (listener instanceof BaseMessageListener) {
+			((BaseMessageListener<?>) listener).setGroupId(groupId);
+		}
 		SubscribeHandle subscribeHandle = m_engine.start(Arrays.asList(new Subscriber(topic, groupId, listener,
 		      consumerType)));
 

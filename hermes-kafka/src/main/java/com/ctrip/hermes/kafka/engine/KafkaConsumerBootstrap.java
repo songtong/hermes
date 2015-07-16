@@ -182,7 +182,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 	private Properties overrideByCtripDefaultSetting(Properties consumerProp) {
 		if (!consumerProp.containsKey("offsets.storage")) {
 			consumerProp.put("offsets.storage", "kafka");
-			consumerProp.put("dual.commit.enabled", true);
+			consumerProp.put("dual.commit.enabled", "true");
 		}
 		return consumerProp;
 	}

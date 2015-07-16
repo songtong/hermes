@@ -46,7 +46,6 @@ public class HermesConsumerPerf {
 
 		public ConsumerPerf(Integer threadId, String name, ConsumerPerfConfig config, AtomicLong totalMessagesRead,
 		      AtomicLong totalBytesRead, CountDownLatch latch, String group) {
-			super(group);
 			this.threadId = threadId;
 			this.name = name;
 			this.config = config;
