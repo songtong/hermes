@@ -5,7 +5,7 @@ import java.util.List;
 
 public class CompositeSubscribeHandle implements SubscribeHandle {
 
-	private List<SubscribeHandle> m_childHandles = new ArrayList<>();
+	private List<SubscribeHandle> m_childHandles = new ArrayList<SubscribeHandle>();
 
 	public void addSubscribeHandle(SubscribeHandle handle) {
 		m_childHandles.add(handle);

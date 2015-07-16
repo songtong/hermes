@@ -53,7 +53,7 @@ public class RemoteMetaProxy implements MetaProxy {
 
 	@Override
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
-		Map<String, String> params = new HashMap<>();
+		Map<String, String> params = new HashMap<String, String>();
 		params.put(SESSION_ID, sessionId);
 		params.put(HOST, Networks.forIp().getLocalHostAddress());
 		String response = post("/lease/consumer/acquire", params, tpg);
@@ -69,7 +69,7 @@ public class RemoteMetaProxy implements MetaProxy {
 
 	@Override
 	public LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId) {
-		Map<String, String> params = new HashMap<>();
+		Map<String, String> params = new HashMap<String, String>();
 		params.put(LEASE_ID, String.valueOf(lease.getId()));
 		params.put(SESSION_ID, sessionId);
 		params.put(HOST, Networks.forIp().getLocalHostAddress());
@@ -87,7 +87,7 @@ public class RemoteMetaProxy implements MetaProxy {
 	@Override
 	public LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId,
 	      int brokerPort) {
-		Map<String, String> params = new HashMap<>();
+		Map<String, String> params = new HashMap<String, String>();
 		params.put(LEASE_ID, String.valueOf(lease.getId()));
 		params.put(SESSION_ID, sessionId);
 		params.put(TOPIC, topic);
@@ -107,7 +107,7 @@ public class RemoteMetaProxy implements MetaProxy {
 
 	@Override
 	public LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort) {
-		Map<String, String> params = new HashMap<>();
+		Map<String, String> params = new HashMap<String, String>();
 		params.put(SESSION_ID, sessionId);
 		params.put(TOPIC, topic);
 		params.put(PARTITION, Integer.toString(partition));
@@ -266,7 +266,7 @@ public class RemoteMetaProxy implements MetaProxy {
 
 	@Override
 	public int registerSchema(String schema, String subject) {
-		Map<String, String> params = new HashMap<>();
+		Map<String, String> params = new HashMap<String, String>();
 		params.put("schema", schema);
 		params.put("subject", subject);
 		String response = post("/schema/register", null, params);
@@ -284,7 +284,7 @@ public class RemoteMetaProxy implements MetaProxy {
 
 	@Override
 	public String getSchemaString(int schemaId) {
-		Map<String, String> params = new HashMap<>();
+		Map<String, String> params = new HashMap<String, String>();
 		params.put("id", String.valueOf(schemaId));
 		String response = get("/schema/register", params);
 		if (response != null) {

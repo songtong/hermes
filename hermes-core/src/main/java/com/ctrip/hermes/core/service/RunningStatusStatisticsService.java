@@ -54,13 +54,13 @@ public class RunningStatusStatisticsService implements Initializable {
 
 	private void printAllThreads() {
 		Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
-		Map<String, List<Pair<String, Boolean>>> groups = new HashMap<>();
+		Map<String, List<Pair<String, Boolean>>> groups = new HashMap<String, List<Pair<String, Boolean>>>();
 		for (Thread thread : allStackTraces.keySet()) {
 			String group = thread.getThreadGroup().getName();
 			if (!groups.containsKey(group)) {
 				groups.put(group, new ArrayList<Pair<String, Boolean>>());
 			}
-			groups.get(group).add(new Pair<>(thread.getName(), thread.isDaemon()));
+			groups.get(group).add(new Pair<String, Boolean>(thread.getName(), thread.isDaemon()));
 		}
 
 		log.info("Running threads({})", JSON.toJSONString(groups));

@@ -21,7 +21,7 @@ public class DefaultProducerPipelineSinkManager extends ContainerHolder implemen
 	@Inject
 	private MetaService m_meta;
 
-	private Map<String, PipelineSink<Future<SendResult>>> m_sinks = new HashMap<>();
+	private Map<String, PipelineSink<Future<SendResult>>> m_sinks = new HashMap<String, PipelineSink<Future<SendResult>>>();
 
 	@Override
 	public PipelineSink<Future<SendResult>> getSink(String topic) {

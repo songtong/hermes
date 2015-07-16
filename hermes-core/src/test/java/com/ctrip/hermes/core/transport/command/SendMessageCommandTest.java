@@ -148,7 +148,7 @@ public class SendMessageCommandTest extends HermesCoreBaseTest {
 		cmd.addMessage(msg, future);
 
 		SendMessageResultCommand resultCmd = new SendMessageResultCommand();
-		Map<Integer, Boolean> results = new HashMap<>();
+		Map<Integer, Boolean> results = new HashMap<Integer, Boolean>();
 		results.put(0, true);
 		resultCmd.addResults(results);
 		cmd.onResultReceived(resultCmd);
@@ -167,7 +167,7 @@ public class SendMessageCommandTest extends HermesCoreBaseTest {
 		cmd.addMessage(msg, future);
 
 		SendMessageResultCommand resultCmd = new SendMessageResultCommand();
-		Map<Integer, Boolean> results = new HashMap<>();
+		Map<Integer, Boolean> results = new HashMap<Integer, Boolean>();
 		results.put(0, false);
 		resultCmd.addResults(results);
 		cmd.onResultReceived(resultCmd);

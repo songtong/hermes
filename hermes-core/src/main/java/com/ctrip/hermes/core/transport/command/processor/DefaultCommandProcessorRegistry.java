@@ -45,7 +45,7 @@ public class DefaultCommandProcessorRegistry extends ContainerHolder implements 
 
 	@Override
 	public Set<CommandProcessor> listAllProcessors() {
-		return new HashSet<>(m_processors.values());
+		return new HashSet<CommandProcessor>(m_processors.values());
 	}
 
 }

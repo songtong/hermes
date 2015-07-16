@@ -35,7 +35,7 @@ public class RemoteMetaLoader implements MetaLoader {
 	@Inject
 	private CoreConfig m_config;
 
-	private AtomicReference<Meta> m_metaCache = new AtomicReference<>(null);
+	private AtomicReference<Meta> m_metaCache = new AtomicReference<Meta>(null);
 
 	@Override
 	public Meta load() {

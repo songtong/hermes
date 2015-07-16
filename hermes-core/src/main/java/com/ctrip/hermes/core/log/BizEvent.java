@@ -9,7 +9,7 @@ public class BizEvent {
 
 	private long m_eventTime;
 
-	private Map<String, Object> m_datas = new HashMap<>();
+	private Map<String, Object> m_datas = new HashMap<String, Object>();
 
 	public BizEvent(String eventType) {
 		m_eventType = eventType;

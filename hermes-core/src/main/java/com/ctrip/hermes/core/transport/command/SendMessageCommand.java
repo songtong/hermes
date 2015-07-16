@@ -39,11 +39,11 @@ public class SendMessageCommand extends AbstractCommand {
 
 	private int m_partition;
 
-	private ConcurrentMap<Integer, List<ProducerMessage<?>>> m_msgs = new ConcurrentHashMap<>();
+	private ConcurrentMap<Integer, List<ProducerMessage<?>>> m_msgs = new ConcurrentHashMap<Integer, List<ProducerMessage<?>>>();
 
-	private transient Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<>();
+	private transient Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<Integer, MessageBatchWithRawData>();
 
-	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<>();
+	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<Integer, SettableFuture<SendResult>>();
 
 	private transient boolean m_accepted = false;
 
@@ -193,7 +193,7 @@ public class SendMessageCommand extends AbstractCommand {
 	private MessageBatchWithRawData readMsgs(String topic, HermesPrimitiveCodec codec, ByteBuf buf) {
 		int size = codec.readInt();
 
-		List<Integer> msgSeqs = new ArrayList<>();
+		List<Integer> msgSeqs = new ArrayList<Integer>();
 
 		for (int j = 0; j < size; j++) {
 			msgSeqs.add(codec.readInt());
@@ -239,7 +239,7 @@ public class SendMessageCommand extends AbstractCommand {
 			if (m_msgs == null) {
 				synchronized (this) {
 					if (m_msgs == null) {
-						m_msgs = new ArrayList<>();
+						m_msgs = new ArrayList<PartialDecodedMessage>();
 
 						ByteBuf tmpBuf = m_rawData.duplicate();
 						MessageCodec messageCodec = PlexusComponentLocator.lookup(MessageCodec.class);
@@ -270,7 +270,7 @@ public class SendMessageCommand extends AbstractCommand {
 	}
 
 	public List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> getProducerMessageFuturePairs() {
-		List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> pairs = new LinkedList<>();
+		List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> pairs = new LinkedList<Pair<ProducerMessage<?>, SettableFuture<SendResult>>>();
 		Collection<List<ProducerMessage<?>>> msgsList = getProducerMessages();
 		for (List<ProducerMessage<?>> msgs : msgsList) {
 			for (ProducerMessage<?> msg : msgs) {

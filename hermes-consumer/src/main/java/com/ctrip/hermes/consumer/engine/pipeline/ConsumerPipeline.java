@@ -26,7 +26,7 @@ public class ConsumerPipeline implements Pipeline<Void> {
 	public Void put(Object payload) {
 
 		List<Valve> valves = m_registry.getValveList();
-		PipelineContext<Void> ctx = new DefaultPipelineContext<>(valves, m_pipelineSink);
+		PipelineContext<Void> ctx = new DefaultPipelineContext<Void>(valves, m_pipelineSink);
 
 		ctx.next(payload);
 

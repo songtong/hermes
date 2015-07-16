@@ -303,6 +303,7 @@
 		<profile>
 			<id>travis</id>
 			<properties>
+				<package.environment>dev</package.environment>
        			<jar.source>1.7</jar.source>
        			<jar.target>1.7</jar.target>				
 			</properties>			
@@ -397,6 +398,7 @@
 				</plugins>
 			</build>
 			<properties>
+				<package.environment>dev</package.environment>
 				<jar.source>1.6</jar.source>
 				<jar.target>1.6</jar.target>
 			</properties>
@@ -423,6 +425,7 @@
 				</plugins>
 			</build>
 			<properties>
+				<package.environment>dev</package.environment>
 				<jar.source>1.8</jar.source>
 				<jar.target>1.8</jar.target>
 			</properties>

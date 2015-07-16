@@ -22,7 +22,7 @@ public class TppConsumerMessageBatch {
 
 	private int m_priority;
 
-	private List<MessageMeta> m_messageMetas = new ArrayList<>();
+	private List<MessageMeta> m_messageMetas = new ArrayList<MessageMeta>();
 
 	private TransferCallback m_transferCallback;
 

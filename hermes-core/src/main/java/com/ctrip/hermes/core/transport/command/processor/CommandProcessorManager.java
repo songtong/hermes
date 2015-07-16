@@ -29,7 +29,7 @@ public class CommandProcessorManager implements Initializable {
 	@Inject
 	private CoreConfig m_config;
 
-	private Map<CommandProcessor, ExecutorService> m_executors = new ConcurrentHashMap<>();
+	private Map<CommandProcessor, ExecutorService> m_executors = new ConcurrentHashMap<CommandProcessor, ExecutorService>();
 
 	private AtomicBoolean m_stopped = new AtomicBoolean(false);
 

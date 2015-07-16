@@ -18,7 +18,7 @@ import com.ctrip.hermes.consumer.ConsumerType;
 public class DefaultBrokerConsumptionRegistry extends ContainerHolder implements Initializable,
       BrokerConsumptionStrategyRegistry {
 
-	private Map<ConsumerType, BrokerConsumptionStrategy> m_strategies = new ConcurrentHashMap<>();
+	private Map<ConsumerType, BrokerConsumptionStrategy> m_strategies = new ConcurrentHashMap<ConsumerType, BrokerConsumptionStrategy>();
 
 	@Override
 	public void initialize() throws InitializationException {

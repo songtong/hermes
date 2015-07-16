@@ -164,7 +164,7 @@ public class HermesPrimitiveCodec {
 		} else {
 			readerIndexBack(m_buf, 1);
 			int length = m_buf.readInt();
-			Map<String, String> result = new HashMap<>();
+			Map<String, String> result = new HashMap<String, String>();
 			if (length > 0) {
 				for (int i = 0; i < length; i++) {
 					result.put(readString(), readString());
@@ -181,7 +181,7 @@ public class HermesPrimitiveCodec {
 		} else {
 			readerIndexBack(m_buf, 1);
 			int length = m_buf.readInt();
-			Map<Long, Integer> result = new HashMap<>();
+			Map<Long, Integer> result = new HashMap<Long, Integer>();
 			if (length > 0) {
 				for (int i = 0; i < length; i++) {
 					result.put(readLong(), readInt());
@@ -198,7 +198,7 @@ public class HermesPrimitiveCodec {
 		} else {
 			readerIndexBack(m_buf, 1);
 			int length = m_buf.readInt();
-			Map<Integer, Boolean> result = new HashMap<>();
+			Map<Integer, Boolean> result = new HashMap<Integer, Boolean>();
 			if (length > 0) {
 				for (int i = 0; i < length; i++) {
 					result.put(readInt(), readBoolean());
