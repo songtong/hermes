@@ -54,7 +54,7 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 public class DefaultEndpointClient implements EndpointClient, Initializable {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEndpointClient.class);
 
-	private ConcurrentMap<Endpoint, EndpointChannel> m_channels = new ConcurrentHashMap<>();
+	private ConcurrentMap<Endpoint, EndpointChannel> m_channels = new ConcurrentHashMap<Endpoint, EndpointChannel>();
 
 	private EventLoopGroup m_eventLoopGroup;
 
@@ -89,8 +89,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 	}
 
 	private EndpointChannel getChannel(Endpoint endpoint) {
-		switch (endpoint.getType()) {
-		case Endpoint.BROKER:
+		if (Endpoint.BROKER.equalsIgnoreCase(endpoint.getType())) {
 			if (!m_channels.containsKey(endpoint)) {
 				synchronized (m_channels) {
 					if (!m_channels.containsKey(endpoint)) {
@@ -100,8 +99,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 			}
 
 			return m_channels.get(endpoint);
-
-		default:
+		} else {
 			throw new IllegalArgumentException(String.format("Unknown endpoint type: %s", endpoint.getType()));
 		}
 	}
@@ -242,11 +240,12 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 	class EndpointChannel {
 
-		private AtomicReference<ChannelFuture> m_channelFuture = new AtomicReference<>(null);
+		private AtomicReference<ChannelFuture> m_channelFuture = new AtomicReference<ChannelFuture>(null);
 
-		private BlockingQueue<WriteOp> m_opQueue = new LinkedBlockingQueue<>(m_config.getEndpointChannelSendBufferSize());
+		private BlockingQueue<WriteOp> m_opQueue = new LinkedBlockingQueue<WriteOp>(
+		      m_config.getEndpointChannelSendBufferSize());
 
-		private AtomicReference<WriteOp> m_flushingOp = new AtomicReference<>(null);
+		private AtomicReference<WriteOp> m_flushingOp = new AtomicReference<WriteOp>(null);
 
 		private AtomicBoolean m_flushing = new AtomicBoolean(false);
 

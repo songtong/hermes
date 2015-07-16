@@ -30,8 +30,8 @@ public class KafkaAvroTest {
 
 		Producer producer = Producer.getInstance();
 
-		final List<AvroVisitEvent> actualResult = new ArrayList<>();
-		final List<AvroVisitEvent> expectedResult = new ArrayList<>();
+		final List<AvroVisitEvent> actualResult = new ArrayList<AvroVisitEvent>();
+		final List<AvroVisitEvent> expectedResult = new ArrayList<AvroVisitEvent>();
 
 		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group, new MessageListener<AvroVisitEvent>() {
 
@@ -46,8 +46,9 @@ public class KafkaAvroTest {
 		});
 
 		System.out.println("Starting consumer...");
-
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
 			while (true) {
 				String line = in.readLine();
 				if ("q".equals(line)) {
@@ -63,6 +64,10 @@ public class KafkaAvroTest {
 					expectedResult.add(event);
 				}
 			}
+		} finally {
+			if (in != null) {
+				in.close();
+			}
 		}
 		consumerHolder.close();
 		Assert.assertEquals(expectedResult.size(), actualResult.size());
@@ -75,8 +80,8 @@ public class KafkaAvroTest {
 
 		Producer producer = Producer.getInstance();
 
-		final List<AvroVisitEvent> actualResult = new ArrayList<>();
-		final List<AvroVisitEvent> expectedResult = new ArrayList<>();
+		final List<AvroVisitEvent> actualResult = new ArrayList<AvroVisitEvent>();
+		final List<AvroVisitEvent> expectedResult = new ArrayList<AvroVisitEvent>();
 
 		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group, new MessageListener<AvroVisitEvent>() {
 

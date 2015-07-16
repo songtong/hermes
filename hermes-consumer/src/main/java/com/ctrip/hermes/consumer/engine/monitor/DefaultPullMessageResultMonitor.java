@@ -31,7 +31,7 @@ public class DefaultPullMessageResultMonitor implements PullMessageResultMonitor
 	@Inject
 	private SystemClockService m_systemClockService;
 
-	private Map<Long, PullMessageCommand> m_cmds = new ConcurrentHashMap<>();
+	private Map<Long, PullMessageCommand> m_cmds = new ConcurrentHashMap<Long, PullMessageCommand>();
 
 	private ReentrantLock m_lock = new ReentrantLock();
 
@@ -78,7 +78,7 @@ public class DefaultPullMessageResultMonitor implements PullMessageResultMonitor
 			      @Override
 			      public void run() {
 				      try {
-					      List<PullMessageCommand> timeoutCmds = new LinkedList<>();
+					      List<PullMessageCommand> timeoutCmds = new LinkedList<PullMessageCommand>();
 
 					      m_lock.lock();
 					      try {

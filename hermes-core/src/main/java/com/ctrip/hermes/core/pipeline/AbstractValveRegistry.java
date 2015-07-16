@@ -15,7 +15,7 @@ import com.ctrip.hermes.core.pipeline.spi.Valve;
 
 public class AbstractValveRegistry extends ContainerHolder implements ValveRegistry {
 
-	private SortedSet<Triple<Valve, String, Integer>> m_tuples = new TreeSet<>(
+	private SortedSet<Triple<Valve, String, Integer>> m_tuples = new TreeSet<Triple<Valve, String, Integer>>(
 	      new Comparator<Triple<Valve, String, Integer>>() {
 
 		      @Override
@@ -35,7 +35,7 @@ public class AbstractValveRegistry extends ContainerHolder implements ValveRegis
 	public synchronized void register(Valve valve, String name, int order) {
 		m_tuples.add(new Triple<Valve, String, Integer>(valve, name, order));
 
-		ArrayList<Valve> newValves = new ArrayList<>();
+		ArrayList<Valve> newValves = new ArrayList<Valve>();
 		for (Triple<Valve, String, Integer> triple : m_tuples) {
 			newValves.add(triple.getFirst());
 		}

@@ -92,7 +92,9 @@ public class DefaultProducer extends Producer {
 		public SendResult sendSync() throws MessageSendException {
 			try {
 				return send().get();
-			} catch (ExecutionException | InterruptedException e) {
+			} catch (ExecutionException e) {
+				throw new MessageSendException(e);
+			} catch(InterruptedException e){
 				throw new MessageSendException(e);
 			}
 		}

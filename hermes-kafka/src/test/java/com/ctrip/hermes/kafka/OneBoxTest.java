@@ -36,7 +36,9 @@ public class OneBoxTest {
 		System.out.println("Starting consumer...");
 
 		boolean hasHeader = true;
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
 			while (true) {
 				String line = in.readLine();
 				if ("q".equals(line)) {
@@ -51,6 +53,10 @@ public class OneBoxTest {
 				hasHeader = !hasHeader;
 				holder.send();
 				System.out.println("Sent: " + proMsg);
+			}
+		} finally {
+			if (in != null) {
+				in.close();
 			}
 		}
 
@@ -77,7 +83,9 @@ public class OneBoxTest {
 		System.out.println("Starting consumer...");
 
 		boolean hasHeader = true;
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
 			while (true) {
 				String line = in.readLine();
 				if ("q".equals(line)) {
@@ -92,6 +100,10 @@ public class OneBoxTest {
 				hasHeader = !hasHeader;
 				holder.send();
 				System.out.println("Sent: " + proMsg);
+			}
+		} finally {
+			if (in != null) {
+				in.close();
 			}
 		}
 

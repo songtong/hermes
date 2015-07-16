@@ -20,10 +20,10 @@ public class AckMessageCommand extends AbstractCommand {
 	private static final long serialVersionUID = 7009170887490443292L;
 
 	// key: tpp, groupId, isResend
-	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> m_ackMsgSeqs = new ConcurrentHashMap<>();
+	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> m_ackMsgSeqs = new ConcurrentHashMap<Triple<Tpp, String, Boolean>, List<AckContext>>();
 
 	// key: tpp, groupId, isResend
-	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> m_nackMsgSeqs = new ConcurrentHashMap<>();
+	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> m_nackMsgSeqs = new ConcurrentHashMap<Triple<Tpp, String, Boolean>, List<AckContext>>();
 
 	public AckMessageCommand() {
 		super(CommandType.MESSAGE_ACK);
@@ -78,16 +78,16 @@ public class AckMessageCommand extends AbstractCommand {
 	}
 
 	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> readMsgSeqMap(HermesPrimitiveCodec codec) {
-		ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> msgSeqMap = new ConcurrentHashMap<>();
+		ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> msgSeqMap = new ConcurrentHashMap<Triple<Tpp, String, Boolean>, List<AckContext>>();
 
 		int mapSize = codec.readInt();
 		if (mapSize != 0) {
-			List<Triple<Tpp, String, Boolean>> tppgrs = new ArrayList<>();
+			List<Triple<Tpp, String, Boolean>> tppgrs = new ArrayList<Triple<Tpp, String, Boolean>>();
 			for (int i = 0; i < mapSize; i++) {
 				Tpp tpp = new Tpp(codec.readString(), codec.readInt(), codec.readInt() == 0 ? true : false);
 				String groupId = codec.readString();
 				boolean resend = codec.readBoolean();
-				tppgrs.add(new Triple<>(tpp, groupId, resend));
+				tppgrs.add(new Triple<Tpp, String, Boolean>(tpp, groupId, resend));
 			}
 			for (int i = 0; i < mapSize; i++) {
 				Triple<Tpp, String, Boolean> tppgr = tppgrs.get(i);
@@ -111,7 +111,7 @@ public class AckMessageCommand extends AbstractCommand {
 
 	public void addAckMsg(Tpp tpp, String groupId, boolean resend, long msgSeq, int remainingRetries,
 	      long onMessageStartTimeMillis, long onMessageEndTimeMillis) {
-		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
+		Triple<Tpp, String, Boolean> key = new Triple<Tpp, String, Boolean>(tpp, groupId, resend);
 		if (!m_ackMsgSeqs.containsKey(key)) {
 			m_ackMsgSeqs.putIfAbsent(key, new ArrayList<AckContext>());
 		}
@@ -121,7 +121,7 @@ public class AckMessageCommand extends AbstractCommand {
 
 	public void addNackMsg(Tpp tpp, String groupId, boolean resend, long msgSeq, int remainingRetries,
 	      long onMessageStartTimeMillis, long onMessageEndTimeMillis) {
-		Triple<Tpp, String, Boolean> key = new Triple<>(tpp, groupId, resend);
+		Triple<Tpp, String, Boolean> key = new Triple<Tpp, String, Boolean>(tpp, groupId, resend);
 		if (!m_nackMsgSeqs.containsKey(key)) {
 			m_nackMsgSeqs.putIfAbsent(key, new ArrayList<AckContext>());
 		}

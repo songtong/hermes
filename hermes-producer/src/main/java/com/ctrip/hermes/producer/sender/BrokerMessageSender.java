@@ -57,7 +57,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 	@Inject
 	private SystemClockService m_systemClockService;
 
-	private ConcurrentMap<Pair<String, Integer>, TaskQueue> m_taskQueues = new ConcurrentHashMap<>();
+	private ConcurrentMap<Pair<String, Integer>, TaskQueue> m_taskQueues = new ConcurrentHashMap<Pair<String, Integer>, TaskQueue>();
 
 	private ExecutorService m_callbackExecutor;
 
@@ -91,7 +91,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 	private class EndpointSender implements Runnable {
 
-		private ConcurrentMap<Pair<String, Integer>, AtomicBoolean> m_runnings = new ConcurrentHashMap<>();
+		private ConcurrentMap<Pair<String, Integer>, AtomicBoolean> m_runnings = new ConcurrentHashMap<Pair<String, Integer>, AtomicBoolean>();
 
 		private ExecutorService m_taskExecThreadPool;
 
@@ -233,14 +233,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		private int m_partition;
 
-		private AtomicReference<SendMessageCommand> m_cmd = new AtomicReference<>(null);
+		private AtomicReference<SendMessageCommand> m_cmd = new AtomicReference<SendMessageCommand>(null);
 
 		private BlockingQueue<ProducerWorkerContext> m_queue;
 
 		public TaskQueue(String topic, int partition, int queueSize) {
 			m_topic = topic;
 			m_partition = partition;
-			m_queue = new LinkedBlockingQueue<>(queueSize);
+			m_queue = new LinkedBlockingQueue<ProducerWorkerContext>(queueSize);
 		}
 
 		public void push(SendMessageCommand cmd) {
@@ -256,7 +256,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		private SendMessageCommand createSendMessageCommand(int size) {
 			SendMessageCommand cmd = null;
-			List<ProducerWorkerContext> contexts = new ArrayList<>(size);
+			List<ProducerWorkerContext> contexts = new ArrayList<ProducerWorkerContext>(size);
 			m_queue.drainTo(contexts, size);
 			if (!contexts.isEmpty()) {
 				cmd = new SendMessageCommand(m_topic, m_partition);

@@ -38,12 +38,13 @@ public class LocalMetaLoader implements MetaLoader {
 		} else {
 			try {
 				return DefaultSaxParser.parse(in);
-			} catch (SAXException | IOException e) {
+			} catch (SAXException e) {
+				throw new RuntimeException(String.format("Error parse local meta file %s", PATH), e);
+			} catch (IOException e) {
 				throw new RuntimeException(String.format("Error parse local meta file %s", PATH), e);
 			}
 		}
 	}
-
 	// public static void main(String[] args) throws IOException, SAXException {
 	// outputMetaStringFromMeta_Local();
 	//

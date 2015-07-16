@@ -44,7 +44,7 @@ public class AvroPayloadCodec extends AbstractPayloadCodec implements Initializa
 
 	@Override
 	public void initialize() throws InitializationException {
-		Map<String, String> configs = new HashMap<>();
+		Map<String, String> configs = new HashMap<String, String>();
 
 		avroSerializer.configure(configs, false);
 

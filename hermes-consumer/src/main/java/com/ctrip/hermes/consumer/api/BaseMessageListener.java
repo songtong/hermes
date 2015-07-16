@@ -63,7 +63,7 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 					Cat.logEvent("Message:" + topic, "Consumed:" + ip, Event.SUCCESS, "key=" + msg.getRefKey());
 					Cat.logMetricForCount(msg.getTopic());
 					t.setStatus(MessageStatus.SUCCESS.equals(msg.getStatus()) ? Transaction.SUCCESS : "FAILED-WILL-RETRY");
-				} catch (RuntimeException | Error e) {
+				} catch (Exception e) {
 					Cat.logError(e);
 					t.setStatus(e);
 					log.error("Exception occurred while calling onMessage.", e);

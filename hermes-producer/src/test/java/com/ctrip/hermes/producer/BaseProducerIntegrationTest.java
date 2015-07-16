@@ -7,7 +7,6 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +26,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
-import org.xml.sax.SAXException;
 
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.SubscriptionView;
@@ -74,7 +72,7 @@ import com.ctrip.hermes.producer.sender.MessageSender;
  */
 public class BaseProducerIntegrationTest extends ComponentTestCase {
 
-	private List<Command> m_receivedCmds = new ArrayList<>();
+	private List<Command> m_receivedCmds = new ArrayList<Command>();
 
 	@Mock
 	protected EndpointClient m_endpointClient;
@@ -131,7 +129,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		} else {
 			try {
 				return DefaultSaxParser.parse(in);
-			} catch (SAXException | IOException e) {
+			} catch (Exception e) {
 				throw new RuntimeException(String.format("Error parse meta file %s", fileName), e);
 			}
 		}
@@ -213,7 +211,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 	}
 
 	private class CompositeAnswer implements Answer<Void> {
-		private List<Answer<?>> m_answers = new LinkedList<>();
+		private List<Answer<?>> m_answers = new LinkedList<Answer<?>>();
 
 		public CompositeAnswer(Answer<?>... answers) {
 			if (answers != null && answers.length > 0) {
@@ -287,7 +285,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 				SendMessageResultCommand resultCmd = new SendMessageResultCommand(sendMessageCmd.getMessageCount());
 				resultCmd.correlate(sendMessageCmd);
 
-				Map<Integer, Boolean> results = new HashMap<>();
+				Map<Integer, Boolean> results = new HashMap<Integer, Boolean>();
 				for (List<ProducerMessage<?>> pmsgList : sendMessageCmd.getProducerMessages()) {
 					for (ProducerMessage<?> pmsg : pmsgList) {
 						results.put(pmsg.getMsgSeqNo(), true);
@@ -311,7 +309,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 				SendMessageResultCommand resultCmd = new SendMessageResultCommand(sendMessageCmd.getMessageCount());
 				resultCmd.correlate(sendMessageCmd);
 
-				Map<Integer, Boolean> results = new HashMap<>();
+				Map<Integer, Boolean> results = new HashMap<Integer, Boolean>();
 				for (List<ProducerMessage<?>> pmsgList : sendMessageCmd.getProducerMessages()) {
 					for (ProducerMessage<?> pmsg : pmsgList) {
 						results.put(pmsg.getMsgSeqNo(), false);

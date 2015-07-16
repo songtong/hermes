@@ -20,7 +20,7 @@ public class BaseConsumerMessage<T> {
 
 	protected PropertiesHolder m_propertiesHolder = new PropertiesHolder();
 
-	protected AtomicReference<MessageStatus> m_status = new AtomicReference<>(MessageStatus.NOT_SET);
+	protected AtomicReference<MessageStatus> m_status = new AtomicReference<MessageStatus>(MessageStatus.NOT_SET);
 
 	protected int m_remainingRetries = 0;
 

@@ -36,8 +36,9 @@ public class PartitionTest {
 		      });
 
 		System.out.println("Starting consumer...");
-
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
 			while (true) {
 				String line = in.readLine();
 				if ("q".equals(line)) {
@@ -48,6 +49,10 @@ public class PartitionTest {
 				MessageHolder holder = producer.message(topicPattern, null, event);
 				holder.send();
 				System.out.println(String.format("Sent to %s: %s", topicPattern, event));
+			}
+		} finally {
+			if (in != null) {
+				in.close();
 			}
 		}
 		consumerHolder.close();
@@ -60,33 +65,36 @@ public class PartitionTest {
 
 		Producer producer = Producer.getInstance();
 
-		ConsumerHolder consumerHolder1 = Consumer.getInstance().start(topicPattern, group, new MessageListener<VisitEvent>() {
+		ConsumerHolder consumerHolder1 = Consumer.getInstance().start(topicPattern, group,
+		      new MessageListener<VisitEvent>() {
 
-			@Override
-			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
-				for (ConsumerMessage<VisitEvent> msg : msgs) {
-					VisitEvent event = msg.getBody();
-					System.out.println(String.format("Consumer1 Receive from %s: %s", msg.getTopic(), event));
-				}
-			}
-		});
+			      @Override
+			      public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
+				      for (ConsumerMessage<VisitEvent> msg : msgs) {
+					      VisitEvent event = msg.getBody();
+					      System.out.println(String.format("Consumer1 Receive from %s: %s", msg.getTopic(), event));
+				      }
+			      }
+		      });
 
 		System.out.println("Starting consumer1...");
 
-		ConsumerHolder consumerHolder2 = Consumer.getInstance().start(topicPattern, group, new MessageListener<VisitEvent>() {
+		ConsumerHolder consumerHolder2 = Consumer.getInstance().start(topicPattern, group,
+		      new MessageListener<VisitEvent>() {
 
-			@Override
-			public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
-				for (ConsumerMessage<VisitEvent> msg : msgs) {
-					VisitEvent event = msg.getBody();
-					System.out.println(String.format("Consumer2 Receive from %s: %s", msg.getTopic(), event));
-				}
-			}
-		});
+			      @Override
+			      public void onMessage(List<ConsumerMessage<VisitEvent>> msgs) {
+				      for (ConsumerMessage<VisitEvent> msg : msgs) {
+					      VisitEvent event = msg.getBody();
+					      System.out.println(String.format("Consumer2 Receive from %s: %s", msg.getTopic(), event));
+				      }
+			      }
+		      });
 
 		System.out.println("Starting consumer2...");
-
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
 			while (true) {
 				String line = in.readLine();
 				if ("q".equals(line)) {
@@ -97,6 +105,10 @@ public class PartitionTest {
 				MessageHolder holder = producer.message(topicPattern, null, event);
 				holder.send();
 				System.out.println(String.format("Sent to %s: %s", topicPattern, event));
+			}
+		} finally {
+			if (in != null) {
+				in.close();
 			}
 		}
 		consumerHolder1.close();

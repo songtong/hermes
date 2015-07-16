@@ -28,7 +28,7 @@ public class StartConsumer extends ComponentTestCase {
 
 	@Test
 	public void test() throws Exception {
-		Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers = new HashMap<>();
+		Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers = new HashMap<Pair<String, String>, List<Pair<String, ConsumerHolder>>>();
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
@@ -142,7 +142,7 @@ public class StartConsumer extends ComponentTestCase {
 
 	private void printAllThreads() {
 		Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
-		Map<String, List<String>> groups = new HashMap<>();
+		Map<String, List<String>> groups = new HashMap<String, List<String>>();
 		for (Thread thread : allStackTraces.keySet()) {
 			String group = thread.getThreadGroup().getName();
 			if (!groups.containsKey(group)) {
@@ -182,7 +182,7 @@ public class StartConsumer extends ComponentTestCase {
 
 		private int m_nackTimes;
 
-		private ConcurrentMap<String, AtomicInteger> m_nacks = new ConcurrentHashMap<>();
+		private ConcurrentMap<String, AtomicInteger> m_nacks = new ConcurrentHashMap<String, AtomicInteger>();
 
 		public NAckMessageListener(String name, int nackTimes) {
 			m_name = name;

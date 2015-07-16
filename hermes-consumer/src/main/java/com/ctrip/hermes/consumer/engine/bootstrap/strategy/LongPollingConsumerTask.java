@@ -86,7 +86,7 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private AtomicBoolean m_pullTaskRunning = new AtomicBoolean(false);
 
-	private AtomicReference<Lease> m_lease = new AtomicReference<>(null);
+	private AtomicReference<Lease> m_lease = new AtomicReference<Lease>(null);
 
 	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
@@ -338,7 +338,7 @@ public class LongPollingConsumerTask implements Runnable {
 	}
 
 	private void consumeMessages(long correlationId, int maxItems) {
-		List<ConsumerMessage<?>> msgs = new ArrayList<>(maxItems <= 0 ? 100 : maxItems);
+		List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>(maxItems <= 0 ? 100 : maxItems);
 
 		if (maxItems <= 0) {
 			m_msgs.drainTo(msgs);
@@ -352,7 +352,7 @@ public class LongPollingConsumerTask implements Runnable {
 	@SuppressWarnings("rawtypes")
 	private List<ConsumerMessage<?>> decodeBatches(List<TppConsumerMessageBatch> batches, Class bodyClazz,
 	      Channel channel) {
-		List<ConsumerMessage<?>> msgs = new ArrayList<>();
+		List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 		for (TppConsumerMessageBatch batch : batches) {
 			List<MessageMeta> msgMetas = batch.getMessageMetas();
 			ByteBuf batchData = batch.getData();

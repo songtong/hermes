@@ -347,7 +347,9 @@ public class DefaultMetaServiceTest extends ComponentTestCase {
 		} else {
 			try {
 				return DefaultSaxParser.parse(in);
-			} catch (SAXException | IOException e) {
+			} catch (SAXException e) {
+				throw new RuntimeException(String.format("Error parse meta file %s", fileName), e);
+			} catch (IOException e) {
 				throw new RuntimeException(String.format("Error parse meta file %s", fileName), e);
 			}
 		}

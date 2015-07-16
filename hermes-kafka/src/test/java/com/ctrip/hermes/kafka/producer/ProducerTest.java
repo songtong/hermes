@@ -19,8 +19,9 @@ public class ProducerTest {
 		String topic = "kafka.SimpleTextTopic";
 
 		Producer producer = Producer.getInstance();
-
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
 			while (true) {
 				String line = in.readLine();
 				if ("q".equals(line)) {
@@ -34,6 +35,10 @@ public class ProducerTest {
 					future.get();
 					System.out.println("Sent: " + proMsg);
 				}
+			}
+		} finally {
+			if (in != null) {
+				in.close();
 			}
 		}
 

@@ -477,7 +477,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		MessageSendAnswer.NoOp //
 		);
 		int times = Integer.valueOf(lookup(ProducerConfig.class).getDefaultBrokerSenderTaskQueueSize()) + 2;
-		List<Future<SendResult>> futures = new ArrayList<>(times);
+		List<Future<SendResult>> futures = new ArrayList<Future<SendResult>>(times);
 		List<Pair<String, String>> appProperties = Arrays.asList(new Pair<String, String>("a", "A"));
 		for (int i = 0; i < times; i++) {
 			futures.add(sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null));

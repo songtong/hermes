@@ -15,7 +15,7 @@ public class SendMessageResultCommand extends AbstractCommand {
 
 	private static final long serialVersionUID = -2408812182538982540L;
 
-	private Map<Integer, Boolean> m_successes = new ConcurrentHashMap<>();
+	private Map<Integer, Boolean> m_successes = new ConcurrentHashMap<Integer, Boolean>();
 
 	private int m_totalSize;
 
