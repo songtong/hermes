@@ -28,7 +28,7 @@ public class FrequencySpecifiedRetryPolicy implements RetryPolicy {
 		m_policyValue = policyValue.trim();
 
 		if (PATTERN_VALID.matcher(m_policyValue).matches()) {
-			m_intervals = new LinkedList<>();
+			m_intervals = new LinkedList<Integer>();
 			Matcher m = PATTERN_GROUP.matcher(m_policyValue.substring(1, m_policyValue.length() - 1));
 			while (m.find()) {
 				m_intervals.add(Integer.valueOf(m.group(1)));

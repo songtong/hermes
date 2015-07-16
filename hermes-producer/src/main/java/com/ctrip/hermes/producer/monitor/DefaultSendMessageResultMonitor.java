@@ -45,7 +45,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	@Inject
 	private SystemClockService m_systemClockService;
 
-	private Map<Long, SendMessageCommand> m_cmds = new ConcurrentHashMap<>();
+	private Map<Long, SendMessageCommand> m_cmds = new ConcurrentHashMap<Long, SendMessageCommand>();
 
 	private ReentrantLock m_lock = new ReentrantLock();
 
@@ -133,7 +133,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	}
 
 	protected List<SendMessageCommand> scanTimeoutCommands() {
-		List<SendMessageCommand> timeoutCmds = new LinkedList<>();
+		List<SendMessageCommand> timeoutCmds = new LinkedList<SendMessageCommand>();
 		m_lock.lock();
 		try {
 			for (Map.Entry<Long, SendMessageCommand> entry : m_cmds.entrySet()) {

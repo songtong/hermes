@@ -39,7 +39,7 @@ public class PullMessageResultCommandTest extends HermesCoreBaseTest {
 		long bornTime = System.currentTimeMillis();
 
 		PullMessageResultCommand cmd = new PullMessageResultCommand();
-		List<TppConsumerMessageBatch> batches = new ArrayList<>();
+		List<TppConsumerMessageBatch> batches = new ArrayList<TppConsumerMessageBatch>();
 
 		final Pair<MessageMeta, PartialDecodedMessage> priorityMsg1 = createMsgAndMetas(1, topic, "key1", "body1",
 		      Arrays.asList(new Pair<String, String>("a", "A")), bornTime, 0, -1, 0, false);
@@ -140,7 +140,7 @@ public class PullMessageResultCommandTest extends HermesCoreBaseTest {
 	      List<MessageMeta> messageMetas) {
 		MessageCodec messageCodec = lookup(MessageCodec.class);
 
-		List<ConsumerMessage<String>> msgs = new ArrayList<>();
+		List<ConsumerMessage<String>> msgs = new ArrayList<ConsumerMessage<String>>();
 
 		for (int j = 0; j < messageMetas.size(); j++) {
 			BaseConsumerMessage<String> baseMsg = (BaseConsumerMessage<String>) messageCodec.decode(batch.getTopic(),
@@ -161,7 +161,7 @@ public class PullMessageResultCommandTest extends HermesCoreBaseTest {
 	private void addBatch(List<TppConsumerMessageBatch> batches, String topic, int partition,
 	      final List<Pair<MessageMeta, PartialDecodedMessage>> msgs, boolean isResend, int priority) {
 		TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
-		List<MessageMeta> metas = new ArrayList<>();
+		List<MessageMeta> metas = new ArrayList<MessageMeta>();
 		for (Pair<MessageMeta, PartialDecodedMessage> msg : msgs) {
 			metas.add(msg.getKey());
 		}
@@ -188,7 +188,7 @@ public class PullMessageResultCommandTest extends HermesCoreBaseTest {
 	private Pair<MessageMeta, PartialDecodedMessage> createMsgAndMetas(long id, String topic, String key, String body,
 	      List<Pair<String, String>> durableProperties, long bornTime, int remainingRetries, long originId,
 	      int priority, boolean isResend) {
-		Pair<MessageMeta, PartialDecodedMessage> pair = new Pair<>();
+		Pair<MessageMeta, PartialDecodedMessage> pair = new Pair<MessageMeta, PartialDecodedMessage>();
 		pair.setKey(createMessageMeta(id, remainingRetries, originId, priority, isResend));
 		pair.setValue(createPartialDecodedMessage(topic, key, body, durableProperties, remainingRetries, bornTime));
 		return pair;

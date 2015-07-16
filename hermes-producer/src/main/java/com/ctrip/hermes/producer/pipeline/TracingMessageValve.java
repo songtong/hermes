@@ -44,10 +44,10 @@ public class TracingMessageValve implements Valve {
 			ctx.next(payload);
 
 			t.setStatus(Transaction.SUCCESS);
-		} catch (RuntimeException | Error e) {
+		} catch (Exception e) {
 			Cat.logError(e);
 			t.setStatus(e);
-			throw e;
+			throw new RuntimeException(e);
 		} finally {
 			t.complete();
 		}

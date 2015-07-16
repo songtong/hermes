@@ -84,7 +84,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 				throw new RuntimeException();
 			}
 
-			List<String> ipPorts = new LinkedList<>();
+			List<String> ipPorts = new LinkedList<String>();
 			for (String ip : ips) {
 				ipPorts.add(String.format("%s:%s", ip, m_masterMetaServerPort));
 			}

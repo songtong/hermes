@@ -16,12 +16,8 @@ public class RetryPolicyFactory {
 
 					if (type != null && !"".equals(type.trim()) && value != null && !"".equals(value.trim())) {
 
-						switch (type.trim()) {
-						case "1":
+						if("1".equals(type.trim())) {
 							return new FrequencySpecifiedRetryPolicy(value.trim());
-
-						default:
-							break;
 						}
 					}
 				}

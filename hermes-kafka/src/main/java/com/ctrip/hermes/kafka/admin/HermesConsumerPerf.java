@@ -12,7 +12,6 @@ import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
-import com.dianping.cat.Cat;
 
 public class HermesConsumerPerf {
 
@@ -93,9 +92,6 @@ public class HermesConsumerPerf {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-
-		Cat.initializeByDomain("900777", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
-
 		ConsumerPerfConfig config = new ConsumerPerfConfig(args);
 		logger.info("Starting consumer...");
 		String topic = config.topic;

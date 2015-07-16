@@ -150,34 +150,29 @@
             <artifactId>javax.servlet-api</artifactId>
             <version>3.1.0</version>
         </dependency>
-        <dependency>
-            <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-core</artifactId>
-            <version>3.1.2</version>
-        </dependency>
+         <!--for test -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-webapp</artifactId>
             <version>9.2.11.v20150529</version>
             <scope>test</scope>
         </dependency>
-         <!--for test -->
-         <dependency>
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.186</version>
             <scope>test</scope>
-         </dependency>
-         <dependency>
+        </dependency>
+        <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-recipes</artifactId>
             <version>2.7.1</version>
-         </dependency>
-         <dependency>
+        </dependency>
+        <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-x-discovery</artifactId>
             <version>2.7.1</version>
-         </dependency>
+        </dependency>
           <dependency>
 			<groupId>org.apache.curator</groupId>
 			<artifactId>curator-examples</artifactId>
@@ -307,6 +302,11 @@
    <profiles>
 		<profile>
 			<id>travis</id>
+			<properties>
+				<package.environment>dev</package.environment>
+       			<jar.source>1.7</jar.source>
+       			<jar.target>1.7</jar.target>				
+			</properties>			
 			<activation>
 				<property>
 					<name>env.TRAVIS</name>
@@ -341,6 +341,93 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>dev</id>
+			<properties>
+				<package.environment>dev</package.environment>
+       			<jar.source>1.7</jar.source>
+       			<jar.target>1.7</jar.target>				
+			</properties>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<id>fws</id>
+			<properties>
+				<package.environment>fws</package.environment>
+       			<jar.source>1.7</jar.source>
+       			<jar.target>1.7</jar.target>
+			</properties>
+		</profile>
+		<profile>
+			<id>uat</id>
+			<properties>
+				<package.environment>uat</package.environment>
+       			<jar.source>1.7</jar.source>
+       			<jar.target>1.7</jar.target>				
+			</properties>
+		</profile>
+		<profile>
+			<id>prod</id>
+			<properties>
+				<package.environment>prod</package.environment>
+       			<jar.source>1.7</jar.source>
+       			<jar.target>1.7</jar.target>				
+			</properties>
+		</profile>
+		<profile>
+			<id>jdk6</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-jar-plugin</artifactId>
+						<version>2.6</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<classifier>jdk6</classifier>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+			<properties>
+				<jar.source>1.6</jar.source>
+				<jar.target>1.6</jar.target>
+			</properties>
+		</profile>
+		<profile>
+			<id>jdk8</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-jar-plugin</artifactId>
+						<version>2.6</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<classifier>jdk8</classifier>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+			<properties>
+				<jar.source>1.8</jar.source>
+				<jar.target>1.8</jar.target>
+			</properties>
+		</profile>
 	</profiles>
    <build>
       <pluginManagement>
@@ -349,8 +436,8 @@
                <artifactId>maven-compiler-plugin</artifactId>
                <version>3.2</version>
                <configuration>
-                  <source>1.7</source>
-                  <target>1.7</target>
+                    <source>${jar.source}</source>
+                    <target>${jar.target}</target>
                </configuration>
             </plugin>
             <plugin>

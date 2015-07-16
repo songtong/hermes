@@ -36,9 +36,9 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	private static final String KEY_IS_LOCAL_MODE = "isLocalMode";
 
-	private ConcurrentMap<String, Properties> m_producerCache = new ConcurrentHashMap<>();
+	private ConcurrentMap<String, Properties> m_producerCache = new ConcurrentHashMap<String, Properties>();
 
-	private ConcurrentMap<String, Properties> m_consumerCache = new ConcurrentHashMap<>();
+	private ConcurrentMap<String, Properties> m_consumerCache = new ConcurrentHashMap<String, Properties>();
 
 	private Properties m_producerDefault;
 
@@ -48,7 +48,7 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	private static final Logger logger = LoggerFactory.getLogger(DefaultClientEnvironment.class);
 
-	private AtomicReference<Env> m_env = new AtomicReference<>();
+	private AtomicReference<Env> m_env = new AtomicReference<Env>();
 
 	@Override
 	public String getMetaServerDomainName() {

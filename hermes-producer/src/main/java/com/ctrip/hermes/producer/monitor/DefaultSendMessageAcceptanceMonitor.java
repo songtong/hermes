@@ -19,7 +19,7 @@ import com.google.common.util.concurrent.AbstractFuture;
 public class DefaultSendMessageAcceptanceMonitor implements SendMessageAcceptanceMonitor {
 	private static final Logger log = LoggerFactory.getLogger(DefaultSendMessageAcceptanceMonitor.class);
 
-	private Map<Long, CancelableFuture> m_futures = new ConcurrentHashMap<>();
+	private Map<Long, CancelableFuture> m_futures = new ConcurrentHashMap<Long, CancelableFuture>();
 
 	private ReentrantLock m_lock = new ReentrantLock();
 

@@ -31,7 +31,7 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultConsumerNotifier.class);
 
-	private ConcurrentMap<Long, Pair<ConsumerContext, ExecutorService>> m_consumerContexs = new ConcurrentHashMap<>();
+	private ConcurrentMap<Long, Pair<ConsumerContext, ExecutorService>> m_consumerContexs = new ConcurrentHashMap<Long, Pair<ConsumerContext, ExecutorService>>();
 
 	@Inject(BuildConstants.CONSUMER)
 	private Pipeline<Void> m_pipeline;
@@ -58,7 +58,7 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 			m_consumerContexs.putIfAbsent(
 			      correlationId,
-			      new Pair<>(context, Executors.newFixedThreadPool(
+			      new Pair<ConsumerContext, ExecutorService>(context, Executors.newFixedThreadPool(
 			            threadCount,
 			            HermesThreadFactory.create(
 			                  String.format("ConsumerNotifier-%s-%s-%s", context.getTopic().getName(),
@@ -105,7 +105,7 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 				} catch (Exception e) {
 					log.error(
 
-					"Exception occurred while calling messageReceived(correlationId={}, topic={}, groupId={}, sessionId={})",
+					      "Exception occurred while calling messageReceived(correlationId={}, topic={}, groupId={}, sessionId={})",
 					      correlationId, context.getTopic().getName(), context.getGroupId(), context.getSessionId(), e);
 				}
 			}

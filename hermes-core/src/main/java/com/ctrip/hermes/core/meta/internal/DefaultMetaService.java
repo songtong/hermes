@@ -51,7 +51,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Inject
 	private CoreConfig m_config;
 
-	private AtomicReference<Meta> m_metaCache = new AtomicReference<>();
+	private AtomicReference<Meta> m_metaCache = new AtomicReference<Meta>();
 
 	protected Meta getMeta() {
 		return m_metaCache.get();
@@ -114,7 +114,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 		}
 
 		Meta meta = getMeta();
-		List<Topic> matchedTopics = new ArrayList<>();
+		List<Topic> matchedTopics = new ArrayList<Topic>();
 
 		Collection<Topic> topics = meta.getTopics().values();
 
@@ -158,7 +158,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public List<Datasource> listAllMysqlDataSources() {
 		Meta meta = getMeta();
-		final List<Datasource> dataSources = new ArrayList<>();
+		final List<Datasource> dataSources = new ArrayList<Datasource>();
 
 		meta.accept(new BaseVisitor2() {
 

@@ -173,7 +173,7 @@ public class HermesPrimitiveCodecTest extends ComponentTestCase {
 		      + "\"14\":{\"str\":\"169.254.142.159\"},\"15\":{\"str\":\"java.lang.String\"},"
 		      + "\"16\":{\"i64\":1429168996889},\"17\":{\"map\":[\"str\",\"str\",0,{}]}}";
 
-		Map<String, String> raw = new HashMap<>();
+		Map<String, String> raw = new HashMap<String, String>();
 		raw.put(UUID.randomUUID().toString(), input);
 
 		ByteBuf buf = Unpooled.buffer();
@@ -188,7 +188,7 @@ public class HermesPrimitiveCodecTest extends ComponentTestCase {
 
 	@Test
 	public void testLongIntMap() {
-		Map<Long, Integer> raw = new HashMap<>();
+		Map<Long, Integer> raw = new HashMap<Long, Integer>();
 		raw.put(100L, 1000);
 		raw.put(101L, 1001);
 
@@ -204,7 +204,7 @@ public class HermesPrimitiveCodecTest extends ComponentTestCase {
 
 	@Test
 	public void testIntBooleanMap() {
-		Map<Integer, Boolean> raw = new HashMap<>();
+		Map<Integer, Boolean> raw = new HashMap<Integer, Boolean>();
 		raw.put(100, true);
 		raw.put(101, false);
 

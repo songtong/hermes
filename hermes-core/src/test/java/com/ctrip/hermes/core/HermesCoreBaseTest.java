@@ -35,7 +35,7 @@ public class HermesCoreBaseTest extends ComponentTestCase {
 	protected void writeProperties(List<Pair<String, String>> properties, ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
 		if (properties != null) {
-			Map<String, String> map = new HashMap<>();
+			Map<String, String> map = new HashMap<String, String>();
 			for (Pair<String, String> prop : properties) {
 				map.put(prop.getKey(), prop.getValue());
 			}

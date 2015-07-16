@@ -16,7 +16,7 @@ import org.unidal.lookup.annotation.Named;
 public class DefaultConsumerBootstrapRegistry extends ContainerHolder implements Initializable,
       ConsumerBootstrapRegistry {
 
-	private Map<String, ConsumerBootstrap> m_bootstraps = new ConcurrentHashMap<>();
+	private Map<String, ConsumerBootstrap> m_bootstraps = new ConcurrentHashMap<String, ConsumerBootstrap>();
 
 	@Override
 	public void initialize() throws InitializationException {

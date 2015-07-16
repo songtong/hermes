@@ -19,7 +19,7 @@ import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 public class PullMessageResultCommand extends AbstractCommand {
 	private static final long serialVersionUID = 7125716603747372895L;
 
-	private List<TppConsumerMessageBatch> m_batches = new ArrayList<>();
+	private List<TppConsumerMessageBatch> m_batches = new ArrayList<TppConsumerMessageBatch>();
 
 	private transient Channel m_channel;
 
@@ -48,7 +48,7 @@ public class PullMessageResultCommand extends AbstractCommand {
 	@Override
 	public void parse0(ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
-		List<TppConsumerMessageBatch> batches = new ArrayList<>();
+		List<TppConsumerMessageBatch> batches = new ArrayList<TppConsumerMessageBatch>();
 
 		readBatchMetas(codec, batches);
 

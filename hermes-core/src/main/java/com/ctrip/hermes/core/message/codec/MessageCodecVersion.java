@@ -17,7 +17,7 @@ public enum MessageCodecVersion {
 
 	private MessageCodecHandler m_handler;
 
-	private static Map<Byte, MessageCodecVersion> m_versions = new HashMap<>();
+	private static Map<Byte, MessageCodecVersion> m_versions = new HashMap<Byte, MessageCodecVersion>();
 
 	static {
 		for (MessageCodecVersion version : MessageCodecVersion.values()) {
