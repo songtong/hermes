@@ -198,7 +198,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerPartitionAssigningStrategy</role>
-			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultOrderedConsumeConsumerPartitionAssigningStrategy</implementation>
+			<implementation>com.ctrip.hermes.metaserver.consumer.LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
