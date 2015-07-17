@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -13,7 +12,6 @@ import org.junit.Test;
 
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
-import com.ctrip.hermes.metaserver.consumer.LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy.Allocator;
 
 public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest {
 
@@ -148,30 +146,6 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest
 		Map<Integer, Map<String, ClientContext>> newAssigns = s.assign(partitions, currentConsumers, originAssigns);
 
 		vefifyAssign(newAssigns, "1=>c3,2=>c3,3=>c2");
-	}
-
-	@Test
-	public void testPointToAvg() {
-		Allocator a = new Allocator(6, 2, Collections.<Integer> emptyList());
-
-		assertEquals(3, a.distanceToAvg(0));
-		assertEquals(2, a.distanceToAvg(1));
-		assertEquals(1, a.distanceToAvg(2));
-		assertEquals(0, a.distanceToAvg(3));
-		assertEquals(-1, a.distanceToAvg(4));
-		assertEquals(-2, a.distanceToAvg(5));
-		assertEquals(-3, a.distanceToAvg(6));
-
-		a = new Allocator(7, 2, Collections.<Integer> emptyList());
-
-		assertEquals(3, a.distanceToAvg(0));
-		assertEquals(2, a.distanceToAvg(1));
-		assertEquals(1, a.distanceToAvg(2));
-		assertEquals(0, a.distanceToAvg(3));
-		assertEquals(0, a.distanceToAvg(4));
-		assertEquals(-1, a.distanceToAvg(5));
-		assertEquals(-2, a.distanceToAvg(6));
-		assertEquals(-3, a.distanceToAvg(7));
 	}
 
 	private Map<String, ClientContext> m(String consumer) {
