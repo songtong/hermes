@@ -70,7 +70,12 @@
 			<groupId>io.confluent</groupId>
 			<artifactId>common-utils</artifactId>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+        </dependency>
+    </dependencies>
 	<build>
 		<plugins>
 			<plugin>

@@ -137,7 +137,7 @@
 							</includes>
 						</resource>
 					</webResources>
-					<warName>${project.artifactId}-${project.version}-${build.time}</warName>
+					<warName>${project.artifactId}-${project.version}-${package.environment}-${build.time}</warName>
 				</configuration>
 			</plugin>
 			<plugin>
