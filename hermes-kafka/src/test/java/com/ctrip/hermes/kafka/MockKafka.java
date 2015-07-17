@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka.admin;
+package com.ctrip.hermes.kafka;
 
 import java.util.Properties;
 import java.util.UUID;
@@ -8,6 +8,8 @@ import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 
 import org.I0Itec.zkclient.ZkClient;
+
+import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 
 public class MockKafka {
 

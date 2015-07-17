@@ -34,3 +34,5 @@ bld/
 *.st
 
 hermes-portal/data/elasticsearch/nodes/0/node.lock
+
+MetaServerTest.xml

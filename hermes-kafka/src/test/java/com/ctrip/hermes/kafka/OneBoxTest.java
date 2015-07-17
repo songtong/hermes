@@ -17,8 +17,6 @@ import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.kafka.admin.MockKafka;
-import com.ctrip.hermes.kafka.admin.MockZookeeper;
 import com.ctrip.hermes.kafka.producer.KafkaFuture;
 import com.ctrip.hermes.kafka.producer.KafkaMessageSender;
 import com.ctrip.hermes.kafka.producer.KafkaSendResult;

@@ -25,8 +25,6 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.ctrip.hermes.kafka.admin.MockKafka;
-import com.ctrip.hermes.kafka.admin.MockZookeeper;
 import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 
 public class NativeKafkaWithStringDecoderTest {
