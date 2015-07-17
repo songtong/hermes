@@ -33,6 +33,7 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.config.PortalConstants;
@@ -181,20 +182,22 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		Map<Pair<String, Integer>, Map<Integer, Pair<Date, Date>>> m = new HashMap<>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
 			Topic t = entry.getValue();
-			for (Partition p : t.getPartitions()) {
-				for (ConsumerGroup c : t.getConsumerGroups()) {
-					Pair<Date, Date> delay = null;
-					try {
-						delay = m_dao.getDelayTime(t.getName(), p.getId(), c.getId());
-					} catch (DalException e) {
-						log.warn("Get delay of {}:{}:{} failed.", t.getName(), p.getId(), PortalConstants.PRIORITY_TRUE, e);
-						continue;
+			if (t.getStorageType().equals(Storage.MYSQL)) {
+				for (Partition p : t.getPartitions()) {
+					for (ConsumerGroup c : t.getConsumerGroups()) {
+						Pair<Date, Date> delay = null;
+						try {
+							delay = m_dao.getDelayTime(t.getName(), p.getId(), c.getId());
+						} catch (DalException e) {
+							log.warn("Get delay of {}:{}:{} failed.", t.getName(), p.getId(), PortalConstants.PRIORITY_TRUE, e);
+							continue;
+						}
+						Pair<String, Integer> k = new Pair<String, Integer>(t.getName(), c.getId());
+						if (!m.containsKey(k)) {
+							m.put(k, new HashMap<Integer, Pair<Date, Date>>());
+						}
+						m.get(k).put(p.getId(), delay);
 					}
-					Pair<String, Integer> k = new Pair<String, Integer>(t.getName(), c.getId());
-					if (!m.containsKey(k)) {
-						m.put(k, new HashMap<Integer, Pair<Date, Date>>());
-					}
-					m.get(k).put(p.getId(), delay);
 				}
 			}
 		}
@@ -204,19 +207,22 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	private void updateLatestProduced() {
 		Map<String, Date> m = new HashMap<String, Date>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
-			String topic = entry.getValue().getName();
-			Date current = m_latestProduced.get(topic) == null ? new Date(0) : m_latestProduced.get(topic);
-			Date latest = new Date(current.getTime());
-			for (Partition partition : m_metaService.findPartitionsByTopic(topic)) {
-				try {
-					latest = m_dao.getLatestProduced(topic, partition.getId());
-				} catch (DalException e) {
-					log.warn("Find latest produced failed. {}:{}", topic, partition.getId());
-					continue;
+			Topic topic = entry.getValue();
+			if (topic.getStorageType().equals(Storage.MYSQL)) {
+				String topicName = topic.getName();
+				Date current = m_latestProduced.get(topicName) == null ? new Date(0) : m_latestProduced.get(topicName);
+				Date latest = new Date(current.getTime());
+				for (Partition partition : m_metaService.findPartitionsByTopic(topicName)) {
+					try {
+						latest = m_dao.getLatestProduced(topicName, partition.getId());
+					} catch (DalException e) {
+						log.warn("Find latest produced failed. {}:{}", topicName, partition.getId());
+						continue;
+					}
+					current = latest.after(current) ? latest : current;
 				}
-				current = latest.after(current) ? latest : current;
+				m.put(topicName, current);
 			}
-			m.put(topic, current);
 		}
 		m_latestProduced = m;
 	}
