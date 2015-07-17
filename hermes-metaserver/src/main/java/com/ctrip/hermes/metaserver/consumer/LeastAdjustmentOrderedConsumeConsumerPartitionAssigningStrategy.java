@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.metaserver.assign.AssignBalancer;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 
 /**
@@ -56,8 +57,8 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy imp
 		freePartitions.addAll(neverAssignedPartitions);
 		freePartitions.addAll(assignLostPartitions);
 
-		Allocator allocator = new Allocator(partitions.size(), Math.min(currentConsumers.size(), partitions.size()),
-		      freePartitions);
+		AssignBalancer<Integer> allocator = new AssignBalancer<>(partitions.size(), Math.min(currentConsumers.size(),
+		      partitions.size()), freePartitions);
 
 		for (String commonConsumer : common) {
 			List<Integer> originAssign = originConsumerToPartition.get(commonConsumer);
@@ -160,77 +161,4 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy imp
 		return result;
 	}
 
-	public static class Allocator {
-		private int m_total;
-
-		private int m_copies;
-
-		private int m_copiesAllocated = 0;
-
-		private LinkedList<Integer> m_freePartitions = new LinkedList<>();
-
-		private int m_avg;
-
-		private int m_biggerThanAvgsAllocated = 0;
-
-		private int m_remainder;
-
-		public Allocator(int total, int copies, List<Integer> freePartitions) {
-			m_total = total;
-			m_copies = copies;
-
-			m_avg = m_total / m_copies;
-			m_remainder = m_total % m_copies;
-
-			if (freePartitions != null) {
-				m_freePartitions.addAll(freePartitions);
-			}
-		}
-
-		public List<Integer> adjust(List<Integer> originAssign) {
-			m_copiesAllocated++;
-			LinkedList<Integer> newAssign = new LinkedList<>(originAssign);
-
-			if (lastCopyOrBeyond()) {
-				newAssign.addAll(m_freePartitions);
-			} else {
-				int partitionsToAdjust = distanceToAvg(originAssign.size());
-				if (partitionsToAdjust > 0) {
-					for (int i = 0; i < partitionsToAdjust; i++) {
-						newAssign.add(m_freePartitions.removeFirst());
-					}
-				} else if (partitionsToAdjust < 0) {
-					for (int i = 0; i < Math.abs(partitionsToAdjust); i++) {
-						m_freePartitions.add(newAssign.removeFirst());
-					}
-				}
-			}
-
-			if (m_remainder != 0 && newAssign.size() == m_avg + 1) {
-				m_biggerThanAvgsAllocated++;
-			}
-
-			return newAssign;
-		}
-
-		protected int distanceToAvg(int point) {
-			if (m_remainder == 0) {
-				return m_avg - point;
-			} else {
-				if (biggerThanAvgAllowed()) {
-					return point > m_avg ? m_avg + 1 - point : m_avg - point;
-				} else {
-					return m_avg - point;
-				}
-			}
-		}
-
-		private boolean biggerThanAvgAllowed() {
-			return m_biggerThanAvgsAllocated < m_remainder;
-		}
-
-		private boolean lastCopyOrBeyond() {
-			return m_copiesAllocated >= m_copies;
-		}
-	}
 }
