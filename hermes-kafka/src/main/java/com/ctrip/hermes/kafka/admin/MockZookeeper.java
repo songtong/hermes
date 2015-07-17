@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka;
+package com.ctrip.hermes.kafka.admin;
 
 import java.io.IOException;
 

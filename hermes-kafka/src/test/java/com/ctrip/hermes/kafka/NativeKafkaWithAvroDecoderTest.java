@@ -29,6 +29,9 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.ctrip.hermes.kafka.admin.MockKafka;
+import com.ctrip.hermes.kafka.admin.MockZookeeper;
+import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 import com.ctrip.hermes.kafka.avro.KafkaAvroTest;
 
 public class NativeKafkaWithAvroDecoderTest {
