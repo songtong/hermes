@@ -31,4 +31,8 @@ public class ProducerSendService {
 	      throws MessageSendException, IOException {
 		return new ProducerSendCommand(producer, topic, params, is).execute();
 	}
+
+	public Producer getProducer() {
+		return this.producer;
+	}
 }

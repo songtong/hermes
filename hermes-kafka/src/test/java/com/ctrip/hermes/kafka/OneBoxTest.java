@@ -16,10 +16,14 @@ import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.kafka.producer.KafkaFuture;
+import com.ctrip.hermes.kafka.producer.KafkaMessageSender;
 import com.ctrip.hermes.kafka.producer.KafkaSendResult;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
+import com.ctrip.hermes.producer.sender.MessageSender;
 
 public class OneBoxTest {
 
@@ -41,10 +45,10 @@ public class OneBoxTest {
 
 	@Test
 	public void simpleTextOneProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
-		String topic = "kafka.SimpleTextTopic";
+		String topic = "kafka.SimpleTextTopic1";
+		kafka.createTopic(topic);
 		String group = UUID.randomUUID().toString();
-		kafka.deleteTopic(topic);
-		
+
 		List<String> expected = new ArrayList<String>();
 		expected.add("abc");
 		expected.add("DEF");
@@ -82,11 +86,14 @@ public class OneBoxTest {
 			      result.getOffset()));
 		}
 
-		if (actual.size() < expected.size()) {
-			System.out.println("Sleep 5 seconds for the last message");
-			Thread.sleep(5000);
+		int sleepCount = 0;
+		while (actual.size() < expected.size() && sleepCount++ < 50) {
+			Thread.sleep(100);
 		}
 
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
 		consumer.close();
 		Assert.assertEquals(expected.size(), actual.size());
 		Assert.assertEquals(expected, actual);
@@ -102,10 +109,10 @@ public class OneBoxTest {
 	@Test
 	public void simpleTextOneProducerMultipleConsumerInOneGroupTest() throws IOException, InterruptedException,
 	      ExecutionException {
-		String topic = "kafka.SimpleTextTopic";
+		String topic = "kafka.SimpleTextTopic2";
+		kafka.createTopic(topic);
 		String group = UUID.randomUUID().toString();
-		kafka.deleteTopic(topic);
-		
+
 		List<String> expected = new ArrayList<String>();
 		expected.add("abc");
 		expected.add("DEF");
@@ -154,10 +161,14 @@ public class OneBoxTest {
 			      result.getOffset()));
 		}
 
-		if (actual.size() < expected.size()) {
-			System.out.println("Sleep 5 seconds for the last message");
-			Thread.sleep(5000);
+		int sleepCount = 0;
+		while (actual.size() < expected.size() && sleepCount++ < 50) {
+			Thread.sleep(100);
 		}
+
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
 
 		consumer1.close();
 		consumer2.close();
@@ -168,11 +179,11 @@ public class OneBoxTest {
 	@Test
 	public void simpleTextOneProducerMultipleConsumerInMultipleGroupTest() throws IOException, InterruptedException,
 	      ExecutionException {
-		String topic = "kafka.SimpleTextTopic";
+		String topic = "kafka.SimpleTextTopic3";
+		kafka.createTopic(topic);
 		String group1 = UUID.randomUUID().toString();
 		String group2 = UUID.randomUUID().toString();
-		kafka.deleteTopic(topic);
-		
+
 		List<String> expected = new ArrayList<String>();
 		expected.add("abc");
 		expected.add("DEF");
@@ -222,10 +233,14 @@ public class OneBoxTest {
 			      result.getOffset()));
 		}
 
-		if (actual1.size() < expected.size() || actual2.size() < expected.size()) {
-			System.out.println("Sleep 5 seconds for the last message");
-			Thread.sleep(5000);
+		int sleepCount = 0;
+		while ((actual1.size() < expected.size() || actual2.size() < expected.size()) && sleepCount++ < 50) {
+			Thread.sleep(100);
 		}
+
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
 
 		consumer1.close();
 		consumer2.close();
@@ -237,10 +252,10 @@ public class OneBoxTest {
 
 	@Test
 	public void simpleTextMultipleProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
-		final String topic = "kafka.SimpleTextTopic";
+		final String topic = "kafka.SimpleTextTopic4";
+		kafka.createTopic(topic);
 		final String group = UUID.randomUUID().toString();
-		kafka.deleteTopic(topic);
-		
+
 		final List<String> expected = new ArrayList<String>();
 		expected.add("abc");
 		expected.add("DEF");
@@ -315,10 +330,14 @@ public class OneBoxTest {
 		};
 		producer2.start();
 
-		if (actual.size() < expected.size() * 2) {
-			System.out.println("Sleep 5 seconds for the last message");
-			Thread.sleep(5000);
+		int sleepCount = 0;
+		while (actual.size() < expected.size() * 2 && sleepCount++ < 50) {
+			Thread.sleep(100);
 		}
+
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
 
 		consumer.close();
 		Assert.assertEquals(expected.size() * 2, actual.size());

@@ -148,7 +148,7 @@ public class KafkaMessageSender implements MessageSender {
 	}
 
 	public void close() {
-		for (KafkaProducer producer : m_producers.values()) {
+		for (KafkaProducer<String, byte[]> producer : m_producers.values()) {
 			producer.close();
 		}
 	}
