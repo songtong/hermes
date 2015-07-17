@@ -1,6 +1,7 @@
 package com.ctrip.hermes.rest.resource;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 import javax.ws.rs.client.Client;
@@ -12,34 +13,70 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
-import org.unidal.lookup.ComponentTestCase;
 
+import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.rest.MockKafka;
+import com.ctrip.hermes.rest.MockZookeeper;
 import com.ctrip.hermes.rest.TestGatewayServer;
 
-public class TopicsResourceTest extends ComponentTestCase {
+public class KafkaTopicsResourceTest {
 
-	@Test
-	public void testPostToKafka() {
-		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
+	private MockZookeeper zk;
 
-		String topic = "kafka.SimpleTextTopic";
+	private MockKafka kafka;
 
-		Builder request = webTarget.path("topics/" + topic).request();
-		String content = "Hello World " + System.currentTimeMillis();
-		InputStream is = new ByteArrayInputStream(content.getBytes());
-		Response response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
-		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
+	private TestGatewayServer server;
+
+	@Before
+	public void before() throws Exception {
+		zk = new MockZookeeper();
+		kafka = new MockKafka();
+		server = new TestGatewayServer();
+		server.startServer();
+	}
+
+	@After
+	public void after() throws Exception {
+		server.stopServer();
+		kafka.stop();
+		zk.stop();
 	}
 
 	@Test
-	public void testPostToKafkaWithHeader() {
+	public void testPostToKafka() throws IOException {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String topic = "kafka.SimpleTextTopic";
+		String topic = "kafka.SimpleTextTopic1";
+
+		Builder request = webTarget.path("topics/" + topic).request();
+		String content1 = "Hello World 1";
+		InputStream is1 = new ByteArrayInputStream(content1.getBytes());
+		Response response1 = request.post(Entity.entity(is1, MediaType.APPLICATION_OCTET_STREAM));
+		is1.close();
+		Assert.assertEquals(Status.OK.getStatusCode(), response1.getStatus());
+//		SendResult sendResult1 = response1.readEntity(SendResult.class);
+//		Assert.assertNotNull(sendResult1);
+
+		String content2 = "Hello World 2";
+		InputStream is2 = new ByteArrayInputStream(content2.getBytes());
+		Response response2 = request.post(Entity.entity(is2, MediaType.APPLICATION_OCTET_STREAM));
+		is2.close();
+		Assert.assertEquals(Status.OK.getStatusCode(), response2.getStatus());
+//		SendResult sendResult2 = response2.readEntity(SendResult.class);
+//		Assert.assertNotNull(sendResult2);
+	}
+
+	@Test
+	public void testPostToKafkaWithHeader() throws IOException {
+		Client client = ClientBuilder.newClient();
+		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
+
+		String topic = "kafka.SimpleTextTopic1";
 
 		Builder request = webTarget.path("topics/" + topic).request();
 		request.header("X-Hermes-Priority", "true");
@@ -49,6 +86,7 @@ public class TopicsResourceTest extends ComponentTestCase {
 		String content = "Hello World " + System.currentTimeMillis();
 		InputStream is = new ByteArrayInputStream(content.getBytes());
 		Response response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
+		is.close();
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		System.out.println(response.readEntity(String.class));
 	}
@@ -72,7 +110,7 @@ public class TopicsResourceTest extends ComponentTestCase {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String topic = "kafka.SimpleTextTopic";
+		String topic = "kafka.SimpleTextTopic1";
 
 		Builder request = webTarget.path("topics/" + topic).request();
 		String content = "Hello World " + System.currentTimeMillis();

@@ -32,13 +32,13 @@ public class OneBoxTest {
 	private MockKafka kafka;
 
 	@Before
-	public void setupEnv() {
+	public void before() {
 		zk = new MockZookeeper();
 		kafka = new MockKafka();
 	}
 
 	@After
-	public void destoryEnv() {
+	public void after() {
 		kafka.stop();
 		zk.stop();
 	}

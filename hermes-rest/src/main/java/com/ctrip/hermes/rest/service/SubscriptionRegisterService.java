@@ -64,40 +64,18 @@ public class SubscriptionRegisterService {
 					}
 
 					for (SubscriptionView sub : created) {
-						logger.info("Starting {}", sub);
-
-						ConsumerHolder consumerHolder = null;
-						boolean isStarted = true;
-						try {
-							consumerHolder = pushService.startPusher(sub);
-						} catch (Exception e) {
-							logger.warn("Start {} failed, {}", sub, e);
-							isStarted = false;
-						}
+						boolean isStarted = startSubscription(sub);
 						if (isStarted) {
-							consumerHolders.put(sub, consumerHolder);
 							subscriptions.add(sub);
-							logger.info("Start {} succcessfully", sub);
 						}
 					}
 
 					if (removed.size() > 0) {
 						Set<SubscriptionView> toRemove = new HashSet<>();
 						for (SubscriptionView sub : removed) {
-							logger.info("Stopping {}", sub);
-
-							ConsumerHolder consumerHolder = consumerHolders.get(sub);
-							boolean isClosed = true;
-							try {
-								consumerHolder.close();
-							} catch (Exception e) {
-								logger.warn("Stop {} failed, {}", sub, e);
-								isClosed = false;
-							}
-							if (isClosed) {
-								consumerHolders.remove(sub);
+							boolean isStopped = stopSubscription(sub);
+							if (isStopped) {
 								toRemove.add(sub);
-								logger.info("Stop {} successfully", sub);
 							}
 						}
 						subscriptions.removeAll(toRemove);
@@ -110,6 +88,24 @@ public class SubscriptionRegisterService {
 		}, 5, 5, TimeUnit.SECONDS);
 	}
 
+	public boolean startSubscription(SubscriptionView sub) {
+		logger.info("Starting {}", sub);
+		ConsumerHolder consumerHolder = null;
+		boolean isStarted = true;
+		try {
+			consumerHolder = pushService.startPusher(sub);
+		} catch (Exception e) {
+			logger.warn("Start {} failed, {}", sub, e);
+			isStarted = false;
+		}
+		if (isStarted) {
+			consumerHolders.put(sub, consumerHolder);
+			logger.info("Start {} succcessfully", sub);
+		}
+
+		return isStarted;
+	}
+
 	public void stop() {
 		scheduledExecutor.shutdown();
 		for (SubscriptionView sub : subscriptions) {
@@ -117,6 +113,25 @@ public class SubscriptionRegisterService {
 			consumerHolder.close();
 		}
 		subscriptions.clear();
+	}
+
+	public boolean stopSubscription(SubscriptionView sub) {
+		logger.info("Stopping {}", sub);
+
+		ConsumerHolder consumerHolder = consumerHolders.get(sub);
+		boolean isClosed = true;
+		try {
+			consumerHolder.close();
+		} catch (Exception e) {
+			logger.warn("Stop {} failed, {}", sub, e);
+			isClosed = false;
+		}
+		if (isClosed) {
+			consumerHolders.remove(sub);
+			logger.info("Stop {} successfully", sub);
+		}
+
+		return isClosed;
 	}
 
 }

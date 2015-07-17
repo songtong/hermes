@@ -4,10 +4,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-@RunWith(Suite.class)
-@SuiteClasses({
+import com.ctrip.hermes.rest.resource.KafkaTopicsResourceTest;
 
-// add test classes here
+@RunWith(Suite.class)
+@SuiteClasses({ 
+	KafkaTopicsResourceTest.class, 
+	OneBoxTest.class,
 
 })
 public class AllTests {

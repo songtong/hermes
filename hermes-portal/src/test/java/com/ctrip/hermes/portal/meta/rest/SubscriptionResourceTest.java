@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.resource;
+package com.ctrip.hermes.portal.meta.rest;
 
 import java.util.List;
 
@@ -11,20 +11,27 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
-import org.unidal.lookup.ComponentTestCase;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SubscriptionView;
-import com.ctrip.hermes.rest.TestGatewayServer;
+import com.ctrip.hermes.portal.StartPortal;
 
-public class SubscriptionResourceTest extends ComponentTestCase {
+public class SubscriptionResourceTest extends StartPortal {
 
+	private final String SERVER_HOST = "http://localhost:" + getServerPort();
+	
+	@After
+	public void stop() throws Exception {
+		stopServer();
+	}
+	
 	@Test
 	public void testSubscribe() throws InterruptedException {
 		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target(TestGatewayServer.PORTAL_HOST);
+		WebTarget webTarget = client.target(SERVER_HOST);
 
 		String name = "myid";
 		String topic = "kafka.SimpleTextTopic";
@@ -36,6 +43,7 @@ public class SubscriptionResourceTest extends ComponentTestCase {
 		sub.setGroup(group);
 		sub.setEndpoints(urls);
 		sub.setName(name);
+		sub.setStatus("RUNNING");
 
 		Builder request = webTarget.path("subscriptions/").request();
 		String json = JSON.toJSONString(sub);

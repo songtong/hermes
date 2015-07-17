@@ -10,6 +10,10 @@ public class KafkaSendResult extends SendResult {
 
 	private long offset;
 
+	public KafkaSendResult(){
+		
+	}
+	
 	public KafkaSendResult(String topic, int partition, long offset) {
 		this.topic = topic;
 		this.partition = partition;
