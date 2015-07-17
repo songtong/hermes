@@ -483,7 +483,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 			futures.add(sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null));
 			if (i == 0) {
 				TimeUnit.MILLISECONDS.sleep(Integer.valueOf(lookup(ProducerConfig.class)
-				      .getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis()) + 50);
+				      .getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis()) + 1000);
 			}
 		}
 
