@@ -37,7 +37,7 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest
 
 		List<Partition> partitions = Arrays.asList(p(1), p(2), p(3));
 
-		Map<Integer, Map<String, ClientContext>> originAssigns = new TreeMap<>();
+		Map<Integer, Map<String, ClientContext>> originAssigns = null;
 
 		Map<String, ClientContext> currentConsumers = new TreeMap<>();
 		currentConsumers.put("c1", cc("c1"));

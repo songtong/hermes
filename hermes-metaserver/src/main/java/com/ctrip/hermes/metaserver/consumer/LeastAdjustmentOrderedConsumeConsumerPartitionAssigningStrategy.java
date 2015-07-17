@@ -37,6 +37,10 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy imp
 			return result;
 		}
 
+		if (originAssigns == null) {
+			originAssigns = Collections.emptyMap();
+		}
+
 		Map<String, List<Integer>> originConsumerToPartition = mapConsumerToPartitions(originAssigns);
 		Map<String, ClientContext> consumerToClientContext = mapConsumerToClientContext(originAssigns, currentConsumers);
 		Set<String> originConsumers = originConsumerToPartition.keySet();
