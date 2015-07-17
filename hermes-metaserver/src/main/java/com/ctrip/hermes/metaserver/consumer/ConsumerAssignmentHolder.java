@@ -124,7 +124,7 @@ public class ConsumerAssignmentHolder implements Initializable {
 				Map<Integer, Map<String, ClientContext>> newAssignment = null;
 				if (consumerGroup.isOrderedConsume()) {
 					newAssignment = m_partitionAssigningStrategy.assign(partitions, consumers,
-					      originAssignment == null ? null : originAssignment.getAssigment());
+					      originAssignment == null ? null : originAssignment.getAssignment());
 				} else {
 					newAssignment = nonOrderedConsumeAssign(partitions, consumers);
 				}
