@@ -3,14 +3,13 @@ package com.ctrip.hermes.kafka;
 import java.util.Properties;
 import java.util.UUID;
 
+import kafka.admin.AdminUtils;
+import kafka.server.KafkaConfig;
+import kafka.server.KafkaServerStartable;
+
 import org.I0Itec.zkclient.ZkClient;
 
 import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
-
-import kafka.admin.AdminUtils;
-import kafka.api.TopicMetadata;
-import kafka.server.KafkaConfig;
-import kafka.server.KafkaServerStartable;
 
 public class MockKafka {
 
@@ -45,6 +44,7 @@ public class MockKafka {
 		properties.put("broker.id", brokerId);
 		properties.put("log.dirs", logDir);
 		properties.put("offsets.topic.replication.factor", "1");
+		properties.put("delete.topic.enable", "true");
 		properties.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
 		return properties;
 	}
@@ -59,14 +59,22 @@ public class MockKafka {
 		System.out.println("embedded kafka down");
 	}
 
+	/**
+	 * Delete may not work
+	 * 
+	 * @param topic
+	 */
 	public void deleteTopic(String topic) {
 		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		if (AdminUtils.topicExists(zkClient, topic)) {
-			TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient);
-			System.out.println(topicMetadata);
-			AdminUtils.deleteTopic(zkClient, topic);
-		}
+		AdminUtils.deleteTopic(zkClient, topic);
 	}
 
+	public void createTopic(String topic) {
+		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
+		zkClient.setZkSerializer(new ZKStringSerializer());
+		int partition = 1;
+		int replication = 1;
+		AdminUtils.createTopic(zkClient, topic, partition, replication, new Properties());
+	}
 }

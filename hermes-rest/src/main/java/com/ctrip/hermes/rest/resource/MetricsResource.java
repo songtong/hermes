@@ -8,8 +8,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.ctrip.hermes.rest.service.SubscriptionPushCommand;
 import com.ctrip.hermes.rest.service.ProducerSendCommand;
+import com.ctrip.hermes.rest.service.SubscriptionPushCommand;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandMetrics;
 
@@ -18,26 +18,27 @@ import com.netflix.hystrix.HystrixCommandMetrics;
 @Produces(MediaType.APPLICATION_JSON)
 public class MetricsResource {
 
-	@Path("topics")
+	@Path("hystrix/topics")
 	@GET
-	public HystrixCommandMetrics getTopicMetrics() {
+	public HystrixCommandMetrics getHystrixTopicMetrics() {
 		HystrixCommandMetrics topicMetrics = HystrixCommandMetrics.getInstance(HystrixCommandKey.Factory
 		      .asKey(ProducerSendCommand.class.getSimpleName()));
 		return topicMetrics;
 	}
 
-	@Path("subscriptions")
+	@Path("hystrix/subscriptions")
 	@GET
-	public HystrixCommandMetrics getSubscriptionMetrics() {
+	public HystrixCommandMetrics getHystrixSubscriptionMetrics() {
 		HystrixCommandMetrics subMetrics = HystrixCommandMetrics.getInstance(HystrixCommandKey.Factory
 		      .asKey(SubscriptionPushCommand.class.getSimpleName()));
 		return subMetrics;
 	}
 
-	@Path("all")
+	@Path("hystrix")
 	@GET
 	public Collection<HystrixCommandMetrics> getHystrixMetrics() {
 		Collection<HystrixCommandMetrics> metrics = HystrixCommandMetrics.getInstances();
 		return metrics;
 	}
+	
 }
