@@ -1,5 +1,7 @@
 package com.ctrip.hermes.core.bo;
 
+import java.util.Objects;
+
 public class HostPort {
 
 	private String m_host;
@@ -30,4 +32,17 @@ public class HostPort {
 		m_port = port;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		HostPort hostPort = (HostPort) o;
+		return Objects.equals(m_port, hostPort.m_port) &&
+				  Objects.equals(m_host, hostPort.m_host);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(m_host, m_port);
+	}
 }

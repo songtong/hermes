@@ -28,7 +28,10 @@ public class DefaultMetaServerAssigningStrategy implements MetaServerAssigningSt
 			int metaServerPos = 0;
 			int metaServerCount = metaServers.size();
 
-			if (topics != null) {
+			/**
+			 * add "&& metaServerCount > 0". If there is no metaServers running.
+			 */
+			if (topics != null && metaServerCount > 0) {
 				for (Topic topic : topics) {
 					if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 						Server metaServer = metaServers.get(metaServerPos);

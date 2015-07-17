@@ -45,6 +45,56 @@
 		<appender-ref ref="CONSOLE" />
 	</logger>
 
+    <!-- to clean output in debugging-->
+    <logger name="com.ctrip.hermes.core.env">
+        <level value="WARN" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="com.dianping">
+        <level value="ERROR" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="org.apache.curator">
+        <level value="ERROR" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="com.ctrip.hermes.metaserver.commons.BaseLeaseHolder">
+        <level value="ERROR" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="org.apache.curator.framework.imps">
+        <level value="FATAL" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="org.apache.curator.ConnectionState">
+        <level value="FATAL" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+    <logger name="com.ctrip.hermes.metaserver.event.impl.LeaderInitEventHandler">
+        <level value="FATAL" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler">
+        <level value="FATAL" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="org.apache.zookeeper.ClientCnxn">
+        <level value="FATAL" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+
+    <logger name="com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder">
+        <level value="FATAL" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="CONSOLE" />

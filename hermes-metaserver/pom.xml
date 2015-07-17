@@ -16,6 +16,12 @@
 			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-metaservice</artifactId>
 		</dependency>
+        <!--need BrokerConfig in MetaServerBaseTest-->
+        <dependency>
+            <groupId>com.ctrip.hermes</groupId>
+            <artifactId>hermes-broker</artifactId>
+            <scope>test</scope>
+        </dependency>
 		<dependency>
 			<groupId>com.dianping.cat</groupId>
 			<artifactId>cat-client</artifactId>

@@ -106,7 +106,7 @@ public class MetaServerAssignmentHolder {
 
 	private void persistToZk(Assignment<String> assignments) {
 		if (assignments != null) {
-			for (Map.Entry<String, Map<String, ClientContext>> entry : assignments.getAssigment().entrySet()) {
+			for (Map.Entry<String, Map<String, ClientContext>> entry : assignments.getAssignment().entrySet()) {
 				String topic = entry.getKey();
 				Map<String, ClientContext> metaServers = entry.getValue();
 
