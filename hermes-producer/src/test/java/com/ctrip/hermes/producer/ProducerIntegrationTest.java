@@ -417,7 +417,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		((TestSendMessageResultMonitor) lookup(SendMessageResultMonitor.class)).scanAndResendTimeoutCommands();
 
 		TimeUnit.MILLISECONDS.sleep(Integer.valueOf(lookup(ProducerConfig.class)
-		      .getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis()) + 50);
+		      .getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis()) + 1000L);
 
 		List<Command> brokerReceivedCmds = getBrokerReceivedCmds();
 		assertEquals(2, brokerReceivedCmds.size());
