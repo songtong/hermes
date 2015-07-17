@@ -1,8 +1,25 @@
 package com.ctrip.hermes.metaserver.fulltest;
 
-import java.io.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.client.Client;
@@ -29,8 +46,6 @@ import org.xml.sax.SAXException;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.ctrip.hermes.broker.config.BrokerConfig;
-import com.ctrip.hermes.broker.zk.ZKClient;
 import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -47,35 +62,40 @@ import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.commons.MetaStatusStatusResponse;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
+import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static org.junit.Assert.*;
-
 
 public class MetaServerBaseTest extends ComponentTestCase {
 	private static final Logger logger = LoggerFactory.getLogger(MetaServerBaseTest.class);
 
 	public static final String metaXmlFile = "MetaServerTest.xml";
+
 	public static final String metaXmlFileBackup = "MetaServerTest_Backup.xml";
 
 	private ZookeeperService zkService;
-	private BrokerConfig m_config;
+
 	private ZKClient m_client;
+
 	private TestingServer m_zkServer;
 
 	/*
-	initial value is based on  "meta-port" in hermes.properties.
+	 * initial value is based on "meta-port" in hermes.properties.
 	 */
 	protected static int portPointer = 1248;
+
 	protected static List<Integer> ports = new ArrayList<>();
+
 	protected static AtomicInteger zkVersion = new AtomicInteger(10000);
 
-
 	protected static AtomicInteger brokerPort = new AtomicInteger(5000);
-	protected Map<Integer/*port*/, HermesClassLoaderMetaServer/*meta server*/> metaServers = new HashMap<>();
-	protected Map<Integer/*port*/, ServiceDiscovery<Void>/*broker serviceDiscovery*/> tempBrokers = new HashMap<>();
+
+	protected Map<Integer/* port */, HermesClassLoaderMetaServer/* meta server */> metaServers = new HashMap<>();
+
+	protected Map<Integer/* port */, ServiceDiscovery<Void>/* broker serviceDiscovery */> tempBrokers = new HashMap<>();
+
 	protected Stack<Topic> tempTopics = new Stack<>();
+
 	protected static String localhostIP = Networks.forIp().getLocalHostAddress();
 
 	@Before
@@ -119,7 +139,6 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		MetaHelper.outputToTestXml(MetaHelper.loadMeta(metaXmlFileBackup));
 
 		zkService = PlexusComponentLocator.lookup(ZookeeperService.class);
-		m_config = PlexusComponentLocator.lookup(BrokerConfig.class);
 		m_client = PlexusComponentLocator.lookup(ZKClient.class);
 	}
 
@@ -183,8 +202,8 @@ public class MetaServerBaseTest extends ComponentTestCase {
 	private int getRightCloseNumber(int number) {
 		int closeNumber = number;
 		if (number > metaServers.size()) {
-			logger.warn("Want to stop {} metaservsers, but only {} running. Will close them all.", number, metaServers
-					  .size());
+			logger.warn("Want to stop {} metaservsers, but only {} running. Will close them all.", number,
+			      metaServers.size());
 			closeNumber = metaServers.size();
 		}
 		return closeNumber;
@@ -270,13 +289,13 @@ public class MetaServerBaseTest extends ComponentTestCase {
 			// only Leader has Broker Assignment Info.
 			if (re.isLeader()) {
 				if (tempBrokers.size() > 0) { // means at lease one broker be assigned.
-					assertEquals("Topics.size() should be equal to Broker Assignments",
-							  topics.size(), re.getBrokerAssignments().size());
+					assertEquals("Topics.size() should be equal to Broker Assignments", topics.size(), re
+					      .getBrokerAssignments().size());
 				}
 				List<Integer> runningBrokers = getRunningBrokers(re.getBrokerAssignments());
 
-				int writeBrokerCount = topics.size() < tempBrokers.keySet().size() ?
-						  topics.size() : tempBrokers.keySet().size();
+				int writeBrokerCount = topics.size() < tempBrokers.keySet().size() ? topics.size() : tempBrokers.keySet()
+				      .size();
 				assertEquals(writeBrokerCount, runningBrokers.size());
 			}
 		}
@@ -302,11 +321,11 @@ public class MetaServerBaseTest extends ComponentTestCase {
 
 		for (Integer port : metaServers.keySet()) {
 			MetaStatusStatusResponse re = BaseRestClient.getMetaStatusMetaServerAssignment(port);
-			assertEquals("Topics.size() should be equal to MetaServer Assignments",
-					  topics.size(), re.getMetaServerAssignments().getAssignment().size());
+			assertEquals("Topics.size() should be equal to MetaServer Assignments", topics.size(), re
+			      .getMetaServerAssignments().getAssignment().size());
 
-//			ArrayList<Integer> runningMetaServers = getRunningMetaServers(re.getMetaServerAssignments().getAssignment());
-//			assertListEqual(new ArrayList<>(metaServers.keySet()), runningMetaServers);
+			// ArrayList<Integer> runningMetaServers = getRunningMetaServers(re.getMetaServerAssignments().getAssignment());
+			// assertListEqual(new ArrayList<>(metaServers.keySet()), runningMetaServers);
 		}
 	}
 
@@ -333,15 +352,14 @@ public class MetaServerBaseTest extends ComponentTestCase {
 	}
 
 	// ============= Broker Lease================
-	protected Lease initLeaseToBroker(int brokerPort, String topic, int partition, String sessionId)
-			  throws Exception {
+	protected Lease initLeaseToBroker(int brokerPort, String topic, int partition, String sessionId) throws Exception {
 		LeaseAcquireResponse re = BaseRestClient.getAcquireBrokerLease(topic, partition, sessionId, brokerPort, 1248);
 
 		return re.getLease();
 	}
 
-	protected Lease changeLeaseTo(int fromBrokerPort, int toBrokerPort, String topic, int partition, long
-			  timeoutInMs) throws Exception {
+	protected Lease changeLeaseTo(int fromBrokerPort, int toBrokerPort, String topic, int partition, long timeoutInMs)
+	      throws Exception {
 		// 方法1，用BrokerAssignmentHolder重新分配, 无法生效：因现状Reassign策略是取所有可用Broker做遍历均分。
 
 		// 方法2，把Broker1挂掉。
@@ -351,40 +369,41 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		return null;
 	}
 
-	protected void assertAcquireBrokerLeaseOnAll(boolean expected, int brokerPort,
-																String topic, int partition, String sessionId) throws Exception {
+	protected void assertAcquireBrokerLeaseOnAll(boolean expected, int brokerPort, String topic, int partition,
+	      String sessionId) throws Exception {
 		for (Integer port : metaServers.keySet()) {
-			assertEquals(String.format("MetaServer:%d, acquire should be %s. ", port, expected),
-					  expected, acquireBrokerLease(brokerPort, topic, partition, sessionId, port));
+			assertEquals(String.format("MetaServer:%d, acquire should be %s. ", port, expected), expected,
+			      acquireBrokerLease(brokerPort, topic, partition, sessionId, port));
 		}
 	}
 
-	private boolean acquireBrokerLease(int brokerPort, String topic, int partition, String
-			  sessionId, Integer metaServerPort) throws Exception {
+	private boolean acquireBrokerLease(int brokerPort, String topic, int partition, String sessionId,
+	      Integer metaServerPort) throws Exception {
 		LeaseAcquireResponse lease = BaseRestClient.getAcquireBrokerLease(topic, partition, sessionId, brokerPort,
-				  metaServerPort);
+		      metaServerPort);
 
 		return lease.isAcquired();
 	}
 
-	protected void assertRenewBrokerLeaseOnAll(boolean expected, int brokerPort, String topic, int partition, long
-			  leaseId, String sessionId) throws IOException, URISyntaxException {
+	protected void assertRenewBrokerLeaseOnAll(boolean expected, int brokerPort, String topic, int partition,
+	      long leaseId, String sessionId) throws IOException, URISyntaxException {
 		for (Integer port : metaServers.keySet()) {
 			assertEquals(expected, renewBrokerLease(brokerPort, topic, partition, leaseId, sessionId, port));
 		}
 	}
 
 	private boolean renewBrokerLease(int brokerPort, String topic, int partition, long leaseId, String sessionId,
-												Integer metaServerPort) throws IOException, URISyntaxException {
-		LeaseAcquireResponse lease = BaseRestClient.getRenewBrokerLease(topic, partition, leaseId, sessionId,
-				  brokerPort, metaServerPort);
+	      Integer metaServerPort) throws IOException, URISyntaxException {
+		LeaseAcquireResponse lease = BaseRestClient.getRenewBrokerLease(topic, partition, leaseId, sessionId, brokerPort,
+		      metaServerPort);
 		logger.info("==Renew Lease== for Broker-Port:{}, Broker-Session:{} on Meta:{}. Got Lease:{}, isExpired:{}",
-				  brokerPort, sessionId, metaServerPort, lease, lease.getLease() == null ? null : lease.getLease().isExpired());
+		      brokerPort, sessionId, metaServerPort, lease, lease.getLease() == null ? null : lease.getLease()
+		            .isExpired());
 		return lease.isAcquired();
 	}
 
 	protected void assertAcquireConsumerLeaseOnAll(boolean expected, String topic, String group) throws IOException,
-			  URISyntaxException, InterruptedException {
+	      URISyntaxException, InterruptedException {
 		for (Integer port : metaServers.keySet()) {
 
 			// will fail at first time to acquire lease!
@@ -396,7 +415,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 	}
 
 	private boolean acquireConsumerLease(Integer metaServerPort, String topic, String group) throws IOException,
-			  URISyntaxException {
+	      URISyntaxException {
 		Tpg tpg = new Tpg();
 		tpg.setTopic(topic);
 		tpg.setGroupId(group);
@@ -404,16 +423,15 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		return BaseRestClient.getAcquireConsumerLease(metaServerPort, tpg).isAcquired();
 	}
 
-	protected void assertRenewConsumerLeaseOnAll(boolean expected, long leaseId, String topic, String group) throws
-			  IOException,
-			  URISyntaxException {
+	protected void assertRenewConsumerLeaseOnAll(boolean expected, long leaseId, String topic, String group)
+	      throws IOException, URISyntaxException {
 		for (Integer port : metaServers.keySet()) {
 			assertEquals(expected, renewConsumerLease(port, leaseId, topic, group));
 		}
 	}
 
-	private boolean renewConsumerLease(Integer metaServerPort, long leaseId, String topic, String group) throws
-			  IOException, URISyntaxException {
+	private boolean renewConsumerLease(Integer metaServerPort, long leaseId, String topic, String group)
+	      throws IOException, URISyntaxException {
 		Tpg tpg = new Tpg();
 		tpg.setTopic(topic);
 		tpg.setGroupId(group);
@@ -440,18 +458,18 @@ public class MetaServerBaseTest extends ComponentTestCase {
 	// set session_id to the broker port!
 	private int brokerRegisterToZK() throws Exception {
 		int port = brokerPort.getAndIncrement();
-		ServiceInstance<Void> thisInstance = ServiceInstance.<Void>builder()//
-				  .name(m_config.getRegistryName(null))//
-				  .address(localhostIP)//
-				  .port(port)//
-				  .id(String.valueOf(port))//
-				  .build();
+		ServiceInstance<Void> thisInstance = ServiceInstance.<Void> builder()//
+		      .name("default")//
+		      .address(localhostIP)//
+		      .port(port)//
+		      .id(String.valueOf(port))//
+		      .build();
 
 		ServiceDiscovery<Void> m_serviceDiscovery = ServiceDiscoveryBuilder.builder(Void.class)//
-				  .client(m_client.getClient())//
-				  .basePath(m_config.getRegistryBasePath())//
-				  .thisInstance(thisInstance)//
-				  .build();
+		      .client(m_client.getClient())//
+		      .basePath("brokers")//
+		      .thisInstance(thisInstance)//
+		      .build();
 		m_serviceDiscovery.start();
 
 		tempBrokers.put(port, m_serviceDiscovery);
@@ -529,7 +547,6 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		logger.info("==Wait {} ms to Timeout", time);
 		Thread.sleep(time);
 	}
-
 
 	static class TopicHelper {
 		protected static Topic buildRandomTopic() {
@@ -637,8 +654,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		// so have to parse into map/JsonObject...
 		public static MetaStatusStatusResponse getMetaStatusLeaderInfo(int port) throws IOException {
 			WebTarget webTarget = getWebTarget(port);
-			Map map = webTarget.path("/metaserver/status").request().get().
-					  readEntity(Map.class);
+			Map map = webTarget.path("/metaserver/status").request().get().readEntity(Map.class);
 
 			MetaStatusStatusResponse re = new MetaStatusStatusResponse();
 			re.setLeader((Boolean) map.get("leader"));
@@ -651,13 +667,12 @@ public class MetaServerBaseTest extends ComponentTestCase {
 
 		public static MetaStatusStatusResponse getMetaStatusBrokerAssignment(int port) throws IOException {
 			WebTarget webTarget = getWebTarget(port);
-			Map map = webTarget.path("/metaserver/status").request().get().
-					  readEntity(Map.class);
+			Map map = webTarget.path("/metaserver/status").request().get().readEntity(Map.class);
 
 			MetaStatusStatusResponse re = new MetaStatusStatusResponse();
-			Map<String, Assignment<Integer>> assignment = JSON.parseObject(JSON.toJSONString(map.get("brokerAssignments")),
-					  new TypeReference<Map<String, Assignment<Integer>>>() {
-					  }.getType());
+			Map<String, Assignment<Integer>> assignment = JSON.parseObject(
+			      JSON.toJSONString(map.get("brokerAssignments")), new TypeReference<Map<String, Assignment<Integer>>>() {
+			      }.getType());
 
 			re.setLeader((boolean) map.get("leader"));
 			re.setBrokerAssignments(assignment);
@@ -671,42 +686,42 @@ public class MetaServerBaseTest extends ComponentTestCase {
 			MetaStatusStatusResponse re = new MetaStatusStatusResponse();
 
 			Assignment<String> assignment = JSON.parseObject(JSON.toJSONString(map.get("metaServerAssignments")),
-					  new TypeReference<Assignment<String>>() {
-					  }.getType());
+			      new TypeReference<Assignment<String>>() {
+			      }.getType());
 			re.setMetaServerAssignments(assignment);
 			return re;
 		}
 
 		public static LeaseAcquireResponse getAcquireBrokerLease(String topic, int partition, String sessionId,
-																					int brokerPort, int metaServerPort) throws IOException, URISyntaxException {
+		      int brokerPort, int metaServerPort) throws IOException, URISyntaxException {
 			return getBrokerLease("/lease/broker/acquire", topic, partition, null, sessionId, brokerPort, metaServerPort);
 		}
 
-		public static LeaseAcquireResponse getRenewBrokerLease(String topic, int partition, long leaseId, String
-				  sessionId, int brokerPort, int metaServerPort) throws IOException, URISyntaxException {
+		public static LeaseAcquireResponse getRenewBrokerLease(String topic, int partition, long leaseId,
+		      String sessionId, int brokerPort, int metaServerPort) throws IOException, URISyntaxException {
 			return getBrokerLease("/lease/broker/renew", topic, partition, leaseId, sessionId, brokerPort, metaServerPort);
 		}
 
-		public static LeaseAcquireResponse getAcquireConsumerLease(int metaServerPort, Tpg tpg) throws IOException, URISyntaxException {
+		public static LeaseAcquireResponse getAcquireConsumerLease(int metaServerPort, Tpg tpg) throws IOException,
+		      URISyntaxException {
 			return getConsumerLease("/lease/consumer/acquire", "WRONG SESSION", null, tpg, metaServerPort);
 		}
 
-		public static LeaseAcquireResponse getRenewConsumerLease(int metaServerPort, long leaseId, Tpg tpg) throws
-				  IOException, URISyntaxException {
+		public static LeaseAcquireResponse getRenewConsumerLease(int metaServerPort, long leaseId, Tpg tpg)
+		      throws IOException, URISyntaxException {
 			return getConsumerLease("/lease/consumer/renew", "WRONG SESSION", leaseId, tpg, metaServerPort);
 
 		}
 
 		static ObjectMapper om = new ObjectMapper();
 
-		public static LeaseAcquireResponse getConsumerLease(String uri, String sessionId, Long leaseId,
-																			 Tpg tpg, int metaServerPort) throws
-				  URISyntaxException, IOException {
+		public static LeaseAcquireResponse getConsumerLease(String uri, String sessionId, Long leaseId, Tpg tpg,
+		      int metaServerPort) throws URISyntaxException, IOException {
 			URIBuilder uriBuilder = new URIBuilder()//
-					  .setScheme("http")//
-					  .setHost(localhostIP)//
-					  .setPort(metaServerPort)//
-					  .setPath(uri);
+			      .setScheme("http")//
+			      .setHost(localhostIP)//
+			      .setPort(metaServerPort)//
+			      .setPath(uri);
 
 			Map<String, String> params = new HashMap<>();
 			params.put("sessionId", sessionId);
@@ -722,14 +737,13 @@ public class MetaServerBaseTest extends ComponentTestCase {
 			return getLeaseAcquireResponse(uriBuilder, tpg);
 		}
 
-
-		public static LeaseAcquireResponse getBrokerLease(String uri, String topic, int partition, Long leaseId, String
-				  sessionId, int brokerPort, int metaServerPort) throws URISyntaxException, IOException {
+		public static LeaseAcquireResponse getBrokerLease(String uri, String topic, int partition, Long leaseId,
+		      String sessionId, int brokerPort, int metaServerPort) throws URISyntaxException, IOException {
 			URIBuilder uriBuilder = new URIBuilder()//
-					  .setScheme("http")//
-					  .setHost(localhostIP)//
-					  .setPort(metaServerPort)//
-					  .setPath(uri);
+			      .setScheme("http")//
+			      .setHost(localhostIP)//
+			      .setPort(metaServerPort)//
+			      .setPath(uri);
 
 			Map<String, String> params = new HashMap<>();
 			params.put("topic", topic);
@@ -748,18 +762,18 @@ public class MetaServerBaseTest extends ComponentTestCase {
 			return getLeaseAcquireResponse(uriBuilder, null);
 		}
 
-		private static LeaseAcquireResponse getLeaseAcquireResponse(URIBuilder uriBuilder, Object payload) throws
-				  IOException, URISyntaxException {
+		private static LeaseAcquireResponse getLeaseAcquireResponse(URIBuilder uriBuilder, Object payload)
+		      throws IOException, URISyntaxException {
 			HttpResponse response;
 			if (payload != null) {
 				response = Request.Post(uriBuilder.build())//
-						  .bodyString(JSON.toJSONString(payload), ContentType.APPLICATION_JSON)//
-						  .execute()//
-						  .returnResponse();
+				      .bodyString(JSON.toJSONString(payload), ContentType.APPLICATION_JSON)//
+				      .execute()//
+				      .returnResponse();
 			} else {
 				response = Request.Post(uriBuilder.build())//
-						  .execute()//
-						  .returnResponse();
+				      .execute()//
+				      .returnResponse();
 			}
 
 			if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -767,15 +781,14 @@ public class MetaServerBaseTest extends ComponentTestCase {
 				if (!StringUtils.isBlank(responseContent)) {
 
 					/**
-					 * trust me, you can't use:
-					 * JSON.parseObject(response, LeaseAcquireResponse.class);
-					 * you'll get Exception: "set property error, lease", "object is not an instance of declaring class"
+					 * trust me, you can't use: JSON.parseObject(response, LeaseAcquireResponse.class); you'll get Exception:
+					 * "set property error, lease", "object is not an instance of declaring class"
 					 *
-					 * That's maybe caused by that Lease is loaded by HermesClassLoader,
-					 * same to the problem in MetaStatusStatusResponse.Assignment<String>.
+					 * That's maybe caused by that Lease is loaded by HermesClassLoader, same to the problem in
+					 * MetaStatusStatusResponse.Assignment<String>.
 					 *
-					 * Unable to solve this. As we need HermesClassLoader to launch different Plexus,
-					 * so that we can run several metaservers at same time.
+					 * Unable to solve this. As we need HermesClassLoader to launch different Plexus, so that we can run several
+					 * metaservers at same time.
 					 */
 					return om.readValue(responseContent, LeaseAcquireResponse.class);
 				}
