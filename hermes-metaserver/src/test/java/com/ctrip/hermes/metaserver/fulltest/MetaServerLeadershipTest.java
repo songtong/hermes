@@ -26,7 +26,7 @@ public class MetaServerLeadershipTest extends MetaServerBaseTest {
 	@Test
 	public void testOnlyOneLeaderAllTime() throws Exception {
 		int totalServers = 3;
-		int initServers = 2;
+		int initServers = 1;
 
 		// init
 		startMultipleMetaServers(initServers);

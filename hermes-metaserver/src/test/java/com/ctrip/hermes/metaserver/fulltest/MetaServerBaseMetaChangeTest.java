@@ -26,11 +26,12 @@ public class MetaServerBaseMetaChangeTest extends MetaServerBaseTest  {
 
 		topic = TopicHelper.buildUpdatedTopic(topic);
 		baseMetaUpdateTopic(topic);
+		Thread.sleep(2500); //wait metaServers notice the ZK change
 		assertAllMetaServerHaveTopic(topic);
 
 		baseMetaDeleteTopic(topic);
-		Thread.sleep(2500); //wait metaServers notice the ZK change
 
+		Thread.sleep(2500); //wait metaServers notice the ZK change
 		assertAllMetaServerHaveNotTopic(topic);
 
 		// stop all servers

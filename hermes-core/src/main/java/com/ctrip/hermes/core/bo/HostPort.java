@@ -45,4 +45,12 @@ public class HostPort {
 	public int hashCode() {
 		return Objects.hash(m_host, m_port);
 	}
+
+	@Override
+	public String toString() {
+		return "HostPort{" +
+				  "m_host='" + m_host + '\'' +
+				  ", m_port=" + m_port +
+				  '}';
+	}
 }

@@ -90,7 +90,15 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
+    <logger name="org.apache.zookeeper.server">
+        <level value="FATAL" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
 
+    <logger name=" com.ctrip.hermes.metaserver.meta.MetaHolder">
+        <level value="FATAL" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
     <logger name="com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder">
         <level value="FATAL" />
         <appender-ref ref="CONSOLE" />
