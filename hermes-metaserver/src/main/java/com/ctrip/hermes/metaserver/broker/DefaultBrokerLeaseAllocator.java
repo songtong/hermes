@@ -38,6 +38,22 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 	@Inject
 	private BrokerAssignmentHolder m_assignmentHolder;
 
+	public void setConfig(MetaServerConfig config) {
+		m_config = config;
+	}
+
+	public void setSystemClockService(SystemClockService systemClockService) {
+		m_systemClockService = systemClockService;
+	}
+
+	public void setLeaseHolder(BrokerLeaseHolder leaseHolder) {
+		m_leaseHolder = leaseHolder;
+	}
+
+	public void setAssignmentHolder(BrokerAssignmentHolder assignmentHolder) {
+		m_assignmentHolder = assignmentHolder;
+	}
+
 	@Override
 	public LeaseAcquireResponse tryAcquireLease(String topic, int partition, String brokerName, String ip, int port)
 	      throws Exception {
@@ -180,8 +196,9 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 						return new LeaseAcquireResponse(true, new Lease(leaseId, existingClientLeaseInfo.getLease()
 						      .getExpireTime() + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1L);
 					} else {
-						return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-						      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
+						Collection<ClientLeaseInfo> leases = existingValidLeases.values();
+						// use the first lease's exp time
+						return new LeaseAcquireResponse(false, null, leases.iterator().next().getLease().getExpireTime());
 					}
 				}
 			}
