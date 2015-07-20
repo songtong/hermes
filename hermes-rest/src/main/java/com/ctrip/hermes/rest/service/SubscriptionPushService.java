@@ -27,6 +27,7 @@ import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
+import com.netflix.hystrix.strategy.properties.HystrixProperty;
 
 @Named
 public class SubscriptionPushService implements Initializable {
@@ -67,6 +68,7 @@ public class SubscriptionPushService implements Initializable {
 			      @Override
 			      protected void onMessage(final ConsumerMessage<RawMessage> msg) {
 				      while (msg.getStatus() != MessageStatus.SUCCESS) {
+					      boolean isCouldAck = false;
 					      for (final String url : urls) {
 						      BizEvent pushEvent = new BizEvent("Rest.push");
 						      HttpResponse pushResponse = null;
@@ -82,21 +84,18 @@ public class SubscriptionPushService implements Initializable {
 
 							      pushEvent.addData("result", pushResponse.getStatusLine().getStatusCode());
 							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
-								      msg.ack();
-								      return;
-							      } else if (pushResponse.getStatusLine().getStatusCode() >= Response.Status.INTERNAL_SERVER_ERROR
-							            .getStatusCode()) {
-								      msg.nack();
-								      return;
+								      isCouldAck = true;
+								      break;
 							      } else {
-								      m_logger.warn("Push message failed, reason:{} topic:{} partition:{} offset:{} url:{}",
-								            pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(), msg.getPartition(),
-								            msg.getOffset(), url);
+								      m_logger
+								            .warn("Push message failed, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
+								                  url, pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(),
+								                  msg.getPartition(), msg.getOffset(), msg.getRefKey());
 							      }
 
 							      if (command.isCircuitBreakerOpen()) {
 								      long errorCount = command.getMetrics().getHealthCounts().getErrorCount();
-								      m_logger.warn("Pubsh message CircuitBreak is open, sleep {} seconds", errorCount);
+								      m_logger.warn("Push message CircuitBreak is open, sleep {} seconds", errorCount);
 								      Thread.sleep(1000 * errorCount);
 							      }
 						      } catch (Exception e) {
@@ -105,10 +104,15 @@ public class SubscriptionPushService implements Initializable {
 							      m_bizLogger.log(pushEvent);
 						      }
 					      }
+
+					      if (isCouldAck) {
+						      msg.ack();
+					      } else {
+						      msg.nack();
+					      }
 				      }
 			      }
 		      });
 		return consumerHolder;
 	}
-
 }

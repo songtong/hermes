@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
+import javax.ws.rs.core.Response;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.client.ClientProtocolException;
@@ -63,6 +65,9 @@ public class SubscriptionPushCommand extends HystrixCommand<HttpResponse> {
 			response = client.execute(post);
 		} finally {
 			post.reset();
+		}
+		if (response.getStatusLine().getStatusCode() != Response.Status.OK.getStatusCode()) {
+			throw new RuntimeException(response.getStatusLine().getReasonPhrase());
 		}
 		return response;
 	}

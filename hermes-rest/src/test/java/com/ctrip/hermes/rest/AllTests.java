@@ -9,7 +9,7 @@ import com.ctrip.hermes.rest.resource.KafkaTopicsResourceTest;
 @RunWith(Suite.class)
 @SuiteClasses({ 
 	KafkaTopicsResourceTest.class, 
-	OneBoxTest.class,
+	RestIntegrationTest.class,
 
 })
 public class AllTests {
