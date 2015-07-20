@@ -1,4 +1,4 @@
-package com.ctrip.hermes.producer;
+package com.ctrip.hermes.producer.integration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
