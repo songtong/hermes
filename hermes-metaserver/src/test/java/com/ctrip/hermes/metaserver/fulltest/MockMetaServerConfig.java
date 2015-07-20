@@ -1,14 +1,10 @@
 package com.ctrip.hermes.metaserver.fulltest;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 
 public class MockMetaServerConfig extends MetaServerConfig {
 
-	public static long BROKER_LEASE_TIMEOUT= 5000;
+	public static long BROKER_LEASE_TIMEOUT= 3000;
 
 	int port;
 	@Override

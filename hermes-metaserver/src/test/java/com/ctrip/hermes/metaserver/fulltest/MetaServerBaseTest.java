@@ -11,15 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.client.Client;
@@ -122,6 +114,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		// close all meta servers anyway
 		stopMultipleMetaServersRandomly(Integer.MAX_VALUE);
 		if (null != m_zkServer) {
+			Thread.sleep(2000);
 			m_zkServer.close();
 			logger.info("==ZKServer== Zookeeper Server Closed");
 		} else {
@@ -225,7 +218,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 	}
 
 	protected void assertOnlyOneLeader() throws InterruptedException, IOException {
-		Thread.sleep(3000);
+		Thread.sleep(5000);
 		List<String> expectedServers = buildExpectedServers(metaServers);
 
 		// 1. check /metaservers/server for all metaservers
@@ -362,16 +355,14 @@ public class MetaServerBaseTest extends ComponentTestCase {
 	      throws Exception {
 		// 方法1，用BrokerAssignmentHolder重新分配, 无法生效：因现状Reassign策略是取所有可用Broker做遍历均分。
 
-		// 方法2，把Broker1挂掉。
+		// 方法2，把Broker1挂掉。自动会做assignment，将Topic-Partition分给其他Broker
 		tempBrokers.get(fromBrokerPort).close();
-
-		Thread.sleep(1000); // wait a while for ZK service discovery
 		return null;
 	}
 
 	protected void assertAcquireBrokerLeaseOnAll(boolean expected, int brokerPort, String topic, int partition,
 	      String sessionId) throws Exception {
-		for (Integer port : metaServers.keySet()) {
+		for (Integer port : new TreeMap<>(metaServers).keySet()) {
 			assertEquals(String.format("MetaServer:%d, acquire should be %s. ", port, expected), expected,
 			      acquireBrokerLease(brokerPort, topic, partition, sessionId, port));
 		}
@@ -387,7 +378,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 
 	protected void assertRenewBrokerLeaseOnAll(boolean expected, int brokerPort, String topic, int partition,
 	      long leaseId, String sessionId) throws IOException, URISyntaxException {
-		for (Integer port : metaServers.keySet()) {
+		for (Integer port : new TreeMap<>(metaServers).keySet()) {
 			assertEquals(expected, renewBrokerLease(brokerPort, topic, partition, leaseId, sessionId, port));
 		}
 	}
@@ -404,13 +395,19 @@ public class MetaServerBaseTest extends ComponentTestCase {
 
 	protected void assertAcquireConsumerLeaseOnAll(boolean expected, String topic, String group) throws IOException,
 	      URISyntaxException, InterruptedException {
-		for (Integer port : metaServers.keySet()) {
+
+		for (Integer port : new TreeMap<>(metaServers).keySet()) {
 
 			// will fail at first time to acquire lease!
 			acquireConsumerLease(port, topic, group);
 			Thread.sleep(2000);
 
-			assertEquals(expected, acquireConsumerLease(port, topic, group));
+			assertEquals(String.format("Acquire Consumer Lease for [Topic: %s, Group: %s] on MetaServer [%d], Should be " +
+											"%s", topic, group, port, expected),
+					  expected, acquireConsumerLease(port, topic, group));
+			logger.info(String.format("Acquire Consumer Lease for [Topic: %s, Group: %s] on MetaServer [%d], Is %s",
+					  topic, group, port, expected));
+
 		}
 	}
 
@@ -425,7 +422,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 
 	protected void assertRenewConsumerLeaseOnAll(boolean expected, long leaseId, String topic, String group)
 	      throws IOException, URISyntaxException {
-		for (Integer port : metaServers.keySet()) {
+		for (Integer port : new TreeMap<>(metaServers).keySet()) {
 			assertEquals(expected, renewConsumerLease(port, leaseId, topic, group));
 		}
 	}
@@ -472,8 +469,12 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		      .build();
 		m_serviceDiscovery.start();
 
-		tempBrokers.put(port, m_serviceDiscovery);
-		return port;
+		if (tempBrokers.containsKey(port)) {
+			throw new RuntimeException("Already Existed in tempBrokers!!");
+		} else {
+			tempBrokers.put(port, m_serviceDiscovery);
+			return port;
+		}
 	}
 
 	private List<String> buildExpectedServers(Map<Integer, HermesClassLoaderMetaServer> metaServers) {
@@ -593,11 +594,11 @@ public class MetaServerBaseTest extends ComponentTestCase {
 	}
 
 	static class MetaHelper {
-		public static Meta loadMeta() throws Exception {
+		public static Meta loadMeta() throws FileNotFoundException {
 			return loadMeta(metaXmlFile);
 		}
 
-		public static Meta loadMeta(String fileName) throws Exception {
+		public static Meta loadMeta(String fileName) throws FileNotFoundException {
 			InputStream in = null;
 			File file;
 			file = new File("src/test/resources/" + fileName);
@@ -610,14 +611,15 @@ public class MetaServerBaseTest extends ComponentTestCase {
 			}
 
 			if (in == null) {
-				throw new RuntimeException(String.format("File %s not found in classpath.", fileName));
+				logger.error("==Load Meta Error== File {} not found in classpath.", fileName);
 			} else {
 				try {
 					return DefaultSaxParser.parse(in);
 				} catch (SAXException | IOException e) {
-					throw new RuntimeException(String.format("Error parse meta file %s", fileName), e);
+					logger.error("==Load Meta Error== Error parse meta file {}", fileName);
 				}
 			}
+			return null;
 		}
 
 		private static void outputToTestXml(Meta meta) {
