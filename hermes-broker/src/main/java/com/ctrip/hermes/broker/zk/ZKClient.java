@@ -45,7 +45,7 @@ public class ZKClient implements Initializable {
 		}
 	}
 
-	public CuratorFramework getClient() {
+	public CuratorFramework get() {
 		return m_client;
 	}
 }

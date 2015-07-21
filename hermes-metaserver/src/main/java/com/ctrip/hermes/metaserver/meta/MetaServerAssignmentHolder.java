@@ -138,7 +138,7 @@ public class MetaServerAssignmentHolder {
 
 		try {
 			String rootPath = ZKPathUtils.getMetaServerAssignmentRootZkPath();
-			CuratorFramework client = m_zkClient.getClient();
+			CuratorFramework client = m_zkClient.get();
 
 			m_zkService.ensurePath(rootPath);
 

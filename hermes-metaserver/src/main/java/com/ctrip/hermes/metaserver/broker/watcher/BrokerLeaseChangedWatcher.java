@@ -9,8 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.commons.BaseZkWatcher;
+import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 
 /**

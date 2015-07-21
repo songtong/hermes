@@ -158,7 +158,7 @@ public class BrokerAssignmentHolder {
 
 		try {
 			String rootPath = ZKPathUtils.getBrokerAssignmentRootZkPath();
-			CuratorFramework client = m_zkClient.getClient();
+			CuratorFramework client = m_zkClient.get();
 
 			m_zkService.ensurePath(rootPath);
 

@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.commons.BaseZkWatcher;
+import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 
@@ -34,7 +34,7 @@ public class ConsumerLeaseAddedWatcher extends BaseZkWatcher {
 	protected void doProcess(WatchedEvent event) {
 		String path = event.getPath();
 		try {
-			CuratorFramework client = PlexusComponentLocator.lookup(ZKClient.class).getClient();
+			CuratorFramework client = PlexusComponentLocator.lookup(ZKClient.class).get();
 
 			List<String> topics = client.getChildren().usingWatcher(this).forPath(path);
 

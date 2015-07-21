@@ -72,12 +72,12 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	}
 
 	private void loadAndAddMetaServerAssignmentWatcher(MetaServerAssignmentChangedWatcher watcher) throws Exception {
-		m_zkClient.getClient().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
+		m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
 		m_metaServerAssignmentHolder.reload();
 	}
 
 	private void loadAndaddMetaInfoWatcher(Watcher watcher) throws Exception {
-		byte[] data = m_zkClient.getClient().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
+		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
 		MetaInfo metaInfo = ZKSerializeUtils.deserialize(data, MetaInfo.class);
 		Meta meta = fetchMetaInfo(metaInfo);
 		if (meta != null) {

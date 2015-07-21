@@ -10,7 +10,7 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.metaserver.build.BuildConstants;
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
+import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)

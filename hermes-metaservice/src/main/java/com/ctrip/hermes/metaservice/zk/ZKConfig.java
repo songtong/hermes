@@ -13,14 +13,18 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 public class ZKConfig {
 
 	@Inject
-	ClientEnvironment env;
+	private ClientEnvironment m_env;
+
+	public void setEnv(ClientEnvironment env) {
+		m_env = env;
+	}
 
 	public int getZkConnectionTimeoutMillis() {
 		return 3000;
 	}
 
 	public String getZkConnectionString() {
-		return env.getGlobalConfig().getProperty("meta.zk.connectionString");
+		return m_env.getGlobalConfig().getProperty("meta.zk.connectionString");
 	}
 
 	public int getZkCloseWaitMillis() {

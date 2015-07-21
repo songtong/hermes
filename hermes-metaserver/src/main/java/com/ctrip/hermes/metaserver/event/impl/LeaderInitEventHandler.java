@@ -95,7 +95,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 	@Override
 	public void initialize() throws InitializationException {
 		m_serviceDiscovery = ServiceDiscoveryBuilder.builder(Void.class)//
-		      .client(m_zkClient.getClient())//
+		      .client(m_zkClient.get())//
 		      .basePath(m_config.getBrokerRegistryBasePath())//
 		      .build();
 
@@ -156,7 +156,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 	private List<Server> loadAndAddMetaServerListWatcher(Watcher watcher) throws Exception {
 		List<Server> metaServers = new ArrayList<>();
 
-		CuratorFramework client = m_zkClient.getClient();
+		CuratorFramework client = m_zkClient.get();
 
 		String rootPath = ZKPathUtils.getMetaServersZkPath();
 
@@ -178,7 +178,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 	}
 
 	private Long loadAndaddBaseMetaWatcher(Watcher watcher) throws Exception {
-		byte[] data = m_zkClient.getClient().getData().usingWatcher(watcher)
+		byte[] data = m_zkClient.get().getData().usingWatcher(watcher)
 		      .forPath(ZKPathUtils.getBaseMetaVersionZkPath());
 		return ZKSerializeUtils.deserialize(data, Long.class);
 	}

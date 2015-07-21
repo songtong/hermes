@@ -43,7 +43,7 @@ public class DefaultBrokerRegistry implements BrokerRegistry, Initializable {
 			      .build();
 
 			m_serviceDiscovery = ServiceDiscoveryBuilder.builder(Void.class)//
-			      .client(m_client.getClient())//
+			      .client(m_client.get())//
 			      .basePath(m_config.getRegistryBasePath())//
 			      .thisInstance(thisInstance)//
 			      .build();

@@ -6,9 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -31,7 +29,7 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class BaseLeaseHolder<Key> implements Initializable {
+public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder<Key> {
 
 	private static final Logger log = LoggerFactory.getLogger(BaseLeaseHolder.class);
 
@@ -50,33 +48,29 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 
 	private ReentrantReadWriteLock m_LeaseContextsLock = new ReentrantReadWriteLock();
 
+	@Override
 	public Map<Key, Map<String, ClientLeaseInfo>> getAllValidLeases() throws Exception {
 		Map<Key, Map<String, ClientLeaseInfo>> leases = new HashMap<>();
 
+		clearExpiredLeases();
+
 		m_LeaseContextsLock.readLock().lock();
 		try {
-
 			for (Map.Entry<Key, LeaseContext> entry : m_LeaseContexts.entrySet()) {
 				Key key = entry.getKey();
-				leases.put(key, new HashMap<String, ClientLeaseInfo>());
-				LeaseContext context = entry.getValue();
-				context.lock();
-				try {
-					removeExpiredLeases(key, context.getExistingLeases());
+				Map<String, ClientLeaseInfo> existingLeases = entry.getValue().getExistingLeases();
+				if (existingLeases != null && !existingLeases.isEmpty()) {
+					leases.put(key, new HashMap<String, ClientLeaseInfo>());
 
-					Map<String, ClientLeaseInfo> existingLeases = context.getExistingLeases();
 					for (Map.Entry<String, ClientLeaseInfo> existingLease : existingLeases.entrySet()) {
 						leases.get(key)//
 						      .put(existingLease.getKey(),//
 						            new ClientLeaseInfo(existingLease.getValue().getLease(),
 						                  existingLease.getValue().getIp(), existingLease.getValue().getPort()));
 					}
-
-				} finally {
-					context.unlock();
 				}
-			}
 
+			}
 		} finally {
 			m_LeaseContextsLock.readLock().unlock();
 		}
@@ -84,6 +78,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		return leases;
 	}
 
+	@Override
 	public LeaseAcquireResponse executeLeaseOperation(Key contextKey, LeaseOperationCallback callback) throws Exception {
 
 		LeaseContext leaseContext = getLeaseContext(contextKey);
@@ -104,6 +99,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		}
 	}
 
+	@Override
 	public Lease newLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
 	      long leaseTimeMillis, String ip, int port) throws Exception {
 		Lease newLease = new Lease(m_leaseIdGenerator.incrementAndGet(), m_systemClockService.now() + leaseTimeMillis);
@@ -112,8 +108,10 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		return newLease;
 	}
 
+	@Override
 	public void renewLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
 	      ClientLeaseInfo existingLeaseInfo, long leaseTimeMillis, String ip, int port) throws Exception {
+		existingValidLeases.put(clientKey, existingLeaseInfo);
 		existingLeaseInfo.getLease().setExpireTime(existingLeaseInfo.getLease().getExpireTime() + leaseTimeMillis);
 		existingLeaseInfo.setIp(ip);
 		existingLeaseInfo.setPort(port);
@@ -127,7 +125,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		m_zookeeperService.persist(path, ZKSerializeUtils.serialize(existingValidLeases), touchPaths);
 	}
 
-	private void removeExpiredLeases(Key contextKey, Map<String, ClientLeaseInfo> existingLeases) throws Exception {
+	protected void removeExpiredLeases(Key contextKey, Map<String, ClientLeaseInfo> existingLeases) throws Exception {
 		Iterator<Entry<String, ClientLeaseInfo>> iter = existingLeases.entrySet().iterator();
 		while (iter.hasNext()) {
 			Entry<String, ClientLeaseInfo> entry = iter.next();
@@ -138,7 +136,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		}
 	}
 
-	private LeaseContext getLeaseContext(Key contextKey) {
+	protected LeaseContext getLeaseContext(Key contextKey) {
 		m_LeaseContextsLock.writeLock().lock();
 		try {
 			if (!m_LeaseContexts.containsKey(contextKey)) {
@@ -152,11 +150,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 
 	}
 
-	public static interface LeaseOperationCallback {
-		public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) throws Exception;
-	}
-
-	private static class LeaseContext {
+	protected static class LeaseContext {
 		private ReentrantLock m_lock = new ReentrantLock();
 
 		private Map<String, ClientLeaseInfo> m_existingLeases = new HashMap<>();
@@ -175,48 +169,6 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 
 		public void setExistingLeases(Map<String, ClientLeaseInfo> existingLeases) {
 			m_existingLeases = existingLeases;
-		}
-
-	}
-
-	public static class ClientLeaseInfo {
-		private Lease m_lease;
-
-		private AtomicReference<String> m_ip = new AtomicReference<>(null);
-
-		private AtomicInteger m_port = new AtomicInteger();
-
-		public ClientLeaseInfo() {
-		}
-
-		public ClientLeaseInfo(Lease lease, String ip, int port) {
-			m_lease = lease;
-			m_ip.set(ip);
-			m_port.set(port);
-		}
-
-		public Lease getLease() {
-			return m_lease;
-		}
-
-		public void setLease(Lease lease) {
-			m_lease = lease;
-		}
-
-		public String getIp() {
-			return m_ip.get();
-		}
-
-		public void setIp(String ip) {
-			m_ip.set(ip);
-		}
-
-		public int getPort() {
-			return m_port.get();
-		}
-
-		public void setPort(int port) {
-			m_port.set(port);
 		}
 
 	}
@@ -243,6 +195,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		updateContexts(path2ExistingLeases);
 	}
 
+	@Override
 	public void updateContexts(Map<String, Map<String, ClientLeaseInfo>> path2ExistingLeases) throws Exception {
 		for (Map.Entry<String, Map<String, ClientLeaseInfo>> entry : path2ExistingLeases.entrySet()) {
 			updateLeaseContext(entry.getKey(), entry.getValue());
@@ -281,30 +234,35 @@ public abstract class BaseLeaseHolder<Key> implements Initializable {
 		}
 	}
 
-	private void startHouseKeeper() {
+	protected void startHouseKeeper() {
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("LeaseHolder-HouseKeeper", true))
 		      .scheduleWithFixedDelay(new Runnable() {
 
 			      @Override
 			      public void run() {
-				      m_LeaseContextsLock.writeLock().lock();
-				      try {
-					      Iterator<Entry<Key, LeaseContext>> iter = m_LeaseContexts.entrySet().iterator();
-					      while (iter.hasNext()) {
-						      Entry<Key, LeaseContext> entry = iter.next();
-						      Map<String, ClientLeaseInfo> existingLeases = entry.getValue().getExistingLeases();
-						      removeExpiredLeases(entry.getKey(), existingLeases);
-						      if (existingLeases.isEmpty()) {
-							      iter.remove();
-						      }
-					      }
-				      } catch (Exception e) {
-					      log.warn("Exception occurred while doing housekeeping", e);
-				      } finally {
-					      m_LeaseContextsLock.writeLock().unlock();
-				      }
+				      clearExpiredLeases();
 			      }
+
 		      }, 0, 5, TimeUnit.SECONDS);
+	}
+
+	protected void clearExpiredLeases() {
+		m_LeaseContextsLock.writeLock().lock();
+		try {
+			Iterator<Entry<Key, LeaseContext>> iter = m_LeaseContexts.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<Key, LeaseContext> entry = iter.next();
+				Map<String, ClientLeaseInfo> existingLeases = entry.getValue().getExistingLeases();
+				removeExpiredLeases(entry.getKey(), existingLeases);
+				if (existingLeases.isEmpty()) {
+					iter.remove();
+				}
+			}
+		} catch (Exception e) {
+			log.warn("Exception occurred while doing housekeeping", e);
+		} finally {
+			m_LeaseContextsLock.writeLock().unlock();
+		}
 	}
 
 	protected abstract String[] getZkPersistTouchPaths(Key contextKey);
