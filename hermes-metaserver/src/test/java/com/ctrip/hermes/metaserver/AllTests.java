@@ -17,14 +17,14 @@ import com.ctrip.hermes.metaserver.fulltest.MetaServerLeadershipTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({ //
-MetaServerBrokerAssignmentTest.class, //
-      MetaServerAssignmentTest.class,//
-      MetaServerBaseMetaChangeTest.class, //
-      MetaServerBrokerLeaseTest.class,//
+//MetaServerBrokerAssignmentTest.class, //
+//      MetaServerAssignmentTest.class,//
+//      MetaServerBaseMetaChangeTest.class, //
+//      MetaServerBrokerLeaseTest.class,//
       // MetaServerBrokerLeaseChangedTest.class,//
-      MetaServerConsumerLeaseTest.class,//
-      // MetaServerConsumerLeaseChangeTest.class,//
-      MetaServerLeadershipTest.class,//
+//      MetaServerConsumerLeaseTest.class,//
+//      // MetaServerConsumerLeaseChangeTest.class,//
+//      MetaServerLeadershipTest.class,//
       LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest.class,//
       AssignBalancerTest.class,//
       DefaultBrokerPartitionAssigningStrategyTest.class, //
