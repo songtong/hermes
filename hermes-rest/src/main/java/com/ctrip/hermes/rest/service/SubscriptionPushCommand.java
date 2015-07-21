@@ -16,10 +16,8 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.HttpContext;
 
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.payload.RawMessage;
@@ -30,20 +28,19 @@ public class SubscriptionPushCommand extends HystrixCommand<HttpResponse> {
 
 	private CloseableHttpClient client;
 
-	private HttpContext context;
-
 	private RequestConfig config;
 
 	private ConsumerMessage<RawMessage> msg;
 
 	private String url;
 
+	private HttpClientContext context;
+
 	public SubscriptionPushCommand(CloseableHttpClient client, RequestConfig config, ConsumerMessage<RawMessage> msg,
 	      String url) {
 		super(HystrixCommandGroupKey.Factory.asKey(SubscriptionPushCommand.class.getSimpleName()));
-		// this.client = client;
-		// FIXME why the pool httpclient will fail
-		this.client = HttpClients.createDefault();
+		this.client = client;
+		// this.client = HttpClients.createDefault();
 		this.context = HttpClientContext.create();
 		this.config = config;
 		this.msg = msg;
@@ -56,7 +53,8 @@ public class SubscriptionPushCommand extends HystrixCommand<HttpResponse> {
 		CloseableHttpResponse response = null;
 		try {
 			post.setConfig(config);
-			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBody().getEncodedMessage());
+			byte[] encodedMessage = msg.getBody().getEncodedMessage();
+			ByteArrayInputStream stream = new ByteArrayInputStream(encodedMessage);
 			post.addHeader("X-Hermes-Topic", msg.getTopic());
 			post.addHeader("X-Hermes-Ref-Key", msg.getRefKey());
 			Iterator<String> propertyNames = msg.getPropertyNames();
@@ -80,7 +78,7 @@ public class SubscriptionPushCommand extends HystrixCommand<HttpResponse> {
 		}
 
 		int statusCode = response.getStatusLine().getStatusCode();
-		// System.out.println("Post to : " + url + " code: " + statusCode);
+//		System.out.println("Post to : " + url + " code: " + statusCode);
 		if (statusCode != Response.Status.OK.getStatusCode()
 		      && statusCode != Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
 			throw new RequestFailedException(response);
@@ -97,11 +95,16 @@ public class SubscriptionPushCommand extends HystrixCommand<HttpResponse> {
 				HttpResponse response = requestFailedException.getPayload();
 				return response;
 			} else {
-				return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 500,
-				      failedExecutionException.getMessage()));
+				return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1,
+				      Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), failedExecutionException.getMessage()));
 			}
 		} else {
-			return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 500, "HystrixCommand fallback"));
+			if (this.isResponseTimedOut()) {
+				return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1,
+				      Response.Status.REQUEST_TIMEOUT.getStatusCode(), "HystrixCommand Timeout"));
+			}
+			return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1,
+			      Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), "HystrixCommand fallback"));
 		}
 	}
 

@@ -147,7 +147,7 @@ public class RestIntegrationTest extends JerseyTest {
 		String topic = "kafka.SimpleTextTopic1";
 		kafka.createTopic(topic);
 		String group = "OneBoxGroup";
-		String urls = getBaseUri() + "onebox/pushNotExist," + getBaseUri() + "onebox/pushStandby";
+		String urls = "http://localhost:4321:/" + "onebox/pushNotExist," + getBaseUri() + "onebox/pushStandby";
 		SubscriptionView sub = new SubscriptionView();
 		sub.setTopic(topic);
 		sub.setGroup(group);
@@ -180,7 +180,7 @@ public class RestIntegrationTest extends JerseyTest {
 		}
 
 		int sleepCount = 0;
-		while (receivedContent.size() < sentContent.size() && sleepCount++ < 50) {
+		while (receivedContent.size() < sentContent.size() && sleepCount++ < 100) {
 			Thread.sleep(100);
 		}
 

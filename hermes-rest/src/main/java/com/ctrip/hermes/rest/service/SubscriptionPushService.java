@@ -1,5 +1,6 @@
 package com.ctrip.hermes.rest.service;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import javax.ws.rs.core.Response;
@@ -10,6 +11,7 @@ import org.apache.http.client.config.RequestConfig.Builder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Disposable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -29,7 +31,7 @@ import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 
 @Named
-public class SubscriptionPushService implements Initializable {
+public class SubscriptionPushService implements Initializable, Disposable {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(SubscriptionPushService.class);
 
@@ -39,7 +41,6 @@ public class SubscriptionPushService implements Initializable {
 	@Inject
 	private ClientEnvironment m_env;
 
-	// FIXME how to release http connection resource
 	private CloseableHttpClient m_httpClient;
 
 	private RequestConfig m_requestConfig;
@@ -47,6 +48,7 @@ public class SubscriptionPushService implements Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+		cm.setMaxTotal(100);
 
 		m_httpClient = HttpClients.custom().setConnectionManager(cm).build();
 
@@ -119,5 +121,14 @@ public class SubscriptionPushService implements Initializable {
 			      }
 		      });
 		return consumerHolder;
+	}
+
+	@Override
+	public void dispose() {
+		try {
+			m_httpClient.close();
+		} catch (IOException e) {
+			m_logger.warn("Dispose SubscriptionPushService", e);
+		}
 	}
 }
