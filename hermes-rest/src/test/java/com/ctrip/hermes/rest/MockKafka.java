@@ -13,7 +13,7 @@ import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 
 public class MockKafka {
 
-	public static final String BROKER_ID = "0";
+	public static final String BROKER_ID = "1";
 
 	public static final String BROKER_HOSTNAME = "localhost";
 

@@ -5,9 +5,9 @@ import java.util.Properties;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.config.RequestConfig.Builder;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -27,7 +27,6 @@ import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
-import com.netflix.hystrix.strategy.properties.HystrixProperty;
 
 @Named
 public class SubscriptionPushService implements Initializable {
@@ -40,14 +39,14 @@ public class SubscriptionPushService implements Initializable {
 	@Inject
 	private ClientEnvironment m_env;
 
-	private HttpClient m_httpClient;
+	// FIXME how to release http connection resource
+	private CloseableHttpClient m_httpClient;
 
 	private RequestConfig m_requestConfig;
 
 	@Override
 	public void initialize() throws InitializationException {
 		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-		cm.setMaxTotal(100);
 
 		m_httpClient = HttpClients.custom().setConnectionManager(cm).build();
 
@@ -67,11 +66,10 @@ public class SubscriptionPushService implements Initializable {
 
 			      @Override
 			      protected void onMessage(final ConsumerMessage<RawMessage> msg) {
-				      while (msg.getStatus() != MessageStatus.SUCCESS) {
+				      while (msg.getStatus() == MessageStatus.NOT_SET) {
 					      boolean isCouldAck = false;
 					      for (final String url : urls) {
 						      BizEvent pushEvent = new BizEvent("Rest.push");
-						      HttpResponse pushResponse = null;
 						      try {
 							      pushEvent.addData("topic", sub.getTopic());
 							      pushEvent.addData("group", sub.getGroup());
@@ -79,16 +77,23 @@ public class SubscriptionPushService implements Initializable {
 							      pushEvent.addData("endpoint", url);
 
 							      SubscriptionPushCommand command = new SubscriptionPushCommand(m_httpClient, m_requestConfig,
-							            sub.getId(), msg, url);
-							      pushResponse = command.execute();
+							            msg, url);
+							      HttpResponse pushResponse = command.execute();
 
 							      pushEvent.addData("result", pushResponse.getStatusLine().getStatusCode());
 							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
 								      isCouldAck = true;
 								      break;
+							      } else if (pushResponse.getStatusLine().getStatusCode() == Response.Status.INTERNAL_SERVER_ERROR
+							            .getStatusCode()) {
+								      m_logger
+								            .warn("Push message failed, will nack, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
+								                  url, pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(),
+								                  msg.getPartition(), msg.getOffset(), msg.getRefKey());
+								      break;
 							      } else {
 								      m_logger
-								            .warn("Push message failed, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
+								            .warn("Push message failed, will retry, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
 								                  url, pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(),
 								                  msg.getPartition(), msg.getOffset(), msg.getRefKey());
 							      }
@@ -99,7 +104,7 @@ public class SubscriptionPushService implements Initializable {
 								      Thread.sleep(1000 * errorCount);
 							      }
 						      } catch (Exception e) {
-							      m_logger.warn("Push message failed", e);
+							      m_logger.warn("Push message exception", e);
 						      } finally {
 							      m_bizLogger.log(pushEvent);
 						      }

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
@@ -26,6 +27,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -138,15 +140,14 @@ public class RestIntegrationTest extends JerseyTest {
 	}
 
 	@Test
-	public void testPushStandy() throws InterruptedException, IOException {
+	public void testPushStandby() throws InterruptedException, IOException {
 		Client client = ClientBuilder.newClient();
 		WebTarget gatewayWebTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
 		String topic = "kafka.SimpleTextTopic1";
 		kafka.createTopic(topic);
 		String group = "OneBoxGroup";
-		String urls = getBaseUri() + "onebox/pushNotAvailable," + getBaseUri() + "onebox/pushStandy";
-
+		String urls = getBaseUri() + "onebox/pushNotExist," + getBaseUri() + "onebox/pushStandby";
 		SubscriptionView sub = new SubscriptionView();
 		sub.setTopic(topic);
 		sub.setGroup(group);
@@ -251,6 +252,58 @@ public class RestIntegrationTest extends JerseyTest {
 	}
 
 	@Test
+	public void testPushTimeoutEndpoint() throws InterruptedException, IOException {
+		Client client = ClientBuilder.newClient();
+		WebTarget gatewayWebTarget = client.target(TestGatewayServer.GATEWAY_HOST);
+
+		String topic = "kafka.SimpleTextTopic3";
+		kafka.createTopic(topic);
+		String group = "OneBoxGroup";
+		String urls = getBaseUri() + "onebox/pushTimeout";
+
+		SubscriptionView sub = new SubscriptionView();
+		sub.setTopic(topic);
+		sub.setGroup(group);
+		sub.setEndpoints(urls);
+		sub.setName(UUID.randomUUID().toString());
+		sub.setStatus("RUNNING");
+
+		SubscriptionRegisterService registerService = PlexusComponentLocator.lookup(SubscriptionRegisterService.class);
+		registerService.startSubscription(sub);
+
+		String base = UUID.randomUUID().toString();
+		System.out.println("Base: " + base);
+
+		int msgSize = 10;
+		int i = 0;
+		while (i < msgSize) {
+			byte[] msg = ("Hello World " + base + " " + (++i)).getBytes();
+			sentContent.add(msg);
+			Builder request = gatewayWebTarget.path("topics/" + topic).request();
+			request.header("X-Hermes-Without-Header", i % 2 == 0 ? "true" : "false");
+			request.header("X-Hermes-Partition-Key", String.valueOf(i));
+			request.header("X-Hermes-Priority-Message", i % 2 == 0 ? "true" : "false");
+			request.header("X-Hermes-Ref-Key", String.valueOf(i));
+			request.header("X-Hermes-Message-Property", "pro1=value1,pro2=value2");
+			InputStream is = new ByteArrayInputStream(msg);
+			Response response = request.post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
+			is.close();
+			Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
+			System.out.println("Sent: " + new String(msg));
+		}
+
+		int sleepCount = 0;
+		while (receivedContent.size() < sentContent.size() && sleepCount++ < 50) {
+			Thread.sleep(100);
+		}
+
+		Assert.assertEquals(0, receivedContent.size());
+
+		registerService.stopSubscription(sub);
+		kafka.deleteTopic(topic);
+	}
+
+	@Test
 	public void testPushNotAvailableEndpoint() throws InterruptedException, IOException {
 		Client client = ClientBuilder.newClient();
 		WebTarget gatewayWebTarget = client.target(TestGatewayServer.GATEWAY_HOST);
@@ -305,6 +358,12 @@ public class RestIntegrationTest extends JerseyTest {
 	@Path("onebox")
 	public static class OneBoxResource {
 
+		@Path("hello")
+		@GET
+		public String hello() {
+			return "Hello World";
+		}
+
 		@Path("push")
 		@POST
 		@Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -325,20 +384,35 @@ public class RestIntegrationTest extends JerseyTest {
 			return Response.serverError().build();
 		}
 
-		@Path("pushStandy")
+		@Path("pushTimout")
 		@POST
 		@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-		public Response pushStandy(byte[] b) {
-			System.out.println("ReceivedStandy: " + new String(b, Charsets.UTF_8));
-			receivedContent.add(b);
+		public Response pushTimeout(byte[] b) {
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+			}
 			return Response.ok().build();
 		}
 
+		@Path("pushStandby")
+		@POST
+		@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+		public Response pushStandby(@Context HttpHeaders headers, byte[] b) {
+			System.out.println("Received: " + new String(b, Charsets.UTF_8));
+			receivedContent.add(b);
+			Map<String, String> receivedHeader = new HashMap<>();
+			receivedHeader.put("X-Hermes-Topic", headers.getHeaderString("X-Hermes-Topic"));
+			receivedHeader.put("X-Hermes-Ref-Key", headers.getHeaderString("X-Hermes-Ref-Key"));
+			receivedHeaders.add(receivedHeader);
+			return Response.ok().build();
+		}
 	}
 
 	@Override
 	protected Application configure() {
+		enable(TestProperties.LOG_TRAFFIC);
+		enable(TestProperties.DUMP_ENTITY);
 		return new ResourceConfig(OneBoxResource.class);
 	}
-
 }
