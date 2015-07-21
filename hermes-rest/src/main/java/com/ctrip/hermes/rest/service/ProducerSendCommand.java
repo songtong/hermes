@@ -23,7 +23,7 @@ public class ProducerSendCommand extends HystrixCommand<Future<SendResult>> {
 	private InputStream is;
 
 	public ProducerSendCommand(Producer producer, String topic, Map<String, String> params, InputStream is) {
-		super(HystrixCommandGroupKey.Factory.asKey(topic));
+		super(HystrixCommandGroupKey.Factory.asKey(ProducerSendCommand.class.getSimpleName()));
 		this.producer = producer;
 		this.topic = topic;
 		this.params = params;

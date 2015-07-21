@@ -18,7 +18,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.rest.MockKafka;
 import com.ctrip.hermes.rest.MockZookeeper;
 import com.ctrip.hermes.rest.TestGatewayServer;
@@ -51,7 +50,7 @@ public class KafkaTopicsResourceTest {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String topic = "kafka.SimpleTextTopic1";
+		String topic = "kafka.SimpleTextTopic0";
 
 		Builder request = webTarget.path("topics/" + topic).request();
 		String content1 = "Hello World 1";
@@ -76,7 +75,7 @@ public class KafkaTopicsResourceTest {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String topic = "kafka.SimpleTextTopic1";
+		String topic = "kafka.SimpleTextTopic0";
 
 		Builder request = webTarget.path("topics/" + topic).request();
 		request.header("X-Hermes-Priority", "true");
@@ -110,7 +109,7 @@ public class KafkaTopicsResourceTest {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String topic = "kafka.SimpleTextTopic1";
+		String topic = "kafka.SimpleTextTopic0";
 
 		Builder request = webTarget.path("topics/" + topic).request();
 		String content = "Hello World " + System.currentTimeMillis();

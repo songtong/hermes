@@ -1,15 +1,17 @@
 package com.ctrip.hermes.rest.service;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import javax.ws.rs.core.Response;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.config.RequestConfig.Builder;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Disposable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -29,7 +31,7 @@ import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 
 @Named
-public class SubscriptionPushService implements Initializable {
+public class SubscriptionPushService implements Initializable, Disposable {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(SubscriptionPushService.class);
 
@@ -39,7 +41,7 @@ public class SubscriptionPushService implements Initializable {
 	@Inject
 	private ClientEnvironment m_env;
 
-	private HttpClient m_httpClient;
+	private CloseableHttpClient m_httpClient;
 
 	private RequestConfig m_requestConfig;
 
@@ -66,10 +68,10 @@ public class SubscriptionPushService implements Initializable {
 
 			      @Override
 			      protected void onMessage(final ConsumerMessage<RawMessage> msg) {
-				      while (msg.getStatus() != MessageStatus.SUCCESS) {
+				      while (msg.getStatus() == MessageStatus.NOT_SET) {
+					      boolean isCouldAck = false;
 					      for (final String url : urls) {
 						      BizEvent pushEvent = new BizEvent("Rest.push");
-						      HttpResponse pushResponse = null;
 						      try {
 							      pushEvent.addData("topic", sub.getTopic());
 							      pushEvent.addData("group", sub.getGroup());
@@ -77,33 +79,43 @@ public class SubscriptionPushService implements Initializable {
 							      pushEvent.addData("endpoint", url);
 
 							      SubscriptionPushCommand command = new SubscriptionPushCommand(m_httpClient, m_requestConfig,
-							            sub.getId(), msg, url);
-							      pushResponse = command.execute();
+							            msg, url);
+							      HttpResponse pushResponse = command.execute();
 
 							      pushEvent.addData("result", pushResponse.getStatusLine().getStatusCode());
 							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
-								      msg.ack();
-								      return;
-							      } else if (pushResponse.getStatusLine().getStatusCode() >= Response.Status.INTERNAL_SERVER_ERROR
+								      isCouldAck = true;
+								      break;
+							      } else if (pushResponse.getStatusLine().getStatusCode() == Response.Status.INTERNAL_SERVER_ERROR
 							            .getStatusCode()) {
-								      msg.nack();
-								      return;
+								      m_logger
+								            .warn("Push message failed, will nack, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
+								                  url, pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(),
+								                  msg.getPartition(), msg.getOffset(), msg.getRefKey());
+								      break;
 							      } else {
-								      m_logger.warn("Push message failed, reason:{} topic:{} partition:{} offset:{} url:{}",
-								            pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(), msg.getPartition(),
-								            msg.getOffset(), url);
+								      m_logger
+								            .warn("Push message failed, will retry, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
+								                  url, pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(),
+								                  msg.getPartition(), msg.getOffset(), msg.getRefKey());
 							      }
 
 							      if (command.isCircuitBreakerOpen()) {
 								      long errorCount = command.getMetrics().getHealthCounts().getErrorCount();
-								      m_logger.warn("Pubsh message CircuitBreak is open, sleep {} seconds", errorCount);
+								      m_logger.warn("Push message CircuitBreak is open, sleep {} seconds", errorCount);
 								      Thread.sleep(1000 * errorCount);
 							      }
 						      } catch (Exception e) {
-							      m_logger.warn("Push message failed", e);
+							      m_logger.warn("Push message exception", e);
 						      } finally {
 							      m_bizLogger.log(pushEvent);
 						      }
+					      }
+
+					      if (isCouldAck) {
+						      msg.ack();
+					      } else {
+						      msg.nack();
 					      }
 				      }
 			      }
@@ -111,4 +123,12 @@ public class SubscriptionPushService implements Initializable {
 		return consumerHolder;
 	}
 
+	@Override
+	public void dispose() {
+		try {
+			m_httpClient.close();
+		} catch (IOException e) {
+			m_logger.warn("Dispose SubscriptionPushService", e);
+		}
+	}
 }
