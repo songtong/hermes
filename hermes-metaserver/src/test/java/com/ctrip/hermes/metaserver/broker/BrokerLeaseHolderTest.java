@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -92,10 +93,9 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 
 	private BrokerLeaseHolder m_leaseHolder;
 
-	private void addLeasesDataToZk(String topic, int partition, List<Pair<String, ClientLeaseInfo>> data)
-	      throws Exception {
+	private void addLeasesToZk(String topic, int partition, List<Pair<String, ClientLeaseInfo>> data) throws Exception {
 		String path = ZKPathUtils.getBrokerLeaseZkPath(topic, partition);
-		String parentPath = ZKPathUtils.getBrokerAssignmentTopicParentZkPath(topic);
+		String parentPath = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic);
 
 		byte[] bytes = null;
 
@@ -239,7 +239,7 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 	public void testExecuteLeaseOperation() throws Exception {
 		final long fakeNowTimestamp = System.currentTimeMillis() + 500 * 1000L;
 
-		addLeasesDataToZk("t1", 0, Arrays.asList(//
+		addLeasesToZk("t1", 0, Arrays.asList(//
 		      new Pair<String, ClientLeaseInfo>("br0", new ClientLeaseInfo(new Lease(1, fakeNowTimestamp + 50),
 		            "0.0.0.0", 1234)),//
 		      new Pair<String, ClientLeaseInfo>("br1", new ClientLeaseInfo(new Lease(2, 30), "0.0.0.1", 1233))//
@@ -277,14 +277,14 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 	public void testInit() throws Exception {
 		long fakeNowTimestamp = System.currentTimeMillis() + 500 * 1000L;
 
-		addLeasesDataToZk("t1", 0, Arrays.asList(//
+		addLeasesToZk("t1", 0, Arrays.asList(//
 		      new Pair<String, ClientLeaseInfo>("br0", new ClientLeaseInfo(new Lease(1, fakeNowTimestamp + 50),
 		            "0.0.0.0", 1234)),//
 		      new Pair<String, ClientLeaseInfo>("br1", new ClientLeaseInfo(new Lease(2, fakeNowTimestamp + 30),
 		            "0.0.0.1", 1233))//
 		      ));
 
-		addLeasesDataToZk(
+		addLeasesToZk(
 		      "t1",
 		      1,
 		      Arrays.asList(//
@@ -292,9 +292,9 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 		            "0.0.0.2", 2222))//
 		      ));
 
-		addLeasesDataToZk("t1", 2, null);
+		addLeasesToZk("t1", 2, null);
 
-		addLeasesDataToZk(
+		addLeasesToZk(
 		      "t2",
 		      0,
 		      Arrays.asList(//
@@ -302,7 +302,7 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 		            "0.0.0.0", 1234))//
 		      ));
 
-		addLeasesDataToZk("t3", 2, null);
+		addLeasesToZk("t3", 2, null);
 
 		leaseHolderReload();
 
@@ -341,6 +341,127 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 	@Test
 	public void testInitWithoutData() throws Exception {
 		assertTrue(m_leaseHolder.getAllValidLeases().isEmpty());
+	}
+
+	@Test
+	public void testLeaseAddedInZk() throws Exception {
+		leaseHolderReload();
+
+		long fakeNowTimestamp = System.currentTimeMillis();
+
+		String topic = "t1";
+		int partition = 0;
+		String brokerName = "br0";
+		String ip = "0.0.0.1";
+		int port = 1234;
+		long expireTime = fakeNowTimestamp + 50000L;
+		addLeasesToZk(topic, partition, Arrays.asList(//
+		      new Pair<String, ClientLeaseInfo>(brokerName, new ClientLeaseInfo(new Lease(1, expireTime), ip, port))//
+		      ));
+
+		Map<Pair<String, Integer>, Map<String, ClientLeaseInfo>> allValidLeases = m_leaseHolder.getAllValidLeases();
+
+		int retries = 50;
+		int i = 0;
+		while (i++ < retries && allValidLeases.isEmpty()) {
+			TimeUnit.MILLISECONDS.sleep(100);
+			allValidLeases = m_leaseHolder.getAllValidLeases();
+		}
+
+		assertEquals(1, allValidLeases.size());
+		assertTrue(m_leaseHolder.topicWatched(topic));
+
+		assertLeases(allValidLeases, topic, partition, Arrays.asList(//
+		      new Pair<String, ClientLeaseInfo>(brokerName, new ClientLeaseInfo(new Lease(1, expireTime), ip, port))));
+	}
+
+	@Test
+	public void testLeaseChangedInZk() throws Exception {
+
+		long fakeNowTimestamp = System.currentTimeMillis();
+		String topic = "t1";
+		int partition = 0;
+		String brokerName = "br0";
+		String ip = "0.0.0.1";
+		int port = 1234;
+		long expireTime = fakeNowTimestamp + 50000L;
+		int retries = 50;
+
+		addLeasesToZk(
+		      topic,
+		      partition,
+		      Arrays.asList(//
+		      new Pair<String, ClientLeaseInfo>(brokerName + "a", new ClientLeaseInfo(new Lease(2, System
+		            .currentTimeMillis() + 500L), ip + "2", port + 1))//
+		      ));
+
+		Map<Pair<String, Integer>, Map<String, ClientLeaseInfo>> allValidLeases = m_leaseHolder.getAllValidLeases();
+
+		for (int i = 0; i < retries && allValidLeases.isEmpty(); i++) {
+			TimeUnit.MILLISECONDS.sleep(100);
+			allValidLeases = m_leaseHolder.getAllValidLeases();
+		}
+
+		allValidLeases.clear();
+
+		addLeasesToZk(topic, partition, Arrays.asList(//
+		      new Pair<String, ClientLeaseInfo>(brokerName, new ClientLeaseInfo(new Lease(1, expireTime), ip, port))//
+		      ));
+
+		for (int i = 0; i < retries; i++) {
+			TimeUnit.MILLISECONDS.sleep(100);
+			allValidLeases = m_leaseHolder.getAllValidLeases();
+			if (!allValidLeases.isEmpty()
+			      && allValidLeases.get(new Pair<String, Integer>(topic, partition)).containsKey(brokerName)) {
+				break;
+			}
+		}
+
+		assertEquals(1, allValidLeases.size());
+
+		assertLeases(allValidLeases, topic, partition, Arrays.asList(//
+		      new Pair<String, ClientLeaseInfo>(brokerName, new ClientLeaseInfo(new Lease(1, expireTime), ip, port))));
+	}
+
+	@Test
+	public void testLeaseRemovedInZk() throws Exception {
+
+		long fakeNowTimestamp = System.currentTimeMillis();
+		String topic = "t1";
+		int partition = 0;
+		String brokerName = "br0";
+		String ip = "0.0.0.1";
+		int port = 1234;
+		long expireTime = fakeNowTimestamp + 1000L;
+		int retries = 50;
+
+		addLeasesToZk(topic, partition, Arrays.asList(//
+		      new Pair<String, ClientLeaseInfo>(brokerName, new ClientLeaseInfo(new Lease(1, expireTime), ip, port))//
+		      ));
+
+		Map<Pair<String, Integer>, Map<String, ClientLeaseInfo>> allValidLeases = m_leaseHolder.getAllValidLeases();
+
+		for (int i = 0; i < retries && allValidLeases.isEmpty(); i++) {
+			TimeUnit.MILLISECONDS.sleep(100);
+			allValidLeases = m_leaseHolder.getAllValidLeases();
+		}
+
+		assertEquals(1, allValidLeases.size());
+		allValidLeases.clear();
+
+		deleteChildren(ZKPathUtils.getBrokerLeaseTopicParentZkPath(topic), true);
+
+		for (int i = 0; i < retries; i++) {
+			TimeUnit.MILLISECONDS.sleep(100);
+			allValidLeases = m_leaseHolder.getAllValidLeases();
+			if (allValidLeases.isEmpty()) {
+				break;
+			}
+		}
+
+		assertFalse(m_leaseHolder.topicWatched(topic));
+		assertTrue(allValidLeases.isEmpty());
+
 	}
 
 	@Test
@@ -383,18 +504,18 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 	public void testRemoveExpiredLeasesAndGetAllValidLeases() throws Exception {
 		long fakeNowTimestamp = System.currentTimeMillis() + 500 * 1000L;
 
-		addLeasesDataToZk("t1", 0, Arrays.asList(//
+		addLeasesToZk("t1", 0, Arrays.asList(//
 		      new Pair<String, ClientLeaseInfo>("br0", new ClientLeaseInfo(new Lease(1, fakeNowTimestamp + 50),
 		            "0.0.0.0", 1234)),//
 		      new Pair<String, ClientLeaseInfo>("br1", new ClientLeaseInfo(new Lease(2, fakeNowTimestamp + 30),
 		            "0.0.0.1", 1233))//
 		      ));
 
-		addLeasesDataToZk("t1", 1, Arrays.asList(//
+		addLeasesToZk("t1", 1, Arrays.asList(//
 		      new Pair<String, ClientLeaseInfo>("br2", new ClientLeaseInfo(new Lease(3, 0), "0.0.0.2", 2222))//
 		      ));
 
-		addLeasesDataToZk("t2", 0, Arrays.asList(//
+		addLeasesToZk("t2", 0, Arrays.asList(//
 		      new Pair<String, ClientLeaseInfo>("br0", new ClientLeaseInfo(new Lease(1, 0), "0.0.0.0", 1234))//
 		      ));
 
@@ -454,4 +575,5 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 		assertEquals(1, clientLeaseInfo.getLease().getId());
 		assertEquals(now + 1000L + 1000 * 1000L, clientLeaseInfo.getLease().getExpireTime());
 	}
+
 }
