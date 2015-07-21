@@ -30,7 +30,7 @@ public class StartBroker extends ComponentTestCase {
 	@After
 	public void after() throws Exception {
 		if (m_zkServer != null) {
-			m_zkServer.stop();
+			m_zkServer.close();
 		}
 	}
 

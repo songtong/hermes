@@ -29,9 +29,9 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.metaserver.commons.Assignment;
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.LeaseOperationCallback;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
+import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
+import com.ctrip.hermes.metaserver.commons.LeaseOperationCallback;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 
 /**
@@ -305,7 +305,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 		mockAssignmentHolderReturn(topic, assignment);
 		HashMap<String, ClientLeaseInfo> existingValidLeases = new HashMap<String, ClientLeaseInfo>();
 		existingValidLeases.put(brokerName, new ClientLeaseInfo(new Lease(1, 10000), "1.1.1.1", 1234));
-		mockLeaseHolderRenewLease(topic, partition, brokerName, "2.2.2.2", 4321, 1, DEFAULT_LEASE_TIME);
+		mockLeaseHolderRenewLease(topic, partition, brokerName, "1.1.1.1", 1234, 1, DEFAULT_LEASE_TIME);
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, existingValidLeases);
 
 		LeaseAcquireResponse response = m_allocator.tryRenewLease(topic, partition, broker.getName(), 1, broker.getIp(),

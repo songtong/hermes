@@ -17,6 +17,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.broker.watcher.BrokerLeaseChangedWatcher;
 import com.ctrip.hermes.metaserver.broker.watcher.BrokerLeaseAddedWatcher;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder;
+import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 
 /**
@@ -51,7 +52,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 
 	@Override
 	protected Map<String, Map<String, ClientLeaseInfo>> loadExistingLeases() throws Exception {
-		CuratorFramework client = m_zkClient.getClient();
+		CuratorFramework client = m_zkClient.get();
 
 		Map<String, Map<String, ClientLeaseInfo>> existingLeases = new HashMap<>();
 
@@ -72,7 +73,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 	public Map<String, Map<String, ClientLeaseInfo>> loadAndWatchTopicExistingLeases(String topic) throws Exception {
 		Map<String, Map<String, ClientLeaseInfo>> topicExistingLeases = new HashMap<>();
 
-		CuratorFramework client = m_zkClient.getClient();
+		CuratorFramework client = m_zkClient.get();
 		String topicPath = ZKPaths.makePath(ZKPathUtils.getBrokerLeaseRootZkPath(), topic);
 
 		client.getData().usingWatcher(m_brokerLeaseChangedWatcher).forPath(topicPath);

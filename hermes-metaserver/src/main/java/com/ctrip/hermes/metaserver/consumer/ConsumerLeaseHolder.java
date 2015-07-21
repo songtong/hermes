@@ -15,6 +15,7 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder;
+import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.consumer.watcher.ConsumerLeaseAddedWatcher;
 import com.ctrip.hermes.metaserver.consumer.watcher.ConsumerLeaseChangedWatcher;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
@@ -51,7 +52,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 
 	@Override
 	protected Map<String, Map<String, ClientLeaseInfo>> loadExistingLeases() throws Exception {
-		CuratorFramework client = m_zkClient.getClient();
+		CuratorFramework client = m_zkClient.get();
 
 		Map<String, Map<String, ClientLeaseInfo>> existingLeases = new HashMap<>();
 
@@ -72,7 +73,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 	public Map<String, Map<String, ClientLeaseInfo>> loadAndWatchTopicExistingLeases(String topic) throws Exception {
 		Map<String, Map<String, ClientLeaseInfo>> topicExistingLeases = new HashMap<>();
 
-		CuratorFramework client = m_zkClient.getClient();
+		CuratorFramework client = m_zkClient.get();
 		String topicPath = ZKPaths.makePath(ZKPathUtils.getConsumerLeaseRootZkPath(), topic);
 
 		client.getData().usingWatcher(m_consumerLeaseChangedWatcher).forPath(topicPath);

@@ -34,6 +34,14 @@ public class DefaultZookeeperService implements ZookeeperService {
 	@Inject
 	private SystemClockService m_systemClockService;
 
+	public void setZkClient(ZKClient zkClient) {
+		m_zkClient = zkClient;
+	}
+
+	public void setSystemClockService(SystemClockService systemClockService) {
+		m_systemClockService = systemClockService;
+	}
+
 	@Override
 	public void ensureConsumerLeaseZkPath(Topic topic) {
 
@@ -54,7 +62,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 	public void updateZkBaseMetaVersion(long version) throws Exception {
 		ensurePath(ZKPathUtils.getBaseMetaVersionZkPath());
 
-		m_zkClient.getClient().setData()
+		m_zkClient.get().setData()
 		      .forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(version));
 	}
 
@@ -79,7 +87,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 		for (String path : paths) {
 			try {
-				m_zkClient.getClient().inTransaction()//
+				m_zkClient.get().inTransaction()//
 				      .delete().forPath(path)//
 				      .and().setData().forPath(topicParentPath, ZKSerializeUtils.serialize(now))//
 				      .and().commit();
@@ -94,7 +102,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 	private void deleteChildren(String path, boolean deleteSelf) throws Exception {
 		PathUtils.validatePath(path);
 
-		CuratorFramework client = m_zkClient.getClient();
+		CuratorFramework client = m_zkClient.get();
 		Stat stat = client.checkExists().forPath(path);
 		if (stat != null) {
 			List<String> children = client.getChildren().forPath(path);
@@ -155,7 +163,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 				}
 			}
 
-			CuratorTransactionBridge curatorTransactionBridge = m_zkClient.getClient().inTransaction().setData()
+			CuratorTransactionBridge curatorTransactionBridge = m_zkClient.get().inTransaction().setData()
 			      .forPath(path, data);
 
 			long now = m_systemClockService.now();
@@ -174,8 +182,8 @@ public class DefaultZookeeperService implements ZookeeperService {
 	}
 
 	public void ensurePath(String path) throws Exception {
-		EnsurePath ensurePath = m_zkClient.getClient().newNamespaceAwareEnsurePath(path);
-		ensurePath.ensure(m_zkClient.getClient().getZookeeperClient());
+		EnsurePath ensurePath = m_zkClient.get().newNamespaceAwareEnsurePath(path);
+		ensurePath.ensure(m_zkClient.get().getZookeeperClient());
 	}
 
 	@Override
@@ -185,8 +193,10 @@ public class DefaultZookeeperService implements ZookeeperService {
 		try {
 			ensurePath(ZKPathUtils.getMetaServerAssignmentZkPath(topicName));
 
-			m_zkClient.getClient().inTransaction()//
-			      .delete().forPath(ZKPathUtils.getMetaServerAssignmentZkPath(topicName))//
+			m_zkClient.get().inTransaction()
+			      //
+			      .delete().forPath(ZKPathUtils.getMetaServerAssignmentZkPath(topicName))
+			      //
 			      .and().setData()
 			      .forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath(), ZKSerializeUtils.serialize(now))//
 			      .and().commit();

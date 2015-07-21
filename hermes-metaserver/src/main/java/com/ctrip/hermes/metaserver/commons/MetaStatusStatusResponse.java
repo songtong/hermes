@@ -14,9 +14,9 @@ public class MetaStatusStatusResponse {
 
 	private Map<String, Assignment<Integer>> brokerAssignments;
 
-	private Map<Pair<String, Integer>, Map<String, BaseLeaseHolder.ClientLeaseInfo>> brokerLeases;
+	private Map<Pair<String, Integer>, Map<String, ClientLeaseInfo>> brokerLeases;
 
-	private Map<Tpg, Map<String, BaseLeaseHolder.ClientLeaseInfo>> consumerLeases;
+	private Map<Tpg, Map<String, ClientLeaseInfo>> consumerLeases;
 
 	private Assignment<String> metaServerAssignments;
 
@@ -36,19 +36,19 @@ public class MetaStatusStatusResponse {
 		this.brokerAssignments = brokerAssignments;
 	}
 
-	public Map<Pair<String, Integer>, Map<String, BaseLeaseHolder.ClientLeaseInfo>> getBrokerLeases() {
+	public Map<Pair<String, Integer>, Map<String, ClientLeaseInfo>> getBrokerLeases() {
 		return brokerLeases;
 	}
 
-	public void setBrokerLeases(Map<Pair<String, Integer>, Map<String, BaseLeaseHolder.ClientLeaseInfo>> brokerLeases) {
+	public void setBrokerLeases(Map<Pair<String, Integer>, Map<String, ClientLeaseInfo>> brokerLeases) {
 		this.brokerLeases = brokerLeases;
 	}
 
-	public Map<Tpg, Map<String, BaseLeaseHolder.ClientLeaseInfo>> getConsumerLeases() {
+	public Map<Tpg, Map<String, ClientLeaseInfo>> getConsumerLeases() {
 		return consumerLeases;
 	}
 
-	public void setConsumerLeases(Map<Tpg, Map<String, BaseLeaseHolder.ClientLeaseInfo>> consumerLeases) {
+	public void setConsumerLeases(Map<Tpg, Map<String, ClientLeaseInfo>> consumerLeases) {
 		this.consumerLeases = consumerLeases;
 	}
 

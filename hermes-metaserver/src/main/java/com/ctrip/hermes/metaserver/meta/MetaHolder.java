@@ -126,7 +126,7 @@ public class MetaHolder implements Initializable {
 
 	private void upgradeMetaVersion(Meta meta) throws Exception {
 		MetaInfo metaInfo = ZKSerializeUtils.deserialize(
-		      m_zkClient.getClient().getData().forPath(ZKPathUtils.getMetaInfoZkPath()), MetaInfo.class);
+		      m_zkClient.get().getData().forPath(ZKPathUtils.getMetaInfoZkPath()), MetaInfo.class);
 
 		long newMetaVersion = System.currentTimeMillis() / 1000L;
 		// may be same due to different machine time

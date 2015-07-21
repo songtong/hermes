@@ -46,7 +46,7 @@ public class StartPortal extends JettyServer {
 	protected void stopServer() throws Exception {
 		super.stopServer();
 		if (m_zkServer != null) {
-			m_zkServer.stop();
+			m_zkServer.close();
 		}
 	}
 

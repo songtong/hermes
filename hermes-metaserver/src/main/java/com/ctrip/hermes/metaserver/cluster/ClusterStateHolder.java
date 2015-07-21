@@ -47,7 +47,7 @@ public class ClusterStateHolder {
 	}
 
 	public void start() throws Exception {
-		m_leaderLatch = new LeaderLatch(m_client.getClient(), m_config.getMetaServerLeaderElectionZkPath(),
+		m_leaderLatch = new LeaderLatch(m_client.get(), m_config.getMetaServerLeaderElectionZkPath(),
 		      m_config.getMetaServerName());
 
 		m_leaderLatch.addListener(new LeaderLatchListener() {

@@ -8,8 +8,8 @@ import org.apache.zookeeper.Watcher.Event.EventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.commons.BaseZkWatcher;
+import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 

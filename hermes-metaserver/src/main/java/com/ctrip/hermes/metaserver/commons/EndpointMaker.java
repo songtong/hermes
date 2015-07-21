@@ -17,7 +17,6 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventEngineContext;

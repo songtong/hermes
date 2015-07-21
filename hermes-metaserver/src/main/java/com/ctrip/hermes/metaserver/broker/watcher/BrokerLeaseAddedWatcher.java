@@ -14,8 +14,8 @@ import org.unidal.lookup.annotation.Inject;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.commons.BaseZkWatcher;
+import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 
 /**
@@ -39,7 +39,7 @@ public class BrokerLeaseAddedWatcher extends BaseZkWatcher {
 	protected void doProcess(WatchedEvent event) {
 		String path = event.getPath();
 		try {
-			CuratorFramework client = PlexusComponentLocator.lookup(ZKClient.class).getClient();
+			CuratorFramework client = PlexusComponentLocator.lookup(ZKClient.class).get();
 
 			List<String> topics = client.getChildren().usingWatcher(this).forPath(path);
 

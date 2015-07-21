@@ -10,8 +10,8 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.metaserver.commons.Assignment;
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.ClientLeaseInfo;
-import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder.LeaseOperationCallback;
+import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
+import com.ctrip.hermes.metaserver.commons.LeaseOperationCallback;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 
 /**
