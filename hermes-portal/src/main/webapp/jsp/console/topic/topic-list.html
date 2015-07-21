@@ -1,0 +1,78 @@
+<div class="panel panel-info">
+	<div class="panel-heading">
+		<label class="label label-danger"> <span ng-bind="current_topic_type" style="text-transform: uppercase;"></span> TOPICS
+		</label>
+		<a href="#/add/{{current_topic_type}}" class="btn btn-xs btn-success" style="text-align: center; float: right;">
+			<span class="glyphicon glyphicon-plus"></span>
+			新增
+		</a>
+	</div>
+	<div class="panel-body" ng-if="current_topics.length == 0">
+		<h2 style="text-align: center;">
+			<label class="label label-danger">NO TOPIC WAS FOUND</label>
+		</h2>
+	</div>
+	<table ng-if="current_topics.length > 0" class="table table-hover" st-pipe="current_topics" st-table="topic_table">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th st-sort="name">名称</th>
+				<th st-sort="codecType" width="100px" style="text-align: center;">编码</th>
+				<th st-sort="partitions" width="60px" style="text-align: center;">分区</th>
+				<th ng-if="current_topic_type == 'mysql'" st-sort="consumerRetryPolicy">消费策略</th>
+				<th ng-if="current_topic_type == 'mysql'" st-sort="ackTimeoutSeconds">ACK超时(秒)</th>
+				<th ng-if="current_topic_type == 'mysql'" style="text-align: center">状态</th>
+				<th ng-if="current_topic_type == 'kafka'" st-sort="endpointType">Endpoint</th>
+				<th ng-if="current_topic_type == 'kafka'" st-sort="schemaName">Schema名称</th>
+				<th ng-if="current_topic_type == 'kafka'" st-sort="endpointVersion">Schema版本</th>
+				<th></th>
+			</tr>
+			<tr>
+				<th></th>
+				<th><input st-search="name" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+				<th><input st-search="codecType" placeholder="Codec" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
+				<th><input st-search="partitions" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
+				<th ng-if="current_topic_type == 'mysql'"><input st-search="consumerRetryPolicy" placeholder="Policy" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+				<th ng-if="current_topic_type == 'mysql'"><input st-search="ackTimeoutSeconds" placeholder="ACK Timeout" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+				<th ng-if="current_topic_type == 'mysql'"></th>
+				<th ng-if="current_topic_type == 'kafka'"><input st-search="endpointType" placeholder="Endpoint" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+				<th ng-if="current_topic_type == 'kafka'"><input st-search="schemaName" placeholder="Name" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+				<th ng-if="current_topic_type == 'kafka'"><input st-search="schemaVersion" placeholder="Version" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody ng-if="!is_loading">
+			<tr ng-click="" ng-repeat="row in current_topics">
+				<td><span ng-bind="$index + 1"> </span></td>
+				<td><a href="/console/topic?op=detail&topic={{row.name}}" ng-bind="row.name" /></td>
+				<td align="center"><span ng-bind="row.codecType"></span></td>
+				<td align="center"><span ng-bind="row.partitions.length"></td>
+				<td ng-if="current_topic_type == 'mysql'"><span ng-bind="row.consumerRetryPolicy"></td>
+				<td ng-if="current_topic_type == 'mysql'"><span ng-bind="row.ackTimeoutSeconds"></td>
+				<td ng-if="current_topic_type == 'mysql'" align="center"><span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-ok"
+						ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.averageDelaySeconds&lt;delayLimit"></span> <span
+						tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-danger"
+						ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.averageDelaySeconds&gt;=delayLimit"></span> <span
+						tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-warn" ng-if="cur_time-row.latestProduced&gt;noProduceLimit"></span></td>
+				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.endpointType"></td>
+				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.schema.name"></td>
+				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.schema.version"></td>
+				<td style="text-align: right;" class="col-md-2">
+					<button ng-click="delete_topic(row, $index)" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove"></span> 删除</button>
+					<div ng-if="current_topic_type == 'kafka'" ng-click="set_selected(row)" data="schema_data" upload-button url="/api/schemas" tooltip="上传Schema文件" class="btn btn-xs btn-success btn-upload"
+						on-success="upload_result(row, true, response)" on-error="upload_result(row, false, response)">
+						<span class="glyphicon glyphicon-upload"></span>
+					</div> <a ng-if="current_topic_type == 'kafka'" target="_self" href="/api/schemas/{{row.schema.id}}/jar" class="btn btn-info btn-xs" tooltip="下载Jar文件">
+						<span class="glyphicon glyphicon-download"></span>
+					</a>
+					<button ng-click="sync_topic(row)" class="btn btn-primary btn-xs" tooltip="同步Topic"><span class="glyphicon glyphicon-cloud"></span></button>
+				</td>
+			</tr>
+		</tbody>
+		<tbody ng-if="is_loading">
+			<tr>
+				<td colspan="8" class="text-center">Loading ...</td>
+			</tr>
+		</tbody>
+	</table>
+</div>

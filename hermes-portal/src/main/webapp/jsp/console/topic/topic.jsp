@@ -7,156 +7,26 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.topic.Model" scope="request" />
 
 <a:layout>
-	<div ng-app="hermes-topic" ng-controller="topic-controller" ng-init="delayLimit=300;noProduceLimit=432000000">
-		<div class="panel panel-info">
-			<div class="panel-heading">Hermes 消息主题列表</div>
-			<table class="table table-hover" st-pipe="get_topics" st-table="topic_table">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th st-sort="name">Topic名称</th>
-						<th st-sort="codecType" width="100px" style="text-align: center;">编码</th>
-						<th st-sort="storageType" width="100px" style="text-align: center;">存储</th>
-						<th st-sort="partitions" width="60px" style="text-align: center;">分区</th>
-						<th st-sort="consumerRetryPolicy">消费重试策略</th>
-						<th st-sort="ackTimeoutSeconds">ACK超时(秒)</th>
-						<th st-sort="endpointType">Endpoint</th>
-						<th st-sort="averageDelaySeconds" style="text-align: center">状态</th>
-						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-topic-modal" class="btn btn-xs btn-success" style="text-align: center;"><span
-									class="glyphicon glyphicon-plus"></span> 新增</button></th>
-					</tr>
-					<tr>
-						<th></th>
-						<th><input st-search="name" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-						<th><input st-search="codecType" placeholder="Codec" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
-						<th><input st-search="storageType" placeholder="Storage" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
-						<th><input st-search="partitions" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
-						<th><input st-search="consumerRetryPolicy" placeholder="Policy" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-						<th><input st-search="ackTimeoutSeconds" placeholder="ACK Timeout" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-						<th><input st-search="endpointType" placeholder="Endpoint" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-						<th></th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody ng-if="!is_loading">
-					<tr ng-click="" ng-repeat="row in topic_rows">
-						<td><span ng-bind="$index + 1"> </span></td>
-						<td><a href="${model.webapp}/console/topic?op=detail&topic={{row.name}}" ng-bind="row.name" /></td>
-						<td align="center"><span ng-bind="row.codecType"></span></td>
-						<td align="center"><span ng-bind="row.storageType"></td>
-						<td align="center"><span ng-bind="row.partitions"></td>
-						<td><span ng-bind="row.consumerRetryPolicy"></td>
-						<td><span ng-bind="row.ackTimeoutSeconds"></td>
-						<td><span ng-bind="row.endpointType"></td>
-						<td align="center"><span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-ok"
-								ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.averageDelaySeconds&lt;delayLimit"></span> <span
-								tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-danger"
-								ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.averageDelaySeconds&gt;=delayLimit"></span> <span
-								tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-warn" ng-if="cur_time-row.latestProduced&gt;noProduceLimit"></span></td>
-						<td>
-							<button type="button" ng-click="del_topic(row.name)" class="btn btn-xs btn-danger" style="text-align: center;"><span class="glyphicon glyphicon-remove"></span> 删除</button>
-						</td>
-					</tr>
-				</tbody>
-				<tbody ng-if="is_loading">
-					<tr>
-						<td colspan="9" class="text-center">Loading ...</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<div class="modal fade" id="add-topic-modal" tabindex="-1" role="dialog" aria-labelledby="add-topic-label" aria-hidden="true">
-			<div class="modal-dialog" style="width: 50%">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h4 class="modal-title" id="add-topic-label">新增 Topic</h4>
-					</div>
-					<div class="modal-body">
-						<form class="form-horizontal">
-							<div class="form-group">
-								<label for="inputTopicName" class="col-sm-4 control-label">名称</label>
-								<div class="col-sm-6">
-									<input class="form-control" id="inputTopicName" placeholder="Topic" ng-model="new_topic.name">
-								</div>
-							</div>
-							<div class="form-group">
-								<label for="inputCodec" class="col-sm-4 control-label">编码类型</label>
-								<div class="col-sm-4">
-									<select class="form-control" id="inputCodec" ng-model="new_topic.codecType" ng-options="codec for codec in codec_types">
-									</select>
-								</div>
-							</div>
-							<div class="form-group">
-								<label for="inputStorageType" class="col-sm-4 control-label">存储类型</label>
-								<div class="col-sm-4">
-									<select class="form-control" id="inputStorageType" ng-model="new_topic.storageType" ng-options="storage for storage in storage_types">
-									</select>
-								</div>
-							</div>
-							<div class="form-group">
-								<label for="inputEndpointType" class="col-sm-4 control-label">Endpoint 类型</label>
-								<div class="col-sm-4">
-									<select class="form-control" id="inputEndpointType" ng-model="new_topic.endpointType" ng-options="endpoint for endpoint in endpoint_types">
-									</select>
-								</div>
-							</div>
-							<div class="form-group">
-								<label for="inputAckTimeout" class="col-sm-4 control-label">ACK 超时(秒)</label>
-								<div class="col-sm-4">
-									<input type="number" class="form-control" id="inputAckTimeout" placeholder="ACK Timeout" ng-model="new_topic.ackTimeoutSeconds">
-								</div>
-							</div>
-							<div class="form-group">
-								<label for="inputConsumeRetryPolicy" class="col-sm-4 control-label">消费重试策略</label>
-								<div class="col-sm-6">
-									<input class="form-control" id="inputConsumeRetryPolicy" placeholder="Consume Retry Policy" ng-model="new_topic.consumerRetryPolicy">
-								</div>
-							</div>
-							<div class="form-group">
-								<label for="inputDescription" class="col-sm-4 control-label">描述</label>
-								<div class="col-sm-6">
-									<input class="form-control" id="inputDescription" placeholder="Topic Description" ng-model="new_topic.description">
-								</div>
-							</div>
-						</form>
-					</div>
-					<div class="modal-header">
-						<button type="button" class="btn btn-xs btn-success" style="float: right; margin-left: 10px" ng-click="add_new_partition()">新增</button>
-						<button type="button" class="btn btn-xs btn-danger" style="float: right; margin-left: 10px" ng-click="del_one_partition()">减少</button>
-						<h4 class="modal-title" id="topic-partitions-label">Partitions</h4>
-					</div>
-					<div class="modal-body" style="max-height: 500px;">
-						<table class="table table-condensed table-responsive">
-							<thead>
-								<tr>
-									<th style="border: none; width: 5%">#</th>
-									<th style="border: none;">Read DS</th>
-									<th style="border: none;">Write DS</th>
-									<th style="border: none;" ng-if="new_topic.storageType=='kafka' || new_topic.endpointType=='kafka'">Endpoint</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr ng-repeat="partition in new_topic.partitions">
-									<td style="border: none; width: 5%;"><label style="line-height: 2.2" ng-bind="$index + 1"></label></td>
-									<td style="border: none;"><select name="rds" class="form-control" id="inputReadDatasource" ng-model="partition.readDatasource"
-										ng-options="ds for ds in datasource_names[new_topic.storageType]"></select></td>
-									<td style="border: none;"><select name="wds" class="form-control" id="inputWriteDatasource" ng-model="partition.writeDatasource"
-										ng-options="ds for ds in datasource_names[new_topic.storageType]"></select></td>
-									<td ng-if="new_topic.storageType=='kafka' || new_topic.endpointType=='kafka'" style="border: none;"><select name="edp" class="form-control" id="inputEndpoint"
-										ng-model="partition.endpoint" ng-options="ep for ep in endpoint_names[new_topic.endpointType]"></select></td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-danger" data-dismiss="modal">关闭</button>
-						<button type="button" class="btn btn-success" data-dismiss="modal" ng-click="add_topic(new_topic)">保存</button>
-					</div>
-				</div>
+	<div class="container fluid" ng-app="topic" ng-init="delayLimit=300;noProduceLimit=432000000;current_topic_type='mysql'">
+		<div class="row">
+			<div class="col-md-2 sidebar" ng-controller="list-controller">
+				<ul class="nav nav-sidebar">
+					<li class="active">
+						<a href="#list/mysql" data-target="#mysql" role="tab" data-toggle="tab" style="text-transform: uppercase;">mysql</a>
+					</li>
+					<li>
+						<a href="#list/kafka" data-target="#kafka" role="tab" data-toggle="tab" style="text-transform: uppercase;">kafka</a>
+					</li>
+				</ul>
 			</div>
+			<div ng-view class="col-md-10 col-md-offset-2 main"></div>
 		</div>
 	</div>
+	<script type="text/javascript" src="${model.webapp}/js/angular/angular-route.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/angular-upload.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/topic.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/topic/topic-list-controller.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/topic/mysql-add-controller.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/topic/kafka-add-controller.js"></script>
 </a:layout>
