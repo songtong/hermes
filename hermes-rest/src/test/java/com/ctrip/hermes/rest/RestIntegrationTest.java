@@ -29,15 +29,13 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.kafka.producer.KafkaMessageSender;
-import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.producer.sender.MessageSender;
 import com.ctrip.hermes.rest.service.SubscriptionRegisterService;
 import com.google.common.base.Charsets;
 import com.netflix.hystrix.Hystrix;
@@ -50,31 +48,33 @@ public class RestIntegrationTest extends JerseyTest {
 
 	private static List<Map<String, String>> receivedHeaders = new ArrayList<>();
 
-	private MockZookeeper zk;
+	private static MockZookeeper zk;
 
-	private MockKafka kafka;
+	private static MockKafka kafka;
 
-	private TestGatewayServer gatewayServer;
+	private static TestGatewayServer gatewayServer;
 
-	@Before
-	public void before() throws Exception {
+	@BeforeClass
+	public static void beforeClass() throws Exception {
 		zk = new MockZookeeper();
-		kafka = new MockKafka();
+		kafka = new MockKafka(zk);
 		gatewayServer = new TestGatewayServer();
 		gatewayServer.startServer();
 	}
 
-	@After
-	public void after() throws Exception {
-		sentContent.clear();
-		receivedContent.clear();
-		receivedHeaders.clear();
-		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
-		      Endpoint.KAFKA);
-		kafkaSender.close();
+	@AfterClass
+	public static void afterClass() throws Exception {
 		gatewayServer.stopServer();
 		kafka.stop();
 		zk.stop();
+
+	}
+
+	@After
+	public void after() {
+		sentContent.clear();
+		receivedContent.clear();
+		receivedHeaders.clear();
 		Hystrix.reset();
 	}
 
@@ -256,7 +256,7 @@ public class RestIntegrationTest extends JerseyTest {
 		Client client = ClientBuilder.newClient();
 		WebTarget gatewayWebTarget = client.target(TestGatewayServer.GATEWAY_HOST);
 
-		String topic = "kafka.SimpleTextTopic3";
+		String topic = "kafka.SimpleTextTopic4";
 		kafka.createTopic(topic);
 		String group = "OneBoxGroup";
 		String urls = getBaseUri() + "onebox/pushTimeout";

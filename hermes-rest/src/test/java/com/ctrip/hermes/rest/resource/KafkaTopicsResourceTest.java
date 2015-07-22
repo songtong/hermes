@@ -33,7 +33,7 @@ public class KafkaTopicsResourceTest {
 	@Before
 	public void before() throws Exception {
 		zk = new MockZookeeper();
-		kafka = new MockKafka();
+		kafka = new MockKafka(zk);
 		server = new TestGatewayServer();
 		server.startServer();
 	}
