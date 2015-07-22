@@ -32,6 +32,7 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.service.SchemaService;
@@ -81,6 +82,9 @@ public class SchemaResource {
 		if (topic == null) {
 			throw new RestException("Topic not found: " + topicId, Status.NOT_FOUND);
 		}
+		if (Codec.AVRO.equals(topic.getCodecType()) && !fileHeader.getFileName().endsWith(".avsc")) {
+			throw new RestException("Schema file name must end with .avsc", Status.BAD_REQUEST);
+		}
 
 		byte[] fileContent = null;
 		if (fileInputStream != null) {
@@ -98,7 +102,7 @@ public class SchemaResource {
 
 		try {
 			int avroid = -1;
-			//If the avro schema has been created, return CONFLICT
+			// If the avro schema has been created, return CONFLICT
 			if ("avro".equalsIgnoreCase(schemaView.getType())) {
 				avroid = schemaService.checkAvroSchema(topic.getName() + "-value", fileContent);
 				if (schemaService.isAvroSchemaExist(topic, avroid)) {
@@ -117,7 +121,7 @@ public class SchemaResource {
 					throw new RestException(e1, Status.INTERNAL_SERVER_ERROR);
 				}
 			}
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+			throw new RestException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.CREATED).entity(schemaView).build();
 	}

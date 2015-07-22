@@ -27,6 +27,14 @@ public class PortalConfig {
 		return m_env.getGlobalConfig().getProperty("portal.kibana.url");
 	}
 
+	public String getSyncHost() {
+		String host = m_env.getGlobalConfig().getProperty("portal.sync.host");
+		if (StringUtils.isBlank(host) && Env.LOCAL.equals(m_env.getEnv())) {
+			return "127.0.0.1";
+		}
+		return host;
+	}
+
 	public List<Pair<String, Integer>> getElasticClusterNodes() {
 		String defaultHost = "localhost";
 		Integer defaultPort = 9300;

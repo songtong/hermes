@@ -1,6 +1,7 @@
 package com.ctrip.hermes.portal.resource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -58,8 +59,9 @@ public class PortalMetaResource {
 
 	@GET
 	@Path("storages")
-	public Response getStorages() {
-		List<Storage> storages = new ArrayList<Storage>(metaService.getStorages().values());
+	public Response getStorages(@QueryParam("type") String type) {
+		List<Storage> storages = StringUtils.isBlank(type) ? new ArrayList<Storage>(metaService.getStorages().values())
+		      : Arrays.asList(metaService.getStorages().get(type));
 		Collections.sort(storages, new Comparator<Storage>() {
 			@Override
 			public int compare(Storage o1, Storage o2) {
@@ -240,7 +242,7 @@ public class PortalMetaResource {
 
 		if (metaService.getDatasources().containsKey(datasource.getId())) {
 			throw new RestException(String.format("Datasource id: %s, type: %s, already exists.", datasource.getId(),
-					  dsType), Status.CONFLICT);
+			      dsType), Status.CONFLICT);
 		}
 
 		try {

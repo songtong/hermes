@@ -15,7 +15,8 @@
 <meta name="description" content="Portal">
 <link href="${model.webapp}/css/bootstrap.min.css" type="text/css" rel="stylesheet">
 <link href="${model.webapp}/css/portal-common.css" type="text/css" rel="stylesheet">
-<script src="${model.webapp}/js/jquery-1.11.3.min.js" type="text/javascript"></script>
+<link href="${model.webapp}/css/btnUpload.min.css" type="text/css" rel="stylesheet">
+<script src="${model.webapp}/js/jquery-2.1.4.min.js" type="text/javascript"></script>
 <script src="${model.webapp}/js/bootstrap.min.js" type="text/javascript"></script>
 <script src="${model.webapp}/js/bootstrap3-typeahead.min.js" type="text/javascript"></script>
 <script src="${model.webapp}/js/portal-common.js" type="text/javascript"></script>
@@ -45,6 +46,11 @@
 			<div class="collapse navbar-collapse">
 				<ul class="nav navbar-nav">
 					<c:forEach var="page" items="${navBar.visiblePages}">
+						<c:if test="${page.name == 'topic' }">
+							<li ${model.page.name == page.name ? 'class="active"' : ''}>
+								<a href="${model.webapp}/${page.moduleName}/${page.path}#/list/mysql">${page.title}</a>
+							</li>
+						</c:if>
 						<c:if test="${page.name == 'dashboard' }">
 							<li ${model.page.name == page.name ? 'class="active dropdown"' : 'class="dropdown"'}>
 								<a href="http://baidu.com" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">${page.title}
@@ -63,7 +69,7 @@
 								</ul>
 							</li>
 						</c:if>
-						<c:if test="${page.standalone and page.name != 'dashboard'}">
+						<c:if test="${page.standalone and page.name != 'dashboard' and page.name != 'topic'}">
 							<li ${model.page.name == page.name ? 'class="active"' : ''}>
 								<a href="${model.webapp}/${page.moduleName}/${page.path}">${page.title}</a>
 							</li>

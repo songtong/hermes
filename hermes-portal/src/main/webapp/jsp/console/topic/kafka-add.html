@@ -1,0 +1,84 @@
+<div class="row">
+	<!-- basic information -->
+	<div class="col-md-6">
+		<div class="panel panel-info row">
+			<div class="panel-heading">
+				<label class="label label-info">基本信息</label>
+				<button class="btn btn-xs btn-success" style="float: right;" aria-hidden="true" ng-click="save_topic()"><span class="glyphicon glyphicon-saved"></span> 提交</button>
+			</div>
+			<div class="panel-body">
+				<div class="form-horizontal">
+					<div class="form-group">
+						<label for="inputTopicName" class="col-md-4 control-label">名称</label>
+						<div class="col-md-8">
+							<input class="form-control" id="inputTopicName" placeholder="Topic" ng-model="new_topic.name">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputEndpointType" class="col-sm-4 control-label">Endpoint 类型</label>
+						<div class="col-sm-8">
+							<select class="form-control" id="inputEndpointType" ng-model="new_topic.endpointType" ng-options="endpoint for endpoint in endpoint_types">
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputDescription" class="col-sm-4 control-label">描述</label>
+						<div class="col-sm-8">
+							<input class="form-control" id="inputDescription" placeholder="Topic Description" ng-model="new_topic.description">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="panel panel-info row">
+			<div class="panel-heading">
+				<label class="label label-info">Kafka 属性</label>
+				<button class="btn btn-xs btn-success" style="float: right;" aria-hidden="true" ng-click="add_property()"><span class="glyphicon glyphicon-plus"></span> 增加属性</button>
+			</div>
+			<div class="panel-body">
+				<h2 ng-if="new_topic.properties.length == 0" style="text-align: center;">
+					<label class="label label-warning">NO PROPERTY WAS DEFINED</label>
+				</h2>
+				<table ng-if="new_topic.properties.length > 0">
+					<tr ng-repeat="property in new_topic.properties">
+						<td class="col-md-4" style="padding: 5px"><select class="form-control col-md-4" id="inputCodec" ng-model="property.name" ng-options="prop_name for prop_name in kafka_property_names">
+						</select></td>
+						<td class="col-md-8" style="padding: 5px"><input class="form-control col-md-8" placeholder="Property Value" ng-model="property.value"></td>
+						<td>
+							<button class="btn btn-danger btn-xs" ng-click="delete_property($index)"><span class="glyphicon glyphicon-remove"></span> 删除</button>
+						</td>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- partition information -->
+	<div class="col-md-6">
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<label class="label label-info">Partition 信息</label>
+				<button ng-click="add_partition()" class="btn btn-xs btn-success" style="float: right;"><span class="glyphicon glyphicon-plus"></span> 增加 Partition</button>
+			</div>
+			<div class="panel-body" style="margin-bottom: 3px">
+				<table class="table table-condensed table-responsive">
+					<thead>
+						<tr>
+							<th style="border: none; width: 5%"></th>
+							<th style="border: none;">Datasource / 读</th>
+							<th style="border: none;">Datasource / 写</th>
+							<th style="border: none;"></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="partition in new_topic.partitions">
+							<td style="border: none; width: 5%;"><label style="line-height: 2.2" ng-bind="$index + 1"></label></td>
+							<td style="border: none;"><select ng-model="partition.readDatasource" ng-options="ds for ds in current_datasource_names" class="form-control"></select></td>
+							<td style="border: none;"><select ng-model="partition.writeDatasource" ng-options="ds for ds in current_datasource_names" class="form-control"></select></td>
+							<td style="border: none; line-height: 2.2"><button ng-click="delete_partition($index)" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove"></span> 删除</button></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
