@@ -5,47 +5,28 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
-import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.curator.test.TestingServer;
-import org.apache.curator.utils.EnsurePath;
-import org.apache.curator.utils.PathUtils;
-import org.apache.curator.utils.ZKPaths;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.data.Stat;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.TypeReference;
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.metaserver.ZKSuppportTestCase;
 import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaserver.commons.LeaseOperationCallback;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
-import com.ctrip.hermes.metaservice.zk.ZKConfig;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 
@@ -54,44 +35,15 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
  *
  */
 @RunWith(MockitoJUnitRunner.class)
-public class BrokerLeaseHolderTest extends ComponentTestCase {
+public class BrokerLeaseHolderTest extends ZKSuppportTestCase {
+
+	private BrokerLeaseHolder m_leaseHolder;
 
 	public static class TestBrokerLeaaseHolder extends BrokerLeaseHolder {
 		@Override
 		protected void startHouseKeeper() {
 		}
 	}
-
-	private static TestingServer m_zkServer;
-
-	private static final int ZK_PORT = 2222;
-
-	@AfterClass
-	public static void afterClass() throws Exception {
-		stopZkServer();
-	}
-
-	@BeforeClass
-	public static void beforeClass() throws Exception {
-		startZkServer();
-	}
-
-	private static void startZkServer() throws Exception {
-		m_zkServer = new TestingServer(ZK_PORT);
-	}
-
-	private static void stopZkServer() throws Exception {
-		if (m_zkServer != null) {
-			m_zkServer.close();
-		}
-	}
-
-	private CuratorFramework m_curator;
-
-	@Mock
-	private ClientEnvironment m_env;
-
-	private BrokerLeaseHolder m_leaseHolder;
 
 	private void addLeasesToZk(String topic, int partition, List<Pair<String, ClientLeaseInfo>> data) throws Exception {
 		String path = ZKPathUtils.getBrokerLeaseZkPath(topic, partition);
@@ -135,16 +87,7 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 		}
 	}
 
-	private void clearZk() throws Exception {
-		deleteChildren("/", true);
-	}
-
 	private void configureBrokerLeaseHolder() throws Exception {
-		Properties globalConf = new Properties();
-		globalConf.put("meta.zk.connectionString", getZkConnectionString());
-		when(m_env.getGlobalConfig()).thenReturn(globalConf);
-		lookup(ZKConfig.class).setEnv(m_env);
-
 		defineComponent(BrokerLeaseHolder.class, TestBrokerLeaaseHolder.class)//
 		      .req(ZKClient.class)//
 		      .req(ZookeeperService.class)//
@@ -153,63 +96,8 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 		m_leaseHolder = lookup(BrokerLeaseHolder.class);
 	}
 
-	private void configureCurator() throws Exception {
-
-		Builder builder = CuratorFrameworkFactory.builder();
-
-		builder.connectionTimeoutMs(50);
-		builder.connectString(getZkConnectionString());
-		builder.maxCloseWaitMs(50);
-		builder.namespace("hermes");
-		builder.retryPolicy(new ExponentialBackoffRetry(5, 3));
-		builder.sessionTimeoutMs(50);
-
-		m_curator = builder.build();
-		m_curator.start();
-		try {
-			m_curator.blockUntilConnected();
-		} catch (InterruptedException e) {
-			throw new InitializationException(e.getMessage(), e);
-		}
-
-	}
-
-	private void deleteChildren(String path, boolean deleteSelf) throws Exception {
-		PathUtils.validatePath(path);
-
-		CuratorFramework client = m_curator;
-		Stat stat = client.checkExists().forPath(path);
-		if (stat != null) {
-			List<String> children = client.getChildren().forPath(path);
-			for (String child : children) {
-				String fullPath = ZKPaths.makePath(path, child);
-				deleteChildren(fullPath, true);
-			}
-
-			if (deleteSelf) {
-				try {
-					client.delete().forPath(path);
-				} catch (KeeperException.NotEmptyException e) {
-					// someone has created a new child since we checked ... delete again.
-					deleteChildren(path, true);
-				} catch (KeeperException.NoNodeException e) {
-					// ignore... someone else has deleted the node it since we checked
-				}
-
-			}
-		}
-	}
-
-	private void ensurePath(String path) throws Exception {
-		EnsurePath ensurePath = m_curator.newNamespaceAwareEnsurePath(path);
-		ensurePath.ensure(m_curator.getZookeeperClient());
-	}
-
-	private String getZkConnectionString() {
-		return "127.0.0.1:" + ZK_PORT;
-	}
-
-	private void initZkData() throws Exception {
+	@Override
+	protected void initZkData() throws Exception {
 		ensurePath(ZKPathUtils.getBrokerLeaseRootZkPath());
 	}
 
@@ -220,19 +108,8 @@ public class BrokerLeaseHolderTest extends ComponentTestCase {
 	@Before
 	@Override
 	public void setUp() throws Exception {
-		configureCurator();
-		initZkData();
-
 		super.setUp();
-
 		configureBrokerLeaseHolder();
-	}
-
-	@After
-	@Override
-	public void tearDown() throws Exception {
-		super.tearDown();
-		clearZk();
 	}
 
 	@Test

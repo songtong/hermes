@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
-import com.ctrip.hermes.metaserver.commons.BaseZkWatcher;
+import com.ctrip.hermes.metaserver.commons.BaseZKWatcher;
 import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 
@@ -17,7 +17,7 @@ import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class BrokerLeaseChangedWatcher extends BaseZkWatcher {
+public class BrokerLeaseChangedWatcher extends BaseZKWatcher {
 
 	private final static Logger log = LoggerFactory.getLogger(BrokerLeaseChangedWatcher.class);
 

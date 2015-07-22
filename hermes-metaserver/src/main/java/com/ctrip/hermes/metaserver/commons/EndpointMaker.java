@@ -45,7 +45,7 @@ public class EndpointMaker implements Initializable {
 		for (Map.Entry<String, Assignment<Integer>> topicAssignment : brokerAssignments.entrySet()) {
 
 			String topic = topicAssignment.getKey();
-			Map<Integer, Map<String, ClientContext>> assignment = topicAssignment.getValue().getAssignment();
+			Map<Integer, Map<String, ClientContext>> assignment = topicAssignment.getValue().getAssignments();
 
 			if (assignment != null && !assignment.isEmpty()) {
 
