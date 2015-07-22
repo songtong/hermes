@@ -14,7 +14,7 @@ import org.unidal.lookup.annotation.Inject;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
-import com.ctrip.hermes.metaserver.commons.BaseZkWatcher;
+import com.ctrip.hermes.metaserver.commons.BaseZKWatcher;
 import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 
@@ -22,7 +22,7 @@ import com.ctrip.hermes.metaservice.zk.ZKClient;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class BrokerLeaseAddedWatcher extends BaseZkWatcher {
+public class BrokerLeaseAddedWatcher extends BaseZKWatcher {
 	private final static Logger log = LoggerFactory.getLogger(BrokerLeaseAddedWatcher.class);
 
 	@Inject

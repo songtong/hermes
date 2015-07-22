@@ -28,7 +28,7 @@ public class Assignment<Key> {
 		m_assignment.get(key).putAll(clients);
 	}
 
-	public Map<Key, Map<String, ClientContext>> getAssignment() {
+	public Map<Key, Map<String, ClientContext>> getAssignments() {
 		return m_assignment;
 	}
 

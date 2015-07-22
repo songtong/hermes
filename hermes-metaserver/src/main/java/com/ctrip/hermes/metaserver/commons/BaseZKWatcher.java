@@ -13,13 +13,13 @@ import org.apache.zookeeper.Watcher.Event.EventType;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class BaseZkWatcher implements Watcher {
+public abstract class BaseZKWatcher implements Watcher {
 
 	protected ExecutorService m_executor;
 
 	private Set<EventType> m_acceptedEventTypes = new HashSet<>();
 
-	protected BaseZkWatcher(ExecutorService executor, EventType... acceptedEventTypes) {
+	protected BaseZKWatcher(ExecutorService executor, EventType... acceptedEventTypes) {
 		m_executor = executor;
 		if (acceptedEventTypes != null && acceptedEventTypes.length != 0) {
 			m_acceptedEventTypes.addAll(Arrays.asList(acceptedEventTypes));

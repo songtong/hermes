@@ -126,7 +126,7 @@ public class BrokerAssignmentHolder {
 			for (Map.Entry<String, Assignment<Integer>> entry : assignments.entrySet()) {
 				String topic = entry.getKey();
 				Assignment<Integer> topicAssignment = entry.getValue();
-				for (Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment : topicAssignment.getAssignment()
+				for (Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment : topicAssignment.getAssignments()
 				      .entrySet()) {
 					String path = ZKPathUtils.getBrokerAssignmentZkPath(topic, partitionAssignment.getKey());
 					try {

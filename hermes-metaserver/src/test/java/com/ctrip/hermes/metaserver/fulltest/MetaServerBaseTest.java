@@ -297,7 +297,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 	private List<Integer> getRunningBrokers(Map<String, Assignment<Integer>> brokerAssignments) {
 		Set<Integer> ports = new HashSet<>();
 		for (Assignment<Integer> assignment : brokerAssignments.values()) {
-			for (Map<String, ClientContext> map : assignment.getAssignment().values()) {
+			for (Map<String, ClientContext> map : assignment.getAssignments().values()) {
 				for (Object o : map.values()) {
 					Map clientContext = JSON.parseObject(JSON.toJSONString(o), Map.class);
 					int port = (int) clientContext.get("port");
@@ -315,7 +315,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		for (Integer port : metaServers.keySet()) {
 			MetaStatusStatusResponse re = BaseRestClient.getMetaStatusMetaServerAssignment(port);
 			assertEquals("Topics.size() should be equal to MetaServer Assignments", topics.size(), re
-			      .getMetaServerAssignments().getAssignment().size());
+			      .getMetaServerAssignments().getAssignments().size());
 
 			// ArrayList<Integer> runningMetaServers = getRunningMetaServers(re.getMetaServerAssignments().getAssignment());
 			// assertListEqual(new ArrayList<>(metaServers.keySet()), runningMetaServers);
