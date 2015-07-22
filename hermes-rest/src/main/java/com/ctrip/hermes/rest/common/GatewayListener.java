@@ -18,18 +18,6 @@ public class GatewayListener implements ServletContextListener {
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
-		File catConfigFile = new File("/opt/ctrip/data/cat/client.xml");
-		if (!catConfigFile.isFile() || !catConfigFile.canRead()) {
-			try {
-				throw new IllegalStateException(
-						  String.format("Cat config file %s not found", catConfigFile.getCanonicalPath()));
-			} catch (IOException e) {
-				// todo: handle exception
-				e.printStackTrace();
-			}
-		}
-		Cat.initialize(catConfigFile);
-
 		subsribeRegistry.start();
 	}
 
