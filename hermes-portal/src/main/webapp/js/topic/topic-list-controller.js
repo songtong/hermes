@@ -1,8 +1,9 @@
 topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParams', 'TopicService', 'upload',
 		function($scope, $resource, $routeParams, TopicService, upload) {
+			$scope.routeParams = $routeParams;
 			$scope.cur_time = new Date();
-			$scope.current_topic_type = $routeParams['type'];
-			TopicService.fetch_topics($scope.current_topic_type);
+
+			TopicService.fetch_topics($scope.routeParams['type']);
 
 			$scope.$watch(TopicService.get_topics, function() {
 				$scope.current_topics = TopicService.get_topics();
