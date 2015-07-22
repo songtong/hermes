@@ -70,13 +70,13 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 						show_op_info.show("发布Topic到Kafka成功!", true);
 						$window.history.back();
 					}, function(response) {
-						show_op_info.show("发布Topic到Kafka失败, 正在删除脏数据..." + response.data, false);
+						console.log(response.data);
 						topic_resource.remove({
 							name : new_topic.name
 						}, function(success_resp) {
-							show_op_info.show("删除脏数据成功!", true);
+							show_op_info.show("发布Topic到Kafka失败, 删除脏数据成功!", false);
 						}, function(error_resp) {
-							show_op_info.show("删除脏数据失败! " + error_resp.data, false);
+							show_op_info.show("发布Topic到Kafka失败, 删除脏数据失败! " + error_resp.data, false);
 						});
 					});
 				} else {
@@ -115,9 +115,9 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 			topic_resource.sync_topic({
 				name : topic_name
 			}, function(success_resp) {
-				show_op_info("同步" + topic_name + "成功!", true);
+				show_op_info.show("同步" + topic_name + "成功!", true);
 			}, function(error_resp) {
-				show_op_info("同步失败: " + error_resp.data, false);
+				show_op_info.show("同步失败: " + error_resp.data, false);
 			});
 		}
 	}

@@ -29,7 +29,7 @@ public class PortalConfig {
 
 	public String getSyncHost() {
 		String host = m_env.getGlobalConfig().getProperty("portal.sync.host");
-		if (Env.LOCAL.equals(m_env.getEnv()) || StringUtils.isBlank(host)) {
+		if (StringUtils.isBlank(host) && Env.LOCAL.equals(m_env.getEnv())) {
 			return "127.0.0.1";
 		}
 		return host;

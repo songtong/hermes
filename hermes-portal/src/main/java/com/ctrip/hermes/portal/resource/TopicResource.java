@@ -19,17 +19,19 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
-import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -62,9 +64,7 @@ import com.ctrip.hermes.producer.api.Producer;
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class TopicResource {
-	public static final Logger log = LoggerFactory.getLogger(TopicResource.class);
-
-	private static final Logger logger = LoggerFactory.getLogger(TopicResource.class);
+	private static final Logger log = LoggerFactory.getLogger(TopicResource.class);
 
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
@@ -103,9 +103,9 @@ public class TopicResource {
 
 	@POST
 	public Response createTopic(String content) {
-		logger.info("Creating topic with payload {}.", content);
+		log.info("Creating topic with payload {}.", content);
 		if (StringUtils.isEmpty(content)) {
-			logger.error("Payload content is empty, create topic failed.");
+			log.error("Payload content is empty, create topic failed.");
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
 
@@ -113,7 +113,7 @@ public class TopicResource {
 		try {
 			result = validateTopicView(JSON.parseObject(content, TopicView.class));
 		} catch (Exception e) {
-			logger.error("Can not parse payload: {}, create topic failed.", content);
+			log.error("Can not parse payload: {}, create topic failed.", content);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 		if (!result.getKey()) {
@@ -130,7 +130,7 @@ public class TopicResource {
 		try {
 			topicView = new TopicView(topicService.createTopic(topic));
 		} catch (Exception e) {
-			logger.error("Create topic failed: {}.", content, e);
+			log.error("Create topic failed: {}.", content, e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.CREATED).entity(topicView).build();
@@ -155,18 +155,21 @@ public class TopicResource {
 			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
 		}
 		WebTarget target = ClientBuilder.newClient().target("http://" + config.getSyncHost());
+		boolean exist = false;
 		try {
-			if (isTopicExistOnTarget(topicName, target)) {
-				throw new RestException(String.format("Topic %s is already exists.", topicName), Status.CONFLICT);
-			}
+			exist = isTopicExistOnTarget(topicName, target);
 		} catch (Exception e) {
-			throw new RestException("Can not decide topic status: %s" + e.getMessage(), Status.NOT_ACCEPTABLE);
+			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
+			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
-		syncTopicToTarget(new TopicView(topic), target);
+		if (exist) {
+			throw new RestException(String.format("Topic %s is already exists.", topicName), Status.CONFLICT);
+		}
+		syncTopicToTarget(getTopic(topicName), target);
 		return Response.status(Status.OK).build();
 	}
 
-	public void syncTopicToTarget(TopicView topic, WebTarget target) {
+	private void syncTopicToTarget(TopicView topic, WebTarget target) {
 		Set<String> missedDatasources = getMissedDatasourceOnTarget(topic, target);
 		if (missedDatasources.size() == 0) {
 			switch (topic.getStorageType()) {
@@ -209,9 +212,10 @@ public class TopicResource {
 			request = target.path(String.format("/api/topics/%s/deploy", topic.getName())).request();
 			Response response = request.post(null);
 			if (response.getStatus() != Status.OK.getStatusCode()) {
-				Log.warn("Deploy topic {} failed. Clean it from remote meta.", topic.getName());
+				String info = response.readEntity(String.class);
+				log.warn("Deploy topic {} failed [{}]. Clean it from remote meta.", topic.getName(), info);
 				deleteTopicMetaOnTarget(topic, target);
-				throw new RestException("Deploy kafka topic failed.", Status.INTERNAL_SERVER_ERROR);
+				throw new RestException("Deploy kafka topic failed: " + info, Status.INTERNAL_SERVER_ERROR);
 			}
 
 			// handle schemas
@@ -219,17 +223,21 @@ public class TopicResource {
 			if (tmp == null) {
 				throw new RestException("Deploy schema failed, can not write tmp file.", Status.INTERNAL_SERVER_ERROR);
 			}
+			target.register(MultiPartFeature.class);
 			request = target.path("/api/schemas").request();
 			FormDataMultiPart form = new FormDataMultiPart();
 			form.bodyPart(new FileDataBodyPart("file", tmp, MediaType.MULTIPART_FORM_DATA_TYPE));
 			form.field("schema", JSON.toJSONString(topic.getSchema()));
 			form.field("topicId", String.valueOf(view.getId()));
 			response = request.post(Entity.entity(form, MediaType.MULTIPART_FORM_DATA_TYPE));
-			if (response.getStatus() != Status.OK.getStatusCode()) {
+			if (response.getStatus() != Status.CREATED.getStatusCode()) {
 				log.warn("Deploy schema response: " + response);
 				throw new RestException("Deploy schema failed.");
 			}
+		} catch (RestException e) {
+			throw e;
 		} catch (Exception e) {
+			log.warn("Sync kafka topic failed.", e);
 			throw new RestException(String.format("Sync kafka topic: %s failed: %s", topic.getName(), e.getMessage()),
 			      Status.NOT_ACCEPTABLE);
 		}
@@ -237,7 +245,7 @@ public class TopicResource {
 
 	private File writeTempPreview(TopicView topic) {
 		try {
-			File f = new File("/tmp", topic.getSchemaId() + ".avsc");
+			File f = new File("/tmp", topic.getSchema().getName() + ".avsc");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 			bw.write(topic.getSchema().getSchemaPreview());
 			bw.flush();
@@ -263,11 +271,22 @@ public class TopicResource {
 		}
 		Set<String> set = new HashSet<String>();
 		Builder request = target.path("/api/meta/storages").queryParam("type", topic.getStorageType()).request();
-		Storage storage = request.get(Storage.class);
-		for (Datasource ds : storage.getDatasources()) {
-			if (iDses.contains(ds.getId())) {
-				set.add(ds.getId());
+		try {
+			List<Storage> storages = request.get(new GenericType<List<Storage>>() {
+			});
+			for (Storage storage : storages) {
+				if (storage.getType().equals(topic.getStorageType())) {
+					for (Datasource ds : storage.getDatasources()) {
+						if (iDses.contains(ds.getId())) {
+							set.add(ds.getId());
+						}
+					}
+				}
 			}
+		} catch (Exception e) {
+			throw new RestException(
+			      "Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
+			      Status.INTERNAL_SERVER_ERROR);
 		}
 		Set<String> ret = new HashSet<String>();
 		for (String ds : iDses) {
@@ -280,16 +299,23 @@ public class TopicResource {
 
 	private boolean isTopicExistOnTarget(String topicName, WebTarget target) {
 		Builder request = target.path("/api/topics/" + topicName).request();
-		TopicView topicView = request.get(TopicView.class);
-		if (topicView.getName().equals(topicName)) {
-			return true;
+		try {
+			TopicView topicView = request.get(TopicView.class);
+			if (topicView.getName().equals(topicName)) {
+				return true;
+			}
+		} catch (WebApplicationException e) {
+			if (e.getResponse().getStatus() == Status.NOT_FOUND.getStatusCode()) {
+				return false;
+			}
+			throw e;
 		}
 		return false;
 	}
 
 	@GET
 	public List<TopicView> findTopics(@QueryParam("pattern") String pattern, @QueryParam("type") String type) {
-		logger.debug("find topics, pattern {}", pattern);
+		log.debug("find topics, pattern {}", pattern);
 		if (StringUtils.isEmpty(pattern)) {
 			pattern = ".*";
 		}
@@ -320,7 +346,7 @@ public class TopicResource {
 				}
 			}
 		} catch (Exception e) {
-			logger.warn("find topics failed", e);
+			log.warn("find topics failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return returnResult;
@@ -342,7 +368,7 @@ public class TopicResource {
 	@GET
 	@Path("{name}")
 	public TopicView getTopic(@PathParam("name") String name) {
-		logger.debug("get topic {}", name);
+		log.debug("get topic {}", name);
 		Topic topic = topicService.findTopicByName(name);
 		if (topic == null) {
 			throw new RestException("Topic not found: " + name, Status.NOT_FOUND);
@@ -375,13 +401,13 @@ public class TopicResource {
 	@GET
 	@Path("{name}/schemas")
 	public List<SchemaView> getSchemas(@PathParam("name") String name) {
-		logger.debug("get schemas, name: {}", name);
+		log.debug("get schemas, name: {}", name);
 		List<SchemaView> returnResult = null;
 		TopicView topic = getTopic(name);
 		try {
 			returnResult = schemaService.listSchemaView(topic.toMetaTopic());
 		} catch (DalException e) {
-			logger.warn("get schemas failed, name {}", name);
+			log.warn("get schemas failed, name {}", name);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return returnResult;
@@ -390,7 +416,7 @@ public class TopicResource {
 	@PUT
 	@Path("{name}")
 	public Response updateTopic(@PathParam("name") String name, String content) {
-		logger.debug("update {} content {}", name, content);
+		log.debug("update {} content {}", name, content);
 		if (StringUtils.isEmpty(content)) {
 			throw new RestException("HTTP PUT body is empty", Status.BAD_REQUEST);
 		}
@@ -399,7 +425,7 @@ public class TopicResource {
 			topicView = JSON.parseObject(content, TopicView.class);
 			topicView.setName(name);
 		} catch (Exception e) {
-			logger.warn("parse topic failed, content {}", content);
+			log.warn("parse topic failed, content {}", content);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
@@ -412,7 +438,7 @@ public class TopicResource {
 			topic = topicService.updateTopic(topic);
 			topicView = new TopicView(topic);
 		} catch (Exception e) {
-			logger.warn("update topic failed", e);
+			log.warn("update topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(topicView).build();
@@ -421,11 +447,11 @@ public class TopicResource {
 	@DELETE
 	@Path("{name}")
 	public Response deleteTopic(@PathParam("name") String name) {
-		logger.debug("delete {}", name);
+		log.debug("delete {}", name);
 		try {
 			topicService.deleteTopic(name);
 		} catch (Exception e) {
-			logger.warn("delete topic failed", e);
+			log.warn("delete topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -434,7 +460,7 @@ public class TopicResource {
 	@POST
 	@Path("{name}/deploy")
 	public Response deployTopic(@PathParam("name") String name) {
-		logger.debug("deploy {}", name);
+		log.debug("deploy {}", name);
 		TopicView topicView = getTopic(name);
 		try {
 			Topic topic = topicView.toMetaTopic();
@@ -442,7 +468,7 @@ public class TopicResource {
 				topicService.createTopicInKafka(topic);
 			}
 		} catch (Exception e) {
-			logger.warn("deploy topic failed", e);
+			log.warn("deploy topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -451,7 +477,7 @@ public class TopicResource {
 	@POST
 	@Path("{name}/undeploy")
 	public Response undeployTopic(@PathParam("name") String name) {
-		logger.debug("undeploy {}", name);
+		log.debug("undeploy {}", name);
 		TopicView topicView = getTopic(name);
 		try {
 			Topic topic = topicView.toMetaTopic();
@@ -459,7 +485,7 @@ public class TopicResource {
 				topicService.deleteTopicInKafka(topic);
 			}
 		} catch (Exception e) {
-			logger.warn("undeploy topic failed", e);
+			log.warn("undeploy topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -468,7 +494,7 @@ public class TopicResource {
 	@POST
 	@Path("{name}/config")
 	public Response configTopic(@PathParam("name") String name) {
-		logger.debug("config {}", name);
+		log.debug("config {}", name);
 		TopicView topicView = getTopic(name);
 		try {
 			Topic topic = topicView.toMetaTopic();
@@ -476,7 +502,7 @@ public class TopicResource {
 				topicService.configTopicInKafka(topic);
 			}
 		} catch (Exception e) {
-			logger.warn("config topic failed", e);
+			log.warn("config topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();

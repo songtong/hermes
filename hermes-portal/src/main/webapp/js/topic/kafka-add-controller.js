@@ -11,7 +11,7 @@ topic_module.controller('kafka-add-controller', [ '$scope', '$resource', 'TopicS
 	$scope.current_datasource_names = [];
 	$scope.kafka_property_names = [ 'partitions', 'replication-factor', 'retention.bytes', 'retention.ms' ]
 	$scope.endpoint_types = [ 'kafka', 'broker' ];
-	
+
 	var meta_resource = $resource('/api/meta/storages', {}, {
 		'get_storage' : {
 			method : 'GET',
@@ -37,14 +37,14 @@ topic_module.controller('kafka-add-controller', [ '$scope', '$resource', 'TopicS
 			$scope.current_datasource_names.push(data[0].datasources[i].id);
 		}
 		for (var i = 0; i < $scope.new_topic.partitions.length; i++) {
-			$scope.new_topic.partitions[i].readDatasource = $scope.current_datasource_names[0];
+			$scope.new_topic.partitions[i].readDatasource = $scope.current_datasource_names[1];
 			$scope.new_topic.partitions[i].writeDatasource = $scope.current_datasource_names[0];
 		}
 	});
 
 	$scope.add_partition = function() {
 		var new_partition = {};
-		new_partition.readDatasource = $scope.current_datasource_names[0];
+		new_partition.readDatasource = $scope.current_datasource_names[1];
 		new_partition.writeDatasource = $scope.current_datasource_names[0];
 		$scope.new_topic.partitions.push(new_partition);
 	};
