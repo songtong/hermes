@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
@@ -27,26 +27,26 @@ import com.ctrip.hermes.producer.sender.MessageSender;
 
 public class OneBoxTest {
 
-	private MockZookeeper zk;
+	private static MockZookeeper zk;
 
-	private MockKafka kafka;
+	private static MockKafkaCluster kafkaCluster;
 
-	@Before
-	public void before() {
+	@BeforeClass
+	public static void before() {
 		zk = new MockZookeeper();
-		kafka = new MockKafka();
+		kafkaCluster = new MockKafkaCluster(zk, 3);
 	}
 
-	@After
-	public void after() {
-		kafka.stop();
+	@AfterClass
+	public static void after() {
+		kafkaCluster.stop();
 		zk.stop();
 	}
 
 	@Test
 	public void simpleTextOneProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
 		String topic = "kafka.SimpleTextTopic1";
-		kafka.createTopic(topic);
+		kafkaCluster.createTopic(topic, 3, 1);
 		String group = UUID.randomUUID().toString();
 
 		List<String> expected = new ArrayList<String>();
@@ -110,7 +110,7 @@ public class OneBoxTest {
 	public void simpleTextOneProducerMultipleConsumerInOneGroupTest() throws IOException, InterruptedException,
 	      ExecutionException {
 		String topic = "kafka.SimpleTextTopic2";
-		kafka.createTopic(topic);
+		kafkaCluster.createTopic(topic, 3, 1);
 		String group = UUID.randomUUID().toString();
 
 		List<String> expected = new ArrayList<String>();
@@ -180,7 +180,7 @@ public class OneBoxTest {
 	public void simpleTextOneProducerMultipleConsumerInMultipleGroupTest() throws IOException, InterruptedException,
 	      ExecutionException {
 		String topic = "kafka.SimpleTextTopic3";
-		kafka.createTopic(topic);
+		kafkaCluster.createTopic(topic, 3, 1);
 		String group1 = UUID.randomUUID().toString();
 		String group2 = UUID.randomUUID().toString();
 
@@ -253,7 +253,7 @@ public class OneBoxTest {
 	@Test
 	public void simpleTextMultipleProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
 		final String topic = "kafka.SimpleTextTopic4";
-		kafka.createTopic(topic);
+		kafkaCluster.createTopic(topic, 3, 1);
 		final String group = UUID.randomUUID().toString();
 
 		final List<String> expected = new ArrayList<String>();

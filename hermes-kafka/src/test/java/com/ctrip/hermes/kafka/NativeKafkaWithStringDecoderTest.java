@@ -29,28 +29,23 @@ import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 
 public class NativeKafkaWithStringDecoderTest {
 
-	static {
-		MockKafka.LOCALHOST_BROKER = "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092";
-		MockZookeeper.ZOOKEEPER_CONNECT = "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181";
-	}
-
 	@Test
 	public void testNative() throws IOException, InterruptedException, ExecutionException {
 		String topic = "kafka.SimpleTextTopic";
-		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
+		ZkClient zkClient = new ZkClient("10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		int msgNum = 100000;
 		final CountDownLatch countDown = new CountDownLatch(msgNum);
 
 		Properties producerProps = new Properties();
 		// Producer
-		producerProps.put("metadata.broker.list", MockKafka.LOCALHOST_BROKER);
-		producerProps.put("bootstrap.servers", MockKafka.LOCALHOST_BROKER);
+		producerProps.put("metadata.broker.list", "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092");
+		producerProps.put("bootstrap.servers", "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
 		producerProps.put("value.serializer", StringSerializer.class.getCanonicalName());
 		producerProps.put("key.serializer", StringSerializer.class.getCanonicalName());
 		// Consumer
 		Properties consumerProps = new Properties();
-		consumerProps.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
+		consumerProps.put("zookeeper.connect", "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
 		consumerProps.put("group.id", "GROUP_" + topic);
 
 		final List<String> actualResult = new ArrayList<String>();

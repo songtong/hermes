@@ -33,23 +33,19 @@ import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 import com.ctrip.hermes.kafka.avro.KafkaAvroTest;
 
 public class NativeKafkaWithAvroDecoderTest {
-	static {
-		MockKafka.LOCALHOST_BROKER = "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092";
-		MockZookeeper.ZOOKEEPER_CONNECT = "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181";
-	}
 
 	@Test
 	public void testNative() throws IOException, InterruptedException, ExecutionException {
 		String topic = "kafka.SimpleAvroTopic";
-		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
+		ZkClient zkClient = new ZkClient("10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		int msgNum = 100000;
 		final CountDownLatch countDown = new CountDownLatch(msgNum);
 
 		Properties producerProps = new Properties();
 		// Producer
-		producerProps.put("metadata.broker.list", MockKafka.LOCALHOST_BROKER);
-		producerProps.put("bootstrap.servers", MockKafka.LOCALHOST_BROKER);
+		producerProps.put("metadata.broker.list", "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092");
+		producerProps.put("bootstrap.servers", "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
 
 		// Avro Decoder/Encoder
 		CachedSchemaRegistryClient schemaRegistry = new CachedSchemaRegistryClient("http://10.3.8.63:8081/",
@@ -70,7 +66,7 @@ public class NativeKafkaWithAvroDecoderTest {
 
 		// Consumer
 		Properties consumerProps = new Properties();
-		consumerProps.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
+		consumerProps.put("zookeeper.connect", "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
 		consumerProps.put("group.id", "GROUP_" + topic);
 
 		final List<Object> actualResult = new ArrayList<Object>();

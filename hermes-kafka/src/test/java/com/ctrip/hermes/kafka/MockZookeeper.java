@@ -6,11 +6,9 @@ import org.apache.curator.test.TestingServer;
 
 public class MockZookeeper {
 
-	public static final int ZK_PORT = 2181;
+	private static final int ZK_PORT = 2181;
 
-	public static final String ZK_HOST = "localhost";
-
-	public static String ZOOKEEPER_CONNECT = ZK_HOST + ":" + ZK_PORT;
+	private static final String ZK_HOST = "localhost";
 
 	private TestingServer zkTestServer;
 
@@ -42,5 +40,9 @@ public class MockZookeeper {
 			}
 
 		}
+	}
+
+	public String getConnectionString() {
+		return ZK_HOST + ":" + ZK_PORT;
 	}
 }

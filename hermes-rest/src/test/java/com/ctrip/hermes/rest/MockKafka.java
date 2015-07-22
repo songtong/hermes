@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 import kafka.admin.AdminUtils;
+import kafka.api.TopicMetadata;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 
@@ -13,18 +14,24 @@ import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 
 public class MockKafka {
 
-	public static final String BROKER_ID = "1";
+	private static Properties createProperties(MockZookeeper zkServer, String logDir, String port, String brokerId) {
+		Properties properties = new Properties();
+		properties.put("port", port);
+		properties.put("broker.id", brokerId);
+		properties.put("log.dirs", logDir);
+		properties.put("host.name", "localhost");
+		properties.put("offsets.topic.replication.factor", "1");
+		properties.put("delete.topic.enable", "true");
+		properties.put("zookeeper.connect", zkServer.getConnectionString());
+		return properties;
+	}
 
-	public static final String BROKER_HOSTNAME = "localhost";
+	private KafkaServerStartable kafkaServer;
 
-	public static final String BROKER_PORT = "9092";
+	private MockZookeeper zkServer;
 
-	public static String LOCALHOST_BROKER = BROKER_HOSTNAME + ":" + BROKER_PORT;
-
-	public KafkaServerStartable kafkaServer;
-
-	public MockKafka() {
-		this(System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString(), BROKER_PORT, BROKER_ID);
+	public MockKafka(MockZookeeper zkServer) {
+		this(zkServer, System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString(), "9092", "1");
 		start();
 	}
 
@@ -33,20 +40,48 @@ public class MockKafka {
 		kafkaServer = new KafkaServerStartable(kafkaConfig);
 	}
 
-	private MockKafka(String logDir, String port, String brokerId) {
-		this(createProperties(logDir, port, brokerId));
-		System.out.println("Kafka logdir: " + logDir);
+	public MockKafka(MockZookeeper zkServer, String port, String brokerId) {
+		this(zkServer, System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString(), port, brokerId);
+		start();
 	}
 
-	private static Properties createProperties(String logDir, String port, String brokerId) {
-		Properties properties = new Properties();
-		properties.put("port", port);
-		properties.put("broker.id", brokerId);
-		properties.put("log.dirs", logDir);
-		properties.put("offsets.topic.replication.factor", "1");
-		properties.put("delete.topic.enable", "true");
-		properties.put("zookeeper.connect", MockZookeeper.ZOOKEEPER_CONNECT);
-		return properties;
+	private MockKafka(MockZookeeper zkServer, String logDir, String port, String brokerId) {
+		this(createProperties(zkServer, logDir, port, brokerId));
+		this.zkServer = zkServer;
+		System.out.println(String.format("Kafka %s:%s dir:%s", kafkaServer.serverConfig().brokerId(), kafkaServer
+		      .serverConfig().port(), kafkaServer.serverConfig().logDirs()));
+	}
+
+	public void createTopic(String topic, int partition, int replication) {
+		ZkClient zkClient = new ZkClient(zkServer.getConnectionString());
+		zkClient.setZkSerializer(new ZKStringSerializer());
+		AdminUtils.createTopic(zkClient, topic, partition, replication, new Properties());
+	}
+
+	public void createTopic(String topic) {
+		this.createTopic(topic, 1, 1);
+	}
+
+	public TopicMetadata fetchTopicMeta(String topic) {
+		ZkClient zkClient = new ZkClient(zkServer.getConnectionString());
+		zkClient.setZkSerializer(new ZKStringSerializer());
+		TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient);
+		return topicMetadata;
+	}
+
+	/**
+	 * Delete may not work
+	 * 
+	 * @param topic
+	 */
+	public void deleteTopic(String topic) {
+		ZkClient zkClient = new ZkClient(zkServer.getConnectionString());
+		zkClient.setZkSerializer(new ZKStringSerializer());
+		AdminUtils.deleteTopic(zkClient, topic);
+	}
+
+	public String getConnectionString() {
+		return String.format("%s:%d", kafkaServer.serverConfig().hostName(), kafkaServer.serverConfig().port());
 	}
 
 	public void start() {
@@ -59,22 +94,8 @@ public class MockKafka {
 		System.out.println("embedded kafka down");
 	}
 
-	/**
-	 * Delete may not work
-	 * 
-	 * @param topic
-	 */
-	public void deleteTopic(String topic) {
-		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
-		zkClient.setZkSerializer(new ZKStringSerializer());
-		AdminUtils.deleteTopic(zkClient, topic);
+	public MockZookeeper getZookeeperServer() {
+		return this.zkServer;
 	}
 
-	public void createTopic(String topic) {
-		ZkClient zkClient = new ZkClient(MockZookeeper.ZOOKEEPER_CONNECT);
-		zkClient.setZkSerializer(new ZKStringSerializer());
-		int partition = 1;
-		int replication = 1;
-		AdminUtils.createTopic(zkClient, topic, partition, replication, new Properties());
-	}
 }
