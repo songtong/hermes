@@ -332,17 +332,22 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 
 		@Override
 		public long getSendMessageReadResultTimeoutMillis() {
-			return 1 * 1000L;
+			return 100L;
+		}
+
+		@Override
+		public long getDefaultBrokerSenderSendTimeoutMillis() {
+			return 100L;
 		}
 
 		@Override
 		public String getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis() {
-			return "10";
+			return "5";
 		}
 
 		@Override
 		public String getDefaultBrokerSenderNetworkIoCheckIntervalBaseMillis() {
-			return "5";
+			return "1";
 		}
 	}
 
