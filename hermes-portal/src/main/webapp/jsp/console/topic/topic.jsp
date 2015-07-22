@@ -11,10 +11,10 @@
 		<div class="row">
 			<div class="col-md-2 sidebar" ng-controller="list-controller">
 				<ul class="nav nav-sidebar">
-					<li class="active">
+					<li ng-class="routeParams['type'] == 'mysql' ? 'active' : ''">
 						<a href="#list/mysql" data-target="#mysql" role="tab" data-toggle="tab" style="text-transform: uppercase;">mysql</a>
 					</li>
-					<li>
+					<li ng-class="routeParams['type'] == 'kafka' ? 'active' : ''">
 						<a href="#list/kafka" data-target="#kafka" role="tab" data-toggle="tab" style="text-transform: uppercase;">kafka</a>
 					</li>
 				</ul>
