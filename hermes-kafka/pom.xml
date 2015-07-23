@@ -66,10 +66,6 @@
 			<groupId>io.confluent</groupId>
 			<artifactId>common-metrics</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>common-utils</artifactId>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

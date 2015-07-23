@@ -20,6 +20,8 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.kafka.producer.KafkaFuture;
 import com.ctrip.hermes.kafka.producer.KafkaMessageSender;
 import com.ctrip.hermes.kafka.producer.KafkaSendResult;
+import com.ctrip.hermes.kafka.server.MockKafkaCluster;
+import com.ctrip.hermes.kafka.server.MockZookeeper;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
@@ -39,6 +41,10 @@ public class OneBoxTest {
 
 	@AfterClass
 	public static void after() {
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
+		
 		kafkaCluster.stop();
 		zk.stop();
 	}
@@ -91,9 +97,6 @@ public class OneBoxTest {
 			Thread.sleep(100);
 		}
 
-		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
-		      Endpoint.KAFKA);
-		kafkaSender.close();
 		consumer.close();
 		Assert.assertEquals(expected.size(), actual.size());
 		Assert.assertEquals(expected, actual);
@@ -162,13 +165,9 @@ public class OneBoxTest {
 		}
 
 		int sleepCount = 0;
-		while (actual.size() < expected.size() && sleepCount++ < 50) {
+		while (actual.size() < expected.size() && sleepCount++ < 100) {
 			Thread.sleep(100);
 		}
-
-		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
-		      Endpoint.KAFKA);
-		kafkaSender.close();
 
 		consumer1.close();
 		consumer2.close();
@@ -237,10 +236,6 @@ public class OneBoxTest {
 		while ((actual1.size() < expected.size() || actual2.size() < expected.size()) && sleepCount++ < 50) {
 			Thread.sleep(100);
 		}
-
-		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
-		      Endpoint.KAFKA);
-		kafkaSender.close();
 
 		consumer1.close();
 		consumer2.close();
@@ -334,10 +329,6 @@ public class OneBoxTest {
 		while (actual.size() < expected.size() * 2 && sleepCount++ < 50) {
 			Thread.sleep(100);
 		}
-
-		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
-		      Endpoint.KAFKA);
-		kafkaSender.close();
 
 		consumer.close();
 		Assert.assertEquals(expected.size() * 2, actual.size());

@@ -56,6 +56,7 @@ public class MockKafka {
 		ZkClient zkClient = new ZkClient(zkServer.getConnectionString());
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		AdminUtils.createTopic(zkClient, topic, partition, replication, new Properties());
+		zkClient.close();
 	}
 
 	public void createTopic(String topic) {
@@ -66,6 +67,7 @@ public class MockKafka {
 		ZkClient zkClient = new ZkClient(zkServer.getConnectionString());
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient);
+		zkClient.close();
 		return topicMetadata;
 	}
 
@@ -78,6 +80,7 @@ public class MockKafka {
 		ZkClient zkClient = new ZkClient(zkServer.getConnectionString());
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		AdminUtils.deleteTopic(zkClient, topic);
+		zkClient.close();
 	}
 
 	public String getConnectionString() {

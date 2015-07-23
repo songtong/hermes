@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka;
+package com.ctrip.hermes.kafka.server;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +44,12 @@ public class MockKafkaCluster {
 		Random random = new Random();
 		MockKafka kafka = kafkaCluster.get(random.nextInt(kafkaCluster.size()));
 		kafka.createTopic(topic, partition, replication);
+	}
+
+	public void deleteTopic(String topic) {
+		Random random = new Random();
+		MockKafka kafka = kafkaCluster.get(random.nextInt(kafkaCluster.size()));
+		kafka.deleteTopic(topic);
 	}
 
 	public TopicMetadata fetchTopicMetadata(String topic) {
