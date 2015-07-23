@@ -12,7 +12,7 @@
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic1' partition-count='1'
-		storage-type='kafka' id='102' description='topic for OneBox Test'
+		storage-type='kafka' id='103' description='topic for OneBox Test'
 		status='valid' create-time='2015-05-01 00:00:00' last-modified-time='2015-04-01 00:00:00'
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
@@ -20,7 +20,7 @@
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic2' partition-count='1'
-		storage-type='kafka' id='102' description='topic for OneBox Test'
+		storage-type='kafka' id='104' description='topic for OneBox Test'
 		status='valid' create-time='2015-05-01 00:00:00' last-modified-time='2015-04-01 00:00:00'
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
@@ -28,7 +28,7 @@
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic3' partition-count='1'
-		storage-type='kafka' id='102' description='topic for OneBox Test'
+		storage-type='kafka' id='105' description='topic for OneBox Test'
 		status='valid' create-time='2015-05-01 00:00:00' last-modified-time='2015-04-01 00:00:00'
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
@@ -36,17 +36,38 @@
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic4' partition-count='1'
-		storage-type='kafka' id='102' description='topic for OneBox Test'
+		storage-type='kafka' id='106' description='topic for OneBox Test'
 		status='valid' create-time='2015-05-01 00:00:00' last-modified-time='2015-04-01 00:00:00'
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
 	</topic>
+
+	<topic name='kafka.SimpleTextTopic5' partition-count='1'
+		storage-type='kafka' id='107' description='topic for OneBox Test'
+		status='valid' create-time='2015-05-01 00:00:00' last-modified-time='2015-04-01 00:00:00'
+		codec-type="json" create-by="liuym" endpoint-type="kafka">
+		<partition id='0' read-datasource='kafka-consumer'
+			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+	</topic>
+
+	<topic name='kafka.SimpleAvroTopic' partition-count='1'
+		storage-type='kafka' id='108' description='topic for OneBox Test'
+		status='valid' create-time='2015-05-01 00:00:00' last-modified-time='2015-04-01 00:00:00'
+		codec-type="avro" create-by="liuym" endpoint-type="kafka">
+		<partition id='0' read-datasource='kafka-consumer'
+			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+	</topic>
+
 	<codec type="json" />
+	<codec type="avro">
+		<property name="schema.registry.url" value="http://localhost:8081" />
+	</codec>
 
 	<storage type='kafka'>
 		<datasource id='kafka-producer'>
-			<property name='bootstrap.servers' value='localhost:9092' />
+			<property name='bootstrap.servers'
+				value='localhost:9092,localhost:9093,localhost:9094' />
 		</datasource>
 		<datasource id='kafka-consumer'>
 			<property name='zookeeper.connect' value='localhost:2181' />

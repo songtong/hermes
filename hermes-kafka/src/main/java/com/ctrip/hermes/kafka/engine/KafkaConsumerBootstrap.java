@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +20,6 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 
 import org.I0Itec.zkclient.ZkClient;
-import org.I0Itec.zkclient.exception.ZkMarshallingError;
-import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -37,6 +34,7 @@ import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
+import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 import com.ctrip.hermes.kafka.message.KafkaConsumerMessage;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -218,31 +216,4 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 		TopicMetadata topicMeta = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient);
 		return topicMeta.partitionsMetadata().size();
 	}
-}
-
-class ZKStringSerializer implements ZkSerializer {
-
-	@Override
-	public Object deserialize(byte[] bytes) throws ZkMarshallingError {
-		if (bytes == null)
-			return null;
-		else
-			try {
-				return new String(bytes, "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				throw new ZkMarshallingError(e);
-			}
-	}
-
-	@Override
-	public byte[] serialize(Object data) throws ZkMarshallingError {
-		byte[] bytes = null;
-		try {
-			bytes = data.toString().getBytes("UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new ZkMarshallingError(e);
-		}
-		return bytes;
-	}
-
 }

@@ -1,8 +1,9 @@
 package com.ctrip.hermes.kafka.avro;
 
-import java.io.BufferedReader;
+import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaString;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -10,74 +11,64 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroDeserializer;
+import com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroSerializer;
+import com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient;
+import com.ctrip.hermes.kafka.producer.KafkaSendResult;
+import com.ctrip.hermes.kafka.server.MockKafkaCluster;
+import com.ctrip.hermes.kafka.server.MockZookeeper;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 
 public class KafkaAvroTest {
 
-	// @Test
-	public void testByConsole() throws InterruptedException, ExecutionException, IOException {
-		String topic = "kafka.SimpleAvroTopic";
-		String group = "avroGroup";
+	private static MockZookeeper zk;
 
-		Producer producer = Producer.getInstance();
+	private static MockKafkaCluster kafkaCluster;
 
-		final List<AvroVisitEvent> actualResult = new ArrayList<AvroVisitEvent>();
-		final List<AvroVisitEvent> expectedResult = new ArrayList<AvroVisitEvent>();
+	private static String topic = "kafka.SimpleAvroTopic";
 
-		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group, new MessageListener<AvroVisitEvent>() {
+	@BeforeClass
+	public static void before() {
+		zk = new MockZookeeper();
+		kafkaCluster = new MockKafkaCluster(zk, 3);
+		kafkaCluster.createTopic(topic, 3, 1);
+	}
 
-			@Override
-			public void onMessage(List<ConsumerMessage<AvroVisitEvent>> msgs) {
-				for (ConsumerMessage<AvroVisitEvent> msg : msgs) {
-					AvroVisitEvent event = msg.getBody();
-					System.out.println("Consumer Received: " + event);
-					actualResult.add(event);
-				}
-			}
-		});
-
-		System.out.println("Starting consumer...");
-		BufferedReader in = null;
-		try {
-			in = new BufferedReader(new InputStreamReader(System.in));
-			while (true) {
-				String line = in.readLine();
-				if ("q".equals(line)) {
-					break;
-				}
-
-				AvroVisitEvent event = generateEvent();
-				MessageHolder holder = producer.message(topic, null, event);
-				Future<SendResult> future = holder.send();
-				future.get();
-				if (future.isDone()) {
-					System.out.println("Producer Sent: " + event);
-					expectedResult.add(event);
-				}
-			}
-		} finally {
-			if (in != null) {
-				in.close();
-			}
-		}
-		consumerHolder.close();
-		Assert.assertEquals(expectedResult.size(), actualResult.size());
+	@AfterClass
+	public static void after() {
+		kafkaCluster.stop();
+		zk.stop();
 	}
 
 	@Test
-	public void testByBatch() throws InterruptedException, ExecutionException, IOException {
-		String topic = "kafka.SimleAvroTopic";
+	public void testByBatch() throws InterruptedException, ExecutionException, IOException, RestClientException {
 		String group = "avroGroup";
 
+		int schemaId = 100;
+		String schemaString = AvroVisitEvent.getClassSchema().toString();
+
+		SchemaRegisterRestClient restService = Mockito.mock(SchemaRegisterRestClient.class);
+		Mockito.when(restService.registerSchema(Mockito.anyString(), Mockito.anyString())).thenReturn(schemaId);
+		Mockito.when(restService.getId(Mockito.anyInt())).thenReturn(new SchemaString(schemaString));
+
+		HermesKafkaAvroSerializer serializer =  PlexusComponentLocator.lookup(HermesKafkaAvroSerializer.class);
+		HermesKafkaAvroDeserializer deserializer =  PlexusComponentLocator.lookup(HermesKafkaAvroDeserializer.class);
+		serializer.setSchemaRestService(restService);
+		deserializer.setSchemaRestService(restService);
+		
 		Producer producer = Producer.getInstance();
 
 		final List<AvroVisitEvent> actualResult = new ArrayList<AvroVisitEvent>();
@@ -97,19 +88,22 @@ public class KafkaAvroTest {
 
 		System.out.println("Starting consumer...");
 
-		int limit = new Random().nextInt(20) + 1;
 		int i = 0;
-		while (i++ < limit) {
+		while (i++ < 10) {
 			AvroVisitEvent event = generateEvent();
 			MessageHolder holder = producer.message(topic, null, event);
 			Future<SendResult> future = holder.send();
-			future.get();
-			if (future.isDone()) {
-				System.out.println("Producer Sent: " + event);
-				expectedResult.add(event);
-			}
+			KafkaSendResult sendResult = (KafkaSendResult) future.get();
+			System.out.format("Producer Sent: %s Partition:%s Offset:%s%n", event, sendResult.getPartition(),
+			      sendResult.getOffset());
+			expectedResult.add(event);
 		}
 
+		int sleepCount = 0;
+		while (actualResult.size() < expectedResult.size() && sleepCount++ < 50) {
+			Thread.sleep(100);
+		}
+		
 		Assert.assertEquals(expectedResult.size(), actualResult.size());
 		consumerHolder.close();
 	}

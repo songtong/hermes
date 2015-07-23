@@ -19,7 +19,11 @@ public class KafkaCallback implements org.apache.kafka.clients.producer.Callback
 			if (exception != null) {
 				m_callback.onFailure(exception);
 			} else {
-				m_callback.onSuccess(new SendResult());
+				KafkaSendResult result = new KafkaSendResult();
+				result.setTopic(metadata.topic());
+				result.setPartition(metadata.partition());
+				result.setOffset(metadata.offset());
+				m_callback.onSuccess(result);
 			}
 		}
 	}
