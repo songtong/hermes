@@ -67,7 +67,6 @@ public class RestIntegrationTest extends JerseyTest {
 		gatewayServer.stopServer();
 		kafka.stop();
 		zk.stop();
-
 	}
 
 	@After

@@ -105,7 +105,7 @@ public class SchemaService {
 			Path compileDir = new File(destDir + schema.getNamespace().replace('.', '/')).toPath();
 			m_compileService.compile(compileDir);
 			m_compileService.jar(destDir, jarFile);
-			m_logger.info(jarFile.getFileName().toString());
+			m_logger.info("Compile avro {}", jarFile.getFileName());
 		}
 
 		byte[] jarContent = Files.readAllBytes(jarFile);
