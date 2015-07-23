@@ -102,7 +102,7 @@ public class TopicsResource {
 	public void publishBinary(@PathParam("topicName") String topicName, @Context HttpHeaders headers,
 	      @Context HttpServletRequest request, InputStream content, @Suspended final AsyncResponse response) {
 		if (!producerService.topicExist(topicName)) {
-			throw new NotFoundException(String.format("Topic {0} does not exist", topicName));
+			throw new NotFoundException(String.format("Topic %s does not exist", topicName));
 		}
 
 		if (logger.isTraceEnabled()) {

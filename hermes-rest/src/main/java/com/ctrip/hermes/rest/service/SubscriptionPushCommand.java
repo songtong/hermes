@@ -77,11 +77,13 @@ public class SubscriptionPushCommand extends HystrixCommand<HttpResponse> {
 			}
 		}
 
-		int statusCode = response.getStatusLine().getStatusCode();
-//		System.out.println("Post to : " + url + " code: " + statusCode);
-		if (statusCode != Response.Status.OK.getStatusCode()
-		      && statusCode != Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
-			throw new RequestFailedException(response);
+		if (response != null) {
+			int statusCode = response.getStatusLine().getStatusCode();
+			// System.out.println("Post to : " + url + " code: " + statusCode);
+			if (statusCode != Response.Status.OK.getStatusCode()
+			      && statusCode != Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
+				throw new RequestFailedException(response);
+			}
 		}
 		return response;
 	}

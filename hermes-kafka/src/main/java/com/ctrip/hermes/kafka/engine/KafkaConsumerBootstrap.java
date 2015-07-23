@@ -187,7 +187,8 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 		return consumerProp;
 	}
 
-	private int getKafkaPartitionCount(String topic) {
+	@SuppressWarnings("unused")
+   private int getKafkaPartitionCount(String topic) {
 		List<Partition> partitions = m_metaService.listPartitionsByTopic(topic);
 		if (partitions == null || partitions.size() < 1) {
 			return 1;

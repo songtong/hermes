@@ -48,6 +48,9 @@ public class SubscriptionRegisterService {
 			public void run() {
 				try {
 					List<SubscriptionView> remoteSubscriptions = m_metaService.listSubscriptions("RUNNING");
+					if (logger.isTraceEnabled()) {
+						logger.trace("Received subscriptions: {}", remoteSubscriptions);
+					}
 					if (remoteSubscriptions == null || remoteSubscriptions.size() == 0) {
 						return;
 					}
@@ -86,6 +89,8 @@ public class SubscriptionRegisterService {
 			}
 
 		}, 5, 5, TimeUnit.SECONDS);
+
+		logger.info("SubscriptionChecker started");
 	}
 
 	public boolean startSubscription(SubscriptionView sub) {
@@ -107,7 +112,8 @@ public class SubscriptionRegisterService {
 	}
 
 	public void stop() {
-		scheduledExecutor.shutdown();
+		if (scheduledExecutor != null)
+			scheduledExecutor.shutdown();
 		for (SubscriptionView sub : subscriptions) {
 			ConsumerHolder consumerHolder = consumerHolders.remove(sub);
 			consumerHolder.close();
