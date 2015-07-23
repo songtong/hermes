@@ -5,7 +5,9 @@ topic_module.controller('mysql-add-controller', [ '$scope', '$resource', 'TopicS
 		ackTimeoutSeconds : 5,
 		endpointType : 'broker',
 		storageType : 'mysql',
-		codecType : 'json'
+		codecType : 'json',
+		storagePartitionSize: '1000000',
+		storagePartitionCount:'10'
 	};
 	$scope.codec_types = [ 'json', 'cmessaging' ];
 	$scope.current_datasource_names = [];
