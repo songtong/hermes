@@ -197,32 +197,37 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		private boolean sendMessagesToBroker(SendMessageCommand cmd) throws InterruptedException, ExecutionException,
 		      TimeoutException {
-			Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partition);
-			if (endpoint != null) {
-				Future<Boolean> future = m_messageAcceptanceMonitor.monitor(cmd.getHeader().getCorrelationId());
-				m_messageResultMonitor.monitor(cmd);
+			try {
+				Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partition);
+				if (endpoint != null) {
+					Future<Boolean> future = m_messageAcceptanceMonitor.monitor(cmd.getHeader().getCorrelationId());
+					m_messageResultMonitor.monitor(cmd);
 
-				long timeout = m_config.getDefaultBrokerSenderSendTimeoutMillis();
+					long timeout = m_config.getDefaultBrokerSenderSendTimeoutMillis();
 
-				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
+					m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
 
-				Boolean brokerAccepted = null;
-				try {
-					brokerAccepted = future.get(timeout, TimeUnit.MILLISECONDS);
-				} catch (TimeoutException e) {
-					future.cancel(true);
-				}
+					Boolean brokerAccepted = null;
+					try {
+						brokerAccepted = future.get(timeout, TimeUnit.MILLISECONDS);
+					} catch (Exception e) {
+						future.cancel(true);
+					}
 
-				if (brokerAccepted != null && brokerAccepted) {
-					return true;
+					if (brokerAccepted != null && brokerAccepted) {
+						return true;
+					} else {
+						return false;
+					}
 				} else {
+					// ignore
+					if (log.isDebugEnabled()) {
+						log.debug("No endpoint found, ignore it");
+					}
 					return false;
 				}
-			} else {
-				// ignore
-				if (log.isDebugEnabled()) {
-					log.debug("No endpoint found, ignore it");
-				}
+			} catch (Exception e) {
+				log.warn("Exception occurred while sending message to broker, will retry it", e);
 				return false;
 			}
 		}

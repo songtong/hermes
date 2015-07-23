@@ -31,7 +31,8 @@ public class HermesThreadFactory implements ThreadFactory {
 	}
 
 	public Thread newThread(Runnable r) {
-		Thread t = new Thread(new ThreadGroup(m_groupName), r, m_namePrefix + "-" + m_threadNumber.getAndIncrement());
+		Thread t = new Thread(new ThreadGroup(m_groupName), r, m_groupName + "-" + m_namePrefix + "-"
+		      + m_threadNumber.getAndIncrement());
 		t.setDaemon(m_daemon);
 		if (t.getPriority() != Thread.NORM_PRIORITY)
 			t.setPriority(Thread.NORM_PRIORITY);
