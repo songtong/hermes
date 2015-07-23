@@ -52,6 +52,10 @@ public class TopicView {
 	private Long averageDelaySeconds;
 
 	private Date latestProduced;
+	
+	private long storagePartitionSize;
+	
+	private int storagePartitionCount;
 
 	public TopicView() {
 
@@ -248,6 +252,8 @@ public class TopicView {
 		topic.setAckTimeoutSeconds(this.ackTimeoutSeconds);
 		topic.setEndpointType(this.endpointType);
 		topic.setConsumerRetryPolicy(this.consumerRetryPolicy);
+		topic.setStoragePartitionSize(this.storagePartitionSize);
+		topic.setStoragePartitionCount(this.storagePartitionCount);
 		return topic;
 	}
 
@@ -273,5 +279,21 @@ public class TopicView {
 
 	public void setLatestProduced(Date latestProduced) {
 		this.latestProduced = latestProduced;
+	}
+
+	public long getStoragePartitionSize() {
+		return storagePartitionSize;
+	}
+
+	public void setStoragePartitionSize(long storagePartitionSize) {
+		this.storagePartitionSize = storagePartitionSize;
+	}
+
+	public int getStoragePartitionCount() {
+		return storagePartitionCount;
+	}
+
+	public void setStoragePartitionCount(int storagePartitionCount) {
+		this.storagePartitionCount = storagePartitionCount;
 	}
 }
