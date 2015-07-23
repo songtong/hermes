@@ -87,7 +87,10 @@ public class TopicResource {
 		} else if (StringUtils.isBlank(topic.getStorageType())) {
 			reason = "Storage type is required";
 			passed = false;
-		} else if (StringUtils.isBlank(topic.getEndpointType())) {
+		}else if (topic.getStoragePartitionSize()<=0) {
+			reason = "Database partition size should be bigger than 0";
+			passed = false;
+		}else if (StringUtils.isBlank(topic.getEndpointType())) {
 			switch (topic.getStorageType()) {
 			case Storage.KAFKA:
 				topic.setEndpointType(Endpoint.KAFKA);

@@ -9,17 +9,17 @@ import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
 
 public interface StorageHandler {
 
-	public boolean dropTables(Long topicId, Integer partitionId, List<TableModel> model,
+	public void dropTables(Long topicId, Integer partitionId, List<TableModel> model,
 									  String datasource) throws StorageHandleErrorException;
 
 	public void createTable(Long topicId, Integer partitionId, List<TableModel> model,
 									String datasource) throws StorageHandleErrorException;
 
 
-	public void addPartition(Long topicId, Integer partitionId, TableModel model, int range,
-									 String datasource) throws StorageHandleErrorException;
+	public void addPartition(Long topicId, Integer partitionId, TableModel model, int l,
+			int count, String datasource) throws StorageHandleErrorException;
 
-	public void addPartition(String table, int range, String datasource) throws StorageHandleErrorException;
+	public void addPartition(String table, int range, int count, String datasource) throws StorageHandleErrorException;
 
 	public void deletePartition(Long topicId, Integer partitionId, TableModel model,
 										 String datasource) throws StorageHandleErrorException;
