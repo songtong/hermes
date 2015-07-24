@@ -10,6 +10,7 @@ dashtopic
 					$scope.main_board_content = {};
 					$scope.current_topic = "";
 					$scope.topic_delays = [];
+					$scope.topic_latest = [];
 
 					DashtopicService.update_topic_briefs();
 
@@ -20,10 +21,15 @@ dashtopic
 					$scope.$watch(DashtopicService.get_current_topic, function() {
 						$scope.current_topic = DashtopicService.get_current_topic();
 						DashtopicService.update_topic_delays($scope.current_topic);
+						DashtopicService.update_topic_latest($scope.current_topic);
 					});
 
 					$scope.$watch(DashtopicService.get_topic_delays, function() {
 						$scope.topic_delays = DashtopicService.get_topic_delays();
+					});
+
+					$scope.$watch(DashtopicService.get_topic_latest, function() {
+						$scope.topic_latest = DashtopicService.get_topic_latest();
 					});
 
 					$scope.$watch(DashtopicService.get_main_board_content, function() {
@@ -125,5 +131,22 @@ dashtopic
 							delay = 0;
 						}
 						return delay / 1000;
+					};
+
+					$scope.truncate = function(raw, size) {
+						return raw.substring(0, size / 2) + " ... " + raw.substring(raw.length - size / 2);
+					};
+
+					$scope.tooltip_format = function(raw) {
+						var new_value = "";
+						var line_count = 20;
+						for (var i = 0; i < raw.length / line_count; i++) {
+							new_value += raw.substring(i * line_count, (i + 1) * line_count) + " ";
+						}
+						return new_value;
+					};
+
+					$scope.refresh_latest = function() {
+						DashtopicService.update_topic_latest($scope.current_topic);
 					};
 				});

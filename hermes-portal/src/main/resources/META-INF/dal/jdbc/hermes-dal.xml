@@ -6,6 +6,7 @@
 		<var name="priority" value-type="int" />
 		<var name="start-id" value-type="long" />
 		<var name="batch-size" value-type="int" />
+		<var name="find-count" value-type="int" />
 
 		<query-defs>
 			<query name="insert" type="INSERT" batch='true'>
@@ -35,7 +36,27 @@
         		]]>
 				</statement>
 			</query>
+			<query name="topK" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<param name="find-count" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT ${find-count}
+        		]]>
+				</statement>
+			</query>
 		</query-defs>
+		<snippet lang='java'><![CDATA[
+			public static java.util.Comparator<MessagePriority> DATE_COMPARATOR_DESC = new java.util.Comparator<MessagePriority>() {
+				@Override
+				public int compare(MessagePriority o1, MessagePriority o2) {
+					return o1.getCreationDate().compareTo(o2.getCreationDate());
+				}
+			};
+		]]></snippet>
 	</entity>
 
 	<entity name="offset-message" implements="com.ctrip.hermes.portal.dal.ds.TopicPartitionPriorityAware">
