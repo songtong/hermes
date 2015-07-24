@@ -59,6 +59,10 @@
 		<attribute name="consumer-retry-policy" default-value="1:[3,6,9]" />
 		<attribute name="ack-timeout-seconds" value-type="int"
 			default-value="5" />
+		<attribute name="storage-partition-size" value-type="long"
+			default-value="1000000" />
+		<attribute name="storage-partition-count" value-type="int"
+			default-value="10" />
 		<entity-ref name="consumer-group" type="list" names="consumer-groups" />
 	</entity>
 	<entity name="codec">

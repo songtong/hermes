@@ -87,6 +87,12 @@ public class TopicResource {
 		} else if (StringUtils.isBlank(topic.getStorageType())) {
 			reason = "Storage type is required";
 			passed = false;
+		} else if (topic.getStoragePartitionSize() <= 10000) {
+			reason = "Database partition size should be bigger than 10000";
+			passed = false;
+		} else if (topic.getStoragePartitionCount() <= 5) {
+			reason = "Database partition count should be bigger than 5";
+			passed = false;
 		} else if (StringUtils.isBlank(topic.getEndpointType())) {
 			switch (topic.getStorageType()) {
 			case Storage.KAFKA:
@@ -160,7 +166,7 @@ public class TopicResource {
 			exist = isTopicExistOnTarget(topicName, target);
 		} catch (Exception e) {
 			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
-			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
 		if (exist) {
 			throw new RestException(String.format("Topic %s is already exists.", topicName), Status.CONFLICT);
@@ -194,7 +200,7 @@ public class TopicResource {
 			}
 		} catch (Exception e) {
 			throw new RestException(String.format("Sync mysql topic: %s failed: %s", topic.getName(), e.getMessage()),
-			      Status.NOT_ACCEPTABLE);
+					Status.NOT_ACCEPTABLE);
 		}
 	}
 
@@ -239,7 +245,7 @@ public class TopicResource {
 		} catch (Exception e) {
 			log.warn("Sync kafka topic failed.", e);
 			throw new RestException(String.format("Sync kafka topic: %s failed: %s", topic.getName(), e.getMessage()),
-			      Status.NOT_ACCEPTABLE);
+					Status.NOT_ACCEPTABLE);
 		}
 	}
 
@@ -285,8 +291,8 @@ public class TopicResource {
 			}
 		} catch (Exception e) {
 			throw new RestException(
-			      "Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
-			      Status.INTERNAL_SERVER_ERROR);
+					"Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
+					Status.INTERNAL_SERVER_ERROR);
 		}
 		Set<String> ret = new HashSet<String>();
 		for (String ds : iDses) {

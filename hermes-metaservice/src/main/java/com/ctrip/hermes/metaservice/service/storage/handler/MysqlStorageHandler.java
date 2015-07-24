@@ -39,7 +39,7 @@ public class MysqlStorageHandler implements StorageHandler {
 	}
 
 	@Override
-	public boolean dropTables(Long topicId, Integer partitionId, List<TableModel> models, String datasource)
+	public void dropTables(Long topicId, Integer partitionId, List<TableModel> models, String datasource)
 			  throws StorageHandleErrorException {
 		String databaseName = getDatabaseName(datasource);
 		StringBuilder sb = new StringBuilder();
@@ -51,8 +51,10 @@ public class MysqlStorageHandler implements StorageHandler {
 		}
 
 		log.warn("\nDrop Table Sql: \n" + sb.toString() + ". On Datasource: " + datasource);
+		
 		executeSql(datasource, sb.toString());
-		return true;
+		
+		
 	}
 
 	@Override
@@ -98,13 +100,13 @@ public class MysqlStorageHandler implements StorageHandler {
 	 * 初始状态是1个100W的partition和1个maxValue的partition和1个minValue的partition. 后续状态是往后新增一个partition.
 	 */
 	@Override
-	public void addPartition(Long topicId, Integer partitionId, TableModel model, int newSapn, String datasource)
+	public void addPartition(Long topicId, Integer partitionId, TableModel model, int newSapn, int count, String datasource)
 			  throws StorageHandleErrorException {
 		String tableName = getTablePrefix(topicId, partitionId) + model.getTableName();
-		addPartition0(tableName, newSapn, datasource);
+		addPartition0(tableName, newSapn, count, datasource);
 	}
 
-	private void addPartition0(String tableName, int newSapn, String datasource) throws StorageHandleErrorException {
+	private void addPartition0(String tableName, int newSapn, int count, String datasource) throws StorageHandleErrorException {
 		String databaseName = getDatabaseName(datasource);
 		List<StoragePartition> storagePartitions = queryPartitionDESC(databaseName, tableName, datasource);
 
@@ -113,51 +115,63 @@ public class MysqlStorageHandler implements StorageHandler {
 		// if there is no Partitions or only Partition pMax left.
 		if (storagePartitions.size() == 0
 				  || (storagePartitions.size() == 1 && storagePartitions.get(0).getName().equals("pMax"))) {
-			sb.append(sqlInitPartition(tableName, "p0", newSapn));
+			sb.append(sqlInitPartition(tableName, "p", count, newSapn));
 		} else {
-			Pair<String /*partitionName*/, Integer /*range*/> highestPartition = getNextHigherPartition
+			Pair<Integer /*partitionId*/, Integer /*range*/> highestPartition = getlastPartition
 					  (storagePartitions);
-
-			sb.append(sqlAddPartition(tableName, highestPartition.getKey(), highestPartition.getValue() + newSapn));
+			
+			sb.append(sqlAddPartition(tableName, "p", highestPartition.getKey(), highestPartition.getValue() ,count, newSapn));
 		}
 
 		executeSql(datasource, sb.toString());
 	}
 
 	@Override
-	public void addPartition(String table, int range, String datasource) throws StorageHandleErrorException {
-		addPartition0(table, range, datasource);
+	public void addPartition(String table, int range, int count, String datasource) throws StorageHandleErrorException {
+		addPartition0(table, range, count, datasource);
 	}
 
-	private Pair<String /*partitionName*/, Integer /*range*/> getNextHigherPartition
+	private Pair<Integer /*partitionId*/, Integer /*range*/> getlastPartition
 			  (List<StoragePartition> storagePartitions) throws StorageHandleErrorException {
 		TreeMap<Integer, StoragePartition> ids = buildPartitionTreeMap(storagePartitions);
 
-		Integer higherId = ids.lastKey() + 1;
+		Integer higherId = ids.lastKey();
 		StoragePartition lastPartition = ids.lastEntry().getValue();
-
-		String partitionName = lastPartition.getName().charAt(0) + String.valueOf(higherId);
+		
 		int threshold = Integer.parseInt(lastPartition.getRange());
-		return new Pair<>(partitionName, threshold);
+		return new Pair<>(higherId, threshold);
 	}
 
 	/**
 	 * 初始化时额外建1个partitin: pMax (MAXVALUE). ALTER TABLE %{tableName} PARTITION BY RANGE (id)( PARTITION %{partitionName} VALUES LESS
 	 * THAN %{range} );
 	 */
-	private String sqlInitPartition(String tableName, String partitionName, int threshold) {
-		return "ALTER TABLE " + tableName + " PARTITION BY RANGE (id) (\n" + " PARTITION " + partitionName
-				  + " VALUES LESS THAN (" + threshold + ") ENGINE = innodb,"
-				  + " PARTITION pMax VALUES LESS THAN MAXVALUE ENGINE = innodb);";
+	private String sqlInitPartition(String tableName, String partitionName, int count, int threshold) {
+		StringBuilder stmt = new StringBuilder("ALTER TABLE " + tableName + " PARTITION BY RANGE (id) (\n");
+		for(int i=0;i<count;i++ ){
+			stmt.append(" PARTITION " + partitionName + i
+					  + " VALUES LESS THAN (" + (threshold*(i+1)) + ") ENGINE = innodb,");
+		}
+		stmt.deleteCharAt(stmt.length()-1);
+		stmt.append(")");
+		return stmt.toString();
 	}
 
 	/**
+	 * @param threshold 
+	 * @param count 
 	 *
 	 */
-	private String sqlAddPartition(String tableName, String partitionName, int threshold) {
-		return "ALTER TABLE " + tableName + " REORGANIZE PARTITION pMax INTO " + "( PARTITION " + partitionName
-				  + " VALUES LESS THAN (" + threshold + ") ENGINE = innodb,"
-				  + "PARTITION pMax VALUES LESS THAN MAXVALUE ENGINE = innodb);";
+	private String sqlAddPartition(String tableName, String partitionName, int highestPartitionKey, int highestPartitionValue, int count, int threshold) {
+		StringBuilder stmt = new StringBuilder("ALTER TABLE " + tableName + " PARTITION BY RANGE (id) (\n");
+		for(int i=0 ; i<count ; i++ ){
+			stmt.append(" PARTITION " + partitionName + (i+highestPartitionKey+1)
+					  + " VALUES LESS THAN (" + (threshold*(i+1)+highestPartitionValue) + ") ENGINE = innodb,");
+		}
+		stmt.deleteCharAt(-1);
+		stmt.append(")");
+		return stmt.toString();
+		
 	}
 
 	/**
