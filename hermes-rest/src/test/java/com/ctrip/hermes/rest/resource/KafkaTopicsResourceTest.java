@@ -21,6 +21,7 @@ import org.junit.Test;
 import com.ctrip.hermes.rest.MockKafka;
 import com.ctrip.hermes.rest.MockZookeeper;
 import com.ctrip.hermes.rest.TestGatewayServer;
+import com.ctrip.hermes.rest.metrics.RestMetricsRegistry;
 
 public class KafkaTopicsResourceTest {
 
@@ -43,6 +44,7 @@ public class KafkaTopicsResourceTest {
 		server.stopServer();
 		kafka.stop();
 		zk.stop();
+		RestMetricsRegistry.reset();
 	}
 
 	@Test

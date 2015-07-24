@@ -13,12 +13,12 @@ import com.ctrip.hermes.rest.service.SubscriptionPushCommand;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandMetrics;
 
-@Path("/metrics/")
+@Path("/hystrix/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
-public class MetricsResource {
+public class HystrixResource {
 
-	@Path("hystrix/topics")
+	@Path("topics")
 	@GET
 	public HystrixCommandMetrics getHystrixTopicMetrics() {
 		HystrixCommandMetrics topicMetrics = HystrixCommandMetrics.getInstance(HystrixCommandKey.Factory
@@ -26,7 +26,7 @@ public class MetricsResource {
 		return topicMetrics;
 	}
 
-	@Path("hystrix/subscriptions")
+	@Path("subscriptions")
 	@GET
 	public HystrixCommandMetrics getHystrixSubscriptionMetrics() {
 		HystrixCommandMetrics subMetrics = HystrixCommandMetrics.getInstance(HystrixCommandKey.Factory
@@ -34,11 +34,11 @@ public class MetricsResource {
 		return subMetrics;
 	}
 
-	@Path("hystrix")
+	@Path("all")
 	@GET
 	public Collection<HystrixCommandMetrics> getHystrixMetrics() {
 		Collection<HystrixCommandMetrics> metrics = HystrixCommandMetrics.getInstances();
 		return metrics;
 	}
-	
+
 }

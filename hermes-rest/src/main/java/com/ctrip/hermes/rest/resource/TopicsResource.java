@@ -3,9 +3,9 @@ package com.ctrip.hermes.rest.resource;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -29,6 +29,11 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.ctrip.hermes.Hermes.Env;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.log.BizEvent;
@@ -36,6 +41,7 @@ import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.rest.metrics.RestMetricsRegistry;
 import com.ctrip.hermes.rest.service.ProducerSendService;
 
 @Path("/topics/")
@@ -43,10 +49,11 @@ import com.ctrip.hermes.rest.service.ProducerSendService;
 @Produces(MediaType.APPLICATION_JSON)
 public class TopicsResource {
 
-	private static class TopicTimeoutHandler implements TimeoutHandler {
+	private class TopicTimeoutHandler implements TimeoutHandler {
 
 		@Override
 		public void handleTimeout(AsyncResponse asyncResponse) {
+			timeoutMeter.mark();
 			asyncResponse.resume(Response.status(Status.REQUEST_TIMEOUT).entity("Timed out").build());
 		}
 
@@ -55,12 +62,6 @@ public class TopicsResource {
 	private static final Logger logger = LoggerFactory.getLogger(TopicsResource.class);
 
 	private static final BizLogger bizLogger = PlexusComponentLocator.lookup(BizLogger.class);
-
-	private ProducerSendService producerService = PlexusComponentLocator.lookup(ProducerSendService.class);
-
-	private ClientEnvironment env = PlexusComponentLocator.lookup(ClientEnvironment.class);
-
-	private ExecutorService executor = Executors.newCachedThreadPool(HermesThreadFactory.create("MessagePublish", true));
 
 	public static final String PARTITION_KEY = "X-Hermes-Partition-Key";
 
@@ -72,12 +73,61 @@ public class TopicsResource {
 
 	public static final String WITHOUT_HEADER = "X-Hermes-Without-Header";
 
+	private ProducerSendService producerService = PlexusComponentLocator.lookup(ProducerSendService.class);
+
+	private ClientEnvironment env = PlexusComponentLocator.lookup(ClientEnvironment.class);
+
+	private ThreadPoolExecutor executor;
+
+	private Meter timeoutMeter;
+
+	private Meter requestMeter;
+
+	private Histogram requestSizeHistogram;
+
+	private Timer sendTimer;
+
+	public TopicsResource() {
+		executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(HermesThreadFactory.create("MessagePublish", true));
+		RestMetricsRegistry.getInstance().getMetricRegistry().register(
+		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "ActiveCount"), new Gauge<Integer>() {
+			      @Override
+			      public Integer getValue() {
+				      return executor.getActiveCount();
+			      }
+		      });
+		RestMetricsRegistry.getInstance().getMetricRegistry().register(
+		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "PoolSize"), new Gauge<Integer>() {
+			      @Override
+			      public Integer getValue() {
+				      return executor.getPoolSize();
+			      }
+		      });
+		RestMetricsRegistry.getInstance().getMetricRegistry().register(
+		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "QueueSize"), new Gauge<Integer>() {
+			      @Override
+			      public Integer getValue() {
+				      return executor.getQueue().size();
+			      }
+		      });
+
+		timeoutMeter = RestMetricsRegistry.getInstance().getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
+		      "MessagePublish", "Timeout"));
+		requestMeter = RestMetricsRegistry.getInstance().getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
+		      "MessagePublish", "Request"));
+		requestSizeHistogram = RestMetricsRegistry.getInstance().getMetricRegistry().histogram(MetricRegistry.name(TopicsResource.class,
+		      "MessagePublish", "ContentLength"));
+		sendTimer = RestMetricsRegistry.getInstance().getMetricRegistry()
+		      .timer(MetricRegistry.name(TopicsResource.class, "MessagePublish"));
+	}
+
 	private void publishAsync(final String topic, final Map<String, String> params, final InputStream content,
 	      final AsyncResponse response) {
 		executor.submit(new Runnable() {
 
 			@Override
 			public void run() {
+				final Timer.Context context = sendTimer.time();
 				try {
 					if (env.getEnv() == Env.PROD) {
 						response.setTimeout(
@@ -90,6 +140,8 @@ public class TopicsResource {
 				} catch (Exception e) {
 					response.resume(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e));
 					response.cancel();
+				} finally {
+					context.stop();
 				}
 			}
 
@@ -133,6 +185,8 @@ public class TopicsResource {
 		receiveEvent.addData("remoteHost", request.getRemoteHost());
 		bizLogger.log(receiveEvent);
 
+		requestMeter.mark();
+		requestSizeHistogram.update(request.getContentLength());
 		publishAsync(topicName, params, content, response);
 	}
 }

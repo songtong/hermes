@@ -14,10 +14,13 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.rest.metrics.RestMetricsRegistry;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
@@ -41,6 +44,14 @@ public class SubscriptionRegisterService {
 	public void start() {
 		scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("SubscriptionChecker",
 		      true));
+
+		RestMetricsRegistry.getInstance().getMetricRegistry().register(
+		      MetricRegistry.name(SubscriptionRegisterService.class, "SubscriptionPusher", "Holders"), new Gauge<Integer>() {
+			      @Override
+			      public Integer getValue() {
+				      return consumerHolders.size();
+			      }
+		      });
 
 		scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
 

@@ -19,6 +19,10 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
@@ -29,6 +33,7 @@ import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
+import com.ctrip.hermes.rest.metrics.RestMetricsRegistry;
 
 @Named
 public class SubscriptionPushService implements Initializable, Disposable {
@@ -45,6 +50,14 @@ public class SubscriptionPushService implements Initializable, Disposable {
 
 	private RequestConfig m_requestConfig;
 
+	private Meter failedMeter;
+
+	private Meter requestMeter;
+
+	private Histogram requestSizeHistogram;
+
+	private Timer pushTimer;
+
 	@Override
 	public void initialize() throws InitializationException {
 		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
@@ -58,6 +71,15 @@ public class SubscriptionPushService implements Initializable, Disposable {
 		b.setConnectTimeout(Integer.valueOf(globalConfig.getProperty("gateway.subcription.connect.timeout", "2000")));
 		b.setSocketTimeout(Integer.valueOf(globalConfig.getProperty("gateway.subscription.socket.timeout", "5000")));
 		m_requestConfig = b.build();
+
+		failedMeter = RestMetricsRegistry.getInstance().getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
+		      "MessageSubscription", "Failed"));
+		requestMeter = RestMetricsRegistry.getInstance().getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
+		      "MessageSubscription", "Request"));
+		requestSizeHistogram = RestMetricsRegistry.getInstance().getMetricRegistry().histogram(MetricRegistry.name(
+		      SubscriptionPushService.class, "MessageSubscription", "BodySize"));
+		pushTimer = RestMetricsRegistry.getInstance().getMetricRegistry().timer(MetricRegistry.name(SubscriptionPushService.class,
+		      "MessageSubscription"));
 	}
 
 	public ConsumerHolder startPusher(final SubscriptionView sub) {
@@ -72,12 +94,15 @@ public class SubscriptionPushService implements Initializable, Disposable {
 					      boolean isCouldAck = false;
 					      for (final String url : urls) {
 						      BizEvent pushEvent = new BizEvent("Rest.push");
+						      Timer.Context timer = pushTimer.time();
 						      try {
 							      pushEvent.addData("topic", sub.getTopic());
 							      pushEvent.addData("group", sub.getGroup());
 							      pushEvent.addData("refKey", msg.getRefKey());
 							      pushEvent.addData("endpoint", url);
 
+							      requestMeter.mark();
+							      requestSizeHistogram.update(msg.getBody().getEncodedMessage().length);
 							      SubscriptionPushCommand command = new SubscriptionPushCommand(m_httpClient, m_requestConfig,
 							            msg, url);
 							      HttpResponse pushResponse = command.execute();
@@ -100,6 +125,7 @@ public class SubscriptionPushService implements Initializable, Disposable {
 								                  msg.getPartition(), msg.getOffset(), msg.getRefKey());
 							      }
 
+							      failedMeter.mark();
 							      if (command.isCircuitBreakerOpen()) {
 								      long errorCount = command.getMetrics().getHealthCounts().getErrorCount();
 								      m_logger.warn("Push message CircuitBreak is open, sleep {} seconds", errorCount);
@@ -109,6 +135,7 @@ public class SubscriptionPushService implements Initializable, Disposable {
 							      m_logger.warn("Push message exception", e);
 						      } finally {
 							      m_bizLogger.log(pushEvent);
+							      timer.close();
 						      }
 					      }
 
