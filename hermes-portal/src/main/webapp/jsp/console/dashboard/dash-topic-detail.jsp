@@ -13,8 +13,8 @@
 					生产速度</button>
 				<button type="button" data-toggle="modal" data-target="#top-consumer-modal" class="btn btn-xs btn-warning" style="text-align: center;"><span class="glyphicon glyphicon-th-list"></span>
 					消费速度</button>
-				<button type="button" data-toggle="modal" data-target="#top-process-modal" class="btn btn-xs btn-primary" style="text-align: center;"><span class="glyphicon glyphicon-th-list"></span>
-					消费时间</button>
+				<button type="button" data-toggle="modal" data-target="#top-process-modal" class="btn btn-xs btn-primary" style="text-align: center;"><span class="glyphicon glyphicon-time"></span> 消费时间</button>
+				<button type="button" data-toggle="modal" data-target="#top-latest-modal" class="btn btn-xs btn-info" style="text-align: center;"><span class="glyphicon glyphicon-eye-open"></span> 最新消息</button>
 			</div>
 			<div class="panel-body">
 				<iframe style="border: 0" ng-src="{{get_produced_kibana('${model.kibanaUrl}')}}" height="200" width="100%"></iframe>
@@ -188,6 +188,53 @@
 						</div>
 					</div>
 				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="top-latest-modal" tabindex="-1" role="dialog" aria-labelledby="top-latest-label" aria-hidden="true">
+	<div class="modal-dialog" style="width: 1024px">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="top-latest-label">
+					最新消息 &emsp;
+					<button class="btn btn-xs btn-success" ng-click="refresh_latest()"><span class="glyphicon glyphicon-refresh"></span> 刷新</button>
+				</h4>
+
+			</div>
+			<div class="modal-body">
+				<table class="table table-bordered table-striped table-condensed table-hover">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Producer</th>
+							<th>Ref Key</th>
+							<th>Attributes</th>
+							<th>Codec</th>
+							<th>Date</th>
+							<th>Payload</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="row in topic_latest">
+							<td><span ng-bind="$index + 1"></span></td>
+							<td><span ng-bind="row.producerIp"></span></td>
+							<td><a href="" tooltip="{{row.refKey}}">
+									<span ng-bind="truncate(row.refKey, 10)"></span>
+								</a></td>
+							<td><a href="" tooltip="{{tooltip_format(row.attributes)}}">
+									<span ng-bind="truncate(row.attributes, 10)"></span>
+								</a></td>
+							<td><span ng-bind="row.codecType"></span></td>
+							<td><span ng-bind="row.creationDate | date:'yyyy-MM-dd HH:mm:ss'"></span></td>
+							<td><a tooltip="{{tooltip_format(row.payload)}}" href="">
+									<span ng-bind="truncate(row.payload, 50)"></span>
+								</a></td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>

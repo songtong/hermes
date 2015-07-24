@@ -4,6 +4,7 @@ dashtopic.service("DashtopicService", [ "$http", "$resource", function($http, $r
 	var topic_briefs = [];
 	var main_board_content = {};
 	var topic_delays = [];
+	var topic_latest = [];
 	var current_topic = "";
 
 	var monitor_resource = $resource("/api/monitor/", {}, {
@@ -16,6 +17,11 @@ dashtopic.service("DashtopicService", [ "$http", "$resource", function($http, $r
 			method : "GET",
 			isArray : false,
 			url : "/api/monitor/detail/topics/:topic/delay"
+		},
+		get_topic_latest : {
+			method : "GET",
+			isArray : true,
+			url : "/api/monitor/topics/:topic/latest"
 		}
 	});
 
@@ -49,6 +55,9 @@ dashtopic.service("DashtopicService", [ "$http", "$resource", function($http, $r
 		get_topic_delays : function() {
 			return topic_delays;
 		},
+		get_topic_latest : function() {
+			return topic_latest;
+		},
 		update_topic_delays : function(topic) {
 			if (topic.length > 0) {
 				monitor_resource.get_topic_delays({
@@ -56,6 +65,15 @@ dashtopic.service("DashtopicService", [ "$http", "$resource", function($http, $r
 				}, function(data) {
 					topic_delays = data['details'];
 				});
+			}
+		},
+		update_topic_latest : function(topic) {
+			if (topic.length > 0) {
+				monitor_resource.get_topic_latest({
+					'topic' : topic
+				}, function(data) {
+					topic_latest = data;
+				})
 			}
 		},
 		get_current_topic : function() {

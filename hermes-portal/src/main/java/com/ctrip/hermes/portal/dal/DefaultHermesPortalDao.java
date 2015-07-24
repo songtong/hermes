@@ -1,6 +1,9 @@
 package com.ctrip.hermes.portal.dal;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +13,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.portal.assist.ListUtils;
 import com.ctrip.hermes.portal.config.PortalConstants;
 
 @Named(type = HermesPortalDao.class)
@@ -73,5 +77,27 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 		}
 
 		return latestConsumed;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<MessagePriority> getLatestMessages(String topic, int partition, int count) throws DalException {
+		try {
+			List<MessagePriority> k0 = m_msgDao.topK(topic, partition, PortalConstants.PRIORITY_TRUE, count,
+			      MessagePriorityEntity.READSET_FULL);
+			List<MessagePriority> k1 = m_msgDao.topK(topic, partition, PortalConstants.PRIORITY_FALSE, count,
+			      MessagePriorityEntity.READSET_FULL);
+			return ListUtils.getTopK(count, new Comparator<MessagePriority>() {
+				@Override
+				public int compare(MessagePriority o1, MessagePriority o2) {
+					return o1.getCreationDate().compareTo(o2.getCreationDate());
+				}
+			}, new List[] { k0, k1 });
+		} catch (DalNotFoundException e) {
+			if (log.isDebugEnabled()) {
+				log.debug("Table has no records: {} {}", topic, partition);
+			}
+		}
+		return new ArrayList<MessagePriority>();
 	}
 }

@@ -21,12 +21,19 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.portal.assist.ListUtils;
+import com.ctrip.hermes.portal.dal.HermesPortalDao;
+import com.ctrip.hermes.portal.dal.MessagePriority;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
@@ -37,10 +44,13 @@ import com.ctrip.hermes.portal.service.monitor.MonitorService;
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class MonitorResource {
+	private static final Logger log = LoggerFactory.getLogger(MonitorResource.class);
 
 	private MonitorService m_monitorService = PlexusComponentLocator.lookup(MonitorService.class);
 
 	private PortalMetaService m_metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
+
+	private HermesPortalDao m_portalDao = PlexusComponentLocator.lookup(HermesPortalDao.class);
 
 	@GET
 	@Path("brief/topics")
@@ -87,6 +97,27 @@ public class MonitorResource {
 		}
 
 		return Response.status(Status.OK).entity(view).build();
+	}
+
+	@GET
+	@Path("topics/{topic}/latest")
+	public Response getTopicLatest(@PathParam("topic") String name) {
+		Topic topic = m_metaService.findTopicByName(name);
+		if (topic == null) {
+			throw new RestException(String.format("Topic %s is not found", name), Status.NOT_FOUND);
+		}
+
+		@SuppressWarnings("unchecked")
+		List<MessagePriority>[] ls = new List[topic.getPartitions().size()];
+		for (int i = 0; i < topic.getPartitions().size(); i++) {
+			Partition partition = topic.getPartitions().get(i);
+			try {
+				ls[i] = m_portalDao.getLatestMessages(topic.getName(), partition.getId(), 20);
+			} catch (DalException e) {
+				log.warn("Find latest messages of {}[{}] failed", topic.getName(), partition.getId(), e);
+			}
+		}
+		return Response.status(Status.OK).entity(ListUtils.getTopK(15, MessagePriority.DATE_COMPARATOR_DESC, ls)).build();
 	}
 
 	@GET
