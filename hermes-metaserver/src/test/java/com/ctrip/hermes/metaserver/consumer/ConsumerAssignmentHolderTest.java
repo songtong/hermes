@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -81,7 +82,7 @@ public class ConsumerAssignmentHolderTest {
 
 	@Test
 	public void test() throws Exception {
-		Map<Pair<String, String>, Map<String, ClientContext>> changes1 = new HashMap<>();
+		Map<Pair<String, String>, Map<String, ClientContext>> changes1 = new LinkedHashMap<>();
 		Pair<String, String> t1g1 = new Pair<String, String>("t1", "g1");
 		Map<String, ClientContext> t1g1Consumers = new HashMap<>();
 		t1g1Consumers.put("c1", new ClientContext("c1", "1.1.1.1", 1111, -1L));
@@ -154,7 +155,7 @@ public class ConsumerAssignmentHolderTest {
 		      )//
 		);
 
-		Map<Pair<String, String>, Map<String, ClientContext>> changes2 = new HashMap<>(changes1);
+		Map<Pair<String, String>, Map<String, ClientContext>> changes2 = new LinkedHashMap<>(changes1);
 		changes2.get(t1g1).remove("c1");
 		changes2.get(t1g2).remove("c3");
 		changes2.get(t2g2).remove("c2");
