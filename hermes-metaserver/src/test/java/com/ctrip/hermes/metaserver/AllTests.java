@@ -12,6 +12,7 @@ import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrateg
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListTest;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolderTest;
 import com.ctrip.hermes.metaserver.consumer.LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest;
+import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAllocatorTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({ //
@@ -31,7 +32,8 @@ LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest.class,//
       BrokerAssignmentHolderTest.class, //
       ActiveConsumerListTest.class, //
       ConsumerAssignmentHolderTest.class, //
-      // add test classes here
+      NonOrderedConsumeConsumerLeaseAllocatorTest.class, //
+// add test classes here
 
 })
 public class AllTests {
