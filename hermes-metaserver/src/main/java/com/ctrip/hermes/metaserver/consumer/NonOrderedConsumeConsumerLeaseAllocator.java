@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaserver.consumer;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -79,8 +80,10 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 				return new LeaseAcquireResponse(true, new Lease(leaseId, existingLeaseInfo.getLease().getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1L);
 			} else {
-				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
+				Collection<ClientLeaseInfo> leases = existingValidLeases.values();
+				// use the first lease's exp time
+				return new LeaseAcquireResponse(false, null, leases.iterator().next().getLease().getExpireTime());
+
 			}
 		}
 	}

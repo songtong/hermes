@@ -35,6 +35,26 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	@Inject
 	protected ConsumerAssignmentHolder m_assignmentHolder;
 
+	public void setConfig(MetaServerConfig config) {
+		m_config = config;
+	}
+
+	public void setSystemClockService(SystemClockService systemClockService) {
+		m_systemClockService = systemClockService;
+	}
+
+	public void setActiveConsumerList(ActiveConsumerListHolder activeConsumerList) {
+		m_activeConsumerList = activeConsumerList;
+	}
+
+	public void setLeaseHolder(ConsumerLeaseHolder leaseHolder) {
+		m_leaseHolder = leaseHolder;
+	}
+
+	public void setAssignmentHolder(ConsumerAssignmentHolder assignmentHolder) {
+		m_assignmentHolder = assignmentHolder;
+	}
+
 	protected void heartbeat(Tpg tpg, String consumerName, String ip, int port) {
 		m_activeConsumerList
 		      .heartbeat(new Pair<String, String>(tpg.getTopic(), tpg.getGroupId()), consumerName, ip, port);
