@@ -87,12 +87,6 @@ public class TopicResource {
 		} else if (StringUtils.isBlank(topic.getStorageType())) {
 			reason = "Storage type is required";
 			passed = false;
-		} else if (topic.getStoragePartitionSize() <= 10000) {
-			reason = "Database partition size should be bigger than 10000";
-			passed = false;
-		} else if (topic.getStoragePartitionCount() <= 5) {
-			reason = "Database partition count should be bigger than 5";
-			passed = false;
 		} else if (StringUtils.isBlank(topic.getEndpointType())) {
 			switch (topic.getStorageType()) {
 			case Storage.KAFKA:
@@ -103,7 +97,15 @@ public class TopicResource {
 				break;
 			}
 		}
-
+		if (topic.getStorageType().equals(Storage.MYSQL)) {
+			if (topic.getStoragePartitionSize() <= 10000) {
+				reason = "Database partition size should be bigger than 10000";
+				passed = false;
+			} else if (topic.getStoragePartitionCount() <= 5) {
+				reason = "Database partition count should be bigger than 5";
+				passed = false;
+			}
+		}
 		return new Pair<>(passed, passed ? topic : reason);
 	}
 
