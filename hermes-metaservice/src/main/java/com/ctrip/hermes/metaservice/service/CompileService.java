@@ -67,6 +67,9 @@ public class CompileService {
 		options.add("1.7");
 		options.add("-target");
 		options.add("1.7");
+		options.add("-classpath");
+		options.add(System.getProperty("java.class.path"));
+		
 		compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits).call();
 		for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
 			logger.warn(String.format("%s on line %d in %s: %s%n", diagnostic.getKind().toString(),
