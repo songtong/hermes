@@ -25,6 +25,9 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
+import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.reflect.AvroDefault;
+import org.codehaus.jackson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
@@ -67,9 +70,13 @@ public class CompileService {
 		options.add("1.7");
 		options.add("-target");
 		options.add("1.7");
+
+		String avro = AvroDefault.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String avroc = SpecificCompiler.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String json = JsonParser.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		options.add("-classpath");
-		options.add(System.getProperty("java.class.path"));
-		
+		options.add(String.format("%s:%s:%s:%s", System.getProperty("java.class.path"), avro, avroc, json));
+
 		compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits).call();
 		for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
 			logger.warn(String.format("%s on line %d in %s: %s%n", diagnostic.getKind().toString(),
