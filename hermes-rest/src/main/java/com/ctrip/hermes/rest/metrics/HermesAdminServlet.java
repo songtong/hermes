@@ -24,20 +24,22 @@ public class HermesAdminServlet extends AdminServlet {
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
-		this.jvmServlet = new JVMMetricsServlet();
-		this.jvmServlet.init(config);
+		if (Boolean.valueOf(config.getInitParameter("show-jvm-metrics"))) {
+			this.jvmServlet = new JVMMetricsServlet();
+			this.jvmServlet.init(config);
 
-		this.jvmUri = DEFAULT_JVM_URI;
+			this.jvmUri = DEFAULT_JVM_URI;
+		}
 	}
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		final String uri = req.getPathInfo();
-		if (uri != null && uri.equals(jvmUri)) {
+		if (uri != null && jvmUri != null && uri.equals(jvmUri)) {
 			jvmServlet.service(req, resp);
 		} else {
 			super.service(req, resp);
 		}
 	}
-	
+
 }

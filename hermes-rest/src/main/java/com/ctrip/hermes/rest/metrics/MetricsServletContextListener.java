@@ -7,7 +7,7 @@ public class MetricsServletContextListener extends MetricsServlet.ContextListene
 
 	@Override
 	protected MetricRegistry getMetricRegistry() {
-		return RestMetricsRegistry.getInstance().getMetricRegistry();
+		return RestMetricsRegistry.getMetricRegistry();
 	}
 
 }
