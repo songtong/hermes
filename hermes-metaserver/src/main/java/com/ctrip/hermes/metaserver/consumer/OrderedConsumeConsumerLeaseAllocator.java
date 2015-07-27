@@ -94,8 +94,9 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 				return new LeaseAcquireResponse(true, new Lease(leaseId, existingClientLeaseInfo.getLease().getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1L);
 			} else {
-				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
+				Collection<ClientLeaseInfo> leases = existingValidLeases.values();
+				// use the first lease's exp time
+				return new LeaseAcquireResponse(false, null, leases.iterator().next().getLease().getExpireTime());
 			}
 		}
 	}
