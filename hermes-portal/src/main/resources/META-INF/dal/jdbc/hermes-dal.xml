@@ -26,16 +26,6 @@
         		LIMIT ${batch-size}]]>
 				</statement>
 			</query>
-			<query name="top" type="SELECT" multiple="false">
-				<param name="topic" />
-				<param name="partition" />
-				<param name="priority" />
-				<statement><![CDATA[SELECT <FIELDS/>
-        		FROM <TABLE/>
-        		ORDER BY <FIELD name='id'/> DESC
-        		]]>
-				</statement>
-			</query>
 			<query name="topK" type="SELECT" multiple="true">
 				<param name="topic" />
 				<param name="partition" />
