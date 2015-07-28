@@ -15,7 +15,7 @@ import com.codahale.metrics.servlets.MetricsServlet;
 
 public class JVMMetricsServletContextListener extends JVMMetricsServlet.ContextListener {
 
-	public static final MetricRegistry JVM_METRIC_REGISTRY = new MetricRegistry();
+	public static final MetricRegistry JVM_METRIC_REGISTRY = RestMetricsRegistry.getMetricRegistry();
 
 	static {
 		JVM_METRIC_REGISTRY.registerAll(new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));

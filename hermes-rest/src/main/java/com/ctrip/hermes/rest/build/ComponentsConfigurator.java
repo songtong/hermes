@@ -21,7 +21,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(SubscriptionPushService.class));
 		all.add(A(ProducerSendService.class));
 		all.add(A(CmessageTransferService.class));
-		
+
 		return all;
 	}
 

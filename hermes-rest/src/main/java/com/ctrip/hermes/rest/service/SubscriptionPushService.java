@@ -72,13 +72,13 @@ public class SubscriptionPushService implements Initializable, Disposable {
 		b.setSocketTimeout(Integer.valueOf(globalConfig.getProperty("gateway.subscription.socket.timeout", "5000")));
 		m_requestConfig = b.build();
 
-		failedMeter = RestMetricsRegistry.getInstance().getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
+		failedMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
 		      "MessageSubscription", "Failed"));
-		requestMeter = RestMetricsRegistry.getInstance().getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
+		requestMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
 		      "MessageSubscription", "Request"));
-		requestSizeHistogram = RestMetricsRegistry.getInstance().getMetricRegistry().histogram(MetricRegistry.name(
+		requestSizeHistogram = RestMetricsRegistry.getMetricRegistry().histogram(MetricRegistry.name(
 		      SubscriptionPushService.class, "MessageSubscription", "BodySize"));
-		pushTimer = RestMetricsRegistry.getInstance().getMetricRegistry().timer(MetricRegistry.name(SubscriptionPushService.class,
+		pushTimer = RestMetricsRegistry.getMetricRegistry().timer(MetricRegistry.name(SubscriptionPushService.class,
 		      "MessageSubscription"));
 	}
 

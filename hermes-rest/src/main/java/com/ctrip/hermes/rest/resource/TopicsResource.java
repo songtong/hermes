@@ -89,21 +89,21 @@ public class TopicsResource {
 
 	public TopicsResource() {
 		executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(HermesThreadFactory.create("MessagePublish", true));
-		RestMetricsRegistry.getInstance().getMetricRegistry().register(
+		RestMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "ActiveCount"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
 				      return executor.getActiveCount();
 			      }
 		      });
-		RestMetricsRegistry.getInstance().getMetricRegistry().register(
+		RestMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "PoolSize"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
 				      return executor.getPoolSize();
 			      }
 		      });
-		RestMetricsRegistry.getInstance().getMetricRegistry().register(
+		RestMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "QueueSize"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
@@ -111,13 +111,13 @@ public class TopicsResource {
 			      }
 		      });
 
-		timeoutMeter = RestMetricsRegistry.getInstance().getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
+		timeoutMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
 		      "MessagePublish", "Timeout"));
-		requestMeter = RestMetricsRegistry.getInstance().getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
+		requestMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
 		      "MessagePublish", "Request"));
-		requestSizeHistogram = RestMetricsRegistry.getInstance().getMetricRegistry().histogram(MetricRegistry.name(TopicsResource.class,
+		requestSizeHistogram = RestMetricsRegistry.getMetricRegistry().histogram(MetricRegistry.name(TopicsResource.class,
 		      "MessagePublish", "ContentLength"));
-		sendTimer = RestMetricsRegistry.getInstance().getMetricRegistry()
+		sendTimer = RestMetricsRegistry.getMetricRegistry()
 		      .timer(MetricRegistry.name(TopicsResource.class, "MessagePublish"));
 	}
 

@@ -1,47 +1,32 @@
 package com.ctrip.hermes.rest.metrics;
 
-import java.util.concurrent.locks.ReentrantLock;
-
+import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 
 public class RestMetricsRegistry {
 
-	private static RestMetricsRegistry INSTANCE;
-	
-	private MetricRegistry metricRegistry = new MetricRegistry();
+	private static MetricRegistry metricRegistry = new MetricRegistry();
 
-	private HealthCheckRegistry healthCheckRegistry = new HealthCheckRegistry();
+	private static HealthCheckRegistry healthCheckRegistry = new HealthCheckRegistry();
 
-	private static ReentrantLock lock = new ReentrantLock();
-	
-	private RestMetricsRegistry(){
-		
-	}
-	
-	public static RestMetricsRegistry getInstance(){
-		if(INSTANCE==null){
-			try{
-				lock.lock();
-				if(INSTANCE==null){
-					INSTANCE = new RestMetricsRegistry();
-				}
-			}finally{
-				lock.unlock();
-			}
-		}
-		return INSTANCE;
+	static{
+		final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
+		reporter.start();
 	}
 	
 	public static void reset(){
-		INSTANCE = null;
+		metricRegistry = new MetricRegistry();
+		healthCheckRegistry = new HealthCheckRegistry();
+		final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
+		reporter.start();
 	}
 	
-	public MetricRegistry getMetricRegistry(){
+	public static MetricRegistry getMetricRegistry(){
 		return metricRegistry;
 	}
 	
-	public HealthCheckRegistry getHealthCheckRegistry(){
+	public static HealthCheckRegistry getHealthCheckRegistry(){
 		return healthCheckRegistry;
 	}
 }

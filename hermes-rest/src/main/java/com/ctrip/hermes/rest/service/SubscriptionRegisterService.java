@@ -45,7 +45,7 @@ public class SubscriptionRegisterService {
 		scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("SubscriptionChecker",
 		      true));
 
-		RestMetricsRegistry.getInstance().getMetricRegistry().register(
+		RestMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(SubscriptionRegisterService.class, "SubscriptionPusher", "Holders"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
