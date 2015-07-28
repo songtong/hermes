@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -50,26 +52,14 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	private AtomicReference<Env> m_env = new AtomicReference<Env>();
 
+	private Map<Env, String> m_env2MetaDomain = new HashMap<>();
+
+	// for test only
+	private Boolean m_localMode;
+
 	@Override
 	public String getMetaServerDomainName() {
-		switch (getEnv()) {
-		case LOCAL:
-			return "meta.hermes.local";
-		case DEV:
-			return "10.3.8.63";
-		case LPT:
-			return "10.3.8.63";
-		case FAT:
-		case FWS:
-			return "meta.hermes.fws.qa.nt.ctripcorp.com";
-		case UAT:
-			return "meta.hermes.fx.uat.qa.nt.ctripcorp.com";
-		case PROD:
-			return "meta.hermes.fx.ctripcorp.com";
-
-		default:
-			throw new IllegalArgumentException(String.format("Unknown hermes env %s", getEnv()));
-		}
+		return m_env2MetaDomain.get(getEnv());
 	}
 
 	@Override
@@ -135,6 +125,17 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 		} catch (IOException e) {
 			throw new InitializationException("Error read producer default config file", e);
 		}
+
+		m_env2MetaDomain.put(Env.LOCAL, m_globalDefault.getProperty("local.domain", "meta.hermes.local"));
+		m_env2MetaDomain.put(Env.DEV, m_globalDefault.getProperty("dev.domain", "10.3.8.63"));
+		m_env2MetaDomain.put(Env.LPT, m_globalDefault.getProperty("lpt.domain", "10.3.8.63"));
+		m_env2MetaDomain.put(Env.FAT, m_globalDefault.getProperty("fat.domain", "meta.hermes.fws.qa.nt.ctripcorp.com"));
+		m_env2MetaDomain.put(Env.FWS, m_globalDefault.getProperty("fws.domain", "meta.hermes.fws.qa.nt.ctripcorp.com"));
+		m_env2MetaDomain
+		      .put(Env.UAT, m_globalDefault.getProperty("uat.domain", "meta.hermes.fx.uat.qa.nt.ctripcorp.com"));
+		m_env2MetaDomain.put(Env.PROD, m_globalDefault.getProperty("prod.domain", "meta.hermes.fx.ctripcorp.com"));
+
+		logger.info(String.format("Meta server domains: %s", m_env2MetaDomain));
 	}
 
 	@Override
@@ -169,15 +170,24 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	@Override
 	public boolean isLocalMode() {
-		boolean isLocalMode;
-		if (System.getenv().containsKey(KEY_IS_LOCAL_MODE)) {
-			isLocalMode = Boolean.parseBoolean(System.getenv(KEY_IS_LOCAL_MODE));
-		} else if (getGlobalConfig().containsKey(KEY_IS_LOCAL_MODE)) {
-			isLocalMode = Boolean.parseBoolean(getGlobalConfig().getProperty(KEY_IS_LOCAL_MODE));
+		if (m_localMode != null) {
+			return m_localMode;
 		} else {
-			isLocalMode = false;
+			boolean isLocalMode;
+			if (System.getenv().containsKey(KEY_IS_LOCAL_MODE)) {
+				isLocalMode = Boolean.parseBoolean(System.getenv(KEY_IS_LOCAL_MODE));
+			} else if (getGlobalConfig().containsKey(KEY_IS_LOCAL_MODE)) {
+				isLocalMode = Boolean.parseBoolean(getGlobalConfig().getProperty(KEY_IS_LOCAL_MODE));
+			} else {
+				isLocalMode = false;
+			}
+			return isLocalMode;
 		}
-		return isLocalMode;
+	}
+
+	// for test only!
+	public void setLocalMode(Boolean localMode) {
+		m_localMode = localMode;
 	}
 
 }
