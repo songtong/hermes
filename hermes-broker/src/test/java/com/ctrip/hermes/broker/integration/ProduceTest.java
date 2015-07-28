@@ -125,12 +125,12 @@ public class ProduceTest extends BaseBrokerTest {
 		setCommandHandler(new CommandHandler() {
 			@Override
 			public void handle(Command arg) {
-				latch.countDown();
 				if (arg instanceof SendMessageAckCommand) {
 					sendAckCmdRef.set((SendMessageAckCommand) arg);
 				} else if (arg instanceof SendMessageResultCommand) {
 					sendResultCmdRef.set((SendMessageResultCommand) arg);
 				}
+				latch.countDown();
 			}
 		});
 

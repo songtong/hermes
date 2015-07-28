@@ -11,10 +11,10 @@ import org.codehaus.plexus.component.factory.ComponentInstantiationException;
 import org.codehaus.plexus.component.repository.ComponentDescriptor;
 import org.junit.After;
 import org.junit.Before;
-import org.unidal.dal.jdbc.test.JdbcTestCase;
+import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
 
-public abstract class MockitoComponentTestCase extends JdbcTestCase {
+public abstract class MockitoComponentTestCase extends ComponentTestCase {
 
 	public static final String FACTORY = "MockitoPlexusComponentFactory";
 
@@ -27,10 +27,9 @@ public abstract class MockitoComponentTestCase extends JdbcTestCase {
 
 	@After
 	@Override
-	public void tearDown() throws Exception {
-		super.tearDown();
-
+	public final void tearDown() throws Exception {
 		MockitoPlexusComponentFactory.clearMockitoComponent();
+		super.tearDown();
 	}
 
 	protected <T> void defineMockitoComponent(Class<T> role, T instance) throws Exception {
