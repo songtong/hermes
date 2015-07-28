@@ -19,6 +19,20 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 		delete_subscriber : {
 			method : 'DELETE',
 			url : '/api/subscriptions/:id'
+		},
+		start_subscriber : {
+			method : 'PUT',
+			url : '/api/subscriptions/:id/start',
+			params : {
+				id : '@id'
+			}
+		},
+		stop_subscriber : {
+			method : 'PUT',
+			url : '/api/subscriptions/:id/stop',
+			params : {
+				id : '@id'
+			}
 		}
 	});
 
@@ -75,5 +89,29 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 				}
 			}
 		});
-	}
+	};
+
+	scope.start_subscription = function(sb) {
+		console.log(sb);
+		subscription_resource.start_subscriber({
+			'id' : sb.id
+		}, function(data) {
+			show_op_info.show("Start subscriber success!", true);
+			sb.status = "RUNNING";
+		}, function(resp) {
+			show_op_info.show("Start subscriber failed! " + resp.data, false);
+		});
+	};
+
+	scope.stop_subscription = function(sb) {
+		console.log(sb);
+		subscription_resource.stop_subscriber({
+			'id' : sb.id
+		}, function(data) {
+			show_op_info.show("Stop subscriber success!", true);
+			sb.status = "STOPPED";
+		}, function(resp) {
+			show_op_info.show("Stop subscriber failed! " + resp.data, false);
+		});
+	};
 } ]);
