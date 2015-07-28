@@ -1,5 +1,7 @@
 package com.ctrip.hermes.portal.resource;
 
+import io.netty.buffer.Unpooled;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,6 +28,11 @@ import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
+import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
+import com.ctrip.hermes.core.utils.CollectionUtil;
+import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
+import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
@@ -117,7 +124,46 @@ public class MonitorResource {
 				log.warn("Find latest messages of {}[{}] failed", topic.getName(), partition.getId(), e);
 			}
 		}
-		return Response.status(Status.OK).entity(ListUtils.getTopK(15, MessagePriority.DATE_COMPARATOR_DESC, ls)).build();
+		List<MessagePriority> list = ListUtils.getTopK(15, MessagePriority.DATE_COMPARATOR_DESC, ls);
+
+		return Response.status(Status.OK).entity(CollectionUtil.collect(list, new Transformer() {
+			@Override
+			public Object transform(Object obj) {
+				return new MessageView((MessagePriority) obj);
+			}
+		})).build();
+	}
+
+	private static class MessageView {
+		private MessagePriority m_rawMessage;
+
+		private String m_attributesString;
+
+		private String m_payloadString;
+
+		public MessageView(MessagePriority msg) {
+			m_rawMessage = msg;
+			HermesPrimitiveCodec codec = new HermesPrimitiveCodec(Unpooled.wrappedBuffer(msg.getAttributes()));
+			m_attributesString = codec.readStringStringMap().toString();
+			if (msg.getCodecType().equals("json")) {
+				m_payloadString = JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(), Object.class));
+			}
+		}
+
+		@SuppressWarnings("unused")
+		public String getAttributesString() {
+			return m_attributesString;
+		}
+
+		@SuppressWarnings("unused")
+		public String getPayloadString() {
+			return m_payloadString;
+		}
+
+		@SuppressWarnings("unused")
+		public MessagePriority getRawMessage() {
+			return m_rawMessage;
+		}
 	}
 
 	@GET
