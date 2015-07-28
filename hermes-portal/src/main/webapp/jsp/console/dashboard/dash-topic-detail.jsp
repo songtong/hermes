@@ -220,17 +220,17 @@
 					<tbody>
 						<tr ng-repeat="row in topic_latest">
 							<td><span ng-bind="$index + 1"></span></td>
-							<td><span ng-bind="row.producerIp"></span></td>
-							<td><a href="" tooltip="{{row.refKey}}">
-									<span ng-bind="truncate(row.refKey, 10)"></span>
+							<td><span ng-bind="row.rawMessage.producerIp"></span></td>
+							<td><a href="" tooltip="{{row.rawMessage.refKey}}">
+									<span ng-bind="truncate(row.rawMessage.refKey, 10)"></span>
 								</a></td>
-							<td><a href="" tooltip="{{tooltip_format(row.attributes)}}">
-									<span ng-bind="truncate(row.attributes, 10)"></span>
+							<td><a href="" tooltip="{{tooltip_format(row.attributesString)}}">
+									<span ng-bind="truncate(row.attributesString, 10)"></span>
 								</a></td>
-							<td><span ng-bind="row.codecType"></span></td>
-							<td><span ng-bind="row.creationDate | date:'yyyy-MM-dd HH:mm:ss'"></span></td>
-							<td><a tooltip="{{tooltip_format(row.payload)}}" href="">
-									<span ng-bind="truncate(row.payload, 50)"></span>
+							<td><span ng-bind="row.rawMessage.codecType"></span></td>
+							<td><span ng-bind="row.rawMessage.creationDate | date:'yyyy-MM-dd HH:mm:ss'"></span></td>
+							<td><a tooltip="{{tooltip_format(row.payloadString)}}" href="">
+									<span ng-bind="truncate(row.payloadString, 50)"></span>
 								</a></td>
 						</tr>
 					</tbody>
