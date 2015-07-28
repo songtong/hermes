@@ -57,4 +57,8 @@ public class SendMessageResultCommand extends AbstractCommand {
 		codec.writeIntBooleanMap(m_successes);
 	}
 
+	public Map<Integer, Boolean> getSuccesses() {
+		return m_successes;
+	}
+
 }

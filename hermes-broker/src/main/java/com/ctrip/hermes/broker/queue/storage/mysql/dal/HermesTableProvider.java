@@ -16,6 +16,8 @@ public class HermesTableProvider implements TableProvider {
 	@Inject
 	private MetaService m_metaService;
 
+	private String m_tablePrefix = "";
+
 	@Override
 	public String getDataSourceName(Map<String, Object> hints, String logicalTableName) {
 		QueryDef def = (QueryDef) hints.get(QueryEngine.HINT_QUERY);
@@ -32,25 +34,25 @@ public class HermesTableProvider implements TableProvider {
 		String db = toDbName(tpAware.getTopic(), tpAware.getPartition());
 		switch (logicalTableName) {
 		case "message-priority":
-			fmt = "%s_message_%s";
+			fmt = m_tablePrefix + "%s_message_%s";
 			TopicPartitionPriorityAware tppAware = (TopicPartitionPriorityAware) tpAware;
 			return String.format(fmt, db, tppAware.getPriority());
 
 		case "resend-group-id":
-			fmt = "%s_resend_%s";
+			fmt = m_tablePrefix + "%s_resend_%s";
 			TopicPartitionPriorityGroupAware tpgAware = (TopicPartitionPriorityGroupAware) tpAware;
 			return String.format(fmt, db, tpgAware.getGroupId());
 
 		case "offset-message":
-			fmt = "%s_offset_message";
+			fmt = m_tablePrefix + "%s_offset_message";
 			return String.format(fmt, db);
 
 		case "offset-resend":
-			fmt = "%s_offset_resend";
+			fmt = m_tablePrefix + "%s_offset_resend";
 			return String.format(fmt, db);
 
 		case "dead-letter":
-			fmt = "%s_dead_letter";
+			fmt = m_tablePrefix + "%s_dead_letter";
 			return String.format(fmt, db);
 
 		default:
@@ -84,6 +86,10 @@ public class HermesTableProvider implements TableProvider {
 		default:
 			throw new IllegalArgumentException(String.format("Unknown query type '%s'", queryType));
 		}
+	}
+
+	public void setTablePrefix(String tablePrefix) {
+		m_tablePrefix = tablePrefix;
 	}
 
 }

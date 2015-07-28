@@ -283,4 +283,9 @@ public class SendMessageCommand extends AbstractCommand {
 
 		return pairs;
 	}
+
+	public Map<Integer, SettableFuture<SendResult>> getFutures() {
+		return m_futures;
+	}
+
 }
