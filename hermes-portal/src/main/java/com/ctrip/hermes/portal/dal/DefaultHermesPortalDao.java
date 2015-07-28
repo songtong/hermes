@@ -8,7 +8,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
-import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
@@ -39,19 +38,11 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 	public Date getLatestProduced(String topic, int partition) throws DalException {
 		Date latestProduced = new Date(0);
 
-		try {
-			MessagePriority msg = null;
+		MessagePriority msg = doFindLatestMessage(topic, partition, PortalConstants.PRIORITY_TRUE);
+		latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
 
-			msg = m_msgDao.top(topic, partition, PortalConstants.PRIORITY_TRUE, MessagePriorityEntity.READSET_FULL);
-			latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
-
-			msg = m_msgDao.top(topic, partition, PortalConstants.PRIORITY_FALSE, MessagePriorityEntity.READSET_FULL);
-			latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
-		} catch (DalNotFoundException e) {
-			if (log.isDebugEnabled()) {
-				log.debug("Table has no records: {} {}", topic, partition);
-			}
-		}
+		msg = doFindLatestMessage(topic, partition, PortalConstants.PRIORITY_FALSE);
+		latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
 
 		return latestProduced;
 	}
@@ -60,44 +51,52 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 	public Date getLatestConsumed(String topic, int partition, int group) throws DalException {
 		Date latestConsumed = new Date(0);
 
-		try {
-			OffsetMessage off = null;
+		OffsetMessage off = findOffsetMessage(topic, partition, PortalConstants.PRIORITY_TRUE, group);
+		latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
 
-			off = m_offsetDao.find(topic, partition, PortalConstants.PRIORITY_TRUE, group,
-			      OffsetMessageEntity.READSET_FULL);
-			latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
-
-			off = m_offsetDao.find(topic, partition, PortalConstants.PRIORITY_FALSE, group,
-			      OffsetMessageEntity.READSET_FULL);
-			latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
-		} catch (DalNotFoundException e) {
-			if (log.isDebugEnabled()) {
-				log.debug("Table has no records: {} {}", topic, partition);
-			}
-		}
+		off = findOffsetMessage(topic, partition, PortalConstants.PRIORITY_FALSE, group);
+		latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
 
 		return latestConsumed;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
+	@SuppressWarnings("unchecked")
 	public List<MessagePriority> getLatestMessages(String topic, int partition, int count) throws DalException {
-		try {
-			List<MessagePriority> k0 = m_msgDao.topK(topic, partition, PortalConstants.PRIORITY_TRUE, count,
-			      MessagePriorityEntity.READSET_FULL);
-			List<MessagePriority> k1 = m_msgDao.topK(topic, partition, PortalConstants.PRIORITY_FALSE, count,
-			      MessagePriorityEntity.READSET_FULL);
-			return ListUtils.getTopK(count, new Comparator<MessagePriority>() {
-				@Override
-				public int compare(MessagePriority o1, MessagePriority o2) {
-					return o1.getCreationDate().compareTo(o2.getCreationDate());
-				}
-			}, new List[] { k0, k1 });
-		} catch (DalNotFoundException e) {
-			if (log.isDebugEnabled()) {
-				log.debug("Table has no records: {} {}", topic, partition);
+		List<MessagePriority> k0 = doFindLatestMessages(topic, partition, PortalConstants.PRIORITY_TRUE, count);
+		List<MessagePriority> k1 = doFindLatestMessages(topic, partition, PortalConstants.PRIORITY_FALSE, count);
+		return ListUtils.getTopK(count, new Comparator<MessagePriority>() {
+			@Override
+			public int compare(MessagePriority o1, MessagePriority o2) {
+				return o1.getCreationDate().compareTo(o2.getCreationDate());
 			}
+		}, new List[] { k0, k1 });
+	}
+
+	private OffsetMessage findOffsetMessage(String topic, int partition, int priority, int groupId) {
+		try {
+			return m_offsetDao.find(topic, partition, priority, groupId, OffsetMessageEntity.READSET_FULL);
+		} catch (Exception e) {
+			if (log.isDebugEnabled()) {
+				log.debug("Find offset message failed, topic:{} priority:{} group:{}", topic, partition, groupId, e);
+			}
+			return null;
 		}
-		return new ArrayList<MessagePriority>();
+	}
+
+	private MessagePriority doFindLatestMessage(String topic, int partition, int priority) {
+		List<MessagePriority> list = doFindLatestMessages(topic, partition, priority, 1);
+		return list.size() > 0 ? list.get(0) : null;
+	}
+
+	private List<MessagePriority> doFindLatestMessages(String topic, int partition, int priority, int count) {
+		try {
+			return m_msgDao.topK(topic, partition, priority, count, MessagePriorityEntity.READSET_FULL);
+		} catch (Exception e) {
+			if (log.isDebugEnabled()) {
+				log.debug("Find top K failed: {} {}", topic, partition, e);
+			}
+			return new ArrayList<MessagePriority>();
+		}
 	}
 }
