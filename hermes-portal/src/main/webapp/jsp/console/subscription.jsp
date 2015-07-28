@@ -17,6 +17,7 @@
 						<th>Topic</th>
 						<th>Consumer</th>
 						<th>Endpoints</th>
+						<th width="20px">Status</th>
 						<th width="100px"><button class="btn btn-success btn-xs" ng-click="add_row()"><span class="glyphicon glyphicon-plus"></span> 新增</button></th>
 					</tr>
 				</thead>
@@ -27,12 +28,16 @@
 						<td><span editable-text="sb.topic" ng-bind="sb.topic || 'Not Set'" e-name="topic" e-form="rowform" e-typeahead="topic for topic in topic_names | filter:$viewValue | limitTo:8"></span></td>
 						<td><span editable-text="sb.group" ng-bind="sb.group || 'Not Set'" e-name="group" e-form="rowform" e-typeahead="consumer for consumer in consumer_names | filter:$viewValue | limitTo:8"></span></td>
 						<td><span editable-text="sb.endpoints" ng-bind="sb.endpoints || 'Not Set'" e-name="endpoints" e-form="rowform"></span></td>
-						<td width="150px">
+						<td style="text-align: center;"><span ng-if="sb.status=='STOPPED'" tooltip="{{sb.status}}" class="status-danger"></span> <span ng-if="sb.status=='RUNNING'" tooltip="{{sb.status}}"
+								class="status-ok"></span></td>
+						<td width="180px">
 							<form shown="inserted == sb" onaftersave="add_subscriber($data)" name="rowform" ng-show="rowform.$visible" class="form-buttons form-inline" editable-form>
 								<button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-floppy-save"></span> 保存</button>
 								<button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-log-out"></span> 取消</button>
 							</form>
 							<div class="buttons" ng-show="!rowform.$visible">
+								<button class="btn btn-success btn-xs" ng-if="sb.status=='STOPPED'" ng-click="start_subscription(sb)"><span class="glyphicon glyphicon-play"></span> 启用</button>
+								<button class="btn btn-danger btn-xs" ng-if="sb.status=='RUNNING'" ng-click="stop_subscription(sb)"><span class="glyphicon glyphicon-pause"></span> 停用</button>
 								<button class="btn btn-warning btn-xs" ng-click="rowform.$show()"><span class="glyphicon glyphicon-edit"></span> 修改</button>
 								<button class="btn btn-danger btn-xs" ng-click="del_row(sb)"><span class="glyphicon glyphicon-remove"></span> 删除</button>
 							</div>
