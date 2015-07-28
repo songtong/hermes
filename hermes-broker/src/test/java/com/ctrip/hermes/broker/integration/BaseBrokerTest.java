@@ -13,17 +13,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.After;
 import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.dal.jdbc.datasource.DataSourceManager;
 import org.unidal.dal.jdbc.datasource.DataSourceProvider;
+import org.unidal.dal.jdbc.datasource.JdbcDataSourceDescriptorManager;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourceDef;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourcesDef;
 import org.unidal.dal.jdbc.datasource.model.entity.PropertiesDef;
 import org.unidal.dal.jdbc.mapping.TableProvider;
+import org.unidal.dal.jdbc.test.JdbcTestHelper;
 import org.unidal.dal.jdbc.test.TableMaker;
+import org.unidal.dal.jdbc.test.TestDataSourceManager;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
@@ -73,14 +78,16 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 
 	private CommandHandler m_cmdHandler;
 
-	@Override
-	protected String getDefaultDataSource() {
-		return "ds0";
-	}
+	private final static String DATASOURCE = "ds0";
 
 	@Before
 	public final void before() throws Exception {
 		((DefaultClientEnvironment) lookup(ClientEnvironment.class)).setLocalMode(true);
+
+		// unidal's jdbc unit test support classes
+		defineComponent(JdbcTestHelper.class);
+		defineComponent(DataSourceManager.class, TestDataSourceManager.class) //
+		      .req(JdbcDataSourceDescriptorManager.class);
 
 		createTables("hermes.xml");
 
@@ -88,7 +95,7 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 		DataSourceDef def = new DataSourceDef("ds0");
 		PropertiesDef props = new PropertiesDef();
 		props.setDriver("org.h2.Driver");
-		props.setUrl("jdbc:h2:mem:ds0");
+		props.setUrl("jdbc:h2:mem:" + DATASOURCE);
 		def.setProperties(props);
 		defs.addDataSource(def);
 		when(m_dsProvider.defineDatasources()).thenReturn(defs);
@@ -132,7 +139,18 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 		doBefore();
 	}
 
-	protected abstract void doBefore() throws Exception;
+	@After
+	public void after() throws Exception {
+		lookup(JdbcTestHelper.class).tearDown(DATASOURCE);
+
+		doAfter();
+	}
+
+	protected void doAfter() throws Exception {
+	}
+
+	protected void doBefore() throws Exception {
+	}
 
 	protected void setCommandHandler(CommandHandler handler) {
 		m_cmdHandler = handler;
@@ -147,7 +165,7 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 
 		TableMaker maker = lookup(TableMaker.class);
 
-		maker.make(getDefaultDataSource(), in);
+		maker.make(DATASOURCE, in);
 	}
 
 	protected SendMessageCommand sendMessage(String topic, List<ProducerMessage<String>> pmsgs) {
