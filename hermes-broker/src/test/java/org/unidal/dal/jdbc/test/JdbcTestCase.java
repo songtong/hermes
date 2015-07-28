@@ -153,7 +153,7 @@ public abstract class JdbcTestCase extends ComponentTestCase {
 
       defineComponent(DataSourceManager.class, TestDataSourceManager.class) //
             .req(JdbcDataSourceDescriptorManager.class);
-      defineFunctions(StringFunction.class);
+//      defineFunctions(StringFunction.class);
    }
 
    protected void showQuery(String sql) throws DalException {
