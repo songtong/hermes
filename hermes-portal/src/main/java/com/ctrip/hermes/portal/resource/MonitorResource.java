@@ -34,6 +34,7 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -145,7 +146,7 @@ public class MonitorResource {
 			m_rawMessage = msg;
 			HermesPrimitiveCodec codec = new HermesPrimitiveCodec(Unpooled.wrappedBuffer(msg.getAttributes()));
 			m_attributesString = codec.readStringStringMap().toString();
-			if (msg.getCodecType().equals("json")) {
+			if (Codec.JSON.equals(msg.getCodecType())) {
 				m_payloadString = JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(), Object.class));
 			}
 		}
