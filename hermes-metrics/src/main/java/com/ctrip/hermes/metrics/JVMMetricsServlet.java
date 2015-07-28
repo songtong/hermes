@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.metrics;
+package com.ctrip.hermes.metrics;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,8 +37,6 @@ public class JVMMetricsServlet extends MetricsServlet {
 
    @Override
    public void init(ServletConfig config) throws ServletException {
-       super.init(config);
-
        final ServletContext context = config.getServletContext();
        if (null == registry) {
            final Object registryAttr = context.getAttribute(JVM_METRICS_REGISTRY);

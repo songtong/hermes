@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.metrics;
+package com.ctrip.hermes.metrics;
 
 import java.lang.management.ManagementFactory;
 
@@ -15,7 +15,7 @@ import com.codahale.metrics.servlets.MetricsServlet;
 
 public class JVMMetricsServletContextListener extends JVMMetricsServlet.ContextListener {
 
-	public static final MetricRegistry JVM_METRIC_REGISTRY = RestMetricsRegistry.getMetricRegistry();
+	public static final MetricRegistry JVM_METRIC_REGISTRY = new MetricRegistry();
 
 	static {
 		JVM_METRIC_REGISTRY.registerAll(new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));

@@ -20,7 +20,7 @@ import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.rest.metrics.RestMetricsRegistry;
+import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
@@ -45,7 +45,7 @@ public class SubscriptionRegisterService {
 		scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("SubscriptionChecker",
 		      true));
 
-		RestMetricsRegistry.getMetricRegistry().register(
+		HermesMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(SubscriptionRegisterService.class, "SubscriptionPusher", "Holders"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {

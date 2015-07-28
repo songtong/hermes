@@ -4,8 +4,8 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 import com.ctrip.hermes.rest.service.SubscriptionRegisterService;
-import com.yammer.metrics.Metrics;
 
 public class GatewayListener implements ServletContextListener {
 
@@ -21,8 +21,7 @@ public class GatewayListener implements ServletContextListener {
 	public void contextDestroyed(ServletContextEvent sce) {
 		subsribeRegistry.stop();
 
-		Metrics.defaultRegistry().shutdown();
-		
+		HermesMetricsRegistry.close();
 	}
 
 }

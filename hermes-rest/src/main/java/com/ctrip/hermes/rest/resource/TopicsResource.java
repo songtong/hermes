@@ -41,7 +41,7 @@ import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.rest.metrics.RestMetricsRegistry;
+import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 import com.ctrip.hermes.rest.service.ProducerSendService;
 
 @Path("/topics/")
@@ -89,21 +89,21 @@ public class TopicsResource {
 
 	public TopicsResource() {
 		executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(HermesThreadFactory.create("MessagePublish", true));
-		RestMetricsRegistry.getMetricRegistry().register(
+		HermesMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "ActiveCount"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
 				      return executor.getActiveCount();
 			      }
 		      });
-		RestMetricsRegistry.getMetricRegistry().register(
+		HermesMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "PoolSize"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
 				      return executor.getPoolSize();
 			      }
 		      });
-		RestMetricsRegistry.getMetricRegistry().register(
+		HermesMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "QueueSize"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
@@ -111,13 +111,13 @@ public class TopicsResource {
 			      }
 		      });
 
-		timeoutMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
+		timeoutMeter = HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
 		      "MessagePublish", "Timeout"));
-		requestMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
+		requestMeter = HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
 		      "MessagePublish", "Request"));
-		requestSizeHistogram = RestMetricsRegistry.getMetricRegistry().histogram(MetricRegistry.name(TopicsResource.class,
+		requestSizeHistogram = HermesMetricsRegistry.getMetricRegistry().histogram(MetricRegistry.name(TopicsResource.class,
 		      "MessagePublish", "ContentLength"));
-		sendTimer = RestMetricsRegistry.getMetricRegistry()
+		sendTimer = HermesMetricsRegistry.getMetricRegistry()
 		      .timer(MetricRegistry.name(TopicsResource.class, "MessagePublish"));
 	}
 

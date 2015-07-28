@@ -33,7 +33,7 @@ import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
-import com.ctrip.hermes.rest.metrics.RestMetricsRegistry;
+import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 
 @Named
 public class SubscriptionPushService implements Initializable, Disposable {
@@ -72,13 +72,13 @@ public class SubscriptionPushService implements Initializable, Disposable {
 		b.setSocketTimeout(Integer.valueOf(globalConfig.getProperty("gateway.subscription.socket.timeout", "5000")));
 		m_requestConfig = b.build();
 
-		failedMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
+		failedMeter = HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
 		      "MessageSubscription", "Failed"));
-		requestMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
+		requestMeter = HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(SubscriptionPushService.class,
 		      "MessageSubscription", "Request"));
-		requestSizeHistogram = RestMetricsRegistry.getMetricRegistry().histogram(MetricRegistry.name(
+		requestSizeHistogram = HermesMetricsRegistry.getMetricRegistry().histogram(MetricRegistry.name(
 		      SubscriptionPushService.class, "MessageSubscription", "BodySize"));
-		pushTimer = RestMetricsRegistry.getMetricRegistry().timer(MetricRegistry.name(SubscriptionPushService.class,
+		pushTimer = HermesMetricsRegistry.getMetricRegistry().timer(MetricRegistry.name(SubscriptionPushService.class,
 		      "MessageSubscription"));
 	}
 
