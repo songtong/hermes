@@ -37,6 +37,18 @@ public class EndpointMaker implements Initializable {
 
 	private ScheduledExecutorService m_scheduledExecutor;
 
+	public void setBrokerLeaseHolder(BrokerLeaseHolder brokerLeaseHolder) {
+		m_brokerLeaseHolder = brokerLeaseHolder;
+	}
+
+	public void setConfig(MetaServerConfig config) {
+		m_config = config;
+	}
+
+	public void setScheduledExecutor(ScheduledExecutorService scheduledExecutor) {
+		m_scheduledExecutor = scheduledExecutor;
+	}
+
 	public Map<String, Map<Integer, Endpoint>> makeEndpoints(EventEngineContext context,
 	      Map<String, Assignment<Integer>> brokerAssignments) throws Exception {
 
@@ -104,8 +116,8 @@ public class EndpointMaker implements Initializable {
 
 	private void scheduleLeaseExpireBrokerReblanceTask(final EventEngineContext context, Lease lease) {
 		long delayMillis = lease.getRemainingTime() > 0 ? lease.getRemainingTime()
-		      + m_config.getleaseExpireRebalanceTriggerDelayMillis() : m_config
-		      .getleaseExpireRebalanceTriggerDelayMillis();
+		      + m_config.getLeaseExpireRebalanceTriggerDelayMillis() : m_config
+		      .getLeaseExpireRebalanceTriggerDelayMillis();
 		m_scheduledExecutor.schedule(new Runnable() {
 
 			@Override

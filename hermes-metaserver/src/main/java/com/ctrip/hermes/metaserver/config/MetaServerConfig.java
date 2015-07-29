@@ -101,8 +101,8 @@ public class MetaServerConfig {
 		return 5;
 	}
 
-	public long getleaseExpireRebalanceTriggerDelayMillis() {
-		return 5;
+	public long getLeaseExpireRebalanceTriggerDelayMillis() {
+		return 50;
 	}
 
 	public int getFetcheMetaFromLeaderConnectTimeout() {

@@ -9,6 +9,7 @@ import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolderTest;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolderTest;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocatorTest;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategyTest;
+import com.ctrip.hermes.metaserver.commons.EndpointMakerTest;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolderTest;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListTest;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolderTest;
@@ -39,6 +40,7 @@ LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest.class,//
       OrderedConsumeConsumerLeaseAllocatorTest.class, //
       ConsumerLeaseHolderTest.class, //
       ActiveConsumerListHolderTest.class, //
+      EndpointMakerTest.class, //
       // add test classes here
 
 })
