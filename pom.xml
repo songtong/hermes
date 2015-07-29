@@ -369,6 +369,14 @@
 			</activation>
 		</profile>
 		<profile>
+			<id>lpt</id>
+			<properties>
+				<package.environment>lpt</package.environment>
+				<jar.source>1.7</jar.source>
+				<jar.target>1.7</jar.target>
+			</properties>
+		</profile>
+		<profile>
 			<id>fws</id>
 			<properties>
 				<package.environment>fws</package.environment>
