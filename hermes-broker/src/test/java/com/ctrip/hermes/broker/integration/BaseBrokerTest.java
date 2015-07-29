@@ -2,6 +2,8 @@ package com.ctrip.hermes.broker.integration;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -15,8 +17,10 @@ import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.datasource.DataSourceManager;
@@ -35,9 +39,12 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriorityDao;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity;
+import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.env.DefaultClientEnvironment;
+import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.meta.MetaService;
@@ -59,6 +66,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.SettableFuture;
 
+@RunWith(MockitoJUnitRunner.class)
 public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 
 	@Mock
@@ -74,11 +82,14 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 	protected Channel m_channel;
 
 	@Mock
-	private ChannelFuture m_channelFuture;
+	protected ChannelFuture m_channelFuture;
+
+	@Mock
+	protected BrokerLeaseContainer m_leaseContainer;
 
 	private CommandHandler m_cmdHandler;
 
-	private final static String DATASOURCE = "ds0";
+	protected final static String DATASOURCE = "ds0";
 
 	@Before
 	public final void before() throws Exception {
@@ -136,11 +147,15 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 			}
 		});
 
+		Lease lease = new Lease(1, System.currentTimeMillis() + Integer.MAX_VALUE);
+		when(m_leaseContainer.acquireLease(anyString(), anyInt(), anyString())).thenReturn(lease);
+		defineMockitoComponent(BrokerLeaseContainer.class, m_leaseContainer);
+
 		doBefore();
 	}
 
 	@After
-	public void after() throws Exception {
+	public final void after() throws Exception {
 		lookup(JdbcTestHelper.class).tearDown(DATASOURCE);
 
 		doAfter();
@@ -168,7 +183,7 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 		maker.make(DATASOURCE, in);
 	}
 
-	protected SendMessageCommand sendMessage(String topic, List<ProducerMessage<String>> pmsgs) {
+	protected SendMessageCommand sendMessage(String topic, List<ProducerMessage<String>> pmsgs) throws Exception {
 		SendMessageCommand cmd = new SendMessageCommand(topic, 0);
 
 		for (ProducerMessage<String> pmsg : pmsgs) {
@@ -176,19 +191,26 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 			cmd.addMessage(pmsg, future);
 		}
 
-		ByteBuf buf = Unpooled.buffer();
-		cmd.toBytes(buf);
-
-		SendMessageCommand decodedCmd = new SendMessageCommand();
-		Header header = new Header();
-		header.parse(buf);
-		decodedCmd.parse(buf, header);
+		SendMessageCommand decodedCmd = serializeAndDeserialize(cmd);
 
 		CommandProcessorContext ctx = new CommandProcessorContext(decodedCmd, m_channel);
 		CommandProcessorManager cmdProcessorMgr = lookup(CommandProcessorManager.class);
 		cmdProcessorMgr.offer(ctx);
 
 		return cmd;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected <T extends Command> T serializeAndDeserialize(T rawCmd) throws Exception {
+		ByteBuf buf = Unpooled.buffer();
+		rawCmd.toBytes(buf);
+
+		T decodedCmd = (T) rawCmd.getClass().newInstance();
+		Header header = new Header();
+		header.parse(buf);
+		decodedCmd.parse(buf, header);
+
+		return decodedCmd;
 	}
 
 	private List<MessagePriority> attachPP(List<MessagePriority> rows, int partition, int priority) {
@@ -295,6 +317,15 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 		assertEquals(pmsg.getKey(), saved.getRefKey());
 		assertEquals(pmsg.getPartition(), saved.getPartition());
 		assertEquals(pmsg.isPriority() ? 0 : 1, saved.getPriority());
+	}
+
+	@SuppressWarnings("rawtypes")
+	protected void assertMessageEqual(ProducerMessage<String> pmsg, ConsumerMessage cmsg) {
+		assertEquals(pmsg.getBody(), cmsg.getBody());
+		assertEquals(pmsg.getBornTime(), cmsg.getBornTime());
+		assertEquals(pmsg.getKey(), cmsg.getRefKey());
+		assertEquals(pmsg.getPartition(), cmsg.getPartition());
+		// TODO assert more
 	}
 
 	protected String uuid() {
