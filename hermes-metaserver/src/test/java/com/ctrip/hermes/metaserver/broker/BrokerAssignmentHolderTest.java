@@ -20,6 +20,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaserver.TestHelper;
 import com.ctrip.hermes.metaserver.ZKSuppportTestCase;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
@@ -92,16 +93,10 @@ public class BrokerAssignmentHolderTest extends ZKSuppportTestCase {
 			ClientContext actualClient = actualClientInfos.get(expectedClientInfo.getKey());
 			ClientContext expectedClient = expectedClientInfo.getValue();
 
-			assertClientContextEquals(actualClient, expectedClient);
+			TestHelper.assertClientContextEquals(expectedClient.getName(), expectedClient.getIp(),
+			      expectedClient.getPort(), expectedClient.getLastHeartbeatTime(), actualClient);
 		}
 
-	}
-
-	private void assertClientContextEquals(ClientContext actualClient, ClientContext expectedClient) {
-		assertEquals(expectedClient.getName(), actualClient.getName());
-		assertEquals(expectedClient.getIp(), actualClient.getIp());
-		assertEquals(expectedClient.getPort(), actualClient.getPort());
-		assertEquals(expectedClient.getLastHeartbeatTime(), actualClient.getLastHeartbeatTime());
 	}
 
 	@Test
@@ -171,15 +166,17 @@ public class BrokerAssignmentHolderTest extends ZKSuppportTestCase {
 		      }.getType());
 
 		assertEquals(1, t20DataInZK.size());
-		assertClientContextEquals(t20DataInZK.values().iterator().next(), new ClientContext("br1", "1.1.1.2", 2222, 0));
+
+		TestHelper.assertClientContextEquals("br1", "1.1.1.2", 2222, 0, t20DataInZK.values().iterator().next());
 
 		Map<String, ClientContext> t21DataInZK = ZKSerializeUtils.deserialize(
 		      m_curator.getData().forPath(ZKPathUtils.getBrokerAssignmentZkPath("t2", 1)),
 		      new TypeReference<Map<String, ClientContext>>() {
 		      }.getType());
-		
+
 		assertEquals(1, t21DataInZK.size());
-		assertClientContextEquals(t21DataInZK.values().iterator().next(), new ClientContext("br1", "1.1.1.2", 2222, 0));
+
+		TestHelper.assertClientContextEquals("br1", "1.1.1.2", 2222, 0, t21DataInZK.values().iterator().next());
 	}
 
 	private Topic createTopic(String topicName, int partitionCount, String endpointType) {

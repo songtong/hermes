@@ -13,7 +13,6 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
-import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -24,12 +23,13 @@ public class ActiveConsumerListHolder {
 	@Inject
 	private SystemClockService m_systemClockService;
 
-	@Inject
-	private MetaServerConfig m_config;
-
 	private Map<Pair<String, String>, ActiveConsumerList> m_activeConsumerLists = new HashMap<>();
 
 	private ReentrantReadWriteLock m_lock = new ReentrantReadWriteLock();
+
+	public void setSystemClockService(SystemClockService systemClockService) {
+		m_systemClockService = systemClockService;
+	}
 
 	public void heartbeat(Pair<String, String> topicGroup, String consumerName, String ip, int port) {
 		m_lock.writeLock().lock();
@@ -50,8 +50,7 @@ public class ActiveConsumerListHolder {
 		long timeoutMillis = timeUnit.toMillis(timeout);
 		m_lock.writeLock().lock();
 		try {
-			Iterator<Entry<Pair<String, String>, ActiveConsumerList>> iter = m_activeConsumerLists.entrySet()
-			      .iterator();
+			Iterator<Entry<Pair<String, String>, ActiveConsumerList>> iter = m_activeConsumerLists.entrySet().iterator();
 
 			while (iter.hasNext()) {
 				Entry<Pair<String, String>, ActiveConsumerList> entry = iter.next();

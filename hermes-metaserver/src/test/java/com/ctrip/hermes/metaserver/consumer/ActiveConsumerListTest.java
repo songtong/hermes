@@ -9,6 +9,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ctrip.hermes.metaserver.TestHelper;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 
 /**
@@ -34,7 +35,7 @@ public class ActiveConsumerListTest {
 
 		Map<String, ClientContext> activeConsumers = m_list.getActiveConsumers();
 		assertEquals(1, activeConsumers.size());
-		assertClientContext(consumerName, ip, port, heartbeatTime, activeConsumers.get(consumerName));
+		TestHelper.assertClientContextEquals(consumerName, ip, port, heartbeatTime, activeConsumers.get(consumerName));
 		assertTrue(m_list.getAndResetChanged());
 	}
 
@@ -50,7 +51,7 @@ public class ActiveConsumerListTest {
 
 		Map<String, ClientContext> activeConsumers = m_list.getActiveConsumers();
 		assertEquals(1, activeConsumers.size());
-		assertClientContext(consumerName, ip, port, heartbeatTime + 1, activeConsumers.get(consumerName));
+		TestHelper.assertClientContextEquals(consumerName, ip, port, heartbeatTime + 1, activeConsumers.get(consumerName));
 		assertFalse(m_list.getAndResetChanged());
 
 	}
@@ -67,7 +68,8 @@ public class ActiveConsumerListTest {
 
 		Map<String, ClientContext> activeConsumers = m_list.getActiveConsumers();
 		assertEquals(1, activeConsumers.size());
-		assertClientContext(consumerName, ip + "2", port + 1, heartbeatTime + 1, activeConsumers.get(consumerName));
+		TestHelper.assertClientContextEquals(consumerName, ip + "2", port + 1, heartbeatTime + 1,
+		      activeConsumers.get(consumerName));
 		assertTrue(m_list.getAndResetChanged());
 
 	}
@@ -89,15 +91,8 @@ public class ActiveConsumerListTest {
 		m_list.purgeExpired(10, 1L);
 		activeConsumers = m_list.getActiveConsumers();
 		assertEquals(1, activeConsumers.size());
-		assertClientContext(consumerName, ip, port, heartbeatTime, activeConsumers.get(consumerName));
+		TestHelper.assertClientContextEquals(consumerName, ip, port, heartbeatTime, activeConsumers.get(consumerName));
 		assertTrue(m_list.getAndResetChanged());
 	}
 
-	private void assertClientContext(String consumerName, String ip, int port, long lastHeartbeatTime,
-	      ClientContext clientContext) {
-		assertEquals(consumerName, clientContext.getName());
-		assertEquals(ip, clientContext.getIp());
-		assertEquals(port, clientContext.getPort());
-		assertEquals(lastHeartbeatTime, clientContext.getLastHeartbeatTime());
-	}
 }
