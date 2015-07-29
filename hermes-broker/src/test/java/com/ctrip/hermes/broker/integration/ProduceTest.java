@@ -20,12 +20,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
-import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.transport.command.Command;
@@ -33,18 +29,11 @@ import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 
-@RunWith(MockitoJUnitRunner.class)
 public class ProduceTest extends BaseBrokerTest {
 
 	private String topic = "order_new";
 
-	@Mock
-	BrokerLeaseContainer m_leaseContainer;
-	
 	protected void doBefore() throws Exception {
-		Lease lease = new Lease(1, System.currentTimeMillis() + Integer.MAX_VALUE);
-		when(m_leaseContainer.acquireLease(anyString(), anyInt(), anyString())).thenReturn(lease);
-		defineMockitoComponent(BrokerLeaseContainer.class, m_leaseContainer);
 	}
 
 	@Test
@@ -136,7 +125,7 @@ public class ProduceTest extends BaseBrokerTest {
 
 		sendCmdRef.set(sendMessage(topic, pmsgs));
 
-		assertTrue(latch.await(200, TimeUnit.MILLISECONDS));
+		assertTrue(latch.await(3, TimeUnit.SECONDS));
 
 		if (willReceiveSendMessageResultCommand) {
 			SendMessageCommand sendCmd = sendCmdRef.get();
