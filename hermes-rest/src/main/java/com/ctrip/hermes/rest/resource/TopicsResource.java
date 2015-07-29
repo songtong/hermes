@@ -41,7 +41,7 @@ import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.rest.metrics.RestMetricsRegistry;
+import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 import com.ctrip.hermes.rest.service.ProducerSendService;
 
 @Path("/topics/")
@@ -51,9 +51,15 @@ public class TopicsResource {
 
 	private class TopicTimeoutHandler implements TimeoutHandler {
 
+		private String topic;
+
+		public TopicTimeoutHandler(String topic) {
+			this.topic = topic;
+		}
+
 		@Override
 		public void handleTimeout(AsyncResponse asyncResponse) {
-			timeoutMeter.mark();
+			updateTimeoutMeter(topic);
 			asyncResponse.resume(Response.status(Status.REQUEST_TIMEOUT).entity("Timed out").build());
 		}
 
@@ -79,31 +85,39 @@ public class TopicsResource {
 
 	private ThreadPoolExecutor executor;
 
-	private Meter timeoutMeter;
+	private Meter timeoutMeterGlobal;
 
-	private Meter requestMeter;
+	private Meter requestMeterGlobal;
 
-	private Histogram requestSizeHistogram;
+	private Histogram requestSizeHistogramGlobal;
 
-	private Timer sendTimer;
+	private Timer sendTimerGlobal;
+
+	private Map<String, Meter> timeoutMeterByTopic;
+
+	private Map<String, Meter> requestMeterByTopic;
+
+	private Map<String, Histogram> requestSizeHistogramByTopic;
+
+	private Map<String, Timer> sendTimerByTopic;
 
 	public TopicsResource() {
 		executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(HermesThreadFactory.create("MessagePublish", true));
-		RestMetricsRegistry.getMetricRegistry().register(
+		HermesMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "ActiveCount"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
 				      return executor.getActiveCount();
 			      }
 		      });
-		RestMetricsRegistry.getMetricRegistry().register(
+		HermesMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "PoolSize"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
 				      return executor.getPoolSize();
 			      }
 		      });
-		RestMetricsRegistry.getMetricRegistry().register(
+		HermesMetricsRegistry.getMetricRegistry().register(
 		      MetricRegistry.name(TopicsResource.class, "MessagePublishExecutor", "QueueSize"), new Gauge<Integer>() {
 			      @Override
 			      public Integer getValue() {
@@ -111,14 +125,48 @@ public class TopicsResource {
 			      }
 		      });
 
-		timeoutMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
-		      "MessagePublish", "Timeout"));
-		requestMeter = RestMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(TopicsResource.class,
-		      "MessagePublish", "Request"));
-		requestSizeHistogram = RestMetricsRegistry.getMetricRegistry().histogram(MetricRegistry.name(TopicsResource.class,
-		      "MessagePublish", "ContentLength"));
-		sendTimer = RestMetricsRegistry.getMetricRegistry()
-		      .timer(MetricRegistry.name(TopicsResource.class, "MessagePublish"));
+		timeoutMeterGlobal = HermesMetricsRegistry.getMetricRegistry().meter(
+		      MetricRegistry.name(TopicsResource.class, "MessagePublish", "Timeout"));
+		requestMeterGlobal = HermesMetricsRegistry.getMetricRegistry().meter(
+		      MetricRegistry.name(TopicsResource.class, "MessagePublish", "Request"));
+		requestSizeHistogramGlobal = HermesMetricsRegistry.getMetricRegistry().histogram(
+		      MetricRegistry.name(TopicsResource.class, "MessagePublish", "ContentLength"));
+		sendTimerGlobal = HermesMetricsRegistry.getMetricRegistry().timer(
+		      MetricRegistry.name(TopicsResource.class, "MessagePublish"));
+		timeoutMeterByTopic = new HashMap<>();
+		requestMeterByTopic = new HashMap<>();
+		requestSizeHistogramByTopic = new HashMap<>();
+		sendTimerByTopic = new HashMap<>();
+	}
+
+	private Map<String, String> extractHeaderParams(HttpHeaders headers) {
+		MultivaluedMap<String, String> requestHeaders = headers.getRequestHeaders();
+		Map<String, String> params = new HashMap<>();
+		if (requestHeaders.containsKey(PARTITION_KEY)) {
+			params.put("partitionKey", requestHeaders.getFirst(PARTITION_KEY));
+		}
+		if (requestHeaders.containsKey(PRIORITY)) {
+			params.put("priority", requestHeaders.getFirst(PRIORITY));
+		}
+		if (requestHeaders.containsKey(REF_KEY)) {
+			params.put("refKey", requestHeaders.getFirst(REF_KEY));
+		}
+		if (requestHeaders.containsKey(PROPERTIES)) {
+			params.put("properties", requestHeaders.getFirst(PROPERTIES));
+		}
+		if (requestHeaders.containsKey(WITHOUT_HEADER)) {
+			params.put("withoutHeader", requestHeaders.getFirst(WITHOUT_HEADER));
+		}
+		return params;
+	}
+
+	private Timer getSendTimer(String topic) {
+		if (!sendTimerByTopic.containsKey(topic)) {
+			Timer sendTimer = HermesMetricsRegistry.getMetricRegistry().timer(
+			      MetricRegistry.name(TopicsResource.class, topic, "MessagePublish"));
+			sendTimerByTopic.put(topic, sendTimer);
+		}
+		return sendTimerByTopic.get(topic);
 	}
 
 	private void publishAsync(final String topic, final Map<String, String> params, final InputStream content,
@@ -127,14 +175,15 @@ public class TopicsResource {
 
 			@Override
 			public void run() {
-				final Timer.Context context = sendTimer.time();
+				final Timer.Context contextGlobal = sendTimerGlobal.time();
+				final Timer.Context context = getSendTimer(topic).time();
 				try {
 					if (env.getEnv() == Env.PROD) {
 						response.setTimeout(
 						      Integer.valueOf(env.getGlobalConfig().getProperty("gateway.topic.publish.timeout", "1000")),
 						      TimeUnit.MILLISECONDS);
 					}
-					response.setTimeoutHandler(new TopicTimeoutHandler());
+					response.setTimeoutHandler(new TopicTimeoutHandler(topic));
 					Future<SendResult> sendResult = producerService.send(topic, params, content);
 					response.resume(sendResult.get());
 				} catch (Exception e) {
@@ -142,6 +191,7 @@ public class TopicsResource {
 					response.cancel();
 				} finally {
 					context.stop();
+					contextGlobal.stop();
 				}
 			}
 
@@ -161,23 +211,7 @@ public class TopicsResource {
 			logger.trace("{} {} {}", topicName, headers.getRequestHeaders().toString(), content);
 		}
 
-		MultivaluedMap<String, String> requestHeaders = headers.getRequestHeaders();
-		Map<String, String> params = new HashMap<>();
-		if (requestHeaders.containsKey(PARTITION_KEY)) {
-			params.put("partitionKey", requestHeaders.getFirst(PARTITION_KEY));
-		}
-		if (requestHeaders.containsKey(PRIORITY)) {
-			params.put("priority", requestHeaders.getFirst(PRIORITY));
-		}
-		if (requestHeaders.containsKey(REF_KEY)) {
-			params.put("refKey", requestHeaders.getFirst(REF_KEY));
-		}
-		if (requestHeaders.containsKey(PROPERTIES)) {
-			params.put("properties", requestHeaders.getFirst(PROPERTIES));
-		}
-		if (requestHeaders.containsKey(WITHOUT_HEADER)) {
-			params.put("withoutHeader", requestHeaders.getFirst(WITHOUT_HEADER));
-		}
+		Map<String, String> params = extractHeaderParams(headers);
 
 		BizEvent receiveEvent = new BizEvent("Rest.received");
 		receiveEvent.addData("topic", topicName);
@@ -185,8 +219,48 @@ public class TopicsResource {
 		receiveEvent.addData("remoteHost", request.getRemoteHost());
 		bizLogger.log(receiveEvent);
 
-		requestMeter.mark();
-		requestSizeHistogram.update(request.getContentLength());
+		updateRequestMeter(topicName);
+		updateRequestSizeHistogram(topicName, request.getContentLength());
+
 		publishAsync(topicName, params, content, response);
+	}
+
+	private void updateRequestMeter(String topic) {
+		requestMeterGlobal.mark();
+
+		if (!requestMeterByTopic.containsKey(topic)) {
+			Meter requestMeter = HermesMetricsRegistry.getMetricRegistry().meter(
+			      MetricRegistry.name(TopicsResource.class, "MessagePublish", topic, "Request"));
+			requestMeterByTopic.put(topic, requestMeter);
+		}
+
+		Meter requestMeter = requestMeterByTopic.get(topic);
+		requestMeter.mark();
+	}
+
+	private void updateRequestSizeHistogram(String topic, int length) {
+		requestSizeHistogramGlobal.update(length);
+
+		if (!requestSizeHistogramByTopic.containsKey(topic)) {
+			Histogram requestSizeHistogram = HermesMetricsRegistry.getMetricRegistry().histogram(
+			      MetricRegistry.name(TopicsResource.class, "MessagePublish", topic, "ContentLength"));
+			requestSizeHistogramByTopic.put(topic, requestSizeHistogram);
+		}
+
+		Histogram requestSizeHistogram = requestSizeHistogramByTopic.get(topic);
+		requestSizeHistogram.update(length);
+	}
+
+	private void updateTimeoutMeter(String topic) {
+		timeoutMeterGlobal.mark();
+
+		if (!timeoutMeterByTopic.containsKey(topic)) {
+			Meter timeoutMeter = HermesMetricsRegistry.getMetricRegistry().meter(
+			      MetricRegistry.name(TopicsResource.class, "MessagePublish", topic, "Timeout"));
+			timeoutMeterByTopic.put(topic, timeoutMeter);
+		}
+
+		Meter timeoutMeter = timeoutMeterByTopic.get(topic);
+		timeoutMeter.mark();
 	}
 }

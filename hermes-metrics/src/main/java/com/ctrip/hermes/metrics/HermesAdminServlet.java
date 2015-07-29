@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.metrics;
+package com.ctrip.hermes.metrics;
 
 import java.io.IOException;
 

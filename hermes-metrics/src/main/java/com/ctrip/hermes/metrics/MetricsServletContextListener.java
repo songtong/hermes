@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.metrics;
+package com.ctrip.hermes.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlets.MetricsServlet;
@@ -7,7 +7,7 @@ public class MetricsServletContextListener extends MetricsServlet.ContextListene
 
 	@Override
 	protected MetricRegistry getMetricRegistry() {
-		return RestMetricsRegistry.getMetricRegistry();
+		return HermesMetricsRegistry.getMetricRegistry();
 	}
 
 }

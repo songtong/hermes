@@ -36,7 +36,7 @@ import org.junit.Test;
 
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.rest.metrics.RestMetricsRegistry;
+import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 import com.ctrip.hermes.rest.service.SubscriptionRegisterService;
 import com.google.common.base.Charsets;
 import com.netflix.hystrix.Hystrix;
@@ -76,7 +76,7 @@ public class RestIntegrationTest extends JerseyTest {
 		receivedContent.clear();
 		receivedHeaders.clear();
 		Hystrix.reset();
-		RestMetricsRegistry.reset();
+		HermesMetricsRegistry.reset();
 	}
 
 	@Test

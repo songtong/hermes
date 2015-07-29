@@ -9,6 +9,7 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>hermes-core</module>
+		<module>hermes-metrics</module>
 		<module>hermes-metaservice</module>
 		<module>hermes-metaserver</module>
 		<module>hermes-producer</module>
@@ -66,6 +67,11 @@
 			<dependency>
 				<groupId>com.ctrip.hermes</groupId>
 				<artifactId>hermes-rest</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.ctrip.hermes</groupId>
+				<artifactId>hermes-metrics</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -161,7 +167,6 @@
 				<groupId>org.eclipse.jetty</groupId>
 				<artifactId>jetty-webapp</artifactId>
 				<version>9.2.11.v20150529</version>
-				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.h2database</groupId>

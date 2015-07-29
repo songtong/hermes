@@ -1,0 +1,743 @@
+{
+  "namespace": "hermes.ubt.custom",
+  "type": "record",
+  "name": "RtubRetry",
+  "fields": [
+    {
+      "name": "CustomEvent",
+      "type": {
+        "namespace": "hermes.ubt.custom",
+        "type": "record",
+        "name": "CustomEvent",
+        "fields": [
+          {
+            "name": "meta",
+            "type": [
+              {
+                "namespace": "hermes.ubt.custom",
+                "type": "record",
+                "name": "DefaultEventMeta",
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "sendTime",
+                    "type": [
+                      "long",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "receiveTime",
+                    "type": [
+                      "long",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "userAccount",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "eventType",
+                    "type": [
+                      {
+                        "namespace": "hermes.ubt.custom",
+                        "type": "enum",
+                        "name": "EventType",
+                        "symbols": [
+                          "Action",
+                          "Custom",
+                          "Malfunction",
+                          "Pageview",
+                          "UserMetric"
+                        ]
+                      },
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "version",
+                    "type": [
+                      "int",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "sender",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "receiver",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                ]
+              },
+              "null"
+            ]
+          },
+          {
+            "name": "context",
+            "type": [
+              {
+                "namespace": "hermes.ubt.custom",
+                "type": "record",
+                "name": "ViewContext",
+                "fields": [
+                  {
+                    "name": "vid",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "sid",
+                    "type": [
+                      "int",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "pvid",
+                    "type": [
+                      "int",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "ts",
+                    "type": [
+                      "long",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "page",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "url",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "v",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "fp",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "clientId",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "tid",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "userAgent",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "ip",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "type",
+                    "type": [
+                      {
+                        "namespace": "hermes.ubt.custom",
+                        "type": "enum",
+                        "name": "ViewType",
+                        "symbols": [
+                          "NativeApp",
+                          "Hybrid",
+                          "H5",
+                          "PC",
+                          "Unknown"
+                        ]
+                      },
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "referrer",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "fromPv",
+                    "type": [
+                      "int",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "fromPage",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "newVisitor",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "newSession",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "appId",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "moduleId",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "callId",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "duration",
+                    "type": [
+                      "long",
+                      "null"
+                    ]
+                  }
+                ]
+              },
+              "null"
+            ]
+          },
+          {
+            "name": "agent",
+            "type": [
+              {
+                "namespace": "hermes.ubt.custom",
+                "type": "record",
+                "name": "Agent",
+                "fields": [
+                  {
+                    "name": "manufacturer",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "deviceName",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "deviceVer",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "osName",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "osVer",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "engineName",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "engineVer",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "browserName",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "browserVer",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "screen",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "colorDepth",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "dpr",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "language",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "viewport",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "platform",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "appName",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "appVer",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "appInternalVer",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "network",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "carrier",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "deviceType",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "browserType",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "generalType",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "cracked",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "emu",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "deviceId",
+                    "type": [
+                      {
+                        "namespace": "hermes.ubt.custom",
+                        "type": "record",
+                        "name": "DeviceID",
+                        "fields": [
+                          {
+                            "name": "mac",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          {
+                            "name": "imei",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          {
+                            "name": "idfa",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        ]
+                      },
+                      "null"
+                    ]
+                  }
+                ]
+              },
+              "null"
+            ]
+          },
+          {
+            "name": "geo",
+            "type": [
+              {
+                "namespace": "hermes.ubt.custom",
+                "type": "record",
+                "name": "GEO",
+                "fields": [
+                  {
+                    "name": "isp",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "longitude",
+                    "type": [
+                      "double",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "latitude",
+                    "type": [
+                      "double",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "countryIsoCode",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "country",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "region",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "city",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "org",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "timeZone",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "gpsLongitude",
+                    "type": [
+                      "double",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "gpsLatitude",
+                    "type": [
+                      "double",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "gpsCity",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                ]
+              },
+              "null"
+            ]
+          },
+          {
+            "name": "user",
+            "type": [
+              {
+                "namespace": "hermes.ubt.custom",
+                "type": "record",
+                "name": "User",
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "token",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "login",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "loginName",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "grade",
+                    "type": [
+                      "int",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "corp",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                ]
+              },
+              "null"
+            ]
+          },
+          {
+            "name": "experiment",
+            "type": [
+              {
+                "namespace": "hermes.ubt.custom",
+                "type": "record",
+                "name": "Experiment",
+                "fields": [
+                  {
+                    "name": "abtest",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                ]
+              },
+              "null"
+            ]
+          },
+          {
+            "name": "custom",
+            "type": [
+              {
+                "namespace": "hermes.ubt.custom",
+                "type": "record",
+                "name": "Custom",
+                "fields": [
+                  {
+                    "name": "key",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  {
+                    "name": "data",
+                    "type": [
+                      {
+                        "type": "map",
+                        "values": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "null"
+                    ]
+                  }
+                ]
+              },
+              "null"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "errors",
+      "type": [
+        {
+          "namespace": "hermes.ubt.custom",
+          "type": "record",
+          "name": "Errors",
+          "fields": [
+            {
+              "name": "failCount",
+              "type": [
+                "int",
+                "null"
+              ]
+            },
+            {
+              "name": "failType",
+              "type": [
+                "int",
+                "null"
+              ]
+            },
+            {
+              "name": "failMessage",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            {
+              "name": "lastTime",
+              "type": [
+                "long",
+                "null"
+              ]
+            }
+          ]
+        },
+        "null"
+      ]
+    }
+  ]
+}

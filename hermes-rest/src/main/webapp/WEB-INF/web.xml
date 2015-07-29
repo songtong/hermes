@@ -23,15 +23,15 @@
 	</servlet>
 	<listener>
 		<display-name>MetricsServletContextListener</display-name>
-		<listener-class>com.ctrip.hermes.rest.metrics.MetricsServletContextListener</listener-class>
+		<listener-class>com.ctrip.hermes.metrics.MetricsServletContextListener</listener-class>
 	</listener>
 	<listener>
 		<display-name>JVMMetricsServletContextListener</display-name>
-		<listener-class>com.ctrip.hermes.rest.metrics.JVMMetricsServletContextListener</listener-class>
+		<listener-class>com.ctrip.hermes.metrics.JVMMetricsServletContextListener</listener-class>
 	</listener>
 	<listener>
 		<display-name>HealthCheckServletContextListener</display-name>
-		<listener-class>com.ctrip.hermes.rest.metrics.HealthCheckServletContextListener</listener-class>
+		<listener-class>com.ctrip.hermes.metrics.HealthCheckServletContextListener</listener-class>
 	</listener>
 	<servlet-mapping>
 		<servlet-name>Jersey REST Service</servlet-name>
@@ -39,7 +39,7 @@
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>metrics</servlet-name>
-		<servlet-class>com.ctrip.hermes.rest.metrics.HermesAdminServlet</servlet-class>
+		<servlet-class>com.ctrip.hermes.metrics.HermesAdminServlet</servlet-class>
 		<init-param>
 			<param-name>show-jvm-metrics</param-name>
 			<param-value>true</param-value>
