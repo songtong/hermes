@@ -7,6 +7,7 @@
 	<version>0.4-SNAPSHOT</version>
 	<name>Hermes</name>
 	<packaging>pom</packaging>
+
 	<modules>
 		<module>hermes-core</module>
 		<module>hermes-metrics</module>
@@ -20,6 +21,7 @@
 		<module>hermes-portal</module>
 		<module>hermes-example</module>
 		<module>hermes-misc</module>
+		<module>hermes-assembly</module>
 		<module>cmessaging.client</module>
 	</modules>
 	<dependencyManagement>
@@ -516,6 +518,10 @@
 						</execution>
 					</executions>
 				</plugin>
+				<plugin>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.3</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -556,6 +562,7 @@
 		</snapshotRepository>
 	</distributionManagement>
 	<properties>
+		<maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
 		<project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
 		<confluent.version>2.0-SNAPSHOT</confluent.version>
 	</properties>
