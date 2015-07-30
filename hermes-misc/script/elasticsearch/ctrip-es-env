@@ -1,0 +1,6 @@
+#!/bin/bash
+export ES_JMX_PORT=8306
+export ES_USE_GC_LOGGING=1
+#export ES_JAVA_OPTS="-XX:+UseG1GC"
+export ES_JAVA_OPTS="-XX:-UseSuperWord"
+export ES_HEAP_SIZE=2g 
