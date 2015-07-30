@@ -17,9 +17,9 @@ public class HashPartitioningStrategy implements PartitioningStrategy {
 	public int computePartitionNo(String key, int partitionCount) {
 
 		if (key == null) {
-			return Math.abs(m_random.nextInt()) % partitionCount;
+			return m_random.nextInt(Integer.MAX_VALUE) % partitionCount;
 		} else {
-			return Math.abs(key.hashCode()) % partitionCount;
+			return (key.hashCode() == Integer.MIN_VALUE ? 0 : Math.abs(key.hashCode())) % partitionCount;
 		}
 	}
 

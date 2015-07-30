@@ -57,6 +57,8 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 	private ConcurrentMap<Endpoint, EndpointChannel> m_channels = new ConcurrentHashMap<Endpoint, EndpointChannel>();
 
+	private Object m_channelsLockObj = new Object();
+
 	private EventLoopGroup m_eventLoopGroup;
 
 	private ExecutorService m_writerThreadPool;
@@ -100,7 +102,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 			EndpointChannel channel = m_channels.get(endpoint);
 
 			if (channel == null) {
-				synchronized (m_channels) {
+				synchronized (m_channelsLockObj) {
 					channel = m_channels.get(endpoint);
 					if (channel == null) {
 						channel = creatChannel(endpoint);
@@ -118,7 +120,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 	void removeChannel(Endpoint endpoint, EndpointChannel endpointChannel) {
 		EndpointChannel removedChannel = null;
 		if (Endpoint.BROKER.equals(endpoint.getType()) && m_channels.containsKey(endpoint)) {
-			synchronized (m_channels) {
+			synchronized (m_channelsLockObj) {
 				if (m_channels.containsKey(endpoint)) {
 					EndpointChannel tmp = m_channels.get(endpoint);
 					if (tmp == endpointChannel) {
@@ -192,7 +194,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 	@Override
 	public void close() {
 		if (m_closed.compareAndSet(false, true)) {
-			synchronized (m_channels) {
+			synchronized (m_channelsLockObj) {
 				for (Map.Entry<Endpoint, EndpointChannel> entry : m_channels.entrySet()) {
 					removeChannel(entry.getKey(), entry.getValue());
 				}

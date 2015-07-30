@@ -103,7 +103,7 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 			}
 		}).when(m_metaServerAssignmentHolder).reload();
 
-		latch.await(5, TimeUnit.SECONDS);
+		assertEquals(true, latch.await(5, TimeUnit.SECONDS));
 		verify(m_brokerAssignmentHolder, times(1)).clear();
 		verify(m_metaServerAssignmentHolder, times(1)).reload();
 
