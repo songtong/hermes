@@ -14,4 +14,6 @@ public interface EndpointClient {
 
 	public void writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit);
 
+	public void close();
+
 }

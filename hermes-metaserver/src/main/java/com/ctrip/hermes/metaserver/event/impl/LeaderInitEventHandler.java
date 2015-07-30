@@ -108,7 +108,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			m_serviceDiscovery.start();
 			m_serviceCache.start();
 		} catch (Exception e) {
-			throw new InitializationException("Failed to init broker assigner", e);
+			throw new InitializationException("Failed to start broker discovery service", e);
 		}
 
 	}
@@ -178,8 +178,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 	}
 
 	private Long loadAndaddBaseMetaWatcher(Watcher watcher) throws Exception {
-		byte[] data = m_zkClient.get().getData().usingWatcher(watcher)
-		      .forPath(ZKPathUtils.getBaseMetaVersionZkPath());
+		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getBaseMetaVersionZkPath());
 		return ZKSerializeUtils.deserialize(data, Long.class);
 	}
 
