@@ -146,8 +146,6 @@
 				<version>2.6</version>
 				<configuration>
 					<attachClasses>true</attachClasses>
-				</configuration>
-				<configuration>
 					<webResources>
 						<resource>
 							<directory>${project.basedir}/conf/${package.environment}</directory>
