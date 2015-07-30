@@ -199,6 +199,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 			}
 
 			m_writerThreadPool.shutdown();
+			m_eventLoopGroup.shutdownGracefully();
 		}
 	}
 

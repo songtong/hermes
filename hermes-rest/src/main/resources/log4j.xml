@@ -1,25 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>  
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-
 <log4j:configuration>
-
+	<appender name="ASYNC" class="org.apache.log4j.AsyncAppender">
+		<appender-ref ref="FILE" />
+		<appender-ref ref="CONSOLE" />
+	</appender>
 	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
 		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="[%d{MM-dd HH:mm:ss.SSS}] [%p] [%c] [%t] %m%n" />
+			<param name="ConversionPattern" value="[%d{MM-dd HH:mm:ss.SSS}] [%p] [%C{1}] [%t] %m%n" />
 		</layout>
-
-		<!--限制输出级别 -->
-		<filter class="org.apache.log4j.varia.LevelRangeFilter">
-			<param name="LevelMax" value="ERROR" />
-			<param name="LevelMin" value="TRACE" />
-		</filter>
 	</appender>
 
 	<appender name="FILE" class="org.apache.log4j.RollingFileAppender">
 		<param name="Threshold" value="ALL" />
 		<param name="MaxBackupIndex" value="10" />
 		<param name="MaxFileSize" value="10MB" />
-		<param name="File" value="/opt/logs/hermes/es.log" />
+		<param name="File" value="/opt/logs/hermes/rest/rest.log" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%d{MM-dd HH:mm:ss.SSS}] [%p] [%C{1}] [%t] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="BIZ" class="org.apache.log4j.RollingFileAppender">
+		<param name="Threshold" value="ALL" />
+		<param name="MaxBackupIndex" value="10" />
+		<param name="MaxFileSize" value="10MB" />
+		<param name="File" value="/opt/logs/hermes/rest/biz.log" />
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%m%n" />
 		</layout>
@@ -27,27 +33,27 @@
 
 	<logger name="biz" additivity="false">
 		<level value="INFO" />
-		<appender-ref ref="FILE" />
+		<appender-ref ref="BIZ" />
 	</logger>
 
 	<logger name="com.mchange.v2">
 		<level value="INFO" />
-		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="ASYNC" />
 	</logger>
 
 	<logger name="org.apache.http">
 		<level value="INFO" />
-		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="ASYNC" />
 	</logger>
 
 	<logger name="io.netty">
 		<level value="INFO" />
-		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="ASYNC" />
 	</logger>
 
 	<root>
 		<priority value="info" />
-		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="ASYNC" />
 	</root>
 
 </log4j:configuration>  

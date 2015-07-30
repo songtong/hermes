@@ -101,7 +101,7 @@ public class SubscriptionRegisterService {
 
 		}, 5, 5, TimeUnit.SECONDS);
 
-		logger.info("SubscriptionChecker started");
+		logger.info("SubscriptionRegisterService started");
 	}
 
 	public boolean startSubscription(SubscriptionView sub) {
@@ -130,6 +130,7 @@ public class SubscriptionRegisterService {
 			consumerHolder.close();
 		}
 		subscriptions.clear();
+		logger.info("SubscriptionRegisterService stopped");
 	}
 
 	public boolean stopSubscription(SubscriptionView sub) {
