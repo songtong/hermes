@@ -10,7 +10,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>hermes-broker</artifactId>
 	<name>Hermes Broker</name>
-	<packaging>jar</packaging>
+	<packaging>war</packaging>
 	<dependencies>
 		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
@@ -20,7 +20,7 @@
 			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-metrics</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka-clients</artifactId>
@@ -141,25 +141,27 @@
 				<inherited>true</inherited>
 			</plugin>
 			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.6</version>
 				<configuration>
-					<!-- not append assembly id in release file name -->
-					<appendAssemblyId>false</appendAssemblyId>
-					<finalName>${project.artifactId}-${project.version}-${package.environment}-${build.time}</finalName>
-					<descriptors>
-						<descriptor>/assembly/hermes_broker.xml</descriptor>
-					</descriptors>
+					<attachClasses>true</attachClasses>
+					<webResources>
+						<resource>
+							<directory>${project.basedir}/conf/${package.environment}</directory>
+							<targetPath>WEB-INF/classes</targetPath>
+							<includes>
+								<include>hermes.properties</include>
+							</includes>
+						</resource>
+					</webResources>
+					<warName>${project.artifactId}-${project.version}-${package.environment}-${build.time}</warName>
 				</configuration>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
+			<!-- <plugin> <artifactId>maven-assembly-plugin</artifactId> <configuration> not append assembly id in release file name 
+				<appendAssemblyId>false</appendAssemblyId> <finalName>${project.artifactId}-${project.version}-${package.environment}-${build.time}</finalName> 
+				<descriptors> <descriptor>/assembly/hermes_broker.xml</descriptor> </descriptors> </configuration> <executions> <execution> 
+				<id>make-assembly</id> <phase>package</phase> <goals> <goal>single</goal> </goals> </execution> </executions> </plugin> -->
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
