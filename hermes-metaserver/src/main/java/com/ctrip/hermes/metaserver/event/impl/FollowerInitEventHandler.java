@@ -12,7 +12,6 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.commons.BaseEventBasedZkWatcher;
-import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventEngineContext;
 import com.ctrip.hermes.metaserver.event.EventHandler;
@@ -34,9 +33,6 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	private static final Logger log = LoggerFactory.getLogger(FollowerInitEventHandler.class);
 
 	@Inject
-	private MetaServerConfig m_config;
-
-	@Inject
 	private MetaHolder m_metaHolder;
 
 	@Inject
@@ -50,10 +46,6 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 	@Inject
 	private LeaderMetaFetcher m_leaderMetaFetcher;
-
-	public void setConfig(MetaServerConfig config) {
-		m_config = config;
-	}
 
 	public void setMetaHolder(MetaHolder metaHolder) {
 		m_metaHolder = metaHolder;
