@@ -51,10 +51,24 @@
 							<goal>single</goal>
 						</goals>
 						<configuration>
-							<finalName>metaserver-${project.version}-${package.environment}-${maven.build.timestamp}</finalName>
+							<finalName>hermes-metaserver-${project.version}-${package.environment}-${maven.build.timestamp}</finalName>
 							<appendAssemblyId>false</appendAssemblyId>
 							<descriptors>
 								<descriptor>assembly/metaserver-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+					<execution>
+						<id>broker</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>hermes-broker-${project.version}-${package.environment}-${maven.build.timestamp}</finalName>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>assembly/broker-assembly.xml</descriptor>
 							</descriptors>
 						</configuration>
 					</execution>

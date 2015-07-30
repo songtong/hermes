@@ -102,25 +102,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
-			<plugin>
-				<groupId>com.keyboardsamurais.maven</groupId>
-				<artifactId>maven-timestamp-plugin</artifactId>
-				<version>1.0</version>
-				<configuration>
-					<propertyName>build.time</propertyName>
-					<timestampPattern>MMdd-HH.mm</timestampPattern>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>compile</phase>
-						<goals>
-							<goal>create</goal>
-						</goals>
-					</execution>
-				</executions>
-				<inherited>true</inherited>
-			</plugin>
 			<!--Configure hermes.properties and war name -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -136,7 +117,7 @@
 							</includes>
 						</resource>
 					</webResources>
-					<warName>${project.artifactId}-${project.version}-${package.environment}-${build.time}</warName>
+					<warName>${project.artifactId}-${project.version}-${package.environment}-${maven.build.timestamp}</warName>
 				</configuration>
 			</plugin>
 			<plugin>
