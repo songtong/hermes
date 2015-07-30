@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -106,10 +105,8 @@ public class ConsumerLeaseHolderTest extends ZKSuppportTestCase {
 		m_leaseHolder.updateContexts(m_leaseHolder.loadExistingLeases());
 	}
 
-	@Before
 	@Override
-	public void setUp() throws Exception {
-		super.setUp();
+	protected void doSetUp() throws Exception {
 		configureConsumerLeaseHolder();
 	}
 

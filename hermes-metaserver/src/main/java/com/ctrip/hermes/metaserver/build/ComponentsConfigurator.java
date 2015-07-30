@@ -26,6 +26,7 @@ import com.ctrip.hermes.metaserver.event.DefaultEventHandlerRegistry;
 import com.ctrip.hermes.metaserver.event.impl.BaseMetaChangedEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.BrokerLeaseChangedEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.BrokerListChangedEventHandler;
+import com.ctrip.hermes.metaserver.event.impl.DefaultLeaderMetaFetcher;
 import com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.LeaderInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.MetaServerListChangedEventHandler;
@@ -84,6 +85,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		// follower
 		all.add(A(FollowerInitEventHandler.class));
+		all.add(A(DefaultLeaderMetaFetcher.class));
 
 		return all;
 	}

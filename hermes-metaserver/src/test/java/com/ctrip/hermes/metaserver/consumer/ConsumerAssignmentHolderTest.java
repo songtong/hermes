@@ -8,7 +8,6 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -23,8 +22,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.meta.transform.DefaultSaxParser;
+import com.ctrip.hermes.metaserver.TestHelper;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
@@ -56,22 +54,7 @@ public class ConsumerAssignmentHolderTest {
 		m_holder.setPartitionAssigningStrategy(new DefaultOrderedConsumeConsumerPartitionAssigningStrategy());
 
 		when(m_config.getConsumerHeartbeatTimeoutMillis()).thenReturn(1000L);
-		when(m_metaHolder.getMeta()).thenReturn(loadLocalMeta());
-	}
-
-	private Meta loadLocalMeta() throws Exception {
-		String fileName = getClass().getSimpleName() + "-meta.xml";
-		InputStream in = getClass().getResourceAsStream(fileName);
-
-		if (in == null) {
-			throw new RuntimeException(String.format("File %s not found in classpath.", fileName));
-		} else {
-			try {
-				return DefaultSaxParser.parse(in);
-			} catch (Exception e) {
-				throw new RuntimeException(String.format("Error parse meta file %s", fileName), e);
-			}
-		}
+		when(m_metaHolder.getMeta()).thenReturn(TestHelper.loadLocalMeta(this));
 	}
 
 	@Test
