@@ -14,6 +14,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.IdleStateHandler;
 
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -72,7 +73,9 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 	@Inject
 	private MetaService m_metaService;
 
-	private AtomicBoolean m_started = new AtomicBoolean(false);
+	private AtomicBoolean m_writerStarted = new AtomicBoolean(false);
+
+	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
 	@Override
 	public void writeCommand(Endpoint endpoint, Command cmd) {
@@ -81,7 +84,11 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 	@Override
 	public void writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
-		if (m_started.compareAndSet(false, true)) {
+		if (m_closed.get()) {
+			return;
+		}
+
+		if (m_writerStarted.compareAndSet(false, true)) {
 			scheduleWriterTask();
 		}
 
@@ -90,15 +97,19 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 	private EndpointChannel getChannel(Endpoint endpoint) {
 		if (Endpoint.BROKER.equalsIgnoreCase(endpoint.getType())) {
-			if (!m_channels.containsKey(endpoint)) {
+			EndpointChannel channel = m_channels.get(endpoint);
+
+			if (channel == null) {
 				synchronized (m_channels) {
-					if (!m_channels.containsKey(endpoint)) {
-						m_channels.put(endpoint, creatChannel(endpoint));
+					channel = m_channels.get(endpoint);
+					if (channel == null) {
+						channel = creatChannel(endpoint);
+						m_channels.put(endpoint, channel);
 					}
 				}
 			}
 
-			return m_channels.get(endpoint);
+			return channel;
 		} else {
 			throw new IllegalArgumentException(String.format("Unknown endpoint type: %s", endpoint.getType()));
 		}
@@ -178,6 +189,19 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 	}
 
+	@Override
+	public void close() {
+		if (m_closed.compareAndSet(false, true)) {
+			synchronized (m_channels) {
+				for (Map.Entry<Endpoint, EndpointChannel> entry : m_channels.entrySet()) {
+					removeChannel(entry.getKey(), entry.getValue());
+				}
+			}
+
+			m_writerThreadPool.shutdown();
+		}
+	}
+
 	private Bootstrap createBootstrap(final Endpoint endpoint, final EndpointChannel endpointChannel) {
 		Bootstrap bootstrap = new Bootstrap();
 		bootstrap.group(m_eventLoopGroup);
@@ -217,7 +241,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 				SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkBase, checkMax);
 
-				while (!Thread.currentThread().isInterrupted()) {
+				while (!m_closed.get() && !Thread.currentThread().isInterrupted()) {
 					boolean flushed = false;
 					try {
 						for (EndpointChannel endpointChannel : m_channels.values()) {
@@ -364,4 +388,5 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 		}
 	}
+
 }
