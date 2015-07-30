@@ -42,6 +42,10 @@ public class ClusterStateHolder {
 
 	private AtomicReference<HostPort> m_leader = new AtomicReference<>(null);
 
+	public void setHasLeadership(boolean hasLeadership) {
+		m_hasLeadership.set(hasLeadership);
+	}
+
 	public boolean hasLeadership() {
 		return m_hasLeadership.get();
 	}

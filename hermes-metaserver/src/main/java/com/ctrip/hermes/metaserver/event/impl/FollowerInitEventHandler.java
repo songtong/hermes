@@ -1,9 +1,5 @@
 package com.ctrip.hermes.metaserver.event.impl;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.util.EntityUtils;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -12,9 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.net.Networks;
 
-import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.commons.BaseEventBasedZkWatcher;
@@ -54,6 +48,33 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	@Inject
 	private ZKClient m_zkClient;
 
+	@Inject
+	private LeaderMetaFetcher m_leaderMetaFetcher;
+
+	public void setConfig(MetaServerConfig config) {
+		m_config = config;
+	}
+
+	public void setMetaHolder(MetaHolder metaHolder) {
+		m_metaHolder = metaHolder;
+	}
+
+	public void setBrokerAssignmentHolder(BrokerAssignmentHolder brokerAssignmentHolder) {
+		m_brokerAssignmentHolder = brokerAssignmentHolder;
+	}
+
+	public void setMetaServerAssignmentHolder(MetaServerAssignmentHolder metaServerAssignmentHolder) {
+		m_metaServerAssignmentHolder = metaServerAssignmentHolder;
+	}
+
+	public void setZkClient(ZKClient zkClient) {
+		m_zkClient = zkClient;
+	}
+
+	public void setLeaderMetaFetcher(LeaderMetaFetcher leaderMetaFetcher) {
+		m_leaderMetaFetcher = leaderMetaFetcher;
+	}
+
 	@Override
 	public EventType eventType() {
 		return EventType.FOLLOWER_INIT;
@@ -79,49 +100,12 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	private void loadAndaddMetaInfoWatcher(Watcher watcher) throws Exception {
 		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
 		MetaInfo metaInfo = ZKSerializeUtils.deserialize(data, MetaInfo.class);
-		Meta meta = fetchMetaInfo(metaInfo);
+		Meta meta = m_leaderMetaFetcher.fetchMetaInfo(metaInfo);
 		if (meta != null) {
 			m_metaHolder.setMeta(meta);
 			log.info("Fetched meta from leader(endpoint={}:{},version={})", metaInfo.getHost(), metaInfo.getPort(),
 			      meta.getVersion());
 		}
-	}
-
-	private Meta fetchMetaInfo(MetaInfo metaInfo) {
-		if(metaInfo == null){
-			return null;
-		}
-
-		try {
-			if(Networks.forIp().getLocalHostAddress().equals(metaInfo.getHost()) && m_config.getMetaServerPort() == metaInfo
-					  .getPort()){
-				return null;
-			}
-
-			String url = String.format("http://%s:%s/meta/complete", metaInfo.getHost(), metaInfo.getPort());
-			Meta meta = m_metaHolder.getMeta();
-
-			if (meta != null) {
-				url += "?version=" + meta.getVersion();
-			}
-
-			HttpResponse response = Request.Get(url)//
-			      .connectTimeout(m_config.getFetcheMetaFromLeaderConnectTimeout())//
-			      .socketTimeout(m_config.getFetcheMetaFromLeaderReadTimeout())//
-			      .execute()//
-			      .returnResponse();
-
-			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-				String responseContent = EntityUtils.toString(response.getEntity());
-				return JSON.parseObject(responseContent, Meta.class);
-			} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
-				return null;
-			}
-
-		} catch (Exception e) {
-			log.error("Failed to fetch meta from leader({}:{})", metaInfo.getHost(), metaInfo.getPort(), e);
-		}
-		return null;
 	}
 
 	@Override

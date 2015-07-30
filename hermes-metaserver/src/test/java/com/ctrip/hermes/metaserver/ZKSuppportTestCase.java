@@ -134,6 +134,12 @@ public abstract class ZKSuppportTestCase extends ComponentTestCase {
 		globalConf.put("meta.zk.connectionString", getZkConnectionString());
 		when(m_env.getGlobalConfig()).thenReturn(globalConf);
 		lookup(ZKConfig.class).setEnv(m_env);
+
+		doSetUp();
+	}
+
+	protected void doSetUp() throws Exception {
+
 	}
 
 	@After

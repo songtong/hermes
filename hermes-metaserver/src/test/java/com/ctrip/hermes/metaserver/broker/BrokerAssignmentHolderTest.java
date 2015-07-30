@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -41,10 +40,8 @@ public class BrokerAssignmentHolderTest extends ZKSuppportTestCase {
 		ensurePath(ZKPathUtils.getBrokerAssignmentRootZkPath());
 	}
 
-	@Before
 	@Override
-	public void setUp() throws Exception {
-		super.setUp();
+	protected void doSetUp() throws Exception {
 		configureBrokerAssignmentHolder();
 	}
 
