@@ -6,6 +6,7 @@
 
 <a:layout>
 	<link href="${model.webapp}/css/dashboard.css" type="text/css" rel="stylesheet">
+	<link href="${model.webapp}/css/bootstrap-treeview.min.css" type="text/css" rel="stylesheet">
 	<div class="container fluid" ng-app="dash-topic" ng-controller="dash-topic-controller">
 		<div class="row">
 			<div class="col-md-2 sidebar">
@@ -23,6 +24,7 @@
 			<div id="main_board" class="col-md-10 col-md-offset-2 main" style="margin-left: 15%"></div>
 		</div>
 	</div>
+	<script type="text/javascript" src="${model.webapp}/js/bootstrap-treeview.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/dashboard/topic-service.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/dashboard/topic-controller.js"></script>

@@ -134,19 +134,53 @@ dashtopic
 					};
 
 					$scope.truncate = function(raw, size) {
-						return raw.substring(0, size / 2) + " ... " + raw.substring(raw.length - size / 2);
-					};
-
-					$scope.tooltip_format = function(raw) {
-						var new_value = "";
-						var line_count = 20;
-						for (var i = 0; i < raw.length / line_count; i++) {
-							new_value += raw.substring(i * line_count, (i + 1) * line_count) + " ";
+						raw = raw.replace(/\\"/g, '"');
+						if (raw.length <= size) {
+							return raw;
 						}
-						return new_value;
+						return raw.substring(0, size / 2) + " ... " + raw.substring(raw.length - size / 2);
 					};
 
 					$scope.refresh_latest = function() {
 						DashtopicService.update_topic_latest($scope.current_topic);
+					};
+
+					function format_tree(obj) {
+						var data = [];
+						if (obj instanceof Object) {
+							for ( var key in obj) {
+								var node = {};
+								var value = obj[key];
+								node.text = key;
+								if (value instanceof Object) {
+									node.nodes = format_tree(value);
+								} else {
+									node.nodes = [ {
+										text : value
+									} ];
+								}
+								data.push(node);
+							}
+						} else {
+							data.push({
+								text : obj
+							});
+						}
+						return data;
+					}
+
+					$scope.show_tree = function(ref_key, json_str) {
+						$scope.current_refkey = ref_key;
+						json_str = json_str.replace(/\\"/g, '"');
+						if (json_str[0] == '"' && json_str[json_str.length - 1] == '"') {
+							json_str = json_str.substring(1, json_str.length - 1);
+						}
+						var obj = JSON.parse(json_str);
+						$scope.current_attr_json = obj;
+						$("#data-tree").treeview({
+							data : format_tree(obj),
+							levels : 1
+						});
+						$("#attr-view").modal('show');
 					};
 				});

@@ -1,6 +1,7 @@
 package com.ctrip.hermes.portal.dal.ds;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.dal.jdbc.QueryDef;
 import org.unidal.dal.jdbc.QueryEngine;
@@ -16,7 +17,7 @@ public class PortalTableProvider implements TableProvider {
 	@Deprecated
 	private PortalMetaService m_metaService;
 
-	private Boolean m_inited = false;
+	private final AtomicBoolean m_inited = new AtomicBoolean(false);
 
 	@Override
 	public String getDataSourceName(Map<String, Object> hints, String logicalTableName) {
@@ -85,11 +86,11 @@ public class PortalTableProvider implements TableProvider {
 	}
 
 	private PortalMetaService getMetaService() {
-		if (!m_inited) {
+		if (!m_inited.get()) {
 			synchronized (m_inited) {
-				if (!m_inited) {
+				if (!m_inited.get()) {
 					m_metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
-					m_inited = true;
+					m_inited.set(true);
 				}
 			}
 		}

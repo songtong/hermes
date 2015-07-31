@@ -194,15 +194,14 @@
 </div>
 
 <div class="modal fade" id="top-latest-modal" tabindex="-1" role="dialog" aria-labelledby="top-latest-label" aria-hidden="true">
-	<div class="modal-dialog" style="width: 1024px">
+	<div class="modal-dialog" style="width: 1100px">
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 				<h4 class="modal-title" id="top-latest-label">
-					最新消息 &emsp;
+					<b><span ng-bind="current_topic" style="text-transform: capitalize;"></span></b> 最新消息 &emsp;
 					<button class="btn btn-xs btn-success" ng-click="refresh_latest()"><span class="glyphicon glyphicon-refresh"></span> 刷新</button>
 				</h4>
-
 			</div>
 			<div class="modal-body">
 				<table class="table table-bordered table-striped table-condensed table-hover">
@@ -221,16 +220,16 @@
 						<tr ng-repeat="row in topic_latest">
 							<td><span ng-bind="$index + 1"></span></td>
 							<td><span ng-bind="row.rawMessage.producerIp"></span></td>
-							<td><a href="" tooltip="{{row.rawMessage.refKey}}">
-									<span ng-bind="truncate(row.rawMessage.refKey, 10)"></span>
+							<td><a href="" tooltip="{{row.rawMessage.refKey}}" tooltip-trigger="click">
+									<span ng-bind="truncate(row.rawMessage.refKey, 20)"></span>
 								</a></td>
-							<td><a href="" tooltip="{{tooltip_format(row.attributesString)}}">
-									<span ng-bind="truncate(row.attributesString, 10)"></span>
+							<td><a href="" tooltip="点击查看详情" ng-click="show_tree(row.rawMessage.refKey, row.attributesString)">
+									<span ng-bind="truncate(row.attributesString, 20)"></span>
 								</a></td>
 							<td><span ng-bind="row.rawMessage.codecType"></span></td>
-							<td><span ng-bind="row.rawMessage.creationDate | date:'yyyy-MM-dd HH:mm:ss'"></span></td>
-							<td><a tooltip="{{tooltip_format(row.payloadString)}}" href="">
-									<span ng-bind="truncate(row.payloadString, 50)"></span>
+							<td><span ng-bind="row.rawMessage.creationDate | date:'MM-dd HH:mm:ss'"></span></td>
+							<td><a tooltip="点击查看详情" href="" ng-click="show_tree(row.rawMessage.refKey, row.payloadString)">
+									<span ng-bind="truncate(row.payloadString, 30)"></span>
 								</a></td>
 						</tr>
 					</tbody>
@@ -238,4 +237,37 @@
 			</div>
 		</div>
 	</div>
+</div>
+
+<div class="modal fade" id="attr-view" tabindex="-1" role="dialog" aria-labelledby="top-latest-label" aria-hidden="true">
+	<div class="modal-dialog" style="width: 1024px">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id=attr-view-label>
+					REF-KEY:
+					<span ng-bind="current_refkey"></span>
+				</h4>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col-md-6">
+							<h5>
+								<label class="label label-primary">消息结构</label>
+							</h5>
+							<div id="data-tree"></div>
+						</div>
+						<div class="col-md-6">
+							<h5>
+								<label class="label label-primary">源消息</label>
+							</h5>
+							<pre style="max-height: 600px; overflow: scroll;">{{current_attr_json | json:2}}</pre>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 </div>
