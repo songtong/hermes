@@ -145,7 +145,7 @@ public class MonitorResource {
 		public MessageView(MessagePriority msg) {
 			m_rawMessage = msg;
 			HermesPrimitiveCodec codec = new HermesPrimitiveCodec(Unpooled.wrappedBuffer(msg.getAttributes()));
-			m_attributesString = codec.readStringStringMap().toString();
+			m_attributesString = JSON.toJSONString(codec.readStringStringMap());
 			if (Codec.JSON.equals(msg.getCodecType())) {
 				m_payloadString = JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(), Object.class));
 			}
