@@ -87,6 +87,26 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	private AtomicBoolean m_brokerListenerAdded = new AtomicBoolean(false);
 
+	public void setMetaService(MetaService metaService) {
+		m_metaService = metaService;
+	}
+
+	public void setMetaHolder(MetaHolder metaHolder) {
+		m_metaHolder = metaHolder;
+	}
+
+	public void setBrokerAssignmentHolder(BrokerAssignmentHolder brokerAssignmentHolder) {
+		m_brokerAssignmentHolder = brokerAssignmentHolder;
+	}
+
+	public void setMetaServerAssignmentHolder(MetaServerAssignmentHolder metaServerAssignmentHolder) {
+		m_metaServerAssignmentHolder = metaServerAssignmentHolder;
+	}
+
+	public void setEndpointMaker(EndpointMaker endpointMaker) {
+		m_endpointMaker = endpointMaker;
+	}
+
 	@Override
 	public EventType eventType() {
 		return EventType.LEADER_INIT;
@@ -116,7 +136,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 	@Override
 	protected void processEvent(EventEngineContext context, Event event) throws Exception {
 
-		loadAndaddBaseMetaWatcher(new BaseMetaWatcher(context));
+		loadAndAddBaseMetaWatcher(new BaseMetaWatcher(context));
 		Meta baseMeta = loadBaseMeta();
 
 		List<Server> metaServers = loadAndAddMetaServerListWatcher(new MetaServerListWatcher(context));
@@ -177,7 +197,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		return metaServers;
 	}
 
-	private Long loadAndaddBaseMetaWatcher(Watcher watcher) throws Exception {
+	private Long loadAndAddBaseMetaWatcher(Watcher watcher) throws Exception {
 		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getBaseMetaVersionZkPath());
 		return ZKSerializeUtils.deserialize(data, Long.class);
 	}
@@ -204,7 +224,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		@Override
 		protected void doProcess(WatchedEvent event) {
 			try {
-				Long version = loadAndaddBaseMetaWatcher(this);
+				Long version = loadAndAddBaseMetaWatcher(this);
 
 				m_eventBus.pubEvent(m_context, new com.ctrip.hermes.metaserver.event.Event(EventType.BASE_META_CHANGED,
 				      version));

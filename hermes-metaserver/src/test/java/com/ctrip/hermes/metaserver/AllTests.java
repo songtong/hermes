@@ -18,6 +18,7 @@ import com.ctrip.hermes.metaserver.consumer.LeastAdjustmentOrderedConsumeConsume
 import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAllocatorTest;
 import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocatorTest;
 import com.ctrip.hermes.metaserver.event.FollowerEventEngineTest;
+import com.ctrip.hermes.metaserver.event.LeaderEventEngineTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({ //
@@ -43,7 +44,8 @@ LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest.class,//
       ActiveConsumerListHolderTest.class, //
       EndpointMakerTest.class, //
       FollowerEventEngineTest.class, //
-// add test classes here
+      LeaderEventEngineTest.class, //
+      // add test classes here
 
 })
 public class AllTests {
