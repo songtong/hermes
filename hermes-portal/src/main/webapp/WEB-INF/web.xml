@@ -5,6 +5,10 @@
 		<filter-class>com.dianping.cat.servlet.CatFilter</filter-class>
 	</filter>
 	<filter>
+		<filter-name>validation-filter</filter-name>
+		<filter-class>com.ctrip.hermes.portal.web.HermesValidationFilter</filter-class>
+	</filter>
+	<filter>
 		<filter-name>mvc-filter</filter-name>
 		<filter-class>org.unidal.web.MVCFilter</filter-class>
 		<init-param>
@@ -22,6 +26,12 @@
 	</filter>
 	<filter-mapping>
 		<filter-name>cat-filter</filter-name>
+		<url-pattern>/*</url-pattern>
+		<dispatcher>REQUEST</dispatcher>
+		<dispatcher>FORWARD</dispatcher>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>validation-filter</filter-name>
 		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 		<dispatcher>FORWARD</dispatcher>

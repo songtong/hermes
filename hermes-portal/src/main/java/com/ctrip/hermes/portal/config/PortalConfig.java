@@ -35,6 +35,12 @@ public class PortalConfig {
 		return host;
 	}
 
+	public Pair<String, String> getAccount() {
+		String username = m_env.getGlobalConfig().getProperty("portal.account.username", "hermes");
+		String password = m_env.getGlobalConfig().getProperty("portal.account.password", "hermes123");
+		return new Pair<String, String>(username, password);
+	}
+
 	public List<Pair<String, Integer>> getElasticClusterNodes() {
 		String defaultHost = "localhost";
 		Integer defaultPort = 9300;
@@ -52,7 +58,8 @@ public class PortalConfig {
 			try {
 				for (String host : str.split(",")) {
 					String[] parts = host.split(":");
-					l.add(new Pair<String, Integer>(parts[0], parts.length > 1 ? Integer.valueOf(parts[1]) : defaultPort));
+					l.add(new Pair<String, Integer>(parts[0],
+							parts.length > 1 ? Integer.valueOf(parts[1]) : defaultPort));
 				}
 			} catch (Exception e) {
 				log.error("Parse endpoints failed.", e);
