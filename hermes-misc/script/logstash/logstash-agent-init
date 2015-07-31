@@ -10,9 +10,10 @@
 # processname: logstash
 
 name="logstash-agent"
-logstash_bin="/opt/ctrip/app/logstash-1.4.2/bin/logstash"
-logstash_conf="/opt/ctrip/app/logstash-1.4.2/shipper.conf"
-logstash_log="/opt/logs/logstash/shipper.log"
+logstash_bin="/opt/ctrip/app/hermes/logstash-1.5.3/bin/logstash"
+logstash_conf="/opt/ctrip/app/hermes/logstash-1.5.3/shipper.conf"
+logstash_log="/opt/logs/hermes/logstash/logstash.log"
+shipper_log="/opt/logs/hermes/logstash/shipper.log"
 
 find_logstash_process () {
     PIDTEMP=`ps ux | grep logstash | grep java | awk '{ print $2 }'`
@@ -30,8 +31,7 @@ start () {
       echo "Log dir ${LOG_DIR} doesn't exist. Creating"
       mkdir $LOG_DIR
     fi
-    nohup ${logstash_bin} agent --verbose -f ${logstash_conf} --log ${logstash_log} > /dev/null 2>&
-1 &
+    nohup ${logstash_bin} agent --verbose -f ${logstash_conf} --log ${shipper_log} > ${logstash_log} 2>&1 &
 }
 
 stop () {
