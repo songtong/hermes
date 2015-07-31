@@ -358,6 +358,32 @@
 					</plugin>
 				</plugins>
 			</build>
+			<repositories>
+				<repository>
+					<id>central</id>
+					<url>http://repo1.maven.org/maven2</url>
+				</repository>
+				<repository>
+					<id>frameworks</id>
+					<url>https://raw.githubusercontent.com/ctripcorp/hermes/mvn-repo</url>
+					<releases>
+						<checksumPolicy>ignore</checksumPolicy>
+					</releases>
+				</repository>
+			</repositories>
+			<pluginRepositories>
+				<pluginRepository>
+					<id>central</id>
+					<url>http://repo1.maven.org/maven2</url>
+				</pluginRepository>
+				<pluginRepository>
+					<id>maven-plugins</id>
+					<url>https://raw.githubusercontent.com/ctripcorp/hermes/mvn-repo</url>
+					<releases>
+						<checksumPolicy>ignore</checksumPolicy>
+					</releases>
+				</pluginRepository>
+			</pluginRepositories>
 		</profile>
 		<profile>
 			<id>dev</id>
@@ -525,32 +551,6 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-	<repositories>
-		<repository>
-			<id>central</id>
-			<url>http://repo1.maven.org/maven2</url>
-		</repository>
-		<repository>
-			<id>frameworks</id>
-			<url>https://raw.githubusercontent.com/ctripcorp/hermes/mvn-repo</url>
-			<releases>
-				<checksumPolicy>ignore</checksumPolicy>
-			</releases>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>central</id>
-			<url>http://repo1.maven.org/maven2</url>
-		</pluginRepository>
-		<pluginRepository>
-			<id>maven-plugins</id>
-			<url>https://raw.githubusercontent.com/ctripcorp/hermes/mvn-repo</url>
-			<releases>
-				<checksumPolicy>ignore</checksumPolicy>
-			</releases>
-		</pluginRepository>
-	</pluginRepositories>
 	<distributionManagement>
 		<repository>
 			<id>releases</id>

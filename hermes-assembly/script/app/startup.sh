@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 set -u
@@ -10,34 +10,47 @@ if [ $# -ne 1 ];then
 	exit 1
 fi
 
-LOG_PATH="/opt/logs/hermes/"
+LOG_PATH=/opt/logs/hermes/
 mkdir -p $LOG_PATH
 
 ENV_FILE="./env.sh"
 . "${ENV_FILE}"
 
-LOG_FILE="sysout.log"
+SYSOUT_LOG=$LOG_PATH/sysout.log
+OP_LOG=$LOG_PATH/op.log
 
 SERVER_HOME=..
 JETTY_JAR=$(ls ../jetty/*.jar)
 WAR=$(ls ../*.war)
+
+if [ ! -f $JAVA_CMD ];then
+	log_op "$JAVA_CMD not found!"
+	exit 1
+fi
 
 start() {
     ensure_not_started
 	if [ ! -d "${LOG_PATH}" ]; then
         mkdir "${LOG_PATH}"
     fi
-    nohup java ${JAVA_OPTS} -jar $JETTY_JAR $WAR > "${LOG_PATH}/${LOG_FILE}" 2>&1 &
-    echo "Instance Started!"
+    log_op $(pwd)
+    BUILD_ID=jenkinsDontKillMe nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_JAR $WAR > $SYSOUT_LOG 2>&1 &
+    log_op "PID $$"
+    log_op "Instance Started!"
+}
+
+log_op() {
+	timestamp=$(date +"%F %T")
+	echo "[$timestamp] $@" >> $OP_LOG
 }
 
 stop(){
     serverPID=$(find_pid)
     if [ "${serverPID}" == "" ]; then
-        echo "No Instance Is Running"
+        log_op "No Instance Is Running"
     else
         kill -9 ${serverPID}
-        echo "Instance Stopped"
+        log_op "Instance Stopped"
     fi
 }
 
@@ -45,7 +58,7 @@ stop(){
 ensure_not_started() {
 	serverPID=$(find_pid)
     if [ "${serverPID}" != "" ]; then
-        echo "Instance Already Running"
+        log_op "Instance Already Running"
         exit 1
     fi
 }
