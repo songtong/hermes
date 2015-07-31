@@ -23,6 +23,7 @@
 
 <script type="text/javascript" src="${model.webapp}/js/angular/angular.min.js"></script>
 <script type="text/javascript" src="${model.webapp}/js/angular/angular-resource.min.js"></script>
+<script type="text/javascript" src="${model.webapp}/js/angular/angular-cookies.min.js"></script>
 <script type="text/javascript" src="${model.webapp}/js/angular/ui-bootstrap-tpls-0.13.0.min.js"></script>
 <script type="text/javascript" src="${model.webapp}/js/angular/bootbox.min.js"></script>
 
@@ -34,55 +35,7 @@
 </head>
 
 <body data-spy="scroll" data-target=".subnav" data-offset="50">
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a href="${model.webapp}/${page.moduleName}" class="navbar-brand">
-					Hermes
-					<span class="badge">${navBar.environment}</span>
-				</a>
-			</div>
-
-			<div class="collapse navbar-collapse">
-				<ul class="nav navbar-nav">
-					<c:forEach var="page" items="${navBar.visiblePages}">
-						<c:if test="${page.name == 'topic' }">
-							<li ${model.page.name == page.name ? 'class="active"' : ''}>
-								<a href="${model.webapp}/${page.moduleName}/${page.path}#/list/mysql">${page.title}</a>
-							</li>
-						</c:if>
-						<c:if test="${page.name == 'dashboard' }">
-							<li ${model.page.name == page.name ? 'class="active dropdown"' : 'class="dropdown"'}>
-								<a href="http://baidu.com" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">${page.title}
-									<span class="caret"></span>
-								</a>
-								<ul class="dropdown-menu">
-									<li>
-										<a href="${model.webapp}/${page.moduleName}/${page.path}">Topic</a>
-									</li>
-									<li>
-										<a href="${model.webapp}/${page.moduleName}/${page.path}?op=broker">Broker</a>
-									</li>
-									<li>
-										<a href="${model.webapp}/${page.moduleName}/${page.path}?op=client">Client</a>
-									</li>
-								</ul>
-							</li>
-						</c:if>
-						<c:if test="${page.standalone and page.name != 'dashboard' and page.name != 'topic'}">
-							<li ${model.page.name == page.name ? 'class="active"' : ''}>
-								<a href="${model.webapp}/${page.moduleName}/${page.path}">${page.title}</a>
-							</li>
-						</c:if>
-						<c:if test="${not page.standalone and model.page.name == page.name and page.name != 'dashboard'}">
-							<li class="active">${page.title}</li>
-						</c:if>
-					</c:forEach>
-				</ul>
-			</div>
-			<!--/.nav-collapse -->
-		</div>
-	</div>
+	
 
 	<div class="container-fluid" style="min-height: 524px;">
 		<div class="row-fluid">
@@ -101,6 +54,84 @@
 			</footer>
 		</div>
 	</div>
+	<div id="login-app" ng-app="log-in-app" ng-controller="log-in-controller">
+		<div class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<a href="${model.webapp}/${page.moduleName}" class="navbar-brand"> Hermes <span class="badge">${navBar.environment}</span>
+					</a>
+				</div>
+
+				<div class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<c:forEach var="page" items="${requestScope.logined ? navBar.allPages : navBar.basePages}">
+							<c:if test="${page.name == 'topic' }">
+								<li ${model.page.name == page.name ? 'class="active"' : ''}><a href="${model.webapp}/${page.moduleName}/${page.path}#/list/mysql">${page.title}</a></li>
+							</c:if>
+							<c:if test="${page.name == 'dashboard' }">
+								<li ${model.page.name == page.name ? 'class="active dropdown"' : 'class="dropdown"'}><a href="http://baidu.com" class="dropdown-toggle" data-toggle="dropdown" role="button"
+									aria-haspopup="true" aria-expanded="false">${page.title} <span class="caret"></span>
+								</a>
+									<ul class="dropdown-menu">
+										<li><a href="${model.webapp}/${page.moduleName}/${page.path}">Topic</a></li>
+										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=broker">Broker</a></li>
+										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=client">Client</a></li>
+									</ul></li>
+							</c:if>
+							<c:if test="${page.standalone and page.name != 'dashboard' and page.name != 'topic'}">
+								<li ${model.page.name == page.name ? 'class="active"' : ''}><a href="${model.webapp}/${page.moduleName}/${page.path}">${page.title}</a></li>
+							</c:if>
+							<c:if test="${not page.standalone and model.page.name == page.name and page.name != 'dashboard'}">
+								<li class="active">${page.title}</li>
+							</c:if>
+						</c:forEach>
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<c:if test="${requestScope.logined}">
+							<li><a class="btn btn-link" ng-click="logout()">Sign out</a></li>
+						</c:if>
+						<c:if test="${!requestScope.logined}">
+							<li><a class="btn btn-link" data-toggle="modal" data-target="#sign_in_modal">Sign in</a></li>
+						</c:if>
+					</ul>
+
+				</div>
+				<!--/.nav-collapse -->
+			</div>
+
+		</div>
+		<div id="sign_in_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h3 id="myModalLabel">Sign In</h3>
+					</div>
+					<div class="modal-body">
+						<form class="form-horizontal">
+							<div class="form-group">
+								<label for="inputUserName" class="col-sm-3 control-label">User Name</label>
+								<div class="col-sm-8">
+									<input type="text" class="form-control" id="inputUserName" data-provide="typeahead" placeholder="User Name" ng-model="userinfo.userName">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inputPassword" class="col-sm-3 control-label">Password</label>
+								<div class="col-sm-8">
+									<input type="password" class="form-control" id="inputPassword" placeholder="Password" ng-model="userinfo.password">
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button class="btn" data-dismiss="modal" aria-hidden="true">close</button>
+						<button class="btn btn-primary" ng-click="login(userinfo)">sign in</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 	<!--/.fluid-container-->
+	<script type="text/javascript" src="${model.webapp}/js/login/login.js"></script>
 </body>
 </html>

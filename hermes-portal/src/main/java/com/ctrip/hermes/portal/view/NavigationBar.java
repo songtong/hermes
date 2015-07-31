@@ -7,12 +7,17 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.portal.console.ConsolePage;
 
 public class NavigationBar {
-	public Page[] getVisiblePages() {
-		return new Page[] {
+	private Page[] BASE_PAGES = new Page[] { ConsolePage.DASHBOARD, ConsolePage.TRACER };
+	private Page[] ALL_PAGES = new Page[] { ConsolePage.DASHBOARD, ConsolePage.TOPIC, ConsolePage.CONSUMER,
+			ConsolePage.SUBSCRIPTION, ConsolePage.STORAGE, ConsolePage.ENDPOINT, ConsolePage.TRACER,
+			ConsolePage.RESENDER };
 
-		ConsolePage.DASHBOARD, ConsolePage.TOPIC, ConsolePage.CONSUMER, ConsolePage.SUBSCRIPTION, ConsolePage.STORAGE,
-		      ConsolePage.ENDPOINT, ConsolePage.TRACER, ConsolePage.RESENDER };
+	public Page[] getBasePages() {
+		return BASE_PAGES;
+	}
 
+	public Page[] getAllPages() {
+		return ALL_PAGES;
 	}
 
 	public String getEnvironment() {

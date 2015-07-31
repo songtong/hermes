@@ -6,7 +6,7 @@
 
 <a:layout>
 
-	<div class="container fluid" ng-app="dashboard" ng-controller="hermes-dashboard-controller">
+	<div id="dashboard-app" class="container fluid" ng-app="dashboard" ng-controller="hermes-dashboard-controller">
 		<div class="row" style="height: 300px">
 			<div class="col-md-6">
 				<div class="panel panel-info">
