@@ -4,9 +4,14 @@ set -u
 
 cd `dirname $0`
 
-if [ $# -ne 1 ];then
-	echo "usage: `basename $0` metaserver|broker"
+if [ $# -lt 1 ];then
+	echo "usage: `basename $0` metaserver|broker [port]"
 	exit 1
+fi
+
+port=""
+if [ $# -eq 2 ];then
+	port=$2
 fi
 
 valid_app=false
@@ -36,5 +41,5 @@ fi
 rm -rf $APP_DIR/*
 tar xf *${APP_NAME}*.tar -C $APP_DIR
 chmod +x $APP_STARTUP_SCRIPT
-$APP_STARTUP_SCRIPT start
+$APP_STARTUP_SCRIPT start $port
 wait

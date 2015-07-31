@@ -5,8 +5,8 @@ set -u
 
 cd `dirname $0`
 
-if [ $# -ne 1 ];then
-	echo "usage: startup.sh [start|stop]"
+if [ $# -lt 1 ];then
+	echo "usage: startup.sh start|stop [port]"
 	exit 1
 fi
 
@@ -28,13 +28,41 @@ if [ ! -f $JAVA_CMD ];then
 	exit 1
 fi
 
+port=8080
+
+can_sudo=false
+set +e
+sudo -n ls >/dev/null 2>&1
+if [ $? -eq 0 ];then
+	can_sudo=true
+fi
+set -e
+			
+sudo=""
+if [ $# -eq 2 ];then
+	num_regex='^[0-9]+$'
+	if [[ $2 =~ $num_regex ]];then
+		port=$2
+		if [ $port -lt 1024 ];then
+			if [ $can_sudo == false ];then
+				log_op "[ERROR] Attemp to start jetty at port $port but without passwordless sudo"
+				exit 1
+			fi
+			sudo="sudo"
+		fi
+	else
+		echo "$2 is not a valid port"
+		exit 1
+	fi
+fi
+
 start() {
     ensure_not_started
 	if [ ! -d "${LOG_PATH}" ]; then
         mkdir "${LOG_PATH}"
     fi
     log_op $(pwd)
-    BUILD_ID=jenkinsDontKillMe nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_JAR $WAR > $SYSOUT_LOG 2>&1 &
+    BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_JAR --port $port $WAR > $SYSOUT_LOG 2>&1 &
     log_op "PID $$"
     log_op "Instance Started!"
 }
@@ -49,7 +77,10 @@ stop(){
     if [ "${serverPID}" == "" ]; then
         log_op "No Instance Is Running"
     else
-        kill -9 ${serverPID}
+    	if [ $can_sudo == true ];then
+    		sudo="sudo"
+    	fi
+        $sudo kill -9 ${serverPID}
         log_op "Instance Stopped"
     fi
 }
