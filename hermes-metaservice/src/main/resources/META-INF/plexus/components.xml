@@ -124,7 +124,7 @@
 			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>
 			<implementation>org.unidal.dal.jdbc.datasource.DefaultDataSourceProvider</implementation>
 			<configuration>
-				<datasourceFile>/data/appdatas/hermes/datasources.xml</datasourceFile>
+				<datasourceFile>/opt/ctrip/data/hermes/datasources.xml</datasourceFile>
 			</configuration>
 		</component>
 	</components>

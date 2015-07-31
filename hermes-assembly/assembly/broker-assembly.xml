@@ -6,10 +6,11 @@
 	<formats>
 		<format>tar</format>
 	</formats>
+	<includeBaseDirectory>false</includeBaseDirectory>
 	<fileSets>
 		<!--scripts -->
 		<fileSet>
-			<directory>${project.basedir}/script</directory>
+			<directory>${project.basedir}/script/app</directory>
 			<outputDirectory>/bin</outputDirectory>
 			<includes>
 				<include>*.sh</include>

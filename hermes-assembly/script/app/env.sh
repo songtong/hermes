@@ -1,10 +1,9 @@
-#!/bin/sh
+#!/bin/bash
+
+JAVA_CMD=/usr/bin/java
 
 # set jvm startup argument
 JAVA_OPTS="-Djava.awt.headless=true \
-            -Dcom.sun.management.jmxremote.port=8301 \
-            -Dcom.sun.management.jmxremote.authenticate=false \
-            -Dcom.sun.management.jmxremote.ssl=false \
             -Dfile.encoding=utf-8 \
             -Dio.netty.allocator.type=pooled \
             -Xms4g \
