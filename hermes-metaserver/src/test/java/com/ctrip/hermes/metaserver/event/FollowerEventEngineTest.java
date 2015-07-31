@@ -3,6 +3,7 @@ package com.ctrip.hermes.metaserver.event;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -80,6 +81,66 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 
 	@Test
 	public void testStart() throws Exception {
+		Meta loadedMeta = startEngine();
+		verify(m_brokerAssignmentHolder, times(1)).clear();
+		verify(m_metaServerAssignmentHolder, times(1)).reload();
+
+		assertEquals(TestHelper.loadLocalMeta(this).toString(), loadedMeta.toString());
+	}
+
+	@Test
+	public void testLeaderMetaChange() throws Exception {
+		startEngine();
+
+		Meta newMeta = new Meta();
+		newMeta.setVersion(System.currentTimeMillis());
+
+		when(m_leaderMetaFetcher.fetchMetaInfo(any(MetaInfo.class))).thenReturn(newMeta);
+
+		MetaInfo metaInfo = new MetaInfo("1.1.1.2", 2222, System.currentTimeMillis());
+
+		m_curator.setData().forPath(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
+
+		final AtomicReference<Meta> loadedMeta = new AtomicReference<>();
+		final CountDownLatch latch = new CountDownLatch(1);
+		doAnswer(new Answer<Void>() {
+
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				loadedMeta.set(invocation.getArgumentAt(0, Meta.class));
+				latch.countDown();
+				return null;
+			}
+		}).when(m_metaHolder).setMeta(any(Meta.class));
+
+		latch.await(5, TimeUnit.SECONDS);
+		assertEquals(newMeta.toString(), loadedMeta.toString());
+	}
+
+	@Test
+	public void testMetaServerAssignmentChange() throws Exception {
+		startEngine();
+
+		m_curator.setData().forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath(),
+		      ZKSerializeUtils.serialize(System.currentTimeMillis()));
+
+		reset(m_metaServerAssignmentHolder);
+		final CountDownLatch latch = new CountDownLatch(1);
+		doAnswer(new Answer<Void>() {
+
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				latch.countDown();
+				return null;
+			}
+		}).when(m_metaServerAssignmentHolder).reload();
+		;
+
+		latch.await(5, TimeUnit.SECONDS);
+		verify(m_metaServerAssignmentHolder, times(1)).reload();
+	}
+
+	private Meta startEngine() throws Exception, InterruptedException {
 		m_engine.start(createClusterStateHolder());
 
 		final CountDownLatch latch = new CountDownLatch(1);
@@ -103,11 +164,8 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 			}
 		}).when(m_metaServerAssignmentHolder).reload();
 
-		assertEquals(true, latch.await(5, TimeUnit.SECONDS));
-		verify(m_brokerAssignmentHolder, times(1)).clear();
-		verify(m_metaServerAssignmentHolder, times(1)).reload();
-
-		assertEquals(TestHelper.loadLocalMeta(this).toString(), loadedMeta.get().toString());
+		latch.await(5, TimeUnit.SECONDS);
+		return loadedMeta.get();
 	}
 
 	private ClusterStateHolder createClusterStateHolder() {
