@@ -94,12 +94,7 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 
 		Meta newMeta = new Meta();
 		newMeta.setVersion(System.currentTimeMillis());
-
 		when(m_leaderMetaFetcher.fetchMetaInfo(any(MetaInfo.class))).thenReturn(newMeta);
-
-		MetaInfo metaInfo = new MetaInfo("1.1.1.2", 2222, System.currentTimeMillis());
-
-		m_curator.setData().forPath(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
 
 		final AtomicReference<Meta> loadedMeta = new AtomicReference<>();
 		final CountDownLatch latch = new CountDownLatch(1);
@@ -113,6 +108,9 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 			}
 		}).when(m_metaHolder).setMeta(any(Meta.class));
 
+		MetaInfo metaInfo = new MetaInfo("1.1.1.2", 2222, System.currentTimeMillis());
+		m_curator.setData().forPath(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
+
 		latch.await(5, TimeUnit.SECONDS);
 		assertEquals(newMeta.toString(), loadedMeta.toString());
 	}
@@ -120,9 +118,6 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 	@Test
 	public void testMetaServerAssignmentChange() throws Exception {
 		startEngine();
-
-		m_curator.setData().forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath(),
-		      ZKSerializeUtils.serialize(System.currentTimeMillis()));
 
 		reset(m_metaServerAssignmentHolder);
 		final CountDownLatch latch = new CountDownLatch(1);
@@ -134,15 +129,15 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 				return null;
 			}
 		}).when(m_metaServerAssignmentHolder).reload();
-		;
+
+		m_curator.setData().forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath(),
+		      ZKSerializeUtils.serialize(System.currentTimeMillis()));
 
 		latch.await(5, TimeUnit.SECONDS);
 		verify(m_metaServerAssignmentHolder, times(1)).reload();
 	}
 
 	private Meta startEngine() throws Exception, InterruptedException {
-		m_engine.start(createClusterStateHolder());
-
 		final CountDownLatch latch = new CountDownLatch(1);
 
 		final AtomicReference<Meta> loadedMeta = new AtomicReference<>();
@@ -163,6 +158,8 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 				return null;
 			}
 		}).when(m_metaServerAssignmentHolder).reload();
+
+		m_engine.start(createClusterStateHolder());
 
 		latch.await(5, TimeUnit.SECONDS);
 		return loadedMeta.get();

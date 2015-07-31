@@ -48,17 +48,17 @@ public class RemoteMetaLoader implements MetaLoader {
 			if (log.isDebugEnabled()) {
 				log.debug("Loading meta from server: {}", ipPort);
 			}
-			
-			String url =null; 
+
+			String url = null;
 			try {
 				String uri = m_clientEnvironment.getGlobalConfig().getProperty("meta.fetch.remote.uri");
 				if (StringUtils.isBlank(uri)) {
 					if (log.isDebugEnabled()) {
-						log.debug("Can not find meta fetch uri, use default.");
+						log.debug("Can not find meta fetch uri, use \"/meta\" as default.");
 					}
 					uri = "/meta";
 				}
-				
+
 				url = String.format("http://%s%s", ipPort, uri);
 				if (m_metaCache.get() != null) {
 					url += "?version=" + m_metaCache.get().getVersion();
