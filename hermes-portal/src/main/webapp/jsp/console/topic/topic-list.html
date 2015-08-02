@@ -1,3 +1,4 @@
+
 <div class="panel panel-info">
 	<div class="panel-heading">
 		<label class="label label-danger"> <span ng-bind="current_topic_type" style="text-transform: uppercase;"></span> TOPICS
@@ -56,7 +57,9 @@
 						tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-warn" ng-if="cur_time-row.latestProduced&gt;noProduceLimit"></span></td>
 				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.endpointType"></td>
 				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.schema.name"></td>
-				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.schema.version"></td>
+				<td ng-if="current_topic_type == 'kafka'"><a href="" ng-click="show_schema_view(row.schema)">
+						<span ng-bind="row.schema.version">
+					</a></td>
 				<td style="text-align: right;" class="col-md-2">
 					<button ng-click="delete_topic(row, $index)" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove"></span> 删除</button>
 					<div ng-if="current_topic_type == 'kafka'" ng-click="set_selected(row)" data="schema_data" upload-button url="/api/schemas" tooltip="上传Schema文件" class="btn btn-xs btn-success btn-upload"
@@ -75,4 +78,35 @@
 			</tr>
 		</tbody>
 	</table>
+</div>
+<div class="modal fade" id="schema-view" tabindex="-1" role="dialog" aria-labelledby="schema-view-label" aria-hidden="true">
+	<div class="modal-dialog" style="width: 1024px">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="schema-view-label">
+					Schema ID:
+					<span ng-bind="current_schema"></span>
+				</h4>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col-md-6">
+							<h5>
+								<label class="label label-primary">Schema结构</label>
+							</h5>
+							<div id="data-tree"></div>
+						</div>
+						<div class="col-md-6">
+							<h5>
+								<label class="label label-primary">Schema源文件</label>
+							</h5>
+							<pre style="max-height: 600px; overflow: scroll;">{{current_attr_json | json:2}}</pre>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>

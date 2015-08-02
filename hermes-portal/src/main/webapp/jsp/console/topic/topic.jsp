@@ -7,6 +7,7 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.topic.Model" scope="request" />
 
 <a:layout>
+	<link href="${model.webapp}/css/bootstrap-treeview.min.css" type="text/css" rel="stylesheet">
 	<div class="container fluid" ng-app="topic" ng-init="delayLimit=300;noProduceLimit=432000000;current_topic_type='mysql'">
 		<div class="row">
 			<div class="col-md-2 sidebar" ng-controller="list-controller">
@@ -22,6 +23,7 @@
 			<div ng-view class="col-md-10 col-md-offset-2 main"></div>
 		</div>
 	</div>
+	<script type="text/javascript" src="${model.webapp}/js/bootstrap-treeview.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-route.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-upload.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
