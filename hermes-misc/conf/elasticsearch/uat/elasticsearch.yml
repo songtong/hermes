@@ -17,9 +17,9 @@ index.number_of_replicas: 1
 
 #################################### Paths ####################################
 #path.conf: /path/to/conf
-path.data: /opt/ctrip/app/elasticsearch-1.7.1/data
+path.data: /opt/ctrip/data/elasticsearch/
 #path.work: /path/to/work
-path.logs: /opt/logs/hermes/elasticsearch/
+path.logs: /opt/logs/elasticsearch/
 #path.plugins: /path/to/plugins
 
 #################################### Plugin ###################################

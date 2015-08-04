@@ -13,21 +13,19 @@
 		</layout>
 	</appender>
 
-	<appender name="FILE" class="org.apache.log4j.RollingFileAppender">
-		<param name="Threshold" value="ALL" />
-		<param name="MaxBackupIndex" value="10" />
-		<param name="MaxFileSize" value="10MB" />
-		<param name="File" value="/opt/logs/hermes/broker/broker.log" />
+	<appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="Append" value="true" />
+		<param name="File" value="/opt/logs/hermes-broker/hermes-broker.log" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd-HH" />
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="[%d{MM-dd HH:mm:ss.SSS}] [%p] [%C{1}] [%t] %m%n" />
 		</layout>
 	</appender>
 
-	<appender name="BIZ" class="org.apache.log4j.RollingFileAppender">
-		<param name="Threshold" value="ALL" />
-		<param name="MaxBackupIndex" value="10" />
-		<param name="MaxFileSize" value="10MB" />
-		<param name="File" value="/opt/logs/hermes/broker/biz.log" />
+	<appender name="BIZ" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="Append" value="true" />
+		<param name="File" value="/opt/logs/hermes-broker/biz.log" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd-HH" />
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%m%n" />
 		</layout>
