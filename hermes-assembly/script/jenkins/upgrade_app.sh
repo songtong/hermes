@@ -5,7 +5,7 @@ set -u
 cd `dirname $0`
 
 if [ $# -lt 1 ];then
-	echo "usage: `basename $0` metaserver|broker [port]"
+	echo "usage: `basename $0` metaserver|broker|portal [port]"
 	exit 1
 fi
 
@@ -15,7 +15,7 @@ if [ $# -eq 2 ];then
 fi
 
 valid_app=false
-for supported_app in metaserver broker;do
+for supported_app in metaserver broker portal;do
 	if [ $1 == $supported_app ];then
 		valid_app=true
 		break;
@@ -29,7 +29,7 @@ else
 fi
 
 APP_NAME=$1
-APP_DIR=/opt/ctrip/app/$APP_NAME
+APP_DIR=/opt/ctrip/app/hermes-$APP_NAME
 APP_STARTUP_SCRIPT=$APP_DIR/bin/startup.sh
 
 mkdir -p $APP_DIR

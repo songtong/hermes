@@ -17,6 +17,14 @@
 			</includes>
 			<fileMode>0755</fileMode>
 		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/script/env/broker</directory>
+			<outputDirectory>/bin</outputDirectory>
+			<includes>
+				<include>env.sh</include>
+			</includes>
+			<fileMode>0755</fileMode>
+		</fileSet>
 		<!--artifact.war -->
 		<fileSet>
 			<directory>${project.basedir}/../hermes-broker/target</directory>

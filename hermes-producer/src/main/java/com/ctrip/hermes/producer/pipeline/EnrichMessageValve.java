@@ -2,11 +2,15 @@ package com.ctrip.hermes.producer.pipeline;
 
 import java.util.UUID;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
+import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.MessagePropertyNames;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
@@ -14,10 +18,15 @@ import com.ctrip.hermes.core.pipeline.spi.Valve;
 import com.ctrip.hermes.core.utils.StringUtils;
 
 @Named(type = Valve.class, value = EnrichMessageValve.ID)
-public class EnrichMessageValve implements Valve {
+public class EnrichMessageValve implements Valve, Initializable {
 	private static final Logger log = LoggerFactory.getLogger(EnrichMessageValve.class);
 
 	public static final String ID = "enrich";
+
+	@Inject
+	private ClientEnvironment m_clientEnv;
+
+	private boolean m_logEnrichInfo = false;
 
 	@Override
 	public void handle(PipelineContext<?> ctx, Object payload) {
@@ -35,7 +44,9 @@ public class EnrichMessageValve implements Valve {
 	private void enrichRefKey(ProducerMessage<?> msg) {
 		if (StringUtils.isEmpty(msg.getKey())) {
 			String refKey = UUID.randomUUID().toString();
-			log.info("Ref key not set, will set uuid as ref key(topic={}, ref key={})", msg.getTopic(), refKey);
+			if (m_logEnrichInfo) {
+				log.info("Ref key not set, will set uuid as ref key(topic={}, ref key={})", msg.getTopic(), refKey);
+			}
 			msg.setKey(refKey);
 		}
 	}
@@ -46,9 +57,16 @@ public class EnrichMessageValve implements Valve {
 
 	private void enrichPartitionKey(ProducerMessage<?> msg, String ip) {
 		if (StringUtils.isEmpty(msg.getPartitionKey())) {
-			log.info("Parition key not set, will set ip as partition key(topic={}, ip={})", msg.getTopic(), ip);
+			if (m_logEnrichInfo) {
+				log.info("Parition key not set, will set ip as partition key(topic={}, ip={})", msg.getTopic(), ip);
+			}
 			msg.setPartitionKey(ip);
 		}
+	}
+
+	@Override
+	public void initialize() throws InitializationException {
+		m_logEnrichInfo = Boolean.parseBoolean(m_clientEnv.getGlobalConfig().getProperty("logEnrichInfo", "false"));
 	}
 
 }
