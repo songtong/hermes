@@ -10,10 +10,10 @@
 # processname: logstash
 
 name="logstash-agent"
-logstash_bin="/opt/ctrip/app/hermes/logstash-1.5.3/bin/logstash"
-logstash_conf="/opt/ctrip/app/hermes/logstash-1.5.3/shipper.conf"
-logstash_log="/opt/logs/hermes/logstash/logstash.log"
-shipper_log="/opt/logs/hermes/logstash/shipper.log"
+logstash_bin="/opt/ctrip/app/logstash-1.5.3/bin/logstash"
+logstash_conf="/opt/ctrip/app/logstash-1.5.3/shipper.conf"
+logstash_log="/opt/logs/logstash/logstash.log"
+shipper_log="/opt/logs/logstash/shipper.log"
 
 find_logstash_process () {
     PIDTEMP=`ps ux | grep logstash | grep java | awk '{ print $2 }'`
