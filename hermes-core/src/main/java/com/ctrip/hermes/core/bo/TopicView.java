@@ -76,6 +76,8 @@ public class TopicView {
 		this.otherinfo = topic.getOtherInfo();
 		this.createBy = topic.getCreateBy();
 		this.consumerRetryPolicy = topic.getConsumerRetryPolicy();
+		this.storagePartitionCount = topic.getStoragePartitionCount();
+		this.storagePartitionSize = topic.getStoragePartitionSize();
 		this.setEndpointType(topic.getEndpointType());
 		this.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 	}
