@@ -1,0 +1,85 @@
+#node.rack: ${RACK_ENV_VAR}
+
+################################### Cluster ###################################
+cluster.name: "hermes-es-prod"
+
+#################################### Node #####################################
+node.name: "10.8.113.96"
+
+node.master: true
+node.data: true
+
+#node.max_local_storage_nodes: 1
+
+#################################### Index ####################################
+index.number_of_shards: 3
+index.number_of_replicas: 1
+
+#################################### Paths ####################################
+#path.conf: /path/to/conf
+path.data: /opt/ctrip/data/elasticsearch/
+#path.work: /path/to/work
+path.logs: /opt/logs/elasticsearch/
+#path.plugins: /path/to/plugins
+
+#################################### Plugin ###################################
+#plugin.mandatory: mapper-attachments,lang-groovy
+
+################################### Memory ####################################
+#bootstrap.mlockall: true
+
+############################## Network And HTTP ###############################
+#network.bind_host: 192.168.0.1
+#network.publish_host: 192.168.0.1
+network.host: 10.8.113.96
+transport.tcp.port: 9300
+transport.tcp.compress: true
+http.port: 9200
+#http.max_content_length: 100mb
+#http.enabled: false
+
+################################### Gateway ###################################
+#gateway.type: local
+#gateway.recover_after_nodes: 1
+#gateway.recover_after_time: 5m
+#gateway.expected_nodes: 2
+
+############################# Recovery Throttling #############################
+#cluster.routing.allocation.node_initial_primaries_recoveries: 4
+#cluster.routing.allocation.node_concurrent_recoveries: 2
+#indices.recovery.max_bytes_per_sec: 20mb
+#indices.recovery.concurrent_streams: 5
+
+################################## Discovery ##################################
+#discovery.zen.minimum_master_nodes: 1
+#discovery.zen.ping.timeout: 3s
+#discovery.zen.ping.multicast.enabled: false
+discovery.zen.ping.unicast.hosts: 10.8.113.96:9300,10.8.113.97:9300,10.8.113.98:9300,10.8.113.99:9300,10.8.113.100:9300,10.8.113.227:9300,10.8.113.228:9300,10.8.113.229:9300,10.8.113.230:9300,10.8.113.231:9300
+
+################################## Slow Log ##################################
+#index.search.slowlog.threshold.query.warn: 10s
+#index.search.slowlog.threshold.query.info: 5s
+#index.search.slowlog.threshold.query.debug: 2s
+#index.search.slowlog.threshold.query.trace: 500ms
+
+#index.search.slowlog.threshold.fetch.warn: 1s
+#index.search.slowlog.threshold.fetch.info: 800ms
+#index.search.slowlog.threshold.fetch.debug: 500ms
+#index.search.slowlog.threshold.fetch.trace: 200ms
+
+#index.indexing.slowlog.threshold.index.warn: 10s
+#index.indexing.slowlog.threshold.index.info: 5s
+#index.indexing.slowlog.threshold.index.debug: 2s
+#index.indexing.slowlog.threshold.index.trace: 500ms
+
+################################## GC Logging ################################
+#monitor.jvm.gc.young.warn: 1000ms
+#monitor.jvm.gc.young.info: 700ms
+#monitor.jvm.gc.young.debug: 400ms
+
+#monitor.jvm.gc.old.warn: 10s
+#monitor.jvm.gc.old.info: 5s
+#monitor.jvm.gc.old.debug: 2s
+
+################################## Security ################################
+#http.jsonp.enable: true
