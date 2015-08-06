@@ -16,7 +16,7 @@ public class ProducerConfig {
 	public String getDefaultBrokerSenderNetworkIoCheckIntervalBaseMillis() {
 		return "5";
 	}
-	
+
 	public String getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis() {
 		return "50";
 	}
@@ -26,7 +26,7 @@ public class ProducerConfig {
 	}
 
 	public long getDefaultBrokerSenderSendTimeoutMillis() {
-		return 2000;
+		return 10 * 1000;
 	}
 
 	public String getDefaultBrokerSenderTaskQueueSize() {

@@ -26,6 +26,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.sender.MessageSender;
+import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
 import com.dianping.cat.message.spi.MessageTree;
@@ -73,6 +74,8 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 			}
 			if (sendMessageCommand != null) {
 				try {
+					ProducerStatusMonitor.INSTANCE.brokerResultReceived(sendMessageCommand.getTopic(),
+					      sendMessageCommand.getPartition(), sendMessageCommand.getMessageCount());
 					sendMessageCommand.onResultReceived(result);
 					tracking(sendMessageCommand, true);
 				} catch (Exception e) {
@@ -152,6 +155,8 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 
 	protected void resend(List<SendMessageCommand> timeoutCmds) {
 		for (SendMessageCommand cmd : timeoutCmds) {
+			ProducerStatusMonitor.INSTANCE.waitBrokerResultTimeout(cmd.getTopic(), cmd.getPartition(),
+			      cmd.getMessageCount());
 			List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> msgFuturePairs = cmd
 			      .getProducerMessageFuturePairs();
 			for (Pair<ProducerMessage<?>, SettableFuture<SendResult>> pair : msgFuturePairs) {

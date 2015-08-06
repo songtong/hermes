@@ -24,6 +24,8 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
@@ -35,6 +37,7 @@ import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.config.ProducerConfig;
+import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -129,8 +132,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					TaskQueue queue = entry.getValue();
 
 					if (queue.hasTask()) {
-						hasTask = true;
-						scheduleTaskExecution(entry.getKey(), queue);
+						hasTask = hasTask || scheduleTaskExecution(entry.getKey(), queue);
 					}
 				} catch (Exception e) {
 					// ignore
@@ -143,12 +145,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			return hasTask;
 		}
 
-		private void scheduleTaskExecution(Pair<String, Integer> tp, TaskQueue queue) {
+		private boolean scheduleTaskExecution(Pair<String, Integer> tp, TaskQueue queue) {
 			m_runnings.putIfAbsent(tp, new AtomicBoolean(false));
 
 			if (m_runnings.get(tp).compareAndSet(false, true)) {
 				m_taskExecThreadPool.submit(new SendTask(tp.getKey(), tp.getValue(), queue, m_runnings.get(tp)));
+				return true;
 			}
+			return false;
 		}
 
 	}
@@ -205,18 +209,30 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 					long timeout = m_config.getDefaultBrokerSenderSendTimeoutMillis();
 
+					Timer timer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(), cmd.getPartition(),
+					      "broker-accept-duration");
+
+					Context context = timer.time();
+
 					m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
+					ProducerStatusMonitor.INSTANCE.wroteToBroker(m_topic, m_partition, cmd.getMessageCount());
 
 					Boolean brokerAccepted = null;
 					try {
 						brokerAccepted = future.get(timeout, TimeUnit.MILLISECONDS);
 					} catch (Exception e) {
+						ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(m_topic, m_partition,
+						      cmd.getMessageCount());
 						future.cancel(true);
 					}
 
+					context.stop();
+
 					if (brokerAccepted != null && brokerAccepted) {
+						ProducerStatusMonitor.INSTANCE.brokerAccepted(m_topic, m_partition, cmd.getMessageCount());
 						return true;
 					} else {
+						ProducerStatusMonitor.INSTANCE.brokerRejected(m_topic, m_partition, cmd.getMessageCount());
 						return false;
 					}
 				} else {
@@ -227,6 +243,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					return false;
 				}
 			} catch (Exception e) {
+				ProducerStatusMonitor.INSTANCE.sendFailed(m_topic, m_partition, cmd.getMessageCount());
 				log.warn("Exception occurred while sending message to broker, will retry it", e);
 				return false;
 			}
@@ -246,6 +263,8 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			m_topic = topic;
 			m_partition = partition;
 			m_queue = new LinkedBlockingQueue<ProducerWorkerContext>(queueSize);
+
+			ProducerStatusMonitor.INSTANCE.addTaskQueueGauge(m_topic, m_partition, m_queue);
 		}
 
 		public void push(SendMessageCommand cmd) {
@@ -277,6 +296,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 
 		public Future<SendResult> submit(final ProducerMessage<?> msg) {
+			ProducerStatusMonitor.INSTANCE.messageSubmitted(m_topic, m_partition);
 			SettableFuture<SendResult> future = SettableFuture.create();
 
 			if (msg.getCallback() != null) {
@@ -301,6 +321,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		private void offer(final ProducerMessage<?> msg, SettableFuture<SendResult> future) {
 			if (!m_queue.offer(new ProducerWorkerContext(msg, future))) {
+				ProducerStatusMonitor.INSTANCE.offerFailed(m_topic, m_partition);
 				String warning = "Producer task queue is full, will drop this message.";
 				log.warn(warning);
 				MessageSendException throwable = new MessageSendException(warning);
@@ -309,6 +330,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 
 		public void resubmit(final ProducerMessage<?> msg, SettableFuture<SendResult> future) {
+			ProducerStatusMonitor.INSTANCE.messageResubmitted(m_topic, m_partition);
 			offer(msg, future);
 		}
 
