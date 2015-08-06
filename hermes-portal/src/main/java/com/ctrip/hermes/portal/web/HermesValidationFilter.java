@@ -29,7 +29,7 @@ public class HermesValidationFilter implements Filter {
 		boolean isLogined = false;
 		if (req.getCookies() != null) {
 			try {
-				isLogined = validateCookie(getToken(req), request.getRemoteAddr());
+				isLogined = validateCookie(getToken(req));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -52,11 +52,11 @@ public class HermesValidationFilter implements Filter {
 		return "";
 	}
 
-	private boolean validateCookie(String cookie, String ip) throws Exception {
+	private boolean validateCookie(String cookie) throws Exception {
 		String username = m_config.getAccount().getKey();
 		String pwd = m_config.getAccount().getValue();
 		String cookieDecoded = ValidationUtils.decode(cookie);
-		return (username + pwd + ip).equals(cookieDecoded);
+		return (username + pwd).equals(cookieDecoded);
 	}
 
 	@Override
