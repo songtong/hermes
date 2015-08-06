@@ -33,8 +33,8 @@ public class AccountResource {
 		String pwd = m_config.getAccount().getValue();
 		if (username.equals(name) && pwd.equals(password)) {
 			String cookieValue = null;
-			String ip = request.getRemoteAddr();
-			String content = name + password + ip;
+			
+			String content = name + password;
 			try {
 				cookieValue = ValidationUtils.encode(content);
 			} catch (Throwable e) {
