@@ -16,7 +16,6 @@ public final class MessageTableModel extends TableModel{
 
 		setMetaModels(id, producer_ip, producer_id, ref_key, attributes, codec_type, creation_date, payload);
 		setPrimaryKey(id);
-		setIndexKey("key", ref_key.columnName);
 
 
 		setTableName("message_" + priority);
