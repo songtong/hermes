@@ -93,6 +93,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>

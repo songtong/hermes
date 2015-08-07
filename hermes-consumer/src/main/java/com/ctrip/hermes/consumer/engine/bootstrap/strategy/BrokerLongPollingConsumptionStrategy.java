@@ -11,6 +11,8 @@ import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
+import com.ctrip.hermes.core.message.retry.RetryPolicy;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
@@ -49,6 +51,9 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	@Inject
 	private ClientEnvironment m_clientEnv;
 
+	@Inject
+	private MetaService m_metaService;
+
 	@Override
 	public SubscribeHandle start(ConsumerContext context, int partitionId) {
 
@@ -60,12 +65,15 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 			      "consumer.localcache.prefetch.threshold.percentage",
 			      m_config.getDefaultLocalCachePrefetchThresholdPercentage()));
 
+			RetryPolicy retryPolicy = m_metaService.findRetryPolicyByTopicAndGroup(context.getTopic().getName(),
+			      context.getGroupId());
 			LongPollingConsumerTask consumerTask = new LongPollingConsumerTask(//
 			      context, //
 			      partitionId,//
 			      localCachSize, //
 			      prefetchSize,//
-			      m_systemClockService);
+			      m_systemClockService,//
+			      retryPolicy);
 
 			consumerTask.setEndpointClient(m_endpointClient);
 			consumerTask.setConsumerNotifier(m_consumerNotifier);

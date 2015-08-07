@@ -29,4 +29,6 @@ public interface ConsumerMessage<T> {
 	public int getPartition();
 	
 	public long getOffset();
+	
+	int getResendTimes();
 }

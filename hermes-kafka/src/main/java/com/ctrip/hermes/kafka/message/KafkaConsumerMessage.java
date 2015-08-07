@@ -100,4 +100,9 @@ public class KafkaConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHo
 	public long getOffset() {
 		return offset;
 	}
+
+	@Override
+	public int getResendTimes() {
+		return 0;
+	}
 }
