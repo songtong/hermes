@@ -329,14 +329,14 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				proto.setLastScheduleDate(resendRow.getScheduleDate());
 				proto.setLastId(resendRow.getId());
 
-				m_offsetResendDao.updateByPK(proto, OffsetResendEntity.UPDATESET_OFFSET);
+				m_offsetResendDao.increaseOffset(proto, OffsetResendEntity.UPDATESET_OFFSET);
 			} else {
 				OffsetMessage proto = getOffsetMessage(tpp, intGroupId);
 				proto.setTopic(topic);
 				proto.setPartition(partition);
 				proto.setOffset(msgSeq);
 
-				m_offsetMessageDao.updateByPK(proto, OffsetMessageEntity.UPDATESET_OFFSET);
+				m_offsetMessageDao.increaseOffset(proto, OffsetMessageEntity.UPDATESET_OFFSET);
 			}
 		} catch (DalException e) {
 			log.error("Failed to ack messages(topic={}, partition={}, priority={}, groupId={}).", tpp.getTopic(),
