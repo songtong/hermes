@@ -18,7 +18,6 @@ public final class DeadLetterTableModel extends TableModel{
 		setMetaModels(id, producer_ip, producer_id, ref_key, attributes, codec_type, creation_date, payload,
 				  dead_date, group_id, priority, origin_id);
 		setPrimaryKey(id);
-		setIndexKey("key", ref_key.columnName);
 		setTableName("dead_letter");
 	}
 }

@@ -29,6 +29,8 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 
 	private Channel m_channel;
 
+	private int m_retryTimesOfRetryPolicy;
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public BrokerConsumerMessage(BaseConsumerMessage baseMsg) {
 		m_baseMsg = baseMsg;
@@ -164,8 +166,25 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	public BaseConsumerMessage<T> getBaseConsumerMessage() {
 		return m_baseMsg;
 	}
-	
-	public long getOffset(){
+
+	public long getOffset() {
 		return this.getMsgSeq();
+	}
+
+	public int getRetryTimesOfRetryPolicy() {
+		return m_retryTimesOfRetryPolicy;
+	}
+
+	public void setRetryTimesOfRetryPolicy(int retryTimesOfRetryPolicy) {
+		m_retryTimesOfRetryPolicy = retryTimesOfRetryPolicy;
+	}
+
+	@Override
+	public int getResendTimes() {
+		if (isResend()) {
+			return m_retryTimesOfRetryPolicy - m_baseMsg.getRemainingRetries() + 1;
+		} else {
+			return 0;
+		}
 	}
 }

@@ -39,6 +39,7 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
+import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.core.transport.command.PullMessageCommand;
@@ -93,14 +94,17 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
+	private RetryPolicy m_retryPolicy;
+
 	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize, int prefetchThreshold,
-	      SystemClockService systemClockService) {
+	      SystemClockService systemClockService, RetryPolicy retryPolicy) {
 		m_context = context;
 		m_partitionId = partitionId;
 		m_cacheSize = cacheSize;
 		m_localCachePrefetchThreshold = prefetchThreshold;
 		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
 		m_systemClockService = systemClockService;
+		m_retryPolicy = retryPolicy;
 
 		m_pullMessageTaskExecutorService = Executors.newSingleThreadExecutor(HermesThreadFactory.create(String.format(
 		      "LongPollingPullMessageTask-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
@@ -381,6 +385,7 @@ public class LongPollingConsumerTask implements Runnable {
 				brokerMsg.setPartition(partition);
 				brokerMsg.setPriority(messageMeta.getPriority() == 0 ? true : false);
 				brokerMsg.setResend(messageMeta.isResend());
+				brokerMsg.setRetryTimesOfRetryPolicy(m_retryPolicy.getRetryTimes());
 				brokerMsg.setChannel(channel);
 				brokerMsg.setMsgSeq(messageMeta.getId());
 
