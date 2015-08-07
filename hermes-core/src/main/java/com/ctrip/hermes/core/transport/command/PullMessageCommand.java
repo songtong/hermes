@@ -2,8 +2,6 @@ package com.ctrip.hermes.core.transport.command;
 
 import io.netty.buffer.ByteBuf;
 
-import java.util.concurrent.TimeoutException;
-
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -70,10 +68,6 @@ public class PullMessageCommand extends AbstractCommand {
 
 	public void onResultReceived(PullMessageResultCommand ack) {
 		m_future.set(ack);
-	}
-
-	public void onTimeout() {
-		m_future.setException(new TimeoutException());
 	}
 
 	@Override

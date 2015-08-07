@@ -21,11 +21,14 @@ import java.util.concurrent.locks.LockSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
+import com.ctrip.hermes.consumer.engine.status.ConsumerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
@@ -110,6 +113,9 @@ public class LongPollingConsumerTask implements Runnable {
 		m_renewLeaseTaskExecutorService = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(String
 		      .format("LongPollingRenewLeaseTask-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
 		            m_context.getGroupId()), false));
+
+		ConsumerStatusMonitor.INSTANCE.addMessageQueueGuage(m_context.getTopic().getName(), m_partitionId,
+		      m_context.getGroupId(), m_msgs);
 	}
 
 	public void setPullMessageResultMonitor(PullMessageResultMonitor pullMessageResultMonitor) {
@@ -188,6 +194,9 @@ public class LongPollingConsumerTask implements Runnable {
 	private void stopConsumer() {
 		m_pullMessageTaskExecutorService.shutdown();
 		m_renewLeaseTaskExecutorService.shutdown();
+
+		ConsumerStatusMonitor.INSTANCE.removeMonitor(m_context.getTopic().getName(), m_partitionId,
+		      m_context.getGroupId());
 
 		log.info("Consumer stopped(topic={}, partition={}, groupId={}, sessionId={})", m_context.getTopic().getName(),
 		      m_partitionId, m_context.getGroupId(), m_context.getSessionId());
@@ -351,6 +360,8 @@ public class LongPollingConsumerTask implements Runnable {
 		}
 
 		m_consumerNotifier.messageReceived(correlationId, msgs);
+		ConsumerStatusMonitor.INSTANCE.messageProcessed(m_context.getTopic().getName(), m_partitionId,
+		      m_context.getGroupId(), msgs.size());
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -364,6 +375,10 @@ public class LongPollingConsumerTask implements Runnable {
 			int partition = batch.getPartition();
 
 			for (int j = 0; j < msgMetas.size(); j++) {
+				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
+				      m_context.getGroupId(), "decode-duration");
+				Context context = timer.time();
+
 				BaseConsumerMessage baseMsg = m_messageCodec.decode(batch.getTopic(), batchData, bodyClazz);
 				BrokerConsumerMessage brokerMsg = new BrokerConsumerMessage(baseMsg);
 				MessageMeta messageMeta = msgMetas.get(j);
@@ -373,6 +388,8 @@ public class LongPollingConsumerTask implements Runnable {
 				brokerMsg.setRetryTimesOfRetryPolicy(m_retryPolicy.getRetryTimes());
 				brokerMsg.setChannel(channel);
 				brokerMsg.setMsgSeq(messageMeta.getId());
+
+				context.stop();
 
 				msgs.add(brokerMsg);
 			}
@@ -418,8 +435,6 @@ public class LongPollingConsumerTask implements Runnable {
 						pullMessages(endpoint, timeout);
 					}
 				}
-			} catch (TimeoutException e) {
-				// ignore
 			} catch (Exception e) {
 				log.warn("Exception occurred while pulling message(topic={}, partition={}, groupId={}, sessionId={}).",
 				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
@@ -444,9 +459,20 @@ public class LongPollingConsumerTask implements Runnable {
 				m_pullMessageResultMonitor.monitor(cmd);
 				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
 
-				ack = future.get(timeout, TimeUnit.MILLISECONDS);
+				ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_context.getTopic().getName(), m_partitionId,
+				      m_context.getGroupId());
+
+				try {
+					ack = future.get(timeout, TimeUnit.MILLISECONDS);
+				} catch (TimeoutException e) {
+					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
+					      m_partitionId, m_context.getGroupId());
+					m_pullMessageResultMonitor.remove(cmd);
+				}
 
 				if (ack != null) {
+					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReceived(m_context.getTopic().getName(),
+					      m_partitionId, m_context.getGroupId());
 					appendToMsgQueue(ack);
 				}
 
@@ -466,6 +492,10 @@ public class LongPollingConsumerTask implements Runnable {
 
 					List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ack.getChannel());
 					m_msgs.addAll(msgs);
+
+					ConsumerStatusMonitor.INSTANCE.messageReceived(m_context.getTopic().getName(), m_partitionId,
+					      m_context.getGroupId(), msgs.size());
+
 				} else {
 					log.info(
 					      "Can not find consumerContext(topic={}, partition={}, groupId={}, sessionId={}), maybe has been stopped.",
