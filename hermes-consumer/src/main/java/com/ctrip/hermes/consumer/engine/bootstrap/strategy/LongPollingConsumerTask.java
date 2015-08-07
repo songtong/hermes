@@ -456,6 +456,12 @@ public class LongPollingConsumerTask implements Runnable {
 			PullMessageResultCommand ack = null;
 
 			try {
+
+				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
+				      m_context.getGroupId(), "pull-msg-cmd-duration");
+
+				Context context = timer.time();
+
 				m_pullMessageResultMonitor.monitor(cmd);
 				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
 
@@ -469,6 +475,8 @@ public class LongPollingConsumerTask implements Runnable {
 					      m_partitionId, m_context.getGroupId());
 					m_pullMessageResultMonitor.remove(cmd);
 				}
+
+				context.stop();
 
 				if (ack != null) {
 					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReceived(m_context.getTopic().getName(),

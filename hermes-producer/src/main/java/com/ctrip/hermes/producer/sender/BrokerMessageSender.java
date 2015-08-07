@@ -220,7 +220,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					Boolean brokerAccepted = null;
 					try {
 						brokerAccepted = future.get(timeout, TimeUnit.MILLISECONDS);
-					} catch (Exception e) {
+					} catch (TimeoutException e) {
 						ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(m_topic, m_partition,
 						      cmd.getMessageCount());
 						future.cancel(true);
