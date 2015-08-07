@@ -10,7 +10,7 @@ import org.unidal.lookup.annotation.Named;
 public class ConsumerConfig {
 
 	public String getDefautlLocalCacheSize() {
-		return "50";
+		return "200";
 	}
 
 	public long getRenewLeaseTimeMillisBeforeExpired() {

@@ -58,20 +58,21 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	public SubscribeHandle start(ConsumerContext context, int partitionId) {
 
 		try {
-			int localCachSize = Integer.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
+			int localCacheSize = Integer.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
 			      "consumer.localcache.size", m_config.getDefautlLocalCacheSize()));
 
-			int prefetchSize = Integer.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
-			      "consumer.localcache.prefetch.threshold.percentage",
-			      m_config.getDefaultLocalCachePrefetchThresholdPercentage()));
+			int prefetchThreshold = (int) (localCacheSize
+			      * Double.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
+			            "consumer.localcache.prefetch.threshold.percentage",
+			            m_config.getDefaultLocalCachePrefetchThresholdPercentage())) / 100d);
 
 			RetryPolicy retryPolicy = m_metaService.findRetryPolicyByTopicAndGroup(context.getTopic().getName(),
 			      context.getGroupId());
 			LongPollingConsumerTask consumerTask = new LongPollingConsumerTask(//
 			      context, //
 			      partitionId,//
-			      localCachSize, //
-			      prefetchSize,//
+			      localCacheSize, //
+			      prefetchThreshold,//
 			      m_systemClockService,//
 			      retryPolicy);
 
