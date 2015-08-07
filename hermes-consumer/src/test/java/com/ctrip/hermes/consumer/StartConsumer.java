@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
@@ -19,6 +20,7 @@ import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.metrics.HttpMetricsServer;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -28,6 +30,9 @@ public class StartConsumer extends ComponentTestCase {
 
 	@Test
 	public void test() throws Exception {
+		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
+		server.start();
+
 		Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers = new HashMap<Pair<String, String>, List<Pair<String, ConsumerHolder>>>();
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -160,6 +165,8 @@ public class StartConsumer extends ComponentTestCase {
 
 		private String m_name;
 
+		private AtomicLong m_count = new AtomicLong(0);
+
 		public AckMessageListener(String name) {
 			m_name = name;
 		}
@@ -168,9 +175,12 @@ public class StartConsumer extends ComponentTestCase {
 		public void onMessage(List<ConsumerMessage<String>> msgs) {
 
 			for (ConsumerMessage<String> msg : msgs) {
-				System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)",
-				      m_name, msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
-				      ((BrokerConsumerMessage<String>) msg).isPriority()));
+				if (m_count.incrementAndGet() % 1000 == 0) {
+					System.out.println("Received 1000 msgs.");
+				}
+				// System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)",
+				// m_name, msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
+				// ((BrokerConsumerMessage<String>) msg).isPriority()));
 				msg.ack();
 			}
 		}
