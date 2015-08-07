@@ -185,7 +185,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 		m_writerThreadPool = Executors
 		      .newSingleThreadExecutor(HermesThreadFactory.create("EndpointChannelWriter", false));
 
-		m_eventLoopGroup = new NioEventLoopGroup(1, HermesThreadFactory.create("NettyWriterEventLoop", false));
+		m_eventLoopGroup = new NioEventLoopGroup(0, HermesThreadFactory.create("NettyWriterEventLoop", false));
 
 	}
 
@@ -327,6 +327,7 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 			if (op != null && !op.isExpired()) {
 
+				// FIXME need flush?
 				ChannelFuture future = channel.writeAndFlush(op.getCmd());
 
 				future.addListener(new ChannelFutureListener() {

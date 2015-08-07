@@ -74,6 +74,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 					      reqCmd.getPartition(), reqCmd.getMessageCount());
 				}
 
+				// FIXME if dumper's queue is full, reject it.
 				writeAck(ctx, true);
 
 				Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();

@@ -106,6 +106,7 @@ public class SendMessageCommand extends AbstractCommand {
 
 	public void onResultReceived(SendMessageResultCommand result) {
 		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
+			// FIXME add more details into result or exception, no matter success or not
 			if (result.isSuccess(entry.getKey())) {
 				entry.getValue().set(new SendResult());
 			} else {

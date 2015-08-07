@@ -1,12 +1,12 @@
 package com.ctrip.hermes.producer.sender;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -75,6 +75,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		Pair<String, Integer> tp = new Pair<String, Integer>(msg.getTopic(), msg.getPartition());
 		m_taskQueues.putIfAbsent(
 		      tp,
+		      // FIXME extract env properties
 		      new TaskQueue(msg.getTopic(), msg.getPartition(), Integer.valueOf(m_clientEnv.getGlobalConfig()
 		            .getProperty("producer.sender.taskqueue.size", m_config.getDefaultBrokerSenderTaskQueueSize()))));
 
@@ -114,8 +115,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			      "producer.networkio.interval.max", m_config.getDefaultBrokerSenderNetworkIoCheckIntervalMaxMillis()));
 
 			SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkIntervalBase, checkIntervalMax);
+
 			while (!Thread.currentThread().isInterrupted()) {
-				boolean hasTask = scanTaskQueues();
+				boolean hasTask = scanAndExecuteTasks();
 				if (hasTask) {
 					schedulePolicy.succeess();
 				} else {
@@ -125,9 +127,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		}
 
-		private boolean scanTaskQueues() {
+		private boolean scanAndExecuteTasks() {
 			boolean hasTask = false;
-			for (Map.Entry<Pair<String, Integer>, TaskQueue> entry : m_taskQueues.entrySet()) {
+
+			// FIXME shuffle these queues in each scan?
+			List<Map.Entry<Pair<String, Integer>, TaskQueue>> entries = new ArrayList<>(m_taskQueues.entrySet());
+
+			Collections.shuffle(entries);
+			for (Map.Entry<Pair<String, Integer>, TaskQueue> entry : entries) {
 				try {
 					TaskQueue queue = entry.getValue();
 
@@ -136,9 +143,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					}
 				} catch (Exception e) {
 					// ignore
-					if (log.isDebugEnabled()) {
-						log.debug("Exception occurred, ignore it", e);
-					}
+					log.debug("Exception occurred, ignore it", e);
 				}
 			}
 
@@ -177,6 +182,8 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		@Override
 		public void run() {
 			try {
+				// FIXME move this to constructor
+				// FIXME move env related ops to config
 				int batchSize = Integer.valueOf(m_clientEnv.getGlobalConfig().getProperty("producer.sender.batchsize",
 				      m_config.getDefaultBrokerSenderBatchSize()));
 				SendMessageCommand cmd = m_taskQueue.pop(batchSize);
@@ -199,12 +206,13 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		}
 
-		private boolean sendMessagesToBroker(SendMessageCommand cmd) throws InterruptedException, ExecutionException,
-		      TimeoutException {
+		private boolean sendMessagesToBroker(SendMessageCommand cmd) {
 			try {
 				Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partition);
 				if (endpoint != null) {
-					Future<Boolean> future = m_messageAcceptanceMonitor.monitor(cmd.getHeader().getCorrelationId());
+					long correlationId = cmd.getHeader().getCorrelationId();
+
+					Future<Boolean> future = m_messageAcceptanceMonitor.monitor(correlationId);
 					m_messageResultMonitor.monitor(cmd);
 
 					long timeout = m_config.getDefaultBrokerSenderSendTimeoutMillis();
@@ -233,6 +241,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 						return true;
 					} else {
 						ProducerStatusMonitor.INSTANCE.brokerRejected(m_topic, m_partition, cmd.getMessageCount());
+						// FIXME log failing reason
 						return false;
 					}
 				} else {
@@ -322,6 +331,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		private void offer(final ProducerMessage<?> msg, SettableFuture<SendResult> future) {
 			if (!m_queue.offer(new ProducerWorkerContext(msg, future))) {
 				ProducerStatusMonitor.INSTANCE.offerFailed(m_topic, m_partition);
+				// FIXME print message detail, current queue size
 				String warning = "Producer task queue is full, will drop this message.";
 				log.warn(warning);
 				MessageSendException throwable = new MessageSendException(warning);
