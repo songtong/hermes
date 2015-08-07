@@ -29,6 +29,7 @@ import com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageR
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
@@ -64,7 +65,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(SystemClockService.class)//
 		      .req(MessageCodec.class)//
 		      .req(ClientEnvironment.class)//
-		      .req(PullMessageResultMonitor.class));
+		      .req(PullMessageResultMonitor.class)//
+		      .req(MetaService.class));
 
 		all.add(A(DefaultConsumerPipelineSink.class));
 

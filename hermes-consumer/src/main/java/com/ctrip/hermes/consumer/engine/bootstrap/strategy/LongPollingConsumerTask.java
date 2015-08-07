@@ -36,6 +36,7 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
+import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.core.transport.command.PullMessageCommand;
@@ -90,14 +91,17 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
+	private RetryPolicy m_retryPolicy;
+
 	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize, int prefetchThreshold,
-	      SystemClockService systemClockService) {
+	      SystemClockService systemClockService, RetryPolicy retryPolicy) {
 		m_context = context;
 		m_partitionId = partitionId;
 		m_cacheSize = cacheSize;
 		m_localCachePrefetchThreshold = prefetchThreshold;
 		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
 		m_systemClockService = systemClockService;
+		m_retryPolicy = retryPolicy;
 
 		m_pullMessageTaskExecutorService = Executors.newSingleThreadExecutor(HermesThreadFactory.create(String.format(
 		      "LongPollingPullMessageTask-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
@@ -366,6 +370,7 @@ public class LongPollingConsumerTask implements Runnable {
 				brokerMsg.setPartition(partition);
 				brokerMsg.setPriority(messageMeta.getPriority() == 0 ? true : false);
 				brokerMsg.setResend(messageMeta.isResend());
+				brokerMsg.setRetryTimesOfRetryPolicy(m_retryPolicy.getRetryTimes());
 				brokerMsg.setChannel(channel);
 				brokerMsg.setMsgSeq(messageMeta.getId());
 
@@ -424,34 +429,33 @@ public class LongPollingConsumerTask implements Runnable {
 		}
 
 		private void pullMessages(Endpoint endpoint, long timeout) throws InterruptedException, TimeoutException,
-            ExecutionException {
-	      final SettableFuture<PullMessageResultCommand> future = SettableFuture.create();
+		      ExecutionException {
+			final SettableFuture<PullMessageResultCommand> future = SettableFuture.create();
 
-	      PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
-	            m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout
-	                  - 500L);
+			PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
+			      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout - 500L);
 
-	      cmd.getHeader().setCorrelationId(m_correlationId);
-	      cmd.setFuture(future);
+			cmd.getHeader().setCorrelationId(m_correlationId);
+			cmd.setFuture(future);
 
-	      PullMessageResultCommand ack = null;
+			PullMessageResultCommand ack = null;
 
-	      try {
-	      	m_pullMessageResultMonitor.monitor(cmd);
-	      	m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
+			try {
+				m_pullMessageResultMonitor.monitor(cmd);
+				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
 
-	      	ack = future.get(timeout, TimeUnit.MILLISECONDS);
+				ack = future.get(timeout, TimeUnit.MILLISECONDS);
 
-	      	if (ack != null) {
-	      		appendToMsgQueue(ack);
-	      	}
+				if (ack != null) {
+					appendToMsgQueue(ack);
+				}
 
-	      } finally {
-	      	if (ack != null) {
-	      		ack.release();
-	      	}
-	      }
-      }
+			} finally {
+				if (ack != null) {
+					ack.release();
+				}
+			}
+		}
 
 		private void appendToMsgQueue(PullMessageResultCommand ack) {
 			List<TppConsumerMessageBatch> batches = ack.getBatches();
