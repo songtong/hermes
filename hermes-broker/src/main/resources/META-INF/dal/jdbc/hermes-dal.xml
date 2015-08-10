@@ -174,13 +174,14 @@
 				<param name="topic" />
 				<param name="partition" />
 				<param name="id" />
-				<param name="schedule-date" />
+				<param name="last-schedule-date" />
+				<param name="last-id" />
 				<statement><![CDATA[UPDATE <TABLE/>
 			        SET <FIELDS/>
 			        WHERE <FIELD name='id'/> = ${id}
-	        		AND (<FIELD name='schedule-date'/> < ${schedule-date}
-	        			OR (<FIELD name='schedule-date'/> = ${schedule-date}
-	        				AND <FIELD name='id'/> < ${id}
+	        		AND (<FIELD name='last-schedule-date'/> < ${last-schedule-date}
+	        			OR (<FIELD name='last-schedule-date'/> = ${last-schedule-date}
+	        				AND <FIELD name='last-id'/> < ${last-id}
 	        			)
 	        		)]]>
 			    </statement>
