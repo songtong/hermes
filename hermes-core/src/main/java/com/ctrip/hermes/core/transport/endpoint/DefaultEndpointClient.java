@@ -327,7 +327,6 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 			if (op != null && !op.isExpired()) {
 
-				// FIXME need flush?
 				ChannelFuture future = channel.writeAndFlush(op.getCmd());
 
 				future.addListener(new ChannelFutureListener() {

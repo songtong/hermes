@@ -152,7 +152,6 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	}
 
 	protected void resend(List<SendMessageCommand> timeoutCmds) {
-		// FIXME move to sender.resend()
 		MessageSender messageSender = PlexusComponentLocator.lookup(MessageSender.class, Endpoint.BROKER);
 		if (messageSender != null) {
 			messageSender.resend(timeoutCmds);

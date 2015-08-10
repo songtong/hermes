@@ -71,7 +71,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		Pair<String, Integer> tp = new Pair<String, Integer>(msg.getTopic(), msg.getPartition());
 		m_taskQueues.putIfAbsent(tp,
-		// FIXME extract env properties
 		      new TaskQueue(msg.getTopic(), msg.getPartition(), m_config.getBrokerSenderTaskQueueSize()));
 
 		return m_taskQueues.get(tp).submit(msg);
@@ -134,7 +133,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		private boolean scanAndExecuteTasks() {
 			boolean hasTask = false;
 
-			// FIXME shuffle these queues in each scan?
 			List<Map.Entry<Pair<String, Integer>, TaskQueue>> entries = new ArrayList<>(m_taskQueues.entrySet());
 
 			Collections.shuffle(entries);
@@ -145,9 +143,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					if (queue.hasTask()) {
 						hasTask = hasTask || scheduleTaskExecution(entry.getKey(), queue);
 					}
-				} catch (Exception e) {
+				} catch (RuntimeException e) {
 					// ignore
-					log.debug("Exception occurred, ignore it", e);
+					log.warn("Exception occurred, ignore it", e);
 				}
 			}
 
@@ -186,8 +184,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		@Override
 		public void run() {
 			try {
-				// FIXME move this to constructor
-				// FIXME move env related ops to config
 				int batchSize = m_config.getBrokerSenderBatchSize();
 				SendMessageCommand cmd = m_taskQueue.pop(batchSize);
 
@@ -333,7 +329,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		private void offer(final ProducerMessage<?> msg, SettableFuture<SendResult> future) {
 			if (!m_queue.offer(new ProducerWorkerContext(msg, future))) {
 				ProducerStatusMonitor.INSTANCE.offerFailed(m_topic, m_partition);
-				// FIXME print message detail, current queue size
 				String warning = String.format(
 				      "Producer task queue is full(queueSize=%s), will drop this message(refKey=%s, body=%s).",
 				      m_queue.size(), msg.getKey(), JSON.toJSONString(msg.getBody()));

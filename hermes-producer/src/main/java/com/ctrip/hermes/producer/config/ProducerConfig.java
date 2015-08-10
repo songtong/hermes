@@ -15,21 +15,21 @@ import com.ctrip.hermes.core.utils.StringUtils;
 @Named(type = ProducerConfig.class)
 public class ProducerConfig implements Initializable {
 
-	private static final int DEFAULT_BROKER_SENDER_NETWORK_IO_THREAD_COUNT = 10;
+	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_THREAD_COUNT = 10;
 
-	private static final long DEFAULT_BROKER_SENDER_SEND_TIMEOUT = 10 * 1000L;
+	public static final long DEFAULT_BROKER_SENDER_SEND_TIMEOUT = 10 * 1000L;
 
-	private static final long DEFAULT_BROKER_SENDER_READ_TIMEOUT = 10 * 1000L;
+	public static final long DEFAULT_BROKER_SENDER_READ_TIMEOUT = 10 * 1000L;
 
-	private static final int DEFAULT_BROKER_SENDER_TASK_QUEUE_SIZE = 500000;
+	public static final int DEFAULT_BROKER_SENDER_TASK_QUEUE_SIZE = 500000;
 
-	private static final int DEFAULT_BROKER_SENDER_BATCH_SIZE = 10000;
+	public static final int DEFAULT_BROKER_SENDER_BATCH_SIZE = 10000;
 
-	private static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_BASE_MILLIS = 5;
+	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_BASE_MILLIS = 5;
 
-	private static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_MAX_MILLIS = 50;
+	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_MAX_MILLIS = 50;
 
-	private static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 50;
+	public static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 50;
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
@@ -90,11 +90,13 @@ public class ProducerConfig implements Initializable {
 			m_brokerSenderBatchSize = Integer.valueOf(brokerSenderBatchSizeStr);
 		}
 
+		// FIXME rename this ugly name
 		String logEnrichInfoEnabledStr = m_clientEnv.getGlobalConfig().getProperty("logEnrichInfo", "false");
 		if ("true".equalsIgnoreCase(logEnrichInfoEnabledStr)) {
 			m_logEnrichInfoEnabled = true;
 		}
 
+		// FIXME log config loading details.
 	}
 
 	public int getBrokerSenderNetworkIoThreadCount() {

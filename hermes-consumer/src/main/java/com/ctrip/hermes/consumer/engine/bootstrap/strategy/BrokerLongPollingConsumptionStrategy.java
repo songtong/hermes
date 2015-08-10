@@ -58,6 +58,7 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	public SubscribeHandle start(ConsumerContext context, int partitionId) {
 
 		try {
+			// FIXME move to config
 			int localCacheSize = Integer.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
 			      "consumer.localcache.size", m_config.getDefautlLocalCacheSize()));
 
@@ -73,7 +74,6 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 			      partitionId,//
 			      localCacheSize, //
 			      prefetchThreshold,//
-			      m_systemClockService,//
 			      retryPolicy);
 
 			consumerTask.setEndpointClient(m_endpointClient);

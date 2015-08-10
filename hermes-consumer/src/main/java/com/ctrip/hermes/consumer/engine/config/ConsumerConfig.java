@@ -14,11 +14,11 @@ public class ConsumerConfig {
 	}
 
 	public long getRenewLeaseTimeMillisBeforeExpired() {
-		return 2 * 1000L;
+		return 5 * 1000L;
 	}
 
 	public long getStopConsumerTimeMillsBeforLeaseExpired() {
-		return 500L;
+		return getRenewLeaseTimeMillisBeforeExpired() - 3 * 1000L;
 	}
 
 	public long getDefaultLeaseAcquireDelayMillis() {
