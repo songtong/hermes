@@ -178,9 +178,9 @@ public class StartConsumer extends ComponentTestCase {
 				if (m_count.incrementAndGet() % 1000 == 0) {
 					System.out.println("Received 1000 msgs.");
 				}
-				// System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)",
-				// m_name, msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
-				// ((BrokerConsumerMessage<String>) msg).isPriority()));
+				System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)",
+				      m_name, msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
+				      ((BrokerConsumerMessage<String>) msg).isPriority()));
 				msg.ack();
 			}
 		}

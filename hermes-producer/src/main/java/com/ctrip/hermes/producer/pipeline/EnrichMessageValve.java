@@ -10,12 +10,12 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.MessagePropertyNames;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
 import com.ctrip.hermes.core.pipeline.spi.Valve;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.producer.config.ProducerConfig;
 
 @Named(type = Valve.class, value = EnrichMessageValve.ID)
 public class EnrichMessageValve implements Valve, Initializable {
@@ -24,7 +24,7 @@ public class EnrichMessageValve implements Valve, Initializable {
 	public static final String ID = "enrich";
 
 	@Inject
-	private ClientEnvironment m_clientEnv;
+	private ProducerConfig m_config;
 
 	private boolean m_logEnrichInfo = false;
 
@@ -66,7 +66,7 @@ public class EnrichMessageValve implements Valve, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_logEnrichInfo = Boolean.parseBoolean(m_clientEnv.getGlobalConfig().getProperty("logEnrichInfo", "false"));
+		m_logEnrichInfo = m_config.isLogEnrichInfoEnabled();
 	}
 
 }
