@@ -64,8 +64,9 @@ angular.module("dashboard", [ 'ngResource', 'ui.bootstrap', 'smart-table' ]).con
 
 			$scope.get_delay_detail = function(topic) {
 				$scope.current_delay_details = $scope.consume_delays_detail[topic];
-				return "delay_popover_template";
+				return "/jsp/console/home/delay-detail.html";
 			}
+			$scope.test_var = {template_url:"delay_popover_template.html"};
 
 			$scope.get_broker_received_detail = function(broker) {
 				dashboard_resource.get_broker_received_qps({

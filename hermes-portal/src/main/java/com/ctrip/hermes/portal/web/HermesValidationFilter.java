@@ -9,6 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.portal.config.PortalConfig;
@@ -33,6 +34,16 @@ public class HermesValidationFilter implements Filter {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+		String requestUrl = ((HttpServletRequest) request).getRequestURI();
+		if (isLogined == false) {
+			if ((requestUrl.contains("/topic")) || (requestUrl.contains("/comsumer"))
+					|| (requestUrl.contains("/subscription")) || (requestUrl.contains("/storage"))
+					|| (requestUrl.contains("/endpoint")) || (requestUrl.contains("/resender"))) {
+				((HttpServletResponse) response).sendRedirect("/console");
+				return;
+			}
+
 		}
 		request.setAttribute("logined", isLogined);
 		chain.doFilter(request, response);
