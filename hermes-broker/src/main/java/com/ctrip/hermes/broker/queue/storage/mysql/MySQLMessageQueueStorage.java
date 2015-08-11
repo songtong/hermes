@@ -112,12 +112,22 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			}
 		}
 
+		long startTime = System.currentTimeMillis();
 		m_msgDao.insert(msgs.toArray(new MessagePriority[msgs.size()]));
 
-		bizLog(msgs);
+		bizLog(tpp, msgs, startTime, System.currentTimeMillis());
 	}
 
-	private void bizLog(List<MessagePriority> msgs) {
+	private void bizLog(Tpp tpp, List<MessagePriority> msgs, long startTime, long endTime) {
+		BizEvent mysqlEvent = new BizEvent("MySQL.Insert");
+		mysqlEvent.addData("startTime", startTime);
+		mysqlEvent.addData("elapse", endTime - startTime);
+		mysqlEvent.addData("topic", tpp.getTopic());
+		mysqlEvent.addData("partition", tpp.getPartition());
+		mysqlEvent.addData("priority", tpp.getPriorityInt());
+		mysqlEvent.addData("msgCount", msgs.size());
+		m_bizLogger.log(mysqlEvent);
+
 		for (MessagePriority msg : msgs) {
 			BizEvent event = new BizEvent("RefKey.Transformed");
 			event.addData("refKey", msg.getRefKey());
