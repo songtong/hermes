@@ -34,8 +34,8 @@ public class DefaultEngine extends Engine {
 			List<Topic> topics = m_metaService.listTopicsByPattern(s.getTopicPattern());
 
 			if (topics == null || topics.isEmpty()) {
-				throw new RuntimeException(
-				      String.format("Can not find any topics matching pattern %s", s.getTopicPattern()));
+				throw new IllegalArgumentException(String.format("Can not find any topics matching pattern %s",
+				      s.getTopicPattern()));
 			}
 
 			log.info("Found topics({}) matching pattern({}), groupId={}.",
@@ -51,15 +51,17 @@ public class DefaultEngine extends Engine {
 				ConsumerContext context = new ConsumerContext(topic, s.getGroupId(), s.getConsumer(), s.getMessageClass(),
 				      s.getConsumerType());
 
+				// FIXME validate all, if fail in any validator, exit
 				if (validate(topic, context)) {
 					try {
 						String endpointType = m_metaService.findEndpointTypeByTopic(topic.getName());
 						ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(endpointType);
 						handle.addSubscribeHandle(consumerBootstrap.start(context));
 
-					} catch (Exception e) {
+					} catch (RuntimeException e) {
 						log.error("Failed to start consumer for topic {}(consumer: groupId={}, sessionId={})",
 						      topic.getName(), context.getGroupId(), context.getSessionId(), e);
+						throw e;
 					}
 				}
 			}

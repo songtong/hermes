@@ -23,13 +23,13 @@ import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.producer.sender.MessageSender;
-import com.google.common.util.concurrent.SettableFuture;
 
 @Named(type = MessageSender.class, value = Endpoint.KAFKA)
 public class KafkaMessageSender implements MessageSender {
@@ -142,14 +142,15 @@ public class KafkaMessageSender implements MessageSender {
 		return new KafkaFuture(sendResult);
 	}
 
-	@Override
-	public void resend(ProducerMessage<?> msg, SettableFuture<SendResult> future) {
-		// do nothing
-	}
-
 	public void close() {
 		for (KafkaProducer<String, byte[]> producer : m_producers.values()) {
 			producer.close();
 		}
+	}
+
+	@Override
+	public void resend(List<SendMessageCommand> timeoutCmds) {
+		// TODO Auto-generated method stub
+
 	}
 }

@@ -6,7 +6,6 @@ import java.util.List;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
@@ -65,7 +64,6 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(SendMessageResultMonitor.class)//
 		      .req(ProducerConfig.class)//
 		      .req(EndpointClient.class)//
-		      .req(ClientEnvironment.class)//
 		      .req(SystemClockService.class)//
 		);
 

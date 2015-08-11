@@ -14,23 +14,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ProducerMessage;
-import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.sender.MessageSender;
 import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
 import com.dianping.cat.message.spi.MessageTree;
-import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -154,17 +152,10 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	}
 
 	protected void resend(List<SendMessageCommand> timeoutCmds) {
-		for (SendMessageCommand cmd : timeoutCmds) {
-			ProducerStatusMonitor.INSTANCE.waitBrokerResultTimeout(cmd.getTopic(), cmd.getPartition(),
-			      cmd.getMessageCount());
-			List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> msgFuturePairs = cmd
-			      .getProducerMessageFuturePairs();
-			for (Pair<ProducerMessage<?>, SettableFuture<SendResult>> pair : msgFuturePairs) {
-				MessageSender messageSender = PlexusComponentLocator.lookup(MessageSender.class);
-				if (messageSender != null) {
-					messageSender.resend(pair.getKey(), pair.getValue());
-				}
-			}
+		MessageSender messageSender = PlexusComponentLocator.lookup(MessageSender.class, Endpoint.BROKER);
+		if (messageSender != null) {
+			messageSender.resend(timeoutCmds);
 		}
 	}
+
 }

@@ -97,13 +97,12 @@ public class LongPollingConsumerTask implements Runnable {
 	private RetryPolicy m_retryPolicy;
 
 	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize, int prefetchThreshold,
-	      SystemClockService systemClockService, RetryPolicy retryPolicy) {
+	      RetryPolicy retryPolicy) {
 		m_context = context;
 		m_partitionId = partitionId;
 		m_cacheSize = cacheSize;
 		m_localCachePrefetchThreshold = prefetchThreshold;
 		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
-		m_systemClockService = systemClockService;
 		m_retryPolicy = retryPolicy;
 
 		m_pullMessageTaskExecutorService = Executors.newSingleThreadExecutor(HermesThreadFactory.create(String.format(
@@ -156,6 +155,7 @@ public class LongPollingConsumerTask implements Runnable {
 
 	@Override
 	public void run() {
+		// FIXME one boss thread to acquire lease, if acquired, run this task
 		log.info("Consumer started(topic={}, partition={}, groupId={}, sessionId={})", m_context.getTopic().getName(),
 		      m_partitionId, m_context.getGroupId(), m_context.getSessionId());
 
@@ -225,8 +225,9 @@ public class LongPollingConsumerTask implements Runnable {
 				}
 
 				if (!m_msgs.isEmpty()) {
-					consumeMessages(correlationId, m_cacheSize);
+					consumeMessages(correlationId);
 				} else {
+					// FIXME exponential back off strategy
 					TimeUnit.MILLISECONDS.sleep(m_config.getNoMessageWaitIntervalMillis());
 				}
 
@@ -240,7 +241,7 @@ public class LongPollingConsumerTask implements Runnable {
 
 		// consume all remaining messages
 		if (!m_msgs.isEmpty()) {
-			consumeMessages(correlationId, 0);
+			consumeMessages(correlationId);
 		}
 
 		m_consumerNotifier.deregister(correlationId);
@@ -350,14 +351,10 @@ public class LongPollingConsumerTask implements Runnable {
 		}
 	}
 
-	private void consumeMessages(long correlationId, int maxItems) {
-		List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>(maxItems <= 0 ? 100 : maxItems);
+	private void consumeMessages(long correlationId) {
+		List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 
-		if (maxItems <= 0) {
-			m_msgs.drainTo(msgs);
-		} else {
-			m_msgs.drainTo(msgs, maxItems);
-		}
+		m_msgs.drainTo(msgs);
 
 		m_consumerNotifier.messageReceived(correlationId, msgs);
 		ConsumerStatusMonitor.INSTANCE.messageProcessed(m_context.getTopic().getName(), m_partitionId,
@@ -423,6 +420,7 @@ public class LongPollingConsumerTask implements Runnable {
 				if (endpoint == null) {
 					log.warn("No endpoint found for topic {} partition {}, will retry later",
 					      m_context.getTopic().getName(), m_partitionId);
+					// FIXME exponential back off
 					TimeUnit.MILLISECONDS.sleep(m_config.getNoEndpointWaitIntervalMillis());
 					return;
 				}
@@ -447,6 +445,7 @@ public class LongPollingConsumerTask implements Runnable {
 		      ExecutionException {
 			final SettableFuture<PullMessageResultCommand> future = SettableFuture.create();
 
+			// FIXME 500ms enough?
 			PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
 			      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout - 500L);
 

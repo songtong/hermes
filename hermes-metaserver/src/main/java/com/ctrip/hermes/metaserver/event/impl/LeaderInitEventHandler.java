@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -160,6 +161,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	private Map<String, ClientContext> loadAndAddBrokerListWatcher(ServiceCacheListener listener) {
 		if (m_brokerListenerAdded.compareAndSet(false, true)) {
+			log.info("[FOR_TEST]Broker change listener added.");
 			m_serviceCache.addListener(listener);
 		}
 		List<ServiceInstance<Void>> instances = m_serviceCache.getInstances();
@@ -170,6 +172,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			int port = instance.getPort();
 			brokers.put(name, new ClientContext(name, ip, port, m_systemClockService.now()));
 		}
+		log.info("[FOR_TEST]New broker list is {}", JSON.toJSONString(brokers));
 		return brokers;
 	}
 
@@ -274,6 +277,8 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		@Override
 		public void cacheChanged() {
+			log.info("[FOR_TEST]Broker list changed.");
+
 			final EventBus eventBus = m_context.getEventBus();
 			ExecutorService watcherExecutor = m_context.getWatcherExecutor();
 			if (!watcherExecutor.isShutdown()) {

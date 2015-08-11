@@ -10,6 +10,8 @@ public interface SendMessageAcceptanceMonitor {
 
 	public Future<Boolean> monitor(long correlationId);
 
+	public void cancel(long correlationId);
+
 	public void received(long correlationId, boolean success);
 
 }
