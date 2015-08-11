@@ -81,31 +81,38 @@ public class EndpointMaker implements Initializable {
 		Map<Integer, Endpoint> partition2Endpoints = new HashMap<>();
 
 		int partition = partitionAssignment.getKey();
-		Map<String, ClientContext> brokers = partitionAssignment.getValue();
+		Map<String, ClientContext> assignedBrokers = partitionAssignment.getValue();
 
-		if (brokers != null && !brokers.isEmpty()) {
+		if (assignedBrokers != null && !assignedBrokers.isEmpty()) {
 			Endpoint endpoint = new Endpoint();
 			endpoint.setType(Endpoint.BROKER);
 
 			Map<String, ClientLeaseInfo> brokerLease = m_brokerLeaseHolder.getAllValidLeases().get(
 			      new Pair<String, Integer>(topic, partition));
+			ClientContext assignedBroker = assignedBrokers.entrySet().iterator().next().getValue();
 
 			if (brokerLease == null || brokerLease.isEmpty()) {
-				ClientContext broker = brokers.entrySet().iterator().next().getValue();
 
-				endpoint.setHost(broker.getIp());
-				endpoint.setId(broker.getName());
-				endpoint.setPort(broker.getPort());
+				endpoint.setHost(assignedBroker.getIp());
+				endpoint.setId(assignedBroker.getName());
+				endpoint.setPort(assignedBroker.getPort());
 			} else {
 				Entry<String, ClientLeaseInfo> brokerLeaseEntry = brokerLease.entrySet().iterator().next();
-				ClientLeaseInfo broker = brokerLeaseEntry.getValue();
-				Lease lease = broker.getLease();
+				String leaseHoldingBrokerName = brokerLeaseEntry.getKey();
+				ClientLeaseInfo leaseHoldingBroker = brokerLeaseEntry.getValue();
 
-				endpoint.setHost(broker.getIp());
-				endpoint.setId(brokerLeaseEntry.getKey());
-				endpoint.setPort(broker.getPort());
+				if (leaseHoldingBrokerName.equals(assignedBroker.getName())) {
+					endpoint.setHost(assignedBroker.getIp());
+					endpoint.setId(assignedBroker.getName());
+					endpoint.setPort(assignedBroker.getPort());
+				} else {
+					Lease lease = leaseHoldingBroker.getLease();
+					endpoint.setHost(leaseHoldingBroker.getIp());
+					endpoint.setId(brokerLeaseEntry.getKey());
+					endpoint.setPort(leaseHoldingBroker.getPort());
 
-				scheduleLeaseExpireBrokerReblanceTask(context, lease);
+					scheduleLeaseExpireBrokerReblanceTask(context, lease);
+				}
 			}
 
 			partition2Endpoints.put(partition, endpoint);
