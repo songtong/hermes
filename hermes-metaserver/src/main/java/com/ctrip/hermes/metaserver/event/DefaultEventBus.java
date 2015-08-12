@@ -39,13 +39,11 @@ public class DefaultEventBus implements EventBus {
 			log.error("Event handler not found for type {}.", type);
 		} else {
 			for (final EventHandler handler : handlers) {
-				log.info("[FOR_TEST] Event bus pub Event {} {}.", event.getType(), handler.getName());
 				m_executor.submit(new Runnable() {
 
 					@Override
 					public void run() {
 						try {
-							log.info("[FOR_TEST] Event bus on event {} {}.", event.getType(), handler.getName());
 							handler.onEvent(context, event);
 						} catch (Exception e) {
 							log.error("Exception occurred while processing event {} in handler {}", event.getType(),

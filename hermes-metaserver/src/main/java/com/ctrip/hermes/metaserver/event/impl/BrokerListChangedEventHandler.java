@@ -2,8 +2,6 @@ package com.ctrip.hermes.metaserver.event.impl;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -22,7 +20,6 @@ import com.ctrip.hermes.metaserver.meta.MetaHolder;
  */
 @Named(type = EventHandler.class, value = "BrokerListChangedEventHandler")
 public class BrokerListChangedEventHandler extends BaseEventHandler {
-	private static final Logger log = LoggerFactory.getLogger(BrokerListChangedEventHandler.class);
 
 	@Inject
 	private BrokerAssignmentHolder m_brokerAssignmentHolder;
@@ -46,7 +43,6 @@ public class BrokerListChangedEventHandler extends BaseEventHandler {
 			Map<String, ClientContext> brokers = (Map<String, ClientContext>) data;
 
 			m_brokerAssignmentHolder.reassign(brokers);
-			log.info("[FOR_TEST] Broker assignment reassigned, since broker list changed.");
 			m_metaHolder.update(m_endpointMaker.makeEndpoints(context, m_brokerAssignmentHolder.getAssignments()));
 		}
 	}

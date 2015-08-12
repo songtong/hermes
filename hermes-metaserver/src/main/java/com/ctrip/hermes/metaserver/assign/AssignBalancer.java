@@ -40,11 +40,15 @@ public class AssignBalancer<T> {
 			int assignsToAdjust = distanceToAvg(originAssign.size());
 			if (assignsToAdjust > 0) {
 				for (int i = 0; i < assignsToAdjust; i++) {
-					newAssign.add(m_freeAssigns.removeFirst());
+					if (!m_freeAssigns.isEmpty()) {
+						newAssign.add(m_freeAssigns.removeFirst());
+					}
 				}
 			} else if (assignsToAdjust < 0) {
 				for (int i = 0; i < Math.abs(assignsToAdjust); i++) {
-					m_freeAssigns.add(newAssign.removeFirst());
+					if (!newAssign.isEmpty()) {
+						m_freeAssigns.add(newAssign.removeFirst());
+					}
 				}
 			}
 		}

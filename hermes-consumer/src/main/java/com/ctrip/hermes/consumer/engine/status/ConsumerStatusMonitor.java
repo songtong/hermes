@@ -5,7 +5,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
@@ -26,60 +25,46 @@ public enum ConsumerStatusMonitor {
 
 	private class ConsumerStatusHolder {
 
-		private Meter m_pullMsgCmdResultReceivedMeter;
+		private static final String MSGS = "messages";
 
-		private Meter m_pullMsgCmdSentMeter;
+		private static final String CMDS = "commands";
 
-		private Meter m_pullMsgCmdResultReadTimeoutMeter;
-
-		private Meter m_messageReceivedMeter;
-
-		private Meter m_messageProcessedMeter;
+		private final String m_metricsPrefix;
 
 		public ConsumerStatusHolder(Tpg tpg) {
 
-			String metricsPrefix = getMetricsPrefix(tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
-
-			m_pullMsgCmdResultReceivedMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "pull-msg-cmd-result-received-meter"));
-
-			m_pullMsgCmdSentMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "pull-msg-cmd-sent-meter"));
-
-			m_pullMsgCmdResultReadTimeoutMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "pull-msg-cmd-result-read-timeout-meter"));
-
-			m_messageReceivedMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "msg-received-meter"));
-
-			m_messageProcessedMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "msg-processed-meter"));
+			m_metricsPrefix = getMetricsPrefix(tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
 		}
 
 		public void pullMessageCmdResultReceived() {
-			m_pullMsgCmdResultReceivedMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "pullMessageResultReceived")).mark();
 		}
 
 		public void pullMessageCmdSent() {
-			m_pullMsgCmdSentMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "pullMessageSent"))
+			      .mark();
 		}
 
 		public void pullMessageCmdResultReadTimeout() {
-			m_pullMsgCmdResultReadTimeoutMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "pullMessageResultReadTimeout")).mark();
 		}
 
 		public void messageReceived(int msgCount) {
-			m_messageReceivedMeter.mark(msgCount);
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "received"))
+			      .mark(msgCount);
 		}
 
 		public void messageProcessed(int msgCount) {
-			m_messageProcessedMeter.mark(msgCount);
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "processed"))
+			      .mark(msgCount);
 		}
 
 	}
 
 	private String getMetricsPrefix(String topic, int partition, String group) {
-		String metricPrefix = topic + "-" + partition + "-" + group;
+		String metricPrefix = topic + "#" + partition + "@" + group;
 		return metricPrefix;
 	}
 
@@ -118,7 +103,7 @@ public enum ConsumerStatusMonitor {
 	}
 
 	private String getMessageQueueGuageName(String topic, int partition, String group) {
-		return MetricRegistry.name(getMetricsPrefix(topic, partition, group), "messageQueue");
+		return MetricRegistry.name(getMetricsPrefix(topic, partition, group), "localCache", "size");
 	}
 
 	public void removeMonitor(String topic, int partition, String group) {

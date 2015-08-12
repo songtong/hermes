@@ -9,4 +9,28 @@
 		<display-name>broker-bootstrap-listener</display-name>
 		<listener-class>com.ctrip.hermes.broker.bootstrap.BrokerBootstrapListener</listener-class>
 	</listener>
+	<listener>
+		<display-name>MetricsServletContextListener</display-name>
+		<listener-class>com.ctrip.hermes.metrics.MetricsServletContextListener</listener-class>
+	</listener>
+	<listener>
+		<display-name>JVMMetricsServletContextListener</display-name>
+		<listener-class>com.ctrip.hermes.metrics.JVMMetricsServletContextListener</listener-class>
+	</listener>
+	<listener>
+		<display-name>HealthCheckServletContextListener</display-name>
+		<listener-class>com.ctrip.hermes.metrics.HealthCheckServletContextListener</listener-class>
+	</listener>
+	<servlet>
+		<servlet-name>metrics</servlet-name>
+		<servlet-class>com.ctrip.hermes.metrics.HermesAdminServlet</servlet-class>
+		<init-param>
+			<param-name>show-jvm-metrics</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>metrics</servlet-name>
+		<url-pattern>/metrics/*</url-pattern>
+	</servlet-mapping>
 </web-app>

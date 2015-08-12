@@ -12,6 +12,10 @@
 	<name>Hermes Core</name>
 	<dependencies>
 		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-metrics</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.unidal.framework</groupId>
 			<artifactId>foundation-service</artifactId>
 		</dependency>
@@ -27,11 +31,11 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 		</dependency>
-        <!--for Lease.class: JsonIgnore-->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-        </dependency>
+		<!--for Lease.class: JsonIgnore -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+		</dependency>
 		<!--netty -->
 		<dependency>
 			<groupId>io.netty</groupId>
