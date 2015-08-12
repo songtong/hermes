@@ -5,7 +5,7 @@ set -u
 cd `dirname $0`
 
 if [ $# -lt 1 ];then
-	echo "usage: `basename $0` metaserver|broker|portal [port]"
+	echo "usage: `basename $0` metaserver|broker|portal|rest [port]"
 	exit 1
 fi
 
@@ -15,7 +15,7 @@ if [ $# -eq 2 ];then
 fi
 
 valid_app=false
-for supported_app in metaserver broker portal;do
+for supported_app in metaserver broker portal rest;do
 	if [ $1 == $supported_app ];then
 		valid_app=true
 		break;

@@ -2,7 +2,7 @@
 	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3 http://maven.apache.org/xsd/assembly-1.1.3.xsd">
-	<id>portal</id>
+	<id>rest</id>
 	<formats>
 		<format>tar</format>
 	</formats>
@@ -18,7 +18,7 @@
 			<fileMode>0755</fileMode>
 		</fileSet>
 		<fileSet>
-			<directory>${project.basedir}/script/env/portal</directory>
+			<directory>${project.basedir}/script/env/rest</directory>
 			<outputDirectory>/bin</outputDirectory>
 			<includes>
 				<include>env.sh</include>
@@ -27,10 +27,10 @@
 		</fileSet>
 		<!--artifact.war -->
 		<fileSet>
-			<directory>${project.basedir}/../hermes-portal/target</directory>
+			<directory>${project.basedir}/../hermes-rest/target</directory>
 			<outputDirectory>/</outputDirectory>
 			<includes>
-				<include>hermes-portal-*.war</include>
+				<include>hermes-rest-*.war</include>
 			</includes>
 			<fileMode>0444</fileMode>
 		</fileSet>

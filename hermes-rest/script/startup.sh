@@ -5,13 +5,13 @@ set -u
 
 cd `dirname $0`
 
-mkdir -p /opt/logs/hermes/
+mkdir -p /opt/logs/hermes-rest/
 
 ENV_FILE="./env.sh"
 . "${ENV_FILE}"
 
-LOG_PATH="../"
-LOG_FILE="run.log"
+LOG_PATH="/opt/logs/hermes-rest/"
+LOG_FILE="sysout.log"
 
 SERVER_DRIVER=com.ctrip.hermes.rest.HermesRestServer
 
@@ -31,15 +31,12 @@ start() {
 	if [ ! -d "${LOG_PATH}" ]; then
         mkdir "${LOG_PATH}"
     fi
-    exec nohup java ${JAVA_OPTS} -classpath ${CLASSPATH} ${SERVER_DRIVER} > "${LOG_PATH}/${LOG_FILE}" 2>&1 &
-    # exec java ${JAVA_OPTS} -classpath ${CLASSPATH} ${SERVER_DRIVER} &
-    echo $!
-    echo $?
-    echo "BrokerServer Started!"
+    nohup java ${JAVA_OPTS} -classpath ${CLASSPATH} ${SERVER_DRIVER} > "${LOG_PATH}/${LOG_FILE}" 2>&1 &
+    echo "RestServer Started!"
 }
 
 stop(){
-    serverPID=`jps | grep HermesRestServer | awk '{print $1;" "}'`
+    serverPID=`jps -lvm | grep com.ctrip.hermes.rest.HermesRestServer | awk '{print $1;" "}'`
     if [ "${serverPID}" == "" ]; then
         echo "no HermesRestServer is running"
     else
@@ -49,9 +46,9 @@ stop(){
 }
 
 ensure_not_started() {
-	serverPID=`jps -lvm | grep HermesRestServer | awk '{print $1}'`
+	serverPID=`jps -lvm | grep com.ctrip.hermes.rest.HermesRestServer | awk '{print $1}'`
     if [ "${serverPID}" != "" ]; then
-        echo "BrokerServer is already running"
+        echo "RestServer is already running"
         exit 1
     fi
 }

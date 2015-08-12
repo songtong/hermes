@@ -5,12 +5,12 @@ set -u
 
 cd `dirname $0`
 
-mkdir -p /opt/logs/hermes/
+mkdir -p /opt/logs/hermes-broker/
 
 ENV_FILE="./env.sh"
 . "${ENV_FILE}"
 
-LOG_PATH="/opt/logs/hermes/"
+LOG_PATH="/opt/logs/hermes-broker/"
 LOG_FILE="sysout.log"
 
 SERVER_DRIVER=com.ctrip.hermes.broker.BrokerServer
@@ -47,7 +47,6 @@ stop(){
     fi
 }
 
-
 ensure_not_started() {
 	serverPID=`jps -lvm | grep com.ctrip.hermes.broker.BrokerServer | awk '{print $1}'`
     if [ "${serverPID}" != "" ]; then
@@ -55,7 +54,6 @@ ensure_not_started() {
         exit 1
     fi
 }
-
 
 _start() {
     java ${JAVA_OPTS} -classpath ${CLASSPATH} ${SERVER_DRIVER}
