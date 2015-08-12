@@ -80,7 +80,7 @@ public class EndpointMakerTest {
 		Map<String, Map<Integer, Endpoint>> endpoints = m_maker.makeEndpoints(new EventEngineContext(null, null, null),
 		      brokerAssignments);
 
-		verify(m_scheduledExecutor, times(2)).schedule(any(Runnable.class), anyLong(), eq(TimeUnit.MILLISECONDS));
+		verify(m_scheduledExecutor, times(1)).schedule(any(Runnable.class), anyLong(), eq(TimeUnit.MILLISECONDS));
 
 		assertEquals(2, endpoints.size());
 		Map<Integer, Endpoint> endpoints1 = endpoints.get("t1");
