@@ -7,8 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.unidal.tuple.Pair;
 
 import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.ctrip.hermes.metrics.HermesMetricsRegistry;
@@ -30,7 +28,8 @@ public enum ProducerStatusMonitor {
 			synchronized (this) {
 				if (!m_tp2TaskQueueGauge.containsKey(topicPartition)) {
 					Gauge<Integer> guage = HermesMetricsRegistry.getMetricRegistry().register(
-					      MetricRegistry.name(getMetricsPrefix(topic, partition), "taskQueueSize"), new Gauge<Integer>() {
+					      MetricRegistry.name(getMetricsPrefix(topic, partition), "sendBuffer", "size"),
+					      new Gauge<Integer>() {
 
 						      @Override
 						      public Integer getValue() {
@@ -50,7 +49,7 @@ public enum ProducerStatusMonitor {
 	}
 
 	private String getMetricsPrefix(String topic, int partition) {
-		String metricPrefix = topic + "-" + partition;
+		String metricPrefix = topic + "#" + partition;
 		return metricPrefix;
 	}
 
@@ -108,140 +107,83 @@ public enum ProducerStatusMonitor {
 		getStatusHolder(topic, partition).brokerResultReceived(messageCount);
 	}
 
-	public class ProducerStatusHolder {
+	private class ProducerStatusHolder {
 
-		private Meter m_messageSubmittedMeter;
+		private final String m_metricsPrefix;
 
-		private Meter m_messageResubmittedMeter;
+		private static final String MSGS = "messages";
 
-		private Meter m_offerFailedMeter;
-
-		private Meter m_brokerAcceptedMsgMeter;
-
-		private Meter m_brokerAcceptedCmdMeter;
-
-		private Histogram m_sendMsgCmdSize;
-
-		private Meter m_wroteToBrokerMsgMeter;
-
-		private Meter m_wroteToBrokerCmdMeter;
-
-		private Meter m_brokerRejectedMsgMeter;
-
-		private Meter m_brokerRejectedCmdMeter;
-
-		private Meter m_sendFailedMsgMeter;
-
-		private Meter m_sendFailedCmdMeter;
-
-		private Meter m_waitBrokerResultTimeoutMsgMeter;
-
-		private Meter m_waitBrokerResultTimeoutCmdMeter;
-
-		private Meter m_brokerResultReceivedMsgMeter;
-
-		private Meter m_brokerResultReceivedCmdMeter;
-
-		private Meter m_waitBrokerAcceptanceTimeoutMsgMeter;
-
-		private Meter m_waitBrokerAcceptanceTimeoutCmdMeter;
+		private static final String CMDS = "commands";
 
 		public ProducerStatusHolder(String topic, int partition) {
-			String metricsPrefix = getMetricsPrefix(topic, partition);
-
-			m_messageSubmittedMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "message-submitted-meter"));
-
-			m_messageResubmittedMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "message-resubmitted-meter"));
-
-			m_offerFailedMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "offer-failure-meter"));
-
-			m_brokerAcceptedMsgMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "broker-accepted-msg-meter"));
-			m_brokerAcceptedCmdMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "sbroker-accepted-cmd-meter"));
-			m_sendMsgCmdSize = HermesMetricsRegistry.getMetricRegistry().histogram(
-			      MetricRegistry.name(metricsPrefix, "sendMsgCmd-size"));
-
-			m_wroteToBrokerMsgMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "wrote-to-broker-msg-meter"));
-			m_wroteToBrokerCmdMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "wrote-to-broker-cmd-meter"));
-
-			m_brokerRejectedMsgMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "broker-rejected-msg-meter"));
-			m_brokerRejectedCmdMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "broker-rejected-cmd-meter"));
-
-			m_sendFailedMsgMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "send-fail-msg-meter"));
-			m_sendFailedCmdMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "send-fail-cmd-meter"));
-
-			m_waitBrokerResultTimeoutMsgMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "wait-broker-result-timeout-msg-meter"));
-			m_waitBrokerResultTimeoutCmdMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "wait-broker-result-timeout-cmd-meter"));
-
-			m_brokerResultReceivedMsgMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "broker-result-received-msg-meter"));
-			m_brokerResultReceivedCmdMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "broker-result-received-cmd-meter"));
-
-			m_waitBrokerAcceptanceTimeoutMsgMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "wait-broker-acceptance-timeout-msg-meter"));
-			m_waitBrokerAcceptanceTimeoutCmdMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-			      MetricRegistry.name(metricsPrefix, "wait-broker-acceptance-timeout-cmd-meter"));
+			m_metricsPrefix = getMetricsPrefix(topic, partition);
 		}
 
 		public void brokerResultReceived(int messageCount) {
-			m_brokerResultReceivedMsgMeter.mark(messageCount);
-			m_brokerResultReceivedCmdMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, MSGS, "brokerResultReceived")).mark(messageCount);
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "brokerResultReceived")).mark();
 		}
 
 		public void waitBrokerAcceptanceTimeout(int messageCount) {
-			m_waitBrokerAcceptanceTimeoutMsgMeter.mark(messageCount);
-			m_waitBrokerAcceptanceTimeoutCmdMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, MSGS, "waitBrokerAcceptanceTimeout")).mark(messageCount);
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "waitBrokerAcceptanceTimeout")).mark();
 		}
 
 		public void messageSubmitted() {
-			m_messageSubmittedMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "submitted"))
+			      .mark();
 		}
 
 		public void messageResubmitted() {
-			m_messageResubmittedMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "resubmitted"))
+			      .mark();
 		}
 
 		public void offerFailed() {
-			m_offerFailedMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "offerFailed"))
+			      .mark();
 		}
 
 		public void brokerAccepted(int messageCount) {
-			m_brokerAcceptedMsgMeter.mark(messageCount);
-			m_brokerAcceptedCmdMeter.mark();
-			m_sendMsgCmdSize.update(messageCount);
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "brokerAccepted"))
+			      .mark(messageCount);
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "brokerAccepted"))
+			      .mark();
+			HermesMetricsRegistry.getMetricRegistry()
+			      .histogram(MetricRegistry.name(m_metricsPrefix, MSGS, "brokerAccepted", "histogram"))
+			      .update(messageCount);
 		}
 
 		public void wroteToBroker(int messageCount) {
-			m_wroteToBrokerMsgMeter.mark(messageCount);
-			m_wroteToBrokerCmdMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "wroteToBroker"))
+			      .mark(messageCount);
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "wroteToBroker"))
+			      .mark();
 		}
 
 		public void brokerRejected(int messageCount) {
-			m_brokerRejectedMsgMeter.mark(messageCount);
-			m_brokerRejectedCmdMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "brokerRejected"))
+			      .mark(messageCount);
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "brokerRejected"))
+			      .mark();
 		}
 
 		public void sendFailed(int messageCount) {
-			m_sendFailedMsgMeter.mark(messageCount);
-			m_sendFailedCmdMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "sendFailed"))
+			      .mark(messageCount);
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "sendFailed"))
+			      .mark();
 		}
 
 		public void waitBrokerResultTimeout(int messageCount) {
-			m_waitBrokerResultTimeoutMsgMeter.mark(messageCount);
-			m_waitBrokerResultTimeoutCmdMeter.mark();
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, MSGS, "waitBrokerResultTimeout")).mark(messageCount);
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "waitBrokerResultTimeout")).mark();
 		}
 
 	}

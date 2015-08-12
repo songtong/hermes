@@ -17,11 +17,6 @@
 			<artifactId>hermes-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.ctrip.hermes</groupId>
-			<artifactId>hermes-metrics</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka-clients</artifactId>
 		</dependency>

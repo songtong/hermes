@@ -84,9 +84,7 @@ public class ClusterStateHolder {
 	}
 
 	public HostPort getLeader() {
-		if (m_leader.get() == null) {
-			m_leader.set(fetcheLeaderInfoFromZk());
-		}
+		m_leader.compareAndSet(null, fetcheLeaderInfoFromZk());
 		return m_leader.get();
 
 	}
