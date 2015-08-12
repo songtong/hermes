@@ -5,7 +5,7 @@
 
 	<appender name="ASYNC" class="org.apache.log4j.AsyncAppender">
 		<appender-ref ref="FILE" />
-	    <appender-ref ref="CONSOLE" />
+	    <!-- <appender-ref ref="CONSOLE" /> -->
 	</appender>
 	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
 		<layout class="org.apache.log4j.PatternLayout">

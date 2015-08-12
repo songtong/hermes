@@ -26,7 +26,7 @@ path.logs: /opt/logs/elasticsearch/
 #plugin.mandatory: mapper-attachments,lang-groovy
 
 ################################### Memory ####################################
-#bootstrap.mlockall: true
+bootstrap.mlockall: true
 
 ############################## Network And HTTP ###############################
 #network.bind_host: 192.168.0.1
@@ -53,8 +53,8 @@ http.port: 9200
 ################################## Discovery ##################################
 #discovery.zen.minimum_master_nodes: 1
 #discovery.zen.ping.timeout: 3s
-#discovery.zen.ping.multicast.enabled: false
-#discovery.zen.ping.unicast.hosts: ["host1", "host2:port"]
+discovery.zen.ping.multicast.enabled: false
+discovery.zen.ping.unicast.hosts: 10.2.7.70:9300, 10.2.7.71:9300, 10.2.7.72:9300, 10.2.7.73:9300, 10.2.7.74:9300
 
 ################################## Slow Log ##################################
 #index.search.slowlog.threshold.query.warn: 10s
