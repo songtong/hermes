@@ -14,8 +14,12 @@ fi
 . "./common.sh"
 
 SERVER_HOME=..
-JETTY_JAR=$(ls ../jetty/*.jar)
+JETTY_RUNNER_JAR=$(ls ../jetty/jetty-runner*.jar)
+JETTY_START_JAR=$(ls ../jetty/jetty-start*.jar)
 WAR=$(ls ../*.war)
+STOP_KEY=hermes4EVER
+STOP_TIMEOUT=180
+DEBUG_OPT="-Xdebug -agentlib:jdwp=transport=dt_socket,address=8787,server=y,suspend=n"
 
 if [ ! -f $JAVA_CMD ];then
 	log_op "$JAVA_CMD not found!"
@@ -23,6 +27,7 @@ if [ ! -f $JAVA_CMD ];then
 fi
 
 port=8080
+stop_port=8081
 
 can_sudo=false
 set +e
@@ -31,12 +36,19 @@ if [ $? -eq 0 ];then
 	can_sudo=true
 fi
 set -e
+
+enable_debug() {
+	echo "Enable debug mode."
+	JAVA_OPTS="${JAVA_OPTS} $DEBUG_OPT"
+	export JAVA_OPTS=${JAVA_OPTS}
+}
 			
 sudo=""
 if [ $# -eq 2 ];then
 	num_regex='^[0-9]+$'
 	if [[ $2 =~ $num_regex ]];then
 		port=$2
+		stop_port=$[port+1]
 		if [ $port -lt 1024 ];then
 			if [ $can_sudo == false ];then
 				log_op "[ERROR] Attemp to start jetty at port $port but without passwordless sudo"
@@ -44,10 +56,16 @@ if [ $# -eq 2 ];then
 			fi
 			sudo="sudo"
 		fi
+	elif [[ $2 == "debug" ]];then
+		enable_debug
 	else
 		echo "$2 is not a valid port"
 		exit 1
 	fi
+fi
+
+if [[ $# == 3 && $3 == "debug" ]];then
+	enable_debug
 fi
 
 start() {
@@ -56,7 +74,7 @@ start() {
         mkdir "${LOG_PATH}"
     fi
     log_op $(pwd)
-    BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_JAR --port $port $WAR > $SYSOUT_LOG 2>&1 &
+    BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_RUNNER_JAR --port $port --stop-port $stop_port --stop-key $STOP_KEY $WAR > $SYSOUT_LOG 2>&1 &
     log_op "PID $$"
     log_op "Instance Started!"
 }
@@ -66,13 +84,39 @@ stop(){
     if [ "${serverPID}" == "" ]; then
         log_op "No Instance Is Running"
     else
-    	if [ $can_sudo == true ];then
+		if [ $can_sudo == true ];then
     		sudo="sudo"
     	fi
-        $sudo kill -9 ${serverPID}
+    	$sudo $JAVA_CMD -DSTOP.PORT=$stop_port -DSTOP.KEY=$STOP_KEY -jar $JETTY_START_JAR --stop
+		wait_or_kill        
         log_op "Instance Stopped"
     fi
 }
+
+wait_or_kill() {
+	pid=$(find_pid)
+	for (( i=$STOP_TIMEOUT; pid>1024 && i>0; i--)); do
+		sleep 1 &
+		printf ">>> Waiting $i seconds for gracefully shutdown... \r"
+		wait
+		pid=$(find_pid)
+		if [[ "$pid" -eq "" ]];then
+			printf "\r\n"
+			pid=-1
+		fi
+	done
+
+	if [[ $i -lt 0 ]]; then
+		echo "Wait for gracefully shutdown failed. Will kill the process."
+		if [ $can_sudo == true ];then
+    		sudo="sudo"
+    	fi
+    	$sudo kill -9 $(find_pid)
+    else
+    	echo "Gracefully shutdown success!"
+	fi
+}
+
 
 
 ensure_not_started() {
