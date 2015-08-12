@@ -179,7 +179,31 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	protected void refreshMeta() {
-		m_metaCache.set(m_manager.loadMeta());
+		int maxTries = 10;
+		RuntimeException exception = null;
+
+		for (int i = 0; i < maxTries; i++) {
+			try {
+				Meta meta = m_manager.loadMeta();
+				if (meta != null) {
+					m_metaCache.set(meta);
+					return;
+				}
+			} catch (RuntimeException e) {
+				exception = e;
+			}
+
+			try {
+				TimeUnit.SECONDS.sleep(1);
+			} catch (InterruptedException e) {
+				// ignore it
+			}
+		}
+
+		if (exception != null) {
+			log.warn("Failed to refresh meta from meta-server for {} times", maxTries);
+			throw exception;
+		}
 	}
 
 	@Override
