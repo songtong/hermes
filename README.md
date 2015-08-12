@@ -4,4 +4,4 @@
 [![Coverage Status](https://coveralls.io/repos/ctripcorp/hermes/badge.svg?branch=master&service=github)](https://coveralls.io/github/ctripcorp/hermes?branch=master)
 
 
-Ctrip asynchronous message queue solution.
+Ctrip asynchronous message queue solution
