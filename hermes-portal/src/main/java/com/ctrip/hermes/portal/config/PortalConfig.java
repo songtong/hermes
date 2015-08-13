@@ -52,14 +52,21 @@ public class PortalConfig {
 		return l.size() > 0 ? l : parseEndpoints(defaultHost, defaultPort);
 	}
 
+	public String getElasticClusterName() {
+		return m_env.getGlobalConfig().getProperty("portal.elastic.cluster.name", "elasticsearch");
+	}
+
+	public String getElasticDocumentType() {
+		return m_env.getGlobalConfig().getProperty("portal.elastic.document.type", "biz");
+	}
+
 	private List<Pair<String, Integer>> parseEndpoints(String str, int defaultPort) {
 		List<Pair<String, Integer>> l = new ArrayList<Pair<String, Integer>>();
 		if (!StringUtils.isBlank(str)) {
 			try {
 				for (String host : str.split(",")) {
 					String[] parts = host.split(":");
-					l.add(new Pair<String, Integer>(parts[0],
-							parts.length > 1 ? Integer.valueOf(parts[1]) : defaultPort));
+					l.add(new Pair<String, Integer>(parts[0], parts.length > 1 ? Integer.valueOf(parts[1]) : defaultPort));
 				}
 			} catch (Exception e) {
 				log.error("Parse endpoints failed.", e);

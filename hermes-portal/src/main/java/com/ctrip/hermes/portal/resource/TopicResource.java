@@ -39,6 +39,7 @@ import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.bo.ConsumerView;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.TopicView;
 import com.ctrip.hermes.core.exception.MessageSendException;
@@ -104,6 +105,9 @@ public class TopicResource {
 			} else if (topic.getStoragePartitionCount() <= 5) {
 				reason = "Database partition count should be bigger than 5";
 				passed = false;
+			} else if (topic.getResendPartitionSize() <= 500) {
+				reason = "Resend partition count should be bigger than 500";
+				passed = false;
 			}
 		}
 		return new Pair<>(passed, passed ? topic : reason);
@@ -168,7 +172,7 @@ public class TopicResource {
 			exist = isTopicExistOnTarget(topicName, target);
 		} catch (Exception e) {
 			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
-					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
 		if (exist) {
 			throw new RestException(String.format("Topic %s is already exists.", topicName), Status.CONFLICT);
@@ -188,21 +192,37 @@ public class TopicResource {
 				syncKafkaTopic(topic, target);
 				break;
 			}
+			syncConsumers(topic, target);
 		} else {
 			throw new RestException("Target has missed datasources, pls init them: " + missedDatasources);
 		}
 	}
 
+	private void syncConsumers(TopicView topic, WebTarget target) {
+		for (ConsumerGroup consumer : metaService.findConsumersByTopic(topic.getName())) {
+			String path = String.format("/api/consumers/%s/%s", topic.getName(), consumer.getName());
+			Builder request = target.path(path).request();
+			ConsumerView requestView = new ConsumerView(topic.getName(), consumer);
+			Response response = request.post(Entity.json(requestView));
+			if (!(Status.CREATED.getStatusCode() == response.getStatus()//
+			|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
+				throw new RestException(String.format("Add consumer %s failed.", consumer.getName()),
+				      Status.INTERNAL_SERVER_ERROR);
+			}
+		}
+	}
+
 	private void syncMysqlTopic(TopicView topic, WebTarget target) {
 		Builder request = target.path("/api/topics").request();
+		TopicView view = null;
 		try {
-			TopicView view = request.post(Entity.json(topic), TopicView.class);
-			if (view == null || !view.getName().equals(topic.getName())) {
-				throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
-			}
+			view = request.post(Entity.json(topic), TopicView.class);
 		} catch (Exception e) {
 			throw new RestException(String.format("Sync mysql topic: %s failed: %s", topic.getName(), e.getMessage()),
-					Status.NOT_ACCEPTABLE);
+			      Status.NOT_ACCEPTABLE);
+		}
+		if (view == null || !view.getName().equals(topic.getName())) {
+			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -247,7 +267,7 @@ public class TopicResource {
 		} catch (Exception e) {
 			log.warn("Sync kafka topic failed.", e);
 			throw new RestException(String.format("Sync kafka topic: %s failed: %s", topic.getName(), e.getMessage()),
-					Status.NOT_ACCEPTABLE);
+			      Status.NOT_ACCEPTABLE);
 		}
 	}
 
@@ -293,8 +313,8 @@ public class TopicResource {
 			}
 		} catch (Exception e) {
 			throw new RestException(
-					"Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
-					Status.INTERNAL_SERVER_ERROR);
+			      "Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
+			      Status.INTERNAL_SERVER_ERROR);
 		}
 		Set<String> ret = new HashSet<String>();
 		for (String ds : iDses) {

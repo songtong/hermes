@@ -61,6 +61,8 @@
 			default-value="5" />
 		<attribute name="storage-partition-size" value-type="long"
 			default-value="1000000" />
+		<attribute name="resend-partition-size" value-type="long"
+			default-value="50000" />
 		<attribute name="storage-partition-count" value-type="int"
 			default-value="10" />
 		<entity-ref name="consumer-group" type="list" names="consumer-groups" />
