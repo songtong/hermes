@@ -3,8 +3,8 @@ package com.ctrip.hermes.example;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.engine.Engine;
@@ -16,7 +16,7 @@ import com.dianping.cat.Cat;
 
 public class ConsumerExample {
 
-	private static Logger logger = LogManager.getLogger(ConsumerExample.class);
+	private static Logger logger = LoggerFactory.getLogger(ConsumerExample.class);
 	private static String groupId = null;
 	private static String topic = null;
 

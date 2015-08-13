@@ -16,9 +16,9 @@
 			<Policies>
 				<OnStartupTriggeringPolicy />
 				<TimeBasedTriggeringPolicy interval="1" />
-				<SizeBasedTriggeringPolicy size="10 MB" />
+				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
-			<DefaultRolloverStrategy max="100" />
+			<DefaultRolloverStrategy max="10" />
 		</RollingFile>
 
 		<RollingFile name="BIZ" fileName="/opt/logs/hermes-broker/biz.log"
@@ -27,9 +27,9 @@
 			<Policies>
 				<OnStartupTriggeringPolicy />
 				<TimeBasedTriggeringPolicy interval="1" />
-				<SizeBasedTriggeringPolicy size="10 MB" />
+				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
-			<DefaultRolloverStrategy max="100" />
+			<DefaultRolloverStrategy max="10" />
 		</RollingFile>
 	</Appenders>
 
