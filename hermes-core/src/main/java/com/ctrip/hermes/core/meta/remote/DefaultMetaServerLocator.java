@@ -1,7 +1,9 @@
 package com.ctrip.hermes.core.meta.remote;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -36,7 +38,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 	@Inject
 	private CoreConfig m_coreConfig;
 
-	private AtomicReference<List<String>> m_metaServerList = new AtomicReference<List<String>>(new LinkedList<String>());
+	private AtomicReference<List<String>> m_metaServerList = new AtomicReference<List<String>>(new ArrayList<String>());
 
 	private int m_masterMetaServerPort = DEFAULT_MASTER_METASERVER_PORT;
 
@@ -46,18 +48,45 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 	}
 
 	private void updateMetaServerList() {
-		if (CollectionUtil.isNullOrEmpty(m_metaServerList.get())) {
-			m_metaServerList.set(domainToIpPorts());
+		int maxTries = 10;
+		RuntimeException exception = null;
+
+		for (int i = 0; i < maxTries; i++) {
+			try {
+				if (CollectionUtil.isNullOrEmpty(m_metaServerList.get())) {
+					m_metaServerList.set(domainToIpPorts());
+				}
+
+				List<String> metaServerList = fetchMetaServerListFromExistingMetaServer();
+				if (metaServerList != null && !metaServerList.isEmpty()) {
+					m_metaServerList.set(metaServerList);
+					return;
+				}
+
+			} catch (RuntimeException e) {
+				exception = e;
+			}
+
+			try {
+				TimeUnit.SECONDS.sleep(1);
+			} catch (InterruptedException e) {
+				// ignore it
+			}
 		}
 
-		m_metaServerList.set(fetchMetaServerListFromExistingMetaServer());
+		if (exception != null) {
+			log.warn("Failed to fetch meta server list for {} times", maxTries);
+			throw exception;
+		}
 	}
 
 	private List<String> fetchMetaServerListFromExistingMetaServer() {
-		List<String> metaServerList = m_metaServerList.get();
+		List<String> metaServerList = new ArrayList<String>(m_metaServerList.get());
 		if (log.isDebugEnabled()) {
 			log.debug("Start fetching meta server ip from meta servers {}", metaServerList);
 		}
+
+		Collections.shuffle(metaServerList);
 
 		for (String ipPort : metaServerList) {
 			try {
