@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.broker.shutdown.ShutdownRequestMonitor;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 /**
@@ -37,6 +38,7 @@ public class BrokerBootstrapListener implements ServletContextListener {
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
 		stopBroker();
+		HermesThreadFactory.waitAllShutdown(60000);// wait for 60 seconds
 	}
 
 	private void stopBroker() {
