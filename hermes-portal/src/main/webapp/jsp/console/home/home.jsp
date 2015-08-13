@@ -171,24 +171,7 @@
 			</div>
 		</div>
 	</div>
-	<script type="text/ng-template" id="delay_popover_template">
-		<table class="table table-condensed table-striped table-bordered">
-			<thead>
-				<tr>
-					<th>Consumer</th>
-					<th>Partition</th>
-					<th>Delay</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat="detail in current_delay_details">
-					<td><span ng-bind="detail.consumer"></span></td>
-					<td><span ng-bind="detail.partitionId"></span></td>
-					<td><span ng-bind="normalize_delay(detail.delay)"></span></td>
-				</tr>
-			</tbody>
-		</table>
-	</script>
+
 
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/home/home.js"></script>
