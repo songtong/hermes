@@ -36,6 +36,8 @@ import org.unidal.dal.jdbc.test.TestDataSourceManager;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.codahale.metrics.Metric;
+import com.codahale.metrics.MetricFilter;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriorityDao;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity;
@@ -63,6 +65,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -157,6 +160,14 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 	@After
 	public final void after() throws Exception {
 		lookup(JdbcTestHelper.class).tearDown(DATASOURCE);
+
+		HermesMetricsRegistry.getMetricRegistry().removeMatching(new MetricFilter() {
+
+			@Override
+			public boolean matches(String name, Metric metric) {
+				return true;
+			}
+		});
 
 		doAfter();
 	}
