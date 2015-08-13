@@ -1,5 +1,7 @@
 package com.ctrip.hermes.core.meta.remote;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -39,10 +41,14 @@ public class RemoteMetaLoader implements MetaLoader {
 
 	@Override
 	public Meta load() {
-		List<String> ipPorts = m_metaServerLocator.getMetaServerList();
-		if (ipPorts == null || ipPorts.isEmpty()) {
+		List<String> metaServerList = m_metaServerLocator.getMetaServerList();
+		if (metaServerList == null || metaServerList.isEmpty()) {
 			throw new RuntimeException("No meta server found.");
 		}
+
+		List<String> ipPorts = new ArrayList<String>(metaServerList);
+
+		Collections.shuffle(ipPorts);
 
 		for (String ipPort : ipPorts) {
 			if (log.isDebugEnabled()) {
