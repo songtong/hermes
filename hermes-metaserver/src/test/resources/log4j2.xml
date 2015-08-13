@@ -15,9 +15,9 @@
 			<Policies>
 				<OnStartupTriggeringPolicy />
 				<TimeBasedTriggeringPolicy interval="1" />
-				<SizeBasedTriggeringPolicy size="10 MB" />
+				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
-			<DefaultRolloverStrategy max="100" />
+			<DefaultRolloverStrategy max="10" />
 		</RollingFile>
 	</Appenders>
 
@@ -91,24 +91,24 @@
 		<Logger
 			name="com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler"
 			level="FATAL">
-			<Appender-ref ref="CONSOLE" />
+			<Appender-ref ref="ASYNC" />
 		</Logger>
 
 		<Logger name="org.apache.zookeeper.ClientCnxn" level="FATAL">
-			<Appender-ref ref="CONSOLE" />
+			<Appender-ref ref="ASYNC" />
 		</Logger>
 
 		<Logger name="org.apache.zookeeper.server" level="FATAL">
-			<Appender-ref ref="CONSOLE" />
+			<Appender-ref ref="ASYNC" />
 		</Logger>
 
 		<Logger name=" com.ctrip.hermes.metaserver.meta.MetaHolder"
 			level="FATAL">
-			<Appender-ref ref="CONSOLE" />
+			<Appender-ref ref="ASYNC" />
 		</Logger>
 		<Logger name="com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder"
 			level="FATAL">
-			<Appender-ref ref="CONSOLE" />
+			<Appender-ref ref="ASYNC" />
 		</Logger>
 
 		<Root level="INFO">
