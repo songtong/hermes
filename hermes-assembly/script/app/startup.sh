@@ -6,7 +6,7 @@ set -u
 cd `dirname $0`
 
 if [ $# -lt 1 ];then
-	echo "usage: startup.sh start|stop [port]"
+	echo "usage: startup.sh start|stop [port] [debug] [T<stop-timeout>]"
 	exit 1
 fi
 
@@ -44,11 +44,19 @@ enable_debug() {
 }
 			
 sudo=""
-if [ $# -eq 2 ];then
-	num_regex='^[0-9]+$'
-	if [[ $2 =~ $num_regex ]];then
-		port=$2
-		stop_port=$[port+1]
+
+if [[ $1=="start" ]]; then
+	if [[ ${!#} == "debug" ]];then
+		enable_debug
+	fi
+	if [[ $# -ge 2 ]];then
+		num_regex='^[0-9]+$'
+		if [[ $2 =~ $num_regex ]];then
+			port=$2
+			stop_port=$[port + 1]
+		elif [[ $2 != "debug" ]];then
+			log_op "$2 is not a valid port, use default: 8080"
+		fi
 		if [ $port -lt 1024 ];then
 			if [ $can_sudo == false ];then
 				log_op "[ERROR] Attemp to start jetty at port $port but without passwordless sudo"
@@ -56,16 +64,31 @@ if [ $# -eq 2 ];then
 			fi
 			sudo="sudo"
 		fi
-	elif [[ $2 == "debug" ]];then
-		enable_debug
-	else
-		echo "$2 is not a valid port"
-		exit 1
 	fi
 fi
 
-if [[ $# == 3 && $3 == "debug" ]];then
-	enable_debug
+if [[ $1=="stop" ]]; then
+	timeout_regex='^T[0-9]+$'
+	if [[ ${!#} =~ $timeout_regex ]];then
+		echo "Set stop timeout to ${!#:1}"
+		STOP_TIMEOUT=${!#:1}
+	fi
+	if [[ $# -ge 2 ]];then
+		num_regex='^[0-9]+$'
+		if [[ $2 =~ $num_regex ]];then
+			port=$2
+			stop_port=$[port + 1]
+		elif [[ ! $2 =~ $timeout_regex ]];then
+			log_op "$2 is not a valid port, use default: 8080"
+		fi
+		if [ $port -lt 1024 ];then
+			if [ $can_sudo == false ];then
+				log_op "[ERROR] Attemp to start jetty at port $port but without passwordless sudo"
+				exit 1
+			fi
+			sudo="sudo"
+		fi
+	fi
 fi
 
 start() {
@@ -82,11 +105,13 @@ start() {
 stop(){
     serverPID=$(find_pid)
     if [ "${serverPID}" == "" ]; then
+    	echo "No Instance Is Running"
         log_op "No Instance Is Running"
     else
 		if [ $can_sudo == true ];then
     		sudo="sudo"
     	fi
+    	echo "Stop port is $stop_port"
     	$sudo $JAVA_CMD -DSTOP.PORT=$stop_port -DSTOP.KEY=$STOP_KEY -jar $JETTY_START_JAR --stop
 		wait_or_kill        
         log_op "Instance Stopped"
@@ -101,21 +126,24 @@ wait_or_kill() {
 		wait
 		pid=$(find_pid)
 		if [[ "$pid" -eq "" ]];then
-			printf "\r\n"
+			printf "\n"
 			pid=-1
 		fi
 	done
 
-	if [[ $i -lt 0 ]]; then
-		echo "Wait for gracefully shutdown failed. Will kill the process."
+	if [[ $i -le 0 ]]; then
+		printf "\nWait for gracefully shutdown failed. Will kill the process.\n"
 		if [ $can_sudo == true ];then
     		sudo="sudo"
     	fi
-    	$sudo kill -9 $(find_pid)
+    	pid=$(find_pid)
+    	$sudo kill -9 $pid
+    	echo "Process $pid is shutdown."
     else
     	echo "Gracefully shutdown success!"
 	fi
 }
+
 
 
 
