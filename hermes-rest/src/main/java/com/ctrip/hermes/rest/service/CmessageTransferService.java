@@ -5,10 +5,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -22,7 +21,7 @@ import com.ctrip.hermes.rest.common.RestConstant;
 @Named
 public class CmessageTransferService implements Initializable {
 
-	private static final org.slf4j.Logger log = LoggerFactory.getLogger(CmessageTransferService.class);
+	private static final Logger logger = LoggerFactory.getLogger(CmessageTransferService.class);
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -30,7 +29,7 @@ public class CmessageTransferService implements Initializable {
 
 		if (null == defaultTopic) {
 			defaultTopic = "cmessage_fws";
-			log.error("Cmessage's defaultTopic haven't been set. Initialise that to [cmessage_fws]." +
+			logger.error("Cmessage's defaultTopic haven't been set. Initialise that to [cmessage_fws]." +
 					  " Set \"cmessage.topic\" in hermes.properties to fix this.");
 		}
 
@@ -62,8 +61,6 @@ public class CmessageTransferService implements Initializable {
 			}
 		}).start();
 	}
-
-	private static Logger logger = LogManager.getLogger(CmessageTransferService.class);
 
 	private BlockingQueue<Triple<String, String, String>> queue = new LinkedBlockingDeque<>(20000);
 
