@@ -54,18 +54,6 @@
 			<groupId>io.confluent</groupId>
 			<artifactId>kafka-schema-registry-client</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>common-config</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>common-metrics</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>common-utils</artifactId>
-		</dependency>
 		<!-- unidal automation -->
 		<dependency>
 			<groupId>junit</groupId>

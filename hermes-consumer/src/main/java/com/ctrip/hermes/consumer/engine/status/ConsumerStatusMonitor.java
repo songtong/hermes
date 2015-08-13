@@ -107,6 +107,9 @@ public enum ConsumerStatusMonitor {
 	}
 
 	public void removeMonitor(String topic, int partition, String group) {
+		Tpg tpg = new Tpg(topic, partition, group);
+		m_tpg2StatusHolder.remove(tpg);
+
 		final String metricsPrefix = getMetricsPrefix(topic, partition, group);
 
 		HermesMetricsRegistry.getMetricRegistry().removeMatching(new MetricFilter() {
