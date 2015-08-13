@@ -52,9 +52,11 @@ public class TopicView {
 	private Long averageDelaySeconds;
 
 	private Date latestProduced;
-	
+
+	private long resendPartitionSize;
+
 	private long storagePartitionSize;
-	
+
 	private int storagePartitionCount;
 
 	public TopicView() {
@@ -78,6 +80,7 @@ public class TopicView {
 		this.consumerRetryPolicy = topic.getConsumerRetryPolicy();
 		this.storagePartitionCount = topic.getStoragePartitionCount();
 		this.storagePartitionSize = topic.getStoragePartitionSize();
+		this.resendPartitionSize = topic.getResendPartitionSize();
 		this.setEndpointType(topic.getEndpointType());
 		this.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 	}
@@ -256,6 +259,7 @@ public class TopicView {
 		topic.setConsumerRetryPolicy(this.consumerRetryPolicy);
 		topic.setStoragePartitionSize(this.storagePartitionSize);
 		topic.setStoragePartitionCount(this.storagePartitionCount);
+		topic.setResendPartitionSize(this.resendPartitionSize);
 		return topic;
 	}
 
@@ -297,5 +301,13 @@ public class TopicView {
 
 	public void setStoragePartitionCount(int storagePartitionCount) {
 		this.storagePartitionCount = storagePartitionCount;
+	}
+
+	public long getResendPartitionSize() {
+		return resendPartitionSize;
+	}
+
+	public void setResendPartitionSize(long resendPartitionSize) {
+		this.resendPartitionSize = resendPartitionSize;
 	}
 }

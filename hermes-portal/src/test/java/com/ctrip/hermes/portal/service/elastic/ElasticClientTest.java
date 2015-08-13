@@ -20,6 +20,7 @@ public class ElasticClientTest extends ComponentTestCase {
 
 	@Test
 	public void testGetLastMinuteCount() {
+		System.out.println(ec.getBrokerReceived());
 	}
 
 }

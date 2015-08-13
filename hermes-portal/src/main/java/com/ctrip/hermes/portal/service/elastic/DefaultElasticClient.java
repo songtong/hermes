@@ -45,7 +45,7 @@ public class DefaultElasticClient implements Initializable, ElasticClient {
 
 	private SearchRequestBuilder prepareSearch() {
 		SearchRequestBuilder sb = m_eClient.prepareSearch("logstash-*");
-		sb.setTypes("hermes");
+		sb.setTypes(m_config.getElasticDocumentType());
 		sb.setSearchType("count");
 		return sb;
 	}
@@ -143,7 +143,8 @@ public class DefaultElasticClient implements Initializable, ElasticClient {
 	}
 
 	private void initClient() {
-		TransportClient client = new TransportClient(ImmutableSettings.settingsBuilder().build());
+		TransportClient client = new TransportClient(ImmutableSettings.settingsBuilder()
+		      .put("cluster.name", m_config.getElasticClusterName()).build());
 		for (Pair<String, Integer> pair : m_config.getElasticClusterNodes()) {
 			client.addTransportAddress(new InetSocketTransportAddress(pair.getKey(), pair.getValue()));
 		}
