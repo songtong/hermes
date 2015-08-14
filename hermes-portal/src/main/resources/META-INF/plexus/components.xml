@@ -389,6 +389,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.portal.console.tracer.JspViewer</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.portal.config.PortalConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>

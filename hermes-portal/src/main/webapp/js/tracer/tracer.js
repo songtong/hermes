@@ -72,15 +72,17 @@ function Trace() {
 
 		var minStartEvent = null;
 		var minEndEvent = null;
-		for(groupId in this.consumerEvents) {
-			if(!minStartEvent || this.consumerEvents[groupId][0].x < minStartEvent.x) { 
+		for (groupId in this.consumerEvents) {
+			if (!minStartEvent || this.consumerEvents[groupId][0].x < minStartEvent.x) {
 				minStartEvent = this.consumerEvents[groupId][0];
 			}
-			if(!minEndEvent || this.consumerEvents[groupId][1].x < minEndEvent.x) { 
+			if (!minEndEvent || this.consumerEvents[groupId][1].x < minEndEvent.x) {
 				minEndEvent = this.consumerEvents[groupId][1];
 			}
 		}
-
+		
+		console.log(this.commonEvents);
+		
 		var plots = [ {
 			text : "BORN",
 			value : 0
@@ -96,7 +98,7 @@ function Trace() {
 		}, {
 			text : "START",
 			value : minStartEvent.x + minStartEvent.width
-		} , {
+		}, {
 			text : "END",
 			value : minEndEvent.x + minEndEvent.width
 		} ];
@@ -168,9 +170,9 @@ function Trace() {
 	this.categories = function() {
 		var categories = [];
 		categories.push("Producer@" + this.commonEvents[1].datas.producerIp);
-		
-		for(groupId in this.consumerEvents) {
-		 	var ce = this.consumerEvents[groupId][0];
+
+		for (groupId in this.consumerEvents) {
+			var ce = this.consumerEvents[groupId][0];
 			categories.push("<b>" + groupId + "@" + ce.datas.consumerIp + "</b>");
 		}
 
@@ -232,8 +234,8 @@ angular.module('hermes-tracer', [ 'ngResource' ]).controller(
 						var esIndex = "logstash-" + msg_date.getFullYear() + '.' + ('0' + (msg_date.getMonth() + 1)).slice(-2) + '.'
 								+ ('0' + msg_date.getDate()).slice(-2);
 						console.log(esIndex);
-						var esServer = "http://127.0.0.1:9200/";
-						var refKeySearchUrl = esServer + esIndex + "/hermes/_search?q=datas.refKey:" + refKey;
+						var esServer = "http://" + esUrl + ":9200/";
+						var refKeySearchUrl = esServer + esIndex + "/biz/_search?q=datas.refKey:" + refKey;
 						get(refKeySearchUrl, function(data) {
 							var hits = data.hits.hits;
 							var eventMap = {};
@@ -254,7 +256,7 @@ angular.module('hermes-tracer', [ 'ngResource' ]).controller(
 							trace.appendCommonEvent(eventMap["Message.Saved"]);
 							var transformEvent = eventMap["RefKey.Transformed"];
 
-							var msgIdSearchUrl = esServer + esIndex + "/hermes/_search?size=20&q=datas.msgId:" + transformEvent.datas.msgId;
+							var msgIdSearchUrl = esServer + esIndex + "/biz/_search?size=20&q=datas.msgId:" + transformEvent.datas.msgId;
 							get(msgIdSearchUrl, function(data) {
 								var hits = data.hits.hits;
 								hits.forEach(function(hit) {

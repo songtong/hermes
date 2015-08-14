@@ -5,6 +5,9 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.tracer.Model" scope="request" />
 
 <a:layout>
+	<script>
+		var esUrl = "${model.esHost}";
+	</script>
 	<div class="container row" ng-app="hermes-tracer" ng-controller="tracer-controller">
 		<div class="form-group form-inline" align="center" style="margin-left: 100px">
 			<label>输入 Ref-Key</label>
