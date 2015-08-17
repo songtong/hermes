@@ -58,7 +58,6 @@
 
 		<!-- to clean output in debugging -->
 		<Logger name="com.ctrip.hermes.core.env" level="WARN">
-			< />
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 

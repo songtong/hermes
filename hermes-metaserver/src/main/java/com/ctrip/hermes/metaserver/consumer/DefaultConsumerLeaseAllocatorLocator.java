@@ -29,7 +29,7 @@ public class DefaultConsumerLeaseAllocatorLocator implements ConsumerLeaseAlloca
 	private ConsumerLeaseAllocator m_nonOrderedConsumeStrategy;
 
 	@Override
-	public ConsumerLeaseAllocator findStrategy(String topicName, String consumerGroupName) {
+	public ConsumerLeaseAllocator findAllocator(String topicName, String consumerGroupName) {
 		ConsumerGroup consumerGroup = getConsumerGroup(topicName, consumerGroupName);
 		if (consumerGroup != null && consumerGroup.isOrderedConsume()) {
 			return m_orderedConsumeStrategy;

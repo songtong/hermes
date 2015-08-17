@@ -6,5 +6,5 @@ package com.ctrip.hermes.metaserver.consumer;
  */
 public interface ConsumerLeaseAllocatorLocator {
 
-	public ConsumerLeaseAllocator findStrategy(String topicName, String consumerGroupName);
+	public ConsumerLeaseAllocator findAllocator(String topicName, String consumerGroupName);
 }

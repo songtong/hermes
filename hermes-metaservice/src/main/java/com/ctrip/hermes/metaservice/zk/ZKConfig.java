@@ -44,6 +44,6 @@ public class ZKConfig {
 	}
 
 	public int getZkSessionTimeoutMillis() {
-		return 15 * 1000;
+		return 5 * 1000;
 	}
 }
