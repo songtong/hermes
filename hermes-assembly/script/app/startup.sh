@@ -27,7 +27,7 @@ if [ ! -f $JAVA_CMD ];then
 fi
 
 port=8080
-stop_port=8081
+stop_port=6798
 
 can_sudo=false
 set +e
@@ -53,7 +53,6 @@ if [[ $1=="start" ]]; then
 		num_regex='^[0-9]+$'
 		if [[ $2 =~ $num_regex ]];then
 			port=$2
-			stop_port=$[port + 1]
 		elif [[ $2 != "debug" ]];then
 			log_op "$2 is not a valid port, use default: 8080"
 		fi
@@ -72,22 +71,6 @@ if [[ $1=="stop" ]]; then
 	if [[ ${!#} =~ $timeout_regex ]];then
 		echo "Set stop timeout to ${!#:1}"
 		STOP_TIMEOUT=${!#:1}
-	fi
-	if [[ $# -ge 2 ]];then
-		num_regex='^[0-9]+$'
-		if [[ $2 =~ $num_regex ]];then
-			port=$2
-			stop_port=$[port + 1]
-		elif [[ ! $2 =~ $timeout_regex ]];then
-			log_op "$2 is not a valid port, use default: 8080"
-		fi
-		if [ $port -lt 1024 ];then
-			if [ $can_sudo == false ];then
-				log_op "[ERROR] Attemp to start jetty at port $port but without passwordless sudo"
-				exit 1
-			fi
-			sudo="sudo"
-		fi
 	fi
 fi
 
