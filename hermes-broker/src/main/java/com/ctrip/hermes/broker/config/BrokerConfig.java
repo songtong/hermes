@@ -40,8 +40,12 @@ public class BrokerConfig {
 		return 3;
 	}
 
-	public long getLongPollingCheckIntervalMillis() {
-		return 100L;
+	public int getLongPollingCheckIntervalBaseMillis() {
+		return 100;
+	}
+
+	public int getLongPollingCheckIntervalMaxMillis() {
+		return 1000;
 	}
 
 	public int getDumperBatchSize() {
