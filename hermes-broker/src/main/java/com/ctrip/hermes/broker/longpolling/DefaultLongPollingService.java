@@ -22,6 +22,8 @@ import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
+import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
+import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
@@ -64,13 +66,15 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 			@Override
 			public void run() {
-				executeTask(pullMessageTask);
+				executeTask(pullMessageTask, new ExponentialSchedulePolicy(//
+				      m_config.getLongPollingCheckIntervalBaseMillis(),//
+				      m_config.getLongPollingCheckIntervalMaxMillis()));
 			}
 
 		});
 	}
 
-	private void executeTask(final PullMessageTask pullMessageTask) {
+	private void executeTask(final PullMessageTask pullMessageTask, final SchedulePolicy policy) {
 		if (m_stopped.get()) {
 			return;
 		}
@@ -92,9 +96,9 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 							@Override
 							public void run() {
-								executeTask(pullMessageTask);
+								executeTask(pullMessageTask, policy);
 							}
-						}, m_config.getLongPollingCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+						}, policy.fail(false), TimeUnit.MILLISECONDS);
 					}
 				}
 			} else {
