@@ -35,7 +35,7 @@ APP_STARTUP_SCRIPT=$APP_DIR/bin/startup.sh
 mkdir -p $APP_DIR
 
 if [ -e $APP_STARTUP_SCRIPT ];then
-	$APP_STARTUP_SCRIPT stop
+	$APP_STARTUP_SCRIPT stop $port
 fi
 
 rm -rf $APP_DIR/*
