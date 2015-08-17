@@ -83,3 +83,10 @@ discovery.zen.ping.unicast.hosts: 10.2.7.70:9300, 10.2.7.71:9300, 10.2.7.72:9300
 
 ################################## Security ################################
 #http.jsonp.enable: true
+
+http.jsonp.enable: true
+http.cors.enabled : true
+
+http.cors.allow-origin : "*"
+http.cors.allow-methods : OPTIONS, HEAD, GET, POST, PUT, DELETE
+http.cors.allow-headers : X-Requested-With,X-Auth-Token,Content-Type, Content-Length
