@@ -10,22 +10,20 @@
 		</Console>
 
 		<RollingFile name="FILE" fileName="/opt/logs/hermes-rest/hermes-rest.log"
-			filePattern="/opt/logs/hermes-rest/hermes-rest.%d{yyyy-MM-dd-HH}-%i.log.gz">
+			filePattern="/opt/logs/hermes-rest/$${date:yyyy-MM}/hermes-rest.%d{yyyy-MM-dd}-%i.log.gz">
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
-				<TimeBasedTriggeringPolicy interval="1" />
+				<TimeBasedTriggeringPolicy/>
 				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
-			<DefaultRolloverStrategy max="10" />
 		</RollingFile>
 
 		<RollingFile name="BIZ" fileName="/opt/logs/hermes-rest/biz.log"
-			filePattern="/opt/logs/hermes-rest/biz.%d{yyyy-MM-dd-HH}-%i.log.gz">
+			filePattern="/opt/logs/hermes-rest/biz-%i.log.gz">
 			<PatternLayout pattern="%m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
-				<TimeBasedTriggeringPolicy interval="1" />
 				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
 			<DefaultRolloverStrategy max="10" />
