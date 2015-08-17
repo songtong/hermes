@@ -58,14 +58,6 @@
 			<groupId>io.confluent</groupId>
 			<artifactId>kafka-avro-serializer</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>common-config</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>common-metrics</artifactId>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

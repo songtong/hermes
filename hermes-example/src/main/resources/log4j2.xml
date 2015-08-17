@@ -10,11 +10,10 @@
 		</Console>
 
 		<RollingFile name="BIZ" fileName="/opt/logs/hermes-broker/biz.log"
-			filePattern="/opt/logs/hermes-broker/biz.%d{yyyy-MM-dd-HH}-%i.log.gz">
+			filePattern="/opt/logs/hermes-broker/biz-%i.log.gz">
 			<PatternLayout pattern="%m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
-				<TimeBasedTriggeringPolicy interval="1" />
 				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
 			<DefaultRolloverStrategy max="10" />
