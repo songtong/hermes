@@ -18,14 +18,16 @@ import com.ctrip.hermes.portal.resource.assists.ValidationUtils;
 public class HermesValidationFilter implements Filter {
 	private PortalConfig m_config = PlexusComponentLocator.lookup(PortalConfig.class);
 
+	private String[] m_protectedPages = { "/topic", "/comsumer", "/subscription", "/storage", "/endpoint", "/resender" };
+
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 
 	}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-			throws IOException, ServletException {
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
+	      ServletException {
 		HttpServletRequest req = (HttpServletRequest) request;
 		boolean isLogined = false;
 		if (req.getCookies() != null) {
@@ -37,13 +39,12 @@ public class HermesValidationFilter implements Filter {
 		}
 		String requestUrl = ((HttpServletRequest) request).getRequestURI();
 		if (isLogined == false) {
-			if ((requestUrl.contains("/topic")) || (requestUrl.contains("/comsumer"))
-					|| (requestUrl.contains("/subscription")) || (requestUrl.contains("/storage"))
-					|| (requestUrl.contains("/endpoint")) || (requestUrl.contains("/resender"))) {
-				((HttpServletResponse) response).sendRedirect("/console");
-				return;
+			for (String page : m_protectedPages) {
+				if (requestUrl.startsWith(page)) {
+					((HttpServletResponse) response).sendRedirect("/console");
+					return;
+				}
 			}
-
 		}
 		request.setAttribute("logined", isLogined);
 		chain.doFilter(request, response);
