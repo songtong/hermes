@@ -139,7 +139,7 @@ ensure_not_started() {
 }
 
 find_pid() {
-	echo $(ps ax | grep java | awk -v war=$WAR '$NF==war{print $1}')
+	echo $(ps ax | grep java | awk -v war=$WAR '$NF==war{print $1}' | head -n1)
 }
 
 
