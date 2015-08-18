@@ -14,7 +14,7 @@
 					<tr>
 						<th st-sort="groupName">消费集群</th>
 						<th st-sort="appId">应用</th>
-						<th st-sort="topic">Topic名称</th>
+						<th st-sort="topicNames">Topic名称</th>
 						<th st-sort="orderedConsume">有序</th>
 						<th st-sort="retryPolicy">消费重试策略</th>
 						<th st-sort="ackTimeoutSeconds">ACK超时</th>
@@ -23,7 +23,7 @@
 					<tr>
 						<th><input st-search="groupName" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="appId" placeholder="App" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-						<th><input st-search="topic" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="topicNames" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="orderedConsume" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="retryPolicy" placeholder="Retry" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="ackTimeoutSeconds" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -34,13 +34,13 @@
 					<tr ng-repeat="row in consumer_rows">
 						<td><span ng-bind="row.groupName"></td>
 						<td><span ng-bind="row.appId"></td>
-						<td><span ng-bind="row.topic"></td>
+						<td><span ng-bind="row.topicNames"></td>
 						<td><span ng-bind="row.orderedConsume"></td>
 						<td><span ng-bind="row.retryPolicy"></td>
 						<td><span ng-bind="row.ackTimeoutSeconds"></td>
 						<td>
 							<button type="button" ng-click="update_consumer()" class="btn btn-xs btn-warning" style="text-align: center;">修改</button>
-							<button type="button" ng-click="del_consumer(row.topic, row.groupName)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
+							<button type="button" ng-click="del_consumer(row.topicNames, row.groupName)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
 						</td>
 					</tr>
 				</tbody>
@@ -63,7 +63,7 @@
 							<div class="form-group">
 								<label for="inputTopicName" class="col-sm-3 control-label">Topic名称</label>
 								<div class="col-sm-8">
-									<input type="text" class="form-control" id="inputTopicName" data-provide="typeahead" placeholder="Topic Name" ng-model="new_consumer.topic">
+									<input type="text" class="form-control" id="inputTopicName"  placeholder="Topic Name" ng-model="newTopicNames">
 								</div>
 							</div>
 							<div class="form-group">

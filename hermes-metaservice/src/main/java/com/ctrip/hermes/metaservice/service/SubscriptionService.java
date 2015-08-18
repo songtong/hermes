@@ -48,7 +48,13 @@ public class SubscriptionService {
 		m_subscriptionDao.insert(sub);
 		return toSubscriptionView(sub);
 	}
-
+	
+	public SubscriptionView update(SubscriptionView view) throws DalException{
+		Subscription sub = toSubscriptionModel(view);
+		m_subscriptionDao.updateByPK(sub, SubscriptionEntity.UPDATESET_FULL);
+		return toSubscriptionView(sub);
+	}
+	
 	public void remove(long id) throws DalException {
 		Subscription subscription = m_subscriptionDao.findByPK(id, SubscriptionEntity.READSET_FULL);
 		if (subscription != null) {
@@ -71,6 +77,7 @@ public class SubscriptionService {
 			m_subscriptionDao.updateByPK(subscription, SubscriptionEntity.UPDATESET_FULL);
 		}
 	}
+	
 
 	public static Subscription toSubscriptionModel(SubscriptionView view) {
 		Subscription sub = new Subscription();
