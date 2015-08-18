@@ -20,6 +20,8 @@ public class MetaStatusStatusResponse {
 
 	private Assignment<String> metaServerAssignments;
 
+	private Map<Pair<String, String>, Assignment<Integer>> consumerAssignments;
+
 	public Boolean isLeader() {
 		return leader;
 	}
@@ -66,5 +68,13 @@ public class MetaStatusStatusResponse {
 
 	public void setMetaServerAssignments(Assignment<String> metaServerAssignments) {
 		this.metaServerAssignments = metaServerAssignments;
+	}
+
+	public void setConsumerAssignments(Map<Pair<String, String>, Assignment<Integer>> consumerAssignments) {
+		this.consumerAssignments = consumerAssignments;
+	}
+
+	public Map<Pair<String, String>, Assignment<Integer>> getConsumerAssignments() {
+		return consumerAssignments;
 	}
 }
