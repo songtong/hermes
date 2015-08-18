@@ -1,11 +1,13 @@
 package com.ctrip.hermes.core.bo;
 
-import org.unidal.tuple.Pair;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 
 public class ConsumerView {
-	private String topic;
+	private List<String> topicNames;
 
 	private String groupName;
 
@@ -20,8 +22,8 @@ public class ConsumerView {
 	public ConsumerView() {
 	}
 
-	public ConsumerView(String topic, ConsumerGroup consumer) {
-		this.topic = topic;
+	public ConsumerView(List<String> topicNames, ConsumerGroup consumer) {
+		this.topicNames = topicNames;
 		this.groupName = consumer.getName();
 		this.appId = consumer.getAppIds();
 		this.retryPolicy = consumer.getRetryPolicy();
@@ -29,24 +31,33 @@ public class ConsumerView {
 		this.orderedConsume = consumer.getOrderedConsume();
 	}
 
-	public Pair<String, ConsumerGroup> toMetaConsumer() {
-		ConsumerGroup consumer = new ConsumerGroup();
-		consumer.setAckTimeoutSeconds(this.ackTimeoutSeconds);
-		consumer.setAppIds(this.appId);
-		consumer.setName(this.groupName);
-		consumer.setRetryPolicy(this.retryPolicy);
-		consumer.setOrderedConsume(this.orderedConsume);
+	public Map<String,ConsumerGroup> toMetaConsumer() {
+		Map<String, ConsumerGroup> topicConsumerMap = new HashMap<>();
+		for(String topicName : this.topicNames){
+			ConsumerGroup consumer = new ConsumerGroup();
+			consumer.setAckTimeoutSeconds(this.ackTimeoutSeconds);
+			consumer.setAppIds(this.appId);
+			consumer.setName(this.groupName);
+			consumer.setRetryPolicy(this.retryPolicy);
+			consumer.setOrderedConsume(this.orderedConsume);
+			topicConsumerMap.put(topicName, consumer);
+		}
+		
 
-		return new Pair<String, ConsumerGroup>(this.topic, consumer);
+		return topicConsumerMap;
 	}
 
-	public String getTopic() {
-		return topic;
+	public List<String> getTopicNames() {
+		return topicNames;
 	}
 
-	public void setTopic(String topic) {
-		this.topic = topic;
+	
+	
+	public void setTopicNames(List<String> topicNames) {
+		this.topicNames = topicNames;
 	}
+	
+	
 
 	public String getGroupName() {
 		return groupName;
@@ -79,7 +90,7 @@ public class ConsumerView {
 	public void setAckTimeoutSeconds(Integer ackTimeoutSeconds) {
 		this.ackTimeoutSeconds = ackTimeoutSeconds;
 	}
-	
+
 	public boolean isOrderedConsume() {
 		return orderedConsume;
 	}
@@ -88,9 +99,11 @@ public class ConsumerView {
 		this.orderedConsume = orderedConsume;
 	}
 
+	
 	@Override
 	public String toString() {
-		return "ConsumerView [topic=" + topic + ", groupName=" + groupName + ", appId=" + appId + ", retryPolicy="
-		      + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume=" + orderedConsume + "]";
+		return "ConsumerView [topicNames=" + topicNames + ", groupName=" + groupName + ", appId=" + appId
+				+ ", retryPolicy=" + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume="
+				+ orderedConsume + "]";
 	}
 }

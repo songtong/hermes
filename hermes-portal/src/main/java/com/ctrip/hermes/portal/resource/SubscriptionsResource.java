@@ -67,9 +67,12 @@ public class SubscriptionsResource {
 		} catch (Exception e) {
 			throw new BadRequestException("Parse subscription failed", e);
 		}
-
+		
 		try {
-			subscription = subscriptionService.create(subscription);
+			if(subscription.getId() != 0)
+				subscription = subscriptionService.update(subscription);
+			else
+				subscription = subscriptionService.create(subscription);
 		} catch (Exception e) {
 			throw new InternalServerErrorException(e);
 		}

@@ -1,6 +1,7 @@
 package com.ctrip.hermes.portal.resource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -20,7 +21,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.ConsumerView;
@@ -45,7 +45,7 @@ public class ConsumerResource {
 			Map<String, List<ConsumerGroup>> consumers = consumerService.getConsumers();
 			for (Entry<String, List<ConsumerGroup>> entry : consumers.entrySet()) {
 				for (ConsumerGroup consumer : entry.getValue()) {
-					returnResult.add(new ConsumerView(entry.getKey(), consumer));
+					returnResult.add(new ConsumerView(Arrays.asList(entry.getKey()), consumer));
 				}
 			}
 		} catch (Exception e) {
@@ -59,8 +59,8 @@ public class ConsumerResource {
 					ret = ret == 0 ? o1.getGroupName().compareTo(o2.getGroupName()) : ret;
 				if (!StringUtils.isEmpty(o1.getAppId()) && !StringUtils.isEmpty(o2.getAppId()))
 					ret = ret == 0 ? o1.getAppId().compareTo(o2.getAppId()) : ret;
-				if (!StringUtils.isEmpty(o1.getTopic()) && !StringUtils.isEmpty(o2.getTopic()))
-					ret = ret == 0 ? o1.getTopic().compareTo(o2.getTopic()) : ret;
+				if (!o1.getTopicNames().isEmpty() && !o2.getTopicNames().isEmpty())
+					ret = ret == 0 ? o1.getTopicNames().get(0).compareTo(o2.getTopicNames().get(0)) : ret;
 				return ret;
 			}
 		});
@@ -75,7 +75,7 @@ public class ConsumerResource {
 		try {
 			List<ConsumerGroup> consumers = consumerService.getConsumers(topic);
 			for (ConsumerGroup c : consumers) {
-				returnResult.add(new ConsumerView(topic, c));
+				returnResult.add(new ConsumerView(Arrays.asList(topic), c));
 			}
 		} catch (Exception e) {
 			throw new RestException(e, Status.NOT_FOUND);
@@ -86,10 +86,10 @@ public class ConsumerResource {
 
 	@DELETE
 	@Path("{topic}/{consumer}")
-	public Response deleteConsumer(@PathParam("topic") String topic, @PathParam("consumer") String consumer) {
-		logger.debug("Delete consumer: {} {}", topic, consumer);
+	public Response deleteConsumer(@PathParam("topic") String topics, @PathParam("consumer") String consumer) {
+		logger.debug("Delete consumer: {} {}", topics, consumer);
 		try {
-			consumerService.deleteConsumerFromTopic(topic, consumer);
+			consumerService.deleteConsumerFromTopic(topics, consumer);
 		} catch (Exception e) {
 			logger.warn("delete topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -98,9 +98,8 @@ public class ConsumerResource {
 	}
 
 	@POST
-	@Path("{topic}/{consumer}")
-	public Response addConsumer(@PathParam("topic") String topic, @PathParam("consumer") String consumer, String content) {
-		logger.debug("Create consumer: {} {}", topic, consumer);
+	@Path("add/multiple")
+	public Response addConsumer(String content) {
 		if (StringUtils.isEmpty(content)) {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
@@ -112,20 +111,23 @@ public class ConsumerResource {
 			logger.error("Parse consumer failed, content: {}", content, e);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
-
-		Pair<String, ConsumerGroup> pair = consumerView.toMetaConsumer();
-
-		if (consumerService.getConsumer(topic, consumer) != null) {
-			throw new RestException("Consumer already exists.", Status.CONFLICT);
+		String consumer = consumerView.getGroupName();
+		for(String topicName : consumerView.getTopicNames()){
+			if (consumerService.getConsumer(topicName, consumer) != null) {
+				throw new RestException("Consumer for "+topicName+" already exists.", Status.CONFLICT);
+			}
 		}
-
+		
+		Map<String, ConsumerGroup> topicConsumerMap = consumerView.toMetaConsumer();
+		
+		ConsumerGroup c =null;
 		try {
-			ConsumerGroup c = consumerService.addConsumerForTopic(pair.getKey(), pair.getValue());
-			consumerView = new ConsumerView(topic, c);
+			c = consumerService.addConsumerForTopics(topicConsumerMap);
 		} catch (Exception e) {
 			logger.warn("Create consumer failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
+		consumerView = new ConsumerView(consumerView.getTopicNames(), c);
 		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
 }

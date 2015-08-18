@@ -14,11 +14,22 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 <meta name="description" content="Portal">
 <link href="${model.webapp}/css/bootstrap.min.css" type="text/css" rel="stylesheet">
+
+<link href="${model.webapp}/css/jquery-ui.min.css" type="text/css" rel="stylesheet">
+<link href="${model.webapp}/css/bootstrap-tokenfield.min.css" type="text/css" rel="stylesheet">
+<link href="${model.webapp}/css/typeahead.css" type="text/css" rel="stylesheet">
+
+
 <link href="${model.webapp}/css/portal-common.css" type="text/css" rel="stylesheet">
 <link href="${model.webapp}/css/btnUpload.min.css" type="text/css" rel="stylesheet">
+
 <script src="${model.webapp}/js/jquery-2.1.4.min.js" type="text/javascript"></script>
+
+<script src="${model.webapp}/js/jquery-ui.min.js" type="text/javascript"></script>
+<script src="${model.webapp}/js/bootstrap-tokenfield.min.js" type="text/javascript"></script>
+<script src="${model.webapp}/js/typeahead.bundle.min.js" type="text/javascript"></script>
+
 <script src="${model.webapp}/js/bootstrap.min.js" type="text/javascript"></script>
-<script src="${model.webapp}/js/bootstrap3-typeahead.min.js" type="text/javascript"></script>
 <script src="${model.webapp}/js/portal-common.js" type="text/javascript"></script>
 
 <script type="text/javascript" src="${model.webapp}/js/angular/angular.min.js"></script>
@@ -35,7 +46,7 @@
 </head>
 
 <body data-spy="scroll" data-target=".subnav" data-offset="50">
-	
+
 
 	<div class="container-fluid" style="min-height: 524px;">
 		<div class="row-fluid">
@@ -108,7 +119,7 @@
 						<h3 id="myModalLabel">Sign In</h3>
 					</div>
 					<div class="modal-body">
-						<form class="form-horizontal">
+						<form class="form-horizontal" ng-submit="login(userinfo)">
 							<div class="form-group">
 								<label for="inputUserName" class="col-sm-3 control-label">User Name</label>
 								<div class="col-sm-8">
@@ -121,12 +132,12 @@
 									<input type="password" class="form-control" id="inputPassword" placeholder="Password" ng-model="userinfo.password">
 								</div>
 							</div>
+							<div class="form-group">
+								<input type="reset" class="col-sm-offset-8 btn btn-default" data-dismiss="modal" value="close">&emsp; <input type="submit" class="btn btn-primary" value="sign in">
+							</div>
 						</form>
 					</div>
-					<div class="modal-footer">
-						<button class="btn" data-dismiss="modal" aria-hidden="true">close</button>
-						<button class="btn btn-primary" ng-click="login(userinfo)">sign in</button>
-					</div>
+
 				</div>
 			</div>
 		</div>
