@@ -98,9 +98,8 @@ public class ConsumerResource {
 	}
 
 	@POST
-	@Path("add/{topics}/{consumer}")
-	public Response addConsumer(@PathParam("topics") String topics, @PathParam("consumer") String consumer, String content) {
-		logger.debug("Create consumer: {} {}", topics, consumer);
+	@Path("add/multiple")
+	public Response addConsumer(String content) {
 		if (StringUtils.isEmpty(content)) {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
@@ -112,7 +111,7 @@ public class ConsumerResource {
 			logger.error("Parse consumer failed, content: {}", content, e);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
-
+		String consumer = consumerView.getGroupName();
 		for(String topicName : consumerView.getTopicNames()){
 			if (consumerService.getConsumer(topicName, consumer) != null) {
 				throw new RestException("Consumer for "+topicName+" already exists.", Status.CONFLICT);

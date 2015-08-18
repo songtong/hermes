@@ -24,7 +24,7 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 							'/api/consumers/:topic/:consumer', {}, {
 								'add_consumer' : {
 									method:'POST',
-									url:'/api/consumers/add/:topics/:consumer'
+									url:'/api/consumers/add/multiple'
 								}
 							});
 					meta_resource = resource('/api/meta', {}, {
@@ -95,10 +95,7 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 					scope.add_consumer = function add_consumer(new_consumer) {
 						new_consumer.topicNames = scope.newTopicNames
 								.split(",");
-						consumer_resource.add_consumer({
-							topics : new_consumer.topicNames,
-							consumer : new_consumer.groupName
-						}, new_consumer, function(save_result) {
+						consumer_resource.add_consumer({}, new_consumer, function(save_result) {
 							console.log(save_result);
 							consumer_resource.query().$promise.then(function(
 									query_result) {
