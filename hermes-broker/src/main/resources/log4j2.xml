@@ -15,7 +15,7 @@
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
-				<TimeBasedTriggeringPolicy/>
+				<TimeBasedTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
 		</RollingFile>
@@ -36,25 +36,25 @@
 			<Appender-ref ref="BIZ" />
 		</Logger>
 
-		<Logger name="com.mchange.v2" level="INFO">
+		<Logger name="com.mchange.v2" level="INFO" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="org.apache.http" level="INFO">
+		<Logger name="org.apache.http" level="INFO" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="io.netty" level="INFO">
+		<Logger name="io.netty" level="INFO" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
 		<Logger
 			name="com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler"
-			level="ERROR">
+			level="ERROR" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="org.apache.zookeeper" level="WARN">
+		<Logger name="org.apache.zookeeper" level="WARN" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
