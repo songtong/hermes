@@ -17,19 +17,15 @@ public class ActiveConsumerList {
 
 	private Map<String, ClientContext> m_consumers = new HashMap<>();
 
-	public void heartbeat(String consumerName, long heartbeatTime, String ip, int port) {
+	public void heartbeat(String consumerName, long heartbeatTime, String ip) {
 		if (!m_consumers.containsKey(consumerName)) {
 			m_changed = true;
-			m_consumers.put(consumerName, new ClientContext(consumerName, ip, port, heartbeatTime));
+			m_consumers.put(consumerName, new ClientContext(consumerName, ip, -1, heartbeatTime));
 		} else {
 			ClientContext consumerContext = m_consumers.get(consumerName);
 			if (!StringUtils.equals(consumerContext.getIp(), ip)) {
 				m_changed = true;
 				consumerContext.setIp(ip);
-			}
-			if (consumerContext.getPort() != port) {
-				m_changed = true;
-				consumerContext.setPort(port);
 			}
 			consumerContext.setLastHeartbeatTime(heartbeatTime);
 		}

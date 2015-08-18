@@ -8,9 +8,8 @@ import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
  *
  */
 public interface ConsumerLeaseAllocator {
-	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName, String ip, int port) throws Exception;
+	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName, String ip) throws Exception;
 
-	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId, String ip, int port)
-	      throws Exception;
+	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId, String ip) throws Exception;
 
 }

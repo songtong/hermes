@@ -23,9 +23,9 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 
 	@Override
 	protected LeaseAcquireResponse doAcquireLease(Tpg tpg, String consumerName,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception {
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception {
 		if (existingValidLeases.isEmpty()) {
-			return newLease(tpg, consumerName, existingValidLeases, ip, port);
+			return newLease(tpg, consumerName, existingValidLeases, ip);
 		} else {
 			Lease existingLease = null;
 
@@ -43,14 +43,14 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 				return new LeaseAcquireResponse(true, new Lease(existingLease.getId(), existingLease.getExpireTime()
 				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
 			} else {
-				return newLease(tpg, consumerName, existingValidLeases, ip, port);
+				return newLease(tpg, consumerName, existingValidLeases, ip);
 			}
 		}
 	}
 
 	@Override
 	protected LeaseAcquireResponse doRenewLease(Tpg tpg, String consumerName, long leaseId,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception {
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception {
 		if (existingValidLeases.isEmpty()) {
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 			      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
@@ -69,7 +69,7 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 
 			if (existingLeaseInfo != null) {
 				m_leaseHolder.renewLease(tpg, consumerName, existingValidLeases, existingLeaseInfo,
-				      m_config.getConsumerLeaseTimeMillis(), ip, port);
+				      m_config.getConsumerLeaseTimeMillis(), ip, -1);
 				if (log.isDebugEnabled()) {
 					log.debug(
 					      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
@@ -89,9 +89,9 @@ public class NonOrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLea
 	}
 
 	private LeaseAcquireResponse newLease(Tpg tpg, String consumerName,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception {
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception {
 		Lease newLease = m_leaseHolder.newLease(tpg, consumerName, existingValidLeases,
-		      m_config.getConsumerLeaseTimeMillis(), ip, port);
+		      m_config.getConsumerLeaseTimeMillis(), ip, -1);
 
 		if (log.isDebugEnabled()) {
 			log.debug(

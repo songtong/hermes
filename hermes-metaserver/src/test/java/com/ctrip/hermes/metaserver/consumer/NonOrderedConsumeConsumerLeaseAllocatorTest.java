@@ -79,14 +79,11 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 
 		private String m_ip;
 
-		private int m_port;
-
-		public HeartbeatInfo(String topic, String group, String consumerName, String ip, int port) {
+		public HeartbeatInfo(String topic, String group, String consumerName, String ip) {
 			m_topic = topic;
 			m_group = group;
 			m_consumerName = consumerName;
 			m_ip = ip;
-			m_port = port;
 		}
 
 		@Override
@@ -96,7 +93,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 			result = prime * result + ((m_consumerName == null) ? 0 : m_consumerName.hashCode());
 			result = prime * result + ((m_group == null) ? 0 : m_group.hashCode());
 			result = prime * result + ((m_ip == null) ? 0 : m_ip.hashCode());
-			result = prime * result + m_port;
 			result = prime * result + ((m_topic == null) ? 0 : m_topic.hashCode());
 			return result;
 		}
@@ -124,8 +120,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 				if (other.m_ip != null)
 					return false;
 			} else if (!m_ip.equals(other.m_ip))
-				return false;
-			if (m_port != other.m_port)
 				return false;
 			if (m_topic == null) {
 				if (other.m_topic != null)
@@ -166,11 +160,10 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 			public Void answer(InvocationOnMock invocation) throws Throwable {
 				Object[] arguments = invocation.getArguments();
 				Pair<String, String> tg = (Pair<String, String>) arguments[0];
-				m_heartbeats.add(new HeartbeatInfo(tg.getKey(), tg.getValue(), (String) arguments[1],
-				      (String) arguments[2], (Integer) arguments[3]));
+				m_heartbeats.add(new HeartbeatInfo(tg.getKey(), tg.getValue(), (String) arguments[1], (String) arguments[2]));
 				return null;
 			}
-		}).when(m_activeConsumerList).heartbeat(any(Pair.class), anyString(), anyString(), anyInt());
+		}).when(m_activeConsumerList).heartbeat(any(Pair.class), anyString(), anyString());
 	}
 
 	@Test
@@ -180,16 +173,14 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		mockAssignmentHolderReturn(topic, group, null);
 
-		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip);
 		assertFalse(response.isAcquired());
 		assertNull(response.getLease());
 		assertEquals(DEFAULT_LEASE_RETRY_DELAY, response.getNextTryTime());
-		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip, port)));
+		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip)));
 	}
 
 	@Test
@@ -199,16 +190,14 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		mockAssignmentHolderReturn(topic, group, null);
 
-		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip);
 		assertFalse(response.isAcquired());
 		assertNull(response.getLease());
 		assertEquals(DEFAULT_LEASE_RETRY_DELAY, response.getNextTryTime());
-		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip, port)));
+		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip)));
 	}
 
 	@Test
@@ -218,17 +207,15 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		mockAssignmentHolderReturn(topic, group, new Assignment<Integer>());
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, new HashMap<String, ClientLeaseInfo>());
 
-		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip);
 		assertFalse(response.isAcquired());
 		assertNull(response.getLease());
 		assertEquals(DEFAULT_LEASE_RETRY_DELAY, response.getNextTryTime());
-		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip, port)));
+		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip)));
 	}
 
 	@Test
@@ -238,13 +225,11 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		mockAssignmentHolderReturn(topic, group, new Assignment<Integer>());
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, new HashMap<String, ClientLeaseInfo>());
 
-		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip);
 		assertFalse(response.isAcquired());
 		assertNull(response.getLease());
 		assertEquals(DEFAULT_LEASE_RETRY_DELAY, response.getNextTryTime());
@@ -257,7 +242,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		Map<String, ClientLeaseInfo> existingValidLeases = new HashMap<String, ClientLeaseInfo>();
 		existingValidLeases.put("c2", new ClientLeaseInfo(new Lease(1, 100L), "1.1.1.2", 1234));
@@ -265,12 +249,11 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		mockAssignmentHolderReturn(topic, group, new Assignment<Integer>());
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, existingValidLeases);
 
-		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip);
 		assertFalse(response.isAcquired());
 		assertNull(response.getLease());
 		assertEquals(100L, response.getNextTryTime());
-		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip, port)));
+		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip)));
 	}
 
 	@Test
@@ -280,7 +263,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		Map<String, ClientLeaseInfo> existingValidLeases = new HashMap<String, ClientLeaseInfo>();
 		existingValidLeases.put("c2", new ClientLeaseInfo(new Lease(1, 100L), "1.1.1.2", 1234));
@@ -288,8 +270,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		mockAssignmentHolderReturn(topic, group, new Assignment<Integer>());
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, existingValidLeases);
 
-		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip);
 		assertFalse(response.isAcquired());
 		assertNull(response.getLease());
 		assertEquals(100L, response.getNextTryTime());
@@ -302,7 +283,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
@@ -314,8 +294,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, new HashMap<String, ClientLeaseInfo>());
 		mockLeaseHolderNewLease(topic, partition, group, consumerName, 1, DEFAULT_LEASE_TIME);
 
-		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip);
 
 		assertTrue(response.isAcquired());
 		Lease lease = response.getLease();
@@ -323,7 +302,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		assertEquals(1, lease.getId());
 		assertEquals(DEFAULT_LEASE_TIME + DEFAULT_LEASE_ADJUST_TIME, lease.getExpireTime());
 		assertEquals(-1L, response.getNextTryTime());
-		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip, port)));
+		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip)));
 	}
 
 	@Test
@@ -333,7 +312,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
@@ -344,8 +322,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		mockAssignmentHolderReturn(topic, group, assignment);
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, new HashMap<String, ClientLeaseInfo>());
 
-		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip);
 
 		assertFalse(response.isAcquired());
 		assertNull(response.getLease());
@@ -373,8 +350,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, existingValidLeases);
 		mockLeaseHolderNewLease(topic, partition, group, consumerName, 1, DEFAULT_LEASE_TIME);
 
-		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip);
 
 		assertTrue(response.isAcquired());
 		Lease lease = response.getLease();
@@ -382,7 +358,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		assertEquals(1, lease.getId());
 		assertEquals(DEFAULT_LEASE_TIME + DEFAULT_LEASE_ADJUST_TIME, lease.getExpireTime());
 		assertEquals(-1L, response.getNextTryTime());
-		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip, port)));
+		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip)));
 	}
 
 	@Test
@@ -392,7 +368,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
@@ -405,8 +380,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		existingValidLeases.put("c2", new ClientLeaseInfo(new Lease(1, 100L), "1.1.1.2", 1234));
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, existingValidLeases);
 
-		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip);
 
 		assertFalse(response.isAcquired());
 		assertNull(response.getLease());
@@ -420,7 +394,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
@@ -433,8 +406,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		existingValidLeases.put(consumerName, new ClientLeaseInfo(new Lease(1, 10000), "1.1.1.1", 1234));
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, existingValidLeases);
 
-		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryAcquireLease(new Tpg(topic, partition, group), consumerName, ip);
 
 		assertTrue(response.isAcquired());
 		Lease lease = response.getLease();
@@ -442,7 +414,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		assertEquals(1, lease.getId());
 		assertEquals(10000 + DEFAULT_LEASE_ADJUST_TIME, lease.getExpireTime());
 		assertEquals(-1, response.getNextTryTime());
-		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip, port)));
+		assertHeartbeat(Arrays.asList(new HeartbeatInfo(topic, group, consumerName, ip)));
 	}
 
 	@Test
@@ -452,7 +424,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
@@ -466,8 +437,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		mockLeaseHolderRenewLease(topic, partition, group, consumerName, "1.1.1.1", 1234, 1L, DEFAULT_LEASE_TIME);
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, existingValidLeases);
 
-		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip);
 
 		assertTrue(response.isAcquired());
 		Lease lease = response.getLease();
@@ -484,7 +454,6 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		int partition = 1;
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1111;
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
@@ -497,8 +466,7 @@ public class NonOrderedConsumeConsumerLeaseAllocatorTest {
 		existingValidLeases.put(consumerName, new ClientLeaseInfo(new Lease(2, 10000), "1.1.1.1", 1234));
 		mockLeaseHolderExecuteLeaseOperation(topic, partition, group, existingValidLeases);
 
-		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip,
-		      port);
+		LeaseAcquireResponse response = m_allocator.tryRenewLease(new Tpg(topic, partition, group), consumerName, 1, ip);
 
 		assertFalse(response.isAcquired());
 		assertNull(response.getLease());

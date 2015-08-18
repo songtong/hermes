@@ -31,14 +31,14 @@ public class ActiveConsumerListHolder {
 		m_systemClockService = systemClockService;
 	}
 
-	public void heartbeat(Pair<String, String> topicGroup, String consumerName, String ip, int port) {
+	public void heartbeat(Pair<String, String> topicGroup, String consumerName, String ip) {
 		m_lock.lock();
 		try {
 			if (!m_activeConsumerLists.containsKey(topicGroup)) {
 				m_activeConsumerLists.put(topicGroup, new ActiveConsumerList());
 			}
 			ActiveConsumerList activeConsumerList = m_activeConsumerLists.get(topicGroup);
-			activeConsumerList.heartbeat(consumerName, m_systemClockService.now(), ip, port);
+			activeConsumerList.heartbeat(consumerName, m_systemClockService.now(), ip);
 		} finally {
 			m_lock.unlock();
 		}

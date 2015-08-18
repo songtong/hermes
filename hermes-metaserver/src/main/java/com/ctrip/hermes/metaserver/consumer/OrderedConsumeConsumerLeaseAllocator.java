@@ -24,10 +24,10 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 
 	@Override
 	protected LeaseAcquireResponse doAcquireLease(Tpg tpg, String consumerName,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception {
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception {
 		if (existingValidLeases.isEmpty()) {
 			Lease newLease = m_leaseHolder.newLease(tpg, consumerName, existingValidLeases,
-			      m_config.getConsumerLeaseTimeMillis(), ip, port);
+			      m_config.getConsumerLeaseTimeMillis(), ip, -1);
 
 			if (log.isDebugEnabled()) {
 				log.debug(
@@ -63,7 +63,7 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 
 	@Override
 	protected LeaseAcquireResponse doRenewLease(Tpg tpg, String consumerName, long leaseId,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception {
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception {
 		if (existingValidLeases.isEmpty()) {
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 			      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
@@ -82,7 +82,7 @@ public class OrderedConsumeConsumerLeaseAllocator extends AbstractConsumerLeaseA
 
 			if (existingClientLeaseInfo != null) {
 				m_leaseHolder.renewLease(tpg, consumerName, existingValidLeases, existingClientLeaseInfo,
-				      m_config.getConsumerLeaseTimeMillis(), ip, port);
+				      m_config.getConsumerLeaseTimeMillis(), ip, -1);
 
 				if (log.isDebugEnabled()) {
 					log.debug(

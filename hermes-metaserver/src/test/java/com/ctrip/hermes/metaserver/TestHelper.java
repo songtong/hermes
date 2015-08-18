@@ -13,17 +13,26 @@ import com.ctrip.hermes.metaserver.commons.ClientContext;
  *
  */
 public class TestHelper {
-	public static void assertClientContextEquals(String clientName, String ip, int port, long lastHeartbeatTime,
+	public static void assertClientContextEquals(String clientName, String ip, long lastHeartbeatTime,
 	      ClientContext clientContext) {
 		assertEquals(clientName, clientContext.getName());
 		assertEquals(ip, clientContext.getIp());
-		assertEquals(port, clientContext.getPort());
 		assertEquals(lastHeartbeatTime, clientContext.getLastHeartbeatTime());
 	}
 
-	public static void assertClientContextEquals(String clientName, String ip, int port, ClientContext clientContext) {
+	public static void assertClientContextEquals(String clientName, String ip, int port, long lastHeartbeatTime,
+	      ClientContext clientContext) {
+		assertClientContextEquals(clientName, ip, lastHeartbeatTime, clientContext);
+		assertEquals(port, clientContext.getPort());
+	}
+
+	public static void assertClientContextEquals(String clientName, String ip, ClientContext clientContext) {
 		assertEquals(clientName, clientContext.getName());
 		assertEquals(ip, clientContext.getIp());
+	}
+
+	public static void assertClientContextEquals(String clientName, String ip, int port, ClientContext clientContext) {
+		assertClientContextEquals(clientName, ip, clientContext);
 		assertEquals(port, clientContext.getPort());
 	}
 
