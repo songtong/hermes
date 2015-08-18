@@ -29,13 +29,12 @@ public class ActiveConsumerListTest {
 	public void testHeartbeat() throws Exception {
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1234;
 		long heartbeatTime = 1L;
-		m_list.heartbeat(consumerName, heartbeatTime, ip, port);
+		m_list.heartbeat(consumerName, heartbeatTime, ip);
 
 		Map<String, ClientContext> activeConsumers = m_list.getActiveConsumers();
 		assertEquals(1, activeConsumers.size());
-		TestHelper.assertClientContextEquals(consumerName, ip, port, heartbeatTime, activeConsumers.get(consumerName));
+		TestHelper.assertClientContextEquals(consumerName, ip, heartbeatTime, activeConsumers.get(consumerName));
 		assertTrue(m_list.getAndResetChanged());
 	}
 
@@ -43,15 +42,14 @@ public class ActiveConsumerListTest {
 	public void testHeartbeatTwiceWithoutChange() throws Exception {
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1234;
 		long heartbeatTime = 1L;
-		m_list.heartbeat(consumerName, heartbeatTime, ip, port);
+		m_list.heartbeat(consumerName, heartbeatTime, ip);
 		m_list.getAndResetChanged();
-		m_list.heartbeat(consumerName, heartbeatTime + 1, ip, port);
+		m_list.heartbeat(consumerName, heartbeatTime + 1, ip);
 
 		Map<String, ClientContext> activeConsumers = m_list.getActiveConsumers();
 		assertEquals(1, activeConsumers.size());
-		TestHelper.assertClientContextEquals(consumerName, ip, port, heartbeatTime + 1, activeConsumers.get(consumerName));
+		TestHelper.assertClientContextEquals(consumerName, ip, heartbeatTime + 1, activeConsumers.get(consumerName));
 		assertFalse(m_list.getAndResetChanged());
 
 	}
@@ -60,16 +58,15 @@ public class ActiveConsumerListTest {
 	public void testHeartbeatTwiceWithChange() throws Exception {
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1234;
 		long heartbeatTime = 1L;
-		m_list.heartbeat(consumerName, heartbeatTime, ip, port);
+		m_list.heartbeat(consumerName, heartbeatTime, ip);
 		m_list.getAndResetChanged();
-		m_list.heartbeat(consumerName, heartbeatTime + 1, ip + "2", port + 1);
+		m_list.heartbeat(consumerName, heartbeatTime + 1, ip + "2");
 
 		Map<String, ClientContext> activeConsumers = m_list.getActiveConsumers();
 		assertEquals(1, activeConsumers.size());
-		TestHelper.assertClientContextEquals(consumerName, ip + "2", port + 1, heartbeatTime + 1,
-		      activeConsumers.get(consumerName));
+		TestHelper
+		      .assertClientContextEquals(consumerName, ip + "2", heartbeatTime + 1, activeConsumers.get(consumerName));
 		assertTrue(m_list.getAndResetChanged());
 
 	}
@@ -78,20 +75,19 @@ public class ActiveConsumerListTest {
 	public void testPurgeExpired() throws Exception {
 		String consumerName = "c1";
 		String ip = "1.1.1.1";
-		int port = 1234;
 		long heartbeatTime = 1L;
-		m_list.heartbeat(consumerName, heartbeatTime, ip, port);
+		m_list.heartbeat(consumerName, heartbeatTime, ip);
 		m_list.purgeExpired(10, 12L);
 
 		Map<String, ClientContext> activeConsumers = m_list.getActiveConsumers();
 		assertEquals(0, activeConsumers.size());
 		assertTrue(m_list.getAndResetChanged());
 
-		m_list.heartbeat(consumerName, heartbeatTime, ip, port);
+		m_list.heartbeat(consumerName, heartbeatTime, ip);
 		m_list.purgeExpired(10, 1L);
 		activeConsumers = m_list.getActiveConsumers();
 		assertEquals(1, activeConsumers.size());
-		TestHelper.assertClientContextEquals(consumerName, ip, port, heartbeatTime, activeConsumers.get(consumerName));
+		TestHelper.assertClientContextEquals(consumerName, ip, heartbeatTime, activeConsumers.get(consumerName));
 		assertTrue(m_list.getAndResetChanged());
 	}
 

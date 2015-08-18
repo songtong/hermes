@@ -55,15 +55,14 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		m_assignmentHolder = assignmentHolder;
 	}
 
-	protected void heartbeat(Tpg tpg, String consumerName, String ip, int port) {
-		m_activeConsumerList
-		      .heartbeat(new Pair<String, String>(tpg.getTopic(), tpg.getGroupId()), consumerName, ip, port);
+	protected void heartbeat(Tpg tpg, String consumerName, String ip) {
+		m_activeConsumerList.heartbeat(new Pair<String, String>(tpg.getTopic(), tpg.getGroupId()), consumerName, ip);
 	}
 
 	@Override
-	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName, String ip, int port) throws Exception {
+	public LeaseAcquireResponse tryAcquireLease(Tpg tpg, String consumerName, String ip) throws Exception {
 
-		heartbeat(tpg, consumerName, ip, port);
+		heartbeat(tpg, consumerName, ip);
 
 		Pair<String, String> topicGroup = new Pair<>(tpg.getTopic(), tpg.getGroupId());
 		Assignment<Integer> topicGroupAssignment = m_assignmentHolder.getAssignment(topicGroup);
@@ -71,7 +70,7 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 			return topicConsumerGroupNoAssignment();
 		} else {
 			if (topicGroupAssignment.isAssignTo(tpg.getPartition(), consumerName)) {
-				return acquireLease(tpg, consumerName, ip, port);
+				return acquireLease(tpg, consumerName, ip);
 			} else {
 				return topicPartitionNotAssignToConsumer(tpg);
 			}
@@ -79,10 +78,9 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	@Override
-	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId, String ip, int port)
-	      throws Exception {
+	public LeaseAcquireResponse tryRenewLease(Tpg tpg, String consumerName, long leaseId, String ip) throws Exception {
 
-		heartbeat(tpg, consumerName, ip, port);
+		heartbeat(tpg, consumerName, ip);
 
 		Pair<String, String> topicGroup = new Pair<>(tpg.getTopic(), tpg.getGroupId());
 		Assignment<Integer> topicGroupAssignment = m_assignmentHolder.getAssignment(topicGroup);
@@ -90,7 +88,7 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 			return topicConsumerGroupNoAssignment();
 		} else {
 			if (topicGroupAssignment.isAssignTo(tpg.getPartition(), consumerName)) {
-				return renewLease(tpg, consumerName, leaseId, ip, port);
+				return renewLease(tpg, consumerName, leaseId, ip);
 			} else {
 				return topicPartitionNotAssignToConsumer(tpg);
 			}
@@ -121,13 +119,13 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 
 	}
 
-	protected LeaseAcquireResponse acquireLease(final Tpg tpg, final String consumerName, final String ip, final int port)
+	protected LeaseAcquireResponse acquireLease(final Tpg tpg, final String consumerName, final String ip)
 	      throws Exception {
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
 			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) throws Exception {
-				return doAcquireLease(tpg, consumerName, existingValidLeases, ip, port);
+				return doAcquireLease(tpg, consumerName, existingValidLeases, ip);
 			}
 
 		});
@@ -135,13 +133,13 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	protected LeaseAcquireResponse renewLease(final Tpg tpg, final String consumerName, final long leaseId,
-	      final String ip, final int port) throws Exception {
+	      final String ip) throws Exception {
 
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
 			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) throws Exception {
-				return doRenewLease(tpg, consumerName, leaseId, existingValidLeases, ip, port);
+				return doRenewLease(tpg, consumerName, leaseId, existingValidLeases, ip);
 			}
 
 		});
@@ -149,9 +147,9 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	protected abstract LeaseAcquireResponse doAcquireLease(final Tpg tpg, final String consumerName,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception;
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception;
 
 	protected abstract LeaseAcquireResponse doRenewLease(final Tpg tpg, final String consumerName, final long leaseId,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip, int port) throws Exception;
+	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception;
 
 }
