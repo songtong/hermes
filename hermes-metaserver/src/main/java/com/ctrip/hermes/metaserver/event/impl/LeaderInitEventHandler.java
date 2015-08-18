@@ -135,7 +135,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	@Override
 	protected void processEvent(EventEngineContext context, Event event) throws Exception {
-
+		// FIXME refine thread pool
 		loadAndAddBaseMetaWatcher(new BaseMetaWatcher(context));
 		Meta baseMeta = loadBaseMeta();
 
@@ -226,6 +226,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			try {
 				Long version = loadAndAddBaseMetaWatcher(this);
 
+				// FIXME context.pubEvent
 				m_eventBus.pubEvent(m_context, new com.ctrip.hermes.metaserver.event.Event(EventType.BASE_META_CHANGED,
 				      version));
 			} catch (Exception e) {

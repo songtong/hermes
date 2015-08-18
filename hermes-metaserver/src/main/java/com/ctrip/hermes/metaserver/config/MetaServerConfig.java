@@ -48,7 +48,7 @@ public class MetaServerConfig {
 	}
 
 	public long getBrokerLeaseTimeMillis() {
-		return 30 * 1000L;
+		return 10 * 1000L;
 	}
 
 	public long getBrokerLeaseClientSideAdjustmentTimeMills() {
