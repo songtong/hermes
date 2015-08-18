@@ -21,7 +21,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.ConsumerView;
@@ -69,8 +68,8 @@ public class ConsumerResource {
 	}
 
 	@GET
-	@Path("{topics}")
-	public List<ConsumerView> getConsumers(@PathParam("topics") String topic) {
+	@Path("{topic}")
+	public List<ConsumerView> getConsumers(@PathParam("topic") String topic) {
 		logger.debug("Get consumers of topic: {}", topic);
 		List<ConsumerView> returnResult = new ArrayList<ConsumerView>();
 		try {
@@ -86,8 +85,8 @@ public class ConsumerResource {
 	}
 
 	@DELETE
-	@Path("{topics}/{consumer}")
-	public Response deleteConsumer(@PathParam("topics") String topics, @PathParam("consumer") String consumer) {
+	@Path("{topic}/{consumer}")
+	public Response deleteConsumer(@PathParam("topic") String topics, @PathParam("consumer") String consumer) {
 		logger.debug("Delete consumer: {} {}", topics, consumer);
 		try {
 			consumerService.deleteConsumerFromTopic(topics, consumer);
@@ -99,7 +98,7 @@ public class ConsumerResource {
 	}
 
 	@POST
-	@Path("{topics}/{consumer}")
+	@Path("add/{topics}/{consumer}")
 	public Response addConsumer(@PathParam("topics") String topics, @PathParam("consumer") String consumer, String content) {
 		logger.debug("Create consumer: {} {}", topics, consumer);
 		if (StringUtils.isEmpty(content)) {
@@ -114,17 +113,17 @@ public class ConsumerResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
-		Pair<List<ConsumerGroup>, List<String>> pair = consumerView.toMetaConsumer();
-		
 		for(String topicName : consumerView.getTopicNames()){
 			if (consumerService.getConsumer(topicName, consumer) != null) {
 				throw new RestException("Consumer for "+topicName+" already exists.", Status.CONFLICT);
 			}
 		}
 		
+		Map<String, ConsumerGroup> topicConsumerMap = consumerView.toMetaConsumer();
+		
 		ConsumerGroup c =null;
 		try {
-			c = consumerService.addConsumerForTopics(consumerView.getTopicNames(),pair.getKey());
+			c = consumerService.addConsumerForTopics(topicConsumerMap);
 		} catch (Exception e) {
 			logger.warn("Create consumer failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);

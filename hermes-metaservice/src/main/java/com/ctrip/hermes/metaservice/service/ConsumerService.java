@@ -61,7 +61,8 @@ public class ConsumerService {
 		m_metaService.updateMeta(meta);
 	}
 
-	public synchronized ConsumerGroup addConsumerForTopic(String topic, ConsumerGroup consumer) throws Exception {
+	public synchronized ConsumerGroup addConsumerForTopics(Map<String, ConsumerGroup> topoicConsumerMap)
+			throws Exception {
 		Meta meta = m_metaService.getMeta();
 
 		int maxConsumerId = 0;
@@ -72,48 +73,18 @@ public class ConsumerService {
 				}
 			}
 		}
-		consumer.setId(maxConsumerId + 1);
-		Topic t = meta.getTopics().get(topic);
-		t.addConsumerGroup(consumer);
 
-		if (Storage.MYSQL.equals(t.getStorageType())) {
-			m_storageService.addConsumerStorage(t, consumer);
-			m_zookeeperService.ensureConsumerLeaseZkPath(t);
-		}
-
-		if (!m_metaService.updateMeta(meta)) {
-			throw new RuntimeException("Update meta failed, please try later");
-		}
-
-		return consumer;
-	}
-	
-	public synchronized ConsumerGroup addConsumerForTopics(List<String> topics, List<ConsumerGroup> consumerGroupList) throws Exception {
-		Meta meta = m_metaService.getMeta();
-
-		int maxConsumerId = 0;
-		for (Entry<String, Topic> entry : meta.getTopics().entrySet()) {
-			for (ConsumerGroup cg : entry.getValue().getConsumerGroups()) {
-				if (cg.getId() != null && cg.getId() > maxConsumerId) {
-					maxConsumerId = cg.getId();
-				}
-			}
-		}
-		
 		ConsumerGroup consumer = null;
-		for(int i=0;i<topics.size();i++){
-			maxConsumerId++;
-			String topic = topics.get(i);
-			consumer = consumerGroupList.get(i);
-			consumer.setId(maxConsumerId);
-			Topic t = meta.getTopics().get(topic);
+		for (String topicName : topoicConsumerMap.keySet()) {
+			consumer = topoicConsumerMap.get(topicName);
+			consumer.setId(++maxConsumerId);
+			Topic t = meta.getTopics().get(topicName);
 			t.addConsumerGroup(consumer);
 			if (Storage.MYSQL.equals(t.getStorageType())) {
 				m_storageService.addConsumerStorage(t, consumer);
 				m_zookeeperService.ensureConsumerLeaseZkPath(t);
 			}
 		}
-
 
 		if (!m_metaService.updateMeta(meta)) {
 			throw new RuntimeException("Update meta failed, please try later");

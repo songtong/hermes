@@ -1,9 +1,8 @@
 package com.ctrip.hermes.core.bo;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
-import org.unidal.tuple.Pair;
+import java.util.Map;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 
@@ -32,20 +31,20 @@ public class ConsumerView {
 		this.orderedConsume = consumer.getOrderedConsume();
 	}
 
-	public Pair<List<ConsumerGroup>, List<String>> toMetaConsumer() {
-		List<ConsumerGroup> consumerGroupList = new ArrayList<>();
-		for(int i =0;i<=this.topicNames.size();i++){
+	public Map<String,ConsumerGroup> toMetaConsumer() {
+		Map<String, ConsumerGroup> topicConsumerMap = new HashMap<>();
+		for(String topicName : this.topicNames){
 			ConsumerGroup consumer = new ConsumerGroup();
 			consumer.setAckTimeoutSeconds(this.ackTimeoutSeconds);
 			consumer.setAppIds(this.appId);
 			consumer.setName(this.groupName);
 			consumer.setRetryPolicy(this.retryPolicy);
 			consumer.setOrderedConsume(this.orderedConsume);
-			consumerGroupList.add(consumer);
+			topicConsumerMap.put(topicName, consumer);
 		}
 		
 
-		return new Pair<List<ConsumerGroup>, List<String>>(consumerGroupList,this.topicNames);
+		return topicConsumerMap;
 	}
 
 	public List<String> getTopicNames() {
@@ -53,9 +52,6 @@ public class ConsumerView {
 	}
 
 	
-//	public void setTopicNames(String topicNames) {
-//		this.topicNames = Arrays.asList(topicNames.split(","));
-//	}
 	
 	public void setTopicNames(List<String> topicNames) {
 		this.topicNames = topicNames;
@@ -103,9 +99,11 @@ public class ConsumerView {
 		this.orderedConsume = orderedConsume;
 	}
 
+	
 	@Override
 	public String toString() {
-		return "ConsumerView [topic=" + topicNames + ", groupName=" + groupName + ", appId=" + appId + ", retryPolicy="
-				+ retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume=" + orderedConsume + "]";
+		return "ConsumerView [topicNames=" + topicNames + ", groupName=" + groupName + ", appId=" + appId
+				+ ", retryPolicy=" + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume="
+				+ orderedConsume + "]";
 	}
 }

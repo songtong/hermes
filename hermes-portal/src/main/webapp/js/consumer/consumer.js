@@ -21,7 +21,12 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 				'$resource',
 				function(scope, filter, resource) {
 					consumer_resource = resource(
-							'/api/consumers/:topics/:consumer', {}, {});
+							'/api/consumers/:topic/:consumer', {}, {
+								'add_consumer' : {
+									method:'POST',
+									url:'/api/consumers/add/:topics/:consumer'
+								}
+							});
 					meta_resource = resource('/api/meta', {}, {
 						'get_topic_names' : {
 							method : 'GET',
@@ -35,7 +40,7 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 					scope.consumer_rows = [];
 					scope.new_consumer = {
 						orderedConsume : true,
-						topicNames: []
+						topicNames : []
 					};
 
 					scope.order_opts = [ true, false ];
@@ -46,14 +51,32 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 							datumTokenizer : Bloodhound.tokenizers.whitespace,
 							queryTokenizer : Bloodhound.tokenizers.whitespace,
 						});
-						$('#inputTopicName').tokenfield({
+						$('#inputTopicName').on(('tokenfield:createdtoken'),function(e){
+							var topicList = $('#inputTopicName').tokenfield('getTokens');
+							var idx;
+							for ( idx =0;idx<(topicList.length-1); idx++){
+								if(e.attrs.value == topicList[idx].value){
+									topicList.pop();
+									$('#inputTopicName').tokenfield('setTokens', topicList);
+								}
+							}
+							for( idx =0;idx< result.local.length;idx++){
+								if(e.attrs.value == result.local[idx]){
+									break;
+								}
+							}
+							if(idx==result.local.length){
+								topicList.pop();
+								$('#inputTopicName').tokenfield('setTokens', topicList);
+							}
+						}).tokenfield({
 							typeahead : [ {
 								hint : true,
 								highlight : true,
 								minLength : 1
 							}, {
 								name : 'topics',
-								source : result
+								source : result 
 							} ],
 							beautify : false
 						});
@@ -70,8 +93,9 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 					};
 					scope.newTopicNames = "";
 					scope.add_consumer = function add_consumer(new_consumer) {
-						new_consumer.topicNames = scope.newTopicNames.split(",");
-						consumer_resource.save({
+						new_consumer.topicNames = scope.newTopicNames
+								.split(",");
+						consumer_resource.add_consumer({
 							topics : new_consumer.topicNames,
 							consumer : new_consumer.groupName
 						}, new_consumer, function(save_result) {
@@ -79,24 +103,24 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 							consumer_resource.query().$promise.then(function(
 									query_result) {
 								reload_table(scope, query_result);
-								show_op_info.show("新增成功: "
-										+ new_consumer.groupName + "("
-										+ new_consumer.topicNames + ")", true);
+								show_op_info.show("新增 consumer "
+										+ new_consumer.groupName + " for topoics ("
+										+ new_consumer.topicNames + ") 成功!", true);
 							});
 						}, function(error_result) {
-							show_op_info.show("新增失败: " + new_consumer.groupName
-									+ "(" + new_consumer.topicNames + "), "
+							show_op_info.show("新增 consumer " + new_consumer.groupName
+									+ " for topoics (" + new_consumer.topicNames + ") 失败! "
 									+ error_result.data, false);
 						});
 					};
 
-					scope.del_consumer = function del_consumer(topicNames,
+					scope.del_consumer = function del_consumer(topicName,
 							groupName) {
 						bootbox.confirm("确认删除 Consumer: " + groupName + "("
-								+ topicNames + ")?", function(result) {
+								+ topicName + ")?", function(result) {
 							if (result) {
 								consumer_resource.remove({
-									topics : topicNames,
+									topic : topicName,
 									consumer : groupName
 								}, function(remove_result) {
 									consumer_resource.query({},
@@ -105,12 +129,12 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 														query_result);
 												show_op_info.show("删除成功: "
 														+ groupName + "("
-														+ topicNames + ")",
+														+ topicName + ")",
 														true);
 											});
 								}, function(error_result) {
 									show_op_info.show("删除失败: " + groupName
-											+ "(" + topicNames + "), "
+											+ "(" + topicName + "), "
 											+ error_result.data, false);
 								});
 							}
