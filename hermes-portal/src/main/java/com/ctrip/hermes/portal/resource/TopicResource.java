@@ -201,8 +201,7 @@ public class TopicResource {
 
 	private void syncConsumers(TopicView topic, WebTarget target) {
 		for (ConsumerGroup consumer : metaService.findConsumersByTopic(topic.getName())) {
-			String path = String.format("/api/consumers/%s/%s", topic.getName(), consumer.getName());
-			Builder request = target.path(path).request();
+			Builder request = target.path("/api/consumers/add/multiple").request();
 			ConsumerView requestView = new ConsumerView(Arrays.asList(topic.getName()), consumer);
 			Response response = request.post(Entity.json(requestView));
 			if (!(Status.CREATED.getStatusCode() == response.getStatus()//
