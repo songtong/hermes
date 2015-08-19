@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -100,6 +101,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 		return findTopic(topicName, getMeta()).findPartition(partitionId);
 	}
 
+	@Override
 	public List<Topic> listTopicsByPattern(String topicPattern) {
 		if (StringUtils.isBlank(topicPattern)) {
 			throw new RuntimeException("Topic pattern can not be null or blank");
@@ -107,30 +109,56 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 		topicPattern = StringUtils.trim(topicPattern);
 
-		boolean hasWildcard = topicPattern.endsWith("*");
-
-		if (hasWildcard) {
-			topicPattern = topicPattern.substring(0, topicPattern.length() - 1);
-		}
-
 		Meta meta = getMeta();
 		List<Topic> matchedTopics = new ArrayList<Topic>();
 
 		Collection<Topic> topics = meta.getTopics().values();
 
 		for (Topic topic : topics) {
-			if (hasWildcard) {
-				if (StringUtils.startsWithIgnoreCase(topic.getName(), topicPattern)) {
-					matchedTopics.add(topic);
-				}
-			} else {
-				if (StringUtils.equalsIgnoreCase(topic.getName(), topicPattern)) {
-					matchedTopics.add(topic);
-				}
+			if (isTopicMatch(topicPattern, topic.getName())) {
+				matchedTopics.add(topic);
 			}
 		}
 
 		return matchedTopics;
+	}
+
+	boolean isTopicMatch(String topicPattern, String topic) {
+		boolean isMatch = false;
+		if (topic.equalsIgnoreCase(topicPattern)) {
+			isMatch = true;
+		} else {
+			if (topicPattern.indexOf("*") >= 0 || topicPattern.indexOf("#") >= 0) {
+				String pattern = buildMatchPattern(topicPattern);
+				isMatch = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(topic).matches();
+			}
+		}
+		return isMatch;
+	}
+
+	private String buildMatchPattern(String topicPattern) {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < topicPattern.length(); i++) {
+			if (i == 0) {
+				sb.append("^");
+			}
+
+			char curChar = topicPattern.charAt(i);
+			if (curChar == '*') {
+				sb.append("\\w+");
+			} else if (curChar == '#') {
+				sb.append("(\\w\\.?)+");
+			} else {
+				sb.append(curChar);
+			}
+
+			if (i == topicPattern.length() - 1) {
+				sb.append("$");
+			}
+		}
+
+		return sb.toString();
 	}
 
 	@Override
