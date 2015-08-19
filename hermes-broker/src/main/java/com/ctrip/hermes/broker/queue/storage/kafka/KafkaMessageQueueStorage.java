@@ -1,8 +1,9 @@
 package com.ctrip.hermes.broker.queue.storage.kafka;
 
-import java.util.ArrayList;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,14 +12,12 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
+import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -27,51 +26,27 @@ import com.ctrip.hermes.meta.entity.Storage;
 public class KafkaMessageQueueStorage implements MessageQueueStorage {
 
 	@Inject
-	private BizLogger m_bizLogger;
+	private MetaService m_metaService;
 
 	@Inject
-	private MetaService m_metaService;
+	private MessageCodec m_messageCodec;
 
 	// TODO housekeeping
 	private Map<String, KafkaMessageBrokerSender> m_senders = new HashMap<>();
 
 	@Override
 	public void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception {
-
+		ByteBuf buf = Unpooled.buffer();
 		KafkaMessageBrokerSender sender = getSender(tpp.getTopic());
-
-		List<MessagePriority> msgs = new ArrayList<>();
 		for (MessageBatchWithRawData batch : batches) {
 			List<PartialDecodedMessage> pdmsgs = batch.getMessages();
 			for (PartialDecodedMessage pdmsg : pdmsgs) {
-				MessagePriority msg = new MessagePriority();
-				msg.setAttributes(pdmsg.readDurableProperties());
-				msg.setCreationDate(new Date(pdmsg.getBornTime()));
-				msg.setPartition(tpp.getPartition());
-				msg.setPayload(pdmsg.readBody());
-				msg.setPriority(tpp.isPriority() ? 0 : 1);
-				// TODO set producer id and producer id in producer
-				msg.setProducerId(0);
-				msg.setProducerIp("");
-				msg.setRefKey(pdmsg.getKey());
-				msg.setTopic(tpp.getTopic());
-				msg.setCodecType(pdmsg.getBodyCodecType());
-
-				msgs.add(msg);
-				sender.send(msg);
+				m_messageCodec.encodePartial(pdmsg, buf);
+				byte[] bytes = new byte[buf.readableBytes()];
+				buf.readBytes(bytes);
+				buf.clear();
+				sender.send(tpp.getTopic(), tpp.getPartition(), bytes);
 			}
-		}
-
-		bizLog(msgs);
-	}
-
-	private void bizLog(List<MessagePriority> msgs) {
-		for (MessagePriority msg : msgs) {
-			BizEvent event = new BizEvent("RefKey.Transformed");
-			event.addData("refKey", msg.getRefKey());
-			event.addData("msgId", msg.getId());
-
-			m_bizLogger.log(event);
 		}
 	}
 
