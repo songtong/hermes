@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.net.Networks;
 
-import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
@@ -86,9 +85,8 @@ public class KafkaMessageBrokerSender {
 		return producerProp;
 	}
 
-	public void send(MessagePriority msg) {
-		ProducerRecord<String, byte[]> record = new ProducerRecord<>(msg.getTopic(), String.valueOf(msg.getPartition()),
-		      msg.getPayload());
+	public void send(String topic, int partition, byte[] array) {
+		ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, String.valueOf(partition), array);
 		m_producer.send(record);
 	}
 
