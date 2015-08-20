@@ -1,6 +1,7 @@
 package com.ctrip.hermes.consumer.api;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -19,6 +20,23 @@ public class ConsumerTest {
 		});
 
 		System.in.read();
+	}
+
+	@Test
+	public void testCreateMessageStreams() {
+		List<MessageStream<String>> streams = Consumer.getInstance().createMessageStreams("order_new", "group1");
+		for (MessageStream<String> s : streams) {
+			processStream(s);
+		}
+	}
+
+	private void processStream(MessageStream<String> s) {
+		long curOffset = s.getOffsetByTime(Long.MAX_VALUE);
+		while (true) {
+			List<ConsumerMessage<String>> msgs = s.fetchMessages(curOffset, 10);
+			// process msgs
+			curOffset = msgs.get(msgs.size() - 1).getOffset() + 1;
+		}
 	}
 
 }
