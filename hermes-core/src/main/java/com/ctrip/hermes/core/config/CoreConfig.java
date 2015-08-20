@@ -30,7 +30,7 @@ public class CoreConfig {
 	}
 
 	public long getMetaCacheRefreshIntervalSeconds() {
-		return 20;
+		return 1;
 	}
 
 	public int getNettySendBufferSize() {
@@ -67,6 +67,14 @@ public class CoreConfig {
 
 	public int getEndpointChannelMaxIdleTime() {
 		return 60;
+	}
+
+	public int getEndpointChannelReadIdleTime() {
+		return 30;
+	}
+
+	public int getEndpointChannelWriteIdleTime() {
+		return 30;
 	}
 
 	public String getAvroSchemaRetryUrlKey() {

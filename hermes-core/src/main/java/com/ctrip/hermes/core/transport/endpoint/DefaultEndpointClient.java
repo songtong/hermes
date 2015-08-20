@@ -223,7 +223,9 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 				      new MagicNumberPrepender(), //
 				      new LengthFieldPrepender(4), //
 				      new NettyEncoder(), //
-				      new IdleStateHandler(0, 0, m_config.getEndpointChannelMaxIdleTime()),//
+				      new IdleStateHandler(m_config.getEndpointChannelReadIdleTime(), //
+				            m_config.getEndpointChannelWriteIdleTime(), //
+				            m_config.getEndpointChannelMaxIdleTime()), //
 				      new DefaultClientChannelInboundHandler(m_commandProcessorManager, endpoint, endpointChannel,
 				            DefaultEndpointClient.this, m_config));
 			}
