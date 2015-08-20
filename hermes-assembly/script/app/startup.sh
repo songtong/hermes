@@ -98,8 +98,14 @@ stop(){
     	echo "Stop port is $STOP_PORT"
     	set +e
     	$sudo $JAVA_CMD -DSTOP.PORT=$STOP_PORT -DSTOP.KEY=$STOP_KEY -jar $JETTY_START_JAR --stop
+    	stop_success=$?
     	set -e
-		wait_or_kill        
+    	if [[ ! $stop_success == 0 ]]; then
+    		echo "Shutdown with stop port failed, try to kill it... "
+    		$sudo kill -9 $(find_pid)
+    	else
+			wait_or_kill        
+    	fi       
         log_op "Instance Stopped"
     fi
 }
