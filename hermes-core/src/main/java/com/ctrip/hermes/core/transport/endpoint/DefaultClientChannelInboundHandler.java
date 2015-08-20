@@ -2,7 +2,6 @@ package com.ctrip.hermes.core.transport.endpoint;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoop;
-import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
 import java.util.concurrent.TimeUnit;
@@ -69,8 +68,12 @@ public class DefaultClientChannelInboundHandler extends AbstractNettyChannelInbo
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if (evt instanceof IdleStateEvent) {
 			IdleStateEvent e = (IdleStateEvent) evt;
-			if (e.state() == IdleState.ALL_IDLE) {
+			switch (e.state()) {
+			case ALL_IDLE:
+			case READER_IDLE:
+			case WRITER_IDLE:
 				m_endpointClient.removeChannel(m_endpoint, m_endpointChannel);
+				break;
 			}
 		}
 	}
