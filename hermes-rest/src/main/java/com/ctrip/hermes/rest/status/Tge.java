@@ -1,7 +1,5 @@
 package com.ctrip.hermes.rest.status;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 public class Tge {
 
@@ -42,11 +40,18 @@ public class Tge {
 	}
 
 	public int hashCode() {
-		return HashCodeBuilder.reflectionHashCode(this);
+		return this.m_topic.hashCode() * 37 * this.m_group.hashCode() * this.m_endpoint.hashCode();
 	}
 
 	public boolean equals(Object rhs) {
-		return EqualsBuilder.reflectionEquals(this, rhs);
+		if (rhs == null)
+			return false;
+		if (!(rhs instanceof Tge)) {
+			return false;
+		}
+		Tge rObj = (Tge) rhs;
+		return this.m_topic.equals(rObj.m_topic) && this.m_group.equals(rObj.m_group)
+		      && this.m_endpoint.equals(rObj.m_endpoint);
 	}
 
 	public String toString() {
