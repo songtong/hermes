@@ -10,6 +10,9 @@ if [ $# -lt 1 ];then
 	exit 1
 fi
 
+# default timeout, can be override in env.sh
+STOP_TIMEOUT=10
+
 . "./env.sh"
 . "./common.sh"
 
@@ -18,7 +21,6 @@ JETTY_RUNNER_JAR=$(ls ../jetty/jetty-runner*.jar)
 JETTY_START_JAR=$(ls ../jetty/jetty-start*.jar)
 WAR=$(ls ../*.war)
 STOP_KEY=hermes4EVER
-STOP_TIMEOUT=180
 DEBUG_OPT="-Xdebug -agentlib:jdwp=transport=dt_socket,address=8787,server=y,suspend=n"
 
 if [ ! -f $JAVA_CMD ];then
@@ -27,7 +29,6 @@ if [ ! -f $JAVA_CMD ];then
 fi
 
 port=8080
-stop_port=6798
 
 can_sudo=false
 set +e
@@ -80,7 +81,7 @@ start() {
         mkdir "${LOG_PATH}"
     fi
     log_op $(pwd)
-    BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_RUNNER_JAR --port $port --stop-port $stop_port --stop-key $STOP_KEY $WAR > $SYSOUT_LOG 2>&1 &
+    BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_RUNNER_JAR --port $port --stop-port $STOP_PORT --stop-key $STOP_KEY $WAR > $SYSOUT_LOG 2>&1 &
     log_op "PID $$"
     log_op "Instance Started!"
 }
@@ -94,8 +95,10 @@ stop(){
 		if [ $can_sudo == true ];then
     		sudo="sudo"
     	fi
-    	echo "Stop port is $stop_port"
-    	$sudo $JAVA_CMD -DSTOP.PORT=$stop_port -DSTOP.KEY=$STOP_KEY -jar $JETTY_START_JAR --stop
+    	echo "Stop port is $STOP_PORT"
+    	set +e
+    	$sudo $JAVA_CMD -DSTOP.PORT=$STOP_PORT -DSTOP.KEY=$STOP_KEY -jar $JETTY_START_JAR --stop
+    	set -e
 		wait_or_kill        
         log_op "Instance Stopped"
     fi
