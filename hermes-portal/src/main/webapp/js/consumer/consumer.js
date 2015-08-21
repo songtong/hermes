@@ -12,6 +12,10 @@ function reload_table(scope, data) {
 	scope.src_consumers = data;
 	scope.consumer_rows = scope.src_consumers;
 }
+function get_new_consuemr(consumer, topics, i){
+	consumer.topicName = topics[i];
+	return consumer;
+}
 
 angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 .run(function(editableOptions) {  editableOptions.theme = 'bs3'; }).controller(
@@ -25,7 +29,7 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 							'/api/consumers/:topic/:consumer', {}, {
 								'add_consumer' : {
 									method:'POST',
-									url:'/api/consumers/add/multiple'
+									url:'/api/consumers/add'
 								},
 								'update_consumer' : {
 									method:'POST',
@@ -44,8 +48,7 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 					scope.src_consumers = [];
 					scope.consumer_rows = [];
 					scope.new_consumer = {
-						orderedConsume : true,
-						topicNames : []
+						orderedConsume : true
 					};
 
 					scope.order_opts = [ true, false ];
@@ -98,26 +101,30 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 					};
 					scope.newTopicNames = "";
 					scope.add_consumer = function add_consumer(new_consumer) {
-						new_consumer.topicNames = scope.newTopicNames
-								.split(",");
-						consumer_resource.add_consumer({}, new_consumer, function(save_result) {
-							console.log(save_result);
-							consumer_resource.query().$promise.then(function(
-									query_result) {
-								reload_table(scope, query_result);
-								show_op_info.show("新增 consumer "
-										+ new_consumer.groupName + " for topoics ("
-										+ new_consumer.topicNames + ") 成功!", true);
+						var topics = scope.newTopicNames.split(",");
+						console.log(topics);
+						for(var i=0 ;i<topics.length;i++){
+							consumer_resource.add_consumer({}, get_new_consuemr(new_consumer,topics,i), function(save_result) {
+								console.log(new_consumer)
+								console.log(save_result);
+								consumer_resource.query().$promise.then(function(
+										query_result) {
+									reload_table(scope, query_result);
+									show_op_info.show("新增 consumer "
+											+ new_consumer.groupName + " for topoics ("
+											+ new_consumer.topicName+ ") 成功!", true);
+								});
+							}, function(error_result) {
+								show_op_info.show("新增 consumer " + new_consumer.groupName
+										+ " for topoics (" + new_consumer.topicName + ") 失败! "
+										+ error_result.data, false);
 							});
-						}, function(error_result) {
-							show_op_info.show("新增 consumer " + new_consumer.groupName
-									+ " for topoics (" + new_consumer.topicNames + ") 失败! "
-									+ error_result.data, false);
-						});
+							
+						}
 					};
 					scope.update_consumer = function update_consumer(data,topicName,groupName){
 						data.groupName=groupName;
-						data.topicNames=topicName;
+						data.topicName=topicName;
 						consumer_resource.update_consumer({}, data, function(save_result) {
 							console.log(save_result);
 							consumer_resource.query().$promise.then(function(
@@ -125,11 +132,11 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 								reload_table(scope, query_result);
 								show_op_info.show("修改 consumer "
 										+ data.groupName + " for topoic ("
-										+ data.topicNames + ") 成功!", true);
+										+ data.topicName + ") 成功!", true);
 							});
 						}, function(error_result) {
 							show_op_info.show("修改 consumer " + data.groupName
-									+ " for topoic (" + data.topicNames + ") 失败! "
+									+ " for topoic (" + data.topicName + ") 失败! "
 									+ error_result.data, false);
 						});
 						
