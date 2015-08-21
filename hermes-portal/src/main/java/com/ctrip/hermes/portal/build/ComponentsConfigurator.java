@@ -12,6 +12,7 @@ import com.ctrip.hermes.metaservice.service.CompileService;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.SchemaRegistryService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
 import com.ctrip.hermes.metaservice.service.TopicService;
@@ -36,6 +37,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(TopicService.class));
 		all.add(A(SchemaService.class));
+		all.add(A(SchemaRegistryService.class));
 		all.add(A(CodecService.class));
 		all.add(A(CompileService.class));
 		all.add(A(ConsumerService.class));

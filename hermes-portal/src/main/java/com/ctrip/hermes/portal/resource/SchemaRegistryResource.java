@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.resource;
+package com.ctrip.hermes.portal.resource;
 
 import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
@@ -17,10 +17,10 @@ import javax.ws.rs.core.Response.Status;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.rest.schemaregistry.SchemaKey;
-import com.ctrip.hermes.rest.schemaregistry.SchemaRegistryKeyType;
-import com.ctrip.hermes.rest.schemaregistry.SchemaValue;
-import com.ctrip.hermes.rest.service.SchemaRegistryService;
+import com.ctrip.hermes.metaservice.schemaregistry.SchemaKey;
+import com.ctrip.hermes.metaservice.schemaregistry.SchemaRegistryKeyType;
+import com.ctrip.hermes.metaservice.schemaregistry.SchemaValue;
+import com.ctrip.hermes.metaservice.service.SchemaRegistryService;
 
 @Path("/schemaregistry/")
 @Singleton

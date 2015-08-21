@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.service;
+package com.ctrip.hermes.metaservice.service;
 
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -14,8 +14,8 @@ import org.unidal.lookup.annotation.Named;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.rest.schemaregistry.SchemaKey;
-import com.ctrip.hermes.rest.schemaregistry.SchemaValue;
+import com.ctrip.hermes.metaservice.schemaregistry.SchemaKey;
+import com.ctrip.hermes.metaservice.schemaregistry.SchemaValue;
 
 @Named
 public class SchemaRegistryService {

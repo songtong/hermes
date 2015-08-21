@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.schemaregistry;
+package com.ctrip.hermes.metaservice.schemaregistry;
 
 public abstract class SchemaRegistryKey implements Comparable<SchemaRegistryKey> {
 

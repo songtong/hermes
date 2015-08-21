@@ -42,14 +42,5 @@
 				</requirement>
 			</requirements>
 		</component>
-		<component>
-			<role>com.ctrip.hermes.rest.service.SchemaRegistryService</role>
-			<implementation>com.ctrip.hermes.rest.service.SchemaRegistryService</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
-				</requirement>
-			</requirements>
-		</component>
 	</components>
 </plexus>
