@@ -41,7 +41,6 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Xmx4g \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
-            -XX:-DisableExplicitGC \
             -XX:+PrintGC \
             -XX:+PrintGCDetails \
             -XX:+PrintGCDateStamps \
