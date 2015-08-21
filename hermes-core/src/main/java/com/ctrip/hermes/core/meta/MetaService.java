@@ -22,8 +22,6 @@ import com.ctrip.hermes.meta.entity.Topic;
  */
 public interface MetaService {
 
-	String findAvroSchemaRegistryUrl();
-
 	Codec findCodecByTopic(String topic);
 
 	Endpoint findEndpointByTopicAndPartition(String topic, int partition);
@@ -60,7 +58,15 @@ public interface MetaService {
 
 	List<SchemaView> listSchemas();
 
+	SchemaView findSchemaViewByAvroId(int avroId);
+	
 	boolean containsEndpoint(Endpoint endpoint);
 
 	boolean containsConsumerGroup(String topicName, String groupId);
+	
+	String getAvroSchemaRegistryUrl();
+	
+	String getZookeeperList();
+	
+	String getKafkaBrokerList();
 }

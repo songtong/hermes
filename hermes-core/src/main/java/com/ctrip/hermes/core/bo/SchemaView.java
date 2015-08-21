@@ -25,6 +25,8 @@ public class SchemaView {
 	private String schemaPreview;
 
 	private Long topicId;
+	
+	private int avroId;
 
 	public SchemaView() {
 
@@ -109,5 +111,13 @@ public class SchemaView {
 	public void setVersion(int version) {
 		this.version = version;
 	}
+
+	public int getAvroId() {
+	   return avroId;
+   }
+
+	public void setAvroId(int avroId) {
+	   this.avroId = avroId;
+   }
 
 }

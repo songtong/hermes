@@ -322,6 +322,21 @@ public class SchemaService {
 
 	/**
 	 * 
+	 * @return
+	 * @throws DalException
+	 */
+	public List<SchemaView> listSchemaViews() throws DalException {
+		List<Schema> schemas = m_schemaDao.list(SchemaEntity.READSET_FULL);
+		List<SchemaView> result = new ArrayList<SchemaView>();
+		for (Schema schema : schemas) {
+			SchemaView schemaView = SchemaService.toSchemaView(schema);
+			result.add(schemaView);
+		}
+		return result;
+	}
+
+	/**
+	 * 
 	 * @param topic
 	 * @return
 	 * @throws DalException
@@ -512,6 +527,7 @@ public class SchemaService {
 		view.setDescription(schema.getDescription());
 		view.setCompatibility(schema.getCompatibility());
 		view.setTopicId(schema.getTopicId());
+		view.setAvroId(schema.getAvroid());
 		if (schema.getSchemaContent() != null) {
 			view.setSchemaPreview(new String(schema.getSchemaContent()));
 		}

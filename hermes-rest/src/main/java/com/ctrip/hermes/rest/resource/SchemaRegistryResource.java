@@ -1,50 +1,73 @@
 package com.ctrip.hermes.rest.resource;
 
-import java.util.Properties;
-
 import javax.inject.Singleton;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.rest.schemaregistry.SchemaKey;
 import com.ctrip.hermes.rest.schemaregistry.SchemaRegistryKeyType;
 import com.ctrip.hermes.rest.schemaregistry.SchemaValue;
+import com.ctrip.hermes.rest.service.SchemaRegistryService;
 
 @Path("/schemaregistry/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class SchemaRegistryResource {
 
-	@Path("{subject}")
+	private SchemaRegistryService schemaRegistryService = PlexusComponentLocator.lookup(SchemaRegistryService.class);
+
+	@Path("subjects/{subject}")
 	@POST
-	public void updateSchema(@PathParam("subject") String subject, @QueryParam("version") Integer version,
-	      String schema, @QueryParam("servers") String servers, @QueryParam("schemaTopic") String topic) {
+	public Response updateSchemaInKafkaStorage(@PathParam("subject") String subject,
+	      @QueryParam("version") Integer version, String schema,
+	      @QueryParam("schemaTopic") @DefaultValue("_schemas") String topic) {
 		SchemaKey schemaKey = new SchemaKey();
 		schemaKey.setSubject(subject);
 		schemaKey.setVersion(version);
 		schemaKey.setMagic(0);
 		schemaKey.setKeytype(SchemaRegistryKeyType.SCHEMA);
 
-		SchemaValue schemaValue = JSON.parseObject(schema, SchemaValue.class);
+		SchemaValue schemaValue = null;
+		try {
+			schemaValue = JSON.parseObject(schema, SchemaValue.class);
+		} catch (Exception e) {
+			throw new BadRequestException(e);
+		}
 
-		Properties configs = new Properties();
-		configs.put("bootstrap.servers", servers);
-		configs.put("client.id", "SchemaRegistryRecover");
-		configs.put("key.serializer", ByteArraySerializer.class.getCanonicalName());
-		configs.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
-		KafkaProducer<byte[], byte[]> producer = new KafkaProducer<byte[], byte[]>(configs);
-		ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[], byte[]>(topic, JSON.toJSONBytes(schemaKey),
-		      JSON.toJSONBytes(schemaValue));
-		producer.send(record);
-		producer.close();
+		boolean result;
+		try {
+			result = schemaRegistryService.updateSchemaInKafkaStorage(topic, schemaKey, schemaValue);
+		} catch (Exception e) {
+			throw new InternalServerErrorException(e);
+		}
+
+		if (result) {
+			return Response.status(Status.OK).build();
+		} else {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
+	@Path("schemas/{schemaId}")
+	@GET
+	public SchemaValue fetchSchemaFromMetaServer(@PathParam("schemaId") Integer schemaId) {
+		SchemaValue schemaValue = schemaRegistryService.fetchSchemaFromMetaServer(schemaId);
+		if (schemaValue == null) {
+			throw new NotFoundException();
+		}
+		return schemaValue;
 	}
 }
