@@ -15,15 +15,22 @@
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="inputEndpointType" class="col-sm-4 control-label">Endpoint 类型</label>
-						<div class="col-sm-8">
+						<label for="inputCodecType" class="col-md-4 control-label">编码类型</label>
+						<div class="col-md-8">
+							<select class="form-control" id="inputCodecType" ng-model="new_topic.codecType" ng-options="codec for codec in codec_types">
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputEndpointType" class="col-md-4 control-label">Endpoint 类型</label>
+						<div class="col-md-8">
 							<select class="form-control" id="inputEndpointType" ng-model="new_topic.endpointType" ng-options="endpoint for endpoint in endpoint_types">
 							</select>
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="inputDescription" class="col-sm-4 control-label">描述</label>
-						<div class="col-sm-8">
+						<label for="inputDescription" class="col-md-4 control-label">描述</label>
+						<div class="col-md-8">
 							<input class="form-control" id="inputDescription" placeholder="Topic Description" ng-model="new_topic.description">
 						</div>
 					</div>

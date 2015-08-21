@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.unidal.tuple.Pair;
+
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 
 public class ConsumerView {
@@ -31,9 +33,9 @@ public class ConsumerView {
 		this.orderedConsume = consumer.getOrderedConsume();
 	}
 
-	public Map<String,ConsumerGroup> toMetaConsumer() {
+	public Map<String, ConsumerGroup> toMetaConsumer() {
 		Map<String, ConsumerGroup> topicConsumerMap = new HashMap<>();
-		for(String topicName : this.topicNames){
+		for (String topicName : this.topicNames) {
 			ConsumerGroup consumer = new ConsumerGroup();
 			consumer.setAckTimeoutSeconds(this.ackTimeoutSeconds);
 			consumer.setAppIds(this.appId);
@@ -42,22 +44,34 @@ public class ConsumerView {
 			consumer.setOrderedConsume(this.orderedConsume);
 			topicConsumerMap.put(topicName, consumer);
 		}
-		
 
 		return topicConsumerMap;
+	}
+
+	public Pair<String, ConsumerGroup> toMetaConsumerPair() {
+		Pair<String, ConsumerGroup> topicConsumerPair = new Pair<>();
+		
+		ConsumerGroup consumer = new ConsumerGroup();
+		consumer.setAckTimeoutSeconds(this.ackTimeoutSeconds);
+		consumer.setAppIds(this.appId);
+		consumer.setName(this.groupName);
+		consumer.setRetryPolicy(this.retryPolicy);
+		consumer.setOrderedConsume(this.orderedConsume);
+		
+		topicConsumerPair.setKey(this.topicNames.get(0));
+		topicConsumerPair.setValue(consumer);
+
+		return topicConsumerPair;
+
 	}
 
 	public List<String> getTopicNames() {
 		return topicNames;
 	}
 
-	
-	
 	public void setTopicNames(List<String> topicNames) {
 		this.topicNames = topicNames;
 	}
-	
-	
 
 	public String getGroupName() {
 		return groupName;
@@ -99,7 +113,6 @@ public class ConsumerView {
 		this.orderedConsume = orderedConsume;
 	}
 
-	
 	@Override
 	public String toString() {
 		return "ConsumerView [topicNames=" + topicNames + ", groupName=" + groupName + ", appId=" + appId

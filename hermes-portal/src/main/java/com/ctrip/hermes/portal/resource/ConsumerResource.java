@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.ConsumerView;
@@ -112,15 +113,15 @@ public class ConsumerResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 		String consumer = consumerView.getGroupName();
-		for(String topicName : consumerView.getTopicNames()){
+		for (String topicName : consumerView.getTopicNames()) {
 			if (consumerService.getConsumer(topicName, consumer) != null) {
-				throw new RestException("Consumer for "+topicName+" already exists.", Status.CONFLICT);
+				throw new RestException("Consumer for " + topicName + " already exists.", Status.CONFLICT);
 			}
 		}
-		
+
 		Map<String, ConsumerGroup> topicConsumerMap = consumerView.toMetaConsumer();
-		
-		ConsumerGroup c =null;
+
+		ConsumerGroup c = null;
 		try {
 			c = consumerService.addConsumerForTopics(topicConsumerMap);
 		} catch (Exception e) {
@@ -128,6 +129,32 @@ public class ConsumerResource {
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		consumerView = new ConsumerView(consumerView.getTopicNames(), c);
+		return Response.status(Status.CREATED).entity(consumerView).build();
+	}
+
+	@POST
+	@Path("update")
+	public Response updateConsumer(String content) {
+		if (StringUtils.isEmpty(content))
+			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
+		
+		ConsumerView consumerView = null;
+		try {
+			consumerView = JSON.parseObject(content, ConsumerView.class);
+		} catch (Exception e) {
+			logger.error("Parse consumer failed, content:{}", content, e);
+			throw new RestException(e,Status.BAD_REQUEST);
+		}
+		
+		Pair<String, ConsumerGroup> topicConsumerPair = consumerView.toMetaConsumerPair();
+		ConsumerGroup c = null;
+		try {
+			c = consumerService.updateGroupForTopic(topicConsumerPair);
+		} catch (Exception e) {
+			logger.warn("Update consumer failed", e);
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		consumerView = new ConsumerView(consumerView.getTopicNames(),c);
 		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
 }

@@ -13,7 +13,8 @@ function reload_table(scope, data) {
 	scope.consumer_rows = scope.src_consumers;
 }
 
-angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
+angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
+.run(function(editableOptions) {  editableOptions.theme = 'bs3'; }).controller(
 		'consumer-controller',
 		[
 				'$scope',
@@ -25,6 +26,10 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 								'add_consumer' : {
 									method:'POST',
 									url:'/api/consumers/add/multiple'
+								},
+								'update_consumer' : {
+									method:'POST',
+									url:'/api/consumers/update'
 								}
 							});
 					meta_resource = resource('/api/meta', {}, {
@@ -110,6 +115,25 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table' ]).controller(
 									+ error_result.data, false);
 						});
 					};
+					scope.update_consumer = function update_consumer(data,topicName,groupName){
+						data.groupName=groupName;
+						data.topicNames=topicName;
+						consumer_resource.update_consumer({}, data, function(save_result) {
+							console.log(save_result);
+							consumer_resource.query().$promise.then(function(
+									query_result) {
+								reload_table(scope, query_result);
+								show_op_info.show("修改 consumer "
+										+ data.groupName + " for topoic ("
+										+ data.topicNames + ") 成功!", true);
+							});
+						}, function(error_result) {
+							show_op_info.show("修改 consumer " + data.groupName
+									+ " for topoic (" + data.topicNames + ") 失败! "
+									+ error_result.data, false);
+						});
+						
+					}
 
 					scope.del_consumer = function del_consumer(topicName,
 							groupName) {

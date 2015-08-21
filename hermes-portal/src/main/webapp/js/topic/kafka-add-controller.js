@@ -11,6 +11,7 @@ topic_module.controller('kafka-add-controller', [ '$scope', '$resource', 'TopicS
 	$scope.current_datasource_names = [];
 	$scope.kafka_property_names = [ 'partitions', 'replication-factor', 'retention.bytes', 'retention.ms' ]
 	$scope.endpoint_types = [ 'kafka', 'broker' ];
+	$scope.codec_types = [ 'avro', 'json' ];
 
 	var meta_resource = $resource('/api/meta/storages', {}, {
 		'get_storage' : {
