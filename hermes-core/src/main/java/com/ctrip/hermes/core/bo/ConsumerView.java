@@ -1,15 +1,11 @@
 package com.ctrip.hermes.core.bo;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.unidal.tuple.Pair;
-
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 
 public class ConsumerView {
-	private List<String> topicNames;
+	private String topicName;
+
+	
 
 	private String groupName;
 
@@ -24,8 +20,8 @@ public class ConsumerView {
 	public ConsumerView() {
 	}
 
-	public ConsumerView(List<String> topicNames, ConsumerGroup consumer) {
-		this.topicNames = topicNames;
+	public ConsumerView(String topicName, ConsumerGroup consumer) {
+		this.topicName = topicName;
 		this.groupName = consumer.getName();
 		this.appId = consumer.getAppIds();
 		this.retryPolicy = consumer.getRetryPolicy();
@@ -33,44 +29,24 @@ public class ConsumerView {
 		this.orderedConsume = consumer.getOrderedConsume();
 	}
 
-	public Map<String, ConsumerGroup> toMetaConsumer() {
-		Map<String, ConsumerGroup> topicConsumerMap = new HashMap<>();
-		for (String topicName : this.topicNames) {
-			ConsumerGroup consumer = new ConsumerGroup();
-			consumer.setAckTimeoutSeconds(this.ackTimeoutSeconds);
-			consumer.setAppIds(this.appId);
-			consumer.setName(this.groupName);
-			consumer.setRetryPolicy(this.retryPolicy);
-			consumer.setOrderedConsume(this.orderedConsume);
-			topicConsumerMap.put(topicName, consumer);
-		}
-
-		return topicConsumerMap;
-	}
-
-	public Pair<String, ConsumerGroup> toMetaConsumerPair() {
-		Pair<String, ConsumerGroup> topicConsumerPair = new Pair<>();
-		
+	public  ConsumerGroup toMetaConsumer() {
 		ConsumerGroup consumer = new ConsumerGroup();
 		consumer.setAckTimeoutSeconds(this.ackTimeoutSeconds);
 		consumer.setAppIds(this.appId);
 		consumer.setName(this.groupName);
 		consumer.setRetryPolicy(this.retryPolicy);
 		consumer.setOrderedConsume(this.orderedConsume);
-		
-		topicConsumerPair.setKey(this.topicNames.get(0));
-		topicConsumerPair.setValue(consumer);
 
-		return topicConsumerPair;
-
+		return consumer;
 	}
 
-	public List<String> getTopicNames() {
-		return topicNames;
+
+	public String getTopicName() {
+		return topicName;
 	}
 
-	public void setTopicNames(List<String> topicNames) {
-		this.topicNames = topicNames;
+	public void setTopicName(String topicName) {
+		this.topicName = topicName;
 	}
 
 	public String getGroupName() {
@@ -115,7 +91,7 @@ public class ConsumerView {
 
 	@Override
 	public String toString() {
-		return "ConsumerView [topicNames=" + topicNames + ", groupName=" + groupName + ", appId=" + appId
+		return "ConsumerView [topicName=" + topicName + ", groupName=" + groupName + ", appId=" + appId
 				+ ", retryPolicy=" + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume="
 				+ orderedConsume + "]";
 	}

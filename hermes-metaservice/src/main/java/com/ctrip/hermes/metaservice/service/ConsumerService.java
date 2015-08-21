@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -62,8 +61,7 @@ public class ConsumerService {
 		m_metaService.updateMeta(meta);
 	}
 
-	public synchronized ConsumerGroup addConsumerForTopics(Map<String, ConsumerGroup> topoicConsumerMap)
-			throws Exception {
+	public synchronized ConsumerGroup addConsumerForTopics(String topicName, ConsumerGroup consumer) throws Exception {
 		Meta meta = m_metaService.getMeta();
 
 		int maxConsumerId = 0;
@@ -75,16 +73,12 @@ public class ConsumerService {
 			}
 		}
 
-		ConsumerGroup consumer = null;
-		for (String topicName : topoicConsumerMap.keySet()) {
-			consumer = topoicConsumerMap.get(topicName);
-			consumer.setId(++maxConsumerId);
-			Topic t = meta.getTopics().get(topicName);
-			t.addConsumerGroup(consumer);
-			if (Storage.MYSQL.equals(t.getStorageType())) {
-				m_storageService.addConsumerStorage(t, consumer);
-				m_zookeeperService.ensureConsumerLeaseZkPath(t);
-			}
+		consumer.setId(maxConsumerId + 1);
+		Topic t = meta.getTopics().get(topicName);
+		t.addConsumerGroup(consumer);
+		if (Storage.MYSQL.equals(t.getStorageType())) {
+			m_storageService.addConsumerStorage(t, consumer);
+			m_zookeeperService.ensureConsumerLeaseZkPath(t);
 		}
 
 		if (!m_metaService.updateMeta(meta)) {
@@ -93,17 +87,19 @@ public class ConsumerService {
 
 		return consumer;
 	}
-	
-	public synchronized ConsumerGroup updateGroupForTopic(Pair<String,ConsumerGroup> topicConsumerPair) throws Exception{
+
+	public synchronized ConsumerGroup updateGroupForTopic(String topicName, ConsumerGroup c)
+			throws Exception {
 		Meta meta = m_metaService.getMeta();
-		Topic t = meta.getTopics().get(topicConsumerPair.getKey());
-		t.updateCosumer(topicConsumerPair.getValue());
-		if(Storage.MYSQL.equals(t.getStorageType())){
+		Topic t = meta.getTopics().get(topicName);
+		t.removeConsumerGroup(c.getName());
+		t.addConsumerGroup(c);
+		if (Storage.MYSQL.equals(t.getStorageType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(t);
 		}
-		if(!m_metaService.updateMeta(meta)){
+		if (!m_metaService.updateMeta(meta)) {
 			throw new RuntimeException("Update meta failed, please try later");
 		}
-		return topicConsumerPair.getValue();
+		return c;
 	}
 }

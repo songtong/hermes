@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -201,8 +200,8 @@ public class TopicResource {
 
 	private void syncConsumers(TopicView topic, WebTarget target) {
 		for (ConsumerGroup consumer : metaService.findConsumersByTopic(topic.getName())) {
-			Builder request = target.path("/api/consumers/add/multiple").request();
-			ConsumerView requestView = new ConsumerView(Arrays.asList(topic.getName()), consumer);
+			Builder request = target.path("/api/consumers/add").request();
+			ConsumerView requestView = new ConsumerView(topic.getName(), consumer);
 			Response response = request.post(Entity.json(requestView));
 			if (!(Status.CREATED.getStatusCode() == response.getStatus()//
 			|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
