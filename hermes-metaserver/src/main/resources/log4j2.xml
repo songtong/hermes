@@ -9,13 +9,12 @@
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 		</Console>
 
-		<RollingFile name="FILE"
-			fileName="/opt/logs/hermes-metaserver/hermes-metaserver.log"
+		<RollingFile name="FILE" fileName="/opt/logs/hermes-metaserver/hermes-metaserver.log"
 			filePattern="/opt/logs/hermes-metaserver/$${date:yyyy-MM}/hermes-metaserver.%d{yyyy-MM-dd}-%i.log.gz">
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
-				<TimeBasedTriggeringPolicy/>
+				<TimeBasedTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
 		</RollingFile>
@@ -41,6 +40,19 @@
 		<Logger name="io.netty" level="INFO" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
+
+		<Logger name="com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder" level="DEBUG" additivity="false">
+			<Appender-ref ref="ASYNC" />
+		</Logger>
+
+		<Logger name="com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder" level="DEBUG" additivity="false">
+			<Appender-ref ref="ASYNC" />
+		</Logger>
+
+		<Logger name="com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder" level="DEBUG" additivity="false">
+			<Appender-ref ref="ASYNC" />
+		</Logger>
+
 		<Root level="info">
 			<Appender-ref ref="ASYNC" />
 		</Root>
