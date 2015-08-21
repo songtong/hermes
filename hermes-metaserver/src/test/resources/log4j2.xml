@@ -9,8 +9,7 @@
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 		</Console>
 
-		<RollingFile name="BIZ" fileName="/opt/logs/hermes-broker/biz.log"
-			filePattern="/opt/logs/hermes-broker/biz-%i.log.gz">
+		<RollingFile name="BIZ" fileName="/opt/logs/hermes-broker/biz.log" filePattern="/opt/logs/hermes-broker/biz-%i.log.gz">
 			<PatternLayout pattern="%m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
@@ -33,9 +32,8 @@
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger
-			name="com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler"
-			level="ERROR" additivity="false">
+		<Logger name="com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler" level="ERROR"
+			additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
@@ -68,8 +66,7 @@
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="com.ctrip.hermes.metaserver.commons.BaseLeaseHolder"
-			level="ERROR" additivity="false">
+		<Logger name="com.ctrip.hermes.metaserver.commons.BaseLeaseHolder" level="ERROR" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
@@ -80,15 +77,11 @@
 		<Logger name="org.apache.curator.ConnectionState" level="FATAL" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
-		<Logger
-			name="com.ctrip.hermes.metaserver.event.impl.LeaderInitEventHandler"
-			level="FATAL" additivity="false">
+		<Logger name="com.ctrip.hermes.metaserver.event.impl.LeaderInitEventHandler" level="FATAL" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger
-			name="com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler"
-			level="FATAL" additivity="false">
+		<Logger name="com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler" level="FATAL" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
@@ -100,12 +93,19 @@
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name=" com.ctrip.hermes.metaserver.meta.MetaHolder"
-			level="FATAL" additivity="false">
+		<Logger name=" com.ctrip.hermes.metaserver.meta.MetaHolder" level="FATAL" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
-		<Logger name="com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder"
-			level="FATAL" additivity="false">
+
+		<Logger name="com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder" level="DEBUG" additivity="false">
+			<Appender-ref ref="ASYNC" />
+		</Logger>
+
+		<Logger name="com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder" level="DEBUG" additivity="false">
+			<Appender-ref ref="ASYNC" />
+		</Logger>
+
+		<Logger name="com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder" level="DEBUG" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
