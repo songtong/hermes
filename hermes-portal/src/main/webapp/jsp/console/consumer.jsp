@@ -6,6 +6,7 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.consumer.Model" scope="request" />
 
 <a:layout>
+	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
 	<div ng-app="hermes-consumer" ng-controller="consumer-controller">
 		<div class="panel panel-info">
 			<div class="panel-heading">Hermes 消费者列表</div>
@@ -32,15 +33,21 @@
 				</thead>
 				<tbody ng-show="!is_loading">
 					<tr ng-repeat="row in consumer_rows">
-						<td><span ng-bind="row.groupName"></td>
-						<td><span ng-bind="row.appId"></td>
-						<td><span ng-bind="row.topicNames"></td>
-						<td><span ng-bind="row.orderedConsume"></td>
-						<td><span ng-bind="row.retryPolicy"></td>
-						<td><span ng-bind="row.ackTimeoutSeconds"></td>
-						<td>
-							<button type="button" ng-click="update_consumer()" class="btn btn-xs btn-warning" style="text-align: center;">修改</button>
-							<button type="button" ng-click="del_consumer(row.topicNames, row.groupName)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
+						<td><span e-form="rowform" ng-bind="row.groupName" e-name="groupName"></td>
+						<td><span e-form="rowform" editable-text="row.appId" ng-bind="row.appId" e-name="appId"></td>
+						<td><span e-form="rowform" ng-bind="row.topicNames" e-name="topicNames"></td>
+						<td><span e-form="rowform" editable-select="row.orderedConsume" ng-bind="row.orderedConsume" e-name="orderedConsume" e-ng-options="order for order in order_opts"></td>
+						<td><span e-form="rowform" editable-text="row.retryPolicy" ng-bind="row.retryPolicy" e-name="retryPolicy"></td>
+						<td><span e-form="rowform" editable-text="row.ackTimeoutSeconds" ng-bind="row.ackTimeoutSeconds" e-name="ackTimeoutSeconds"></td>
+						<td style="white-space: nowrap">
+							<form editable-form name="rowform" onbeforesave="update_consumer($data,row.topicNames,row.groupName)" ng-show="rowform.$visible">
+								<button type="submit" ng-disabled="rowform.$waiting" class="btn btn-xs btn-primary">保存</button>
+								<button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-xs btn-default">取消</button>
+							</form>
+							<div class="buttons" ng-show="!rowform.$visible">
+								<button type="button" ng-click="rowform.$show()" class="btn btn-xs btn-warning" style="text-align: center;">修改</button>
+								<button type="button" ng-click="del_consumer(row.topicNames, row.groupName)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
+							</div>
 						</td>
 					</tr>
 				</tbody>
@@ -55,7 +62,9 @@
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
 						<h4 class="modal-title" id="add-consumer-label">新增 Consumer</h4>
 					</div>
 					<div class="modal-body">
@@ -63,7 +72,7 @@
 							<div class="form-group">
 								<label for="inputTopicName" class="col-sm-3 control-label">Topic名称</label>
 								<div class="col-sm-8">
-									<input type="text" class="form-control" id="inputTopicName"  placeholder="Topic Name" ng-model="newTopicNames">
+									<input type="text" class="form-control" id="inputTopicName" placeholder="Topic Name" ng-model="newTopicNames">
 								</div>
 							</div>
 							<div class="form-group">
@@ -108,6 +117,7 @@
 		</div>
 	</div>
 
+	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/consumer/consumer.js"></script>
 </a:layout>

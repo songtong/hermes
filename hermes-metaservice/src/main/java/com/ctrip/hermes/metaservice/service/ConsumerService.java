@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -91,5 +92,18 @@ public class ConsumerService {
 		}
 
 		return consumer;
+	}
+	
+	public synchronized ConsumerGroup updateGroupForTopic(Pair<String,ConsumerGroup> topicConsumerPair) throws Exception{
+		Meta meta = m_metaService.getMeta();
+		Topic t = meta.getTopics().get(topicConsumerPair.getKey());
+		t.updateCosumer(topicConsumerPair.getValue());
+		if(Storage.MYSQL.equals(t.getStorageType())){
+			m_zookeeperService.ensureConsumerLeaseZkPath(t);
+		}
+		if(!m_metaService.updateMeta(meta)){
+			throw new RuntimeException("Update meta failed, please try later");
+		}
+		return topicConsumerPair.getValue();
 	}
 }
