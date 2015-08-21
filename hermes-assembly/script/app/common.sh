@@ -24,11 +24,9 @@ set -e
 
 JAVA_CMD=/usr/bin/java
 
-JAVA_OPTS=""
-
 if [ $hostname_ok == true ];then
 	log_op "jmx enabled"
-	JAVA_OPTS="-Dcom.sun.management.jmxremote.port=$JMX_PORT \
+	JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT \
             -Dcom.sun.management.jmxremote.authenticate=false \
             -Dcom.sun.management.jmxremote.ssl=false "
 else

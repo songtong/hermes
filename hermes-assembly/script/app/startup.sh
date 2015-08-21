@@ -10,8 +10,9 @@ if [ $# -lt 1 ];then
 	exit 1
 fi
 
-# default timeout, can be override in env.sh
+# default config, can be override in env.sh
 STOP_TIMEOUT=10
+JAVA_OPTS=""
 
 . "./env.sh"
 . "./common.sh"
