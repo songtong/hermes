@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
@@ -85,8 +84,6 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	private ServiceCache<Void> m_serviceCache;
 
-	private AtomicBoolean m_brokerListenerAdded = new AtomicBoolean(false);
-
 	public void setMetaService(MetaService metaService) {
 		m_metaService = metaService;
 	}
@@ -159,7 +156,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 	}
 
 	private Map<String, ClientContext> loadAndAddBrokerListWatcher(ServiceCacheListener listener) {
-		if (m_brokerListenerAdded.compareAndSet(false, true)) {
+		if (listener != null) {
 			m_serviceCache.addListener(listener);
 		}
 		List<ServiceInstance<Void>> instances = m_serviceCache.getInstances();
@@ -283,14 +280,12 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 					@Override
 					public void run() {
-						Map<String, ClientContext> brokerList = loadAndAddBrokerListWatcher(BrokerChangedListener.this);
+						Map<String, ClientContext> brokerList = loadAndAddBrokerListWatcher(null);
 						eventBus.pubEvent(m_context, new Event(EventType.BROKER_LIST_CHANGED, brokerList));
 					}
 				});
 			} else {
-				if (m_brokerListenerAdded.compareAndSet(true, false)) {
-					m_serviceCache.removeListener(this);
-				}
+				m_serviceCache.removeListener(this);
 			}
 		}
 	}

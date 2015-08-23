@@ -32,15 +32,6 @@
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler" level="ERROR"
-			additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
-		<Logger name="org.apache.zookeeper" level="WARN" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
 		<Logger name="org.apache.jasper" level="WARN" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
@@ -62,38 +53,7 @@
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="org.apache.curator" level="ERROR" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
-		<Logger name="com.ctrip.hermes.metaserver.commons.BaseLeaseHolder" level="ERROR" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
-		<Logger name="org.apache.curator.framework.imps" level="FATAL" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
-		<Logger name="org.apache.curator.ConnectionState" level="FATAL" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-		<Logger name="com.ctrip.hermes.metaserver.event.impl.LeaderInitEventHandler" level="FATAL" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
-		<Logger name="com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler" level="FATAL" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
-		<Logger name="org.apache.zookeeper.ClientCnxn" level="FATAL" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
 		<Logger name="org.apache.zookeeper.server" level="FATAL" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
-		<Logger name=" com.ctrip.hermes.metaserver.meta.MetaHolder" level="FATAL" additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
