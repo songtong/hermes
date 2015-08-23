@@ -145,6 +145,8 @@ public class MetaHolder implements Initializable {
 		metaInfo.setPort(m_config.getMetaServerPort());
 
 		m_zkService.persist(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
+
+		log.info("Upgrade dynamic meta(version={}).", metaInfo.getTimestamp());
 	}
 
 }
