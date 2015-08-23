@@ -26,8 +26,8 @@ public abstract class BaseEventBasedZkWatcher implements Watcher {
 
 	private Set<EventType> m_acceptedEventTypes = new HashSet<>();
 
-	protected BaseEventBasedZkWatcher(EventBus eventBus, ExecutorService executor, ClusterStateHolder clusterStateHolder,
-	      EventType... acceptedEventTypes) {
+	protected BaseEventBasedZkWatcher(EventBus eventBus, ExecutorService executor,
+	      ClusterStateHolder clusterStateHolder, EventType... acceptedEventTypes) {
 		m_eventBus = eventBus;
 		m_executor = executor;
 		m_clusterStateHolder = clusterStateHolder;
@@ -38,7 +38,7 @@ public abstract class BaseEventBasedZkWatcher implements Watcher {
 
 	@Override
 	public void process(final WatchedEvent event) {
-		if (conditionSatisfy(event) && eventTypeMatch(event) && !m_executor.isShutdown()) {
+		if (conditionSatisfy(event) && eventTypeMatch(event) && !m_eventBus.isStopped() && !m_executor.isShutdown()) {
 			m_executor.submit(new Runnable() {
 
 				@Override
