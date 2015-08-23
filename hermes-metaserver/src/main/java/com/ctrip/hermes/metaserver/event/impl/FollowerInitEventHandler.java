@@ -1,5 +1,7 @@
 package com.ctrip.hermes.metaserver.event.impl;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -47,6 +49,10 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	@Inject
 	private LeaderMetaFetcher m_leaderMetaFetcher;
 
+	private ReentrantLock m_metaWatcherLock = new ReentrantLock();
+
+	private ReentrantLock m_metaServerAssignmentWatcherLock = new ReentrantLock();
+
 	public void setMetaHolder(MetaHolder metaHolder) {
 		m_metaHolder = metaHolder;
 	}
@@ -85,18 +91,28 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	}
 
 	private void loadAndAddMetaServerAssignmentWatcher(MetaServerAssignmentChangedWatcher watcher) throws Exception {
-		m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
-		m_metaServerAssignmentHolder.reload();
+		m_metaServerAssignmentWatcherLock.lock();
+		try {
+			m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
+			m_metaServerAssignmentHolder.reload();
+		} finally {
+			m_metaServerAssignmentWatcherLock.unlock();
+		}
 	}
 
 	private void loadAndAddLeaderMetaWatcher(Watcher watcher) throws Exception {
-		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
-		MetaInfo metaInfo = ZKSerializeUtils.deserialize(data, MetaInfo.class);
-		Meta meta = m_leaderMetaFetcher.fetchMetaInfo(metaInfo);
-		if (meta != null) {
-			m_metaHolder.setMeta(meta);
-			log.info("Fetched meta from leader(endpoint={}:{},version={})", metaInfo.getHost(), metaInfo.getPort(),
-			      meta.getVersion());
+		m_metaWatcherLock.lock();
+		try {
+			byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
+			MetaInfo metaInfo = ZKSerializeUtils.deserialize(data, MetaInfo.class);
+			Meta meta = m_leaderMetaFetcher.fetchMetaInfo(metaInfo);
+			if (meta != null) {
+				m_metaHolder.setMeta(meta);
+				log.info("Fetched meta from leader(endpoint={}:{},version={})", metaInfo.getHost(), metaInfo.getPort(),
+				      meta.getVersion());
+			}
+		} finally {
+			m_metaWatcherLock.unlock();
 		}
 	}
 

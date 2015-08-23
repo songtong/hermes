@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
@@ -84,6 +85,12 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	private ServiceCache<Void> m_serviceCache;
 
+	private ReentrantLock m_baseMetaWatcherLock = new ReentrantLock();
+
+	private ReentrantLock m_metaListWatcherLock = new ReentrantLock();
+
+	private ReentrantLock m_brokerListWatcherLock = new ReentrantLock();
+
 	public void setMetaService(MetaService metaService) {
 		m_metaService = metaService;
 	}
@@ -132,7 +139,6 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	@Override
 	protected void processEvent(EventEngineContext context, Event event) throws Exception {
-		// FIXME refine thread pool
 		loadAndAddBaseMetaWatcher(new BaseMetaWatcher(context));
 		Meta baseMeta = loadBaseMeta();
 
@@ -156,47 +162,62 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 	}
 
 	private Map<String, ClientContext> loadAndAddBrokerListWatcher(ServiceCacheListener listener) {
-		if (listener != null) {
-			m_serviceCache.addListener(listener);
+		m_brokerListWatcherLock.lock();
+		try {
+			if (listener != null) {
+				m_serviceCache.addListener(listener);
+			}
+			List<ServiceInstance<Void>> instances = m_serviceCache.getInstances();
+			Map<String, ClientContext> brokers = new HashMap<>();
+			for (ServiceInstance<Void> instance : instances) {
+				String name = instance.getId();
+				String ip = instance.getAddress();
+				int port = instance.getPort();
+				brokers.put(name, new ClientContext(name, ip, port, m_systemClockService.now()));
+			}
+			return brokers;
+		} finally {
+			m_brokerListWatcherLock.unlock();
 		}
-		List<ServiceInstance<Void>> instances = m_serviceCache.getInstances();
-		Map<String, ClientContext> brokers = new HashMap<>();
-		for (ServiceInstance<Void> instance : instances) {
-			String name = instance.getId();
-			String ip = instance.getAddress();
-			int port = instance.getPort();
-			brokers.put(name, new ClientContext(name, ip, port, m_systemClockService.now()));
-		}
-		return brokers;
 	}
 
 	private List<Server> loadAndAddMetaServerListWatcher(Watcher watcher) throws Exception {
-		List<Server> metaServers = new ArrayList<>();
+		m_metaListWatcherLock.lock();
+		try {
+			List<Server> metaServers = new ArrayList<>();
 
-		CuratorFramework client = m_zkClient.get();
+			CuratorFramework client = m_zkClient.get();
 
-		String rootPath = ZKPathUtils.getMetaServersZkPath();
+			String rootPath = ZKPathUtils.getMetaServersZkPath();
 
-		List<String> serverPaths = client.getChildren().usingWatcher(watcher).forPath(rootPath);
+			List<String> serverPaths = client.getChildren().usingWatcher(watcher).forPath(rootPath);
 
-		for (String serverPath : serverPaths) {
-			HostPort hostPort = ZKSerializeUtils.deserialize(
-			      client.getData().forPath(ZKPaths.makePath(rootPath, serverPath)), HostPort.class);
+			for (String serverPath : serverPaths) {
+				HostPort hostPort = ZKSerializeUtils.deserialize(
+				      client.getData().forPath(ZKPaths.makePath(rootPath, serverPath)), HostPort.class);
 
-			Server s = new Server();
-			s.setHost(hostPort.getHost());
-			s.setId(serverPath);
-			s.setPort(hostPort.getPort());
+				Server s = new Server();
+				s.setHost(hostPort.getHost());
+				s.setId(serverPath);
+				s.setPort(hostPort.getPort());
 
-			metaServers.add(s);
+				metaServers.add(s);
+			}
+
+			return metaServers;
+		} finally {
+			m_metaListWatcherLock.unlock();
 		}
-
-		return metaServers;
 	}
 
 	private Long loadAndAddBaseMetaWatcher(Watcher watcher) throws Exception {
-		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getBaseMetaVersionZkPath());
-		return ZKSerializeUtils.deserialize(data, Long.class);
+		m_baseMetaWatcherLock.lock();
+		try {
+			byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getBaseMetaVersionZkPath());
+			return ZKSerializeUtils.deserialize(data, Long.class);
+		} finally {
+			m_baseMetaWatcherLock.unlock();
+		}
 	}
 
 	private Meta loadBaseMeta() throws Exception {
@@ -275,7 +296,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 			final EventBus eventBus = m_context.getEventBus();
 			ExecutorService watcherExecutor = m_context.getWatcherExecutor();
-			if (!watcherExecutor.isShutdown()) {
+			if (!eventBus.isStopped() && !watcherExecutor.isShutdown()) {
 				watcherExecutor.submit(new Runnable() {
 
 					@Override
