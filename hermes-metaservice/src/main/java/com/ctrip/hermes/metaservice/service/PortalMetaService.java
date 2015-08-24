@@ -56,4 +56,5 @@ public interface PortalMetaService extends MetaService {
 	public String getZookeeperList();
 	
 	public String getKafkaBrokerList();
+
 }

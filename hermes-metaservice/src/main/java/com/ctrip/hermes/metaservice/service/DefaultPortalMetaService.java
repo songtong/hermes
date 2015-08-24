@@ -261,7 +261,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	}
 
 	@Override
-   public String getZookeeperList() {
+	public String getZookeeperList() {
 		Map<String, Storage> storages = m_meta.getStorages();
 		for (Storage storage : storages.values()) {
 			if ("kafka".equals(storage.getType())) {
@@ -275,10 +275,10 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 			}
 		}
 		return "";
-   }
+	}
 
 	@Override
-   public String getKafkaBrokerList() {
+	public String getKafkaBrokerList() {
 		Map<String, Storage> storages = m_meta.getStorages();
 		for (Storage storage : storages.values()) {
 			if ("kafka".equals(storage.getType())) {
@@ -293,4 +293,5 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		}
 		return "";
 	}
+
 }

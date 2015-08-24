@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.config.CoreConfig;
@@ -329,11 +328,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public List<SchemaView> listSchemas() {
-		return getMetaProxy().listSchemas();
-	}
-
-	@Override
 	public boolean containsEndpoint(Endpoint endpoint) {
 		return getMeta().getEndpoints().containsKey(endpoint.getId());
 	}
@@ -385,15 +379,4 @@ public class DefaultMetaService implements MetaService, Initializable {
 		return "";
 	}
 
-	@Override
-	public SchemaView findSchemaViewByAvroId(int avroId) {
-		List<SchemaView> schemas = getMetaProxy().listSchemas();
-		if (schemas != null) {
-			for (SchemaView schema : schemas) {
-				if (schema.getAvroId() == avroId)
-					return schema;
-			}
-		}
-		return null;
-	}
 }

@@ -15,6 +15,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.unidal.dal.jdbc.DalException;
+import org.unidal.dal.jdbc.DalNotFoundException;
+
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.schemaregistry.SchemaKey;
@@ -64,7 +67,14 @@ public class SchemaRegistryResource {
 	@Path("schemas/{schemaId}")
 	@GET
 	public SchemaValue fetchSchemaFromMetaServer(@PathParam("schemaId") Integer schemaId) {
-		SchemaValue schemaValue = schemaRegistryService.fetchSchemaFromMetaServer(schemaId);
+		SchemaValue schemaValue = null;
+		try {
+			schemaValue = schemaRegistryService.fetchSchemaFromMetaServer(schemaId);
+		} catch (DalNotFoundException e) {
+			throw new NotFoundException(e);
+		} catch (DalException e) {
+			throw new InternalServerErrorException(e);
+		}
 		if (schemaValue == null) {
 			throw new NotFoundException();
 		}

@@ -8,12 +8,12 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SchemaView;
-import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.metaservice.schemaregistry.SchemaKey;
 import com.ctrip.hermes.metaservice.schemaregistry.SchemaValue;
 
@@ -21,7 +21,10 @@ import com.ctrip.hermes.metaservice.schemaregistry.SchemaValue;
 public class SchemaRegistryService {
 
 	@Inject
-	private MetaService metaService;
+	private PortalMetaService metaService;
+	
+	@Inject
+	private SchemaService schemaService;
 
 	public boolean updateSchemaInKafkaStorage(String topic, SchemaKey schemaKey, SchemaValue schemaValue)
 	      throws InterruptedException, ExecutionException {
@@ -42,8 +45,8 @@ public class SchemaRegistryService {
 			return false;
 	}
 
-	public SchemaValue fetchSchemaFromMetaServer(Integer schemaId) {
-		SchemaView schemaView = metaService.findSchemaViewByAvroId(schemaId);
+	public SchemaValue fetchSchemaFromMetaServer(Integer schemaId) throws DalException {
+		SchemaView schemaView = schemaService.getSchemaViewByAvroid(schemaId);
 		if (schemaView == null) {
 			return null;
 		}

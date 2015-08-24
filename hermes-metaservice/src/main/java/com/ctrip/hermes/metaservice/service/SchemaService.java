@@ -312,6 +312,18 @@ public class SchemaService {
 
 	/**
 	 * 
+	 * @param avroid
+	 * @return
+	 * @throws DalException 
+	 */
+	public SchemaView getSchemaViewByAvroid(int avroid) throws DalException {
+		Schema schema = m_schemaDao.findByAvroid(avroid, SchemaEntity.READSET_FULL);
+		SchemaView schemaView = toSchemaView(schema);
+		return schemaView;
+	}
+	
+	/**
+	 * 
 	 * @return
 	 * @throws DalException
 	 */
