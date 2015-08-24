@@ -167,13 +167,12 @@
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</role>
+					<role>com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.event.EventBus</role>
 				</requirement>
 			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</role>
-			<implementation>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</role>
@@ -236,9 +235,16 @@
 			<implementation>com.ctrip.hermes.metaserver.meta.DefaultMetaServerAssigningStrategy</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListener</role>
-			<role-hint>EventEngineBootstrapListener</role-hint>
-			<implementation>com.ctrip.hermes.metaserver.cluster.listener.EventEngineBootstrapListener</implementation>
+			<role>com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener</role>
+			<implementation>com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.event.EventBus</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.event.Guard</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.event.EventHandlerRegistry</role>
@@ -255,6 +261,22 @@
 					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.event.EventBus</role>
+			<implementation>com.ctrip.hermes.metaserver.event.DefaultEventBus</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.event.EventHandlerRegistry</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.event.Guard</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.event.Guard</role>
+			<implementation>com.ctrip.hermes.metaserver.event.Guard</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.event.EventHandler</role>
@@ -284,6 +306,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.commons.EndpointMaker</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.event.Guard</role>
 				</requirement>
 			</requirements>
 		</component>

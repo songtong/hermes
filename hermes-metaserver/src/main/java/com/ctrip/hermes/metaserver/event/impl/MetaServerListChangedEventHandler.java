@@ -7,7 +7,6 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.metaserver.event.Event;
-import com.ctrip.hermes.metaserver.event.EventEngineContext;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
@@ -33,7 +32,7 @@ public class MetaServerListChangedEventHandler extends BaseEventHandler {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected void processEvent(EventEngineContext context, Event event) throws Exception {
+	protected void processEvent(Event event) throws Exception {
 		Object data = event.getData();
 		if (data != null) {
 			List<Server> metaServers = (List<Server>) data;

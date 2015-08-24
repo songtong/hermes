@@ -10,9 +10,8 @@ import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy;
-import com.ctrip.hermes.metaserver.cluster.ClusterStateChangeListenerContainer;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
-import com.ctrip.hermes.metaserver.cluster.listener.EventEngineBootstrapListener;
+import com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
@@ -22,7 +21,9 @@ import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocatorLocator
 import com.ctrip.hermes.metaserver.consumer.LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy;
 import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator;
+import com.ctrip.hermes.metaserver.event.DefaultEventBus;
 import com.ctrip.hermes.metaserver.event.DefaultEventHandlerRegistry;
+import com.ctrip.hermes.metaserver.event.Guard;
 import com.ctrip.hermes.metaserver.event.impl.BaseMetaChangedEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.BrokerLeaseChangedEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.BrokerListChangedEventHandler;
@@ -61,8 +62,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		// cluster
 		all.add(A(ClusterStateHolder.class));
 
-		all.add(A(ClusterStateChangeListenerContainer.class));
-
 		// assignment
 		all.add(A(ConsumerAssignmentHolder.class));
 		all.add(A(LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy.class));
@@ -72,9 +71,12 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultMetaServerAssigningStrategy.class));
 
 		// event handler
-		all.add(A(EventEngineBootstrapListener.class));
+		all.add(A(EventBusBootstrapListener.class));
 		all.add(A(DefaultEventHandlerRegistry.class));
 		all.add(A(EndpointMaker.class));
+
+		all.add(A(DefaultEventBus.class));
+		all.add(A(Guard.class));
 
 		// leader
 		all.add(A(LeaderInitEventHandler.class));

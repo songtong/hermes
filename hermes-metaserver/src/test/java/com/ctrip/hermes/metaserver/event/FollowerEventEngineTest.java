@@ -51,7 +51,7 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 	@Mock
 	private LeaderMetaFetcher m_leaderMetaFetcher;
 
-	private FollowerEventEngine m_engine;
+	private EventBus m_eventBus;
 
 	@Override
 	protected void initZkData() throws Exception {
@@ -68,7 +68,7 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 
 	@Override
 	protected void doSetUp() throws Exception {
-		m_engine = new FollowerEventEngine();
+		m_eventBus = lookup(EventBus.class);
 		FollowerInitEventHandler followerInitEventHandler = (FollowerInitEventHandler) lookup(EventHandler.class,
 		      "FollowerInitEventHandler");
 		followerInitEventHandler.setBrokerAssignmentHolder(m_brokerAssignmentHolder);
@@ -159,7 +159,7 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 			}
 		}).when(m_metaServerAssignmentHolder).reload();
 
-		m_engine.start(createClusterStateHolder());
+		m_eventBus.pubEvent(new Event(EventType.FOLLOWER_INIT, 0, createClusterStateHolder(), null));
 
 		latch.await(5, TimeUnit.SECONDS);
 		return loadedMeta.get();

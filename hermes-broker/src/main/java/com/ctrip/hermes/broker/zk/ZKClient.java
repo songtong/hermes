@@ -3,7 +3,7 @@ package com.ctrip.hermes.broker.zk;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
-import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.retry.RetryNTimes;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.annotation.Inject;
@@ -31,8 +31,7 @@ public class ZKClient implements Initializable {
 		builder.connectString(m_config.getZkConnectionString());
 		builder.maxCloseWaitMs(m_config.getZkCloseWaitMillis());
 		builder.namespace(m_config.getZkNamespace());
-		builder.retryPolicy(new ExponentialBackoffRetry(m_config.getZkRetryBaseSleepTimeMillis(), m_config
-		      .getZkRetryMaxRetries()));
+		builder.retryPolicy(new RetryNTimes(m_config.getZkRetries(), m_config.getSleepMsBetweenRetries()));
 		builder.sessionTimeoutMs(m_config.getZkSessionTimeoutMillis());
 		builder.threadFactory(HermesThreadFactory.create("Broker-Zk", true));
 
