@@ -79,8 +79,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	@Override
 	protected void processEvent(Event event) throws Exception {
 		m_brokerAssignmentHolder.clear();
-		loadAndAddLeaderMetaWatcher(new LeaderMetaChangedWatcher(event.getEventBus(), event.getVersion()),
-		      event.getVersion());
+		loadAndAddLeaderMetaWatcher(new LeaderMetaChangedWatcher(event.getEventBus(), event.getVersion()));
 
 		loadAndAddMetaServerAssignmentWatcher(new MetaServerAssignmentChangedWatcher(event.getEventBus(),
 		      event.getVersion()));
@@ -91,7 +90,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		m_metaServerAssignmentHolder.reload();
 	}
 
-	private void loadAndAddLeaderMetaWatcher(Watcher watcher, long version) throws Exception {
+	private void loadAndAddLeaderMetaWatcher(Watcher watcher) throws Exception {
 		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
 		MetaInfo metaInfo = ZKSerializeUtils.deserialize(data, MetaInfo.class);
 		Meta meta = m_leaderMetaFetcher.fetchMetaInfo(metaInfo);
@@ -121,7 +120,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		@Override
 		protected void doProcess(WatchedEvent event) {
 			try {
-				loadAndAddLeaderMetaWatcher(this, m_version);
+				loadAndAddLeaderMetaWatcher(this);
 			} catch (Exception e) {
 				log.error("Exception occurred while handling leader meta watcher event.", e);
 			}
