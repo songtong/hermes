@@ -34,7 +34,7 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 	private EndpointManager m_endpointManager;
 
 	@Inject
-	private EndpointClient m_endpointClient;
+	protected EndpointClient m_endpointClient;
 
 	@Inject
 	private MessageCodec m_messageCodec;

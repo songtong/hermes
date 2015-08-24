@@ -7,6 +7,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.MessageListener;
+import com.ctrip.hermes.consumer.engine.CompositeSubscribeHandle;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.Subscriber;
@@ -37,6 +38,13 @@ public class DefaultConsumer extends com.ctrip.hermes.consumer.api.Consumer {
 
 		public DefaultConsumerHolder(SubscribeHandle subscribeHandle) {
 			m_subscribeHandle = subscribeHandle;
+		}
+
+		public boolean isConsuming() {
+			if (m_subscribeHandle instanceof CompositeSubscribeHandle) {
+				return ((CompositeSubscribeHandle) m_subscribeHandle).getChildHandleList().size() > 0;
+			}
+			return false;
 		}
 
 		@Override
