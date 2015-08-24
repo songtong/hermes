@@ -1,12 +1,14 @@
 package com.ctrip.hermes.consumer;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.MessageListener;
+import com.ctrip.hermes.consumer.api.MessageStream;
 import com.ctrip.hermes.consumer.engine.CompositeSubscribeHandle;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
@@ -52,5 +54,11 @@ public class DefaultConsumer extends com.ctrip.hermes.consumer.api.Consumer {
 			m_subscribeHandle.close();
 		}
 
+	}
+
+	@Override
+	public <T> List<MessageStream<T>> createMessageStreams(String topic, String groupId) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
 	}
 }
