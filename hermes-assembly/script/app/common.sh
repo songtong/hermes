@@ -44,8 +44,8 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -XX:+PrintGC \
             -XX:+PrintGCDetails \
             -XX:+PrintGCDateStamps \
-            -Xloggc:/opt/logs/hermes/gc.log \
+            -Xloggc:$LOG_PATH/gc.log \
             -XX:-OmitStackTraceInFastThrow \
-            -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/logs/hermes/
+            -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$LOG_PATH
             "
 export JAVA_OPTS=${JAVA_OPTS}
