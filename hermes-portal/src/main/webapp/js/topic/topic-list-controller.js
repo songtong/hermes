@@ -33,6 +33,7 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 			$scope.upload_result = function(row, success, response) {
 				if (success) {
 					show_op_info.show("上传schema成功!", true);
+					row.schema = row.schema == null || row.schema == undefined ? {} : row_schema;
 					row.schema.version = row.schema.version == undefined ? 1 : row.schema.version + 1;
 					row.schema.name = row.name + '-value';
 					row.schema.id += 1;

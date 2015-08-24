@@ -11,6 +11,10 @@ public class CompositeSubscribeHandle implements SubscribeHandle {
 		m_childHandles.add(handle);
 	}
 
+	public List<SubscribeHandle> getChildHandleList() {
+		return m_childHandles;
+	}
+
 	@Override
 	public void close() {
 		for (SubscribeHandle child : m_childHandles) {
