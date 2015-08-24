@@ -52,4 +52,9 @@ public interface PortalMetaService extends MetaService {
 	public Partition findPartition(String topic, int partitionId);
 
 	public List<ConsumerGroup> findConsumersByTopic(String topicName);
+	
+	public String getZookeeperList();
+	
+	public String getKafkaBrokerList();
+
 }

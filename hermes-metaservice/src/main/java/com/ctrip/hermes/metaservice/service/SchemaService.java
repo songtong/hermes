@@ -312,12 +312,39 @@ public class SchemaService {
 
 	/**
 	 * 
+	 * @param avroid
+	 * @return
+	 * @throws DalException 
+	 */
+	public SchemaView getSchemaViewByAvroid(int avroid) throws DalException {
+		Schema schema = m_schemaDao.findByAvroid(avroid, SchemaEntity.READSET_FULL);
+		SchemaView schemaView = toSchemaView(schema);
+		return schemaView;
+	}
+	
+	/**
+	 * 
 	 * @return
 	 * @throws DalException
 	 */
 	public List<Schema> listLatestSchemaMeta() throws DalException {
 		List<Schema> schemas = m_schemaDao.listLatest(SchemaEntity.READSET_FULL);
 		return schemas;
+	}
+
+	/**
+	 * 
+	 * @return
+	 * @throws DalException
+	 */
+	public List<SchemaView> listSchemaViews() throws DalException {
+		List<Schema> schemas = m_schemaDao.list(SchemaEntity.READSET_FULL);
+		List<SchemaView> result = new ArrayList<SchemaView>();
+		for (Schema schema : schemas) {
+			SchemaView schemaView = SchemaService.toSchemaView(schema);
+			result.add(schemaView);
+		}
+		return result;
 	}
 
 	/**
@@ -512,6 +539,7 @@ public class SchemaService {
 		view.setDescription(schema.getDescription());
 		view.setCompatibility(schema.getCompatibility());
 		view.setTopicId(schema.getTopicId());
+		view.setAvroId(schema.getAvroid());
 		if (schema.getSchemaContent() != null) {
 			view.setSchemaPreview(new String(schema.getSchemaContent()));
 		}

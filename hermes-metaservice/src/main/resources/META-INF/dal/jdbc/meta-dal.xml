@@ -11,6 +11,7 @@
 	</entity>
 	<entity name="schema">
 		<var name="tId" value-type="long" />
+		<var name="aId" value-type="int" />
 		<query-defs>
 			<query name="findByTopic" type="SELECT" multiple="true">
 				<param name="tId" />
@@ -36,6 +37,12 @@
 		WHERE <FIELD name='id'/> IN 
 		(SELECT MAX(<FIELD name='id'/>) FROM <TABLE/> GROUP BY <FIELD name='topic-id'/>)]]>
 				</statement>
+			</query>
+			<query name="findByAvroid" type="SELECT">
+				<param name="aId" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='avro-id'/> = ${aId}]]></statement>
 			</query>
 		</query-defs>
 	</entity>

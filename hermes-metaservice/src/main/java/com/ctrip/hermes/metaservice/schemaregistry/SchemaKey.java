@@ -1,4 +1,4 @@
-package com.ctrip.hermes.rest.schemaregistry;
+package com.ctrip.hermes.metaservice.schemaregistry;
 
 public class SchemaKey extends SchemaRegistryKey {
 

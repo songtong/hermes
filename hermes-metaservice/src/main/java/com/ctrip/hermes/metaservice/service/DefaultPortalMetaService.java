@@ -259,4 +259,39 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		}
 		return new ArrayList<ConsumerGroup>();
 	}
+
+	@Override
+	public String getZookeeperList() {
+		Map<String, Storage> storages = m_meta.getStorages();
+		for (Storage storage : storages.values()) {
+			if ("kafka".equals(storage.getType())) {
+				for (Datasource ds : storage.getDatasources()) {
+					for (Property property : ds.getProperties().values()) {
+						if ("zookeeper.connect".equals(property.getName())) {
+							return property.getValue();
+						}
+					}
+				}
+			}
+		}
+		return "";
+	}
+
+	@Override
+	public String getKafkaBrokerList() {
+		Map<String, Storage> storages = m_meta.getStorages();
+		for (Storage storage : storages.values()) {
+			if ("kafka".equals(storage.getType())) {
+				for (Datasource ds : storage.getDatasources()) {
+					for (Property property : ds.getProperties().values()) {
+						if ("bootstrap.servers".equals(property.getName())) {
+							return property.getValue();
+						}
+					}
+				}
+			}
+		}
+		return "";
+	}
+
 }

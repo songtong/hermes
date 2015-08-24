@@ -3,6 +3,7 @@ package com.ctrip.hermes.core.meta.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.config.CoreConfig;
@@ -32,6 +32,7 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.transform.BaseVisitor2;
@@ -292,7 +293,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public String findAvroSchemaRegistryUrl() {
+	public String getAvroSchemaRegistryUrl() {
 		Codec avroCodec = getMeta().findCodec(Codec.AVRO);
 		return avroCodec.getProperties().get(m_config.getAvroSchemaRetryUrlKey()).getValue();
 	}
@@ -327,11 +328,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public List<SchemaView> listSchemas() {
-		return getMetaProxy().listSchemas();
-	}
-
-	@Override
 	public boolean containsEndpoint(Endpoint endpoint) {
 		return getMeta().getEndpoints().containsKey(endpoint.getId());
 	}
@@ -347,6 +343,40 @@ public class DefaultMetaService implements MetaService, Initializable {
 		}
 
 		return true;
+	}
+
+	@Override
+	public String getZookeeperList() {
+		Map<String, Storage> storages = getMeta().getStorages();
+		for (Storage storage : storages.values()) {
+			if ("kafka".equals(storage.getType())) {
+				for (Datasource ds : storage.getDatasources()) {
+					for (Property property : ds.getProperties().values()) {
+						if ("zookeeper.connect".equals(property.getName())) {
+							return property.getValue();
+						}
+					}
+				}
+			}
+		}
+		return "";
+	}
+
+	@Override
+	public String getKafkaBrokerList() {
+		Map<String, Storage> storages = getMeta().getStorages();
+		for (Storage storage : storages.values()) {
+			if ("kafka".equals(storage.getType())) {
+				for (Datasource ds : storage.getDatasources()) {
+					for (Property property : ds.getProperties().values()) {
+						if ("bootstrap.servers".equals(property.getName())) {
+							return property.getValue();
+						}
+					}
+				}
+			}
+		}
+		return "";
 	}
 
 }

@@ -53,6 +53,18 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.metaservice.service.SchemaRegistryService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.SchemaRegistryService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.SchemaService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaservice.service.CodecService</role>
 			<implementation>com.ctrip.hermes.metaservice.service.CodecService</implementation>
 			<requirements>

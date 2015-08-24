@@ -2,7 +2,6 @@ package com.ctrip.hermes.core.meta;
 
 import java.util.List;
 
-import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -21,8 +20,6 @@ import com.ctrip.hermes.meta.entity.Topic;
  *
  */
 public interface MetaService {
-
-	String findAvroSchemaRegistryUrl();
 
 	Codec findCodecByTopic(String topic);
 
@@ -57,10 +54,14 @@ public interface MetaService {
 	LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId);
 
 	List<SubscriptionView> listSubscriptions(String status);
-
-	List<SchemaView> listSchemas();
-
+	
 	boolean containsEndpoint(Endpoint endpoint);
 
 	boolean containsConsumerGroup(String topicName, String groupId);
+	
+	String getAvroSchemaRegistryUrl();
+	
+	String getZookeeperList();
+	
+	String getKafkaBrokerList();
 }
