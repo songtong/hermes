@@ -1,5 +1,7 @@
 package com.ctrip.hermes.consumer.engine.bootstrap;
 
+import com.ctrip.hermes.meta.entity.Topic;
+
 
 
 /**
@@ -8,6 +10,6 @@ package com.ctrip.hermes.consumer.engine.bootstrap;
  */
 public interface ConsumerBootstrapManager {
 
-	public ConsumerBootstrap findConsumerBootStrap(String endpointType);
+	public ConsumerBootstrap findConsumerBootStrap(Topic topic);
 
 }
