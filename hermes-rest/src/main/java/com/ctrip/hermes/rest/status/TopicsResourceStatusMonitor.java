@@ -27,8 +27,8 @@ public enum TopicsResourceStatusMonitor {
 	      MetricRegistry.name(MSG_PUBLISH_PREFIX, "timer"));
 
 	public Timer getSendTimer(String topic) {
-		Timer sendTimer = HermesMetricsRegistry.getMetricRegistry().timer(
-		      MetricRegistry.name(MSG_PUBLISH_PREFIX, topic, "timer"));
+		Timer sendTimer = HermesMetricsRegistry.getMetricRegistryByT(topic).timer(
+		      MetricRegistry.name(MSG_PUBLISH_PREFIX, "timer"));
 		return sendTimer;
 	}
 
@@ -63,24 +63,24 @@ public enum TopicsResourceStatusMonitor {
 	public void updateRequestMeter(String topic) {
 		requestMeterGlobal.mark();
 
-		Meter requestMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-		      MetricRegistry.name(MSG_PUBLISH_PREFIX, topic, "request", "meter"));
+		Meter requestMeter = HermesMetricsRegistry.getMetricRegistryByT(topic).meter(
+		      MetricRegistry.name(MSG_PUBLISH_PREFIX, "request", "meter"));
 		requestMeter.mark();
 	}
 
 	public void updateRequestSizeHistogram(String topic, int length) {
 		requestSizeHistogramGlobal.update(length);
 
-		Histogram requestSizeHistogram = HermesMetricsRegistry.getMetricRegistry().histogram(
-		      MetricRegistry.name(MSG_PUBLISH_PREFIX, topic, "content-length", "histogram"));
+		Histogram requestSizeHistogram = HermesMetricsRegistry.getMetricRegistryByT(topic).histogram(
+		      MetricRegistry.name(MSG_PUBLISH_PREFIX, "content-length", "histogram"));
 		requestSizeHistogram.update(length);
 	}
 
 	public void updateTimeoutMeter(String topic) {
 		timeoutMeterGlobal.mark();
 
-		Meter timeoutMeter = HermesMetricsRegistry.getMetricRegistry().meter(
-		      MetricRegistry.name(MSG_PUBLISH_PREFIX, topic, "timeout", "meter"));
+		Meter timeoutMeter = HermesMetricsRegistry.getMetricRegistryByT(topic).meter(
+		      MetricRegistry.name(MSG_PUBLISH_PREFIX, "timeout", "meter"));
 		timeoutMeter.mark();
 	}
 }
