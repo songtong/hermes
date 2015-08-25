@@ -44,7 +44,8 @@ public abstract class BaseZKWatcher implements Watcher {
 	}
 
 	protected boolean eventTypeMatch(final WatchedEvent event) {
-		return m_acceptedEventTypes.isEmpty() || m_acceptedEventTypes.contains(event.getType());
+		return m_acceptedEventTypes.isEmpty() || m_acceptedEventTypes.contains(event.getType())
+		      || event.getType() == EventType.None;
 	}
 
 	protected abstract void doProcess(WatchedEvent event);

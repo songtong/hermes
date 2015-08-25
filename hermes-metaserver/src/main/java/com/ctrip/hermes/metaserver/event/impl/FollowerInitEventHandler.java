@@ -113,11 +113,6 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		}
 
 		@Override
-		public void process(WatchedEvent event) {
-			super.process(event);
-		}
-
-		@Override
 		protected void doProcess(WatchedEvent event) {
 			try {
 				loadAndAddLeaderMetaWatcher(this);

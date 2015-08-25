@@ -59,6 +59,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 		List<String> topics = client.getChildren()//
 		      .usingWatcher(m_consumerLeaseAddedWatcher)//
 		      .forPath(ZKPathUtils.getConsumerLeaseRootZkPath());
+		m_consumerLeaseAddedWatcher.addWatchedPath(ZKPathUtils.getConsumerLeaseRootZkPath());
 
 		if (topics != null && !topics.isEmpty()) {
 			for (String topic : topics) {
@@ -77,6 +78,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 		String topicPath = ZKPaths.makePath(ZKPathUtils.getConsumerLeaseRootZkPath(), topic);
 
 		client.getData().usingWatcher(m_consumerLeaseChangedWatcher).forPath(topicPath);
+		m_consumerLeaseChangedWatcher.addWatchedPath(topicPath);
 		addWatchedTopic(topic);
 
 		List<String> partitions = client.getChildren().forPath(topicPath);
@@ -105,8 +107,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 
 	@Override
 	protected void doInitialize() {
-		m_watcherExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("ConsumerLeaseWatcher",
-		      true));
+		m_watcherExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("ConsumerLeaseWatcher", true));
 		m_consumerLeaseChangedWatcher = new ConsumerLeaseChangedWatcher(m_watcherExecutor, this);
 		m_consumerLeaseAddedWatcher = new ConsumerLeaseAddedWatcher(m_watcherExecutor, this);
 	}
