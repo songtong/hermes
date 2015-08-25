@@ -230,7 +230,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					} catch (TimeoutException e) {
 						ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(m_topic, m_partition,
 						      cmd.getMessageCount());
-						future.cancel(true);
+						m_messageAcceptanceMonitor.cancel(correlationId);
 					}
 
 					context.stop();

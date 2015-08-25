@@ -307,6 +307,8 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 
 		public boolean flush() {
 			if (!isClosed()) {
+				popExpiredOps();
+
 				ChannelFuture channelFuture = m_channelFuture.get();
 
 				if (channelFuture != null) {
@@ -323,6 +325,16 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 				}
 			}
 			return false;
+		}
+
+		private void popExpiredOps() {
+			while (!m_opQueue.isEmpty()) {
+				if (m_opQueue.peek().isExpired()) {
+					m_opQueue.poll();
+				} else {
+					break;
+				}
+			}
 		}
 
 		private void doFlush(Channel channel, final WriteOp op) {
@@ -360,14 +372,16 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 		}
 
 		public void write(Command cmd, long timeout, TimeUnit timeUnit) {
-			if (!isClosed() && !m_opQueue.offer(new WriteOp(cmd, timeout, timeUnit))) {
-				ChannelFuture channelFuture = m_channelFuture.get();
-				Channel channel = null;
-				if (channelFuture != null) {
-					channel = channelFuture.channel();
+			if (!isClosed()) {
+				if (!m_opQueue.offer(new WriteOp(cmd, timeout, timeUnit))) {
+					ChannelFuture channelFuture = m_channelFuture.get();
+					Channel channel = null;
+					if (channelFuture != null) {
+						channel = channelFuture.channel();
+					}
+					log.warn("Send buffer of endpoint channel {} is full",
+					      channel == null ? "null" : NettyUtils.parseChannelRemoteAddr(channel));
 				}
-				log.warn("Send buffer of endpoint channel {} is full",
-				      channel == null ? "null" : NettyUtils.parseChannelRemoteAddr(channel));
 			}
 		}
 
