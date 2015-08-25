@@ -26,14 +26,15 @@ public enum PullMessageAnswer implements Answer<Void> {
 			}
 			m_answeredCount.incrementAndGet();
 			PullMessageCommand pullMessageCmd = invocation.getArgumentAt(1, PullMessageCommand.class);
-			PullMessageResultCommand resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
-			      pullMessageCmd.getTopic(), Arrays.asList(new Pair<String, String>("hello", "hermes")), 0, 0, false,
-			      "hermes-key", m_msgCreator.createRawMessages());
-			resultCmd.correlate(pullMessageCmd);
+			if (pullMessageCmd != null && m_msgCreator != null) {
+				PullMessageResultCommand resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
+				      pullMessageCmd.getTopic(), Arrays.asList(new Pair<String, String>("hello", "hermes")), 0, 0, false,
+				      "hermes-key", m_msgCreator.createRawMessages());
+				resultCmd.correlate(pullMessageCmd);
 
-			PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL.toString()).process(
-			      new CommandProcessorContext(resultCmd, m_channel));
-
+				PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL.toString()).process(
+				      new CommandProcessorContext(resultCmd, m_channel));
+			}
 			return null;
 		}
 	},
@@ -58,7 +59,7 @@ public enum PullMessageAnswer implements Answer<Void> {
 	 *           Mock channel to write ack/nack when received messages
 	 * @return
 	 */
-	public PullMessageAnswer channel(Channel channel) {
+	public synchronized PullMessageAnswer channel(Channel channel) {
 		m_channel = channel;
 		return this;
 	}
@@ -68,23 +69,23 @@ public enum PullMessageAnswer implements Answer<Void> {
 	 *           Generate mock messages to simulate PullMessageResultCommand
 	 * @return
 	 */
-	public PullMessageAnswer creator(RawMessageCreator<?> creator) {
+	public synchronized PullMessageAnswer creator(RawMessageCreator<?> creator) {
 		m_msgCreator = creator;
 		return this;
 	}
 
-	public static void reset() {
+	public synchronized static void reset() {
 		m_answeredCount.set(0);
 		m_channel = null;
 		m_msgCreator = null;
 	}
 
-	public PullMessageAnswer withDelay(int delay) {
+	public synchronized PullMessageAnswer withDelay(int delay) {
 		m_answerDelay = delay;
 		return this;
 	}
 
-	private static void waitUntilTrigger() {
+	private synchronized static void waitUntilTrigger() {
 		if (m_answerDelay > 0) {
 			try {
 				TimeUnit.MILLISECONDS.sleep(m_answerDelay);
