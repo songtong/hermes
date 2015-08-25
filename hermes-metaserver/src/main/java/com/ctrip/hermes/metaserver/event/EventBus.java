@@ -1,15 +1,15 @@
 package com.ctrip.hermes.metaserver.event;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
 public interface EventBus {
 
-	void pubEvent(EventEngineContext context, Event event);
+	void pubEvent(Event event);
 
-	void stop();
-
-	boolean isStopped();
+	ExecutorService getExecutor();
 
 }

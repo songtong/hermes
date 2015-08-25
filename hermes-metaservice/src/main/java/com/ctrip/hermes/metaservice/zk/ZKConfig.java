@@ -35,12 +35,12 @@ public class ZKConfig {
 		return "hermes";
 	}
 
-	public int getZkRetryBaseSleepTimeMillis() {
+	public int getSleepMsBetweenRetries() {
 		return 1000;
 	}
 
-	public int getZkRetryMaxRetries() {
-		return 3;
+	public int getZkRetries() {
+		return Integer.MAX_VALUE;
 	}
 
 	public int getZkSessionTimeoutMillis() {

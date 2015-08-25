@@ -1,6 +1,5 @@
 package com.ctrip.hermes.metaserver.cluster;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -14,8 +13,9 @@ import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
-import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
+import com.ctrip.hermes.metaserver.event.EventBus;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 
 /**
@@ -34,7 +34,10 @@ public class ClusterStateHolder {
 	private ZKClient m_client;
 
 	@Inject
-	private ClusterStateChangeListenerContainer m_listenerContainer;
+	private EventBusBootstrapListener m_eventBusBootstrapListener;
+
+	@Inject
+	private EventBus m_eventBus;
 
 	private LeaderLatch m_leaderLatch;
 
@@ -61,7 +64,7 @@ public class ClusterStateHolder {
 				log.info("Become follower");
 				m_hasLeadership.set(false);
 				m_leader.set(fetcheLeaderInfoFromZk());
-				m_listenerContainer.notLeader(ClusterStateHolder.this);
+				m_eventBusBootstrapListener.notLeader(ClusterStateHolder.this);
 			}
 
 			@Override
@@ -69,12 +72,18 @@ public class ClusterStateHolder {
 				log.info("Become leader");
 				m_hasLeadership.set(true);
 				m_leader.set(fetcheLeaderInfoFromZk());
-				m_listenerContainer.isLeader(ClusterStateHolder.this);
+				m_eventBusBootstrapListener.isLeader(ClusterStateHolder.this);
 			}
-		}, Executors.newSingleThreadExecutor(HermesThreadFactory.create("LeaderLatchListenerPool", true)));
+		}, m_eventBus.getExecutor());
 
 		// call notLeader before start, since if this is not leader, it won't trigger notLeader on start
-		m_listenerContainer.notLeader(this);
+		m_eventBus.getExecutor().submit(new Runnable() {
+
+			@Override
+			public void run() {
+				m_eventBusBootstrapListener.notLeader(ClusterStateHolder.this);
+			}
+		});
 
 		m_leaderLatch.start();
 	}

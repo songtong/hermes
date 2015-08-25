@@ -6,7 +6,7 @@ package com.ctrip.hermes.metaserver.event;
  */
 public interface EventHandler {
 
-	public void onEvent(EventEngineContext context, Event event) throws Exception;
+	public void onEvent(Event event) throws Exception;
 
 	public String getName();
 

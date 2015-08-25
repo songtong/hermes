@@ -14,8 +14,8 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.metaserver.broker.watcher.BrokerLeaseChangedWatcher;
 import com.ctrip.hermes.metaserver.broker.watcher.BrokerLeaseAddedWatcher;
+import com.ctrip.hermes.metaserver.broker.watcher.BrokerLeaseChangedWatcher;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder;
 import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
@@ -59,6 +59,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 		List<String> topics = client.getChildren()//
 		      .usingWatcher(m_brokerLeaseAddedWatcher)//
 		      .forPath(ZKPathUtils.getBrokerLeaseRootZkPath());
+		m_brokerLeaseAddedWatcher.addWatchedPath(ZKPathUtils.getBrokerLeaseRootZkPath());
 
 		if (topics != null && !topics.isEmpty()) {
 			for (String topic : topics) {
@@ -77,6 +78,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 		String topicPath = ZKPaths.makePath(ZKPathUtils.getBrokerLeaseRootZkPath(), topic);
 
 		client.getData().usingWatcher(m_brokerLeaseChangedWatcher).forPath(topicPath);
+		m_brokerLeaseChangedWatcher.addWatchedPath(topicPath);
 		addWatchedTopic(topic);
 
 		List<String> partitions = client.getChildren().forPath(topicPath);

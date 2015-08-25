@@ -62,7 +62,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 	@Mock
 	private EndpointMaker m_endpointMaker;
 
-	private LeaderEventEngine m_engine;
+	private EventBus m_eventBus;
 
 	private static AtomicInteger m_baseMetaChangeCount = new AtomicInteger(0);
 
@@ -88,7 +88,6 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 		defineComponent(EventHandler.class, "MetaServerListChangedEventHandler",
 		      TestMetaServerListChangedEventHandler.class);
 
-		m_engine = new LeaderEventEngine();
 		LeaderInitEventHandler leaderInitEventHandler = (LeaderInitEventHandler) lookup(EventHandler.class,
 		      "LeaderInitEventHandler");
 		leaderInitEventHandler.setMetaService(m_metaService);
@@ -101,6 +100,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 		m_curator.setData().forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(1L));
 
 		leaderInitEventHandler.initialize();
+		m_eventBus = lookup(EventBus.class);
 	}
 
 	private void setMetaServers(List<Pair<String, HostPort>> servers) throws Exception {
@@ -197,7 +197,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 			}
 		}).when(m_metaServerAssignmentHolder).reassign(anyListOf(Server.class), anyListOf(Topic.class));
 
-		m_engine.start(createClusterStateHolder());
+		m_eventBus.pubEvent(new Event(EventType.LEADER_INIT, 0, createClusterStateHolder(), null));
 
 		latch.await(5, TimeUnit.SECONDS);
 	}
@@ -211,7 +211,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 	public static class TestBaseMetaChangedEventHandler extends BaseMetaChangedEventHandler {
 
 		@Override
-		protected void processEvent(EventEngineContext context, Event event) throws Exception {
+		protected void processEvent(Event event) throws Exception {
 			m_baseMetaChangeCount.incrementAndGet();
 		}
 
@@ -220,7 +220,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 	public static class TestMetaServerListChangedEventHandler extends MetaServerListChangedEventHandler {
 		@SuppressWarnings("unchecked")
 		@Override
-		protected void processEvent(EventEngineContext context, Event event) throws Exception {
+		protected void processEvent(Event event) throws Exception {
 			m_metaServers.set((List<Server>) event.getData());
 		}
 	}

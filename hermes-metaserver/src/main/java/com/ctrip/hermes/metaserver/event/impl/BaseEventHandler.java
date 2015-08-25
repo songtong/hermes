@@ -2,8 +2,6 @@ package com.ctrip.hermes.metaserver.event.impl;
 
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.event.Event;
-import com.ctrip.hermes.metaserver.event.EventBus;
-import com.ctrip.hermes.metaserver.event.EventEngineContext;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 
 /**
@@ -13,13 +11,8 @@ import com.ctrip.hermes.metaserver.event.EventHandler;
 public abstract class BaseEventHandler implements EventHandler {
 
 	@Override
-	public void onEvent(EventEngineContext context, Event event) throws Exception {
-		EventBus eventBus = context.getEventBus();
-		ClusterStateHolder clusterStateHolder = context.getClusterStateHolder();
-
-		if (eventBus.isStopped()) {
-			return;
-		}
+	public void onEvent(Event event) throws Exception {
+		ClusterStateHolder clusterStateHolder = event.getStateHolder();
 
 		if (Role.LEADER == role() && !clusterStateHolder.hasLeadership()) {
 			return;
@@ -29,7 +22,7 @@ public abstract class BaseEventHandler implements EventHandler {
 			return;
 		}
 
-		processEvent(context, event);
+		processEvent(event);
 	}
 
 	@Override
@@ -37,7 +30,7 @@ public abstract class BaseEventHandler implements EventHandler {
 		return this.getClass().getSimpleName();
 	}
 
-	protected abstract void processEvent(EventEngineContext context, Event event) throws Exception;
+	protected abstract void processEvent(Event event) throws Exception;
 
 	protected abstract Role role();
 

@@ -1,7 +1,5 @@
 package com.ctrip.hermes.metaserver.event.impl;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -15,7 +13,7 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.commons.BaseEventBasedZkWatcher;
 import com.ctrip.hermes.metaserver.event.Event;
-import com.ctrip.hermes.metaserver.event.EventEngineContext;
+import com.ctrip.hermes.metaserver.event.EventBus;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
@@ -49,10 +47,6 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	@Inject
 	private LeaderMetaFetcher m_leaderMetaFetcher;
 
-	private ReentrantLock m_metaWatcherLock = new ReentrantLock();
-
-	private ReentrantLock m_metaServerAssignmentWatcherLock = new ReentrantLock();
-
 	public void setMetaHolder(MetaHolder metaHolder) {
 		m_metaHolder = metaHolder;
 	}
@@ -83,36 +77,27 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	}
 
 	@Override
-	protected void processEvent(EventEngineContext context, Event event) throws Exception {
+	protected void processEvent(Event event) throws Exception {
 		m_brokerAssignmentHolder.clear();
-		loadAndAddLeaderMetaWatcher(new LeaderMetaChangedWatcher(context));
+		loadAndAddLeaderMetaWatcher(new LeaderMetaChangedWatcher(event.getEventBus(), event.getVersion()));
 
-		loadAndAddMetaServerAssignmentWatcher(new MetaServerAssignmentChangedWatcher(context));
+		loadAndAddMetaServerAssignmentWatcher(new MetaServerAssignmentChangedWatcher(event.getEventBus(),
+		      event.getVersion()));
 	}
 
 	private void loadAndAddMetaServerAssignmentWatcher(MetaServerAssignmentChangedWatcher watcher) throws Exception {
-		m_metaServerAssignmentWatcherLock.lock();
-		try {
-			m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
-			m_metaServerAssignmentHolder.reload();
-		} finally {
-			m_metaServerAssignmentWatcherLock.unlock();
-		}
+		m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
+		m_metaServerAssignmentHolder.reload();
 	}
 
 	private void loadAndAddLeaderMetaWatcher(Watcher watcher) throws Exception {
-		m_metaWatcherLock.lock();
-		try {
-			byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
-			MetaInfo metaInfo = ZKSerializeUtils.deserialize(data, MetaInfo.class);
-			Meta meta = m_leaderMetaFetcher.fetchMetaInfo(metaInfo);
-			if (meta != null) {
-				m_metaHolder.setMeta(meta);
-				log.info("Fetched meta from leader(endpoint={}:{},version={})", metaInfo.getHost(), metaInfo.getPort(),
-				      meta.getVersion());
-			}
-		} finally {
-			m_metaWatcherLock.unlock();
+		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
+		MetaInfo metaInfo = ZKSerializeUtils.deserialize(data, MetaInfo.class);
+		Meta meta = m_leaderMetaFetcher.fetchMetaInfo(metaInfo);
+		if (meta != null) {
+			m_metaHolder.setMeta(meta);
+			log.info("Fetched meta from leader(endpoint={}:{},version={})", metaInfo.getHost(), metaInfo.getPort(),
+			      meta.getVersion());
 		}
 	}
 
@@ -123,9 +108,8 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 	private class LeaderMetaChangedWatcher extends BaseEventBasedZkWatcher {
 
-		protected LeaderMetaChangedWatcher(EventEngineContext context) {
-			super(context.getEventBus(), context.getWatcherExecutor(), context.getClusterStateHolder(),
-			      org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
+		protected LeaderMetaChangedWatcher(EventBus eventBus, long version) {
+			super(eventBus, version, org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
 		}
 
 		@Override
@@ -141,9 +125,8 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 	private class MetaServerAssignmentChangedWatcher extends BaseEventBasedZkWatcher {
 
-		protected MetaServerAssignmentChangedWatcher(EventEngineContext context) {
-			super(context.getEventBus(), context.getWatcherExecutor(), context.getClusterStateHolder(),
-			      org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
+		protected MetaServerAssignmentChangedWatcher(EventBus eventBus, long version) {
+			super(eventBus, version, org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
 		}
 
 		@Override

@@ -24,7 +24,6 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
-import com.ctrip.hermes.metaserver.event.EventEngineContext;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -77,8 +76,7 @@ public class EndpointMakerTest {
 		when(m_brokerLeaseHolder.getAllValidLeases()).thenReturn(leases);
 		when(m_scheduledExecutor.schedule(any(Runnable.class), anyLong(), eq(TimeUnit.MILLISECONDS))).thenReturn(null);
 
-		Map<String, Map<Integer, Endpoint>> endpoints = m_maker.makeEndpoints(new EventEngineContext(null, null, null),
-		      brokerAssignments);
+		Map<String, Map<Integer, Endpoint>> endpoints = m_maker.makeEndpoints(null, -1, null, brokerAssignments);
 
 		verify(m_scheduledExecutor, times(1)).schedule(any(Runnable.class), anyLong(), eq(TimeUnit.MILLISECONDS));
 
