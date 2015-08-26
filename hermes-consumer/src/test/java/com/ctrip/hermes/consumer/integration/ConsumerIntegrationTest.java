@@ -26,6 +26,7 @@ import com.ctrip.hermes.meta.entity.Meta;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
+
 	private static final TestObjectMessage TEST_MSG = new TestObjectMessage("test", 123, new byte[] { 0, 1, 2, 3 });
 
 	private static final RawMessageCreator<TestObjectMessage> SIMPLE_CREATOR = new RawMessageCreator<TestObjectMessage>() {
@@ -46,7 +47,7 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 			try {
 				TimeUnit.MILLISECONDS.sleep(100);
 			} catch (InterruptedException e) {
-				// ignore
+				e.printStackTrace();
 			}
 		}
 	}
@@ -63,8 +64,10 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 		consumer.close();
 
 		Assert.assertFalse(!((DefaultConsumerHolder) consumer).isConsuming());
-		Assert.assertEquals(TEST_MSG, msgListener.getReceivedMessages().get(0));
 		Assert.assertEquals(1, msgListener.getReceivedMessages().size());
+		Assert.assertEquals(TEST_MSG, msgListener.getReceivedMessages().get(0));
+
+		msgListener.countDownAll();
 	}
 
 	@Test
@@ -97,13 +100,14 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 		System.out.println(msgListener.getReceivedMessages());
 
 		Assert.assertFalse(!((DefaultConsumerHolder) consumer).isConsuming());
+		Assert.assertEquals(batchCount * msgCountPerBatch, msgListener.getReceivedMessages().size());
 		for (int i = 0; i < batchCount; i++) {
 			for (int j = 0; j < msgCountPerBatch; j++) {
 				Assert.assertEquals(17,
 				      msgListener.getReceivedMessages().get(i * msgCountPerBatch + j).getByteArrayValue()[0]);
 			}
 		}
-		Assert.assertEquals(batchCount * msgCountPerBatch, msgListener.getReceivedMessages().size());
+		msgListener.countDownAll();
 	}
 
 	@Test
@@ -118,12 +122,13 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 		consumer.close();
 
 		Assert.assertFalse(!((DefaultConsumerHolder) consumer).isConsuming());
-		Assert.assertEquals(TEST_MSG, msgListener.getReceivedMessages().get(0));
 		Assert.assertEquals(1, msgListener.getReceivedMessages().size());
+		Assert.assertEquals(TEST_MSG, msgListener.getReceivedMessages().get(0));
+		msgListener.countDownAll();
 	}
 
 	@Test
-	public void testConsumeFailed() throws Exception {
+	public void testConsumeFailed() {
 		brokerActions4PollMessageCmd(PullMessageAnswer.BASIC.channel(m_channel).creator(SIMPLE_CREATOR));
 
 		TestMessageListener msgListener = new TestMessageListener().receiveCount(1).withError(true);
@@ -133,8 +138,9 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 
 		consumer.close();
 
-		Assert.assertEquals(TEST_MSG, msgListener.getReceivedMessages().get(0));
 		Assert.assertEquals(1, msgListener.getReceivedMessages().size());
+		Assert.assertEquals(TEST_MSG, msgListener.getReceivedMessages().get(0));
+		msgListener.countDownAll();
 	}
 
 	@Test
@@ -150,6 +156,7 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 		consumer.close();
 
 		Assert.assertEquals(0, msgListener.getReceivedMessages().size());
+		msgListener.countDownAll();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -191,6 +198,7 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 		listener.waitUntilReceivedAllMessage(300);
 		holder.close();
 		Assert.assertEquals(0, listener.getReceivedMessages().size());
+		listener.countDownAll();
 	}
 
 	@Test
@@ -198,27 +206,28 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 		long id = CorrelationIdGenerator.generateCorrelationId() + 1;
 
 		ConsumerNotifier notifier = lookup(ConsumerNotifier.class);
-		brokerActions4PollMessageCmd(PullMessageAnswer.BASIC.channel(m_channel).creator(SIMPLE_CREATOR));
 
 		metaProxyActions4LeaseOperation(LeaseAnswer.SUCCESS, LeaseAnswer.SUCCESS);
+		brokerActions4PollMessageCmd(PullMessageAnswer.BASIC.channel(m_channel).creator(SIMPLE_CREATOR));
+
 		TestMessageListener listener = new TestMessageListener().receiveCount(1);
 		ConsumerHolder holder = Consumer.getInstance().start(TEST_TOPIC, TEST_GROUP, listener);
 		waitUntilConsumerStarted(holder);
 		listener.waitUntilReceivedAllMessage();
 		Assert.assertEquals(1, listener.getReceivedMessages().size());
-		TimeUnit.MILLISECONDS.sleep(250);
-		Assert.assertNotNull(notifier.find(id));
 		holder.close();
+		listener.countDownAll();
 
 		metaProxyActions4LeaseOperation(LeaseAnswer.SUCCESS, LeaseAnswer.FAILED);
+		brokerActions4PollMessageCmd(PullMessageAnswer.BASIC.channel(m_channel).creator(SIMPLE_CREATOR));
+
 		listener = new TestMessageListener().receiveCount(1);
 		ConsumerHolder holder_failed = Consumer.getInstance().start(TEST_TOPIC, TEST_GROUP, listener);
 		waitUntilConsumerStarted(holder_failed);
 		listener.waitUntilReceivedAllMessage();
-		Assert.assertEquals(1, listener.getReceivedMessages().size());
-		TimeUnit.MILLISECONDS.sleep(250);
 		Assert.assertNull(notifier.find(id));
 		holder_failed.close();
+		listener.countDownAll();
 	}
 
 	@Test
@@ -229,6 +238,7 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 		long preCost = listener.waitUntilReceivedAllMessage();
 		Assert.assertEquals(1, listener.getReceivedMessages().size());
 		holder.close();
+		listener.countDownAll();
 
 		Meta meta = loadLocalMeta();
 		meta.getEndpoints().clear();
@@ -240,5 +250,6 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 		listener.waitUntilReceivedAllMessage(preCost * 2);
 		Assert.assertEquals(0, listener.getReceivedMessages().size());
 		holder.close();
+		listener.countDownAll();
 	}
 }

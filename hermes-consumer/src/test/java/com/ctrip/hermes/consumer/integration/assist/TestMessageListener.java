@@ -15,8 +15,13 @@ public class TestMessageListener extends BaseMessageListener<TestObjectMessage> 
 
 	private boolean m_throwException = false;
 
+	public CountDownLatch getLatch() {
+		return m_receiveLatch;
+	}
+
 	public TestMessageListener receiveCount(int count) {
 		m_receiveLatch = new CountDownLatch(count);
+		System.out.println(">>>>>>>>>>>> Listener latch: " + getLatch().getCount());
 		return this;
 	}
 
@@ -27,8 +32,12 @@ public class TestMessageListener extends BaseMessageListener<TestObjectMessage> 
 
 	public boolean waitUntilReceivedAllMessage(long timeoutInMillisecond) {
 		try {
-			return m_receiveLatch.await(timeoutInMillisecond, TimeUnit.MILLISECONDS);
+			boolean success = m_receiveLatch.await(timeoutInMillisecond, TimeUnit.MILLISECONDS);
+			System.out.println(">>>>>>>>>>>> Listener latch after wait: " + getLatch().getCount());
+			return success;
 		} catch (InterruptedException e) {
+			System.out.println("!!!!!!!!!!!!!! Interrupted before receive all !!!!!!!");
+			e.printStackTrace();
 			return false;
 		}
 	}
@@ -37,9 +46,21 @@ public class TestMessageListener extends BaseMessageListener<TestObjectMessage> 
 		try {
 			long begin = System.currentTimeMillis();
 			m_receiveLatch.await();
+			System.out.println(">>>>>>>>>>>> Listener latch after wait: " + getLatch().getCount());
 			return System.currentTimeMillis() - begin;
 		} catch (InterruptedException e) {
+			System.out.println("!!!!!!!!!!!!!! Interrupted before receive all !!!!!!!");
+			e.printStackTrace();
 			return -1;
+		}
+	}
+
+	public void countDownAll() {
+		if (m_receiveLatch != null && m_receiveLatch.getCount() > 0) {
+			for (int idx = 0; idx < m_receiveLatch.getCount();) {
+				m_receiveLatch.countDown();
+			}
+			System.out.println(">>>>>>>>>>>> Count down all manually...");
 		}
 	}
 
@@ -49,13 +70,20 @@ public class TestMessageListener extends BaseMessageListener<TestObjectMessage> 
 
 	@Override
 	protected synchronized void onMessage(ConsumerMessage<TestObjectMessage> msg) {
+		boolean shouldCountDown = false;
 		if (m_receiveLatch != null) {
 			if (m_receiveLatch.getCount() == 0) {
 				return;
 			}
-			m_receiveLatch.countDown();
+			shouldCountDown = true;
 		}
-		handleMessage(msg);
+		try {
+			handleMessage(msg);
+		} finally {
+			if (shouldCountDown) {
+				m_receiveLatch.countDown();
+			}
+		}
 	}
 
 	private void handleMessage(ConsumerMessage<TestObjectMessage> msg) {

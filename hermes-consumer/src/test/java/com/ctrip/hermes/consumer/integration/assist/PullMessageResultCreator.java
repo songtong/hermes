@@ -68,14 +68,17 @@ public class PullMessageResultCreator {
 		batch.setPriority(priority);
 
 		batch.setTransferCallback(new TransferCallback() {
-
 			@Override
 			public void transfer(ByteBuf out) {
-				for (Pair<MessageMeta, PartialDecodedMessage> msg : msgs) {
-					PlexusComponentLocator.lookup(MessageCodec.class).encodePartial(msg.getValue(), out);
+				MessageCodec msgCodec = PlexusComponentLocator.lookup(MessageCodec.class);
+				if (msgCodec != null) {
+					for (Pair<MessageMeta, PartialDecodedMessage> msg : msgs) {
+						msgCodec.encodePartial(msg.getValue(), out);
+					}
+				} else {
+					System.out.println("********** [ERROR] Can not find MessageCodec!");
 				}
 			}
-
 		});
 		batches.add(batch);
 	}

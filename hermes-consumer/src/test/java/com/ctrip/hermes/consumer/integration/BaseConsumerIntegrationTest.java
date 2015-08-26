@@ -11,6 +11,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.unidal.lookup.ComponentTestCase;
@@ -63,10 +65,14 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 	@Mock
 	protected Channel m_channel;
 
+	@Rule
+	public TestName m_name = new TestName();
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
+		System.out.println("\n\n************** Current test case: " + m_name.getMethodName() + " start **************");
 		configureStubComponents();
 	}
 
@@ -80,6 +86,7 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 			}
 		});
 		resetAnswers();
+		System.out.println("************** Current test case: " + m_name.getMethodName() + " stop **************\n\n");
 		super.tearDown();
 	}
 
