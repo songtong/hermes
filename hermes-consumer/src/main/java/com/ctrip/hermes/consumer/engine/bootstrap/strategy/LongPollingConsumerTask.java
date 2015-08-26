@@ -82,8 +82,6 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private int m_cacheSize;
 
-	private int m_localCachePrefetchThreshold;
-
 	private ConsumerContext m_context;
 
 	private int m_partitionId;
@@ -96,12 +94,10 @@ public class LongPollingConsumerTask implements Runnable {
 
 	private RetryPolicy m_retryPolicy;
 
-	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize, int prefetchThreshold,
-	      RetryPolicy retryPolicy) {
+	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize, RetryPolicy retryPolicy) {
 		m_context = context;
 		m_partitionId = partitionId;
 		m_cacheSize = cacheSize;
-		m_localCachePrefetchThreshold = prefetchThreshold;
 		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
 		m_retryPolicy = retryPolicy;
 
@@ -220,7 +216,7 @@ public class LongPollingConsumerTask implements Runnable {
 					break;
 				}
 
-				if (m_msgs.size() <= m_localCachePrefetchThreshold) {
+				if (m_msgs.isEmpty()) {
 					schedulePullMessagesTask(correlationId);
 				}
 
@@ -411,7 +407,7 @@ public class LongPollingConsumerTask implements Runnable {
 		@Override
 		public void run() {
 			try {
-				if (isClosed() || m_msgs.size() > m_localCachePrefetchThreshold) {
+				if (isClosed() || !m_msgs.isEmpty()) {
 					return;
 				}
 
