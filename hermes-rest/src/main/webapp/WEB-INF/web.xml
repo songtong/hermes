@@ -21,28 +21,12 @@
 		<async-supported>true</async-supported>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	<listener>
-		<display-name>JVMMetricsServletContextListener</display-name>
-		<listener-class>com.ctrip.hermes.metrics.JVMMetricsServletContextListener</listener-class>
-	</listener>
-	<listener>
-		<display-name>HealthCheckServletContextListener</display-name>
-		<listener-class>com.ctrip.hermes.metrics.HealthCheckServletContextListener</listener-class>
-	</listener>
-	<listener>
-		<display-name>HermesMetircsServletContextListener</display-name>
-		<listener-class>com.ctrip.hermes.metrics.HermesMetricsServletContextListener</listener-class>
-	</listener>
 	<servlet-mapping>
 		<servlet-name>Jersey REST Service</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>metrics</servlet-name>
-		<servlet-class>com.codahale.metrics.servlets.AdminServlet</servlet-class>
-	</servlet>
-	<servlet>
-		<servlet-name>hermes</servlet-name>
 		<servlet-class>com.ctrip.hermes.metrics.HermesServlet</servlet-class>
 		<init-param>
 			<param-name>show-jvm-metrics</param-name>
@@ -52,10 +36,6 @@
 	<servlet-mapping>
 		<servlet-name>metrics</servlet-name>
 		<url-pattern>/metrics/*</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
-		<servlet-name>hermes</servlet-name>
-		<url-pattern>/hermes/*</url-pattern>
 	</servlet-mapping>
 	<filter>
 		<filter-name>cat-filter</filter-name>

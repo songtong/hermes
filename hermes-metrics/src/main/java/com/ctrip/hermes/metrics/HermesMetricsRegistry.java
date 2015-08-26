@@ -109,7 +109,7 @@ public class HermesMetricsRegistry {
 				if (!t_metrics.containsKey(topic)) {
 					MetricRegistry metricRegistry = new MetricRegistry();
 					t_metrics.put(topic, metricRegistry);
-					JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
+					JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).inDomain(topic).build();
 					reporter.start();
 					reporters.put(topic, reporter);
 				}
@@ -131,7 +131,7 @@ public class HermesMetricsRegistry {
 				if (!tp_metrics.containsKey(key)) {
 					MetricRegistry metricRegistry = new MetricRegistry();
 					tp_metrics.put(key, metricRegistry);
-					JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
+					JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).inDomain(key).build();
 					reporter.start();
 					reporters.put(key, reporter);
 				}
@@ -154,7 +154,7 @@ public class HermesMetricsRegistry {
 				if (!tpg_metrics.containsKey(key)) {
 					MetricRegistry metricRegistry = new MetricRegistry();
 					tpg_metrics.put(key, metricRegistry);
-					JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
+					JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).inDomain(key).build();
 					reporter.start();
 					reporters.put(key, reporter);
 				}

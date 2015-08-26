@@ -2,9 +2,9 @@ package com.ctrip.hermes.metrics;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -13,8 +13,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.servlets.AdminServlet;
+import com.codahale.metrics.servlets.HealthCheckServlet;
 import com.codahale.metrics.servlets.MetricsServlet;
+import com.codahale.metrics.servlets.PingServlet;
+import com.codahale.metrics.servlets.ThreadDumpServlet;
 
 public class HermesServlet extends HttpServlet {
 	/**
@@ -22,54 +24,69 @@ public class HermesServlet extends HttpServlet {
 	 */
 	private static final long serialVersionUID = 5115168561274109694L;
 
-	public static final String DEFAULT_JVM_URI = "/jvm";
+	private String jvmUri;
 
-	public static final String DEFAULT_HERMES_URI = "/hermes";
+	private String healthcheckUri;
 
-	private transient String jvmUri;
+	private String pingUri;
 
-	private transient String hermesUri;
+	private String metricsUri;
 
-	private transient String hermesUriByT;
+	private String threadsUri;
 
-	private transient String hermesUriByTP;
+	private String globalUri;
 
-	private transient String hermesUriByTPG;
+	private JVMMetricsServlet jvmServlet;
 
-	private transient JVMMetricsServlet jvmServlet;
+	private HealthCheckServlet healthCheckServlet;
 
-	private transient Map<String, MetricsServlet> metricServletGroupByT;
+	private PingServlet pingServlet;
 
-	private transient Map<String, MetricsServlet> metricServletGroupByTP;
+	private ThreadDumpServlet threadDumpServlet;
 
-	private transient Map<String, MetricsServlet> metricServletGroupByTPG;
+	private MetricsServlet metricServlet;
+
+	private Map<String, MetricsServlet> metricServletGroupByT;
+
+	private Map<String, MetricsServlet> metricServletGroupByTP;
+
+	private Map<String, MetricsServlet> metricServletGroupByTPG;
 
 	private static final String CONTENT_TYPE = "text/html";
 
-	private static final String TEMPLATE = String
-	      .format("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"%n"
-	            + "        \"http://www.w3.org/TR/html4/loose.dtd\">%n" + "<html>%n" + "<head>%n"
-	            + "  <title>Hermes Metrics</title>%n" + "</head>%n" + "<body>%n" + "  <ul>%n"
-	            + "    <li><a href=\"{0}{1}?pretty=true\">Metrics By T</a></li>%n"
-	            + "    <li><a href=\"{2}{3}?pretty=true\">Metrics By TP</a></li>%n"
-	            + "    <li><a href=\"{4}{5}?pretty=true\">Metrics By TPG</a></li>%n"
-	            + "    <li><a href=\"{6}{7}?pretty=true\">JVM</a></li>%n" + "  </ul>%n" + "</body>%n" + "</html>");
+	private ServletConfig config;
 
 	public void init(ServletConfig config) throws ServletException {
+		this.config = config;
 		if (Boolean.valueOf(config.getInitParameter("show-jvm-metrics"))) {
-			this.jvmServlet = new JVMMetricsServlet();
+			JVMMetricsServletContextListener listener = new JVMMetricsServletContextListener();
+			this.jvmServlet = new JVMMetricsServlet(listener.getMetricRegistry());
 			this.jvmServlet.init(config);
 
-			this.jvmUri = DEFAULT_JVM_URI;
+			this.jvmUri = "/jvm";
 		}
+
+		healthCheckServlet = new HealthCheckServlet(HermesMetricsRegistry.getHealthCheckRegistry());
+		healthCheckServlet.init(config);
+
+		pingServlet = new PingServlet();
+		pingServlet.init(config);
+
+		threadDumpServlet = new ThreadDumpServlet();
+		threadDumpServlet.init(config);
+
+		metricServlet = new MetricsServlet(HermesMetricsRegistry.getMetricRegistry());
+		metricServlet.init(config);
 
 		this.metricServletGroupByT = new HashMap<String, MetricsServlet>();
 		this.metricServletGroupByTP = new HashMap<String, MetricsServlet>();
 		this.metricServletGroupByTPG = new HashMap<String, MetricsServlet>();
-		this.hermesUri = DEFAULT_HERMES_URI;
-		this.hermesUriByT = this.hermesUri + "/t/";
-		this.hermesUriByTP = this.hermesUri + "/tp/";
-		this.hermesUriByTPG = this.hermesUri + "/tpg/";
+
+		this.healthcheckUri = "/healthcheck";
+		this.pingUri = "/ping";
+		this.threadsUri = "/threads";
+		this.globalUri = "/global";
+		this.metricsUri = "/metrics";
 	}
 
 	@Override
@@ -81,7 +98,21 @@ public class HermesServlet extends HttpServlet {
 		}
 		if (jvmUri != null && uri.equals(jvmUri)) {
 			jvmServlet.service(req, resp);
-		} else if (uri.startsWith(hermesUri)) {
+		} else if (uri.equals(healthcheckUri)) {
+			healthCheckServlet.service(req, resp);
+		} else if (uri.equals(globalUri)) {
+			metricServlet.service(req, resp);
+		} else if (uri.equals(pingUri)) {
+			pingServlet.service(req, resp);
+		} else if (uri.equals(threadsUri)) {
+			threadDumpServlet.service(req, resp);
+		} else if (uri.startsWith("/t/")) {
+			MetricsServlet metricsServlet = getServletFromUri(uri);
+			metricsServlet.service(req, resp);
+		} else if (uri.startsWith("/tp/")) {
+			MetricsServlet metricsServlet = getServletFromUri(uri);
+			metricsServlet.service(req, resp);
+		} else if (uri.startsWith("/tpg/")) {
 			MetricsServlet metricsServlet = getServletFromUri(uri);
 			metricsServlet.service(req, resp);
 		} else {
@@ -98,7 +129,44 @@ public class HermesServlet extends HttpServlet {
 		resp.setContentType(CONTENT_TYPE);
 		final PrintWriter writer = resp.getWriter();
 		try {
-			writer.println(MessageFormat.format(TEMPLATE, path, "/t", path, "/tp", path, "/tpg", path, jvmUri));
+			StringBuilder sb = new StringBuilder();
+			sb.append("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"")
+			      .append("\"http://www.w3.org/TR/html4/loose.dtd\"><html><head>")
+			      .append("<title>Hermes Metrics</title></head><body>");
+			sb.append("<h3>Default Metrics</h3>");
+			sb.append("<ul>");
+			sb.append("<li><a href=\"").append(path).append(globalUri).append("?pretty=true\">Global</a></li>");
+			sb.append("<li><a href=\"").append(path).append(threadsUri).append("?pretty=true\">Threads Dump</a></li>");
+			sb.append("<li><a href=\"").append(path).append(jvmUri).append("?pretty=true\">JVM</a></li>");
+			sb.append("<li><a href=\"").append(path).append(pingUri).append("?pretty=true\">Ping</a></li>");
+			sb.append("<li><a href=\"").append(path).append(healthcheckUri).append("?pretty=true\">Health Check</a></li>");
+			sb.append("</ul>");
+			sb.append("<h3>Metrics By T</h3>");
+			sb.append("<ul>");
+			Set<String> tKeys = HermesMetricsRegistry.getMetricRegistiesGroupByT().keySet();
+			for (String t : tKeys) {
+				sb.append("<li><a href=\"").append(metricsUri).append("/t/").append(t).append("?pretty=true\">").append(t)
+				      .append("</a></li>");
+			}
+			sb.append("</ul>");
+			sb.append("<h3>Metrics By TP</h3>");
+			sb.append("<ul>");
+			Set<String> tpKeys = HermesMetricsRegistry.getMetricRegistiesGroupByTP().keySet();
+			for (String tp : tpKeys) {
+				sb.append("<li><a href=\"").append(metricsUri).append("/tp/").append(tp).append("?pretty=true\">")
+				      .append(tp).append("</a></li>");
+			}
+			sb.append("</ul>");
+			sb.append("<h3>Metrics By TPG</h3>");
+			sb.append("<ul>");
+			Set<String> tpgKeys = HermesMetricsRegistry.getMetricRegistiesGroupByTPG().keySet();
+			for (String tpg : tpgKeys) {
+				sb.append("<li><a href=\"").append(metricsUri).append("/tpg/").append(tpg).append("?pretty=true\">")
+				      .append(tpg).append("</a></li>");
+			}
+			sb.append("</ul>");
+			sb.append("</body></html>");
+			writer.println(sb.toString());
 		} finally {
 			writer.close();
 		}
@@ -106,32 +174,32 @@ public class HermesServlet extends HttpServlet {
 
 	private MetricsServlet getServletFromUri(String fullUri) throws ServletException {
 		MetricsServlet metricServlet = null;
-		if (fullUri.startsWith(hermesUriByT)) {
-			String T = fullUri.substring(hermesUriByT.length());
+		if (fullUri.startsWith("/t/")) {
+			String T = fullUri.substring("/t/".length());
 			if (!metricServletGroupByT.containsKey(T)) {
 				MetricRegistry metricRegistry = HermesMetricsRegistry.getMetricRegistryByT(T);
 				metricServlet = new MetricsServlet(metricRegistry);
-				metricServlet.init(this.getServletConfig());
+				metricServlet.init(config);
 				metricServletGroupByT.put(T, metricServlet);
 			} else {
 				metricServlet = metricServletGroupByT.get(T);
 			}
-		} else if (fullUri.startsWith(hermesUriByTP)) {
-			String TP = fullUri.substring(hermesUriByTP.length());
+		} else if (fullUri.startsWith("/tp/")) {
+			String TP = fullUri.substring("/tp/".length());
 			if (!metricServletGroupByTP.containsKey(TP)) {
 				MetricRegistry metricRegistry = HermesMetricsRegistry.getMetricRegistryByT(TP);
 				metricServlet = new MetricsServlet(metricRegistry);
-				metricServlet.init(this.getServletConfig());
+				metricServlet.init(config);
 				metricServletGroupByTP.put(TP, metricServlet);
 			} else {
 				metricServlet = metricServletGroupByTP.get(TP);
 			}
-		} else if (fullUri.startsWith(hermesUriByTPG)) {
-			String TPG = fullUri.substring(hermesUriByTPG.length());
+		} else if (fullUri.startsWith("/tpg/")) {
+			String TPG = fullUri.substring("/tpg/".length());
 			if (!metricServletGroupByTPG.containsKey(TPG)) {
 				MetricRegistry metricRegistry = HermesMetricsRegistry.getMetricRegistryByT(TPG);
 				metricServlet = new MetricsServlet(metricRegistry);
-				metricServlet.init(this.getServletConfig());
+				metricServlet.init(config);
 				metricServletGroupByTPG.put(TPG, metricServlet);
 			} else {
 				metricServlet = metricServletGroupByTPG.get(TPG);
