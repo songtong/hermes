@@ -180,7 +180,7 @@ public class RestIntegrationTest extends JerseyTest {
 		}
 
 		int sleepCount = 0;
-		while (receivedContent.size() < sentContent.size() && sleepCount++ < 100) {
+		while (receivedContent.size() < sentContent.size() && sleepCount++ < 150) {
 			Thread.sleep(100);
 		}
 
