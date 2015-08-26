@@ -36,6 +36,7 @@ import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 import com.ctrip.hermes.kafka.message.KafkaConsumerMessage;
+import com.ctrip.hermes.kafka.producer.KafkaProperties;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
@@ -144,7 +145,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 	}
 
 	private Properties getConsumerProperties(String topic, String group) {
-		Properties configs = new Properties();
+		Properties configs = KafkaProperties.getDefaultKafkaConsumerProperties();
 
 		try {
 			Properties envProperties = m_environment.getConsumerConfig(topic);
@@ -174,15 +175,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			}
 		}
 		configs.put("group.id", group);
-		return overrideByCtripDefaultSetting(configs);
-	}
-
-	private Properties overrideByCtripDefaultSetting(Properties consumerProp) {
-		if (!consumerProp.containsKey("offsets.storage")) {
-			consumerProp.put("offsets.storage", "kafka");
-			consumerProp.put("dual.commit.enabled", "true");
-		}
-		return consumerProp;
+		return KafkaProperties.overrideByCtripDefaultConsumerSetting(configs);
 	}
 
 	@SuppressWarnings("unused")

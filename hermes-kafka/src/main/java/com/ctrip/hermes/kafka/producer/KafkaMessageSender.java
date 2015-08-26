@@ -10,13 +10,10 @@ import java.util.concurrent.Future;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.net.Networks;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.ProducerMessage;
@@ -48,7 +45,7 @@ public class KafkaMessageSender implements MessageSender {
 	private ClientEnvironment m_environment;
 
 	private Properties getProducerProperties(String topic) {
-		Properties configs = new Properties();
+		Properties configs = KafkaProperties.getDefaultKafkaProducerProperties();
 
 		try {
 			Properties envProperties = m_environment.getProducerConfig(topic);
@@ -78,32 +75,7 @@ public class KafkaMessageSender implements MessageSender {
 			}
 		}
 
-		return overrideByCtripDefaultSetting(configs);
-	}
-
-	/**
-	 * 
-	 * @param producerProp
-	 * @return
-	 */
-	private Properties overrideByCtripDefaultSetting(Properties producerProp) {
-		producerProp.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
-		producerProp.put("key.serializer", StringSerializer.class.getCanonicalName());
-
-		if (!producerProp.containsKey("client.id")) {
-			producerProp.put("client.id", Networks.forIp().getLocalHostAddress());
-		}
-		if (!producerProp.containsKey("block.on.buffer.full")) {
-			producerProp.put("block.on.buffer.full", false);
-		}
-		if (!producerProp.containsKey("linger.ms")) {
-			producerProp.put("linger.ms", 50);
-		}
-		if (!producerProp.containsKey("retries")) {
-			producerProp.put("retries", 3);
-		}
-
-		return producerProp;
+		return KafkaProperties.overrideByCtripDefaultProducerSetting(configs);
 	}
 
 	/**
@@ -120,7 +92,10 @@ public class KafkaMessageSender implements MessageSender {
 			synchronized (m_producers) {
 				if (!m_producers.containsKey(topic)) {
 					Properties configs = getProducerProperties(topic);
+					long start = System.currentTimeMillis();
 					KafkaProducer<String, byte[]> producer = new KafkaProducer<String, byte[]>(configs);
+					long end = System.currentTimeMillis();
+					m_logger.info("Init kafka producer in " + (end - start) + "ms");
 					m_producers.put(topic, producer);
 				}
 			}

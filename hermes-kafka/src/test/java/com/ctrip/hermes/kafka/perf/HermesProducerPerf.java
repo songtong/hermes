@@ -1,66 +1,42 @@
 package com.ctrip.hermes.kafka.perf;
 
 import java.util.Arrays;
-import java.util.Properties;
+import java.util.Random;
 
-import org.apache.kafka.clients.producer.Callback;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
+import com.ctrip.hermes.core.exception.MessageSendException;
+import com.ctrip.hermes.core.result.CompletionCallback;
+import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.producer.api.Producer;
+import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 
-public class KafkaProducerPerf {
+public class HermesProducerPerf {
 	private static final long NS_PER_MS = 1000000L;
 
 	private static final long NS_PER_SEC = 1000 * NS_PER_MS;
 
 	private static final long MIN_SLEEP_NS = 2 * NS_PER_MS;
 
-	public static void main(String[] args) throws Exception {
-		if (args.length < 4) {
-			System.err.println("USAGE: java " + KafkaProducerPerf.class.getName()
-			      + " topic_name num_records record_size target_records_sec [prop_name=prop_value]*");
-			System.exit(1);
-		}
+	public static void main(String[] args) throws MessageSendException, InterruptedException {
 
-		/* parse args */
 		String topicName = args[0];
 		long numRecords = Long.parseLong(args[1]);
 		int recordSize = Integer.parseInt(args[2]);
 		int throughput = Integer.parseInt(args[3]);
 
-		Properties props = new Properties();
-		for (int i = 4; i < args.length; i++) {
-			String[] pieces = args[i].split("=");
-			if (pieces.length != 2)
-				throw new IllegalArgumentException("Invalid property: " + args[i]);
-			props.put(pieces[0], pieces[1]);
-		}
-		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArraySerializer");
-		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-		      "org.apache.kafka.common.serialization.ByteArraySerializer");
-		long start = System.currentTimeMillis();
-		KafkaProducer<byte[], byte[]> producer = new KafkaProducer<byte[], byte[]>(props);
-		long end = System.currentTimeMillis();
-		System.out.println("Init Kafka Producer in " + (end - start) + "ms");
-
-		/* setup perf test */
+		Producer producer = Producer.getInstance();
+		Random random = new Random();
+		
 		byte[] payload = new byte[recordSize];
 		Arrays.fill(payload, (byte) 1);
-		ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[], byte[]>(topicName, payload);
+		MessageHolder message = producer.message(topicName, String.valueOf(random.nextInt()), payload);
 		long sleepTime = NS_PER_SEC / throughput;
 		long sleepDeficitNs = 0;
 		Stats stats = new Stats(numRecords, 5000);
 		for (int i = 0; i < numRecords; i++) {
 			long sendStart = System.currentTimeMillis();
-			Callback cb = stats.nextCompletion(sendStart, payload.length, stats);
-			producer.send(record, cb);
+			CompletionCallback<SendResult> cb = stats.nextCompletion(sendStart, payload.length, stats);
+			message.setCallback(cb).withoutHeader().send();
 
-			/*
-			 * Maybe sleep a little to control throughput. Sleep time can be a bit inaccurate for times < 1 ms so instead of sleeping
-			 * each time instead wait until a minimum sleep time accumulates (the "sleep deficit") and then make up the whole deficit
-			 * in one longer sleep.
-			 */
 			if (throughput > 0) {
 				sleepDeficitNs += sleepTime;
 				if (sleepDeficitNs >= MIN_SLEEP_NS) {
@@ -72,8 +48,6 @@ public class KafkaProducerPerf {
 			}
 		}
 
-		/* print final results */
-		producer.close();
 		stats.printTotal();
 	}
 
@@ -146,8 +120,8 @@ public class KafkaProducerPerf {
 			}
 		}
 
-		public Callback nextCompletion(long start, int bytes, Stats stats) {
-			Callback cb = new PerfCallback(this.iteration, start, bytes, stats);
+		public CompletionCallback<SendResult> nextCompletion(long start, int bytes, Stats stats) {
+			CompletionCallback<SendResult> cb = new PerfCallback(this.iteration, start, bytes, stats);
 			this.iteration++;
 			return cb;
 		}
@@ -192,7 +166,7 @@ public class KafkaProducerPerf {
 		}
 	}
 
-	private static final class PerfCallback implements Callback {
+	private static final class PerfCallback implements CompletionCallback<SendResult> {
 		private final long start;
 
 		private final int iteration;
@@ -208,13 +182,17 @@ public class KafkaProducerPerf {
 			this.bytes = bytes;
 		}
 
-		public void onCompletion(RecordMetadata metadata, Exception exception) {
+		@Override
+		public void onFailure(Throwable t) {
+			if (t != null)
+				t.printStackTrace();
+		}
+
+		@Override
+		public void onSuccess(SendResult result) {
 			long now = System.currentTimeMillis();
 			int latency = (int) (now - start);
 			this.stats.record(iteration, latency, bytes, now);
-			if (exception != null)
-				exception.printStackTrace();
 		}
 	}
-
 }

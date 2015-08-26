@@ -45,7 +45,7 @@ public class HttpMetricsServer {
 		servletContextHandler.addEventListener(new JVMMetricsServletContextListener());
 		servletContextHandler.addEventListener(new HealthCheckServletContextListener());
 
-		servletContextHandler.addServlet(new ServletHolder(new HermesAdminServlet()), "/metrics");
+		servletContextHandler.addServlet(new ServletHolder(new HermesServlet()), "/hermes");
 		servletContextHandler.addServlet(new ServletHolder(new MetricsServlet()), "/metrics/metrics");
 		servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), "/metrics/threads");
 		servletContextHandler.addServlet(new ServletHolder(new HealthCheckServlet()), "/metrics/healthcheck");

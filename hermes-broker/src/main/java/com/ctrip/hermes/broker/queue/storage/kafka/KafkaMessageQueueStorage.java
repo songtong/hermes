@@ -13,6 +13,7 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
+import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
@@ -46,6 +47,7 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 				buf.readBytes(bytes);
 				buf.clear();
 				sender.send(tpp.getTopic(), tpp.getPartition(), bytes);
+				BrokerStatusMonitor.INSTANCE.kafkaSend(tpp.getTopic());
 			}
 		}
 	}

@@ -21,25 +21,13 @@
 		<async-supported>true</async-supported>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	<listener>
-		<display-name>MetricsServletContextListener</display-name>
-		<listener-class>com.ctrip.hermes.metrics.MetricsServletContextListener</listener-class>
-	</listener>
-	<listener>
-		<display-name>JVMMetricsServletContextListener</display-name>
-		<listener-class>com.ctrip.hermes.metrics.JVMMetricsServletContextListener</listener-class>
-	</listener>
-	<listener>
-		<display-name>HealthCheckServletContextListener</display-name>
-		<listener-class>com.ctrip.hermes.metrics.HealthCheckServletContextListener</listener-class>
-	</listener>
 	<servlet-mapping>
 		<servlet-name>Jersey REST Service</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>metrics</servlet-name>
-		<servlet-class>com.ctrip.hermes.metrics.HermesAdminServlet</servlet-class>
+		<servlet-class>com.ctrip.hermes.metrics.HermesServlet</servlet-class>
 		<init-param>
 			<param-name>show-jvm-metrics</param-name>
 			<param-value>true</param-value>
