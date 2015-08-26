@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,13 +59,9 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 			int threadCount = Integer.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
 			      "consumer.notifier.threadcount", m_config.getDefaultNotifierThreadCount()));
 
-			m_consumerContexs.putIfAbsent(
-			      correlationId,
-			      new Pair<ConsumerContext, ExecutorService>(context, Executors.newFixedThreadPool(
-			            threadCount,
-			            HermesThreadFactory.create(
-			                  String.format("ConsumerNotifier-%s-%s-%s", context.getTopic().getName(),
-			                        context.getGroupId(), correlationId), false))));
+
+			m_consumerContexs.putIfAbsent(correlationId, new Pair<ConsumerContext, ExecutorService>(context,
+			      createNotifierExecutor(context, threadCount, correlationId)));
 		} catch (Exception e) {
 			throw new RuntimeException("Register consumer notifier failed", e);
 		}
@@ -119,4 +118,28 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 		return pair == null ? null : pair.getKey();
 	}
 
+	private ExecutorService createNotifierExecutor(ConsumerContext context, int threadCount, long correlationId) {
+		return new ThreadPoolExecutor(threadCount, //
+		      threadCount,//
+		      0L, //
+		      TimeUnit.MILLISECONDS,//
+
+		      new LinkedBlockingQueue<Runnable>(threadCount), //
+		      HermesThreadFactory.create(String.format("ConsumerNotifier-%s-%s-%s", context.getTopic().getName(),
+		            context.getGroupId(), correlationId), false), //
+		      new BlockUntilSubmittedPolicy());
+	}
+
+	private static class BlockUntilSubmittedPolicy implements RejectedExecutionHandler {
+
+		@Override
+		public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+			try {
+				executor.getQueue().put(r);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+
+	}
 }
