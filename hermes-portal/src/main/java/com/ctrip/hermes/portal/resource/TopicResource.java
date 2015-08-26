@@ -99,13 +99,13 @@ public class TopicResource {
 			}
 		}
 		if (topic.getStorageType().equals(Storage.MYSQL)) {
-			if (topic.getStoragePartitionSize() <= 10000) {
+			if (topic.getStoragePartitionSize() < 10000) {
 				reason = "Database partition size should be bigger than 10000";
 				passed = false;
-			} else if (topic.getStoragePartitionCount() <= 5) {
+			} else if (topic.getStoragePartitionCount() < 5) {
 				reason = "Database partition count should be bigger than 5";
 				passed = false;
-			} else if (topic.getResendPartitionSize() <= 500) {
+			} else if (topic.getResendPartitionSize() < 500) {
 				reason = "Resend partition count should be bigger than 500";
 				passed = false;
 			}

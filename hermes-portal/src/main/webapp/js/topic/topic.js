@@ -2,10 +2,10 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 	$routeProvider.when('/list/:type', {
 		templateUrl : '/jsp/console/topic/topic-list.html',
 		controller : 'list-controller'
-	}).when('/add/mysql', {
+	}).when('/add/mysql/:type', {
 		templateUrl : '/jsp/console/topic/mysql-add.html',
-		controller : 'mysql-add-controller'
-	}).when('/add/kafka', {
+		controller :'mysql-add-controller'
+	}).when('/add/kafka/:type', {
 		templateUrl : '/jsp/console/topic/kafka-add.html',
 		controller : 'kafka-add-controller'
 	});
@@ -37,7 +37,6 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 		}
 	});
 	var current_topics = [];
-
 	function remove_topic_in_meta(topic, index) {
 		topic_resource.remove({
 			"name" : topic.name

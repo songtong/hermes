@@ -36,7 +36,6 @@ public class SubscriptionsResource {
 
 	private SubscriptionService subscriptionService = PlexusComponentLocator.lookup(SubscriptionService.class);
 
-	@Path("")
 	@GET
 	public List<SubscriptionView> getAll() {
 		try {
@@ -56,7 +55,6 @@ public class SubscriptionsResource {
 		}
 	}
 
-	@Path("/")
 	@POST
 	public Response subscribe(String content) {
 		logger.debug("subscribe {}", content);

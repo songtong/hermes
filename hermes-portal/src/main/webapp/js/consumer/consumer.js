@@ -12,8 +12,14 @@ function reload_table(scope, data) {
 	scope.src_consumers = data;
 	scope.consumer_rows = scope.src_consumers;
 }
-function get_new_consuemr(consumer, topics, i){
+function get_new_consuemr(newconsumer, topics, i){
+	var consumer={};
 	consumer.topicName = topics[i];
+	consumer.orderedConsume = newconsumer.orderedConsume;
+	consumer.appId = newconsumer.appId;
+	consumer.groupName = newconsumer.groupName;
+	consumer.retryPolicy = newconsumer.retryPolicy;
+	consumer.ackTimeoutSeconds = newconsumer.ackTimeoutSeconds;
 	return consumer;
 }
 
@@ -104,7 +110,8 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 						var topics = scope.newTopicNames.split(",");
 						console.log(topics);
 						for(var i=0 ;i<topics.length;i++){
-							consumer_resource.add_consumer({}, get_new_consuemr(new_consumer,topics,i), function(save_result) {
+							var this_consumer = get_new_consuemr(new_consumer,topics,i);
+							consumer_resource.add_consumer({}, this_consumer, function(save_result) {
 								console.log(new_consumer)
 								console.log(save_result);
 								consumer_resource.query().$promise.then(function(
@@ -112,11 +119,12 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 									reload_table(scope, query_result);
 									show_op_info.show("新增 consumer "
 											+ new_consumer.groupName + " for topoics ("
-											+ new_consumer.topicName+ ") 成功!", true);
+											+ save_result.topicName+ ") 成功!", true);
 								});
 							}, function(error_result) {
+								console.log(error_result.data);
 								show_op_info.show("新增 consumer " + new_consumer.groupName
-										+ " for topoics (" + new_consumer.topicName + ") 失败! "
+										+ " for topoics (" + this_consumer.topicName + ") 失败! "
 										+ error_result.data, false);
 							});
 							
