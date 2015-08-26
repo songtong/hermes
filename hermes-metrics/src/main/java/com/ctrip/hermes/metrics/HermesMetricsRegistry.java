@@ -28,6 +28,15 @@ public class HermesMetricsRegistry {
 			reporter.close();
 		}
 
+		default_metrics.removeMatching(new MetricFilter() {
+
+			@Override
+			public boolean matches(String name, Metric metric) {
+				return true;
+			}
+
+		});
+
 		for (MetricRegistry metricRegistry : t_metrics.values()) {
 			metricRegistry.removeMatching(new MetricFilter() {
 
@@ -164,6 +173,7 @@ public class HermesMetricsRegistry {
 	}
 
 	public static void reset() {
+		close();
 		t_metrics.clear();
 		tp_metrics.clear();
 		tpg_metrics.clear();

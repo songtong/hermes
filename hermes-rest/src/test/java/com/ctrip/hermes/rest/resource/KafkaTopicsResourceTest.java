@@ -41,10 +41,10 @@ public class KafkaTopicsResourceTest {
 
 	@After
 	public void after() throws Exception {
+		HermesMetricsRegistry.reset();
 		server.stopServer();
 		kafka.stop();
 		zk.stop();
-		HermesMetricsRegistry.reset();
 	}
 
 	@Test
