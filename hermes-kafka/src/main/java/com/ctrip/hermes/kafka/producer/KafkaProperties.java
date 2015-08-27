@@ -66,15 +66,6 @@ public class KafkaProperties {
 		if (!producerProp.containsKey("client.id")) {
 			producerProp.put("client.id", Networks.forIp().getLocalHostAddress());
 		}
-		if (!producerProp.containsKey("block.on.buffer.full")) {
-			producerProp.put("block.on.buffer.full", false);
-		}
-		if (!producerProp.containsKey("linger.ms")) {
-			producerProp.put("linger.ms", 50);
-		}
-		if (!producerProp.containsKey("retries")) {
-			producerProp.put("retries", 3);
-		}
 
 		return producerProp;
 	}
@@ -85,10 +76,6 @@ public class KafkaProperties {
 	 * @return
 	 */
 	public static Properties overrideByCtripDefaultConsumerSetting(Properties consumerProp) {
-		if (!consumerProp.containsKey("offsets.storage")) {
-			consumerProp.put("offsets.storage", "kafka");
-			consumerProp.put("dual.commit.enabled", "true");
-		}
 		return consumerProp;
 	}
 }

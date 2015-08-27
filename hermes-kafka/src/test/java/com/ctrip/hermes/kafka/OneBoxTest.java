@@ -44,7 +44,7 @@ public class OneBoxTest {
 		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
 		      Endpoint.KAFKA);
 		kafkaSender.close();
-		
+
 		kafkaCluster.stop();
 		zk.stop();
 	}
@@ -78,6 +78,7 @@ public class OneBoxTest {
 		});
 
 		System.out.println("Starting consumer...");
+		Thread.sleep(1000);
 
 		for (int i = 0; i < expected.size(); i++) {
 			String proMsg = expected.get(i);
@@ -139,7 +140,8 @@ public class OneBoxTest {
 		});
 
 		System.out.println("Starting consumer1");
-
+		Thread.sleep(1000);
+		
 		ConsumerHolder consumer2 = Consumer.getInstance().start(topic, group, new BaseMessageListener<String>() {
 
 			@Override
@@ -150,7 +152,8 @@ public class OneBoxTest {
 			}
 		});
 		System.out.println("Starting consumer2");
-
+		Thread.sleep(1000);
+		
 		for (int i = 0; i < expected.size(); i++) {
 			String proMsg = expected.get(i);
 
@@ -207,7 +210,8 @@ public class OneBoxTest {
 		});
 
 		System.out.println("Starting consumer1");
-
+		Thread.sleep(1000);
+		
 		ConsumerHolder consumer2 = Consumer.getInstance().start(topic, group2, new BaseMessageListener<String>() {
 
 			@Override
@@ -218,7 +222,8 @@ public class OneBoxTest {
 			}
 		});
 		System.out.println("Starting consumer2");
-
+		Thread.sleep(1000);
+		
 		for (int i = 0; i < expected.size(); i++) {
 			String proMsg = expected.get(i);
 
@@ -272,7 +277,8 @@ public class OneBoxTest {
 		});
 
 		System.out.println("Starting consumer...");
-
+		Thread.sleep(1000);
+		
 		Thread producer1 = new Thread() {
 			public void run() {
 				Producer producer = Producer.getInstance();
