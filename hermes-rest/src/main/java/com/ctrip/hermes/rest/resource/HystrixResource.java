@@ -9,7 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.ctrip.hermes.rest.service.ProducerSendCommand;
-import com.ctrip.hermes.rest.service.SubscriptionPushCommand;
+import com.ctrip.hermes.rest.service.HttpPushCommand;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandMetrics;
 
@@ -30,7 +30,7 @@ public class HystrixResource {
 	@GET
 	public HystrixCommandMetrics getHystrixSubscriptionMetrics() {
 		HystrixCommandMetrics subMetrics = HystrixCommandMetrics.getInstance(HystrixCommandKey.Factory
-		      .asKey(SubscriptionPushCommand.class.getSimpleName()));
+		      .asKey(HttpPushCommand.class.getSimpleName()));
 		return subMetrics;
 	}
 

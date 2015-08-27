@@ -32,10 +32,13 @@ public class SubscriptionRegisterService {
 	private Map<SubscriptionView, ConsumerHolder> consumerHolders = new ConcurrentHashMap<>();
 
 	@Inject
-	private SubscriptionPushService pushService;
+	private HttpPushService httpService;
 
 	@Inject
-	private MetaService m_metaService;
+	private SoaPushService soaService;
+
+	@Inject
+	private MetaService metaService;
 
 	private ScheduledExecutorService scheduledExecutor;
 
@@ -43,14 +46,14 @@ public class SubscriptionRegisterService {
 		scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("SubscriptionChecker",
 		      true));
 
-		SubscriptionPushStatusMonitor.INSTANCE.monitorConsumerHolders(consumerHolders);
+		SubscriptionPushStatusMonitor.INSTANCE.monitorConsumerHolderSize(consumerHolders);
 
 		scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
 
 			@Override
 			public void run() {
 				try {
-					List<SubscriptionView> remoteSubscriptions = m_metaService.listSubscriptions("RUNNING");
+					List<SubscriptionView> remoteSubscriptions = metaService.listSubscriptions("RUNNING");
 					if (logger.isTraceEnabled()) {
 						logger.trace("Received subscriptions: {}", remoteSubscriptions);
 					}
@@ -101,7 +104,14 @@ public class SubscriptionRegisterService {
 		ConsumerHolder consumerHolder = null;
 		boolean isStarted = true;
 		try {
-			consumerHolder = pushService.startPusher(sub);
+			if ("http".equalsIgnoreCase(sub.getType())) {
+				consumerHolder = httpService.startPusher(sub);
+			} else if ("soa".equalsIgnoreCase(sub.getType())) {
+				consumerHolder = soaService.startPusher(sub);
+			} else {
+				// FIXME when portal support SOA
+				consumerHolder = httpService.startPusher(sub);
+			}
 		} catch (Exception e) {
 			logger.warn("Start {} failed, {}", sub, e);
 			isStarted = false;
@@ -140,8 +150,8 @@ public class SubscriptionRegisterService {
 			consumerHolders.remove(sub);
 			logger.info("Stop {} successfully", sub);
 		}
-		
-		SubscriptionPushStatusMonitor.INSTANCE.removeMonitor(sub.getTopic(),sub.getGroup());
+
+		SubscriptionPushStatusMonitor.INSTANCE.removeMonitor(sub.getTopic(), sub.getGroup());
 
 		return isClosed;
 	}

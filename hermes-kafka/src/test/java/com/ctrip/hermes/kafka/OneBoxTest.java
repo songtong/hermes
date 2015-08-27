@@ -44,7 +44,7 @@ public class OneBoxTest {
 		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
 		      Endpoint.KAFKA);
 		kafkaSender.close();
-		
+
 		kafkaCluster.stop();
 		zk.stop();
 	}
@@ -99,7 +99,7 @@ public class OneBoxTest {
 
 		consumer.close();
 		Assert.assertEquals(expected.size(), actual.size());
-		Assert.assertEquals(expected, actual);
+		Assert.assertEquals(new HashSet<String>(expected), new HashSet<String>(actual));
 	}
 
 	/**

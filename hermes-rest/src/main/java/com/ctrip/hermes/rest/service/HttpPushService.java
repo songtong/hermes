@@ -34,9 +34,9 @@ import com.ctrip.hermes.rest.status.SubscriptionPushStatusMonitor;
 import com.ctrip.hermes.rest.status.Tge;
 
 @Named
-public class SubscriptionPushService implements Initializable, Disposable {
+public class HttpPushService implements Initializable, Disposable {
 
-	private static final Logger m_logger = LoggerFactory.getLogger(SubscriptionPushService.class);
+	private static final Logger m_logger = LoggerFactory.getLogger(HttpPushService.class);
 
 	@Inject
 	private BizLogger m_bizLogger;
@@ -53,7 +53,7 @@ public class SubscriptionPushService implements Initializable, Disposable {
 		try {
 			m_httpClient.close();
 		} catch (IOException e) {
-			m_logger.warn("Dispose SubscriptionPushService", e);
+			m_logger.warn("Dispose HttpPushService", e);
 		}
 	}
 
@@ -97,7 +97,7 @@ public class SubscriptionPushService implements Initializable, Disposable {
 							      SubscriptionPushStatusMonitor.INSTANCE.updateRequestSizeHistogram(tge, msg.getBody()
 							            .getEncodedMessage().length);
 
-							      SubscriptionPushCommand command = new SubscriptionPushCommand(m_httpClient, m_requestConfig,
+							      HttpPushCommand command = new HttpPushCommand(m_httpClient, m_requestConfig,
 							            msg, url);
 							      HttpResponse pushResponse = command.execute();
 
@@ -108,13 +108,13 @@ public class SubscriptionPushService implements Initializable, Disposable {
 							      } else if (pushResponse.getStatusLine().getStatusCode() == Response.Status.INTERNAL_SERVER_ERROR
 							            .getStatusCode()) {
 								      m_logger
-								            .warn("Push message failed, will nack, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
+								            .warn("Http push message failed, will nack, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
 								                  url, pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(),
 								                  msg.getPartition(), msg.getOffset(), msg.getRefKey());
 								      break;
 							      } else {
 								      m_logger
-								            .warn("Push message failed, will retry, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
+								            .warn("Http push message failed, will retry, endpoint:{} reason:{} topic:{} partition:{} offset:{} refKey:{}",
 								                  url, pushResponse.getStatusLine().getReasonPhrase(), msg.getTopic(),
 								                  msg.getPartition(), msg.getOffset(), msg.getRefKey());
 							      }
@@ -122,11 +122,11 @@ public class SubscriptionPushService implements Initializable, Disposable {
 							      SubscriptionPushStatusMonitor.INSTANCE.updateFailedMeter(tge);
 							      if (command.isCircuitBreakerOpen()) {
 								      long errorCount = command.getMetrics().getHealthCounts().getErrorCount();
-								      m_logger.warn("Push message CircuitBreak is open, sleep {} seconds", errorCount);
+								      m_logger.warn("Http push message CircuitBreak is open, sleep {} seconds", errorCount);
 								      Thread.sleep(1000 * errorCount);
 							      }
 						      } catch (Exception e) {
-							      m_logger.warn("Push message exception", e);
+							      m_logger.warn("Http push message exception", e);
 						      } finally {
 							      m_bizLogger.log(pushEvent);
 							      timer.close();
