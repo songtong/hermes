@@ -130,8 +130,8 @@ public class MetaHolder implements Initializable {
 
 		long newMetaVersion = System.currentTimeMillis() / 1000L;
 		// may be same due to different machine time
-		if (metaInfo != null && metaInfo.getTimestamp() == newMetaVersion) {
-			newMetaVersion++;
+		if (metaInfo != null) {
+			newMetaVersion = metaInfo.getTimestamp() >= newMetaVersion ? metaInfo.getTimestamp() + 1 : newMetaVersion;
 		}
 
 		meta.setVersion(newMetaVersion);
