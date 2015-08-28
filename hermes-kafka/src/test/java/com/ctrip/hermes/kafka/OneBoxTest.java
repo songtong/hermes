@@ -100,7 +100,7 @@ public class OneBoxTest {
 
 		consumer.close();
 		Assert.assertEquals(expected.size(), actual.size());
-		Assert.assertEquals(expected, actual);
+		Assert.assertEquals(new HashSet<String>(expected), new HashSet<String>(actual));
 	}
 
 	/**

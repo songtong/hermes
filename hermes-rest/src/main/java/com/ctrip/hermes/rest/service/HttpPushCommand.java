@@ -24,7 +24,7 @@ import com.ctrip.hermes.core.message.payload.RawMessage;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 
-public class SubscriptionPushCommand extends HystrixCommand<HttpResponse> {
+public class HttpPushCommand extends HystrixCommand<HttpResponse> {
 
 	private CloseableHttpClient client;
 
@@ -36,9 +36,9 @@ public class SubscriptionPushCommand extends HystrixCommand<HttpResponse> {
 
 	private HttpClientContext context;
 
-	public SubscriptionPushCommand(CloseableHttpClient client, RequestConfig config, ConsumerMessage<RawMessage> msg,
+	public HttpPushCommand(CloseableHttpClient client, RequestConfig config, ConsumerMessage<RawMessage> msg,
 	      String url) {
-		super(HystrixCommandGroupKey.Factory.asKey(SubscriptionPushCommand.class.getSimpleName()));
+		super(HystrixCommandGroupKey.Factory.asKey(HttpPushCommand.class.getSimpleName()));
 		this.client = client;
 		// this.client = HttpClients.createDefault();
 		this.context = HttpClientContext.create();

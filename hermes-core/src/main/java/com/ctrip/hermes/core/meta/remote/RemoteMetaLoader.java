@@ -50,6 +50,7 @@ public class RemoteMetaLoader implements MetaLoader {
 
 		Collections.shuffle(ipPorts);
 
+		Meta fetchedMeta = null;
 		for (String ipPort : ipPorts) {
 			if (log.isDebugEnabled()) {
 				log.debug("Loading meta from server: {}", ipPort);
@@ -80,14 +81,19 @@ public class RemoteMetaLoader implements MetaLoader {
 
 				if (statusCode == HttpStatus.SC_OK) {
 					String responseContent = EntityUtils.toString(response.getEntity());
-					m_metaCache.set(JSON.parseObject(responseContent, Meta.class));
-					return m_metaCache.get();
+					try {
+						fetchedMeta = JSON.parseObject(responseContent, Meta.class);
+						m_metaCache.set(fetchedMeta);
+						return m_metaCache.get();
+					} catch (Exception e) {
+						log.warn("Parse meta failed, from URL %s, Reason %s", url, e.getMessage());
+						log.warn("Got meta: " + responseContent);
+					}
 				} else if (statusCode == HttpStatus.SC_NOT_MODIFIED) {
 					return m_metaCache.get();
 				}
-
 			} catch (Exception e) {
-				log.debug("Load meta failed, from URL " + url, e);
+				log.warn("Load meta failed, from URL %s, will retry other meta servers, Reason %s", url, e.getMessage());
 				// ignore
 			}
 		}

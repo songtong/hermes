@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +114,13 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 			props.load(in);
 		}
 
+		StringBuilder sb = new StringBuilder();
+		for (Enumeration<String> e = (Enumeration<String>) props.propertyNames(); e.hasMoreElements();) {
+			String key = e.nextElement();
+			String val = (String) props.getProperty(key);
+			sb.append(key).append('=').append(val).append('\n');
+		}
+		logger.info("Reading properties: \n" + sb.toString());
 		return props;
 	}
 

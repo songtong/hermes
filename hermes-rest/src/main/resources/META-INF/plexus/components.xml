@@ -5,7 +5,10 @@
 			<implementation>com.ctrip.hermes.rest.service.SubscriptionRegisterService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.rest.service.SubscriptionPushService</role>
+					<role>com.ctrip.hermes.rest.service.HttpPushService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.rest.service.SoaPushService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
@@ -13,8 +16,20 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.rest.service.SubscriptionPushService</role>
-			<implementation>com.ctrip.hermes.rest.service.SubscriptionPushService</implementation>
+			<role>com.ctrip.hermes.rest.service.HttpPushService</role>
+			<implementation>com.ctrip.hermes.rest.service.HttpPushService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.log.BizLogger</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.rest.service.SoaPushService</role>
+			<implementation>com.ctrip.hermes.rest.service.SoaPushService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.log.BizLogger</role>

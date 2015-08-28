@@ -7,8 +7,9 @@ import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.rest.service.CmessageTransferService;
+import com.ctrip.hermes.rest.service.HttpPushService;
 import com.ctrip.hermes.rest.service.ProducerSendService;
-import com.ctrip.hermes.rest.service.SubscriptionPushService;
+import com.ctrip.hermes.rest.service.SoaPushService;
 import com.ctrip.hermes.rest.service.SubscriptionRegisterService;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
@@ -18,7 +19,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		List<Component> all = new ArrayList<Component>();
 
 		all.add(A(SubscriptionRegisterService.class));
-		all.add(A(SubscriptionPushService.class));
+		all.add(A(HttpPushService.class));
+		all.add(A(SoaPushService.class));
 		all.add(A(ProducerSendService.class));
 		all.add(A(CmessageTransferService.class));
 

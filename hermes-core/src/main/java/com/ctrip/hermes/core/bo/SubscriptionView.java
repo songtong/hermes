@@ -14,10 +14,21 @@ public class SubscriptionView {
 
 	private String endpoints;
 
+	private String type;// HTTP,SOA
+
 	private String status;
 
-	public String getStatus() {
-		return status;
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+
+		if (!(obj instanceof SubscriptionView)) {
+			return false;
+		}
+
+		SubscriptionView other = (SubscriptionView) obj;
+		return Objects.equals(this.id, other.id) && Objects.equals(this.name, other.name);
 	}
 
 	public String getEndpoints() {
@@ -36,12 +47,20 @@ public class SubscriptionView {
 		return name;
 	}
 
+	public String getStatus() {
+		return status;
+	}
+
 	public String getTopic() {
 		return topic;
 	}
 
-	public void setStatus(String status) {
-		this.status = status;
+	public String getType() {
+		return type;
+	}
+
+	public int hashCode() {
+		return Objects.hash(this.id, this.name);
 	}
 
 	public void setEndpoints(String endpoints) {
@@ -60,30 +79,21 @@ public class SubscriptionView {
 		this.name = name;
 	}
 
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
 	public void setTopic(String topic) {
 		this.topic = topic;
 	}
 
-	public int hashCode() {
-		return Objects.hash(this.id, this.name);
-	}
-
-	public boolean equals(Object obj) {
-		if (obj == null) {
-			return false;
-		}
-
-		if (!(obj instanceof SubscriptionView)) {
-			return false;
-		}
-
-		SubscriptionView other = (SubscriptionView) obj;
-		return Objects.equals(this.id, other.id) && Objects.equals(this.name, other.name);
+	public void setType(String type) {
+		this.type = type;
 	}
 
 	public String toString() {
 		return new StringBuilder().append("SubscriptionView{").append("id=").append(this.id).append(",name=")
-		      .append(name).append(",topic=").append(topic).append(",group=").append(group).append(",endpoints=")
-		      .append(endpoints).append(",status=").append(status).append("}").toString();
+		      .append(name).append(",topic=").append(topic).append(",group=").append(group).append(",type=").append(type)
+		      .append(",endpoints=").append(endpoints).append(",status=").append(status).append("}").toString();
 	}
 }

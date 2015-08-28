@@ -41,7 +41,7 @@ public enum SubscriptionPushStatusMonitor {
 		return pushTimerGlobal;
 	}
 
-	public void monitorConsumerHolders(final Map<SubscriptionView, ConsumerHolder> consumerHolders) {
+	public void monitorConsumerHolderSize(final Map<SubscriptionView, ConsumerHolder> consumerHolders) {
 		HermesMetricsRegistry.getMetricRegistry().register(MetricRegistry.name(MSG_SUBSCRIPTION_PREFIX, "holders"),
 		      new Gauge<Integer>() {
 			      @Override
