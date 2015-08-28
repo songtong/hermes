@@ -212,10 +212,13 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				Meta latestMeta = findLatestMeta();
 				if (m_meta == null || latestMeta.getVersion() > m_meta.getVersion()) {
 					m_meta = latestMeta;
+					m_zookeeperService.updateZkBaseMetaVersion(m_meta.getVersion());
 				}
 			}
 		} catch (DalException e) {
 			m_logger.warn("Update meta from db failed.", e);
+		} catch (Exception e) {
+			m_logger.warn("Update meta from db failed, maybe update base meta version in zk failed.", e);
 		}
 	}
 
