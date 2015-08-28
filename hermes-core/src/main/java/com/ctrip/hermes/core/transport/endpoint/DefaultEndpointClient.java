@@ -122,12 +122,8 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 				if (m_channels.containsKey(endpoint)) {
 					EndpointChannel tmp = m_channels.get(endpoint);
 					if (tmp == endpointChannel) {
-						if (tmp.isClosed()) {
-							m_channels.remove(endpoint);
-						} else if (!tmp.isFlushing() && !tmp.hasUnflushOps()) {
-							m_channels.remove(endpoint);
-							removedChannel = endpointChannel;
-						}
+						m_channels.remove(endpoint);
+						removedChannel = endpointChannel;
 					}
 				}
 			}
