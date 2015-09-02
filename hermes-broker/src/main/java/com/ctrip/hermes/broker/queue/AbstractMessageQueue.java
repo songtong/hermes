@@ -62,7 +62,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	}
 
 	@Override
-	public MessageQueueCursor getCursor(String groupId, Lease lease) {
+	public MessageQueueCursor getCursor(String groupId, Lease lease, String sessionId) {
 		if (m_stopped.get()) {
 			return null;
 		}
@@ -72,7 +72,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		MessageQueueCursor existingCursor = m_cursors.get(groupId).get();
 
 		if (existingCursor == null || existingCursor.getLease().getId() != lease.getId() || existingCursor.hasError()) {
-			MessageQueueCursor newCursor = create(groupId, lease);
+			MessageQueueCursor newCursor = create(groupId, lease, sessionId);
 			if (m_cursors.get(groupId).compareAndSet(existingCursor, newCursor)) {
 				newCursor.init();
 			}
@@ -120,7 +120,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	protected abstract MessageQueueDumper createDumper(Lease lease);
 
-	protected abstract MessageQueueCursor create(String groupId, Lease lease);
+	protected abstract MessageQueueCursor create(String groupId, Lease lease, String sessionId);
 
 	protected abstract void doNack(boolean resend, boolean isPriority, String groupId,
 	      List<Pair<Long, MessageMeta>> msgId2Metas);

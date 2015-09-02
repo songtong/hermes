@@ -21,11 +21,12 @@ public interface MessageQueueManager {
 
 	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data, Lease lease);
 
-	public MessageQueueCursor getCursor(Tpg tpg, Lease lease);
+	public MessageQueueCursor getCursor(Tpg tpg, Lease lease, String sessionId);
 
 	public void nack(Tpp tpp, String groupId, boolean resend, List<Pair<Long, MessageMeta>> msgId2Metas);
 
 	public void ack(Tpp tpp, String groupId, boolean resend, long msgSeq);
 
 	public void stop();
+
 }

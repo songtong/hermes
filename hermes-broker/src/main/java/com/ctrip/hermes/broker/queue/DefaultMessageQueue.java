@@ -35,8 +35,9 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	}
 
 	@Override
-	protected MessageQueueCursor create(String groupId, Lease lease) {
-		return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), lease, m_storage, m_metaService);
+	protected MessageQueueCursor create(String groupId, Lease lease, String sessionId) {
+		return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), lease, m_storage, m_metaService,
+		      this, sessionId);
 	}
 
 	@Override

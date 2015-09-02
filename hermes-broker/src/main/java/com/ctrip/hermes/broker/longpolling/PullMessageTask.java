@@ -18,14 +18,17 @@ class PullMessageTask {
 
 	private Lease m_brokerLease;
 
+	private String m_sessionId;
+
 	public PullMessageTask(Tpg tpg, long correlationId, int batchSize, Channel channel, long expireTime,
-	      Lease brokerLease) {
+	      Lease brokerLease, String sessionId) {
 		m_tpg = tpg;
 		m_correlationId = correlationId;
 		m_batchSize = batchSize;
 		m_channel = channel;
 		m_expireTime = expireTime;
 		m_brokerLease = brokerLease;
+		m_sessionId = sessionId;
 	}
 
 	public long getExpireTime() {
@@ -50,6 +53,10 @@ class PullMessageTask {
 
 	public Lease getBrokerLease() {
 		return m_brokerLease;
+	}
+
+	public String getSessionId() {
+		return m_sessionId;
 	}
 
 }

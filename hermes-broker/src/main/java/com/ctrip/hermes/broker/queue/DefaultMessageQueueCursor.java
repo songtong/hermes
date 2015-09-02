@@ -13,8 +13,9 @@ import com.ctrip.hermes.core.meta.MetaService;
 public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 	private MessageQueueStorage m_storage;
 
-	public DefaultMessageQueueCursor(Tpg tpg, Lease lease, MessageQueueStorage storage, MetaService metaService) {
-		super(tpg, lease, metaService);
+	public DefaultMessageQueueCursor(Tpg tpg, Lease lease, MessageQueueStorage storage, MetaService metaService,
+	      MessageQueue messageQueue, String sessionId) {
+		super(tpg, lease, metaService, messageQueue, sessionId);
 		m_storage = storage;
 	}
 
