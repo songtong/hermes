@@ -63,7 +63,7 @@ public class ConsumeTest extends BaseBrokerTest {
 			}
 		});
 
-		PullMessageCommand pullMsgcmd = new PullMessageCommand(topic, partition, groupId, size, expireTime);
+		PullMessageCommand pullMsgcmd = new PullMessageCommand(topic, partition, groupId, size, expireTime, null);
 		PullMessageCommand decodedPullMsgCmd = serializeAndDeserialize(pullMsgcmd);
 
 		CommandProcessorContext ctx = new CommandProcessorContext(decodedPullMsgCmd, m_channel);

@@ -37,7 +37,7 @@ public class BrokerConfig {
 	}
 
 	public int getLongPollingServiceThreadCount() {
-		return 3;
+		return 10;
 	}
 
 	public int getLongPollingCheckIntervalBaseMillis() {

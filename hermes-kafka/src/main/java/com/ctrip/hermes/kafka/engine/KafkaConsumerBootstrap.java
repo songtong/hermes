@@ -128,6 +128,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 					BaseConsumerMessage<?> baseMsg = m_messageCodec.decode(consumerContext.getTopic().getName(), byteBuf,
 					      consumerContext.getMessageClazz());
+					baseMsg.setSessionId(consumerContext.getSessionId());
 					@SuppressWarnings("rawtypes")
 					ConsumerMessage kafkaMsg = new KafkaConsumerMessage(baseMsg, msgAndMetadata.partition(),
 					      msgAndMetadata.offset());
@@ -179,7 +180,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 	}
 
 	@SuppressWarnings("unused")
-   private int getKafkaPartitionCount(String topic) {
+	private int getKafkaPartitionCount(String topic) {
 		List<Partition> partitions = m_metaService.listPartitionsByTopic(topic);
 		if (partitions == null || partitions.size() < 1) {
 			return 1;
