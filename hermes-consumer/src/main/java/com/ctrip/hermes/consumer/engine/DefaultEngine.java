@@ -13,7 +13,6 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 
 @Named(type = Engine.class)
@@ -50,7 +49,7 @@ public class DefaultEngine extends Engine {
 
 			for (Topic topic : topics) {
 				ConsumerContext context = new ConsumerContext(topic, s.getGroupId(), s.getConsumer(), s.getMessageClass(),
-				      s.getConsumerType());
+				      s.getConsumerType(), s.getMessageListenerConfig());
 
 				// FIXME validate all, if fail in any validator, exit
 				if (validate(topic, context)) {

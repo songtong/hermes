@@ -5,9 +5,12 @@ import java.lang.reflect.Type;
 
 import com.ctrip.hermes.consumer.ConsumerType;
 import com.ctrip.hermes.consumer.api.MessageListener;
+import com.ctrip.hermes.consumer.api.MessageListenerConfig;
 
 @SuppressWarnings("rawtypes")
 public class Subscriber {
+
+	private final static MessageListenerConfig DEFAULT_MESSAGE_LISTENER_CONFIG = new MessageListenerConfig();
 
 	private String m_groupId;
 
@@ -17,15 +20,28 @@ public class Subscriber {
 
 	private ConsumerType m_consumerType;
 
-	public Subscriber(String topicPattern, String groupId, MessageListener consumer, ConsumerType consumerType) {
+	private MessageListenerConfig m_messageListenerConfig;
+
+	public Subscriber(String topicPattern, String groupId, MessageListener consumer,
+	      MessageListenerConfig messageListenerConfig, ConsumerType consumerType) {
 		m_topicPattern = topicPattern;
 		m_groupId = groupId;
 		m_consumer = consumer;
 		m_consumerType = consumerType;
+		m_messageListenerConfig = messageListenerConfig;
+	}
+
+	public Subscriber(String topicPattern, String groupId, MessageListener consumer, ConsumerType consumerType) {
+		this(topicPattern, groupId, consumer, DEFAULT_MESSAGE_LISTENER_CONFIG, consumerType);
 	}
 
 	public Subscriber(String topicPattern, String groupId, MessageListener consumer) {
-		this(topicPattern, groupId, consumer, ConsumerType.LONG_POLLING);
+		this(topicPattern, groupId, consumer, DEFAULT_MESSAGE_LISTENER_CONFIG, ConsumerType.LONG_POLLING);
+	}
+
+	public Subscriber(String topicPattern, String groupId, MessageListener consumer,
+	      MessageListenerConfig messageListenerConfig) {
+		this(topicPattern, groupId, consumer, messageListenerConfig, ConsumerType.LONG_POLLING);
 	}
 
 	public ConsumerType getConsumerType() {
@@ -42,6 +58,10 @@ public class Subscriber {
 
 	public MessageListener getConsumer() {
 		return m_consumer;
+	}
+
+	public MessageListenerConfig getMessageListenerConfig() {
+		return m_messageListenerConfig;
 	}
 
 	public Class<?> getMessageClass() {
