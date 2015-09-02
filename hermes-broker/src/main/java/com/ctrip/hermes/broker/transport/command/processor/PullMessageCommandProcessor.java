@@ -53,7 +53,7 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 				if (lease != null) {
 					m_longPollingService.schedulePush(
 					      new Tpg(reqCmd.getTopic(), reqCmd.getPartition(), reqCmd.getGroupId()), correlationId,
-					      reqCmd.getSize(), ctx.getChannel(), reqCmd.getExpireTime(), lease);
+					      reqCmd.getSize(), ctx.getChannel(), reqCmd.getExpireTime(), lease, reqCmd.getSessionId());
 					return;
 				} else {
 					if (log.isDebugEnabled()) {

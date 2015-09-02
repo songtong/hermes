@@ -38,9 +38,9 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	}
 
 	@Override
-	public MessageQueueCursor getCursor(Tpg tpg, Lease lease) {
+	public MessageQueueCursor getCursor(Tpg tpg, Lease lease, String sessionId) {
 		if (!m_stopped.get()) {
-			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).getCursor(tpg.getGroupId(), lease);
+			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).getCursor(tpg.getGroupId(), lease, sessionId);
 		} else {
 			return null;
 		}
