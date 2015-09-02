@@ -30,7 +30,6 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
-import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.AckMessageCommand.AckContext;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -55,9 +54,6 @@ public class DefaultAckManager implements AckManager, Initializable {
 
 	@Inject
 	private MessageQueueManager m_queueManager;
-
-	@Inject
-	private MetaService m_metaService;
 
 	@Inject
 	private BrokerConfig m_config;
@@ -136,9 +132,7 @@ public class DefaultAckManager implements AckManager, Initializable {
 		ConcurrentMap<Pair<Tpp, String>, AckHolder<MessageMeta>> holders = getHolders(isResend);
 
 		if (!holders.containsKey(key)) {
-			int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(key.getKey().getTopic(),
-			      key.getValue()) * 1000;
-			DefaultAckHolder<MessageMeta> newHolder = new DefaultAckHolder<MessageMeta>(timeout);
+			DefaultAckHolder<MessageMeta> newHolder = new DefaultAckHolder<MessageMeta>(Integer.MAX_VALUE);
 			holders.putIfAbsent(key, newHolder);
 		}
 
