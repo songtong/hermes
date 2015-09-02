@@ -235,11 +235,6 @@ public class LongPollingConsumerTask implements Runnable {
 			}
 		}
 
-		// consume all remaining messages
-		if (!m_msgs.isEmpty()) {
-			consumeMessages(correlationId);
-		}
-
 		m_consumerNotifier.deregister(correlationId);
 		m_lease.set(null);
 	}
