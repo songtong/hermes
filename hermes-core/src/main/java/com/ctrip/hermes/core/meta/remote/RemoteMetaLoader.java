@@ -86,14 +86,14 @@ public class RemoteMetaLoader implements MetaLoader {
 						m_metaCache.set(fetchedMeta);
 						return m_metaCache.get();
 					} catch (Exception e) {
-						log.warn("Parse meta failed, from URL %s, Reason %s", url, e.getMessage());
+						log.warn("Parse meta failed, from URL {}, Reason {}", url, e.getMessage());
 						log.warn("Got meta: " + responseContent);
 					}
 				} else if (statusCode == HttpStatus.SC_NOT_MODIFIED) {
 					return m_metaCache.get();
 				}
 			} catch (Exception e) {
-				log.warn("Load meta failed, from URL %s, will retry other meta servers, Reason %s", url, e.getMessage());
+				log.warn("Load meta failed, from URL {}, will retry other meta servers, Reason {}", url, e.getMessage());
 				// ignore
 			}
 		}
