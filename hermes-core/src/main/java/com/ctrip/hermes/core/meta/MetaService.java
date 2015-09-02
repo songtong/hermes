@@ -35,8 +35,6 @@ public interface MetaService {
 
 	Topic findTopicByName(String topic);
 
-	int getAckTimeoutSecondsByTopicAndConsumerGroup(String topic, String groupId);
-
 	List<Datasource> listAllMysqlDataSources();
 
 	List<Partition> listPartitionsByTopic(String topic);

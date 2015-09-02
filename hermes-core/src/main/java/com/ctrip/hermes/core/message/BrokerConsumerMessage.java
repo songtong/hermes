@@ -83,7 +83,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	@Override
 	public void nack() {
 		if (m_baseMsg.nack()) {
-			AckMessageCommand cmd = new AckMessageCommand();
+			AckMessageCommand cmd = new AckMessageCommand(m_baseMsg.getSessionId());
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			Tpp tpp = new Tpp(getTopic(), getPartition(), m_priority);
 			cmd.addNackMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries(),
@@ -125,7 +125,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	@Override
 	public void ack() {
 		if (m_baseMsg.ack()) {
-			AckMessageCommand cmd = new AckMessageCommand();
+			AckMessageCommand cmd = new AckMessageCommand(m_baseMsg.getSessionId());
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			Tpp tpp = new Tpp(getTopic(), getPartition(), m_priority);
 			cmd.addAckMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries(),
