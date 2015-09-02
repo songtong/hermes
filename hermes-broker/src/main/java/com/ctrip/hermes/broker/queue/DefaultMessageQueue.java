@@ -1,6 +1,7 @@
 package com.ctrip.hermes.broker.queue;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.unidal.tuple.Pair;
 
@@ -23,8 +24,8 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	private BrokerConfig m_config;
 
 	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService,
-	      BrokerConfig config) {
-		super(topic, partition, storage);
+	      BrokerConfig config, ScheduledExecutorService es) {
+		super(topic, partition, storage, es);
 		m_metaService = metaService;
 		m_config = config;
 	}
@@ -52,7 +53,6 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 
 	@Override
 	protected void doStop() {
-
 	}
 
 }

@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.lookup.annotation.Inject;
 
-import com.ctrip.hermes.broker.ack.AckManager;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
@@ -19,9 +18,6 @@ import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
 public abstract class AbstractLongPollingService implements LongPollingService {
 	@Inject
 	protected MessageQueueManager m_queueManager;
-
-	@Inject
-	protected AckManager m_ackManager;
 
 	@Inject
 	protected BrokerConfig m_config;

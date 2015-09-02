@@ -60,7 +60,7 @@ public class BrokerConfig {
 		return 50;
 	}
 
-	public long getAckManagerCheckIntervalMillis() {
+	public long getMessageQueueCheckIntervalMillis() {
 		return 10;
 	}
 
@@ -68,7 +68,7 @@ public class BrokerConfig {
 		return 5000;
 	}
 
-	public int getAckManagerOpQueueSize() {
+	public int getMessageQueueOpQueueSize() {
 		return 500000;
 	}
 

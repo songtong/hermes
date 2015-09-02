@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.broker.ack.AckManager;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
@@ -41,9 +40,6 @@ public class ShutdownRequestMonitor {
 	private static final Logger log = LoggerFactory.getLogger(ShutdownRequestMonitor.class);
 
 	private static final int MAX_IDLE_SECONDS = 30;
-
-	@Inject
-	private AckManager m_ackManager;
 
 	@Inject
 	private CommandProcessorManager m_commandProcessor;
@@ -104,7 +100,6 @@ public class ShutdownRequestMonitor {
 		m_longPollingService.stop();
 		m_messageQueueManager.stop();
 		m_nettyServer.stop();
-		m_ackManager.stop();
 		m_bossGroup.shutdownGracefully();
 		m_workerGroup.shutdownGracefully();
 	}

@@ -1,5 +1,7 @@
 package com.ctrip.hermes.broker.queue;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -21,11 +23,11 @@ public class MessageQueuePartitionFactory extends ContainerHolder {
 	@Inject
 	private BrokerConfig m_config;
 
-	public MessageQueue getMessageQueue(String topic, int partition) {
+	public MessageQueue getMessageQueue(String topic, int partition, ScheduledExecutorService es) {
 		Storage storage = m_metaService.findStorageByTopic(topic);
 		try {
 			return new DefaultMessageQueue(topic, partition, lookup(MessageQueueStorage.class, storage.getType()),
-			      m_metaService, m_config);
+			      m_metaService, m_config, es);
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Unsupported storage type " + storage.getType(), e);
 		}
