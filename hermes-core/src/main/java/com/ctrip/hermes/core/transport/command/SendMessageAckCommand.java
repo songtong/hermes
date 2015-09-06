@@ -15,7 +15,7 @@ public class SendMessageAckCommand extends AbstractCommand {
 	private boolean m_success = false;
 
 	public SendMessageAckCommand() {
-		super(CommandType.ACK_MESSAGE_SEND);
+		super(CommandType.ACK_MESSAGE_SEND, 1);
 	}
 
 	public void setSuccess(boolean success) {

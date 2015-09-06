@@ -14,7 +14,7 @@ public class CorrelationIdGenerator {
 	public static class DummyCommand extends AbstractCommand {
 
 		public DummyCommand() {
-			super(null);
+			super(null, 1);
 		}
 
 		private static final long serialVersionUID = 4348425282657231872L;

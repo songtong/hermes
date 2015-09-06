@@ -30,7 +30,7 @@ public class PullMessageCommand extends AbstractCommand {
 	}
 
 	public PullMessageCommand(String topic, int partition, String groupId, int size, long expireTime) {
-		super(CommandType.MESSAGE_PULL);
+		super(CommandType.MESSAGE_PULL, 1);
 		m_topic = topic;
 		m_partition = partition;
 		m_groupId = groupId;

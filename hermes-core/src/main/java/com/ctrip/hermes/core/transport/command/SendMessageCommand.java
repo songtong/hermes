@@ -50,11 +50,11 @@ public class SendMessageCommand extends AbstractCommand {
 	private transient long m_acceptedTime = -1L;
 
 	public SendMessageCommand() {
-		super(CommandType.MESSAGE_SEND);
+		this(null, -1);
 	}
 
 	public SendMessageCommand(String topic, int partition) {
-		super(CommandType.MESSAGE_SEND);
+		super(CommandType.MESSAGE_SEND, 1);
 		m_topic = topic;
 		m_partition = partition;
 	}
