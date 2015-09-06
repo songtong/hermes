@@ -164,8 +164,7 @@ public class ConsumerIntegrationTest extends BaseConsumerIntegrationTest {
 		Consumer.getInstance().start("non.exist.topic", TEST_GROUP, new TestMessageListener());
 	}
 
-	@Test
-	// (expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testGroupNotAllowed() {
 		ConsumerHolder holder = Consumer.getInstance().start(TEST_TOPIC, "non.exist.group", new TestMessageListener());
 		Assert.assertFalse(((DefaultConsumerHolder) holder).isConsuming());

@@ -21,7 +21,7 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.ctrip.hermes.consumer.ConsumerType;
 import com.ctrip.hermes.consumer.build.BuildConstants;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategy;
+import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumingStrategy;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
@@ -99,7 +99,7 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 		defineComponent(ConsumerConfig.class, TestConsumerConfig.class);
 		defineComponent(MetaService.class, TestMetaService.class);
 
-		defineComponent(BrokerConsumptionStrategy.class, ConsumerType.LONG_POLLING.toString(),
+		defineComponent(BrokerConsumingStrategy.class, ConsumerType.LONG_POLLING.toString(),
 		      TestBrokerLongPollingConsumptionStrategy.class)//
 		      .req(ConsumerNotifier.class)//
 		      .req(EndpointManager.class)//
@@ -112,7 +112,7 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 		      .req(PullMessageResultMonitor.class);
 
 		((TestMetaService) lookup(MetaService.class)).setMetaProxy(m_metaProxy).setMetaHolder(m_metaHolder);
-		((TestBrokerLongPollingConsumptionStrategy) lookup(BrokerConsumptionStrategy.class,
+		((TestBrokerLongPollingConsumptionStrategy) lookup(BrokerConsumingStrategy.class,
 		      ConsumerType.LONG_POLLING.toString())).setEndpointClient(m_endpointClient);
 
 		when(m_metaHolder.getMeta()).thenReturn(loadLocalMeta());

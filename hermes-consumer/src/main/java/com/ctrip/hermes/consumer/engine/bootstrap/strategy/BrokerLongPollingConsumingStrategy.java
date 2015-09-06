@@ -5,7 +5,7 @@ import org.unidal.lookup.annotation.Inject;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
-import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager.ConsumerLeaseKey;
+import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.core.env.ClientEnvironment;
@@ -22,7 +22,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionStrategy {
+public class BrokerLongPollingConsumingStrategy implements BrokerConsumingStrategy {
 
 	@Inject
 	private LeaseManager<ConsumerLeaseKey> m_leaseManager;
@@ -104,4 +104,5 @@ public class BrokerLongPollingConsumptionStrategy implements BrokerConsumptionSt
 		}
 
 	}
+
 }

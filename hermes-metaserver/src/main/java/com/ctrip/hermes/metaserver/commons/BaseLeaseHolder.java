@@ -112,7 +112,12 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	public void renewLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
 	      ClientLeaseInfo existingLeaseInfo, long leaseTimeMillis, String ip, int port) throws Exception {
 		existingValidLeases.put(clientKey, existingLeaseInfo);
-		existingLeaseInfo.getLease().setExpireTime(existingLeaseInfo.getLease().getExpireTime() + leaseTimeMillis);
+		long newExpireTime = existingLeaseInfo.getLease().getExpireTime() + leaseTimeMillis;
+		long now = m_systemClockService.now();
+		if (newExpireTime > now + 2 * leaseTimeMillis) {
+			newExpireTime = now + 2 * leaseTimeMillis;
+		}
+		existingLeaseInfo.getLease().setExpireTime(newExpireTime);
 		existingLeaseInfo.setIp(ip);
 		existingLeaseInfo.setPort(port);
 		persistToZK(contextKey, existingValidLeases);

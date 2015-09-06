@@ -73,7 +73,7 @@ public class OneBoxTest extends ComponentTestCase {
 				// System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>Received: " + msg.getBody());
 			}
 		});
-		engine.start(Arrays.asList(s));
+		engine.start(s);
 
 		System.in.read();
 	}
@@ -162,7 +162,7 @@ public class OneBoxTest extends ComponentTestCase {
 			for (String id : entry.getValue()) {
 				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(nacks, id), ConsumerType.LONG_POLLING);
 				System.out.println("Starting consumer " + groupId + ":" + id);
-				engine.start(Arrays.asList(s));
+				engine.start(s);
 			}
 
 		}
@@ -193,7 +193,7 @@ public class OneBoxTest extends ComponentTestCase {
 					String id = parts[2];
 					Map<String, Integer> nacks = findNacks(groupId);
 					System.out.println(String.format("Starting consumer with groupId %s and id %s", groupId, id));
-					engine.start(Arrays.asList((new Subscriber(topic, groupId, new MyConsumer(nacks, id)))));
+					engine.start(new Subscriber(topic, groupId, new MyConsumer(nacks, id)));
 				}
 			} else {
 				send(topic, prefix);

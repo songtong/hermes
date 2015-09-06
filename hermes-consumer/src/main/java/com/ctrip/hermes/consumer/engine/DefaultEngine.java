@@ -1,5 +1,6 @@
 package com.ctrip.hermes.consumer.engine;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -27,57 +28,62 @@ public class DefaultEngine extends Engine {
 	private MetaService m_metaService;
 
 	@Override
-	public SubscribeHandle start(List<Subscriber> subscribers) {
+	public SubscribeHandle start(Subscriber subscriber) {
 		CompositeSubscribeHandle handle = new CompositeSubscribeHandle();
 
-		for (Subscriber s : subscribers) {
-			List<Topic> topics = m_metaService.listTopicsByPattern(s.getTopicPattern());
+		List<Topic> topics = m_metaService.listTopicsByPattern(subscriber.getTopicPattern());
 
-			if (topics == null || topics.isEmpty()) {
-				throw new IllegalArgumentException(String.format("Can not find any topics matching pattern %s",
-				      s.getTopicPattern()));
+		if (topics == null || topics.isEmpty()) {
+			throw new IllegalArgumentException(String.format("Can not find any topics matching pattern %s",
+			      subscriber.getTopicPattern()));
+		}
+
+		log.info("Found topics({}) matching pattern({}), groupId={}.", CollectionUtil.collect(topics, new Transformer() {
+
+			@Override
+			public Object transform(Object topic) {
+				return ((Topic) topic).getName();
 			}
+		}), subscriber.getTopicPattern(), subscriber.getGroupId());
 
-			log.info("Found topics({}) matching pattern({}), groupId={}.",
-			      CollectionUtil.collect(topics, new Transformer() {
+		validate(topics, subscriber.getGroupId());
 
-				      @Override
-				      public Object transform(Object topic) {
-					      return ((Topic) topic).getName();
-				      }
-			      }), s.getTopicPattern(), s.getGroupId());
+		for (Topic topic : topics) {
+			ConsumerContext context = new ConsumerContext(topic, subscriber.getGroupId(), subscriber.getConsumer(),
+			      subscriber.getMessageClass(), subscriber.getConsumerType(), subscriber.getMessageListenerConfig());
 
-			for (Topic topic : topics) {
-				ConsumerContext context = new ConsumerContext(topic, s.getGroupId(), s.getConsumer(), s.getMessageClass(),
-				      s.getConsumerType(), s.getMessageListenerConfig());
+			try {
+				ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(topic);
+				handle.addSubscribeHandle(consumerBootstrap.start(context));
 
-				// FIXME validate all, if fail in any validator, exit
-				if (validate(topic, context)) {
-					try {
-						ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(topic);
-						handle.addSubscribeHandle(consumerBootstrap.start(context));
-
-					} catch (RuntimeException e) {
-						log.error("Failed to start consumer for topic {}(consumer: groupId={}, sessionId={})",
-						      topic.getName(), context.getGroupId(), context.getSessionId(), e);
-						throw e;
-					}
-				}
+			} catch (RuntimeException e) {
+				log.error("Failed to start consumer for topic {} (consumer: groupId={}, sessionId={})", topic.getName(),
+				      context.getGroupId(), context.getSessionId(), e);
+				throw e;
 			}
 		}
 
 		return handle;
 	}
 
-	private boolean validate(Topic topic, ConsumerContext context) {
-		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
-			if (!m_metaService.containsConsumerGroup(topic.getName(), context.getGroupId())) {
-				log.error("Consumer group {} not found for topic {}, please add consumer group in Hermes-Portal first.",
-				      context.getGroupId(), topic.getName());
-				return false;
+	private void validate(List<Topic> topics, String groupId) {
+		List<String> failedTopics = new ArrayList<String>();
+		boolean hasError = false;
+
+		for (Topic topic : topics) {
+			if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+				if (!m_metaService.containsConsumerGroup(topic.getName(), groupId)) {
+					failedTopics.add(topic.getName());
+					hasError = true;
+				}
 			}
 		}
 
-		return true;
+		if (hasError) {
+			throw new IllegalArgumentException(String.format(
+			      "Consumer group %s not found for topics (%s), please add consumer group in Hermes-Portal first.",
+			      groupId, failedTopics));
+		}
+
 	}
 }

@@ -40,7 +40,7 @@
 			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.BrokerConsumerBootstrap</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategyRegistry</role>
+					<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumingStrategyRegistry</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.transport.endpoint.EndpointClient</role>
@@ -57,13 +57,13 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategyRegistry</role>
-			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultBrokerConsumptionRegistry</implementation>
+			<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumingStrategyRegistry</role>
+			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultBrokerConsumingRegistry</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategy</role>
+			<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumingStrategy</role>
 			<role-hint>LONG_POLLING</role-hint>
-			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerLongPollingConsumptionStrategy</implementation>
+			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerLongPollingConsumingStrategy</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier</role>

@@ -7,7 +7,8 @@ import com.ctrip.hermes.consumer.engine.SubscribeHandle;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public interface BrokerConsumptionStrategy {
+public interface BrokerConsumingStrategy {
 
 	SubscribeHandle start(ConsumerContext context, int partitionId);
+
 }

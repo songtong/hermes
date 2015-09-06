@@ -3,7 +3,6 @@ package com.ctrip.hermes.example.feature.producer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +56,7 @@ public class OneProducer extends ComponentTestCase {
 			}
 		});
 
-		engine.start(Arrays.asList(s));
+		engine.start(s);
 
 		assertTrue(latch.await(1, TimeUnit.SECONDS));
 	}

@@ -1,7 +1,6 @@
 package com.ctrip.hermes.example.performance;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
@@ -164,7 +163,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 					}
 				});
 
-				engine.start(Arrays.asList(s));
+				engine.start(s);
 			}
 		}).start();
 	}
@@ -207,7 +206,7 @@ public class ProduceAndConsume extends ComponentTestCase {
 					}
 				});
 
-				engine.start(Arrays.asList(s));
+				engine.start(s);
 			}
 		}).start();
 	}

@@ -6,7 +6,7 @@ import com.ctrip.hermes.consumer.ConsumerType;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public interface BrokerConsumptionStrategyRegistry {
+public interface BrokerConsumingStrategyRegistry {
 
-	public BrokerConsumptionStrategy findStrategy(ConsumerType consumerType);
+	public BrokerConsumingStrategy findStrategy(ConsumerType consumerType);
 }

@@ -1,6 +1,5 @@
 package com.ctrip.cmessaging.client.consumer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -17,28 +16,20 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public class HermesSyncConsumer implements ISyncConsumer {
-	private String topic;
-	private String groupId;
+
 	private long timeout;
 
 	BlockingDeque<ConsumerMessage<byte[]>> msgQueue = new LinkedBlockingDeque<>();
 
 	public HermesSyncConsumer(String topic, String groupId, long timeout) {
-		this.topic = topic;
-		this.groupId = groupId;
 		this.timeout = timeout;
 
 		Engine engine = PlexusComponentLocator.lookup(Engine.class);
 
-		List<Subscriber> subscribers = new ArrayList<>();
-
-		subscribers.add(new Subscriber(topic, groupId, new InnerConsumer()));
-
 		// todo: move engine.start() into consumeOne() step,
 		// 暂时无法实现，需engine提供stop方法。
-		engine.start(subscribers);
+		engine.start(new Subscriber(topic, groupId, new InnerConsumer()));
 	}
-
 
 	@Override
 	public IMessage consumeOne() throws ConsumeTimeoutException {
@@ -60,24 +51,18 @@ public class HermesSyncConsumer implements ISyncConsumer {
 		this.timeout = l;
 	}
 
-	@Override
 	public void topicBind(String topic, String exchangeName) {
-		this.topic = topic;
-		/*
-		exchangeName is useless
-		 */
 	}
 
 	@Override
 	public void setBatchSize(int i) {
 		/*
-		do nothing
+		 * do nothing
 		 */
 	}
 
 	@Override
 	public void setIdentifier(String identifier) {
-		this.groupId = identifier;
 	}
 
 	class InnerConsumer implements MessageListener<byte[]> {
