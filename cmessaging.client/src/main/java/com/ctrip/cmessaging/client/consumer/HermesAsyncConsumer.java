@@ -1,7 +1,5 @@
 package com.ctrip.cmessaging.client.consumer;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import com.ctrip.cmessaging.client.IAsyncConsumer;
@@ -18,7 +16,9 @@ public class HermesAsyncConsumer implements IAsyncConsumer {
 	private IConsumerCallbackEventHandler handler;
 
 	private String topic;
+
 	private String groupId;
+
 	private boolean isAutoAck;
 
 	public HermesAsyncConsumer(String topic, String groupId) {
@@ -51,14 +51,12 @@ public class HermesAsyncConsumer implements IAsyncConsumer {
 		this.isAutoAck = autoAck;
 		Engine engine = PlexusComponentLocator.lookup(Engine.class);
 
-		List<Subscriber> subscribers = new ArrayList<>();
-		maxThread = maxThread <= 0 ? 1: maxThread;
+		maxThread = maxThread <= 0 ? 1 : maxThread;
 
-		for (int i = 0; i < maxThread; i ++) {
-			subscribers.add(new Subscriber(topic, groupId, new InnerConsumer()));
+		for (int i = 0; i < maxThread; i++) {
+			engine.start(new Subscriber(topic, groupId, new InnerConsumer()));
 		}
 
-		engine.start(subscribers);
 	}
 
 	@Override
@@ -70,14 +68,14 @@ public class HermesAsyncConsumer implements IAsyncConsumer {
 	public void topicBind(String topic, String exchangeName) {
 		this.topic = topic;
 		/*
-		exchangeName is useless
+		 * exchangeName is useless
 		 */
 	}
 
 	@Override
 	public void setBatchSize(int i) {
 		/*
-		do nothing
+		 * do nothing
 		 */
 	}
 
@@ -90,7 +88,7 @@ public class HermesAsyncConsumer implements IAsyncConsumer {
 		@Override
 		public void onMessage(List<ConsumerMessage<byte[]>> msgs) {
 			try {
-//				System.out.println("received " + msgs.size() + " msgs.");
+				// System.out.println("received " + msgs.size() + " msgs.");
 				for (ConsumerMessage<byte[]> msg : msgs) {
 					handler.callback(new HermesIMessage(msg, isAutoAck));
 				}

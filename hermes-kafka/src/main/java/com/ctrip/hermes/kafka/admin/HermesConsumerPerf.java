@@ -123,7 +123,9 @@ public class HermesConsumerPerf {
 		logger.info("starting threads");
 		long startMs = System.currentTimeMillis();
 		System.out.println("Starting consumer...");
-		engine.start(subscribers);
+		for (Subscriber s : subscribers) {
+			engine.start(s);
+		}
 
 		latch.await();
 		long endMs = System.currentTimeMillis();

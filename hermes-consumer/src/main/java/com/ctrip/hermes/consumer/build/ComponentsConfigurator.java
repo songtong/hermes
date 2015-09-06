@@ -12,9 +12,9 @@ import com.ctrip.hermes.consumer.engine.DefaultEngine;
 import com.ctrip.hermes.consumer.engine.bootstrap.BrokerConsumerBootstrap;
 import com.ctrip.hermes.consumer.engine.bootstrap.DefaultConsumerBootstrapManager;
 import com.ctrip.hermes.consumer.engine.bootstrap.DefaultConsumerBootstrapRegistry;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumptionStrategy;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerLongPollingConsumptionStrategy;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultBrokerConsumptionRegistry;
+import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumingStrategy;
+import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerLongPollingConsumingStrategy;
+import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultBrokerConsumingRegistry;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager;
@@ -54,9 +54,9 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(BrokerConsumerBootstrap.class));
 
 		// consumption strategy
-		all.add(A(DefaultBrokerConsumptionRegistry.class));
-		all.add(C(BrokerConsumptionStrategy.class, ConsumerType.LONG_POLLING.toString(),
-		      BrokerLongPollingConsumptionStrategy.class)//
+		all.add(A(DefaultBrokerConsumingRegistry.class));
+		all.add(C(BrokerConsumingStrategy.class, ConsumerType.LONG_POLLING.toString(),
+		      BrokerLongPollingConsumingStrategy.class)//
 		      .req(ConsumerNotifier.class)//
 		      .req(EndpointManager.class)//
 		      .req(EndpointClient.class)//

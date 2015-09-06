@@ -1,6 +1,5 @@
 package com.ctrip.hermes.example.performance;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,13 +15,14 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.producer.api.Producer;
 
 /**
- * Test the performance on: consumer pull msgs from broker.
- * Assume that network is not th bottleneck.
+ * Test the performance on: consumer pull msgs from broker. Assume that network is not th bottleneck.
  */
 public class ConsumerPullBroker extends ComponentTestCase {
 
 	final static String TOPIC = "order_new";
+
 	private static final int MESSAGE_COUNT = 20000;
+
 	static AtomicInteger receiveCount = new AtomicInteger(0);
 
 	@BeforeClass
@@ -35,7 +35,6 @@ public class ConsumerPullBroker extends ComponentTestCase {
 
 		produceMsgs();
 
-
 		String topic = TOPIC;
 		Engine engine = lookup(Engine.class);
 
@@ -44,19 +43,18 @@ public class ConsumerPullBroker extends ComponentTestCase {
 			@Override
 			public void onMessage(List<ConsumerMessage<String>> msgs) {
 				receiveCount.addAndGet(msgs.size());
-//				System.out.println("receiveCount: " + receiveCount);
+				// System.out.println("receiveCount: " + receiveCount);
 				if (receiveCount.get() >= MESSAGE_COUNT) {
 
 					long endTime = System.currentTimeMillis();
 					System.out.println(String.format("Result: Time: %.2f(s), msgs: %d, QPS: %.2f msg/s",
-							  (endTime - startTime) / 1000f, MESSAGE_COUNT, MESSAGE_COUNT / ((endTime - startTime) /
-										 1000f)));
+					      (endTime - startTime) / 1000f, MESSAGE_COUNT, MESSAGE_COUNT / ((endTime - startTime) / 1000f)));
 					System.exit(0);
 				}
 			}
 		});
 
-		engine.start(Arrays.asList(s));
+		engine.start(s);
 
 		System.in.read();
 	}
