@@ -13,7 +13,8 @@ public abstract class AbstractCommand implements Command {
 
 	protected ByteBuf m_rawBuf;
 
-	public AbstractCommand(CommandType commandType) {
+	public AbstractCommand(CommandType commandType, int version) {
+		m_header.setVersion(version);
 		m_header.setType(commandType);
 	}
 

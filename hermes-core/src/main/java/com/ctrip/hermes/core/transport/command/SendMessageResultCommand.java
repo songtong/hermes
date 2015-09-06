@@ -24,7 +24,7 @@ public class SendMessageResultCommand extends AbstractCommand {
 	}
 
 	public SendMessageResultCommand(int totalSize) {
-		super(CommandType.RESULT_MESSAGE_SEND);
+		super(CommandType.RESULT_MESSAGE_SEND, 1);
 		m_totalSize = totalSize;
 	}
 

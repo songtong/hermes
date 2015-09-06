@@ -24,7 +24,7 @@ public class PullMessageResultCommand extends AbstractCommand {
 	private transient Channel m_channel;
 
 	public PullMessageResultCommand() {
-		super(CommandType.RESULT_MESSAGE_PULL);
+		super(CommandType.RESULT_MESSAGE_PULL, 1);
 	}
 
 	public List<TppConsumerMessageBatch> getBatches() {

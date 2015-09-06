@@ -26,7 +26,7 @@ public class AckMessageCommand extends AbstractCommand {
 	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> m_nackMsgSeqs = new ConcurrentHashMap<Triple<Tpp, String, Boolean>, List<AckContext>>();
 
 	public AckMessageCommand() {
-		super(CommandType.MESSAGE_ACK);
+		super(CommandType.MESSAGE_ACK, 1);
 	}
 
 	@Override
