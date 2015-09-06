@@ -28,16 +28,6 @@ public class BaseConsumerMessage<T> {
 
 	protected long m_onMessageEndTimeMills;
 
-	protected String m_sessionId;
-
-	public String getSessionId() {
-		return m_sessionId;
-	}
-
-	public void setSessionId(String sessionId) {
-		m_sessionId = sessionId;
-	}
-
 	public long getOnMessageStartTimeMills() {
 		return m_onMessageStartTimeMills;
 	}

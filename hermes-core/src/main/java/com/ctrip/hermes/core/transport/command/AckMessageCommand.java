@@ -11,7 +11,6 @@ import org.unidal.tuple.Triple;
 
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
-import com.ctrip.hermes.core.utils.StringUtils;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -20,8 +19,6 @@ import com.ctrip.hermes.core.utils.StringUtils;
 public class AckMessageCommand extends AbstractCommand {
 	private static final long serialVersionUID = 7009170887490443292L;
 
-	private static final String SESSIONID_KEY = "consumer.sessionId";
-
 	// key: tpp, groupId, isResend
 	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> m_ackMsgSeqs = new ConcurrentHashMap<Triple<Tpp, String, Boolean>, List<AckContext>>();
 
@@ -29,18 +26,7 @@ public class AckMessageCommand extends AbstractCommand {
 	private ConcurrentMap<Triple<Tpp, String, Boolean>, List<AckContext>> m_nackMsgSeqs = new ConcurrentHashMap<Triple<Tpp, String, Boolean>, List<AckContext>>();
 
 	public AckMessageCommand() {
-		this(null);
-	}
-
-	public AckMessageCommand(String sessionId) {
 		super(CommandType.MESSAGE_ACK);
-		if (!StringUtils.isBlank(sessionId)) {
-			this.m_header.addProperty(SESSIONID_KEY, sessionId);
-		}
-	}
-
-	public String getSessionId() {
-		return this.m_header.getProperties().get(SESSIONID_KEY);
 	}
 
 	@Override

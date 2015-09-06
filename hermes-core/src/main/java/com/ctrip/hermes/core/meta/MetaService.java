@@ -35,6 +35,8 @@ public interface MetaService {
 
 	Topic findTopicByName(String topic);
 
+	int getAckTimeoutSecondsByTopicAndConsumerGroup(String topic, String groupId);
+
 	List<Datasource> listAllMysqlDataSources();
 
 	List<Partition> listPartitionsByTopic(String topic);
@@ -52,14 +54,14 @@ public interface MetaService {
 	LeaseAcquireResponse tryRenewConsumerLease(Tpg tpg, Lease lease, String sessionId);
 
 	List<SubscriptionView> listSubscriptions(String status);
-	
+
 	boolean containsEndpoint(Endpoint endpoint);
 
 	boolean containsConsumerGroup(String topicName, String groupId);
-	
+
 	String getAvroSchemaRegistryUrl();
-	
+
 	String getZookeeperList();
-	
+
 	String getKafkaBrokerList();
 }

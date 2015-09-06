@@ -54,10 +54,7 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	protected MessageQueue m_messageQueue;
 
-	private String m_sessionId;
-
-	public AbstractMessageQueueCursor(Tpg tpg, Lease lease, MetaService metaService, MessageQueue messageQueue,
-	      String sessionId) {
+	public AbstractMessageQueueCursor(Tpg tpg, Lease lease, MetaService metaService, MessageQueue messageQueue) {
 		m_tpg = tpg;
 		m_lease = lease;
 		m_priorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), true);
@@ -65,7 +62,6 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		m_metaService = metaService;
 		m_groupIdInt = m_metaService.translateToIntGroupId(m_tpg.getTopic(), m_tpg.getGroupId());
 		m_messageQueue = messageQueue;
-		m_sessionId = sessionId;
 	}
 
 	@Override
@@ -170,10 +166,6 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		if (m_stopped.compareAndSet(false, true)) {
 			doStop();
 		}
-	}
-
-	public String getSessionId() {
-		return m_sessionId;
 	}
 
 }

@@ -128,7 +128,6 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 					BaseConsumerMessage<?> baseMsg = m_messageCodec.decode(consumerContext.getTopic().getName(), byteBuf,
 					      consumerContext.getMessageClazz());
-					baseMsg.setSessionId(consumerContext.getSessionId());
 					@SuppressWarnings("rawtypes")
 					ConsumerMessage kafkaMsg = new KafkaConsumerMessage(baseMsg, msgAndMetadata.partition(),
 					      msgAndMetadata.offset());

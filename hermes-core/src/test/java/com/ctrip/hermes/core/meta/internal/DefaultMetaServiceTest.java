@@ -62,6 +62,31 @@ public class DefaultMetaServiceTest extends ComponentTestCase {
 	}
 
 	@Test
+	public void testGetAckTimeoutSecondsByTopicAndConsumerGroup() throws Exception {
+		assertEquals(10, m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup("test_broker", "group1"));
+		assertEquals(6, m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup("test_broker", "group2"));
+		assertEquals(5, m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup("test_broker", "group3"));
+
+		try {
+			m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup("topic_not_found", "group3");
+			fail();
+		} catch (RuntimeException e) {
+			// do nothing
+		} catch (Exception e) {
+			fail();
+		}
+
+		try {
+			m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup("test_broker", "group_not_found");
+			fail();
+		} catch (RuntimeException e) {
+			// do nothing
+		} catch (Exception e) {
+			fail();
+		}
+	}
+
+	@Test
 	public void testFindEndpointTypeByTopic() throws Exception {
 		assertEquals(Endpoint.KAFKA, m_metaService.findEndpointTypeByTopic("test_kafka"));
 		assertEquals(Endpoint.BROKER, m_metaService.findEndpointTypeByTopic("test_broker"));

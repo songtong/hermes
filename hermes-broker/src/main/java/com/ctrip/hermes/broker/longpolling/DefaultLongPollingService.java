@@ -49,14 +49,14 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 	@Override
 	public void schedulePush(Tpg tpg, long correlationId, int batchSize, Channel channel, long expireTime,
-	      Lease brokerLease, String sessionId) {
+	      Lease brokerLease) {
 		if (log.isDebugEnabled()) {
 			log.debug("Schedule push for client(correlationId={}, topic={}, partition={}, groupId={})", correlationId,
 			      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
 		}
 
 		final PullMessageTask pullMessageTask = new PullMessageTask(tpg, correlationId, batchSize, channel, expireTime,
-		      brokerLease, sessionId);
+		      brokerLease);
 
 		if (m_stopped.get()) {
 			response(pullMessageTask, null);
@@ -118,7 +118,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	private boolean queryAndResponseData(PullMessageTask pullTask) {
 		Tpg tpg = pullTask.getTpg();
 
-		MessageQueueCursor cursor = m_queueManager.getCursor(tpg, pullTask.getBrokerLease(), pullTask.getSessionId());
+		MessageQueueCursor cursor = m_queueManager.getCursor(tpg, pullTask.getBrokerLease());
 
 		if (cursor == null) {
 			return false;

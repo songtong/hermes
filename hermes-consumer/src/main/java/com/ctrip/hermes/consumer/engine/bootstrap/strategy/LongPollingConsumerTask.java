@@ -368,7 +368,6 @@ public class LongPollingConsumerTask implements Runnable {
 				Context context = timer.time();
 
 				BaseConsumerMessage baseMsg = m_messageCodec.decode(batch.getTopic(), batchData, bodyClazz);
-				baseMsg.setSessionId(m_context.getSessionId());
 				BrokerConsumerMessage brokerMsg = new BrokerConsumerMessage(baseMsg);
 				MessageMeta messageMeta = msgMetas.get(j);
 				brokerMsg.setPartition(partition);
@@ -439,8 +438,7 @@ public class LongPollingConsumerTask implements Runnable {
 
 			// FIXME 500ms enough?
 			PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
-			      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout - 500L,
-			      m_context.getSessionId());
+			      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout - 500L);
 
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			cmd.setFuture(future);
