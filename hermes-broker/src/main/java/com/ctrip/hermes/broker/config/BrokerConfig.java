@@ -37,7 +37,7 @@ public class BrokerConfig {
 	}
 
 	public int getLongPollingServiceThreadCount() {
-		return 10;
+		return 50;
 	}
 
 	public int getLongPollingCheckIntervalBaseMillis() {
@@ -69,7 +69,7 @@ public class BrokerConfig {
 	}
 
 	public int getAckOpExecutorThreadCount() {
-		return 5;
+		return 10;
 	}
 
 	public int getAckOpQueueSize() {

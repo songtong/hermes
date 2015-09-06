@@ -223,10 +223,6 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 		@Override
 		public void run() {
-			if (m_stopped.get()) {
-				return;
-			}
-
 			try {
 				handleOperations();
 				checkHolders();
