@@ -14,8 +14,8 @@ public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 	private MessageQueueStorage m_storage;
 
 	public DefaultMessageQueueCursor(Tpg tpg, Lease lease, MessageQueueStorage storage, MetaService metaService,
-	      MessageQueue messageQueue, String sessionId) {
-		super(tpg, lease, metaService, messageQueue, sessionId);
+	      MessageQueue messageQueue) {
+		super(tpg, lease, metaService, messageQueue);
 		m_storage = storage;
 	}
 

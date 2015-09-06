@@ -20,7 +20,7 @@ public interface MessageQueueManager {
 
 	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data, Lease lease);
 
-	public MessageQueueCursor getCursor(Tpg tpg, Lease lease, String sessionId);
+	public MessageQueueCursor getCursor(Tpg tpg, Lease lease);
 
 	public void stop();
 

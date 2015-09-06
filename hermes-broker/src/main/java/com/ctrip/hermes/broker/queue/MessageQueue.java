@@ -20,7 +20,7 @@ public interface MessageQueue {
 	ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch,
 	      Lease lease);
 
-	MessageQueueCursor getCursor(String groupId, Lease lease, String sessionId);
+	MessageQueueCursor getCursor(String groupId, Lease lease);
 
 	void nack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas);
 
