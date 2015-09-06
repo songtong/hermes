@@ -105,7 +105,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 			return;
 		}
 
-		resetTppIfResend(tpp, resend);
+		resetPriorityIfResend(tpp, resend);
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
 		List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>(msgMetas.size());
 		for (MessageMeta msgMeta : msgMetas) {
@@ -114,7 +114,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 		boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offer(
 		      new Operation(key, resend, Type.DELIVERED, msgId2Metas, m_systemClockService.now()));
-		logOfferFail("delivered", offered);
+		logIfOfferFail("delivered", offered);
 	}
 
 	@Override
@@ -122,12 +122,12 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		if (m_stopped.get()) {
 			return;
 		}
-		resetTppIfResend(tpp, resend);
+		resetPriorityIfResend(tpp, resend);
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
 		for (AckContext context : ackContexts) {
 			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offer(
 			      new Operation(key, resend, Type.ACK, context.getMsgSeq(), m_systemClockService.now()));
-			logOfferFail("acked", offered);
+			logIfOfferFail("acked", offered);
 		}
 	}
 
@@ -136,22 +136,22 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		if (m_stopped.get()) {
 			return;
 		}
-		resetTppIfResend(tpp, resend);
+		resetPriorityIfResend(tpp, resend);
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
 		for (AckContext context : nackContexts) {
 			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offer(
 			      new Operation(key, resend, Type.NACK, context.getMsgSeq(), m_systemClockService.now()));
-			logOfferFail("nacked", offered);
+			logIfOfferFail("nacked", offered);
 		}
 	}
 
-	private void logOfferFail(String type, boolean offered) {
+	private void logIfOfferFail(String type, boolean offered) {
 		if (!offered) {
 			log.warn("Operation queue full when doing {}", type);
 		}
 	}
 
-	private void resetTppIfResend(Tpp tpp, boolean resend) {
+	private void resetPriorityIfResend(Tpp tpp, boolean resend) {
 		if (resend) {
 			tpp.setPriority(false);
 		}
@@ -205,8 +205,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 	@Override
 	public void initialize() throws InitializationException {
-		// TODO config pool size
-		m_ackOpExecutor = Executors.newScheduledThreadPool(1, HermesThreadFactory.create("AckOp", true));
+		m_ackOpExecutor = Executors.newScheduledThreadPool(m_config.getAckOpExecutorThreadCount(), HermesThreadFactory.create("AckOp", true));
 	}
 
 }
