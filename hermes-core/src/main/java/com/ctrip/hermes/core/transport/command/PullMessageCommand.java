@@ -3,7 +3,6 @@ package com.ctrip.hermes.core.transport.command;
 import io.netty.buffer.ByteBuf;
 
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
-import com.ctrip.hermes.core.utils.StringUtils;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
@@ -13,8 +12,6 @@ import com.google.common.util.concurrent.SettableFuture;
 public class PullMessageCommand extends AbstractCommand {
 
 	private static final long serialVersionUID = 8392887545356755515L;
-
-	private static final String SESSIONID_KEY = "consumer.sessionId";
 
 	private String m_groupId;
 
@@ -29,19 +26,16 @@ public class PullMessageCommand extends AbstractCommand {
 	private transient SettableFuture<PullMessageResultCommand> m_future;
 
 	public PullMessageCommand() {
-		this(null, -1, null, 0, -1L, null);
+		this(null, -1, null, 0, -1L);
 	}
 
-	public PullMessageCommand(String topic, int partition, String groupId, int size, long expireTime, String sessionId) {
+	public PullMessageCommand(String topic, int partition, String groupId, int size, long expireTime) {
 		super(CommandType.MESSAGE_PULL);
 		m_topic = topic;
 		m_partition = partition;
 		m_groupId = groupId;
 		m_size = size;
 		m_expireTime = expireTime;
-		if (!StringUtils.isBlank(sessionId)) {
-			this.m_header.addProperty(SESSIONID_KEY, sessionId);
-		}
 	}
 
 	public SettableFuture<PullMessageResultCommand> getFuture() {
@@ -50,10 +44,6 @@ public class PullMessageCommand extends AbstractCommand {
 
 	public void setFuture(SettableFuture<PullMessageResultCommand> future) {
 		m_future = future;
-	}
-
-	public String getSessionId() {
-		return this.m_header.getProperties().get(SESSIONID_KEY);
 	}
 
 	public long getExpireTime() {
