@@ -67,23 +67,26 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private MetaService m_metaService;
 
-	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage, ScheduledExecutorService es) {
+	private ScheduledExecutorService m_ackOpExecutor;
+
+	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage,
+	      ScheduledExecutorService ackOpExecutor) {
 		m_topic = topic;
 		m_partition = partition;
 		m_storage = storage;
 		m_ackHolders = new ConcurrentHashMap<>();
 		m_resendAckHolders = new ConcurrentHashMap<>();
+		m_ackOpExecutor = ackOpExecutor;
 		m_config = PlexusComponentLocator.lookup(BrokerConfig.class);
 		m_metaService = PlexusComponentLocator.lookup(MetaService.class);
 
-		init(es);
+		init();
 	}
 
-	private void init(ScheduledExecutorService es) {
-		m_opQueue = new LinkedBlockingQueue<>(m_config.getMessageQueueOpQueueSize());
+	private void init() {
+		m_opQueue = new LinkedBlockingQueue<>(m_config.getAckOpQueueSize());
 		m_ackTask = new AckTask();
-		// TODO AckTask schedule self
-		es.scheduleWithFixedDelay(m_ackTask, 0, m_config.getMessageQueueCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+		m_ackOpExecutor.schedule(m_ackTask, m_config.getMessageQueueCheckIntervalMillis(), TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -220,11 +223,20 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 		@Override
 		public void run() {
+			if (m_stopped.get()) {
+				return;
+			}
+
 			try {
 				handleOperations();
 				checkHolders();
 			} catch (Exception e) {
 				log.error("Exception occurred while executing ack task.", e);
+			} finally {
+				if (!m_stopped.get()) {
+					m_ackOpExecutor
+					      .schedule(m_ackTask, m_config.getMessageQueueCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+				}
 			}
 		}
 
@@ -232,7 +244,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		private void handleOperations() {
 			try {
 				if (m_todos.isEmpty()) {
-					m_opQueue.drainTo(m_todos, m_config.getAckManagerOpHandlingBatchSize());
+					m_opQueue.drainTo(m_todos, m_config.getAckOpHandlingBatchSize());
 				}
 
 				if (m_todos.isEmpty()) {
@@ -268,9 +280,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			Map<Pair<Boolean, String>, AckHolder<MessageMeta>> holders = findHolders(op);
 
 			if (!holders.containsKey(op.getKey())) {
-				int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(m_topic,
-									      op.getKey().getValue()) * 1000;
-				
+				int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(m_topic, op.getKey().getValue()) * 1000;
+
 				holders.put(op.getKey(), new DefaultAckHolder<MessageMeta>(timeout));
 			}
 

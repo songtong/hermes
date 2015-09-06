@@ -55,7 +55,7 @@ public class BrokerConfig {
 	public int getDumperNoMessageWaitIntervalBaseMillis() {
 		return 5;
 	}
-	
+
 	public int getDumperNoMessageWaitIntervalMaxMillis() {
 		return 50;
 	}
@@ -64,11 +64,15 @@ public class BrokerConfig {
 		return 10;
 	}
 
-	public int getAckManagerOpHandlingBatchSize() {
+	public int getAckOpHandlingBatchSize() {
 		return 5000;
 	}
 
-	public int getMessageQueueOpQueueSize() {
+	public int getAckOpExecutorThreadCount() {
+		return 5;
+	}
+
+	public int getAckOpQueueSize() {
 		return 500000;
 	}
 
@@ -105,4 +109,5 @@ public class BrokerConfig {
 			return Integer.valueOf(port);
 		}
 	}
+
 }

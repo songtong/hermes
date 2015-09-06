@@ -24,8 +24,8 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	private BrokerConfig m_config;
 
 	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService,
-	      BrokerConfig config, ScheduledExecutorService es) {
-		super(topic, partition, storage, es);
+	      BrokerConfig config, ScheduledExecutorService ackOpExecutor) {
+		super(topic, partition, storage, ackOpExecutor);
 		m_metaService = metaService;
 		m_config = config;
 	}
