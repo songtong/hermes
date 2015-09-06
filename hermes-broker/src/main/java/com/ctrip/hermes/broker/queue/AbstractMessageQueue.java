@@ -28,6 +28,7 @@ import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -64,6 +65,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private BrokerConfig m_config;
 
+	private MetaService m_metaService;
+
 	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage, ScheduledExecutorService es) {
 		m_topic = topic;
 		m_partition = partition;
@@ -71,6 +74,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		m_ackHolders = new ConcurrentHashMap<>();
 		m_resendAckHolders = new ConcurrentHashMap<>();
 		m_config = PlexusComponentLocator.lookup(BrokerConfig.class);
+		m_metaService = PlexusComponentLocator.lookup(MetaService.class);
 
 		init(es);
 	}
@@ -264,7 +268,10 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			Map<Pair<Boolean, String>, AckHolder<MessageMeta>> holders = findHolders(op);
 
 			if (!holders.containsKey(op.getKey())) {
-				holders.put(op.getKey(), new DefaultAckHolder<MessageMeta>(Integer.MAX_VALUE));
+				int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(m_topic,
+									      op.getKey().getValue()) * 1000;
+				
+				holders.put(op.getKey(), new DefaultAckHolder<MessageMeta>(timeout));
 			}
 
 			return holders.get(op.getKey());

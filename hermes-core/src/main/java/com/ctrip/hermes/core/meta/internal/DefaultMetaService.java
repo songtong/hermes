@@ -236,6 +236,23 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
+	public int getAckTimeoutSecondsByTopicAndConsumerGroup(String topicName, String groupId) {
+		Topic topic = findTopic(topicName, getMeta());
+
+		if (containsConsumerGroup(topicName, groupId)) {
+			ConsumerGroup consumerGroup = topic.findConsumerGroup(groupId);
+			if (consumerGroup.getAckTimeoutSeconds() == null) {
+				return topic.getAckTimeoutSeconds();
+			} else {
+				return consumerGroup.getAckTimeoutSeconds();
+			}
+		} else {
+			throw new RuntimeException(String.format("Consumer group %s for topic %s not found", groupId, topicName));
+		}
+
+	}
+
+	@Override
 	public LeaseAcquireResponse tryAcquireConsumerLease(Tpg tpg, String sessionId) {
 		return getMetaProxy().tryAcquireConsumerLease(tpg, sessionId);
 	}
