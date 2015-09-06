@@ -28,6 +28,7 @@ import com.ctrip.hermes.producer.sender.MessageSender;
 import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
+import com.dianping.cat.message.internal.DefaultTransaction;
 import com.dianping.cat.message.spi.MessageTree;
 
 /**
@@ -85,6 +86,8 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	}
 
 	private void tracking(SendMessageCommand sendMessageCommand, boolean success) {
+		String status = success ? Transaction.SUCCESS : "Timeout";
+
 		for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
 			for (ProducerMessage<?> msg : msgs) {
 				Transaction t = Cat.newTransaction("Message.Produce.Acked", msg.getTopic());
@@ -98,7 +101,15 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 				tree.setParentMessageId(parentMsgId);
 				tree.setRootMessageId(rootMsgId);
 
-				t.setStatus(success ? Transaction.SUCCESS : "Timeout");
+				Transaction elapseT = Cat.newTransaction("Message.Produce.Elapse", msg.getTopic());
+				if (elapseT instanceof DefaultTransaction) {
+					((DefaultTransaction) elapseT).setDurationStart(msg.getBornTimeNano());
+					elapseT.addData("command.message.count", sendMessageCommand.getMessageCount());
+				}
+				elapseT.setStatus(status);
+				elapseT.complete();
+
+				t.setStatus(status);
 				t.complete();
 			}
 		}
