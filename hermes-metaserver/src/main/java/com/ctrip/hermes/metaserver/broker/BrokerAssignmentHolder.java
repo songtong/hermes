@@ -132,7 +132,7 @@ public class BrokerAssignmentHolder {
 					try {
 						m_zkService.persist(path, ZKSerializeUtils.serialize(partitionAssignment.getValue()));
 					} catch (Exception e) {
-						log.error("Failed to persisit broker assignments to zk.", e);
+						log.error("Failed to persist broker assignments to zk.", e);
 					}
 				}
 			}
