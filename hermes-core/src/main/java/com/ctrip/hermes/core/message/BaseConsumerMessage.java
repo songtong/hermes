@@ -116,6 +116,10 @@ public class BaseConsumerMessage<T> {
 		return setSuccess;
 	}
 
+	public void resetStatus() {
+		m_status.set(MessageStatus.NOT_SET);
+	}
+
 	public void setPropertiesHolder(PropertiesHolder propertiesHolder) {
 		m_propertiesHolder = propertiesHolder;
 	}

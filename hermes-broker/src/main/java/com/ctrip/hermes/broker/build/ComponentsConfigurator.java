@@ -10,8 +10,6 @@ import org.unidal.initialization.ModuleManager;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.broker.HermesBrokerModule;
-import com.ctrip.hermes.broker.ack.AckManager;
-import com.ctrip.hermes.broker.ack.DefaultAckManager;
 import com.ctrip.hermes.broker.bootstrap.DefaultBrokerBootstrap;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
@@ -67,7 +65,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MetaService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
-		      .req(AckManager.class) //
+				.req(MessageQueueManager.class)//
 		      .req(BizLogger.class) //
 		);
 
@@ -77,7 +75,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(MessageQueuePartitionFactory.class));
 		all.add(A(DefaultMessageQueueManager.class));
-		all.add(A(DefaultAckManager.class));
 		all.add(A(MySQLMessageQueueStorage.class));
 		all.add(A(KafkaMessageQueueStorage.class));
 

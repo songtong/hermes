@@ -132,7 +132,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 			String ip = NettyUtils.parseChannelRemoteAddr(pullTask.getChannel(), false);
 			for (TppConsumerMessageBatch batch : batches) {
-				m_ackManager.delivered(new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority()),
+				m_queueManager.delivered(new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority()),
 				      tpg.getGroupId(), batch.isResend(), batch.getMessageMetas());
 
 				bizLogDelivered(ip, batch.getMessageMetas(), tpg);

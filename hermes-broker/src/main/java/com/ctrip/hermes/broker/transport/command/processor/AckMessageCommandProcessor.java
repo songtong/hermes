@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Triple;
 
-import com.ctrip.hermes.broker.ack.AckManager;
+import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.BizLogger;
@@ -31,7 +31,7 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 	private BizLogger m_bizLogger;
 
 	@Inject
-	private AckManager m_ackManager;
+	private MessageQueueManager m_messageQueueManager;
 
 	@Override
 	public List<CommandType> commandTypes() {
@@ -48,7 +48,7 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 			String groupId = entry.getKey().getMiddle();
 			boolean isResend = entry.getKey().getLast();
 			List<AckContext> ackContexts = entry.getValue();
-			m_ackManager.acked(tpp, groupId, isResend, ackContexts);
+			m_messageQueueManager.acked(tpp, groupId, isResend, ackContexts);
 			bizLogAcked(tpp, consumerIp, groupId, ackContexts, isResend, true);
 
 			if (log.isDebugEnabled()) {
@@ -62,7 +62,7 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 			String groupId = entry.getKey().getMiddle();
 			boolean isResend = entry.getKey().getLast();
 			List<AckContext> nackContexts = entry.getValue();
-			m_ackManager.nacked(tpp, groupId, isResend, nackContexts);
+			m_messageQueueManager.nacked(tpp, groupId, isResend, nackContexts);
 			bizLogAcked(tpp, consumerIp, groupId, nackContexts, isResend, false);
 
 			if (log.isDebugEnabled()) {

@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.ctrip.hermes.consumer.ConsumerType;
 import com.ctrip.hermes.consumer.api.MessageListener;
+import com.ctrip.hermes.consumer.api.MessageListenerConfig;
 import com.ctrip.hermes.meta.entity.Topic;
 
 /**
@@ -22,15 +23,18 @@ public class ConsumerContext {
 
 	private ConsumerType m_consumerType;
 
+	private MessageListenerConfig m_messageListenerConfig;
+
 	private String m_sessionId = UUID.randomUUID().toString();
 
 	public ConsumerContext(Topic topic, String groupId, MessageListener consumer, Class<?> messageClazz,
-	      ConsumerType consumerType) {
+	      ConsumerType consumerType, MessageListenerConfig messageListenerConfig) {
 		m_topic = topic;
 		m_groupId = groupId;
 		m_consumer = consumer;
 		m_messageClazz = messageClazz;
 		m_consumerType = consumerType;
+		m_messageListenerConfig = messageListenerConfig;
 	}
 
 	public String getSessionId() {
@@ -55,6 +59,10 @@ public class ConsumerContext {
 
 	public MessageListener getConsumer() {
 		return m_consumer;
+	}
+
+	public MessageListenerConfig getMessageListenerConfig() {
+		return m_messageListenerConfig;
 	}
 
 	@Override

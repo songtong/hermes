@@ -8,6 +8,8 @@ public abstract class Consumer {
 
 	public abstract ConsumerHolder start(String topic, String groupId, MessageListener<?> listener);
 	
+	public abstract ConsumerHolder start(String topic, String groupId, MessageListener<?> listener, MessageListenerConfig config);
+	
 	public abstract <T> List<MessageStream<T>> createMessageStreams(String topic, String groupId);
 
 	public static Consumer getInstance() {
