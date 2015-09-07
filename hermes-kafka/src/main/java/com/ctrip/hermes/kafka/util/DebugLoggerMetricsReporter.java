@@ -21,11 +21,22 @@ public class DebugLoggerMetricsReporter implements MetricsReporter {
 
 	private Map<MetricName, KafkaMetric> metrics = new HashMap<MetricName, KafkaMetric>();
 
-	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory
-	      .create("MetricsLogger", true));
+	private ScheduledExecutorService scheduler;
+
+	private void addMetric(KafkaMetric metric) {
+		metrics.put(metric.metricName(), metric);
+	}
+
+	@Override
+	public void close() {
+		metrics.clear();
+		if (scheduler != null)
+			scheduler.shutdown();
+	}
 
 	@Override
 	public void configure(Map<String, ?> configs) {
+		scheduler = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("KafkaMetricsLogger", true));
 		long millis = TimeUnit.MINUTES.toMillis(1);
 		scheduler.scheduleAtFixedRate(new Runnable() {
 
@@ -38,10 +49,6 @@ public class DebugLoggerMetricsReporter implements MetricsReporter {
 		}, millis, millis, TimeUnit.MILLISECONDS);
 	}
 
-	private void addMetric(KafkaMetric metric) {
-		metrics.put(metric.metricName(), metric);
-	}
-
 	@Override
 	public void init(List<KafkaMetric> metrics) {
 		for (KafkaMetric metric : metrics) {
@@ -52,11 +59,6 @@ public class DebugLoggerMetricsReporter implements MetricsReporter {
 	@Override
 	public void metricChange(KafkaMetric metric) {
 		addMetric(metric);
-	}
-
-	@Override
-	public void close() {
-		metrics.clear();
 	}
 
 }
