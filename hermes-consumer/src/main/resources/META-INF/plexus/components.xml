@@ -92,7 +92,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
-			<role-hint>RESULT_MESSAGE_PULL</role-hint>
+			<role-hint>RESULT_MESSAGE_PULL_V2</role-hint>
 			<implementation>com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageResultCommandProcessor</implementation>
 			<requirements>
 				<requirement>
@@ -101,13 +101,22 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor</role>
-			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor</implementation>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>RESULT_QUERY_OFFSET</role-hint>
+			<implementation>com.ctrip.hermes.consumer.engine.transport.command.processor.QueryOffsetResultCommandProcessor</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+					<role>com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor</role>
 				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor</role>
+			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor</role>
+			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultQueryOffsetResultMonitor</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier</role>

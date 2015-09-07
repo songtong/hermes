@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
@@ -25,6 +27,7 @@ import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
+import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.status.ConsumerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -43,10 +46,14 @@ import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
+import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
+import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Endpoint;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -88,6 +95,8 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	protected RetryPolicy m_retryPolicy;
 
+	protected PullMessageResultMonitor m_pullMessageResultMonitor;
+
 	@SuppressWarnings("unchecked")
 	public BaseConsumerTask(ConsumerContext context, int partitionId, int localCacheSize) {
 		m_context = context;
@@ -103,6 +112,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		m_config = PlexusComponentLocator.lookup(ConsumerConfig.class);
 		m_retryPolicy = PlexusComponentLocator.lookup(MetaService.class).findRetryPolicyByTopicAndGroup(
 		      context.getTopic().getName(), context.getGroupId());
+		m_pullMessageResultMonitor = PlexusComponentLocator.lookup(PullMessageResultMonitor.class);
 
 		m_pullMessageTaskExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create(
 		      String.format("PullMessageThread-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
@@ -375,5 +385,126 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	public void close() {
 		m_closed.set(true);
+	}
+
+	protected abstract class BasePullMessagesTask implements Runnable {
+		protected long m_correlationId;
+
+		protected SchedulePolicy m_noEndpointSchedulePolicy;
+
+		public BasePullMessagesTask(long correlationId, SchedulePolicy noEndpointSchedulePolicy) {
+			m_correlationId = correlationId;
+			m_noEndpointSchedulePolicy = noEndpointSchedulePolicy;
+		}
+
+		@Override
+		public void run() {
+			try {
+				if (isClosed() || !m_msgs.isEmpty()) {
+					return;
+				}
+
+				Endpoint endpoint = m_endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
+
+				if (endpoint == null) {
+					log.warn("No endpoint found for topic {} partition {}, will retry later",
+					      m_context.getTopic().getName(), m_partitionId);
+					m_noEndpointSchedulePolicy.fail(true);
+					return;
+				} else {
+					m_noEndpointSchedulePolicy.succeess();
+				}
+
+				Lease lease = m_lease.get();
+				if (lease != null) {
+					long timeout = lease.getRemainingTime();
+
+					if (timeout > 0) {
+						pullMessages(endpoint, timeout);
+					}
+				}
+			} catch (Exception e) {
+				log.warn("Exception occurred while pulling message(topic={}, partition={}, groupId={}, sessionId={}).",
+				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
+			} finally {
+				m_pullTaskRunning.set(false);
+			}
+		}
+
+		protected void pullMessages(Endpoint endpoint, long timeout) throws InterruptedException, TimeoutException,
+		      ExecutionException {
+			final SettableFuture<PullMessageResultCommandV2> future = SettableFuture.create();
+
+			PullMessageCommandV2 cmd = createPullMessageCommand(timeout);
+
+			cmd.getHeader().setCorrelationId(m_correlationId);
+			cmd.setFuture(future);
+
+			PullMessageResultCommandV2 ack = null;
+
+			try {
+
+				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
+				      m_context.getGroupId(), "pull-msg-cmd-duration");
+
+				Context context = timer.time();
+
+				m_pullMessageResultMonitor.monitor(cmd);
+				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
+
+				ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_context.getTopic().getName(), m_partitionId,
+				      m_context.getGroupId());
+
+				try {
+					ack = future.get(timeout, TimeUnit.MILLISECONDS);
+				} catch (TimeoutException e) {
+					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
+					      m_partitionId, m_context.getGroupId());
+				} finally {
+					m_pullMessageResultMonitor.remove(cmd);
+				}
+
+				context.stop();
+
+				if (ack != null) {
+					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReceived(m_context.getTopic().getName(),
+					      m_partitionId, m_context.getGroupId());
+					appendToMsgQueue(ack);
+
+					resultReceived(ack);
+				}
+
+			} finally {
+				if (ack != null) {
+					ack.release();
+				}
+			}
+		}
+
+		protected abstract void resultReceived(PullMessageResultCommandV2 ack);
+
+		protected abstract PullMessageCommandV2 createPullMessageCommand(long timeout);
+
+		protected void appendToMsgQueue(PullMessageResultCommandV2 ack) {
+			List<TppConsumerMessageBatch> batches = ack.getBatches();
+			if (batches != null && !batches.isEmpty()) {
+				ConsumerContext context = m_consumerNotifier.find(m_correlationId);
+				if (context != null) {
+					Class<?> bodyClazz = context.getMessageClazz();
+
+					List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ack.getChannel());
+					m_msgs.addAll(msgs);
+
+					ConsumerStatusMonitor.INSTANCE.messageReceived(m_context.getTopic().getName(), m_partitionId,
+					      m_context.getGroupId(), msgs.size());
+
+				} else {
+					log.info(
+					      "Can not find consumerContext(topic={}, partition={}, groupId={}, sessionId={}), maybe has been stopped.",
+					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId());
+				}
+			}
+		}
+
 	}
 }
