@@ -141,7 +141,9 @@ public class StrictlyOrderedConsumingStrategyConsumerTask extends BaseConsumerTa
 
 		@Override
 		protected void resultReceived(PullMessageResultCommandV2 ack) {
-			m_offset.set(ack.getOffset());
+			if (ack.getOffset() != null) {
+				m_offset.set(ack.getOffset());
+			}
 		}
 
 		@Override
