@@ -36,7 +36,7 @@ import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 import com.ctrip.hermes.kafka.message.KafkaConsumerMessage;
-import com.ctrip.hermes.kafka.producer.KafkaProperties;
+import com.ctrip.hermes.kafka.util.KafkaProperties;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;

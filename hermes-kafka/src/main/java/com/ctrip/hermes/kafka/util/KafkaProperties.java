@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka.producer;
+package com.ctrip.hermes.kafka.util;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,7 +62,6 @@ public class KafkaProperties {
 	public static Properties overrideByCtripDefaultProducerSetting(Properties producerProp) {
 		producerProp.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
 		producerProp.put("key.serializer", StringSerializer.class.getCanonicalName());
-
 		if (!producerProp.containsKey("client.id")) {
 			producerProp.put("client.id", Networks.forIp().getLocalHostAddress());
 		}

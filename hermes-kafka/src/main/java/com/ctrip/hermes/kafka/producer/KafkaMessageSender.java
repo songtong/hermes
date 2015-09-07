@@ -21,6 +21,7 @@ import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
+import com.ctrip.hermes.kafka.util.KafkaProperties;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
