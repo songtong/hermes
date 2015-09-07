@@ -13,6 +13,6 @@ public @interface Subscribe {
 
 	public String groupId();
 
-	public ConsumerType consumerType() default ConsumerType.LONG_POLLING;
+	public ConsumerType consumerType() default ConsumerType.DEFAULT;
 
 }

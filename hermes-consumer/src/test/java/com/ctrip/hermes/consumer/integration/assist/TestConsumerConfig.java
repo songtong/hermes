@@ -14,7 +14,11 @@ public class TestConsumerConfig extends ConsumerConfig {
 	}
 
 	@Override
-	public long getNoMessageWaitIntervalMillis() {
-		return 50L;
+	public int getNoMessageWaitBaseMillis() {
+		return 50;
+	}
+	@Override
+	public int getNoMessageWaitMaxMillis() {
+		return 50;
 	}
 }

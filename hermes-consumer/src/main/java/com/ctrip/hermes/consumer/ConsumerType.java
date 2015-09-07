@@ -5,7 +5,7 @@ package com.ctrip.hermes.consumer;
  *
  */
 public enum ConsumerType {
-//	PUSH, //
-	LONG_POLLING, //
+	DEFAULT, //
+	STRICTLY_ORDERING, //
 	;
 }

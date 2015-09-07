@@ -19,29 +19,20 @@ import org.unidal.lookup.ComponentTestCase;
 
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
-import com.ctrip.hermes.consumer.ConsumerType;
-import com.ctrip.hermes.consumer.build.BuildConstants;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumingStrategy;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
-import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
-import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.consumer.integration.assist.LeaseAnswer;
 import com.ctrip.hermes.consumer.integration.assist.PullMessageAnswer;
-import com.ctrip.hermes.consumer.integration.assist.TestBrokerLongPollingConsumptionStrategy;
 import com.ctrip.hermes.consumer.integration.assist.TestConsumerConfig;
 import com.ctrip.hermes.consumer.integration.assist.TestMetaHolder;
 import com.ctrip.hermes.consumer.integration.assist.TestMetaService;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.lease.Lease;
-import com.ctrip.hermes.core.lease.LeaseManager;
-import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.meta.internal.MetaProxy;
-import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.PullMessageCommand;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
-import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
@@ -96,27 +87,41 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 	}
 
 	private void configureStubComponents() throws Exception {
-		defineComponent(ConsumerConfig.class, TestConsumerConfig.class);
+		defineComponent(ConsumerConfig.class, TestConsumerConfig.class).req(ClientEnvironment.class);
 		defineComponent(MetaService.class, TestMetaService.class);
+		defineComponent(EndpointClient.class, TestEndpointClient.class);
 
-		defineComponent(BrokerConsumingStrategy.class, ConsumerType.LONG_POLLING.toString(),
-		      TestBrokerLongPollingConsumptionStrategy.class)//
-		      .req(ConsumerNotifier.class)//
-		      .req(EndpointManager.class)//
-		      .req(MetaService.class)//
-		      .req(LeaseManager.class, BuildConstants.CONSUMER)//
-		      .req(ConsumerConfig.class)//
-		      .req(SystemClockService.class)//
-		      .req(MessageCodec.class)//
-		      .req(ClientEnvironment.class)//
-		      .req(PullMessageResultMonitor.class);
+		((TestEndpointClient) lookup(EndpointClient.class)).setDelegate(m_endpointClient);
 
 		((TestMetaService) lookup(MetaService.class)).setMetaProxy(m_metaProxy).setMetaHolder(m_metaHolder);
-		((TestBrokerLongPollingConsumptionStrategy) lookup(BrokerConsumingStrategy.class,
-		      ConsumerType.LONG_POLLING.toString())).setEndpointClient(m_endpointClient);
 
 		when(m_metaHolder.getMeta()).thenReturn(loadLocalMeta());
 		when(m_channel.writeAndFlush(any(Object.class))).thenReturn(null);
+	}
+
+	public static class TestEndpointClient implements EndpointClient {
+
+		private EndpointClient m_delegate;
+
+		public void setDelegate(EndpointClient delegate) {
+			m_delegate = delegate;
+		}
+
+		@Override
+		public void writeCommand(Endpoint endpoint, Command cmd) {
+			m_delegate.writeCommand(endpoint, cmd);
+		}
+
+		@Override
+		public void writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
+			m_delegate.writeCommand(endpoint, cmd, timeout, timeUnit);
+		}
+
+		@Override
+		public void close() {
+			m_delegate.close();
+		}
+
 	}
 
 	protected Meta loadLocalMeta() throws Exception {

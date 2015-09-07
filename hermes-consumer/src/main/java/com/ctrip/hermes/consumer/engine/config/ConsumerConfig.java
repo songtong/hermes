@@ -1,6 +1,12 @@
 package com.ctrip.hermes.consumer.engine.config;
 
+import java.io.IOException;
+
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+
+import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.utils.StringUtils;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -9,8 +15,19 @@ import org.unidal.lookup.annotation.Named;
 @Named(type = ConsumerConfig.class)
 public class ConsumerConfig {
 
-	public String getDefautlLocalCacheSize() {
-		return "10";
+	public static final int DEFAULT_LOCALCACHE_SIZE = 10;
+
+	@Inject
+	private ClientEnvironment m_clientEnv;
+
+	public int getLocalCacheSize(String topic) throws IOException {
+		String localCacheSizeStr = m_clientEnv.getConsumerConfig(topic).getProperty("consumer.localcache.size");
+
+		if (StringUtils.isNumeric(localCacheSizeStr)) {
+			return Integer.valueOf(localCacheSizeStr);
+		}
+
+		return DEFAULT_LOCALCACHE_SIZE;
 	}
 
 	public long getRenewLeaseTimeMillisBeforeExpired() {
@@ -29,16 +46,28 @@ public class ConsumerConfig {
 		return 500L;
 	}
 
-	public long getNoMessageWaitIntervalMillis() {
-		return 50L;
+	public int getNoMessageWaitBaseMillis() {
+		return 50;
 	}
 
-	public long getNoEndpointWaitIntervalMillis() {
-		return 500L;
+	public int getNoMessageWaitMaxMillis() {
+		return 800;
+	}
+
+	public int getNoEndpointWaitBaseMillis() {
+		return 500;
+	}
+
+	public int getNoEndpointWaitMaxMillis() {
+		return 4000;
 	}
 
 	public String getDefaultNotifierThreadCount() {
 		return "1";
+	}
+
+	public long getPullMessageBrokerExpireTimeAdjustmentMills() {
+		return -500L;
 	}
 
 }
