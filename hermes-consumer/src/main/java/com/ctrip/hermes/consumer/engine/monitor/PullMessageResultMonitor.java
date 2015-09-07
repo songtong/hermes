@@ -1,7 +1,7 @@
 package com.ctrip.hermes.consumer.engine.monitor;
 
-import com.ctrip.hermes.core.transport.command.PullMessageCommand;
-import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
+import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
+import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -9,10 +9,10 @@ import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
  */
 public interface PullMessageResultMonitor {
 
-	void monitor(PullMessageCommand cmd);
+	void monitor(PullMessageCommandV2 cmd);
 
-	void resultReceived(PullMessageResultCommand ack);
+	void resultReceived(PullMessageResultCommandV2 ack);
 
-	void remove(PullMessageCommand cmd);
+	void remove(PullMessageCommandV2 cmd);
 
 }

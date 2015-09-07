@@ -20,12 +20,15 @@ import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.DefaultQueryOffsetResultMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.DefaultConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.pipeline.ConsumerPipeline;
 import com.ctrip.hermes.consumer.engine.pipeline.ConsumerValveRegistry;
 import com.ctrip.hermes.consumer.engine.pipeline.DefaultConsumerPipelineSink;
 import com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageResultCommandProcessor;
+import com.ctrip.hermes.consumer.engine.transport.command.processor.QueryOffsetResultCommandProcessor;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 
@@ -58,11 +61,15 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(DefaultConsumerPipelineSink.class));
 
-		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL.toString(),
+		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V2.toString(),
 		      PullMessageResultCommandProcessor.class)//
 		      .req(PullMessageResultMonitor.class));
+		all.add(C(CommandProcessor.class, CommandType.RESULT_QUERY_OFFSET.toString(),
+		      QueryOffsetResultCommandProcessor.class)//
+		      .req(QueryOffsetResultMonitor.class));
 
 		all.add(A(DefaultPullMessageResultMonitor.class));
+		all.add(A(DefaultQueryOffsetResultMonitor.class));
 
 		// notifier
 		all.add(A(DefaultConsumerNotifier.class));

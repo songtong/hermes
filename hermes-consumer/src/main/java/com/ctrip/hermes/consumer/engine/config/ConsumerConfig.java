@@ -70,4 +70,8 @@ public class ConsumerConfig {
 		return -500L;
 	}
 
+	public long getQueryOffsetTimeoutMillis() {
+		return 3000;
+	}
+
 }
