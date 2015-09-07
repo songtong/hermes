@@ -20,6 +20,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation.Type;
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
@@ -205,7 +206,16 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_ackOpExecutor = Executors.newScheduledThreadPool(m_config.getAckOpExecutorThreadCount(), HermesThreadFactory.create("AckOp", true));
+		m_ackOpExecutor = Executors.newScheduledThreadPool(m_config.getAckOpExecutorThreadCount(),
+		      HermesThreadFactory.create("AckOp", true));
+	}
+
+	@Override
+	public Offset findLatestOffset(Tpg tpg) {
+		if (!m_stopped.get()) {
+			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).findLatestOffset(tpg.getGroupId());
+		}
+		return null;
 	}
 
 }

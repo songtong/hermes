@@ -1,12 +1,16 @@
 package com.ctrip.hermes.broker.queue;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
@@ -18,7 +22,8 @@ import com.ctrip.hermes.core.meta.MetaService;
  *
  */
 public class DefaultMessageQueue extends AbstractMessageQueue {
-
+	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueue.class);
+	
 	private MetaService m_metaService;
 
 	private BrokerConfig m_config;
@@ -55,4 +60,19 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	protected void doStop() {
 	}
 
+	@Override
+	public Offset findLatestOffset(String groupId) {
+		int groupIdInt = m_metaService.translateToIntGroupId(m_topic, groupId);
+		try {
+			long pOffset = (long) m_storage.findLastOffset(new Tpp(m_topic, m_partition, true), groupIdInt);
+			long npOffset = (long) m_storage.findLastOffset(new Tpp(m_topic, m_partition, false), groupIdInt);
+			@SuppressWarnings("unchecked")
+			Pair<Date, Long> rOffset = (Pair<Date, Long>) m_storage.findLastResendOffset(new Tpg(m_topic, m_partition,
+			      groupId));
+			return new Offset(pOffset, npOffset, rOffset);
+		} catch (Exception e) {
+			log.error("Find latest offset failed: topic= {}, partition= {}, group= {}.", m_topic, m_partition, groupId, e);
+		}
+		return null;
+	}
 }
