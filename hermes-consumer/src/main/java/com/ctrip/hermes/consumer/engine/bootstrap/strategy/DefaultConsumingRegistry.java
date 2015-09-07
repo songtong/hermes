@@ -14,23 +14,23 @@ import com.ctrip.hermes.consumer.ConsumerType;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = BrokerConsumingStrategyRegistry.class)
-public class DefaultBrokerConsumingRegistry extends ContainerHolder implements Initializable,
-      BrokerConsumingStrategyRegistry {
+@Named(type = ConsumingStrategyRegistry.class)
+public class DefaultConsumingRegistry extends ContainerHolder implements Initializable,
+      ConsumingStrategyRegistry {
 
-	private Map<ConsumerType, BrokerConsumingStrategy> m_strategies = new ConcurrentHashMap<ConsumerType, BrokerConsumingStrategy>();
+	private Map<ConsumerType, ConsumingStrategy> m_strategies = new ConcurrentHashMap<ConsumerType, ConsumingStrategy>();
 
 	@Override
 	public void initialize() throws InitializationException {
-		Map<String, BrokerConsumingStrategy> strategies = lookupMap(BrokerConsumingStrategy.class);
+		Map<String, ConsumingStrategy> strategies = lookupMap(ConsumingStrategy.class);
 
-		for (Map.Entry<String, BrokerConsumingStrategy> entry : strategies.entrySet()) {
+		for (Map.Entry<String, ConsumingStrategy> entry : strategies.entrySet()) {
 			m_strategies.put(ConsumerType.valueOf(entry.getKey()), entry.getValue());
 		}
 	}
 
 	@Override
-	public BrokerConsumingStrategy findStrategy(ConsumerType consumerType) {
+	public ConsumingStrategy findStrategy(ConsumerType consumerType) {
 		return m_strategies.get(consumerType);
 	}
 

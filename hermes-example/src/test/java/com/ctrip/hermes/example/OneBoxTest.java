@@ -160,7 +160,7 @@ public class OneBoxTest extends ComponentTestCase {
 			String groupId = entry.getKey();
 			Map<String, Integer> nacks = findNacks(groupId);
 			for (String id : entry.getValue()) {
-				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(nacks, id), ConsumerType.LONG_POLLING);
+				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(nacks, id), ConsumerType.DEFAULT);
 				System.out.println("Starting consumer " + groupId + ":" + id);
 				engine.start(s);
 			}

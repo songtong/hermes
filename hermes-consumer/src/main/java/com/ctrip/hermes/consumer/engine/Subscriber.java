@@ -36,12 +36,12 @@ public class Subscriber {
 	}
 
 	public Subscriber(String topicPattern, String groupId, MessageListener consumer) {
-		this(topicPattern, groupId, consumer, DEFAULT_MESSAGE_LISTENER_CONFIG, ConsumerType.LONG_POLLING);
+		this(topicPattern, groupId, consumer, DEFAULT_MESSAGE_LISTENER_CONFIG, ConsumerType.DEFAULT);
 	}
 
 	public Subscriber(String topicPattern, String groupId, MessageListener consumer,
 	      MessageListenerConfig messageListenerConfig) {
-		this(topicPattern, groupId, consumer, messageListenerConfig, ConsumerType.LONG_POLLING);
+		this(topicPattern, groupId, consumer, messageListenerConfig, ConsumerType.DEFAULT);
 	}
 
 	public ConsumerType getConsumerType() {

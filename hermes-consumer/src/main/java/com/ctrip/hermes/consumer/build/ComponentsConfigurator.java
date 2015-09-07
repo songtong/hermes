@@ -12,29 +12,22 @@ import com.ctrip.hermes.consumer.engine.DefaultEngine;
 import com.ctrip.hermes.consumer.engine.bootstrap.BrokerConsumerBootstrap;
 import com.ctrip.hermes.consumer.engine.bootstrap.DefaultConsumerBootstrapManager;
 import com.ctrip.hermes.consumer.engine.bootstrap.DefaultConsumerBootstrapRegistry;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerConsumingStrategy;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.BrokerLongPollingConsumingStrategy;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultBrokerConsumingRegistry;
+import com.ctrip.hermes.consumer.engine.bootstrap.strategy.ConsumingStrategy;
+import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultConsumingRegistry;
+import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultConsumingStrategy;
+import com.ctrip.hermes.consumer.engine.bootstrap.strategy.StrictlyOrderedConsumingStrategy;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
-import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.notifier.DefaultConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.pipeline.ConsumerPipeline;
 import com.ctrip.hermes.consumer.engine.pipeline.ConsumerValveRegistry;
 import com.ctrip.hermes.consumer.engine.pipeline.DefaultConsumerPipelineSink;
 import com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageResultCommandProcessor;
-import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.lease.LeaseManager;
-import com.ctrip.hermes.core.message.codec.MessageCodec;
-import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
-import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
-import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -53,20 +46,15 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(DefaultConsumerBootstrapRegistry.class));
 		all.add(A(BrokerConsumerBootstrap.class));
 
-		// consumption strategy
-		all.add(A(DefaultBrokerConsumingRegistry.class));
-		all.add(C(BrokerConsumingStrategy.class, ConsumerType.LONG_POLLING.toString(),
-		      BrokerLongPollingConsumingStrategy.class)//
-		      .req(ConsumerNotifier.class)//
-		      .req(EndpointManager.class)//
-		      .req(EndpointClient.class)//
-		      .req(LeaseManager.class, BuildConstants.CONSUMER)//
+		// consuming strategy
+		all.add(A(DefaultConsumingRegistry.class));
+		all.add(C(ConsumingStrategy.class, ConsumerType.DEFAULT.toString(), DefaultConsumingStrategy.class)//
 		      .req(ConsumerConfig.class)//
-		      .req(SystemClockService.class)//
-		      .req(MessageCodec.class)//
-		      .req(ClientEnvironment.class)//
-		      .req(PullMessageResultMonitor.class)//
-		      .req(MetaService.class));
+		);
+		all.add(C(ConsumingStrategy.class, ConsumerType.STRICTLY_ORDERING.toString(),
+		      StrictlyOrderedConsumingStrategy.class)//
+		      .req(ConsumerConfig.class)//
+		);
 
 		all.add(A(DefaultConsumerPipelineSink.class));
 

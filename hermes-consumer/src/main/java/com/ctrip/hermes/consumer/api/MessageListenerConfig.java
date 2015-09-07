@@ -6,7 +6,7 @@ public class MessageListenerConfig {
 
 	private RetryPolicy m_strictlyOrderingRetryPolicy;
 
-	private boolean m_strictlyOrdering;
+	private boolean m_strictlyOrdering = false;
 
 	public void setStrictlyOrderingRetryPolicy(StrictlyOrderingRetryPolicy policy) {
 		m_strictlyOrderingRetryPolicy = policy.toRetryPolicy();

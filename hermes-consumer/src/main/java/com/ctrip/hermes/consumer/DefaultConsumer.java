@@ -40,7 +40,8 @@ public class DefaultConsumer extends com.ctrip.hermes.consumer.api.Consumer {
 
 	@Override
 	public ConsumerHolder start(String topic, String groupId, MessageListener<?> listener, MessageListenerConfig config) {
-		return start(topic, groupId, listener, config, ConsumerType.LONG_POLLING);
+		return start(topic, groupId, listener, config, config.isStrictlyOrdering() ? ConsumerType.STRICTLY_ORDERING
+		      : ConsumerType.DEFAULT);
 	}
 
 	public class DefaultConsumerHolder implements ConsumerHolder {

@@ -7,13 +7,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
@@ -23,10 +21,10 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
+import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
-import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.status.ConsumerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -40,120 +38,94 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
+import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
+import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
-import com.ctrip.hermes.core.transport.command.PullMessageCommand;
-import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.meta.entity.Endpoint;
-import com.google.common.util.concurrent.SettableFuture;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class LongPollingConsumerTask implements Runnable {
+public abstract class BaseConsumerTask implements ConsumerTask {
 
-	private static final Logger log = LoggerFactory.getLogger(LongPollingConsumerTask.class);
+	private static final Logger log = LoggerFactory.getLogger(BaseConsumerTask.class);
 
-	private ConsumerNotifier m_consumerNotifier;
+	protected ConsumerNotifier m_consumerNotifier;
 
-	private MessageCodec m_messageCodec;
+	protected MessageCodec m_messageCodec;
 
-	private EndpointManager m_endpointManager;
+	protected EndpointManager m_endpointManager;
 
-	private EndpointClient m_endpointClient;
+	protected EndpointClient m_endpointClient;
 
-	private LeaseManager<ConsumerLeaseKey> m_leaseManager;
+	protected LeaseManager<ConsumerLeaseKey> m_leaseManager;
 
-	private SystemClockService m_systemClockService;
+	protected SystemClockService m_systemClockService;
 
-	private ConsumerConfig m_config;
+	protected ConsumerConfig m_config;
 
-	private ExecutorService m_pullMessageTaskExecutorService;
+	protected ExecutorService m_pullMessageTaskExecutor;
 
-	private ScheduledExecutorService m_renewLeaseTaskExecutorService;
+	protected ScheduledExecutorService m_renewLeaseTaskExecutor;
 
-	private PullMessageResultMonitor m_pullMessageResultMonitor;
+	protected BlockingQueue<ConsumerMessage<?>> m_msgs;
 
-	private BlockingQueue<ConsumerMessage<?>> m_msgs;
+	protected ConsumerContext m_context;
 
-	private int m_cacheSize;
+	protected int m_partitionId;
 
-	private ConsumerContext m_context;
+	protected AtomicBoolean m_pullTaskRunning = new AtomicBoolean(false);
 
-	private int m_partitionId;
+	protected AtomicReference<Lease> m_lease = new AtomicReference<Lease>(null);
 
-	private AtomicBoolean m_pullTaskRunning = new AtomicBoolean(false);
+	protected AtomicBoolean m_closed = new AtomicBoolean(false);
 
-	private AtomicReference<Lease> m_lease = new AtomicReference<Lease>(null);
+	protected RetryPolicy m_retryPolicy;
 
-	private AtomicBoolean m_closed = new AtomicBoolean(false);
-
-	private RetryPolicy m_retryPolicy;
-
-	public LongPollingConsumerTask(ConsumerContext context, int partitionId, int cacheSize, RetryPolicy retryPolicy) {
+	@SuppressWarnings("unchecked")
+	public BaseConsumerTask(ConsumerContext context, int partitionId, int localCacheSize) {
 		m_context = context;
 		m_partitionId = partitionId;
-		m_cacheSize = cacheSize;
-		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(m_cacheSize);
-		m_retryPolicy = retryPolicy;
+		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(localCacheSize);
 
-		m_pullMessageTaskExecutorService = Executors.newSingleThreadExecutor(HermesThreadFactory.create(String.format(
-		      "LongPollingPullMessageTask-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
-		      m_context.getGroupId()), false));
+		m_leaseManager = PlexusComponentLocator.lookup(LeaseManager.class, BuildConstants.CONSUMER);
+		m_consumerNotifier = PlexusComponentLocator.lookup(ConsumerNotifier.class);
+		m_endpointClient = PlexusComponentLocator.lookup(EndpointClient.class);
+		m_endpointManager = PlexusComponentLocator.lookup(EndpointManager.class);
+		m_messageCodec = PlexusComponentLocator.lookup(MessageCodec.class);
+		m_systemClockService = PlexusComponentLocator.lookup(SystemClockService.class);
+		m_config = PlexusComponentLocator.lookup(ConsumerConfig.class);
+		m_retryPolicy = PlexusComponentLocator.lookup(MetaService.class).findRetryPolicyByTopicAndGroup(
+		      context.getTopic().getName(), context.getGroupId());
 
-		m_renewLeaseTaskExecutorService = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(String
-		      .format("LongPollingRenewLeaseTask-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
+		m_pullMessageTaskExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create(
+		      String.format("PullMessageThread-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
+		            m_context.getGroupId()), false));
+
+		m_renewLeaseTaskExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(
+		      String.format("RenewLeaseThread-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
 		            m_context.getGroupId()), false));
 
 		ConsumerStatusMonitor.INSTANCE.addMessageQueueGuage(m_context.getTopic().getName(), m_partitionId,
 		      m_context.getGroupId(), m_msgs);
 	}
 
-	public void setPullMessageResultMonitor(PullMessageResultMonitor pullMessageResultMonitor) {
-		m_pullMessageResultMonitor = pullMessageResultMonitor;
-	}
-
-	public void setConfig(ConsumerConfig config) {
-		m_config = config;
-	}
-
-	public void setSystemClockService(SystemClockService systemClockService) {
-		m_systemClockService = systemClockService;
-	}
-
-	public void setConsumerNotifier(ConsumerNotifier consumerNotifier) {
-		m_consumerNotifier = consumerNotifier;
-	}
-
-	public void setMessageCodec(MessageCodec messageCodec) {
-		m_messageCodec = messageCodec;
-	}
-
-	public void setEndpointManager(EndpointManager endpointManager) {
-		m_endpointManager = endpointManager;
-	}
-
-	public void setEndpointClient(EndpointClient endpointClient) {
-		m_endpointClient = endpointClient;
-	}
-
-	public void setLeaseManager(LeaseManager<ConsumerLeaseKey> leaseManager) {
-		m_leaseManager = leaseManager;
-	}
-
-	private boolean isClosed() {
+	protected boolean isClosed() {
 		return m_closed.get();
 	}
 
 	@Override
-	public void run() {
+	public void start() {
 		// FIXME one boss thread to acquire lease, if acquired, run this task
-		log.info("Consumer started(topic={}, partition={}, groupId={}, sessionId={})", m_context.getTopic().getName(),
-		      m_partitionId, m_context.getGroupId(), m_context.getSessionId());
+		log.info("Consumer started(mode={}, topic={}, partition={}, groupId={}, sessionId={})",
+		      m_context.getConsumerType(), m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
+		      m_context.getSessionId());
 
 		ConsumerLeaseKey key = new ConsumerLeaseKey(new Tpg(m_context.getTopic().getName(), m_partitionId,
 		      m_context.getGroupId()), m_context.getSessionId());
@@ -167,16 +139,16 @@ public class LongPollingConsumerTask implements Runnable {
 					long correlationId = CorrelationIdGenerator.generateCorrelationId();
 
 					log.info(
-					      "Consumer continue consuming(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease acquired",
-					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), correlationId,
-					      m_context.getSessionId());
+					      "Consumer continue consuming(mode={}, topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease acquired",
+					      m_context.getConsumerType(), m_context.getTopic().getName(), m_partitionId,
+					      m_context.getGroupId(), correlationId, m_context.getSessionId());
 
-					startConsumingMessages(key, correlationId);
+					startConsuming(key, correlationId);
 
 					log.info(
-					      "Consumer pause consuming(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease expired",
-					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), correlationId,
-					      m_context.getSessionId());
+					      "Consumer pause consuming(mode={}, topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease expired",
+					      m_context.getConsumerType(), m_context.getTopic().getName(), m_partitionId,
+					      m_context.getGroupId(), correlationId, m_context.getSessionId());
 				}
 			} catch (Exception e) {
 				log.error("Exception occurred in consumer's run method(topic={}, partition={}, groupId={}, sessionId={})",
@@ -187,19 +159,24 @@ public class LongPollingConsumerTask implements Runnable {
 		stopConsumer();
 	}
 
-	private void stopConsumer() {
-		m_pullMessageTaskExecutorService.shutdown();
-		m_renewLeaseTaskExecutorService.shutdown();
+	protected void stopConsumer() {
+		m_pullMessageTaskExecutor.shutdown();
+		m_renewLeaseTaskExecutor.shutdown();
 
 		ConsumerStatusMonitor.INSTANCE.removeMonitor(m_context.getTopic().getName(), m_partitionId,
 		      m_context.getGroupId());
 
-		log.info("Consumer stopped(topic={}, partition={}, groupId={}, sessionId={})", m_context.getTopic().getName(),
-		      m_partitionId, m_context.getGroupId(), m_context.getSessionId());
+		log.info("Consumer stopped(mode={}, topic={}, partition={}, groupId={}, sessionId={})",
+		      m_context.getConsumerType(), m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
+		      m_context.getSessionId());
 	}
 
-	private void startConsumingMessages(ConsumerLeaseKey key, long correlationId) {
+	protected void startConsuming(ConsumerLeaseKey key, long correlationId) {
 		m_consumerNotifier.register(correlationId, m_context);
+		doBeforeConsuming(key, correlationId);
+
+		SchedulePolicy noMessageSchedulePolicy = new ExponentialSchedulePolicy(m_config.getNoMessageWaitBaseMillis(),
+		      m_config.getNoMessageWaitMaxMillis());
 
 		while (!isClosed() && !Thread.currentThread().isInterrupted() && !m_lease.get().isExpired()) {
 
@@ -217,18 +194,16 @@ public class LongPollingConsumerTask implements Runnable {
 				}
 
 				if (m_msgs.isEmpty()) {
-					schedulePullMessagesTask(correlationId);
+					schedulePullMessagesTask();
 				}
 
 				if (!m_msgs.isEmpty()) {
 					consumeMessages(correlationId);
+					noMessageSchedulePolicy.succeess();
 				} else {
-					// FIXME exponential back off strategy
-					TimeUnit.MILLISECONDS.sleep(m_config.getNoMessageWaitIntervalMillis());
+					noMessageSchedulePolicy.fail(true);
 				}
 
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
 			} catch (Exception e) {
 				log.error("Exception occurred while consuming message(topic={}, partition={}, groupId={}, sessionId={})",
 				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
@@ -239,8 +214,20 @@ public class LongPollingConsumerTask implements Runnable {
 		m_lease.set(null);
 	}
 
-	private void scheduleRenewLeaseTask(final ConsumerLeaseKey key, long delay) {
-		m_renewLeaseTaskExecutorService.schedule(new Runnable() {
+	protected void schedulePullMessagesTask() {
+		if (!isClosed() && m_pullTaskRunning.compareAndSet(false, true)) {
+			m_pullMessageTaskExecutor.submit(getPullMessageTask());
+		}
+	}
+
+	protected abstract Runnable getPullMessageTask();
+
+	protected abstract void doBeforeConsuming(ConsumerLeaseKey key, long correlationId);
+
+	protected abstract void doAfterConsuming(ConsumerLeaseKey key, long correlationId);
+
+	protected void scheduleRenewLeaseTask(final ConsumerLeaseKey key, long delay) {
+		m_renewLeaseTaskExecutor.schedule(new Runnable() {
 
 			@Override
 			public void run() {
@@ -283,7 +270,7 @@ public class LongPollingConsumerTask implements Runnable {
 		}, delay, TimeUnit.MILLISECONDS);
 	}
 
-	private void acquireLease(ConsumerLeaseKey key) {
+	protected void acquireLease(ConsumerLeaseKey key) {
 		long nextTryTime = m_systemClockService.now();
 		while (!isClosed() && !Thread.currentThread().isInterrupted()) {
 			try {
@@ -328,7 +315,7 @@ public class LongPollingConsumerTask implements Runnable {
 		}
 	}
 
-	private void waitForNextTryTime(long nextTryTime) {
+	protected void waitForNextTryTime(long nextTryTime) {
 		while (true) {
 			if (!isClosed() && !Thread.currentThread().isInterrupted()) {
 				if (nextTryTime > m_systemClockService.now()) {
@@ -342,7 +329,7 @@ public class LongPollingConsumerTask implements Runnable {
 		}
 	}
 
-	private void consumeMessages(long correlationId) {
+	protected void consumeMessages(long correlationId) {
 		List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 
 		m_msgs.drainTo(msgs);
@@ -353,7 +340,7 @@ public class LongPollingConsumerTask implements Runnable {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private List<ConsumerMessage<?>> decodeBatches(List<TppConsumerMessageBatch> batches, Class bodyClazz,
+	protected List<ConsumerMessage<?>> decodeBatches(List<TppConsumerMessageBatch> batches, Class bodyClazz,
 	      Channel channel) {
 		List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 		for (TppConsumerMessageBatch batch : batches) {
@@ -384,124 +371,6 @@ public class LongPollingConsumerTask implements Runnable {
 		}
 
 		return msgs;
-	}
-
-	private void schedulePullMessagesTask(long correlationId) {
-		if (!isClosed() && m_pullTaskRunning.compareAndSet(false, true)) {
-			m_pullMessageTaskExecutorService.submit(new PullMessagesTask(correlationId));
-		}
-	}
-
-	private class PullMessagesTask implements Runnable {
-		private long m_correlationId;
-
-		public PullMessagesTask(long correlationId) {
-			m_correlationId = correlationId;
-		}
-
-		@Override
-		public void run() {
-			try {
-				if (isClosed() || !m_msgs.isEmpty()) {
-					return;
-				}
-
-				Endpoint endpoint = m_endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
-
-				if (endpoint == null) {
-					log.warn("No endpoint found for topic {} partition {}, will retry later",
-					      m_context.getTopic().getName(), m_partitionId);
-					// FIXME exponential back off
-					TimeUnit.MILLISECONDS.sleep(m_config.getNoEndpointWaitIntervalMillis());
-					return;
-				}
-
-				Lease lease = m_lease.get();
-				if (lease != null) {
-					long timeout = lease.getRemainingTime();
-
-					if (timeout > 0) {
-						pullMessages(endpoint, timeout);
-					}
-				}
-			} catch (Exception e) {
-				log.warn("Exception occurred while pulling message(topic={}, partition={}, groupId={}, sessionId={}).",
-				      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId(), e);
-			} finally {
-				m_pullTaskRunning.set(false);
-			}
-		}
-
-		private void pullMessages(Endpoint endpoint, long timeout) throws InterruptedException, TimeoutException,
-		      ExecutionException {
-			final SettableFuture<PullMessageResultCommand> future = SettableFuture.create();
-
-			// FIXME 500ms enough?
-			PullMessageCommand cmd = new PullMessageCommand(m_context.getTopic().getName(), m_partitionId,
-			      m_context.getGroupId(), m_cacheSize - m_msgs.size(), m_systemClockService.now() + timeout - 500L);
-
-			cmd.getHeader().setCorrelationId(m_correlationId);
-			cmd.setFuture(future);
-
-			PullMessageResultCommand ack = null;
-
-			try {
-
-				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
-				      m_context.getGroupId(), "pull-msg-cmd-duration");
-
-				Context context = timer.time();
-
-				m_pullMessageResultMonitor.monitor(cmd);
-				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
-
-				ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_context.getTopic().getName(), m_partitionId,
-				      m_context.getGroupId());
-
-				try {
-					ack = future.get(timeout, TimeUnit.MILLISECONDS);
-				} catch (TimeoutException e) {
-					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
-					      m_partitionId, m_context.getGroupId());
-					m_pullMessageResultMonitor.remove(cmd);
-				}
-
-				context.stop();
-
-				if (ack != null) {
-					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReceived(m_context.getTopic().getName(),
-					      m_partitionId, m_context.getGroupId());
-					appendToMsgQueue(ack);
-				}
-
-			} finally {
-				if (ack != null) {
-					ack.release();
-				}
-			}
-		}
-
-		private void appendToMsgQueue(PullMessageResultCommand ack) {
-			List<TppConsumerMessageBatch> batches = ack.getBatches();
-			if (batches != null && !batches.isEmpty()) {
-				ConsumerContext context = m_consumerNotifier.find(m_correlationId);
-				if (context != null) {
-					Class<?> bodyClazz = context.getMessageClazz();
-
-					List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ack.getChannel());
-					m_msgs.addAll(msgs);
-
-					ConsumerStatusMonitor.INSTANCE.messageReceived(m_context.getTopic().getName(), m_partitionId,
-					      m_context.getGroupId(), msgs.size());
-
-				} else {
-					log.info(
-					      "Can not find consumerContext(topic={}, partition={}, groupId={}, sessionId={}), maybe has been stopped.",
-					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), m_context.getSessionId());
-				}
-			}
-		}
-
 	}
 
 	public void close() {
