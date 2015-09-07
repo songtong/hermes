@@ -3,6 +3,7 @@ package com.ctrip.hermes.broker.queue;
 import java.util.List;
 import java.util.Map;
 
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
@@ -29,5 +30,7 @@ public interface MessageQueueManager {
 	void acked(Tpp tpp, String groupId, boolean resend, List<AckContext> ackContexts);
 
 	void nacked(Tpp tpp, String groupId, boolean resend, List<AckContext> nackContexts);
+
+	public Offset findLatestOffset(Tpg tpg);
 
 }

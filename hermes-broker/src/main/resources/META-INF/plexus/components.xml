@@ -111,6 +111,25 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>QUERY_OFFSET</role-hint>
+			<implementation>com.ctrip.hermes.broker.transport.command.processor.QueryOffsetCommandProcessor</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.broker.longpolling.LongPollingService</role>
 			<implementation>com.ctrip.hermes.broker.longpolling.DefaultLongPollingService</implementation>
 			<requirements>

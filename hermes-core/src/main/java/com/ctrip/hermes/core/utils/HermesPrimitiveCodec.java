@@ -3,9 +3,13 @@ package com.ctrip.hermes.core.utils;
 import io.netty.buffer.ByteBuf;
 
 import java.nio.ByteOrder;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.unidal.tuple.Pair;
+
+import com.ctrip.hermes.core.bo.Offset;
 import com.google.common.base.Charsets;
 
 public class HermesPrimitiveCodec {
@@ -110,6 +114,31 @@ public class HermesPrimitiveCodec {
 
 	public long readLong() {
 		return m_buf.readLong();
+	}
+
+	public Offset readOffset() {
+		byte firstByte = m_buf.readByte();
+		if (NULL == firstByte) {
+			return null;
+		} else {
+			readerIndexBack(m_buf, 1);
+			long pOff = m_buf.readLong();
+			long npOff = m_buf.readLong();
+			Date rDate = new Date(m_buf.readLong());
+			long rOff = m_buf.readLong();
+			return new Offset(pOff, npOff, new Pair<Date, Long>(rDate, rOff));
+		}
+	}
+
+	public void writeOffset(Offset offset) {
+		if (offset == null) {
+			writeNull();
+		} else {
+			m_buf.writeLong(offset.getPriorityOffset());
+			m_buf.writeLong(offset.getNonPriorityOffset());
+			m_buf.writeLong(offset.getResendOffset().getKey().getTime());
+			m_buf.writeLong(offset.getResendOffset().getValue());
+		}
 	}
 
 	public void writeStringStringMap(Map<String, String> map) {
