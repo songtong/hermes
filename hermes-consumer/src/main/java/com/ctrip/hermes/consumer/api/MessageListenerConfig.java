@@ -48,7 +48,7 @@ public class MessageListenerConfig {
 
 					@Override
 					public long nextScheduleTimeMillis(int retryTimes, long currentTimeMillis) {
-						return currentTimeMillis + (retryTimes + 1) * m_retryIntervalMills;
+						return currentTimeMillis + m_retryIntervalMills;
 					}
 
 					@Override
