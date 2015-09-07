@@ -52,6 +52,8 @@ public class RetryPolicyFactory {
 
 					if ("1".equals(type.trim())) {
 						return new FrequencySpecifiedRetryPolicy(value.trim());
+					} else if ("2".equals(type.trim()) && "[]".equals(value.trim())) {
+						return new NoRetryPolicy();
 					}
 				}
 			}
