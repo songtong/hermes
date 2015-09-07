@@ -36,14 +36,17 @@ public class StrictlyOrderedNotifyStrategy implements NotifyStrategy {
 				pipeline.put(new Pair<ConsumerContext, List<?>>(context, singleMsg));
 
 				if (nackDelayedMsg.getBaseConsumerMessage().getStatus() == MessageStatus.FAIL) {
+					// reset status to enable reconsume or nack
 					nackDelayedMsg.getBaseConsumerMessage().resetStatus();
 					if (retries < m_retryPolicy.getRetryTimes()) {
 						sleep(m_retryPolicy.nextScheduleTimeMillis(retries, 0));
 						retries++;
 					} else {
+						msg.nack();
 						break;
 					}
 				} else {
+					msg.ack();
 					break;
 				}
 			}
