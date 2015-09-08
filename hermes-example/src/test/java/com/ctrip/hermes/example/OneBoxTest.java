@@ -18,13 +18,16 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
-import com.ctrip.hermes.consumer.ConsumerType;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
+import com.ctrip.hermes.consumer.api.Consumer;
+import com.ctrip.hermes.consumer.api.MessageListenerConfig;
+import com.ctrip.hermes.consumer.api.MessageListenerConfig.StrictlyOrderingRetryPolicy;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.metrics.HttpMetricsServer;
 import com.ctrip.hermes.producer.api.Producer;
 import com.dianping.cat.Cat;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -146,29 +149,31 @@ public class OneBoxTest extends ComponentTestCase {
 		Cat.initialize("cat.fws.qa.nt.ctripcorp.com");
 		startBroker();
 
-		String topic = "order_new";
+		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
+		server.start();
 
-		Engine engine = lookup(Engine.class);
+		String topic = "order_new";
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
 		// subscribers.put("group2", Arrays.asList("1-a"));
-		subscribers.put("group1", Arrays.asList("1-a", "1-b"));
-		subscribers.put("group2", Arrays.asList("2-a", "2-b"));
-		subscribers.put("group3", Arrays.asList("3-a", "3-b", "3-c"));
+		subscribers.put("group1", Arrays.asList("1-a"));
+		// subscribers.put("group2", Arrays.asList("2-a", "2-b"));
+		// subscribers.put("group3", Arrays.asList("3-a", "3-b", "3-c"));
 
 		for (Map.Entry<String, List<String>> entry : subscribers.entrySet()) {
 			String groupId = entry.getKey();
 			Map<String, Integer> nacks = findNacks(groupId);
 			for (String id : entry.getValue()) {
-				Subscriber s = new Subscriber(topic, groupId, new MyConsumer(nacks, id), ConsumerType.DEFAULT);
+				MessageListenerConfig config = new MessageListenerConfig();
+				config.setStrictlyOrderingRetryPolicy(StrictlyOrderingRetryPolicy.evenRetry(3000, 3));
 				System.out.println("Starting consumer " + groupId + ":" + id);
-				engine.start(s);
+				Consumer.getInstance().start(topic, groupId, new MyConsumer(nacks, id), config);
 			}
 
 		}
 
 		System.out.println("Starting producer...");
-		send(topic, "ACK-");
+		// send(topic, "ACK-");
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
@@ -193,7 +198,7 @@ public class OneBoxTest extends ComponentTestCase {
 					String id = parts[2];
 					Map<String, Integer> nacks = findNacks(groupId);
 					System.out.println(String.format("Starting consumer with groupId %s and id %s", groupId, id));
-					engine.start(new Subscriber(topic, groupId, new MyConsumer(nacks, id)));
+					Consumer.getInstance().start(topic, groupId, new MyConsumer(nacks, id));
 				}
 			} else {
 				send(topic, prefix);
