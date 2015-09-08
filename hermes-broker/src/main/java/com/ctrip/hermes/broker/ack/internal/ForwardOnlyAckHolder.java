@@ -31,7 +31,7 @@ public class ForwardOnlyAckHolder implements AckHolder<MessageMeta> {
 
 		long oldValue = m_maxAckedOffset;
 		m_maxAckedOffset = Math.max(offset, m_maxAckedOffset);
-		m_modified = m_maxAckedOffset != oldValue;
+		m_modified = m_modified || m_maxAckedOffset > oldValue;
 
 		if (!success) {
 			if (messageMetaOfOffset != null) {
