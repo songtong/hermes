@@ -2,13 +2,18 @@ package com.ctrip.hermes.broker.longpolling;
 
 import io.netty.channel.Channel;
 
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 
-class PullMessageTask {
+public class PullMessageTask {
 	private Tpg m_tpg;
 
 	private long m_correlationId;
+
+	private int m_pullCommandVersion;
+
+	private Offset m_startOffset;
 
 	private int m_batchSize;
 
@@ -18,13 +23,37 @@ class PullMessageTask {
 
 	private Lease m_brokerLease;
 
-	public PullMessageTask(Tpg tpg, long correlationId, int batchSize, Channel channel, long expireTime,
-	      Lease brokerLease) {
+	private boolean m_withOffset;
+
+	public void setTpg(Tpg tpg) {
 		m_tpg = tpg;
+	}
+
+	public void setCorrelationId(long correlationId) {
 		m_correlationId = correlationId;
+	}
+
+	public void setPullCommandVersion(int pullCommandVersion) {
+		m_pullCommandVersion = pullCommandVersion;
+	}
+
+	public void setStartOffset(Offset startOffset) {
+		m_startOffset = startOffset;
+	}
+
+	public void setBatchSize(int batchSize) {
 		m_batchSize = batchSize;
+	}
+
+	public void setChannel(Channel channel) {
 		m_channel = channel;
+	}
+
+	public void setExpireTime(long expireTime) {
 		m_expireTime = expireTime;
+	}
+
+	public void setBrokerLease(Lease brokerLease) {
 		m_brokerLease = brokerLease;
 	}
 
@@ -40,6 +69,10 @@ class PullMessageTask {
 		return m_correlationId;
 	}
 
+	public Offset getStartOffset() {
+		return m_startOffset;
+	}
+
 	public int getBatchSize() {
 		return m_batchSize;
 	}
@@ -50,6 +83,26 @@ class PullMessageTask {
 
 	public Lease getBrokerLease() {
 		return m_brokerLease;
+	}
+
+	public int getPullMessageCommandVersion() {
+		return m_pullCommandVersion;
+	}
+
+	public boolean isWithOffset() {
+		return m_withOffset;
+	}
+
+	public void setWithOffset(boolean withOffset) {
+		m_withOffset = withOffset;
+	}
+
+	@Override
+	public String toString() {
+		return "PullMessageTask [m_tpg=" + m_tpg + ", m_correlationId=" + m_correlationId + ", m_pullCommandVersion="
+		      + m_pullCommandVersion + ", m_startOffset=" + m_startOffset + ", m_batchSize=" + m_batchSize
+		      + ", m_channel=" + m_channel + ", m_expireTime=" + m_expireTime + ", m_brokerLease=" + m_brokerLease
+		      + ", m_withOffset=" + m_withOffset + "]";
 	}
 
 }

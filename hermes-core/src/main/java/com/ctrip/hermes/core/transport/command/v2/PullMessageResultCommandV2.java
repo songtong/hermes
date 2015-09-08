@@ -36,6 +36,10 @@ public class PullMessageResultCommandV2 extends AbstractCommand {
 		return m_batches;
 	}
 
+	public void setOffset(Offset offset) {
+		m_offset = offset;
+	}
+
 	public Offset getOffset() {
 		return m_offset;
 	}

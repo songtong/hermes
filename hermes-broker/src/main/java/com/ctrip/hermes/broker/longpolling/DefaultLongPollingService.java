@@ -1,7 +1,5 @@
 package com.ctrip.hermes.broker.longpolling;
 
-import io.netty.channel.Channel;
-
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,11 +11,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.MessageQueueCursor;
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
-import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
@@ -48,30 +46,23 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	}
 
 	@Override
-	public void schedulePush(Tpg tpg, long correlationId, int batchSize, Channel channel, long expireTime,
-	      Lease brokerLease) {
+	public void schedulePush(final PullMessageTask task) {
 		if (log.isDebugEnabled()) {
-			log.debug("Schedule push for client(correlationId={}, topic={}, partition={}, groupId={})", correlationId,
-			      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
+			log.debug("Schedule push(correlation id: {}) for client: {}", task.getCorrelationId(), task.getTpg());
 		}
 
-		final PullMessageTask pullMessageTask = new PullMessageTask(tpg, correlationId, batchSize, channel, expireTime,
-		      brokerLease);
-
-		if (m_stopped.get()) {
-			response(pullMessageTask, null);
+		if (m_stopped.get() || (task.isWithOffset() && task.getStartOffset() == null)) {
+			response(task, null, null);
+		} else {
+			m_scheduledThreadPool.submit(new Runnable() {
+				@Override
+				public void run() {
+					executeTask(task, new ExponentialSchedulePolicy(//
+					      m_config.getLongPollingCheckIntervalBaseMillis(),//
+					      m_config.getLongPollingCheckIntervalMaxMillis()));
+				}
+			});
 		}
-
-		m_scheduledThreadPool.submit(new Runnable() {
-
-			@Override
-			public void run() {
-				executeTask(pullMessageTask, new ExponentialSchedulePolicy(//
-				      m_config.getLongPollingCheckIntervalBaseMillis(),//
-				      m_config.getLongPollingCheckIntervalMaxMillis()));
-			}
-
-		});
 	}
 
 	private void executeTask(final PullMessageTask pullMessageTask, final SchedulePolicy policy) {
@@ -108,7 +99,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 					            .getPartition(), pullMessageTask.getTpg().getGroupId());
 				}
 				// no lease, return empty cmd
-				response(pullMessageTask, null);
+				response(pullMessageTask, null, null);
 			}
 		} catch (Exception e) {
 			log.error("Exception occurred while executing pull message task", e);
@@ -124,21 +115,21 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 			return false;
 		}
 
-		List<TppConsumerMessageBatch> batches = null;
+		Pair<Offset, List<TppConsumerMessageBatch>> p = cursor.next(pullTask.getStartOffset(), pullTask.getBatchSize());
 
-		batches = cursor.next(pullTask.getBatchSize());
+		Offset currentOffset = p.getKey();
+		List<TppConsumerMessageBatch> batches = p.getValue();
 
 		if (batches != null && !batches.isEmpty()) {
 
 			String ip = NettyUtils.parseChannelRemoteAddr(pullTask.getChannel(), false);
 			for (TppConsumerMessageBatch batch : batches) {
-				m_queueManager.delivered(new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority()),
-				      tpg.getGroupId(), batch.isResend(), batch.getMessageMetas());
+				m_queueManager.delivered(batch, tpg.getGroupId(), pullTask.isWithOffset());
 
 				bizLogDelivered(ip, batch.getMessageMetas(), tpg);
 			}
 
-			response(pullTask, batches);
+			response(pullTask, batches, currentOffset);
 			return true;
 		} else {
 			return false;

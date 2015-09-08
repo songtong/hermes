@@ -18,10 +18,12 @@ import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.ack.internal.AckHolder;
+import com.ctrip.hermes.broker.ack.internal.AckHolder.AckHolderType;
 import com.ctrip.hermes.broker.ack.internal.BatchResult;
 import com.ctrip.hermes.broker.ack.internal.ContinuousRange;
 import com.ctrip.hermes.broker.ack.internal.DefaultAckHolder;
 import com.ctrip.hermes.broker.ack.internal.EnumRange;
+import com.ctrip.hermes.broker.ack.internal.ForwardOnlyAckHolder;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
@@ -58,6 +60,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	protected Map<Pair<Boolean, String>, AckHolder<MessageMeta>> m_ackHolders;
 
 	protected Map<Pair<Boolean, String>, AckHolder<MessageMeta>> m_resendAckHolders;
+
+	protected Map<Pair<Boolean, String>, AckHolder<MessageMeta>> m_forwardOnlyAckHolders;
 
 	private BlockingQueue<Operation> m_opQueue;
 
@@ -138,6 +142,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		m_ackHolders.remove(new Pair<Boolean, String>(false, groupId));
 		m_resendAckHolders.remove(new Pair<Boolean, String>(true, groupId));
 		m_resendAckHolders.remove(new Pair<Boolean, String>(false, groupId));
+		m_forwardOnlyAckHolders.remove(new Pair<Boolean, String>(true, groupId));
+		m_forwardOnlyAckHolders.remove(new Pair<Boolean, String>(false, groupId));
 	}
 
 	@Override
@@ -177,6 +183,11 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	@Override
 	public void checkHolders() {
+		for (Entry<Pair<Boolean, String>, AckHolder<MessageMeta>> entry : m_forwardOnlyAckHolders.entrySet()) {
+			BatchResult<MessageMeta> result = entry.getValue().scan();
+			doCheckHolders(entry.getKey(), result, false);
+		}
+
 		for (Entry<Pair<Boolean, String>, AckHolder<MessageMeta>> entry : m_ackHolders.entrySet()) {
 			BatchResult<MessageMeta> result = entry.getValue().scan();
 			doCheckHolders(entry.getKey(), result, false);
@@ -288,7 +299,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			if (holder == null) {
 				int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(m_topic, op.getKey().getValue()) * 1000;
 
-				holder = new DefaultAckHolder<MessageMeta>(timeout);
+				holder = isForwordOnly(op) ? new ForwardOnlyAckHolder<MessageMeta>() : new DefaultAckHolder<MessageMeta>(
+				      timeout);
 				holders.put(op.getKey(), holder);
 			}
 
@@ -296,9 +308,12 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		}
 
 		private Map<Pair<Boolean, String>, AckHolder<MessageMeta>> findHolders(Operation op) {
-			return op.isResend() ? m_resendAckHolders : m_ackHolders;
+			return isForwordOnly(op) ? m_forwardOnlyAckHolders : (op.isResend() ? m_resendAckHolders : m_ackHolders);
 		}
 
+		private boolean isForwordOnly(Operation op) {
+			return AckHolderType.FORWARD_ONLY == op.getAckHolderType();
+		}
 	}
 
 	@Override

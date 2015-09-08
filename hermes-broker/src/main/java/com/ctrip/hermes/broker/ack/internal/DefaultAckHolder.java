@@ -163,4 +163,9 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 
 	}
 
+	@Override
+	public long getMaxAckedOffset() {
+		throw new UnsupportedOperationException("Can not dectect DefaultAckHolder's max offset.");
+	}
+
 }

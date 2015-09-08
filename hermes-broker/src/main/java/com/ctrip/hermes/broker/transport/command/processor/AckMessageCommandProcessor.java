@@ -10,14 +10,16 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Triple;
 
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
+import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.transport.command.AckMessageCommand;
-import com.ctrip.hermes.core.transport.command.AckMessageCommand.AckContext;
+import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
 
 /**
@@ -35,20 +37,42 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.MESSAGE_ACK);
+		return Arrays.asList(CommandType.MESSAGE_ACK, CommandType.MESSAGE_ACK_V2);
 	}
 
 	@Override
 	public void process(CommandProcessorContext ctx) {
-		AckMessageCommand cmd = (AckMessageCommand) ctx.getCommand();
+		Command cmd = ctx.getCommand();
+
+		int ackType = AckMessageCommandV2.NORMAL;
+
+		Map<Triple<Tpp, String, Boolean>, List<AckContext>> ackMsgs = null;
+		Map<Triple<Tpp, String, Boolean>, List<AckContext>> nackMsgs = null;
+
+		switch (cmd.getHeader().getVersion()) {
+		case 1:
+			ackMsgs = ((AckMessageCommand) cmd).getAckMsgs();
+			nackMsgs = ((AckMessageCommand) cmd).getNackMsgs();
+			break;
+		case 2:
+			ackMsgs = ((AckMessageCommandV2) cmd).getAckMsgs();
+			nackMsgs = ((AckMessageCommandV2) cmd).getNackMsgs();
+			ackType = ((AckMessageCommandV2) cmd).getType();
+			break;
+		default:
+			if (log.isDebugEnabled()) {
+				log.debug("Invalid ack message command version: {}" + cmd.getHeader().getVersion());
+			}
+			return;
+		}
 
 		String consumerIp = NettyUtils.parseChannelRemoteAddr(ctx.getChannel(), false);
-		for (Map.Entry<Triple<Tpp, String, Boolean>, List<AckContext>> entry : cmd.getAckMsgs().entrySet()) {
+		for (Map.Entry<Triple<Tpp, String, Boolean>, List<AckContext>> entry : ackMsgs.entrySet()) {
 			Tpp tpp = entry.getKey().getFirst();
 			String groupId = entry.getKey().getMiddle();
 			boolean isResend = entry.getKey().getLast();
 			List<AckContext> ackContexts = entry.getValue();
-			m_messageQueueManager.acked(tpp, groupId, isResend, ackContexts);
+			m_messageQueueManager.acked(tpp, groupId, isResend, ackContexts, ackType);
 			bizLogAcked(tpp, consumerIp, groupId, ackContexts, isResend, true);
 
 			if (log.isDebugEnabled()) {
@@ -57,12 +81,12 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 			}
 		}
 
-		for (Map.Entry<Triple<Tpp, String, Boolean>, List<AckContext>> entry : cmd.getNackMsgs().entrySet()) {
+		for (Map.Entry<Triple<Tpp, String, Boolean>, List<AckContext>> entry : nackMsgs.entrySet()) {
 			Tpp tpp = entry.getKey().getFirst();
 			String groupId = entry.getKey().getMiddle();
 			boolean isResend = entry.getKey().getLast();
 			List<AckContext> nackContexts = entry.getValue();
-			m_messageQueueManager.nacked(tpp, groupId, isResend, nackContexts);
+			m_messageQueueManager.nacked(tpp, groupId, isResend, nackContexts, ackType);
 			bizLogAcked(tpp, consumerIp, groupId, nackContexts, isResend, false);
 
 			if (log.isDebugEnabled()) {
