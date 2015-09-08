@@ -80,6 +80,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		m_storage = storage;
 		m_ackHolders = new ConcurrentHashMap<>();
 		m_resendAckHolders = new ConcurrentHashMap<>();
+		m_forwardOnlyAckHolders = new ConcurrentHashMap<>();
 		m_ackOpExecutor = ackOpExecutor;
 		m_config = PlexusComponentLocator.lookup(BrokerConfig.class);
 		m_metaService = PlexusComponentLocator.lookup(MetaService.class);
