@@ -18,16 +18,19 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.broker.ack.internal.AckHolder.AckHolderType;
 import com.ctrip.hermes.broker.config.BrokerConfig;
-import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation.Type;
+import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation.OperationType;
+import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.core.transport.command.AckMessageCommand.AckContext;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
+import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -101,25 +104,29 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	}
 
 	@Override
-	public void delivered(Tpp tpp, String groupId, boolean resend, List<MessageMeta> msgMetas) {
+	public void delivered(TppConsumerMessageBatch batch, String groupId, boolean withOffset) {
 		if (m_stopped.get()) {
 			return;
 		}
 
-		resetPriorityIfResend(tpp, resend);
+		Tpp tpp = new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority());
+		resetPriorityIfResend(tpp, batch.isResend());
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
-		List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>(msgMetas.size());
-		for (MessageMeta msgMeta : msgMetas) {
+		List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>(batch.getMessageMetas().size());
+		for (MessageMeta msgMeta : batch.getMessageMetas()) {
 			msgId2Metas.add(new Pair<>(msgMeta.getId(), msgMeta));
 		}
 
+		AckHolderType ackHolderType = withOffset ? AckHolderType.FORWARD_ONLY : AckHolderType.NORMAL;
 		boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offer(
-		      new Operation(key, resend, Type.DELIVERED, msgId2Metas, m_systemClockService.now()));
+		      new Operation(key, batch.isResend(), OperationType.DELIVERED, ackHolderType, msgId2Metas,
+		            m_systemClockService.now()));
+
 		logIfOfferFail("delivered", offered);
 	}
 
 	@Override
-	public void acked(Tpp tpp, String groupId, boolean resend, List<AckContext> ackContexts) {
+	public void acked(Tpp tpp, String groupId, boolean resend, List<AckContext> ackContexts, int ackType) {
 		if (m_stopped.get()) {
 			return;
 		}
@@ -127,13 +134,14 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
 		for (AckContext context : ackContexts) {
 			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offer(
-			      new Operation(key, resend, Type.ACK, context.getMsgSeq(), m_systemClockService.now()));
+			      new Operation(key, resend, OperationType.ACK, getHolderType(ackType), context.getMsgSeq(),
+			            m_systemClockService.now()));
 			logIfOfferFail("acked", offered);
 		}
 	}
 
 	@Override
-	public void nacked(Tpp tpp, String groupId, boolean resend, List<AckContext> nackContexts) {
+	public void nacked(Tpp tpp, String groupId, boolean resend, List<AckContext> nackContexts, int ackType) {
 		if (m_stopped.get()) {
 			return;
 		}
@@ -141,9 +149,14 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
 		for (AckContext context : nackContexts) {
 			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offer(
-			      new Operation(key, resend, Type.NACK, context.getMsgSeq(), m_systemClockService.now()));
+			      new Operation(key, resend, OperationType.NACK, getHolderType(ackType), context.getMsgSeq(),
+			            m_systemClockService.now()));
 			logIfOfferFail("nacked", offered);
 		}
+	}
+
+	private AckHolderType getHolderType(int ackType) {
+		return AckMessageCommandV2.FORWARD_ONLY == ackType ? AckHolderType.FORWARD_ONLY : AckHolderType.NORMAL;
 	}
 
 	private void logIfOfferFail(String type, boolean offered) {
@@ -159,7 +172,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	}
 
 	public static class Operation {
-		public enum Type {
+		public enum OperationType {
 			ACK, NACK, DELIVERED;
 		}
 
@@ -170,15 +183,19 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 		private Object m_data;
 
-		private Type m_type;
+		private OperationType m_operationType;
 
 		private long m_createTime;
 
-		Operation(Pair<Boolean, String> key, boolean isResend, Type type, Object data, long createTime) {
+		private AckHolderType m_ackHolderType = AckHolderType.NORMAL;
+
+		Operation(Pair<Boolean, String> key, boolean isResend, OperationType operationType, AckHolderType ackHolderType,
+		      Object data, long createTime) {
 			m_key = key;
 			m_resend = isResend;
 			m_data = data;
-			m_type = type;
+			m_operationType = operationType;
+			m_ackHolderType = ackHolderType;
 			m_createTime = createTime;
 		}
 
@@ -194,12 +211,16 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 			return m_data;
 		}
 
-		public Type getType() {
-			return m_type;
+		public OperationType getType() {
+			return m_operationType;
 		}
 
 		public long getCreateTime() {
 			return m_createTime;
+		}
+
+		public AckHolderType getAckHolderType() {
+			return m_ackHolderType;
 		}
 
 	}

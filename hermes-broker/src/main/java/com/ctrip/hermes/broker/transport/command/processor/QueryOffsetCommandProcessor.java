@@ -66,11 +66,7 @@ public class QueryOffsetCommandProcessor extends ContainerHolder implements Comm
 		} else {
 			logDebug(reqCmd, "No consumer group was found.");
 		}
-		responseError(ctx.getChannel(), correlationId);
-	}
-
-	private void responseError(Channel channel, long correlationId) {
-		response(channel, correlationId, null);
+		response(ctx.getChannel(), correlationId, null);
 	}
 
 	private void response(Channel channel, long correlationId, Offset offset) {

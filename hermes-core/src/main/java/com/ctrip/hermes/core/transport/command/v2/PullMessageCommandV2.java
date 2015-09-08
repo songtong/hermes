@@ -20,7 +20,7 @@ public class PullMessageCommandV2 extends AbstractCommand {
 
 	public static final int PULL_WITHOUT_OFFSET = 2;
 
-	private int m_pullType;
+	private int m_pullType = PULL_WITH_OFFSET;
 
 	private String m_groupId;
 

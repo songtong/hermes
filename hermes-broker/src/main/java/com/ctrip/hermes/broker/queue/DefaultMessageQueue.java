@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.broker.ack.internal.AckHolder;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Offset;
@@ -23,7 +24,7 @@ import com.ctrip.hermes.core.meta.MetaService;
  */
 public class DefaultMessageQueue extends AbstractMessageQueue {
 	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueue.class);
-	
+
 	private MetaService m_metaService;
 
 	private BrokerConfig m_config;
@@ -65,7 +66,11 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 		int groupIdInt = m_metaService.translateToIntGroupId(m_topic, groupId);
 		try {
 			long pOffset = (long) m_storage.findLastOffset(new Tpp(m_topic, m_partition, true), groupIdInt);
+			pOffset = getMaxOffset(pOffset, m_forwardOnlyAckHolders.get(new Pair<Boolean, String>(true, groupId)));
+
 			long npOffset = (long) m_storage.findLastOffset(new Tpp(m_topic, m_partition, false), groupIdInt);
+			npOffset = getMaxOffset(npOffset, m_forwardOnlyAckHolders.get(new Pair<Boolean, String>(false, groupId)));
+
 			@SuppressWarnings("unchecked")
 			Pair<Date, Long> rOffset = (Pair<Date, Long>) m_storage.findLastResendOffset(new Tpg(m_topic, m_partition,
 			      groupId));
@@ -74,5 +79,9 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 			log.error("Find latest offset failed: topic= {}, partition= {}, group= {}.", m_topic, m_partition, groupId, e);
 		}
 		return null;
+	}
+
+	private long getMaxOffset(long offset, AckHolder<MessageMeta> holder) {
+		return holder == null ? offset : Math.max(holder.getMaxAckedOffset(), offset);
 	}
 }

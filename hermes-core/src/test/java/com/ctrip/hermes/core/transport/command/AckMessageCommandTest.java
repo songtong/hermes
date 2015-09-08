@@ -12,8 +12,8 @@ import org.junit.Test;
 import org.unidal.tuple.Triple;
 
 import com.ctrip.hermes.core.HermesCoreBaseTest;
+import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.transport.command.AckMessageCommand.AckContext;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
