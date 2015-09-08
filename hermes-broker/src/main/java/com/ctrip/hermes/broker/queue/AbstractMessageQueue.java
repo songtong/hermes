@@ -123,6 +123,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		if (existingCursor == null || existingCursor.getLease().getId() != lease.getId() || existingCursor.hasError()) {
 			MessageQueueCursor newCursor = create(groupId, lease);
 			if (m_cursors.get(groupId).compareAndSet(existingCursor, newCursor)) {
+				clearHolders(groupId);
 				newCursor.init();
 			}
 		}
@@ -130,6 +131,13 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		MessageQueueCursor cursor = m_cursors.get(groupId).get();
 
 		return cursor.isInited() ? cursor : new NoopMessageQueueCursor();
+	}
+
+	private void clearHolders(String groupId) {
+		m_ackHolders.remove(new Pair<Boolean, String>(true, groupId));
+		m_ackHolders.remove(new Pair<Boolean, String>(false, groupId));
+		m_resendAckHolders.remove(new Pair<Boolean, String>(true, groupId));
+		m_resendAckHolders.remove(new Pair<Boolean, String>(false, groupId));
 	}
 
 	@Override
@@ -275,13 +283,16 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		private AckHolder<MessageMeta> findHolder(Operation op) {
 			Map<Pair<Boolean, String>, AckHolder<MessageMeta>> holders = findHolders(op);
 
-			if (!holders.containsKey(op.getKey())) {
+			AckHolder<MessageMeta> holder = null;
+			holder = holders.get(op.getKey());
+			if (holder == null) {
 				int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(m_topic, op.getKey().getValue()) * 1000;
 
-				holders.put(op.getKey(), new DefaultAckHolder<MessageMeta>(timeout));
+				holder = new DefaultAckHolder<MessageMeta>(timeout);
+				holders.put(op.getKey(), holder);
 			}
 
-			return holders.get(op.getKey());
+			return holder;
 		}
 
 		private Map<Pair<Boolean, String>, AckHolder<MessageMeta>> findHolders(Operation op) {
