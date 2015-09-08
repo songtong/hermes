@@ -376,12 +376,14 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 				context.stop();
 
-				msgs.add(brokerMsg);
+				msgs.add(decorateBrokerMessage(brokerMsg));
 			}
 		}
 
 		return msgs;
 	}
+
+	protected abstract BrokerConsumerMessage<?> decorateBrokerMessage(BrokerConsumerMessage<?> brokerMsg);
 
 	public void close() {
 		m_closed.set(true);
