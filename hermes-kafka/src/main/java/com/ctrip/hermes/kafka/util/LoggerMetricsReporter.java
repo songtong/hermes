@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
-public class DebugLoggerMetricsReporter implements MetricsReporter {
+public class LoggerMetricsReporter implements MetricsReporter {
 
-	private static final Logger m_logger = LoggerFactory.getLogger(DebugLoggerMetricsReporter.class);
+	private static final Logger m_logger = LoggerFactory.getLogger(LoggerMetricsReporter.class);
 
 	private Map<MetricName, KafkaMetric> metrics = new HashMap<MetricName, KafkaMetric>();
 
@@ -43,7 +43,7 @@ public class DebugLoggerMetricsReporter implements MetricsReporter {
 			@Override
 			public void run() {
 				for (Map.Entry<MetricName, KafkaMetric> e : metrics.entrySet()) {
-					m_logger.debug("{} : {}", e.getKey().name(), e.getValue().value());
+					m_logger.info("{} : {}", e.getKey().name(), e.getValue().value());
 				}
 			}
 		}, millis, millis, TimeUnit.MILLISECONDS);
