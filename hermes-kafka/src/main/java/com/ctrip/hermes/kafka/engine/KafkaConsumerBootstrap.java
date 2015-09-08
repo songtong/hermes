@@ -34,6 +34,7 @@ import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 import com.ctrip.hermes.kafka.message.KafkaConsumerMessage;
 import com.ctrip.hermes.kafka.util.KafkaProperties;
@@ -49,7 +50,8 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(KafkaConsumerBootstrap.class);
 
-	private ExecutorService m_executor = Executors.newCachedThreadPool();
+	private ExecutorService m_executor = Executors.newCachedThreadPool(HermesThreadFactory.create(
+	      "KafkaConsumerExecutor", true));
 
 	@Inject
 	private ClientEnvironment m_environment;
