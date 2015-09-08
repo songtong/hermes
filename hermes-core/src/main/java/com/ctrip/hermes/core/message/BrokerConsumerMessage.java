@@ -5,7 +5,7 @@ import io.netty.channel.Channel;
 import java.util.Iterator;
 
 import com.ctrip.hermes.core.bo.Tpp;
-import com.ctrip.hermes.core.transport.command.AckMessageCommand;
+import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -31,9 +31,19 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 
 	private int m_retryTimesOfRetryPolicy;
 
+	private boolean m_ackWithForwardOnly = false;
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public BrokerConsumerMessage(BaseConsumerMessage baseMsg) {
 		m_baseMsg = baseMsg;
+	}
+
+	public boolean isAckWithForwardOnly() {
+		return m_ackWithForwardOnly;
+	}
+
+	public void setAckWithForwardOnly(boolean ackWithForwardOnly) {
+		m_ackWithForwardOnly = ackWithForwardOnly;
 	}
 
 	public String getGroupId() {
@@ -83,13 +93,18 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	@Override
 	public void nack() {
 		if (m_baseMsg.nack()) {
-			AckMessageCommand cmd = new AckMessageCommand();
+			AckMessageCommandV2 cmd = createAckCommand();
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			Tpp tpp = new Tpp(getTopic(), getPartition(), m_priority);
 			cmd.addNackMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries(),
 			      m_baseMsg.getOnMessageStartTimeMills(), m_baseMsg.getOnMessageEndTimeMills());
 			m_channel.writeAndFlush(cmd);
 		}
+	}
+
+	private AckMessageCommandV2 createAckCommand() {
+		return m_ackWithForwardOnly ? new AckMessageCommandV2(AckMessageCommandV2.FORWARD_ONLY)
+		      : new AckMessageCommandV2(AckMessageCommandV2.NORMAL);
 	}
 
 	@Override
@@ -125,7 +140,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	@Override
 	public void ack() {
 		if (m_baseMsg.ack()) {
-			AckMessageCommand cmd = new AckMessageCommand();
+			AckMessageCommandV2 cmd = createAckCommand();
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			Tpp tpp = new Tpp(getTopic(), getPartition(), m_priority);
 			cmd.addAckMsg(tpp, m_groupId, m_resend, m_msgSeq, m_baseMsg.getRemainingRetries(),

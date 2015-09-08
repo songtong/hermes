@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
+import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
@@ -33,6 +34,13 @@ public class DefaultConsumingStrategyConsumerTask extends BaseConsumerTask {
 		m_pullMessagesTask.set(null);
 	}
 
+	@Override
+	protected BrokerConsumerMessage<?> decorateBrokerMessage(BrokerConsumerMessage<?> brokerMsg) {
+		brokerMsg.setAckWithForwardOnly(false);
+		return brokerMsg;
+	}
+
+	@Override
 	protected Runnable getPullMessageTask() {
 		return m_pullMessagesTask.get();
 	}

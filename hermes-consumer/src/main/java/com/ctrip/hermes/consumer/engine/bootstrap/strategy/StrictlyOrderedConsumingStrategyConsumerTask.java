@@ -15,6 +15,7 @@ import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.consumer.engine.status.ConsumerStatusMonitor;
 import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.transport.command.QueryOffsetCommand;
@@ -56,6 +57,12 @@ public class StrictlyOrderedConsumingStrategyConsumerTask extends BaseConsumerTa
 		m_noEndpointSchedulePolicy.succeess();
 
 		m_pullMessagesTask.set(new PullMessagesTask(correlationId, m_noEndpointSchedulePolicy));
+	}
+
+	@Override
+	protected BrokerConsumerMessage<?> decorateBrokerMessage(BrokerConsumerMessage<?> brokerMsg) {
+		brokerMsg.setAckWithForwardOnly(true);
+		return brokerMsg;
 	}
 
 	private void queryLatestOffset(ConsumerLeaseKey key, long correlationId) {
@@ -129,6 +136,7 @@ public class StrictlyOrderedConsumingStrategyConsumerTask extends BaseConsumerTa
 		m_offset.set(null);
 	}
 
+	@Override
 	protected Runnable getPullMessageTask() {
 		return m_pullMessagesTask.get();
 	}
