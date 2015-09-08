@@ -51,7 +51,7 @@ public class ConsumerConfig {
 	}
 
 	public int getNoMessageWaitMaxMillis() {
-		return 800;
+		return 500;
 	}
 
 	public int getNoEndpointWaitBaseMillis() {

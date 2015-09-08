@@ -7,6 +7,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
+import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -23,7 +24,7 @@ public enum CommandType {
 	ACK_MESSAGE_SEND(201, 1, SendMessageAckCommand.class), //
 
 	RESULT_MESSAGE_PULL(302, 1, PullMessageResultCommand.class), //
-	RESULT_MESSAGE_PULL_V2(302, 2, PullMessageCommandV2.class), //
+	RESULT_MESSAGE_PULL_V2(302, 2, PullMessageResultCommandV2.class), //
 	RESULT_MESSAGE_SEND(301, 1, SendMessageResultCommand.class), //
 	RESULT_QUERY_OFFSET(303, 1, QueryOffsetResultCommand.class) //
 	;
