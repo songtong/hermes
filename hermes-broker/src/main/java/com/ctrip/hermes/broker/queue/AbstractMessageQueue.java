@@ -242,7 +242,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		private List<Operation> m_todos = new ArrayList<Operation>();
 
 		@Override
-		public void run() {
+		public synchronized void run() {
 			try {
 				handleOperations();
 				checkHolders();
@@ -300,7 +300,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			if (holder == null) {
 				int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(m_topic, op.getKey().getValue()) * 1000;
 
-				holder = isForwordOnly(op) ? new ForwardOnlyAckHolder<MessageMeta>() : new DefaultAckHolder<MessageMeta>(
+				holder = isForwordOnly(op) ? new ForwardOnlyAckHolder() : new DefaultAckHolder<MessageMeta>(
 				      timeout);
 				holders.put(op.getKey(), holder);
 			}
