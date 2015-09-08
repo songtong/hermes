@@ -11,10 +11,10 @@ import org.mockito.stubbing.Answer;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.transport.command.CommandType;
-import com.ctrip.hermes.core.transport.command.PullMessageCommand;
-import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
+import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public enum PullMessageAnswer implements Answer<Void> {
@@ -25,15 +25,15 @@ public enum PullMessageAnswer implements Answer<Void> {
 				waitUntilTrigger();
 			}
 			m_answeredCount.incrementAndGet();
-			PullMessageCommand pullMessageCmd = invocation.getArgumentAt(1, PullMessageCommand.class);
+			PullMessageCommandV2 pullMessageCmd = invocation.getArgumentAt(1, PullMessageCommandV2.class);
 			if (pullMessageCmd != null && m_msgCreator != null) {
-				PullMessageResultCommand resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
+				PullMessageResultCommandV2 resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
 				      pullMessageCmd.getTopic(), Arrays.asList(new Pair<String, String>("hello", "hermes")), 0, 0, false,
 				      "hermes-key", m_msgCreator.createRawMessages());
 				resultCmd.correlate(pullMessageCmd);
 
-				PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL.toString()).process(
-				      new CommandProcessorContext(resultCmd, m_channel));
+				PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V2.toString())
+				      .process(new CommandProcessorContext(resultCmd, m_channel));
 			}
 			return null;
 		}

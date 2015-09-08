@@ -24,7 +24,7 @@ public class PullMessageResultCommandV2 extends AbstractCommand {
 
 	private List<TppConsumerMessageBatch> m_batches = new ArrayList<TppConsumerMessageBatch>();
 
-	private Offset m_offset = new Offset();
+	private Offset m_offset;
 
 	private transient Channel m_channel;
 

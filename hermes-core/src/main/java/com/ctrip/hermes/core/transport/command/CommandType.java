@@ -18,8 +18,7 @@ public enum CommandType {
 	MESSAGE_ACK_V2(102, 2, AckMessageCommandV2.class), //
 	MESSAGE_PULL(103, 1, PullMessageCommand.class), //
 	MESSAGE_PULL_V2(103, 2, PullMessageCommandV2.class), //
-
-	QUERY_OFFSET(401, 1, QueryOffsetCommand.class), //
+	QUERY_OFFSET(104, 1, QueryOffsetCommand.class), //
 
 	ACK_MESSAGE_SEND(201, 1, SendMessageAckCommand.class), //
 

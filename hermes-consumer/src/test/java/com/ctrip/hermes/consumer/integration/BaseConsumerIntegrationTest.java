@@ -31,7 +31,7 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.meta.internal.MetaProxy;
 import com.ctrip.hermes.core.transport.command.Command;
-import com.ctrip.hermes.core.transport.command.PullMessageCommand;
+import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -143,7 +143,7 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 		doAnswer(answer)//
 		      .when(m_endpointClient)//
 		      .writeCommand(any(Endpoint.class), //
-		            any(PullMessageCommand.class), //
+		            any(PullMessageCommandV2.class), //
 		            anyLong(), //
 		            any(TimeUnit.class));
 	}
