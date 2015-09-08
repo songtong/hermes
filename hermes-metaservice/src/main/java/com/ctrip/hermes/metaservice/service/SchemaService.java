@@ -169,7 +169,7 @@ public class SchemaService {
 	 */
 	public SchemaView createSchema(SchemaView schemaView, Topic topic) throws DalException, IOException,
 	      RestClientException {
-		m_logger.info(String.format("Create schema for %s", topic.getName()));
+		m_logger.info("Creating schema for topic: {}, schema: {}", topic.getName(), schemaView);
 		Schema schema = toSchema(schemaView);
 		Date now = new Date(System.currentTimeMillis());
 		schema.setCreateTime(now);
@@ -193,6 +193,7 @@ public class SchemaService {
 			}
 		}
 
+		m_logger.info("Created schema: {}", schema);
 		return toSchemaView(schema);
 	}
 
@@ -202,6 +203,7 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public void deleteSchema(long id) throws DalException {
+		m_logger.info("Deleting schema id: {}", id);
 		Schema schema = m_schemaDao.findByPK(id, SchemaEntity.READSET_FULL);
 		Topic topic = m_metaService.findTopicById(schema.getTopicId());
 		if (topic != null) {
@@ -220,6 +222,7 @@ public class SchemaService {
 				updateTopic(topic);
 			}
 			m_schemaDao.deleteByPK(schema);
+			m_logger.info("Deleted schema id: {}", id);
 		}
 	}
 
@@ -248,6 +251,8 @@ public class SchemaService {
 	 */
 	public void deployToMaven(Schema metaSchema, String groupId, String artifactId, String version, String repositoryId)
 	      throws NumberFormatException, IOException, java.text.ParseException {
+		m_logger.info("Deploying to maven, {}, groupId {}, artifactId {}, version {}, repositoryId {}", metaSchema,
+		      groupId, artifactId, version, repositoryId);
 		Path jarPath = Files.createTempFile(metaSchema.getName(), ".jar");
 		com.google.common.io.Files.write(metaSchema.getJarContent(), jarPath.toFile());
 		try {
@@ -259,6 +264,8 @@ public class SchemaService {
 		} finally {
 			m_compileService.delete(jarPath);
 		}
+		m_logger.info("Deployed groupId {}, artifactId {}, version {}, repositoryId {}", groupId, artifactId, version,
+		      repositoryId);
 	}
 
 	private SchemaRegistryClient getAvroSchemaRegistry() throws IOException {
@@ -314,14 +321,14 @@ public class SchemaService {
 	 * 
 	 * @param avroid
 	 * @return
-	 * @throws DalException 
+	 * @throws DalException
 	 */
 	public SchemaView getSchemaViewByAvroid(int avroid) throws DalException {
 		Schema schema = m_schemaDao.findByAvroid(avroid, SchemaEntity.READSET_FULL);
 		SchemaView schemaView = toSchemaView(schema);
 		return schemaView;
 	}
-	
+
 	/**
 	 * 
 	 * @return
@@ -386,6 +393,7 @@ public class SchemaService {
 	 */
 	public SchemaView updateSchemaFile(SchemaView schemaView, byte[] fileContent, FormDataContentDisposition fileHeader)
 	      throws IOException, DalException, RestClientException {
+		m_logger.info("update schema {} by file {}", schemaView, fileHeader.getFileName());
 		SchemaView result = null;
 		if (schemaView.getType().equals("json")) {
 			result = uploadJsonSchema(schemaView, null, null, fileContent, fileHeader);
