@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 
 /**
@@ -14,6 +15,7 @@ import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 public enum CommandType {
 	MESSAGE_SEND(101, 1, SendMessageCommand.class), //
 	MESSAGE_ACK(102, 1, AckMessageCommand.class), //
+	MESSAGE_ACK_V2(102, 2, AckMessageCommandV2.class), //
 	MESSAGE_PULL(103, 1, PullMessageCommand.class), //
 	MESSAGE_PULL_V2(103, 2, PullMessageCommandV2.class), //
 
