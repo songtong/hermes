@@ -91,7 +91,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	private void init() {
 		m_opQueue = new LinkedBlockingQueue<>(m_config.getAckOpQueueSize());
 		m_ackTask = new AckTask();
-		m_ackOpExecutor.schedule(m_ackTask, m_config.getMessageQueueCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+		m_ackOpExecutor.schedule(m_ackTask, m_config.getAckOpCheckIntervalMillis(), TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -251,7 +251,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			} finally {
 				if (!m_stopped.get()) {
 					m_ackOpExecutor
-					      .schedule(m_ackTask, m_config.getMessageQueueCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+					      .schedule(m_ackTask, m_config.getAckOpCheckIntervalMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		}
