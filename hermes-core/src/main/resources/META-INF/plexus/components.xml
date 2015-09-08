@@ -169,6 +169,11 @@
 		<component>
 			<role>com.ctrip.hermes.core.config.CoreConfig</role>
 			<implementation>com.ctrip.hermes.core.config.CoreConfig</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.service.SystemClockService</role>
