@@ -410,7 +410,17 @@ public class ConsumerLeaseHolderTest extends ZKSuppportTestCase {
 
 		leaseHolderReload();
 
-		Map<Tpg, Map<String, ClientLeaseInfo>> allValidLeases = m_leaseHolder.getAllValidLeases();
+		int retries = 50;
+		int i = 0;
+		Map<Tpg, Map<String, ClientLeaseInfo>> allValidLeases = null;
+		while (i++ < retries) {
+			allValidLeases = m_leaseHolder.getAllValidLeases();
+			if (allValidLeases.size() == 1) {
+				break;
+			} else {
+				TimeUnit.MILLISECONDS.sleep(100);
+			}
+		}
 		assertEquals(1, allValidLeases.size());
 
 		assertLeases(allValidLeases, t1p0g1, Arrays.asList(//
