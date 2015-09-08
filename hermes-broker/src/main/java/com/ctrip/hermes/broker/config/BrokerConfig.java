@@ -60,8 +60,8 @@ public class BrokerConfig {
 		return 50;
 	}
 
-	public long getMessageQueueCheckIntervalMillis() {
-		return 10;
+	public long getAckOpCheckIntervalMillis() {
+		return 200;
 	}
 
 	public int getAckOpHandlingBatchSize() {

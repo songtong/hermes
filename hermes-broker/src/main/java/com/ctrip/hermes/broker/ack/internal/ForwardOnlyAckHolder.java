@@ -5,7 +5,7 @@ import java.util.List;
 import org.unidal.tuple.Pair;
 
 public class ForwardOnlyAckHolder<T> implements AckHolder<T> {
-	private long m_maxAckedOffset = -1;
+	private volatile long m_maxAckedOffset = -1;
 
 	private boolean m_modified = false;
 
