@@ -62,8 +62,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 	public void updateZkBaseMetaVersion(long version) throws Exception {
 		ensurePath(ZKPathUtils.getBaseMetaVersionZkPath());
 
-		m_zkClient.get().setData()
-		      .forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(version));
+		m_zkClient.get().setData().forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(version));
 	}
 
 	@Override
@@ -149,6 +148,17 @@ public class DefaultZookeeperService implements ZookeeperService {
 		} catch (Exception e) {
 			log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
 			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public String queryData(String path) throws Exception {
+		try {
+			ensurePath(path);
+			return ZKSerializeUtils.deserialize(m_zkClient.get().getData().forPath(path), String.class);
+		} catch (Exception e) {
+			log.error("Query zookeeper data failed:{}", path, e);
+			throw e;
 		}
 	}
 
