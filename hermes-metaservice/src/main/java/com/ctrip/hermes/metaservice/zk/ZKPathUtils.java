@@ -44,6 +44,10 @@ public class ZKPathUtils {
 
 	private static final String BROKER_LEASE_PATH_PATTERN = BROKER_LEASE_PATH_PREFIX_PATTERN + "/%s";
 
+	public static String getCmessageExchangePath() {
+		return "/cmessage-exchange";
+	}
+
 	public static String getBaseMetaVersionZkPath() {
 		return "/base-meta-version";
 	}
