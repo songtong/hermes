@@ -103,9 +103,9 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	protected abstract Object loadLastResendOffset();
 
-	protected abstract FetchResult fetchPriortyMessages(int batchSize);
+	protected abstract FetchResult fetchPriorityMessages(int batchSize);
 
-	protected abstract FetchResult fetchNonPriortyMessages(int batchSize);
+	protected abstract FetchResult fetchNonPriorityMessages(int batchSize);
 
 	protected abstract FetchResult fetchResendMessages(int batchSize);
 
@@ -133,7 +133,7 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		try {
 			List<TppConsumerMessageBatch> result = new LinkedList<>();
 			int remainingSize = batchSize;
-			FetchResult pFetchResult = fetchPriortyMessages(batchSize);
+			FetchResult pFetchResult = fetchPriorityMessages(batchSize);
 
 			if (pFetchResult != null) {
 				TppConsumerMessageBatch priorityMessageBatch = pFetchResult.getBatch();
@@ -158,7 +158,7 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 			}
 
 			if (remainingSize > 0) {
-				FetchResult npFetchResult = fetchNonPriortyMessages(remainingSize);
+				FetchResult npFetchResult = fetchNonPriorityMessages(remainingSize);
 
 				if (npFetchResult != null) {
 					TppConsumerMessageBatch nonPriorityMessageBatch = npFetchResult.getBatch();
