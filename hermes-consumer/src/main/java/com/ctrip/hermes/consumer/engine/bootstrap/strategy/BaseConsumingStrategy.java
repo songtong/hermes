@@ -11,7 +11,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class BaseCosumingStrategy implements ConsumingStrategy {
+public abstract class BaseConsumingStrategy implements ConsumingStrategy {
 
 	@Inject
 	protected ConsumerConfig m_config;
