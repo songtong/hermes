@@ -6,7 +6,7 @@ import com.ctrip.hermes.consumer.engine.ConsumerContext;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class DefaultConsumingStrategy extends BaseCosumingStrategy {
+public class DefaultConsumingStrategy extends BaseConsumingStrategy {
 
 	@Override
 	protected ConsumerTask getConsumerTask(ConsumerContext context, int partitionId, int localCacheSize) {
