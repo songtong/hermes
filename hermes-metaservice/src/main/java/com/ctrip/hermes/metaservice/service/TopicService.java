@@ -298,7 +298,7 @@ public class TopicService {
 	 */
 	public Topic updateTopic(Topic topic) throws DalException {
 		Meta meta = m_metaService.getMeta();
-		Topic originTopic = findTopicByName(topic.getName());
+		Topic originTopic = m_metaService.findTopicByName(topic.getName());
 		
 		originTopic.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 		originTopic.setCodecType(topic.getCodecType());
@@ -343,7 +343,7 @@ public class TopicService {
 	 */
 	public Topic addPartitionForTopic(String topicName, Partition partition) throws Exception {
 		Meta meta = m_metaService.getMeta();
-		Topic topic = findTopicByName(topicName);
+		Topic topic = m_metaService.findTopicByName(topicName);
 
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 
@@ -373,6 +373,7 @@ public class TopicService {
 		}
 
 		if (!m_metaService.updateMeta(meta)) {
+			//增加回滚
 			throw new RuntimeException("Update meta failed, please try later");
 		}
 
