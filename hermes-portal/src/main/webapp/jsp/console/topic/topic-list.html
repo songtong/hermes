@@ -45,7 +45,7 @@
 		<tbody ng-if="!is_loading">
 			<tr ng-click="" ng-repeat="row in current_topics">
 				<td><span ng-bind="$index + 1"> </span></td>
-				<td><a href="/console/topic?op=detail&topic={{row.name}}" ng-bind="row.name" /></td>
+				<td><a href="#/detail/{{current_topic_type}}/{{current_topic_type}}/{{row.name}}" ng-bind="row.name" /></td>
 				<td align="center"><span ng-bind="row.codecType"></span></td>
 				<td align="center"><span ng-bind="row.partitions.length"></td>
 				<td ng-if="current_topic_type == 'mysql'"><span ng-bind="row.consumerRetryPolicy"></td>

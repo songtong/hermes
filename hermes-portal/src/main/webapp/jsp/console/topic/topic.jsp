@@ -8,6 +8,7 @@
 
 <a:layout>
 	<link href="${model.webapp}/css/bootstrap-treeview.min.css" type="text/css" rel="stylesheet">
+	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
 	<div class="container fluid" ng-app="topic" ng-init="delayLimit=300;noProduceLimit=432000000;current_topic_type='mysql'">
 		<div class="row">
 			<div class="col-md-2 sidebar" ng-controller="list-controller">
@@ -27,8 +28,11 @@
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-route.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-upload.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/topic.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/topic-list-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/mysql-add-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/kafka-add-controller.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/topic/mysql-detail-controller.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/topic/kafka-detail-controller.js"></script>
 </a:layout>

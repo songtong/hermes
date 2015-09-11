@@ -1,0 +1,177 @@
+<div class="row">
+	<!-- basic information -->
+	<div class="col-md-6">
+		<div class="panel panel-info">
+			<div class="panel-heading clearfix">
+				<label class="label label-info pull-left">基本信息</label>
+				<form editable-form name="topicForm" onbeforesave="update_topic()" ng-show="topicForm.$visible">
+					<button type="submit" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-disabled="topicForm.$waiting">
+						<span class="glyphicon glyphicon-saved"></span>保存
+					</button>
+					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="topicForm.$waiting" ng-click="topicForm.$cancel()">取消</button>
+				</form>
+				<button class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="topicForm.$show()" ng-show="!topicForm.$visible">
+					<span class="glyphicon glyphicon-pencil"></span> 修改
+				</button>
+			</div>
+			<div class="panel-body">
+				<div class="form-horizontal">
+					<div class="form-group">
+						<label class="col-md-4 control-label">名称</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span  ng-bind="topic.name"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">编码类型</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.codecType" editable-select="topic.codecType" e-form="topicForm" e-name="codecType"  e-ng-options="codec for codec in codec_types"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label ">存储类型</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.storageType"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">Endpoint</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.endpointType"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">消费重试策略</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.consumerRetryPolicy" editable-text="topic.consumerRetryPolicy" e-form="topicForm" e-name="consumerRetryPolicy"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">ACK 超时(秒)</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.ackTimeoutSeconds" editable-range="topic.ackTimeoutSeconds" e-form="topicForm" e-name="ackTimeoutSeconds" e-step="5" e-min="5" e-max="200"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">状态</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.status|| 'Not Set'"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">数据库分区大小</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.storagePartitionSize"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">重发分区大小</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.resendPartitionSize"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">数据库分区数量</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.storagePartitionCount"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">创建时间</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.createTime | date : 'y/M/d, h:mm:ss a'"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">修改时间</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.lastModifiedTime | date : 'y/M/d, h:mm:ss a'"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">创建者</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.createBy" editable-text="topic.createBy" e-form="topicForm" e-name="createBy"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">描述</label>
+						<div class="col-md-8" style="padding-top:7px">
+							<span ng-bind="topic.description" editable-text="topic.description" e-form="topicForm" e-name="description"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- partition information -->
+	<div class="col-md-6">
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<label class="label label-info">Partition 信息</label>
+				<button ng-click="add_partition()" class="btn btn-xs btn-success" style="float: right;">
+					<span class="glyphicon glyphicon-plus"></span> 增加 Partition
+				</button>
+			</div>
+			<div class="panel-body">
+				<table class="table table-condensed table-responsive">
+					<thead>
+						<tr>
+							<th class="col-md-1">#</th>
+							<th class="col-md-4">Datasource / 读</th>
+							<th class="col-md-4">Datasource / 写</th>
+							<th class="col-md-3"></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="partition in topic.partitions">
+							<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
+							<td><span e-form="rowform" e-name="readDatasource" ng-bind="partition.readDatasource" onshow="load_datasource_names()" onbeforesave="check_not_null($data)" editable-select="partition.readDatasource" e-ng-options="storage for storage in datasource_names"></span></td>
+							<td><span e-form="rowform" e-name="writeDatasource" ng-bind="partition.writeDatasource" onbeforesave="check_not_null($data)" editable-select="partition.writeDatasource" e-ng-options="storage for storage in datasource_names"></span></td>
+							<td width="150px">
+								<form editable-form name="rowform" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted==partition" onbeforesave="save_partition($data,$index)">
+									<button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary btn-xs">
+										<span class="glyphicon glyphicon-floppy-save"></span> 保存
+									</button>
+									<button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-default btn-xs">
+										<span class="glyphicon glyphicon-remove-circle"></span> 取消
+									</button>
+								</form>
+								<div class="buttons" ng-show="!rowform.$visible">
+									<button class="btn btn-warning btn-xs" ng-if=false ng-click="rowform.$show()">
+										<span class="glyphicon glyphicon-edit"></span> 修改
+									</button>
+									<button class="btn btn-danger btn-xs" ng-click="remove_partition($index)">
+										<span class="glyphicon glyphicon-remove"></span> 删除
+									</button>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<label class="label label-info">Consumer 信息</label>
+			</div>
+			<div class="panel-body">
+				<table class="table table-condensed table-responsive">
+					<thead>
+						<th class="col-md-1">#</th>
+						<th class="col-md-5">消费集群</th>
+						<th class="col-md-5">应用</th>
+					</thead>
+					<tbody>
+						<tr ng-repeat="consumer in consumers">
+							<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
+							<td>{{consumer.groupName}}</td>
+							<td>{{consumer.appId}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
