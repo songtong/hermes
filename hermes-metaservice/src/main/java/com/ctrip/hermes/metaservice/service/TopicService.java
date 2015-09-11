@@ -298,16 +298,25 @@ public class TopicService {
 	 */
 	public Topic updateTopic(Topic topic) throws DalException {
 		Meta meta = m_metaService.getMeta();
-		meta.removeTopic(topic.getName());
-		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
-		meta.addTopic(topic);
+		Topic originTopic = meta.findTopic(topic.getName());
+		
+		originTopic.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
+		originTopic.setCodecType(topic.getCodecType());
+		originTopic.setConsumerRetryPolicy(topic.getConsumerRetryPolicy());
+		originTopic.setCreateBy(topic.getCreateBy());
+		originTopic.setDescription(topic.getDescription());
+		originTopic.setEndpointType(topic.getEndpointType());
+		originTopic.setLastModifiedTime(new Date(System.currentTimeMillis()));
+
+		meta.removeTopic(originTopic.getName());
+		meta.addTopic(originTopic);
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 		}
 
 		m_metaService.updateMeta(meta);
-		return topic;
+		return originTopic;
 	}
 
 	public Integer queryStorageSize(String ds) throws StorageHandleErrorException {
@@ -327,11 +336,55 @@ public class TopicService {
 		return m_topicStorageService.queryTablePartitions(ds, table);
 	}
 
-	public void addPartition(String ds, String table, int span) throws StorageHandleErrorException {
+	/**
+	 * 
+	 * @param topicName
+	 * @param partition
+	 */
+	public Topic addPartitionForTopic(String topicName, Partition partition) throws Exception {
+		Meta meta = m_metaService.getMeta();
+		Topic topic = meta.findTopic(topicName);
+
+		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
+
+		int partitionId = 0;
+		for (Partition p : topic.getPartitions()) {
+			if (p.getId() != null && p.getId() > partitionId) {
+				partitionId = p.getId();
+			}
+		}
+
+		partition.setId(partitionId + 1);
+
+		topic.addPartition(partition);
+
+		meta.removeTopic(topicName);
+		meta.addTopic(topic);
+
+		if (Storage.MYSQL.equals(topic.getStorageType())) {
+			
+			if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
+				m_logger.error("Add new topic partition failed, please try later.");
+				throw new RuntimeException("Add new topic partition failed, please try later.");
+			}
+
+			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
+			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
+		}
+
+		if (!m_metaService.updateMeta(meta)) {
+			//增加回滚
+			throw new RuntimeException("Update meta failed, please try later");
+		}
+
+		return topic;
+	}
+
+	public void addPartitionStorage(String ds, String table, int span) throws StorageHandleErrorException {
 		m_topicStorageService.addPartitionStorage(ds, table, span);
 	}
 
-	public void delPartition(String ds, String table) throws StorageHandleErrorException {
+	public void delPartitionStorage(String ds, String table) throws StorageHandleErrorException {
 		m_topicStorageService.delPartitionStorage(ds, table);
 	}
 

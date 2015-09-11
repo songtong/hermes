@@ -74,4 +74,14 @@ public interface TopicStorageService {
 	public List<StorageTable> queryStorageTables(String ds) throws StorageHandleErrorException;
 
 	public List<StoragePartition> queryTablePartitions(String ds, String table) throws StorageHandleErrorException;
+
+	/**
+	 * 针对已有的topic, 新建一个TP, 在该TP上新建表，并初始化分区
+	 * @param topic
+	 * @param partition
+	 * @return 
+	 * @throws StorageHandleErrorException 
+	 * @throws TopicIsNullException 
+	 */
+	public boolean addPartitionForTopic(Topic topic, Partition partition) throws TopicIsNullException, StorageHandleErrorException;
 }

@@ -78,7 +78,7 @@ public class TopicStorageResource {
 
 	@GET
 	@Path("addp")
-	public Map<String, String> addPartition(@QueryParam("ds") String datasource,
+	public Map<String, String> addPartitionStorage(@QueryParam("ds") String datasource,
 														 @QueryParam("table") String table,
 														 @QueryParam("span") Integer span) {
 		checkDSAndTable(datasource, table);
@@ -86,7 +86,7 @@ public class TopicStorageResource {
 
 		boolean isSuccess = false;
 		try {
-			service.addPartition(datasource, table, span);
+			service.addPartitionStorage(datasource, table, span);
 			isSuccess = true;
 		} catch (StorageHandleErrorException e) {
 			result.put("error", e.getMessage());
@@ -98,13 +98,13 @@ public class TopicStorageResource {
 
 	@GET
 	@Path("deletep")
-	public Map<String, String> deletePartition(@QueryParam("ds") String datasource, @QueryParam("table") String table) {
+	public Map<String, String> deletePartitionStorage(@QueryParam("ds") String datasource, @QueryParam("table") String table) {
 		checkDSAndTable(datasource, table);
 
 		Map<String, String> result = new HashMap<>();
 		boolean isSuccess = false;
 		try {
-			service.delPartition(datasource, table);
+			service.delPartitionStorage(datasource, table);
 			isSuccess = true;
 		} catch (StorageHandleErrorException e) {
 			result.put("error", e.getMessage());

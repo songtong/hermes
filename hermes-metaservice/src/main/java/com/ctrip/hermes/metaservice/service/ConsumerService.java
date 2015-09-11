@@ -92,6 +92,8 @@ public class ConsumerService {
 			throws Exception {
 		Meta meta = m_metaService.getMeta();
 		Topic t = meta.getTopics().get(topicName);
+		ConsumerGroup originConsumer = t.findConsumerGroup(c.getName());
+		c.setId(originConsumer.getId());
 		t.removeConsumerGroup(c.getName());
 		t.addConsumerGroup(c);
 		if (Storage.MYSQL.equals(t.getStorageType())) {

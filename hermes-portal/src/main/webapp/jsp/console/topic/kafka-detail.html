@@ -1,0 +1,147 @@
+<div class="row">
+	<!-- basic information -->
+	<div class="col-md-6">
+		<div class="panel panel-info">
+			<div class="panel-heading clearfix">
+				<label class="label label-info pull-left">基本信息</label>
+				<form editable-form name="topicForm" onbeforesave="update_topic($data)" ng-show="topicForm.$visible">
+					<button type="submit" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-disabled="topicForm.$waiting">
+						<span class="glyphicon glyphicon-saved"></span>保存
+					</button>
+					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="topicForm.$waiting" ng-click="topicForm.$cancel()">取消</button>
+				</form>
+				<button class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="topicForm.$show()" ng-show="!topicForm.$visible">
+					<span class="glyphicon glyphicon-pencil"></span> 修改
+				</button>
+			</div>
+			<div class="panel-body">
+				<div class="form-horizontal">
+					<div class="form-group">
+						<label class="col-md-4 control-label">名称</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.name"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">编码类型</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.codecType" editable-select="topic.codecType" e-form="topicForm" e-name="codecType" e-ng-options="codec for codec in codec_types"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label ">存储类型</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.storageType"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">Endpoint</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.endpointType" editable-select="topic.endpointType" e-form="topicForm" e-name="endpointType" e-ng-options="endpoint for endpoint in endpoint_types"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">状态</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.status|| 'Not Set'"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">创建时间</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.createTime | date : 'y/M/d, h:mm:ss a'"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">修改时间</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.lastModifiedTime | date : 'y/M/d, h:mm:ss a'"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">创建者</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.createBy" editable-text="topic.createBy" e-form="topicForm" e-name="createBy"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">描述</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.description" editable-text="topic.description" e-form="topicForm" e-name="description"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<label class="label label-info">Kafka 属性</label>
+			</div>
+			<div class="panel-body">
+				<table class="table table-condensed table-responsive">
+					<thead>
+						<th class="col-md-1">#</th>
+						<th class="col-md-5">名称</th>
+						<th class="col-md-5">值</th>
+					</thead>
+					<tbody>
+						<tr ng-repeat="property in topic.properties">
+							<td  style="width: 5%;"><label ng-bind="$index + 1"></label></td>
+							<td>{{property.name}}</td>
+							<td>{{property.value}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- partition information -->
+	<div class="col-md-6">
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<label class="label label-info">Partition 信息</label>
+			</div>
+			<div class="panel-body">
+				<table class="table table-condensed table-responsive">
+					<thead>
+						<tr>
+							<th style="border: none; width: 5%">#</th>
+							<th style="border: none;">Datasource / 读</th>
+							<th style="border: none;">Datasource / 写</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="partition in topic.partitions">
+							<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
+							<td>{{partition.readDatasource}}</td>
+							<td>{{partition.writeDatasource}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<label class="label label-info">Consumer 信息</label>
+			</div>
+			<div class="panel-body">
+				<table class="table table-condensed table-responsive">
+					<thead>
+						<th class="col-md-1">#</th>
+						<th class="col-md-5">消费集群</th>
+						<th class="col-md-5">应用</th>
+					</thead>
+					<tbody>
+						<tr ng-repeat="consumer in consumers">
+							<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
+							<td>{{consumer.groupName}}</td>
+							<td>{{consumer.appId}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
