@@ -298,7 +298,7 @@ public class TopicService {
 	 */
 	public Topic updateTopic(Topic topic) throws DalException {
 		Meta meta = m_metaService.getMeta();
-		Topic originTopic = m_metaService.findTopicByName(topic.getName());
+		Topic originTopic = meta.findTopic(topic.getName());
 		
 		originTopic.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 		originTopic.setCodecType(topic.getCodecType());
@@ -343,7 +343,7 @@ public class TopicService {
 	 */
 	public Topic addPartitionForTopic(String topicName, Partition partition) throws Exception {
 		Meta meta = m_metaService.getMeta();
-		Topic topic = m_metaService.findTopicByName(topicName);
+		Topic topic = meta.findTopic(topicName);
 
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 
