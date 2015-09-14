@@ -1,6 +1,7 @@
 package com.ctrip.hermes.core.meta.remote;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,11 +11,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.http.client.fluent.Request;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.helper.Files.IO;
+import org.unidal.helper.Urls;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -24,6 +26,7 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.DNSUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.google.common.base.Charsets;
 
 @Named(type = MetaServerLocator.class)
 public class DefaultMetaServerLocator implements MetaServerLocator, Initializable {
@@ -126,13 +129,26 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	private List<String> doFetch(String ipPort) throws IOException {
 		String url = String.format("http://%s%s", ipPort, "/metaserver/servers");
-		String response = Request.Get(url)//
-		      .connectTimeout(m_coreConfig.getMetaServerConnectTimeout())//
-		      .socketTimeout(m_coreConfig.getMetaServerReadTimeout())//
-		      .execute()//
-		      .returnContent().asString();
 
-		return Arrays.asList(JSON.parseArray(response).toArray(new String[0]));
+		InputStream is = null;
+
+		try {
+			is = Urls.forIO()//
+			      .connectTimeout(m_coreConfig.getMetaServerConnectTimeout())//
+			      .readTimeout(m_coreConfig.getMetaServerReadTimeout())//
+			      .openStream(url);
+
+			String response = IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
+			return Arrays.asList(JSON.parseArray(response).toArray(new String[0]));
+		} finally {
+			if (is != null) {
+				try {
+					is.close();
+				} catch (Exception e) {
+					// ignore it
+				}
+			}
+		}
 	}
 
 	@Override
