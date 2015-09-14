@@ -185,6 +185,8 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		m_consumerNotifier.register(correlationId, m_context);
 		doBeforeConsuming(key, correlationId);
 
+		m_msgs.clear();
+
 		SchedulePolicy noMessageSchedulePolicy = new ExponentialSchedulePolicy(m_config.getNoMessageWaitBaseMillis(),
 		      m_config.getNoMessageWaitMaxMillis());
 
@@ -222,7 +224,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 		m_consumerNotifier.deregister(correlationId);
 		m_lease.set(null);
-		m_msgs.clear();
 		doAfterConsuming(key, correlationId);
 	}
 
