@@ -222,6 +222,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 		m_consumerNotifier.deregister(correlationId);
 		m_lease.set(null);
+		m_msgs.clear();
 		doAfterConsuming(key, correlationId);
 	}
 
