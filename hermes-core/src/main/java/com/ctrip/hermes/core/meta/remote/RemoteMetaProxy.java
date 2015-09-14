@@ -1,17 +1,18 @@
 package com.ctrip.hermes.core.meta.remote;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.helper.Files.IO;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
@@ -24,6 +25,7 @@ import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.meta.internal.MetaProxy;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 
 @Named(type = MetaProxy.class, value = RemoteMetaProxy.ID)
@@ -145,29 +147,33 @@ public class RemoteMetaProxy implements MetaProxy {
 
 			@Override
 			public String apply(String ip) {
+				String url = String.format("http://%s%s", ip, path);
+				InputStream is = null;
 				try {
-					URIBuilder uriBuilder = new URIBuilder()//
-					      .setScheme("http")//
-					      .setHost(ip)//
-					      .setPath(path);
 					if (requestParams != null) {
-						for (Map.Entry<String, String> entry : requestParams.entrySet()) {
-							uriBuilder.addParameter(entry.getKey(), entry.getValue());
+						String encodedRequestParamStr = encodePropertiesStr(requestParams);
+
+						if (encodedRequestParamStr != null) {
+							url = url + "?" + encodedRequestParamStr;
 						}
+
 					}
 
-					HttpResponse response = Request.Get(uriBuilder.build())//
-					      .connectTimeout(m_config.getMetaServerConnectTimeout())//
-					      .socketTimeout(m_config.getMetaServerReadTimeout())//
-					      .execute()//
-					      .returnResponse();
+					HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 
-					if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-						return EntityUtils.toString(response.getEntity());
+					conn.setConnectTimeout(m_config.getMetaServerConnectTimeout());
+					conn.setReadTimeout(m_config.getMetaServerReadTimeout());
+					conn.setRequestMethod("GET");
+					conn.connect();
+
+					int statusCode = conn.getResponseCode();
+
+					if (statusCode == 200) {
+						is = conn.getInputStream();
+						return IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
 					} else {
 						if (log.isDebugEnabled()) {
-							log.debug("Response error while getting meta server error({url={}, status={}}).",
-							      uriBuilder.build(), response.getStatusLine().getStatusCode());
+							log.debug("Response error while getting meta server error({url={}, status={}}).", url, statusCode);
 						}
 						return null;
 					}
@@ -178,6 +184,14 @@ public class RemoteMetaProxy implements MetaProxy {
 						log.debug("Get meta server error.", e);
 					}
 					return null;
+				} finally {
+					if (is != null) {
+						try {
+							is.close();
+						} catch (Exception e) {
+							// ignore it
+						}
+					}
 				}
 
 			}
@@ -189,40 +203,44 @@ public class RemoteMetaProxy implements MetaProxy {
 
 			@Override
 			public String apply(String ip) {
+
+				String url = String.format("http://%s%s", ip, path);
+				InputStream is = null;
+				OutputStream os = null;
+
 				try {
-					URIBuilder uriBuilder = new URIBuilder()//
-					      .setScheme("http")//
-					      .setHost(ip)//
-					      .setPath(path);
 					if (requestParams != null) {
-						for (Map.Entry<String, String> entry : requestParams.entrySet()) {
-							uriBuilder.addParameter(entry.getKey(), entry.getValue());
+						String encodedRequestParamStr = encodePropertiesStr(requestParams);
+
+						if (encodedRequestParamStr != null) {
+							url = url + "?" + encodedRequestParamStr;
 						}
 					}
 
-					HttpResponse response = null;
+					HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+
+					conn.setConnectTimeout(m_config.getMetaServerConnectTimeout());
+					conn.setReadTimeout(m_config.getMetaServerReadTimeout());
+					conn.setRequestMethod("POST");
+					conn.addRequestProperty("content-type", "application/json");
 
 					if (payload != null) {
-						response = Request.Post(uriBuilder.build())//
-						      .connectTimeout(m_config.getMetaServerConnectTimeout())//
-						      .socketTimeout(m_config.getMetaServerReadTimeout())//
-						      .bodyString(JSON.toJSONString(payload), ContentType.APPLICATION_JSON)//
-						      .execute()//
-						      .returnResponse();
+						conn.setDoOutput(true);
+						conn.connect();
+						os = conn.getOutputStream();
+						os.write(JSON.toJSONBytes(payload));
 					} else {
-						response = Request.Post(uriBuilder.build())//
-						      .connectTimeout(m_config.getMetaServerConnectTimeout())//
-						      .socketTimeout(m_config.getMetaServerReadTimeout())//
-						      .execute()//
-						      .returnResponse();
+						conn.connect();
 					}
 
-					if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-						return EntityUtils.toString(response.getEntity());
+					int statusCode = conn.getResponseCode();
+
+					if (statusCode == 200) {
+						is = conn.getInputStream();
+						return IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
 					} else {
 						if (log.isDebugEnabled()) {
-							log.debug("Response error while posting meta server error({url={}, status={}}).",
-							      uriBuilder.build(), response.getStatusLine().getStatusCode());
+							log.debug("Response error while posting meta server error({url={}, status={}}).", url, statusCode);
 						}
 						return null;
 					}
@@ -233,9 +251,42 @@ public class RemoteMetaProxy implements MetaProxy {
 						log.debug("Post meta server error.", e);
 					}
 					return null;
+				} finally {
+					if (is != null) {
+						try {
+							is.close();
+						} catch (Exception e) {
+							// ignore it
+						}
+					}
+
+					if (os != null) {
+						try {
+							os.close();
+						} catch (Exception e) {
+							// ignore it
+						}
+					}
 				}
+
 			}
 		});
+	}
+
+	private String encodePropertiesStr(Map<String, String> properties) throws UnsupportedEncodingException {
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, String> entry : properties.entrySet()) {
+			sb.append(URLEncoder.encode(entry.getKey(), Charsets.UTF_8.name()))//
+			      .append("=")//
+			      .append(URLEncoder.encode(entry.getValue(), Charsets.UTF_8.name()))//
+			      .append("&");
+		}
+
+		if (sb.length() > 0) {
+			return sb.substring(0, sb.length() - 1);
+		} else {
+			return null;
+		}
 	}
 
 	@Override

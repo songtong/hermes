@@ -1,16 +1,16 @@
 package com.ctrip.hermes.core.meta.remote;
 
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.helper.Files.IO;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -20,6 +20,7 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.meta.internal.MetaLoader;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.google.common.base.Charsets;
 
 @Named(type = MetaLoader.class, value = RemoteMetaLoader.ID)
 public class RemoteMetaLoader implements MetaLoader {
@@ -57,6 +58,7 @@ public class RemoteMetaLoader implements MetaLoader {
 			}
 
 			String url = null;
+			InputStream is = null;
 			try {
 				String uri = m_clientEnvironment.getGlobalConfig().getProperty("meta.fetch.remote.uri");
 				if (StringUtils.isBlank(uri)) {
@@ -71,16 +73,18 @@ public class RemoteMetaLoader implements MetaLoader {
 					url += "?version=" + m_metaCache.get().getVersion();
 				}
 
-				HttpResponse response = Request.Get(url)//
-				      .connectTimeout(m_config.getMetaServerConnectTimeout())//
-				      .socketTimeout(m_config.getMetaServerReadTimeout())//
-				      .execute()//
-				      .returnResponse();
+				HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 
-				int statusCode = response.getStatusLine().getStatusCode();
+				conn.setRequestMethod("GET");
+				conn.setConnectTimeout(m_config.getMetaServerConnectTimeout());
+				conn.setReadTimeout(m_config.getMetaServerReadTimeout());
+				conn.connect();
 
-				if (statusCode == HttpStatus.SC_OK) {
-					String responseContent = EntityUtils.toString(response.getEntity());
+				int statusCode = conn.getResponseCode();
+
+				if (statusCode == 200) {
+					is = conn.getInputStream();
+					String responseContent = IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
 					try {
 						fetchedMeta = JSON.parseObject(responseContent, Meta.class);
 						m_metaCache.set(fetchedMeta);
@@ -89,12 +93,23 @@ public class RemoteMetaLoader implements MetaLoader {
 						log.warn("Parse meta failed, from URL {}, Reason {}", url, e.getMessage());
 						log.warn("Got meta: " + responseContent);
 					}
-				} else if (statusCode == HttpStatus.SC_NOT_MODIFIED) {
+				} else if (statusCode == 304) {
 					return m_metaCache.get();
+				} else {
+					throw new Exception(String.format("Request %s got status code %s.", url, statusCode));
 				}
+
 			} catch (Exception e) {
 				log.warn("Load meta failed, from URL {}, will retry other meta servers, Reason {}", url, e.getMessage());
 				// ignore
+			} finally {
+				if (is != null) {
+					try {
+						is.close();
+					} catch (Exception e) {
+						// ignore it
+					}
+				}
 			}
 		}
 		throw new RuntimeException(String.format("Failed to load remote meta from %s", ipPorts));
