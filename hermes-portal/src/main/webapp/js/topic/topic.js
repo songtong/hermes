@@ -1,21 +1,22 @@
-var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-table', 'ui.bootstrap', 'lr.upload','xeditable' ]).config(function($routeProvider) {
-	$routeProvider.when('/list/:type', {
-		templateUrl : '/jsp/console/topic/topic-list.html',
-		controller : 'list-controller'
-	}).when('/add/mysql/:type', {
-		templateUrl : '/jsp/console/topic/mysql-add.html',
-		controller :'mysql-add-controller'
-	}).when('/add/kafka/:type', {
-		templateUrl : '/jsp/console/topic/kafka-add.html',
-		controller : 'kafka-add-controller'
-	}).when('/detail/mysql/:type/:topicName',{
-		templateUrl : '/jsp/console/topic/mysql-detail.html',
-		controller : 'mysql-detail-controller'
-	}).when('/detail/kafka/:type/:topicName',{
-		templateUrl : '/jsp/console/topic/kafka-detail.html',
-		controller : 'kafka-detail-controller'
-	});
-}).service('TopicService', [ '$resource', '$window','$q' ,function($resource, $window,$q) {
+var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-table', 'ui.bootstrap', 'lr.upload', 'xeditable' ]).config(
+		function($routeProvider) {
+			$routeProvider.when('/list/:type', {
+				templateUrl : '/jsp/console/topic/topic-list.html',
+				controller : 'list-controller'
+			}).when('/add/mysql/:type', {
+				templateUrl : '/jsp/console/topic/mysql-add.html',
+				controller : 'mysql-add-controller'
+			}).when('/add/kafka/:type', {
+				templateUrl : '/jsp/console/topic/kafka-add.html',
+				controller : 'kafka-add-controller'
+			}).when('/detail/mysql/:type/:topicName', {
+				templateUrl : '/jsp/console/topic/mysql-detail.html',
+				controller : 'mysql-detail-controller'
+			}).when('/detail/kafka/:type/:topicName', {
+				templateUrl : '/jsp/console/topic/kafka-detail.html',
+				controller : 'kafka-detail-controller'
+			});
+		}).service('TopicService', [ '$resource', '$window', '$q', function($resource, $window, $q) {
 	var topic_resource = $resource("/api/topics/:name", {}, {
 		get_topic_detail : {
 			method : 'GET',
@@ -49,12 +50,13 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 			isArray : false,
 			url : '/api/topics/:name/sync',
 			params : {
-				name : '@name'
+				name : '@name',
+				force_schema : '@force_schema'
 			}
 		}
 	});
-	
-	var meta_resource = $resource('/api/meta/',{},{
+
+	var meta_resource = $resource('/api/meta/', {}, {
 		get_storages : {
 			method : 'GET',
 			url : '/api/meta/storages',
@@ -66,14 +68,13 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 			isArray : true
 		}
 	});
-	
-	var consumer_resource = $resource('/api/consumers/:topic',{},{
+
+	var consumer_resource = $resource('/api/consumers/:topic', {}, {
 		get_consumers : {
-			method: 'GET',
+			method : 'GET',
 			isArray : true
 		}
 	});
-	
 
 	function find_datasource_names(data, type) {
 		for (var i = 0; i < data.length; i++) {
@@ -82,7 +83,7 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 			}
 		}
 	}
-	
+
 	function find_endpoint_names(data, type) {
 		names = [];
 		for (var i = 0; i < data.length; i++) {
@@ -92,10 +93,10 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 		}
 		return names;
 	}
-	
+
 	var current_topics = [];
-	var storages= [];
-	
+	var storages = [];
+
 	function remove_topic_in_meta(topic, index) {
 		topic_resource.remove({
 			"name" : topic.name
@@ -106,48 +107,55 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 			show_op_info.show("删除 " + topic.name + " 失败: " + error_result.data, false);
 		});
 	}
- 
+
 	return {
 		'update_topic' : function(topic_name, content) {
-			var d=$q.defer();
-			topic_resource.update_topic({name:topic_name},content,function(result){
-						d.resolve(result);
-					},function(result){
-						d.reject(result.data);
-					}
-				);
+			var d = $q.defer();
+			topic_resource.update_topic({
+				name : topic_name
+			}, content, function(result) {
+				d.resolve(result);
+			}, function(result) {
+				d.reject(result.data);
+			});
 			return d.promise;
 		},
-		'add_partition' : function(topic_name,content) {
-			var d=$q.defer();
-			topic_resource.add_partition({name:topic_name},content,function(result){
-					d.resolve(result);
-				},function(result){
-					d.reject(result.data);
-				});
+		'add_partition' : function(topic_name, content) {
+			var d = $q.defer();
+			topic_resource.add_partition({
+				name : topic_name
+			}, content, function(result) {
+				d.resolve(result);
+			}, function(result) {
+				d.reject(result.data);
+			});
 			return d.promise;
 		},
 		'fetch_storages' : function() {
-			var d=$q.defer();
-			meta_resource.get_storages({}, function(result){
+			var d = $q.defer();
+			meta_resource.get_storages({}, function(result) {
 				storages = result;
 				d.resolve();
 			});
 			return d.promise;
 		},
-		'get_datasource_names' : function(type){
+		'get_datasource_names' : function(type) {
 			return find_datasource_names(storages, type);
 		},
 		'fetch_topic_detail' : function(topic) {
-			var d=$q.defer();
-			topic_resource.get_topic_detail({name:topic},function(query_result){
+			var d = $q.defer();
+			topic_resource.get_topic_detail({
+				name : topic
+			}, function(query_result) {
 				d.resolve(query_result);
 			});
 			return d.promise;
 		},
-		'fetch_consumers_for_topic' : function(topic){
-			var d=$q.defer();
-			consumer_resource.get_consumers({topic:topic}, function(result){
+		'fetch_consumers_for_topic' : function(topic) {
+			var d = $q.defer();
+			consumer_resource.get_consumers({
+				topic : topic
+			}, function(result) {
 				d.resolve(result);
 			});
 			return d.promise;
@@ -213,9 +221,10 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 				remove_topic_in_meta(topic, index);
 			}
 		},
-		'sync_topic' : function(topic_name) {
+		'sync_topic' : function(topic_name, force_sync_schema) {
 			topic_resource.sync_topic({
-				name : topic_name
+				name : topic_name,
+				force_schema : force_sync_schema
 			}, function(success_resp) {
 				show_op_info.show("同步" + topic_name + "成功!", true);
 			}, function(error_resp) {
