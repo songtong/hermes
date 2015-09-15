@@ -385,11 +385,16 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	}
 
 	@Override
-	public List<Entry<String, Date>> getTopOutdateTopic(int top) {
-		List<Entry<String, Date>> list = new ArrayList<Entry<String, Date>>(m_latestProduced.entrySet());
-		Collections.sort(list, new Comparator<Entry<String, Date>>() {
+	public List<Pair<String, Date>> getTopOutdateTopic(int top) {
+		List<Pair<String, Date>> list = new ArrayList<Pair<String, Date>>();
+
+		for (Entry<String, Date> entry : m_latestProduced.entrySet()) {
+			list.add(new Pair<String, Date>(entry.getKey(), entry.getValue()));
+		}
+
+		Collections.sort(list, new Comparator<Pair<String, Date>>() {
 			@Override
-			public int compare(Entry<String, Date> o1, Entry<String, Date> o2) {
+			public int compare(Pair<String, Date> o1, Pair<String, Date> o2) {
 				return o1.getValue().compareTo(o2.getValue());
 			}
 		});

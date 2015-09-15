@@ -3,7 +3,6 @@ package com.ctrip.hermes.portal.service.monitor;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.unidal.tuple.Pair;
@@ -22,7 +21,7 @@ public interface MonitorService {
 
 	public List<TopicDelayDetailView> getTopDelays(int top);
 
-	public List<Entry<String, Date>> getTopOutdateTopic(int top);
+	public List<Pair<String, Date>> getTopOutdateTopic(int top);
 
 	public Map<String, Set<String>> getTopic2ProducerIPs();
 
