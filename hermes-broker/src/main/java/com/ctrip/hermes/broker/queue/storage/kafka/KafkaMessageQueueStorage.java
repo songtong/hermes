@@ -40,20 +40,24 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 	public void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception {
 		ByteBuf bodyBuf = Unpooled.buffer();
 		KafkaMessageBrokerSender sender = getSender(tpp.getTopic());
-		for (MessageBatchWithRawData batch : batches) {
-			List<PartialDecodedMessage> pdmsgs = batch.getMessages();
-			for (PartialDecodedMessage pdmsg : pdmsgs) {
-				m_messageCodec.encodePartial(pdmsg, bodyBuf);
-				byte[] bytes = new byte[bodyBuf.readableBytes()];
-				bodyBuf.readBytes(bytes);
-				bodyBuf.clear();
-				
-				ByteBuf propertiesBuf = pdmsg.getDurableProperties();
-				HermesPrimitiveCodec codec = new HermesPrimitiveCodec(propertiesBuf);
-				Map<String, String> propertiesMap = codec.readStringStringMap();
-				sender.send(tpp.getTopic(), propertiesMap.get("pK"), bytes);
-				BrokerStatusMonitor.INSTANCE.kafkaSend(tpp.getTopic());
+		try {
+			for (MessageBatchWithRawData batch : batches) {
+				List<PartialDecodedMessage> pdmsgs = batch.getMessages();
+				for (PartialDecodedMessage pdmsg : pdmsgs) {
+					m_messageCodec.encodePartial(pdmsg, bodyBuf);
+					byte[] bytes = new byte[bodyBuf.readableBytes()];
+					bodyBuf.readBytes(bytes);
+					bodyBuf.clear();
+					
+					ByteBuf propertiesBuf = pdmsg.getDurableProperties();
+					HermesPrimitiveCodec codec = new HermesPrimitiveCodec(propertiesBuf);
+					Map<String, String> propertiesMap = codec.readStringStringMap();
+					sender.send(tpp.getTopic(), propertiesMap.get("pK"), bytes);
+					BrokerStatusMonitor.INSTANCE.kafkaSend(tpp.getTopic());
+				}
 			}
+		} finally {
+			bodyBuf.release();
 		}
 	}
 
