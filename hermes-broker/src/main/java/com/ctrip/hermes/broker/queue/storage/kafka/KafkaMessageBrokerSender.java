@@ -85,8 +85,8 @@ public class KafkaMessageBrokerSender {
 		return producerProp;
 	}
 
-	public void send(String topic, int partition, byte[] array) {
-		ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, String.valueOf(partition), array);
+	public void send(String topic, String partitionKey, byte[] array) {
+		ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, partitionKey, array);
 		m_producer.send(record);
 	}
 
