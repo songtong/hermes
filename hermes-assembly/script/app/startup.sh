@@ -4,6 +4,10 @@ set -e
 set -u
 
 cd `dirname $0`
+BIN_DIR=`pwd`
+APP_DIR=`dirname $BIN_DIR`
+CONTEXT_DIR=$APP_DIR/context
+
 
 if [ $# -lt 1 ];then
 	echo "usage: startup.sh start|stop [port] [debug] [T<stop-timeout>]"
@@ -27,6 +31,11 @@ DEBUG_OPT="-Xdebug -agentlib:jdwp=transport=dt_socket,address=8787,server=y,susp
 if [ ! -f $JAVA_CMD ];then
 	log_op "$JAVA_CMD not found!"
 	exit 1
+fi
+
+if [ ! -f $CONTEXT_DIR/WEB-INF/web.xml ];then
+	log_op "Unzip war into $CONTEXT_DIR ..."
+	unzip -q -d $CONTEXT_DIR $WAR
 fi
 
 port=8080
@@ -82,7 +91,7 @@ start() {
         mkdir "${LOG_PATH}"
     fi
     log_op $(pwd)
-    BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_RUNNER_JAR --port $port --stop-port $STOP_PORT --stop-key $STOP_KEY $WAR > $SYSOUT_LOG 2>&1 &
+    BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_RUNNER_JAR --port $port --stop-port $STOP_PORT --stop-key $STOP_KEY $CONTEXT_DIR > $SYSOUT_LOG 2>&1 &
     log_op "PID $$"
     log_op "Instance Started!"
 }
@@ -149,7 +158,7 @@ ensure_not_started() {
 }
 
 find_pid() {
-	echo $(ps ax | grep java | awk -v war=$WAR '$NF==war{print $1}' | head -n1)
+	echo $(ps ax | grep java | awk -v war=$CONTEXT_DIR '$NF==war{print $1}' | head -n1)
 }
 
 
