@@ -329,9 +329,15 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		private void offer(final ProducerMessage<?> msg, SettableFuture<SendResult> future) {
 			if (!m_queue.offer(new ProducerWorkerContext(msg, future))) {
 				ProducerStatusMonitor.INSTANCE.offerFailed(m_topic, m_partition);
+				String body = null;
+				try {
+					body = JSON.toJSONString(msg);
+				} catch (Exception e) {
+					body = msg.toString();
+				}
 				String warning = String.format(
 				      "Producer task queue is full(queueSize=%s), will drop this message(refKey=%s, body=%s).",
-				      m_queue.size(), msg.getKey(), JSON.toJSONString(msg.getBody()));
+				      m_queue.size(), msg.getKey(), body);
 				log.warn(warning);
 				MessageSendException throwable = new MessageSendException(warning);
 				future.setException(throwable);
