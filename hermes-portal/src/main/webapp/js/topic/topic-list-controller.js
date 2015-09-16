@@ -53,11 +53,24 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 					locale : "zh_CN",
 					callback : function(result) {
 						if (result) {
-							TopicService.sync_topic(row.name);
+							TopicService.sync_topic(row.name, false);
 						}
 					}
 				});
 			};
+
+			$scope.sync_schema = function(row) {
+				bootbox.confirm({
+					title : "请确认",
+					message : "确认要同步Schema至下一环境吗？",
+					locale : "zh_CN",
+					callback : function(result) {
+						if (result) {
+							TopicService.sync_topic(row.name, true);
+						}
+					}
+				});
+			}
 
 			function format_fields(fields) {
 				var data = [];

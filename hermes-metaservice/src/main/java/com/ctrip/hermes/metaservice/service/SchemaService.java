@@ -59,6 +59,7 @@ public class SchemaService {
 	public int checkAvroSchema(String schemaName, byte[] schemaContent) throws IOException, RestClientException {
 		Parser parser = new Parser();
 		org.apache.avro.Schema avroSchema = parser.parse(new String(schemaContent));
+		getAvroSchemaRegistry().updateCompatibility(schemaName, "NONE");
 		int avroid = getAvroSchemaRegistry().register(schemaName, avroSchema);
 		return avroid;
 	}

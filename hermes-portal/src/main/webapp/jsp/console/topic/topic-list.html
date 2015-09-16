@@ -61,14 +61,52 @@
 						<span ng-bind="row.schema.version">
 					</a></td>
 				<td style="text-align: right;" class="col-md-2">
-					<button ng-click="delete_topic(row, $index)" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove"></span> 删除</button>
 					<div ng-if="current_topic_type == 'kafka'" ng-click="set_selected(row)" data="schema_data" upload-button url="/api/schemas" tooltip="上传Schema文件" class="btn btn-xs btn-success btn-upload"
 						on-success="upload_result(row, true, response)" on-error="upload_result(row, false, response)">
 						<span class="glyphicon glyphicon-upload"></span>
-					</div> <a ng-if="current_topic_type == 'kafka'" target="_self" href="/api/schemas/{{row.schema.id}}/jar" class="btn btn-info btn-xs" tooltip="下载Jar文件">
-						<span class="glyphicon glyphicon-download"></span>
-					</a>
-					<button ng-click="sync_topic(row)" class="btn btn-primary btn-xs" tooltip="同步Topic"><span class="glyphicon glyphicon-cloud"></span></button>
+					</div>
+					<div class="btn-group">
+						<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">操作 <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu dropdown-menu-right" role="group">
+							<li>
+								<a ng-click="sync_topic(row)" href="">
+									<span class="glyphicon glyphicon-cloud" style="color: green"></span>
+									同步Topic
+								</a>
+							</li>
+							<li ng-if="current_topic_type == 'kafka' && row.schema != null">
+								<a ng-click="sync_schema(row)" href="">
+									<span class="glyphicon glyphicon-cloud" style="color: orange;"></span>
+									同步Schema
+								</a>
+							</li>
+							<li>
+								<a ng-click="delete_topic(row, $index)" href="">
+									<span class="glyphicon glyphicon-remove" style="color: red;"></span>
+									删除Topic
+								</a>
+							</li>
+							<li ng-if="current_topic_type == 'kafka' && row.schema != null">
+								<a target="_self" href="/api/schemas/{{row.schema.id}}/jar">
+									<span class="glyphicon glyphicon-download"></span>
+									下载Schema Jar文件
+								</a>
+							</li>
+							<li ng-if="current_topic_type == 'kafka' && row.schema != null">
+								<a ng-click="download_schema(row)" href="">
+									<span class="glyphicon glyphicon-download" style="color: blue;"></span>
+									下载Schema描述文件
+								</a>
+							</li>
+							<li ng-if="current_topic_type == 'kafka' && row.schema != null">
+								<a ng-click="deploy_to_maven(row)" href="">
+									<span class="glyphicon glyphicon glyphicon-flag" style="color: purple;"></span>
+									部署Schema Jar
+								</a>
+							</li>
+						</ul>
+					</div>
 				</td>
 			</tr>
 		</tbody>
