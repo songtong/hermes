@@ -1,4 +1,4 @@
-angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable' ]).run(function(editableOptions) {
+angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable' ,'smart-table']).run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
 }).controller('subscription-controller', [ '$scope', '$filter', '$resource', function(scope, filter, resource) {
 	var subscription_resource = resource('/api/subscriptions/', {}, {
@@ -37,7 +37,8 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 	});
 
 	scope.selected = {};
-	scope.subscribers = {};
+	scope.subscribers = [];
+	scope.display_subscribers = [].concat(scope.subscribers);
 
 	scope.topic_names = subscription_resource.get_topic_names({}, function(data) {
 		scope.topic_names = data;

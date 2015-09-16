@@ -2,8 +2,9 @@ package com.ctrip.hermes.portal.dal;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,39 +26,30 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 	@Inject
 	private OffsetMessageDao m_offsetDao;
 
-	private Date getNewer(Date d1, Date d2) {
-		return d1.after(d2) ? d1 : d2;
+	@Override
+	public MessagePriority getLatestProduced(String topic, int partition, int priority) throws DalException {
+		MessagePriority msg = doFindLatestMessage(topic, partition, priority);
+		return msg;
 	}
 
 	@Override
-	public Pair<Date, Date> getDelayTime(String topic, int partition, int groupId) throws DalException {
-		return new Pair<Date, Date>(getLatestProduced(topic, partition), getLatestConsumed(topic, partition, groupId));
-	}
+	public Map<Integer, Pair<OffsetMessage, OffsetMessage>> getLatestConsumed(String topic, int partition)
+			throws DalException {
+		List<OffsetMessage> offsetMsgs = m_offsetDao.findAll(topic, partition, OffsetMessageEntity.READSET_FULL);
+		Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = new HashMap<>();
+		for (OffsetMessage offsetMsg : offsetMsgs) {
 
-	@Override
-	public Date getLatestProduced(String topic, int partition) throws DalException {
-		Date latestProduced = new Date(0);
+			if (!offsetMsgMap.containsKey(offsetMsg.getGroupId()))
+				offsetMsgMap.put(offsetMsg.getGroupId(), new Pair<OffsetMessage, OffsetMessage>());
 
-		MessagePriority msg = doFindLatestMessage(topic, partition, PortalConstants.PRIORITY_TRUE);
-		latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
+			if (offsetMsg.getPriority() == PortalConstants.PRIORITY_TRUE) {
+				offsetMsgMap.get(offsetMsg.getGroupId()).setKey(offsetMsg);
+			} else {
+				offsetMsgMap.get(offsetMsg.getGroupId()).setValue(offsetMsg);
+			}
 
-		msg = doFindLatestMessage(topic, partition, PortalConstants.PRIORITY_FALSE);
-		latestProduced = msg == null ? latestProduced : getNewer(latestProduced, msg.getCreationDate());
-
-		return latestProduced;
-	}
-
-	@Override
-	public Date getLatestConsumed(String topic, int partition, int group) throws DalException {
-		Date latestConsumed = new Date(0);
-
-		OffsetMessage off = findOffsetMessage(topic, partition, PortalConstants.PRIORITY_TRUE, group);
-		latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
-
-		off = findOffsetMessage(topic, partition, PortalConstants.PRIORITY_FALSE, group);
-		latestConsumed = off == null ? latestConsumed : getNewer(latestConsumed, off.getLastModifiedDate());
-
-		return latestConsumed;
+		}
+		return offsetMsgMap;
 	}
 
 	@Override
@@ -73,7 +65,8 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 		}, new List[] { k0, k1 });
 	}
 
-	private OffsetMessage findOffsetMessage(String topic, int partition, int priority, int groupId) {
+	@Override
+	public OffsetMessage findOffsetMessage(String topic, int partition, int priority, int groupId) {
 		try {
 			return m_offsetDao.find(topic, partition, priority, groupId, OffsetMessageEntity.READSET_FULL);
 		} catch (Exception e) {
@@ -99,4 +92,5 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 			return new ArrayList<MessagePriority>();
 		}
 	}
+
 }

@@ -1,21 +1,27 @@
 package com.ctrip.hermes.portal.dal;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
 public interface HermesPortalDao {
-	/***
-	 * @return Pair<Date, Date> key: latest message date, value: latest consumed date
+	
+	public MessagePriority getLatestProduced(String topic, int partition, int priority) throws DalException;
+
+	/**
+	 * 
+	 * @param topic
+	 * @param partition
+	 * @return key=offsetMsg.GroupId, value.key=offsetMsg(priority), value.value=offsetMsg(non-priority).
+	 * @throws DalException
 	 */
-	public Pair<Date, Date> getDelayTime(String topic, int partition, int groupId) throws DalException;
-
-	public Date getLatestProduced(String topic, int partition) throws DalException;
-
-	public Date getLatestConsumed(String topic, int partition, int group) throws DalException;
+	public Map<Integer, Pair<OffsetMessage, OffsetMessage>> getLatestConsumed(String topic, int partition) throws DalException;
 
 	public List<MessagePriority> getLatestMessages(String topic, int pratition, int count) throws DalException;
+	
+	public OffsetMessage findOffsetMessage(String topic, int partition, int priority, int groupId);
+
 
 }

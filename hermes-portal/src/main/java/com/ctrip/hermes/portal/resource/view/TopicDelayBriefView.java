@@ -6,13 +6,13 @@ import java.util.concurrent.TimeUnit;
 public class TopicDelayBriefView {
 	private static final long NON_PRODUCE_LIMIT = TimeUnit.DAYS.toMillis(7);
 
-	private static final long DELAY_LIMIT = TimeUnit.MINUTES.toMillis(3);
+	private static final long DELAY_LIMIT = 500;
 
 	private String topic;
 
 	private Date latestProduced = new Date(0);
 
-	private int averageDelay = 0;
+	private long totalDelay = 0;
 
 	private int dangerLevel = 0;
 	
@@ -20,15 +20,15 @@ public class TopicDelayBriefView {
 
 	}
 
-	public TopicDelayBriefView(String topic, Date date, int delay) {
+	public TopicDelayBriefView(String topic, Date date, long delay) {
 		this.topic = topic;
 		this.latestProduced = date;
-		this.averageDelay = delay;
+		this.totalDelay = delay;
 
 		long now = System.currentTimeMillis();
 		if (now - this.latestProduced.getTime() > NON_PRODUCE_LIMIT) {
 			this.dangerLevel = 1;
-		} else if (this.averageDelay > DELAY_LIMIT) {
+		} else if (this.totalDelay > DELAY_LIMIT) {
 			this.dangerLevel = 2;
 		}
 	}
@@ -49,14 +49,14 @@ public class TopicDelayBriefView {
 		this.latestProduced = latestProduced;
 	}
 
-	public int getAverageDelay() {
-		return averageDelay;
+	public long getTotalDelay() {
+		return totalDelay;
 	}
 
-	public void setAverageDelay(int averageDelay) {
-		this.averageDelay = averageDelay;
+	public void setTotalDelay(long totalDelay) {
+		this.totalDelay = totalDelay;
 	}
-
+	
 	public int getDangerLevel() {
 		return dangerLevel;
 	}

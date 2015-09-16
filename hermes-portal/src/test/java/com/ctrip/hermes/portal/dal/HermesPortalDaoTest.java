@@ -21,10 +21,6 @@ public class HermesPortalDaoTest extends StartPortal {
 		stopServer();
 	}
 
-	@Test
-	public void testGetDelay() throws Exception {
-		Tpp tpp = new Tpp("order_new", 0, true);
-		System.out.println(m_dao.getDelayTime(tpp.getTopic(), tpp.getPartition(), 1));
-	}
+	
 
 }

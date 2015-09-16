@@ -70,6 +70,14 @@
         		AND <FIELD name='group-id'/> = ${group-id}]]>
 				</statement>
 			</query>
+			<query name="find-all" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>]]>
+				</statement>
+			</query>
 		</query-defs>
 	</entity>
 
