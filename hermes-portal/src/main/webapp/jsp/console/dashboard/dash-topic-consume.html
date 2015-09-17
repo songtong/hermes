@@ -1,0 +1,23 @@
+<div class="row">
+	<div class="col-md-12">
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<span class="label label-warning">Topic</span>
+				<span class="label label-success" ng-bind="current_topic"></span>
+				<span class="label label-warning">消费组</span>
+				<span class="label label-success" ng-bind="current_consumer"></span>
+			</div>
+			<iframe style="border: 0" ng-src="{{k_consume_history}}" height="200" width="100%"></iframe>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<span class="label label-warning"> 消费时间 </span>
+			</div>
+			<iframe style="border: 0" ng-src="{{k_consume_process_history}}" height="200" width="100%"></iframe>
+		</div>
+	</div>
+</div>
