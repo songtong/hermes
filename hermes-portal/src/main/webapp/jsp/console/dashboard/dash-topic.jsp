@@ -12,9 +12,11 @@
 	<link href="${model.webapp}/css/bootstrap-treeview.min.css" type="text/css" rel="stylesheet">
 	<div class="container fluid" ng-app="dash-topic">
 		<div class="row" ng-controller="dash-topic-nav-controller">
-			<div class="col-md-3 sidebar">
+			<div class="well col-md-3 sidebar">
+				<input class="form-control" ng-model="filter_key">
+				<hr>
 				<ul class="nav nav-sidebar">
-					<li ng-repeat="topic_brief in topic_briefs" ng-class="'{{topic_brief.topic}}' == nav_current_topic ? 'active' : ''">
+					<li ng-repeat="topic_brief in filtered_topic_briefs" ng-class="'{{topic_brief.topic}}' == nav_current_topic ? 'active' : ''">
 						<a href="#detail/{{topic_brief.topic}}" role="tab">
 							<span ng-bind="topic_brief.topic | short" tooltip="{{topic_brief.topic}}" tooltip-class="side-tooltip"></span>
 							<span style="float: right; margin-top: 6px" class="status-ok" ng-if="topic_brief.dangerLevel==0"></span>
