@@ -70,6 +70,7 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 					Cat.logError(e);
 					t.setStatus(e);
 					log.error("Exception occurred while calling onMessage.", e);
+					msg.nack();
 				} finally {
 					t.complete();
 				}
