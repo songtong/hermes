@@ -49,6 +49,36 @@ function unique_array(array) {
 	return l;
 }
 
+function starts_with(source, target) {
+	if (source.length < target.length) {
+		return false;
+	}
+	var matched = 0;
+	for (var idx = 0; idx < target.length; idx++) {
+		if (source[idx] == target[idx]) {
+			matched = matched + 1;
+		} else {
+			break;
+		}
+	}
+	return matched == target.length;
+}
+
+function ends_with(source, target) {
+	if (source.length < target.length) {
+		return false;
+	}
+	var matched = 0;
+	for (var idx = 0; idx < target.length; idx++) {
+		if (source[source.length - target.length + idx] == target[idx]) {
+			matched = matched + 1;
+		} else {
+			break;
+		}
+	}
+	return matched == target.length;
+}
+
 $(function() {
 	show_op_info.init({
 		"selector" : ".op-alert"

@@ -11,7 +11,7 @@
 			<div class="col-md-6">
 				<div class="panel panel-info">
 					<div class="panel-heading">消费延迟排行</div>
-					<table class="table table-hover" st-pipe="get_consume_delays"  st-safe-src="consume_delays_detail" st-table="display_consume_delays_deail">
+					<table class="table table-hover" st-pipe="get_consume_delays" st-safe-src="consume_delays_detail" st-table="display_consume_delays_deail">
 						<thead>
 							<tr>
 								<th st-sort="topic">Topic</th>
@@ -21,9 +21,15 @@
 						</thead>
 						<tbody ng-if="!delay_table_is_loading">
 							<tr ng-repeat="delay in display_consume_delays_deail">
-								<td><span ng-bind="delay.topic"></span></td>
-								<td><span ng-bind="delay.consumer"></span></td>
-								<td><a href="" popover-placement="right" popover-trigger="focus" popover-template="get_delay_detail(delay)" popover-title="{{delay.topic}}" ><span ng-bind="delay.delay"></span></a></td>
+								<td><a href="" tooltip="{{delay.topic}}">
+										<span ng-bind="delay.topic | short:25"></span>
+									</a></td>
+								<td><a href="" tooltip="{{delay.consumer}}">
+										<span ng-bind="delay.consumer | short:25"></span>
+									</a></td>
+								<td><a href="" popover-placement="right" popover-trigger="focus" popover-template="get_delay_detail(delay)" popover-title="{{delay.topic}}">
+										<span ng-bind="delay.delay"></span>
+									</a></td>
 							</tr>
 						</tbody>
 						<tbody ng-if="delay_table_is_loading">
@@ -75,8 +81,9 @@
 						<tbody ng-if="!broker_received_table_is_loading">
 							<tr ng-repeat="qps in display_broker_received_qps">
 								<td><span ng-bind="qps.brokerIp"></span></td>
-								<td><a href="" ng-click="get_broker_received_detail(qps.brokerIp)" data-toggle="modal" data-target="#broker_received_modal"> <span ng-bind="qps.qps"></span>
-								</a></td>
+								<td><a href="" ng-click="get_broker_received_detail(qps.brokerIp)" data-toggle="modal" data-target="#broker_received_modal">
+										<span ng-bind="qps.qps"></span>
+									</a></td>
 							</tr>
 						</tbody>
 						<tbody ng-if="broker_received_table_is_loading">
@@ -100,8 +107,9 @@
 						<tbody ng-if="!broker_delivered_table_is_loading">
 							<tr ng-repeat="qps in display_broker_delivered_qps">
 								<td><span ng-bind="qps.brokerIp"></span></td>
-								<td><a href="" ng-click="get_broker_delivered_detail(qps.brokerIp)" data-toggle="modal" data-target="#broker_delivered_modal"> <span ng-bind="qps.qps"></span>
-								</a></td>
+								<td><a href="" ng-click="get_broker_delivered_detail(qps.brokerIp)" data-toggle="modal" data-target="#broker_delivered_modal">
+										<span ng-bind="qps.qps"></span>
+									</a></td>
 							</tr>
 						</tbody>
 						<tbody ng-if="broker_delivered_table_is_loading">
@@ -117,9 +125,7 @@
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 						<h4 class="modal-title" id="broker_received_label">
 							<span ng-bind="current_broker_received_details.brokerIp"></span>
 						</h4>
@@ -147,9 +153,7 @@
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 						<h4 class="modal-title" id="broker_delivered_label">
 							<span ng-bind="current_broker_delivered_details.brokerIp"></span>
 						</h4>

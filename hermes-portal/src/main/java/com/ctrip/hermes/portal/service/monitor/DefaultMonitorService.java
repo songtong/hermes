@@ -119,8 +119,8 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 
 	private Meta loadMeta() {
 		try {
-			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(),
-					m_env.getGlobalConfig().getProperty("meta.port", "1248").trim(), "/meta");
+			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
+			      .getProperty("meta.port", "1248").trim(), "/meta");
 			HttpResponse response = Request.Get(url).execute().returnResponse();
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) {
@@ -190,13 +190,13 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 				for (Partition p : t.getPartitions()) {
 					try {
 						MessagePriority msgPriority = m_dao.getLatestProduced(t.getName(), p.getId(),
-								PortalConstants.PRIORITY_TRUE);
+						      PortalConstants.PRIORITY_TRUE);
 						MessagePriority msgNonPriority = m_dao.getLatestProduced(t.getName(), p.getId(),
-								PortalConstants.PRIORITY_FALSE);
+						      PortalConstants.PRIORITY_FALSE);
 						long priorityMsgId = msgPriority == null ? 0 : msgPriority.getId();
 						long nonPriorityMsgId = msgNonPriority == null ? 0 : msgNonPriority.getId();
-						Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = m_dao
-								.getLatestConsumed(t.getName(), p.getId());
+						Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = m_dao.getLatestConsumed(t.getName(),
+						      p.getId());
 						for (ConsumerGroup c : t.getConsumerGroups()) {
 							Long delay = null;
 							Pair<OffsetMessage, OffsetMessage> thisOffsetMsgs = offsetMsgMap.get(c.getId());
@@ -204,7 +204,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 								delay = priorityMsgId + nonPriorityMsgId;
 							} else {
 								delay = (priorityMsgId + nonPriorityMsgId)
-										- (thisOffsetMsgs.getKey().getOffset() + thisOffsetMsgs.getValue().getOffset());
+								      - (thisOffsetMsgs.getKey().getOffset() + thisOffsetMsgs.getValue().getOffset());
 							}
 							Pair<String, Integer> k = new Pair<String, Integer>(t.getName(), c.getId());
 							if (!m.containsKey(k)) {
@@ -233,10 +233,10 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 				for (Partition partition : m_metaService.findPartitionsByTopic(topicName)) {
 					try {
 						MessagePriority msgPriority = m_dao.getLatestProduced(topicName, partition.getId(),
-								PortalConstants.PRIORITY_TRUE);
+						      PortalConstants.PRIORITY_TRUE);
 						Date datePriority = msgPriority == null ? latest : msgPriority.getCreationDate();
 						MessagePriority msgNonPriority = m_dao.getLatestProduced(topicName, partition.getId(),
-								PortalConstants.PRIORITY_FALSE);
+						      PortalConstants.PRIORITY_FALSE);
 
 						Date dateNonPriority = msgNonPriority == null ? latest : msgNonPriority.getCreationDate();
 						latest = datePriority.after(dateNonPriority) ? datePriority : dateNonPriority;
@@ -364,33 +364,33 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		updateLatestBroker();
 
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_MYSQL_UPDATE_TASK", true))
-				.scheduleWithFixedDelay(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							updateDelayDetails();
-							updateTopDelays();
-							updateLatestProduced();
-							updateLatestBroker();
-						} catch (Throwable e) {
-							log.error("Update mysql monitor information failed.", e);
-						}
-					}
-				}, 0, 1, TimeUnit.MINUTES);
+		      .scheduleWithFixedDelay(new Runnable() {
+			      @Override
+			      public void run() {
+				      try {
+					      updateDelayDetails();
+					      updateTopDelays();
+					      updateLatestProduced();
+					      updateLatestBroker();
+				      } catch (Throwable e) {
+					      log.error("Update mysql monitor information failed.", e);
+				      }
+			      }
+		      }, 0, 1, TimeUnit.MINUTES);
 
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_ELASTIC_UPDATE_TASK", true))
-				.scheduleWithFixedDelay(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							updateProducerTopicRelationship();
-							updateConsumerTopicRelationship();
-							updateLatestClients();
-						} catch (Throwable e) {
-							log.error("Update elastic monitor information failed.", e);
-						}
-					}
-				}, 0, 30, TimeUnit.MINUTES);
+		      .scheduleWithFixedDelay(new Runnable() {
+			      @Override
+			      public void run() {
+				      try {
+					      updateProducerTopicRelationship();
+					      updateConsumerTopicRelationship();
+					      updateLatestClients();
+				      } catch (Throwable e) {
+					      log.error("Update elastic monitor information failed.", e);
+				      }
+			      }
+		      }, 0, 30, TimeUnit.MINUTES);
 	}
 
 	@Override

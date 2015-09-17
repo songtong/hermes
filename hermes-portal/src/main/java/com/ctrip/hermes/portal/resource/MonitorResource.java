@@ -34,6 +34,7 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.assist.ListUtils;
@@ -91,10 +92,13 @@ public class MonitorResource {
 	public Response getTopicDelay(@PathParam("topic") String name) {
 		Topic topic = m_metaService.findTopicByName(name);
 		TopicDelayDetailView view = new TopicDelayDetailView(name);
-		for (ConsumerGroup consumer : topic.getConsumerGroups()) {
-			for (Entry<Integer, Long> e : m_monitorService.getDelayDetails(name, consumer.getId()).entrySet()) {
-				long delay = e.getValue();
-				view.addDelay(consumer.getName(), e.getKey(), delay);
+
+		if (Storage.MYSQL.equals(topic.getStorageType())) {
+			for (ConsumerGroup consumer : topic.getConsumerGroups()) {
+				for (Entry<Integer, Long> e : m_monitorService.getDelayDetails(name, consumer.getId()).entrySet()) {
+					long delay = e.getValue();
+					view.addDelay(consumer.getName(), e.getKey(), delay);
+				}
 			}
 		}
 
@@ -109,17 +113,20 @@ public class MonitorResource {
 			throw new RestException(String.format("Topic %s is not found", name), Status.NOT_FOUND);
 		}
 
-		@SuppressWarnings("unchecked")
-		List<MessagePriority>[] ls = new List[topic.getPartitions().size()];
-		for (int i = 0; i < topic.getPartitions().size(); i++) {
-			Partition partition = topic.getPartitions().get(i);
-			try {
-				ls[i] = m_portalDao.getLatestMessages(topic.getName(), partition.getId(), 20);
-			} catch (DalException e) {
-				log.warn("Find latest messages of {}[{}] failed", topic.getName(), partition.getId(), e);
+		List<MessagePriority> list = new ArrayList<MessagePriority>();
+		if (Storage.MYSQL.equals(topic.getStorageType())) {
+			@SuppressWarnings("unchecked")
+			List<MessagePriority>[] ls = new List[topic.getPartitions().size()];
+			for (int i = 0; i < topic.getPartitions().size(); i++) {
+				Partition partition = topic.getPartitions().get(i);
+				try {
+					ls[i] = m_portalDao.getLatestMessages(topic.getName(), partition.getId(), 20);
+				} catch (DalException e) {
+					log.warn("Find latest messages of {}[{}] failed", topic.getName(), partition.getId(), e);
+				}
 			}
+			list = ListUtils.getTopK(15, MessagePriority.DATE_COMPARATOR_DESC, ls);
 		}
-		List<MessagePriority> list = ListUtils.getTopK(15, MessagePriority.DATE_COMPARATOR_DESC, ls);
 
 		return Response.status(Status.OK).entity(CollectionUtil.collect(list, new Transformer() {
 			@Override

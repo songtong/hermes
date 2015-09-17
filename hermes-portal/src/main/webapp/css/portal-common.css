@@ -185,9 +185,13 @@ body {
 	filter: alpha(opacity = 0);
 }
 
-.popover-content {
+.popover .popover-content {
 	max-width: none;
 	min-width: 180px;
 	overflow: auto;
 	max-height: 300px;
+}
+
+.tooltip .tooltip-inner {
+	max-width: none;
 }

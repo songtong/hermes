@@ -84,7 +84,7 @@
 									aria-haspopup="true" aria-expanded="false">${page.title} <span class="caret"></span>
 								</a>
 									<ul class="dropdown-menu">
-										<li><a href="${model.webapp}/${page.moduleName}/${page.path}">Topic</a></li>
+										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/detail/_default">Topic</a></li>
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=broker">Broker</a></li>
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=client">Client</a></li>
 									</ul></li>

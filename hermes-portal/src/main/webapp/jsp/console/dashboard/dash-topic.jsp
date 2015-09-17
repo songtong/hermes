@@ -4,16 +4,19 @@
 <jsp:useBean id="payload" type="com.ctrip.hermes.portal.console.dashboard.Payload" scope="request" />
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.dashboard.Model" scope="request" />
 
+<script>
+	var global_kibana_url = "${model.kibanaUrl}"
+</script>
 <a:layout>
 	<link href="${model.webapp}/css/dashboard.css" type="text/css" rel="stylesheet">
 	<link href="${model.webapp}/css/bootstrap-treeview.min.css" type="text/css" rel="stylesheet">
-	<div class="container fluid" ng-app="dash-topic" ng-controller="dash-topic-controller">
-		<div class="row">
-			<div class="col-md-2 sidebar">
+	<div class="container fluid" ng-app="dash-topic">
+		<div class="row" ng-controller="dash-topic-nav-controller">
+			<div class="col-md-3 sidebar">
 				<ul class="nav nav-sidebar">
-					<li ng-click="nav_select(topic_brief)" ng-repeat="topic_brief in topic_briefs" role="presentation" ng-class="$first ? 'active' : ''">
-						<a href="" role="tab" data-toggle="tab" aria-controls="content">
-							<span ng-bind="topic_brief.topic" style="text-transform: capitalize;"></span>
+					<li ng-repeat="topic_brief in topic_briefs" ng-class="'{{topic_brief.topic}}' == nav_current_topic ? 'active' : ''">
+						<a href="#detail/{{topic_brief.topic}}" role="tab">
+							<span ng-bind="topic_brief.topic | short" tooltip="{{topic_brief.topic}}" tooltip-class="side-tooltip"></span>
 							<span style="float: right; margin-top: 6px" class="status-ok" ng-if="topic_brief.dangerLevel==0"></span>
 							<span style="float: right; margin-top: 6px" class="status-danger" ng-if="topic_brief.dangerLevel==2"></span>
 							<span style="float: right; margin-top: 6px" class="status-warn" ng-if="topic_brief.dangerLevel==1"></span>
@@ -21,11 +24,14 @@
 					</li>
 				</ul>
 			</div>
-			<div id="main_board" class="col-md-10 col-md-offset-2 main" style="margin-left: 15%"></div>
+			<div ng-view class="col-md-9 col-md-offset-3 main" style="margin-left: 25%"></div>
 		</div>
 	</div>
 	<script type="text/javascript" src="${model.webapp}/js/bootstrap-treeview.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/dashboard/topic-service.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/dashboard/topic-controller.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/angular-route.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/dashboard/dash-topic.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/dashboard/dash-kibana.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/dashboard/dash-topic-controller.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/dashboard/dash-topic-nav-controller.js"></script>
 </a:layout>
