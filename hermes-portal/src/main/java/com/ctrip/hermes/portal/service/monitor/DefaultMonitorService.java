@@ -226,7 +226,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		Map<String, Date> m = new HashMap<String, Date>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
 			Topic topic = entry.getValue();
-			if (topic.getStorageType().equals(Storage.MYSQL)) {
+			if (Storage.MYSQL.equals(topic.getStorageType())) {
 				String topicName = topic.getName();
 				Date current = m_latestProduced.get(topicName) == null ? new Date(0) : m_latestProduced.get(topicName);
 				Date latest = new Date(0);
@@ -422,9 +422,17 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		Collections.sort(list, new Comparator<Pair<String, Date>>() {
 			@Override
 			public int compare(Pair<String, Date> o1, Pair<String, Date> o2) {
+				long t1 = o1.getValue().getTime();
+				long t2 = o2.getValue().getTime();
+				if (t1 == 0 && t2 == 0) {
+					return o1.getKey().compareTo(o2.getKey());
+				} else if (t1 == 0 || t2 == 0) {
+					return t1 == 0 ? 1 : -1;
+				}
 				return o1.getValue().compareTo(o2.getValue());
 			}
 		});
+		System.out.println(list);
 		top = top > list.size() ? list.size() : top;
 		return list.subList(0, top > 0 ? top : 0);
 	}
@@ -457,5 +465,4 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	public BrokerQPSDetailView getBrokerDeliveredDetailQPS(String brokerIp) {
 		return new BrokerQPSDetailView(brokerIp, m_elasticClient.getBrokerTopicDelivered(brokerIp, 50));
 	}
-
 }
