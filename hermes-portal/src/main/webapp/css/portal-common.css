@@ -184,3 +184,10 @@ body {
 	opacity: 0;
 	filter: alpha(opacity = 0);
 }
+
+.popover-content {
+	max-width: none;
+	min-width: 180px;
+	overflow: auto;
+	max-height: 300px;
+}

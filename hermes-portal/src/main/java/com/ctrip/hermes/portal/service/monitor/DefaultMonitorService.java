@@ -155,7 +155,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 
 	@Override
 	public Long getDelay(String topic) {
-		long delay =0;
+		long delay = 0;
 		for (TopicDelayDetailView view : m_topDelays) {
 			if (view.getTopic().equals(topic)) {
 				delay = view.getTotalDelay();
