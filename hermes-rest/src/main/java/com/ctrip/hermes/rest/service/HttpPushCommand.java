@@ -36,8 +36,7 @@ public class HttpPushCommand extends HystrixCommand<HttpResponse> {
 
 	private HttpClientContext context;
 
-	public HttpPushCommand(CloseableHttpClient client, RequestConfig config, ConsumerMessage<RawMessage> msg,
-	      String url) {
+	public HttpPushCommand(CloseableHttpClient client, RequestConfig config, ConsumerMessage<RawMessage> msg, String url) {
 		super(HystrixCommandGroupKey.Factory.asKey(HttpPushCommand.class.getSimpleName()));
 		this.client = client;
 		// this.client = HttpClients.createDefault();
@@ -68,7 +67,7 @@ public class HttpPushCommand extends HystrixCommand<HttpResponse> {
 				sb.deleteCharAt(sb.length() - 1);
 				post.addHeader("X-Hermes-Message-Property", sb.toString());
 			}
-			post.setEntity(new InputStreamEntity(stream, ContentType.APPLICATION_OCTET_STREAM));
+			post.setEntity(new InputStreamEntity(stream, encodedMessage.length, ContentType.APPLICATION_OCTET_STREAM));
 			// post.setEntity(new StringEntity(new String(msg.getBody().getEncodedMessage()), ContentType.TEXT_PLAIN));
 			response = client.execute(post, context);
 		} finally {
