@@ -21,10 +21,10 @@
 						</thead>
 						<tbody ng-if="!delay_table_is_loading">
 							<tr ng-repeat="delay in display_consume_delays_deail">
-								<td><a href="" tooltip="{{delay.topic}}">
+								<td><a href="/console/dashboard#/detail/{{delay.topic}}" tooltip="{{delay.topic}}">
 										<span ng-bind="delay.topic | short:25"></span>
 									</a></td>
-								<td><a href="" tooltip="{{delay.consumer}}">
+								<td><a href="/console/dashboard#/consume/{{delay.topic}}/{{delay.consumer}}" tooltip="{{delay.consumer}}">
 										<span ng-bind="delay.consumer | short:25"></span>
 									</a></td>
 								<td><a href="" popover-placement="right" popover-trigger="focus" popover-template="get_delay_detail(delay)" popover-title="{{delay.topic}}">
@@ -53,8 +53,10 @@
 						</thead>
 						<tbody ng-if="!outdate_topics_table_is_loading">
 							<tr ng-repeat="outdate in display_outdate_topics">
-								<td><span ng-bind="outdate.key"></span></td>
-								<td><span ng-bind="outdate.value | date:'yyyy-MM-dd HH:mm:ss'"></span></td>
+								<td><a href="/console/dashboard#/latest/{{outdate.key}}" tooltip="{{outdate.key}}">
+										<span ng-bind="outdate.key | short:20"></span>
+									</a></td>
+								<td><span ng-bind="outdate.value | date:'yyyy-MM-dd HH:mm:ss' | produce_format"></span></td>
 								<td><span ng-bind="get_delay_to_now(outdate.value)"></span></td>
 							</tr>
 						</tbody>

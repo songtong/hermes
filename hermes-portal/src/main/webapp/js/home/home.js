@@ -28,7 +28,9 @@ function recombineDelays(data) {
 	return temp_consume_delays_detail;
 }
 
-angular.module("dashboard", [ 'ngResource', 'ui.bootstrap', 'smart-table' ]).filter('short', function() {
+var homeapp = angular.module("dashboard", [ 'ngResource', 'ui.bootstrap', 'smart-table' ]);
+
+homeapp.filter('short', function() {
 	return function(input, length) {
 		input = input || '';
 		length = length || 30;
@@ -39,7 +41,16 @@ angular.module("dashboard", [ 'ngResource', 'ui.bootstrap', 'smart-table' ]).fil
 		out = input.substring(0, length / 2) + " ... " + input.substring(input.length - length / 2);
 		return out;
 	}
-}).controller("hermes-dashboard-controller", function($scope, $http, $resource, $compile, $sce) {
+});
+
+homeapp.filter('produce_format', function() {
+	return function(input) {
+		input = input || 'NO_MSG';
+		return input == '1970-01-01 08:00:00' ? 'NO_MSG' : input
+	}
+});
+
+homeapp.controller("hermes-dashboard-controller", function($scope, $http, $resource, $compile, $sce) {
 	$scope.consume_delays_detail = [];
 	$scope.oudate_topics = [];
 	$scope.broker_received_qps = [];
