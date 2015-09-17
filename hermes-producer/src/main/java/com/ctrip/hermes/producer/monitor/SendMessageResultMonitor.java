@@ -1,5 +1,7 @@
 package com.ctrip.hermes.producer.monitor;
 
+import java.util.concurrent.Future;
+
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 
@@ -9,7 +11,9 @@ import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
  */
 public interface SendMessageResultMonitor {
 
-	void monitor(SendMessageCommand cmd);
+	Future<Void> monitor(SendMessageCommand cmd);
+
+	void cancel(SendMessageCommand cmd);
 
 	void resultReceived(SendMessageResultCommand result);
 

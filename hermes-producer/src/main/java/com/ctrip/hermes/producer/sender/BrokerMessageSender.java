@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -25,7 +26,6 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
-import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
@@ -74,24 +74,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		      new TaskQueue(msg.getTopic(), msg.getPartition(), m_config.getBrokerSenderTaskQueueSize()));
 
 		return m_taskQueues.get(tp).submit(msg);
-	}
-
-	@Override
-	public void resend(List<SendMessageCommand> timeoutCmds) {
-		for (SendMessageCommand cmd : timeoutCmds) {
-			ProducerStatusMonitor.INSTANCE.waitBrokerResultTimeout(cmd.getTopic(), cmd.getPartition(),
-			      cmd.getMessageCount());
-			List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> msgFuturePairs = cmd
-			      .getProducerMessageFuturePairs();
-			for (Pair<ProducerMessage<?>, SettableFuture<SendResult>> pair : msgFuturePairs) {
-				resend(pair.getKey(), pair.getValue());
-			}
-		}
-	}
-
-	private void resend(ProducerMessage<?> msg, SettableFuture<SendResult> future) {
-		Pair<String, Integer> tp = new Pair<String, Integer>(msg.getTopic(), msg.getPartition());
-		m_taskQueues.get(tp).resubmit(msg, future);
 	}
 
 	private void startEndpointSender() {
@@ -188,16 +170,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				SendMessageCommand cmd = m_taskQueue.pop(batchSize);
 
 				if (cmd != null) {
-					if (sendMessagesToBroker(cmd)) {
-						cmd.accepted(m_systemClockService.now());
-					} else {
+					Context wholeSendProcessTimer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(),
+					      cmd.getPartition(), "send-message-duration").time();
+
+					if (!sendMessagesToBroker(cmd)) {
 						m_taskQueue.push(cmd);
 					}
-				}
-			} catch (Exception e) {
-				// ignore
-				if (log.isDebugEnabled()) {
-					log.debug("Exception occurred, ignore it", e);
+
+					wholeSendProcessTimer.stop();
 				}
 			} finally {
 				m_running.set(false);
@@ -211,33 +191,32 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				if (endpoint != null) {
 					long correlationId = cmd.getHeader().getCorrelationId();
 
-					Future<Boolean> future = m_messageAcceptanceMonitor.monitor(correlationId);
-					m_messageResultMonitor.monitor(cmd);
+					Future<Boolean> acceptFuture = m_messageAcceptanceMonitor.monitor(correlationId);
+					Future<Void> resultFuture = m_messageResultMonitor.monitor(cmd);
 
 					long timeout = m_config.getBrokerSenderSendTimeoutMillis();
 
-					Timer timer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(), cmd.getPartition(),
-					      "broker-accept-duration");
-
-					Context context = timer.time();
+					Context acceptTimer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(), cmd.getPartition(),
+					      "broker-accept-duration").time();
 
 					m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
 					ProducerStatusMonitor.INSTANCE.wroteToBroker(m_topic, m_partition, cmd.getMessageCount());
 
 					Boolean brokerAccepted = null;
 					try {
-						brokerAccepted = future.get(timeout, TimeUnit.MILLISECONDS);
+						brokerAccepted = acceptFuture.get(timeout, TimeUnit.MILLISECONDS);
 					} catch (TimeoutException e) {
 						ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(m_topic, m_partition,
 						      cmd.getMessageCount());
 						m_messageAcceptanceMonitor.cancel(correlationId);
 					}
 
-					context.stop();
+					acceptTimer.stop();
 
 					if (brokerAccepted != null && brokerAccepted) {
 						ProducerStatusMonitor.INSTANCE.brokerAccepted(m_topic, m_partition, cmd.getMessageCount());
-						return true;
+
+						return waitForBrokerResult(cmd, resultFuture);
 					} else {
 						ProducerStatusMonitor.INSTANCE.brokerRejected(m_topic, m_partition, cmd.getMessageCount());
 						return false;
@@ -254,6 +233,18 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				log.warn("Exception occurred while sending message to broker, will retry it", e);
 				return false;
 			}
+		}
+
+		private boolean waitForBrokerResult(SendMessageCommand cmd, Future<Void> resultFuture)
+		      throws InterruptedException, ExecutionException {
+			try {
+				resultFuture.get(m_config.getSendMessageReadResultTimeoutMillis(), TimeUnit.MILLISECONDS);
+				return true;
+			} catch (TimeoutException e) {
+				m_messageResultMonitor.cancel(cmd);
+			}
+
+			return false;
 		}
 	}
 
@@ -343,12 +334,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				future.setException(throwable);
 			}
 		}
-
-		public void resubmit(final ProducerMessage<?> msg, SettableFuture<SendResult> future) {
-			ProducerStatusMonitor.INSTANCE.messageResubmitted(m_topic, m_partition);
-			offer(msg, future);
-		}
-
 	}
 
 	@Override

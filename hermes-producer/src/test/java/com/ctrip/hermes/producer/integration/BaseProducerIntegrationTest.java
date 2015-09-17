@@ -109,10 +109,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 
 		defineComponent(MetaService.class, TestMetaService.class);
 
-		defineComponent(SendMessageResultMonitor.class, TestSendMessageResultMonitor.class)//
-		      .req(SystemClockService.class)//
-		      .req(ProducerConfig.class)//
-		;
+		defineComponent(SendMessageResultMonitor.class, TestSendMessageResultMonitor.class);
 
 		((TestMessageSender) lookup(MessageSender.class, Endpoint.BROKER)).setEndpointClient(m_endpointClient);
 		((TestMetaService) lookup(MetaService.class)).setMetaHolder(m_metaHolder);
@@ -352,15 +349,6 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 	}
 
 	public static class TestSendMessageResultMonitor extends DefaultSendMessageResultMonitor {
-		@Override
-		public void initialize() throws InitializationException {
-			// do nothing
-		}
-
-		@Override
-		public void scanAndResendTimeoutCommands() {
-			super.scanAndResendTimeoutCommands();
-		}
 	}
 
 	public static class TestMessageSender extends BrokerMessageSender {

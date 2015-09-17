@@ -34,7 +34,6 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.producer.config.ProducerConfig;
-import com.ctrip.hermes.producer.monitor.SendMessageResultMonitor;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -335,8 +334,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
 
 		try {
-			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L,
-			      TimeUnit.MILLISECONDS);
+			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
 			fail();
 		} catch (TimeoutException e) {
 			// do nothing
@@ -368,8 +366,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
 
 		try {
-			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L,
-			      TimeUnit.MILLISECONDS);
+			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
 			fail();
 		} catch (TimeoutException e) {
 			// do nothing
@@ -402,8 +399,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
 
 		try {
-			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L,
-			      TimeUnit.MILLISECONDS);
+			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
 			fail();
 		} catch (TimeoutException e) {
 			// do nothing
@@ -417,15 +413,14 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		List<Command> brokerReceivedCmds = null;
 		for (int i = 0; i < retries; i++) {
 			TimeUnit.MILLISECONDS.sleep(100);
-			((TestSendMessageResultMonitor) lookup(SendMessageResultMonitor.class)).scanAndResendTimeoutCommands();
 
 			brokerReceivedCmds = getBrokerReceivedCmds();
-			if (brokerReceivedCmds.size() == 2) {
+			if (brokerReceivedCmds.size() > 1) {
 				break;
 			}
 		}
 
-		assertEquals(2, brokerReceivedCmds.size());
+		assertTrue(brokerReceivedCmds.size() > 1);
 	}
 
 	@Test
@@ -525,8 +520,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
 
 		try {
-			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L,
-			      TimeUnit.MILLISECONDS);
+			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
 			fail();
 		} catch (TimeoutException e) {
 			// do nothing
