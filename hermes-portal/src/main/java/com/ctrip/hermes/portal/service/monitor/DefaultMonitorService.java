@@ -229,7 +229,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 			if (topic.getStorageType().equals(Storage.MYSQL)) {
 				String topicName = topic.getName();
 				Date current = m_latestProduced.get(topicName) == null ? new Date(0) : m_latestProduced.get(topicName);
-				Date latest = new Date(current.getTime());
+				Date latest = new Date(0);
 				for (Partition partition : m_metaService.findPartitionsByTopic(topicName)) {
 					try {
 						MessagePriority msgPriority = m_dao.getLatestProduced(topicName, partition.getId(),
@@ -325,9 +325,9 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 			}
 			for (Entry<Integer, Long> pEntry : entry.getValue().entrySet()) {
 				int partitionId = pEntry.getKey();
-				Long delayInSeconds = pEntry.getValue();
-				view.addDelay(consumer, partitionId, delayInSeconds);
-				sum += delayInSeconds;
+				Long delay = pEntry.getValue();
+				view.addDelay(consumer, partitionId, delay);
+				sum += delay;
 			}
 			view.setTotalDelay(sum);
 		}
@@ -336,7 +336,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		Collections.sort(list, new Comparator<TopicDelayDetailView>() {
 			@Override
 			public int compare(TopicDelayDetailView o1, TopicDelayDetailView o2) {
-				return (int) (o2.getTotalDelay() - o1.getTotalDelay());
+				return o2.getTotalDelay() == o1.getTotalDelay() ? 0 : o2.getTotalDelay() > o1.getTotalDelay() ? 1 : -1;
 			}
 		});
 

@@ -21,7 +21,4 @@ public interface HermesPortalDao {
 
 	public List<MessagePriority> getLatestMessages(String topic, int pratition, int count) throws DalException;
 	
-	public OffsetMessage findOffsetMessage(String topic, int partition, int priority, int groupId);
-
-
 }

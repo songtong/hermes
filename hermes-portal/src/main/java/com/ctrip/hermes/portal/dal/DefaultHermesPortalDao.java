@@ -42,7 +42,7 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 			if (!offsetMsgMap.containsKey(offsetMsg.getGroupId()))
 				offsetMsgMap.put(offsetMsg.getGroupId(), new Pair<OffsetMessage, OffsetMessage>());
 
-			if (offsetMsg.getPriority() == PortalConstants.PRIORITY_TRUE) {
+			if (PortalConstants.PRIORITY_TRUE == offsetMsg.getPriority()) {
 				offsetMsgMap.get(offsetMsg.getGroupId()).setKey(offsetMsg);
 			} else {
 				offsetMsgMap.get(offsetMsg.getGroupId()).setValue(offsetMsg);
@@ -63,18 +63,6 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 				return o1.getCreationDate().compareTo(o2.getCreationDate());
 			}
 		}, new List[] { k0, k1 });
-	}
-
-	@Override
-	public OffsetMessage findOffsetMessage(String topic, int partition, int priority, int groupId) {
-		try {
-			return m_offsetDao.find(topic, partition, priority, groupId, OffsetMessageEntity.READSET_FULL);
-		} catch (Exception e) {
-			if (log.isDebugEnabled()) {
-				log.debug("Find offset message failed, topic:{} priority:{} group:{}", topic, partition, groupId, e);
-			}
-			return null;
-		}
 	}
 
 	private MessagePriority doFindLatestMessage(String topic, int partition, int priority) {

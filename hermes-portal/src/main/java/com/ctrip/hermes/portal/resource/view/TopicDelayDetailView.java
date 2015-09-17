@@ -14,8 +14,8 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 		setTopic(topic);
 	}
 
-	public void addDelay(String consumer, int partitionId, Long delayInSeconds) {
-		details.add(new DelayDetail(consumer, partitionId, delayInSeconds));
+	public void addDelay(String consumer, int partitionId, Long delay) {
+		details.add(new DelayDetail(consumer, partitionId, delay));
 	}
 
 	public List<DelayDetail> getDetails() {

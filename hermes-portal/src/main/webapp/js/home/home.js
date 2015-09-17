@@ -1,5 +1,4 @@
 function recombineDelays(data) {
-	console.log(data);
 	temp_consume_delays_detail = [];
 	var index = 0;
 	for (var i = 0; i < data.length; i++) {
