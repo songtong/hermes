@@ -14,7 +14,7 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 		setTopic(topic);
 	}
 
-	public void addDelay(String consumer, int partitionId, int delay) {
+	public void addDelay(String consumer, int partitionId, Long delay) {
 		details.add(new DelayDetail(consumer, partitionId, delay));
 	}
 
@@ -31,13 +31,13 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		private int partitionId;
 
-		private int delay;
+		private long delay;
 
 		public DelayDetail() {
 
 		}
 
-		public DelayDetail(String consumer, int partitionId, int delay) {
+		public DelayDetail(String consumer, int partitionId, long delay) {
 			this.consumer = consumer;
 			this.partitionId = partitionId;
 			this.delay = delay;
@@ -59,7 +59,7 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 			this.partitionId = partitionId;
 		}
 
-		public int getDelay() {
+		public long getDelay() {
 			return delay;
 		}
 

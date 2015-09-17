@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -398,13 +397,8 @@ public class TopicResource {
 
 	private TopicView prepareTopicView(Topic topic) {
 		TopicView topicView = new TopicView(topic);
-		List<ConsumerGroup> consumers = metaService.findConsumersByTopic(topic.getName());
-		long sum = 0;
-		for (ConsumerGroup consumer : consumers) {
-			Pair<Date, Date> delay = monitorService.getDelay(topic.getName(), consumer.getId());
-			sum += (delay.getKey().getTime() - delay.getValue().getTime()) / 1000;
-		}
-		topicView.setAverageDelaySeconds(consumers.size() > 0 ? sum / consumers.size() : 0);
+		long delay = monitorService.getDelay(topic.getName());
+		topicView.setTotalDelay(delay);
 		topicView.setLatestProduced(monitorService.getLatestProduced(topic.getName()));
 		return topicView;
 	}

@@ -49,7 +49,7 @@ public class TopicView {
 
 	private String consumerRetryPolicy;
 
-	private Long averageDelaySeconds;
+	private Long totalDelay;
 
 	private Date latestProduced;
 
@@ -270,15 +270,15 @@ public class TopicView {
 	public void setConsumerRetryPolicy(String consumerRetryPolicy) {
 		this.consumerRetryPolicy = consumerRetryPolicy;
 	}
-
-	public Long getAverageDelaySeconds() {
-		return averageDelaySeconds;
+	
+	public Long getTotalDelay() {
+		return totalDelay;
 	}
 
-	public void setAverageDelaySeconds(Long averageDelaySeconds) {
-		this.averageDelaySeconds = averageDelaySeconds;
+	public void setTotalDelay(Long totalDelay) {
+		this.totalDelay = totalDelay;
 	}
-
+	
 	public Date getLatestProduced() {
 		return latestProduced;
 	}

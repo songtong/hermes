@@ -9,7 +9,7 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 			$scope.$watch(TopicService.get_topics, function() {
 				$scope.current_topics = TopicService.get_topics();
 			});
-
+			$scope.display_current_topics = [].concat($scope.current_topics);
 			$scope.delete_topic = function(topic, index) {
 				bootbox.confirm({
 					title : "请确认",
@@ -146,4 +146,11 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 				});
 				$("#schema-view").modal('show');
 			};
+			
+			$scope.getters = {
+					sort_partitions: function (value) {
+						console.log(value);
+			            return value.partitions.length;
+			        }
+			}
 		} ]);

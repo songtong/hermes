@@ -13,16 +13,16 @@
 			<label class="label label-danger">NO TOPIC WAS FOUND</label>
 		</h2>
 	</div>
-	<table ng-if="current_topics.length > 0" class="table table-hover" st-pipe="current_topics" st-table="topic_table">
+	<table ng-if="current_topics.length > 0" class="table table-hover" st-safe-src="current_topics" st-pipe="current_topics" st-table="display_current_topics">
 		<thead>
 			<tr>
-				<th>#</th>
+				<th >#</th>
 				<th st-sort="name">名称</th>
 				<th st-sort="codecType" width="100px" style="text-align: center;">编码</th>
-				<th st-sort="partitions" width="60px" style="text-align: center;">分区</th>
+				<th st-sort="getters.sort_partitions" width="60px" style="text-align: center;">分区</th>
 				<th ng-if="current_topic_type == 'mysql'" st-sort="consumerRetryPolicy">消费策略</th>
 				<th ng-if="current_topic_type == 'mysql'" st-sort="ackTimeoutSeconds">ACK超时(秒)</th>
-				<th ng-if="current_topic_type == 'mysql'" style="text-align: center">状态</th>
+				<th ng-if="current_topic_type == 'mysql'" style="text-align: center" st-sort="status">状态</th>
 				<th ng-if="current_topic_type == 'kafka'" st-sort="endpointType">Endpoint</th>
 				<th ng-if="current_topic_type == 'kafka'" st-sort="schemaName">Schema名称</th>
 				<th ng-if="current_topic_type == 'kafka'" st-sort="endpointVersion">Schema版本</th>
@@ -32,7 +32,7 @@
 				<th></th>
 				<th><input st-search="name" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 				<th><input st-search="codecType" placeholder="Codec" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
-				<th><input st-search="partitions" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
+				<th><input st-search="partitions" placeholder="Partitions" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
 				<th ng-if="current_topic_type == 'mysql'"><input st-search="consumerRetryPolicy" placeholder="Policy" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 				<th ng-if="current_topic_type == 'mysql'"><input st-search="ackTimeoutSeconds" placeholder="ACK Timeout" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 				<th ng-if="current_topic_type == 'mysql'"></th>
@@ -43,18 +43,18 @@
 			</tr>
 		</thead>
 		<tbody ng-if="!is_loading">
-			<tr ng-click="" ng-repeat="row in current_topics">
+			<tr ng-click="" ng-repeat="row in display_current_topics">
 				<td><span ng-bind="$index + 1"> </span></td>
 				<td><a href="#/detail/{{current_topic_type}}/{{current_topic_type}}/{{row.name}}" ng-bind="row.name" /></td>
 				<td align="center"><span ng-bind="row.codecType"></span></td>
 				<td align="center"><span ng-bind="row.partitions.length"></td>
 				<td ng-if="current_topic_type == 'mysql'"><span ng-bind="row.consumerRetryPolicy"></td>
 				<td ng-if="current_topic_type == 'mysql'"><span ng-bind="row.ackTimeoutSeconds"></td>
-				<td ng-if="current_topic_type == 'mysql'" align="center"><span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-ok"
-						ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.averageDelaySeconds&lt;delayLimit"></span> <span
-						tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-danger"
-						ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.averageDelaySeconds&gt;=delayLimit"></span> <span
-						tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.averageDelaySeconds}} s" class="status-warn" ng-if="cur_time-row.latestProduced&gt;noProduceLimit"></span></td>
+				<td ng-if="current_topic_type == 'mysql'" align="center"><span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}}" class="status-ok"
+						ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.totalDelay&lt;delayLimit"></span> <span
+						tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}} " class="status-danger"
+						ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.totalDelay&gt;=delayLimit"></span> <span
+						tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}} " class="status-warn" ng-if="cur_time-row.latestProduced&gt;noProduceLimit"></span></td>
 				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.endpointType"></td>
 				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.schema.name"></td>
 				<td ng-if="current_topic_type == 'kafka'"><a href="" ng-click="show_schema_view(row.schema)">

@@ -9,20 +9,20 @@
 	<div ng-app="hermes-subscription" ng-controller="subscription-controller">
 		<div class="panel panel-info">
 			<div class="panel-heading">Hermes Subscriber 列表</div>
-			<table class="table table-condensed table-responsive table-bordered">
+			<table class="table table-condensed table-responsive table-bordered" st-table="display_subscribers" st-safe-src="subscribers">
 				<thead>
 					<tr>
 						<th style="width: 5%">#</th>
-						<th>Name</th>
-						<th>Topic</th>
-						<th>Consumer</th>
-						<th>Endpoints</th>
-						<th width="20px">Status</th>
+						<th st-sort="name">Name</th>
+						<th st-sort="topic">Topic</th>
+						<th st-sort="group">Consumer</th>
+						<th st-sort="endpoints">Endpoints</th>
+						<th st-sort="status" width="20px">Status</th>
 						<th width="100px"><button class="btn btn-success btn-xs" ng-click="add_row()"><span class="glyphicon glyphicon-plus"></span> 新增</button></th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr ng-repeat="sb in subscribers">
+					<tr ng-repeat="sb in display_subscribers">
 						<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
 						<td><span editable-text="sb.name" ng-bind="sb.name || 'Not Set'" e-name="name" e-form="rowform" onbeforesave="checkName($data, sb.id)"  e-required></span></td>
 						<td><span editable-text="sb.topic" ng-bind="sb.topic || 'Not Set'" e-name="topic" e-form="rowform" e-typeahead="topic for topic in topic_names | filter:$viewValue | limitTo:8"></span></td>
@@ -49,5 +49,6 @@
 	</div>
 
 	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/subscription/subscription.js"></script>
 </a:layout>

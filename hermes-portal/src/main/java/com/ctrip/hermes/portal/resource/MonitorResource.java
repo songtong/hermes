@@ -1,11 +1,8 @@
 package com.ctrip.hermes.portal.resource;
 
-import io.netty.buffer.Unpooled;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +45,8 @@ import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.service.monitor.MonitorService;
 
+import io.netty.buffer.Unpooled;
+
 @Path("/monitor/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
@@ -66,13 +65,8 @@ public class MonitorResource {
 		List<TopicDelayBriefView> list = new ArrayList<TopicDelayBriefView>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
 			Topic t = entry.getValue();
-			int avgDelay = 0;
-			for (ConsumerGroup consumer : t.getConsumerGroups()) {
-				Pair<Date, Date> delay = m_monitorService.getDelay(t.getName(), consumer.getId());
-				avgDelay += delay.getKey().getTime() - delay.getValue().getTime();
-			}
-			avgDelay /= t.getConsumerGroups().size() == 0 ? 1 : t.getConsumerGroups().size();
-			list.add(new TopicDelayBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), avgDelay));
+			long delay = m_monitorService.getDelay(t.getName());
+			list.add(new TopicDelayBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), delay));
 		}
 
 		Collections.sort(list, new Comparator<TopicDelayBriefView>() {
@@ -98,8 +92,8 @@ public class MonitorResource {
 		Topic topic = m_metaService.findTopicByName(name);
 		TopicDelayDetailView view = new TopicDelayDetailView(name);
 		for (ConsumerGroup consumer : topic.getConsumerGroups()) {
-			for (Entry<Integer, Pair<Date, Date>> e : m_monitorService.getDelayDetails(name, consumer.getId()).entrySet()) {
-				int delay = (int) (e.getValue().getKey().getTime() - e.getValue().getValue().getTime());
+			for (Entry<Integer, Long> e : m_monitorService.getDelayDetails(name, consumer.getId()).entrySet()) {
+				long delay = e.getValue();
 				view.addDelay(consumer.getName(), e.getKey(), delay);
 			}
 		}
@@ -245,8 +239,9 @@ public class MonitorResource {
 
 	@GET
 	@Path("delay/{topic}/{groupId}")
+	// not in use
 	public Response getConsumeDelay(@PathParam("topic") String topic, @PathParam("groupId") int groupId) {
-		Pair<Date, Date> delay = m_monitorService.getDelay(topic, groupId);
+		Long delay = m_monitorService.getDelay(topic, groupId);
 		if (delay == null) {
 			throw new RestException(String.format("Delay [%s, %s] not found.", topic, groupId), Status.NOT_FOUND);
 		}
@@ -255,8 +250,9 @@ public class MonitorResource {
 
 	@GET
 	@Path("delay/{topic}/{groupId}/detail")
+	// not in use
 	public Response getConsumeDelayDetail(@PathParam("topic") String topic, @PathParam("groupId") int groupId) {
-		Map<Integer, Pair<Date, Date>> delayDetails = m_monitorService.getDelayDetails(topic, groupId);
+		Map<Integer, Long> delayDetails = m_monitorService.getDelayDetails(topic, groupId);
 		if (delayDetails == null || delayDetails.size() == 0) {
 			throw new RestException(String.format("Delay [%s, %s] not found.", topic, groupId), Status.NOT_FOUND);
 		}
