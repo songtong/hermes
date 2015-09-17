@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.unidal.tuple.Pair;
+
 import com.ctrip.hermes.portal.resource.view.BrokerQPSBriefView;
 import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
@@ -14,7 +16,7 @@ public interface MonitorService {
 	public Date getLatestProduced(String topic);
 
 	public Long getDelay(String topic, int groupId);
-	
+
 	public Long getDelay(String topic);
 
 	public Map<Integer, Long> getDelayDetails(String topic, int groupId);

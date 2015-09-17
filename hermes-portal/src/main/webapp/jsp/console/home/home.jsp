@@ -23,7 +23,7 @@
 							<tr ng-repeat="delay in display_consume_delays_deail">
 								<td><span ng-bind="delay.topic"></span></td>
 								<td><span ng-bind="delay.consumer"></span></td>
-								<td><span popover-placement="bottom" popover-trigger="mouseenter" popover-template="get_delay_detail(delay)" popover-title="{{delay.topic}}" ng-bind="delay.delay"></span></td>
+								<td><a href="" popover-placement="right" popover-trigger="focus" popover-template="get_delay_detail(delay)" popover-title="{{delay.topic}}" ><span ng-bind="delay.delay"></span></a></td>
 							</tr>
 						</tbody>
 						<tbody ng-if="delay_table_is_loading">
