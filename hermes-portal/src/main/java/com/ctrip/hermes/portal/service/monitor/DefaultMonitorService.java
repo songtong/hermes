@@ -432,7 +432,6 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 				return o1.getValue().compareTo(o2.getValue());
 			}
 		});
-		System.out.println(list);
 		top = top > list.size() ? list.size() : top;
 		return list.subList(0, top > 0 ? top : 0);
 	}
