@@ -45,10 +45,6 @@ public class SendMessageCommand extends AbstractCommand {
 
 	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<Integer, SettableFuture<SendResult>>();
 
-	private transient boolean m_accepted = false;
-
-	private transient long m_acceptedTime = -1L;
-
 	public SendMessageCommand() {
 		this(null, -1);
 	}
@@ -255,15 +251,6 @@ public class SendMessageCommand extends AbstractCommand {
 
 			return m_msgs;
 		}
-	}
-
-	public synchronized void accepted(long acceptedTime) {
-		m_acceptedTime = acceptedTime;
-		m_accepted = true;
-	}
-
-	public synchronized boolean isExpired(long now, long timeoutMillis) {
-		return m_accepted && (now - m_acceptedTime > timeoutMillis);
 	}
 
 	public Collection<List<ProducerMessage<?>>> getProducerMessages() {

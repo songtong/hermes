@@ -20,7 +20,6 @@ import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.kafka.util.KafkaProperties;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -124,9 +123,4 @@ public class KafkaMessageSender implements MessageSender {
 		}
 	}
 
-	@Override
-	public void resend(List<SendMessageCommand> timeoutCmds) {
-		// TODO Auto-generated method stub
-
-	}
 }
