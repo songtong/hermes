@@ -120,7 +120,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	private Meta loadMeta() {
 		try {
 			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
-			      .getProperty("meta.port", "1248").trim(), "meta");
+			      .getProperty("meta.port", "80").trim(), "meta");
 			HttpResponse response = Request.Get(url).execute().returnResponse();
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) {
