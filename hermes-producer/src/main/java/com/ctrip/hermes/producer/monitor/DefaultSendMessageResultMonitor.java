@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,17 +32,30 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 
 	private Map<Long, Pair<SendMessageCommand, SettableFuture<Void>>> m_cmds = new ConcurrentHashMap<>();
 
+	private ReentrantLock m_lock = new ReentrantLock();
+
 	@Override
 	public Future<Void> monitor(SendMessageCommand cmd) {
-		SettableFuture<Void> future = SettableFuture.create();
-		m_cmds.put(cmd.getHeader().getCorrelationId(), new Pair<SendMessageCommand, SettableFuture<Void>>(cmd, future));
-		return future;
+		m_lock.lock();
+		try {
+			SettableFuture<Void> future = SettableFuture.create();
+			m_cmds.put(cmd.getHeader().getCorrelationId(), new Pair<SendMessageCommand, SettableFuture<Void>>(cmd, future));
+			return future;
+		} finally {
+			m_lock.unlock();
+		}
 	}
 
 	@Override
 	public void resultReceived(SendMessageResultCommand result) {
 		if (result != null) {
-			Pair<SendMessageCommand, SettableFuture<Void>> pair = m_cmds.remove(result.getHeader().getCorrelationId());
+			Pair<SendMessageCommand, SettableFuture<Void>> pair = null;
+			m_lock.lock();
+			try {
+				pair = m_cmds.remove(result.getHeader().getCorrelationId());
+			} finally {
+				m_lock.unlock();
+			}
 			if (pair != null) {
 				try {
 					SendMessageCommand sendMessageCommand = pair.getKey();
@@ -93,7 +107,12 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 
 	@Override
 	public void cancel(SendMessageCommand cmd) {
-		m_cmds.remove(cmd.getHeader().getCorrelationId());
+		m_lock.lock();
+		try {
+			m_cmds.remove(cmd.getHeader().getCorrelationId());
+		} finally {
+			m_lock.unlock();
+		}
 	}
 
 }
