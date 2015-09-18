@@ -48,7 +48,7 @@
 				<td><a href="#/detail/{{current_topic_type}}/{{current_topic_type}}/{{row.name}}" ng-bind="row.name" tooltip="{{row.id}}" /></td>
 				<td align="center"><span ng-bind="row.codecType"></span></td>
 				<td align="center"><span ng-bind="row.partitions.length"></td>
-				<td ng-if="current_topic_type == 'mysql'" style="width: 20%"><a href="" ng-bind="row.consumerRetryPolicy | short:20" tooltip="row.consumerRetryPolicy"></a></td>
+				<td ng-if="current_topic_type == 'mysql'" style="width: 20%"><a href="" ng-bind="row.consumerRetryPolicy | short:20" tooltip="{{row.consumerRetryPolicy}}"></a></td>
 				<td ng-if="current_topic_type == 'mysql'" style="width: 10%"><span ng-bind="row.ackTimeoutSeconds"></span></td>
 				<td ng-if="current_topic_type == 'mysql'" align="center" style="width: 5%"><span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}}"
 						class="status-ok" ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.totalDelay&lt;delayLimit"></span> <span
