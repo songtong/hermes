@@ -12,8 +12,9 @@ dashtopic.controller('dash-topic-nav-controller', function($scope, $http, Dashbo
 	$scope.$watch("filter_key", function() {
 		var new_filtered = [];
 		if ($scope.topic_briefs != undefined && $scope.filter_key != undefined && $scope.filter_key.length > 0) {
+			var key = $scope.filter_key.toLowerCase();
 			for (var i = 0; i < $scope.topic_briefs.length; i++) {
-				if ($scope.topic_briefs[i].topic.search($scope.filter_key) >= 0) {
+				if ($scope.topic_briefs[i].topic.toLowerCase().search(key) >= 0) {
 					new_filtered.push($scope.topic_briefs[i]);
 				}
 			}
