@@ -19,6 +19,7 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 import org.unidal.tuple.Triple;
 
+import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetter;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetterDao;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
@@ -85,6 +86,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	@Inject
 	private SystemClockService m_systemClockService;
 
+	@Inject
+	private BrokerConfig m_config;
+
 	private Map<Triple<String, Integer, Integer>, OffsetResend> m_offsetResendCache = new ConcurrentHashMap<>();
 
 	private Map<Pair<Tpp, Integer>, OffsetMessage> m_offsetMessageCache = new ConcurrentHashMap<>();
@@ -92,6 +96,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	@Override
 	public void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception {
 		List<MessagePriority> msgs = new ArrayList<>();
+
 		for (MessageBatchWithRawData batch : batches) {
 			List<PartialDecodedMessage> pdmsgs = batch.getMessages();
 			for (PartialDecodedMessage pdmsg : pdmsgs) {
@@ -109,13 +114,24 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				msg.setCodecType(pdmsg.getBodyCodecType());
 
 				msgs.add(msg);
+
+				if (msgs.size() == m_config.getMySQLBatchInsertSize()) {
+					batchInsert(tpp, msgs);
+					msgs.clear();
+				}
 			}
 		}
 
-		long startTime = System.currentTimeMillis();
+		if (!msgs.isEmpty()) {
+			batchInsert(tpp, msgs);
+		}
+	}
+
+	private void batchInsert(Tpp tpp, List<MessagePriority> msgs) throws DalException {
+		long startTime = m_systemClockService.now();
 		m_msgDao.insert(msgs.toArray(new MessagePriority[msgs.size()]));
 
-		bizLog(tpp, msgs, startTime, System.currentTimeMillis());
+		bizLog(tpp, msgs, startTime, m_systemClockService.now());
 	}
 
 	private void bizLog(Tpp tpp, List<MessagePriority> msgs, long startTime, long endTime) {

@@ -3,6 +3,11 @@
 		<component>
 			<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 			<implementation>com.ctrip.hermes.broker.config.BrokerConfig</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.broker.bootstrap.BrokerBootstrap</role>
@@ -234,6 +239,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.service.SystemClockService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
