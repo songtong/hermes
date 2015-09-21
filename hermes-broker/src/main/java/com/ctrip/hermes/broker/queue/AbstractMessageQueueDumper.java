@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -74,9 +75,11 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 		return m_lease;
 	}
 
-	private boolean flushMsgs(List<FutureBatchPriorityWrapper> todos) {
-		if (todos.isEmpty()) {
-			m_queue.drainTo(todos, m_config.getDumperBatchSize());
+	private boolean flushMsgs(List<FutureBatchPriorityWrapper> todos, int batchSize) {
+		if (batchSize < 0) {
+			m_queue.drainTo(todos);
+		} else {
+			m_queue.drainTo(todos, batchSize);
 		}
 
 		if (!todos.isEmpty()) {
@@ -157,7 +160,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 		@Override
 		public void run() {
-			List<FutureBatchPriorityWrapper> todos = new ArrayList<>(m_config.getDumperBatchSize());
+			List<FutureBatchPriorityWrapper> todos = new LinkedList<>();
 
 			int checkIntervalBase = m_config.getDumperNoMessageWaitIntervalBaseMillis();
 			int checkIntervalMax = m_config.getDumperNoMessageWaitIntervalMaxMillis();
@@ -165,7 +168,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 			SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkIntervalBase, checkIntervalMax);
 			while (!m_stopped.get() && !Thread.currentThread().isInterrupted() && !m_lease.isExpired()) {
 				try {
-					if (flushMsgs(todos)) {
+					if (flushMsgs(todos, m_config.getDumperBatchSize())) {
 						schedulePolicy.succeess();
 					} else {
 						schedulePolicy.fail(true);
@@ -177,7 +180,7 @@ public abstract class AbstractMessageQueueDumper implements MessageQueueDumper {
 
 			// lease is expired or stopped, flush remaining msgs
 			while (!m_queue.isEmpty() || !todos.isEmpty()) {
-				flushMsgs(todos);
+				flushMsgs(todos, -1);
 			}
 		}
 	}
