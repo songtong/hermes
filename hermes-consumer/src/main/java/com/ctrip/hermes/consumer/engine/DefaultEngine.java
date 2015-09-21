@@ -13,6 +13,7 @@ import com.ctrip.hermes.consumer.engine.bootstrap.ConsumerBootstrapManager;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
+import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 
 @Named(type = Engine.class)
@@ -48,7 +49,8 @@ public class DefaultEngine extends Engine {
 		validate(topics, subscriber.getGroupId());
 
 		for (Topic topic : topics) {
-			ConsumerContext context = new ConsumerContext(topic, subscriber.getGroupId(), subscriber.getConsumer(),
+			ConsumerGroup cg= topic.findConsumerGroup(subscriber.getGroupId());
+			ConsumerContext context = new ConsumerContext(topic, cg, subscriber.getConsumer(),
 			      subscriber.getMessageClass(), subscriber.getConsumerType(), subscriber.getMessageListenerConfig());
 
 			try {
