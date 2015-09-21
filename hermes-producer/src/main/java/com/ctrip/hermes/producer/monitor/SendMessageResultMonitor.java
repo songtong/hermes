@@ -11,7 +11,7 @@ import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
  */
 public interface SendMessageResultMonitor {
 
-	Future<Void> monitor(SendMessageCommand cmd);
+	Future<Boolean> monitor(SendMessageCommand cmd);
 
 	void cancel(SendMessageCommand cmd);
 

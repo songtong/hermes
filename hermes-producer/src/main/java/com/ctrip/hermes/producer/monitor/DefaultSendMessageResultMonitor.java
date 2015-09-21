@@ -30,16 +30,17 @@ import com.google.common.util.concurrent.SettableFuture;
 public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor {
 	private static final Logger log = LoggerFactory.getLogger(DefaultSendMessageResultMonitor.class);
 
-	private Map<Long, Pair<SendMessageCommand, SettableFuture<Void>>> m_cmds = new ConcurrentHashMap<>();
+	private Map<Long, Pair<SendMessageCommand, SettableFuture<Boolean>>> m_cmds = new ConcurrentHashMap<>();
 
 	private ReentrantLock m_lock = new ReentrantLock();
 
 	@Override
-	public Future<Void> monitor(SendMessageCommand cmd) {
+	public Future<Boolean> monitor(SendMessageCommand cmd) {
 		m_lock.lock();
 		try {
-			SettableFuture<Void> future = SettableFuture.create();
-			m_cmds.put(cmd.getHeader().getCorrelationId(), new Pair<SendMessageCommand, SettableFuture<Void>>(cmd, future));
+			SettableFuture<Boolean> future = SettableFuture.create();
+			m_cmds.put(cmd.getHeader().getCorrelationId(), new Pair<SendMessageCommand, SettableFuture<Boolean>>(cmd,
+			      future));
 			return future;
 		} finally {
 			m_lock.unlock();
@@ -49,7 +50,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	@Override
 	public void resultReceived(SendMessageResultCommand result) {
 		if (result != null) {
-			Pair<SendMessageCommand, SettableFuture<Void>> pair = null;
+			Pair<SendMessageCommand, SettableFuture<Boolean>> pair = null;
 			m_lock.lock();
 			try {
 				pair = m_cmds.remove(result.getHeader().getCorrelationId());
@@ -59,12 +60,16 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 			if (pair != null) {
 				try {
 					SendMessageCommand sendMessageCommand = pair.getKey();
-					SettableFuture<Void> future = pair.getValue();
+					SettableFuture<Boolean> future = pair.getValue();
 
 					ProducerStatusMonitor.INSTANCE.brokerResultReceived(sendMessageCommand.getTopic(),
 					      sendMessageCommand.getPartition(), sendMessageCommand.getMessageCount());
 
-					future.set(null);
+					if (isResultSuccess(result)) {
+						future.set(true);
+					} else {
+						future.set(false);
+					}
 					sendMessageCommand.onResultReceived(result);
 					tracking(sendMessageCommand, true);
 				} catch (Exception e) {
@@ -73,6 +78,17 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 
 			}
 		}
+	}
+
+	private boolean isResultSuccess(SendMessageResultCommand result) {
+		Map<Integer, Boolean> successes = result.getSuccesses();
+		for (Boolean success : successes.values()) {
+			if (!success) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private void tracking(SendMessageCommand sendMessageCommand, boolean success) {
