@@ -22,7 +22,7 @@ public class SimpleTextInDevTest {
 	@Test
 	public void simpleTextMessageTest() throws IOException {
 		String topic = "kafka.SimpleTextTopic";
-		String group = "simpleTextMessageTest";
+		String group = "SimpleTextTopicGroup";
 		MetricRegistry metrics = HermesMetricsRegistry.getMetricRegistryByT(topic);
 		final Meter sent = metrics.meter("sent");
 		final Meter received = metrics.meter("received");

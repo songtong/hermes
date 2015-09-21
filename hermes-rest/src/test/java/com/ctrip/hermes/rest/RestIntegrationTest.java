@@ -86,7 +86,7 @@ public class RestIntegrationTest extends JerseyTest {
 
 		String topic = "kafka.SimpleTextTopic";
 		kafka.createTopic(topic);
-		String group = "OneBoxGroup";
+		String group = "SimpleTextTopicGroup";
 		String urls = getBaseUri() + "onebox/push";
 
 		SubscriptionView sub = new SubscriptionView();
@@ -146,7 +146,7 @@ public class RestIntegrationTest extends JerseyTest {
 
 		String topic = "kafka.SimpleTextTopic1";
 		kafka.createTopic(topic);
-		String group = "OneBoxGroup";
+		String group = "SimpleTextTopic1Group";
 		String urls = "http://localhost:4321:/" + "onebox/pushNotExist," + getBaseUri() + "onebox/pushStandby";
 		SubscriptionView sub = new SubscriptionView();
 		sub.setTopic(topic);
@@ -205,7 +205,7 @@ public class RestIntegrationTest extends JerseyTest {
 
 		String topic = "kafka.SimpleTextTopic2";
 		kafka.createTopic(topic);
-		String group = "OneBoxGroup";
+		String group = "SimpleTextTopic2Group";
 		String urls = getBaseUri() + "onebox/pushNotExist";
 
 		SubscriptionView sub = new SubscriptionView();
@@ -256,7 +256,7 @@ public class RestIntegrationTest extends JerseyTest {
 
 		String topic = "kafka.SimpleTextTopic4";
 		kafka.createTopic(topic);
-		String group = "OneBoxGroup";
+		String group = "SimpleTextTopic4Group";
 		String urls = getBaseUri() + "onebox/pushTimeout";
 
 		SubscriptionView sub = new SubscriptionView();
@@ -307,7 +307,7 @@ public class RestIntegrationTest extends JerseyTest {
 
 		String topic = "kafka.SimpleTextTopic3";
 		kafka.createTopic(topic);
-		String group = "OneBoxGroup";
+		String group = "SimpleTextTopic3Group";
 		String urls = getBaseUri() + "onebox/pushNotAvailable";
 
 		SubscriptionView sub = new SubscriptionView();

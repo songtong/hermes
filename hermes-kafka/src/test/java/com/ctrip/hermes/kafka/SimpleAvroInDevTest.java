@@ -24,7 +24,7 @@ public class SimpleAvroInDevTest {
 	@Test
 	public void simpleAvroMessageTest() throws IOException {
 		String topic = "kafka.SimpleAvroTopic";
-		String group = "simpleTextMessageTest";
+		String group = "SimpleAvroTopicGroup";
 		MetricRegistry metrics = HermesMetricsRegistry.getMetricRegistryByT(topic);
 		final Meter sent = metrics.meter("sent");
 		final Meter received = metrics.meter("received");

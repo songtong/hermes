@@ -22,7 +22,7 @@ public class WildcardTopicsTest {
 		String topicPattern = "kafka.SimpleTextTopic.*";
 		String sendTopic1 = "kafka.SimpleTextTopic1";
 		String sendTopic2 = "kafka.SimpleTextTopic2";
-		String group = "group1";
+		String group = "SimpleTextTopic1Group";
 
 		Producer producer = Producer.getInstance();
 

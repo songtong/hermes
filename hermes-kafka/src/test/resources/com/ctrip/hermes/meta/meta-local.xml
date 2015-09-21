@@ -9,6 +9,8 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100000' name="SimpleTextTopicGroup"
+			app-ids="1" />
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic1' partition-count='1'
@@ -17,6 +19,8 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100001' name="SimpleTextTopic1Group"
+			app-ids="1" />
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic2' partition-count='1'
@@ -25,6 +29,8 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100002' name="SimpleTextTopic2Group"
+			app-ids="1" />
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic3' partition-count='1'
@@ -33,6 +39,10 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='1000031' name="SimpleTextTopic3Group1"
+			app-ids="1" />
+		<consumer-group id='1000032' name="SimpleTextTopic3Group2"
+			app-ids="2" />
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic4' partition-count='1'
@@ -41,6 +51,8 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100004' name="SimpleTextTopic4Group"
+			app-ids="1" />
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic5' partition-count='1'
@@ -49,6 +61,8 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100005' name="SimpleTextTopic5Group"
+			app-ids="1" />
 	</topic>
 
 	<topic name='kafka.SimpleAvroTopic' partition-count='1'
@@ -57,6 +71,8 @@
 		codec-type="avro" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100006' name="SimpleAvroTopicGroup"
+			app-ids="1" />
 	</topic>
 
 	<codec type="json" />
