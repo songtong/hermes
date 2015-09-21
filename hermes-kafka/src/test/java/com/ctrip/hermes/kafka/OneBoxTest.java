@@ -84,9 +84,6 @@ public class OneBoxTest {
 			String proMsg = expected.get(i);
 
 			MessageHolder holder = producer.message(topic, String.valueOf(i), proMsg);
-			if (System.currentTimeMillis() % 2 == 0) {
-				holder = holder.withoutHeader();
-			}
 			KafkaFuture future = (KafkaFuture) holder.send();
 			KafkaSendResult result = future.get();
 			System.out.println(String.format("Sent:%s, Partition:%s, Offset:%s", proMsg, result.getPartition(),
@@ -158,9 +155,6 @@ public class OneBoxTest {
 			String proMsg = expected.get(i);
 
 			MessageHolder holder = producer.message(topic, String.valueOf(i), proMsg);
-			if (System.currentTimeMillis() % 2 == 0) {
-				holder = holder.withoutHeader();
-			}
 			KafkaFuture future = (KafkaFuture) holder.send();
 			KafkaSendResult result = future.get();
 			System.out.println(String.format("Sent:%s, Partition:%s, Offset:%s", proMsg, result.getPartition(),
@@ -228,9 +222,6 @@ public class OneBoxTest {
 			String proMsg = expected.get(i);
 
 			MessageHolder holder = producer.message(topic, String.valueOf(i), proMsg);
-			if (System.currentTimeMillis() % 2 == 0) {
-				holder = holder.withoutHeader();
-			}
 			KafkaFuture future = (KafkaFuture) holder.send();
 			KafkaSendResult result = future.get();
 			System.out.println(String.format("Sent:%s, Partition:%s, Offset:%s", proMsg, result.getPartition(),
@@ -286,9 +277,6 @@ public class OneBoxTest {
 					String proMsg = expected.get(i);
 
 					MessageHolder holder = producer.message(topic, String.valueOf(i), proMsg);
-					if (System.currentTimeMillis() % 2 == 0) {
-						holder = holder.withoutHeader();
-					}
 					KafkaFuture future = (KafkaFuture) holder.send();
 					KafkaSendResult result;
 					try {
@@ -312,9 +300,6 @@ public class OneBoxTest {
 					String proMsg = expected.get(i);
 
 					MessageHolder holder = producer.message(topic, String.valueOf(i), proMsg);
-					if (System.currentTimeMillis() % 2 == 0) {
-						holder = holder.withoutHeader();
-					}
 					KafkaFuture future = (KafkaFuture) holder.send();
 					KafkaSendResult result;
 					try {

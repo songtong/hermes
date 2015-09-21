@@ -22,8 +22,6 @@ public abstract class Producer {
 		
 		public SendResult sendSync() throws MessageSendException;
 
-		public MessageHolder withoutHeader();
-		
 		public MessageHolder withPriority();
 
 		public MessageHolder addProperty(String key, String value);

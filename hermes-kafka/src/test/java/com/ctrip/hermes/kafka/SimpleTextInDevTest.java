@@ -41,7 +41,6 @@ public class SimpleTextInDevTest {
 
 		System.out.println("Starting consumer...");
 
-		boolean hasHeader = true;
 		int count = 1;
 		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
 			while (true) {
@@ -52,10 +51,6 @@ public class SimpleTextInDevTest {
 
 				String proMsg = "Hello Ctrip " + count++;
 				MessageHolder holder = producer.message(topic, String.valueOf(System.currentTimeMillis()), proMsg);
-				if (!hasHeader) {
-					holder = holder.withoutHeader();
-				}
-				hasHeader = !hasHeader;
 				holder.send();
 				System.out.println("Sent: " + proMsg);
 				sent.mark();

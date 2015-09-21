@@ -73,8 +73,6 @@ public class TopicsResource {
 
 	public static final String PROPERTIES = "X-Hermes-Message-Property";
 
-	public static final String WITHOUT_HEADER = "X-Hermes-Without-Header";
-
 	private ProducerSendService producerService = PlexusComponentLocator.lookup(ProducerSendService.class);
 
 	private ClientEnvironment env = PlexusComponentLocator.lookup(ClientEnvironment.class);
@@ -101,9 +99,6 @@ public class TopicsResource {
 		}
 		if (requestHeaders.containsKey(PROPERTIES)) {
 			params.put("properties", requestHeaders.getFirst(PROPERTIES));
-		}
-		if (requestHeaders.containsKey(WITHOUT_HEADER)) {
-			params.put("withoutHeader", requestHeaders.getFirst(WITHOUT_HEADER));
 		}
 		return params;
 	}

@@ -240,7 +240,7 @@ public class SendMessageCommandTest extends HermesCoreBaseTest {
 		msg.setPartition(partition);
 		msg.setPartitionKey(partitionKey);
 		msg.setPriority(isPriority);
-		msg.setWithHeader(withHeader);
+		msg.setWithCatTrace(withHeader);
 		PropertiesHolder propertiesHolder = new PropertiesHolder();
 		if (appProperites != null && !appProperites.isEmpty()) {
 			for (Pair<String, String> appProperty : appProperites) {

@@ -60,11 +60,6 @@ public class ProducerSendCommand extends HystrixCommand<Future<SendResult>> {
 				}
 			}
 		}
-		if (params.containsKey("withoutHeader")) {
-			if (Boolean.valueOf(params.get("withoutHeader"))) {
-				messageHolder.withoutHeader();
-			}
-		}
 
 		Future<SendResult> sendResult = messageHolder.send();
 		return sendResult;
