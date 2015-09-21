@@ -192,7 +192,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					long correlationId = cmd.getHeader().getCorrelationId();
 
 					Future<Boolean> acceptFuture = m_messageAcceptanceMonitor.monitor(correlationId);
-					Future<Void> resultFuture = m_messageResultMonitor.monitor(cmd);
+					Future<Boolean> resultFuture = m_messageResultMonitor.monitor(cmd);
 
 					long timeout = m_config.getBrokerSenderSendTimeoutMillis();
 
@@ -235,11 +235,11 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			}
 		}
 
-		private boolean waitForBrokerResult(SendMessageCommand cmd, Future<Void> resultFuture)
+		private boolean waitForBrokerResult(SendMessageCommand cmd, Future<Boolean> resultFuture)
 		      throws InterruptedException, ExecutionException {
 			try {
-				resultFuture.get(m_config.getSendMessageReadResultTimeoutMillis(), TimeUnit.MILLISECONDS);
-				return true;
+				Boolean result = resultFuture.get(m_config.getSendMessageReadResultTimeoutMillis(), TimeUnit.MILLISECONDS);
+				return result != null && result.booleanValue();
 			} catch (TimeoutException e) {
 				m_messageResultMonitor.cancel(cmd);
 			}
