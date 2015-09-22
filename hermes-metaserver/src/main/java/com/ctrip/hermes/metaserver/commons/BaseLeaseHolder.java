@@ -42,7 +42,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	@Inject
 	protected ZKClient m_zkClient;
 
-	private AtomicLong m_leaseIdGenerator = new AtomicLong(0);
+	private AtomicLong m_leaseIdGenerator = new AtomicLong(System.nanoTime());
 
 	private Map<Key, LeaseContext> m_LeaseContexts = new HashMap<>();
 

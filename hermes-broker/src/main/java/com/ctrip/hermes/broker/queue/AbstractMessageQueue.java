@@ -102,7 +102,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		}
 
 		MessageQueueDumper existingDumper = m_dumper.get();
-		if (existingDumper == null || existingDumper.getLease().getId() != lease.getId()) {
+		if (existingDumper == null || existingDumper.getLease().getId() != lease.getId() || existingDumper.getLease().isExpired()) {
 			MessageQueueDumper newDumper = createDumper(lease);
 			if (m_dumper.compareAndSet(existingDumper, newDumper)) {
 				newDumper.start();
