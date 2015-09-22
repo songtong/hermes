@@ -63,7 +63,6 @@ public class ProducerTest {
 
 			MessageHolder holder = producer.message(topic, String.valueOf(i), proMsg);
 			if (System.currentTimeMillis() % 2 == 0) {
-				holder = holder.withoutHeader();
 				holder = holder.withPriority();
 			}
 			holder = holder.withRefKey(String.valueOf(i));
@@ -113,7 +112,6 @@ public class ProducerTest {
 
 			});
 			if (System.currentTimeMillis() % 2 == 0) {
-				holder = holder.withoutHeader();
 				holder = holder.withPriority();
 			}
 			holder = holder.withRefKey(String.valueOf(i));

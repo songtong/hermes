@@ -16,6 +16,7 @@ import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.build.BuildConstants;
@@ -59,6 +60,9 @@ public class DefaultProducer extends Producer {
 				throw new IllegalArgumentException(String.format("Topic %s not found.", m_msg.getTopic()));
 			}
 
+			if (Storage.KAFKA.equals(topic.getStorageType())) {
+				m_msg.setWithCatTrace(false);
+			}
 			m_msg.setBornTime(m_systemClockService.now());
 			return m_pipeline.put(m_msg);
 		}
@@ -103,10 +107,5 @@ public class DefaultProducer extends Producer {
 			}
 		}
 
-		@Override
-		public MessageHolder withoutHeader() {
-			m_msg.setWithHeader(false);
-			return this;
-		}
 	}
 }

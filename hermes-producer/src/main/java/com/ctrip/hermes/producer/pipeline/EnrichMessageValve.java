@@ -34,10 +34,8 @@ public class EnrichMessageValve implements Valve, Initializable {
 		String ip = Networks.forIp().getLocalHostAddress();
 		enrichPartitionKey(msg, ip);
 
-		if (msg.isWithHeader()) {
-			enrichRefKey(msg);
-			enrichMessageProperties(msg, ip);
-		}
+		enrichRefKey(msg);
+		enrichMessageProperties(msg, ip);
 		ctx.next(payload);
 	}
 

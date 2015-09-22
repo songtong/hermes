@@ -35,7 +35,7 @@ public class HermesProducerPerf {
 		for (int i = 0; i < numRecords; i++) {
 			long sendStart = System.currentTimeMillis();
 			CompletionCallback<SendResult> cb = stats.nextCompletion(sendStart, payload.length, stats);
-			message.setCallback(cb).withoutHeader().send();
+			message.setCallback(cb).send();
 
 			if (throughput > 0) {
 				sleepDeficitNs += sleepTime;

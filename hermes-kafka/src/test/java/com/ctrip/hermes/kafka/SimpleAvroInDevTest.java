@@ -43,7 +43,6 @@ public class SimpleAvroInDevTest {
 
 		System.out.println("Starting consumer...");
 
-		boolean hasHeader = true;
 		try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
 			while (true) {
 				String line = in.readLine();
@@ -53,10 +52,6 @@ public class SimpleAvroInDevTest {
 
 				AvroVisitEvent proMsg = KafkaAvroTest.generateEvent();
 				MessageHolder holder = producer.message(topic, proMsg.getIp().toString(), proMsg);
-				if (!hasHeader) {
-					holder = holder.withoutHeader();
-				}
-				hasHeader = !hasHeader;
 				holder.send();
 				System.out.println("Sent: " + proMsg);
 				sent.mark();

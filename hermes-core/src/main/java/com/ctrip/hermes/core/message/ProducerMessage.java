@@ -20,7 +20,7 @@ public class ProducerMessage<T> {
 
 	private long m_bornTime;
 
-	private boolean m_withHeader = true;
+	private boolean m_withCatTrace = true;
 
 	private PropertiesHolder m_propertiesHolder = new PropertiesHolder();
 
@@ -143,12 +143,12 @@ public class ProducerMessage<T> {
 		return m_callback;
 	}
 
-	public boolean isWithHeader() {
-		return m_withHeader;
+	public boolean isWithCatTrace() {
+		return m_withCatTrace;
 	}
 
-	public void setWithHeader(boolean withHeader) {
-		this.m_withHeader = withHeader;
+	public void setWithCatTrace(boolean withHeader) {
+		this.m_withCatTrace = withHeader;
 	}
 
 	public long getBornTimeNano() {

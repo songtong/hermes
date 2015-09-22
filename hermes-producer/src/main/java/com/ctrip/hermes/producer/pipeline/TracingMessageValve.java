@@ -29,7 +29,7 @@ public class TracingMessageValve implements Valve {
 			Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
 			Cat.logEvent("Producer:" + ip, topic, Event.SUCCESS, "key=" + msg.getKey());
 			
-			if (msg.isWithHeader()) {
+			if (msg.isWithCatTrace()) {
 				MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 				String childMsgId = Cat.createMessageId();
 				String rootMsgId = tree.getRootMessageId();
