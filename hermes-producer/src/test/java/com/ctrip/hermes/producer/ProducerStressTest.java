@@ -1,18 +1,15 @@
 package com.ctrip.hermes.producer;
 
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.unidal.lookup.ComponentTestCase;
 
+import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.metrics.HttpMetricsServer;
 import com.ctrip.hermes.producer.api.Producer;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -21,11 +18,11 @@ import com.google.common.util.concurrent.SettableFuture;
 public class ProducerStressTest extends ComponentTestCase {
 
 	public static void main(String[] args) throws Exception {
-		ExecutorService executors = Executors.newFixedThreadPool(5);
 		// String topic = "hello_world";
 		String topic = "order_new";
-		int bodyLength = 1000;
-		int count = 10000000;
+		int bodyLength = 100;
+		int paritionCount = 1;
+		int msgPerSeconds = 600;
 
 		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
 		server.start();
@@ -38,36 +35,136 @@ public class ProducerStressTest extends ComponentTestCase {
 		final AtomicLong sent = new AtomicLong(0);
 		final AtomicLong failed = new AtomicLong(0);
 
-		String body = topic + "--" + generateRandomString(bodyLength);
+		StatTask statTask = new StatTask(sending, sent, failed, 5 * 1000);
 
-		Producer.getInstance().message(topic, "prepare-msg", topic + "--prepare-msg").sendSync();
+		Thread statThread = new Thread(statTask);
+		statThread.start();
 
-		while (sending.get() < count) {
+		ProducerTask[] producerTasks = new ProducerTask[paritionCount];
+		for (int i = 0; i < paritionCount; i++) {
+			producerTasks[i] = new ProducerTask(i, sending, sent, failed, topic, generateRandomString(bodyLength),
+			      msgPerSeconds / paritionCount);
+			Thread producerThread = new Thread(producerTasks[i]);
+			producerThread.start();
+		}
 
-			long id = sending.incrementAndGet();
-			SettableFuture<SendResult> future = (SettableFuture<SendResult>) Producer.getInstance()
-			      .message(topic, body, body).withRefKey(Long.toString(id)).send();
+		System.in.read();
+		for (ProducerTask producerTask : producerTasks) {
+			producerTask.stop();
+		}
 
-			Futures.addCallback(future, new FutureCallback<SendResult>() {
+		System.out.println("Producer stopped...");
 
-				@Override
-				public void onSuccess(SendResult result) {
-					sent.incrementAndGet();
+		System.in.read();
+		statTask.stop();
+		System.out.println("Stat stopped...");
+
+		System.in.read();
+
+	}
+
+	private static class StatTask implements Runnable {
+
+		private AtomicLong sending;
+
+		private AtomicLong sent;
+
+		private AtomicLong failed;
+
+		private long interval;
+
+		private AtomicBoolean stopped = new AtomicBoolean(false);
+
+		public StatTask(AtomicLong sending, AtomicLong sent, AtomicLong failed, long interval) {
+			this.sending = sending;
+			this.sent = sent;
+			this.failed = failed;
+			this.interval = interval;
+		}
+
+		@Override
+		public void run() {
+			while (!stopped.get()) {
+				System.out.println(String.format("Sending: %s, Sent: %s, Failed: %s", sending.get(), sent.get(),
+				      failed.get()));
+
+				try {
+					Thread.sleep(interval);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 
-				@Override
-				public void onFailure(Throwable t) {
-					failed.incrementAndGet();
-				}
-			}, executors);
-
-			long current = sending.get();
-
-			if (current != 0 && current % 10000 == 0) {
-				System.out.println("Sending: " + sending.get() + " Sent: " + sent.get() + " Failed: " + failed.get());
-				Thread.sleep(20 * 1000);
 			}
 		}
+
+		public void stop() {
+			stopped.set(true);
+		}
+
+	}
+
+	private static class ProducerTask implements Runnable {
+		private AtomicLong sending;
+
+		private AtomicLong sent;
+
+		private AtomicLong failed;
+
+		private AtomicBoolean stopped = new AtomicBoolean(false);
+
+		private String topic;
+
+		private String body;
+
+		private int msgsPerSec;
+
+		private int num;
+
+		public ProducerTask(int num, AtomicLong sending, AtomicLong sent, AtomicLong failed, String topic, String body,
+		      int msgsPerSec) {
+			this.sending = sending;
+			this.sent = sent;
+			this.failed = failed;
+			this.body = body;
+			this.topic = topic;
+			this.msgsPerSec = msgsPerSec;
+			this.num = num;
+		}
+
+		@Override
+		public void run() {
+			long id = 0;
+			while (!stopped.get()) {
+				sending.incrementAndGet();
+				id++;
+				Producer.getInstance().message(topic, String.valueOf(num), id + "--" + body).withRefKey(Long.toString(id))
+				      .setCallback(new CompletionCallback<SendResult>() {
+
+					      @Override
+					      public void onSuccess(SendResult result) {
+						      sent.incrementAndGet();
+					      }
+
+					      @Override
+					      public void onFailure(Throwable t) {
+						      failed.incrementAndGet();
+					      }
+				      }).send();
+
+				if (id % msgsPerSec == 0) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+		public void stop() {
+			stopped.set(true);
+		}
+
 	}
 
 	private static String generateRandomString(int size) {
