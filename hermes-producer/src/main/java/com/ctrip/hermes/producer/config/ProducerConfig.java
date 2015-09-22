@@ -23,7 +23,7 @@ public class ProducerConfig implements Initializable {
 
 	public static final int DEFAULT_BROKER_SENDER_TASK_QUEUE_SIZE = 500000;
 
-	public static final int DEFAULT_BROKER_SENDER_BATCH_SIZE = 10000;
+	public static final int DEFAULT_BROKER_SENDER_BATCH_SIZE = 500;
 
 	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_BASE_MILLIS = 5;
 
