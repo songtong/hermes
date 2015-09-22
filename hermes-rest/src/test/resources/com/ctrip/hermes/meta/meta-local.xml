@@ -9,14 +9,18 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100000' name="SimpleTextTopic0Group"
+			app-ids="1" />
 	</topic>
-	
+
 	<topic name='kafka.SimpleTextTopic' partition-count='1'
 		storage-type='kafka' id='101' description='topic for OneBox Test'
 		status='valid' create-time='2015-05-01 00:00:00' last-modified-time='2015-04-01 00:00:00'
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100000' name="SimpleTextTopicGroup"
+			app-ids="1" />
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic1' partition-count='1'
@@ -25,6 +29,8 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100001' name="SimpleTextTopic1Group"
+			app-ids="1" />
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic2' partition-count='1'
@@ -33,6 +39,8 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100002' name="SimpleTextTopic2Group"
+			app-ids="1" />
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic3' partition-count='1'
@@ -41,6 +49,8 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100003' name="SimpleTextTopic3Group"
+			app-ids="1" />
 	</topic>
 
 	<topic name='kafka.SimpleTextTopic4' partition-count='1'
@@ -49,8 +59,10 @@
 		codec-type="json" create-by="liuym" endpoint-type="kafka">
 		<partition id='0' read-datasource='kafka-consumer'
 			write-datasource='kafka-producer' endpoint='kafka-endpoint' />
+		<consumer-group id='100004' name="SimpleTextTopic4Group"
+			app-ids="1" />
 	</topic>
-	
+
 	<codec type="json" />
 
 	<storage type='kafka'>

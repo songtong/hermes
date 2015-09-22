@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.AfterClass;
@@ -49,11 +48,27 @@ public class OneBoxTest {
 		zk.stop();
 	}
 
+	@Test(expected = IllegalArgumentException.class)
+	public void simpleTextOneProducerWrongConsumerTest() throws InterruptedException, ExecutionException {
+		String topic = "kafka.SimpleTextTopic1";
+		String group = "NonExistGroup";
+
+		Consumer.getInstance().start(topic, group, new BaseMessageListener<String>() {
+
+			@Override
+			protected void onMessage(ConsumerMessage<String> msg) {
+				String body = msg.getBody();
+				System.out.println("Receive: " + body);
+			}
+		});
+
+	}
+
 	@Test
 	public void simpleTextOneProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
 		String topic = "kafka.SimpleTextTopic1";
 		kafkaCluster.createTopic(topic, 3, 1);
-		String group = UUID.randomUUID().toString();
+		String group = "SimpleTextTopic1Group";
 
 		List<String> expected = new ArrayList<String>();
 		expected.add("abc");
@@ -115,7 +130,7 @@ public class OneBoxTest {
 	      ExecutionException {
 		String topic = "kafka.SimpleTextTopic2";
 		kafkaCluster.createTopic(topic, 3, 1);
-		String group = UUID.randomUUID().toString();
+		String group = "SimpleTextTopic2Group";
 
 		List<String> expected = new ArrayList<String>();
 		expected.add("abc");
@@ -141,7 +156,7 @@ public class OneBoxTest {
 
 		System.out.println("Starting consumer1");
 		Thread.sleep(1000);
-		
+
 		ConsumerHolder consumer2 = Consumer.getInstance().start(topic, group, new BaseMessageListener<String>() {
 
 			@Override
@@ -153,7 +168,7 @@ public class OneBoxTest {
 		});
 		System.out.println("Starting consumer2");
 		Thread.sleep(1000);
-		
+
 		for (int i = 0; i < expected.size(); i++) {
 			String proMsg = expected.get(i);
 
@@ -183,8 +198,8 @@ public class OneBoxTest {
 	      ExecutionException {
 		String topic = "kafka.SimpleTextTopic3";
 		kafkaCluster.createTopic(topic, 3, 1);
-		String group1 = UUID.randomUUID().toString();
-		String group2 = UUID.randomUUID().toString();
+		String group1 = "SimpleTextTopic3Group1";
+		String group2 = "SimpleTextTopic3Group2";
 
 		List<String> expected = new ArrayList<String>();
 		expected.add("abc");
@@ -211,7 +226,7 @@ public class OneBoxTest {
 
 		System.out.println("Starting consumer1");
 		Thread.sleep(1000);
-		
+
 		ConsumerHolder consumer2 = Consumer.getInstance().start(topic, group2, new BaseMessageListener<String>() {
 
 			@Override
@@ -223,7 +238,7 @@ public class OneBoxTest {
 		});
 		System.out.println("Starting consumer2");
 		Thread.sleep(1000);
-		
+
 		for (int i = 0; i < expected.size(); i++) {
 			String proMsg = expected.get(i);
 
@@ -254,7 +269,7 @@ public class OneBoxTest {
 	public void simpleTextMultipleProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
 		final String topic = "kafka.SimpleTextTopic4";
 		kafkaCluster.createTopic(topic, 3, 1);
-		final String group = UUID.randomUUID().toString();
+		final String group = "SimpleTextTopic4Group";
 
 		final List<String> expected = new ArrayList<String>();
 		expected.add("abc");
@@ -278,7 +293,7 @@ public class OneBoxTest {
 
 		System.out.println("Starting consumer...");
 		Thread.sleep(1000);
-		
+
 		Thread producer1 = new Thread() {
 			public void run() {
 				Producer producer = Producer.getInstance();

@@ -55,7 +55,7 @@ public class KafkaAvroTest {
 
 	@Test
 	public void testByBatch() throws InterruptedException, ExecutionException, IOException, RestClientException {
-		String group = "avroGroup";
+		String group = "SimpleAvroTopicGroup";
 
 		int schemaId = 100;
 		String schemaString = AvroVisitEvent.getClassSchema().toString();

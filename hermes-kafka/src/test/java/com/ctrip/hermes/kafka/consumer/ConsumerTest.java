@@ -20,7 +20,7 @@ public class ConsumerTest {
 	@Test
 	public void testOneConsumerOneGroup() throws IOException {
 		String topic = "kafka.SimpleTextTopic";
-		String group = "group1";
+		String group = "SimpleTextTopicGroup";
 
 		Producer producer = Producer.getInstance();
 

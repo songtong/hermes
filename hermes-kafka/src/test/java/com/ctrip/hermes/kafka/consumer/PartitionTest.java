@@ -19,7 +19,7 @@ public class PartitionTest {
 	@Test
 	public void testTwoPartitionOneConsumer() throws IOException {
 		String topicPattern = "kafka.SimpleTextTopic";
-		String group = "group2";
+		String group = "SimpleTextTopicGroup";
 
 		Producer producer = Producer.getInstance();
 
@@ -61,7 +61,7 @@ public class PartitionTest {
 	@Test
 	public void testTwoPartitionTwoConsumer() throws IOException {
 		String topicPattern = "kafka.SimpleTextTopic";
-		String group = "group2";
+		String group = "SimpleTextTopicGroup";
 
 		Producer producer = Producer.getInstance();
 

@@ -13,7 +13,6 @@ import com.ctrip.hermes.consumer.engine.bootstrap.ConsumerBootstrapManager;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
-import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Topic;
 
 @Named(type = Engine.class)
@@ -71,11 +70,9 @@ public class DefaultEngine extends Engine {
 		boolean hasError = false;
 
 		for (Topic topic : topics) {
-			if (Endpoint.BROKER.equals(topic.getEndpointType())) {
-				if (!m_metaService.containsConsumerGroup(topic.getName(), groupId)) {
-					failedTopics.add(topic.getName());
-					hasError = true;
-				}
+			if (!m_metaService.containsConsumerGroup(topic.getName(), groupId)) {
+				failedTopics.add(topic.getName());
+				hasError = true;
 			}
 		}
 
