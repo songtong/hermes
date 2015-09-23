@@ -4,21 +4,10 @@
 	<div class="col-md-12">
 		<div class="panel panel-success">
 			<div class="panel-heading">
-				<a href="#top/produce/{{current_topic}}" class="btn btn-xs btn-success" style="text-align: center;">
-					<span class="glyphicon glyphicon-th-list"></span>
-					生产速度排行
-				</a>
-				<a href="#top/consume/{{current_topic}}" class="btn btn-xs btn-warning" style="text-align: center;">
-					<span class="glyphicon glyphicon-th-list"></span>
-					消费速度排行
-				</a>
-				<a href="#top/process/{{current_topic}}" class="btn btn-xs btn-primary" style="text-align: center;">
-					<span class="glyphicon glyphicon-time"></span>
-					消费耗时排行
-				</a>
-				<a href="#latest/{{current_topic}}" class="btn btn-xs btn-info" style="text-align: center;">
-					<span class="glyphicon glyphicon-eye-open"></span>
-					最新消息
+				<a href="#top/produce/{{current_topic}}" class="btn btn-xs btn-success" style="text-align: center;"> <span class="glyphicon glyphicon-th-list"></span> 生产速度排行
+				</a> <a href="#top/consume/{{current_topic}}" class="btn btn-xs btn-warning" style="text-align: center;"> <span class="glyphicon glyphicon-th-list"></span> 消费速度排行
+				</a> <a href="#top/process/{{current_topic}}" class="btn btn-xs btn-primary" style="text-align: center;"> <span class="glyphicon glyphicon-time"></span> 消费耗时排行
+				</a> <a href="#latest/{{current_topic}}" class="btn btn-xs btn-info" style="text-align: center;"> <span class="glyphicon glyphicon-eye-open"></span> 最新消息
 				</a>
 			</div>
 			<iframe style="border: 0" ng-src="{{k_topic_produce_history}}" height="200" width="100%"></iframe>
@@ -30,12 +19,18 @@
 	<div class="col-md-12">
 		<div class="panel panel-success">
 			<div class="panel-heading">Consumer 消费延时</div>
-			<table class="table table-hover" st-pipe="topic_delay" st-table="delay_table" style="font-size: small;">
+			<table class="table table-hover" st-pipe="topic_delay" st-table="display_topic_delay" st-safe-src="topic_delay" style="font-size: small;">
 				<thead>
 					<tr>
 						<th st-sort="consumer">Consumer 名称</th>
 						<th st-sort="partition">Partition ID</th>
 						<th st-sort="delay">延迟数量</th>
+						<th st-sort="priorityMsgId">最新优先消息ID</th>
+						<th st-sort="priorityMsgOffset">消费至</th>
+						<th st-sort="lastConsumedPriorityMsg">最近消费内容</th>
+						<th st-sort="nonPriorityMsgId">最新非优先消息ID</th>
+						<th st-sort="nonPriorityMsgOffset">消费至</th>
+						<th st-sort="lastConsumedNonPriorityMsg">最近消费内容</th>
 					</tr>
 					<tr>
 						<th><input st-search="consumer" placeholder="Consumer Name" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -44,12 +39,17 @@
 					</tr>
 				</thead>
 				<tbody ng-if="!is_loading">
-					<tr ng-click="" ng-repeat="delay in topic_delay.details">
-						<td><a href="#consume/{{current_topic}}/{{delay.consumer}}">
-								<span ng-bind="delay.consumer" tooltip="点击查看消费详情"></span>
-							</a></td>
-						<td width="15%"><span ng-bind="delay.partitionId"></span></td>
+					<tr ng-click="" ng-repeat="delay in display_topic_delay">
+						<td><a href="#consume/{{current_topic}}/{{delay.consumer}}"> <span ng-bind="delay.consumer" tooltip="点击查看消费详情"></span>
+						</a></td>
+						<td><span ng-bind="delay.partitionId"></span></td>
 						<td><span ng-bind="delay.delay"></span></td>
+						<td><span ng-bind="delay.priorityMsgId"></span></td>
+						<td><span ng-bind="delay.priorityMsgOffset"></span></td>
+						<td><a href="" tooltip="点击查看详情" ng-click="show_payload(delay.lastConsumedPriorityMsg)"><span ng-bind="delay.lastConsumedPriorityMsg | short:6"></span></a></td>
+						<td><span ng-bind="delay.nonPriorityMsgId"></span></td>
+						<td><span ng-bind="delay.nonPriorityMsgOffset"></span></td>
+						<td><a href="" tooltip="点击查看详情" ng-click="show_payload(delay.lastConsumedNonPriorityMsg)"><span ng-bind="delay.lastConsumedNonPriorityMsg | short:6"></span></a></td>
 					</tr>
 				</tbody>
 				<tbody ng-if="is_loading">
@@ -58,6 +58,24 @@
 					</tr>
 				</tbody>
 			</table>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="payload-view" tabindex="-1" role="dialog" aria-labelledby="payload-label" aria-hidden="true">
+	<div class="modal-dialog" style="margin-top: 10%;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="payload-label">Payload</h4>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<pre style="max-height: 600px; overflow: scroll;">{{current_payload | json:2}}</pre>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

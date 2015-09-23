@@ -1,11 +1,13 @@
 package com.ctrip.hermes.portal.resource.view;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TopicDelayDetailView extends TopicDelayBriefView {
 
-	private List<DelayDetail> details = new ArrayList<DelayDetail>();
+	private Map<String, List<DelayDetail>> details = new HashMap<>();
 
 	public TopicDelayDetailView() {
 	}
@@ -14,15 +16,35 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 		setTopic(topic);
 	}
 
-	public void addDelay(String consumer, int partitionId, Long delay) {
-		details.add(new DelayDetail(consumer, partitionId, delay));
+	public DelayDetail getDelay(String consumer, int partitionId) {
+		List<DelayDetail> delaydetails = details.get(consumer);
+		for (DelayDetail currentDetail : delaydetails) {
+			if (currentDetail.getPartitionId() == partitionId) {
+				return currentDetail;
+			}
+		}
+		return null;
+	}
+/**
+ * 
+ * @param consumer
+ * @param partitionId
+ * @return the DelayDetail added.
+ */
+	public DelayDetail addDelay(String consumer, int partitionId) {
+		if (!details.containsKey(consumer)) {
+			details.put(consumer, new ArrayList<DelayDetail>());
+		}
+		DelayDetail curentDetail = new DelayDetail(consumer, partitionId);
+		details.get(consumer).add(curentDetail);
+		return curentDetail;
 	}
 
-	public List<DelayDetail> getDetails() {
+	public Map<String, List<DelayDetail>> getDetails() {
 		return details;
 	}
 
-	public void setDetails(List<DelayDetail> details) {
+	public void setDetails(Map<String, List<DelayDetail>> details) {
 		this.details = details;
 	}
 
@@ -33,14 +55,26 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		private long delay;
 
+		private long priorityMsgId;
+
+		private long nonPriorityMsgId;
+
+		private long priorityMsgOffset;
+
+		private long nonPriorityMsgOffset;
+
+		private String lastConsumedPriorityMsg;
+
+		private String lastConsumedNonPriorityMsg;
+
+
 		public DelayDetail() {
 
 		}
 
-		public DelayDetail(String consumer, int partitionId, long delay) {
+		public DelayDetail(String consumer, int partitionId) {
 			this.consumer = consumer;
 			this.partitionId = partitionId;
-			this.delay = delay;
 		}
 
 		public String getConsumer() {
@@ -59,11 +93,12 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 			this.partitionId = partitionId;
 		}
 
+
 		public long getDelay() {
 			return delay;
 		}
 
-		public void setDelay(int delay) {
+		public void setDelay(long delay) {
 			this.delay = delay;
 		}
 
@@ -94,5 +129,55 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 				return false;
 			return true;
 		}
+
+		public String getLastConsumedPriorityMsg() {
+			return lastConsumedPriorityMsg;
+		}
+
+		public void setLastConsumedPriorityMsg(String lastConsumedPriorityMsg) {
+			this.lastConsumedPriorityMsg = lastConsumedPriorityMsg;
+		}
+
+		public String getLastConsumedNonPriorityMsg() {
+			return lastConsumedNonPriorityMsg;
+		}
+		
+		public void setLastConsumedNonPriorityMsg(String lastConsumedNonPriorityMsg) {
+			this.lastConsumedNonPriorityMsg = lastConsumedNonPriorityMsg;
+		}
+
+		public long getPriorityMsgId() {
+			return priorityMsgId;
+		}
+
+		public void setPriorityMsgId(long priorityMsgId) {
+			this.priorityMsgId = priorityMsgId;
+		}
+
+		public long getNonPriorityMsgId() {
+			return nonPriorityMsgId;
+		}
+
+		public void setNonPriorityMsgId(long nonPriorityMsgId) {
+			this.nonPriorityMsgId = nonPriorityMsgId;
+		}
+
+		public long getPriorityMsgOffset() {
+			return priorityMsgOffset;
+		}
+
+		public void setPriorityMsgOffset(long priorityMsgOffset) {
+			this.priorityMsgOffset = priorityMsgOffset;
+		}
+
+		public long getNonPriorityMsgOffset() {
+			return nonPriorityMsgOffset;
+		}
+
+		public void setNonPriorityMsgOffset(long nonPriorityMsgOffset) {
+			this.nonPriorityMsgOffset = nonPriorityMsgOffset;
+		}
+
+		
 	}
 }

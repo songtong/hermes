@@ -59,16 +59,26 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 		});
 		$("#attr-view").modal('show');
 	};
+	
+	$scope.show_payload = function(payload){
+		$scope.current_payload = payload;
+		$("#payload-view").modal('show');
+	}
 
 	// ************** consumer delays **************** //
 	$scope.refresh_topic_delay = function() {
 		topic_delay_resource.query({
 			'topic' : $scope.current_topic
 		}, function(data) {
-			$scope.topic_delay = data;
+			$scope.topic_delay=[];
+			for(var consumer_name in data.details){
+				$scope.topic_delay=$scope.topic_delay.concat(data.details[consumer_name]);
+			}
+			console.log($scope.topic_delay);
 		});
 	}
 	$scope.topic_delay = $scope.refresh_topic_delay();
+	$scope.display_topic_delay = [].concat($scope.topic_delay);
 });
 
 function format_tree(obj) {
