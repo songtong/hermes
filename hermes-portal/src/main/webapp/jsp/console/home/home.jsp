@@ -18,18 +18,19 @@
 								<th st-sort="consumer">Consumer</th>
 								<th st-sort="delay">Delay(条)</th>
 							</tr>
+							<tr>
+								<th><input st-search="topic" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+								<th><input st-search="consumer" placeholder="Consumer" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+							</tr>
 						</thead>
 						<tbody ng-if="!delay_table_is_loading">
 							<tr ng-repeat="delay in display_consume_delays_deail">
-								<td><a href="/console/dashboard#/detail/{{delay.topic}}" tooltip="{{delay.topic}}">
-										<span ng-bind="delay.topic | short:25"></span>
-									</a></td>
-								<td><a href="/console/dashboard#/consume/{{delay.topic}}/{{delay.consumer}}" tooltip="{{delay.consumer}}">
-										<span ng-bind="delay.consumer | short:25"></span>
-									</a></td>
-								<td><a href="" popover-placement="right" popover-trigger="focus" popover-template="get_delay_detail(delay)" popover-title="{{delay.topic}}">
-										<span ng-bind="delay.delay"></span>
-									</a></td>
+								<td><a href="/console/dashboard#/detail/{{delay.topic}}" tooltip="{{delay.topic}}"> <span ng-bind="delay.topic | short:25"></span>
+								</a></td>
+								<td><a href="/console/dashboard#/consume/{{delay.topic}}/{{delay.consumer}}" tooltip="{{delay.consumer}}"> <span ng-bind="delay.consumer | short:25"></span>
+								</a></td>
+								<td><a href="" popover-placement="right" popover-trigger="focus" popover-template="get_delay_detail(delay)" popover-title="{{delay.topic}}"> <span ng-bind="delay.delay"></span>
+								</a></td>
 							</tr>
 						</tbody>
 						<tbody ng-if="delay_table_is_loading">
@@ -50,12 +51,14 @@
 								<th st-sort="value">最近生产</th>
 								<th st-sort="getters.outdate_delay_to_now">延时</th>
 							</tr>
+							<tr>
+								<th><input st-search="key" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+							</tr>
 						</thead>
 						<tbody ng-if="!outdate_topics_table_is_loading">
 							<tr ng-repeat="outdate in display_outdate_topics">
-								<td><a href="/console/dashboard#/latest/{{outdate.key}}" tooltip="{{outdate.key}}">
-										<span ng-bind="outdate.key | short:20"></span>
-									</a></td>
+								<td><a href="/console/dashboard#/latest/{{outdate.key}}" tooltip="{{outdate.key}}"> <span ng-bind="outdate.key | short:20"></span>
+								</a></td>
 								<td><span ng-bind="outdate.value | date:'yyyy-MM-dd HH:mm:ss' | produce_format"></span></td>
 								<td><span ng-bind="get_delay_to_now(outdate.value)"></span></td>
 							</tr>
@@ -83,9 +86,8 @@
 						<tbody ng-if="!broker_received_table_is_loading">
 							<tr ng-repeat="qps in display_broker_received_qps">
 								<td><span ng-bind="qps.brokerIp"></span></td>
-								<td><a href="" ng-click="get_broker_received_detail(qps.brokerIp)" data-toggle="modal" data-target="#broker_received_modal">
-										<span ng-bind="qps.qps"></span>
-									</a></td>
+								<td><a href="" ng-click="get_broker_received_detail(qps.brokerIp)" data-toggle="modal" data-target="#broker_received_modal"> <span ng-bind="qps.qps"></span>
+								</a></td>
 							</tr>
 						</tbody>
 						<tbody ng-if="broker_received_table_is_loading">
@@ -109,9 +111,8 @@
 						<tbody ng-if="!broker_delivered_table_is_loading">
 							<tr ng-repeat="qps in display_broker_delivered_qps">
 								<td><span ng-bind="qps.brokerIp"></span></td>
-								<td><a href="" ng-click="get_broker_delivered_detail(qps.brokerIp)" data-toggle="modal" data-target="#broker_delivered_modal">
-										<span ng-bind="qps.qps"></span>
-									</a></td>
+								<td><a href="" ng-click="get_broker_delivered_detail(qps.brokerIp)" data-toggle="modal" data-target="#broker_delivered_modal"> <span ng-bind="qps.qps"></span>
+								</a></td>
 							</tr>
 						</tbody>
 						<tbody ng-if="broker_delivered_table_is_loading">
@@ -127,7 +128,9 @@
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
 						<h4 class="modal-title" id="broker_received_label">
 							<span ng-bind="current_broker_received_details.brokerIp"></span>
 						</h4>
@@ -155,7 +158,9 @@
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
 						<h4 class="modal-title" id="broker_delivered_label">
 							<span ng-bind="current_broker_delivered_details.brokerIp"></span>
 						</h4>

@@ -4,31 +4,24 @@ function recombineDelays(data) {
 	for (var i = 0; i < data.length; i++) {
 		topic_name = data[i].topic;
 		temp_delay_details = data[i].details;
-		for (var j = 0; j < temp_delay_details.length; j++) {
-			consumer_name = temp_delay_details[j].consumer;
-			var k = index;
-			for (k = 0; k < temp_consume_delays_detail.length; k++) {
-				if (temp_consume_delays_detail[k].consumer == consumer_name && temp_consume_delays_detail[k].topic == topic_name) {
-					break;
-				}
+		for ( var consumer_name in temp_delay_details) {
+			var tempDelay=0;
+			for (var k = 0; k <  temp_delay_details[consumer_name].length; k++) {
+				tempDelay +=  temp_delay_details[consumer_name][k].delay;
 			}
-			if (k == temp_consume_delays_detail.length) {
-				temp_consume_delays_detail.push({
-					topic : topic_name,
-					consumer : consumer_name,
-					delay : 0,
-					details : []
-				});
-			}
-			temp_consume_delays_detail[k].details.push(temp_delay_details[j]);
-			temp_consume_delays_detail[k].delay = temp_consume_delays_detail[k].delay + temp_delay_details[j].delay;
+			temp_consume_delays_detail.push({
+				topic : topic_name,
+				consumer : consumer_name,
+				delay : tempDelay,
+				details : temp_delay_details[consumer_name]
+			});
 		}
-		index += j;
 	}
 	return temp_consume_delays_detail;
 }
 
-var homeapp = angular.module("dashboard", [ 'ngResource', 'ui.bootstrap', 'smart-table' ]);
+var homeapp = angular.module("dashboard", [ 'ngResource', 'ui.bootstrap',
+		'smart-table' ]);
 
 homeapp.filter('short', function() {
 	return function(input, length) {
@@ -38,7 +31,8 @@ homeapp.filter('short', function() {
 		if (input.length <= length) {
 			return input;
 		}
-		out = input.substring(0, length / 2) + " ... " + input.substring(input.length - length / 2);
+		out = input.substring(0, length / 2) + " ... "
+				+ input.substring(input.length - length / 2);
 		return out;
 	}
 });
@@ -50,16 +44,19 @@ homeapp.filter('produce_format', function() {
 	}
 });
 
-homeapp.controller("hermes-dashboard-controller", function($scope, $http, $resource, $compile, $sce) {
+homeapp.controller("hermes-dashboard-controller", function($scope, $http,
+		$resource, $compile, $sce) {
 	$scope.consume_delays_detail = [];
 	$scope.oudate_topics = [];
 	$scope.broker_received_qps = [];
 	$scope.broker_delivered_qps = [];
 
-	$scope.display_consume_delays_deail = [].concat($scope.consume_delays_detail);
+	$scope.display_consume_delays_deail = []
+			.concat($scope.consume_delays_detail);
 	$scope.display_outdate_topics = [].concat($scope.outdate_topics);
 	$scope.display_broker_received_qps = [].concat($scope.broker_received_qps);
-	$scope.display_broker_delivered_qps = [].concat($scope.broker_delivered_qps);
+	$scope.display_broker_delivered_qps = []
+			.concat($scope.broker_delivered_qps);
 
 	$scope.delay_table_is_loading = true;
 	$scope.outdate_topics_table_is_loading = true;
@@ -148,13 +145,16 @@ homeapp.controller("hermes-dashboard-controller", function($scope, $http, $resou
 
 	$scope.normalize_delay = function(delay) {
 		if (delay >= 86400000) {
-			return parseInt(delay / 86400000) + "天" + $scope.normalize_delay(delay % 86400000);
+			return parseInt(delay / 86400000) + "天"
+					+ $scope.normalize_delay(delay % 86400000);
 		}
 		if (delay >= 3600000) {
-			return parseInt(delay / 3600000) + "小时" + $scope.normalize_delay(delay % 3600000);
+			return parseInt(delay / 3600000) + "小时"
+					+ $scope.normalize_delay(delay % 3600000);
 		}
 		if (delay >= 60000) {
-			return parseInt(delay / 60000) + "分钟" + $scope.normalize_delay(delay % 60000);
+			return parseInt(delay / 60000) + "分钟"
+					+ $scope.normalize_delay(delay % 60000);
 		}
 		return parseInt(delay / 1000) + "秒";
 	};

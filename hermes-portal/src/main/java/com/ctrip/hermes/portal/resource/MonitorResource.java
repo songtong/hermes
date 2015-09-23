@@ -32,7 +32,6 @@ import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Codec;
-import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -44,6 +43,7 @@ import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
+import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.monitor.MonitorService;
 
 import io.netty.buffer.Unpooled;
@@ -94,12 +94,7 @@ public class MonitorResource {
 		TopicDelayDetailView view = new TopicDelayDetailView(name);
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
-			for (ConsumerGroup consumer : topic.getConsumerGroups()) {
-				for (Entry<Integer, Long> e : m_monitorService.getDelayDetails(name, consumer.getId()).entrySet()) {
-					long delay = e.getValue();
-					view.addDelay(consumer.getName(), e.getKey(), delay);
-				}
-			}
+			view = m_monitorService.getTopicDelayDetail(name);
 		}
 
 		return Response.status(Status.OK).entity(view).build();
@@ -245,23 +240,23 @@ public class MonitorResource {
 	}
 
 	@GET
-	@Path("delay/{topic}/{groupId}")
+	@Path("delay/{topic}/{groupName}")
 	// not in use
-	public Response getConsumeDelay(@PathParam("topic") String topic, @PathParam("groupId") int groupId) {
-		Long delay = m_monitorService.getDelay(topic, groupId);
+	public Response getConsumeDelay(@PathParam("topic") String topic, @PathParam("groupName") String groupName) {
+		Long delay = m_monitorService.getDelay(topic, groupName);
 		if (delay == null) {
-			throw new RestException(String.format("Delay [%s, %s] not found.", topic, groupId), Status.NOT_FOUND);
+			throw new RestException(String.format("Delay [%s, %s] not found.", topic, groupName), Status.NOT_FOUND);
 		}
 		return Response.status(Status.OK).entity(delay).build();
 	}
 
 	@GET
-	@Path("delay/{topic}/{groupId}/detail")
+	@Path("delay/{topic}/{groupName}/detail")
 	// not in use
-	public Response getConsumeDelayDetail(@PathParam("topic") String topic, @PathParam("groupId") int groupId) {
-		Map<Integer, Long> delayDetails = m_monitorService.getDelayDetails(topic, groupId);
+	public Response getConsumeDelayDetail(@PathParam("topic") String topic, @PathParam("groupName") String groupName) {
+		List<DelayDetail> delayDetails = m_monitorService.getDelayDetailForConsumer(topic, groupName);
 		if (delayDetails == null || delayDetails.size() == 0) {
-			throw new RestException(String.format("Delay [%s, %s] not found.", topic, groupId), Status.NOT_FOUND);
+			throw new RestException(String.format("Delay [%s, %s] not found.", topic, groupName), Status.NOT_FOUND);
 		}
 		return Response.status(Status.OK).entity(delayDetails).build();
 	}

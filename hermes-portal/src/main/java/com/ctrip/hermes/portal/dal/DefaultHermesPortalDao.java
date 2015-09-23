@@ -33,6 +33,16 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 	}
 
 	@Override
+	public MessagePriority getMsgById(String topic, int partition, int priority, long id) throws DalException {
+		if(id<=0){
+			return null;
+		}
+		List<MessagePriority> msgs = m_msgDao.findIdAfter(topic, partition, priority, id - 1, 1,
+				MessagePriorityEntity.READSET_FULL);
+		return msgs.size() > 0 ? msgs.get(0) : null;
+	}
+
+	@Override
 	public Map<Integer, Pair<OffsetMessage, OffsetMessage>> getLatestConsumed(String topic, int partition)
 			throws DalException {
 		List<OffsetMessage> offsetMsgs = m_offsetDao.findAll(topic, partition, OffsetMessageEntity.READSET_FULL);
