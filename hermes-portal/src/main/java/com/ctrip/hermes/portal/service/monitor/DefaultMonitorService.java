@@ -28,6 +28,7 @@ import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -326,9 +327,11 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 							delayDetail.setPriorityMsgOffset(priorityMsgOffset);
 							delayDetail.setNonPriorityMsgOffset(nonPriorityMsgOffset);
 							delayDetail.setLastConsumedPriorityMsg(lastConsumedPriorityMsg == null ? null
-									: new String(lastConsumedPriorityMsg.getPayload()));
+									: JSON.toJSONString(new JsonPayloadCodec()
+											.decode(lastConsumedPriorityMsg.getPayload(), Object.class)));
 							delayDetail.setLastConsumedNonPriorityMsg(lastConsumedNonPriorityMsg == null ? null
-									: new String(lastConsumedNonPriorityMsg.getPayload()));
+									: JSON.toJSONString(new JsonPayloadCodec()
+											.decode(lastConsumedNonPriorityMsg.getPayload(), Object.class)));
 							topicDelayView.addDelay(delayDetail);
 
 							topicDelayView.setTotalDelay(topicDelayView.getTotalDelay() + delay);
