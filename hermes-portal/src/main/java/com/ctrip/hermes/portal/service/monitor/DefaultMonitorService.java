@@ -318,15 +318,17 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 									PortalConstants.PRIORITY_TRUE, priorityMsgOffset);
 							MessagePriority lastConsumedNonPriorityMsg = m_dao.getMsgById(t.getName(), p.getId(),
 									PortalConstants.PRIORITY_TRUE, nonPriorityMsgOffset);
-							
+
 							DelayDetail delayDetail = new DelayDetail(c.getName(), p.getId());
 							delayDetail.setDelay(delay);
 							delayDetail.setPriorityMsgId(priorityMsgId);
 							delayDetail.setNonPriorityMsgId(nonPriorityMsgId);
 							delayDetail.setPriorityMsgOffset(priorityMsgOffset);
 							delayDetail.setNonPriorityMsgOffset(nonPriorityMsgOffset);
-							delayDetail.setLastConsumedPriorityMsg(lastConsumedPriorityMsg);
-							delayDetail.setLastConsumedNonPriorityMsg(lastConsumedNonPriorityMsg);
+							delayDetail.setLastConsumedPriorityMsg(lastConsumedPriorityMsg == null ? null
+									: new String(lastConsumedPriorityMsg.getPayload()));
+							delayDetail.setLastConsumedNonPriorityMsg(lastConsumedNonPriorityMsg == null ? null
+									: new String(lastConsumedNonPriorityMsg.getPayload()));
 							topicDelayView.addDelay(delayDetail);
 
 							topicDelayView.setTotalDelay(topicDelayView.getTotalDelay() + delay);

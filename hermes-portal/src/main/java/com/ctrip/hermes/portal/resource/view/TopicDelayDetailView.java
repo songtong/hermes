@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.ctrip.hermes.portal.dal.MessagePriority;
-
 public class TopicDelayDetailView extends TopicDelayBriefView {
 
 	private Map<String, List<DelayDetail>> details = new HashMap<>();
@@ -58,9 +56,9 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		private long nonPriorityMsgOffset;
 
-		private MessagePriority lastConsumedPriorityMsg;
+		private String lastConsumedPriorityMsg;
 
-		private MessagePriority lastConsumedNonPriorityMsg;
+		private String lastConsumedNonPriorityMsg;
 
 
 		public DelayDetail() {
@@ -158,21 +156,22 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 			this.nonPriorityMsgOffset = nonPriorityMsgOffset;
 		}
 
-		public MessagePriority getLastConsumedPriorityMsg() {
+		public String getLastConsumedPriorityMsg() {
 			return lastConsumedPriorityMsg;
 		}
 
-		public void setLastConsumedPriorityMsg(MessagePriority lastConsumedPriorityMsg) {
+		public void setLastConsumedPriorityMsg(String lastConsumedPriorityMsg) {
 			this.lastConsumedPriorityMsg = lastConsumedPriorityMsg;
 		}
 
-		public MessagePriority getLastConsumedNonPriorityMsg() {
+		public String getLastConsumedNonPriorityMsg() {
 			return lastConsumedNonPriorityMsg;
 		}
 
-		public void setLastConsumedNonPriorityMsg(MessagePriority lastConsumedNonPriorityMsg) {
+		public void setLastConsumedNonPriorityMsg(String lastConsumedNonPriorityMsg) {
 			this.lastConsumedNonPriorityMsg = lastConsumedNonPriorityMsg;
 		}
+
 
 		
 	}
