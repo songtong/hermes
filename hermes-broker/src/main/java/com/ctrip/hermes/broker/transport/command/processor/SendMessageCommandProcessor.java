@@ -1,9 +1,14 @@
 package com.ctrip.hermes.broker.transport.command.processor;
 
+import io.netty.channel.Channel;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -28,6 +33,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.processor.SingleThreaded;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -56,14 +62,49 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	@Inject
 	private MetaService m_metaService;
 
+	private FakeAckPusher m_fakeAckPusher = new FakeAckPusher();
+
 	@Override
 	public List<CommandType> commandTypes() {
 		return Arrays.asList(CommandType.MESSAGE_SEND);
 	}
 
+	static class FakeAckPusher {
+		private ConcurrentSkipListSet<Channel> m_channels = new ConcurrentSkipListSet<>();
+
+		private SendMessageAckCommand m_fakeCmd = new SendMessageAckCommand();
+
+		public FakeAckPusher() {
+			m_fakeCmd.getHeader().setCorrelationId(-111111L);
+
+			Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("FakeAckPusher", true))
+			      .scheduleWithFixedDelay(new Runnable() {
+				      public void run() {
+					      for (Channel channel : m_channels) {
+						      try {
+							      if (channel.isActive() && channel.isWritable()) {
+								      channel.writeAndFlush(m_fakeCmd);
+							      } else {
+								      m_channels.remove(channel);
+							      }
+						      } catch (Exception e) {
+
+						      }
+					      }
+				      }
+			      }, 500, 500, TimeUnit.MILLISECONDS);
+		}
+
+		public void addChannel(Channel channel) {
+			m_channels.add(channel);
+		}
+	}
+
 	@Override
 	public void process(final CommandProcessorContext ctx) {
 		SendMessageCommand reqCmd = (SendMessageCommand) ctx.getCommand();
+
+		m_fakeAckPusher.addChannel(ctx.getChannel());
 
 		Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(), m_config.getSessionId());
 
