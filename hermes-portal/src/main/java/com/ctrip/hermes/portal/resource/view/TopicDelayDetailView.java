@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.ctrip.hermes.portal.dal.MessagePriority;
+
 public class TopicDelayDetailView extends TopicDelayBriefView {
 
 	private Map<String, List<DelayDetail>> details = new HashMap<>();
@@ -25,19 +27,12 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 		}
 		return null;
 	}
-/**
- * 
- * @param consumer
- * @param partitionId
- * @return the DelayDetail added.
- */
-	public DelayDetail addDelay(String consumer, int partitionId) {
-		if (!details.containsKey(consumer)) {
-			details.put(consumer, new ArrayList<DelayDetail>());
+
+	public void addDelay(DelayDetail delay) {
+		if (!details.containsKey(delay.getConsumer())) {
+			details.put(delay.getConsumer(), new ArrayList<DelayDetail>());
 		}
-		DelayDetail curentDetail = new DelayDetail(consumer, partitionId);
-		details.get(consumer).add(curentDetail);
-		return curentDetail;
+		details.get(delay.getConsumer()).add(delay);
 	}
 
 	public Map<String, List<DelayDetail>> getDetails() {
@@ -63,9 +58,9 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		private long nonPriorityMsgOffset;
 
-		private String lastConsumedPriorityMsg;
+		private MessagePriority lastConsumedPriorityMsg;
 
-		private String lastConsumedNonPriorityMsg;
+		private MessagePriority lastConsumedNonPriorityMsg;
 
 
 		public DelayDetail() {
@@ -130,21 +125,6 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 			return true;
 		}
 
-		public String getLastConsumedPriorityMsg() {
-			return lastConsumedPriorityMsg;
-		}
-
-		public void setLastConsumedPriorityMsg(String lastConsumedPriorityMsg) {
-			this.lastConsumedPriorityMsg = lastConsumedPriorityMsg;
-		}
-
-		public String getLastConsumedNonPriorityMsg() {
-			return lastConsumedNonPriorityMsg;
-		}
-		
-		public void setLastConsumedNonPriorityMsg(String lastConsumedNonPriorityMsg) {
-			this.lastConsumedNonPriorityMsg = lastConsumedNonPriorityMsg;
-		}
 
 		public long getPriorityMsgId() {
 			return priorityMsgId;
@@ -176,6 +156,22 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		public void setNonPriorityMsgOffset(long nonPriorityMsgOffset) {
 			this.nonPriorityMsgOffset = nonPriorityMsgOffset;
+		}
+
+		public MessagePriority getLastConsumedPriorityMsg() {
+			return lastConsumedPriorityMsg;
+		}
+
+		public void setLastConsumedPriorityMsg(MessagePriority lastConsumedPriorityMsg) {
+			this.lastConsumedPriorityMsg = lastConsumedPriorityMsg;
+		}
+
+		public MessagePriority getLastConsumedNonPriorityMsg() {
+			return lastConsumedNonPriorityMsg;
+		}
+
+		public void setLastConsumedNonPriorityMsg(MessagePriority lastConsumedNonPriorityMsg) {
+			this.lastConsumedNonPriorityMsg = lastConsumedNonPriorityMsg;
 		}
 
 		

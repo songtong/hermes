@@ -67,9 +67,9 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 
 	private Set<String> m_latestClients = new HashSet<String>();
 
-	private List<TopicDelayDetailView> m_topDelaySorted = new ArrayList<TopicDelayDetailView>();
+	private List<TopicDelayDetailView> m_topDelays = new ArrayList<TopicDelayDetailView>();
 
-	private Map<String, TopicDelayDetailView> m_topDelays = new HashMap<>();
+	private Map<String, TopicDelayDetailView> m_delays = new HashMap<>();
 
 	// key: topic, value: latest produced date
 	private Map<String, Date> m_latestProduced = new HashMap<>();
@@ -156,9 +156,9 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	@Override
 	public Long getDelay(String topic) {
 		long delay = 0;
-		TopicDelayDetailView view = m_topDelays.get(topic);
+		TopicDelayDetailView view = m_delays.get(topic);
 		if (view == null) {
-			log.warn("Delay information of {}:{} not found.", topic);
+			log.warn("Delay information of {} not found.", topic);
 		} else {
 			delay = view.getTotalDelay();
 		}
@@ -168,20 +168,40 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	@Override
 	public Long getDelay(String topic, String groupName) {
 		long delay = 0;
-		for (DelayDetail detail : m_topDelays.get(topic).getDetails().get(groupName)) {
-			delay += detail.getDelay();
+		TopicDelayDetailView view = m_delays.get(topic);
+		if (view == null) {
+			log.warn("Delay information of {} not found.", topic);
+		} else {
+			List<DelayDetail> details = view.getDetails().get(groupName);
+			if (details == null) {
+				log.warn("Delay information of {}:{} not found.", topic, groupName);
+			} else {
+				for (DelayDetail detail : details) {
+					delay += detail.getDelay();
+				}
+			}
 		}
 		return delay;
 	}
 
 	@Override
 	public TopicDelayDetailView getTopicDelayDetail(String topic) {
-		return m_topDelays.get(topic);
+		return m_delays.get(topic);
 	}
 
 	@Override
 	public List<DelayDetail> getDelayDetailForConsumer(String topic, String consumer) {
-		return m_topDelays.get(topic).getDetails().get(consumer);
+		List<DelayDetail> details = null;
+		TopicDelayDetailView view = m_delays.get(topic);
+		if (view == null) {
+			log.warn("Delay information of {} not found.", topic);
+		} else {
+			details = view.getDetails().get(consumer);
+			if (details == null) {
+				log.warn("Delay information of {}:{} not found.", topic, consumer);
+			}
+		}
+		return details;
 	}
 
 	private void updateLatestProduced() {
@@ -275,49 +295,41 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		Map<String, TopicDelayDetailView> delayMap = new HashMap<String, TopicDelayDetailView>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
 			Topic t = entry.getValue();
-			if (t.getStorageType().equals(Storage.MYSQL)) {
-				delayMap.put(t.getName(), new TopicDelayDetailView(t.getName()));
-				TopicDelayDetailView currentTopic = delayMap.get(t.getName());
+			if (Storage.MYSQL.equals(t.getStorageType())) {
+				TopicDelayDetailView topicDelayView = new TopicDelayDetailView(t.getName());
+				delayMap.put(t.getName(), topicDelayView);
 				for (Partition p : t.getPartitions()) {
 					try {
 						MessagePriority msgPriority = m_dao.getLatestProduced(t.getName(), p.getId(),
 								PortalConstants.PRIORITY_TRUE);
 						MessagePriority msgNonPriority = m_dao.getLatestProduced(t.getName(), p.getId(),
 								PortalConstants.PRIORITY_FALSE);
-						Long priorityMsgId = msgPriority == null ? 0 : msgPriority.getId();
-						Long nonPriorityMsgId = msgNonPriority == null ? 0 : msgNonPriority.getId();
+						long priorityMsgId = msgPriority == null ? 0 : msgPriority.getId();
+						long nonPriorityMsgId = msgNonPriority == null ? 0 : msgNonPriority.getId();
 						Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = m_dao
 								.getLatestConsumed(t.getName(), p.getId());
 						for (ConsumerGroup c : t.getConsumerGroups()) {
-							Pair<OffsetMessage, OffsetMessage> thisOffsetMsgs = offsetMsgMap.get(c.getId());
-							Long priorityMsgOffset;
-							Long nonPriorityMsgOffset;
-							if (thisOffsetMsgs == null) {
-								priorityMsgOffset = (long) 0;
-								nonPriorityMsgOffset = (long) 0;
-							} else {
-								priorityMsgOffset = thisOffsetMsgs.getKey().getOffset();
-								nonPriorityMsgOffset = thisOffsetMsgs.getValue().getOffset();
-							}
-							Long delay = priorityMsgId + nonPriorityMsgId - (priorityMsgOffset + nonPriorityMsgOffset);
-
+							Pair<OffsetMessage, OffsetMessage> offsets = offsetMsgMap.get(c.getId());
+							long priorityMsgOffset = offsets == null ? 0 : offsets.getKey().getOffset();
+							long nonPriorityMsgOffset = offsets == null ? 0 : offsets.getValue().getOffset();
+							long delay = (priorityMsgId + nonPriorityMsgId)
+									- (priorityMsgOffset + nonPriorityMsgOffset);
 							MessagePriority lastConsumedPriorityMsg = m_dao.getMsgById(t.getName(), p.getId(),
 									PortalConstants.PRIORITY_TRUE, priorityMsgOffset);
 							MessagePriority lastConsumedNonPriorityMsg = m_dao.getMsgById(t.getName(), p.getId(),
 									PortalConstants.PRIORITY_TRUE, nonPriorityMsgOffset);
+							
+							DelayDetail delayDetail = new DelayDetail(c.getName(), p.getId());
+							delayDetail.setDelay(delay);
+							delayDetail.setPriorityMsgId(priorityMsgId);
+							delayDetail.setNonPriorityMsgId(nonPriorityMsgId);
+							delayDetail.setPriorityMsgOffset(priorityMsgOffset);
+							delayDetail.setNonPriorityMsgOffset(nonPriorityMsgOffset);
+							delayDetail.setLastConsumedPriorityMsg(lastConsumedPriorityMsg);
+							delayDetail.setLastConsumedNonPriorityMsg(lastConsumedNonPriorityMsg);
+							topicDelayView.addDelay(delayDetail);
 
-							DelayDetail currentDelayDetail = currentTopic.addDelay(c.getName(), p.getId());
-							currentDelayDetail.setDelay(delay);
-							currentDelayDetail.setPriorityMsgId(priorityMsgId);
-							currentDelayDetail.setNonPriorityMsgId(nonPriorityMsgId);
-							currentDelayDetail.setPriorityMsgOffset(priorityMsgOffset);
-							currentDelayDetail.setNonPriorityMsgOffset(nonPriorityMsgOffset);
-							currentDelayDetail.setLastConsumedPriorityMsg(
-									lastConsumedPriorityMsg == null ? null : new String(lastConsumedPriorityMsg.getPayload()));
-							currentDelayDetail.setLastConsumedNonPriorityMsg(lastConsumedNonPriorityMsg == null ? null
-									: new String(lastConsumedNonPriorityMsg.getPayload()));
-
-							currentTopic.setTotalDelay(currentTopic.getTotalDelay() + delay);
+							topicDelayView.setTotalDelay(topicDelayView.getTotalDelay() + delay);
 						}
 					} catch (DalException e) {
 						log.warn("Get delay of {}:{} failed.", t.getName(), p.getId(), e);
@@ -327,7 +339,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 			}
 		}
 
-		m_topDelays = delayMap;
+		m_delays = delayMap;
 		List<TopicDelayDetailView> list = new ArrayList<TopicDelayDetailView>(delayMap.values());
 		Collections.sort(list, new Comparator<TopicDelayDetailView>() {
 			@Override
@@ -336,7 +348,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 			}
 		});
 
-		m_topDelaySorted = list;
+		m_topDelays = list;
 	}
 
 	private void updateLatestClients() {
@@ -393,8 +405,8 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 
 	@Override
 	public List<TopicDelayDetailView> getTopDelays(int top) {
-		top = top > m_topDelays.size() ? m_topDelays.size() : top;
-		return m_topDelaySorted.subList(0, top > 0 ? top : 0);
+		top = top > m_delays.size() ? m_delays.size() : top;
+		return m_topDelays.subList(0, top > 0 ? top : 0);
 	}
 
 	@Override
