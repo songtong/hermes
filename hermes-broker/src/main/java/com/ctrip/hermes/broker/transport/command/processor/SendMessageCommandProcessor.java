@@ -77,22 +77,22 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		public FakeAckPusher() {
 			m_fakeCmd.getHeader().setCorrelationId(-111111L);
 
-			Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("FakeAckPusher", true))
-			      .scheduleWithFixedDelay(new Runnable() {
-				      public void run() {
-					      for (Channel channel : m_channels) {
-						      try {
-							      if (channel.isActive() && channel.isWritable()) {
-								      channel.writeAndFlush(m_fakeCmd);
-							      } else {
-								      m_channels.remove(channel);
-							      }
-						      } catch (Exception e) {
-
-						      }
-					      }
-				      }
-			      }, 500, 500, TimeUnit.MILLISECONDS);
+//			Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("FakeAckPusher", true))
+//			      .scheduleWithFixedDelay(new Runnable() {
+//				      public void run() {
+//					      for (Channel channel : m_channels) {
+//						      try {
+//							      if (channel.isActive() && channel.isWritable()) {
+//								      channel.writeAndFlush(m_fakeCmd);
+//							      } else {
+//								      m_channels.remove(channel);
+//							      }
+//						      } catch (Exception e) {
+//
+//						      }
+//					      }
+//				      }
+//			      }, 500, 500, TimeUnit.MILLISECONDS);
 		}
 
 		public void addChannel(Channel channel) {
