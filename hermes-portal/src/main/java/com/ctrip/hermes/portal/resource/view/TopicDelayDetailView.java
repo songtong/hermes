@@ -60,7 +60,7 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		private String lastConsumedNonPriorityMsg;
 		
-		private String ip;
+		private String currentConsumerIp;
 
 
 		public DelayDetail() {
@@ -175,11 +175,11 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 		}
 
 		public String getIp() {
-			return ip;
+			return currentConsumerIp;
 		}
 
-		public void setIp(String ip) {
-			this.ip = ip;
+		public void setIp(String currentConsumerIp) {
+			this.currentConsumerIp = currentConsumerIp;
 		}
 
 

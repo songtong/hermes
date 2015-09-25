@@ -27,7 +27,6 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.env.ClientEnvironment;
@@ -140,8 +139,8 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		return m_metaService.getMeta();
 	}
 
-	private Map<Tpg, String> loadConsumerLease() {
-		Map<Tpg, String> consumerLeases = new HashMap<>();
+	private Map<Tpg, String> loadConsumerIp() {
+		Map<Tpg, String> consumerIps = new HashMap<>();
 		try {
 			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(),
 					m_env.getGlobalConfig().getProperty("meta.port", "80").trim(), "metaserver/status");
@@ -151,19 +150,19 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 				String responseContent = EntityUtils.toString(response.getEntity());
 				JSONObject jsonObject = JSON.parseObject(responseContent);
 				JSONObject consumerLease = jsonObject.getJSONObject("consumerLeases");
-				for (String key : consumerLease.keySet()) {
-					JSONObject lease = consumerLease.getJSONObject(key);
-					String ip = lease.getJSONObject(lease.keySet().iterator().next()).getString("ip");
-					String[] splitKey = key.split(",|=|]");
+				for (Entry<String, Object> entry : consumerLease.entrySet()) {
+					JSONObject lease = (JSONObject) entry.getValue();
+					String ip = ((JSONObject) lease.entrySet().iterator().next().getValue()).getString("ip");
+					String[] splitKey = entry.getKey().split(",|=|]");
 					if (splitKey.length != 6) {
-						log.warn("Parse comsumer lease for {} failed.",key);
+						log.warn("Parse comsumer lease for {} failed.", entry.getKey());
 						continue;
 					}
 					String topic = splitKey[1].trim();
 					int partition = new Integer(splitKey[3].trim());
 					String group = splitKey[5].trim();
 					Tpg tpg = new Tpg(topic, partition, group);
-					consumerLeases.put(tpg, ip);
+					consumerIps.put(tpg, ip);
 				}
 			}
 		} catch (Exception e) {
@@ -171,7 +170,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 				log.debug("Load consumer lease from meta-servers faied.", e);
 			}
 		}
-		return consumerLeases;
+		return consumerIps;
 	}
 
 	private void updateLatestBroker() {
@@ -330,7 +329,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	}
 
 	private void updateTopDelays() {
-		Map<Tpg, String> consumerLease = loadConsumerLease();
+		Map<Tpg, String> consumerIps = loadConsumerIp();
 		Map<String, TopicDelayDetailView> delayMap = new HashMap<String, TopicDelayDetailView>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
 			Topic t = entry.getValue();
@@ -368,7 +367,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 									lastConsumedPriorityMsg == null ? null : getPayload(lastConsumedPriorityMsg));
 							delayDetail.setLastConsumedNonPriorityMsg(
 									lastConsumedNonPriorityMsg == null ? null : getPayload(lastConsumedNonPriorityMsg));
-							delayDetail.setIp(consumerLease.get(new Tpg(t.getName(), p.getId(), c.getName())));
+							delayDetail.setIp(consumerIps.get(new Tpg(t.getName(), p.getId(), c.getName())));
 							topicDelayView.addDelay(delayDetail);
 
 							topicDelayView.setTotalDelay(topicDelayView.getTotalDelay() + delay);
