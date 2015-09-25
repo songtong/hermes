@@ -31,6 +31,7 @@
 						<th st-sort="nonPriorityMsgId">最新非优先消息ID</th>
 						<th st-sort="nonPriorityMsgOffset">消费至</th>
 						<th st-sort="lastConsumedNonPriorityMsg">最近消费内容</th>
+						<th st-sort="ip">当前租约分配ip</th>
 					</tr>
 					<tr>
 						<th><input st-search="consumer" placeholder="Consumer Name" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -50,6 +51,7 @@
 						<td><span ng-bind="delay.nonPriorityMsgId"></span></td>
 						<td><span ng-bind="delay.nonPriorityMsgOffset"></span></td>
 						<td><a href="" tooltip="点击查看详情" ng-click="show_payload(delay.lastConsumedNonPriorityMsg)"><span ng-bind="delay.lastConsumedNonPriorityMsg | short:6"></span></a></td>
+						<td><span ng-bind="delay.ip"></span></td>
 					</tr>
 				</tbody>
 				<tbody ng-if="is_loading">

@@ -27,6 +27,8 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -135,6 +137,40 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 			}
 		}
 		return m_metaService.getMeta();
+	}
+
+	private Map<Tpg, String> loadConsumerIp() {
+		Map<Tpg, String> consumerIps = new HashMap<>();
+		try {
+			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(),
+					m_env.getGlobalConfig().getProperty("meta.port", "80").trim(), "metaserver/status");
+			HttpResponse response = Request.Get(url).execute().returnResponse();
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (HttpStatus.SC_OK == statusCode) {
+				String responseContent = EntityUtils.toString(response.getEntity());
+				JSONObject jsonObject = JSON.parseObject(responseContent);
+				JSONObject consumerLease = jsonObject.getJSONObject("consumerLeases");
+				for (Entry<String, Object> entry : consumerLease.entrySet()) {
+					JSONObject lease = (JSONObject) entry.getValue();
+					String ip = ((JSONObject) lease.entrySet().iterator().next().getValue()).getString("ip");
+					String[] splitKey = entry.getKey().split(",|=|]");
+					if (splitKey.length != 6) {
+						log.warn("Parse comsumer lease for {} failed.", entry.getKey());
+						continue;
+					}
+					String topic = splitKey[1].trim();
+					int partition = new Integer(splitKey[3].trim());
+					String group = splitKey[5].trim();
+					Tpg tpg = new Tpg(topic, partition, group);
+					consumerIps.put(tpg, ip);
+				}
+			}
+		} catch (Exception e) {
+			if (log.isDebugEnabled()) {
+				log.debug("Load consumer lease from meta-servers faied.", e);
+			}
+		}
+		return consumerIps;
 	}
 
 	private void updateLatestBroker() {
@@ -293,6 +329,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	}
 
 	private void updateTopDelays() {
+		Map<Tpg, String> consumerIps = loadConsumerIp();
 		Map<String, TopicDelayDetailView> delayMap = new HashMap<String, TopicDelayDetailView>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
 			Topic t = entry.getValue();
@@ -318,7 +355,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 							MessagePriority lastConsumedPriorityMsg = m_dao.getMsgById(t.getName(), p.getId(),
 									PortalConstants.PRIORITY_TRUE, priorityMsgOffset);
 							MessagePriority lastConsumedNonPriorityMsg = m_dao.getMsgById(t.getName(), p.getId(),
-									PortalConstants.PRIORITY_TRUE, nonPriorityMsgOffset);
+									PortalConstants.PRIORITY_FALSE, nonPriorityMsgOffset);
 
 							DelayDetail delayDetail = new DelayDetail(c.getName(), p.getId());
 							delayDetail.setDelay(delay);
@@ -326,12 +363,11 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 							delayDetail.setNonPriorityMsgId(nonPriorityMsgId);
 							delayDetail.setPriorityMsgOffset(priorityMsgOffset);
 							delayDetail.setNonPriorityMsgOffset(nonPriorityMsgOffset);
-							delayDetail.setLastConsumedPriorityMsg(lastConsumedPriorityMsg == null ? null
-									: JSON.toJSONString(new JsonPayloadCodec()
-											.decode(lastConsumedPriorityMsg.getPayload(), Object.class)));
-							delayDetail.setLastConsumedNonPriorityMsg(lastConsumedNonPriorityMsg == null ? null
-									: JSON.toJSONString(new JsonPayloadCodec()
-											.decode(lastConsumedNonPriorityMsg.getPayload(), Object.class)));
+							delayDetail.setLastConsumedPriorityMsg(
+									lastConsumedPriorityMsg == null ? null : getPayload(lastConsumedPriorityMsg));
+							delayDetail.setLastConsumedNonPriorityMsg(
+									lastConsumedNonPriorityMsg == null ? null : getPayload(lastConsumedNonPriorityMsg));
+							delayDetail.setIp(consumerIps.get(new Tpg(t.getName(), p.getId(), c.getName())));
 							topicDelayView.addDelay(delayDetail);
 
 							topicDelayView.setTotalDelay(topicDelayView.getTotalDelay() + delay);
@@ -354,6 +390,12 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 		});
 
 		m_topDelays = list;
+	}
+
+	private String getPayload(MessagePriority msg) {
+		String rawPayloadString = msg == null ? null
+				: JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(), Object.class));
+		return rawPayloadString.substring(1, rawPayloadString.length() - 1);
 	}
 
 	private void updateLatestClients() {
