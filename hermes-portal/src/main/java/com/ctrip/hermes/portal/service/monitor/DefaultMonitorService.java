@@ -367,7 +367,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 									lastConsumedPriorityMsg == null ? null : getPayload(lastConsumedPriorityMsg));
 							delayDetail.setLastConsumedNonPriorityMsg(
 									lastConsumedNonPriorityMsg == null ? null : getPayload(lastConsumedNonPriorityMsg));
-							delayDetail.setIp(consumerIps.get(new Tpg(t.getName(), p.getId(), c.getName())));
+							delayDetail.setCurrentConsumerIp(consumerIps.get(new Tpg(t.getName(), p.getId(), c.getName())));
 							topicDelayView.addDelay(delayDetail);
 
 							topicDelayView.setTotalDelay(topicDelayView.getTotalDelay() + delay);

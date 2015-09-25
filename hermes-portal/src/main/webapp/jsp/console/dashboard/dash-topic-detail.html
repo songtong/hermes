@@ -51,7 +51,7 @@
 						<td><span ng-bind="delay.nonPriorityMsgId"></span></td>
 						<td><span ng-bind="delay.nonPriorityMsgOffset"></span></td>
 						<td><a href="" tooltip="点击查看详情" ng-click="show_payload(delay.lastConsumedNonPriorityMsg)"><span ng-bind="delay.lastConsumedNonPriorityMsg | short:6"></span></a></td>
-						<td><span ng-bind="delay.ip"></span></td>
+						<td><span ng-bind="delay.currentConsumerIp"></span></td>
 					</tr>
 				</tbody>
 				<tbody ng-if="is_loading">
