@@ -5,8 +5,6 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.consumer.build.BuildConstants;
-import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerAuditValve;
-import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve;
 import com.ctrip.hermes.core.pipeline.AbstractValveRegistry;
 import com.ctrip.hermes.core.pipeline.ValveRegistry;
 
@@ -18,7 +16,6 @@ import com.ctrip.hermes.core.pipeline.ValveRegistry;
 public class ConsumerValveRegistry extends AbstractValveRegistry implements Initializable {
 	@Override
 	public void initialize() throws InitializationException {
-		doRegister(ConsumerTracingValve.ID, 0);
-		doRegister(ConsumerAuditValve.ID, 1);
+//		doRegister(ConsumerTracingValve.ID, 0);
 	}
 }
