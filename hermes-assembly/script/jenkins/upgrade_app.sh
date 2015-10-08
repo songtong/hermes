@@ -28,18 +28,25 @@ else
 	echo "Upgrading $1"
 fi
 
+APP_BASE_DIR=/opt/ctrip/app
 APP_NAME=$1
-APP_DIR=/opt/ctrip/app/hermes-$APP_NAME
+APP_DIR=$APP_BASE_DIR/hermes-$APP_NAME
+APP_RELEASE_DIR=$APP_BASE_DIR/hermes-$APP_NAME.releases/`date "+%Y-%m-%d.%H.%M.%S"`
 APP_STARTUP_SCRIPT=$APP_DIR/bin/startup.sh
 
-mkdir -p $APP_DIR
 
 if [ -e $APP_STARTUP_SCRIPT ];then
 	$APP_STARTUP_SCRIPT stop $port
 fi
 
-rm -rf $APP_DIR/*
-tar xf *${APP_NAME}*.tar -C $APP_DIR
+mkdir -p $APP_RELEASE_DIR
+tar xf *${APP_NAME}*.tar -C $APP_RELEASE_DIR
+
+if [ -d $APP_DIR ];then 
+	rm -rf $APP_DIR
+fi
+ln -s $APP_RELEASE_DIR $APP_DIR
+
 chmod +x $APP_STARTUP_SCRIPT
 $APP_STARTUP_SCRIPT start $port
 wait
