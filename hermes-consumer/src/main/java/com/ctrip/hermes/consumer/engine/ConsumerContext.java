@@ -18,8 +18,6 @@ public class ConsumerContext {
 
 	private ConsumerGroup m_group;
 
-	private String m_auditName;
-
 	private Class<?> m_messageClazz;
 
 	private MessageListener m_consumer;
@@ -34,7 +32,6 @@ public class ConsumerContext {
 	      ConsumerType consumerType, MessageListenerConfig messageListenerConfig) {
 		m_topic = topic;
 		m_group = group;
-		m_auditName = topic.getName() + "_" + group.getAppIds();
 		m_consumer = consumer;
 		m_messageClazz = messageClazz;
 		m_consumerType = consumerType;
@@ -65,10 +62,6 @@ public class ConsumerContext {
 		return m_group.getName();
 	}
 
-	public String getAuditAppName(){
-		return m_auditName;
-	}
-	
 	public MessageListener getConsumer() {
 		return m_consumer;
 	}

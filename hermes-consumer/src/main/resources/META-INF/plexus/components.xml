@@ -148,11 +148,6 @@
 			<implementation>com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.pipeline.spi.Valve</role>
-			<role-hint>consumer-audit</role-hint>
-			<implementation>com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerAuditValve</implementation>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.core.pipeline.Pipeline</role>
 			<role-hint>consumer</role-hint>
 			<implementation>com.ctrip.hermes.consumer.engine.pipeline.ConsumerPipeline</implementation>
