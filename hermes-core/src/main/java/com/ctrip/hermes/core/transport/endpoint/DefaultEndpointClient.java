@@ -130,7 +130,8 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 		}
 
 		if (removedChannel != null) {
-			log.info("Closing idle connection to broker({}:{})", endpoint.getHost(), endpoint.getPort());
+			log.info("Closing idle connection to broker({}:{}, endpointId={})", endpoint.getHost(), endpoint.getPort(),
+			      endpoint.getId());
 			removedChannel.close();
 		}
 	}
@@ -158,10 +159,13 @@ public class DefaultEndpointClient implements EndpointClient, Initializable {
 							loop.schedule(new Runnable() {
 								@Override
 								public void run() {
-									log.info("Reconnecting to broker({}:{})", endpoint.getHost(), endpoint.getPort());
+									log.info("Reconnecting to broker({}:{}, endpointId={})", endpoint.getHost(),
+									      endpoint.getPort(), endpoint.getId());
 									connect(endpoint, endpointChannel);
 								}
 							}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
+						} else {
+							removeChannel(endpoint, endpointChannel);
 						}
 					} else {
 						endpointChannel.setChannelFuture(future);
