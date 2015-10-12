@@ -59,13 +59,15 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 			group : undefined,
 			endpoints : undefined,
 			id : 0,
+			status: "STOPPED"
 		};
 		scope.subscribers.push(scope.inserted);
 	};
 
-	scope.add_subscriber = function add_subscriber(subscriber,id) {
+	scope.add_subscriber = function add_subscriber(subscriber,id,status) {
 		console.log(id);
 		subscriber.id=id;
+		subscriber.status = status;
 		subscription_resource.save(subscriber, function(data) {
 			scope.subscribers = subscription_resource.get_subscribers({}, function(data) {
 				scope.subscribers = data;
