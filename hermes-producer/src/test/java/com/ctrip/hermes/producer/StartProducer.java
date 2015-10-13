@@ -13,6 +13,7 @@ import org.unidal.lookup.ComponentTestCase;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.producer.api.Producer;
+import com.dianping.cat.Cat;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -27,6 +28,8 @@ public class StartProducer extends ComponentTestCase {
 	@Test
 	public void test() throws Exception {
 		System.out.println("Producer started...");
+
+		Cat.initializeByDomain("52061", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {

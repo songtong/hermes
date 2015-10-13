@@ -16,6 +16,7 @@ import com.dianping.cat.Cat;
 import com.dianping.cat.configuration.NetworkInterfaceManager;
 import com.dianping.cat.message.Event;
 import com.dianping.cat.message.Transaction;
+import com.dianping.cat.message.internal.DefaultTransaction;
 import com.dianping.cat.message.spi.MessageTree;
 
 public abstract class BaseMessageListener<T> implements MessageListener<T> {
@@ -89,7 +90,15 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 	private void setOnMessageStartTime(ConsumerMessage<T> msg) {
 		if (msg instanceof BaseConsumerMessageAware) {
 			BaseConsumerMessage<?> baseMsg = ((BaseConsumerMessageAware<?>) msg).getBaseConsumerMessage();
-			baseMsg.setOnMessageStartTimeMills(System.currentTimeMillis());
+			long now = System.currentTimeMillis();
+			baseMsg.setOnMessageStartTimeMills(now);
+
+			Transaction latencyT = Cat.newTransaction("Message.Consume.Latency", msg.getTopic());
+			if (latencyT instanceof DefaultTransaction) {
+				((DefaultTransaction) latencyT).setDurationStart(baseMsg.getBornTime() * 1000000);
+			}
+			latencyT.setStatus(Transaction.SUCCESS);
+			latencyT.complete();
 		}
 	}
 
