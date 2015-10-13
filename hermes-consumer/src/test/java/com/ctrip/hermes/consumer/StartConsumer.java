@@ -15,12 +15,13 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
-import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.metrics.HttpMetricsServer;
+import com.dianping.cat.Cat;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -32,6 +33,8 @@ public class StartConsumer extends ComponentTestCase {
 	public void test() throws Exception {
 		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
 		server.start();
+
+		Cat.initializeByDomain("52061", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
 
 		Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers = new HashMap<Pair<String, String>, List<Pair<String, ConsumerHolder>>>();
 
@@ -161,7 +164,7 @@ public class StartConsumer extends ComponentTestCase {
 		}
 	}
 
-	static class AckMessageListener implements MessageListener<String> {
+	static class AckMessageListener extends BaseMessageListener<String> {
 
 		private String m_name;
 
@@ -172,21 +175,19 @@ public class StartConsumer extends ComponentTestCase {
 		}
 
 		@Override
-		public void onMessage(List<ConsumerMessage<String>> msgs) {
+		public void onMessage(ConsumerMessage<String> msg) {
 
-			for (ConsumerMessage<String> msg : msgs) {
-				if (m_count.incrementAndGet() % 1000 == 0) {
-					System.out.println("Received 1000 msgs.");
-				}
-				System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)",
-				      m_name, msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
-				      ((BrokerConsumerMessage<String>) msg).isPriority()));
-				msg.ack();
+			if (m_count.incrementAndGet() % 1000 == 0) {
+				System.out.println("Received 1000 msgs.");
 			}
+			System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)", m_name,
+			      msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
+			      ((BrokerConsumerMessage<String>) msg).isPriority()));
+			msg.ack();
 		}
 	}
 
-	static class NAckMessageListener implements MessageListener<String> {
+	static class NAckMessageListener extends BaseMessageListener<String> {
 
 		private String m_name;
 
@@ -200,25 +201,22 @@ public class StartConsumer extends ComponentTestCase {
 		}
 
 		@Override
-		public void onMessage(List<ConsumerMessage<String>> msgs) {
+		public void onMessage(ConsumerMessage<String> msg) {
 
-			for (ConsumerMessage<String> msg : msgs) {
+			m_nacks.putIfAbsent(msg.getRefKey(), new AtomicInteger(m_nackTimes));
 
-				m_nacks.putIfAbsent(msg.getRefKey(), new AtomicInteger(m_nackTimes));
+			System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)", m_name,
+			      msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
+			      ((BrokerConsumerMessage<String>) msg).isPriority()));
 
-				System.out.println(String.format("[%s]Message received(topic:%s, body:%s, partition:%s, priority:%s)",
-				      m_name, msg.getTopic(), msg.getBody(), ((BrokerConsumerMessage<String>) msg).getPartition(),
-				      ((BrokerConsumerMessage<String>) msg).isPriority()));
+			AtomicInteger nackTimes = m_nacks.get(msg.getRefKey());
 
-				AtomicInteger nackTimes = m_nacks.get(msg.getRefKey());
-
-				if (nackTimes.get() == 0) {
-					m_nacks.remove(msg.getRefKey());
-					msg.ack();
-				} else {
-					nackTimes.decrementAndGet();
-					msg.nack();
-				}
+			if (nackTimes.get() == 0) {
+				m_nacks.remove(msg.getRefKey());
+				msg.ack();
+			} else {
+				nackTimes.decrementAndGet();
+				msg.nack();
 			}
 		}
 	}
