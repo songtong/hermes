@@ -141,6 +141,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 			BizEvent event = new BizEvent("Message.Delivered");
 			event.addData("msgId", meta.getOriginId());
 			event.addData("topic", tpg.getTopic());
+			event.addData("partition", tpg.getPartition());
 			event.addData("consumerIp", ip);
 			event.addData("groupId", tpg.getGroupId());
 

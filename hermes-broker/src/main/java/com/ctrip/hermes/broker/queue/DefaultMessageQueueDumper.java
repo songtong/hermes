@@ -47,25 +47,28 @@ public class DefaultMessageQueueDumper extends AbstractMessageQueueDumper {
 				      }
 			      }));
 
-			setBatchesResult(todos, true);
+			setBatchesResult(isPriority, todos, true);
 		} catch (Exception e) {
-			setBatchesResult(todos, false);
+			setBatchesResult(isPriority, todos, false);
 			log.error("Failed to append messages.", e);
 		}
 	}
 
-	private void setBatchesResult(Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos, boolean success) {
+	private void setBatchesResult(boolean isPriority,
+	      Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos, boolean success) {
 		for (Pair<MessageBatchWithRawData, Map<Integer, Boolean>> todo : todos) {
-			bizLog(todo.getKey(), success);
+			bizLog(isPriority, todo.getKey(), success);
 			Map<Integer, Boolean> result = todo.getValue();
 			addResults(result, success);
 		}
 	}
 
-	private void bizLog(MessageBatchWithRawData batch, boolean success) {
+	private void bizLog(boolean isPriority, MessageBatchWithRawData batch, boolean success) {
 		for (PartialDecodedMessage msg : batch.getMessages()) {
 			BizEvent event = new BizEvent("Message.Saved");
 			event.addData("topic", batch.getTopic());
+			event.addData("partition", m_partition);
+			event.addData("priority", isPriority ? 0 : 1);
 			event.addData("refKey", msg.getKey());
 			event.addData("success", success);
 
