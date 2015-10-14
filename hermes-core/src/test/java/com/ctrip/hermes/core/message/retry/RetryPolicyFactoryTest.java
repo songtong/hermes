@@ -42,4 +42,12 @@ public class RetryPolicyFactoryTest {
 		assertTrue(policy instanceof FrequencySpecifiedRetryPolicy);
 		assertEquals(2, policy.getRetryTimes());
 	}
+
+	@Test
+	public void testValid2() throws Exception {
+		RetryPolicy policy = RetryPolicyFactory.create("3:[10,5000]");
+		assertTrue(policy instanceof FixedIntervalRetryPolicy);
+		assertEquals(10, policy.getRetryTimes());
+		assertEquals(5000, ((FixedIntervalRetryPolicy) policy).getIntervalMillis());
+	}
 }
