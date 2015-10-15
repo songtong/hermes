@@ -15,14 +15,14 @@ topic_module.run(function(editableOptions) {
 		scope.consumers = result;
 	});
 	
-	scope.update_topic = function(data){
+	scope.update_topic = function(){
 		bootbox.confirm({
 			title : "请确认",
 			message : "确认要修改 Topic: <label class='label label-success'>" + scope.topic_name + "</label> 吗？",
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
-					TopicService.update_topic(scope.topic_name, data).then(function(result){
+					TopicService.update_topic(scope.topic_name, scope.topic).then(function(result){
 						show_op_info.show("修改topic ( "+ scope.topic_name + " ) 成功!", true);
 						scope.topic = result;
 					},function(data){

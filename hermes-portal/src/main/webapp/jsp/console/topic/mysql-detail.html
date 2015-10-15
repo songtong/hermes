@@ -4,7 +4,7 @@
 		<div class="panel panel-info">
 			<div class="panel-heading clearfix">
 				<label class="label label-info pull-left">基本信息</label>
-				<form editable-form name="topicForm" onbeforesave="update_topic()" ng-show="topicForm.$visible">
+				<form editable-form name="topicForm" onaftersave="update_topic()" ng-show="topicForm.$visible">
 					<button type="submit" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-disabled="topicForm.$waiting">
 						<span class="glyphicon glyphicon-saved"></span>保存
 					</button>

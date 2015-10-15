@@ -307,6 +307,7 @@ public class TopicService {
 		originTopic.setDescription(topic.getDescription());
 		originTopic.setEndpointType(topic.getEndpointType());
 		originTopic.setLastModifiedTime(new Date(System.currentTimeMillis()));
+		originTopic.setStatus(topic.getStatus());
 
 		meta.removeTopic(originTopic.getName());
 		meta.addTopic(originTopic);
