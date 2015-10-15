@@ -395,7 +395,7 @@ public class DefaultMonitorService implements MonitorService, Initializable {
 	private String getPayload(MessagePriority msg) {
 		String rawPayloadString = msg == null ? null
 				: JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(), Object.class));
-		return rawPayloadString.substring(1, rawPayloadString.length() - 1);
+		return rawPayloadString;
 	}
 
 	private void updateLatestClients() {

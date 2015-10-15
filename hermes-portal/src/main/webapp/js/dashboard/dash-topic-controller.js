@@ -61,7 +61,12 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 	};
 	
 	$scope.show_payload = function(payload){
-		$scope.current_payload = payload;
+		payload = payload.replace(/\\"/g, '"');
+		if (starts_with(payload, '"{') && ends_with(payload, '}"')) {
+			payload = payload.substring(1, payload.length - 1);
+		}
+		var obj = JSON.parse(payload);
+		$scope.current_payload = obj;
 		$("#payload-view").modal('show');
 	}
 
