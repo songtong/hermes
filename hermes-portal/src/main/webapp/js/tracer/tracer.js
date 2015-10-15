@@ -17,14 +17,6 @@ function Trace() {
 	this.consumerStartEvents = {};
 	this.consumerEndEvents = {};
 
-	this.textShown = {};
-	this.textShown["Message.Born"] = "BORN";
-	this.textShown["Message.Received"] = "RCV";
-	this.textShown["Message.Saved"] = "SAVE";
-	this.textShown["Message.Delivered"] = "DELIVER";
-	this.textShown["Message.BizProcessStart"] = "START";
-	this.textShown["Message.BizProcessEnd"] = "END";
-
 	this.series = function() {
 		var series = [];
 		var groupCount = Object.keys(this.consumerEvents).length
@@ -115,6 +107,8 @@ function Trace() {
 				text : "START",
 				value : minStartEvent.x + minStartEvent.width
 			});
+		}
+		if(minEndEvent){
 			plots.push({
 				text : "END",
 				value : minEndEvent.x + minEndEvent.width
