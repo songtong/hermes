@@ -146,6 +146,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 		for (MessagePriority msg : msgs) {
 			BizEvent event = new BizEvent("RefKey.Transformed");
+			event.addData("topic", msg.getTopic());
+			event.addData("partition", tpp.getPartition());
+			event.addData("priority", tpp.getPriorityInt());
 			event.addData("refKey", msg.getRefKey());
 			event.addData("msgId", msg.getId());
 

@@ -121,6 +121,8 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 	private void addBizData(BizEvent event, Tpp tpp, String consumerIp, String groupId, AckContext ctx,
 	      boolean isResend, boolean ack) {
 		event.addData("topic", tpp.getTopic());
+		event.addData("partition", tpp.getPartition());
+		event.addData("priority", tpp.getPriorityInt());
 		event.addData("msgId", ctx.getMsgSeq());
 		event.addData("consumerIp", consumerIp);
 		event.addData("groupId", groupId);

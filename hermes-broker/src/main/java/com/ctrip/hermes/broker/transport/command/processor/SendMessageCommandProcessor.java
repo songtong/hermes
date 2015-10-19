@@ -79,7 +79,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 				Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
 
-				bizLog(ctx, rawBatches);
+				bizLog(ctx, rawBatches, reqCmd.getPartition());
 
 				final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
 				result.correlate(reqCmd);
@@ -118,7 +118,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		reqCmd.release();
 	}
 
-	private void bizLog(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches) {
+	private void bizLog(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches, int partition) {
 		String ip = NettyUtils.parseChannelRemoteAddr(ctx.getChannel(), false);
 		for (Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
 			MessageBatchWithRawData batch = entry.getValue();
@@ -126,6 +126,8 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 			for (PartialDecodedMessage msg : msgs) {
 				BizEvent event = new BizEvent("Message.Received");
 				event.addData("topic", batch.getTopic());
+				event.addData("partition", partition);
+				event.addData("priority", entry.getKey());
 				event.addData("producerIp", ip);
 				event.addData("bornTime", msg.getBornTime());
 				event.addData("refKey", msg.getKey());
