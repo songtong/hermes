@@ -4,12 +4,19 @@ import java.util.List;
 
 import com.ctrip.hermes.core.message.ConsumerMessage;
 
-public interface MessageStream<T> {
+public interface MessageStream<T> extends Iterable<ConsumerMessage<T>> {
+
+	/**
+	 * 
+	 * @return topic name of this MessageStream
+	 */
+	public String getTopic();
+
 	/**
 	 * 
 	 * @return partition id of this MessageStream
 	 */
-	int getParatitionId();
+	public int getParatitionId();
 
 	/**
 	 * 
@@ -18,8 +25,9 @@ public interface MessageStream<T> {
 	 * @param size
 	 *           how many messages to fetch
 	 * @return messages from offset
+	 * @throws Exception
 	 */
-	List<ConsumerMessage<T>> fetchMessages(long offset, int size);
+	public List<ConsumerMessage<T>> fetchMessages(MessageStreamOffset offset, int size) throws Exception;
 
 	/**
 	 * 
@@ -27,15 +35,10 @@ public interface MessageStream<T> {
 	 *           message offsets to fetch
 	 * @return messages whose offset is in offsets
 	 */
-	List<ConsumerMessage<T>> fetchMessages(List<Long> offsets);
+	public List<ConsumerMessage<T>> fetchMessages(List<MessageStreamOffset> offsets) throws Exception;
 
-	/**
-	 * 
-	 * @param time
-	 *           message born time to query
-	 * @return The offset of message whose born time is closest to time.<br/>
-	 *         If time == Long.MIN_VALUE, then return the offset of the oldest message.<br/>
-	 *         If time == Long.MAX_VALUE, then return the offset of the newest message.
-	 */
-	long getOffsetByTime(long time); // Long.MIN_VALUE返回最早的offset，Long.MAX_VALUE返回最新的offset
+	public boolean hasNext();
+
+	public ConsumerMessage<T> next();
+
 }

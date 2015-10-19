@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.config.CoreConfig;
@@ -335,14 +336,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public boolean containsConsumerGroup(String topicName, String groupId) {
 		Topic topic = findTopic(topicName, getMeta());
-
-		ConsumerGroup consumerGroup = topic.findConsumerGroup(groupId);
-
-		if (consumerGroup == null) {
-			return false;
-		}
-
-		return true;
+		return topic != null && topic.findConsumerGroup(groupId) != null;
 	}
 
 	@Override
@@ -377,6 +371,17 @@ public class DefaultMetaService implements MetaService, Initializable {
 			}
 		}
 		return "";
+	}
+
+	@Override
+	public Offset findMessageOffsetByTime(String topic, int partition, long time) {
+		Map<Integer, Offset> map = getMetaProxy().findMessageOffsetByTime(topic, partition, time);
+		return map == null || map.size() == 0 ? null : map.get(partition);
+	}
+
+	@Override
+	public Map<Integer, Offset> findMessageOffsetByTime(String topic, long time) {
+		return getMetaProxy().findMessageOffsetByTime(topic, -1, time);
 	}
 
 }

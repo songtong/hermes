@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.google.common.util.concurrent.SettableFuture;
 
-public class QueryOffsetCommand extends AbstractCommand {
+public class QueryLatestConsumerOffsetCommand extends AbstractCommand {
 
 	private static final long serialVersionUID = -5558419534493044888L;
 
@@ -17,12 +17,12 @@ public class QueryOffsetCommand extends AbstractCommand {
 
 	private transient SettableFuture<QueryOffsetResultCommand> m_future;
 
-	public QueryOffsetCommand() {
+	public QueryLatestConsumerOffsetCommand() {
 		this(null, -1, null);
 	}
 
-	public QueryOffsetCommand(String topic, int partition, String groupId) {
-		super(CommandType.QUERY_OFFSET, 1);
+	public QueryLatestConsumerOffsetCommand(String topic, int partition, String groupId) {
+		super(CommandType.QUERY_LATEST_CONSUMER_OFFSET, 1);
 		m_topic = topic;
 		m_partition = partition;
 		m_groupId = groupId;
@@ -70,7 +70,7 @@ public class QueryOffsetCommand extends AbstractCommand {
 
 	@Override
 	public String toString() {
-		return "QueryOffsetCommand [m_topic=" + m_topic + ", m_partition=" + m_partition + ", m_groupId=" + m_groupId
-		      + "]";
+		return "QueryConsumerOffsetCommand [m_topic=" + m_topic + ", m_partition=" + m_partition + ", m_groupId="
+		      + m_groupId + "]";
 	}
 }

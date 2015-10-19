@@ -9,6 +9,7 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,8 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -342,5 +345,39 @@ public class RemoteMetaProxy implements MetaProxy {
 			log.warn("No response while getting meta server[getSchemaString]");
 		}
 		return null;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Map<Integer, Offset> findMessageOffsetByTime(String topic, int partition, long time) {
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("topic", topic);
+		params.put("partition", String.valueOf(partition));
+		params.put("time", String.valueOf(time));
+		String response = get("/message/offset", params);
+		if (response != null) {
+			try {
+				return parseFromJsonObject((Map<Integer, JSONObject>) JSON.parse(response));
+			} catch (Exception e) {
+				log.warn("Parse Offset object failed when query message offset[{}:{} {}].", topic, partition, time, e);
+				if (log.isDebugEnabled()) {
+					log.debug("Error response string: {}", response);
+				}
+			}
+		} else {
+			log.warn("No response while getting meta server[findMessageOffsetByTime]");
+		}
+		return null;
+	}
+
+	public Map<Integer, Offset> parseFromJsonObject(Map<Integer, JSONObject> map) {
+		Map<Integer, Offset> result = new HashMap<Integer, Offset>();
+		for (Entry<Integer, JSONObject> entry : map.entrySet()) {
+			int partitionId = Integer.valueOf(String.valueOf(entry.getKey()));
+			long pOffset = Long.valueOf(entry.getValue().get("priorityOffset").toString());
+			long npOffset = Long.valueOf(entry.getValue().get("nonPriorityOffset").toString());
+			result.put(partitionId, new Offset(pOffset, npOffset, null));
+		}
+		return result;
 	}
 }

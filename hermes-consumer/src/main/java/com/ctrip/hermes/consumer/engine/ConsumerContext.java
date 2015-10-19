@@ -5,6 +5,7 @@ import java.util.UUID;
 import com.ctrip.hermes.consumer.ConsumerType;
 import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.api.MessageListenerConfig;
+import com.ctrip.hermes.consumer.api.OffsetStorage;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 
@@ -28,14 +29,17 @@ public class ConsumerContext {
 
 	private String m_sessionId = UUID.randomUUID().toString();
 
+	private OffsetStorage m_offsetStorage;
+
 	public ConsumerContext(Topic topic, ConsumerGroup group, MessageListener consumer, Class<?> messageClazz,
-	      ConsumerType consumerType, MessageListenerConfig messageListenerConfig) {
+	      ConsumerType consumerType, MessageListenerConfig messageListenerConfig, OffsetStorage offsetStorage) {
 		m_topic = topic;
 		m_group = group;
 		m_consumer = consumer;
 		m_messageClazz = messageClazz;
 		m_consumerType = consumerType;
 		m_messageListenerConfig = messageListenerConfig;
+		m_offsetStorage = offsetStorage;
 	}
 
 	public String getSessionId() {
@@ -68,6 +72,10 @@ public class ConsumerContext {
 
 	public MessageListenerConfig getMessageListenerConfig() {
 		return m_messageListenerConfig;
+	}
+
+	public OffsetStorage getOffsetStorage() {
+		return m_offsetStorage;
 	}
 
 	@Override

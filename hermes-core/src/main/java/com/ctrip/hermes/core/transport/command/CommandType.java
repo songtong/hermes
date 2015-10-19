@@ -8,6 +8,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
+import com.ctrip.hermes.core.transport.command.v2.PullSpecificMessageCommand;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -19,7 +20,9 @@ public enum CommandType {
 	MESSAGE_ACK_V2(102, 2, AckMessageCommandV2.class), //
 	MESSAGE_PULL(103, 1, PullMessageCommand.class), //
 	MESSAGE_PULL_V2(103, 2, PullMessageCommandV2.class), //
-	QUERY_OFFSET(104, 1, QueryOffsetCommand.class), //
+	QUERY_LATEST_CONSUMER_OFFSET(104, 1, QueryLatestConsumerOffsetCommand.class), //
+	QUERY_MESSAGE_OFFSET_BY_TIME(105, 1, QueryMessageOffsetByTimeCommand.class), //
+	MESSAGE_PULL_SPECIFIC(106, 1, PullSpecificMessageCommand.class), //
 
 	ACK_MESSAGE_SEND(201, 1, SendMessageAckCommand.class), //
 

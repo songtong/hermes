@@ -55,28 +55,43 @@ public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
 	@Override
 	protected FetchResult fetchPriorityMessages(int batchSize) {
 		if (!m_stopped.get()) {
-			return m_storage.fetchMessages(m_priorityTpp, m_priorityOffset, batchSize);
-		} else {
-			return null;
+			try {
+				return m_storage.fetchMessages(m_priorityTpp, m_priorityOffset, batchSize);
+			} catch (Exception e) {
+				if (log.isDebugEnabled()) {
+					log.debug("Fetch priority message failed. [{}]", m_priorityTpp, e);
+				}
+			}
 		}
+		return null;
 	}
 
 	@Override
 	protected FetchResult fetchNonPriorityMessages(int batchSize) {
 		if (!m_stopped.get()) {
-			return m_storage.fetchMessages(m_nonPriorityTpp, m_nonPriorityOffset, batchSize);
-		} else {
-			return null;
+			try {
+				return m_storage.fetchMessages(m_nonPriorityTpp, m_nonPriorityOffset, batchSize);
+			} catch (Exception e) {
+				if (log.isDebugEnabled()) {
+					log.debug("Fetch non priority message failed. [{}]", m_nonPriorityTpp, e);
+				}
+			}
 		}
+		return null;
 	}
 
 	@Override
 	protected FetchResult fetchResendMessages(int batchSize) {
 		if (!m_stopped.get()) {
-			return m_storage.fetchResendMessages(m_tpg, m_resendOffset, batchSize);
-		} else {
-			return null;
+			try {
+				return m_storage.fetchResendMessages(m_tpg, m_resendOffset, batchSize);
+			} catch (Exception e) {
+				if (log.isDebugEnabled()) {
+					log.debug("Fetch resend message failed. [{}]", m_tpg, e);
+				}
+			}
 		}
+		return null;
 	}
 
 	@Override

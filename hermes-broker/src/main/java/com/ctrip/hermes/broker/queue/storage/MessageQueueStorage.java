@@ -23,7 +23,11 @@ public interface MessageQueueStorage {
 
 	Object findLastResendOffset(Tpg tpg) throws Exception;
 
+	Object findMessageOffsetByTime(Tpp tpp, long time);
+
 	FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize);
+
+	FetchResult fetchMessages(Tpp tpp, List<Object> offsets);
 
 	FetchResult fetchResendMessages(Tpg tpg, Object startOffset, int batchSize);
 

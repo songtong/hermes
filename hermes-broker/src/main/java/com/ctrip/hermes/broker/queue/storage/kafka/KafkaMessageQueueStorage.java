@@ -103,4 +103,14 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 		return m_senders.get(topic);
 	}
 
+	@Override
+	public Object findMessageOffsetByTime(Tpp tpp, long time) {
+		return null;
+	}
+
+	@Override
+   public FetchResult fetchMessages(Tpp tpp, List<Object> offsets) {
+	   return null;
+   }
+
 }

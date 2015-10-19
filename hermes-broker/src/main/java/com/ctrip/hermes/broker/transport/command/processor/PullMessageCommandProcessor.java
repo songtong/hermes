@@ -85,8 +85,11 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 		switch (task.getPullMessageCommandVersion()) {
 		case 1:
 			cmd = new PullMessageResultCommand();
+			break;
 		case 2:
 			cmd = new PullMessageResultCommandV2();
+			((PullMessageResultCommandV2) cmd).setBrokerAccepted(false);
+			break;
 		}
 		cmd.getHeader().setCorrelationId(task.getCorrelationId());
 		task.getChannel().writeAndFlush(cmd);

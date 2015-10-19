@@ -17,14 +17,14 @@ import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.CommandType;
-import com.ctrip.hermes.core.transport.command.QueryOffsetCommand;
+import com.ctrip.hermes.core.transport.command.QueryLatestConsumerOffsetCommand;
 import com.ctrip.hermes.core.transport.command.QueryOffsetResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 
-public class QueryOffsetCommandProcessor extends ContainerHolder implements CommandProcessor {
+public class QueryLatestConsumerOffsetCommandProcessor extends ContainerHolder implements CommandProcessor {
 
-	private static final Logger log = LoggerFactory.getLogger(QueryOffsetCommandProcessor.class);
+	private static final Logger log = LoggerFactory.getLogger(QueryLatestConsumerOffsetCommandProcessor.class);
 
 	@Inject
 	private MetaService m_metaService;
@@ -40,12 +40,12 @@ public class QueryOffsetCommandProcessor extends ContainerHolder implements Comm
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.QUERY_OFFSET);
+		return Arrays.asList(CommandType.QUERY_LATEST_CONSUMER_OFFSET);
 	}
 
 	@Override
 	public void process(CommandProcessorContext ctx) {
-		QueryOffsetCommand reqCmd = (QueryOffsetCommand) ctx.getCommand();
+		QueryLatestConsumerOffsetCommand reqCmd = (QueryLatestConsumerOffsetCommand) ctx.getCommand();
 		long correlationId = reqCmd.getHeader().getCorrelationId();
 		String topic = reqCmd.getTopic();
 		String groupId = reqCmd.getGroupId();
@@ -54,7 +54,7 @@ public class QueryOffsetCommandProcessor extends ContainerHolder implements Comm
 		if (m_metaService.containsConsumerGroup(topic, groupId)) {
 			try {
 				if (m_leaseContainer.acquireLease(topic, partition, m_config.getSessionId()) != null) {
-					Offset offset = m_messageQueueManager.findLatestOffset(new Tpg(topic, partition, groupId));
+					Offset offset = m_messageQueueManager.findLatestConsumerOffset(new Tpg(topic, partition, groupId));
 					response(ctx.getChannel(), correlationId, offset);
 					return;
 				} else {
@@ -75,14 +75,14 @@ public class QueryOffsetCommandProcessor extends ContainerHolder implements Comm
 		channel.writeAndFlush(cmd);
 	}
 
-	private void logDebug(QueryOffsetCommand cmd, String debugInfo) {
+	private void logDebug(QueryLatestConsumerOffsetCommand cmd, String debugInfo) {
 		if (log.isDebugEnabled()) {
 			log.debug(debugInfo + " (correlationId={}, topic={}, partition={}, groupId={})", cmd.getHeader()
 			      .getCorrelationId(), cmd.getTopic(), cmd.getPartition(), cmd.getGroupId());
 		}
 	}
 
-	private void logError(QueryOffsetCommand cmd, String errorInfo, Exception e) {
+	private void logError(QueryLatestConsumerOffsetCommand cmd, String errorInfo, Exception e) {
 		log.error(errorInfo + " (correlationId={}, topic={}, partition={}, groupId={})", cmd.getHeader()
 		      .getCorrelationId(), cmd.getTopic(), cmd.getPartition(), cmd.getGroupId(), e);
 	}

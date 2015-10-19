@@ -3,6 +3,7 @@ package com.ctrip.hermes.consumer;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,11 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
+import com.ctrip.hermes.consumer.api.Consumer.MessageStreamHolder;
+import com.ctrip.hermes.consumer.api.MessageStream;
+import com.ctrip.hermes.consumer.api.MessageStreamOffset;
+import com.ctrip.hermes.consumer.api.OffsetStorage;
+import com.ctrip.hermes.consumer.api.PartitionMetaListener;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.metrics.HttpMetricsServer;
@@ -28,6 +34,45 @@ import com.dianping.cat.Cat;
  *
  */
 public class StartConsumer extends ComponentTestCase {
+
+	public class HermesOffsetStorage implements OffsetStorage {
+		@Override
+		public MessageStreamOffset queryLatestOffset(String topic, int partitionId) {
+			return new MessageStreamOffset(1, 1);
+		}
+	}
+
+	@Test
+	public void testMessageStream() throws Exception {
+		MessageStreamHolder<String> holder = Consumer.getInstance().openMessageStreams("song.test", "song.test.group",
+		      String.class, new HermesOffsetStorage(), new PartitionMetaListener() {
+			      @Override
+			      public void onPartitionCountChanged(String topic) {
+				      System.out.println(String.format("Partition of topic %s changed", topic));
+			      }
+		      });
+		for (final MessageStream<String> stream : holder.getStreams()) {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					for (ConsumerMessage<String> msg : stream) {
+						System.out.println(">>>>>>>>>>>" + msg.getBody());
+					}
+				}
+			}).start();
+		}
+		for (MessageStream<String> stream : holder.getStreams()) {
+			for (ConsumerMessage<String> msg : stream.fetchMessages(Arrays.asList(new MessageStreamOffset(1, 100)))) {
+				System.out.println("%%%%%%%%%%%%%%%% " + msg.getBody());
+			}
+		}
+		for (MessageStream<String> stream : holder.getStreams()) {
+			for (ConsumerMessage<String> msg : stream.fetchMessages(new MessageStreamOffset(0, 0), 10)) {
+				System.out.println("**************** " + msg.getBody());
+			}
+		}
+		System.in.read();
+	}
 
 	@Test
 	public void test() throws Exception {

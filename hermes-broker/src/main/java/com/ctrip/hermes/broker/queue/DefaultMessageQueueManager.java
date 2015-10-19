@@ -31,7 +31,9 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
+import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.google.common.util.concurrent.ListenableFuture;
 
 @Named(type = MessageQueueManager.class)
@@ -232,11 +234,50 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	}
 
 	@Override
-	public Offset findLatestOffset(Tpg tpg) {
+	public Offset findLatestConsumerOffset(Tpg tpg) {
 		if (!m_stopped.get()) {
-			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).findLatestOffset(tpg.getGroupId());
+			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).findLatestConsumerOffset(tpg.getGroupId());
 		}
 		return null;
 	}
 
+	@Override
+	public Offset findMessageOffsetByTime(String topic, int partition, long time) {
+		if (!m_stopped.get()) {
+			return getMessageQueue(topic, partition).findMessageOffsetByTime(time);
+		}
+		return null;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<TppConsumerMessageBatch> findMessagesByOffsets(String topic, int partition, List<Offset> offsets) {
+		List<TppConsumerMessageBatch> result = new ArrayList<TppConsumerMessageBatch>();
+		MessageQueue queue = getMessageQueue(topic, partition);
+		if (!m_stopped.get()) {
+			if (queue != null) {
+				TppConsumerMessageBatch priorityMessasges = queue.findMessagesByOffsets(true,
+				      (List<Long>) CollectionUtil.collect(offsets, new Transformer() {
+					      @Override
+					      public Object transform(Object offset) {
+						      return ((Offset) offset).getPriorityOffset();
+					      }
+				      }));
+				if (priorityMessasges != null) {
+					result.add(priorityMessasges);
+				}
+				TppConsumerMessageBatch nonPriorityMessages = queue.findMessagesByOffsets(false,
+				      (List<Long>) CollectionUtil.collect(offsets, new Transformer() {
+					      @Override
+					      public Object transform(Object offset) {
+						      return ((Offset) offset).getNonPriorityOffset();
+					      }
+				      }));
+				if (nonPriorityMessages != null) {
+					result.add(nonPriorityMessages);
+				}
+			}
+		}
+		return result;
+	}
 }

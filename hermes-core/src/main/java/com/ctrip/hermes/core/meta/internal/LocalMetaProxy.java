@@ -2,10 +2,12 @@ package com.ctrip.hermes.core.meta.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -72,4 +74,8 @@ public class LocalMetaProxy implements MetaProxy {
 		return null;
 	}
 
+	@Override
+   public Map<Integer, Offset> findMessageOffsetByTime(String topic, int partition, long time) {
+	   return null;
+   }
 }

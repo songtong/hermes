@@ -1,7 +1,9 @@
 package com.ctrip.hermes.core.meta;
 
 import java.util.List;
+import java.util.Map;
 
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -64,4 +66,8 @@ public interface MetaService {
 	String getZookeeperList();
 
 	String getKafkaBrokerList();
+
+	Offset findMessageOffsetByTime(String topic, int partition, long time);
+
+	Map<Integer, Offset> findMessageOffsetByTime(String topicName, long time);
 }

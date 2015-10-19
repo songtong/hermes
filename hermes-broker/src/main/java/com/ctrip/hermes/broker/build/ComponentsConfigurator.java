@@ -29,7 +29,9 @@ import com.ctrip.hermes.broker.transport.NettyServer;
 import com.ctrip.hermes.broker.transport.NettyServerConfig;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessor;
-import com.ctrip.hermes.broker.transport.command.processor.QueryOffsetCommandProcessor;
+import com.ctrip.hermes.broker.transport.command.processor.PullSpecificMessageCommandProcessor;
+import com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOffsetCommandProcessor;
+import com.ctrip.hermes.broker.transport.command.processor.QueryMessageOffsetByTimeCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor;
 import com.ctrip.hermes.broker.zk.ZKClient;
 import com.ctrip.hermes.broker.zk.ZKConfig;
@@ -65,11 +67,32 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(BrokerConfig.class)//
 		      .req(MetaService.class)//
 		);
+		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL_SPECIFIC.toString(),
+		      PullSpecificMessageCommandProcessor.class)//
+		      .req(BrokerLeaseContainer.class)//
+		      .req(MessageQueueManager.class)//
+		      .req(BrokerConfig.class)//
+		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class)//
 		      .req(BizLogger.class) //
 		);
-		all.add(C(CommandProcessor.class, CommandType.QUERY_OFFSET.toString(), QueryOffsetCommandProcessor.class)//
+		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET.toString(),
+		      QueryLatestConsumerOffsetCommandProcessor.class)//
+		      .req(BrokerLeaseContainer.class)//
+		      .req(BrokerConfig.class)//
+		      .req(MetaService.class)//
+		      .req(MessageQueueManager.class)//
+		);
+		all.add(C(CommandProcessor.class, CommandType.QUERY_MESSAGE_OFFSET_BY_TIME.toString(),
+		      QueryMessageOffsetByTimeCommandProcessor.class)//
+		      .req(BrokerLeaseContainer.class)//
+		      .req(BrokerConfig.class)//
+		      .req(MetaService.class)//
+		      .req(MessageQueueManager.class)//
+		);
+		all.add(C(CommandProcessor.class, CommandType.QUERY_MESSAGE_OFFSET_BY_TIME.toString(),
+		      QueryMessageOffsetByTimeCommandProcessor.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//
 		      .req(MetaService.class)//

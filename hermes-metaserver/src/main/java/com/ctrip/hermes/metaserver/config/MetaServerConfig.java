@@ -108,4 +108,9 @@ public class MetaServerConfig {
 	public int getFetcheMetaFromLeaderReadTimeout() {
 		return 5000;
 	}
+
+	public long getQueryMessageOffsetTimeoutMillis() {
+		return 30000;
+	}
+
 }

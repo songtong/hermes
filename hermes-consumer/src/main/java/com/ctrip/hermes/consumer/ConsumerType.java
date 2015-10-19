@@ -7,5 +7,6 @@ package com.ctrip.hermes.consumer;
 public enum ConsumerType {
 	DEFAULT, //
 	STRICTLY_ORDERING, //
+	MESSAGE_STREAM, //
 	;
 }

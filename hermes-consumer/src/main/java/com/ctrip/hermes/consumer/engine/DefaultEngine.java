@@ -49,9 +49,10 @@ public class DefaultEngine extends Engine {
 		validate(topics, subscriber.getGroupId());
 
 		for (Topic topic : topics) {
-			ConsumerGroup cg= topic.findConsumerGroup(subscriber.getGroupId());
+			ConsumerGroup cg = topic.findConsumerGroup(subscriber.getGroupId());
 			ConsumerContext context = new ConsumerContext(topic, cg, subscriber.getConsumer(),
-			      subscriber.getMessageClass(), subscriber.getConsumerType(), subscriber.getMessageListenerConfig());
+			      subscriber.getMessageClass(), subscriber.getConsumerType(), subscriber.getMessageListenerConfig(),
+			      subscriber.getOffsetStorage());
 
 			try {
 				ConsumerBootstrap consumerBootstrap = m_consumerManager.findConsumerBootStrap(topic);

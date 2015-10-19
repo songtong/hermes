@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
-import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointClient.EndpointChannel;
+import com.ctrip.hermes.core.transport.endpoint.AbstractEndpointClient.EndpointChannel;
 import com.ctrip.hermes.core.transport.netty.AbstractNettyChannelInboundHandler;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -27,12 +27,12 @@ public class DefaultClientChannelInboundHandler extends AbstractNettyChannelInbo
 
 	private Endpoint m_endpoint;
 
-	private DefaultEndpointClient m_endpointClient;
+	private AbstractEndpointClient m_endpointClient;
 
 	private CoreConfig m_config;
 
 	public DefaultClientChannelInboundHandler(CommandProcessorManager cmdProcessorManager, Endpoint endpoint,
-	      EndpointChannel endpointChannel, DefaultEndpointClient endpointClient, CoreConfig config) {
+	      EndpointChannel endpointChannel, AbstractEndpointClient endpointClient, CoreConfig config) {
 		super(cmdProcessorManager);
 		m_endpoint = endpoint;
 		m_endpointChannel = endpointChannel;

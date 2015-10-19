@@ -46,6 +46,7 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 				((PullMessageResultCommandV2) cmd).addBatches(batches);
 			}
 			((PullMessageResultCommandV2) cmd).setOffset(offset);
+			((PullMessageResultCommandV2) cmd).setBrokerAccepted(true);
 			break;
 		}
 		cmd.getHeader().setCorrelationId(pullTask.getCorrelationId());

@@ -23,7 +23,7 @@ import com.ctrip.hermes.core.meta.MetaService;
  *
  */
 public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
-	private static final Logger log = LoggerFactory.getLogger(AbstractMessageQueueCursor.class);
+	protected static final Logger log = LoggerFactory.getLogger(AbstractMessageQueueCursor.class);
 
 	protected static final int STATE_NOT_INITED = 0;
 

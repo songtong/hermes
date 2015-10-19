@@ -23,6 +23,8 @@ public interface MessageQueueManager {
 
 	public MessageQueueCursor getCursor(Tpg tpg, Lease lease);
 
+	public List<TppConsumerMessageBatch> findMessagesByOffsets(String topic, int partition, List<Offset> offsets);
+
 	public void stop();
 
 	void delivered(TppConsumerMessageBatch batch, String groupId, boolean withOffset);
@@ -31,6 +33,8 @@ public interface MessageQueueManager {
 
 	void nacked(Tpp tpp, String groupId, boolean resend, List<AckContext> nackContexts, int ackType);
 
-	public Offset findLatestOffset(Tpg tpg);
+	public Offset findLatestConsumerOffset(Tpg tpg);
+
+	public Offset findMessageOffsetByTime(String topic, int partition, long time);
 
 }
