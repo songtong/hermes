@@ -1,5 +1,6 @@
 package com.ctrip.hermes.broker.queue.storage.mysql;
 
+import static com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity.READSET_OFFSET;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -188,17 +189,49 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		}
 	}
 
+	private List<Long[]> splitOffsets(List<Object> offsets) {
+		int batchSize = m_config.getFetchMessageWithOffsetBatchSize();
+		List<Long[]> list = new ArrayList<>();
+		for (int idx = 0; idx < offsets.size(); idx += batchSize) {
+			List<Object> l = offsets.subList(idx, idx + batchSize < offsets.size() ? idx + batchSize : offsets.size());
+			list.add(l.toArray(new Long[l.size()]));
+		}
+		return list;
+	}
+
+	@Override
+	public FetchResult fetchMessages(Tpp tpp, List<Object> offsets) {
+		List<MessagePriority> msgs = new ArrayList<MessagePriority>();
+		for (Long[] subOffsets : splitOffsets(offsets)) {
+			try {
+				msgs.addAll(m_msgDao.findWithOffsets(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), subOffsets,
+				      MessagePriorityEntity.READSET_FULL));
+			} catch (Exception e) {
+				log.error("Failed to fetch message({}).", tpp, e);
+				continue;
+			}
+		}
+		return buildFetchResult(tpp, msgs);
+	}
+
 	@Override
 	public FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize) {
+		try {
+			return buildFetchResult(tpp, m_msgDao.findIdAfter(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(),
+			      (Long) startOffset, batchSize, MessagePriorityEntity.READSET_FULL));
+		} catch (DalException e) {
+			log.error("Failed to fetch message({}).", tpp, e);
+			return null;
+		}
+	}
+
+	private FetchResult buildFetchResult(Tpp tpp, final List<MessagePriority> msgs) {
 		FetchResult result = new FetchResult();
 		try {
-			final List<MessagePriority> dataObjs = m_msgDao.findIdAfter(tpp.getTopic(), tpp.getPartition(),
-			      tpp.getPriorityInt(), (Long) startOffset, batchSize, MessagePriorityEntity.READSET_FULL);
-
 			long biggestOffset = 0L;
-			if (dataObjs != null && !dataObjs.isEmpty()) {
+			if (msgs != null && !msgs.isEmpty()) {
 				final TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
-				for (MessagePriority dataObj : dataObjs) {
+				for (MessagePriority dataObj : msgs) {
 					MessageMeta msgMeta = new MessageMeta(dataObj.getId(), 0, dataObj.getId(), tpp.getPriorityInt(), false);
 					biggestOffset = Math.max(biggestOffset, dataObj.getId());
 					batch.addMessageMeta(msgMeta);
@@ -210,10 +243,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				batch.setPriority(tpp.getPriorityInt());
 
 				batch.setTransferCallback(new TransferCallback() {
-
 					@Override
 					public void transfer(ByteBuf out) {
-						for (MessagePriority dataObj : dataObjs) {
+						for (MessagePriority dataObj : msgs) {
 							PartialDecodedMessage partialMsg = new PartialDecodedMessage();
 							partialMsg.setRemainingRetries(0);
 							partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
@@ -225,7 +257,6 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 							m_messageCodec.encodePartial(partialMsg, out);
 						}
 					}
-
 				});
 
 				result.setBatch(batch);
@@ -233,8 +264,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				return result;
 			}
 		} catch (Exception e) {
-			log.error("Failed to fetch message(topic={}, partition={}, priority={}).", tpp.getTopic(), tpp.getPartition(),
-			      tpp.isPriority(), e);
+			log.error("Failed to fetch message({}).", tpp, e);
 		}
 
 		return null;
@@ -504,4 +534,94 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		return false;
 	}
 
+	@Override
+	public Object findMessageOffsetByTime(Tpp tpp, long time) {
+		MessagePriority oldestMsg = findOldestMessageOffset(tpp);
+		MessagePriority latestMsg = findLatestMessageOffset(tpp);
+
+		if (oldestMsg == null || latestMsg == null) {
+			log.error("No message found in {}.", tpp);
+			return 0L;
+		}
+
+		return Long.MIN_VALUE == time ? oldestMsg.getId() //
+		      : Long.MAX_VALUE == time ? latestMsg.getId() //
+		            : findMessageOffsetByTimeInRange(tpp, oldestMsg, latestMsg, time);
+	}
+
+	private MessagePriority findOldestMessageOffset(Tpp tpp) {
+		try {
+			return m_msgDao.findOldestOffset( //
+			      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), READSET_OFFSET);
+		} catch (Exception e) {
+			log.warn("Find oldest message offset failed.{}", tpp, e);
+			return null;
+		}
+	}
+
+	private MessagePriority findLatestMessageOffset(Tpp tpp) {
+		try {
+			return m_msgDao.findLatestOffset( //
+			      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), READSET_OFFSET);
+		} catch (Exception e) {
+			log.warn("Find latest message offset failed.{}", tpp, e);
+			return null;
+		}
+	}
+
+	private long findMessageOffsetByTimeInRange(Tpp tpp, MessagePriority left, MessagePriority right, long time) {
+		long precisionMillis = m_config.getMessageOffsetQueryPrecisionMillis();
+
+		switch (compareWithPrecision(left.getCreationDate().getTime(), time, precisionMillis)) {
+		case 0:
+			return left.getId();
+		case 1:
+			return 0L;
+		}
+
+		switch (compareWithPrecision(right.getCreationDate().getTime(), time, precisionMillis)) {
+		case 0:
+			return right.getId();
+		case -1:
+			return 0L;
+		}
+
+		try {
+			long leftId = left.getId();
+			long rightId = right.getId();
+			while (leftId < rightId) {
+				long midId = leftId + (rightId - leftId) / 2L;
+				MessagePriority mid = m_msgDao.findOffsetById( //
+				      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), midId, READSET_OFFSET);
+				switch (compareWithPrecision(mid.getCreationDate().getTime(), time, precisionMillis)) {
+				case 0:
+					return mid.getId();
+				case 1:
+					rightId = mid.getId() - 1;
+					break;
+				case -1:
+					leftId = mid.getId() + 1;
+					break;
+				default:
+					throw new RuntimeException("Impossible compare status!");
+				}
+			}
+			if (leftId == rightId) {
+				MessagePriority msg = m_msgDao.findOffsetById( //
+				      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), leftId, READSET_OFFSET);
+				if (compareWithPrecision(msg.getCreationDate().getTime(), time, precisionMillis) == 0) {
+					return msg.getId();
+				}
+			}
+		} catch (DalException e) {
+			if (log.isDebugEnabled()) {
+				log.debug("Find message by offset failed. {}", tpp, e);
+			}
+		}
+		return 0L;
+	}
+
+	private int compareWithPrecision(long src, long dst, long precisionMillis) {
+		return src < dst - precisionMillis ? -1 : src > dst + precisionMillis ? 1 : 0;
+	}
 }

@@ -3,8 +3,10 @@ package com.ctrip.hermes.core.utils;
 import io.netty.buffer.ByteBuf;
 
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.unidal.tuple.Pair;
@@ -124,9 +126,29 @@ public class HermesPrimitiveCodec {
 			readerIndexBack(m_buf, 1);
 			long pOff = m_buf.readLong();
 			long npOff = m_buf.readLong();
-			Date rDate = new Date(m_buf.readLong());
-			long rOff = m_buf.readLong();
-			return new Offset(pOff, npOff, new Pair<Date, Long>(rDate, rOff));
+
+			Pair<Date, Long> resendOffset = null;
+			firstByte = m_buf.readByte();
+			if (NULL != firstByte) {
+				readerIndexBack(m_buf, 1);
+				resendOffset = new Pair<Date, Long>(new Date(m_buf.readLong()), m_buf.readLong());
+			}
+			return new Offset(pOff, npOff, resendOffset);
+		}
+	}
+
+	public List<Offset> readOffsets() {
+		byte firstByte = m_buf.readByte();
+		if (NULL == firstByte) {
+			return null;
+		} else {
+			readerIndexBack(m_buf, 1);
+			int size = m_buf.readInt();
+			List<Offset> list = new ArrayList<Offset>();
+			for (int i = 0; i < size; i++) {
+				list.add(readOffset());
+			}
+			return list;
 		}
 	}
 
@@ -134,10 +156,25 @@ public class HermesPrimitiveCodec {
 		if (offset == null) {
 			writeNull();
 		} else {
-			m_buf.writeLong(offset.getPriorityOffset());
-			m_buf.writeLong(offset.getNonPriorityOffset());
-			m_buf.writeLong(offset.getResendOffset().getKey().getTime());
-			m_buf.writeLong(offset.getResendOffset().getValue());
+			writeLong(offset.getPriorityOffset());
+			writeLong(offset.getNonPriorityOffset());
+			if (offset.getResendOffset() == null) {
+				writeNull();
+			} else {
+				writeLong(offset.getResendOffset().getKey().getTime());
+				writeLong(offset.getResendOffset().getValue());
+			}
+		}
+	}
+
+	public void writeOffsets(List<Offset> offsets) {
+		if (offsets == null) {
+			writeNull();
+		} else {
+			m_buf.writeInt(offsets.size());
+			for (Offset offset : offsets) {
+				writeOffset(offset);
+			}
 		}
 	}
 
@@ -244,5 +281,4 @@ public class HermesPrimitiveCodec {
 	public ByteBuf getBuf() {
 		return m_buf;
 	}
-
 }

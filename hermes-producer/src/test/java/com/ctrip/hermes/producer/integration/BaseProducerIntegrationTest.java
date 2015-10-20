@@ -27,6 +27,7 @@ import org.mockito.stubbing.Answer;
 import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -443,6 +444,10 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 			return null;
 		}
 
+		@Override
+		public Map<Integer, Offset> findMessageOffsetByTime(String topic, int partition, long time) {
+			return null;
+		}
 	}
 
 }

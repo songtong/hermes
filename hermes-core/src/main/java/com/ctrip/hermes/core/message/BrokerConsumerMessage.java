@@ -66,6 +66,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 		m_channel = channel;
 	}
 
+	@Override
 	public boolean isPriority() {
 		return m_priority;
 	}

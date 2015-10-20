@@ -18,7 +18,7 @@ import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
-import com.ctrip.hermes.core.transport.command.QueryOffsetCommand;
+import com.ctrip.hermes.core.transport.command.QueryLatestConsumerOffsetCommand;
 import com.ctrip.hermes.core.transport.command.QueryOffsetResultCommand;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
@@ -40,7 +40,7 @@ public class StrictlyOrderedConsumingStrategyConsumerTask extends BaseConsumerTa
 
 	private SchedulePolicy m_noEndpointSchedulePolicy;
 
-	private AtomicReference<Offset> m_offset = new AtomicReference<>(null);
+	protected AtomicReference<Offset> m_offset = new AtomicReference<>(null);
 
 	public StrictlyOrderedConsumingStrategyConsumerTask(ConsumerContext context, int partitionId, int cacheSize) {
 		super(context, partitionId, cacheSize);
@@ -65,7 +65,7 @@ public class StrictlyOrderedConsumingStrategyConsumerTask extends BaseConsumerTa
 		return brokerMsg;
 	}
 
-	private void queryLatestOffset(ConsumerLeaseKey key, long correlationId) {
+	protected void queryLatestOffset(ConsumerLeaseKey key, long correlationId) {
 
 		while (!isClosed() && !Thread.currentThread().isInterrupted() && !m_lease.get().isExpired()) {
 
@@ -81,7 +81,7 @@ public class StrictlyOrderedConsumingStrategyConsumerTask extends BaseConsumerTa
 
 			final SettableFuture<QueryOffsetResultCommand> future = SettableFuture.create();
 
-			QueryOffsetCommand cmd = new QueryOffsetCommand(m_context.getTopic().getName(), m_partitionId,
+			QueryLatestConsumerOffsetCommand cmd = new QueryLatestConsumerOffsetCommand(m_context.getTopic().getName(), m_partitionId,
 			      m_context.getGroupId());
 
 			cmd.getHeader().setCorrelationId(correlationId);

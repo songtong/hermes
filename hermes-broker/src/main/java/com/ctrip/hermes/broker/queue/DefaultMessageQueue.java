@@ -1,5 +1,6 @@
 package com.ctrip.hermes.broker.queue;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -11,10 +12,12 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.broker.ack.internal.AckHolder;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
+import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.meta.MetaService;
 
@@ -62,7 +65,7 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	}
 
 	@Override
-	public Offset findLatestOffset(String groupId) {
+	public Offset findLatestConsumerOffset(String groupId) {
 		int groupIdInt = m_metaService.translateToIntGroupId(m_topic, groupId);
 		try {
 			long pOffset = (long) m_storage.findLastOffset(new Tpp(m_topic, m_partition, true), groupIdInt);
@@ -83,5 +86,19 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 
 	private long getMaxOffset(long offset, AckHolder<MessageMeta> holder) {
 		return holder == null ? offset : Math.max(holder.getMaxAckedOffset(), offset);
+	}
+
+	@Override
+	public Offset findMessageOffsetByTime(long time) {
+		long pOffset = (long) m_storage.findMessageOffsetByTime(new Tpp(m_topic, m_partition, true), time);
+		long npOffset = (long) m_storage.findMessageOffsetByTime(new Tpp(m_topic, m_partition, false), time);
+		return new Offset(pOffset, npOffset, null);
+	}
+
+	@Override
+	public TppConsumerMessageBatch findMessagesByOffsets(boolean isPriority, List<Long> offsets) {
+		Tpp tpp = new Tpp(m_topic, m_partition, isPriority);
+		FetchResult fetchResult = m_storage.fetchMessages(tpp, new ArrayList<Object>(offsets));
+		return fetchResult == null ? null : fetchResult.getBatch();
 	}
 }

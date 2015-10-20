@@ -74,4 +74,12 @@ public class ConsumerConfig {
 		return 3000;
 	}
 
+	public long getPullMessageTimeoutMills() {
+		return 30000;
+	}
+
+	public long getPartitionWatchdogIntervalSeconds() {
+		return 30;
+	}
+
 }

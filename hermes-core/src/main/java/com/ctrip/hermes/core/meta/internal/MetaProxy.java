@@ -1,7 +1,9 @@
 package com.ctrip.hermes.core.meta.internal;
 
 import java.util.List;
+import java.util.Map;
 
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -25,4 +27,6 @@ public interface MetaProxy {
 	int registerSchema(String schema, String subject);
 
 	String getSchemaString(int schemaId);
+
+	Map<Integer, Offset> findMessageOffsetByTime(String topic, int partition, long time);
 }

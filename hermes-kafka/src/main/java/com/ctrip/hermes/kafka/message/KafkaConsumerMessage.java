@@ -105,4 +105,9 @@ public class KafkaConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHo
 	public int getResendTimes() {
 		return 0;
 	}
+
+	@Override
+	public boolean isPriority() {
+		return false;
+	}
 }

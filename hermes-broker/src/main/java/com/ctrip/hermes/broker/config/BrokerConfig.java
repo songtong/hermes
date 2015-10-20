@@ -140,4 +140,12 @@ public class BrokerConfig implements Initializable {
 			return Integer.valueOf(port);
 		}
 	}
+
+	public int getMessageOffsetQueryPrecisionMillis() {
+		return 30000;
+	}
+
+	public int getFetchMessageWithOffsetBatchSize() {
+		return 500;
+	}
 }

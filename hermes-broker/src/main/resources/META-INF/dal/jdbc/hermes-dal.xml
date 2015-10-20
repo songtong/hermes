@@ -6,7 +6,13 @@
 		<var name="priority" value-type="int" />
 		<var name="start-id" value-type="long" />
 		<var name="batch-size" value-type="int" />
-
+		<var name="offsets" value-type="Long[]" />
+		<readsets>
+			<readset name="OFFSET" all="false">
+				<member name="id" />
+				<member name="creation-date" />
+			</readset>
+		</readsets>
 		<query-defs>
 			<query name="insert" type="INSERT" batch='true'>
 				<statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
@@ -25,6 +31,18 @@
         		LIMIT ${batch-size}]]>
 				</statement>
 			</query>
+			<query name="find-with-offsets" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<param name="offsets" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='id'/> IN <IN>${offsets}</IN>
+        		]]>
+				</statement>
+			</query>
 			<query name="top" type="SELECT" multiple="true">
 				<param name="topic" />
 				<param name="partition" />
@@ -33,6 +51,42 @@
         		FROM <TABLE/>
         		ORDER BY <FIELD name='id'/> DESC
         		LIMIT 1]]>
+				</statement>
+			</query>
+			<query name="find-latest-offset" type="SELECT" multiple="false">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT 1
+        		]]>
+				</statement>
+			</query>
+			<query name="find-oldest-offset" type="SELECT" multiple="false">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> ASC
+        		LIMIT 1
+        		]]>
+				</statement>
+			</query>
+			<query name="find-offset-by-id" type="SELECT" multiple="false">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<param name="key-id" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='id'/> = ${key-id}
+        		]]>
 				</statement>
 			</query>
 		</query-defs>
@@ -184,7 +238,7 @@
 	        				AND <FIELD name='last-id'/> < ${last-id}
 	        			)
 	        		)]]>
-			    </statement>
+				</statement>
 			</query>
 		</query-defs>
 	</entity>

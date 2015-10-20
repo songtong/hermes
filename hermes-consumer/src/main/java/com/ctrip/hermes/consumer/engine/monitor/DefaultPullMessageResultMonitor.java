@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
+import com.ctrip.hermes.core.transport.command.v2.PullMessageResultListener;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 
 /**
@@ -18,24 +18,23 @@ import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 public class DefaultPullMessageResultMonitor implements PullMessageResultMonitor {
 	private static final Logger log = LoggerFactory.getLogger(DefaultPullMessageResultMonitor.class);
 
-	private Map<Long, PullMessageCommandV2> m_cmds = new ConcurrentHashMap<Long, PullMessageCommandV2>();
+	private Map<Long, PullMessageResultListener> m_cmds = new ConcurrentHashMap<Long, PullMessageResultListener>();
 
 	@Override
-	public void monitor(PullMessageCommandV2 cmd) {
-		if (cmd != null) {
-			m_cmds.put(cmd.getHeader().getCorrelationId(), cmd);
+	public void monitor(PullMessageResultListener pullMessageResultListener) {
+		if (pullMessageResultListener != null) {
+			m_cmds.put(pullMessageResultListener.getHeader().getCorrelationId(), pullMessageResultListener);
 		}
 	}
 
 	@Override
 	public void resultReceived(PullMessageResultCommandV2 result) {
 		if (result != null) {
-			PullMessageCommandV2 pullMessageCommand = null;
-			pullMessageCommand = m_cmds.remove(result.getHeader().getCorrelationId());
+			PullMessageResultListener listener = m_cmds.remove(result.getHeader().getCorrelationId());
 
-			if (pullMessageCommand != null) {
+			if (listener != null) {
 				try {
-					pullMessageCommand.onResultReceived(result);
+					listener.onResultReceived(result);
 				} catch (Exception e) {
 					log.warn("Exception occurred while calling resultReceived", e);
 				}
@@ -46,9 +45,9 @@ public class DefaultPullMessageResultMonitor implements PullMessageResultMonitor
 	}
 
 	@Override
-	public void remove(PullMessageCommandV2 cmd) {
-		if (cmd != null) {
-			m_cmds.remove(cmd.getHeader().getCorrelationId());
+	public void remove(PullMessageResultListener pullMessageResultListener) {
+		if (pullMessageResultListener != null) {
+			m_cmds.remove(pullMessageResultListener.getHeader().getCorrelationId());
 		}
 	}
 }

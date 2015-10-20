@@ -22,6 +22,8 @@ import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 public class PullMessageResultCommandV2 extends AbstractCommand {
 	private static final long serialVersionUID = -8007236396754479256L;
 
+	private static final String BROKER_NOT_ACCEPT_KEY = "BROKER_NOT_ACCEPTED";
+
 	private List<TppConsumerMessageBatch> m_batches = new ArrayList<TppConsumerMessageBatch>();
 
 	private Offset m_offset;
@@ -34,6 +36,15 @@ public class PullMessageResultCommandV2 extends AbstractCommand {
 
 	public List<TppConsumerMessageBatch> getBatches() {
 		return m_batches;
+	}
+
+	public void setBrokerAccepted(boolean accepted) {
+		getHeader().addProperty(BROKER_NOT_ACCEPT_KEY, Boolean.toString(!accepted));
+	}
+
+	public boolean isBrokerAccepted() {
+		String value = getHeader().getProperties().get(BROKER_NOT_ACCEPT_KEY);
+		return value == null || Boolean.toString(false).equals(value);
 	}
 
 	public void setOffset(Offset offset) {

@@ -30,5 +30,7 @@ public interface ConsumerMessage<T> {
 	
 	public long getOffset();
 	
-	int getResendTimes();
+	public boolean isPriority();
+	
+	public int getResendTimes();
 }

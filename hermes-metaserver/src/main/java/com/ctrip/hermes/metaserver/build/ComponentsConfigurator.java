@@ -6,10 +6,13 @@ import java.util.List;
 import org.unidal.dal.jdbc.configuration.AbstractJdbcResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.core.transport.command.CommandType;
+import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy;
+import com.ctrip.hermes.metaserver.broker.endpoint.MetaEndpointClient;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
@@ -34,6 +37,9 @@ import com.ctrip.hermes.metaserver.event.impl.MetaServerListChangedEventHandler;
 import com.ctrip.hermes.metaserver.meta.DefaultMetaServerAssigningStrategy;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
+import com.ctrip.hermes.metaserver.monitor.DefaultQueryOffsetResultMonitor;
+import com.ctrip.hermes.metaserver.monitor.QueryOffsetResultMonitor;
+import com.ctrip.hermes.metaserver.processor.QueryOffsetResultCommandProcessor;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
@@ -88,6 +94,15 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		// follower
 		all.add(A(FollowerInitEventHandler.class));
 		all.add(A(DefaultLeaderMetaFetcher.class));
+
+		// endpoint client
+		all.add(A(MetaEndpointClient.class));
+
+		// message offsets handler
+		all.add(C(CommandProcessor.class, CommandType.RESULT_QUERY_OFFSET.toString(),
+		      QueryOffsetResultCommandProcessor.class)//
+		      .req(QueryOffsetResultMonitor.class));
+		all.add(A(DefaultQueryOffsetResultMonitor.class));
 
 		return all;
 	}
