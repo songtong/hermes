@@ -1,5 +1,8 @@
 package com.ctrip.hermes.broker.queue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -11,6 +14,9 @@ import com.ctrip.hermes.core.meta.MetaService;
  *
  */
 public class DefaultMessageQueueCursor extends AbstractMessageQueueCursor {
+
+	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueueCursor.class);
+
 	private MessageQueueStorage m_storage;
 
 	public DefaultMessageQueueCursor(Tpg tpg, Lease lease, MessageQueueStorage storage, MetaService metaService,
