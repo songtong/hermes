@@ -46,6 +46,20 @@ CREATE TABLE IF NOT EXISTS `subscription` (
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='subscription';
 
+CREATE TABLE IF NOT EXISTS `monitor_event` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `event_type` int(11) NOT NULL,
+  `create_time` datetime DEFAULT NULL,
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
+  `key1` varchar(500) DEFAULT NULL,
+  `key2` varchar(500) DEFAULT NULL,
+  `key3` varchar(500) DEFAULT NULL,
+  `key4` varchar(500) DEFAULT NULL,
+  `message` text,
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='monitor_event';
+
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -22,6 +22,7 @@
 		<module>hermes-example</module>
 		<module>hermes-misc</module>
 		<module>hermes-assembly</module>
+		<module>hermes-monitor</module>
 		<module>cmessaging.client</module>
 	</modules>
 	<dependencyManagement>
