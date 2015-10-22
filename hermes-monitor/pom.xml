@@ -11,86 +11,48 @@
 
 	<artifactId>hermes-monitor</artifactId>
 	<name>Hermes Monitor</name>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>fluent-hc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.unidal.framework</groupId>
-			<artifactId>test-framework</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-webapp</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
-			<exclusions>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+			<!-- <exclusions>
 				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-api</artifactId>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
 				</exclusion>
-				<exclusion>
-					<groupId>org.apache.logging.log4j</groupId>
-					<artifactId>log4j-api</artifactId>
-				</exclusion>
-			</exclusions>
+			</exclusions> -->
 		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-		</dependency>
+		<!-- <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency> -->
 	</dependencies>
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<mainClass>com.ctrip.hermes.monitor.Bootstrap</mainClass>
+					<layout>ZIP</layout>
+				</configuration>
+				<version>1.2.7.RELEASE</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.2</version>
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.keyboardsamurais.maven</groupId>
-				<artifactId>maven-timestamp-plugin</artifactId>
-				<version>1.0</version>
-				<configuration>
-					<propertyName>build.time</propertyName>
-					<timestampPattern>MMdd-HH.mm</timestampPattern>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>compile</phase>
-						<goals>
-							<goal>create</goal>
-						</goals>
-					</execution>
-				</executions>
-				<inherited>true</inherited>
-			</plugin>
-			<!--Configure hermer.properties and war name -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>2.6</version>
-				<configuration>
-					<webResources>
-						<resource>
-							<directory>${project.basedir}/conf/${package.environment}</directory>
-							<targetPath>WEB-INF/classes</targetPath>
-							<includes>
-								<include>hermes.properties</include>
-							</includes>
-						</resource>
-					</webResources>
-					<warName>${project.artifactId}-${project.version}-${package.environment}-${build.time}</warName>
 				</configuration>
 			</plugin>
 			<plugin>
