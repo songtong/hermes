@@ -3,7 +3,7 @@
    <jdbc package="com.ctrip.hermes.metaservice.dal" name="fxhermesmetadb">
       <datasource>
          <driver>com.mysql.jdbc.Driver</driver>
-         <url>jdbc:mysql://localhost:3306/fxhermesmetadb</url>
+         <url>jdbc:mysql://10.3.6.237:3306/fxhermesmetadb</url>
          <user>root</user>
          <password>~{c3943edeb60e9a9a9a9090a298500090901c91e6fe7be}</password>
          <properties>useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</properties>
@@ -13,6 +13,7 @@
          <table name="schema"/>
          <table name="subscription"/>
          <table name="monitor_event"/>
+         <table name="monitor_report"/>
       </group>
    </jdbc>
 </wizard>

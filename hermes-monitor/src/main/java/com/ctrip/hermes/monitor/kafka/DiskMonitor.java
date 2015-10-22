@@ -1,8 +1,7 @@
-package com.ctrip.hermes.monitor.zabbix;
+package com.ctrip.hermes.monitor.kafka;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -10,23 +9,42 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zabbix4j.ZabbixApi;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import com.ctrip.hermes.monitor.zabbix.ZabbixApiUtils;
+import com.ctrip.hermes.monitor.zabbix.ZabbixIds;
+import com.ctrip.hermes.monitor.zabbix.ZabbixStatUtils;
 import com.zabbix4j.ZabbixApiException;
-import com.zabbix4j.history.HistoryGetRequest;
-import com.zabbix4j.history.HistoryGetResponse;
 import com.zabbix4j.history.HistoryObject;
 import com.zabbix4j.history.HistoryObject.HISOTRY_OBJECT_TYPE;
-import com.zabbix4j.item.ItemGetRequest;
-import com.zabbix4j.item.ItemGetResponse;
 import com.zabbix4j.item.ItemGetResponse.Result;
 
+@Service
 public class DiskMonitor {
 	public static void main(String[] args) throws IOException, ZabbixApiException {
-		 getCurrentDiskFreePercentage();
-//		getPast5DaysDiskFreePercentage();
+		DiskMonitor monitor = new DiskMonitor();
+		// monitor.getPastHourDiskFreePercentage();
+		monitor.getCurrentDiskFreePercentage();
+		// monitor.getPast5DaysDiskFreePercentage();
 	}
 
-	public static void getPast5DaysDiskFreePercentage() throws ZabbixApiException {
+	public void getCurrentDiskFreePercentage() throws ZabbixApiException {
+		List<Integer> hostids = ZabbixIds.Kafka_Broker_Hostids;
+		List<Integer> itemids = ZabbixIds.Disk_Free_Percentage_Itemids;
+		Map<Integer, com.zabbix4j.host.HostGetResponse.Result> hosts = ZabbixApiUtils.getHosts(hostids);
+
+		for (Integer hostid : hostids) {
+			System.out.format("%30s\n", hosts.get(hostid).getHost());
+			Map<Integer, Result> items = ZabbixStatUtils.getItems(hostid, itemids);
+			for (Map.Entry<Integer, Result> item : items.entrySet()) {
+				System.out.format("%30s\t%5.2f%%\n", item.getValue().getKey_(),
+				      Double.parseDouble(item.getValue().getLastvalue()));
+			}
+		}
+	}
+
+	public void getPast5DaysDiskFreePercentage() throws ZabbixApiException {
 		List<Integer> hostids = ZabbixIds.Kafka_Broker_Hostids;
 		Map<Integer, com.zabbix4j.host.HostGetResponse.Result> hosts = ZabbixApiUtils.getHosts(hostids);
 		for (Integer hostid : hostids) {
@@ -35,40 +53,32 @@ public class DiskMonitor {
 		}
 	}
 
-	public static void getPast5DaysDiskFreePercentage(Integer hostid) throws ZabbixApiException {
+	public void getPast5DaysDiskFreePercentage(Integer hostid) throws ZabbixApiException {
 		List<Integer> itemids = ZabbixIds.Disk_Free_Percentage_Itemids;
 		Map<Integer, Result> items = ZabbixApiUtils.getItems(itemids);
 
 		List<Date> header = new ArrayList<Date>();
 		Map<Integer, List<HistoryObject>> fiveDaysData = new HashMap<Integer, List<HistoryObject>>();
 		for (int day = 5; day >= 0; day--) {
-			HistoryGetRequest historyGetRequest = new HistoryGetRequest();
-			historyGetRequest.getParams().setHistory(HISOTRY_OBJECT_TYPE.FLOAT.value);
-			historyGetRequest.getParams().setHostids(Arrays.asList(hostid));
-			historyGetRequest.getParams().setItemids(itemids);
-			historyGetRequest.getParams().setSortField("itemid");
 			long timeFrom = System.currentTimeMillis() / 1000 - day * 24 * 60 * 60 - 120;
 			long timeTill = timeFrom + 60;
-
 			header.add(new Date(timeFrom * 1000));
-			historyGetRequest.getParams().setTime_from(timeFrom);
-			historyGetRequest.getParams().setTime_till(timeTill);
 
-			ZabbixApi zabbixApi = ZabbixApiUtils.getZabbixApiInstance();
-			HistoryGetResponse hisotryGetResponse = zabbixApi.history().get(historyGetRequest);
+			Map<Integer, HistoryObject> history = ZabbixStatUtils.getHistory(new Date(timeFrom * 1000), new Date(
+			      timeTill * 1000), hostid, itemids, HISOTRY_OBJECT_TYPE.FLOAT);
 
-			for (HistoryObject result : hisotryGetResponse.getResult()) {
-				if (!fiveDaysData.containsKey(result.getItemid())) {
-					fiveDaysData.put(result.getItemid(), new ArrayList<HistoryObject>());
+			for (Map.Entry<Integer, HistoryObject> result : history.entrySet()) {
+				if (!fiveDaysData.containsKey(result.getKey())) {
+					fiveDaysData.put(result.getKey(), new ArrayList<HistoryObject>());
 				}
-				List<HistoryObject> itemValues = fiveDaysData.get(result.getItemid());
+				List<HistoryObject> itemValues = fiveDaysData.get(result.getKey());
 				if (itemValues.size() > 0) {
 					HistoryObject lastValue = itemValues.get(itemValues.size() - 1);
-					if (Math.abs(result.getClock() - lastValue.getClock()) < 60 * 60) {
+					if (Math.abs(result.getValue().getClock() - lastValue.getClock()) < 60 * 60) {
 						continue;
 					}
 				}
-				itemValues.add(result);
+				itemValues.add(result.getValue());
 			}
 		}
 
@@ -114,36 +124,8 @@ public class DiskMonitor {
 		}
 	}
 
-	public static void getCurrentDiskFreePercentage() throws ZabbixApiException {
-		List<Integer> hostids = ZabbixIds.Kafka_Broker_Hostids;
-		List<Integer> itemids = ZabbixIds.Disk_Free_Percentage_Itemids;
+	@Scheduled(fixedRate = 3600000)
+	public void getPastHourDiskFreePercentage() {
 
-		ItemGetRequest itemGetRequest = new ItemGetRequest();
-		itemGetRequest.getParams().setHostids(hostids);
-		itemGetRequest.getParams().setItemids(itemids);
-		itemGetRequest.getParams().setSortField("key_");
-
-		ZabbixApi zabbixApi = ZabbixApiUtils.getZabbixApiInstance();
-		ItemGetResponse itemGetResponse = zabbixApi.item().get(itemGetRequest);
-
-		StringBuilder header = new StringBuilder(String.format("%30s\t", "Host"));
-		for (Integer hostid : hostids) {
-			header.append(String.format("%6s\t", hostid));
-		}
-		System.out.println(header);
-
-		int columnIndex = 0;
-		StringBuilder row = null;
-		for (Result result : itemGetResponse.getResult()) {
-			if (columnIndex++ == 0) {
-				row = new StringBuilder();
-				row.append(String.format("%30s\t", result.getKey_()));
-			}
-			row.append(String.format("%5.2f%%\t", Double.parseDouble(result.getLastvalue())));
-			if (columnIndex == hostids.size()) {
-				System.out.println(row);
-				columnIndex = 0;
-			}
-		}
 	}
 }

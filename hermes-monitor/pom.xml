@@ -27,6 +27,14 @@
 			<artifactId>zabbix4j</artifactId>
 			<version>0.1.2</version>
 		</dependency>
+		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-metaservice</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.dianping.cat</groupId>
+			<artifactId>cat-client</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
