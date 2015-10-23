@@ -1,7 +1,6 @@
 package com.ctrip.hermes.monitor.zabbix;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +11,6 @@ import com.zabbix4j.host.HostGetRequest;
 import com.zabbix4j.host.HostGetResponse;
 import com.zabbix4j.item.ItemGetRequest;
 import com.zabbix4j.item.ItemGetResponse;
-import com.zabbix4j.item.ItemGetResponse.Result;
 
 public class ZabbixApiUtils {
 
@@ -80,11 +78,7 @@ public class ZabbixApiUtils {
 
 	public static void main(String[] args) throws ZabbixApiException {
 		Map<String, String> search = new HashMap<String, String>();
-		search.put("name", "FailedFetchRequestsPerSec");
+		search.put("name", args[0]);
 		getItemIds(ZabbixIds.Kafka_Broker_Hostids, search);
-
-		List<Integer> itemids = Arrays.asList(6927094);
-		Map<Integer, Result> items = getItems(itemids);
-		System.out.println(items.get(6927094).getName());
 	}
 }

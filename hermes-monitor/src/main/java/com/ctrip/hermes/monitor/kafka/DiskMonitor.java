@@ -1,7 +1,7 @@
 package com.ctrip.hermes.monitor.kafka;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -9,9 +9,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.unidal.dal.jdbc.DalException;
 
+import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.metaservice.model.MonitorReport;
+import com.ctrip.hermes.monitor.service.MonitorReportService;
+import com.ctrip.hermes.monitor.stat.StatResult;
 import com.ctrip.hermes.monitor.zabbix.ZabbixApiUtils;
 import com.ctrip.hermes.monitor.zabbix.ZabbixIds;
 import com.ctrip.hermes.monitor.zabbix.ZabbixStatUtils;
@@ -22,26 +28,36 @@ import com.zabbix4j.item.ItemGetResponse.Result;
 
 @Service
 public class DiskMonitor {
-	public static void main(String[] args) throws IOException, ZabbixApiException {
+
+	public static void main(String[] args) throws ZabbixApiException, DalException {
 		DiskMonitor monitor = new DiskMonitor();
-		// monitor.getPastHourDiskFreePercentage();
-		monitor.getCurrentDiskFreePercentage();
+		monitor.service = new MonitorReportService();
+		monitor.getPastHourDiskFreePercentage();
+		// monitor.getCurrentDiskFreePercentage();
 		// monitor.getPast5DaysDiskFreePercentage();
 	}
 
-	public void getCurrentDiskFreePercentage() throws ZabbixApiException {
+	@Autowired
+	private MonitorReportService service;
+
+	public Map<Integer, Map<String, Double>> getCurrentDiskFreePercentage() throws ZabbixApiException {
 		List<Integer> hostids = ZabbixIds.Kafka_Broker_Hostids;
 		List<Integer> itemids = ZabbixIds.Disk_Free_Percentage_Itemids;
 		Map<Integer, com.zabbix4j.host.HostGetResponse.Result> hosts = ZabbixApiUtils.getHosts(hostids);
+		Map<Integer, Map<String, Double>> result = new HashMap<Integer, Map<String, Double>>();
 
 		for (Integer hostid : hostids) {
 			System.out.format("%30s\n", hosts.get(hostid).getHost());
 			Map<Integer, Result> items = ZabbixStatUtils.getItems(hostid, itemids);
+			Map<String, Double> diskFreeValue = new HashMap<String, Double>();
 			for (Map.Entry<Integer, Result> item : items.entrySet()) {
 				System.out.format("%30s\t%5.2f%%\n", item.getValue().getKey_(),
 				      Double.parseDouble(item.getValue().getLastvalue()));
+				diskFreeValue.put(item.getValue().getKey_(), Double.parseDouble(item.getValue().getLastvalue()));
 			}
+			result.put(hosts.get(hostid).getHostid(), diskFreeValue);
 		}
+		return result;
 	}
 
 	public void getPast5DaysDiskFreePercentage() throws ZabbixApiException {
@@ -125,7 +141,40 @@ public class DiskMonitor {
 	}
 
 	@Scheduled(fixedRate = 3600000)
-	public void getPastHourDiskFreePercentage() {
+	public void getPastHourDiskFreePercentage() throws ZabbixApiException, DalException {
+		Map<Integer, com.zabbix4j.item.ItemGetResponse.Result> items = ZabbixApiUtils
+		      .getItems(ZabbixIds.Disk_Free_Percentage_Itemids);
+		Map<Integer, com.zabbix4j.host.HostGetResponse.Result> hosts = ZabbixApiUtils
+		      .getHosts(ZabbixIds.Kafka_Broker_Hostids);
 
+		Calendar cal = Calendar.getInstance();
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		Date timeTill = cal.getTime();
+		cal.set(Calendar.HOUR_OF_DAY, cal.get(Calendar.HOUR_OF_DAY) - 1);
+		Date timeFrom = cal.getTime();
+
+		for (Integer hostid : ZabbixIds.Kafka_Broker_Hostids) {
+			Map<Integer, StatResult> history = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			      ZabbixIds.Disk_Free_Percentage_Itemids, HISOTRY_OBJECT_TYPE.FLOAT);
+			System.out.format("%30s %s-%s \n", hosts.get(hostid).getHost(), timeFrom, timeTill);
+			Map<String, Object> stat = new HashMap<String, Object>();
+			for (Map.Entry<Integer, StatResult> h : history.entrySet()) {
+				String name = items.get(h.getKey()).getKey_();
+				stat.put(name, h.getValue().getMean());
+				System.out.format("%30s : %5.2f%% \n", name, h.getValue().getMean());
+			}
+
+			String json = JSON.toJSONString(stat);
+			MonitorReport report = new MonitorReport();
+			report.setCategory("Disk");
+			report.setSource("Zabbix");
+			report.setStart(timeFrom);
+			report.setEnd(timeTill);
+			report.setHost(hosts.get(hostid).getHost());
+			report.setValue(json);
+
+			service.insertOrUpdate(report);
+		}
 	}
 }

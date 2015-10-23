@@ -31,6 +31,7 @@ import java.util.Map;
 
 /**
  * Created by Suguru Yajima on 2014/05/02.
+ * Update by Yiming Liu on 2015/10/22.
  */
 public class GetRequestCommonParams {
     private Boolean countOutput;
@@ -228,7 +229,6 @@ public class GetRequestCommonParams {
 
     public class SortOrder {
         private String sortfield;
-        private String order;
 
         private SortOrder() {
         }
