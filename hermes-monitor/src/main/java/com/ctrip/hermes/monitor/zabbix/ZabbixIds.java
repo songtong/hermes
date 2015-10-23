@@ -88,13 +88,13 @@ public class ZabbixIds {
 
 	public static final List<Integer> Kafka_Request_Rate_FetchFollower_Itemids = new ArrayList<Integer>();
 	static {
-		Kafka_Request_Rate_Produce_Itemids.addAll(Arrays.asList(6188600, 6188601, 6188602, 6188603, 6188604, 6343182,
+		Kafka_Request_Rate_FetchFollower_Itemids.addAll(Arrays.asList(6188600, 6188601, 6188602, 6188603, 6188604, 6343182,
 		      6343210, 6343238, 6343274, 6343302, 6928188, 6928220, 6928248, 6928284, 6928316, 6928344));
 	}
 
 	public static final List<Integer> Kafka_Request_Rate_FetchConsumer_Itemids = new ArrayList<Integer>();
 	static {
-		Kafka_Request_Rate_Produce_Itemids.addAll(Arrays.asList(6188594, 6188595, 6188596, 6188597, 6188598, 6343181,
+		Kafka_Request_Rate_FetchConsumer_Itemids.addAll(Arrays.asList(6188594, 6188595, 6188596, 6188597, 6188598, 6343181,
 		      6343209, 6343237, 6343273, 6343301, 6928187, 6928219, 6928247, 6928283, 6928315, 6928343));
 	}
 }
