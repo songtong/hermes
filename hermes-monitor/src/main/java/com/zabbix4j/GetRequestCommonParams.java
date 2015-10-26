@@ -30,215 +30,229 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Suguru Yajima on 2014/05/02.
+ * Created by Suguru Yajima on 2014/05/02. Update by Yiming Liu on 2015/10/22.
  */
 public class GetRequestCommonParams {
-    private Boolean countOutput;
-    private Boolean editable;
-    private Boolean excludeSearch;
-    private Integer limit;
-    private List<Integer> nodeids;
-    private String output = "extend";
-    private Boolean preservekeys;
-    private Map<String,String> search;
-    private Boolean searchByAny;
-    private Boolean searchWildcardsEnabled;
-    private List<SortOrder> sortorder;
-    private String startSearch;
-    private Integer limitSelects;
-    private List<String> sortfield;
-    private String selectConditions;
-    private String selectOperations;
+	private Boolean countOutput;
 
-    public GetRequestCommonParams() {
-    }
+	private Boolean editable;
 
-    public String getSelectConditions() {
-        return selectConditions;
-    }
+	private Boolean excludeSearch;
 
-    public void setSelectConditions(String selectConditions) {
-        this.selectConditions = selectConditions;
-    }
+	private Integer limit;
 
-    public String getSelectOperations() {
-        return selectOperations;
-    }
+	private List<Integer> nodeids;
 
-    public void setSelectOperations(String selectOperations) {
-        this.selectOperations = selectOperations;
-    }
+	private String output = "extend";
 
-    public Boolean getCountOutput() {
-        return countOutput;
-    }
+	private Boolean preservekeys;
 
-    public void setCountOutput(Boolean countOutput) {
-        this.countOutput = countOutput;
-    }
+	private Map<String, String> search;
 
-    public Boolean getEditable() {
-        return editable;
-    }
+	private Boolean searchByAny;
 
-    public void setEditable(Boolean editable) {
-        this.editable = editable;
-    }
+	private Boolean searchWildcardsEnabled;
 
-    public Boolean getExcludeSearch() {
-        return excludeSearch;
-    }
+	private List<SortOrder> sortorder;
 
-    public void setExcludeSearch(Boolean excludeSearch) {
-        this.excludeSearch = excludeSearch;
-    }
+	private String startSearch;
 
-    public void setLimit(Integer limit) {
-        this.limit = limit;
-    }
+	private Integer limitSelects;
 
-    public Boolean getPreservekeys() {
-        return preservekeys;
-    }
+	private List<String> sortfield;
 
-    public void setPreservekeys(Boolean preservekeys) {
-        this.preservekeys = preservekeys;
-    }
+	private String selectConditions;
 
-    public Boolean getSearchByAny() {
-        return searchByAny;
-    }
+	private String selectOperations;
 
-    public void setSearchByAny(Boolean searchByAny) {
-        this.searchByAny = searchByAny;
-    }
+	public GetRequestCommonParams() {
+	}
 
-    public Boolean getSearchWildcardsEnabled() {
-        return searchWildcardsEnabled;
-    }
+	public String getSelectConditions() {
+		return selectConditions;
+	}
 
-    public void setSearchWildcardsEnabled(Boolean searchWildcardsEnabled) {
-        this.searchWildcardsEnabled = searchWildcardsEnabled;
-    }
+	public void setSelectConditions(String selectConditions) {
+		this.selectConditions = selectConditions;
+	}
 
-    public Integer getLimitSelects() {
-        return limitSelects;
-    }
+	public String getSelectOperations() {
+		return selectOperations;
+	}
 
-    public void setLimitSelects(Integer limitSelects) {
-        this.limitSelects = limitSelects;
-    }
+	public void setSelectOperations(String selectOperations) {
+		this.selectOperations = selectOperations;
+	}
 
-    public void addSortField(String field) {
-        sortfield = ZbxListUtils.add(sortfield, field);
-    }
+	public Boolean getCountOutput() {
+		return countOutput;
+	}
 
-    public void setNodeId(int id) {
-        nodeids = ZbxListUtils.add(nodeids, id);
-    }
+	public void setCountOutput(Boolean countOutput) {
+		this.countOutput = countOutput;
+	}
 
-    public void setSortField(String field) {
-        sortfield = ZbxListUtils.add(sortfield, field);
-    }
+	public Boolean getEditable() {
+		return editable;
+	}
 
-    public Boolean isCountOutput() {
-        return countOutput;
-    }
+	public void setEditable(Boolean editable) {
+		this.editable = editable;
+	}
 
-    public Boolean isEditable() {
-        return editable;
-    }
+	public Boolean getExcludeSearch() {
+		return excludeSearch;
+	}
 
-    public Boolean isExcludeSearch() {
-        return excludeSearch;
-    }
+	public void setExcludeSearch(Boolean excludeSearch) {
+		this.excludeSearch = excludeSearch;
+	}
 
-    public int getLimit() {
-        return limit;
-    }
+	public void setLimit(Integer limit) {
+		this.limit = limit;
+	}
 
-    public void setLimit(int limit) {
-        this.limit = limit;
-    }
+	public Boolean getPreservekeys() {
+		return preservekeys;
+	}
 
-    public List<Integer> getNodeids() {
-        return nodeids;
-    }
+	public void setPreservekeys(Boolean preservekeys) {
+		this.preservekeys = preservekeys;
+	}
 
-    public void setNodeids(List<Integer> nodeids) {
-        this.nodeids = nodeids;
-    }
+	public Boolean getSearchByAny() {
+		return searchByAny;
+	}
 
-    public String getOutput() {
-        return output;
-    }
+	public void setSearchByAny(Boolean searchByAny) {
+		this.searchByAny = searchByAny;
+	}
 
-    public void setOutput(String output) {
-        this.output = output;
-    }
+	public Boolean getSearchWildcardsEnabled() {
+		return searchWildcardsEnabled;
+	}
 
-    public Boolean isPreservekeys() {
-        return preservekeys;
-    }
+	public void setSearchWildcardsEnabled(Boolean searchWildcardsEnabled) {
+		this.searchWildcardsEnabled = searchWildcardsEnabled;
+	}
 
-    public Map<String,String> getSearch() {
-        return search;
-    }
+	public Integer getLimitSelects() {
+		return limitSelects;
+	}
 
-    public void setSearch(Map<String,String> search) {
-        this.search = search;
-    }
+	public void setLimitSelects(Integer limitSelects) {
+		this.limitSelects = limitSelects;
+	}
 
-    public Boolean isSearchByAny() {
-        return searchByAny;
-    }
+	public void addSortField(String field) {
+		sortfield = ZbxListUtils.add(sortfield, field);
+	}
 
-    public Boolean isSearchWildcardsEnabled() {
-        return searchWildcardsEnabled;
-    }
+	public void setNodeId(int id) {
+		nodeids = ZbxListUtils.add(nodeids, id);
+	}
 
-    public List<String> getSortfield() {
-        return sortfield;
-    }
+	public void setSortField(String field) {
+		sortfield = ZbxListUtils.add(sortfield, field);
+	}
 
-    public void setSortfield(List<String> sortfield) {
-        this.sortfield = sortfield;
-    }
+	public Boolean isCountOutput() {
+		return countOutput;
+	}
 
-    public List<SortOrder> getSortorder() {
-        return sortorder;
-    }
+	public Boolean isEditable() {
+		return editable;
+	}
 
-    public void setSortorder(List<SortOrder> sortorder) {
-        this.sortorder = sortorder;
-    }
+	public Boolean isExcludeSearch() {
+		return excludeSearch;
+	}
 
-    public String getStartSearch() {
-        return startSearch;
-    }
+	public int getLimit() {
+		return limit;
+	}
 
-    public void setStartSearch(String startSearch) {
-        this.startSearch = startSearch;
-    }
+	public void setLimit(int limit) {
+		this.limit = limit;
+	}
 
-    public void setSortOrder(SortOrder order) {
-        sortorder = ZbxListUtils.add(sortorder, order);
+	public List<Integer> getNodeids() {
+		return nodeids;
+	}
 
-    }
+	public void setNodeids(List<Integer> nodeids) {
+		this.nodeids = nodeids;
+	}
 
-    public class SortOrder {
-        private String sortfield;
-        private String order;
+	public String getOutput() {
+		return output;
+	}
 
-        private SortOrder() {
-        }
+	public void setOutput(String output) {
+		this.output = output;
+	}
 
-        public String getSortfield() {
-            return sortfield;
-        }
+	public Boolean isPreservekeys() {
+		return preservekeys;
+	}
 
-        public void setSortfield(String sortfield) {
-            this.sortfield = sortfield;
-        }
-    }
+	public Map<String, String> getSearch() {
+		return search;
+	}
+
+	public void setSearch(Map<String, String> search) {
+		this.search = search;
+	}
+
+	public Boolean isSearchByAny() {
+		return searchByAny;
+	}
+
+	public Boolean isSearchWildcardsEnabled() {
+		return searchWildcardsEnabled;
+	}
+
+	public List<String> getSortfield() {
+		return sortfield;
+	}
+
+	public void setSortfield(List<String> sortfield) {
+		this.sortfield = sortfield;
+	}
+
+	public List<SortOrder> getSortorder() {
+		return sortorder;
+	}
+
+	public void setSortorder(List<SortOrder> sortorder) {
+		this.sortorder = sortorder;
+	}
+
+	public String getStartSearch() {
+		return startSearch;
+	}
+
+	public void setStartSearch(String startSearch) {
+		this.startSearch = startSearch;
+	}
+
+	public void setSortOrder(SortOrder order) {
+		sortorder = ZbxListUtils.add(sortorder, order);
+
+	}
+
+	public class SortOrder {
+		private String sortfield;
+
+		private SortOrder() {
+		}
+
+		public String getSortfield() {
+			return sortfield;
+		}
+
+		public void setSortfield(String sortfield) {
+			this.sortfield = sortfield;
+		}
+	}
 }
