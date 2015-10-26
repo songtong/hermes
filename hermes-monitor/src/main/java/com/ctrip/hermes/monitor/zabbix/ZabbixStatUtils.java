@@ -19,14 +19,19 @@ import com.zabbix4j.history.HistoryObject.HISOTRY_OBJECT_TYPE;
 import com.zabbix4j.item.ItemGetRequest;
 import com.zabbix4j.item.ItemGetResponse;
 import com.zabbix4j.item.ItemGetResponse.Result;
+import com.zabbix4j.item.ItemObject;
 
 public class ZabbixStatUtils {
 
 	public static Map<Integer, HistoryObject> getHistory(Date timeFrom, Date timeTill, Integer hostid,
-	      List<Integer> itemids, HISOTRY_OBJECT_TYPE hisotry) throws ZabbixApiException {
+	      List<ItemObject> items, HISOTRY_OBJECT_TYPE hisotry) throws ZabbixApiException {
 		HistoryGetRequest historyGetRequest = new HistoryGetRequest();
 		historyGetRequest.getParams().setHistory(hisotry.value);
 		historyGetRequest.getParams().setHostids(Arrays.asList(hostid));
+		List<Integer> itemids = new ArrayList<Integer>();
+		for (ItemObject item : items) {
+			itemids.add(item.getItemid());
+		}
 		historyGetRequest.getParams().setItemids(itemids);
 		historyGetRequest.getParams().setSortField("itemid");
 		historyGetRequest.getParams().setTime_from(timeFrom.getTime() / 1000);
@@ -43,7 +48,12 @@ public class ZabbixStatUtils {
 	}
 
 	public static Map<Integer, StatResult> getHistoryStat(Date timeFrom, Date timeTill, Integer hostid,
-	      List<Integer> itemids, HISOTRY_OBJECT_TYPE history) throws ZabbixApiException {
+	      List<ItemObject> items, HISOTRY_OBJECT_TYPE history) throws ZabbixApiException {
+		List<Integer> itemids = new ArrayList<Integer>();
+		for (ItemObject item : items) {
+			itemids.add(item.getItemid());
+		}
+
 		HistoryGetRequest historyGetRequest = new HistoryGetRequest();
 		historyGetRequest.getParams().setHistory(history.value);
 		historyGetRequest.getParams().setHostids(Arrays.asList(hostid));
@@ -85,9 +95,13 @@ public class ZabbixStatUtils {
 		return result;
 	}
 
-	public static Map<Integer, Result> getItems(Integer hostid, List<Integer> itemids) throws ZabbixApiException {
+	public static Map<Integer, Result> getItems(Integer hostid, List<ItemObject> items) throws ZabbixApiException {
 		ItemGetRequest itemGetRequest = new ItemGetRequest();
 		itemGetRequest.getParams().setHostids(Arrays.asList(hostid));
+		List<Integer> itemids = new ArrayList<Integer>();
+		for (ItemObject item : items) {
+			itemids.add(item.getItemid());
+		}
 		itemGetRequest.getParams().setItemids(itemids);
 		itemGetRequest.getParams().setSortField("key_");
 

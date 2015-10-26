@@ -1,6 +1,7 @@
 package com.ctrip.hermes.monitor.kafka;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,12 +20,14 @@ import com.ctrip.hermes.metaservice.model.MonitorReport;
 import com.ctrip.hermes.monitor.service.MonitorReportService;
 import com.ctrip.hermes.monitor.stat.StatResult;
 import com.ctrip.hermes.monitor.zabbix.ZabbixApiUtils;
-import com.ctrip.hermes.monitor.zabbix.ZabbixIds;
+import com.ctrip.hermes.monitor.zabbix.ZabbixConst;
 import com.ctrip.hermes.monitor.zabbix.ZabbixStatUtils;
 import com.zabbix4j.ZabbixApiException;
 import com.zabbix4j.history.HistoryObject;
 import com.zabbix4j.history.HistoryObject.HISOTRY_OBJECT_TYPE;
+import com.zabbix4j.host.HostObject;
 import com.zabbix4j.item.ItemGetResponse.Result;
+import com.zabbix4j.item.ItemObject;
 
 @Service
 public class DiskMonitor {
@@ -41,14 +44,13 @@ public class DiskMonitor {
 	private MonitorReportService service;
 
 	public Map<Integer, Map<String, Double>> getCurrentDiskFreePercentage() throws ZabbixApiException {
-		List<Integer> hostids = ZabbixIds.Kafka_Broker_Hostids;
-		List<Integer> itemids = ZabbixIds.Disk_Free_Percentage_Itemids;
-		Map<Integer, com.zabbix4j.host.HostGetResponse.Result> hosts = ZabbixApiUtils.getHosts(hostids);
+		Map<Integer, HostObject> hosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
+		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(), ZabbixConst.DISK_FREE_PERCENTAGE);
 		Map<Integer, Map<String, Double>> result = new HashMap<Integer, Map<String, Double>>();
 
-		for (Integer hostid : hostids) {
+		for (Integer hostid : hosts.keySet()) {
 			System.out.format("%30s\n", hosts.get(hostid).getHost());
-			Map<Integer, Result> items = ZabbixStatUtils.getItems(hostid, itemids);
+			Map<Integer, Result> items = ZabbixStatUtils.getItems(hostid, ids.get(hostid));
 			Map<String, Double> diskFreeValue = new HashMap<String, Double>();
 			for (Map.Entry<Integer, Result> item : items.entrySet()) {
 				System.out.format("%30s\t%5.2f%%\n", item.getValue().getKey_(),
@@ -61,17 +63,16 @@ public class DiskMonitor {
 	}
 
 	public void getPast5DaysDiskFreePercentage() throws ZabbixApiException {
-		List<Integer> hostids = ZabbixIds.Kafka_Broker_Hostids;
-		Map<Integer, com.zabbix4j.host.HostGetResponse.Result> hosts = ZabbixApiUtils.getHosts(hostids);
-		for (Integer hostid : hostids) {
+		Map<Integer, HostObject> hosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
+		for (Integer hostid : hosts.keySet()) {
 			System.out.format("Host: %s\n", hosts.get(hostid).getHost());
 			getPast5DaysDiskFreePercentage(hostid);
 		}
 	}
 
 	public void getPast5DaysDiskFreePercentage(Integer hostid) throws ZabbixApiException {
-		List<Integer> itemids = ZabbixIds.Disk_Free_Percentage_Itemids;
-		Map<Integer, Result> items = ZabbixApiUtils.getItems(itemids);
+		Map<Integer, List<ItemObject>> items = ZabbixApiUtils.searchItems(Arrays.asList(hostid),
+		      ZabbixConst.DISK_FREE_PERCENTAGE);
 
 		List<Date> header = new ArrayList<Date>();
 		Map<Integer, List<HistoryObject>> fiveDaysData = new HashMap<Integer, List<HistoryObject>>();
@@ -81,7 +82,7 @@ public class DiskMonitor {
 			header.add(new Date(timeFrom * 1000));
 
 			Map<Integer, HistoryObject> history = ZabbixStatUtils.getHistory(new Date(timeFrom * 1000), new Date(
-			      timeTill * 1000), hostid, itemids, HISOTRY_OBJECT_TYPE.FLOAT);
+			      timeTill * 1000), hostid, items.get(hostid), HISOTRY_OBJECT_TYPE.FLOAT);
 
 			for (Map.Entry<Integer, HistoryObject> result : history.entrySet()) {
 				if (!fiveDaysData.containsKey(result.getKey())) {
@@ -107,6 +108,11 @@ public class DiskMonitor {
 		System.out.format("%10s", "Comments");
 		System.out.println();
 
+		Map<Integer, ItemObject> itemObjects = new HashMap<Integer, ItemObject>();
+		for (ItemObject item : items.get(hostid)) {
+			itemObjects.put(item.getItemid(), item);
+		}
+
 		for (Map.Entry<Integer, List<HistoryObject>> entry : fiveDaysData.entrySet()) {
 			Integer itemId = entry.getKey();
 			List<HistoryObject> values = entry.getValue();
@@ -118,7 +124,7 @@ public class DiskMonitor {
 
 			});
 
-			System.out.format("%30s :", items.get(itemId).getKey_());
+			System.out.format("%30s :", itemObjects.get(itemId).getKey_());
 			double totalValue = 0.0;
 			HistoryObject latestValue = null;
 			for (HistoryObject history : values) {
@@ -142,10 +148,8 @@ public class DiskMonitor {
 
 	@Scheduled(fixedRate = 3600000)
 	public void getPastHourDiskFreePercentage() throws ZabbixApiException, DalException {
-		Map<Integer, com.zabbix4j.item.ItemGetResponse.Result> items = ZabbixApiUtils
-		      .getItems(ZabbixIds.Disk_Free_Percentage_Itemids);
-		Map<Integer, com.zabbix4j.host.HostGetResponse.Result> hosts = ZabbixApiUtils
-		      .getHosts(ZabbixIds.Kafka_Broker_Hostids);
+		Map<Integer, HostObject> hosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
+		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(), ZabbixConst.DISK_FREE_PERCENTAGE);
 
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
@@ -154,11 +158,15 @@ public class DiskMonitor {
 		cal.set(Calendar.HOUR_OF_DAY, cal.get(Calendar.HOUR_OF_DAY) - 1);
 		Date timeFrom = cal.getTime();
 
-		for (Integer hostid : ZabbixIds.Kafka_Broker_Hostids) {
-			Map<Integer, StatResult> history = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
-			      ZabbixIds.Disk_Free_Percentage_Itemids, HISOTRY_OBJECT_TYPE.FLOAT);
+		for (Integer hostid : hosts.keySet()) {
+			Map<Integer, StatResult> history = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.FLOAT);
 			System.out.format("%30s %s-%s \n", hosts.get(hostid).getHost(), timeFrom, timeTill);
 			Map<String, Object> stat = new HashMap<String, Object>();
+			Map<Integer, ItemObject> items = new HashMap<Integer, ItemObject>();
+			for (ItemObject item : ids.get(hostid)) {
+				items.put(item.getItemid(), item);
+			}
 			for (Map.Entry<Integer, StatResult> h : history.entrySet()) {
 				String name = items.get(h.getKey()).getKey_();
 				stat.put(name, h.getValue().getMean());
