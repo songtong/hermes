@@ -67,6 +67,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.metaservice.monitor.dao.MonitorEventStorage</role>
+			<implementation>com.ctrip.hermes.metaservice.monitor.dao.DefaultMonitorEventStorage</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.MonitorEventDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>meta</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>

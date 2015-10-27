@@ -9,6 +9,36 @@
 			</query>
 		</query-defs>
 	</entity>
+	<entity name="monitor-event" table="monitor_event" alias="me">
+		<var name="type" value-type="int" />
+		<var name="count" value-type="int" />
+		<var name="start" value-type="long" />
+		<var name="end" value-type="long" />
+		<query-defs>
+			<query name="find-by-type-within-time-range" type="SELECT" multiple="true">
+				<param name="type" />
+				<param name="start" />
+				<param name="end" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        WHERE <FIELD name='event-type'/> = ${type} 
+		        AND <FIELD name='create-time'/> >= ${start} 
+		        AND <FIELD name='create-time'/> <= ${end} 
+		        ORDER BY <FIELD name='id'/> DESC]]></statement>
+			</query>
+			<query name="find-by-time-range" type="SELECT" multiple="true">
+				<param name="start" />
+				<param name="end" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        WHERE <FIELD name='create-time'/> >= ${start} 
+		        AND <FIELD name='create-time'/> <= ${end} 
+		        ORDER BY <FIELD name='id'/> DESC]]></statement>
+			</query>
+		</query-defs>
+	</entity>
 	<entity name="schema">
 		<var name="tId" value-type="long" />
 		<var name="aId" value-type="int" />

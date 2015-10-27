@@ -6,7 +6,7 @@ public interface MonitorEvent {
 
 	public MonitorEventType getType();
 
-	public com.ctrip.hermes.metaservice.model.MonitorEvent toMonitorEventDal();
+	public com.ctrip.hermes.metaservice.model.MonitorEvent toDBEntity();
 
-	public MonitorEvent parse(com.ctrip.hermes.metaservice.model.MonitorEvent monitorEventDal);
+	public MonitorEvent parse(com.ctrip.hermes.metaservice.model.MonitorEvent eventDao);
 }

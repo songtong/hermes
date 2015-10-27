@@ -1,8 +1,8 @@
 package com.ctrip.hermes.metaservice.monitor;
 
-import com.ctrip.hermes.metaservice.monitor.event.AbstractMonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.BrokerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MetaServerErrorEvent;
+import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 
 public enum MonitorEventType {
 	BROKER_ERROR(1, BrokerErrorEvent.class), //
@@ -21,9 +21,9 @@ public enum MonitorEventType {
 
 	private int m_code;
 
-	private Class<? extends AbstractMonitorEvent> m_clazz;
+	private Class<? extends MonitorEvent> m_clazz;
 
-	private MonitorEventType(int code, Class<? extends AbstractMonitorEvent> clazz) {
+	private MonitorEventType(int code, Class<? extends MonitorEvent> clazz) {
 		m_code = code;
 		m_clazz = clazz;
 	}
@@ -32,7 +32,7 @@ public enum MonitorEventType {
 		return m_code;
 	}
 
-	public Class<? extends AbstractMonitorEvent> getClazz() {
+	public Class<? extends MonitorEvent> getClazz() {
 		return m_clazz;
 	}
 
