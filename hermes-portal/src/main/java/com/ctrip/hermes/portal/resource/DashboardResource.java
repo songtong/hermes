@@ -44,7 +44,7 @@ import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
-import com.ctrip.hermes.portal.service.monitor.MonitorService;
+import com.ctrip.hermes.portal.service.dashboard.DashboardService;
 
 import io.netty.buffer.Unpooled;
 
@@ -54,7 +54,7 @@ import io.netty.buffer.Unpooled;
 public class DashboardResource {
 	private static final Logger log = LoggerFactory.getLogger(DashboardResource.class);
 
-	private MonitorService m_monitorService = PlexusComponentLocator.lookup(MonitorService.class);
+	private DashboardService m_monitorService = PlexusComponentLocator.lookup(DashboardService.class);
 
 	private PortalMetaService m_metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
 

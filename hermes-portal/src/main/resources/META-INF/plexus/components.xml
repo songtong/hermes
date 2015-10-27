@@ -194,8 +194,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.portal.service.monitor.MonitorService</role>
-			<implementation>com.ctrip.hermes.portal.service.monitor.DefaultMonitorService</implementation>
+			<role>com.ctrip.hermes.portal.service.dashboard.DashboardService</role>
+			<implementation>com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.portal.dal.HermesPortalDao</role>
