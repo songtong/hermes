@@ -3,12 +3,13 @@ package com.ctrip.hermes.metaservice.monitor;
 import com.ctrip.hermes.metaservice.monitor.event.BrokerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MetaServerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
+import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
 
 public enum MonitorEventType {
 	BROKER_ERROR(1, BrokerErrorEvent.class), //
 	METASERVER_ERROR(2, MetaServerErrorEvent.class), //
 
-	PRODUCE_LONG_LATENCY(3, null), //
+	PRODUCE_LARGE_LATENCY(3, ProduceLatencyTooLargeEvent.class), //
 	PRODUCE_HIGH_FAILURE_RATIO(4, null), //
 	PRODUCE_HIGH_RESEND_RATIO(5, null), //
 
