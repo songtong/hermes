@@ -52,6 +52,43 @@ public abstract class BaseMonitorEvent implements MonitorEvent {
 		parse0(dbEntity);
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((m_createTime == null) ? 0 : m_createTime.hashCode());
+		result = prime * result + (int) (m_id ^ (m_id >>> 32));
+		result = prime * result + ((m_message == null) ? 0 : m_message.hashCode());
+		result = prime * result + ((m_type == null) ? 0 : m_type.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BaseMonitorEvent other = (BaseMonitorEvent) obj;
+		if (m_createTime == null) {
+			if (other.m_createTime != null)
+				return false;
+		} else if (!m_createTime.equals(other.m_createTime))
+			return false;
+		if (m_id != other.m_id)
+			return false;
+		if (m_message == null) {
+			if (other.m_message != null)
+				return false;
+		} else if (!m_message.equals(other.m_message))
+			return false;
+		if (m_type != other.m_type)
+			return false;
+		return true;
+	}
+
 	protected abstract void parse0(com.ctrip.hermes.metaservice.model.MonitorEvent dbEntity);
 
 	protected abstract void toDBEntity0(com.ctrip.hermes.metaservice.model.MonitorEvent e);

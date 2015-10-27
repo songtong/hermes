@@ -26,7 +26,7 @@ public abstract class CatTransactionCrossReportBasedChecker implements Checker {
 
 	private static final int CAT_READ_TIMEOUT = 30 * 1000;
 
-	protected static class Timespan {
+	public static class Timespan {
 		private Date m_startHour;
 
 		private List<Integer> m_minutes = new LinkedList<>();
@@ -50,9 +50,9 @@ public abstract class CatTransactionCrossReportBasedChecker implements Checker {
 	}
 
 	protected Timespan calTimespan(Date toDate, int minutesBefore) {
-		if (minutesBefore > 60) {
-			throw new IllegalArgumentException(String.format(
-			      "Timespan can not larger than 60 minutes(toDate=%s, minutesBefore=%s).", toDate, minutesBefore));
+		if (minutesBefore > 60 || minutesBefore <= 0) {
+			throw new IllegalArgumentException(String.format("MinutesBefore invalid(toDate=%s, minutesBefore=%s).",
+			      toDate, minutesBefore));
 		}
 
 		Timespan timespan = new Timespan();
@@ -83,10 +83,6 @@ public abstract class CatTransactionCrossReportBasedChecker implements Checker {
 		}
 
 		return timespan;
-	}
-
-	public CatTransactionCrossReportBasedChecker() {
-		super();
 	}
 
 	protected String getCatTransactionCrossReport(Date startHour, String transactionType) throws IOException {
