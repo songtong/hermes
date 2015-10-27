@@ -1,24 +1,28 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
+import com.ctrip.hermes.metaservice.model.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
-public class BrokerErrorEvent implements MonitorEvent {
+public class BrokerErrorEvent extends BaseMonitorEvent {
+
+	public BrokerErrorEvent() {
+		this(MonitorEventType.BROKER_ERROR);
+	}
+
+	public BrokerErrorEvent(MonitorEventType type) {
+		super(MonitorEventType.BROKER_ERROR);
+	}
 
 	private String m_brokerIp;
 
 	@Override
-	public MonitorEventType getType() {
-		return MonitorEventType.BROKER_ERROR;
+	protected void toDBEntity0(MonitorEvent e) {
+		e.setKey1(m_brokerIp);
 	}
 
 	@Override
-	public com.ctrip.hermes.metaservice.model.MonitorEvent toDBEntity() {
-		com.ctrip.hermes.metaservice.model.MonitorEvent e = new com.ctrip.hermes.metaservice.model.MonitorEvent();
-		return e;
+	protected void parse0(MonitorEvent dbEntity) {
+		m_brokerIp = dbEntity.getKey1();
 	}
 
-	@Override
-	public MonitorEvent parse(com.ctrip.hermes.metaservice.model.MonitorEvent monitorEventDal) {
-		return null;
-	}
 }

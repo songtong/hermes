@@ -8,5 +8,5 @@ public interface MonitorEvent {
 
 	public com.ctrip.hermes.metaservice.model.MonitorEvent toDBEntity();
 
-	public MonitorEvent parse(com.ctrip.hermes.metaservice.model.MonitorEvent eventDao);
+	public void parse(com.ctrip.hermes.metaservice.model.MonitorEvent eventDao);
 }

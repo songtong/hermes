@@ -1,6 +1,5 @@
 package com.ctrip.hermes.metaservice.monitor.dao;
 
-import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -25,12 +24,8 @@ public class DefaultMonitorEventStorage implements MonitorEventStorage {
 
 	@Override
 	public void addMonitorEvent(MonitorEvent event) throws Exception {
-		com.ctrip.hermes.metaservice.model.MonitorEvent monitorEventDao = event.toDBEntity();
-		Date date = new Date();
-		monitorEventDao.setEventType(event.getType().getCode());
-		monitorEventDao.setCreateTime(date);
-		monitorEventDao.setDataChangeLastTime(date);
-		m_dao.insert(monitorEventDao);
+		com.ctrip.hermes.metaservice.model.MonitorEvent entity = event.toDBEntity();
+		m_dao.insert(entity);
 	}
 
 	@Override
