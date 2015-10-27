@@ -36,7 +36,7 @@ public enum MonitorEventType {
 		return m_clazz;
 	}
 
-	public static MonitorEventType getFromTypeCode(int code) {
+	public static MonitorEventType findByTypeCode(int code) {
 		for (MonitorEventType type : MonitorEventType.values()) {
 			if (type.getCode() == code) {
 				return type;
