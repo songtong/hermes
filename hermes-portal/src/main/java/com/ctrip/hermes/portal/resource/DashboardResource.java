@@ -48,11 +48,11 @@ import com.ctrip.hermes.portal.service.monitor.MonitorService;
 
 import io.netty.buffer.Unpooled;
 
-@Path("/monitor/")
+@Path("/dashboard/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
-public class MonitorResource {
-	private static final Logger log = LoggerFactory.getLogger(MonitorResource.class);
+public class DashboardResource {
+	private static final Logger log = LoggerFactory.getLogger(DashboardResource.class);
 
 	private MonitorService m_monitorService = PlexusComponentLocator.lookup(MonitorService.class);
 

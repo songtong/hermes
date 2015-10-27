@@ -67,32 +67,32 @@ homeapp.controller("hermes-dashboard-controller", function($scope, $http,
 		get_consume_delays : {
 			method : 'GET',
 			isArray : true,
-			url : '/api/monitor/top/delays'
+			url : '/api/dashboard/top/delays'
 		},
 		get_outdate_topics : {
 			method : 'GET',
 			isArray : true,
-			url : '/api/monitor/top/outdate-topics'
+			url : '/api/dashboard/top/outdate-topics'
 		},
 		get_brokers_received_qps : {
 			method : 'GET',
 			isArray : true,
-			url : '/api/monitor/top/broker/qps/received'
+			url : '/api/dashboard/top/broker/qps/received'
 		},
 		get_brokers_delivered_qps : {
 			method : 'GET',
 			isArray : true,
-			url : '/api/monitor/top/broker/qps/delivered'
+			url : '/api/dashboard/top/broker/qps/delivered'
 		},
 		get_broker_received_qps : {
 			method : 'GET',
 			isArray : false,
-			url : '/api/monitor/top/broker/qps/received/:brokerIp'
+			url : '/api/dashboard/top/broker/qps/received/:brokerIp'
 		},
 		get_broker_delivered_qps : {
 			method : 'GET',
 			isArray : false,
-			url : '/api/monitor/top/broker/qps/delivered/:brokerIp'
+			url : '/api/dashboard/top/broker/qps/delivered/:brokerIp'
 		}
 	});
 
