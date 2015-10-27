@@ -5,7 +5,7 @@ import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
 public class MetaServerErrorEvent extends BaseMonitorEvent {
 
-	public MetaServerErrorEvent(MonitorEventType type) {
+	public MetaServerErrorEvent() {
 		super(MonitorEventType.METASERVER_ERROR);
 	}
 

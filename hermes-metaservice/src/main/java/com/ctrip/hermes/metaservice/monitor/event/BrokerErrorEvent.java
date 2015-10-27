@@ -6,10 +6,6 @@ import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 public class BrokerErrorEvent extends BaseMonitorEvent {
 
 	public BrokerErrorEvent() {
-		this(MonitorEventType.BROKER_ERROR);
-	}
-
-	public BrokerErrorEvent(MonitorEventType type) {
 		super(MonitorEventType.BROKER_ERROR);
 	}
 
