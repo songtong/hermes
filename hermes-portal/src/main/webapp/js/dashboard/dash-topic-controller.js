@@ -1,6 +1,6 @@
 dashtopic.controller('dash-topic-controller', function($scope, $http, $resource, $sce, $routeParams, DashboardTopicService) {
-	var latest_msgs_resource = $resource('/api/monitor/topics/:topic/latest');
-	var topic_delay_resource = $resource('/api/monitor/detail/topics/:topic/delay', {}, {
+	var latest_msgs_resource = $resource('/api/dashboard/topics/:topic/latest');
+	var topic_delay_resource = $resource('/api/dashboard/detail/topics/:topic/delay', {}, {
 		query : {
 			method : "GET",
 			isArray : false
@@ -9,7 +9,7 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 
 	if ($scope.topic_briefs == undefined) {
 		console.log('Topic brief is undefined, refresh it.')
-		$http.get('/api/monitor/brief/topics').success(function(data, status, headers, config) {
+		$http.get('/api/dashboard/brief/topics').success(function(data, status, headers, config) {
 			$scope.topic_briefs = data;
 		}).error(function(data, status, headers, config) {
 			console.log(data);

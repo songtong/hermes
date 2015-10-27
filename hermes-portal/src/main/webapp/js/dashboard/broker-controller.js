@@ -7,11 +7,11 @@ angular
 					$scope.current_broker = "";
 					$scope.main_board_content = "";
 
-					var monitor_resource = $resource("/api/monitor/", {}, {
+					var monitor_resource = $resource("/api/dashboard/", {}, {
 						get_brokers : {
 							method : "GET",
 							isArray : true,
-							url : "/api/monitor/brief/brokers"
+							url : "/api/dashboard/brief/brokers"
 						},
 					});
 

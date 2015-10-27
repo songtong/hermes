@@ -9,11 +9,11 @@ angular
 						"consumeTopics" : []
 					};
 
-					var monitor_resource = $resource("/api/monitor/", {}, {
+					var monitor_resource = $resource("/api/dashboard/", {}, {
 						get_declare_topics : {
 							method : "GET",
 							isArray : false,
-							url : "/api/monitor/topics/:ip"
+							url : "/api/dashboard/topics/:ip"
 						},
 					});
 
@@ -52,7 +52,7 @@ angular
 
 					$scope.selected = undefined;
 					$scope.getClients = function(val) {
-						return $http.get('/api/monitor/clients', {
+						return $http.get('/api/dashboard/clients', {
 							params : {
 								part : val
 							}

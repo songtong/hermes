@@ -1,5 +1,5 @@
 dashtopic.controller('dash-topic-nav-controller', function($scope, $http, DashboardTopicService) {
-	$http.get('/api/monitor/brief/topics').success(function(data, status, headers, config) {
+	$http.get('/api/dashboard/brief/topics').success(function(data, status, headers, config) {
 		$scope.topic_briefs = data;
 		$scope.filtered_topic_briefs = $scope.topic_briefs;
 	}).error(function(data, status, headers, config) {
