@@ -57,7 +57,7 @@ import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.resource.assists.RestException;
-import com.ctrip.hermes.portal.service.monitor.MonitorService;
+import com.ctrip.hermes.portal.service.dashboard.DashboardService;
 import com.ctrip.hermes.producer.api.Producer;
 
 @Path("/topics/")
@@ -74,7 +74,7 @@ public class TopicResource {
 
 	private CodecService codecService = PlexusComponentLocator.lookup(CodecService.class);
 
-	private MonitorService monitorService = PlexusComponentLocator.lookup(MonitorService.class);
+	private DashboardService monitorService = PlexusComponentLocator.lookup(DashboardService.class);
 
 	private PortalConfig config = PlexusComponentLocator.lookup(PortalConfig.class);
 

@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service.monitor;
+package com.ctrip.hermes.portal.service.dashboard;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,10 +49,10 @@ import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.elastic.ElasticClient;
 
-@Named(type = MonitorService.class)
-public class DefaultMonitorService implements MonitorService, Initializable {
+@Named(type = DashboardService.class)
+public class DefaultDashboardService implements DashboardService, Initializable {
 
-	private static final Logger log = LoggerFactory.getLogger(DefaultMonitorService.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultDashboardService.class);
 
 	@Inject
 	private HermesPortalDao m_dao;

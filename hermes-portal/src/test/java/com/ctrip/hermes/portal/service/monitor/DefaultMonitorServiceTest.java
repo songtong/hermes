@@ -4,13 +4,14 @@ import org.junit.After;
 import org.junit.Before;
 
 import com.ctrip.hermes.portal.StartPortal;
+import com.ctrip.hermes.portal.service.dashboard.DashboardService;
 
 public class DefaultMonitorServiceTest extends StartPortal {
-	private MonitorService m_monitor;
+	private DashboardService m_monitor;
 
 	@Before
 	public void init() {
-		m_monitor = lookup(MonitorService.class);
+		m_monitor = lookup(DashboardService.class);
 	}
 
 	@After

@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.service.monitor;
+package com.ctrip.hermes.portal.service.dashboard;
 
 import java.util.Date;
 import java.util.List;
@@ -12,7 +12,7 @@ import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 
-public interface MonitorService {
+public interface DashboardService {
 
 	public Date getLatestProduced(String topic);
 
