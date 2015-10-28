@@ -21,6 +21,10 @@ public class CoreConfig implements Initializable {
 
 	private static final int DEFAULT_CHANNEL_ALL_IDLE_TIME_SECONDS = 60;
 
+	private static final int DEFAULT_MAX_CLIENT_TIME_DIFF_MILLIS = 2000;
+
+	public static final String TIME_UNSYNC_HEADER = "X-Hermes-Time-Unsync";
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -29,6 +33,8 @@ public class CoreConfig implements Initializable {
 	private int m_channelWriteIdle = DEFAULT_CHANNEL_WRITE_IDLE_TIME_SECONDS;
 
 	private int m_channelAllIdle = DEFAULT_CHANNEL_ALL_IDLE_TIME_SECONDS;
+
+	private long m_maxClientTimeDiffMillis = DEFAULT_MAX_CLIENT_TIME_DIFF_MILLIS;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -44,6 +50,11 @@ public class CoreConfig implements Initializable {
 		String allIdleStr = m_env.getGlobalConfig().getProperty("channel.all.idle.seconds");
 		if (StringUtils.isNumeric(allIdleStr)) {
 			m_channelAllIdle = Integer.valueOf(allIdleStr);
+		}
+
+		String maxClientTimeDiffMillis = m_env.getGlobalConfig().getProperty("max.client.time.diff.millis");
+		if (StringUtils.isNumeric(maxClientTimeDiffMillis)) {
+			m_maxClientTimeDiffMillis = Long.valueOf(maxClientTimeDiffMillis);
 		}
 	}
 
@@ -117,6 +128,10 @@ public class CoreConfig implements Initializable {
 
 	public String getAvroSchemaRetryUrlKey() {
 		return "schema.registry.url";
+	}
+
+	public long getMaxClientTimeDiffMillis() {
+		return m_maxClientTimeDiffMillis;
 	}
 
 }

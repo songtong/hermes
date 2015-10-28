@@ -5,8 +5,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +28,8 @@ import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.DNSUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Event;
 import com.google.common.base.Charsets;
 
 @Named(type = MetaServerLocator.class)
@@ -128,17 +132,31 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 	}
 
 	private List<String> doFetch(String ipPort) throws IOException {
-		String url = String.format("http://%s%s", ipPort, "/metaserver/servers");
+		String url = String.format("http://%s%s?clientTimeMillis=%s", ipPort, "/metaserver/servers",
+		      System.currentTimeMillis());
 
 		InputStream is = null;
 
 		try {
+			Map<String, List<String>> headers = new HashMap<String, List<String>>();
 			is = Urls.forIO()//
 			      .connectTimeout(m_coreConfig.getMetaServerConnectTimeout())//
 			      .readTimeout(m_coreConfig.getMetaServerReadTimeout())//
-			      .openStream(url);
+			      .openStream(url, headers);
 
 			String response = IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
+
+			if (headers.containsKey(CoreConfig.TIME_UNSYNC_HEADER)) {
+				List<String> values = headers.get(CoreConfig.TIME_UNSYNC_HEADER);
+				String diff = "n/a";
+				if (values != null && values.size() > 0) {
+					diff = values.get(0);
+				}
+
+				Cat.logEvent("Hermes.Client", "TimeUnsync", Event.SUCCESS, "diff=" + diff);
+				log.warn("Client time is unsync with hermes server, diff is {}", diff);
+			}
+
 			return Arrays.asList(JSON.parseArray(response).toArray(new String[0]));
 		} finally {
 			if (is != null) {
