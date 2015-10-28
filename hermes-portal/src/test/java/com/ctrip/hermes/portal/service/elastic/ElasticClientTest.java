@@ -6,11 +6,11 @@ import org.unidal.lookup.ComponentTestCase;
 
 public class ElasticClientTest extends ComponentTestCase {
 
-	private ElasticClient ec;
+	private PortalElasticClient ec;
 
 	@Before
 	public void init() {
-		ec = lookup(ElasticClient.class);
+		ec = lookup(PortalElasticClient.class);
 	}
 
 	@Test

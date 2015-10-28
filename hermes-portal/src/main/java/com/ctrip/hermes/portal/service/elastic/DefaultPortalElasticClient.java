@@ -32,9 +32,9 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.portal.config.PortalConfig;
 
-@Named(type = ElasticClient.class)
-public class DefaultElasticClient implements Initializable, ElasticClient {
-	private static final Logger log = LoggerFactory.getLogger(DefaultElasticClient.class);
+@Named(type = PortalElasticClient.class)
+public class DefaultPortalElasticClient implements Initializable, PortalElasticClient {
+	private static final Logger log = LoggerFactory.getLogger(DefaultPortalElasticClient.class);
 
 	private static final String AGG_NAME = "hermes-agg"; // could be any string you like
 

@@ -47,7 +47,7 @@ import com.ctrip.hermes.portal.resource.view.BrokerQPSBriefView;
 import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
-import com.ctrip.hermes.portal.service.elastic.ElasticClient;
+import com.ctrip.hermes.portal.service.elastic.PortalElasticClient;
 
 @Named(type = DashboardService.class)
 public class DefaultDashboardService implements DashboardService, Initializable {
@@ -61,7 +61,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private PortalMetaService m_metaService;
 
 	@Inject
-	private ElasticClient m_elasticClient;
+	private PortalElasticClient m_elasticClient;
 
 	@Inject
 	private ClientEnvironment m_env;
