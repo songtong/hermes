@@ -8,6 +8,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.Hermes;
 import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
@@ -17,6 +18,7 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.dianping.cat.Cat;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -38,6 +40,7 @@ public class DefaultConsumerPipelineSink implements PipelineSink<Void> {
 		MessageListener consumer = pair.getKey().getConsumer();
 		List<ConsumerMessage<?>> msgs = pair.getValue();
 		setOnMessageStartTime(msgs);
+		logVersionToCat();
 		try {
 			consumer.onMessage(msgs);
 		} catch (Throwable e) {
@@ -64,6 +67,10 @@ public class DefaultConsumerPipelineSink implements PipelineSink<Void> {
 				baseMsg.setOnMessageStartTimeMills(m_systemClockService.now());
 			}
 		}
+	}
+
+	private void logVersionToCat() {
+		Cat.logEvent("Hermes.Client.Version", Hermes.VERSION);
 	}
 
 }
