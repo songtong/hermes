@@ -12,7 +12,14 @@ public class ProduceLatencyTooLargeEvent extends BaseMonitorEvent {
 	private double m_latency;
 
 	public ProduceLatencyTooLargeEvent() {
+		this(null, null, 0d);
+	}
+
+	public ProduceLatencyTooLargeEvent(String topic, String date, double latency) {
 		super(MonitorEventType.PRODUCE_LARGE_LATENCY);
+		m_topic = topic;
+		m_date = date;
+		m_latency = latency;
 	}
 
 	public String getTopic() {
@@ -51,6 +58,7 @@ public class ProduceLatencyTooLargeEvent extends BaseMonitorEvent {
 		e.setKey1(m_topic);
 		e.setKey2(m_date);
 		e.setKey3(Double.toString(m_latency));
+		e.setMessage(String.format("[%s]Topic %s produce latency too large(latency=%sms).", m_date, m_topic, m_latency));
 	}
 
 	@Override
