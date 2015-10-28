@@ -20,6 +20,7 @@
 				<![CDATA[
 				UPDATE <TABLE/>
 		        SET <FIELD name='notified'/> = '1'
+		        WHERE <FIELD name='id'/> = ${id}
 		        ]]>
 				</statement>
 			</query>
