@@ -23,7 +23,7 @@ import com.ctrip.hermes.portal.dal.DefaultHermesPortalDao;
 import com.ctrip.hermes.portal.dal.ds.PortalDataSourceProvider;
 import com.ctrip.hermes.portal.dal.ds.PortalTableProvider;
 import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService;
-import com.ctrip.hermes.portal.service.elastic.DefaultElasticClient;
+import com.ctrip.hermes.portal.service.elastic.DefaultPortalElasticClient;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -57,7 +57,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(DefaultDashboardService.class));
 
-		all.add(A(DefaultElasticClient.class));
+		all.add(A(DefaultPortalElasticClient.class));
 
 		// Please keep it as last
 		all.addAll(new PortalDatabaseConfigurator().defineComponents());

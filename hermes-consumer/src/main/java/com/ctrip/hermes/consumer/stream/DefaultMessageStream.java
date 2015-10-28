@@ -234,7 +234,8 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 				List<Offset> cmdOffs = (List<Offset>) CollectionUtil.collect(offsets, new Transformer() {
 					@Override
 					public Object transform(Object offset) {
-						return new MessageStreamOffset((Offset) offset);
+						MessageStreamOffset mOffset = (MessageStreamOffset) offset;
+						return new Offset(mOffset.getPriorityOffset(), mOffset.getNonPriorityOffset(), null);
 					}
 				});
 
@@ -250,13 +251,18 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 
 	@Override
 	public List<ConsumerMessage<T>> fetchMessages(final MessageStreamOffset offset, final int size) throws Exception {
+		if (!(offset.getPriorityOffset() > 0) || !(offset.getNonPriorityOffset() > 0)) {
+			throw new IllegalArgumentException("Offset must be a positive number ( >0 ).");
+		}
+
 		return pullMessages(new PullMessageCommandCreator() {
 			@Override
 			public AbstractPullMessageCommand createPullCommand() {
 				SettableFuture<PullMessageResultCommandV2> future = SettableFuture.create();
 				long expireTime = m_systemClockService.now() + m_config.getPullMessageTimeoutMills();
-				PullMessageCommandV2 cmd = new PullMessageCommandV2(PullMessageCommandV2.PULL_WITH_OFFSET, //
-				      m_topic, m_partitionId, m_groupId, offset, size, expireTime);
+				Offset off = new Offset(offset.getPriorityOffset() - 1, offset.getNonPriorityOffset() - 1, null);
+				PullMessageCommandV2 cmd = new PullMessageCommandV2( //
+				      PullMessageCommandV2.PULL_WITH_OFFSET, m_topic, m_partitionId, m_groupId, off, size, expireTime);
 				cmd.getHeader().setCorrelationId(CorrelationIdGenerator.generateCorrelationId());
 				cmd.setFuture(future);
 				return cmd;

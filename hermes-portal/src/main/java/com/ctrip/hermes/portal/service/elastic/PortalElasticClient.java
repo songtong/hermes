@@ -3,7 +3,7 @@ package com.ctrip.hermes.portal.service.elastic;
 import java.util.List;
 import java.util.Map;
 
-public interface ElasticClient {
+public interface PortalElasticClient {
 
 	public List<String> getLastWeekProducers(String topic);
 

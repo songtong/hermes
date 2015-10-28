@@ -2,7 +2,7 @@ package com.ctrip.hermes.consumer.api;
 
 import com.ctrip.hermes.core.bo.Offset;
 
-public class MessageStreamOffset extends Offset {
+public class MessageStreamOffset {
 	private long m_priorityOffset;
 
 	private long m_nonPriorityOffset;
