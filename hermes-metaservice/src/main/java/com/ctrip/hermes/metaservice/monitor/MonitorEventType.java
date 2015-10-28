@@ -1,36 +1,44 @@
 package com.ctrip.hermes.metaservice.monitor;
 
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.monitor.event.BrokerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MetaServerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
 
 public enum MonitorEventType {
-	BROKER_ERROR(1, BrokerErrorEvent.class), //
-	METASERVER_ERROR(2, MetaServerErrorEvent.class), //
+	BROKER_ERROR(1, "broker_error", BrokerErrorEvent.class), //
+	METASERVER_ERROR(2, "metaserver_error", MetaServerErrorEvent.class), //
 
-	PRODUCE_LARGE_LATENCY(3, ProduceLatencyTooLargeEvent.class), //
-	PRODUCE_HIGH_FAILURE_RATIO(4, null), //
-	PRODUCE_HIGH_RESEND_RATIO(5, null), //
+	PRODUCE_LARGE_LATENCY(3, "produce_large_latency", ProduceLatencyTooLargeEvent.class), //
+	PRODUCE_HIGH_FAILURE_RATIO(4, null, null), //
+	PRODUCE_HIGH_RESEND_RATIO(5, null, null), //
 
-	CONSUME_LONG_DELAY(6, null), //
-	CONSUME_LARGE_BACKLOG(7, null), //
+	CONSUME_LONG_DELAY(6, null, null), //
+	CONSUME_LARGE_BACKLOG(7, null, null), //
 
-	ES_DATASOURCE_ERROR(8, null), //
-	CAT_DATASOURCE_ERROR(9, null)//
+	ES_DATASOURCE_ERROR(8, null, null), //
+	CAT_DATASOURCE_ERROR(9, null, null)//
 	;
 
 	private int m_code;
 
+	private String m_displayName;
+
 	private Class<? extends MonitorEvent> m_clazz;
 
-	private MonitorEventType(int code, Class<? extends MonitorEvent> clazz) {
+	private MonitorEventType(int code, String displayName, Class<? extends MonitorEvent> clazz) {
 		m_code = code;
+		m_displayName = displayName;
 		m_clazz = clazz;
 	}
 
 	public int getCode() {
 		return m_code;
+	}
+
+	public String getDisplayName() {
+		return StringUtils.isBlank(m_displayName) ? name() : m_displayName;
 	}
 
 	public Class<? extends MonitorEvent> getClazz() {

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -19,8 +20,13 @@ import com.ctrip.hermes.metaservice.monitor.event.MonitorEventParser;
 public class DefaultMonitorEventStorage implements MonitorEventStorage {
 	private static final Logger log = LoggerFactory.getLogger(DefaultMonitorEventStorage.class);
 
+	private static final String MONITOR_EVENT_DS_NAME = "fxhermesmetadb";
+
 	@Inject
 	MonitorEventDao m_dao;
+
+	@Inject
+	TransactionManager m_transactionManager;
 
 	@Override
 	public void addMonitorEvent(MonitorEvent event) throws Exception {
@@ -29,18 +35,10 @@ public class DefaultMonitorEventStorage implements MonitorEventStorage {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public List<MonitorEvent> findMonitorEvent(MonitorEventType type, long start, long end) {
 		try {
-			return (List<MonitorEvent>) CollectionUtil.collect(
-			      m_dao.findByTypeWithinTimeRange(type.getCode(), start, end, MonitorEventEntity.READSET_FULL),
-			      new Transformer() {
-				      @Override
-				      public Object transform(Object obj) {
-					      com.ctrip.hermes.metaservice.model.MonitorEvent event = (com.ctrip.hermes.metaservice.model.MonitorEvent) obj;
-					      return MonitorEventParser.parse(event);
-				      }
-			      });
+			return MonitorEventParser.parse(//
+			      m_dao.findByTypeWithinTimeRange(type.getCode(), start, end, MonitorEventEntity.READSET_FULL));
 		} catch (Exception e) {
 			log.error("Find monitor event from db failed. [{}, {}, {}]", type, start, end, e);
 		}
@@ -65,4 +63,40 @@ public class DefaultMonitorEventStorage implements MonitorEventStorage {
 		return null;
 	}
 
+	@Override
+	public List<MonitorEvent> fetchUnnotifiedMonitorEvent(boolean isForNotify) {
+		return MonitorEventParser.parse(isForNotify ? findAndUpdateUnnotifiedEvents() : findUnnotifiedEvents());
+	}
+
+	private List<com.ctrip.hermes.metaservice.model.MonitorEvent> findAndUpdateUnnotifiedEvents() {
+		boolean isSuccess = false;
+		try {
+			m_transactionManager.startTransaction(MONITOR_EVENT_DS_NAME);
+			List<com.ctrip.hermes.metaservice.model.MonitorEvent> unnotifiedEvents = //
+			m_dao.findUnnotifiedEvents(MonitorEventEntity.READSET_FULL);
+			m_dao.updateNotifiedStatus(
+			      unnotifiedEvents.toArray(new com.ctrip.hermes.metaservice.model.MonitorEvent[unnotifiedEvents.size()]),
+			      MonitorEventEntity.UPDATESET_FULL);
+			isSuccess = true;
+			return unnotifiedEvents;
+		} catch (Exception e) {
+			log.error("Find and Update monitor event failed.", e);
+			return null;
+		} finally {
+			if (isSuccess) {
+				m_transactionManager.commitTransaction();
+			} else {
+				m_transactionManager.rollbackTransaction();
+			}
+		}
+	}
+
+	private List<com.ctrip.hermes.metaservice.model.MonitorEvent> findUnnotifiedEvents() {
+		try {
+			return m_dao.findUnnotifiedEvents(MonitorEventEntity.READSET_FULL);
+		} catch (Exception e) {
+			log.error("Find unnotified monitor event failed.", e);
+		}
+		return null;
+	}
 }

@@ -5,11 +5,16 @@ import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
 public class BrokerErrorEvent extends BaseMonitorEvent {
 
+	private String m_brokerIp;
+
 	public BrokerErrorEvent() {
 		super(MonitorEventType.BROKER_ERROR);
 	}
 
-	private String m_brokerIp;
+	public BrokerErrorEvent broker(String ip) {
+		m_brokerIp = ip;
+		return this;
+	}
 
 	@Override
 	protected void toDBEntity0(MonitorEvent e) {
@@ -21,4 +26,8 @@ public class BrokerErrorEvent extends BaseMonitorEvent {
 		m_brokerIp = dbEntity.getKey1();
 	}
 
+	@Override
+	public String toString() {
+		return "BrokerErrorEvent [m_brokerIp=" + m_brokerIp + "]";
+	}
 }

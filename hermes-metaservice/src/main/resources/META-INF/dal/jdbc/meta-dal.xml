@@ -15,6 +15,21 @@
 		<var name="start" value-type="long" />
 		<var name="end" value-type="long" />
 		<query-defs>
+			<query name="update-notified-status" type="UPDATE" batch='true'>
+				<statement>
+				<![CDATA[
+				UPDATE <TABLE/>
+		        SET <FIELD name='notified'/> = '1'
+		        ]]>
+				</statement>
+			</query>
+			<query name="find-unnotified-events" type="SELECT" multiple="true">
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        WHERE <FIELD name='notified'/> = 0 
+		        ORDER BY <FIELD name='id'/> DESC]]></statement>
+			</query>
 			<query name="find-by-type-within-time-range" type="SELECT" multiple="true">
 				<param name="type" />
 				<param name="start" />
