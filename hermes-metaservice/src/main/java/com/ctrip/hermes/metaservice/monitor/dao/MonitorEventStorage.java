@@ -11,4 +11,6 @@ public interface MonitorEventStorage {
 	public List<MonitorEvent> findMonitorEvent(MonitorEventType type, long start, long end);
 
 	public List<MonitorEvent> findMonitorEvent(long start, long end);
+
+	public List<MonitorEvent> fetchUnnotifiedMonitorEvent(boolean isForNotify);
 }

@@ -46,6 +46,7 @@
     <member name="key3" field="key3" value-type="String" length="500" />
     <member name="key4" field="key4" value-type="String" length="500" />
     <member name="message" field="message" value-type="String" length="65535" />
+    <member name="notified" field="notified" value-type="boolean" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />

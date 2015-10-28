@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS `monitor_event` (
   `key3` varchar(500) DEFAULT NULL,
   `key4` varchar(500) DEFAULT NULL,
   `message` text,
+  `notified` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='monitor_event';

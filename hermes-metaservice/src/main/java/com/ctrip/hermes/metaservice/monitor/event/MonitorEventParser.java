@@ -1,5 +1,9 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
+import java.util.List;
+
+import com.ctrip.hermes.core.utils.CollectionUtil;
+import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
 public class MonitorEventParser {
@@ -15,5 +19,16 @@ public class MonitorEventParser {
 			}
 		}
 		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static List<MonitorEvent> parse(List<com.ctrip.hermes.metaservice.model.MonitorEvent> dbEntities) {
+		return (List<MonitorEvent>) CollectionUtil.collect(dbEntities, new Transformer() {
+			@Override
+			public Object transform(Object obj) {
+				com.ctrip.hermes.metaservice.model.MonitorEvent event = (com.ctrip.hermes.metaservice.model.MonitorEvent) obj;
+				return parse(event);
+			}
+		});
 	}
 }
