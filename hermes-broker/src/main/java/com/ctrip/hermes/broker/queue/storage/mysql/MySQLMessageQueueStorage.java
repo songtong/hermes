@@ -480,8 +480,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 					if (resendAfter(dataObj, latestResend)) {
 						latestResend = dataObj;
 					}
-					// TODO origin id, priority
-					MessageMeta msgMeta = new MessageMeta(dataObj.getId(), dataObj.getRemainingRetries(), -1,
+					MessageMeta msgMeta = new MessageMeta(dataObj.getId(), dataObj.getRemainingRetries(), dataObj.getOriginId(),
 					      dataObj.getPriority(), true);
 
 					batch.addMessageMeta(msgMeta);
