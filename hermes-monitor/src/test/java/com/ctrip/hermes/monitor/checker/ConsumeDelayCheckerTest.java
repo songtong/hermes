@@ -13,19 +13,19 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.ctrip.hermes.metaservice.monitor.event.ConsumeDelayTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
-import com.ctrip.hermes.monitor.checker.client.ProduceLatencyChecker;
+import com.ctrip.hermes.monitor.checker.client.ConsumeDelayChecker;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class ProduceLatencyCheckerTest extends BaseCheckerTest {
-	public static class MockProduceLatencyChecker extends ProduceLatencyChecker {
+public class ConsumeDelayCheckerTest extends BaseCheckerTest {
+	public static class MockConsumeDelayChecker extends ConsumeDelayChecker {
 		private String m_catReportXml;
 
-		public MockProduceLatencyChecker(String catReportXml) {
+		public MockConsumeDelayChecker(String catReportXml) {
 			m_catReportXml = catReportXml;
 		}
 
@@ -38,7 +38,7 @@ public class ProduceLatencyCheckerTest extends BaseCheckerTest {
 	@Test
 	public void testAlert() throws Exception {
 		String catReportXml = loadTestData("testAlert");
-		ProduceLatencyChecker checker = new MockProduceLatencyChecker(catReportXml);
+		MockConsumeDelayChecker checker = new MockConsumeDelayChecker(catReportXml);
 
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.MINUTE, 50);
@@ -48,7 +48,7 @@ public class ProduceLatencyCheckerTest extends BaseCheckerTest {
 		assertTrue(result.isRunSuccess());
 		assertNull(result.getErrorMessage());
 		assertNull(result.getException());
-		assertEquals(3, result.getMonitorEvents().size());
+		assertEquals(2, result.getMonitorEvents().size());
 
 		List<MonitorEvent> expectedEvents = new ArrayList<>();
 
@@ -56,11 +56,9 @@ public class ProduceLatencyCheckerTest extends BaseCheckerTest {
 		calendar.set(Calendar.SECOND, 0);
 
 		calendar.set(Calendar.MINUTE, 45);
-		expectedEvents.add(new ProduceLatencyTooLargeEvent("a.b.c", sdf.format(calendar.getTime()), 1000.1d));
-		calendar.set(Calendar.MINUTE, 47);
-		expectedEvents.add(new ProduceLatencyTooLargeEvent("a.b.c", sdf.format(calendar.getTime()), 2000.3));
-		calendar.set(Calendar.MINUTE, 46);
-		expectedEvents.add(new ProduceLatencyTooLargeEvent("b.c.d", sdf.format(calendar.getTime()), 1329.6));
+		expectedEvents.add(new ConsumeDelayTooLargeEvent("leo_test_11111", sdf.format(calendar.getTime()), 6690.8d));
+		calendar.set(Calendar.MINUTE, 49);
+		expectedEvents.add(new ConsumeDelayTooLargeEvent("leo_test_11111", sdf.format(calendar.getTime()), 7430.3));
 
 		for (MonitorEvent expectedEvent : expectedEvents) {
 			assertTrue(result.getMonitorEvents().contains(expectedEvent));
@@ -70,7 +68,7 @@ public class ProduceLatencyCheckerTest extends BaseCheckerTest {
 	@Test
 	public void testNormal() throws Exception {
 		String catReportXml = loadTestData("testNormal");
-		ProduceLatencyChecker checker = new MockProduceLatencyChecker(catReportXml);
+		MockConsumeDelayChecker checker = new MockConsumeDelayChecker(catReportXml);
 
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.MINUTE, 50);
