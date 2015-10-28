@@ -1,0 +1,277 @@
+<transaction>
+	<report domain="All" startTime="2015-10-27 14:00:00" endTime="2015-10-27 14:59:59">
+		<domain>12345</domain>
+		<domain>23456</domain>
+		<domain>34567</domain>
+		<ip>部门1</ip>
+		<ip>部门2</ip>
+		<machine ip="All">
+			<type id="Message.Produce.Elapse" totalCount="30306" failCount="0" failPercent="0.00" min="7.07" max="62135625602010.68"
+				avg="2640753836739.5" sum="80030685776226192.0" sum2="4972756727712215000000000000000.0" std="12534405086355.8" tps="0.00"
+				line95Value="0.00" line99Value="0.00">
+				<successMessageUrl>110117-0a08595d-401646-74</successMessageUrl>
+				<slowestMessageUrl>810301-0a085a19-401646-8134</slowestMessageUrl>
+				<name id="a.b.c" totalCount="532" failCount="0" failPercent="0.00" min="11.61" max="3375.59" avg="220.0" sum="117045.9"
+					sum2="103085135.5" std="381.3" tps="0.00" line95Value="0.00" line99Value="0.00">
+					<successMessageUrl>110117-0a08595d-401646-74</successMessageUrl>
+					<slowestMessageUrl>110117-0a08595f-401646-105704</slowestMessageUrl>
+					<range value="0" count="17" sum="1924.9390000000003" avg="1131.2" fails="0" />
+					<range value="1" count="11" sum="2781.639" avg="252.9" fails="0" />
+					<range value="2" count="8" sum="961.831" avg="120.2" fails="0" />
+					<range value="3" count="14" sum="6061.620000000001" avg="4331.0" fails="0" />
+					<range value="4" count="11" sum="1741.183" avg="158.3" fails="0" />
+					<range value="5" count="14" sum="2435.4469999999997" avg="174.0" fails="0" />
+					<range value="6" count="12" sum="5965.7390000000005" avg="4971.1" fails="0" />
+					<range value="7" count="7" sum="2644.441" avg="377.8" fails="0" />
+					<range value="8" count="13" sum="1541.71" avg="118.6" fails="0" />
+					<range value="9" count="15" sum="1723.309" avg="114.9" fails="0" />
+					<range value="10" count="13" sum="1824.4539999999997" avg="1401.3" fails="0" />
+					<range value="11" count="12" sum="1486.2029999999997" avg="123.9" fails="0" />
+					<range value="12" count="7" sum="881.775" avg="126.0" fails="0" />
+					<range value="13" count="11" sum="1336.0219999999997" avg="121.5" fails="0" />
+					<range value="14" count="22" sum="3667.255" avg="166.7" fails="0" />
+					<range value="15" count="11" sum="1376.696" avg="125.2" fails="0" />
+					<range value="16" count="14" sum="2483.078" avg="177.4" fails="0" />
+					<range value="17" count="19" sum="1999.9160000000002" avg="105.3" fails="0" />
+					<range value="18" count="21" sum="2593.974" avg="1231.5" fails="0" />
+					<range value="19" count="13" sum="4241.5470000000005" avg="326.3" fails="0" />
+					<range value="20" count="19" sum="12810.490999999998" avg="674.2" fails="0" />
+					<range value="21" count="16" sum="2108.02" avg="131.8" fails="0" />
+					<range value="22" count="19" sum="5456.843000000001" avg="2871.2" fails="0" />
+					<range value="23" count="14" sum="3384.7609999999995" avg="241.8" fails="0" />
+					<range value="24" count="11" sum="4303.536" avg="3911.2" fails="0" />
+					<range value="25" count="11" sum="3720.706" avg="338.2" fails="0" />
+					<range value="26" count="19" sum="7856.724999999999" avg="413.5" fails="0" />
+					<range value="27" count="17" sum="5508.018" avg="324.0" fails="0" />
+					<range value="28" count="14" sum="4390.039" avg="313.6" fails="0" />
+					<range value="29" count="12" sum="2984.956" avg="248.7" fails="0" />
+					<range value="30" count="12" sum="2208.35" avg="184.0" fails="0" />
+					<range value="31" count="13" sum="1609.5059999999999" avg="123.8" fails="0" />
+					<range value="32" count="17" sum="1985.759" avg="1161.8" fails="0" />
+					<range value="33" count="12" sum="1422.942" avg="118.6" fails="0" />
+					<range value="34" count="19" sum="2012.85" avg="105.9" fails="0" />
+					<range value="35" count="16" sum="1951.0389999999998" avg="121.9" fails="0" />
+					<range value="36" count="11" sum="1263.388" avg="114.9" fails="0" />
+					<range value="37" count="13" sum="1736.1419999999998" avg="133.5" fails="0" />
+					<range value="38" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="39" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="40" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="41" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="42" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="43" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="44" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="45" count="2" sum="659.1379999999999" avg="1000.1" fails="0" />
+					<range value="46" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="47" count="2" sum="659.1379999999999" avg="2000.3" fails="0" />
+					<range value="48" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="49" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="50" count="2" sum="659.1379999999999" avg="3129.6" fails="0" />
+					<duration value="128" count="302" />
+					<duration value="256" count="159" />
+					<duration value="64" count="14" />
+					<duration value="2048" count="22" />
+					<duration value="16" count="2" />
+					<duration value="32" count="1" />
+					<duration value="4096" count="6" />
+					<duration value="512" count="12" />
+					<duration value="1024" count="14" />
+				</name>
+				<name id="b.c.d" totalCount="532" failCount="0" failPercent="0.00" min="11.61" max="3375.59" avg="220.0" sum="117045.9"
+					sum2="103085135.5" std="381.3" tps="0.00" line95Value="0.00" line99Value="0.00">
+					<successMessageUrl>110117-0a08595d-401646-74</successMessageUrl>
+					<slowestMessageUrl>110117-0a08595f-401646-105704</slowestMessageUrl>
+					<range value="0" count="17" sum="1924.9390000000003" avg="1131.2" fails="0" />
+					<range value="1" count="11" sum="2781.639" avg="252.9" fails="0" />
+					<range value="2" count="8" sum="961.831" avg="120.2" fails="0" />
+					<range value="3" count="14" sum="6061.620000000001" avg="4331.0" fails="0" />
+					<range value="4" count="11" sum="1741.183" avg="158.3" fails="0" />
+					<range value="5" count="14" sum="2435.4469999999997" avg="174.0" fails="0" />
+					<range value="6" count="12" sum="5965.7390000000005" avg="4971.1" fails="0" />
+					<range value="7" count="7" sum="2644.441" avg="377.8" fails="0" />
+					<range value="8" count="13" sum="1541.71" avg="118.6" fails="0" />
+					<range value="9" count="15" sum="1723.309" avg="114.9" fails="0" />
+					<range value="10" count="13" sum="1824.4539999999997" avg="1401.3" fails="0" />
+					<range value="11" count="12" sum="1486.2029999999997" avg="123.9" fails="0" />
+					<range value="12" count="7" sum="881.775" avg="126.0" fails="0" />
+					<range value="13" count="11" sum="1336.0219999999997" avg="121.5" fails="0" />
+					<range value="14" count="22" sum="3667.255" avg="166.7" fails="0" />
+					<range value="15" count="11" sum="1376.696" avg="125.2" fails="0" />
+					<range value="16" count="14" sum="2483.078" avg="177.4" fails="0" />
+					<range value="17" count="19" sum="1999.9160000000002" avg="105.3" fails="0" />
+					<range value="18" count="21" sum="2593.974" avg="1231.5" fails="0" />
+					<range value="19" count="13" sum="4241.5470000000005" avg="326.3" fails="0" />
+					<range value="20" count="19" sum="12810.490999999998" avg="674.2" fails="0" />
+					<range value="21" count="16" sum="2108.02" avg="131.8" fails="0" />
+					<range value="22" count="19" sum="5456.843000000001" avg="2871.2" fails="0" />
+					<range value="23" count="14" sum="3384.7609999999995" avg="241.8" fails="0" />
+					<range value="24" count="11" sum="4303.536" avg="3911.2" fails="0" />
+					<range value="25" count="11" sum="3720.706" avg="338.2" fails="0" />
+					<range value="26" count="19" sum="7856.724999999999" avg="413.5" fails="0" />
+					<range value="27" count="17" sum="5508.018" avg="324.0" fails="0" />
+					<range value="28" count="14" sum="4390.039" avg="313.6" fails="0" />
+					<range value="29" count="12" sum="2984.956" avg="248.7" fails="0" />
+					<range value="30" count="12" sum="2208.35" avg="184.0" fails="0" />
+					<range value="31" count="13" sum="1609.5059999999999" avg="123.8" fails="0" />
+					<range value="32" count="17" sum="1985.759" avg="1161.8" fails="0" />
+					<range value="33" count="12" sum="1422.942" avg="118.6" fails="0" />
+					<range value="34" count="19" sum="2012.85" avg="105.9" fails="0" />
+					<range value="35" count="16" sum="1951.0389999999998" avg="121.9" fails="0" />
+					<range value="36" count="11" sum="1263.388" avg="114.9" fails="0" />
+					<range value="37" count="13" sum="1736.1419999999998" avg="133.5" fails="0" />
+					<range value="38" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="39" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="40" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="41" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="42" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="43" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="44" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="45" count="2" sum="659.1379999999999" avg="100.1" fails="0" />
+					<range value="46" count="2" sum="659.1379999999999" avg="1329.6" fails="0" />
+					<range value="47" count="2" sum="659.1379999999999" avg="200.3" fails="0" />
+					<range value="48" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="49" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="50" count="2" sum="659.1379999999999" avg="3129.6" fails="0" />
+					<duration value="128" count="302" />
+					<duration value="256" count="159" />
+					<duration value="64" count="14" />
+					<duration value="2048" count="22" />
+					<duration value="16" count="2" />
+					<duration value="32" count="1" />
+					<duration value="4096" count="6" />
+					<duration value="512" count="12" />
+					<duration value="1024" count="14" />
+				</name>
+				<name id="All" totalCount="532" failCount="0" failPercent="0.00" min="11.61" max="3375.59" avg="220.0" sum="117045.9"
+					sum2="103085135.5" std="381.3" tps="0.00" line95Value="0.00" line99Value="0.00">
+					<successMessageUrl>110117-0a08595d-401646-74</successMessageUrl>
+					<slowestMessageUrl>110117-0a08595f-401646-105704</slowestMessageUrl>
+					<range value="0" count="17" sum="1924.9390000000003" avg="1131.2" fails="0" />
+					<range value="1" count="11" sum="2781.639" avg="252.9" fails="0" />
+					<range value="2" count="8" sum="961.831" avg="120.2" fails="0" />
+					<range value="3" count="14" sum="6061.620000000001" avg="4331.0" fails="0" />
+					<range value="4" count="11" sum="1741.183" avg="158.3" fails="0" />
+					<range value="5" count="14" sum="2435.4469999999997" avg="174.0" fails="0" />
+					<range value="6" count="12" sum="5965.7390000000005" avg="4971.1" fails="0" />
+					<range value="7" count="7" sum="2644.441" avg="377.8" fails="0" />
+					<range value="8" count="13" sum="1541.71" avg="118.6" fails="0" />
+					<range value="9" count="15" sum="1723.309" avg="114.9" fails="0" />
+					<range value="10" count="13" sum="1824.4539999999997" avg="1401.3" fails="0" />
+					<range value="11" count="12" sum="1486.2029999999997" avg="123.9" fails="0" />
+					<range value="12" count="7" sum="881.775" avg="126.0" fails="0" />
+					<range value="13" count="11" sum="1336.0219999999997" avg="121.5" fails="0" />
+					<range value="14" count="22" sum="3667.255" avg="166.7" fails="0" />
+					<range value="15" count="11" sum="1376.696" avg="125.2" fails="0" />
+					<range value="16" count="14" sum="2483.078" avg="177.4" fails="0" />
+					<range value="17" count="19" sum="1999.9160000000002" avg="105.3" fails="0" />
+					<range value="18" count="21" sum="2593.974" avg="1231.5" fails="0" />
+					<range value="19" count="13" sum="4241.5470000000005" avg="326.3" fails="0" />
+					<range value="20" count="19" sum="12810.490999999998" avg="674.2" fails="0" />
+					<range value="21" count="16" sum="2108.02" avg="131.8" fails="0" />
+					<range value="22" count="19" sum="5456.843000000001" avg="2871.2" fails="0" />
+					<range value="23" count="14" sum="3384.7609999999995" avg="241.8" fails="0" />
+					<range value="24" count="11" sum="4303.536" avg="3911.2" fails="0" />
+					<range value="25" count="11" sum="3720.706" avg="338.2" fails="0" />
+					<range value="26" count="19" sum="7856.724999999999" avg="413.5" fails="0" />
+					<range value="27" count="17" sum="5508.018" avg="324.0" fails="0" />
+					<range value="28" count="14" sum="4390.039" avg="313.6" fails="0" />
+					<range value="29" count="12" sum="2984.956" avg="248.7" fails="0" />
+					<range value="30" count="12" sum="2208.35" avg="184.0" fails="0" />
+					<range value="31" count="13" sum="1609.5059999999999" avg="123.8" fails="0" />
+					<range value="32" count="17" sum="1985.759" avg="1161.8" fails="0" />
+					<range value="33" count="12" sum="1422.942" avg="118.6" fails="0" />
+					<range value="34" count="19" sum="2012.85" avg="105.9" fails="0" />
+					<range value="35" count="16" sum="1951.0389999999998" avg="121.9" fails="0" />
+					<range value="36" count="11" sum="1263.388" avg="114.9" fails="0" />
+					<range value="37" count="13" sum="1736.1419999999998" avg="133.5" fails="0" />
+					<range value="38" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="39" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="40" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="41" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="42" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="43" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="44" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="45" count="2" sum="659.1379999999999" avg="1000.1" fails="0" />
+					<range value="46" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="47" count="2" sum="659.1379999999999" avg="2000.3" fails="0" />
+					<range value="48" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="49" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="50" count="2" sum="659.1379999999999" avg="3129.6" fails="0" />
+					<duration value="128" count="302" />
+					<duration value="256" count="159" />
+					<duration value="64" count="14" />
+					<duration value="2048" count="22" />
+					<duration value="16" count="2" />
+					<duration value="32" count="1" />
+					<duration value="4096" count="6" />
+					<duration value="512" count="12" />
+					<duration value="1024" count="14" />
+				</name>
+				<name id="visa.order.orderstatuschanged" totalCount="532" failCount="0" failPercent="0.00" min="11.61" max="3375.59"
+					avg="220.0" sum="117045.9" sum2="103085135.5" std="381.3" tps="0.00" line95Value="0.00" line99Value="0.00">
+					<successMessageUrl>110117-0a08595d-401646-74</successMessageUrl>
+					<slowestMessageUrl>110117-0a08595f-401646-105704</slowestMessageUrl>
+					<range value="0" count="17" sum="1924.9390000000003" avg="1131.2" fails="0" />
+					<range value="1" count="11" sum="2781.639" avg="252.9" fails="0" />
+					<range value="2" count="8" sum="961.831" avg="120.2" fails="0" />
+					<range value="3" count="14" sum="6061.620000000001" avg="4331.0" fails="0" />
+					<range value="4" count="11" sum="1741.183" avg="158.3" fails="0" />
+					<range value="5" count="14" sum="2435.4469999999997" avg="174.0" fails="0" />
+					<range value="6" count="12" sum="5965.7390000000005" avg="4971.1" fails="0" />
+					<range value="7" count="7" sum="2644.441" avg="377.8" fails="0" />
+					<range value="8" count="13" sum="1541.71" avg="118.6" fails="0" />
+					<range value="9" count="15" sum="1723.309" avg="114.9" fails="0" />
+					<range value="10" count="13" sum="1824.4539999999997" avg="1401.3" fails="0" />
+					<range value="11" count="12" sum="1486.2029999999997" avg="123.9" fails="0" />
+					<range value="12" count="7" sum="881.775" avg="126.0" fails="0" />
+					<range value="13" count="11" sum="1336.0219999999997" avg="121.5" fails="0" />
+					<range value="14" count="22" sum="3667.255" avg="166.7" fails="0" />
+					<range value="15" count="11" sum="1376.696" avg="125.2" fails="0" />
+					<range value="16" count="14" sum="2483.078" avg="177.4" fails="0" />
+					<range value="17" count="19" sum="1999.9160000000002" avg="105.3" fails="0" />
+					<range value="18" count="21" sum="2593.974" avg="1231.5" fails="0" />
+					<range value="19" count="13" sum="4241.5470000000005" avg="326.3" fails="0" />
+					<range value="20" count="19" sum="12810.490999999998" avg="674.2" fails="0" />
+					<range value="21" count="16" sum="2108.02" avg="131.8" fails="0" />
+					<range value="22" count="19" sum="5456.843000000001" avg="2871.2" fails="0" />
+					<range value="23" count="14" sum="3384.7609999999995" avg="241.8" fails="0" />
+					<range value="24" count="11" sum="4303.536" avg="3911.2" fails="0" />
+					<range value="25" count="11" sum="3720.706" avg="338.2" fails="0" />
+					<range value="26" count="19" sum="7856.724999999999" avg="413.5" fails="0" />
+					<range value="27" count="17" sum="5508.018" avg="324.0" fails="0" />
+					<range value="28" count="14" sum="4390.039" avg="313.6" fails="0" />
+					<range value="29" count="12" sum="2984.956" avg="248.7" fails="0" />
+					<range value="30" count="12" sum="2208.35" avg="184.0" fails="0" />
+					<range value="31" count="13" sum="1609.5059999999999" avg="123.8" fails="0" />
+					<range value="32" count="17" sum="1985.759" avg="1161.8" fails="0" />
+					<range value="33" count="12" sum="1422.942" avg="118.6" fails="0" />
+					<range value="34" count="19" sum="2012.85" avg="105.9" fails="0" />
+					<range value="35" count="16" sum="1951.0389999999998" avg="121.9" fails="0" />
+					<range value="36" count="11" sum="1263.388" avg="114.9" fails="0" />
+					<range value="37" count="13" sum="1736.1419999999998" avg="133.5" fails="0" />
+					<range value="38" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="39" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="40" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="41" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="42" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="43" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="44" count="2" sum="659.1379999999999" avg="3291.6" fails="0" />
+					<range value="45" count="2" sum="659.1379999999999" avg="1000.1" fails="0" />
+					<range value="46" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="47" count="2" sum="659.1379999999999" avg="2000.3" fails="0" />
+					<range value="48" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="49" count="2" sum="659.1379999999999" avg="329.6" fails="0" />
+					<range value="50" count="2" sum="659.1379999999999" avg="3129.6" fails="0" />
+					<duration value="128" count="302" />
+					<duration value="256" count="159" />
+					<duration value="64" count="14" />
+					<duration value="2048" count="22" />
+					<duration value="16" count="2" />
+					<duration value="32" count="1" />
+					<duration value="4096" count="6" />
+					<duration value="512" count="12" />
+					<duration value="1024" count="14" />
+				</name>
+			</type>
+		</machine>
+	</report>
+</transaction>
