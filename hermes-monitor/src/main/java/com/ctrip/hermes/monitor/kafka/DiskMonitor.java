@@ -1,5 +1,6 @@
 package com.ctrip.hermes.monitor.kafka;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -10,14 +11,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.action.index.IndexResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.unidal.dal.jdbc.DalException;
 
-import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.metaservice.model.MonitorReport;
-import com.ctrip.hermes.monitor.service.MonitorReportService;
+import com.ctrip.hermes.monitor.domain.MonitorItem;
+import com.ctrip.hermes.monitor.service.ElasticSearchService;
 import com.ctrip.hermes.monitor.stat.StatResult;
 import com.ctrip.hermes.monitor.zabbix.ZabbixApiUtils;
 import com.ctrip.hermes.monitor.zabbix.ZabbixConst;
@@ -34,14 +35,15 @@ public class DiskMonitor {
 
 	public static void main(String[] args) throws ZabbixApiException, DalException {
 		DiskMonitor monitor = new DiskMonitor();
-		monitor.service = new MonitorReportService();
+		monitor.service = new ElasticSearchService();
 		monitor.getPastHourDiskFreePercentage();
 		// monitor.getCurrentDiskFreePercentage();
 		// monitor.getPast5DaysDiskFreePercentage();
 	}
 
 	@Autowired
-	private MonitorReportService service;
+	// private MonitorReportService service;
+	private ElasticSearchService service;
 
 	public Map<Integer, Map<String, Double>> getCurrentDiskFreePercentage() throws ZabbixApiException {
 		Map<Integer, HostObject> hosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
@@ -146,7 +148,8 @@ public class DiskMonitor {
 		}
 	}
 
-	@Scheduled(fixedRate = 3600000)
+	 @Scheduled(cron = "0 4 * * * *")
+//	@Scheduled(fixedDelay = 60000)
 	public void getPastHourDiskFreePercentage() throws ZabbixApiException, DalException {
 		Map<Integer, HostObject> hosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
 		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(), ZabbixConst.DISK_FREE_PERCENTAGE);
@@ -173,16 +176,22 @@ public class DiskMonitor {
 				System.out.format("%30s : %5.2f%% \n", name, h.getValue().getMean());
 			}
 
-			String json = JSON.toJSONString(stat);
-			MonitorReport report = new MonitorReport();
-			report.setCategory("Disk");
-			report.setSource("Zabbix");
-			report.setStart(timeFrom);
-			report.setEnd(timeTill);
-			report.setHost(hosts.get(hostid).getHost());
-			report.setValue(json);
+			MonitorItem item = new MonitorItem();
+			item.setCategory("Disk");
+			item.setSource("Zabbix");
+			item.setStartDate(timeFrom);
+			item.setEndDate(timeTill);
+			item.setHost(hosts.get(hostid).getHost());
+			item.setValue(stat);
 
-			service.insertOrUpdate(report);
+			// service.insertOrUpdate(report);
+			IndexResponse response;
+			try {
+				response = service.prepareIndex(item);
+				System.out.println(response.getId());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

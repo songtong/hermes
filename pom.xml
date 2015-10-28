@@ -331,6 +331,11 @@
 				<artifactId>metrics-servlets</artifactId>
 				<version>3.1.2</version>
 			</dependency>
+			<dependency>
+				<groupId>org.elasticsearch</groupId>
+				<artifactId>elasticsearch</artifactId>
+				<version>1.7.3</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<profiles>
