@@ -5,12 +5,17 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
@@ -33,12 +38,22 @@ public class MetaServerResource {
 
 	private ClusterStateHolder m_clusterStatusHolder = PlexusComponentLocator.lookup(ClusterStateHolder.class);
 
+	private CoreConfig m_coreConfig = PlexusComponentLocator.lookup(CoreConfig.class);
+
 	@GET
 	@Path("servers")
-	public List<String> getServers() {
+	public List<String> getServers(@QueryParam("clientTimeMillis") @DefaultValue("0") long clientTimeMillis, //
+	      @Context HttpServletResponse res) {
 		Meta meta = m_metaHolder.getMeta();
 		if (meta == null) {
 			throw new RestException("Meta not found", Status.NOT_FOUND);
+		}
+
+		if (clientTimeMillis > 0) {
+			long diff = clientTimeMillis - System.currentTimeMillis();
+			if (Math.abs(diff) > m_coreConfig.getMaxClientTimeDiffMillis()) {
+				res.addHeader(CoreConfig.TIME_UNSYNC_HEADER, Long.toString(diff));
+			}
 		}
 
 		Collection<Server> servers = meta.getServers().values();
@@ -46,6 +61,7 @@ public class MetaServerResource {
 		for (Server server : servers) {
 			result.add(String.format("%s:%s", server.getHost(), server.getPort()));
 		}
+
 		return result;
 	}
 
