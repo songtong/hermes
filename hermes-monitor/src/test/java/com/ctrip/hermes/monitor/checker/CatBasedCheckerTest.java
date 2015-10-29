@@ -3,46 +3,30 @@ package com.ctrip.hermes.monitor.checker;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
 import org.junit.Test;
 
-import com.ctrip.hermes.monitor.checker.client.CatTransactionCrossReportBasedChecker;
-import com.ctrip.hermes.monitor.checker.client.CatTransactionCrossReportBasedChecker.Timespan;
+import com.ctrip.hermes.monitor.checker.client.CatBasedChecker;
+import com.ctrip.hermes.monitor.checker.client.CatBasedChecker.Timespan;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class CatTransactionCrossReportBasedCheckerTest {
+public class CatBasedCheckerTest {
 
-	private static class MockCatTransactionCrossReportBasedChecker extends CatTransactionCrossReportBasedChecker {
-		private String m_mockCatResult;
-
-		public MockCatTransactionCrossReportBasedChecker(String mockCatResult) {
-			m_mockCatResult = mockCatResult;
-		}
-
-		@Override
-		protected String getCatTransactionCrossReport(Date startHour, String transactionType) throws IOException {
-			return m_mockCatResult;
-		}
+	private static class MockCatBasedChecker extends CatBasedChecker {
 
 		@Override
 		public String name() {
-			return "CatTransactionCrossReportBasedChecker";
+			return "MockCatBasedChecker";
 		}
 
 		@Override
-		protected String getTransactionType() {
-			return "txType";
-		}
-
-		@Override
-		protected void doCheck(String transactionReportXml, Timespan timespan, CheckerResult result) throws Exception {
+		protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
 			// do nothing
 		}
 
@@ -55,25 +39,25 @@ public class CatTransactionCrossReportBasedCheckerTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testCalTimespanMinutesBeforeLargeThan60() {
-		MockCatTransactionCrossReportBasedChecker checker = new MockCatTransactionCrossReportBasedChecker("");
+		MockCatBasedChecker checker = new MockCatBasedChecker();
 		checker.calTimespan(new Date(), 61);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testCalTimespanMinutesBeforeSmallerThan0() {
-		MockCatTransactionCrossReportBasedChecker checker = new MockCatTransactionCrossReportBasedChecker("");
+		MockCatBasedChecker checker = new MockCatBasedChecker();
 		checker.calTimespan(new Date(), -1);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testCalTimespanMinutesBeforeEqual0() {
-		MockCatTransactionCrossReportBasedChecker checker = new MockCatTransactionCrossReportBasedChecker("");
+		MockCatBasedChecker checker = new MockCatBasedChecker();
 		checker.calTimespan(new Date(), 0);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testCalTimespanNoEnoughMinutes() {
-		MockCatTransactionCrossReportBasedChecker checker = new MockCatTransactionCrossReportBasedChecker("");
+		MockCatBasedChecker checker = new MockCatBasedChecker();
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.MINUTE, 20);
 		checker.calTimespan(calendar.getTime(), 21);
@@ -89,7 +73,7 @@ public class CatTransactionCrossReportBasedCheckerTest {
 		expectedCalendar.setTime(calendar.getTime());
 		expectedCalendar.add(Calendar.HOUR_OF_DAY, -1);
 
-		MockCatTransactionCrossReportBasedChecker checker = new MockCatTransactionCrossReportBasedChecker("");
+		MockCatBasedChecker checker = new MockCatBasedChecker();
 
 		Timespan timespan = checker.calTimespan(calendar.getTime(), 60);
 
@@ -120,7 +104,7 @@ public class CatTransactionCrossReportBasedCheckerTest {
 		int currentMinute = 43;
 		calendar.set(Calendar.MINUTE, currentMinute);
 
-		MockCatTransactionCrossReportBasedChecker checker = new MockCatTransactionCrossReportBasedChecker("");
+		MockCatBasedChecker checker = new MockCatBasedChecker();
 
 		int minutesBefore = 5;
 		Timespan timespan = checker.calTimespan(calendar.getTime(), minutesBefore);

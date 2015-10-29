@@ -3,7 +3,6 @@ package com.ctrip.hermes.monitor.checker.client;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -18,6 +17,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 import org.w3c.dom.Document;
@@ -25,6 +25,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
@@ -33,17 +34,31 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
  *
  */
 @Component(value = "ProducerLatencyChecker")
-public class ProduceLatencyChecker extends CatTransactionCrossReportBasedChecker {
+public class ProduceLatencyChecker extends CatBasedChecker implements InitializingBean {
 
 	private static final String CAT_TRANSACTION_TYPE = "Message.Produce.Elapse";
 
-	private static final List<String> EXCLUDED_TOPICS = Arrays.asList(new String[] { "All",
-	      "visa.order.orderstatuschanged" });
-
-	private static final double LATENCY_THRESHOLD = 1000d;
+	private List<String> m_excludedTopics = new LinkedList<>();
 
 	@Override
-	protected void doCheck(String transactionReportXml, Timespan timespan, CheckerResult result) throws Exception {
+	public void afterPropertiesSet() throws Exception {
+		String excludedTopicsStr = m_config.getProduceLatencyCheckerExcludedTopics();
+		if (!StringUtils.isBlank(excludedTopicsStr)) {
+			String[] topics = excludedTopicsStr.split(",");
+			if (topics != null && topics.length > 0) {
+				for (String topic : topics) {
+					m_excludedTopics.add(topic.trim());
+				}
+			}
+		}
+	}
+
+	@Override
+	protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
+		String catReportUrl = m_config.getCatBaseUrl()
+		      + String.format(m_config.getCatCrossTransactionUrlPattern(), formatToCatUrlTime(timespan.getStartHour()),
+		            CAT_TRANSACTION_TYPE);
+		String transactionReportXml = curl(catReportUrl, m_config.getCatConnectTimeout(), m_config.getCatReadTimeout());
 		Map<String, List<Pair<Integer, Double>>> topic2LatencyList = extractLatencyDatasFromXml(transactionReportXml);
 		bizCheck(topic2LatencyList, timespan, result);
 	}
@@ -57,12 +72,12 @@ public class ProduceLatencyChecker extends CatTransactionCrossReportBasedChecker
 			String topic = entry.getKey();
 			List<Pair<Integer, Double>> latencyList = entry.getValue();
 
-			if (!EXCLUDED_TOPICS.contains(topic)) {
+			if (!m_excludedTopics.contains(topic)) {
 				for (Pair<Integer, Double> pair : latencyList) {
 					int minute = pair.getKey();
 					double latency = pair.getValue();
 
-					if (timespan.getMinutes().contains(minute) && latency > LATENCY_THRESHOLD) {
+					if (timespan.getMinutes().contains(minute) && latency > m_config.getProduceLatencyThreshold()) {
 						ProduceLatencyTooLargeEvent monitorEvent = new ProduceLatencyTooLargeEvent();
 						monitorEvent.setTopic(topic);
 						monitorEvent.setLatency(latency);
@@ -125,10 +140,4 @@ public class ProduceLatencyChecker extends CatTransactionCrossReportBasedChecker
 	public String name() {
 		return "ProducerLatencyChecker";
 	}
-
-	@Override
-	protected String getTransactionType() {
-		return CAT_TRANSACTION_TYPE;
-	}
-
 }

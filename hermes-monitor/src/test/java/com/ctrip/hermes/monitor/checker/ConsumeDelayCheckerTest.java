@@ -8,10 +8,15 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.stereotype.Component;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeDelayTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
@@ -21,29 +26,37 @@ import com.ctrip.hermes.monitor.checker.client.ConsumeDelayChecker;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = BaseCheckerTest.class)
 public class ConsumeDelayCheckerTest extends BaseCheckerTest {
+
+	@Component("MockConsumeDelayChecker")
 	public static class MockConsumeDelayChecker extends ConsumeDelayChecker {
 		private String m_catReportXml;
 
-		public MockConsumeDelayChecker(String catReportXml) {
+		public void setCatReportXml(String catReportXml) {
 			m_catReportXml = catReportXml;
 		}
 
 		@Override
-		protected String getCatTransactionCrossReport(Date startHour, String transactionType) throws IOException {
+		protected String curl(String url, int connectTimeoutMillis, int readTimeoutMillis) throws IOException {
 			return m_catReportXml;
 		}
 	}
 
+	@Autowired
+	@Qualifier("MockConsumeDelayChecker")
+	private MockConsumeDelayChecker m_checker;
+
 	@Test
 	public void testAlert() throws Exception {
 		String catReportXml = loadTestData("testAlert");
-		MockConsumeDelayChecker checker = new MockConsumeDelayChecker(catReportXml);
+		m_checker.setCatReportXml(catReportXml);
 
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.MINUTE, 50);
 
-		CheckerResult result = checker.check(calendar.getTime(), 5);
+		CheckerResult result = m_checker.check(calendar.getTime(), 5);
 
 		assertTrue(result.isRunSuccess());
 		assertNull(result.getErrorMessage());
@@ -70,12 +83,12 @@ public class ConsumeDelayCheckerTest extends BaseCheckerTest {
 	@Test
 	public void testNormal() throws Exception {
 		String catReportXml = loadTestData("testNormal");
-		MockConsumeDelayChecker checker = new MockConsumeDelayChecker(catReportXml);
+		m_checker.setCatReportXml(catReportXml);
 
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.MINUTE, 50);
 
-		CheckerResult result = checker.check(calendar.getTime(), 5);
+		CheckerResult result = m_checker.check(calendar.getTime(), 5);
 
 		assertTrue(result.isRunSuccess());
 		assertNull(result.getErrorMessage());
