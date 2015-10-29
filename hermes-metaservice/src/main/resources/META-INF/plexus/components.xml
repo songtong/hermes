@@ -98,15 +98,6 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>monitor-report</role-hint>
-			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
-			<configuration>
-				<physical-table-name>monitor_report</physical-table-name>
-				<data-source-name>fxhermesmetadb</data-source-name>
-			</configuration>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>schema</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -135,15 +126,6 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.model.MonitorEventDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.MonitorEventDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaservice.model.MonitorReportDao</role>
-			<implementation>com.ctrip.hermes.metaservice.model.MonitorReportDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
