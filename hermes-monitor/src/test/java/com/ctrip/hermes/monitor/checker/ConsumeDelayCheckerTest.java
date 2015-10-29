@@ -56,9 +56,11 @@ public class ConsumeDelayCheckerTest extends BaseCheckerTest {
 		calendar.set(Calendar.SECOND, 0);
 
 		calendar.set(Calendar.MINUTE, 45);
-		expectedEvents.add(new ConsumeDelayTooLargeEvent("leo_test_11111", sdf.format(calendar.getTime()), 6690.8d));
+		expectedEvents.add(new ConsumeDelayTooLargeEvent("leo_test_11111", "leo1", sdf.format(calendar.getTime()),
+		      6690.8d));
 		calendar.set(Calendar.MINUTE, 49);
-		expectedEvents.add(new ConsumeDelayTooLargeEvent("leo_test_11111", sdf.format(calendar.getTime()), 7430.3));
+		expectedEvents
+		      .add(new ConsumeDelayTooLargeEvent("leo_test_11111", "leo1", sdf.format(calendar.getTime()), 7430.3));
 
 		for (MonitorEvent expectedEvent : expectedEvents) {
 			assertTrue(result.getMonitorEvents().contains(expectedEvent));

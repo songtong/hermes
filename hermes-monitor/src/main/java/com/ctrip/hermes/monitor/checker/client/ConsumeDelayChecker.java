@@ -37,46 +37,51 @@ public class ConsumeDelayChecker extends CatTransactionCrossReportBasedChecker {
 	private static final String CAT_TRANSACTION_TYPE = "Message.Consume.Latency";
 
 	// key: topic, value: threshold in millisecond
-	private static final Map<String, Double> TOPICS_2_DELAY_THRESHOLD = new HashMap<>();
+	private static final Map<String, Double> TOPIC_CONSUMER_GROUP_2_DELAY_THRESHOLD = new HashMap<>();
 
 	static {
-		TOPICS_2_DELAY_THRESHOLD.put("leo_test_11111", 1 * 1000d);// for test
+		TOPIC_CONSUMER_GROUP_2_DELAY_THRESHOLD.put("leo_test_11111:leo1", 1 * 1000d);// for test
 	}
 
 	@Override
 	protected void doCheck(String transactionReportXml, Timespan timespan, CheckerResult result) throws Exception {
-		Map<String, List<Pair<Integer, Double>>> topic2DelayList = extractDelayDatasFromXml(transactionReportXml);
-		bizCheck(topic2DelayList, timespan, result);
+		Map<String, List<Pair<Integer, Double>>> topicConsumerGroup2DelayList = extractDelayDatasFromXml(transactionReportXml);
+		bizCheck(topicConsumerGroup2DelayList, timespan, result);
 	}
 
-	private void bizCheck(Map<String, List<Pair<Integer, Double>>> topic2DelayList, Timespan timespan,
+	private void bizCheck(Map<String, List<Pair<Integer, Double>>> topicConsumerGroup2DelayList, Timespan timespan,
 	      CheckerResult result) {
 
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-		for (Map.Entry<String, List<Pair<Integer, Double>>> entry : topic2DelayList.entrySet()) {
-			String topic = entry.getKey();
+		for (Map.Entry<String, List<Pair<Integer, Double>>> entry : topicConsumerGroup2DelayList.entrySet()) {
+			String topicConsumerGroup = entry.getKey();
 			List<Pair<Integer, Double>> delayList = entry.getValue();
 
-			if (TOPICS_2_DELAY_THRESHOLD.containsKey(topic)) {
+			if (TOPIC_CONSUMER_GROUP_2_DELAY_THRESHOLD.containsKey(topicConsumerGroup)) {
 				for (Pair<Integer, Double> pair : delayList) {
 					int minute = pair.getKey();
 					double delay = pair.getValue();
 
-					Double threshold = TOPICS_2_DELAY_THRESHOLD.get(topic);
+					Double threshold = TOPIC_CONSUMER_GROUP_2_DELAY_THRESHOLD.get(topicConsumerGroup);
 
 					if (timespan.getMinutes().contains(minute) && delay > threshold) {
 						ConsumeDelayTooLargeEvent monitorEvent = new ConsumeDelayTooLargeEvent();
-						monitorEvent.setTopic(topic);
-						monitorEvent.setDelay(delay);
+						String[] splits = topicConsumerGroup.split(":");
 
-						Calendar calendar = Calendar.getInstance();
-						calendar.setTime(timespan.getStartHour());
-						calendar.set(Calendar.MINUTE, minute);
-						calendar.set(Calendar.SECOND, 0);
+						if (splits != null && splits.length == 2) {
+							monitorEvent.setTopic(splits[0]);
+							monitorEvent.setConsumerGroup(splits[1]);
+							monitorEvent.setDelay(delay);
 
-						monitorEvent.setDate(sdf.format(calendar.getTime()));
-						result.addMonitorEvent(monitorEvent);
+							Calendar calendar = Calendar.getInstance();
+							calendar.setTime(timespan.getStartHour());
+							calendar.set(Calendar.MINUTE, minute);
+							calendar.set(Calendar.SECOND, 0);
+
+							monitorEvent.setDate(sdf.format(calendar.getTime()));
+							result.addMonitorEvent(monitorEvent);
+						}
 					}
 				}
 			}
