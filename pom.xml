@@ -172,6 +172,12 @@
 			</dependency>
 			<!--for test -->
 			<dependency>
+	            <groupId>org.springframework.boot</groupId>
+	            <artifactId>spring-boot-starter-test</artifactId>
+	            <version>1.2.7.RELEASE</version>
+	            <scope>test</scope>
+	        </dependency>
+			<dependency>
 				<groupId>org.dbunit</groupId>
 				<artifactId>dbunit</artifactId>
 				<version>2.5.1</version>

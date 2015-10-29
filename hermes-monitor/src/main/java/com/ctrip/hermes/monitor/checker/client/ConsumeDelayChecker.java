@@ -17,6 +17,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 import org.w3c.dom.Document;
@@ -24,6 +25,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeDelayTooLargeEvent;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
@@ -32,19 +36,33 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
  *
  */
 @Component(value = "ConsumeDelayChecker")
-public class ConsumeDelayChecker extends CatTransactionCrossReportBasedChecker {
+public class ConsumeDelayChecker extends CatBasedChecker implements InitializingBean {
 
 	private static final String CAT_TRANSACTION_TYPE = "Message.Consume.Latency";
 
 	// key: topic, value: threshold in millisecond
-	private static final Map<String, Double> TOPIC_CONSUMER_GROUP_2_DELAY_THRESHOLD = new HashMap<>();
+	private Map<String, Double> m_thresholds = new HashMap<>();
 
-	static {
-		TOPIC_CONSUMER_GROUP_2_DELAY_THRESHOLD.put("leo_test_11111:leo1", 1 * 1000d);// for test
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		String consumeDelayThresholds = m_config.getConsumeDelayThresholds();
+
+		if (!StringUtils.isBlank(consumeDelayThresholds)) {
+			Map<String, Double> configedThresholds = JSON.parseObject(consumeDelayThresholds,
+			      new TypeReference<Map<String, Double>>() {
+			      });
+			if (configedThresholds != null) {
+				m_thresholds.putAll(configedThresholds);
+			}
+		}
 	}
 
 	@Override
-	protected void doCheck(String transactionReportXml, Timespan timespan, CheckerResult result) throws Exception {
+	protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
+		String catReportUrl = m_config.getCatBaseUrl()
+		      + String.format(m_config.getCatCrossTransactionUrlPattern(), formatToCatUrlTime(timespan.getStartHour()),
+		            CAT_TRANSACTION_TYPE);
+		String transactionReportXml = curl(catReportUrl, m_config.getCatConnectTimeout(), m_config.getCatReadTimeout());
 		Map<String, List<Pair<Integer, Double>>> topicConsumerGroup2DelayList = extractDelayDatasFromXml(transactionReportXml);
 		bizCheck(topicConsumerGroup2DelayList, timespan, result);
 	}
@@ -58,12 +76,12 @@ public class ConsumeDelayChecker extends CatTransactionCrossReportBasedChecker {
 			String topicConsumerGroup = entry.getKey();
 			List<Pair<Integer, Double>> delayList = entry.getValue();
 
-			if (TOPIC_CONSUMER_GROUP_2_DELAY_THRESHOLD.containsKey(topicConsumerGroup)) {
+			if (m_thresholds.containsKey(topicConsumerGroup)) {
 				for (Pair<Integer, Double> pair : delayList) {
 					int minute = pair.getKey();
 					double delay = pair.getValue();
 
-					Double threshold = TOPIC_CONSUMER_GROUP_2_DELAY_THRESHOLD.get(topicConsumerGroup);
+					Double threshold = m_thresholds.get(topicConsumerGroup);
 
 					if (timespan.getMinutes().contains(minute) && delay > threshold) {
 						ConsumeDelayTooLargeEvent monitorEvent = new ConsumeDelayTooLargeEvent();
@@ -132,11 +150,6 @@ public class ConsumeDelayChecker extends CatTransactionCrossReportBasedChecker {
 	@Override
 	public String name() {
 		return "ConsumeDelayChecker";
-	}
-
-	@Override
-	protected String getTransactionType() {
-		return CAT_TRANSACTION_TYPE;
 	}
 
 }

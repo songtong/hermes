@@ -8,15 +8,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.http.client.fluent.Request;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ctrip.hermes.monitor.checker.Checker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class CatTransactionCrossReportBasedChecker implements Checker {
+public abstract class CatBasedChecker implements Checker {
 
 	private static final String CAT_DATE_PATTERN = "yyyyMMddkk";
 
@@ -25,6 +27,9 @@ public abstract class CatTransactionCrossReportBasedChecker implements Checker {
 	private static final int CAT_CONNECT_TIMEOUT = 10 * 1000;
 
 	private static final int CAT_READ_TIMEOUT = 30 * 1000;
+
+	@Autowired
+	protected MonitorConfig m_config;
 
 	public static class Timespan {
 		private Date m_startHour;
@@ -85,19 +90,20 @@ public abstract class CatTransactionCrossReportBasedChecker implements Checker {
 		return timespan;
 	}
 
-	protected String getCatTransactionCrossReport(Date startHour, String transactionType) throws IOException {
-		String uri = String.format(CAT_TRANSACTION_CROSS_REPORT_URL_PATTERN,
-		      new SimpleDateFormat(CAT_DATE_PATTERN).format(startHour), transactionType);
+	protected String formatToCatUrlTime(Date date) {
+		return new SimpleDateFormat(CAT_DATE_PATTERN).format(date);
+	}
 
+	protected String curl(String url, int connectTimeoutMillis, int readTimeoutMillis) throws IOException {
 		try {
-			return Request.Get(uri)//
-			      .connectTimeout(CAT_CONNECT_TIMEOUT)//
-			      .socketTimeout(CAT_READ_TIMEOUT)//
+			return Request.Get(url)//
+			      .connectTimeout(connectTimeoutMillis)//
+			      .socketTimeout(readTimeoutMillis)//
 			      .execute()//
 			      .returnContent()//
 			      .asString();
 		} catch (IOException e) {
-			throw new IOException(String.format("Failed to fetch data from cat(uri=%s)", uri), e);
+			throw new IOException(String.format("Failed to fetch data from url %s", url), e);
 		}
 	}
 
@@ -108,9 +114,7 @@ public abstract class CatTransactionCrossReportBasedChecker implements Checker {
 		try {
 			Timespan timespan = calTimespan(toDate, minutesBefore);
 
-			String transactionReportXml = getCatTransactionCrossReport(timespan.getStartHour(), getTransactionType());
-
-			doCheck(transactionReportXml, timespan, result);
+			doCheck(timespan, result);
 		} catch (Exception e) {
 			result.setRunSuccess(false);
 			result.setErrorMessage(e.getMessage());
@@ -120,9 +124,6 @@ public abstract class CatTransactionCrossReportBasedChecker implements Checker {
 		return result;
 	}
 
-	protected abstract String getTransactionType();
-
-	protected abstract void doCheck(String transactionReportXml, Timespan timespan, CheckerResult result)
-	      throws Exception;
+	protected abstract void doCheck(Timespan timespan, CheckerResult result) throws Exception;
 
 }
