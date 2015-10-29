@@ -67,10 +67,10 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 
 					if (isResultSuccess(result)) {
 						future.set(true);
+						sendMessageCommand.onResultReceived(result);
 					} else {
 						future.set(false);
 					}
-					sendMessageCommand.onResultReceived(result);
 					tracking(sendMessageCommand, true);
 				} catch (Exception e) {
 					log.warn("Exception occurred while calling resultReceived", e);

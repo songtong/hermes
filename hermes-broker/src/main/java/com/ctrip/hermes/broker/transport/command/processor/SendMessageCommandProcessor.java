@@ -28,6 +28,8 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.processor.SingleThreaded;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Event;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -84,7 +86,8 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 				final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
 				result.correlate(reqCmd);
 
-				FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx);
+				FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx,
+				      reqCmd.getTopic());
 
 				for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
 					MessageBatchWithRawData batch = entry.getValue();
@@ -144,9 +147,12 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 		private AtomicBoolean m_written = new AtomicBoolean(false);
 
-		public AppendMessageCompletionCallback(SendMessageResultCommand result, CommandProcessorContext ctx) {
+		private String m_topic;
+
+		public AppendMessageCompletionCallback(SendMessageResultCommand result, CommandProcessorContext ctx, String topic) {
 			m_result = result;
 			m_ctx = ctx;
+			m_topic = topic;
 		}
 
 		@Override
@@ -156,13 +162,21 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 			if (m_result.isAllResultsSet()) {
 				try {
 					if (m_written.compareAndSet(false, true)) {
+						logToCatIfHasError(m_result);
 						m_ctx.write(m_result);
 					}
 				} finally {
 					m_ctx.getCommand().release();
 				}
 			}
+		}
 
+		private void logToCatIfHasError(SendMessageResultCommand resultCmd) {
+			for (Boolean sendSuccess : resultCmd.getSuccesses().values()) {
+				if (!sendSuccess) {
+					Cat.logEvent("Message.Produce.Error", m_topic, Event.SUCCESS, "");
+				}
+			}
 		}
 
 		@Override
