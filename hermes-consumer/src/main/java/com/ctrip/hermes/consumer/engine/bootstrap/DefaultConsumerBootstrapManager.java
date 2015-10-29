@@ -20,12 +20,22 @@ public class DefaultConsumerBootstrapManager implements ConsumerBootstrapManager
 	private ConsumerBootstrapRegistry m_registry;
 
 	public ConsumerBootstrap findConsumerBootStrap(Topic topic) {
+		ConsumerBootstrap bootstrap = null;
+
 		if (Storage.KAFKA.equals(topic.getStorageType())) {
-			return m_registry.findConsumerBootstrap(Endpoint.KAFKA);
+			bootstrap = m_registry.findConsumerBootstrap(Endpoint.KAFKA);
 		} else if (Arrays.asList(Endpoint.BROKER, Endpoint.KAFKA).contains(topic.getEndpointType())) {
-			return m_registry.findConsumerBootstrap(topic.getEndpointType());
+			bootstrap = m_registry.findConsumerBootstrap(topic.getEndpointType());
 		} else {
 			throw new IllegalArgumentException(String.format("Unknown endpoint type: %s", topic.getEndpointType()));
+		}
+
+		if (bootstrap == null) {
+			throw new IllegalArgumentException(String.format(
+			      "No consumer bootstrap found for storage %s and endpoint %s, please check project dependencies.",
+			      topic.getStorageType(), topic.getEndpointType()));
+		} else {
+			return bootstrap;
 		}
 	}
 
