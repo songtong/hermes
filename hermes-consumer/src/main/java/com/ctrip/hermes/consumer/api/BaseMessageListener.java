@@ -93,7 +93,7 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 			long now = System.currentTimeMillis();
 			baseMsg.setOnMessageStartTimeMills(now);
 
-			Transaction latencyT = Cat.newTransaction("Message.Consume.Latency", msg.getTopic());
+			Transaction latencyT = Cat.newTransaction("Message.Consume.Latency", msg.getTopic() + ":" + m_groupId);
 			if (latencyT instanceof DefaultTransaction) {
 				((DefaultTransaction) latencyT).setDurationStart(baseMsg.getBornTime() * 1000000);
 			}
