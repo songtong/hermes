@@ -22,7 +22,7 @@ import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
 
 @Service
-public class ElasticSearchService {
+public class ESMonitorService {
 
 	public static final String DEFAULT_INDEX = "monitor";
 

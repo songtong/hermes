@@ -8,13 +8,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.action.index.IndexResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.monitor.Bootstrap;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
-import com.ctrip.hermes.monitor.service.ElasticSearchService;
+import com.ctrip.hermes.monitor.service.ESMonitorService;
 import com.ctrip.hermes.monitor.stat.StatResult;
 import com.ctrip.hermes.monitor.zabbix.ZabbixApiUtils;
 import com.ctrip.hermes.monitor.zabbix.ZabbixConst;
@@ -27,72 +32,40 @@ import com.zabbix4j.item.ItemObject;
 @Service
 public class KafkaMonitor {
 
+	private static final Logger logger = LoggerFactory.getLogger(KafkaMonitor.class);
+
 	public static void main(String[] args) throws ZabbixApiException, DalException {
-		KafkaMonitor monitor = new KafkaMonitor();
-		monitor.service = new ElasticSearchService();
-		monitor.monitorHourly();
+		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
+		KafkaMonitor kafkaMonitor = context.getBean(KafkaMonitor.class);
+		kafkaMonitor.monitorPastHours(4);
 	}
 
 	@Autowired
-	private ElasticSearchService service;
-
-	public void monitorDaily() throws ZabbixApiException {
-		Calendar cal = Calendar.getInstance();
-		cal.set(Calendar.HOUR_OF_DAY, 0);
-		cal.set(Calendar.MINUTE, 0);
-		cal.set(Calendar.SECOND, 0);
-		Date timeTill = cal.getTime();
-		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
-		Date timeFrom = cal.getTime();
-
-		Map<Integer, HostObject> kafkaHosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
-		statMessageIn(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
-		statByteIn(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
-		statByteOut(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
-		statFailedProduceRequests(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
-		statFailedFetchRequests(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
-		statRequestQueueSize(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
-		statRequestRateProduce(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
-		statRequestRateFetchConsumer(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
-		statRequestRateFetchFollower(timeFrom, timeTill, kafkaHosts);
-	}
+	private ESMonitorService service;
 
 	@Scheduled(cron = "0 5 * * * *")
-//	@Scheduled(fixedDelay = 60000)
 	public void monitorHourly() throws ZabbixApiException, DalException {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
 		Date timeTill = cal.getTime();
-		cal.set(Calendar.HOUR_OF_DAY, cal.get(Calendar.HOUR_OF_DAY) - 1);
+		cal.add(Calendar.HOUR_OF_DAY, -1);
 		Date timeFrom = cal.getTime();
 
+		monitorKafka(timeFrom, timeTill);
+	}
+
+	private void monitorKafka(Date timeFrom, Date timeTill) throws ZabbixApiException {
 		Map<Integer, HostObject> kafkaHosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
 		Map<Integer, StatResult> messageInStat = statMessageIn(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
 		Map<Integer, StatResult> byteInStat = statByteIn(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
 		Map<Integer, StatResult> byteOutStat = statByteOut(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
 		Map<Integer, StatResult> failedProduceRequestsStat = statFailedProduceRequests(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
 		Map<Integer, StatResult> failedFetchRequestsStat = statFailedFetchRequests(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
 		Map<Integer, StatResult> requestQueueSizeStat = statRequestQueueSize(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
 		Map<Integer, StatResult> requestRateProduceStat = statRequestRateProduce(timeFrom, timeTill, kafkaHosts);
-		System.out.format("******************************************************************\n");
 		Map<Integer, StatResult> requestRateFetchConsumerStat = statRequestRateFetchConsumer(timeFrom, timeTill,
 		      kafkaHosts);
-		System.out.format("******************************************************************\n");
 		Map<Integer, StatResult> requestRateFetchFollowerStat = statRequestRateFetchFollower(timeFrom, timeTill,
 		      kafkaHosts);
 
@@ -119,97 +92,39 @@ public class KafkaMonitor {
 			stat.put("FetchFollowerMeanBySec", requestRateFetchFollowerStat.get(hostid).getMean());
 
 			MonitorItem report = new MonitorItem();
-			report.setCategory("Kafka");
-			report.setSource("Zabbix");
+			report.setCategory(ZabbixConst.CATEGORY_KAFKA);
+			report.setSource(ZabbixConst.SOURCE_ZABBIX);
 			report.setStartDate(timeFrom);
 			report.setEndDate(timeTill);
 			report.setHost(kafkaHosts.get(hostid).getHost());
 			report.setValue(stat);
 
-			IndexResponse response;
 			try {
-				response = service.prepareIndex(report);
-				System.out.println(response.getId());
+				IndexResponse response = service.prepareIndex(report);
+				logger.info(response.getId());
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.warn("Save item failed", e);
 			}
-
 		}
 	}
 
-	private Map<Integer, StatResult> statRequestRateFetchFollower(Date timeFrom, Date timeTill,
-	      Map<Integer, HostObject> hosts) throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(),
-		      ZabbixConst.KAFKA_REQUEST_RATE_FETCHFOLLOWER);
-		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
-		long totalSum = 0;
-		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
-			StatResult validResult = new StatResult();
-			for (StatResult value : statResults.values()) {
-				if (value.getSum() > 0) {
-					validResult = value;
-					break;
-				}
-			}
-			result.put(hostid, validResult);
-			totalSum += (validResult.getSum() * 60);
-			System.out.format("%14s Fetch Follower(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)\n", hosts
-			      .get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean());
-		}
-		System.out.format("%14s Fetch Follower(%s - %s) %,15d \n", "Total", timeFrom, timeTill, totalSum);
-		return result;
-	}
+	public void monitorPastHours(int hours) throws ZabbixApiException, DalException {
+		for (int i = hours - 1; i >= 0; i--) {
+			Calendar cal = Calendar.getInstance();
+			cal.set(Calendar.MINUTE, 0);
+			cal.set(Calendar.SECOND, 0);
+			cal.add(Calendar.HOUR_OF_DAY, -i);
+			Date timeTill = cal.getTime();
+			cal.add(Calendar.HOUR_OF_DAY, -1);
+			Date timeFrom = cal.getTime();
 
-	private Map<Integer, StatResult> statRequestRateFetchConsumer(Date timeFrom, Date timeTill,
-	      Map<Integer, HostObject> hosts) throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(),
-		      ZabbixConst.KAFKA_REQUEST_RATE_FETCHCONSUMER);
-		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
-		long totalSum = 0;
-		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
-			StatResult validResult = new StatResult();
-			for (StatResult value : statResults.values()) {
-				if (value.getSum() > 0) {
-					validResult = value;
-					break;
-				}
-			}
-			result.put(hostid, validResult);
-			totalSum += (validResult.getSum() * 60);
-			System.out.format("%14s Fetch Consumer(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)\n", hosts
-			      .get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean());
-		}
-		System.out.format("%14s Fetch Consumer(%s - %s) %,15d \n", "Total", timeFrom, timeTill, totalSum);
-		return result;
-	}
+			monitorKafka(timeFrom, timeTill);
 
-	private Map<Integer, StatResult> statRequestRateProduce(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
-	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(),
-		      ZabbixConst.KAFKA_REQUEST_RATE_PRODUCE);
-		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
-		long totalSum = 0;
-		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
-			StatResult validResult = new StatResult();
-			for (StatResult value : statResults.values()) {
-				if (value.getSum() > 0) {
-					validResult = value;
-					break;
-				}
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
 			}
-			result.put(hostid, validResult);
-			totalSum += (validResult.getSum() * 60);
-			System.out.format("%14s Produce(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)\n", hosts
-			      .get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean());
 		}
-		System.out.format("%14s Produce(%s - %s) %,15d \n", "Total", timeFrom, timeTill, totalSum);
-		return result;
 	}
 
 	private Map<Integer, StatResult> statByteIn(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
@@ -229,10 +144,10 @@ public class KafkaMonitor {
 			}
 			result.put(hostid, validResult);
 			totalSum += (validResult.getSum() * 60);
-			System.out.format("%14s Bytes In(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)\n",
-			      hosts.get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean());
+			logger.info(String.format("%14s Bytes In(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)", hosts
+			      .get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean()));
 		}
-		System.out.format("%14s Bytes In(%s - %s) %,15d \n", "Total", timeFrom, timeTill, totalSum);
+		logger.info(String.format("%14s Bytes In(%s - %s) %,15d ", "Total", timeFrom, timeTill, totalSum));
 		return result;
 	}
 
@@ -253,10 +168,10 @@ public class KafkaMonitor {
 			}
 			result.put(hostid, validResult);
 			totalSum += (validResult.getSum() * 60);
-			System.out.format("%14s Bytes Out(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)\n",
-			      hosts.get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean());
+			logger.info(String.format("%14s Bytes Out(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)", hosts
+			      .get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean()));
 		}
-		System.out.format("%14s Bytes Out(%s - %s) %,15d \n", "Total", timeFrom, timeTill, totalSum);
+		logger.info(String.format("%14s Bytes Out(%s - %s) %,15d ", "Total", timeFrom, timeTill, totalSum));
 		return result;
 	}
 
@@ -278,10 +193,11 @@ public class KafkaMonitor {
 			}
 			result.put(hostid, validResult);
 			totalSum += validResult.getSum() * 60;
-			System.out.format("%14s Failed Fetch Request(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)\n",
-			      hosts.get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean());
+			logger.info(String.format(
+			      "%14s Failed Fetch Request(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)", hosts.get(hostid)
+			            .getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean()));
 		}
-		System.out.format("%14s Failed Fetch Request(%s - %s) %,15d \n", "Total", timeFrom, timeTill, totalSum);
+		logger.info(String.format("%14s Failed Fetch Request(%s - %s) %,15d ", "Total", timeFrom, timeTill, totalSum));
 		return result;
 	}
 
@@ -303,10 +219,11 @@ public class KafkaMonitor {
 			}
 			result.put(hostid, validResult);
 			totalSum += (validResult.getSum() * 60);
-			System.out.format("%14s Failed Produce Request(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)\n",
-			      hosts.get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean());
+			logger.info(String.format(
+			      "%14s Failed Produce Request(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)",
+			      hosts.get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean()));
 		}
-		System.out.format("%14s Failed Produce Request(%s - %s) %,12d \n", "Total", timeFrom, timeTill, totalSum);
+		logger.info(String.format("%14s Failed Produce Request(%s - %s) %,12d ", "Total", timeFrom, timeTill, totalSum));
 		return result;
 	}
 
@@ -328,10 +245,10 @@ public class KafkaMonitor {
 			}
 			result.put(hostid, validResult);
 			totalSum += (validResult.getSum() * 60);
-			System.out.format("%14s Message In(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)\n",
-			      hosts.get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean());
+			logger.info(String.format("%14s Message In(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)", hosts
+			      .get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean()));
 		}
-		System.out.format("%14s Message In(%s - %s) %,15d \n", "Total", timeFrom, timeTill, totalSum);
+		logger.info(String.format("%14s Message In(%s - %s) %,15d ", "Total", timeFrom, timeTill, totalSum));
 		return result;
 	}
 
@@ -353,10 +270,85 @@ public class KafkaMonitor {
 			}
 			result.put(hostid, validResult);
 			totalSum += validResult.getMean();
-			System.out.format("%14s Request Queue Size(%s - %s) %,9.0f(By Second) \n", hosts.get(hostid).getHost(),
-			      timeFrom, timeTill, validResult.getMean());
+			logger.info(String.format("%14s Request Queue Size(%s - %s) %,9.0f(By Second) ", hosts.get(hostid).getHost(),
+			      timeFrom, timeTill, validResult.getMean()));
 		}
-		System.out.format("%14s Request Queue Size(%s - %s) %,12d \n", "Total", timeFrom, timeTill, totalSum);
+		logger.info(String.format("%14s Request Queue Size(%s - %s) %,12d ", "Total", timeFrom, timeTill, totalSum));
+		return result;
+	}
+
+	private Map<Integer, StatResult> statRequestRateFetchConsumer(Date timeFrom, Date timeTill,
+	      Map<Integer, HostObject> hosts) throws ZabbixApiException {
+		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(),
+		      ZabbixConst.KAFKA_REQUEST_RATE_FETCHCONSUMER);
+		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
+		long totalSum = 0;
+		for (Integer hostid : hosts.keySet()) {
+			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			StatResult validResult = new StatResult();
+			for (StatResult value : statResults.values()) {
+				if (value.getSum() > 0) {
+					validResult = value;
+					break;
+				}
+			}
+			result.put(hostid, validResult);
+			totalSum += (validResult.getSum() * 60);
+			logger.info(String.format("%14s Fetch Consumer(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)",
+			      hosts.get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean()));
+		}
+		logger.info(String.format("%14s Fetch Consumer(%s - %s) %,15d ", "Total", timeFrom, timeTill, totalSum));
+		return result;
+	}
+
+	private Map<Integer, StatResult> statRequestRateFetchFollower(Date timeFrom, Date timeTill,
+	      Map<Integer, HostObject> hosts) throws ZabbixApiException {
+		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(),
+		      ZabbixConst.KAFKA_REQUEST_RATE_FETCHFOLLOWER);
+		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
+		long totalSum = 0;
+		for (Integer hostid : hosts.keySet()) {
+			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			StatResult validResult = new StatResult();
+			for (StatResult value : statResults.values()) {
+				if (value.getSum() > 0) {
+					validResult = value;
+					break;
+				}
+			}
+			result.put(hostid, validResult);
+			totalSum += (validResult.getSum() * 60);
+			logger.info(String.format("%14s Fetch Follower(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)",
+			      hosts.get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean()));
+		}
+		logger.info(String.format("%14s Fetch Follower(%s - %s) %,15d ", "Total", timeFrom, timeTill, totalSum));
+		return result;
+	}
+
+	private Map<Integer, StatResult> statRequestRateProduce(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
+	      throws ZabbixApiException {
+		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(),
+		      ZabbixConst.KAFKA_REQUEST_RATE_PRODUCE);
+		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
+		long totalSum = 0;
+		for (Integer hostid : hosts.keySet()) {
+			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			StatResult validResult = new StatResult();
+			for (StatResult value : statResults.values()) {
+				if (value.getSum() > 0) {
+					validResult = value;
+					break;
+				}
+			}
+			result.put(hostid, validResult);
+			totalSum += (validResult.getSum() * 60);
+			logger.info(String.format("%14s Produce(%s - %s) Sum: %,15.0f(By Minute), Mean: %,9.0f(By Second)",
+			      hosts.get(hostid).getHost(), timeFrom, timeTill, validResult.getSum() * 60, validResult.getMean()));
+		}
+		logger.info(String.format("%14s Produce(%s - %s) %,15d ", "Total", timeFrom, timeTill, totalSum));
 		return result;
 	}
 }
