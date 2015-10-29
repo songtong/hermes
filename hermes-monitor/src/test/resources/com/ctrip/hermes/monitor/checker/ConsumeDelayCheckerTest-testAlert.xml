@@ -11,7 +11,7 @@
 				line95Value="0.00" line99Value="0.00">
 				<successMessageUrl>710305-0a085a61-401672-3</successMessageUrl>
 				<slowestMessageUrl>51271-0a0f712f-401672-436279</slowestMessageUrl>
-				<name id="a.b.c" totalCount="1429" failCount="0" failPercent="0.00" min="0.00" max="40611.70"
+				<name id="a.b.c:group" totalCount="1429" failCount="0" failPercent="0.00" min="0.00" max="40611.70"
 					avg="726.4" sum="1037992.7" sum2="2742373619.2" std="1179.6" tps="0.00" line95Value="0.00" line99Value="0.00">
 					<successMessageUrl>710305-0a085a61-401672-3</successMessageUrl>
 					<slowestMessageUrl>710305-0a085a61-401672-33472</slowestMessageUrl>
@@ -89,7 +89,7 @@
 					<duration value="16384" count="1" />
 					<duration value="16" count="5" />
 				</name>
-				<name id="leo_test_11111" totalCount="1429" failCount="0" failPercent="0.00" min="0.00" max="40611.70"
+				<name id="leo_test_11111:leo1" totalCount="1429" failCount="0" failPercent="0.00" min="0.00" max="40611.70"
 					avg="726.4" sum="1037992.7" sum2="2742373619.2" std="1179.6" tps="0.00" line95Value="0.00" line99Value="0.00">
 					<successMessageUrl>710305-0a085a61-401672-3</successMessageUrl>
 					<slowestMessageUrl>710305-0a085a61-401672-33472</slowestMessageUrl>
