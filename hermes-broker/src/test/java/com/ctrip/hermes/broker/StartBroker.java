@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.test.jetty.JettyServer;
 
+import com.dianping.cat.Cat;
+
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
@@ -23,6 +25,7 @@ public class StartBroker extends JettyServer {
 
 	@Before
 	public void before() throws Exception {
+		Cat.initialize("cat.fws.qa.nt.ctripcorp.com");
 		String zkMode = System.getProperty("zkMode");
 		if (!"real".equalsIgnoreCase(zkMode)) {
 			try {
