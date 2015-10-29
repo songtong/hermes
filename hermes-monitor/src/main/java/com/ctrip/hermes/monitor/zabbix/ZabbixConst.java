@@ -1,23 +1,22 @@
 package com.ctrip.hermes.monitor.zabbix;
 
-
 public class ZabbixConst {
 
 	/**
 	 * Zabbix Group Name
 	 */
 	public static final String GROUP_NAME_KAFKA = "REALTIME-KAFKA";
-	
-	public static final String GROUP_NAME_HERMES_BROKER="hermesbroker";
-	
-	public static final String GROUP_NAME_HERMES_METASERVER="hermesmeteserver";
-	
-	public static final String GROUP_NAME_HERMES_PORTAL="hermesportal";
-	
-	public static final String GROUP_NAME_ZOOKEEPER="realtime-kafka-zk";
-	
+
+	public static final String GROUP_NAME_HERMES_BROKER = "hermesbroker";
+
+	public static final String GROUP_NAME_HERMES_METASERVER = "hermesmeteserver";
+
+	public static final String GROUP_NAME_HERMES_PORTAL = "hermesportal";
+
+	public static final String GROUP_NAME_ZOOKEEPER = "realtime-kafka-zk";
+
 	/**
-	 * Disk 
+	 * Disk
 	 */
 	public static final String DISK_FREE_PERCENTAGE = "Free disk space on $1 (percentage)";
 
@@ -42,4 +41,15 @@ public class ZabbixConst {
 
 	public static final String KAFKA_REQUEST_RATE_FETCHFOLLOWER = "Request rate (FetchFollower)";
 
+	/**
+	 * Category
+	 */
+	public static final String CATEGORY_KAFKA = "Kafka";
+
+	public static final String CATEGORY_DISK = "Disk";
+
+	/**
+	 * Source
+	 */
+	public static final String SOURCE_ZABBIX = "Zabbix";
 }

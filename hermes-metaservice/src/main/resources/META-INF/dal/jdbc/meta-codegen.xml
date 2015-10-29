@@ -80,47 +80,6 @@
       </query>
     </query-defs>
   </entity>
-  <entity name="monitor-report" table="monitor_report" alias="mr">
-    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
-    <member name="source" field="source" value-type="String" length="50" nullable="false" />
-    <member name="category" field="category" value-type="String" length="50" nullable="false" />
-    <member name="start" field="start" value-type="Date" nullable="false" />
-    <member name="end" field="end" value-type="Date" nullable="false" />
-    <member name="value" field="value" value-type="String" length="16777215" nullable="false" />
-    <member name="host" field="host" value-type="String" length="50" nullable="false" />
-    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
-    <var name="key-id" value-type="int" key-member="id" />
-    <primary-key name="PRIMARY" members="id" />
-    <readsets>
-      <readset name="FULL" all="true" />
-    </readsets>
-    <updatesets>
-      <updateset name="FULL" all="true" />
-    </updatesets>
-    <query-defs>
-      <query name="find-by-PK" type="SELECT">
-        <param name="key-id" />
-        <statement><![CDATA[SELECT <FIELDS/>
-        FROM <TABLE/>
-        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
-      </query>
-      <query name="insert" type="INSERT">
-        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
-        VALUES(<VALUES/>)]]></statement>
-      </query>
-      <query name="update-by-PK" type="UPDATE">
-        <param name="key-id" />
-        <statement><![CDATA[UPDATE <TABLE/>
-        SET <FIELDS/>
-        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
-      </query>
-      <query name="delete-by-PK" type="DELETE">
-        <param name="key-id" />
-        <statement><![CDATA[DELETE FROM <TABLE/>
-        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
-      </query>
-    </query-defs>
-  </entity>
   <entity name="schema" table="schema" alias="s">
     <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
     <member name="name" field="name" value-type="String" length="500" nullable="false" />

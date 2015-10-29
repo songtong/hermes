@@ -108,23 +108,5 @@
 			</query>
 		</query-defs>
 	</entity>
-	<entity name="monitor-report">
-		<query-defs>
-			<query name="findExistingReport" type="SELECT">
-				<param name="source" />
-				<param name="category" />
-				<param name="start" />
-				<param name="end" />
-				<param name="host" />
-				<statement><![CDATA[SELECT <FIELDS/>
-		FROM <TABLES/>
-		WHERE <FIELD name='source'/> = ${source} 
-		AND   <FIELD name='category'/> = ${category}
-		AND   <FIELD name='start'/> = ${start}
-		AND   <FIELD name='end'/> = ${end}
-		AND   <FIELD name='host'/> = ${host} ]]></statement>
-			</query>
-		</query-defs>
-	</entity>
 </entities>
 
