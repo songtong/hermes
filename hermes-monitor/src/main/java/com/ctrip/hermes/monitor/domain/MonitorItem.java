@@ -16,6 +16,8 @@ public class MonitorItem {
 	private Map<String, Object> value;
 
 	private String host;
+	
+	private String group;
 
 	public String getCategory() {
 		return category;
@@ -64,4 +66,13 @@ public class MonitorItem {
 	public void setValue(Map<String, Object> value) {
 		this.value = value;
 	}
+
+	public String getGroup() {
+	   return group;
+   }
+
+	public void setGroup(String group) {
+	   this.group = group;
+   }
+
 }

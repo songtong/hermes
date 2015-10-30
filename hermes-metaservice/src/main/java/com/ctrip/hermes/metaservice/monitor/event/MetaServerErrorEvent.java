@@ -1,22 +1,24 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
-import com.ctrip.hermes.metaservice.model.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
-public class MetaServerErrorEvent extends BaseMonitorEvent {
+public class MetaServerErrorEvent extends ServerErrorEvent {
 
 	public MetaServerErrorEvent() {
-		super(MonitorEventType.METASERVER_ERROR);
+		this(null, -1);
+	}
+
+	public MetaServerErrorEvent(String host, long errorCount) {
+		super(MonitorEventType.METASERVER_ERROR, host, errorCount);
 	}
 
 	@Override
-	protected void parse0(MonitorEvent dbEntity) {
-
+	public String toString() {
+		return "MetaServerErrorEvent [m_host=" + getHost() + ", m_errorCount=" + getErrorCount() + "]";
 	}
 
 	@Override
-	protected void toDBEntity0(MonitorEvent e) {
-
+	String getMessageFormat() {
+		return "[%s] Broker %s has got %s times error.";
 	}
-
 }

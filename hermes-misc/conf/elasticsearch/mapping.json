@@ -1,0 +1,229 @@
+{
+    "monitor": {
+        "mappings": {
+            "Cpu": {
+                "properties": {
+                    "category": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "group": {
+                        "type": "string"
+                    },
+                    "host": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "value": {
+                        "properties": {
+                            "cpu.iowaittime": {
+                                "type": "double"
+                            },
+                            "cpu.ratioloadofprocessor": {
+                                "type": "double"
+                            },
+                            "cpu.systemtime": {
+                                "type": "double"
+                            },
+                            "cpu.usertime": {
+                                "type": "double"
+                            }
+                        }
+                    }
+                }
+            },
+            "Disk": {
+                "properties": {
+                    "category": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "group": {
+                        "type": "string"
+                    },
+                    "host": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "value": {
+                        "properties": {
+                            "vfs.fs.size[/,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/boot,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data01,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data02,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data03,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data04,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data05,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data06,pfree]": {
+                                "type": "double"
+                            }
+                        }
+                    }
+                }
+            },
+            "Zookeeper": {
+                "properties": {
+                    "category": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "group": {
+                        "type": "string"
+                    },
+                    "host": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "value": {
+                        "properties": {
+                            "zk.aliveconnectioncount": {
+                                "type": "double"
+                            },
+                            "zk.avglatency": {
+                                "type": "long"
+                            },
+                            "zk.ephemeralscount": {
+                                "type": "long"
+                            },
+                            "zk.maxlatency": {
+                                "type": "long"
+                            },
+                            "zk.openfdcount": {
+                                "type": "double"
+                            },
+                            "zk.outstandingrequests": {
+                                "type": "double"
+                            },
+                            "zk.watchcount": {
+                                "type": "long"
+                            },
+                            "zk.znodecount": {
+                                "type": "long"
+                            }
+                        }
+                    }
+                }
+            },
+            "Kafka": {
+                "properties": {
+                    "category": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "group": {
+                        "type": "string"
+                    },
+                    "host": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "value": {
+                        "properties": {
+                            "kafka.bytein.meanbysec": {
+                                "type": "double"
+                            },
+                            "kafka.bytein.sumbymin": {
+                                "type": "double"
+                            },
+                            "kafka.byteout.meanbysec": {
+                                "type": "double"
+                            },
+                            "kafka.byteout.sumbymin": {
+                                "type": "double"
+                            },
+                            "kafka.failedfetchrequest.meanbysec": {
+                                "type": "long"
+                            },
+                            "kafka.failedfetchrequest.sumbymin": {
+                                "type": "long"
+                            },
+                            "kafka.failedproducerequest.meanbysec": {
+                                "type": "long"
+                            },
+                            "kafka.failedproducerequest.sumbymin": {
+                                "type": "long"
+                            },
+                            "kafka.fetchconsumer.meanbysec": {
+                                "type": "double"
+                            },
+                            "kafka.fetchconsumer.sumbymin": {
+                                "type": "double"
+                            },
+                            "kafka.fetchfollower.meanbysec": {
+                                "type": "double"
+                            },
+                            "kafka.fetchfollower.sumbymin": {
+                                "type": "long"
+                            },
+                            "kafka.messagein.meanbysec": {
+                                "type": "double"
+                            },
+                            "kafka.messagein.sumbymin": {
+                                "type": "double"
+                            },
+                            "kafka.produce.meanbysec": {
+                                "type": "double"
+                            },
+                            "kafka.produce.sumbymin": {
+                                "type": "long"
+                            },
+                            "kafka.requestqueuesize.meanbysec": {
+                                "type": "double"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

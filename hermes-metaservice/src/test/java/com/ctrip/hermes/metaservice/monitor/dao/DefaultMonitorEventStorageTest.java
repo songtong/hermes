@@ -27,7 +27,7 @@ public class DefaultMonitorEventStorageTest extends ComponentTestCase {
 	@Test
 	public void testAddAndCheckMonitorEvent() throws Exception {
 		for (int i = 0; i < 10; i++) {
-			m_storage.addMonitorEvent(new BrokerErrorEvent().broker(String.valueOf(i)));
+			m_storage.addMonitorEvent(new BrokerErrorEvent("127.0.0.1", 10));
 		}
 		List<MonitorEvent> l = m_storage.fetchUnnotifiedMonitorEvent(false);
 		for (MonitorEvent e : l) {
