@@ -1,4 +1,4 @@
-package com.ctrip.hermes.monitor.kafka;
+package com.ctrip.hermes.monitor.service;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -18,12 +18,11 @@ import org.springframework.stereotype.Service;
 import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.monitor.Bootstrap;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
-import com.ctrip.hermes.monitor.service.ESMonitorService;
 import com.ctrip.hermes.monitor.stat.StatResult;
-import com.ctrip.hermes.monitor.zabbix.ZabbixApiUtils;
+import com.ctrip.hermes.monitor.zabbix.ZabbixApiGateway;
 import com.ctrip.hermes.monitor.zabbix.ZabbixConst;
-import com.ctrip.hermes.monitor.zabbix.ZabbixStatUtils;
 import com.zabbix4j.ZabbixApiException;
 import com.zabbix4j.history.HistoryObject.HISOTRY_OBJECT_TYPE;
 import com.zabbix4j.host.HostObject;
@@ -37,21 +36,29 @@ public class DiskMonitor {
 
 	public static void main(String[] args) throws ZabbixApiException, DalException {
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
-		DiskMonitor diskMonitor = context.getBean(DiskMonitor.class);
-		diskMonitor.monitorPastHours(4);
+		DiskMonitor monitor = context.getBean(DiskMonitor.class);
+		monitor.monitorPastHours(1, 5);
+		context.close();
 	}
 
 	@Autowired
 	private ESMonitorService service;
 
+	@Autowired
+	private ZabbixApiGateway zabbixApi;
+
+	@Autowired
+	private MonitorConfig config;
+
 	public Map<Integer, Map<String, Double>> monitorCurrent() throws ZabbixApiException {
-		Map<Integer, HostObject> hosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(), ZabbixConst.DISK_FREE_PERCENTAGE);
+		Map<Integer, HostObject> hosts = zabbixApi.searchHostsByName(config.getZabbixKafkaBrokerHosts());
+		Map<Integer, List<ItemObject>> ids = zabbixApi
+		      .searchItemsByName(hosts.keySet(), ZabbixConst.DISK_FREE_PERCENTAGE);
 		Map<Integer, Map<String, Double>> result = new HashMap<Integer, Map<String, Double>>();
 
 		for (Integer hostid : hosts.keySet()) {
 			logger.info(String.format("%30s", hosts.get(hostid).getHost()));
-			Map<Integer, Result> items = ZabbixStatUtils.getItems(hostid, ids.get(hostid));
+			Map<Integer, Result> items = zabbixApi.getItems(hostid, ids.get(hostid));
 			Map<String, Double> diskFreeValue = new HashMap<String, Double>();
 			for (Map.Entry<Integer, Result> item : items.entrySet()) {
 				logger.info(String.format("%30s\t%5.2f%%", item.getValue().getKey_(),
@@ -63,12 +70,13 @@ public class DiskMonitor {
 		return result;
 	}
 
-	private void monitorDisk(Date timeFrom, Date timeTill) throws ZabbixApiException {
-		Map<Integer, HostObject> hosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItems(hosts.keySet(), ZabbixConst.DISK_FREE_PERCENTAGE);
+	private void monitorDisk(Date timeFrom, Date timeTill, String group, String[] hostNames) throws ZabbixApiException {
+		Map<Integer, HostObject> hosts = zabbixApi.searchHostsByName(hostNames);
+		Map<Integer, List<ItemObject>> ids = zabbixApi
+		      .searchItemsByName(hosts.keySet(), ZabbixConst.DISK_FREE_PERCENTAGE);
 
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> history = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			Map<Integer, StatResult> history = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
 			      HISOTRY_OBJECT_TYPE.FLOAT);
 			logger.info(String.format("%30s %s-%s ", hosts.get(hostid).getHost(), timeFrom, timeTill));
 			Map<String, Object> stat = new HashMap<String, Object>();
@@ -83,11 +91,12 @@ public class DiskMonitor {
 			}
 
 			MonitorItem item = new MonitorItem();
-			item.setCategory("Disk");
-			item.setSource("Zabbix");
+			item.setCategory(ZabbixConst.CATEGORY_DISK);
+			item.setSource(ZabbixConst.SOURCE_ZABBIX);
 			item.setStartDate(timeFrom);
 			item.setEndDate(timeTill);
 			item.setHost(hosts.get(hostid).getHost());
+			item.setGroup(group);
 			item.setValue(stat);
 
 			try {
@@ -108,10 +117,14 @@ public class DiskMonitor {
 		cal.add(Calendar.HOUR_OF_DAY, -1);
 		Date timeFrom = cal.getTime();
 
-		monitorDisk(timeFrom, timeTill);
+		monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_MYSQL_BROKER, config.getZabbixMysqlBrokerHosts());
+		monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_METASERVER, config.getZabbixMetaserverHosts());
+		monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_PORTAL, config.getZabbixPortalHosts());
+		monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_KAFKA_BROKER, config.getZabbixKafkaBrokerHosts());
+		monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_ZOOKEEPER, config.getZabbixZookeeperHosts());
 	}
 
-	public void monitorPastHours(int hours) throws ZabbixApiException, DalException {
+	public void monitorPastHours(int hours, int requestIntervalSecond) throws ZabbixApiException, DalException {
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);
@@ -121,10 +134,13 @@ public class DiskMonitor {
 			cal.add(Calendar.HOUR_OF_DAY, -1);
 			Date timeFrom = cal.getTime();
 
-			monitorDisk(timeFrom, timeTill);
-
+			monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_MYSQL_BROKER, config.getZabbixMysqlBrokerHosts());
+			monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_METASERVER, config.getZabbixMetaserverHosts());
+			monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_PORTAL, config.getZabbixPortalHosts());
+			monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_KAFKA_BROKER, config.getZabbixKafkaBrokerHosts());
+			monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_ZOOKEEPER, config.getZabbixZookeeperHosts());
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(requestIntervalSecond * 1000);
 			} catch (InterruptedException e) {
 			}
 		}

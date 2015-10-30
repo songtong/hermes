@@ -3,22 +3,35 @@ package com.ctrip.hermes.monitor.zabbix;
 public class ZabbixConst {
 
 	/**
-	 * Zabbix Group Name
+	 * Group
 	 */
-	public static final String GROUP_NAME_KAFKA = "REALTIME-KAFKA";
+	public static final String GROUP_KAFKA_BROKER = "KafkaBroker";
 
-	public static final String GROUP_NAME_HERMES_BROKER = "hermesbroker";
+	public static final String GROUP_MYSQL_BROKER = "MysqlBroker";
 
-	public static final String GROUP_NAME_HERMES_METASERVER = "hermesmeteserver";
+	public static final String GROUP_METASERVER = "MetaServer";
 
-	public static final String GROUP_NAME_HERMES_PORTAL = "hermesportal";
+	public static final String GROUP_PORTAL = "Portal";
 
-	public static final String GROUP_NAME_ZOOKEEPER = "realtime-kafka-zk";
+	public static final String GROUP_ZOOKEEPER = "Zookeeper";
 
 	/**
 	 * Disk
 	 */
 	public static final String DISK_FREE_PERCENTAGE = "Free disk space on $1 (percentage)";
+
+	/**
+	 * CPU
+	 */
+	public static final String CPU_PROCESSOR_LOAD = "Processor load (avg1)";
+
+	public static final String CPU_USER_TIME = "system.cpu.util[,user]";
+
+	public static final String CPU_SYSTEM_TIME = "system.cpu.util[,system]";
+
+	public static final String CPU_IOWAIT_TIME = "system.cpu.util[,iowait]";
+
+	public static final String CPU_RATIO_OF_CPU_LOAD_AND_CPU_NUMBER = "The ratio of cpu load and cpu number";
 
 	/**
 	 * Kafka
@@ -42,11 +55,34 @@ public class ZabbixConst {
 	public static final String KAFKA_REQUEST_RATE_FETCHFOLLOWER = "Request rate (FetchFollower)";
 
 	/**
+	 * ZK
+	 */
+	public static final String ZK_ZNODE_COUNT = "zk_znode_count";
+
+	public static final String ZK_WATCH_COUNT = "zk_watch_count";
+
+	public static final String ZK_OUTSTANDING_REQUESTS = "zk_outstanding_requests";
+
+	public static final String ZK_OPEN_FD_COUNT = "zk_open_file_descriptor_count";
+
+	public static final String ZK_NUM_ALIVE_CONNECTIONS = "zk_num_alive_connections";
+
+	public static final String ZK_MAX_LATENCY = "zk_max_latency";
+
+	public static final String ZK_EPHEMERALS_COUNT = "zk_ephemerals_count";
+
+	public static final String ZK_AVG_LATENCY = "zk_avg_latency";
+
+	/**
 	 * Category
 	 */
 	public static final String CATEGORY_KAFKA = "Kafka";
 
 	public static final String CATEGORY_DISK = "Disk";
+
+	public static final String CATEGORY_CPU = "Cpu";
+
+	public static final String CATEGORY_ZK = "Zookeeper";
 
 	/**
 	 * Source
