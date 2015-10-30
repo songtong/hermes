@@ -2,6 +2,8 @@ package com.ctrip.hermes.monitor.service;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -9,22 +11,40 @@ import javax.annotation.PreDestroy;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.ctrip.hermes.monitor.checker.server.ServerCheckerConstans;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
 
 @Service
 public class ESMonitorService {
 
+	private static final Logger log = LoggerFactory.getLogger(ESMonitorService.class);
+
 	public static final String DEFAULT_INDEX = "monitor";
+
+	private static final String QUERY_AGG_NAME = "hermes-agg";
 
 	private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHH");
 	static {
@@ -39,7 +59,7 @@ public class ESMonitorService {
 	@PostConstruct
 	private void postConstruct() {
 		Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", config.getEsClusterName()).build();
-		client = new TransportClient(settings).addTransportAddresses();
+		client = new TransportClient(settings);
 		String[] esTransportAddress = config.getEsTransportAddress();
 		for (int i = 0; i < esTransportAddress.length; i++) {
 			String[] split = esTransportAddress[i].split(":");
@@ -69,5 +89,63 @@ public class ESMonitorService {
 		sb.append(item.getHost()).append('_').append(item.getSource()).append('_').append(item.getCategory()).append('_')
 		      .append(formatter.format(item.getStartDate()));
 		return sb.toString();
+	}
+
+	// *********************** FOR ES QUERY *********************** //
+
+	public Map<String, Long> queryBrokerErrorCount(long from, long to) {
+		ESQueryContext ctx = new ESQueryContext();
+
+		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_BROKER);
+		ctx.setIndex(ServerCheckerConstans.ES_INDEX);
+		ctx.setFrom(from);
+		ctx.setTo(to);
+		ctx.setGroupSchema("host.raw");
+		ctx.setKeyWord("ERROR");
+		ctx.setQuerySchema("message");
+
+		return queryCountInTimeRange(ctx);
+	}
+
+	public Map<String, Long> queryMetaserverErrorCount(long from, long to) {
+		ESQueryContext ctx = new ESQueryContext();
+
+		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_METASERVER);
+		ctx.setIndex(ServerCheckerConstans.ES_INDEX);
+		ctx.setFrom(from);
+		ctx.setTo(to);
+		ctx.setGroupSchema("host.raw");
+		ctx.setKeyWord("ERROR");
+		ctx.setQuerySchema("message");
+
+		return queryCountInTimeRange(ctx);
+	}
+
+	private Map<String, Long> queryCountInTimeRange(ESQueryContext ctx) {
+
+		String query = String.format("_type:%s AND %s:%s", ctx.getDocumentType(), ctx.getQuerySchema(), ctx.getKeyWord());
+
+		QueryBuilder qb = QueryBuilders.queryStringQuery(query);
+		FilterBuilder fb = FilterBuilders.rangeFilter("@timestamp").from(ctx.getFrom()).to(ctx.getTo());
+		TermsBuilder tb = new TermsBuilder(QUERY_AGG_NAME).field(ctx.getGroupSchema());
+
+		SearchRequestBuilder sb = client.prepareSearch(ctx.getIndex());
+		sb.setTypes(ctx.getDocumentType());
+		sb.setSearchType(SearchType.COUNT);
+		sb.setQuery(QueryBuilders.filteredQuery(qb, fb));
+		sb.addAggregation(tb);
+
+		SearchResponse sr = sb.execute().actionGet();
+
+		Map<String, Long> map = new HashMap<String, Long>();
+		if (RestStatus.OK.equals(sr.status())) {
+			for (Bucket bucket : ((StringTerms) sr.getAggregations().get(QUERY_AGG_NAME)).getBuckets()) {
+				map.put(bucket.getKey(), bucket.getDocCount());
+			}
+			return map;
+		}
+
+		log.warn("Elastic clusters response error: {}", sr.status());
+		throw new RuntimeException(String.format("Elastic clusters response error: %s", sr.status()));
 	}
 }
