@@ -36,7 +36,7 @@ public class KafkaMonitor {
 	public static void main(String[] args) throws ZabbixApiException, DalException {
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		KafkaMonitor monitor = context.getBean(KafkaMonitor.class);
-		monitor.monitorPastHours(1);
+		monitor.monitorPastHours(24 * 2, 5);
 		context.close();
 	}
 
@@ -45,10 +45,10 @@ public class KafkaMonitor {
 
 	@Autowired
 	private ZabbixApiGateway zabbixApi;
-	
+
 	@Autowired
 	private MonitorConfig config;
-	
+
 	@Scheduled(cron = "0 5 * * * *")
 	public void monitorHourly() throws ZabbixApiException, DalException {
 		Calendar cal = Calendar.getInstance();
@@ -79,23 +79,24 @@ public class KafkaMonitor {
 
 		for (Integer hostid : kafkaHosts.keySet()) {
 			Map<String, Object> stat = new HashMap<String, Object>();
-			stat.put("MessageInSumByMin", messageInStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
-			stat.put("MessageInMeanBySec", messageInStat.get(hostid).getMean());
-			stat.put("ByteInSumByMin", byteInStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
-			stat.put("ByteInMeanBySec", byteInStat.get(hostid).getMean());
-			stat.put("ByteOutSumByMin", byteOutStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
-			stat.put("ByteOutMeanBySec", byteOutStat.get(hostid).getMean());
-			stat.put("FailedProduceRequestSumByMin", failedProduceRequestsStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
-			stat.put("FailedProduceRequestMeanBySec", failedProduceRequestsStat.get(hostid).getMean());
-			stat.put("FailedFetchRequestSumByMin", failedFetchRequestsStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
-			stat.put("FailedFetchRequestMeanBySec", failedFetchRequestsStat.get(hostid).getMean());
-			stat.put("RequestQueueSizeMeanBySec", requestQueueSizeStat.get(hostid).getMean());
-			stat.put("ProduceSumByMin", requestRateProduceStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
-			stat.put("ProduceMeanBySec", requestRateProduceStat.get(hostid).getMean());
-			stat.put("FetchConsumerSumByMin", requestRateFetchConsumerStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
-			stat.put("FetchConsumerMeanBySec", requestRateFetchConsumerStat.get(hostid).getMean());
-			stat.put("FetchFollowerSumByMin", requestRateFetchFollowerStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
-			stat.put("FetchFollowerMeanBySec", requestRateFetchFollowerStat.get(hostid).getMean());
+			stat.put("kafka.messagein.sumbymin", messageInStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
+			stat.put("kafka.messagein.meanbysec", messageInStat.get(hostid).getMean());
+			stat.put("kafka.bytein.sumbymin", byteInStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
+			stat.put("kafka.bytein.meanbysec", byteInStat.get(hostid).getMean());
+			stat.put("kafka.byteout.sumbymin", byteOutStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
+			stat.put("kafka.byteout.meanbysec", byteOutStat.get(hostid).getMean());
+			stat.put("kafka.failedproducerequest.sumbymin", failedProduceRequestsStat.get(hostid).getSum()
+			      * MINUTE_IN_SECONDS);
+			stat.put("kafka.failedproducerequest.meanbysec", failedProduceRequestsStat.get(hostid).getMean());
+			stat.put("kafka.failedfetchrequest.sumbymin", failedFetchRequestsStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
+			stat.put("kafka.failedfetchrequest.meanbysec", failedFetchRequestsStat.get(hostid).getMean());
+			stat.put("kafka.requestqueuesize.meanbysec", requestQueueSizeStat.get(hostid).getMean());
+			stat.put("kafka.produce.sumbymin", requestRateProduceStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
+			stat.put("kafka.produce.meanbysec", requestRateProduceStat.get(hostid).getMean());
+			stat.put("kafka.fetchconsumer.sumbymin", requestRateFetchConsumerStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
+			stat.put("kafka.fetchconsumer.meanbysec", requestRateFetchConsumerStat.get(hostid).getMean());
+			stat.put("kafka.fetchfollower.sumbymin", requestRateFetchFollowerStat.get(hostid).getSum() * MINUTE_IN_SECONDS);
+			stat.put("kafka.fetchfollower.meanbysec", requestRateFetchFollowerStat.get(hostid).getMean());
 
 			MonitorItem item = new MonitorItem();
 			item.setCategory(ZabbixConst.CATEGORY_KAFKA);
@@ -115,7 +116,7 @@ public class KafkaMonitor {
 		}
 	}
 
-	public void monitorPastHours(int hours) throws ZabbixApiException, DalException {
+	public void monitorPastHours(int hours, int requestIntervalSecond) throws ZabbixApiException, DalException {
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);
@@ -128,7 +129,7 @@ public class KafkaMonitor {
 			monitorKafka(timeFrom, timeTill);
 
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(requestIntervalSecond * 1000);
 			} catch (InterruptedException e) {
 			}
 		}
@@ -140,8 +141,8 @@ public class KafkaMonitor {
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
 				if (value.getSum() > 0) {
@@ -164,8 +165,8 @@ public class KafkaMonitor {
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
 				if (value.getSum() > 0) {
@@ -189,8 +190,8 @@ public class KafkaMonitor {
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
 				if (value.getSum() > 0) {
@@ -215,8 +216,8 @@ public class KafkaMonitor {
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
 				if (value.getSum() > 0) {
@@ -236,13 +237,13 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statMessageIn(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
 	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = zabbixApi
-		      .searchItemsByName(hosts.keySet(), ZabbixConst.KAFKA_MESSAGE_IN_RATE);
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(),
+		      ZabbixConst.KAFKA_MESSAGE_IN_RATE);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
 				if (value.getSum() > 0) {
@@ -266,8 +267,8 @@ public class KafkaMonitor {
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
 				if (value.getMean() > 0) {
@@ -291,8 +292,8 @@ public class KafkaMonitor {
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
 				if (value.getSum() > 0) {
@@ -316,8 +317,8 @@ public class KafkaMonitor {
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
 				if (value.getSum() > 0) {
@@ -341,8 +342,8 @@ public class KafkaMonitor {
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
-			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
 				if (value.getSum() > 0) {

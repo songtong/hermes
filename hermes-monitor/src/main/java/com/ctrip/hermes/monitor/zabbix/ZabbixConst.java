@@ -3,7 +3,7 @@ package com.ctrip.hermes.monitor.zabbix;
 public class ZabbixConst {
 
 	/**
-	 * Zabbix Group Name
+	 * Group
 	 */
 	public static final String GROUP_KAFKA_BROKER = "KafkaBroker";
 
@@ -55,6 +55,25 @@ public class ZabbixConst {
 	public static final String KAFKA_REQUEST_RATE_FETCHFOLLOWER = "Request rate (FetchFollower)";
 
 	/**
+	 * ZK
+	 */
+	public static final String ZK_ZNODE_COUNT = "zk_znode_count";
+
+	public static final String ZK_WATCH_COUNT = "zk_watch_count";
+
+	public static final String ZK_OUTSTANDING_REQUESTS = "zk_outstanding_requests";
+
+	public static final String ZK_OPEN_FD_COUNT = "zk_open_file_descriptor_count";
+
+	public static final String ZK_NUM_ALIVE_CONNECTIONS = "zk_num_alive_connections";
+
+	public static final String ZK_MAX_LATENCY = "zk_max_latency";
+
+	public static final String ZK_EPHEMERALS_COUNT = "zk_ephemerals_count";
+
+	public static final String ZK_AVG_LATENCY = "zk_avg_latency";
+
+	/**
 	 * Category
 	 */
 	public static final String CATEGORY_KAFKA = "Kafka";
@@ -62,6 +81,8 @@ public class ZabbixConst {
 	public static final String CATEGORY_DISK = "Disk";
 
 	public static final String CATEGORY_CPU = "Cpu";
+
+	public static final String CATEGORY_ZK = "Zookeeper";
 
 	/**
 	 * Source

@@ -1,7 +1,6 @@
 package com.ctrip.hermes.monitor.service;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -55,14 +54,14 @@ public class CPUMonitor {
 		Map<Integer, StatResult> cpuUserTime = statCPUUserTime(timeFrom, timeTill, hosts);
 		Map<Integer, StatResult> cpuSystemTime = statCPUSystemTime(timeFrom, timeTill, hosts);
 		Map<Integer, StatResult> cpuIOWaitTime = statCPUIOWaitTime(timeFrom, timeTill, hosts);
-		Map<Integer, StatResult> cpuRatioLoadOfNumber = statCPURatioLoadOfNumber(timeFrom, timeTill, hosts);
+		Map<Integer, StatResult> cpuRatioLoadOfProcessor = statCPURatioLoadOfNumber(timeFrom, timeTill, hosts);
 
 		for (Integer hostid : hosts.keySet()) {
 			Map<String, Object> stat = new HashMap<String, Object>();
-			stat.put("CPUUserTime", cpuUserTime.get(hostid).getMean());
-			stat.put("CPUSystemTime", cpuSystemTime.get(hostid).getMean());
-			stat.put("CPUIOWaitTime", cpuIOWaitTime.get(hostid).getMean());
-			stat.put("CPURaioLoadOfNumber", cpuRatioLoadOfNumber.get(hostid).getMean());
+			stat.put("cpu.usertime", cpuUserTime.get(hostid).getMean());
+			stat.put("cpu.systemtime", cpuSystemTime.get(hostid).getMean());
+			stat.put("cpu.iowaittime", cpuIOWaitTime.get(hostid).getMean());
+			stat.put("cpu.ratioloadofprocessor", cpuRatioLoadOfProcessor.get(hostid).getMean());
 
 			MonitorItem item = new MonitorItem();
 			item.setCategory(ZabbixConst.CATEGORY_CPU);
