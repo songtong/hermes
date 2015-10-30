@@ -20,13 +20,16 @@ public class MonitorConfig {
 	@Value("${cat.cross.transaction.url.pattern:/cat/r/t?op=graphs&domain=All&date=%s&ip=All&type=%s&forceDownload=xml}")
 	private String catCrossTransactionUrlPattern;
 
+	@Value("${cat.event.url.pattern:/cat/r/e?op=graphs&domain=%s&date=%s&type=%s&ip=All&forceDownload=xml}")
+	private String catEventUrlPattern;
+
 	@Value("${cat.connect.timeout:10000}")
 	private int catConnectTimeout;
 
 	@Value("${cat.read.timeout:30000}")
 	private int catReadTimeout;
 
-	@Value("${produce.latency.checker.excluded.topics:All}")
+	@Value("${produce.latency.checker.excluded.topics:[\"All\"]}")
 	private String produceLatencyCheckerExcludedTopics;
 
 	@Value("${produce.latency.checker.threshold:1000}")
@@ -34,6 +37,12 @@ public class MonitorConfig {
 
 	@Value("${consume.delay.checker.thresholds:{}}")
 	private String consumeDelayThresholds;
+
+	@Value("${produce.failure.checker.excluded.topics:[\"All\"]}")
+	private String produceFailureCheckerExcludedTopics;
+
+	@Value("${produce.failure.checker.threshold:10}")
+	private int produceFailureCountThreshold;
 
 	public String getEsClusterName() {
 		return esClusterName;
@@ -105,6 +114,30 @@ public class MonitorConfig {
 
 	public void setConsumeDelayThresholds(String consumeDelayThresholds) {
 		this.consumeDelayThresholds = consumeDelayThresholds;
+	}
+
+	public String getProduceFailureCheckerExcludedTopics() {
+		return produceFailureCheckerExcludedTopics;
+	}
+
+	public void setProduceFailureCheckerExcludedTopics(String produceFailureCheckerExcludedTopics) {
+		this.produceFailureCheckerExcludedTopics = produceFailureCheckerExcludedTopics;
+	}
+
+	public String getCatEventUrlPattern() {
+		return catEventUrlPattern;
+	}
+
+	public void setCatEventUrlPattern(String catEventUrlPattern) {
+		this.catEventUrlPattern = catEventUrlPattern;
+	}
+
+	public int getProduceFailureCountThreshold() {
+		return produceFailureCountThreshold;
+	}
+
+	public void setProduceFailureCountThreshold(int produceFailureCountThreshold) {
+		this.produceFailureCountThreshold = produceFailureCountThreshold;
 	}
 
 }

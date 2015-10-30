@@ -28,23 +28,25 @@ import org.xml.sax.SAXException;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.utils.StringUtils;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
+import com.ctrip.hermes.metaservice.monitor.event.ProduceFailureCountTooLargeEvent;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Component(value = "ProducerLatencyChecker")
-public class ProduceLatencyChecker extends CatBasedChecker implements InitializingBean {
+@Component(value = "ProduceFailureChecker")
+public class ProduceFailureChecker extends CatBasedChecker implements InitializingBean {
 
-	private static final String CAT_TRANSACTION_TYPE = "Message.Produce.Elapse";
+	private static final String CAT_DOMAIN = "hermes";
+
+	private static final String CAT_TRANSACTION_TYPE = "Message.Produce.Error";
 
 	private List<String> m_excludedTopics = new LinkedList<>();
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		String excludedTopicsStr = m_config.getProduceLatencyCheckerExcludedTopics();
+		String excludedTopicsStr = m_config.getProduceFailureCheckerExcludedTopics();
 		if (!StringUtils.isBlank(excludedTopicsStr)) {
 			List<String> configedExcludedTopics = JSON.parseObject(excludedTopicsStr, new TypeReference<List<String>>() {
 			});
@@ -57,31 +59,31 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 	@Override
 	protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
 		String catReportUrl = m_config.getCatBaseUrl()
-		      + String.format(m_config.getCatCrossTransactionUrlPattern(), formatToCatUrlTime(timespan.getStartHour()),
+		      + String.format(m_config.getCatEventUrlPattern(), CAT_DOMAIN, formatToCatUrlTime(timespan.getStartHour()),
 		            CAT_TRANSACTION_TYPE);
 		String transactionReportXml = curl(catReportUrl, m_config.getCatConnectTimeout(), m_config.getCatReadTimeout());
-		Map<String, List<Pair<Integer, Double>>> topic2LatencyList = extractLatencyDatasFromXml(transactionReportXml);
-		bizCheck(topic2LatencyList, timespan, result);
+		Map<String, List<Pair<Integer, Integer>>> topic2FailureCountList = extractFailureCountFromXml(transactionReportXml);
+		bizCheck(topic2FailureCountList, timespan, result);
 	}
 
-	private void bizCheck(Map<String, List<Pair<Integer, Double>>> topic2LatencyList, Timespan timespan,
+	private void bizCheck(Map<String, List<Pair<Integer, Integer>>> topic2FailureCountList, Timespan timespan,
 	      CheckerResult result) {
 
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-		for (Map.Entry<String, List<Pair<Integer, Double>>> entry : topic2LatencyList.entrySet()) {
+		for (Map.Entry<String, List<Pair<Integer, Integer>>> entry : topic2FailureCountList.entrySet()) {
 			String topic = entry.getKey();
-			List<Pair<Integer, Double>> latencyList = entry.getValue();
+			List<Pair<Integer, Integer>> failureCountList = entry.getValue();
 
 			if (!m_excludedTopics.contains(topic)) {
-				for (Pair<Integer, Double> pair : latencyList) {
+				for (Pair<Integer, Integer> pair : failureCountList) {
 					int minute = pair.getKey();
-					double latency = pair.getValue();
+					int failureCount = pair.getValue();
 
-					if (timespan.getMinutes().contains(minute) && latency > m_config.getProduceLatencyThreshold()) {
-						ProduceLatencyTooLargeEvent monitorEvent = new ProduceLatencyTooLargeEvent();
+					if (timespan.getMinutes().contains(minute) && failureCount >= m_config.getProduceFailureCountThreshold()) {
+						ProduceFailureCountTooLargeEvent monitorEvent = new ProduceFailureCountTooLargeEvent();
 						monitorEvent.setTopic(topic);
-						monitorEvent.setLatency(latency);
+						monitorEvent.setFailureCount(failureCount);
 
 						Calendar calendar = Calendar.getInstance();
 						calendar.setTime(timespan.getStartHour());
@@ -98,9 +100,9 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 		result.setRunSuccess(true);
 	}
 
-	private Map<String, List<Pair<Integer, Double>>> extractLatencyDatasFromXml(String xmlContent) throws SAXException,
+	private Map<String, List<Pair<Integer, Integer>>> extractFailureCountFromXml(String xmlContent) throws SAXException,
 	      IOException, ParserConfigurationException, XPathExpressionException {
-		Map<String, List<Pair<Integer, Double>>> topic2LatencyList = new HashMap<>();
+		Map<String, List<Pair<Integer, Integer>>> topic2FailureCountList = new HashMap<>();
 
 		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -108,8 +110,8 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
-		String allTransactionsExpression = "/transaction/report/machine[@ip='All']/type[@id='" + CAT_TRANSACTION_TYPE
-		      + "']/name";
+		String allTransactionsExpression = "/event/report[@domain='" + CAT_DOMAIN + "']/machine[@ip='All']/type[@id='"
+		      + CAT_TRANSACTION_TYPE + "']/name";
 
 		NodeList transactionNodes = (NodeList) xPath.compile(allTransactionsExpression).evaluate(doc,
 		      XPathConstants.NODESET);
@@ -118,7 +120,7 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 			Node transactionNode = transactionNodes.item(i);
 
 			String topic = transactionNode.getAttributes().getNamedItem("id").getNodeValue();
-			topic2LatencyList.put(topic, new LinkedList<Pair<Integer, Double>>());
+			topic2FailureCountList.put(topic, new LinkedList<Pair<Integer, Integer>>());
 
 			String allRangesExpression = "range";
 
@@ -127,18 +129,19 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 
 			for (int j = 0; j < rangeNodes.getLength(); j++) {
 				Node rangeNode = rangeNodes.item(j);
-				String avgStr = rangeNode.getAttributes().getNamedItem("avg").getNodeValue();
+				String countStr = rangeNode.getAttributes().getNamedItem("count").getNodeValue();
 				String minuteStr = rangeNode.getAttributes().getNamedItem("value").getNodeValue();
-				topic2LatencyList.get(topic).add(
-				      new Pair<Integer, Double>(Integer.parseInt(minuteStr), Double.parseDouble(avgStr)));
+				topic2FailureCountList.get(topic).add(
+				      new Pair<Integer, Integer>(Integer.parseInt(minuteStr), Integer.parseInt(countStr)));
 			}
 		}
 
-		return topic2LatencyList;
+		return topic2FailureCountList;
 	}
 
 	@Override
 	public String name() {
-		return "ProducerLatencyChecker";
+		return "ProduceFailureChecker";
 	}
+
 }

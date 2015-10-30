@@ -1,0 +1,170 @@
+<event>
+	<report domain="hermes" startTime="2015-10-30 11:00:00" endTime="2015-10-30 11:59:59">
+		<domain>1</domain>
+		<domain>2</domain>
+		<domain>3</domain>
+		<ip>10.1.1.1</ip>
+		<ip>10.1.1.2</ip>
+		<machine ip="All">
+			<type id="Reboot" totalCount="9" failCount="0" failPercent="0.00" tps="0.00">
+				<successMessageUrl>hermes-0a020753-401715-10269</successMessageUrl>
+				<name id="10.2.7.83" totalCount="1" failCount="0" failPercent="0.00" tps="0.00">
+					<successMessageUrl>hermes-0a020753-401715-10269</successMessageUrl>
+					<range value="23" count="1" fails="0" />
+				</name>
+				<name id="All" totalCount="9" failCount="0" failPercent="0.00" tps="0.00">
+					<successMessageUrl>hermes-0a020753-401715-10269</successMessageUrl>
+					<range value="23" count="2" fails="0" />
+					<range value="22" count="1" fails="0" />
+					<range value="28" count="1" fails="0" />
+					<range value="29" count="1" fails="0" />
+					<range value="31" count="1" fails="0" />
+					<range value="32" count="1" fails="0" />
+					<range value="33" count="1" fails="0" />
+					<range value="34" count="1" fails="0" />
+				</name>
+				<name id="10.2.7.84" totalCount="2" failCount="0" failPercent="0.00" tps="0.00">
+					<successMessageUrl>hermes-0a020754-401715-10275</successMessageUrl>
+					<range value="22" count="1" fails="0" />
+					<range value="23" count="1" fails="0" />
+				</name>
+				<name id="10.32.21.2" totalCount="6" failCount="0" failPercent="0.00" tps="0.00">
+					<successMessageUrl>hermes-0a201502-401715-10002</successMessageUrl>
+					<range value="28" count="1" fails="0" />
+					<range value="29" count="1" fails="0" />
+					<range value="31" count="1" fails="0" />
+					<range value="32" count="1" fails="0" />
+					<range value="33" count="1" fails="0" />
+					<range value="34" count="1" fails="0" />
+				</name>
+			</type>
+			<type id="Exception" totalCount="1108" failCount="1108" failPercent="100.00" tps="0.31">
+				<failMessageUrl>hermes-0a201502-401715-10003</failMessageUrl>
+				<name id="java.net.ConnectException" totalCount="8" failCount="8" failPercent="100.00" tps="0.00">
+					<failMessageUrl>hermes-0a201502-401715-10003</failMessageUrl>
+					<range value="28" count="1" fails="1" />
+					<range value="29" count="1" fails="1" />
+					<range value="31" count="1" fails="1" />
+					<range value="32" count="1" fails="1" />
+					<range value="33" count="1" fails="1" />
+					<range value="34" count="2" fails="2" />
+					<range value="35" count="1" fails="1" />
+				</name>
+				<name id="All" totalCount="1108" failCount="1108" failPercent="100.00" tps="0.31">
+					<failMessageUrl>hermes-0a201502-401715-10003</failMessageUrl>
+					<range value="28" count="1" fails="1" />
+					<range value="29" count="1" fails="1" />
+					<range value="31" count="1" fails="1" />
+					<range value="32" count="301" fails="301" />
+					<range value="33" count="1" fails="1" />
+					<range value="34" count="596" fails="596" />
+					<range value="35" count="207" fails="207" />
+				</name>
+				<name id="java.sql.BatchUpdateException" totalCount="1100" failCount="1100" failPercent="100.00" tps="0.31">
+					<failMessageUrl>hermes-0a201502-401715-30028</failMessageUrl>
+					<range value="32" count="300" fails="300" />
+					<range value="34" count="594" fails="594" />
+					<range value="35" count="206" fails="206" />
+				</name>
+			</type>
+			<type id="URL" totalCount="516" failCount="0" failPercent="0.00" tps="0.14">
+				<successMessageUrl>hermes-0a201502-401715-10005</successMessageUrl>
+				<name id="URL.client" totalCount="258" failCount="0" failPercent="0.00" tps="0.07">
+					<successMessageUrl>hermes-0a201502-401715-10005</successMessageUrl>
+					<range value="29" count="23" fails="0" />
+					<range value="31" count="2" fails="0" />
+					<range value="32" count="81" fails="0" />
+					<range value="34" count="111" fails="0" />
+					<range value="35" count="41" fails="0" />
+				</name>
+				<name id="All" totalCount="516" failCount="0" failPercent="0.00" tps="0.14">
+					<successMessageUrl>hermes-0a201502-401715-10005</successMessageUrl>
+					<range value="29" count="46" fails="0" />
+					<range value="31" count="4" fails="0" />
+					<range value="32" count="162" fails="0" />
+					<range value="34" count="222" fails="0" />
+					<range value="35" count="82" fails="0" />
+				</name>
+				<name id="URL.method" totalCount="258" failCount="0" failPercent="0.00" tps="0.07">
+					<successMessageUrl>hermes-0a201502-401715-10005</successMessageUrl>
+					<range value="29" count="23" fails="0" />
+					<range value="31" count="2" fails="0" />
+					<range value="32" count="81" fails="0" />
+					<range value="34" count="111" fails="0" />
+					<range value="35" count="41" fails="0" />
+				</name>
+			</type>
+			<type id="Message.Produce.Error" totalCount="1100" failCount="0" failPercent="0.00" tps="0.31">
+				<successMessageUrl>hermes-0a201502-401715-30028</successMessageUrl>
+				<name id="order_new" totalCount="1100" failCount="0" failPercent="0.00" tps="0.31">
+					<successMessageUrl>hermes-0a201502-401715-30028</successMessageUrl>
+					<range value="0" count="1" fails="0" />
+					<range value="1" count="1" fails="0" />
+					<range value="2" count="1" fails="0" />
+					<range value="3" count="0" fails="0" />
+					<range value="4" count="20" fails="0" />
+					<range value="5" count="0" fails="0" />
+					<range value="6" count="2" fails="0" />
+					<range value="7" count="9" fails="0" />
+					<range value="8" count="2" fails="0" />
+					<range value="9" count="18" fails="0" />
+					<range value="10" count="88" fails="0" />
+					<range value="11" count="0" fails="0" />
+					<range value="12" count="198" fails="0" />
+					<range value="13" count="21" fails="0" />
+					<range value="14" count="43" fails="0" />
+					<range value="15" count="54" fails="0" />
+					<range value="16" count="77" fails="0" />
+					<range value="17" count="65" fails="0" />
+					<range value="18" count="34" fails="0" />
+					<range value="19" count="111" fails="0" />
+					<range value="20" count="23" fails="0" />
+					<range value="21" count="43" fails="0" />
+					<range value="23" count="4" fails="0" />
+					<range value="24" count="6" fails="0" />
+					<range value="25" count="43" fails="0" />
+					<range value="26" count="2" fails="0" />
+					<range value="27" count="4" fails="0" />
+					<range value="28" count="5" fails="0" />
+					<range value="29" count="0" fails="0" />
+					<range value="30" count="123" fails="0" />
+					<range value="31" count="1" fails="0" />
+					<range value="32" count="0" fails="0" />
+					<range value="33" count="9" fails="0" />
+					<range value="34" count="0" fails="0" />
+					<range value="35" count="8" fails="0" />
+					<range value="36" count="22" fails="0" />
+					<range value="37" count="7003" fails="0" />
+					<range value="38" count="6983" fails="0" />
+					<range value="39" count="6987" fails="0" />
+					<range value="40" count="6990" fails="0" />
+					<range value="41" count="6985" fails="0" />
+					<range value="42" count="7075" fails="0" />
+					<range value="43" count="6751" fails="0" />
+					<range value="44" count="7066" fails="0" />
+					<range value="45" count="7035" fails="0" />
+					<range value="46" count="7013" fails="0" />
+					<range value="47" count="7041" fails="0" />
+					<range value="48" count="6778" fails="0" />
+					<range value="49" count="6962" fails="0" />
+					<range value="50" count="7002" fails="0" />
+					<range value="51" count="7004" fails="0" />
+					<range value="52" count="6991" fails="0" />
+					<range value="53" count="6944" fails="0" />
+					<range value="54" count="7037" fails="0" />
+					<range value="55" count="6968" fails="0" />
+					<range value="56" count="7041" fails="0" />
+					<range value="57" count="7057" fails="0" />
+					<range value="58" count="6900" fails="0" />
+					<range value="59" count="6862" fails="0" />
+				</name>
+				<name id="All" totalCount="1100" failCount="0" failPercent="0.00" tps="0.31">
+					<successMessageUrl>hermes-0a201502-401715-30028</successMessageUrl>
+					<range value="32" count="300" fails="0" />
+					<range value="34" count="594" fails="0" />
+					<range value="35" count="206" fails="0" />
+				</name>
+			</type>
+		</machine>
+	</report>
+</event>
