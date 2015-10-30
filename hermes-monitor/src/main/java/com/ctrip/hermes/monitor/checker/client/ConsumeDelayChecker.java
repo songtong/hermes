@@ -118,7 +118,7 @@ public class ConsumeDelayChecker extends CatBasedChecker implements Initializing
 
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
-		String allTransactionsExpression = "/transaction/report/machine[@ip='All']/type[@id='" + CAT_TRANSACTION_TYPE
+		String allTransactionsExpression = "/transaction/report[@domain='All']/machine[@ip='All']/type[@id='" + CAT_TRANSACTION_TYPE
 		      + "']/name";
 
 		NodeList transactionNodes = (NodeList) xPath.compile(allTransactionsExpression).evaluate(doc,

@@ -44,6 +44,18 @@ public class MonitorConfig {
 	@Value("${produce.failure.checker.threshold:10}")
 	private int produceFailureCountThreshold;
 
+	@Value("${produce.ackedtriedratio.checker.excluded.topics:[\"All\"]}")
+	private String produceAckedTriedRatioCheckerExcludedTopics;
+
+	@Value("${meta.rest.url:http://meta.hermes.fx.ctripcorp.com/meta}")
+	private String metaRestUrl;
+
+	@Value("${produce.acktriedratio.checker.noproducetried.acked.threshold:100}")
+	private int produceAckedTriedRatioAckedCountThresholdWhileNoProduceTried;
+
+	@Value("${produce.acktriedratio.checker.threshold:0.3}")
+	private double produceAckedTriedRatioThreshold;
+
 	@Value("${zabbix.kafka.broker.hosts}")
 	private String[] zabbixKafkaBrokerHosts;
 
@@ -153,6 +165,39 @@ public class MonitorConfig {
 
 	public void setProduceFailureCountThreshold(int produceFailureCountThreshold) {
 		this.produceFailureCountThreshold = produceFailureCountThreshold;
+	}
+
+	public String getProduceAckedTriedRatioCheckerExcludedTopics() {
+		return produceAckedTriedRatioCheckerExcludedTopics;
+	}
+
+	public void setProduceAckedTriedRatioCheckerExcludedTopics(String produceAckedTriedRatioCheckerExcludedTopics) {
+		this.produceAckedTriedRatioCheckerExcludedTopics = produceAckedTriedRatioCheckerExcludedTopics;
+	}
+
+	public String getMetaRestUrl() {
+		return metaRestUrl;
+	}
+
+	public void setMetaRestUrl(String metaRestUrl) {
+		this.metaRestUrl = metaRestUrl;
+	}
+
+	public int getProduceAckedTriedRatioAckedCountThresholdWhileNoProduceTried() {
+		return produceAckedTriedRatioAckedCountThresholdWhileNoProduceTried;
+	}
+
+	public void setProduceAckedTriedRatioAckedCountThresholdWhileNoProduceTried(
+	      int produceAckedTriedRatioAckedCountThresholdWhileNoProduceTried) {
+		this.produceAckedTriedRatioAckedCountThresholdWhileNoProduceTried = produceAckedTriedRatioAckedCountThresholdWhileNoProduceTried;
+	}
+
+	public double getProduceAckedTriedRatioThreshold() {
+		return produceAckedTriedRatioThreshold;
+	}
+
+	public void setProduceAckedTriedRatioThreshold(double produceAckedTriedRatioThreshold) {
+		this.produceAckedTriedRatioThreshold = produceAckedTriedRatioThreshold;
 	}
 
 	public String[] getZabbixZookeeperHosts() {

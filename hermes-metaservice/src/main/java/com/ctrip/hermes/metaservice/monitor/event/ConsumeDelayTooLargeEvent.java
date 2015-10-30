@@ -71,7 +71,7 @@ public class ConsumeDelayTooLargeEvent extends BaseMonitorEvent {
 		e.setKey2(m_consumerGroup);
 		e.setKey3(m_date);
 		e.setKey4(Double.toString(m_delay));
-		e.setMessage(String.format("[%s]Consumer group %s of topic %s consume delay too large(delay=%sms).", m_date,
+		e.setMessage(String.format("[%s]Consumer group %s of topic %s consume delay(delay=%sms).", m_date,
 		      m_consumerGroup, m_topic, m_delay));
 	}
 
