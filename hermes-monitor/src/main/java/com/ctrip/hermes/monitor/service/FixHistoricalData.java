@@ -17,6 +17,8 @@ public class FixHistoricalData {
 		cpuMonitor.monitorPastHours(hours, interval);
 		DiskMonitor diskMonitor = context.getBean(DiskMonitor.class);
 		diskMonitor.monitorPastHours(hours, interval);
+		MemoryMonitor memoryMonitor = context.getBean(MemoryMonitor.class);
+		memoryMonitor.monitorPastHours(hours, interval);
 		KafkaMonitor kafkaMonitor = context.getBean(KafkaMonitor.class);
 		kafkaMonitor.monitorPastHours(hours, interval);
 		ZKMonitor zkMonitor = context.getBean(ZKMonitor.class);

@@ -49,7 +49,7 @@ public class ZKMonitor {
 	@Autowired
 	private MonitorConfig config;
 
-	@Scheduled(cron = "0 6 * * * *")
+	@Scheduled(cron = "0 7 * * * *")
 	public void monitorHourly() throws ZabbixApiException, DalException {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
