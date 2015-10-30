@@ -16,7 +16,7 @@ public class ProduceFailureCountTooLargeEvent extends BaseMonitorEvent {
 	}
 
 	public ProduceFailureCountTooLargeEvent(String topic, String date, int failureCount) {
-		super(MonitorEventType.PRODUCE_LARGE_LATENCY);
+		super(MonitorEventType.PRODUCE_LARGE_FAILURE_COUNT);
 		m_topic = topic;
 		m_date = date;
 		m_failureCount = failureCount;
@@ -58,7 +58,7 @@ public class ProduceFailureCountTooLargeEvent extends BaseMonitorEvent {
 		e.setKey1(m_topic);
 		e.setKey2(m_date);
 		e.setKey3(Integer.toString(m_failureCount));
-		e.setMessage(String.format("[%s]Topic %s has too many send error(errorCOunt=%s).", m_date, m_topic,
+		e.setMessage(String.format("[%s]Topic %s has too many send error(errorCount=%s).", m_date, m_topic,
 		      m_failureCount));
 	}
 

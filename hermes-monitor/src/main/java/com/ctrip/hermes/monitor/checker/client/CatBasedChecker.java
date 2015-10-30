@@ -22,12 +22,6 @@ public abstract class CatBasedChecker implements Checker {
 
 	private static final String CAT_DATE_PATTERN = "yyyyMMddkk";
 
-	private static final String CAT_TRANSACTION_CROSS_REPORT_URL_PATTERN = "http://cat.ctripcorp.com/cat/r/t?op=graphs&domain=All&date=%s&ip=All&type=%s&forceDownload=xml";
-
-	private static final int CAT_CONNECT_TIMEOUT = 10 * 1000;
-
-	private static final int CAT_READ_TIMEOUT = 30 * 1000;
-
 	@Autowired
 	protected MonitorConfig m_config;
 

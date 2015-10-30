@@ -5,6 +5,7 @@ import com.ctrip.hermes.metaservice.monitor.event.BrokerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeDelayTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MetaServerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
+import com.ctrip.hermes.metaservice.monitor.event.ProduceAckedTriedRatioErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceFailureCountTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
 
@@ -14,7 +15,7 @@ public enum MonitorEventType {
 
 	PRODUCE_LARGE_LATENCY(3, "produce_large_latency", ProduceLatencyTooLargeEvent.class), //
 	PRODUCE_LARGE_FAILURE_COUNT(4, "produce_large_failure_count", ProduceFailureCountTooLargeEvent.class), //
-	PRODUCE_HIGH_RESEND_RATIO(5, null, null), //
+	PRODUCE_ACKED_TRIED_RATIO_ERROR(5, "produce_acked_tried_ratio_error", ProduceAckedTriedRatioErrorEvent.class), //
 
 	CONSUME_LARGE_DELAY(6, "consume_large_delay", ConsumeDelayTooLargeEvent.class), //
 	CONSUME_LARGE_BACKLOG(7, null, null), //
