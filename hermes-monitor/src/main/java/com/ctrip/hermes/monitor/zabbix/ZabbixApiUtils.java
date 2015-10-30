@@ -66,10 +66,12 @@ public class ZabbixApiUtils {
 		return zabbixApi;
 	}
 
-	public static Map<Integer, HostObject> searchHosts(String hostGroup) throws ZabbixApiException {
+	public static Map<Integer, HostObject> searchHosts(String... hostGroup) throws ZabbixApiException {
 		HostgroupGetRequest grequest = new HostgroupGetRequest();
 		Filter filter = grequest.getParams().newFilter();
-		filter.addName(hostGroup);
+		for (String group : hostGroup) {
+			filter.addName(group);
+		}
 		grequest.getParams().setFilter(filter);
 
 		ZabbixApi zabbixApi = ZabbixApiUtils.getZabbixApiInstance();
@@ -90,7 +92,7 @@ public class ZabbixApiUtils {
 		return result;
 	}
 
-	public static Map<Integer, List<ItemObject>> searchItems(Collection<Integer> hostids, String searchName)
+	public static Map<Integer, List<ItemObject>> searchItemsByName(Collection<Integer> hostids, String searchName)
 	      throws ZabbixApiException {
 		ItemGetRequest request = new ItemGetRequest();
 		List<Integer> hostidList = new ArrayList<Integer>();
@@ -114,10 +116,37 @@ public class ZabbixApiUtils {
 		return result;
 	}
 
+	public static Map<Integer, List<ItemObject>> searchItemsByKey(Collection<Integer> hostids, String keyName)
+	      throws ZabbixApiException {
+		ItemGetRequest request = new ItemGetRequest();
+		List<Integer> hostidList = new ArrayList<Integer>();
+		hostidList.addAll(hostids);
+		request.getParams().setHostids(hostidList);
+		Map<String, String> search = new HashMap<String, String>();
+		search.put("key_", keyName);
+		request.getParams().setSearch(search);
+
+		ZabbixApi zabbixApi = ZabbixApiUtils.getZabbixApiInstance();
+		ItemGetResponse response = zabbixApi.item().get(request);
+
+		Map<Integer, List<ItemObject>> result = new HashMap<Integer, List<ItemObject>>();
+		for (com.zabbix4j.item.ItemGetResponse.Result r : response.getResult()) {
+			if (!result.containsKey(r.getHostid())) {
+				result.put(r.getHostid(), new ArrayList<ItemObject>());
+			}
+			List<ItemObject> ids = result.get(r.getHostid());
+			ids.add(r);
+		}
+		return result;
+	}
+
 	public static void main(String[] args) throws ZabbixApiException {
-		Map<Integer, HostObject> hosts = searchHosts(ZabbixConst.GROUP_NAME_KAFKA);
-		System.out.println(hosts);
-		Map<Integer, List<ItemObject>> items = searchItems(hosts.keySet(), ZabbixConst.KAFKA_MESSAGE_IN_RATE);
-		System.out.println(items);
+		List<String> groups = Arrays.asList(ZabbixConst.GROUP_KAFKA_BROKER, ZabbixConst.GROUP_ZOOKEEPER,
+		      ZabbixConst.GROUP_MYSQL_BROKER, ZabbixConst.GROUP_METASERVER,
+		      ZabbixConst.GROUP_PORTAL);
+		for (String group : groups) {
+			Map<Integer, HostObject> hosts = searchHosts(group);
+			System.out.println(hosts);
+		}
 	}
 }

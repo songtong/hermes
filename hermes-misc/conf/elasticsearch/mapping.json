@@ -1,0 +1,193 @@
+{
+    "monitor": {
+        "mappings": {
+            "Cpu": {
+                "properties": {
+                    "category": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "endDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "group": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "group_not_analyzed": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    },
+                    "host": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "source": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "startDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "value": {
+                        "properties": {
+                            "CPUIOWaitTime": {
+                                "type": "double"
+                            },
+                            "CPURaioLoadOfNumber": {
+                                "type": "double"
+                            },
+                            "CPUSystemTime": {
+                                "type": "double"
+                            },
+                            "CPUUserTime": {
+                                "type": "double"
+                            }
+                        }
+                    }
+                }
+            },
+            "Disk": {
+                "properties": {
+                    "category": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "endDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "group": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "host": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "source": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "startDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "value": {
+                        "properties": {
+                            "vfs.fs.size[/,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/boot,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data01,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data02,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data03,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data04,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data05,pfree]": {
+                                "type": "double"
+                            },
+                            "vfs.fs.size[/data06,pfree]": {
+                                "type": "double"
+                            }
+                        }
+                    }
+                }
+            },
+            "Kafka": {
+                "properties": {
+                    "category": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "endDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "group": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "host": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "source": {
+                        "type": "string",
+						"index": "not_analyzed"
+                    },
+                    "startDate": {
+                        "type": "date",
+                        "format": "dateOptionalTime"
+                    },
+                    "value": {
+                        "properties": {
+                            "ByteInMeanBySec": {
+                                "type": "double"
+                            },
+                            "ByteInSumByMin": {
+                                "type": "double"
+                            },
+                            "ByteOutMeanBySec": {
+                                "type": "double"
+                            },
+                            "ByteOutSumByMin": {
+                                "type": "double"
+                            },
+                            "FailedFetchRequestMeanBySec": {
+                                "type": "long"
+                            },
+                            "FailedFetchRequestSumByMin": {
+                                "type": "long"
+                            },
+                            "FailedProduceRequestMeanBySec": {
+                                "type": "long"
+                            },
+                            "FailedProduceRequestSumByMin": {
+                                "type": "long"
+                            },
+                            "FetchConsumerMeanBySec": {
+                                "type": "double"
+                            },
+                            "FetchConsumerSumByMin": {
+                                "type": "double"
+                            },
+                            "FetchFollowerMeanBySec": {
+                                "type": "double"
+                            },
+                            "FetchFollowerSumByMin": {
+                                "type": "long"
+                            },
+                            "MessageInMeanBySec": {
+                                "type": "double"
+                            },
+                            "MessageInSumByMin": {
+                                "type": "double"
+                            },
+                            "ProduceMeanBySec": {
+                                "type": "double"
+                            },
+                            "ProduceSumByMin": {
+                                "type": "long"
+                            },
+                            "RequestQueueSizeMeanBySec": {
+                                "type": "double"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
