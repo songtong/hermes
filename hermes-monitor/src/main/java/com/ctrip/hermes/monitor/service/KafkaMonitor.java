@@ -18,11 +18,11 @@ import org.springframework.stereotype.Service;
 import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.monitor.Bootstrap;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
 import com.ctrip.hermes.monitor.stat.StatResult;
-import com.ctrip.hermes.monitor.zabbix.ZabbixApiUtils;
+import com.ctrip.hermes.monitor.zabbix.ZabbixApiGateway;
 import com.ctrip.hermes.monitor.zabbix.ZabbixConst;
-import com.ctrip.hermes.monitor.zabbix.ZabbixStatUtils;
 import com.zabbix4j.ZabbixApiException;
 import com.zabbix4j.history.HistoryObject.HISOTRY_OBJECT_TYPE;
 import com.zabbix4j.host.HostObject;
@@ -36,12 +36,19 @@ public class KafkaMonitor {
 	public static void main(String[] args) throws ZabbixApiException, DalException {
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		KafkaMonitor monitor = context.getBean(KafkaMonitor.class);
-		monitor.monitorPastHours(100);
+		monitor.monitorPastHours(1);
+		context.close();
 	}
 
 	@Autowired
 	private ESMonitorService service;
 
+	@Autowired
+	private ZabbixApiGateway zabbixApi;
+	
+	@Autowired
+	private MonitorConfig config;
+	
 	@Scheduled(cron = "0 5 * * * *")
 	public void monitorHourly() throws ZabbixApiException, DalException {
 		Calendar cal = Calendar.getInstance();
@@ -55,7 +62,7 @@ public class KafkaMonitor {
 	}
 
 	private void monitorKafka(Date timeFrom, Date timeTill) throws ZabbixApiException {
-		Map<Integer, HostObject> kafkaHosts = ZabbixApiUtils.searchHosts(ZabbixConst.GROUP_KAFKA_BROKER);
+		Map<Integer, HostObject> kafkaHosts = zabbixApi.searchHostsByName(config.getZabbixKafkaBrokerHosts());
 		Map<Integer, StatResult> messageInStat = statMessageIn(timeFrom, timeTill, kafkaHosts);
 		Map<Integer, StatResult> byteInStat = statByteIn(timeFrom, timeTill, kafkaHosts);
 		Map<Integer, StatResult> byteOutStat = statByteOut(timeFrom, timeTill, kafkaHosts);
@@ -129,11 +136,11 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statByteIn(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
 	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItemsByName(hosts.keySet(), ZabbixConst.KAFKA_BYTE_IN_RATE);
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(), ZabbixConst.KAFKA_BYTE_IN_RATE);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
 			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
@@ -153,11 +160,11 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statByteOut(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
 	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItemsByName(hosts.keySet(), ZabbixConst.KAFKA_BYTE_OUT_RATE);
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(), ZabbixConst.KAFKA_BYTE_OUT_RATE);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
 			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
@@ -177,12 +184,12 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statFailedFetchRequests(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
 	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItemsByName(hosts.keySet(),
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(),
 		      ZabbixConst.KAFKA_FAILED_FETCH_REQUESTS);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
 			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
@@ -203,12 +210,12 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statFailedProduceRequests(Date timeFrom, Date timeTill,
 	      Map<Integer, HostObject> hosts) throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItemsByName(hosts.keySet(),
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(),
 		      ZabbixConst.KAFKA_FAILED_PRODUCE_REQUESTS);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
 			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
@@ -229,12 +236,12 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statMessageIn(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
 	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils
+		Map<Integer, List<ItemObject>> ids = zabbixApi
 		      .searchItemsByName(hosts.keySet(), ZabbixConst.KAFKA_MESSAGE_IN_RATE);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
 			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
@@ -254,12 +261,12 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statRequestQueueSize(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
 	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItemsByName(hosts.keySet(),
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(),
 		      ZabbixConst.KAFKA_REQUEST_QUEUE_SIZE);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
 			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
@@ -279,12 +286,12 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statRequestRateFetchConsumer(Date timeFrom, Date timeTill,
 	      Map<Integer, HostObject> hosts) throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItemsByName(hosts.keySet(),
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(),
 		      ZabbixConst.KAFKA_REQUEST_RATE_FETCHCONSUMER);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
 			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
@@ -304,12 +311,12 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statRequestRateFetchFollower(Date timeFrom, Date timeTill,
 	      Map<Integer, HostObject> hosts) throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItemsByName(hosts.keySet(),
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(),
 		      ZabbixConst.KAFKA_REQUEST_RATE_FETCHFOLLOWER);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
 			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {
@@ -329,12 +336,12 @@ public class KafkaMonitor {
 
 	private Map<Integer, StatResult> statRequestRateProduce(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
 	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = ZabbixApiUtils.searchItemsByName(hosts.keySet(),
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(),
 		      ZabbixConst.KAFKA_REQUEST_RATE_PRODUCE);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		long totalSum = 0;
 		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = ZabbixStatUtils.getHistoryStat(timeFrom, timeTill, hostid,
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid,
 			      ids.get(hostid), HISOTRY_OBJECT_TYPE.INTEGER);
 			StatResult validResult = new StatResult();
 			for (StatResult value : statResults.values()) {

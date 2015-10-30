@@ -44,6 +44,21 @@ public class MonitorConfig {
 	@Value("${produce.failure.checker.threshold:10}")
 	private int produceFailureCountThreshold;
 
+	@Value("${zabbix.kafka.broker.hosts}")
+	private String[] zabbixKafkaBrokerHosts;
+
+	@Value("${zabbix.mysql.broker.hosts}")
+	private String[] zabbixMysqlBrokerHosts;
+
+	@Value("${zabbix.metaserver.hosts}")
+	private String[] zabbixMetaserverHosts;
+
+	@Value("${zabbix.portal.hosts}")
+	private String[] zabbixPortalHosts;
+
+	@Value("${zabbix.zookeeper.hosts}")
+	private String[] zabbixZookeeperHosts;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -140,4 +155,43 @@ public class MonitorConfig {
 		this.produceFailureCountThreshold = produceFailureCountThreshold;
 	}
 
+	public String[] getZabbixZookeeperHosts() {
+		return zabbixZookeeperHosts;
+	}
+
+	public void setZabbixZookeeperHosts(String[] zabbixZookeeperHosts) {
+		this.zabbixZookeeperHosts = zabbixZookeeperHosts;
+	}
+
+	public String[] getZabbixPortalHosts() {
+		return zabbixPortalHosts;
+	}
+
+	public void setZabbixPortalHosts(String[] zabbixPortalHosts) {
+		this.zabbixPortalHosts = zabbixPortalHosts;
+	}
+
+	public String[] getZabbixMetaserverHosts() {
+		return zabbixMetaserverHosts;
+	}
+
+	public void setZabbixMetaserverHosts(String[] zabbixMetaserverHosts) {
+		this.zabbixMetaserverHosts = zabbixMetaserverHosts;
+	}
+
+	public String[] getZabbixMysqlBrokerHosts() {
+		return zabbixMysqlBrokerHosts;
+	}
+
+	public void setZabbixMysqlBrokerHosts(String[] zabbixMysqlBrokerHosts) {
+		this.zabbixMysqlBrokerHosts = zabbixMysqlBrokerHosts;
+	}
+
+	public String[] getZabbixKafkaBrokerHosts() {
+		return zabbixKafkaBrokerHosts;
+	}
+
+	public void setZabbixKafkaBrokerHosts(String[] zabbixKafkaBrokerHosts) {
+		this.zabbixKafkaBrokerHosts = zabbixKafkaBrokerHosts;
+	}
 }
