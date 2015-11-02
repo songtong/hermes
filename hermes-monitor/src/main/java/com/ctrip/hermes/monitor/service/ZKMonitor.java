@@ -15,7 +15,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.monitor.Bootstrap;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
@@ -29,11 +28,11 @@ import com.zabbix4j.host.HostObject;
 import com.zabbix4j.item.ItemObject;
 
 @Service
-public class ZKMonitor {
+public class ZKMonitor implements IZabbixMonitor {
 
 	private static final Logger logger = LoggerFactory.getLogger(ZKMonitor.class);
 
-	public static void main(String[] args) throws ZabbixApiException, DalException {
+	public static void main(String[] args) throws Throwable {
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		ZKMonitor monitor = context.getBean(ZKMonitor.class);
 		monitor.monitorPastHours(24 * 4, 5);
@@ -49,8 +48,8 @@ public class ZKMonitor {
 	@Autowired
 	private MonitorConfig config;
 
-	@Scheduled(cron = "0 6 * * * *")
-	public void monitorHourly() throws ZabbixApiException, DalException {
+	@Scheduled(cron = "0 7 * * * *")
+	public void monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -61,7 +60,7 @@ public class ZKMonitor {
 		monitorZK(timeFrom, timeTill);
 	}
 
-	public void monitorPastHours(int hours, int requestIntervalSecond) throws ZabbixApiException, DalException {
+	public void monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);
@@ -80,7 +79,7 @@ public class ZKMonitor {
 		}
 	}
 
-	private void monitorZK(Date timeFrom, Date timeTill) throws ZabbixApiException {
+	private void monitorZK(Date timeFrom, Date timeTill) throws Throwable {
 		Map<Integer, HostObject> hosts = zabbixApi.searchHostsByName(config.getZabbixZookeeperHosts());
 		Map<Integer, StatResult> avgLatency = statAvgLatency(timeFrom, timeTill, hosts);
 		Map<Integer, StatResult> znodeCount = statZnodeCount(timeFrom, timeTill, hosts);

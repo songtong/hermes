@@ -15,7 +15,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.monitor.Bootstrap;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
@@ -29,11 +28,11 @@ import com.zabbix4j.host.HostObject;
 import com.zabbix4j.item.ItemObject;
 
 @Service
-public class KafkaMonitor {
+public class KafkaMonitor implements IZabbixMonitor {
 
 	private static final Logger logger = LoggerFactory.getLogger(KafkaMonitor.class);
 
-	public static void main(String[] args) throws ZabbixApiException, DalException {
+	public static void main(String[] args) throws Throwable {
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		KafkaMonitor monitor = context.getBean(KafkaMonitor.class);
 		monitor.monitorPastHours(24 * 2, 5);
@@ -50,7 +49,7 @@ public class KafkaMonitor {
 	private MonitorConfig config;
 
 	@Scheduled(cron = "0 5 * * * *")
-	public void monitorHourly() throws ZabbixApiException, DalException {
+	public void monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -61,7 +60,7 @@ public class KafkaMonitor {
 		monitorKafka(timeFrom, timeTill);
 	}
 
-	private void monitorKafka(Date timeFrom, Date timeTill) throws ZabbixApiException {
+	private void monitorKafka(Date timeFrom, Date timeTill) throws Throwable {
 		Map<Integer, HostObject> kafkaHosts = zabbixApi.searchHostsByName(config.getZabbixKafkaBrokerHosts());
 		Map<Integer, StatResult> messageInStat = statMessageIn(timeFrom, timeTill, kafkaHosts);
 		Map<Integer, StatResult> byteInStat = statByteIn(timeFrom, timeTill, kafkaHosts);
@@ -116,7 +115,7 @@ public class KafkaMonitor {
 		}
 	}
 
-	public void monitorPastHours(int hours, int requestIntervalSecond) throws ZabbixApiException, DalException {
+	public void monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);

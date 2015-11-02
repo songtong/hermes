@@ -34,6 +34,13 @@ public class ZabbixConst {
 	public static final String CPU_RATIO_OF_CPU_LOAD_AND_CPU_NUMBER = "The ratio of cpu load and cpu number";
 
 	/**
+	 * Memory
+	 */
+	public static final String MEMORY_AVAILABLE_PERCENTAGE = "Available memory in %";
+
+	public static final String MEMORY_FREE_SWAP_PERCENTAGE = "Free swap space in %";
+
+	/**
 	 * Kafka
 	 */
 	public static final String KAFKA_MESSAGE_IN_RATE = "Message in rate";
@@ -83,6 +90,8 @@ public class ZabbixConst {
 	public static final String CATEGORY_CPU = "Cpu";
 
 	public static final String CATEGORY_ZK = "Zookeeper";
+
+	public static final String CATEGORY_MEMORY = "Memory";
 
 	/**
 	 * Source

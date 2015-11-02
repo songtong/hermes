@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math.stat.StatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,10 @@ import org.springframework.stereotype.Service;
 
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.stat.StatResult;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
 import com.zabbix4j.ZabbixApi;
 import com.zabbix4j.ZabbixApiException;
 import com.zabbix4j.history.HistoryGetRequest;
@@ -31,9 +37,6 @@ import com.zabbix4j.item.ItemObject;
 @Service
 public class ZabbixApiGateway {
 
-	@Autowired
-	private MonitorConfig config;
-
 	public static String DEFAULT_USER = "guest";
 
 	public static String DEFAULT_PASSWORD = "";
@@ -41,34 +44,6 @@ public class ZabbixApiGateway {
 	public static String DEFAULT_ZABBIX_URL = "http://zabbixserver.sh.ctripcorp.com/api_jsonrpc.php";
 
 	private static ZabbixApi zabbixApi;
-
-	public Map<Integer, HostObject> getHosts(List<Integer> hostids) throws ZabbixApiException {
-		HostGetRequest request = new HostGetRequest();
-		request.getParams().setHostids(hostids);
-
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
-		HostGetResponse response = zabbixApi.host().get(request);
-
-		Map<Integer, HostObject> result = new HashMap<Integer, HostObject>();
-		for (com.zabbix4j.host.HostGetResponse.Result host : response.getResult()) {
-			result.put(host.getHostid(), host);
-		}
-		return result;
-	}
-
-	public Map<Integer, ItemObject> getItems(List<Integer> itemids) throws ZabbixApiException {
-		ItemGetRequest request = new ItemGetRequest();
-		request.getParams().setItemids(itemids);
-
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
-		ItemGetResponse response = zabbixApi.item().get(request);
-
-		Map<Integer, ItemObject> result = new HashMap<Integer, ItemObject>();
-		for (com.zabbix4j.item.ItemGetResponse.Result item : response.getResult()) {
-			result.put(item.getItemid(), item);
-		}
-		return result;
-	}
 
 	// TODO enable configuration
 	private static ZabbixApi getZabbixApiInstance() throws ZabbixApiException {
@@ -79,70 +54,21 @@ public class ZabbixApiGateway {
 		return zabbixApi;
 	}
 
-	public Map<Integer, HostObject> searchHostsByName(String... hostNames) throws ZabbixApiException {
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
-		Map<Integer, HostObject> result = new HashMap<Integer, HostObject>();
+	@Autowired
+	private MonitorConfig config;
 
-		for (String hostname : hostNames) {
-			HostGetRequest request = new HostGetRequest();
-			Map<String, String> search = new HashMap<String, String>();
-			search.put("name", hostname);
-			request.getParams().setSearch(search);
+	private LoadingCache<String, Map<Integer, HostObject>> hostNameCache;
 
-			HostGetResponse response = zabbixApi.host().get(request);
-			for (com.zabbix4j.host.HostGetResponse.Result hr : response.getResult()) {
-				result.put(hr.getHostid(), hr);
-			}
-		}
-		return result;
-	}
+	public ZabbixApiGateway() {
+		hostNameCache = CacheBuilder.newBuilder().recordStats().maximumSize(50).expireAfterWrite(1, TimeUnit.HOURS)
+		      .build(new CacheLoader<String, Map<Integer, HostObject>>() {
 
-	public Map<Integer, List<ItemObject>> searchItemsByName(Collection<Integer> hostids, String searchName)
-	      throws ZabbixApiException {
-		ItemGetRequest request = new ItemGetRequest();
-		List<Integer> hostidList = new ArrayList<Integer>();
-		hostidList.addAll(hostids);
-		request.getParams().setHostids(hostidList);
-		Map<String, String> search = new HashMap<String, String>();
-		search.put("name", searchName);
-		request.getParams().setSearch(search);
+			      @Override
+			      public Map<Integer, HostObject> load(String name) throws Exception {
+				      return populateHostsByName(name);
+			      }
 
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
-		ItemGetResponse response = zabbixApi.item().get(request);
-
-		Map<Integer, List<ItemObject>> result = new HashMap<Integer, List<ItemObject>>();
-		for (com.zabbix4j.item.ItemGetResponse.Result r : response.getResult()) {
-			if (!result.containsKey(r.getHostid())) {
-				result.put(r.getHostid(), new ArrayList<ItemObject>());
-			}
-			List<ItemObject> ids = result.get(r.getHostid());
-			ids.add(r);
-		}
-		return result;
-	}
-
-	public Map<Integer, List<ItemObject>> searchItemsByKey(Collection<Integer> hostids, String keyName)
-	      throws ZabbixApiException {
-		ItemGetRequest request = new ItemGetRequest();
-		List<Integer> hostidList = new ArrayList<Integer>();
-		hostidList.addAll(hostids);
-		request.getParams().setHostids(hostidList);
-		Map<String, String> search = new HashMap<String, String>();
-		search.put("key_", keyName);
-		request.getParams().setSearch(search);
-
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
-		ItemGetResponse response = zabbixApi.item().get(request);
-
-		Map<Integer, List<ItemObject>> result = new HashMap<Integer, List<ItemObject>>();
-		for (com.zabbix4j.item.ItemGetResponse.Result r : response.getResult()) {
-			if (!result.containsKey(r.getHostid())) {
-				result.put(r.getHostid(), new ArrayList<ItemObject>());
-			}
-			List<ItemObject> ids = result.get(r.getHostid());
-			ids.add(r);
-		}
-		return result;
+		      });
 	}
 
 	public Map<Integer, HistoryObject> getHistory(Date timeFrom, Date timeTill, Integer hostid, List<ItemObject> items,
@@ -217,6 +143,20 @@ public class ZabbixApiGateway {
 		return result;
 	}
 
+	public Map<Integer, HostObject> getHosts(List<Integer> hostids) throws Throwable {
+		HostGetRequest request = new HostGetRequest();
+		request.getParams().setHostids(hostids);
+
+		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
+		HostGetResponse response = zabbixApi.host().get(request);
+
+		Map<Integer, HostObject> result = new HashMap<Integer, HostObject>();
+		for (com.zabbix4j.host.HostGetResponse.Result host : response.getResult()) {
+			result.put(host.getHostid(), host);
+		}
+		return result;
+	}
+
 	public Map<Integer, Result> getItems(Integer hostid, List<ItemObject> items) throws ZabbixApiException {
 		ItemGetRequest itemGetRequest = new ItemGetRequest();
 		itemGetRequest.getParams().setHostids(Arrays.asList(hostid));
@@ -236,5 +176,96 @@ public class ZabbixApiGateway {
 		}
 		return result;
 	}
-	
+
+	public Map<Integer, ItemObject> getItems(List<Integer> itemids) throws Throwable {
+		ItemGetRequest request = new ItemGetRequest();
+		request.getParams().setItemids(itemids);
+
+		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
+		ItemGetResponse response = zabbixApi.item().get(request);
+
+		Map<Integer, ItemObject> result = new HashMap<Integer, ItemObject>();
+		for (com.zabbix4j.item.ItemGetResponse.Result item : response.getResult()) {
+			result.put(item.getItemid(), item);
+		}
+		return result;
+	}
+
+	public Map<Integer, HostObject> searchHostsByName(String... hostNames) throws Throwable {
+		try {
+			ImmutableMap<String, Map<Integer, HostObject>> all = hostNameCache.getAll(Arrays.asList(hostNames));
+			Map<Integer, HostObject> result = new HashMap<Integer, HostObject>();
+			for (Map.Entry<String, Map<Integer, HostObject>> entry : all.entrySet()) {
+				result.putAll(entry.getValue());
+			}
+			return result;
+		} catch (ExecutionException e) {
+			throw e.getCause();
+		}
+	}
+
+	private Map<Integer, HostObject> populateHostsByName(String hostName) throws ZabbixApiException {
+		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
+		Map<Integer, HostObject> result = new HashMap<Integer, HostObject>();
+
+		HostGetRequest request = new HostGetRequest();
+		Map<String, String> search = new HashMap<String, String>();
+		search.put("name", hostName);
+		request.getParams().setSearch(search);
+
+		HostGetResponse response = zabbixApi.host().get(request);
+		for (com.zabbix4j.host.HostGetResponse.Result hr : response.getResult()) {
+			result.put(hr.getHostid(), hr);
+		}
+		return result;
+	}
+
+	public Map<Integer, List<ItemObject>> searchItemsByKey(Collection<Integer> hostids, String keyName)
+	      throws ZabbixApiException {
+		ItemGetRequest request = new ItemGetRequest();
+		List<Integer> hostidList = new ArrayList<Integer>();
+		hostidList.addAll(hostids);
+		request.getParams().setHostids(hostidList);
+		Map<String, String> search = new HashMap<String, String>();
+		search.put("key_", keyName);
+		request.getParams().setSearch(search);
+
+		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
+		ItemGetResponse response = zabbixApi.item().get(request);
+
+		Map<Integer, List<ItemObject>> result = new HashMap<Integer, List<ItemObject>>();
+		for (com.zabbix4j.item.ItemGetResponse.Result r : response.getResult()) {
+			if (!result.containsKey(r.getHostid())) {
+				result.put(r.getHostid(), new ArrayList<ItemObject>());
+			}
+			List<ItemObject> ids = result.get(r.getHostid());
+			ids.add(r);
+		}
+		return result;
+	}
+
+	public Map<Integer, List<ItemObject>> searchItemsByName(Collection<Integer> hostids, String searchName)
+	      throws ZabbixApiException {
+		ItemGetRequest request = new ItemGetRequest();
+		List<Integer> hostidList = new ArrayList<Integer>();
+		hostidList.addAll(hostids);
+		request.getParams().setHostids(hostidList);
+		Map<String, String> search = new HashMap<String, String>();
+		search.put("name", searchName);
+		request.getParams().setSearch(search);
+
+		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
+		ItemGetResponse response = zabbixApi.item().get(request);
+
+		Map<Integer, List<ItemObject>> result = new HashMap<Integer, List<ItemObject>>();
+		for (com.zabbix4j.item.ItemGetResponse.Result r : response.getResult()) {
+			if (!result.containsKey(r.getHostid())) {
+				result.put(r.getHostid(), new ArrayList<ItemObject>());
+			}
+			List<ItemObject> ids = result.get(r.getHostid());
+			ids.add(r);
+		}
+		return result;
+	}
+
 }

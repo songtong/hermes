@@ -15,7 +15,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.monitor.Bootstrap;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
@@ -29,11 +28,11 @@ import com.zabbix4j.host.HostObject;
 import com.zabbix4j.item.ItemObject;
 
 @Service
-public class CPUMonitor {
+public class CPUMonitor implements IZabbixMonitor {
 
 	private static final Logger logger = LoggerFactory.getLogger(CPUMonitor.class);
 
-	public static void main(String[] args) throws ZabbixApiException, DalException {
+	public static void main(String[] args) throws Throwable {
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		CPUMonitor monitor = context.getBean(CPUMonitor.class);
 		monitor.monitorPastHours(1, 5);
@@ -49,7 +48,7 @@ public class CPUMonitor {
 	@Autowired
 	private MonitorConfig config;
 
-	private void monitorCPU(Date timeFrom, Date timeTill, String group, String[] hostNames) throws ZabbixApiException {
+	private void monitorCPU(Date timeFrom, Date timeTill, String group, String[] hostNames) throws Throwable {
 		Map<Integer, HostObject> hosts = zabbixApi.searchHostsByName(hostNames);
 		Map<Integer, StatResult> cpuUserTime = statCPUUserTime(timeFrom, timeTill, hosts);
 		Map<Integer, StatResult> cpuSystemTime = statCPUSystemTime(timeFrom, timeTill, hosts);
@@ -82,7 +81,7 @@ public class CPUMonitor {
 	}
 
 	@Scheduled(cron = "0 3 * * * *")
-	public void monitorHourly() throws ZabbixApiException, DalException {
+	public void monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -97,7 +96,7 @@ public class CPUMonitor {
 		monitorCPU(timeFrom, timeTill, ZabbixConst.GROUP_PORTAL, config.getZabbixPortalHosts());
 	}
 
-	public void monitorPastHours(int hours, int requestIntervalSecond) throws ZabbixApiException, DalException {
+	public void monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);

@@ -1,26 +1,24 @@
 package com.ctrip.hermes.monitor.service;
 
+import java.util.Map;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.monitor.Bootstrap;
-import com.zabbix4j.ZabbixApiException;
 
 public class FixHistoricalData {
 
-	public static void main(String[] args) throws ZabbixApiException, DalException {
+	public static void main(String[] args) throws Throwable {
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
-		int hours = 48;
-		int interval = 5;
-		CPUMonitor cpuMonitor = context.getBean(CPUMonitor.class);
-		cpuMonitor.monitorPastHours(hours, interval);
-		DiskMonitor diskMonitor = context.getBean(DiskMonitor.class);
-		diskMonitor.monitorPastHours(hours, interval);
-		KafkaMonitor kafkaMonitor = context.getBean(KafkaMonitor.class);
-		kafkaMonitor.monitorPastHours(hours, interval);
-		ZKMonitor zkMonitor = context.getBean(ZKMonitor.class);
-		zkMonitor.monitorPastHours(hours, interval);
+		int hours = Integer.parseInt(args[0]);
+		int requestIntervalSecond = Integer.parseInt(args[1]);
+		Map<String, IZabbixMonitor> beans = context.getBeansOfType(IZabbixMonitor.class);
+		for (Map.Entry<String, IZabbixMonitor> entry : beans.entrySet()) {
+			System.out.println(entry.getValue().getClass());
+			IZabbixMonitor zabbixMonitor = entry.getValue();
+			zabbixMonitor.monitorPastHours(hours, requestIntervalSecond);
+		}
 		context.close();
 	}
 
