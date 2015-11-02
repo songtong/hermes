@@ -105,6 +105,20 @@
 							</descriptors>
 						</configuration>
 					</execution>
+					<execution>
+						<id>monitor</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>hermes-monitor-${project.version}-${package.environment}-${maven.build.timestamp}</finalName>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>assembly/monitor-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
