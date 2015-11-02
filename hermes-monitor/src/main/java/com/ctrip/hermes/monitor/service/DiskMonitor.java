@@ -15,7 +15,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.monitor.Bootstrap;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
@@ -23,18 +22,17 @@ import com.ctrip.hermes.monitor.domain.MonitorItem;
 import com.ctrip.hermes.monitor.stat.StatResult;
 import com.ctrip.hermes.monitor.zabbix.ZabbixApiGateway;
 import com.ctrip.hermes.monitor.zabbix.ZabbixConst;
-import com.zabbix4j.ZabbixApiException;
 import com.zabbix4j.history.HistoryObject.HISOTRY_OBJECT_TYPE;
 import com.zabbix4j.host.HostObject;
 import com.zabbix4j.item.ItemGetResponse.Result;
 import com.zabbix4j.item.ItemObject;
 
 @Service
-public class DiskMonitor {
+public class DiskMonitor implements IZabbixMonitor {
 
 	private static final Logger logger = LoggerFactory.getLogger(DiskMonitor.class);
 
-	public static void main(String[] args) throws ZabbixApiException, DalException {
+	public static void main(String[] args) throws Throwable {
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		DiskMonitor monitor = context.getBean(DiskMonitor.class);
 		monitor.monitorPastHours(1, 5);
@@ -50,7 +48,7 @@ public class DiskMonitor {
 	@Autowired
 	private MonitorConfig config;
 
-	public Map<Integer, Map<String, Double>> monitorCurrent() throws ZabbixApiException {
+	public Map<Integer, Map<String, Double>> monitorCurrent() throws Throwable {
 		Map<Integer, HostObject> hosts = zabbixApi.searchHostsByName(config.getZabbixKafkaBrokerHosts());
 		Map<Integer, List<ItemObject>> ids = zabbixApi
 		      .searchItemsByName(hosts.keySet(), ZabbixConst.DISK_FREE_PERCENTAGE);
@@ -70,7 +68,7 @@ public class DiskMonitor {
 		return result;
 	}
 
-	private void monitorDisk(Date timeFrom, Date timeTill, String group, String[] hostNames) throws ZabbixApiException {
+	private void monitorDisk(Date timeFrom, Date timeTill, String group, String[] hostNames) throws Throwable {
 		Map<Integer, HostObject> hosts = zabbixApi.searchHostsByName(hostNames);
 		Map<Integer, List<ItemObject>> ids = zabbixApi
 		      .searchItemsByName(hosts.keySet(), ZabbixConst.DISK_FREE_PERCENTAGE);
@@ -109,7 +107,7 @@ public class DiskMonitor {
 	}
 
 	@Scheduled(cron = "0 4 * * * *")
-	public void monitorHourly() throws ZabbixApiException, DalException {
+	public void monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -124,7 +122,7 @@ public class DiskMonitor {
 		monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_ZOOKEEPER, config.getZabbixZookeeperHosts());
 	}
 
-	public void monitorPastHours(int hours, int requestIntervalSecond) throws ZabbixApiException, DalException {
+	public void monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);
