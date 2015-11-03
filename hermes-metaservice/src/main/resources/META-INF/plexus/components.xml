@@ -7,9 +7,6 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
-				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -80,6 +77,36 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>message-priority</role-hint>
+			<implementation>com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider</implementation>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>resend-group-id</role-hint>
+			<implementation>com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider</implementation>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>offset-message</role-hint>
+			<implementation>com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider</implementation>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>offset-resend</role-hint>
+			<implementation>com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider</implementation>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>dead-letter</role-hint>
+			<implementation>com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider</implementation>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>
+			<role-hint>meta-service</role-hint>
+			<implementation>com.ctrip.hermes.metaservice.queue.ds.MessageQueueDatasourceProvider</implementation>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>meta</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -144,6 +171,51 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.model.SubscriptionDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.SubscriptionDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.queue.DeadLetterDao</role>
+			<implementation>com.ctrip.hermes.metaservice.queue.DeadLetterDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.queue.MessagePriorityDao</role>
+			<implementation>com.ctrip.hermes.metaservice.queue.MessagePriorityDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.queue.OffsetMessageDao</role>
+			<implementation>com.ctrip.hermes.metaservice.queue.OffsetMessageDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.queue.OffsetResendDao</role>
+			<implementation>com.ctrip.hermes.metaservice.queue.OffsetResendDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.queue.ResendGroupIdDao</role>
+			<implementation>com.ctrip.hermes.metaservice.queue.ResendGroupIdDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

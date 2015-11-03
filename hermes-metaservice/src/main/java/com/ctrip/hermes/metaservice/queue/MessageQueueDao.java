@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.dal;
+package com.ctrip.hermes.metaservice.queue;
 
 import java.util.List;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Map;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
-public interface HermesPortalDao {
+public interface MessageQueueDao {
 	
 	public MessagePriority getLatestProduced(String topic, int partition, int priority) throws DalException;
 

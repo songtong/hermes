@@ -1,6 +1,7 @@
 package com.ctrip.hermes.metaservice.service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.unidal.helper.Codes;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -41,6 +43,9 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	@Inject
 	private ClientEnvironment m_env;
 
+	@Inject
+	private ZookeeperService m_zookeeperService;
+
 	protected Meta m_meta;
 
 	@Override
@@ -56,12 +61,33 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 			return false;
 		}
 
-		if (super.updateMeta(meta)) { // update db
+		if (doUpdateMeta(meta)) { // update db
 			m_meta = meta; // update memory
 			return true;
 		}
 
 		return false;
+	}
+
+	public synchronized boolean doUpdateMeta(Meta meta) throws DalException {
+		Meta latest = findLatestMeta();
+		if (!latest.getVersion().equals(meta.getVersion())) {
+			String e = String.format("Outdated Version. Latest: %s, Offered: %s", latest.getVersion(), meta.getVersion());
+			throw new RuntimeException(e);
+		}
+
+		com.ctrip.hermes.metaservice.model.Meta dalMeta = new com.ctrip.hermes.metaservice.model.Meta();
+		try {
+			meta.setVersion(meta.getVersion() + 1);
+			dalMeta.setValue(JSON.toJSONString(meta));
+			dalMeta.setDataChangeLastTime(new Date(System.currentTimeMillis()));
+			m_metaDao.insert(dalMeta);
+			m_zookeeperService.updateZkBaseMetaVersion(meta.getVersion());
+		} catch (Exception e) {
+			m_logger.warn("Update meta failed", e);
+			throw new RuntimeException("Update meta failed.", e);
+		}
+		return true;
 	}
 
 	@Override

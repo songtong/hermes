@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.assist;
+package com.ctrip.hermes.metaservice.queue;
 
 import java.util.ArrayList;
 import java.util.Comparator;

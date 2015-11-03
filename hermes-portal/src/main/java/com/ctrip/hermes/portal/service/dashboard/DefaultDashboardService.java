@@ -38,11 +38,11 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.queue.MessagePriority;
+import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
+import com.ctrip.hermes.metaservice.queue.OffsetMessage;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.config.PortalConstants;
-import com.ctrip.hermes.portal.dal.HermesPortalDao;
-import com.ctrip.hermes.portal.dal.MessagePriority;
-import com.ctrip.hermes.portal.dal.OffsetMessage;
 import com.ctrip.hermes.portal.resource.view.BrokerQPSBriefView;
 import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
@@ -55,7 +55,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private static final Logger log = LoggerFactory.getLogger(DefaultDashboardService.class);
 
 	@Inject
-	private HermesPortalDao m_dao;
+	private MessageQueueDao m_dao;
 
 	@Inject
 	private PortalMetaService m_metaService;
@@ -122,8 +122,8 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private Meta loadMeta() {
 		try {
-			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(),
-					m_env.getGlobalConfig().getProperty("meta.port", "80").trim(), "meta");
+			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
+			      .getProperty("meta.port", "80").trim(), "meta");
 			HttpResponse response = Request.Get(url).execute().returnResponse();
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) {
@@ -142,8 +142,8 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private Map<Tpg, String> loadConsumerIp() {
 		Map<Tpg, String> consumerIps = new HashMap<>();
 		try {
-			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(),
-					m_env.getGlobalConfig().getProperty("meta.port", "80").trim(), "metaserver/status");
+			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
+			      .getProperty("meta.port", "80").trim(), "metaserver/status");
 			HttpResponse response = Request.Get(url).execute().returnResponse();
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (HttpStatus.SC_OK == statusCode) {
@@ -252,10 +252,10 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				for (Partition partition : m_metaService.findPartitionsByTopic(topicName)) {
 					try {
 						MessagePriority msgPriority = m_dao.getLatestProduced(topicName, partition.getId(),
-								PortalConstants.PRIORITY_TRUE);
+						      PortalConstants.PRIORITY_TRUE);
 						Date datePriority = msgPriority == null ? latest : msgPriority.getCreationDate();
 						MessagePriority msgNonPriority = m_dao.getLatestProduced(topicName, partition.getId(),
-								PortalConstants.PRIORITY_FALSE);
+						      PortalConstants.PRIORITY_FALSE);
 
 						Date dateNonPriority = msgNonPriority == null ? latest : msgNonPriority.getCreationDate();
 						latest = datePriority.after(dateNonPriority) ? datePriority : dateNonPriority;
@@ -339,23 +339,22 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				for (Partition p : t.getPartitions()) {
 					try {
 						MessagePriority msgPriority = m_dao.getLatestProduced(t.getName(), p.getId(),
-								PortalConstants.PRIORITY_TRUE);
+						      PortalConstants.PRIORITY_TRUE);
 						MessagePriority msgNonPriority = m_dao.getLatestProduced(t.getName(), p.getId(),
-								PortalConstants.PRIORITY_FALSE);
+						      PortalConstants.PRIORITY_FALSE);
 						long priorityMsgId = msgPriority == null ? 0 : msgPriority.getId();
 						long nonPriorityMsgId = msgNonPriority == null ? 0 : msgNonPriority.getId();
-						Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = m_dao
-								.getLatestConsumed(t.getName(), p.getId());
+						Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = m_dao.getLatestConsumed(t.getName(),
+						      p.getId());
 						for (ConsumerGroup c : t.getConsumerGroups()) {
 							Pair<OffsetMessage, OffsetMessage> offsets = offsetMsgMap.get(c.getId());
 							long priorityMsgOffset = offsets == null ? 0 : offsets.getKey().getOffset();
 							long nonPriorityMsgOffset = offsets == null ? 0 : offsets.getValue().getOffset();
-							long delay = (priorityMsgId + nonPriorityMsgId)
-									- (priorityMsgOffset + nonPriorityMsgOffset);
+							long delay = (priorityMsgId + nonPriorityMsgId) - (priorityMsgOffset + nonPriorityMsgOffset);
 							MessagePriority lastConsumedPriorityMsg = m_dao.getMsgById(t.getName(), p.getId(),
-									PortalConstants.PRIORITY_TRUE, priorityMsgOffset);
+							      PortalConstants.PRIORITY_TRUE, priorityMsgOffset);
 							MessagePriority lastConsumedNonPriorityMsg = m_dao.getMsgById(t.getName(), p.getId(),
-									PortalConstants.PRIORITY_FALSE, nonPriorityMsgOffset);
+							      PortalConstants.PRIORITY_FALSE, nonPriorityMsgOffset);
 
 							DelayDetail delayDetail = new DelayDetail(c.getName(), p.getId());
 							delayDetail.setDelay(delay);
@@ -363,10 +362,10 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 							delayDetail.setNonPriorityMsgId(nonPriorityMsgId);
 							delayDetail.setPriorityMsgOffset(priorityMsgOffset);
 							delayDetail.setNonPriorityMsgOffset(nonPriorityMsgOffset);
-							delayDetail.setLastConsumedPriorityMsg(
-									lastConsumedPriorityMsg == null ? null : getPayload(lastConsumedPriorityMsg));
-							delayDetail.setLastConsumedNonPriorityMsg(
-									lastConsumedNonPriorityMsg == null ? null : getPayload(lastConsumedNonPriorityMsg));
+							delayDetail.setLastConsumedPriorityMsg(lastConsumedPriorityMsg == null ? null
+							      : getPayload(lastConsumedPriorityMsg));
+							delayDetail.setLastConsumedNonPriorityMsg(lastConsumedNonPriorityMsg == null ? null
+							      : getPayload(lastConsumedNonPriorityMsg));
 							delayDetail.setCurrentConsumerIp(consumerIps.get(new Tpg(t.getName(), p.getId(), c.getName())));
 							topicDelayView.addDelay(delayDetail);
 
@@ -393,8 +392,8 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	}
 
 	private String getPayload(MessagePriority msg) {
-		String rawPayloadString = msg == null ? null
-				: JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(), Object.class));
+		String rawPayloadString = msg == null ? null : JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(),
+		      Object.class));
 		return rawPayloadString;
 	}
 
@@ -409,33 +408,33 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		updateLatestBroker();
 
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_MYSQL_UPDATE_TASK", true))
-				.scheduleWithFixedDelay(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							// updateDelayDetails();
-							updateTopDelays();
-							updateLatestProduced();
-							updateLatestBroker();
-						} catch (Throwable e) {
-							log.error("Update mysql monitor information failed.", e);
-						}
-					}
-				}, 0, 1, TimeUnit.MINUTES);
+		      .scheduleWithFixedDelay(new Runnable() {
+			      @Override
+			      public void run() {
+				      try {
+					      // updateDelayDetails();
+					      updateTopDelays();
+					      updateLatestProduced();
+					      updateLatestBroker();
+				      } catch (Throwable e) {
+					      log.error("Update mysql monitor information failed.", e);
+				      }
+			      }
+		      }, 0, 1, TimeUnit.MINUTES);
 
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_ELASTIC_UPDATE_TASK", true))
-				.scheduleWithFixedDelay(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							updateProducerTopicRelationship();
-							updateConsumerTopicRelationship();
-							updateLatestClients();
-						} catch (Throwable e) {
-							log.error("Update elastic monitor information failed.", e);
-						}
-					}
-				}, 0, 30, TimeUnit.MINUTES);
+		      .scheduleWithFixedDelay(new Runnable() {
+			      @Override
+			      public void run() {
+				      try {
+					      updateProducerTopicRelationship();
+					      updateConsumerTopicRelationship();
+					      updateLatestClients();
+				      } catch (Throwable e) {
+					      log.error("Update elastic monitor information failed.", e);
+				      }
+			      }
+		      }, 0, 30, TimeUnit.MINUTES);
 	}
 
 	@Override

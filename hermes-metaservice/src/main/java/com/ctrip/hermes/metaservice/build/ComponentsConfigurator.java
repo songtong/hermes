@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.unidal.dal.jdbc.configuration.AbstractJdbcResourceConfigurator;
+import org.unidal.dal.jdbc.mapping.TableProvider;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.metaservice.monitor.dao.DefaultMonitorEventStorage;
+import com.ctrip.hermes.metaservice.queue.ds.MessageQueueDatasourceProvider;
+import com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider;
 import com.ctrip.hermes.metaservice.service.DefaultMetaService;
 import com.ctrip.hermes.metaservice.service.DefaultZookeeperService;
 import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
@@ -32,7 +35,15 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(DefaultMonitorEventStorage.class));
 
+		all.add(C(TableProvider.class, "message-priority", MessageQueueTableProvider.class));
+		all.add(C(TableProvider.class, "resend-group-id", MessageQueueTableProvider.class));
+		all.add(C(TableProvider.class, "offset-message", MessageQueueTableProvider.class));
+		all.add(C(TableProvider.class, "offset-resend", MessageQueueTableProvider.class));
+		all.add(C(TableProvider.class, "dead-letter", MessageQueueTableProvider.class));
+		all.add(A(MessageQueueDatasourceProvider.class));
+
 		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
+		all.addAll(new FxHermesShardDbDatabaseConfigurator().defineComponents());
 
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/ctrip/data/hermes/datasources.xml"));
 

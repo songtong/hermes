@@ -47,7 +47,7 @@ public class MonitorConfig {
 	@Value("${produce.ackedtriedratio.checker.excluded.topics:[\"All\"]}")
 	private String produceAckedTriedRatioCheckerExcludedTopics;
 
-	@Value("${meta.rest.url:http://meta.hermes.fx.ctripcorp.com/meta}")
+	@Value("${meta.rest.url:http://meta.hermes.fx.ctripcorp.com/meta/complete}")
 	private String metaRestUrl;
 
 	@Value("${produce.acktriedratio.checker.noproducetried.acked.threshold:100}")
@@ -73,13 +73,31 @@ public class MonitorConfig {
 
 	@Value("${zabbix.url}")
 	private String zabbixUrl;
-	
+
 	@Value("${zabbix.username:guest}")
 	private String zabbixUsername;
-	
+
 	@Value("${zabbix.password:}")
 	private String zabbixPassword;
-	
+
+	@Value("${broker.log.error.checker.threshold:100}")
+	private int brokerErrorThreshold;
+
+	@Value("${metaserver.log.error.checker.threshold:20}")
+	private int metaserverErrorThreshold;
+
+	@Value("${topic.large.dead.letter.checker.include.topics:[\".*:100\"]}")
+	private String deadLetterCheckerIncludeTopics;
+
+	@Value("${topic.large.dead.letter.checker.exclude.topics:[]}")
+	private String deadLetterCheckerExcludeTopics;
+
+	@Value("${consume.large.backlog.checker.include.topics:[\".*:.*:5000\"]}")
+	private String consumeBacklogCheckerIncludeTopics;
+
+	@Value("${consume.large.backlog.checker.exclude.topics:[]}")
+	private String consumeBacklogCheckerExcludeTopics;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -250,26 +268,74 @@ public class MonitorConfig {
 	}
 
 	public String getZabbixUrl() {
-	   return zabbixUrl;
-   }
+		return zabbixUrl;
+	}
 
 	public void setZabbixUrl(String zabbixUrl) {
-	   this.zabbixUrl = zabbixUrl;
-   }
+		this.zabbixUrl = zabbixUrl;
+	}
 
 	public String getZabbixUsername() {
-	   return zabbixUsername;
-   }
+		return zabbixUsername;
+	}
 
 	public void setZabbixUsername(String zabbixUsername) {
-	   this.zabbixUsername = zabbixUsername;
-   }
+		this.zabbixUsername = zabbixUsername;
+	}
 
 	public String getZabbixPassword() {
-	   return zabbixPassword;
-   }
+		return zabbixPassword;
+	}
 
 	public void setZabbixPassword(String zabbixPassword) {
-	   this.zabbixPassword = zabbixPassword;
-   }
+		this.zabbixPassword = zabbixPassword;
+	}
+
+	public int getBrokerErrorThreshold() {
+		return brokerErrorThreshold;
+	}
+
+	public void setBrokerErrorThreshold(int brokerErrorThreshold) {
+		this.brokerErrorThreshold = brokerErrorThreshold;
+	}
+
+	public int getMetaserverErrorThreshold() {
+		return metaserverErrorThreshold;
+	}
+
+	public void setMetaserverErrorThreshold(int metaserverErrorThreshold) {
+		this.metaserverErrorThreshold = metaserverErrorThreshold;
+	}
+
+	public String getDeadLetterCheckerIncludeTopics() {
+		return deadLetterCheckerIncludeTopics;
+	}
+
+	public void setDeadLetterCheckerIncludeTopics(String deadLetterCheckerIncludeTopics) {
+		this.deadLetterCheckerIncludeTopics = deadLetterCheckerIncludeTopics;
+	}
+
+	public String getConsumeBacklogCheckerIncludeTopics() {
+		return consumeBacklogCheckerIncludeTopics;
+	}
+
+	public void setConsumeBacklogCheckerIncludeTopics(String consumeBacklogCheckerIncludeTopics) {
+		this.consumeBacklogCheckerIncludeTopics = consumeBacklogCheckerIncludeTopics;
+	}
+
+	public String getDeadLetterCheckerExcludeTopics() {
+		return deadLetterCheckerExcludeTopics;
+	}
+
+	public void setDeadLetterCheckerExcludeTopics(String deadLetterCheckerExcludeTopics) {
+		this.deadLetterCheckerExcludeTopics = deadLetterCheckerExcludeTopics;
+	}
+
+	public String getConsumeBacklogCheckerExcludeTopics() {
+		return consumeBacklogCheckerExcludeTopics;
+	}
+
+	public void setConsumeBacklogCheckerExcludeTopics(String consumeBacklogCheckerExcludeTopics) {
+		this.consumeBacklogCheckerExcludeTopics = consumeBacklogCheckerExcludeTopics;
+	}
 }

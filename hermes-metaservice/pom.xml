@@ -106,9 +106,12 @@
 							<goal>dal-jdbc</goal>
 						</goals>
 						<configuration>
-							<manifest><![CDATA[,
-                        ${basedir}/src/main/resources/META-INF/dal/jdbc/meta-manifest.xml,
-                     ,]]></manifest>
+							<manifest>
+							<![CDATA[
+		                        ${basedir}/src/main/resources/META-INF/dal/jdbc/meta-manifest.xml,
+		                        ${basedir}/src/main/resources/META-INF/dal/jdbc/queue-manifest.xml
+                     		]]>
+							</manifest>
 						</configuration>
 					</execution>
 				</executions>

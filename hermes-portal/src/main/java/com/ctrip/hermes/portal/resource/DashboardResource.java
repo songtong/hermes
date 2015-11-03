@@ -1,5 +1,7 @@
 package com.ctrip.hermes.portal.resource;
 
+import io.netty.buffer.Unpooled;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,18 +37,16 @@ import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.queue.ListUtils;
+import com.ctrip.hermes.metaservice.queue.MessagePriority;
+import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
-import com.ctrip.hermes.portal.assist.ListUtils;
-import com.ctrip.hermes.portal.dal.HermesPortalDao;
-import com.ctrip.hermes.portal.dal.MessagePriority;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.dashboard.DashboardService;
-
-import io.netty.buffer.Unpooled;
 
 @Path("/dashboard/")
 @Singleton
@@ -58,7 +58,7 @@ public class DashboardResource {
 
 	private PortalMetaService m_metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
 
-	private HermesPortalDao m_portalDao = PlexusComponentLocator.lookup(HermesPortalDao.class);
+	private MessageQueueDao m_messageQueueDao = PlexusComponentLocator.lookup(MessageQueueDao.class);
 
 	@GET
 	@Path("brief/topics")
@@ -115,7 +115,7 @@ public class DashboardResource {
 			for (int i = 0; i < topic.getPartitions().size(); i++) {
 				Partition partition = topic.getPartitions().get(i);
 				try {
-					ls[i] = m_portalDao.getLatestMessages(topic.getName(), partition.getId(), 20);
+					ls[i] = m_messageQueueDao.getLatestMessages(topic.getName(), partition.getId(), 20);
 				} catch (DalException e) {
 					log.warn("Find latest messages of {}[{}] failed", topic.getName(), partition.getId(), e);
 				}

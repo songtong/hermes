@@ -12,5 +12,4 @@ public interface MetaService {
 
 	Meta findLatestMeta() throws DalException;
 
-	boolean updateMeta(Meta meta) throws DalException;
 }

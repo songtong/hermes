@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.ctrip.hermes.metaservice.monitor.event.MetaServerErrorEvent;
 import com.ctrip.hermes.monitor.checker.Checker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.service.ESMonitorService;
 
 @Component(value = MetaserverLogErrorChecker.ID)
@@ -19,6 +20,9 @@ public class MetaserverLogErrorChecker implements Checker {
 
 	@Autowired
 	private ESMonitorService m_es;
+
+	@Autowired
+	private MonitorConfig m_config;
 
 	@Override
 	public String name() {
@@ -35,7 +39,9 @@ public class MetaserverLogErrorChecker implements Checker {
 		try {
 			Map<String, Long> map = m_es.queryMetaserverErrorCount(from, to);
 			for (Entry<String, Long> entry : map.entrySet()) {
-				r.addMonitorEvent(new MetaServerErrorEvent(entry.getKey(), entry.getValue()));
+				if (entry.getValue() >= m_config.getMetaserverErrorThreshold()) {
+					r.addMonitorEvent(new MetaServerErrorEvent(entry.getKey(), entry.getValue()));
+				}
 			}
 			r.setRunSuccess(true);
 		} catch (Exception e) {

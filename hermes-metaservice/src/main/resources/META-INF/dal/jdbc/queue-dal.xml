@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<entities do-package="com.ctrip.hermes.portal.dal" gen="true">
-	<entity name="message-priority" implements="com.ctrip.hermes.portal.dal.ds.TopicPartitionPriorityAware">
+<entities do-package="com.ctrip.hermes.metaservice.queue" gen="true">
+	<entity name="message-priority" implements="com.ctrip.hermes.metaservice.queue.ds.TopicPartitionPriorityAware">
 		<var name="topic" value-type="String" />
 		<var name="partition" value-type="int" />
 		<var name="priority" value-type="int" />
 		<var name="start-id" value-type="long" />
 		<var name="batch-size" value-type="int" />
 		<var name="find-count" value-type="int" />
+
+		<readsets>
+			<readset name="ID">
+				<member name="id" />
+			</readset>
+		</readsets>
 
 		<query-defs>
 			<query name="insert" type="INSERT" batch='true'>
@@ -49,7 +55,7 @@
 		]]></snippet>
 	</entity>
 
-	<entity name="offset-message" implements="com.ctrip.hermes.portal.dal.ds.TopicPartitionPriorityAware">
+	<entity name="offset-message" implements="com.ctrip.hermes.metaservice.queue.ds.TopicPartitionPriorityAware">
 		<var name="partition" value-type="int" />
 		<var name="topic" value-type="String" />
 		<updatesets>
@@ -81,7 +87,7 @@
 		</query-defs>
 	</entity>
 
-	<entity name="resend-group-id" implements="com.ctrip.hermes.portal.dal.ds.TopicPartitionPriorityAware">
+	<entity name="resend-group-id" implements="com.ctrip.hermes.metaservice.queue.ds.TopicPartitionPriorityAware">
 		<relation name="message-priority" entity-name="message-priority" entity-alias="mp" />
 
 		<var name="topic" value-type="String" />
@@ -158,7 +164,7 @@
 		</query-defs>
 	</entity>
 
-	<entity name="offset-resend" alias="ore" implements="com.ctrip.hermes.portal.dal.ds.TopicPartitionAware">
+	<entity name="offset-resend" alias="ore" implements="com.ctrip.hermes.metaservice.queue.ds.TopicPartitionAware">
 		<var name="topic" value-type="String" />
 		<var name="partition" value-type="int" />
 
@@ -183,14 +189,36 @@
 		</query-defs>
 	</entity>
 
-	<entity name="dead-letter" implements="com.ctrip.hermes.portal.dal.ds.TopicPartitionPriorityGroupAware">
+	<entity name="dead-letter" implements="com.ctrip.hermes.metaservice.queue.ds.TopicPartitionPriorityGroupAware">
 		<relation name="message-priority" entity-name="message-priority" entity-alias="mp" />
 		<relation name="resend-group-id" entity-name="resend-group-id" entity-alias="rgi" />
 		<var name="topic" value-type="String" />
 		<var name="partition" value-type="int" />
 		<var name="message-ids" value-type="Long[]" />
+		<var name="start-time" value-type="Date" />
+		<var name="end-time" value-type="Date" />
+		<member name="count-of-time-range" value-type="int" select-expr="COUNT(*)" all="false" />
+
+		<readsets>
+			<readset name="COUNT">
+				<member name="count-of-time-range" />
+			</readset>
+		</readsets>
 
 		<query-defs>
+			<query name="find-by-time-range" type="SELECT" multiple="false">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="start-time" />
+				<param name="end-time" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='dead-date'/> >= ${start-time}
+        		AND <FIELD name='dead-date'/> <= ${end-time}
+        		]]>
+				</statement>
+			</query>
 			<query name="copyFromMessageTable" type="INSERT">
 				<param name="topic" />
 				<param name="partition" />
