@@ -33,9 +33,11 @@ public class DiskMonitor implements IZabbixMonitor {
 	private static final Logger logger = LoggerFactory.getLogger(DiskMonitor.class);
 
 	public static void main(String[] args) throws Throwable {
+		int hours = Integer.parseInt(args[0]);
+		int requestIntervalSecond = Integer.parseInt(args[1]);
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		DiskMonitor monitor = context.getBean(DiskMonitor.class);
-		monitor.monitorPastHours(1, 5);
+		monitor.monitorPastHours(hours, requestIntervalSecond);
 		context.close();
 	}
 

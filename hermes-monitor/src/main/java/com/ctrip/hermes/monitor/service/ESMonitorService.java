@@ -86,8 +86,8 @@ public class ESMonitorService {
 
 	private String generateId(MonitorItem item) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(item.getHost()).append('_').append(item.getSource()).append('_').append(item.getCategory()).append('_')
-		      .append(formatter.format(item.getStartDate()));
+		sb.append(item.getHost()).append('_').append(item.getSource()).append('_').append(item.getGroup()).append('_')
+		      .append(item.getCategory()).append('_').append(formatter.format(item.getStartDate()));
 		return sb.toString();
 	}
 

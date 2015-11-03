@@ -33,9 +33,11 @@ public class KafkaMonitor implements IZabbixMonitor {
 	private static final Logger logger = LoggerFactory.getLogger(KafkaMonitor.class);
 
 	public static void main(String[] args) throws Throwable {
+		int hours = Integer.parseInt(args[0]);
+		int requestIntervalSecond = Integer.parseInt(args[1]);
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		KafkaMonitor monitor = context.getBean(KafkaMonitor.class);
-		monitor.monitorPastHours(24 * 2, 5);
+		monitor.monitorPastHours(hours, requestIntervalSecond);
 		context.close();
 	}
 

@@ -33,9 +33,11 @@ public class MemoryMonitor implements IZabbixMonitor {
 	private static final Logger logger = LoggerFactory.getLogger(MemoryMonitor.class);
 
 	public static void main(String[] args) throws Throwable {
+		int hours = Integer.parseInt(args[0]);
+		int requestIntervalSecond = Integer.parseInt(args[1]);
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		MemoryMonitor monitor = context.getBean(MemoryMonitor.class);
-		monitor.monitorPastHours(48, 5);
+		monitor.monitorPastHours(hours, requestIntervalSecond);
 		context.close();
 	}
 

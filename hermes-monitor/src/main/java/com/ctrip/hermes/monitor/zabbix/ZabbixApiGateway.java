@@ -52,11 +52,11 @@ public class ZabbixApiGateway {
 	private void postConstruct() {
 		zabbixApi = new ZabbixApi(config.getZabbixUrl());
 		try {
-         zabbixApi.login(config.getZabbixUsername(), config.getZabbixPassword());
-      } catch (ZabbixApiException e) {
-         e.printStackTrace();
-      }
-		
+			zabbixApi.login(config.getZabbixUsername(), config.getZabbixPassword());
+		} catch (ZabbixApiException e) {
+			e.printStackTrace();
+		}
+
 		hostNameCache = CacheBuilder.newBuilder().recordStats().maximumSize(50).expireAfterWrite(1, TimeUnit.HOURS)
 		      .build(new CacheLoader<String, Map<Integer, HostObject>>() {
 
@@ -93,6 +93,10 @@ public class ZabbixApiGateway {
 
 	public Map<Integer, StatResult> getHistoryStat(Date timeFrom, Date timeTill, Integer hostid, List<ItemObject> items,
 	      HISOTRY_OBJECT_TYPE history) throws ZabbixApiException {
+		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
+		if (items == null) {
+			return result;
+		}
 		List<Integer> itemids = new ArrayList<Integer>();
 		for (ItemObject item : items) {
 			itemids.add(item.getItemid());
@@ -108,7 +112,6 @@ public class ZabbixApiGateway {
 
 		HistoryGetResponse hisotryGetResponse = zabbixApi.history().get(historyGetRequest);
 
-		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		Map<Integer, List<Double>> values = new HashMap<Integer, List<Double>>();
 		for (HistoryObject ho : hisotryGetResponse.getResult()) {
 			if (!values.containsKey(ho.getItemid())) {

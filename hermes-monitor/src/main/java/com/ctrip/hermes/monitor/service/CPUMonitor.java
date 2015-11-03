@@ -33,9 +33,11 @@ public class CPUMonitor implements IZabbixMonitor {
 	private static final Logger logger = LoggerFactory.getLogger(CPUMonitor.class);
 
 	public static void main(String[] args) throws Throwable {
+		int hours = Integer.parseInt(args[0]);
+		int requestIntervalSecond = Integer.parseInt(args[1]);
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		CPUMonitor monitor = context.getBean(CPUMonitor.class);
-		monitor.monitorPastHours(1, 5);
+		monitor.monitorPastHours(hours, requestIntervalSecond);
 		context.close();
 	}
 
@@ -61,7 +63,6 @@ public class CPUMonitor implements IZabbixMonitor {
 			stat.put("cpu.systemtime", cpuSystemTime.get(hostid).getMean());
 			stat.put("cpu.iowaittime", cpuIOWaitTime.get(hostid).getMean());
 			stat.put("cpu.ratioloadofprocessor", cpuRatioLoadOfProcessor.get(hostid).getMean());
-
 			MonitorItem item = new MonitorItem();
 			item.setCategory(ZabbixConst.CATEGORY_CPU);
 			item.setSource(ZabbixConst.SOURCE_ZABBIX);
