@@ -46,7 +46,8 @@ public class ConsumeLargeBacklogEvent extends BaseMonitorEvent {
 		e.setKey2(m_group);
 		e.setKey3(String.valueOf(m_totalBacklog));
 		e.setKey4(JSON.toJSONString(m_backlogDetail));
-		e.setMessage(String.format("Too much backlog for %s : %s, total: %s", m_topic, m_group, m_totalBacklog));
+		e.setMessage(String.format("[%s] Too much backlog for %s : %s, total: %s", //
+		      getCreateTime(), m_topic, m_group, m_totalBacklog));
 	}
 
 	public String getTopic() {

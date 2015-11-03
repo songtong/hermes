@@ -86,16 +86,28 @@ public class MonitorConfig {
 	@Value("${metaserver.log.error.checker.threshold:20}")
 	private int metaserverErrorThreshold;
 
-	@Value("${topic.large.dead.letter.checker.include.topics:[\".*:100\"]}")
+	/**
+	 * { "song.test" : 100, ".*" : 100, "song..*" : 1000 }
+	 */
+	@Value("${topic.large.dead.letter.checker.include.topics:{\".*\":100}}")
 	private String deadLetterCheckerIncludeTopics;
 
+	/**
+	 * ["song.test", "song..*"]
+	 */
 	@Value("${topic.large.dead.letter.checker.exclude.topics:[]}")
 	private String deadLetterCheckerExcludeTopics;
 
-	@Value("${consume.large.backlog.checker.include.topics:[\".*:.*:5000\"]}")
+	/**
+	 * { ".*" : { ".*" : 100}, "song.test" : { "song.test.group" : 100, "song.test.group2" : 1000 }}
+	 */
+	@Value("${consume.large.backlog.checker.include.topics:{\".*\":{\".*\":5000}}}")
 	private String consumeBacklogCheckerIncludeTopics;
 
-	@Value("${consume.large.backlog.checker.exclude.topics:[]}")
+	/**
+	 * { ".*" : {"song.test..*"} }
+	 */
+	@Value("${consume.large.backlog.checker.exclude.topics:{}}")
 	private String consumeBacklogCheckerExcludeTopics;
 
 	public String getEsClusterName() {

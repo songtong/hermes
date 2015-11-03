@@ -11,9 +11,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -23,44 +24,58 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.mysql.task.DeadLetterCheckerTask;
 
 @Component(value = TopicLargeDeadLetterChecker.ID)
-public class TopicLargeDeadLetterChecker extends DBBasedChecker implements InitializingBean {
+public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 	public static final String ID = "TopicLargeDeadLetterChecker";
 
 	private static final int DEADLETTER_CHECKER_TIMEOUT_MINUTE = 3;
 
 	private DeadLetterDao m_dao = PlexusComponentLocator.lookup(DeadLetterDao.class);
 
-	private Map<Topic, Integer> m_limits = new HashMap<Topic, Integer>();
+	private Map<Topic, Integer> m_limits;
 
 	@Override
 	public String name() {
 		return ID;
 	}
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		Meta meta = fetchMeta();
-		for (String item : m_config.getDeadLetterCheckerIncludeTopics().split(",")) {
-			String[] parts = item.split(":");
-			if (parts.length < 2) {
-				throw new IllegalArgumentException("Wrong dead letter checker config: " + item);
+	protected void setDeadLetterDao(DeadLetterDao dao) {
+		m_dao = dao;
+	}
+
+	protected void setLimits(Map<Topic, Integer> limits) {
+		m_limits = limits;
+	}
+
+	protected Map<Topic, Integer> parseLimits(Meta meta, String includeString, String excludeString) {
+		if (meta == null || StringUtils.isBlank(includeString) || StringUtils.isBlank(excludeString)) {
+			return null;
+		}
+		Map<Topic, Integer> limits = new HashMap<Topic, Integer>();
+		Map<String, Integer> includes = JSON.parseObject(includeString, new TypeReference<Map<String, Integer>>() {
+		});
+		if (includes.containsKey(".*")) {
+			for (Entry<String, Topic> entry : findTopics(".*", meta)) {
+				limits.put(entry.getValue(), includes.get(".*"));
 			}
-			String pattern = parts[0].trim();
-			Integer limit = Integer.valueOf(parts[1].trim());
-			if (limit > 0) {
-				for (Entry<String, Topic> entry : findTopics(pattern, meta)) {
-					m_limits.put(entry.getValue(), limit);
+		}
+		for (Entry<String, Integer> item : includes.entrySet()) {
+			if (!item.getKey().equals(".*") && item.getValue() > 0) {
+				for (Entry<String, Topic> entry : findTopics(item.getKey(), meta)) {
+					limits.put(entry.getValue(), item.getValue());
 				}
 			}
 		}
 
-		for (String item : m_config.getDeadLetterCheckerExcludeTopics().split(",")) {
+		for (String item : JSON.parseObject(excludeString, new TypeReference<List<String>>() {
+		})) {
 			if (!StringUtils.isBlank(item)) {
 				for (Entry<String, Topic> entry : findTopics(item.trim(), meta)) {
-					m_limits.remove(entry.getValue());
+					limits.remove(entry.getValue());
 				}
 			}
 		}
+
+		return limits;
 	}
 
 	private List<Entry<String, Topic>> findTopics(final String pattern, Meta meta) {
@@ -74,6 +89,9 @@ public class TopicLargeDeadLetterChecker extends DBBasedChecker implements Initi
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
+		m_limits = m_limits == null ? parseLimits(fetchMeta(), m_config.getDeadLetterCheckerIncludeTopics(),
+		      m_config.getDeadLetterCheckerExcludeTopics()) : m_limits;
+
 		final Date to = new Date(toDate.getTime() - TimeUnit.MINUTES.toMillis(1));
 		final Date from = new Date(to.getTime() - TimeUnit.MINUTES.toMillis(minutesBefore));
 

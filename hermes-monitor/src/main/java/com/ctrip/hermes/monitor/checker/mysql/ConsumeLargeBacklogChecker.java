@@ -11,11 +11,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -25,7 +27,7 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.mysql.task.ConsumeBacklogCheckerTask;
 
 @Component(value = ConsumeLargeBacklogChecker.ID)
-public class ConsumeLargeBacklogChecker extends DBBasedChecker implements InitializingBean {
+public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 	public static final String ID = "ConsumeLargeBacklogChecker";
 
 	private static final int CONSUME_BACKLOG_CHECKER_TIMEOUT_MINUTE = 5;
@@ -34,35 +36,50 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 
 	private OffsetMessageDao m_offsetDao = PlexusComponentLocator.lookup(OffsetMessageDao.class);
 
-	private Map<Pair<Topic, ConsumerGroup>, Long> m_limits = new HashMap<>();
+	private Map<Pair<Topic, ConsumerGroup>, Long> m_limits;
 
 	@Override
 	public String name() {
 		return ID;
 	}
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		Meta meta = fetchMeta();
-
-		for (String item : m_config.getConsumeBacklogCheckerIncludeTopics().split(",")) {
-			final String[] parts = item.split(":");
-			if (parts.length < 3) {
-				throw new IllegalAccessException("Wrong format of consume backlog checker include config: " + item);
+	protected Map<Pair<Topic, ConsumerGroup>, Long> parseLimits(Meta meta, String includeString, String excludeString) {
+		if (meta == null || StringUtils.isBlank(includeString) || StringUtils.isBlank(excludeString)) {
+			return null;
+		}
+		Map<Pair<Topic, ConsumerGroup>, Long> limits = new HashMap<>();
+		Map<String, Map<String, Integer>> includes = JSON.parseObject(includeString,
+		      new TypeReference<Map<String, Map<String, Integer>>>() {
+		      });
+		Map<String, Integer> all = includes.get(".*");
+		if (all != null) {
+			for (Entry<String, Integer> entry : all.entrySet()) {
+				limits.putAll(parseIncludes(meta, ".*", "", entry.getValue()));
 			}
-			addInclude(meta, parts[0], parts[1], Long.valueOf(parts[2]));
+		}
+		for (Entry<String, Map<String, Integer>> item : includes.entrySet()) {
+			if (!item.getKey().equals(".*")) {
+				for (Entry<String, Integer> entry : item.getValue().entrySet()) {
+					limits.putAll(parseIncludes(meta, item.getKey(), entry.getKey(), entry.getValue()));
+				}
+			}
 		}
 
-		for (String item : m_config.getConsumeBacklogCheckerExcludeTopics().split(",")) {
-			final String[] parts = item.split(":");
-			if (parts.length < 2) {
-				throw new IllegalAccessException("Wrong format of consume backlog checker exclude config: " + item);
+		Map<String, List<String>> excludes = JSON.parseObject(excludeString,
+		      new TypeReference<Map<String, List<String>>>() {
+		      });
+		for (Entry<String, List<String>> item : excludes.entrySet()) {
+			for (String consumer : item.getValue()) {
+				removeExcludes(limits, meta, item.getKey(), consumer);
 			}
-			addExclude(meta, parts[0], parts[1]);
 		}
+
+		return limits;
 	}
 
-	private void addInclude(Meta meta, final String topicPattern, final String groupPattern, long limit) {
+	private Map<Pair<Topic, ConsumerGroup>, Long> parseIncludes( //
+	      Meta meta, final String topicPattern, final String groupPattern, long limit) {
+		Map<Pair<Topic, ConsumerGroup>, Long> limits = new HashMap<Pair<Topic, ConsumerGroup>, Long>();
 		List<Entry<String, Topic>> includeTopics = findMatched(meta.getTopics().entrySet(),
 		      new Matcher<Entry<String, Topic>>() {
 			      @Override
@@ -79,12 +96,14 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 				}
 			});
 			for (ConsumerGroup group : includeGroups) {
-				m_limits.put(new Pair<Topic, ConsumerGroup>(topic, group), limit);
+				limits.put(new Pair<Topic, ConsumerGroup>(topic, group), limit);
 			}
 		}
+		return limits;
 	}
 
-	private void addExclude(Meta meta, final String topicPattern, final String groupPattern) {
+	private void removeExcludes(Map<Pair<Topic, ConsumerGroup>, Long> limits, //
+	      Meta meta, final String topicPattern, final String groupPattern) {
 		List<Entry<String, Topic>> excludeTopics = findMatched(meta.getTopics().entrySet(),
 		      new Matcher<Entry<String, Topic>>() {
 			      @Override
@@ -101,13 +120,15 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 				}
 			});
 			for (ConsumerGroup group : excludeGroups) {
-				m_limits.remove(new Pair<Topic, Integer>(topic, group.getId()));
+				limits.remove(new Pair<Topic, Integer>(topic, group.getId()));
 			}
 		}
 	}
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
+		m_limits = m_limits == null ? parseLimits(fetchMeta(), m_config.getConsumeBacklogCheckerIncludeTopics(),
+		      m_config.getConsumeBacklogCheckerExcludeTopics()) : m_limits;
 
 		final CheckerResult result = new CheckerResult();
 
