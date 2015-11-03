@@ -9,22 +9,16 @@ public class MockMetaService implements MetaService {
 
 	@Override
 	public Meta findLatestMeta() throws DalException {
-		Meta meta =null;
-			try {
-				 meta = loadMeta();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		Meta meta = null;
+		try {
+			meta = loadMeta();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return meta;
 	}
 
-	@Override
-	public boolean updateMeta(Meta meta) throws DalException {
-		throw  new RuntimeException("not implemented in MockMetaService!");
-	}
-
 	protected Meta loadMeta() throws Exception {
-
 
 		String fileName = MetaServerBaseTest.metaXmlFile;
 

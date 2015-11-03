@@ -3,11 +3,13 @@ package com.ctrip.hermes.metaservice.monitor;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.monitor.event.BrokerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeDelayTooLargeEvent;
+import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MetaServerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceAckedTriedRatioErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceFailureCountTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
+import com.ctrip.hermes.metaservice.monitor.event.TopicLargeDeadLetterEvent;
 
 public enum MonitorEventType {
 	BROKER_ERROR(1, "broker_error", BrokerErrorEvent.class), //
@@ -18,10 +20,13 @@ public enum MonitorEventType {
 	PRODUCE_ACKED_TRIED_RATIO_ERROR(5, "produce_acked_tried_ratio_error", ProduceAckedTriedRatioErrorEvent.class), //
 
 	CONSUME_LARGE_DELAY(6, "consume_large_delay", ConsumeDelayTooLargeEvent.class), //
-	CONSUME_LARGE_BACKLOG(7, null, null), //
+	CONSUME_LARGE_BACKLOG(7, "consume_large_backlog", ConsumeLargeBacklogEvent.class), //
 
-	ES_DATASOURCE_ERROR(8, null, null), //
-	CAT_DATASOURCE_ERROR(9, null, null)//
+	TOPIC_LARGE_DEAD_LETTER(8, "topic_large_dead_letter", TopicLargeDeadLetterEvent.class), //
+
+	ES_DATASOURCE_ERROR(9, null, null), //
+	CAT_DATASOURCE_ERROR(10, null, null), //
+	DB_DATASOURCE_ERROR(11, null, null)//
 	;
 
 	private int m_code;

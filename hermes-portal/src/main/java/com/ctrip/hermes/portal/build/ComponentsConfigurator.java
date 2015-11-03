@@ -3,15 +3,14 @@ package com.ctrip.hermes.portal.build;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.unidal.dal.jdbc.mapping.TableProvider;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.metaservice.queue.DefaultMessageQueueDao;
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.CompileService;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.metaservice.service.SchemaRegistryService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
@@ -19,9 +18,6 @@ import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler;
 import com.ctrip.hermes.portal.config.PortalConfig;
-import com.ctrip.hermes.portal.dal.DefaultHermesPortalDao;
-import com.ctrip.hermes.portal.dal.ds.PortalDataSourceProvider;
-import com.ctrip.hermes.portal.dal.ds.PortalTableProvider;
 import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService;
 import com.ctrip.hermes.portal.service.elastic.DefaultPortalElasticClient;
 
@@ -46,21 +42,13 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(DefaultPortalMetaService.class));
 
-		all.add(C(TableProvider.class, "message-priority", PortalTableProvider.class).req(PortalMetaService.class));
-		all.add(C(TableProvider.class, "resend-group-id", PortalTableProvider.class).req(PortalMetaService.class));
-		all.add(C(TableProvider.class, "offset-message", PortalTableProvider.class).req(PortalMetaService.class));
-		all.add(C(TableProvider.class, "offset-resend", PortalTableProvider.class).req(PortalMetaService.class));
-		all.add(C(TableProvider.class, "dead-letter", PortalTableProvider.class).req(PortalMetaService.class));
-		all.add(A(PortalDataSourceProvider.class));
-
-		all.add(A(DefaultHermesPortalDao.class));
+		all.add(A(DefaultMessageQueueDao.class));
 
 		all.add(A(DefaultDashboardService.class));
 
 		all.add(A(DefaultPortalElasticClient.class));
 
 		// Please keep it as last
-		all.addAll(new PortalDatabaseConfigurator().defineComponents());
 		all.addAll(new WebComponentConfigurator().defineComponents());
 
 		return all;

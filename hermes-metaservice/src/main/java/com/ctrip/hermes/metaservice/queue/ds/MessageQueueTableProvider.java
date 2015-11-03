@@ -1,23 +1,25 @@
-package com.ctrip.hermes.portal.dal.ds;
+package com.ctrip.hermes.metaservice.queue.ds;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.QueryDef;
 import org.unidal.dal.jdbc.QueryEngine;
 import org.unidal.dal.jdbc.QueryType;
 import org.unidal.dal.jdbc.mapping.TableProvider;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.MetaService;
 
-public class PortalTableProvider implements TableProvider {
+public class MessageQueueTableProvider implements TableProvider {
+	private static final Logger log = LoggerFactory.getLogger(MessageQueueTableProvider.class);
 
-	@Deprecated
-	private PortalMetaService m_metaService;
-
-	private final AtomicBoolean m_inited = new AtomicBoolean(false);
+	private AtomicReference<Meta> m_meta = new AtomicReference<Meta>();
 
 	@Override
 	public String getDataSourceName(Map<String, Object> hints, String logicalTableName) {
@@ -64,13 +66,13 @@ public class PortalTableProvider implements TableProvider {
 
 	private String toDbName(String topic, int partition) {
 		String fmt = "%s_%s";
-		return String.format(fmt, getMetaService().findTopicByName(topic).getId(), partition);
+		return String.format(fmt, getMeta().findTopic(topic).getId(), partition);
 	}
 
 	private String findDataSourceName(QueryDef def, TopicPartitionAware tpAware) {
 		QueryType queryType = def.getType();
 
-		Partition p = getMetaService().findPartition(tpAware.getTopic(), tpAware.getPartition());
+		Partition p = getMeta().findTopic(tpAware.getTopic()).findPartition(tpAware.getPartition());
 
 		switch (queryType) {
 		case INSERT:
@@ -85,15 +87,18 @@ public class PortalTableProvider implements TableProvider {
 		}
 	}
 
-	private PortalMetaService getMetaService() {
-		if (!m_inited.get()) {
-			synchronized (m_inited) {
-				if (!m_inited.get()) {
-					m_metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
-					m_inited.set(true);
+	private Meta getMeta() {
+		if (m_meta.get() == null) {
+			synchronized (m_meta) {
+				if (m_meta.get() == null) {
+					try {
+						m_meta.set(PlexusComponentLocator.lookup(MetaService.class).findLatestMeta());
+					} catch (DalException e) {
+						log.error("Couldn't find latest meta-info from meta-db.", e);
+					}
 				}
 			}
 		}
-		return m_metaService;
+		return m_meta.get();
 	}
 }

@@ -119,77 +119,22 @@
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>message-priority</role-hint>
-			<implementation>com.ctrip.hermes.portal.dal.ds.PortalTableProvider</implementation>
-			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
+					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>resend-group-id</role-hint>
-			<implementation>com.ctrip.hermes.portal.dal.ds.PortalTableProvider</implementation>
+			<role>com.ctrip.hermes.metaservice.queue.MessageQueueDao</role>
+			<implementation>com.ctrip.hermes.metaservice.queue.DefaultMessageQueueDao</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>offset-message</role-hint>
-			<implementation>com.ctrip.hermes.portal.dal.ds.PortalTableProvider</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>offset-resend</role-hint>
-			<implementation>com.ctrip.hermes.portal.dal.ds.PortalTableProvider</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>dead-letter</role-hint>
-			<implementation>com.ctrip.hermes.portal.dal.ds.PortalTableProvider</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>
-			<role-hint>portal</role-hint>
-			<implementation>com.ctrip.hermes.portal.dal.ds.PortalDataSourceProvider</implementation>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.portal.dal.HermesPortalDao</role>
-			<implementation>com.ctrip.hermes.portal.dal.DefaultHermesPortalDao</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.portal.dal.MessagePriorityDao</role>
+					<role>com.ctrip.hermes.metaservice.queue.MessagePriorityDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.dal.OffsetMessageDao</role>
+					<role>com.ctrip.hermes.metaservice.queue.OffsetMessageDao</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -198,7 +143,7 @@
 			<implementation>com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.portal.dal.HermesPortalDao</role>
+					<role>com.ctrip.hermes.metaservice.queue.MessageQueueDao</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
@@ -217,51 +162,6 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.portal.config.PortalConfig</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.portal.dal.DeadLetterDao</role>
-			<implementation>com.ctrip.hermes.portal.dal.DeadLetterDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.portal.dal.MessagePriorityDao</role>
-			<implementation>com.ctrip.hermes.portal.dal.MessagePriorityDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.portal.dal.OffsetMessageDao</role>
-			<implementation>com.ctrip.hermes.portal.dal.OffsetMessageDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.portal.dal.OffsetResendDao</role>
-			<implementation>com.ctrip.hermes.portal.dal.OffsetResendDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.portal.dal.ResendGroupIdDao</role>
-			<implementation>com.ctrip.hermes.portal.dal.ResendGroupIdDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
 				</requirement>
 			</requirements>
 		</component>

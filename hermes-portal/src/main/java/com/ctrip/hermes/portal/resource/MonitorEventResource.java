@@ -14,7 +14,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 import com.ctrip.hermes.metaservice.monitor.dao.MonitorEventStorage;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;

@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.dal;
+package com.ctrip.hermes.metaservice.queue;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,12 +13,9 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.portal.assist.ListUtils;
-import com.ctrip.hermes.portal.config.PortalConstants;
-
-@Named(type = HermesPortalDao.class)
-public class DefaultHermesPortalDao implements HermesPortalDao {
-	private static final Logger log = LoggerFactory.getLogger(DefaultHermesPortalDao.class);
+@Named(type = MessageQueueDao.class)
+public class DefaultMessageQueueDao implements MessageQueueDao {
+	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueueDao.class);
 
 	@Inject
 	private MessagePriorityDao m_msgDao;
@@ -34,17 +31,17 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 
 	@Override
 	public MessagePriority getMsgById(String topic, int partition, int priority, long id) throws DalException {
-		if(id<=0){
+		if (id <= 0) {
 			return null;
 		}
 		List<MessagePriority> msgs = m_msgDao.findIdAfter(topic, partition, priority, id - 1, 1,
-				MessagePriorityEntity.READSET_FULL);
+		      MessagePriorityEntity.READSET_FULL);
 		return msgs.size() > 0 ? msgs.get(0) : null;
 	}
 
 	@Override
 	public Map<Integer, Pair<OffsetMessage, OffsetMessage>> getLatestConsumed(String topic, int partition)
-			throws DalException {
+	      throws DalException {
 		List<OffsetMessage> offsetMsgs = m_offsetDao.findAll(topic, partition, OffsetMessageEntity.READSET_FULL);
 		Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = new HashMap<>();
 		for (OffsetMessage offsetMsg : offsetMsgs) {
@@ -52,7 +49,7 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 			if (!offsetMsgMap.containsKey(offsetMsg.getGroupId()))
 				offsetMsgMap.put(offsetMsg.getGroupId(), new Pair<OffsetMessage, OffsetMessage>());
 
-			if (PortalConstants.PRIORITY_TRUE == offsetMsg.getPriority()) {
+			if (MessageQueueConstants.PRIORITY_TRUE == offsetMsg.getPriority()) {
 				offsetMsgMap.get(offsetMsg.getGroupId()).setKey(offsetMsg);
 			} else {
 				offsetMsgMap.get(offsetMsg.getGroupId()).setValue(offsetMsg);
@@ -65,8 +62,8 @@ public class DefaultHermesPortalDao implements HermesPortalDao {
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<MessagePriority> getLatestMessages(String topic, int partition, int count) throws DalException {
-		List<MessagePriority> k0 = doFindLatestMessages(topic, partition, PortalConstants.PRIORITY_TRUE, count);
-		List<MessagePriority> k1 = doFindLatestMessages(topic, partition, PortalConstants.PRIORITY_FALSE, count);
+		List<MessagePriority> k0 = doFindLatestMessages(topic, partition, MessageQueueConstants.PRIORITY_TRUE, count);
+		List<MessagePriority> k1 = doFindLatestMessages(topic, partition, MessageQueueConstants.PRIORITY_FALSE, count);
 		return ListUtils.getTopK(count, new Comparator<MessagePriority>() {
 			@Override
 			public int compare(MessagePriority o1, MessagePriority o2) {

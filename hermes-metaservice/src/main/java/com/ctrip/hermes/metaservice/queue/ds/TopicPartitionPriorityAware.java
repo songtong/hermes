@@ -1,4 +1,4 @@
-package com.ctrip.hermes.portal.dal.ds;
+package com.ctrip.hermes.metaservice.queue.ds;
 
 public interface TopicPartitionPriorityAware extends TopicPartitionAware {
 
