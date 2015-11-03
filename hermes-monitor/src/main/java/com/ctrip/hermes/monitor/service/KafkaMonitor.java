@@ -74,7 +74,7 @@ public class KafkaMonitor implements IZabbixMonitor {
 		Map<Integer, StatResult> requestRateFetchFollowerStat = statRequestRateFetchFollower(timeFrom, timeTill,
 		      kafkaHosts);
 
-		int MINUTE_IN_SECONDS = 60;
+		int MINUTE_IN_SECONDS = (int) ((timeTill.getTime() - timeFrom.getTime()) / 1000 / 60);
 
 		for (Integer hostid : kafkaHosts.keySet()) {
 			Map<String, Object> stat = new HashMap<String, Object>();

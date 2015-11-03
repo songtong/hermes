@@ -10,8 +10,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.math.stat.StatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.ctrip.hermes.monitor.config.MonitorConfig;
@@ -35,31 +38,25 @@ import com.zabbix4j.item.ItemGetResponse.Result;
 import com.zabbix4j.item.ItemObject;
 
 @Service
+@Scope("singleton")
 public class ZabbixApiGateway {
 
-	public static String DEFAULT_USER = "guest";
-
-	public static String DEFAULT_PASSWORD = "";
-
-	public static String DEFAULT_ZABBIX_URL = "http://zabbixserver.sh.ctripcorp.com/api_jsonrpc.php";
-
-	private static ZabbixApi zabbixApi;
-
-	// TODO enable configuration
-	private static ZabbixApi getZabbixApiInstance() throws ZabbixApiException {
-		if (zabbixApi == null) {
-			zabbixApi = new ZabbixApi(DEFAULT_ZABBIX_URL);
-			zabbixApi.login(DEFAULT_USER, DEFAULT_PASSWORD);
-		}
-		return zabbixApi;
-	}
+	private ZabbixApi zabbixApi;
 
 	@Autowired
 	private MonitorConfig config;
 
 	private LoadingCache<String, Map<Integer, HostObject>> hostNameCache;
 
-	public ZabbixApiGateway() {
+	@PostConstruct
+	private void postConstruct() {
+		zabbixApi = new ZabbixApi(config.getZabbixUrl());
+		try {
+         zabbixApi.login(config.getZabbixUsername(), config.getZabbixPassword());
+      } catch (ZabbixApiException e) {
+         e.printStackTrace();
+      }
+		
 		hostNameCache = CacheBuilder.newBuilder().recordStats().maximumSize(50).expireAfterWrite(1, TimeUnit.HOURS)
 		      .build(new CacheLoader<String, Map<Integer, HostObject>>() {
 
@@ -85,7 +82,6 @@ public class ZabbixApiGateway {
 		historyGetRequest.getParams().setTime_from(timeFrom.getTime() / 1000);
 		historyGetRequest.getParams().setTime_till(timeTill.getTime() / 1000);
 
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
 		HistoryGetResponse hisotryGetResponse = zabbixApi.history().get(historyGetRequest);
 
 		Map<Integer, HistoryObject> result = new HashMap<Integer, HistoryObject>();
@@ -110,7 +106,6 @@ public class ZabbixApiGateway {
 		historyGetRequest.getParams().setTime_from(timeFrom.getTime() / 1000);
 		historyGetRequest.getParams().setTime_till(timeTill.getTime() / 1000);
 
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
 		HistoryGetResponse hisotryGetResponse = zabbixApi.history().get(historyGetRequest);
 
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
@@ -147,7 +142,6 @@ public class ZabbixApiGateway {
 		HostGetRequest request = new HostGetRequest();
 		request.getParams().setHostids(hostids);
 
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
 		HostGetResponse response = zabbixApi.host().get(request);
 
 		Map<Integer, HostObject> result = new HashMap<Integer, HostObject>();
@@ -167,7 +161,6 @@ public class ZabbixApiGateway {
 		itemGetRequest.getParams().setItemids(itemids);
 		itemGetRequest.getParams().setSortField("key_");
 
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
 		ItemGetResponse itemGetResponse = zabbixApi.item().get(itemGetRequest);
 
 		Map<Integer, Result> result = new HashMap<Integer, Result>();
@@ -181,7 +174,6 @@ public class ZabbixApiGateway {
 		ItemGetRequest request = new ItemGetRequest();
 		request.getParams().setItemids(itemids);
 
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
 		ItemGetResponse response = zabbixApi.item().get(request);
 
 		Map<Integer, ItemObject> result = new HashMap<Integer, ItemObject>();
@@ -205,7 +197,6 @@ public class ZabbixApiGateway {
 	}
 
 	private Map<Integer, HostObject> populateHostsByName(String hostName) throws ZabbixApiException {
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
 		Map<Integer, HostObject> result = new HashMap<Integer, HostObject>();
 
 		HostGetRequest request = new HostGetRequest();
@@ -230,7 +221,6 @@ public class ZabbixApiGateway {
 		search.put("key_", keyName);
 		request.getParams().setSearch(search);
 
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
 		ItemGetResponse response = zabbixApi.item().get(request);
 
 		Map<Integer, List<ItemObject>> result = new HashMap<Integer, List<ItemObject>>();
@@ -254,7 +244,6 @@ public class ZabbixApiGateway {
 		search.put("name", searchName);
 		request.getParams().setSearch(search);
 
-		ZabbixApi zabbixApi = ZabbixApiGateway.getZabbixApiInstance();
 		ItemGetResponse response = zabbixApi.item().get(request);
 
 		Map<Integer, List<ItemObject>> result = new HashMap<Integer, List<ItemObject>>();

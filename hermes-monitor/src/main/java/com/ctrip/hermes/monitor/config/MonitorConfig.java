@@ -71,6 +71,15 @@ public class MonitorConfig {
 	@Value("${zabbix.zookeeper.hosts}")
 	private String[] zabbixZookeeperHosts;
 
+	@Value("${zabbix.url}")
+	private String zabbixUrl;
+	
+	@Value("${zabbix.username:guest}")
+	private String zabbixUsername;
+	
+	@Value("${zabbix.password:}")
+	private String zabbixPassword;
+	
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -239,4 +248,28 @@ public class MonitorConfig {
 	public void setZabbixKafkaBrokerHosts(String[] zabbixKafkaBrokerHosts) {
 		this.zabbixKafkaBrokerHosts = zabbixKafkaBrokerHosts;
 	}
+
+	public String getZabbixUrl() {
+	   return zabbixUrl;
+   }
+
+	public void setZabbixUrl(String zabbixUrl) {
+	   this.zabbixUrl = zabbixUrl;
+   }
+
+	public String getZabbixUsername() {
+	   return zabbixUsername;
+   }
+
+	public void setZabbixUsername(String zabbixUsername) {
+	   this.zabbixUsername = zabbixUsername;
+   }
+
+	public String getZabbixPassword() {
+	   return zabbixPassword;
+   }
+
+	public void setZabbixPassword(String zabbixPassword) {
+	   this.zabbixPassword = zabbixPassword;
+   }
 }
