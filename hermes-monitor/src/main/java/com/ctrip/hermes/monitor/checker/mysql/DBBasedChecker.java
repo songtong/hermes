@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 
 import org.apache.http.client.fluent.Request;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.xml.sax.SAXException;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -76,8 +75,12 @@ public abstract class DBBasedChecker implements Checker {
 		}
 	}
 
-	protected Meta fetchMeta() throws IOException, SAXException {
-		String metaStr = curl(m_config.getMetaRestUrl(), 3000, 1000);
-		return JSON.parseObject(metaStr, Meta.class);
+	protected Meta fetchMeta() {
+		try {
+			return JSON.parseObject(curl(m_config.getMetaRestUrl(), 3000, 1000), Meta.class);
+		} catch (Exception e) {
+			throw new RuntimeException("Fetch meta failed.", e);
+		}
 	}
+
 }

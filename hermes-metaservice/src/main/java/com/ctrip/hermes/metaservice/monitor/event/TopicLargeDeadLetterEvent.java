@@ -120,4 +120,10 @@ public class TopicLargeDeadLetterEvent extends BaseMonitorEvent {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "TopicLargeDeadLetterEvent [m_topic=" + m_topic + ", m_deadCount=" + m_deadCount + ", m_startDate="
+		      + m_startDate + ", m_endDate=" + m_endDate + "]";
+	}
+
 }
