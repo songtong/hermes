@@ -31,8 +31,6 @@ public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 
 	private DeadLetterDao m_dao = PlexusComponentLocator.lookup(DeadLetterDao.class);
 
-	private Map<Topic, Integer> m_limits;
-
 	@Override
 	public String name() {
 		return ID;
@@ -40,10 +38,6 @@ public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 
 	protected void setDeadLetterDao(DeadLetterDao dao) {
 		m_dao = dao;
-	}
-
-	protected void setLimits(Map<Topic, Integer> limits) {
-		m_limits = limits;
 	}
 
 	protected Map<Topic, Integer> parseLimits(Meta meta, String includeString, String excludeString) {
@@ -89,8 +83,8 @@ public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
-		m_limits = m_limits == null ? parseLimits(fetchMeta(), m_config.getDeadLetterCheckerIncludeTopics(),
-		      m_config.getDeadLetterCheckerExcludeTopics()) : m_limits;
+		Map<Topic, Integer> limits = parseLimits(fetchMeta(), //
+		      m_config.getDeadLetterCheckerIncludeTopics(), m_config.getDeadLetterCheckerExcludeTopics());
 
 		final Date to = new Date(toDate.getTime() - TimeUnit.MINUTES.toMillis(1));
 		final Date from = new Date(to.getTime() - TimeUnit.MINUTES.toMillis(minutesBefore));
@@ -99,7 +93,7 @@ public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 
 		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
 		try {
-			List<Map<Topic, Integer>> splited = splitMap(m_limits, DB_CHECKER_THREAD_COUNT);
+			List<Map<Topic, Integer>> splited = splitMap(limits, DB_CHECKER_THREAD_COUNT);
 			final CountDownLatch latch = new CountDownLatch(splited.size());
 			for (final Map<Topic, Integer> map : splited) {
 				es.execute(new DeadLetterCheckerTask(map, m_dao, from, to, result, latch));
