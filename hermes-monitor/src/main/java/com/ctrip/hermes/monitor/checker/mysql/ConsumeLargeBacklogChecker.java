@@ -36,11 +36,17 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 
 	private OffsetMessageDao m_offsetDao = PlexusComponentLocator.lookup(OffsetMessageDao.class);
 
-	private Map<Pair<Topic, ConsumerGroup>, Long> m_limits;
-
 	@Override
 	public String name() {
 		return ID;
+	}
+
+	protected void setMessagePriorityDao(MessagePriorityDao dao) {
+		m_msgDao = dao;
+	}
+
+	protected void setOffsetMessageDao(OffsetMessageDao dao) {
+		m_offsetDao = dao;
 	}
 
 	protected Map<Pair<Topic, ConsumerGroup>, Long> parseLimits(Meta meta, String includeString, String excludeString) {
@@ -54,7 +60,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 		Map<String, Integer> all = includes.get(".*");
 		if (all != null) {
 			for (Entry<String, Integer> entry : all.entrySet()) {
-				limits.putAll(parseIncludes(meta, ".*", "", entry.getValue()));
+				limits.putAll(parseIncludes(meta, ".*", entry.getKey(), entry.getValue()));
 			}
 		}
 		for (Entry<String, Map<String, Integer>> item : includes.entrySet()) {
@@ -127,17 +133,17 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
-		m_limits = m_limits == null ? parseLimits(fetchMeta(), m_config.getConsumeBacklogCheckerIncludeTopics(),
-		      m_config.getConsumeBacklogCheckerExcludeTopics()) : m_limits;
+		Map<Pair<Topic, ConsumerGroup>, Long> limits = parseLimits(fetchMeta(), //
+		      m_config.getConsumeBacklogCheckerIncludeTopics(), m_config.getConsumeBacklogCheckerExcludeTopics());
 
 		final CheckerResult result = new CheckerResult();
 
 		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
 		try {
-			List<Map<Pair<Topic, ConsumerGroup>, Long>> splited = splitMap(m_limits, DB_CHECKER_THREAD_COUNT);
+			List<Map<Pair<Topic, ConsumerGroup>, Long>> splited = splitMap(limits, DB_CHECKER_THREAD_COUNT);
 			final CountDownLatch latch = new CountDownLatch(splited.size());
-			for (final Map<Pair<Topic, ConsumerGroup>, Long> limits : splited) {
-				es.execute(new ConsumeBacklogCheckerTask(limits, m_msgDao, m_offsetDao, result, latch));
+			for (final Map<Pair<Topic, ConsumerGroup>, Long> batchLimits : splited) {
+				es.execute(new ConsumeBacklogCheckerTask(batchLimits, m_msgDao, m_offsetDao, result, latch));
 			}
 			if (latch.await(CONSUME_BACKLOG_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
 				result.setRunSuccess(true);

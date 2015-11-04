@@ -122,4 +122,9 @@ public class ConsumeLargeBacklogEvent extends BaseMonitorEvent {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "ConsumeLargeBacklogEvent [m_topic=" + m_topic + ", m_group=" + m_group + ", m_totalBacklog="
+		      + m_totalBacklog + ", m_backlogDetail=" + m_backlogDetail + "]";
+	}
 }

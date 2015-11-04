@@ -7,6 +7,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -17,9 +19,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.Readset;
 
+import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.metaservice.queue.DeadLetter;
@@ -32,23 +34,27 @@ public class TopicLargeDeadLetterCheckerTest extends BaseCheckerTest {
 
 	@Component("MockTopicLargeDeadLetterChecker")
 	public static class MockTopicLargeDeadLetterChecker extends TopicLargeDeadLetterChecker {
+
+		@Override
+		protected Meta fetchMeta() {
+			try {
+				return DefaultSaxParser.parse(new String(Files.readAllBytes(Paths.get(this.getClass()
+				      .getResource("DBCheckerMockMeta.xml").toURI()))));
+			} catch (Exception e) {
+				return null;
+			}
+		}
+
 		@SuppressWarnings("unchecked")
 		public void initMock(int count) {
 			try {
-				setLimits(parseLimits(
-				      DefaultSaxParser.parse(loadTestData("testNormal", TopicLargeDeadLetterCheckerTest.class)),
-				      m_config.getDeadLetterCheckerIncludeTopics(), m_config.getDeadLetterCheckerExcludeTopics()));
 				DeadLetterDao mockDao = mock(DeadLetterDao.class);
-				try {
-					doReturn(new DeadLetter().setCountOfTimeRange(100)) //
-					      .when(mockDao) //
-					      .findByTimeRange(anyString(), anyInt(), any(Date.class), any(Date.class), any(Readset.class));
-					doReturn(new DeadLetter().setCountOfTimeRange(count)) //
-					      .when(mockDao) //
-					      .findByTimeRange(eq("song.test"), anyInt(), any(Date.class), any(Date.class), any(Readset.class));
-				} catch (DalException e) {
-					e.printStackTrace();
-				}
+				doReturn(new DeadLetter().setCountOfTimeRange(100)) //
+				      .when(mockDao) //
+				      .findByTimeRange(anyString(), anyInt(), any(Date.class), any(Date.class), any(Readset.class));
+				doReturn(new DeadLetter().setCountOfTimeRange(count)) //
+				      .when(mockDao) //
+				      .findByTimeRange(eq("song.test"), anyInt(), any(Date.class), any(Date.class), any(Readset.class));
 				setDeadLetterDao(mockDao);
 			} catch (Exception e) {
 				e.printStackTrace();

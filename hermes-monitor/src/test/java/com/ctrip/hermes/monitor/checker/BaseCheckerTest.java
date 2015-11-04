@@ -21,11 +21,6 @@ public class BaseCheckerTest {
 		      .getResource(this.getClass().getSimpleName() + "-" + methodName + ".xml").toURI())));
 	}
 
-	public static String loadTestData(String methodName, Class<?> clazz) throws IOException, URISyntaxException {
-		return new String(Files.readAllBytes(Paths.get(clazz.getResource(
-		      clazz.getSimpleName() + "-" + methodName + ".xml").toURI())));
-	}
-
 	public static void main(String[] args) {
 		SpringApplication.run(BaseCheckerTest.class);
 	}
