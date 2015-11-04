@@ -3,6 +3,8 @@ package com.ctrip.hermes.monitor.domain;
 import java.util.Date;
 import java.util.Map;
 
+import org.elasticsearch.common.lang3.builder.ToStringBuilder;
+
 public class MonitorItem {
 
 	private String source;
@@ -75,4 +77,7 @@ public class MonitorItem {
 	   this.group = group;
    }
 
+	public String toString(){
+		return ToStringBuilder.reflectionToString(this);
+	}
 }

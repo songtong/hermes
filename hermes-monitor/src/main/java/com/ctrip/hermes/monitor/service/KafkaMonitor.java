@@ -33,9 +33,11 @@ public class KafkaMonitor implements IZabbixMonitor {
 	private static final Logger logger = LoggerFactory.getLogger(KafkaMonitor.class);
 
 	public static void main(String[] args) throws Throwable {
+		int hours = Integer.parseInt(args[0]);
+		int requestIntervalSecond = Integer.parseInt(args[1]);
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
 		KafkaMonitor monitor = context.getBean(KafkaMonitor.class);
-		monitor.monitorPastHours(24 * 2, 5);
+		monitor.monitorPastHours(hours, requestIntervalSecond);
 		context.close();
 	}
 
@@ -49,7 +51,11 @@ public class KafkaMonitor implements IZabbixMonitor {
 	private MonitorConfig config;
 
 	@Scheduled(cron = "0 5 * * * *")
-	public void monitorHourly() throws Throwable {
+	public void scheduled() throws Throwable{
+		monitorHourly();
+	}
+	
+	public String monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -58,6 +64,7 @@ public class KafkaMonitor implements IZabbixMonitor {
 		Date timeFrom = cal.getTime();
 
 		monitorKafka(timeFrom, timeTill);
+		return String.format("%s: %s->%s", "Kafka", timeFrom, timeTill);
 	}
 
 	private void monitorKafka(Date timeFrom, Date timeTill) throws Throwable {
@@ -115,7 +122,9 @@ public class KafkaMonitor implements IZabbixMonitor {
 		}
 	}
 
-	public void monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
+	public String monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
+		Date firstTimeFrom = null;
+		Date lastTimeTill = null;
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);
@@ -125,6 +134,11 @@ public class KafkaMonitor implements IZabbixMonitor {
 			cal.add(Calendar.HOUR_OF_DAY, -1);
 			Date timeFrom = cal.getTime();
 
+			if (firstTimeFrom == null) {
+				firstTimeFrom = timeFrom;
+			}
+			lastTimeTill = timeTill;
+			
 			monitorKafka(timeFrom, timeTill);
 
 			try {
@@ -132,6 +146,7 @@ public class KafkaMonitor implements IZabbixMonitor {
 			} catch (InterruptedException e) {
 			}
 		}
+		return String.format("%s->%s", firstTimeFrom, lastTimeTill);
 	}
 
 	private Map<Integer, StatResult> statByteIn(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)

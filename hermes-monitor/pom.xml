@@ -95,11 +95,6 @@
 	</dependencies>
 	<build>
 		<plugins>
-			<!-- <plugin> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-maven-plugin</artifactId> 
-				<configuration> <mainClass>com.ctrip.hermes.monitor.Bootstrap</mainClass> 
-				<layout>ZIP</layout> </configuration> <version>1.2.7.RELEASE</version> <executions> 
-				<execution> <goals> <goal>repackage</goal> </goals> </execution> </executions> 
-				</plugin> -->
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.2</version>

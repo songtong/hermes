@@ -38,7 +38,10 @@ if [ ! -f $CONTEXT_DIR/WEB-INF/web.xml ];then
 	unzip -q -d $CONTEXT_DIR $WAR
 fi
 
-port=8080
+port=$HTTP_PORT
+if [ "${HTTP_PORT}" == "" ];then
+    port=8080
+fi
 
 can_sudo=false
 set +e
