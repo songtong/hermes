@@ -82,7 +82,11 @@ public class CPUMonitor implements IZabbixMonitor {
 	}
 
 	@Scheduled(cron = "0 3 * * * *")
-	public void monitorHourly() throws Throwable {
+	public void scheduled() throws Throwable {
+		monitorHourly();
+	}
+
+	public String monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -95,9 +99,12 @@ public class CPUMonitor implements IZabbixMonitor {
 		monitorCPU(timeFrom, timeTill, ZabbixConst.GROUP_MYSQL_BROKER, config.getZabbixMysqlBrokerHosts());
 		monitorCPU(timeFrom, timeTill, ZabbixConst.GROUP_METASERVER, config.getZabbixMetaserverHosts());
 		monitorCPU(timeFrom, timeTill, ZabbixConst.GROUP_PORTAL, config.getZabbixPortalHosts());
+		return String.format("%s: %s->%s", "CPU", timeFrom, timeTill);
 	}
 
-	public void monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
+	public String monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
+		Date firstTimeFrom = null;
+		Date lastTimeTill = null;
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);
@@ -106,6 +113,11 @@ public class CPUMonitor implements IZabbixMonitor {
 			Date timeTill = cal.getTime();
 			cal.add(Calendar.HOUR_OF_DAY, -1);
 			Date timeFrom = cal.getTime();
+
+			if (firstTimeFrom == null) {
+				firstTimeFrom = timeFrom;
+			}
+			lastTimeTill = timeTill;
 
 			monitorCPU(timeFrom, timeTill, ZabbixConst.GROUP_KAFKA_BROKER, config.getZabbixKafkaBrokerHosts());
 			monitorCPU(timeFrom, timeTill, ZabbixConst.GROUP_ZOOKEEPER, config.getZabbixZookeeperHosts());
@@ -117,6 +129,7 @@ public class CPUMonitor implements IZabbixMonitor {
 			} catch (InterruptedException e) {
 			}
 		}
+		return String.format("%s->%s", firstTimeFrom, lastTimeTill);
 	}
 
 	private Map<Integer, StatResult> statCPUUserTime(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)

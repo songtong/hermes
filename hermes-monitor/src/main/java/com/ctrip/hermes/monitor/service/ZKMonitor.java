@@ -51,7 +51,11 @@ public class ZKMonitor implements IZabbixMonitor {
 	private MonitorConfig config;
 
 	@Scheduled(cron = "0 7 * * * *")
-	public void monitorHourly() throws Throwable {
+	public void scheduled() throws Throwable{
+		monitorHourly();
+	}
+	
+	public String monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -60,9 +64,12 @@ public class ZKMonitor implements IZabbixMonitor {
 		Date timeFrom = cal.getTime();
 
 		monitorZK(timeFrom, timeTill);
+		return String.format("%s->%s", timeFrom, timeTill);
 	}
 
-	public void monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
+	public String monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
+		Date firstTimeFrom = null;
+		Date lastTimeTill = null;
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);
@@ -72,6 +79,11 @@ public class ZKMonitor implements IZabbixMonitor {
 			cal.add(Calendar.HOUR_OF_DAY, -1);
 			Date timeFrom = cal.getTime();
 
+			if (firstTimeFrom == null) {
+				firstTimeFrom = timeFrom;
+			}
+			lastTimeTill = timeTill;
+			
 			monitorZK(timeFrom, timeTill);
 
 			try {
@@ -79,6 +91,7 @@ public class ZKMonitor implements IZabbixMonitor {
 			} catch (InterruptedException e) {
 			}
 		}
+		return String.format("%s: %s->%s","Zookeeper", firstTimeFrom, lastTimeTill);
 	}
 
 	private void monitorZK(Date timeFrom, Date timeTill) throws Throwable {

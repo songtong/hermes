@@ -23,9 +23,11 @@ import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -147,5 +149,17 @@ public class ESMonitorService {
 
 		log.warn("Elastic clusters response error: {}", sr.status());
 		throw new RuntimeException(String.format("Elastic clusters response error: %s", sr.status()));
+	}
+
+	public MonitorItem queryLatestMonitorItem(String category) {
+		SearchResponse response = client.prepareSearch(DEFAULT_INDEX).setTypes(category).setSize(1)
+		      .addSort("startDate", SortOrder.DESC).execute().actionGet();
+		MonitorItem latestItem = null;
+		SearchHits hits = response.getHits();
+		if (hits.getTotalHits() > 0) {
+			String result = hits.getHits()[0].getSourceAsString();
+			latestItem = JSON.parseObject(result, MonitorItem.class);
+		}
+		return latestItem;
 	}
 }

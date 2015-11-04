@@ -109,7 +109,11 @@ public class DiskMonitor implements IZabbixMonitor {
 	}
 
 	@Scheduled(cron = "0 4 * * * *")
-	public void monitorHourly() throws Throwable {
+	public void scheduled() throws Throwable {
+		monitorHourly();
+	}
+
+	public String monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -122,9 +126,12 @@ public class DiskMonitor implements IZabbixMonitor {
 		monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_PORTAL, config.getZabbixPortalHosts());
 		monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_KAFKA_BROKER, config.getZabbixKafkaBrokerHosts());
 		monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_ZOOKEEPER, config.getZabbixZookeeperHosts());
+		return String.format("%s: %s->%s", "Disk", timeFrom, timeTill);
 	}
 
-	public void monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
+	public String monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
+		Date firstTimeFrom = null;
+		Date lastTimeTill = null;
 		for (int i = hours - 1; i >= 0; i--) {
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.MINUTE, 0);
@@ -133,6 +140,11 @@ public class DiskMonitor implements IZabbixMonitor {
 			Date timeTill = cal.getTime();
 			cal.add(Calendar.HOUR_OF_DAY, -1);
 			Date timeFrom = cal.getTime();
+
+			if (firstTimeFrom == null) {
+				firstTimeFrom = timeFrom;
+			}
+			lastTimeTill = timeTill;
 
 			monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_MYSQL_BROKER, config.getZabbixMysqlBrokerHosts());
 			monitorDisk(timeFrom, timeTill, ZabbixConst.GROUP_METASERVER, config.getZabbixMetaserverHosts());
@@ -144,5 +156,6 @@ public class DiskMonitor implements IZabbixMonitor {
 			} catch (InterruptedException e) {
 			}
 		}
+		return String.format("%s->%s", firstTimeFrom, lastTimeTill);
 	}
 }
