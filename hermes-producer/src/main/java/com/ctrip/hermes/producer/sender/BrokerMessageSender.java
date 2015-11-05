@@ -123,7 +123,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					TaskQueue queue = entry.getValue();
 
 					if (queue.hasTask()) {
-						hasTask = hasTask || scheduleTaskExecution(entry.getKey(), queue);
+						hasTask = scheduleTaskExecution(entry.getKey(), queue) || hasTask;
 					}
 				} catch (RuntimeException e) {
 					// ignore

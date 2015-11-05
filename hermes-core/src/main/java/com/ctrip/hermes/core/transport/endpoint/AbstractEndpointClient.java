@@ -245,7 +245,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 					try {
 						for (EndpointChannel endpointChannel : m_channels.values()) {
 							if (!endpointChannel.isClosed()) {
-								flushed = flushed || endpointChannel.flush();
+								flushed = endpointChannel.flush() || flushed;
 							}
 						}
 					} catch (Exception e) {
