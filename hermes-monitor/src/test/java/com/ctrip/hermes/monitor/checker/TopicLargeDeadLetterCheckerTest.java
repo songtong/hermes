@@ -29,7 +29,7 @@ import com.ctrip.hermes.metaservice.queue.DeadLetterDao;
 import com.ctrip.hermes.monitor.checker.mysql.TopicLargeDeadLetterChecker;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = TopicLargeDeadLetterCheckerTest.class)
+@SpringApplicationConfiguration(classes = BaseCheckerTest.class)
 public class TopicLargeDeadLetterCheckerTest extends BaseCheckerTest {
 
 	@Component("MockTopicLargeDeadLetterChecker")
