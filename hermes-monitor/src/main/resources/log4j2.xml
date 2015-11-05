@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration>
+	<Appenders>
+		<Async name="ASYNC">
+			<AppenderRef ref="FILE" />
+			<!-- <AppenderRef ref="CONSOLE" /> -->
+		</Async>
+		<Console name="CONSOLE" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
+		</Console>
+
+		<RollingFile name="FILE" fileName="/opt/logs/hermes-monitor/hermes-monitor.log"
+			filePattern="/opt/logs/hermes-monitor/$${date:yyyy-MM}/hermes-monitor.%d{yyyy-MM-dd}-%i.log.gz">
+			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<TimeBasedTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="100 MB" />
+			</Policies>
+		</RollingFile>
+	</Appenders>
+
+	<Loggers>
+		<Root level="info">
+			<Appender-ref ref="ASYNC" />
+		</Root>
+	</Loggers>
+
+</Configuration>  
