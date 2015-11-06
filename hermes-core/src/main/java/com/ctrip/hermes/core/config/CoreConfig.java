@@ -79,7 +79,7 @@ public class CoreConfig implements Initializable {
 	}
 
 	public long getMetaCacheRefreshIntervalSeconds() {
-		return 1;
+		return 5;
 	}
 
 	public int getNettySendBufferSize() {
