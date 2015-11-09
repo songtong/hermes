@@ -8,6 +8,9 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.ctrip.hermes.monitor.checker.client.CatBasedChecker;
 import com.ctrip.hermes.monitor.checker.client.CatBasedChecker.Timespan;
@@ -16,6 +19,8 @@ import com.ctrip.hermes.monitor.checker.client.CatBasedChecker.Timespan;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = BaseCheckerTest.class)
 public class CatBasedCheckerTest {
 
 	private static class MockCatBasedChecker extends CatBasedChecker {

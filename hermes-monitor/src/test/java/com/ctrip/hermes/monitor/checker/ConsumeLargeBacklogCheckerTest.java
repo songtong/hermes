@@ -32,7 +32,7 @@ import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
 import com.ctrip.hermes.monitor.checker.mysql.ConsumeLargeBacklogChecker;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = ConsumeLargeBacklogCheckerTest.class)
+@SpringApplicationConfiguration(classes = BaseCheckerTest.class)
 public class ConsumeLargeBacklogCheckerTest extends BaseCheckerTest {
 
 	@Component("MockConsumeLargeBacklogChecker")
