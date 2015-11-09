@@ -20,6 +20,12 @@ public class ZabbixConst {
 	 */
 	public static final String DISK_FREE_PERCENTAGE = "Free disk space on $1 (percentage)";
 
+	public static final String DISK_USED = "Used disk space on $1";
+
+	public static final String DISK_READ_OPS = "Disk read ops";
+
+	public static final String DISK_WRITE_OPS = "Disk write ops";
+
 	/**
 	 * CPU
 	 */

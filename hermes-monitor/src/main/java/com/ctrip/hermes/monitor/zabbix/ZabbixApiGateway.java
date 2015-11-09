@@ -110,10 +110,10 @@ public class ZabbixApiGateway {
 		historyGetRequest.getParams().setTime_from(timeFrom.getTime() / 1000);
 		historyGetRequest.getParams().setTime_till(timeTill.getTime() / 1000);
 
-		HistoryGetResponse hisotryGetResponse = zabbixApi.history().get(historyGetRequest);
+		HistoryGetResponse historyGetResponse = zabbixApi.history().get(historyGetRequest);
 
 		Map<Integer, List<Double>> values = new HashMap<Integer, List<Double>>();
-		for (HistoryObject ho : hisotryGetResponse.getResult()) {
+		for (HistoryObject ho : historyGetResponse.getResult()) {
 			if (!values.containsKey(ho.getItemid())) {
 				values.put(ho.getItemid(), new ArrayList<Double>());
 			}
