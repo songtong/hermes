@@ -1,5 +1,7 @@
 package com.ctrip.hermes.monitor.checker.mysql;
 
+import io.netty.util.internal.ConcurrentSet;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +26,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
 import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.checker.mysql.task.ConsumeBacklogCheckerTask;
 
 @Component(value = ConsumeLargeBacklogChecker.ID)
@@ -133,23 +136,27 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
-		Map<Pair<Topic, ConsumerGroup>, Long> limits = parseLimits(fetchMeta(), //
-		      m_config.getConsumeBacklogCheckerIncludeTopics(), m_config.getConsumeBacklogCheckerExcludeTopics());
-
 		final CheckerResult result = new CheckerResult();
-
 		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
 		try {
+			Map<Pair<Topic, ConsumerGroup>, Long> limits = parseLimits(fetchMeta(), //
+			      m_config.getConsumeBacklogCheckerIncludeTopics(), m_config.getConsumeBacklogCheckerExcludeTopics());
+			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			List<Map<Pair<Topic, ConsumerGroup>, Long>> splited = splitMap(limits, DB_CHECKER_THREAD_COUNT);
 			final CountDownLatch latch = new CountDownLatch(splited.size());
 			for (final Map<Pair<Topic, ConsumerGroup>, Long> batchLimits : splited) {
-				es.execute(new ConsumeBacklogCheckerTask(batchLimits, m_msgDao, m_offsetDao, result, latch));
+				es.execute(new ConsumeBacklogCheckerTask(batchLimits, m_msgDao, m_offsetDao, result, latch, exceptions));
 			}
 			if (latch.await(CONSUME_BACKLOG_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
 				result.setRunSuccess(true);
 			} else {
 				result.setRunSuccess(false);
 				result.setErrorMessage("Query consume backlog db timeout, check result is not completely.");
+			}
+			if (exceptions.size() > 0) {
+				result.setRunSuccess(false);
+				result.setErrorMessage("Consumer large backlog checker task has exceptions!");
+				result.setException(new CompositeException(exceptions));
 			}
 		} catch (Exception e) {
 			result.setErrorMessage("Query consume backlog db failed.");

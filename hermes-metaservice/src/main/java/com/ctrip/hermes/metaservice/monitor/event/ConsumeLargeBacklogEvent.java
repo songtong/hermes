@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
+import java.util.Date;
 import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
@@ -47,7 +48,7 @@ public class ConsumeLargeBacklogEvent extends BaseMonitorEvent {
 		e.setKey3(String.valueOf(m_totalBacklog));
 		e.setKey4(JSON.toJSONString(m_backlogDetail));
 		e.setMessage(String.format("[%s] Too much backlog for %s : %s, total: %s", //
-		      getCreateTime(), m_topic, m_group, m_totalBacklog));
+		      new Date(), m_topic, m_group, m_totalBacklog));
 	}
 
 	public String getTopic() {

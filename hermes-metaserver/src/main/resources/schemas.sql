@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `monitor_event` (
   `key2` varchar(500) DEFAULT NULL,
   `key3` varchar(500) DEFAULT NULL,
   `key4` varchar(500) DEFAULT NULL,
-  `message` text,
+  `message` longtext,
   `notified` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
