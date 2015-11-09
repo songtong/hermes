@@ -76,7 +76,7 @@ public class ApplicationResource {
 
 		// 存入数据库
 		try {
-			topicApplication = appService.createTopicApplication(topicApplication);
+			topicApplication = appService.saveTopicApplication(topicApplication);
 		} catch (Exception e) {
 			log.error("Can not create topic application : {}.", content, e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -121,7 +121,7 @@ public class ApplicationResource {
 
 	@GET
 	@Path("review/{id}")
-	public Response getApplication(@PathParam("id") long id) {
+	public Response getApplicationById(@PathParam("id") long id) {
 		if (id <= 0) {
 			throw new RestException("Application id not available", Status.BAD_REQUEST);
 		}
@@ -133,7 +133,7 @@ public class ApplicationResource {
 
 	@GET
 	@Path("{status}")
-	public Response getApplications(@PathParam("status") int status) {
+	public Response getApplicationsByStatus(@PathParam("status") int status) {
 		List<HermesApplication> apps = appService.getApplicationsByStatus(status);
 		return Response.status(Status.OK).entity(apps).build();
 	}

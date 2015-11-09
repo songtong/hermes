@@ -8,7 +8,7 @@ import com.ctrip.hermes.portal.application.TopicApplication;
 
 public interface ApplicationService {
 	
-	public TopicApplication createTopicApplication(TopicApplication topicApplication);
+	public TopicApplication saveTopicApplication(TopicApplication topicApplication);
 	
 	public HermesApplication getApplicationById(long id);
 	

@@ -25,10 +25,11 @@ public class DefaultApplicationService implements ApplicationService {
 	private HermesApplicationDao m_dao;
 
 	@Override
-	public TopicApplication createTopicApplication(TopicApplication topicApplication) {
+	public TopicApplication saveTopicApplication(TopicApplication topicApplication) {
 		try {
-			long id = m_dao.saveApplication(topicApplication.toDBEntity());
-			return (TopicApplication) this.getApplicationById(id);
+			Application dbApp = topicApplication.toDBEntity();
+			m_dao.saveApplication(dbApp);
+			return (TopicApplication) HermesApplication.parse(dbApp);
 		} catch (DalException e) {
 			log.error("Create new topic application : {}.{}.{} failed", topicApplication.getProductLine(),
 					topicApplication.getEntity(), topicApplication.getEvent(), e);
@@ -38,15 +39,14 @@ public class DefaultApplicationService implements ApplicationService {
 
 	@Override
 	public HermesApplication getApplicationById(long id) {
-		HermesApplication app = null;
 		Application dbApp = null;
 		try {
 			dbApp = m_dao.getAppById(id);
+			return HermesApplication.parse(dbApp);
 		} catch (DalException e) {
 			log.error("Read application:id={} from db failed.", id, e);
 		}
-		app = HermesApplication.parse(dbApp);
-		return app;
+		return null;
 	}
 
 	@Override
@@ -55,13 +55,14 @@ public class DefaultApplicationService implements ApplicationService {
 		List<Application> dbApps = null;
 		try {
 			dbApps = m_dao.getApplicationsByStatus(status);
+			for (Application dbApp : dbApps) {
+				applications.add(HermesApplication.parse(dbApp));
+				return applications;
+			}
 		} catch (DalException e) {
 			log.error("Read applications: status={} from db failed.", status, e);
 		}
-		for (Application dbApp : dbApps) {
-			applications.add(HermesApplication.parse(dbApp));
-		}
-		return applications;
+		return new ArrayList<>();
 	}
 	
 	
