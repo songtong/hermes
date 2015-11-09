@@ -104,7 +104,8 @@ public class CheckerSuite {
 					CheckerExceptionEvent event = new CheckerExceptionEvent();
 					event.setCheckerName(checkerName);
 					event.setDate(sdf.format(toDate));
-					event.setDetail(formatExceptionDetail(result.getErrorMessage(), result.getException()));
+					event.setDetail(String.format("[%s]Checker %s throw exception.\n %s", sdf.format(toDate), checkerName,
+					      formatExceptionDetail(result.getErrorMessage(), result.getException())));
 					try {
 						m_monitorEventDao.insert(event.toDBEntity());
 					} catch (DalException e) {

@@ -50,15 +50,14 @@ public class CheckerExceptionEvent extends BaseMonitorEvent {
 	protected void parse0(MonitorEvent dbEntity) {
 		m_checkerName = dbEntity.getKey1();
 		m_date = dbEntity.getKey2();
-		m_detail = dbEntity.getKey3();
+		m_detail = dbEntity.getMessage();
 	}
 
 	@Override
 	protected void toDBEntity0(MonitorEvent e) {
 		e.setKey1(m_checkerName);
 		e.setKey2(m_date);
-		e.setKey3(m_detail);
-		e.setMessage(String.format("[%s]Checker %s throw exception.\n %s", m_date, m_checkerName, m_detail));
+		e.setMessage(m_detail);
 	}
 
 	@Override
