@@ -2,6 +2,7 @@ package com.ctrip.hermes.metaservice.monitor;
 
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.monitor.event.BrokerErrorEvent;
+import com.ctrip.hermes.metaservice.monitor.event.CheckerExceptionEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeDelayTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MetaServerErrorEvent;
@@ -26,7 +27,9 @@ public enum MonitorEventType {
 
 	ES_DATASOURCE_ERROR(9, null, null), //
 	CAT_DATASOURCE_ERROR(10, null, null), //
-	DB_DATASOURCE_ERROR(11, null, null)//
+	DB_DATASOURCE_ERROR(11, null, null), //
+
+	CHECKER_EXCEPTION(50, "checker_exception", CheckerExceptionEvent.class), //
 	;
 
 	private int m_code;
