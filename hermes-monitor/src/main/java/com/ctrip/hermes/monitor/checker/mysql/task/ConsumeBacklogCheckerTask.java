@@ -92,11 +92,6 @@ public class ConsumeBacklogCheckerTask implements Runnable {
 	public void run() {
 		try {
 			for (Entry<Pair<Topic, ConsumerGroup>, Long> entry : m_limits.entrySet()) {
-				System.out.println(//
-				      entry.getKey().getKey().getName() + "\t" + entry.getKey().getValue().getName() + "\t"
-				            + entry.getValue());
-			}
-			for (Entry<Pair<Topic, ConsumerGroup>, Long> entry : m_limits.entrySet()) {
 				Topic topic = entry.getKey().getKey();
 				ConsumerGroup group = entry.getKey().getValue();
 				long limit = entry.getValue();
