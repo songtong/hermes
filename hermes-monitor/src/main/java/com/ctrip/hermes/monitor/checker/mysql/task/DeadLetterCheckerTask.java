@@ -1,5 +1,7 @@
 package com.ctrip.hermes.monitor.checker.mysql.task;
 
+import io.netty.util.internal.ConcurrentSet;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,14 +33,17 @@ public class DeadLetterCheckerTask implements Runnable {
 
 	private CountDownLatch m_latch;
 
+	private ConcurrentSet<Exception> m_exceptions;
+
 	public DeadLetterCheckerTask(Map<Topic, Integer> limits, DeadLetterDao dao, Date from, Date to,
-	      CheckerResult result, CountDownLatch latch) {
+	      CheckerResult result, CountDownLatch latch, ConcurrentSet<Exception> exceptions) {
 		m_limits = limits;
 		m_dao = dao;
 		m_from = from;
 		m_to = to;
 		m_result = result;
 		m_latch = latch;
+		m_exceptions = exceptions;
 	}
 
 	@Override
@@ -53,13 +58,17 @@ public class DeadLetterCheckerTask implements Runnable {
 						      topic, partition.getId(), m_from, m_to, DeadLetterEntity.READSET_COUNT) //
 						      .getCountOfTimeRange();
 					} catch (DalException e) {
-						log.error("Query dead letter count failed, {} {}", topic, partition.getId());
+						if (log.isDebugEnabled()) {
+							log.debug("Query dead letter count failed, {} {}", topic, partition.getId());
+						}
 					}
 				}
 				if (tpDeadSum >= entry.getValue()) {
 					m_result.addMonitorEvent(new TopicLargeDeadLetterEvent(topic, tpDeadSum, m_from, m_to));
 				}
 			}
+		} catch (Exception e) {
+			m_exceptions.add(e);
 		} finally {
 			m_latch.countDown();
 		}

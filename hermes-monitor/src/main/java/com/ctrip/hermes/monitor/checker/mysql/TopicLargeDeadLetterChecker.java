@@ -1,5 +1,7 @@
 package com.ctrip.hermes.monitor.checker.mysql;
 
+import io.netty.util.internal.ConcurrentSet;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.DeadLetterDao;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.checker.mysql.task.DeadLetterCheckerTask;
 
 @Component(value = TopicLargeDeadLetterChecker.ID)
@@ -83,26 +86,29 @@ public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
-		Map<Topic, Integer> limits = parseLimits(fetchMeta(), //
-		      m_config.getDeadLetterCheckerIncludeTopics(), m_config.getDeadLetterCheckerExcludeTopics());
-
 		final Date to = new Date(toDate.getTime() - TimeUnit.MINUTES.toMillis(1));
 		final Date from = new Date(to.getTime() - TimeUnit.MINUTES.toMillis(minutesBefore));
-
 		final CheckerResult result = new CheckerResult();
-
 		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
 		try {
+			Map<Topic, Integer> limits = parseLimits(fetchMeta(), //
+			      m_config.getDeadLetterCheckerIncludeTopics(), m_config.getDeadLetterCheckerExcludeTopics());
+			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			List<Map<Topic, Integer>> splited = splitMap(limits, DB_CHECKER_THREAD_COUNT);
 			final CountDownLatch latch = new CountDownLatch(splited.size());
 			for (final Map<Topic, Integer> map : splited) {
-				es.execute(new DeadLetterCheckerTask(map, m_dao, from, to, result, latch));
+				es.execute(new DeadLetterCheckerTask(map, m_dao, from, to, result, latch, exceptions));
 			}
 			if (latch.await(DEADLETTER_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
 				result.setRunSuccess(true);
 			} else {
 				result.setRunSuccess(false);
 				result.setErrorMessage("Query dead letter db timeout, check result is not completely.");
+			}
+			if (exceptions.size() > 0) {
+				result.setRunSuccess(false);
+				result.setErrorMessage("Dead letter checker task has exceptions!");
+				result.setException(new CompositeException(exceptions));
 			}
 		} catch (Exception e) {
 			result.setErrorMessage("Query dead letter db failed.");
