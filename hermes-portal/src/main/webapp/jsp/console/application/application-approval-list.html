@@ -1,0 +1,22 @@
+<table st-table="applications-table" class="table table-striped">
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>申请内容</th>
+			<th>申请人</th>
+			<th>申请状态</th>
+			<th>申请时间</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="application in applications">
+			<td><label ng-bind="$index + 1"></label></td>
+			<td>{{application.content|short:20}}</td>
+			<td>{{application.ownerName}}</td>
+			<td>{{application.status}}</td>
+			<td>{{application.createTime|date:"yyyy-MM-dd HH:mm:ss"}}</td>
+			<td><a href="/console/application#approval/{{application.id}}">查看详情</a></td>
+		</tr>
+	</tbody>
+</table>

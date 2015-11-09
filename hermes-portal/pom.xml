@@ -118,6 +118,25 @@
 		<plugins>
 			<plugin>
 				<groupId>org.unidal.maven.plugins</groupId>
+				<artifactId>codegen-maven-plugin</artifactId>
+				<version>2.2.2</version>
+				<executions>
+					<execution>
+						<id>generate dal jdbc model</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>dal-jdbc</goal>
+						</goals>
+						<configuration>
+							<manifest>
+								${basedir}/src/main/resources/META-INF/dal/jdbc/application-manifest.xml
+							</manifest>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.unidal.maven.plugins</groupId>
 				<artifactId>plexus-maven-plugin</artifactId>
 				<version>2.2.0</version>
 				<executions>

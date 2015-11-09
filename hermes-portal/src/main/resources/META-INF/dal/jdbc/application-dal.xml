@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.hermes.portal.dal.application" gen="true">
+	<entity name="application">
+		<var name="query-status" value-type="int" />
+		<query-defs>
+			<query name="find-by-status" type="SELECT" multiple="true">
+				<param name="query-status" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='status'/> = ${query-status}
+        		]]>
+				</statement>
+			</query>
+		</query-defs>
+	</entity>
+</entities>

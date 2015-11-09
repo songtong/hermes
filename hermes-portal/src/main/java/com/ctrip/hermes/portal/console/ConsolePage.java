@@ -4,85 +4,88 @@ import org.unidal.web.mvc.Page;
 import org.unidal.web.mvc.annotation.ModuleMeta;
 
 public enum ConsolePage implements Page {
-	HOME("home", "home", "Home", "Home", true),
 
-	TOPIC("topic", "topic", "Topic", "Topic", true),
+   TOPIC("topic", "topic", "Topic", "Topic", true),
 
-	CONSUMER("consumer", "consumer", "Consumer", "Consumer", true),
+   CONSUMER("consumer", "consumer", "Consumer", "Consumer", true),
 
-	DASHBOARD("dashboard", "dashboard", "Dashboard", "Dashboard", true),
+   DASHBOARD("dashboard", "dashboard", "Dashboard", "Dashboard", true),
 
-	ENDPOINT("endpoint", "endpoint", "Endpoint", "Endpoint", true),
+   ENDPOINT("endpoint", "endpoint", "Endpoint", "Endpoint", true),
 
-	STORAGE("storage", "storage", "Storage", "Storage", true),
+   STORAGE("storage", "storage", "Storage", "Storage", true),
 
-	SUBSCRIPTION("subscription", "subscription", "Subscription", "Subscription", true),
+   SUBSCRIPTION("subscription", "subscription", "Subscription", "Subscription", true),
 
-	TRACER("tracer", "tracer", "Tracer", "Tracer", true),
+   TRACER("tracer", "tracer", "Tracer", "Tracer", true),
 
-	RESENDER("resender", "resender", "Resender", "Resender", true);
+   RESENDER("resender", "resender", "Resender", "Resender", true),
 
-	private String m_name;
+   HOME("home", "home", "Home", "Home", true),
 
-	private String m_path;
+   APPLICATION("application", "application", "Application", "Application", true);
 
-	private String m_title;
+   private String m_name;
 
-	private String m_description;
+   private String m_path;
 
-	private boolean m_standalone;
+   private String m_title;
 
-	private ConsolePage(String name, String path, String title, String description, boolean standalone) {
-		m_name = name;
-		m_path = path;
-		m_title = title;
-		m_description = description;
-		m_standalone = standalone;
-	}
+   private String m_description;
 
-	public static ConsolePage getByName(String name, ConsolePage defaultPage) {
-		for (ConsolePage action : ConsolePage.values()) {
-			if (action.getName().equals(name)) {
-				return action;
-			}
-		}
+   private boolean m_standalone;
 
-		return defaultPage;
-	}
+   private ConsolePage(String name, String path, String title, String description, boolean standalone) {
+      m_name = name;
+      m_path = path;
+      m_title = title;
+      m_description = description;
+      m_standalone = standalone;
+   }
 
-	public String getDescription() {
-		return m_description;
-	}
+   public static ConsolePage getByName(String name, ConsolePage defaultPage) {
+      for (ConsolePage action : ConsolePage.values()) {
+         if (action.getName().equals(name)) {
+            return action;
+         }
+      }
 
-	public String getModuleName() {
-		ModuleMeta meta = ConsoleModule.class.getAnnotation(ModuleMeta.class);
+      return defaultPage;
+   }
 
-		if (meta != null) {
-			return meta.name();
-		} else {
-			return null;
-		}
-	}
+   public String getDescription() {
+      return m_description;
+   }
 
-	@Override
-	public String getName() {
-		return m_name;
-	}
+   public String getModuleName() {
+      ModuleMeta meta = ConsoleModule.class.getAnnotation(ModuleMeta.class);
 
-	@Override
-	public String getPath() {
-		return m_path;
-	}
+      if (meta != null) {
+         return meta.name();
+      } else {
+         return null;
+      }
+   }
 
-	public String getTitle() {
-		return m_title;
-	}
+   @Override
+   public String getName() {
+      return m_name;
+   }
 
-	public boolean isStandalone() {
-		return m_standalone;
-	}
+   @Override
+   public String getPath() {
+      return m_path;
+   }
 
-	public ConsolePage[] getValues() {
-		return ConsolePage.values();
-	}
+   public String getTitle() {
+      return m_title;
+   }
+
+   public boolean isStandalone() {
+      return m_standalone;
+   }
+
+   public ConsolePage[] getValues() {
+      return ConsolePage.values();
+   }
 }

@@ -1,7 +1,5 @@
 package com.ctrip.hermes.portal.resource;
 
-import io.netty.buffer.Unpooled;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,6 +45,8 @@ import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.dashboard.DashboardService;
+
+import io.netty.buffer.Unpooled;
 
 @Path("/dashboard/")
 @Singleton

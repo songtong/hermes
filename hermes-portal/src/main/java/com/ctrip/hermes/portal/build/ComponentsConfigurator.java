@@ -18,6 +18,8 @@ import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler;
 import com.ctrip.hermes.portal.config.PortalConfig;
+import com.ctrip.hermes.portal.dal.application.DefaultHermesApplicationDao;
+import com.ctrip.hermes.portal.service.application.DefaultApplicationService;
 import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService;
 import com.ctrip.hermes.portal.service.elastic.DefaultPortalElasticClient;
 
@@ -43,14 +45,18 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(DefaultPortalMetaService.class));
 
 		all.add(A(DefaultMessageQueueDao.class));
+		all.add(A(DefaultHermesApplicationDao.class));
 
 		all.add(A(DefaultDashboardService.class));
 
 		all.add(A(DefaultPortalElasticClient.class));
+		
+		all.add(A(DefaultApplicationService.class));
+
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());
-
+		all.addAll(new FxHermesMetaDatabaseConfigurator().defineComponents());
 		return all;
 	}
 

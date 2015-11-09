@@ -29,6 +29,9 @@
          <page name="home" title="Home" path="home" template="default">
             <description>Home</description>
          </page>
+         <page name="application" title="Application" path="application" template="default">
+            <description>Application</description>
+         </page>
       </module>
    </webapp>
 </wizard>

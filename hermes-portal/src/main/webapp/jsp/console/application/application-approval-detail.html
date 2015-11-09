@@ -1,0 +1,71 @@
+<div class="row">
+	<div class="col-md-6">
+		<div class="panel panel-info">
+			<div class="panel-headint">
+				<label class="label label-info">原始申请内容</label>
+			</div>
+			<div class="panel panel-body">
+				<div class="form-horizontal">
+					<div class="form-group">
+						<label class="col-md-4 control-label">名称</label>
+						<p class="col-md-6 form-control-static">{{application.productLine}}.{{application.entity}}.{{application.event}}</p>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">存储类型</label>
+						<div class="col-md-6">
+							<div class="form-control-static">{{ application.storageType }}</div>
+						</div>
+					</div>
+					<div ng-if="application.storageType=='kafka'" class="form-group">
+						<label class="col-md-4 control-label">语言类型</label>
+						<div class="col-md-6">
+							<div class="form-control-static">{{ application.languageType }}</div>
+						</div>
+					</div>
+					<div ng-if="application.storageType=='kafka'" class="form-group">
+						<label class="col-md-4 control-label">编码类型</label>
+						<div class="col-md-6">
+							<div class="form-control-static">{{ application.codecType }}</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">消息上限（条/天）</label>
+						<div class="col-md-6">
+							<div class="form-control-static">{{ application.maxMsgNumPerDay }}</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">消息保留时间（天）</label>
+						<div class="col-md-6">
+							<div class="form-control-static">{{ application.retentionDays }}</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">消息大小（Kb）</label>
+						<div class="col-md-6">
+							<div class="form-control-static">{{ application.size }}</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">负责人姓名</label>
+						<div class="col-md-6">
+							<div class="form-control-static">{{ application.ownerName }}</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">负责人邮箱</label>
+						<div class="col-md-6">
+							<div class="form-control-static">{{ application.ownerEmail }}</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">描述</label>
+						<div class="col-md-8">
+							<div class="form-control-static">{{ application.description }}</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
