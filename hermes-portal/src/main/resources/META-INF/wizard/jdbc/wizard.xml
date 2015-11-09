@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wizard package="com.ctrip.hermes.portal">
+   <jdbc package="com.ctrip.hermes.portal.dal" name="fxhermesmetadb">
+      <datasource>
+         <driver>com.mysql.jdbc.Driver</driver>
+         <url>jdbc:mysql://localhost:3306/fxhermesmetadb</url>
+         <user>root</user>
+         <password>~{f4f8f0d0f18040f0f1f5fa8e8660d}</password>
+         <properties>useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</properties>
+      </datasource>
+      <group name="application" package="com.ctrip.hermes.portal.dal.application">
+         <table name="application"/>
+      </group>
+   </jdbc>
+</wizard>

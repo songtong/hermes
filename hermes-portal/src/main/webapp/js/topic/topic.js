@@ -16,7 +16,7 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 				templateUrl : '/jsp/console/topic/kafka-detail.html',
 				controller : 'kafka-detail-controller'
 			});
-		}).service('TopicService', [ '$resource', '$window', '$q', function($resource, $window, $q) {
+}).service('TopicService', [ '$resource', '$window', '$q', function($resource, $window, $q) {
 	var topic_resource = $resource("/api/topics/:name", {}, {
 		get_topic_detail : {
 			method : 'GET',
