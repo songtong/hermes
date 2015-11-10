@@ -1,5 +1,6 @@
 package com.ctrip.hermes.monitor.dashboard;
 
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.annotation.PostConstruct;
@@ -67,6 +68,7 @@ public class RoomStatusConsumeBacklogEmittor {
 		item.setPriority(priority);
 		item.setTopic(topic);
 		item.setSamplingTimestamp(System.currentTimeMillis());
+		item.setTimestamp(new Date());
 
 		item.addValue("delay", partitonBacklog);
 

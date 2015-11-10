@@ -1,5 +1,6 @@
 package com.ctrip.hermes.monitor.dashboard;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +19,16 @@ public class DashboardItem {
 	private Map<String, Object> m_value = new HashMap<String, Object>();
 
 	private long m_samplingTimestamp;
+
+	private Date m_timestamp;
+
+	public Date getTimestamp() {
+		return m_timestamp;
+	}
+
+	public void setTimestamp(Date timestamp) {
+		m_timestamp = timestamp;
+	}
 
 	public long getSamplingTimestamp() {
 		return m_samplingTimestamp;
