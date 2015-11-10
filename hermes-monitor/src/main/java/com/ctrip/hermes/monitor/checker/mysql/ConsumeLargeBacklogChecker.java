@@ -22,6 +22,7 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
 import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
@@ -98,14 +99,16 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 		      });
 		for (Entry<String, Topic> entry : includeTopics) {
 			Topic topic = entry.getValue();
-			List<ConsumerGroup> includeGroups = findMatched(topic.getConsumerGroups(), new Matcher<ConsumerGroup>() {
-				@Override
-				public boolean match(ConsumerGroup obj) {
-					return Pattern.matches(groupPattern, obj.getName());
+			if (Storage.MYSQL.equals(topic.getStorageType())) {
+				List<ConsumerGroup> includeGroups = findMatched(topic.getConsumerGroups(), new Matcher<ConsumerGroup>() {
+					@Override
+					public boolean match(ConsumerGroup obj) {
+						return Pattern.matches(groupPattern, obj.getName());
+					}
+				});
+				for (ConsumerGroup group : includeGroups) {
+					limits.put(new Pair<Topic, ConsumerGroup>(topic, group), limit);
 				}
-			});
-			for (ConsumerGroup group : includeGroups) {
-				limits.put(new Pair<Topic, ConsumerGroup>(topic, group), limit);
 			}
 		}
 		return limits;
