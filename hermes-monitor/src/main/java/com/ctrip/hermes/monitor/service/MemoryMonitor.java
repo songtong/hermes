@@ -50,6 +50,22 @@ public class MemoryMonitor implements IZabbixMonitor {
 	@Autowired
 	private MonitorConfig config;
 
+	public String monitorHourly() throws Throwable {
+		Calendar cal = Calendar.getInstance();
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		Date timeTill = cal.getTime();
+		cal.add(Calendar.HOUR_OF_DAY, -1);
+		Date timeFrom = cal.getTime();
+
+		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_KAFKA_BROKER, config.getZabbixKafkaBrokerHosts());
+		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_ZOOKEEPER, config.getZabbixZookeeperHosts());
+		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_MYSQL_BROKER, config.getZabbixMysqlBrokerHosts());
+		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_METASERVER, config.getZabbixMetaserverHosts());
+		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_PORTAL, config.getZabbixPortalHosts());
+		return String.format("%s: %s->%s", "Memory", timeFrom, timeTill);
+	}
+
 	private void monitorMemory(Date timeFrom, Date timeTill, String group, String[] hostNames) throws Throwable {
 		Map<Integer, HostObject> hosts = zabbixApi.searchHostsByName(hostNames);
 		Map<Integer, StatResult> availablePercentage = statAvailablePercentage(timeFrom, timeTill, hosts);
@@ -77,28 +93,7 @@ public class MemoryMonitor implements IZabbixMonitor {
 			}
 		}
 	}
-
-	@Scheduled(cron = "0 6 * * * *")
-	public void scheduled() throws Throwable{
-		monitorHourly();
-	}
 	
-	public String monitorHourly() throws Throwable {
-		Calendar cal = Calendar.getInstance();
-		cal.set(Calendar.MINUTE, 0);
-		cal.set(Calendar.SECOND, 0);
-		Date timeTill = cal.getTime();
-		cal.add(Calendar.HOUR_OF_DAY, -1);
-		Date timeFrom = cal.getTime();
-
-		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_KAFKA_BROKER, config.getZabbixKafkaBrokerHosts());
-		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_ZOOKEEPER, config.getZabbixZookeeperHosts());
-		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_MYSQL_BROKER, config.getZabbixMysqlBrokerHosts());
-		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_METASERVER, config.getZabbixMetaserverHosts());
-		monitorMemory(timeFrom, timeTill, ZabbixConst.GROUP_PORTAL, config.getZabbixPortalHosts());
-		return String.format("%s: %s->%s", "Memory", timeFrom, timeTill);
-	}
-
 	public String monitorPastHours(int hours, int requestIntervalSecond) throws Throwable {
 		Date firstTimeFrom = null;
 		Date lastTimeTill = null;
@@ -127,6 +122,11 @@ public class MemoryMonitor implements IZabbixMonitor {
 			}
 		}
 		return String.format("%s->%s", firstTimeFrom, lastTimeTill);
+	}
+
+	@Scheduled(cron = "0 6 * * * *")
+	public void scheduled() throws Throwable{
+		monitorHourly();
 	}
 
 	private Map<Integer, StatResult> statAvailablePercentage(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)

@@ -47,6 +47,19 @@ public class ZabbixConst {
 	public static final String MEMORY_FREE_SWAP_PERCENTAGE = "Free swap space in %";
 
 	/**
+	 * Network
+	 */
+	public static final String NETWORK_ESTABLISHED = "Network ESTABLISHED";
+
+	public static final String NETWORK_SYN_RECV = "Network SYN_RECV";
+
+	public static final String NETWORK_TIME_WAIT = "Network TIME_WAIT";
+
+	public static final String NETWORK_INCOMING_TRAFFIC = "Incoming network traffic on";
+
+	public static final String NETWORK_OUTGOING_TRAFFIC = "Outgoing network traffic on";
+
+	/**
 	 * Kafka
 	 */
 	public static final String KAFKA_MESSAGE_IN_RATE = "Message in rate";
@@ -99,8 +112,12 @@ public class ZabbixConst {
 
 	public static final String CATEGORY_MEMORY = "Memory";
 
+	public static final String CATEGORY_NETWORK = "Network";
+
 	/**
 	 * Source
 	 */
 	public static final String SOURCE_ZABBIX = "Zabbix";
+
+	public static final String SOURCE_CAT = "Cat";
 }
