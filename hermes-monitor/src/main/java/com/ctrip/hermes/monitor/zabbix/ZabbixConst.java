@@ -45,6 +45,14 @@ public class ZabbixConst {
 	public static final String MEMORY_AVAILABLE_PERCENTAGE = "Available memory in %";
 
 	public static final String MEMORY_FREE_SWAP_PERCENTAGE = "Free swap space in %";
+	
+	public static final String MEMORY_AVAILABLE = "Available memory";
+	
+	public static final String MEMORY_FREE_SWAP = "Free swap space";
+	
+	public static final String MEMORY_SWAP_IN = "System swap in";
+	
+	public static final String MEMORY_SWAP_OUT = "System swap out";
 
 	/**
 	 * Network
