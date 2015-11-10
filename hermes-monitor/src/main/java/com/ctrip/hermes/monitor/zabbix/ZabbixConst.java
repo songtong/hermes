@@ -68,6 +68,13 @@ public class ZabbixConst {
 	public static final String NETWORK_OUTGOING_TRAFFIC = "Outgoing network traffic on";
 
 	/**
+	 * Process
+	 */
+	public static final String PROCESS_NUMBER = "Number of processes";
+	
+	public static final String PROCESS_RUNNING_NUMBER = "Number of running processes";
+	
+	/**
 	 * Kafka
 	 */
 	public static final String KAFKA_MESSAGE_IN_RATE = "Message in rate";
@@ -122,6 +129,8 @@ public class ZabbixConst {
 
 	public static final String CATEGORY_NETWORK = "Network";
 
+	public static final String CATEGORY_PROCESS = "Process";
+	
 	/**
 	 * Source
 	 */
