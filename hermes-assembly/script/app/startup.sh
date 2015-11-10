@@ -38,8 +38,8 @@ if [ ! -f $CONTEXT_DIR/WEB-INF/web.xml ];then
 	unzip -q -d $CONTEXT_DIR $WAR
 fi
 
-port=$HTTP_PORT
-if [ "${HTTP_PORT}" == "" ];then
+port=${2:-$HTTP_PORT}
+if [ "${port}" == "" ];then
     port=8080
 fi
 
