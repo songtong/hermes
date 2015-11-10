@@ -13,7 +13,6 @@
          <table name="schema"/>
          <table name="subscription"/>
          <table name="monitor_event"/>
-         <table name="monitor_report"/>
       </group>
    </jdbc>
 </wizard>

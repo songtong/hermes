@@ -13,7 +13,7 @@ public abstract class BaseMonitorEvent implements MonitorEvent {
 
 	private MonitorEventType m_type;
 
-	private boolean m_notified;
+	private Date m_notifyTime;
 
 	public BaseMonitorEvent(MonitorEventType type) {
 		m_type = type;
@@ -35,12 +35,12 @@ public abstract class BaseMonitorEvent implements MonitorEvent {
 		return m_message;
 	}
 
-	public boolean isNotified() {
-		return m_notified;
+	public Date getNotifyTime() {
+		return m_notifyTime;
 	}
 
-	public void setNotified(boolean notified) {
-		m_notified = notified;
+	public void setNotifyTime(Date notifyTime) {
+		m_notifyTime = notifyTime;
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public abstract class BaseMonitorEvent implements MonitorEvent {
 		m_createTime = dbEntity.getCreateTime();
 		m_id = dbEntity.getId();
 		m_message = dbEntity.getMessage();
-		m_notified = dbEntity.isNotified();
+		m_notifyTime = dbEntity.getNotifyTime();
 
 		parse0(dbEntity);
 	}
