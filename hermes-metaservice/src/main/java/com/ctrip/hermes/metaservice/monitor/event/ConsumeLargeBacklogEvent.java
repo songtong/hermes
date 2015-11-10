@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.metaservice.model.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
@@ -27,18 +28,20 @@ public class ConsumeLargeBacklogEvent extends BaseMonitorEvent {
 		m_group = group;
 		m_backlogDetail = backlogs;
 		m_totalBacklog = 0;
-		for (Long backlog : backlogs.values()) {
-			m_totalBacklog += backlog;
+		if (backlogs != null) {
+			for (Long backlog : backlogs.values()) {
+				m_totalBacklog += backlog;
+			}
 		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected void parse0(MonitorEvent dbEntity) {
 		m_topic = dbEntity.getKey1();
 		m_group = dbEntity.getKey2();
 		m_totalBacklog = Long.valueOf(dbEntity.getKey3());
-		m_backlogDetail = (Map<Integer, Long>) JSON.parse(dbEntity.getKey4());
+		m_backlogDetail = JSON.parseObject(dbEntity.getKey4(), new TypeReference<Map<Integer, Long>>() {
+		});
 	}
 
 	@Override
