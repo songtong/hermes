@@ -12,6 +12,10 @@
 			<readset name="ID">
 				<member name="id" />
 			</readset>
+			<readset name="CREATE_DATE">
+				<member name="id" />
+				<member name="creation-date"></member>
+			</readset>
 		</readsets>
 
 		<query-defs>
@@ -41,6 +45,37 @@
         		FROM <TABLE/>
         		ORDER BY <FIELD name='id'/> DESC
         		LIMIT ${find-count}
+        		]]>
+				</statement>
+			</query>
+			<query name="find-by-PK" type="SELECT">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<param name="key-id" />
+				<statement><![CDATA[SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+			</query>
+			<query name="latest" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT 1
+        		]]>
+				</statement>
+			</query>
+			<query name="oldest" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> ASC
+        		LIMIT 1
         		]]>
 				</statement>
 			</query>
@@ -96,6 +131,13 @@
 		<var name="batch-size" value-type="int" />
 		<var name="message-ids" value-type="Long[]" />
 		<var name="current-time" value-type="Date" />
+
+		<readsets>
+			<readset name="CREATE_DATE">
+				<member name="id"></member>
+				<member name="creation-date"></member>
+			</readset>
+		</readsets>
 
 		<query-defs>
 			<query name="insert" type="INSERT" batch='true'>
@@ -161,6 +203,29 @@
         		FROM <TABLE/>
         		WHERE <FIELD name='id'/> = ${key-id}]]></statement>
 			</query>
+			<query name="latest" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group-id" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT 1
+        		]]>
+				</statement>
+			</query>
+			<query name="oldest" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group-id" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> ASC
+        		LIMIT 1
+        		]]>
+				</statement>
+			</query>
+
 		</query-defs>
 	</entity>
 

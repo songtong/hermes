@@ -7,6 +7,7 @@ import com.ctrip.hermes.metaservice.monitor.event.ConsumeDelayTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MetaServerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
+import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceAckedTriedRatioErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceFailureCountTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
@@ -25,9 +26,11 @@ public enum MonitorEventType {
 
 	TOPIC_LARGE_DEAD_LETTER(8, "topic_large_dead_letter", TopicLargeDeadLetterEvent.class), //
 
-	ES_DATASOURCE_ERROR(9, null, null), //
-	CAT_DATASOURCE_ERROR(10, null, null), //
-	DB_DATASOURCE_ERROR(11, null, null), //
+	PARTITION_MODIFICATION(9, "partition_modification", PartitionModificationEvent.class), //
+
+	ES_DATASOURCE_ERROR(40, null, null), //
+	CAT_DATASOURCE_ERROR(41, null, null), //
+	DB_DATASOURCE_ERROR(42, null, null), //
 
 	CHECKER_EXCEPTION(50, "checker_exception", CheckerExceptionEvent.class), //
 	;

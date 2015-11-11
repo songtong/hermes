@@ -23,6 +23,31 @@ public abstract class DBBasedChecker implements Checker {
 	@Autowired
 	protected MonitorConfig m_config;
 
+	protected <K> List<List<K>> splitCollection(Collection<K> collection, int batchCount) {
+		if (batchCount <= 0) {
+			throw new IllegalArgumentException("BatchCount must be a positive number.");
+		}
+
+		List<List<K>> list = new ArrayList<List<K>>();
+		for (int i = 0; i < batchCount; i++) {
+			list.add(new ArrayList<K>());
+		}
+
+		int currentIdx = 0;
+		for (K k : collection) {
+			list.get(currentIdx).add(k);
+			currentIdx = ++currentIdx % batchCount;
+		}
+
+		Iterator<List<K>> iter = list.iterator();
+		while (iter.hasNext()) {
+			if (iter.next().size() == 0) {
+				iter.remove();
+			}
+		}
+		return list;
+	}
+
 	protected <K, V> List<Map<K, V>> splitMap(Map<K, V> map, int batchCount) {
 		if (batchCount <= 0) {
 			throw new IllegalArgumentException("BatchCount must be a positive number.");

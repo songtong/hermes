@@ -110,6 +110,15 @@ public class MonitorConfig {
 	@Value("${consume.large.backlog.checker.exclude.topics:{}}")
 	private String consumeBacklogCheckerExcludeTopics;
 
+	@Value("${partition.checker.retain.day:30}")
+	private int partitionRetainInDay;
+
+	@Value("${partition.checker.cordon.day:2}")
+	private int partitionCordonInDay;
+
+	@Value("${partition.checker.increment.day:5}")
+	private int partitionIncrementInDay;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -349,5 +358,29 @@ public class MonitorConfig {
 
 	public void setConsumeBacklogCheckerExcludeTopics(String consumeBacklogCheckerExcludeTopics) {
 		this.consumeBacklogCheckerExcludeTopics = consumeBacklogCheckerExcludeTopics;
+	}
+
+	public int getPartitionRetainInDay() {
+		return partitionRetainInDay;
+	}
+
+	public void setPartitionRetainInDay(int partitionRetainInDay) {
+		this.partitionRetainInDay = partitionRetainInDay;
+	}
+
+	public int getPartitionCordonInDay() {
+		return partitionCordonInDay;
+	}
+
+	public void setPartitionCordonInDay(int partitionCordonInDay) {
+		this.partitionCordonInDay = partitionCordonInDay;
+	}
+
+	public int getPartitionIncrementInDay() {
+		return partitionIncrementInDay;
+	}
+
+	public void setPartitionIncrementInDay(int partitionIncrementInDay) {
+		this.partitionIncrementInDay = partitionIncrementInDay;
 	}
 }
