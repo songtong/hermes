@@ -77,9 +77,9 @@ public class MemoryMonitor implements IZabbixMonitor {
 
 		for (Integer hostid : hosts.keySet()) {
 			Map<String, Object> stat = new HashMap<String, Object>();
-			stat.put("memory.available.percentage", availablePercentage.get(hostid).getMean());
+			stat.put("memory.available.percentage", availablePercentage.get(hostid).getMean() / 100);
 			stat.put("memory.available", available.get(hostid).getMean());
-			stat.put("memory.freeswap.percentage", freeSwapPercentage.get(hostid).getMean());
+			stat.put("memory.freeswap.percentage", freeSwapPercentage.get(hostid).getMean() / 100);
 			stat.put("memory.freeswap", freeSwap.get(hostid).getMean());
 			stat.put("memory.swapin", swapIn.get(hostid).getMean());
 			stat.put("memory.swapout", swapOut.get(hostid).getMean());

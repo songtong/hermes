@@ -36,6 +36,8 @@ public class ZabbixConst {
 	public static final String CPU_SYSTEM_TIME = "system.cpu.util[,system]";
 
 	public static final String CPU_IOWAIT_TIME = "system.cpu.util[,iowait]";
+	
+	public static final String CPU_IDLE_TIME = "system.cpu.util[,idle]";
 
 	public static final String CPU_RATIO_OF_CPU_LOAD_AND_CPU_NUMBER = "The ratio of cpu load and cpu number";
 

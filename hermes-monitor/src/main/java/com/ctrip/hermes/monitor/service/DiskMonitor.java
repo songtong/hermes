@@ -82,7 +82,7 @@ public class DiskMonitor implements IZabbixMonitor {
 			Map<String, Object> stat = new HashMap<String, Object>();
 			Map<String, StatResult> resultMap = diskFreePercentage.get(hostid);
 			for (Map.Entry<String, StatResult> entry : resultMap.entrySet()) {
-				stat.put(entry.getKey(), entry.getValue().getMean());
+				stat.put(entry.getKey(), entry.getValue().getMean() / 100);
 			}
 			resultMap = diskUsed.get(hostid);
 			for (Map.Entry<String, StatResult> entry : resultMap.entrySet()) {
