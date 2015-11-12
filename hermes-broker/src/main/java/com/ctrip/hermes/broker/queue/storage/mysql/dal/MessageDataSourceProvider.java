@@ -43,6 +43,18 @@ public class MessageDataSourceProvider implements DataSourceProvider {
 			props.setConnectionProperties("useUnicode=true&autoReconnect=true&rewriteBatchedStatements=true");
 			dsDef.setProperties(props);
 
+			int maxPoolSize = 20;
+			if (dsProps.get("maximumPoolSize") != null) {
+				maxPoolSize = Integer.parseInt(dsProps.get("maximumPoolSize").getValue());
+			}
+			dsDef.setMaximumPoolSize(maxPoolSize);
+
+			int minPoolSize = 10;
+			if (dsProps.get("minimumPoolSize") != null) {
+				minPoolSize = Integer.parseInt(dsProps.get("minimumPoolSize").getValue());
+			}
+			dsDef.setMinimumPoolSize(minPoolSize);
+
 			def.addDataSource(dsDef);
 		}
 
