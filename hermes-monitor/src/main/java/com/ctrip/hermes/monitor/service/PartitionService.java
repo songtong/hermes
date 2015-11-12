@@ -29,18 +29,20 @@ public class PartitionService {
 	@Autowired
 	private DataSourceManager m_dsManager;
 
-	public Pair<String, Boolean> addPartitions(TableContext ctx, List<PartitionInfo> list) throws Exception {
+	public String addPartitions(TableContext ctx, List<PartitionInfo> list) throws Exception {
 		String sql = getAddPartitionSQL(ctx, list);
 		log.info("Add partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
-		return new Pair<String, Boolean>(sql, executeSQL(ctx.getDatasource(), sql));
+		executeSQL(ctx.getDatasource(), sql);
+		return sql;
 	}
 
-	public Pair<String, Boolean> dropPartitions(TableContext ctx, List<PartitionInfo> list) throws Exception {
+	public String dropPartitions(TableContext ctx, List<PartitionInfo> list) throws Exception {
 		String sql = getDropPartitionSQL(ctx, list);
 		log.info("Drop partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
-		return new Pair<String, Boolean>(sql, executeSQL(ctx.getDatasource(), sql));
+		executeSQL(ctx.getDatasource(), sql);
+		return sql;
 	}
 
 	public static String getAddPartitionSQL(TableContext ctx, List<PartitionInfo> list) {

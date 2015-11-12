@@ -56,18 +56,8 @@ public class PartitionCheckerTask implements Runnable {
 					try {
 						List<PartitionInfo> dropList = pair.getValue();
 						if (dropList.size() > 0) {
-							Pair<String, Boolean> dropStatus = m_service.dropPartitions(ctx, dropList);
-							if (dropStatus.getValue()) {
-								PartitionModificationEvent e = new PartitionModificationEvent();
-								e.setTopic(ctx.getTopic().getName());
-								e.setPartition(ctx.getPartition().getId());
-								e.setOp(PartitionOperation.DROP);
-								e.setSql(dropStatus.getKey());
-								e.setTableName(ctx.getTableName());
-								m_result.addMonitorEvent(e);
-							} else {
-								log.error("Drop partitions failed[{}]: {}", ctx, dropStatus.getKey());
-							}
+							String sql = m_service.dropPartitions(ctx, dropList);
+							m_result.addMonitorEvent(generateEvent(ctx, PartitionOperation.DROP, sql));
 						}
 					} catch (Exception e) {
 						m_exceptions.add(e);
@@ -75,18 +65,8 @@ public class PartitionCheckerTask implements Runnable {
 					try {
 						List<PartitionInfo> addList = pair.getKey();
 						if (addList.size() > 0) {
-							Pair<String, Boolean> addStatus = m_service.addPartitions(ctx, addList);
-							if (addStatus.getValue()) {
-								PartitionModificationEvent e = new PartitionModificationEvent();
-								e.setTopic(ctx.getTopic().getName());
-								e.setPartition(ctx.getPartition().getId());
-								e.setOp(PartitionOperation.ADD);
-								e.setSql(addStatus.getKey());
-								e.setTableName(ctx.getTableName());
-								m_result.addMonitorEvent(e);
-							} else {
-								log.error("Add partitions failed[{}]: {}", ctx, addStatus.getKey());
-							}
+							String sql = m_service.addPartitions(ctx, addList);
+							m_result.addMonitorEvent(generateEvent(ctx, PartitionOperation.ADD, sql));
 						}
 					} catch (Exception e) {
 						m_exceptions.add(e);
@@ -96,6 +76,16 @@ public class PartitionCheckerTask implements Runnable {
 		} finally {
 			m_latch.countDown();
 		}
+	}
+
+	private PartitionModificationEvent generateEvent(TableContext ctx, PartitionOperation op, String sql) {
+		PartitionModificationEvent e = new PartitionModificationEvent();
+		e.setTopic(ctx.getTopic().getName());
+		e.setPartition(ctx.getPartition().getId());
+		e.setOp(op);
+		e.setSql(sql);
+		e.setTableName(ctx.getTableName());
+		return e;
 	}
 
 	private PartitionCheckerStrategy findStrategy(TableContext ctx) {

@@ -7,10 +7,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -62,11 +66,12 @@ public class PartitionChecker extends DBBasedChecker {
 		ExecutorService es = Executors.newFixedThreadPool(PARTITION_TASK_SIZE);
 		try {
 			Meta meta = fetchMeta();
-			Map<String, Pair<Datasource, List<PartitionInfo>>> partitionInfos = new HashMap<String, Pair<Datasource, List<PartitionInfo>>>();
+			Map<String, Integer> limits = parseLimits(meta, m_config.getPartitionRetainInDay());
+			Map<String, Pair<Datasource, List<PartitionInfo>>> ps = new HashMap<>();
 			for (Datasource ds : meta.getStorages().get(Storage.MYSQL).getDatasources()) {
-				partitionInfos.putAll(m_partitionService.getDatasourcePartitions(ds));
+				ps.putAll(m_partitionService.getDatasourcePartitions(ds));
 			}
-			List<List<TableContext>> tasks = splitCollection(getTableContexts(meta, partitionInfos), PARTITION_TASK_SIZE);
+			List<List<TableContext>> tasks = splitCollection(getTableContexts(meta, ps, limits), PARTITION_TASK_SIZE);
 			CountDownLatch latch = new CountDownLatch(tasks.size());
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			for (List<TableContext> task : tasks) {
@@ -92,13 +97,42 @@ public class PartitionChecker extends DBBasedChecker {
 		return result;
 	}
 
-	private List<TableContext> getTableContexts(Meta meta, Map<String, Pair<Datasource, List<PartitionInfo>>> partitions) {
-		int retain = m_config.getPartitionRetainInDay();
+	private Map<String, Integer> parseLimits(Meta meta, String partitionRetainInDay) {
+		Map<String, Integer> limits = new HashMap<String, Integer>();
+		Map<String, Integer> includes = JSON.parseObject(partitionRetainInDay, new TypeReference<Map<String, Integer>>() {
+		});
+		if (includes.containsKey(".*")) {
+			for (Entry<String, Topic> entry : findTopics(".*", meta)) {
+				limits.put(entry.getValue().getName(), includes.get(".*"));
+			}
+		}
+		for (Entry<String, Integer> item : includes.entrySet()) {
+			if (!item.getKey().equals(".*") && item.getValue() > 0) {
+				for (Entry<String, Topic> entry : findTopics(item.getKey(), meta)) {
+					limits.put(entry.getValue().getName(), item.getValue());
+				}
+			}
+		}
+		return limits;
+	}
+
+	private List<Entry<String, Topic>> findTopics(final String pattern, Meta meta) {
+		return findMatched(meta.getTopics().entrySet(), new Matcher<Entry<String, Topic>>() {
+			@Override
+			public boolean match(Entry<String, Topic> obj) {
+				return Pattern.matches(pattern, obj.getKey());
+			}
+		});
+	}
+
+	private List<TableContext> getTableContexts(//
+	      Meta meta, Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, Map<String, Integer> topicRetainDays) {
 		int cordon = m_config.getPartitionCordonInDay();
 		int increment = m_config.getPartitionIncrementInDay();
 
 		List<TableContext> ctxes = new ArrayList<TableContext>();
 		for (Topic topic : meta.getTopics().values()) {
+			int retain = topicRetainDays.get(topic.getName());
 			for (Partition partition : topic.getPartitions()) {
 				MessageTableContext pMsgCtx = new MessageTableContext(topic, partition, 0, retain, cordon, increment);
 				ctxes.add(pMsgCtx.setPartitionInfos(partitions.get(pMsgCtx.getTableName()).getValue()));
@@ -112,7 +146,10 @@ public class PartitionChecker extends DBBasedChecker {
 
 				for (ConsumerGroup consumer : topic.getConsumerGroups()) {
 					ResendTableContext cCtx = new ResendTableContext(topic, partition, consumer, retain, cordon, increment);
-					ctxes.add(cCtx.setPartitionInfos(partitions.get(cCtx.getTableName()).getValue()).setDatasource(ds));
+					Pair<Datasource, List<PartitionInfo>> pair = partitions.get(cCtx.getTableName());
+					if (pair != null) {
+						ctxes.add(cCtx.setPartitionInfos(pair.getValue()).setDatasource(ds));
+					}
 				}
 			}
 		}

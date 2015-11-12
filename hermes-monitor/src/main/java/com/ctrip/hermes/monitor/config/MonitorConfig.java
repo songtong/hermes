@@ -110,14 +110,26 @@ public class MonitorConfig {
 	@Value("${consume.large.backlog.checker.exclude.topics:{}}")
 	private String consumeBacklogCheckerExcludeTopics;
 
-	@Value("${partition.checker.retain.day:30}")
-	private int partitionRetainInDay;
+	/**
+	 * { ".*" : 30, "song.test" : 60, "song..*" : 40 }
+	 */
+	@Value("${partition.checker.retain.day:{\".*\":30}}")
+	private String partitionRetainInDay;
 
-	@Value("${partition.checker.cordon.day:2}")
+	@Value("${partition.checker.cordon.day:5}")
 	private int partitionCordonInDay;
 
-	@Value("${partition.checker.increment.day:5}")
+	@Value("${partition.checker.increment.day:15}")
 	private int partitionIncrementInDay;
+
+	@Value("${partition.checker.increment.max.count:100}")
+	private int partitionIncrementMaxCount;
+
+	@Value("${partition.checker.increment.partition.max.size:50000000}")
+	private int partitionMaxSize;
+
+	@Value("${partition.checker.size.increment.size:1000000}")
+	private int partitionSizeIncrementStep;
 
 	public String getEsClusterName() {
 		return esClusterName;
@@ -360,11 +372,11 @@ public class MonitorConfig {
 		this.consumeBacklogCheckerExcludeTopics = consumeBacklogCheckerExcludeTopics;
 	}
 
-	public int getPartitionRetainInDay() {
+	public String getPartitionRetainInDay() {
 		return partitionRetainInDay;
 	}
 
-	public void setPartitionRetainInDay(int partitionRetainInDay) {
+	public void setPartitionRetainInDay(String partitionRetainInDay) {
 		this.partitionRetainInDay = partitionRetainInDay;
 	}
 
@@ -382,5 +394,29 @@ public class MonitorConfig {
 
 	public void setPartitionIncrementInDay(int partitionIncrementInDay) {
 		this.partitionIncrementInDay = partitionIncrementInDay;
+	}
+
+	public int getPartitionIncrementMaxCount() {
+		return partitionIncrementMaxCount;
+	}
+
+	public void setPartitionIncrementMaxCount(int partitionIncrementMaxCount) {
+		this.partitionIncrementMaxCount = partitionIncrementMaxCount;
+	}
+
+	public int getPartitionMaxSize() {
+		return partitionMaxSize;
+	}
+
+	public void setPartitionMaxSize(int partitionMaxSize) {
+		this.partitionMaxSize = partitionMaxSize;
+	}
+
+	public int getPartitionSizeIncrementStep() {
+		return partitionSizeIncrementStep;
+	}
+
+	public void setPartitionSizeIncrementStep(int partitionSizeIncrementStep) {
+		this.partitionSizeIncrementStep = partitionSizeIncrementStep;
 	}
 }

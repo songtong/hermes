@@ -149,4 +149,10 @@ public class PartitionModificationEvent extends BaseMonitorEvent {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "PartitionModificationEvent [m_topic=" + m_topic + ", m_partition=" + m_partition + ", m_tableName="
+		      + m_tableName + ", m_op=" + m_op + ", m_sql=" + m_sql + ", getMessage()=" + getMessage() + "]";
+	}
 }

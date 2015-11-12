@@ -11,6 +11,7 @@ import com.ctrip.hermes.monitor.checker.mysql.dal.entity.PartitionInfo;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.finder.CreationStampFinder;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.finder.CreationStampFinder.CreationStamp;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
 
 public abstract class BasePartitionCheckerStrategy implements PartitionCheckerStrategy {
 	private static final int SPEED_SAMPLE_COUNT = 3;
@@ -18,6 +19,8 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 	private static final int MIN_PARTITION_COUNT = 5;
 
 	abstract protected CreationStampFinder getCreationStampFinder();
+
+	abstract protected MonitorConfig getConfig();
 
 	public Pair<List<PartitionInfo>, List<PartitionInfo>> analysisTable(TableContext ctx) {
 		if (ctx == null) {
@@ -35,14 +38,16 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		CreationStamp oldest = getCreationStampFinder().findOldest(ctx);
 		CreationStamp latest = getCreationStampFinder().findLatest(ctx);
 
-		long leftCapacity = getLeftCapacity(ctx, latest);
-		long daySpeed = getLatestSpeedPerDay(ctx, oldest, latest);
+		if (oldest != null && latest != null) {
+			long leftCapacity = getLeftCapacity(ctx, latest);
+			long daySpeed = getLatestSpeedPerDay(ctx, oldest, latest);
 
-		if (isUsageDanger(leftCapacity, daySpeed, ctx.getCordonInDay())) {
-			long partitionCapacity = getLatestCapacityPerPartition(ctx);
-			addList.addAll(caculateIncrementPartitions(ctx, daySpeed, partitionCapacity));
+			if (isUsageDanger(leftCapacity, daySpeed, ctx.getCordonInDay())) {
+				long partitionCapacity = getLatestCapacityPerPartition(ctx);
+				addList.addAll(caculateIncrementPartitions(ctx, daySpeed, partitionCapacity));
+			}
+			delList.addAll(caculateDecrementPartitions(ctx));
 		}
-		delList.addAll(caculateDecrementPartitions(ctx));
 
 		return new Pair<List<PartitionInfo>, List<PartitionInfo>>(addList, delList);
 	}
@@ -55,13 +60,16 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 	private List<PartitionInfo> caculateDecrementPartitions(TableContext ctx) {
 		List<PartitionInfo> list = new ArrayList<PartitionInfo>();
 		List<PartitionInfo> ps = ctx.getPartitionInfos();
-		if (ps.get(1).getRows() > 0) {
-			for (PartitionInfo pInfo : ps) {
-				long partitionMaxId = pInfo.getBorder() - 1;
-				CreationStamp stamp = getCreationStampFinder().findSpecific(ctx, partitionMaxId);
-				if (stamp.getDate().getTime() < System.currentTimeMillis() - TimeUnit.DAYS.toMillis(ctx.getRetainInDay())) {
-					list.add(pInfo);
-				}
+		for (int idx = 0; idx < ps.size() - 1; idx++) {
+			if (ps.get(idx + 1).getRows() == 0) {
+				break;
+			}
+			PartitionInfo p = ps.get(idx);
+			CreationStamp stamp = getCreationStampFinder().findSpecific(ctx, p.getBorder() - 1);
+			if (stamp.getDate().getTime() < System.currentTimeMillis() - TimeUnit.DAYS.toMillis(ctx.getRetainInDay())) {
+				list.add(p);
+			} else {
+				break;
 			}
 		}
 		return list;
@@ -69,17 +77,35 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 
 	private List<PartitionInfo> caculateIncrementPartitions(TableContext ctx, long speed, long partitionSize) {
 		List<PartitionInfo> list = new ArrayList<PartitionInfo>();
-		long count = (long) Math.ceil((ctx.getIncrementInDay() * speed) / (double) partitionSize);
-		PartitionInfo max = ctx.getPartitionInfos().get(ctx.getPartitionInfos().size() - 1);
-		for (int idx = 0; idx < count; idx++) {
-			PartitionInfo info = new PartitionInfo();
-			info.setBorder(max.getBorder() + partitionSize);
-			info.setName(nextPartitionName(max));
-			info.setTable(ctx.getTableName());
-			list.add(info);
-			max = info;
+		if (speed > 0) {
+			long incrementPartitionCount = ctx.getIncrementInDay() * speed / partitionSize;
+			if (incrementPartitionCount > getConfig().getPartitionIncrementMaxCount()) {
+				Pair<Long, Long> pair = renewPartitionSizeAndCount(ctx.getIncrementInDay() * speed, ctx.getIncrementInDay());
+				partitionSize = pair.getKey();
+				incrementPartitionCount = pair.getValue();
+			}
+			PartitionInfo latestPartitionInfo = ctx.getPartitionInfos().get(ctx.getPartitionInfos().size() - 1);
+			for (int idx = 0; idx < incrementPartitionCount; idx++) {
+				PartitionInfo nextPartitionInfo = new PartitionInfo();
+				nextPartitionInfo.setBorder(latestPartitionInfo.getBorder() + partitionSize);
+				nextPartitionInfo.setName(nextPartitionName(latestPartitionInfo));
+				nextPartitionInfo.setTable(ctx.getTableName());
+				list.add(nextPartitionInfo);
+
+				latestPartitionInfo = nextPartitionInfo;
+			}
 		}
 		return list;
+	}
+
+	private Pair<Long, Long> renewPartitionSizeAndCount(long capacityInCount, int capacityInDay) {
+		long capacityPerDay = capacityInCount / capacityInDay;
+		long step = getConfig().getPartitionSizeIncrementStep();
+		long size = step;
+		while (size < getConfig().getPartitionMaxSize() && size < capacityPerDay) {
+			size += step;
+		}
+		return new Pair<Long, Long>(size, (long) Math.ceil(capacityInCount / (double) size));
 	}
 
 	private String nextPartitionName(PartitionInfo current) {
@@ -98,7 +124,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		if (speed <= 0) {
 			return false;
 		}
-		return (long) Math.ceil(capacity / speed) <= cordon;
+		return capacity / speed <= cordon;
 	}
 
 	private long getLeftCapacity(TableContext ctx, CreationStamp latest) {
@@ -113,11 +139,12 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 
 	private long calculateAverageSpeed(//
 	      TableContext ctx, List<PartitionInfo> ps, CreationStamp oldest, CreationStamp latest) {
-		oldest = ps.size() <= 1 ? oldest : //
+		oldest = ps.get(0).getOrdinal() == 1 ? oldest : //
 		      getCreationStampFinder().findSpecific(ctx, ps.get(0).getBorder() - ps.get(0).getRows());
 		if (oldest != null && latest != null) {
-			long period = TimeUnit.MILLISECONDS.toDays(latest.getDate().getTime() - latest.getDate().getTime());
-			return (latest.getId() - oldest.getId()) / period;
+			long period = latest.getDate().getTime() - oldest.getDate().getTime();
+			period = Math.max(1, period);
+			return (long) ((latest.getId() - oldest.getId()) / (float) period * TimeUnit.DAYS.toMillis(1));
 		}
 		return -1L;
 	}

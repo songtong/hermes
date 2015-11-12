@@ -54,4 +54,11 @@ public class MessageTableContext extends BaseTableContext {
 	public Tpp getTpp() {
 		return new Tpp(m_topic.getName(), m_partition.getId(), m_priority == 0);
 	}
+
+	@Override
+	public String toString() {
+		return "MessageTableContext [m_priority=" + m_priority + ", getTableName()=" + getTableName() + ", getTopic()="
+		      + getTopic().getName() + ", getPartition()=" + getPartition().getId() + ", getPartitionInfos()="
+		      + getPartitionInfos() + "]";
+	}
 }

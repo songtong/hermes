@@ -49,4 +49,11 @@ public class ResendTableContext extends BaseTableContext {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "ResendTableContext [m_consumer=" + m_consumer.getName() + ", getTableName()=" + getTableName()
+		      + ", getTopic()=" + getTopic().getName() + ", getPartition()=" + getPartition().getId()
+		      + ", getPartitionInfos()=" + getPartitionInfos() + "]";
+	}
 }
