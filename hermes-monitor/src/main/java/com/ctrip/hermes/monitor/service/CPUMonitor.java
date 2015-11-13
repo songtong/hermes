@@ -55,13 +55,17 @@ public class CPUMonitor implements IZabbixMonitor {
 		Map<Integer, StatResult> cpuUserTime = statCPUUserTime(timeFrom, timeTill, hosts);
 		Map<Integer, StatResult> cpuSystemTime = statCPUSystemTime(timeFrom, timeTill, hosts);
 		Map<Integer, StatResult> cpuIOWaitTime = statCPUIOWaitTime(timeFrom, timeTill, hosts);
+		Map<Integer, StatResult> cpuIdleTime = statCPUIdleTime(timeFrom, timeTill, hosts);
+		Map<Integer, StatResult> cpuProcessorLoad = statCPUProcessorLoad(timeFrom, timeTill, hosts);
 		Map<Integer, StatResult> cpuRatioLoadOfProcessor = statCPURatioLoadOfNumber(timeFrom, timeTill, hosts);
 
 		for (Integer hostid : hosts.keySet()) {
 			Map<String, Object> stat = new HashMap<String, Object>();
-			stat.put("cpu.usertime", cpuUserTime.get(hostid).getMean());
-			stat.put("cpu.systemtime", cpuSystemTime.get(hostid).getMean());
-			stat.put("cpu.iowaittime", cpuIOWaitTime.get(hostid).getMean());
+			stat.put("cpu.usertime", cpuUserTime.get(hostid).getMean() / 100);
+			stat.put("cpu.systemtime", cpuSystemTime.get(hostid).getMean() / 100);
+			stat.put("cpu.iowaittime", cpuIOWaitTime.get(hostid).getMean() / 100);
+			stat.put("cpu.idletime", cpuIdleTime.get(hostid).getMean() / 100);
+			stat.put("cpu.load", cpuProcessorLoad.get(hostid).getMean());
 			stat.put("cpu.ratioloadofprocessor", cpuRatioLoadOfProcessor.get(hostid).getMean());
 			MonitorItem item = new MonitorItem();
 			item.setCategory(ZabbixConst.CATEGORY_CPU);
@@ -79,11 +83,6 @@ public class CPUMonitor implements IZabbixMonitor {
 				logger.warn("Save item failed", e);
 			}
 		}
-	}
-
-	@Scheduled(cron = "0 3 * * * *")
-	public void scheduled() throws Throwable {
-		monitorHourly();
 	}
 
 	public String monitorHourly() throws Throwable {
@@ -132,30 +131,14 @@ public class CPUMonitor implements IZabbixMonitor {
 		return String.format("%s->%s", firstTimeFrom, lastTimeTill);
 	}
 
-	private Map<Integer, StatResult> statCPUUserTime(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
-	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByKey(hosts.keySet(), ZabbixConst.CPU_USER_TIME);
-		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
-		for (Integer hostid : hosts.keySet()) {
-			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
-			      HISOTRY_OBJECT_TYPE.FLOAT);
-			StatResult validResult = new StatResult();
-			for (StatResult value : statResults.values()) {
-				if (value.getSum() > 0) {
-					validResult = value;
-					break;
-				}
-			}
-			result.put(hostid, validResult);
-			logger.info(String.format("%14s CPU User Time(%s - %s) Mean: %5.2f%%", hosts.get(hostid).getHost(), timeFrom,
-			      timeTill, validResult.getMean()));
-		}
-		return result;
+	@Scheduled(cron = "0 3 * * * *")
+	public void scheduled() throws Throwable {
+		monitorHourly();
 	}
 
-	private Map<Integer, StatResult> statCPUSystemTime(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
+	private Map<Integer, StatResult> statCPUIdleTime(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
 	      throws ZabbixApiException {
-		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByKey(hosts.keySet(), ZabbixConst.CPU_SYSTEM_TIME);
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByKey(hosts.keySet(), ZabbixConst.CPU_IDLE_TIME);
 		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
 		for (Integer hostid : hosts.keySet()) {
 			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
@@ -168,8 +151,8 @@ public class CPUMonitor implements IZabbixMonitor {
 				}
 			}
 			result.put(hostid, validResult);
-			logger.info(String.format("%14s CPU System Time(%s - %s) Mean: %5.2f%%", hosts.get(hostid).getHost(),
-			      timeFrom, timeTill, validResult.getMean()));
+			logger.info(String.format("%14s CPU Idle Time(%s - %s) Mean: %5.2f%%", hosts.get(hostid).getHost(), timeFrom,
+			      timeTill, validResult.getMean()));
 		}
 		return result;
 	}
@@ -195,6 +178,27 @@ public class CPUMonitor implements IZabbixMonitor {
 		return result;
 	}
 
+	private Map<Integer, StatResult> statCPUProcessorLoad(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
+	      throws ZabbixApiException {
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(), ZabbixConst.CPU_PROCESSOR_LOAD);
+		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
+		for (Integer hostid : hosts.keySet()) {
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.FLOAT);
+			StatResult validResult = new StatResult();
+			for (StatResult value : statResults.values()) {
+				if (value.getSum() > 0) {
+					validResult = value;
+					break;
+				}
+			}
+			result.put(hostid, validResult);
+			logger.info(String.format("%14s CPU Processor Load(%s - %s) Mean: %5.2f", hosts.get(hostid).getHost(),
+			      timeFrom, timeTill, validResult.getMean()));
+		}
+		return result;
+	}
+
 	private Map<Integer, StatResult> statCPURatioLoadOfNumber(Date timeFrom, Date timeTill,
 	      Map<Integer, HostObject> hosts) throws ZabbixApiException {
 		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByName(hosts.keySet(),
@@ -213,6 +217,48 @@ public class CPUMonitor implements IZabbixMonitor {
 			result.put(hostid, validResult);
 			logger.info(String.format("%14s CPU Ratio Load Of Processor Number(%s - %s) Mean: %5.2f", hosts.get(hostid)
 			      .getHost(), timeFrom, timeTill, validResult.getMean()));
+		}
+		return result;
+	}
+
+	private Map<Integer, StatResult> statCPUSystemTime(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
+	      throws ZabbixApiException {
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByKey(hosts.keySet(), ZabbixConst.CPU_SYSTEM_TIME);
+		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
+		for (Integer hostid : hosts.keySet()) {
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.FLOAT);
+			StatResult validResult = new StatResult();
+			for (StatResult value : statResults.values()) {
+				if (value.getSum() > 0) {
+					validResult = value;
+					break;
+				}
+			}
+			result.put(hostid, validResult);
+			logger.info(String.format("%14s CPU System Time(%s - %s) Mean: %5.2f%%", hosts.get(hostid).getHost(),
+			      timeFrom, timeTill, validResult.getMean()));
+		}
+		return result;
+	}
+
+	private Map<Integer, StatResult> statCPUUserTime(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)
+	      throws ZabbixApiException {
+		Map<Integer, List<ItemObject>> ids = zabbixApi.searchItemsByKey(hosts.keySet(), ZabbixConst.CPU_USER_TIME);
+		Map<Integer, StatResult> result = new HashMap<Integer, StatResult>();
+		for (Integer hostid : hosts.keySet()) {
+			Map<Integer, StatResult> statResults = zabbixApi.getHistoryStat(timeFrom, timeTill, hostid, ids.get(hostid),
+			      HISOTRY_OBJECT_TYPE.FLOAT);
+			StatResult validResult = new StatResult();
+			for (StatResult value : statResults.values()) {
+				if (value.getSum() > 0) {
+					validResult = value;
+					break;
+				}
+			}
+			result.put(hostid, validResult);
+			logger.info(String.format("%14s CPU User Time(%s - %s) Mean: %5.2f%%", hosts.get(hostid).getHost(), timeFrom,
+			      timeTill, validResult.getMean()));
 		}
 		return result;
 	}
