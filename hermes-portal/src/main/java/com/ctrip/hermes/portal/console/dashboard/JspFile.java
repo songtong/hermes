@@ -6,7 +6,8 @@ public enum JspFile {
 	CLIENT("/jsp/console/dashboard/dash-client.jsp"), //
 	BROKER("/jsp/console/dashboard/dash-broker.jsp"), //
 	BROKER_DETAIL("/jsp/console/dashboard/dash-broker-detail.jsp"), //
-	BROKER_DETAIL_HOME("/jsp/console/dashboard/dash-broker-detail-home.jsp"); //
+	BROKER_DETAIL_HOME("/jsp/console/dashboard/dash-broker-detail-home.jsp"), //
+	MONITOR_EVENT("/jsp/console/dashboard/monitor-event.jsp"); //
 
 	private String m_path;
 

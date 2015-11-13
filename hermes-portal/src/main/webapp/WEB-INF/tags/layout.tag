@@ -85,6 +85,7 @@
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/detail/_default">Topic</a></li>
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=broker">Broker</a></li>
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=client">Client</a></li>
+										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=monitor_event">Monitor Event</a></li>
 									</ul></li>
 							</c:if>
 							<c:if test="${page.name == 'application' }">

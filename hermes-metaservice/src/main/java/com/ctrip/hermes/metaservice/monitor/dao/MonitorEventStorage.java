@@ -13,4 +13,8 @@ public interface MonitorEventStorage {
 	public List<MonitorEvent> findMonitorEvent(long start, long end);
 
 	public List<MonitorEvent> fetchUnnotifiedMonitorEvent(boolean isForNotify);
+
+	public List<com.ctrip.hermes.metaservice.model.MonitorEvent> findDBMonitorEvents(int pageCount, int pageNum);
+
+	public long totalPageCount(int pageCount);
 }
