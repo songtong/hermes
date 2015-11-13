@@ -2,7 +2,8 @@
 	<thead>
 		<tr>
 			<th>#</th>
-			<th>申请内容</th>
+			<th>申请类型</th>
+			<th>Topic名字</th>
 			<th>申请人</th>
 			<th>申请状态</th>
 			<th>申请时间</th>
@@ -12,9 +13,15 @@
 	<tbody>
 		<tr ng-repeat="application in applications">
 			<td><label ng-bind="$index + 1"></label></td>
-			<td>{{application.content|short:20}}</td>
+			<td><div ng-if="application.type==0">创建Topic</div>
+				<div ng-if="application.type==1">创建Consumer</div>
+				<div ng-if="application.type==2">修改Topic</div>
+				<div ng-if="application.type==3">修改Consumer</div></td>
+			<td>{{application.productLine}}.{{application.entity}}.{{application.event}}</td>
 			<td>{{application.ownerName}}</td>
-			<td>{{application.status}}</td>
+			<td><div ng-if="application.status==0" class="text-info">审核中</div>
+				<div ng-if="application.status==1" class="text-danger">拒绝</div>
+				<div ng-if="application.status==2" class="text-success">申请成功</div></td>
 			<td>{{application.createTime|date:"yyyy-MM-dd HH:mm:ss"}}</td>
 			<td><a href="/console/application#approval/{{application.id}}">查看详情</a></td>
 		</tr>

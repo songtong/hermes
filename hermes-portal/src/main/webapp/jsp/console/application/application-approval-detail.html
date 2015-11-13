@@ -1,70 +1,235 @@
 <div class="row">
 	<div class="col-md-6">
-		<div class="panel panel-info">
-			<div class="panel-headint">
-				<label class="label label-info">原始申请内容</label>
+		<label class="label label-success">{{currentPageType}}申请内容</label>
+		<div class="well">
+			<div class="form-horizontal">
+				<div class="form-group">
+					<label class="col-md-4 control-label">名称</label>
+					<p class="col-md-6 form-control-static">{{application.productLine}}.{{application.entity}}.{{application.event}}</p>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">存储类型</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.storageType }}</div>
+					</div>
+				</div>
+				<div ng-if="application.storageType=='kafka'" class="form-group">
+					<label class="col-md-4 control-label">语言类型</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.languageType }}</div>
+					</div>
+				</div>
+				<div ng-if="application.storageType=='kafka'" class="form-group">
+					<label class="col-md-4 control-label">编码类型</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.codecType }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">消息上限（条/天）</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.maxMsgNumPerDay }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">消息保留时间（天）</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.retentionDays }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">消息大小（Kb）</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.size }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人姓名</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerName }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人邮箱</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerEmail }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">描述</label>
+					<div class="col-md-8">
+						<div class="form-control-static">{{ application.description }}</div>
+					</div>
+				</div>
 			</div>
-			<div class="panel panel-body">
+		</div>
+	</div>
+	<div class="col-md-6">
+		<label class="label label-info">审批状态</label>
+		<div class="panel panel-info">
+			<div class="form-horizontal">
+				<div class="form-group">
+					<label class="col-md-4 control-label">审批状态</label>
+					<div class="col-md-6">
+						<div ng-if="application.status==0" class="form-control-static text-info">审核中</div>
+						<div ng-if="application.status==1" class="form-control-static text-danger">拒绝</div>
+						<div ng-if="application.status==2" class="form-control-static text-success">申请成功</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">申请时间</label>
+					<div class="col-md-6 form-control-static">{{application.createTime | date:"yyyy-MM-dd HH:mm:ss"}}</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">上次审批人</label>
+					<div class="col-md-6 form-control-static">{{application.approver || "暂无"}}</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">上次审批意见</label>
+					<div class="col-md-6 form-control-static">{{application.comment || "暂无"}}</div>
+				</div>
+			</div>
+		</div>
+		<form>
+			<div class="form-group">
+				<label class="label label-info">添加新的意见</label>
+				<textarea class="form-control" rows="5" ng-model="new_comment"></textarea>
+			</div>
+			<button type="button" class="btn btn-danger pull-right" ng-click="reject_application()" id="rejectButton">
+				<span class="glyphicon glyphicon-inbox"></span> 拒绝申请
+			</button>
+		</form>
+	</div>
+</div>
+<div class="hrLine" style="border-bottom: 3px solid #bce8f1">
+	<span style="font-size: 18px;">AUTO GENERATED</span>
+</div>
+<div class="row">
+
+	<div class="col-md-12">
+		<div class="well clearfix">
+			<div class="col-md-6">
+				<label class="label label-info">基本信息</label>
 				<div class="form-horizontal">
 					<div class="form-group">
-						<label class="col-md-4 control-label">名称</label>
-						<p class="col-md-6 form-control-static">{{application.productLine}}.{{application.entity}}.{{application.event}}</p>
-					</div>
-					<div class="form-group">
-						<label class="col-md-4 control-label">存储类型</label>
-						<div class="col-md-6">
-							<div class="form-control-static">{{ application.storageType }}</div>
-						</div>
-					</div>
-					<div ng-if="application.storageType=='kafka'" class="form-group">
-						<label class="col-md-4 control-label">语言类型</label>
-						<div class="col-md-6">
-							<div class="form-control-static">{{ application.languageType }}</div>
-						</div>
-					</div>
-					<div ng-if="application.storageType=='kafka'" class="form-group">
-						<label class="col-md-4 control-label">编码类型</label>
-						<div class="col-md-6">
-							<div class="form-control-static">{{ application.codecType }}</div>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-4 control-label">消息上限（条/天）</label>
-						<div class="col-md-6">
-							<div class="form-control-static">{{ application.maxMsgNumPerDay }}</div>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-4 control-label">消息保留时间（天）</label>
-						<div class="col-md-6">
-							<div class="form-control-static">{{ application.retentionDays }}</div>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-4 control-label">消息大小（Kb）</label>
-						<div class="col-md-6">
-							<div class="form-control-static">{{ application.size }}</div>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-4 control-label">负责人姓名</label>
-						<div class="col-md-6">
-							<div class="form-control-static">{{ application.ownerName }}</div>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-4 control-label">负责人邮箱</label>
-						<div class="col-md-6">
-							<div class="form-control-static">{{ application.ownerEmail }}</div>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-4 control-label">描述</label>
+						<label for="inputTopicName" class="col-md-4 control-label">名称</label>
 						<div class="col-md-8">
-							<div class="form-control-static">{{ application.description }}</div>
+							<input class="form-control" id="inputTopicName" placeholder="Topic" ng-model="view.name">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputCodec" class="col-md-4 control-label">编码类型</label>
+						<div class="col-md-4">
+							<select class="form-control" id="inputCodec" ng-model="view.codecType" ng-options="codec for codec in codec_types">
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputEndpoint" class="col-md-4 control-label">Endpoint类型</label>
+						<div class="col-md-4">
+							<select class="form-control" id="inputEndpoint" ng-model="view.endpointType" ng-options="endpointType for endpointType in endpoint_types">
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputConsumeRetryPolicy" class="col-sm-4 control-label">消费重试策略</label>
+						<div class="col-sm-4">
+							<input class="form-control" id="inputConsumeRetryPolicy" placeholder="Consume Retry Policy" ng-model="view.consumerRetryPolicy">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputAckTimeout" class="col-sm-4 control-label">ACK 超时(秒)</label>
+						<div class="col-sm-4">
+							<input type="number" class="form-control" id="inputAckTimeout" placeholder="ACK Timeout" ng-model="view.ackTimeoutSeconds">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputStoragePartitionSize" class="col-sm-4 control-label">数据库分区大小</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputStoragePartitionSize" placeholder="Storage Partition Size" ng-model="view.storagePartitionSize">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputResendPartitionSize" class="col-sm-4 control-label">重发分区大小</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputResendPartitionSize" placeholder="Resend Partition Size" ng-model="view.resendPartitionSize">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputStoragePartitionCount" class="col-sm-4 control-label">数据库分区数量</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputStoragePartitionCount" placeholder="Storage Partition Count" ng-model="view.storagePartitionCount">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputCreateBy" class="col-sm-4 control-label">负责人</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputCreateBy" placeholder="Topic Creator" ng-model="view.createBy">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputDescription" class="col-sm-4 control-label">描述</label>
+						<div class="col-sm-8">
+							<input class="form-control" id="inputDescription" placeholder="Topic Description" ng-model="view.description">
 						</div>
 					</div>
 				</div>
+				<div ng-if="view.storageType=='kafka'">
+					<label class="label label-default">属性</label>
+					<button ng-click="add_property()" class="btn btn-xs btn-success" style="float: right;">
+						<span class="glyphicon glyphicon-plus"></span> 增加属性
+					</button>
+					<div class="well">
+						<h2 ng-if="view.properties.length == 0" style="text-align: center;">
+							<label class="label label-warning">NO PROPERTY WAS DEFINED</label>
+						</h2>
+						<table ng-if="view.properties.length > 0">
+							<tbody>
+								<tr ng-repeat="property in view.properties">
+									<td class="col-md-5" style="padding: 5px"><select class="form-control" ng-model="property.name" ng-options="property for property in properties"></select></td>
+									<td class="col-md-7" style="padding: 5px"><input class="form-control" ng-model="property.value" placeholder="Property Value"></td>
+									<td>
+										<button class="btn btn-danger btn-xs" ng-click="delete_property($index)">
+											<span class="glyphicon glyphicon-remove"></span> 删除
+										</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<label class="label label-default">Partition 信息</label>
+				<button ng-click="add_partition()" class="btn btn-xs btn-success" style="float: right;">
+					<span class="glyphicon glyphicon-plus"></span> 增加 Partition
+				</button>
+				<div class="well clearfix">
+					<table class="table table-condensed table-responsive">
+						<thead>
+							<tr>
+								<th style="border: none; width: 5%"></th>
+								<th style="border: none;">Datasource / 读</th>
+								<th style="border: none;">Datasource / 写</th>
+								<th style="border: none;"></th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="partition in view.partitions">
+								<td style="border: none; width: 5%;"><label style="line-height: 2.2" ng-bind="$index + 1"></label></td>
+								<td style="border: none;"><select ng-model="partition.readDatasource" ng-options="ds for ds in datasources" class="form-control"></select></td>
+								<td style="border: none;"><select ng-model="partition.writeDatasource" ng-options="ds for ds in datasources" class="form-control"></select></td>
+								<td style="border: none; line-height: 2.2"><button ng-click="delete_partition($index)" class="btn btn-xs btn-danger">
+										<span class="glyphicon glyphicon-remove"></span> 删除
+									</button></td>
+							</tr>
+						</tbody>
+					</table>
+
+				</div>
+				<button type="button" class="btn btn-success pull-right" aria-hidden="true" ng-click="permit_application()" id="permitButton">
+					<span class="glyphicon glyphicon-saved"></span> 通过申请
+				</button>
 			</div>
 		</div>
 	</div>

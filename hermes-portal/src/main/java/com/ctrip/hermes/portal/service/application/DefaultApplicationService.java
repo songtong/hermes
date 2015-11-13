@@ -14,6 +14,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;
+import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.dal.application.Application;
 import com.ctrip.hermes.portal.dal.application.HermesApplicationDao;
 
@@ -57,15 +58,14 @@ public class DefaultApplicationService implements ApplicationService {
 			dbApps = m_dao.getApplicationsByStatus(status);
 			for (Application dbApp : dbApps) {
 				applications.add(HermesApplication.parse(dbApp));
-				return applications;
 			}
+			return applications;
 		} catch (DalException e) {
 			log.error("Read applications: status={} from db failed.", status, e);
 		}
 		return new ArrayList<>();
 	}
-	
-	
+
 	@Override
 	public TopicView generageTopicView(TopicApplication app) {
 		TopicView topicView = new TopicView();
@@ -88,7 +88,9 @@ public class DefaultApplicationService implements ApplicationService {
 			List<Property> kafkaProperties = new ArrayList<>();
 			kafkaProperties.add(new Property("partitions").setValue("3"));
 			kafkaProperties.add(new Property("replication-factor").setValue("2"));
-			kafkaProperties.add(new Property("retention.ms").setValue(""+(app.getRetentionDays()*24*3600*1000)));
+			kafkaProperties
+					.add(new Property("retention.ms").setValue("" + (app.getRetentionDays() * 24 * 3600 * 1000)));
+			topicView.setProperties(kafkaProperties);
 			defaultReadDS = "kafka-consumer";
 			defaultWriteDS = "kafka-producer";
 			if ("java".equals(app.getLanguageType())) {
@@ -96,6 +98,7 @@ public class DefaultApplicationService implements ApplicationService {
 			} else if (".net".equals(app.getLanguageType())) {
 				topicView.setEndpointType("broker");
 			}
+
 		}
 		int partitionCount = 1;
 		int storagePartitionCount = 10;
@@ -120,6 +123,7 @@ public class DefaultApplicationService implements ApplicationService {
 			topicPartition.add(p);
 		}
 
+		topicView.setCreateBy(app.getOwnerName() + "/" + app.getOwnerEmail());
 		topicView.setPartitions(topicPartition);
 		topicView.setName(app.getProductLine() + "." + app.getEntity() + "." + app.getEvent());
 		topicView.setStorageType(app.getStorageType());
@@ -130,8 +134,37 @@ public class DefaultApplicationService implements ApplicationService {
 		topicView.setResendPartitionSize(5000);
 		topicView.setStoragePartitionCount(storagePartitionCount);
 		topicView.setDescription(app.getDescription());
-		
+
 		return topicView;
+	}
+
+	@Override
+	public HermesApplication updateApplication(HermesApplication app) {
+		try {
+			app.setStatus(PortalConstants.APP_STATUS_PROCESSING);
+			Application dbApp = app.toDBEntity();
+			dbApp = m_dao.updateApplication(dbApp);
+			app = HermesApplication.parse(dbApp);
+			return app;
+		} catch (Exception e) {
+			log.error("Update application:id={} failed!", app.getId(), e);
+		}
+		return null;
+	}
+
+	@Override
+	public HermesApplication updateStatus(long id, int status, String comment, String approver) {
+		try {
+			Application dbApp = m_dao.getAppById(id);
+			dbApp.setStatus(status);
+			dbApp.setComment(comment);
+			dbApp.setApprover(approver);
+			dbApp = m_dao.updateApplication(dbApp);
+			return HermesApplication.parse(dbApp);
+		} catch (DalException e) {
+			log.error("Update status of apllication: id={} failed.", id, e);
+		}
+		return null;
 	}
 
 }

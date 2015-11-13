@@ -3,24 +3,21 @@ application_module.controller('app-review-controller', [ '$scope', '$routeParams
 	$scope.storageTypes = [ 'mysql', 'kafka' ];
 	$scope.codecTypes = [ 'json', 'avro' ];
 	$scope.languageTypes = [ 'java', '.net' ];
-	
+
 	$scope.application = ApplicationService.get_application($routeParams['id']).then(function(result) {
 		$scope.application = result;
 		updatePageType(result.type);
 		console.log(result);
 	})
-	$scope.update_application = function(application) {
-		ApplicationService.update_application(application).then(function(reuslt) {
-			show_op_info("Update application success!", true);
-			$scope.application = ApplicationService.get_application(id).then(function(result) {
-				$scope.application = result;
-			});
+	$scope.update_application = function(data) {
+		ApplicationService.update_application($scope.application, $scope.application.type).then(function(result) {
+			show_op_info.show("Update application success!", true);
+			$scope.application = result;
 		}, function(result) {
-			show_op_info("Update application failed, please try later.", false);
+			show_op_info.show("Update application failed, please try later.", false);
 		})
 	}
-
-	//$scope.$watch($scope.application.type, updateType);
+	
 
 	function updatePageType(typeCode) {
 		switch (typeCode) {
@@ -41,5 +38,8 @@ application_module.controller('app-review-controller', [ '$scope', '$routeParams
 			console.log("default");
 		}
 	}
+	
+	
+	
 
 } ])

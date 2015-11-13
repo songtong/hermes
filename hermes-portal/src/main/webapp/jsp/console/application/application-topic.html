@@ -1,87 +1,80 @@
 
 <div>
-	<div class="col-md-6 col-md-offset-3">
-		<div class="panel panel-info">
-			<div class="panel-heading">
-				<label class="label label-info">Topic信息</label>
-				<button class="btn btn-success btn-xs" style="float: right;" ng-click="create_topic_application(new_application)">
-					<span class="glyphicon glyphicon-saved"></span>提交
-				</button>
+	<div class="col-md-10 col-md-offset-1">
+		<h1 style="font-family: 微软雅黑;">Topic申请</h1>
+		<hr>
+		<div class="row">
+			<div class="col-md-3">
+				<h3 style="font-family: 微软雅黑;">Topic名称</h3>
+				<span class="help-block"><small>Topic组成：ProdictLine.Entity.Event<br>例如：fx.topic.created<br><strong> <span ng-if="!(new_application.productLine==''||new_application.productLine==null)">当前topic名称：<br> {{new_application.productLine}}
+						</span> <span ng-if="!(new_application.entity==''||new_application.entity==null)">.{{new_application.entity}}</span> <span ng-if="!(new_application.event==''||new_application.event==null)">.{{new_application.event}}</span></strong>
+				</small></span>
 			</div>
-			<div class="panel panel-body">
-				<form class="form-horizontal">
-					<div class="form-group">
-						<label class="col-md-3 control-label">名称</label>
-						<div class="col-md-3">
-							<select class="form-control" ng-model="new_application.productLine" ng-options="productLine for productLine in productLines" placeholder="Product line" data-toggle="tooltip" data-placement="top" title="Tooltip on top"></select>
-						</div>
-						<div class="col-md-3">
-							<input class="form-control" ng-model="new_application.entity" placeholder="Message entity, eg: 'order'." type="text" data-toggle="tooltip" data-placement="top" title="Tooltip on top"></input>
-						</div>
-						<div class="col-md-3">
-							<input class="form-control" ng-model="new_application.event" placeholder="Event" type="text"></input>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">存储类型</label>
-						<div class="col-md-6">
-							<select class="form-control" ng-model="new_application.storageType" ng-options="storageType for storageType in storageTypes"></select>
-						</div>
-					</div>
-					<div ng-if="new_application.storageType=='kafka'" class="form-group">
-						<label class="col-md-3 control-label">语言环境</label>
-						<div class="col-md-6">
-							<select class="form-control" ng-model="new_application.languageType" ng-options="languageType for languageType in languageTypes"></select>
-						</div>
-					</div>
-					<div ng-if="new_application.storageType=='kafka'" class="form-group">
-						<label class="col-md-3 control-label">编码类型</label>
-						<div class="col-md-6">
-							<select class="form-control" ng-model="new_application.codecType" ng-options="codecType for codecType in codecTypes"></select>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">消息上限（条/天）</label>
-						<div class="col-md-6">
-							<input class="form-control" ng-model="new_application.maxMsgNumPerDay" type="number"></input>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">消息保留时间（天）</label>
-						<div class="col-md-6">
-							<input class="form-control" ng-model="new_application.retentionDays" type="number"></input>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">消息大小（Kb）</label>
-						<div class="col-md-6">
-							<input class="form-control" ng-model="new_application.size" type="number"></input>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">负责人姓名</label>
-						<div class="col-md-6">
-							<input class="form-control" ng-model="new_application.ownerName" type="text"></input>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">负责人邮箱</label>
-						<div class="col-md-6">
-							<input class="form-control" ng-model="new_application.ownerEmail" type="email"></input>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">描述</label>
-						<div class="col-md-8">
-							<input class="form-control" ng-model="new_application.description" type="text"></input>
-						</div>
-					</div>
-				</form>
+			<div class="col-md-7">
+				<div class="form-group">
+					<label>ProductLine</label> <select class="form-control" ng-model="new_application.productLine" ng-options="productLine for productLine in productLines" placeholder="Product line">
+					</select>
+				</div>
+				<div class="form-group" style="margin-bottom: 0px;">
+					<label>Entity</label> <input class="form-control" ng-model="new_application.entity" type="text"></input>
+				</div>
+				<span class="help-block"><small>消息实体例如海外酒店订单(overseahotel.order)或者用户信息(userinfo)，可多段，使用 ' . ' 隔开。</small></span>
+				<div class="form-group" style="margin-bottom: 0px;">
+					<label>Event</label> <input class="form-control" ng-model="new_application.event" type="text"></input>
+				</div>
+				<span class="help-block"><small>消息产生的情形。<br>举例：创建事件：created，查询事件：inquired，删除事件：deleted。</small></span>
+				<div class="form-group" style="margin-bottom: 0px;">
+					<label>描述</label> <input class="form-control" ng-model="new_application.description" type="text"></input>
+				</div>
+				<span class="help-block"><small>Topic用途描述。</small></span>
 			</div>
 		</div>
+		<hr>
+		<div class="row">
+			<div class="col-md-3">
+				<h3 style="font-family: 微软雅黑;">参数</h3>
+			</div>
+			<div class="col-md-7">
+				<div class="form-group" style="margin-bottom: 0px;">
+					<label>存储类型</label> <select class="form-control" ng-model="new_application.storageType" ng-options="storageType for storageType in storageTypes"></select>
+				</div>
+				<span class=" help-block"><small>日志类消息请选择使用kafka存储类型。</small></span>
+				<div ng-if="new_application.storageType=='kafka'" class="form-group">
+					<label>语言环境</label> <select class="form-control" ng-model="new_application.languageType" ng-options="languageType for languageType in languageTypes"></select>
+				</div>
+				<div ng-if="new_application.storageType=='kafka'" class="form-group">
+					<label>编码类型</label> <select class="form-control" ng-model="new_application.codecType" ng-options="codecType for codecType in codecTypes"></select>
+				</div>
+				<div class="form-group">
+					<label>消息预估上限（条/天）</label> <input class="form-control" ng-model="new_application.maxMsgNumPerDay" type="number"></input>
+				</div>
+				<div class="form-group">
+					<label>消息保留时间（天）</label> <input class="form-control" ng-model="new_application.retentionDays" type="number"></input>
+				</div>
+				<div class="form-group" style="margin-bottom: 0px;">
+					<label>消息预估大小（Kb）</label> <input class="form-control" ng-model="new_application.size" type="number"></input>
+				</div>
+				<span class="help-block"><small>消息追求实效性，一般几k较合理。</small></span>
+			</div>
+		</div>
+		<hr>
+		<div class="row">
+			<div class="col-md-3">
+				<h3 style="font-family: 微软雅黑;">负责人信息</h3>
+			</div>
+			<div class="col-md-7">
+				<div class="form-group">
+					<label class=>负责人姓名</label> <input class="form-control" ng-model="new_application.ownerName" type="text"></input>
+				</div>
+				<div class="form-group" style="margin-bottom: 0px;">
+					<label class=>负责人邮箱</label> <input class="form-control" ng-model="new_application.ownerEmail" type="email"></input>
+				</div>
+				<span class="help-block"><small>*@Ctrip.com</small></span>
+			</div>
+		</div>
+		<hr>
+		<button class="btn btn-success pull-right" ng-click="create_topic_application(new_application)">
+			<span class="glyphicon glyphicon-saved"></span>提交
+		</button>
 	</div>
-</div>
-<div class="tooltip top" role="tooltip">
-	<div class="tooltip-arrow"></div>
-	<div class="tooltip-inner">Some tooltip text!</div>
 </div>

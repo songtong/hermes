@@ -13,4 +13,6 @@ public interface HermesApplicationDao {
 	public long saveApplication(Application application) throws DalException;
 
 	public List<Application> getApplicationsByStatus(int status) throws DalException;
+	
+	public Application updateApplication(Application application) throws DalException;
 }

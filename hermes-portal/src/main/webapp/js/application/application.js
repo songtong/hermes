@@ -57,6 +57,28 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 		get_generated_application : {
 			method : 'GET',
 			url : '/api/applications/generated/:id'
+		},
+		update_application : {
+			method : 'PUT',
+			url : '/api/applications/update/:type'
+		},
+		reject_application : {
+			method : 'PUT',
+			url : '/api/applications/reject/:id',
+			params : {
+				id:'@id',
+				comment : '@comment',
+				approver : '@approver'
+			}
+		},
+		pass_application : {
+			method : 'PUT',
+			url : '/api/applications/pass/:id',
+			params : {
+				id:'@id',
+				comment : '@comment',
+				approver : '@approver'
+			}
 		}
 	});
 
@@ -102,6 +124,49 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			}, function(result) {
 				delay.reject(result);
 			})
+			return delay.promise;
+		},
+		'update_application' : function(app, app_type) {
+			var delay = $q.defer();
+			application_resource.update_application({
+				type : app_type
+			}, app, function(result) {
+				console.log("application_resource.update_application success");
+				delay.resolve(result);
+			}, function(result) {
+				console.log("application_resource.update_application failed");
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'reject_application' : function(app_id, app_comment, app_approver) {
+			console.log("ApplicationService.reject_application");
+			var delay = $q.defer();
+			application_resource.reject_application({
+				id : app_id,
+				comment : app_comment,
+				approver : app_approver
+			}, function(result) {
+				console.log("ApplicationService.reject_application.success");
+				delay.resolve(result);
+			}, function(result) {
+				console.log(result);
+				console.log("ApplicationService.reject_application.failed");
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'pass_application' : function(app_id, app_comment, app_approver) {
+			var delay = $q.defer();
+			application_resource.pass_application({
+				id : app_id,
+				comment : app_comment,
+				approver : app_approver
+			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
 			return delay.promise;
 		}
 	}

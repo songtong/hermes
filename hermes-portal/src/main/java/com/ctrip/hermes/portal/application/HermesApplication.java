@@ -99,6 +99,7 @@ public abstract class HermesApplication {
 	}
 
 	public static HermesApplication parse(Application dbApp) {
+		//except for content value
 		HermesApplicationType type = HermesApplicationType.findByTypeCode(dbApp.getType());
 		HermesApplication app = JSON.parseObject(dbApp.getContent(), type.getClazz());
 		app.setType(dbApp.getType());
@@ -107,7 +108,6 @@ public abstract class HermesApplication {
 		app.setComment(dbApp.getComment());
 		app.setCreateTime(dbApp.getCreateTime());
 		app.setStatus(dbApp.getStatus());
-		app.setContent(dbApp.getContent());
 		return app;
 
 	};
