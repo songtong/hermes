@@ -65,26 +65,20 @@ public class ConsumeBacklogCheckerTask implements Runnable {
 	private long doCalculateBacklog(String topic, int partition, int priority, int group) {
 		try {
 			Iterator<MessagePriority> latestIter = //
-			m_msgDao.topK(topic, partition, priority, 1, MessagePriorityEntity.READSET_ID).iterator();
+			m_msgDao.latest(topic, partition, priority, MessagePriorityEntity.READSET_ID).iterator();
 			long latestMsgId = latestIter.hasNext() ? latestIter.next().getId() : -1;
 
 			OffsetMessage offset = null;
 			try {
 				offset = m_offsetDao.find(topic, partition, priority, group, OffsetMessageEntity.READSET_FULL);
 			} catch (DalException e) {
-				if (log.isDebugEnabled()) {
-					log.debug("Find offset message failed.{} {} {} {}", topic, partition, priority, group, e);
-				}
+				log.debug("Find offset message failed.{} {} {} {}", topic, partition, priority, group, e);
 			}
-			long consumeOffset = offset == null ? 0 : offset.getOffset();
-
-			return Math.max(latestMsgId - consumeOffset, 0);
+			return offset == null ? 0 : Math.max(latestMsgId - offset.getOffset(), 0);
 		} catch (Exception e) {
-			if (log.isDebugEnabled()) {
-				log.debug("Query latest consume backlog failed: {} {} {} {}", topic, partition, priority, group, e);
-			}
+			log.debug("Query latest consume backlog failed: {} {} {} {}", topic, partition, priority, group, e);
 			m_exceptions.add(e);
-			return 0;
+			return 0L;
 		}
 	}
 

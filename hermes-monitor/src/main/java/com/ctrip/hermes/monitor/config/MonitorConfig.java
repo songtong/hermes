@@ -110,6 +110,27 @@ public class MonitorConfig {
 	@Value("${consume.large.backlog.checker.exclude.topics:{}}")
 	private String consumeBacklogCheckerExcludeTopics;
 
+	/**
+	 * { ".*" : 30, "song.test" : 60, "song..*" : 40 }
+	 */
+	@Value("${partition.checker.retain.day:{\".*\":30}}")
+	private String partitionRetainInDay;
+
+	@Value("${partition.checker.watermark.day:5}")
+	private int partitionWatermarkInDay;
+
+	@Value("${partition.checker.increment.day:15}")
+	private int partitionIncrementInDay;
+
+	@Value("${partition.checker.increment.max.count:100}")
+	private int partitionIncrementMaxCount;
+
+	@Value("${partition.checker.increment.partition.max.size:50000000}")
+	private int partitionMaxSize;
+
+	@Value("${partition.checker.size.increment.size:1000000}")
+	private int partitionSizeIncrementStep;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -349,5 +370,53 @@ public class MonitorConfig {
 
 	public void setConsumeBacklogCheckerExcludeTopics(String consumeBacklogCheckerExcludeTopics) {
 		this.consumeBacklogCheckerExcludeTopics = consumeBacklogCheckerExcludeTopics;
+	}
+
+	public String getPartitionRetainInDay() {
+		return partitionRetainInDay;
+	}
+
+	public void setPartitionRetainInDay(String partitionRetainInDay) {
+		this.partitionRetainInDay = partitionRetainInDay;
+	}
+
+	public int getPartitionWatermarkInDay() {
+		return partitionWatermarkInDay;
+	}
+
+	public void setPartitionWatermarkInDay(int partitionWatermarkInDay) {
+		this.partitionWatermarkInDay = partitionWatermarkInDay;
+	}
+
+	public int getPartitionIncrementInDay() {
+		return partitionIncrementInDay;
+	}
+
+	public void setPartitionIncrementInDay(int partitionIncrementInDay) {
+		this.partitionIncrementInDay = partitionIncrementInDay;
+	}
+
+	public int getPartitionIncrementMaxCount() {
+		return partitionIncrementMaxCount;
+	}
+
+	public void setPartitionIncrementMaxCount(int partitionIncrementMaxCount) {
+		this.partitionIncrementMaxCount = partitionIncrementMaxCount;
+	}
+
+	public int getPartitionMaxSize() {
+		return partitionMaxSize;
+	}
+
+	public void setPartitionMaxSize(int partitionMaxSize) {
+		this.partitionMaxSize = partitionMaxSize;
+	}
+
+	public int getPartitionSizeIncrementStep() {
+		return partitionSizeIncrementStep;
+	}
+
+	public void setPartitionSizeIncrementStep(int partitionSizeIncrementStep) {
+		this.partitionSizeIncrementStep = partitionSizeIncrementStep;
 	}
 }
