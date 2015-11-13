@@ -23,7 +23,7 @@ public interface TableContext {
 
 	public int getRetainInDay();
 
-	public int getCordonInDay();
+	public int getWatermarkInDay();
 
 	public int getIncrementInDay();
 

@@ -49,7 +49,7 @@ public class PartitionService {
 		StringBuilder sb = new StringBuilder(String.format("ALTER TABLE %s ADD PARTITION (", ctx.getTableName()));
 		for (PartitionInfo pInfo : list) {
 			sb.append( //
-			String.format("PARTITION %s VALUES LESS THAN (%s) ENGINE = InnoDB, ", pInfo.getName(), pInfo.getBorder()));
+			String.format("PARTITION %s VALUES LESS THAN (%s) ENGINE = InnoDB, ", pInfo.getName(), pInfo.getUpperbound()));
 		}
 		return sb.toString().substring(0, sb.length() - 2) + ");";
 	}

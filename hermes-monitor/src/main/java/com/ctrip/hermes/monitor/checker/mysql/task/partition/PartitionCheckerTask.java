@@ -7,7 +7,6 @@ import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent;
 import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent.PartitionOperation;
@@ -16,6 +15,7 @@ import com.ctrip.hermes.monitor.checker.mysql.dal.entity.PartitionInfo;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy.MessagePartitionCheckerStrategy;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy.PartitionCheckerStrategy;
+import com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy.PartitionCheckerStrategy.AnalysisResult;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy.ResendPartitionCheckerStrategy;
 import com.ctrip.hermes.monitor.service.PartitionService;
 import com.ctrip.hermes.monitor.utils.ApplicationContextUtil;
@@ -23,7 +23,7 @@ import com.ctrip.hermes.monitor.utils.ApplicationContextUtil;
 public class PartitionCheckerTask implements Runnable {
 	private static final Logger log = LoggerFactory.getLogger(PartitionCheckerTask.class);
 
-	private List<TableContext> m_tasks;
+	private TableContext m_task;
 
 	private CheckerResult m_result;
 
@@ -33,9 +33,9 @@ public class PartitionCheckerTask implements Runnable {
 
 	private PartitionService m_service;
 
-	public PartitionCheckerTask(List<TableContext> tasks, CheckerResult result, CountDownLatch latch,
+	public PartitionCheckerTask(TableContext task, CheckerResult result, CountDownLatch latch,
 	      ConcurrentSet<Exception> exceptions, PartitionService service) {
-		m_tasks = tasks;
+		m_task = task;
 		m_result = result;
 		m_latch = latch;
 		m_exceptions = exceptions;
@@ -45,32 +45,30 @@ public class PartitionCheckerTask implements Runnable {
 	@Override
 	public void run() {
 		try {
-			for (TableContext ctx : m_tasks) {
-				Pair<List<PartitionInfo>, List<PartitionInfo>> pair = null;
+			AnalysisResult analysisResult = null;
+			try {
+				analysisResult = findStrategy(m_task).analysisTable(m_task);
+			} catch (Exception e) {
+				log.debug("Analysis table failed: {}", m_task, e);
+			}
+			if (analysisResult != null) {
 				try {
-					pair = findStrategy(ctx).analysisTable(ctx);
+					List<PartitionInfo> dropList = analysisResult.getDropList();
+					if (dropList.size() > 0) {
+						String sql = m_service.dropPartitions(m_task, dropList);
+						m_result.addMonitorEvent(generateEvent(m_task, PartitionOperation.DROP, sql));
+					}
 				} catch (Exception e) {
-					log.debug("Analysis table failed: {}", ctx, e);
+					m_exceptions.add(e);
 				}
-				if (pair != null) {
-					try {
-						List<PartitionInfo> dropList = pair.getValue();
-						if (dropList.size() > 0) {
-							String sql = m_service.dropPartitions(ctx, dropList);
-							m_result.addMonitorEvent(generateEvent(ctx, PartitionOperation.DROP, sql));
-						}
-					} catch (Exception e) {
-						m_exceptions.add(e);
+				try {
+					List<PartitionInfo> addList = analysisResult.getAddList();
+					if (addList.size() > 0) {
+						String sql = m_service.addPartitions(m_task, addList);
+						m_result.addMonitorEvent(generateEvent(m_task, PartitionOperation.ADD, sql));
 					}
-					try {
-						List<PartitionInfo> addList = pair.getKey();
-						if (addList.size() > 0) {
-							String sql = m_service.addPartitions(ctx, addList);
-							m_result.addMonitorEvent(generateEvent(ctx, PartitionOperation.ADD, sql));
-						}
-					} catch (Exception e) {
-						m_exceptions.add(e);
-					}
+				} catch (Exception e) {
+					m_exceptions.add(e);
 				}
 			}
 		} finally {

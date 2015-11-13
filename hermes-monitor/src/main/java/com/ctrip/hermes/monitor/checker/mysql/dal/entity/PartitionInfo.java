@@ -21,7 +21,7 @@ public class PartitionInfo {
 
 	private int m_ordinal;
 
-	private long m_border;
+	private long m_upperbound;
 
 	private long m_rows;
 
@@ -49,12 +49,12 @@ public class PartitionInfo {
 		m_ordinal = ordinal;
 	}
 
-	public long getBorder() {
-		return m_border;
+	public long getUpperbound() {
+		return m_upperbound;
 	}
 
-	public void setBorder(long border) {
-		m_border = border;
+	public void setUpperbound(long upperbound) {
+		m_upperbound = upperbound;
 	}
 
 	public long getRows() {
@@ -101,8 +101,8 @@ public class PartitionInfo {
 
 	@Override
 	public String toString() {
-		return "PartitionInfo [m_table=" + m_table + ", m_name=" + m_name + ", m_ordinal=" + m_ordinal + ", m_border="
-		      + m_border + ", m_rows=" + m_rows + "]";
+		return "PartitionInfo [m_table=" + m_table + ", m_name=" + m_name + ", m_ordinal=" + m_ordinal
+		      + ", m_upperbound=" + m_upperbound + ", m_rows=" + m_rows + "]";
 	}
 
 	public static Map<String, List<PartitionInfo>> parseResultSet(ResultSet rs) throws SQLException {
@@ -121,7 +121,7 @@ public class PartitionInfo {
 				p.setTable(rs.getString(1));
 				p.setName(rs.getString(2));
 				p.setOrdinal(rs.getInt(3));
-				p.setBorder(getBorder(rs.getString(4)));
+				p.setUpperbound(getBorder(rs.getString(4)));
 				p.setRows(rs.getLong(5));
 				partitions.add(p);
 			}

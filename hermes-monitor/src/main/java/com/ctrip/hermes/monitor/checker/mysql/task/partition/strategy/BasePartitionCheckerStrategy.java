@@ -22,42 +22,46 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 
 	abstract protected MonitorConfig getConfig();
 
-	public Pair<List<PartitionInfo>, List<PartitionInfo>> analysisTable(TableContext ctx) {
+	public AnalysisResult analysisTable(TableContext ctx) {
 		if (ctx == null) {
 			throw new IllegalArgumentException("Wrong table context type for " + getClass().getName());
 		}
-		if (ctx.getPartitionInfos() == null || ctx.getPartitionInfos().size() < MIN_PARTITION_COUNT) {
+		if (ctx.getPartitionInfos() == null) {
 			throw new IllegalArgumentException("Partition infos illegal: " + ctx.getPartitionInfos());
 		}
 
-		List<PartitionInfo> addList = new ArrayList<PartitionInfo>();
-		List<PartitionInfo> delList = new ArrayList<PartitionInfo>();
+		if (ctx.getPartitionInfos().size() < MIN_PARTITION_COUNT) {
+			return new AnalysisResult(calculateMinimalIncrementPartitions(ctx), new ArrayList<PartitionInfo>());
+		}
 
-		excludeWrongPartition(ctx.getPartitionInfos(), delList);
+		List<PartitionInfo> addList = new ArrayList<PartitionInfo>();
+		List<PartitionInfo> dropList = new ArrayList<PartitionInfo>();
+
+		excludeWrongPartition(ctx.getPartitionInfos(), dropList);
 
 		CreationStamp oldest = getCreationStampFinder().findOldest(ctx);
 		CreationStamp latest = getCreationStampFinder().findLatest(ctx);
 
 		if (oldest != null && latest != null) {
 			long leftCapacity = getLeftCapacity(ctx, latest);
-			long daySpeed = getLatestSpeedPerDay(ctx, oldest, latest);
+			long dailyTotal = getLatestSpeedPerDay(ctx, oldest, latest);
 
-			if (isUsageDanger(leftCapacity, daySpeed, ctx.getCordonInDay())) {
-				long partitionCapacity = getLatestCapacityPerPartition(ctx);
-				addList.addAll(caculateIncrementPartitions(ctx, daySpeed, partitionCapacity));
+			if (shouldAddPartition(leftCapacity, dailyTotal, ctx.getWatermarkInDay())) {
+				addList.addAll(calculateIncrementPartitions(ctx, dailyTotal, getLatestCapacityPerPartition(ctx)));
 			}
-			delList.addAll(caculateDecrementPartitions(ctx));
+			dropList.addAll(calculateDecrementPartitions(ctx));
 		}
 
-		return new Pair<List<PartitionInfo>, List<PartitionInfo>>(addList, delList);
+		return new AnalysisResult(addList, dropList);
 	}
 
 	private long getLatestCapacityPerPartition(TableContext ctx) {
 		List<PartitionInfo> ps = ctx.getPartitionInfos();
-		return ps.get(ps.size() - 1).getBorder() - ps.get(ps.size() - 2).getBorder();
+		return ps.size() < 2 ? getConfig().getPartitionSizeIncrementStep() : //
+		      ps.get(ps.size() - 1).getUpperbound() - ps.get(ps.size() - 2).getUpperbound();
 	}
 
-	private List<PartitionInfo> caculateDecrementPartitions(TableContext ctx) {
+	private List<PartitionInfo> calculateDecrementPartitions(TableContext ctx) {
 		List<PartitionInfo> list = new ArrayList<PartitionInfo>();
 		List<PartitionInfo> ps = ctx.getPartitionInfos();
 		for (int idx = 0; idx < ps.size() - 1; idx++) {
@@ -65,7 +69,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 				break;
 			}
 			PartitionInfo p = ps.get(idx);
-			CreationStamp stamp = getCreationStampFinder().findSpecific(ctx, p.getBorder() - 1);
+			CreationStamp stamp = getCreationStampFinder().findSpecific(ctx, p.getUpperbound() - 1);
 			if (stamp.getDate().getTime() < System.currentTimeMillis() - TimeUnit.DAYS.toMillis(ctx.getRetainInDay())) {
 				list.add(p);
 			} else {
@@ -75,7 +79,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		return list;
 	}
 
-	private List<PartitionInfo> caculateIncrementPartitions(TableContext ctx, long speed, long partitionSize) {
+	private List<PartitionInfo> calculateIncrementPartitions(TableContext ctx, long speed, long partitionSize) {
 		List<PartitionInfo> list = new ArrayList<PartitionInfo>();
 		if (speed > 0) {
 			long incrementPartitionCount = ctx.getIncrementInDay() * speed / partitionSize;
@@ -87,13 +91,29 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 			PartitionInfo latestPartitionInfo = ctx.getPartitionInfos().get(ctx.getPartitionInfos().size() - 1);
 			for (int idx = 0; idx < incrementPartitionCount; idx++) {
 				PartitionInfo nextPartitionInfo = new PartitionInfo();
-				nextPartitionInfo.setBorder(latestPartitionInfo.getBorder() + partitionSize);
+				nextPartitionInfo.setUpperbound(latestPartitionInfo.getUpperbound() + partitionSize);
 				nextPartitionInfo.setName(nextPartitionName(latestPartitionInfo));
 				nextPartitionInfo.setTable(ctx.getTableName());
 				list.add(nextPartitionInfo);
 
 				latestPartitionInfo = nextPartitionInfo;
 			}
+		}
+		return list;
+	}
+
+	private List<PartitionInfo> calculateMinimalIncrementPartitions(TableContext ctx) {
+		List<PartitionInfo> list = new ArrayList<PartitionInfo>();
+		PartitionInfo latestPartitionInfo = ctx.getPartitionInfos().get(ctx.getPartitionInfos().size() - 1);
+		for (int idx = 0; idx < MIN_PARTITION_COUNT - ctx.getPartitionInfos().size(); idx++) {
+			PartitionInfo nextPartitionInfo = new PartitionInfo();
+			nextPartitionInfo.setUpperbound( //
+			      latestPartitionInfo.getUpperbound() + getConfig().getPartitionSizeIncrementStep());
+			nextPartitionInfo.setName(nextPartitionName(latestPartitionInfo));
+			nextPartitionInfo.setTable(ctx.getTableName());
+			list.add(nextPartitionInfo);
+
+			latestPartitionInfo = nextPartitionInfo;
 		}
 		return list;
 	}
@@ -114,22 +134,22 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 
 	private void excludeWrongPartition(List<PartitionInfo> partitions, List<PartitionInfo> delList) {
 		PartitionInfo last = partitions.get(partitions.size() - 1);
-		if (last.getBorder() == Long.MAX_VALUE) {
+		if (last.getUpperbound() == Long.MAX_VALUE) {
 			delList.add(last);
 			partitions.remove(partitions.size() - 1);
 		}
 	}
 
-	private boolean isUsageDanger(long capacity, long speed, int cordon) {
+	private boolean shouldAddPartition(long capacity, long speed, int watermark) {
 		if (speed <= 0) {
 			return false;
 		}
-		return capacity / speed <= cordon;
+		return capacity / speed <= watermark;
 	}
 
 	private long getLeftCapacity(TableContext ctx, CreationStamp latest) {
 		List<PartitionInfo> ps = ctx.getPartitionInfos();
-		return ps.get(ps.size() - 1).getBorder() - latest.getId();
+		return ps.get(ps.size() - 1).getUpperbound() - latest.getId();
 	}
 
 	private long getLatestSpeedPerDay(TableContext ctx, CreationStamp oldest, CreationStamp latest) {
@@ -140,7 +160,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 	private long calculateAverageSpeed(//
 	      TableContext ctx, List<PartitionInfo> ps, CreationStamp oldest, CreationStamp latest) {
 		oldest = ps.get(0).getOrdinal() == 1 ? oldest : //
-		      getCreationStampFinder().findSpecific(ctx, ps.get(0).getBorder() - ps.get(0).getRows());
+		      getCreationStampFinder().findSpecific(ctx, ps.get(0).getUpperbound() - ps.get(0).getRows());
 		if (oldest != null && latest != null) {
 			long period = latest.getDate().getTime() - oldest.getDate().getTime();
 			period = Math.max(1, period);

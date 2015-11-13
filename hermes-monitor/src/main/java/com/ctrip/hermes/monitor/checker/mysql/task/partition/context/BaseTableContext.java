@@ -17,7 +17,7 @@ public abstract class BaseTableContext implements TableContext {
 
 	private int m_retainInDay;
 
-	private int m_cordonInDay;
+	private int m_watermarkInDay;
 
 	private int m_incrementInDay;
 
@@ -25,11 +25,11 @@ public abstract class BaseTableContext implements TableContext {
 
 	private Datasource m_datasource;
 
-	public BaseTableContext(Topic topic, Partition partition, int retain, int cordon, int increment) {
+	public BaseTableContext(Topic topic, Partition partition, int retain, int watermark, int increment) {
 		m_topic = topic;
 		m_partition = partition;
 		m_retainInDay = retain;
-		m_cordonInDay = cordon;
+		m_watermarkInDay = watermark;
 		m_incrementInDay = increment;
 	}
 
@@ -68,8 +68,8 @@ public abstract class BaseTableContext implements TableContext {
 	}
 
 	@Override
-	public int getCordonInDay() {
-		return m_cordonInDay;
+	public int getWatermarkInDay() {
+		return m_watermarkInDay;
 	}
 
 	@Override

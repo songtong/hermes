@@ -71,10 +71,10 @@ public class PartitionChecker extends DBBasedChecker {
 			for (Datasource ds : meta.getStorages().get(Storage.MYSQL).getDatasources()) {
 				ps.putAll(m_partitionService.getDatasourcePartitions(ds));
 			}
-			List<List<TableContext>> tasks = splitCollection(getTableContexts(meta, ps, limits), PARTITION_TASK_SIZE);
+			List<TableContext> tasks = getTableContexts(meta, ps, limits);
 			CountDownLatch latch = new CountDownLatch(tasks.size());
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
-			for (List<TableContext> task : tasks) {
+			for (TableContext task : tasks) {
 				es.execute(new PartitionCheckerTask(task, result, latch, exceptions, m_partitionService));
 			}
 			if (latch.await(PARTITION_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
@@ -127,7 +127,7 @@ public class PartitionChecker extends DBBasedChecker {
 
 	private List<TableContext> getTableContexts(//
 	      Meta meta, Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, Map<String, Integer> topicRetainDays) {
-		int cordon = m_config.getPartitionCordonInDay();
+		int cordon = m_config.getPartitionWatermarkInDay();
 		int increment = m_config.getPartitionIncrementInDay();
 
 		List<TableContext> ctxes = new ArrayList<TableContext>();

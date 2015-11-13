@@ -23,7 +23,7 @@ public class PartitionModificationEvent extends BaseMonitorEvent {
 					return op;
 				}
 			}
-			throw new IllegalArgumentException("Operaiont of code is not exists: " + code);
+			throw new IllegalArgumentException("Operaiont of code does not exist: " + code);
 		}
 	}
 

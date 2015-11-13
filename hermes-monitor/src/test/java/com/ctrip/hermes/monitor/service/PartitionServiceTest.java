@@ -42,7 +42,7 @@ public class PartitionServiceTest {
 		List<PartitionInfo> addlist = new ArrayList<PartitionInfo>();
 		for (int i = 0; i < 5; i++) {
 			PartitionInfo info = new PartitionInfo();
-			info.setBorder(curBorder + (i + 1) * 100);
+			info.setUpperbound(curBorder + (i + 1) * 100);
 			info.setName("p" + (curIdx + i + 1));
 			addlist.add(info);
 		}

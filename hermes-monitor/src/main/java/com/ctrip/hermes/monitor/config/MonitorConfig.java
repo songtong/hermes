@@ -116,8 +116,8 @@ public class MonitorConfig {
 	@Value("${partition.checker.retain.day:{\".*\":30}}")
 	private String partitionRetainInDay;
 
-	@Value("${partition.checker.cordon.day:5}")
-	private int partitionCordonInDay;
+	@Value("${partition.checker.watermark.day:5}")
+	private int partitionWatermarkInDay;
 
 	@Value("${partition.checker.increment.day:15}")
 	private int partitionIncrementInDay;
@@ -380,12 +380,12 @@ public class MonitorConfig {
 		this.partitionRetainInDay = partitionRetainInDay;
 	}
 
-	public int getPartitionCordonInDay() {
-		return partitionCordonInDay;
+	public int getPartitionWatermarkInDay() {
+		return partitionWatermarkInDay;
 	}
 
-	public void setPartitionCordonInDay(int partitionCordonInDay) {
-		this.partitionCordonInDay = partitionCordonInDay;
+	public void setPartitionWatermarkInDay(int partitionWatermarkInDay) {
+		this.partitionWatermarkInDay = partitionWatermarkInDay;
 	}
 
 	public int getPartitionIncrementInDay() {
