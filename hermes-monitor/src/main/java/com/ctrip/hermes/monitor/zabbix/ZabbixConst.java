@@ -36,6 +36,8 @@ public class ZabbixConst {
 	public static final String CPU_SYSTEM_TIME = "system.cpu.util[,system]";
 
 	public static final String CPU_IOWAIT_TIME = "system.cpu.util[,iowait]";
+	
+	public static final String CPU_IDLE_TIME = "system.cpu.util[,idle]";
 
 	public static final String CPU_RATIO_OF_CPU_LOAD_AND_CPU_NUMBER = "The ratio of cpu load and cpu number";
 
@@ -45,7 +47,35 @@ public class ZabbixConst {
 	public static final String MEMORY_AVAILABLE_PERCENTAGE = "Available memory in %";
 
 	public static final String MEMORY_FREE_SWAP_PERCENTAGE = "Free swap space in %";
+	
+	public static final String MEMORY_AVAILABLE = "Available memory";
+	
+	public static final String MEMORY_FREE_SWAP = "Free swap space";
+	
+	public static final String MEMORY_SWAP_IN = "System swap in";
+	
+	public static final String MEMORY_SWAP_OUT = "System swap out";
 
+	/**
+	 * Network
+	 */
+	public static final String NETWORK_ESTABLISHED = "Network ESTABLISHED";
+
+	public static final String NETWORK_SYN_RECV = "Network SYN_RECV";
+
+	public static final String NETWORK_TIME_WAIT = "Network TIME_WAIT";
+
+	public static final String NETWORK_INCOMING_TRAFFIC = "Incoming network traffic on";
+
+	public static final String NETWORK_OUTGOING_TRAFFIC = "Outgoing network traffic on";
+
+	/**
+	 * Process
+	 */
+	public static final String PROCESS_NUMBER = "Number of processes";
+	
+	public static final String PROCESS_RUNNING_NUMBER = "Number of running processes";
+	
 	/**
 	 * Kafka
 	 */
@@ -99,8 +129,14 @@ public class ZabbixConst {
 
 	public static final String CATEGORY_MEMORY = "Memory";
 
+	public static final String CATEGORY_NETWORK = "Network";
+
+	public static final String CATEGORY_PROCESS = "Process";
+	
 	/**
 	 * Source
 	 */
 	public static final String SOURCE_ZABBIX = "Zabbix";
+
+	public static final String SOURCE_CAT = "Cat";
 }

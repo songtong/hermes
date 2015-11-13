@@ -37,6 +37,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.ctrip.hermes.monitor.checker.server.ServerCheckerConstans;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.dashboard.DashboardItem;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
 
 @Service
@@ -45,6 +46,8 @@ public class ESMonitorService {
 	private static final Logger log = LoggerFactory.getLogger(ESMonitorService.class);
 
 	public static final String DEFAULT_INDEX = "monitor";
+
+	public static final String DASHBOARD_INDEX = "dashboard";
 
 	private static final String QUERY_AGG_NAME = "hermes-agg";
 
@@ -67,6 +70,13 @@ public class ESMonitorService {
 			String[] split = esTransportAddress[i].split(":");
 			client.addTransportAddress(new InetSocketTransportAddress(split[0], Integer.parseInt(split[1])));
 		}
+	}
+
+	public IndexResponse prepareIndex(DashboardItem item) throws IOException {
+		IndexRequestBuilder builder = client.prepareIndex(DASHBOARD_INDEX, item.getCategory());
+		String source = JSON.toJSONString(item, SerializerFeature.WriteDateUseDateFormat);
+		IndexResponse response = builder.setSource(source).execute().actionGet();
+		return response;
 	}
 
 	public IndexResponse prepareIndex(MonitorItem item) throws IOException {
