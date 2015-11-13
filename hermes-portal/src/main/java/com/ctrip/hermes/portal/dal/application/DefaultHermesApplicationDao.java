@@ -35,4 +35,10 @@ public class DefaultHermesApplicationDao implements HermesApplicationDao {
 		return m_appDao.findByStatus(status, ApplicationEntity.READSET_FULL);
 	}
 
+	@Override
+	public Application updateApplication(Application application) throws DalException {
+		m_appDao.updateByPK(application, ApplicationEntity.UPDATESET_FULL);
+		return application;
+	}
+
 }

@@ -6,9 +6,11 @@ import java.util.List;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -75,11 +77,9 @@ public class ApplicationResource {
 		topicApplication.setCreateTime(new Date(System.currentTimeMillis()));
 
 		// 存入数据库
-		try {
-			topicApplication = appService.saveTopicApplication(topicApplication);
-		} catch (Exception e) {
-			log.error("Can not create topic application : {}.", content, e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		topicApplication = appService.saveTopicApplication(topicApplication);
+		if (topicApplication == null) {
+			throw new RestException("Save topic application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
 
 		// 返回
@@ -145,11 +145,59 @@ public class ApplicationResource {
 			throw new RestException("Application id not available", Status.BAD_REQUEST);
 		}
 		HermesApplication app = appService.getApplicationById(id);
-		if(HermesApplicationType.CREATE_TOPIC==HermesApplicationType.findByTypeCode(app.getType())){
-			TopicView topicView = appService.generageTopicView((TopicApplication)app);
+		if (HermesApplicationType.CREATE_TOPIC == HermesApplicationType.findByTypeCode(app.getType())) {
+			TopicView topicView = appService.generageTopicView((TopicApplication) app);
 			return Response.status(Status.OK).entity(new Pair<HermesApplication, TopicView>(app, topicView)).build();
-		}else{
+		} else {
 			throw new RestException("Generate view failed.");
 		}
+	}
+
+	@PUT
+	@Path("update/{type}")
+	public Response updateApplication(@PathParam("type") int type, String content) {
+		HermesApplication app = null;
+		try {
+			app = JSON.parseObject(content, HermesApplicationType.findByTypeCode(type).getClazz());
+		} catch (Exception e) {
+			log.error("Can not parse payload : {}, submit topic application failed.", content);
+			throw new RestException(e, Status.BAD_REQUEST);
+		}
+		app.setContent(content);
+		app = appService.updateApplication(app);
+		if (app == null) {
+			throw new RestException("Update application failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+		return Response.status(Status.OK).entity(app).build();
+	}
+
+	@PUT
+	@Path("reject/{id}")
+	public Response rejectApplication(@PathParam("id") long id, @QueryParam("comment") String comment,
+			@QueryParam("approver") String approver) {
+		if (id < 0) {
+			throw new RestException("Application id unavailable");
+		}
+		HermesApplication app = appService.updateStatus(id, PortalConstants.APP_STATUS_REJECTED, comment, approver);
+		if (app == null) {
+			throw new RestException("Reject application failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		return Response.status(Status.OK).entity(app).build();
+	}
+	
+	@PUT
+	@Path("pass/{id}")
+	public Response passApplication(@PathParam("id") long id, @QueryParam("comment") String comment,
+			@QueryParam("approver") String approver) {
+		if (id < 0) {
+			throw new RestException("Application id unavailable");
+		}
+		HermesApplication app = appService.updateStatus(id, PortalConstants.APP_STATUS_SUCCESS, comment, approver);
+		if (app == null) {
+			throw new RestException("Pass application failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		return Response.status(Status.OK).entity(app).build();
 	}
 }
