@@ -1,9 +1,11 @@
 package com.ctrip.hermes.metaservice.monitor.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -98,5 +100,24 @@ public class DefaultMonitorEventStorage implements MonitorEventStorage {
 			log.error("Find unnotified monitor event failed.", e);
 		}
 		return null;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.metaservice.model.MonitorEvent> findDBMonitorEvents(int pageCount, int pageOffset) {
+		try {
+			return m_dao.findEventsBatch(pageCount, pageOffset, MonitorEventEntity.READSET_FULL);
+		} catch (DalException e) {
+			log.error("Find monitor event failed.", e);
+			return new ArrayList<com.ctrip.hermes.metaservice.model.MonitorEvent>();
+		}
+	}
+
+	@Override
+	public long totalPageCount(int pageCount) {
+		try {
+			return (long) Math.ceil(m_dao.totalCount(MonitorEventEntity.READSET_COUNT).getTotal() / (double) pageCount);
+		} catch (DalException e) {
+			return 0L;
+		}
 	}
 }

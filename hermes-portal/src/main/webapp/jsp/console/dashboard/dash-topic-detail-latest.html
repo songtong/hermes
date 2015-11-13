@@ -9,7 +9,7 @@
 			<table class="table table-bordered table-striped table-condensed table-hover" style="font-size: small;">
 				<thead>
 					<tr>
-						<th>#</th>
+						<th>ID</th>
 						<th>Ref Key</th>
 						<th>Attributes</th>
 						<th>Codec</th>
@@ -19,7 +19,7 @@
 				</thead>
 				<tbody>
 					<tr ng-repeat="row in topic_latest">
-						<td><span ng-bind="$index + 1"></span></td>
+						<td><span ng-bind="row.rawMessage.id"></span></td>
 						<td><a href="" tooltip="{{row.rawMessage.refKey}}" tooltip-trigger="click">
 								<span ng-bind="row.rawMessage.refKey | short:30"></span>
 							</a></td>

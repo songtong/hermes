@@ -6,7 +6,8 @@ public enum Action implements org.unidal.web.mvc.Action {
 	BROKER("broker"), //
 	TOPIC_DETAIL("topic-detail"), //
 	BROKER_DETAIL("broker-detail"), //
-	BROKER_DETAIL_HOME("broker-detail-home");
+	BROKER_DETAIL_HOME("broker-detail-home"), //
+	MONITOR_EVENT("monitor_event");
 
 	private String m_name;
 

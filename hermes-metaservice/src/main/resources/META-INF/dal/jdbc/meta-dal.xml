@@ -14,7 +14,32 @@
 		<var name="count" value-type="int" />
 		<var name="start" value-type="long" />
 		<var name="end" value-type="long" />
+		<var name="page-count" value-type="int" />
+		<var name="id-offset" value-type="long" />
+		<member name="total" value-type="long" select-expr="COUNT(*)" all="false" />
+
+		<readsets>
+			<readset name="COUNT">
+				<member name="total" />
+			</readset>
+		</readsets>
+
 		<query-defs>
+			<query name="total-count" type="SELECT" multiple="false">
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+				]]></statement>
+			</query>
+			<query name="find-events-batch" type="SELECT" multiple="true">
+				<param name="page-count" />
+				<param name="id-offset" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        ORDER BY <FIELD name='id'/> DESC
+		        LIMIT ${id-offset},${page-count}]]></statement>
+			</query>
 			<query name="update-notified-status" type="UPDATE" batch='true'>
 				<statement>
 				<![CDATA[
