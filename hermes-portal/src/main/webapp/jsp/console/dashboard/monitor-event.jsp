@@ -31,10 +31,18 @@
 						<tr ng-repeat="monitor_event in monitor_event_displayed">
 							<td><span ng-bind="monitor_event.eventType"></span></td>
 							<td><span ng-bind="monitor_event.createTime | date:'yyyy-MM-dd HH:mm:ss'"></span></td>
-							<td><span ng-bind="monitor_event.key1"></span></td>
-							<td><span ng-bind="monitor_event.key2"></span></td>
-							<td><span ng-bind="monitor_event.key3"></span></td>
-							<td><span ng-bind="monitor_event.key4"></span></td>
+							<td><a href="" tooltip="{{monitor_event.key1}}">
+									<span ng-bind="monitor_event.key1 | short:25"></span>
+								</a></td>
+							<td><a href="" tooltip="{{monitor_event.key2}}">
+									<span ng-bind="monitor_event.key2 | short:25"></span>
+								</a></td>
+							<td><a href="" tooltip="{{monitor_event.key3}}">
+									<span ng-bind="monitor_event.key3 | short:25"></span>
+								</a></td>
+							<td><a href="" tooltip="{{monitor_event.key4}}">
+									<span ng-bind="monitor_event.key4 | short:25"></span>
+								</a></td>
 							<td><a href="" tooltip="点击查看详情" ng-click="show_message(monitor_event.message)">
 									<span ng-bind="monitor_event.message | short:20"></span>
 								</a></td>
