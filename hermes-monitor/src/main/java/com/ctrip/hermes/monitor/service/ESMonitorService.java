@@ -47,8 +47,6 @@ public class ESMonitorService {
 
 	public static final String DEFAULT_INDEX = "monitor";
 
-	public static final String DASHBOARD_INDEX = "dashboard";
-
 	private static final String QUERY_AGG_NAME = "hermes-agg";
 
 	private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHH");
@@ -73,7 +71,7 @@ public class ESMonitorService {
 	}
 
 	public IndexResponse prepareIndex(DashboardItem item) throws IOException {
-		IndexRequestBuilder builder = client.prepareIndex(DASHBOARD_INDEX, item.getCategory());
+		IndexRequestBuilder builder = client.prepareIndex(item.getIndex(), item.getCategory());
 		String source = JSON.toJSONString(item, SerializerFeature.WriteDateUseDateFormat);
 		IndexResponse response = builder.setSource(source).execute().actionGet();
 		return response;
