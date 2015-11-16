@@ -1,5 +1,6 @@
 package com.ctrip.hermes.monitor.dashboard;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -24,6 +25,10 @@ import com.ctrip.hermes.monitor.service.ESMonitorService;
 public class RoomStatusConsumeBacklogEmittor {
 
 	private static final Logger log = LoggerFactory.getLogger(DashboardSuite.class);
+
+	private static final SimpleDateFormat INDEX_DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd");
+
+	public static final String INDEX_PREFIX = "dashboard-";
 
 	private MessagePriorityDao m_msgDao;
 
@@ -69,6 +74,7 @@ public class RoomStatusConsumeBacklogEmittor {
 		item.setTopic(topic);
 		item.setSamplingTimestamp(System.currentTimeMillis());
 		item.setTimestamp(new Date());
+		item.setIndex(INDEX_PREFIX + INDEX_DATE_FORMAT.format(new Date()));
 
 		item.addValue("delay", partitonBacklog);
 

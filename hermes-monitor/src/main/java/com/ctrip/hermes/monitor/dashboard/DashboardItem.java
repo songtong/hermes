@@ -22,6 +22,16 @@ public class DashboardItem {
 
 	private Date m_timestamp;
 
+	private String m_index;
+
+	public String getIndex() {
+		return m_index;
+	}
+
+	public void setIndex(String index) {
+		m_index = index;
+	}
+
 	public Date getTimestamp() {
 		return m_timestamp;
 	}
