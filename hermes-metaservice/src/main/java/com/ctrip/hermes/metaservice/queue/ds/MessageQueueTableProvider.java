@@ -1,7 +1,6 @@
 package com.ctrip.hermes.metaservice.queue.ds;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +17,6 @@ import com.ctrip.hermes.metaservice.service.MetaService;
 
 public class MessageQueueTableProvider implements TableProvider {
 	private static final Logger log = LoggerFactory.getLogger(MessageQueueTableProvider.class);
-
-	private AtomicReference<Meta> m_meta = new AtomicReference<Meta>();
 
 	@Override
 	public String getDataSourceName(Map<String, Object> hints, String logicalTableName) {
@@ -88,17 +85,11 @@ public class MessageQueueTableProvider implements TableProvider {
 	}
 
 	private Meta getMeta() {
-		if (m_meta.get() == null) {
-			synchronized (m_meta) {
-				if (m_meta.get() == null) {
-					try {
-						m_meta.set(PlexusComponentLocator.lookup(MetaService.class).findLatestMeta());
-					} catch (DalException e) {
-						log.error("Couldn't find latest meta-info from meta-db.", e);
-					}
-				}
-			}
+		try {
+			return PlexusComponentLocator.lookup(MetaService.class).findLatestMeta();
+		} catch (DalException e) {
+			log.error("Couldn't find latest meta-info from meta-db.", e);
+			return null;
 		}
-		return m_meta.get();
 	}
 }
