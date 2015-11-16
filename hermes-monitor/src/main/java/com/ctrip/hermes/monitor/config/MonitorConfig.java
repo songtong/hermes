@@ -23,17 +23,17 @@ public class MonitorConfig {
 	@Value("${cat.event.url.pattern:/cat/r/e?op=graphs&domain=%s&date=%s&type=%s&ip=All&forceDownload=xml}")
 	private String catEventUrlPattern;
 
-	@Value("${cat.connect.timeout:10000}")
+	@Value("${cat.connect.timeout:20000}")
 	private int catConnectTimeout;
 
-	@Value("${cat.read.timeout:30000}")
+	@Value("${cat.read.timeout:60000}")
 	private int catReadTimeout;
 
 	@Value("${produce.latency.checker.excluded.topics:[\"All\"]}")
 	private String produceLatencyCheckerExcludedTopics;
 
-	@Value("${produce.latency.checker.threshold:1000}")
-	private double produceLatencyThreshold;
+	@Value("${produce.latency.checker.thresholds:{\"Default\":2000}}")
+	private String produceLatencyThresholds;
 
 	@Value("${consume.delay.checker.thresholds:{}}")
 	private String consumeDelayThresholds;
@@ -101,7 +101,7 @@ public class MonitorConfig {
 	/**
 	 * { ".*" : { ".*" : 100}, "song.test" : { "song.test.group" : 100, "song.test.group2" : 1000 }}
 	 */
-	@Value("${consume.large.backlog.checker.include.topics:{\".*\":{\".*\":500}}}")
+	@Value("${consume.large.backlog.checker.include.topics:{\".*\":{\".*\":2000}}}")
 	private String consumeBacklogCheckerIncludeTopics;
 
 	/**
@@ -187,12 +187,12 @@ public class MonitorConfig {
 		this.produceLatencyCheckerExcludedTopics = produceLatencyCheckerExcludedTopics;
 	}
 
-	public double getProduceLatencyThreshold() {
-		return produceLatencyThreshold;
+	public String getProduceLatencyThresholds() {
+		return produceLatencyThresholds;
 	}
 
-	public void setProduceLatencyThreshold(double produceLatencyThreshold) {
-		this.produceLatencyThreshold = produceLatencyThreshold;
+	public void setProduceLatencyThresholds(String produceLatencyThresholds) {
+		this.produceLatencyThresholds = produceLatencyThresholds;
 	}
 
 	public String getConsumeDelayThresholds() {

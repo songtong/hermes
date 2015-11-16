@@ -15,7 +15,7 @@ import com.ctrip.hermes.metaservice.queue.MessagePriorityEntity;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.MessageTableContext;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
 
-@Component
+//@Component
 public class MessageCreationStampFinder implements CreationStampFinder {
 	private static final Logger log = LoggerFactory.getLogger(MessageCreationStampFinder.class);
 

@@ -38,9 +38,13 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
 @Component(value = "ProducerLatencyChecker")
 public class ProduceLatencyChecker extends CatBasedChecker implements InitializingBean {
 
+	private static final String DEFAULT_THRESHOLD_KEY = "Default";
+
 	private static final String CAT_TRANSACTION_TYPE = "Message.Produce.Elapse";
 
 	private List<String> m_excludedTopics = new LinkedList<>();
+
+	private Map<String, Integer> m_thresholds = new HashMap<>();
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -50,6 +54,16 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 			});
 			if (configedExcludedTopics != null) {
 				m_excludedTopics.addAll(configedExcludedTopics);
+			}
+		}
+
+		String thresholdsStr = m_config.getProduceLatencyThresholds();
+		if (!StringUtils.isBlank(thresholdsStr)) {
+			Map<String, Integer> configedThresholds = JSON.parseObject(thresholdsStr,
+			      new TypeReference<Map<String, Integer>>() {
+			      });
+			if (configedThresholds != null) {
+				m_thresholds.putAll(configedThresholds);
 			}
 		}
 	}
@@ -78,7 +92,10 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 					int minute = pair.getKey();
 					double latency = pair.getValue();
 
-					if (timespan.getMinutes().contains(minute) && latency > m_config.getProduceLatencyThreshold()) {
+					int threshold = m_thresholds.containsKey(topic) ? m_thresholds.get(topic) : (m_thresholds
+					      .containsKey(DEFAULT_THRESHOLD_KEY) ? m_thresholds.get(DEFAULT_THRESHOLD_KEY) : Integer.MAX_VALUE);
+
+					if (timespan.getMinutes().contains(minute) && latency > threshold) {
 						ProduceLatencyTooLargeEvent monitorEvent = new ProduceLatencyTooLargeEvent();
 						monitorEvent.setTopic(topic);
 						monitorEvent.setLatency(latency);
@@ -108,8 +125,8 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
-		String allTransactionsExpression = "/transaction/report[@domain='All']/machine[@ip='All']/type[@id='" + CAT_TRANSACTION_TYPE
-		      + "']/name";
+		String allTransactionsExpression = "/transaction/report[@domain='All']/machine[@ip='All']/type[@id='"
+		      + CAT_TRANSACTION_TYPE + "']/name";
 
 		NodeList transactionNodes = (NodeList) xPath.compile(allTransactionsExpression).evaluate(doc,
 		      XPathConstants.NODESET);

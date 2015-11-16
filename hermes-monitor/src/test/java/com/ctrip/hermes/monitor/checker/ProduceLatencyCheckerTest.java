@@ -60,7 +60,7 @@ public class ProduceLatencyCheckerTest extends BaseCheckerTest {
 		assertTrue(result.isRunSuccess());
 		assertNull(result.getErrorMessage());
 		assertNull(result.getException());
-		assertEquals(3, result.getMonitorEvents().size());
+		assertEquals(4, result.getMonitorEvents().size());
 
 		List<MonitorEvent> expectedEvents = new ArrayList<>();
 
@@ -73,6 +73,8 @@ public class ProduceLatencyCheckerTest extends BaseCheckerTest {
 		expectedEvents.add(new ProduceLatencyTooLargeEvent("a.b.c", sdf.format(calendar.getTime()), 2000.3));
 		calendar.set(Calendar.MINUTE, 46);
 		expectedEvents.add(new ProduceLatencyTooLargeEvent("b.c.d", sdf.format(calendar.getTime()), 1329.6));
+		calendar.set(Calendar.MINUTE, 49);
+		expectedEvents.add(new ProduceLatencyTooLargeEvent("f.g.h", sdf.format(calendar.getTime()), 6329.6));
 
 		for (MonitorEvent expectedEvent : expectedEvents) {
 			assertTrue(result.getMonitorEvents().contains(expectedEvent));
