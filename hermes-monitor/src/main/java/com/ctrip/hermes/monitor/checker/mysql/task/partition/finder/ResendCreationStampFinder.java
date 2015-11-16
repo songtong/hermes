@@ -14,7 +14,7 @@ import com.ctrip.hermes.metaservice.queue.ResendGroupIdEntity;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.ResendTableContext;
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
 
-@Component
+//@Component
 public class ResendCreationStampFinder implements CreationStampFinder {
 
 	private static final Logger log = LoggerFactory.getLogger(ResendCreationStampFinder.class);

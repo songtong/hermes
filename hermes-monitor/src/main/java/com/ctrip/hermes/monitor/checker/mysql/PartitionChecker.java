@@ -37,7 +37,7 @@ import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.ResendTable
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
 import com.ctrip.hermes.monitor.service.PartitionService;
 
-@Component(value = PartitionChecker.ID)
+//@Component(value = PartitionChecker.ID)
 public class PartitionChecker extends DBBasedChecker {
 
 	private static final Logger log = LoggerFactory.getLogger(PartitionChecker.class);

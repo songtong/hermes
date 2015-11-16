@@ -7,7 +7,7 @@ import com.ctrip.hermes.monitor.checker.mysql.task.partition.finder.CreationStam
 import com.ctrip.hermes.monitor.checker.mysql.task.partition.finder.MessageCreationStampFinder;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 
-@Component
+//@Component
 public class MessagePartitionCheckerStrategy extends BasePartitionCheckerStrategy {
 	@Autowired
 	private MessageCreationStampFinder m_finder;
