@@ -53,7 +53,7 @@ public class MonitorConfig {
 	@Value("${produce.acktriedratio.checker.noproducetried.acked.threshold:100}")
 	private int produceAckedTriedRatioAckedCountThresholdWhileNoProduceTried;
 
-	@Value("${produce.acktriedratio.checker.threshold:0.3}")
+	@Value("${produce.acktriedratio.checker.threshold:0.5}")
 	private double produceAckedTriedRatioThreshold;
 
 	@Value("${zabbix.kafka.broker.hosts}")
