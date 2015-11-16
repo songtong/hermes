@@ -132,7 +132,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 				}
 			});
 			for (ConsumerGroup group : excludeGroups) {
-				limits.remove(new Pair<Topic, Integer>(topic, group.getId()));
+				limits.remove(new Pair<Topic, ConsumerGroup>(topic, group));
 			}
 		}
 	}
