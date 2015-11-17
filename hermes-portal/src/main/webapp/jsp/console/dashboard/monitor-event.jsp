@@ -46,7 +46,7 @@
 							<td><a href="" tooltip="点击查看详情" ng-click="show_message(monitor_event.message)">
 									<span ng-bind="monitor_event.message | short:20"></span>
 								</a></td>
-							<td><span ng-bind="monitor_event.notifyTime || 'NOT_YET'"| date:"yyyy-MM-dd HH:mm:ss"></span></td>
+							<td><span ng-bind="monitor_event.notifyTime || 'NOT_YET'| date:'yyyy-MM-dd HH:mm:ss'"></span></td>
 						</tr>
 					</tbody>
 					<tbody ng-if="is_loading">
