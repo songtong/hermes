@@ -15,7 +15,7 @@ import com.ctrip.hermes.core.utils.StringUtils;
 @Named(type = ConsumerConfig.class)
 public class ConsumerConfig {
 
-	public static final int DEFAULT_LOCALCACHE_SIZE = 10;
+	public static final int DEFAULT_LOCALCACHE_SIZE = 200;
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
