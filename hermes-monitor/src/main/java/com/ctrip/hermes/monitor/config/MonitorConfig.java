@@ -32,7 +32,7 @@ public class MonitorConfig {
 	@Value("${produce.latency.checker.excluded.topics:[\"All\"]}")
 	private String produceLatencyCheckerExcludedTopics;
 
-	@Value("${produce.latency.checker.thresholds:{\"Default\":2000}}")
+	@Value("${produce.latency.checker.thresholds:{\"Default\":5000}}")
 	private String produceLatencyThresholds;
 
 	@Value("${consume.delay.checker.thresholds:{}}")
