@@ -143,6 +143,7 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 		m_env2MetaDomain
 		      .put(Env.UAT, m_globalDefault.getProperty("uat.domain", "meta.hermes.fx.uat.qa.nt.ctripcorp.com"));
 		m_env2MetaDomain.put(Env.PROD, m_globalDefault.getProperty("prod.domain", "meta.hermes.fx.ctripcorp.com"));
+		m_env2MetaDomain.put(Env.TOOLS, m_globalDefault.getProperty("tools.domain", "meta.hermes.fx.tools.ctripcorp.com"));
 
 		logger.info(String.format("Meta server domains: %s", m_env2MetaDomain));
 	}
