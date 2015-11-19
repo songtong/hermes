@@ -101,7 +101,7 @@ public class MonitorConfig {
 	/**
 	 * { ".*" : { ".*" : 100}, "song.test" : { "song.test.group" : 100, "song.test.group2" : 1000 }}
 	 */
-	@Value("${consume.large.backlog.checker.include.topics:{\".*\":{\".*\":2000}}}")
+	@Value("${consume.large.backlog.checker.include.topics:{\".*\":{\".*\":10000}}}")
 	private String consumeBacklogCheckerIncludeTopics;
 
 	/**
