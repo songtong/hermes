@@ -1,7 +1,5 @@
 package com.ctrip.hermes.consumer.engine.bootstrap.strategy;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
 import com.ctrip.hermes.core.message.BrokerConsumerMessage;
@@ -15,8 +13,6 @@ import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
  *
  */
 public class DefaultConsumingStrategyConsumerTask extends BaseConsumerTask {
-
-	private AtomicReference<PullMessagesTask> m_pullMessagesTask = new AtomicReference<>(null);
 
 	public DefaultConsumingStrategyConsumerTask(ConsumerContext context, int partitionId, int cacheSize) {
 		super(context, partitionId, cacheSize);
@@ -38,11 +34,6 @@ public class DefaultConsumingStrategyConsumerTask extends BaseConsumerTask {
 	protected BrokerConsumerMessage<?> decorateBrokerMessage(BrokerConsumerMessage<?> brokerMsg) {
 		brokerMsg.setAckWithForwardOnly(false);
 		return brokerMsg;
-	}
-
-	@Override
-	protected Runnable getPullMessageTask() {
-		return m_pullMessagesTask.get();
 	}
 
 	private class PullMessagesTask extends BasePullMessagesTask {

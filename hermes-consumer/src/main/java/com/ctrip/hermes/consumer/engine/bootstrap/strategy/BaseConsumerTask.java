@@ -97,6 +97,8 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	protected PullMessageResultMonitor m_pullMessageResultMonitor;
 
+	protected AtomicReference<Runnable> m_pullMessagesTask = new AtomicReference<>(null);
+
 	@SuppressWarnings("unchecked")
 	public BaseConsumerTask(ConsumerContext context, int partitionId, int localCacheSize) {
 		m_context = context;
@@ -233,7 +235,9 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		}
 	}
 
-	protected abstract Runnable getPullMessageTask();
+	protected Runnable getPullMessageTask() {
+		return m_pullMessagesTask.get();
+	}
 
 	protected abstract void doBeforeConsuming(ConsumerLeaseKey key, long correlationId);
 
@@ -386,7 +390,9 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		return msgs;
 	}
 
-	protected abstract BrokerConsumerMessage<?> decorateBrokerMessage(BrokerConsumerMessage<?> brokerMsg);
+	protected BrokerConsumerMessage<?> decorateBrokerMessage(BrokerConsumerMessage<?> brokerMsg) {
+		return brokerMsg;
+	}
 
 	public void close() {
 		m_closed.set(true);

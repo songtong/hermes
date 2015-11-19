@@ -45,15 +45,19 @@ public class StrictlyOrderedConsumingStrategyConsumerTask extends BaseConsumerTa
 	public StrictlyOrderedConsumingStrategyConsumerTask(ConsumerContext context, int partitionId, int cacheSize) {
 		super(context, partitionId, cacheSize);
 		m_queryOffsetResultMonitor = PlexusComponentLocator.lookup(QueryOffsetResultMonitor.class);
+
+		m_noEndpointSchedulePolicy = new ExponentialSchedulePolicy(m_config.getNoEndpointWaitBaseMillis(),
+		      m_config.getNoEndpointWaitMaxMillis());
 	}
 
 	@Override
 	protected void doBeforeConsuming(ConsumerLeaseKey key, long correlationId) {
-		m_noEndpointSchedulePolicy = new ExponentialSchedulePolicy(m_config.getNoEndpointWaitBaseMillis(),
-		      m_config.getNoEndpointWaitMaxMillis());
+		// reset policy for query latest offset
+		m_noEndpointSchedulePolicy.succeess();
 
 		queryLatestOffset(key, correlationId);
-		// reset policy
+
+		// reset policy for consuming
 		m_noEndpointSchedulePolicy.succeess();
 
 		m_pullMessagesTask.set(new PullMessagesTask(correlationId, m_noEndpointSchedulePolicy));
@@ -81,8 +85,8 @@ public class StrictlyOrderedConsumingStrategyConsumerTask extends BaseConsumerTa
 
 			final SettableFuture<QueryOffsetResultCommand> future = SettableFuture.create();
 
-			QueryLatestConsumerOffsetCommand cmd = new QueryLatestConsumerOffsetCommand(m_context.getTopic().getName(), m_partitionId,
-			      m_context.getGroupId());
+			QueryLatestConsumerOffsetCommand cmd = new QueryLatestConsumerOffsetCommand(m_context.getTopic().getName(),
+			      m_partitionId, m_context.getGroupId());
 
 			cmd.getHeader().setCorrelationId(correlationId);
 			cmd.setFuture(future);
@@ -134,11 +138,6 @@ public class StrictlyOrderedConsumingStrategyConsumerTask extends BaseConsumerTa
 	protected void doAfterConsuming(ConsumerLeaseKey key, long correlationId) {
 		m_pullMessagesTask.set(null);
 		m_offset.set(null);
-	}
-
-	@Override
-	protected Runnable getPullMessageTask() {
-		return m_pullMessagesTask.get();
 	}
 
 	private class PullMessagesTask extends BasePullMessagesTask {
