@@ -1,23 +1,30 @@
 application_module.controller('app-review-controller', [ '$scope', '$routeParams', 'ApplicationService', function($scope, $routeParams, ApplicationService) {
-	$scope.productLines = [ 'hotel', 'flight', 'fx' ];
+	$scope.productLines = ApplicationService.get_productLines();
 	$scope.storageTypes = [ 'mysql', 'kafka' ];
 	$scope.codecTypes = [ 'json', 'avro' ];
 	$scope.languageTypes = [ 'java', '.net' ];
-
+	$scope.needRetryList = [ {
+		value : true,
+		text : "是"
+	}, {
+		value : false,
+		text : "否"
+	} ]
 	$scope.application = ApplicationService.get_application($routeParams['id']).then(function(result) {
 		$scope.application = result;
+		$scope.application.needRetry = $scope.application.needRetry.toString();
 		updatePageType(result.type);
-		console.log(result);
 	})
 	$scope.update_application = function(data) {
+		console.log(data);
 		ApplicationService.update_application($scope.application, $scope.application.type).then(function(result) {
 			show_op_info.show("Update application success!", true);
 			$scope.application = result;
+			$scope.application.needRetry = $scope.application.needRetry.toString();
 		}, function(result) {
 			show_op_info.show("Update application failed, please try later.", false);
 		})
 	}
-	
 
 	function updatePageType(typeCode) {
 		switch (typeCode) {
@@ -38,8 +45,5 @@ application_module.controller('app-review-controller', [ '$scope', '$routeParams
 			console.log("default");
 		}
 	}
-	
-	
-	
 
 } ])

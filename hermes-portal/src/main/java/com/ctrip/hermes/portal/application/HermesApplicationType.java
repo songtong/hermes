@@ -3,7 +3,8 @@ package com.ctrip.hermes.portal.application;
 import com.ctrip.hermes.core.utils.StringUtils;
 
 public enum HermesApplicationType {
-	CREATE_TOPIC(0, "create_topic_application", TopicApplication.class);
+	CREATE_TOPIC(0, "create_topic_application", TopicApplication.class),
+	CREATE_CONSUMER(1,"create_consumer_application",ConsumerApplication.class);
 
 	private int m_typeCode;
 

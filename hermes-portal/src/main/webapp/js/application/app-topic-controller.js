@@ -5,7 +5,7 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 		codecType : 'json',
 		languageType : 'java'
 	};
-	$scope.productLines = [ 'hotel', 'flight', 'fx' ];
+	$scope.productLines = ApplicationService.get_productLines();
 	$scope.storageTypes = [ 'mysql', 'kafka' ];
 	$scope.codecTypes = [ 'json', 'avro' ];
 	$scope.languageTypes = [ 'java', '.net' ];
@@ -41,9 +41,5 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 			}
 		});
 	}
-
-	$(function() {
-		$('[data-toggle="tooltip"]').tooltip()
-	})
 
 } ])

@@ -20,10 +20,14 @@ import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.bo.ConsumerView;
 import com.ctrip.hermes.core.bo.TopicView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.TopicService;
+import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.HermesApplicationType;
 import com.ctrip.hermes.portal.application.TopicApplication;
@@ -44,7 +48,7 @@ public class ApplicationResource {
 	@POST
 	@Path("topic/create")
 	public Response createTopicApplication(String content) {
-		log.info("Submitting application with payload", content);
+		log.info("Submitting topic application with payload", content);
 		if (StringUtils.isEmpty(content)) {
 			log.error("Payload content is empty, submit application failed.");
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
@@ -86,6 +90,40 @@ public class ApplicationResource {
 		return Response.status(Status.CREATED).entity(topicApplication).build();
 	}
 
+	@POST
+	@Path("consumer/create")
+	public Response createConsumerApplication(String content) {
+		log.info("Submitting  consumer application with payload", content);
+		if (StringUtils.isBlank(content)) {
+			log.error("Payload content is empty, submit consuemr application failed");
+			throw new RestException("HTTP Post body is empty!", Status.BAD_REQUEST);
+		}
+		ConsumerApplication app = null;
+		try {
+			app = JSON.parseObject(content, ConsumerApplication.class);
+		} catch (Exception e) {
+			log.error("Can not parse payload: {}, submit consumer application failed.", content);
+			throw new RestException(e, Status.BAD_REQUEST);
+		}
+		Pair<Boolean, String> result = validateConsumerApplication(app);
+		if (result.getKey() == false) {
+			throw new RestException(result.getValue());
+		}
+
+		app.setContent(content);
+		app.setType(PortalConstants.APP_TYPE_CREATE_CONSUMER);
+		app.setStatus(PortalConstants.APP_STATUS_PROCESSING);
+		app.setCreateTime(new Date(System.currentTimeMillis()));
+
+		app = appService.saveConsumerApplication(app);
+		if (app == null) {
+			throw new RestException("Save consumer application failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		return Response.status(Status.OK).entity(app).build();
+
+	}
+
 	private Pair<Boolean, String> validateTopicApplication(TopicApplication app) {
 		boolean pass = true;
 		String reason = "";
@@ -119,6 +157,56 @@ public class ApplicationResource {
 
 	}
 
+	private Pair<Boolean, String> validateConsumerApplication(ConsumerApplication app) {
+		boolean pass = true;
+		String reason = "";
+		if (StringUtils.isBlank(app.getTopicName())) {
+			pass = false;
+			reason = "Topic name should not be null.";
+		} else if (StringUtils.isBlank(app.getProductLine())) {
+			pass = false;
+			reason = "Product line should not be null.";
+		} else if (StringUtils.isBlank(app.getProduct())) {
+			pass = false;
+			reason = "Product should not be null.";
+		} else if (StringUtils.isBlank(app.getProject())) {
+			pass = false;
+			reason = "Project should not be null.";
+		} else if (StringUtils.isBlank(app.getAppName())) {
+			pass = false;
+			reason = "App name should not be null.";
+		} else if (StringUtils.isBlank(app.getOwnerName())) {
+			pass = false;
+			reason = "负责人不能为空！";
+		} else if (StringUtils.isBlank(app.getOwnerEmail())) {
+			pass = false;
+			reason = "邮箱填写有误！";
+		} else if (app.getAckTimeoutSeconds() <= 0) {
+			pass = false;
+			reason = "超时不能小于0！";
+		} else {
+			Topic t = topicService.findTopicByName(app.getTopicName());
+			for (ConsumerGroup c : t.getConsumerGroups()) {
+				String currentConsuemrName = app.getProductLine() + "." + app.getProduct() + "." + app.getProject();
+				if (currentConsuemrName.equals(c.getName())) {
+					pass = false;
+					reason = "当前Topic下已有ConsumerGroup名字为" + currentConsuemrName;
+					break;
+				}
+			}
+			if ("mysql".equals(t.getStorageType()) && app.isNeedRetry()) {
+				if (app.getRetryCount() <= 0) {
+					pass = false;
+					reason = "重试次数不能小于0！";
+				} else if (app.getRetryInterval() <= 0) {
+					pass = false;
+					reason = "重试时间间隔不能小于0！";
+				}
+			}
+		}
+		return new Pair<Boolean, String>(pass, reason);
+	}
+
 	@GET
 	@Path("review/{id}")
 	public Response getApplicationById(@PathParam("id") long id) {
@@ -145,10 +233,15 @@ public class ApplicationResource {
 			throw new RestException("Application id not available", Status.BAD_REQUEST);
 		}
 		HermesApplication app = appService.getApplicationById(id);
-		if (HermesApplicationType.CREATE_TOPIC == HermesApplicationType.findByTypeCode(app.getType())) {
+		switch (HermesApplicationType.findByTypeCode(app.getType())) {
+		case CREATE_TOPIC:
 			TopicView topicView = appService.generageTopicView((TopicApplication) app);
 			return Response.status(Status.OK).entity(new Pair<HermesApplication, TopicView>(app, topicView)).build();
-		} else {
+		case CREATE_CONSUMER:
+			ConsumerView consumerView = appService.generateConsumerView((ConsumerApplication) app);
+			return Response.status(Status.OK).entity(new Pair<HermesApplication, ConsumerView>(app, consumerView))
+					.build();
+		default:
 			throw new RestException("Generate view failed.");
 		}
 	}
@@ -185,7 +278,7 @@ public class ApplicationResource {
 
 		return Response.status(Status.OK).entity(app).build();
 	}
-	
+
 	@PUT
 	@Path("pass/{id}")
 	public Response passApplication(@PathParam("id") long id, @QueryParam("comment") String comment,

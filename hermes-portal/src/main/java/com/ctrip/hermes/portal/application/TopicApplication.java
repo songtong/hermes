@@ -1,7 +1,5 @@
 package com.ctrip.hermes.portal.application;
 
-import com.ctrip.hermes.portal.dal.application.Application;
-
 public class TopicApplication extends HermesApplication {
 	private String m_productLine;
 
@@ -22,7 +20,7 @@ public class TopicApplication extends HermesApplication {
 	private String m_ownerName;
 
 	private String m_description;
-	
+
 	private String m_languageType;
 
 	public String getProductLine() {
@@ -105,20 +103,6 @@ public class TopicApplication extends HermesApplication {
 		this.m_ownerName = ownerName;
 	}
 
-	@Override
-	public Application toDBEntity() {
-		Application dbApp = new Application();
-		dbApp.setId(this.getId());
-		dbApp.setType(this.getType());
-		dbApp.setStatus(this.getStatus());
-		dbApp.setContent(this.getContent());
-		dbApp.setComment(this.getComment());
-		dbApp.setOwner(this.getOwnerEmail());
-		dbApp.setApprover(this.getApprover());
-		dbApp.setCreateTime(this.getCreateTime());
-		return dbApp;
-	}
-
 	public String getLanguageType() {
 		return m_languageType;
 	}
@@ -126,5 +110,5 @@ public class TopicApplication extends HermesApplication {
 	public void setLanguageType(String languageType) {
 		this.m_languageType = languageType;
 	}
-	
+
 }
