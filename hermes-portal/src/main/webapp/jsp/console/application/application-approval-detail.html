@@ -2,7 +2,7 @@
 	<div class="col-md-6">
 		<label class="label label-success">{{currentPageType}}申请内容</label>
 		<div class="well">
-			<div class="form-horizontal">
+			<div class="form-horizontal" name="topicApplicationForm" ng-if="application.type==0">
 				<div class="form-group">
 					<label class="col-md-4 control-label">名称</label>
 					<p class="col-md-6 form-control-static">{{application.productLine}}.{{application.entity}}.{{application.event}}</p>
@@ -62,6 +62,62 @@
 					</div>
 				</div>
 			</div>
+			<div class="form-horizontal" name="consumerApplicationForm" ng-if="application.type==1">
+				<div class="form-group">
+					<label class="col-md-4 control-label">Topic名称 </label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{application.topicName}}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">Consumer名称 </label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{application.productLine}}.{{application.product}}.{{application.project}}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">应用名称 </label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{application.appName}}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">超时时间（秒） </label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{application.ackTimeoutSeconds}}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">需要重发？</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{application.needRetry}}</div>
+					</div>
+				</div>
+				<div class="form-group" ng-if="application.needRetry">
+					<label class="col-md-4 control-label">重发次数 </label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{application.retryCount}}</div>
+					</div>
+				</div>
+				<div class="form-group" ng-if="application.needRetry">
+					<label class="col-md-4 control-label">重发间隔（秒） </label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{application.retryInterval}}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人姓名 </label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{application.ownerName}}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人邮箱 </label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{application.ownerEmail}}</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 	<div class="col-md-6">
@@ -107,7 +163,7 @@
 <div class="row">
 
 	<div class="col-md-12">
-		<div class="well clearfix">
+		<div class="well clearfix" name="topicViewWell" ng-if="application.type==0">
 			<div class="col-md-6">
 				<label class="label label-info">基本信息</label>
 				<div class="form-horizontal">
@@ -227,7 +283,62 @@
 					</table>
 
 				</div>
-				<button type="button" class="btn btn-success pull-right" aria-hidden="true" ng-click="permit_application()" id="permitButton">
+				<button type="button" class="btn btn-success pull-right" aria-hidden="true" ng-click="permit_topic_application()" id="permitTopicButton">
+					<span class="glyphicon glyphicon-saved"></span> 通过申请
+				</button>
+			</div>
+		</div>
+		<div class="well clearfix" name="consumerViewWell" ng-if="application.type==1">
+			<div class="col-md-6">
+				<label class="label label-info">基本信息</label>
+				<div class="form-horizontal">
+					<div class="form-group">
+						<label class="col-md-4 control-label">Topic名称</label>
+						<div class="col-md-8">
+							<input class="form-control" ng-model="view.topicName">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">Consumer名称</label>
+						<div class="col-md-8">
+							<input class="form-control" ng-model="view.groupName">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">应用名称</label>
+						<div class="col-md-8">
+							<input class="form-control" ng-model="view.appId">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">保证有序消费</label>
+						<div class="col-md-8">
+							<select class="form-control" ng-model="view.orderedConsume" ng-options="order for order in order_opts">
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">重试策略</label>
+						<div class="col-md-8">
+							<input class="form-control" ng-model="view.retryPolicy">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">ACK超时</label>
+						<div class="col-md-8">
+							<input class="form-control" ng-model="view.ackTimeoutSeconds">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">负责人</label>
+						<div class="col-md-8">
+							<input class="form-control" ng-model="view.owner">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<button type="button" class="btn btn-success pull-right" aria-hidden="true" ng-click="permit_consumer_application()" id="permitConsumerButton">
 					<span class="glyphicon glyphicon-saved"></span> 通过申请
 				</button>
 			</div>

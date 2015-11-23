@@ -9,13 +9,19 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			}
 		}
 	});
-	var consumer_resource = $resource("api/consuemrs", {}, {});
+	consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
+		'add_consumer' : {
+			method : 'POST',
+			url : '/api/consumers/add'
+		}
+	});
 	var meta_resource = $resource('/api/meta/storages', {}, {
 		'get_storage' : {
 			method : 'GET',
 			isArray : true,
 		}
 	});
+	$scope.order_opts = [ true, false ];
 	$scope.datasources = [];
 	$scope.new_comment = "";
 	ApplicationService.get_generated_application($routeParams['id']).then(function(result) {
@@ -98,57 +104,58 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		}
 	}
 
-	$scope.permit_application = function() {
-		document.getElementById("permitButton").disabled = "disabled";
-		switch ($scope.application["type"]) {
-		case 0:
-			topic_resource.save($scope.view, function(save_result) {
-				if ($scope.view.storageType == 'kafka') {
-					show_op_info.show("保存Topic成功，正在发布Topic至Kafka...", true);
-					topic_resource.deploy_topic({}, {
-						"name" : $scope.view.name
-					}, function(response) {
-						ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
-							$window["location"].replace("/console/topic#detail/kafka/kafka/" + $scope.view.name);
-							show_op_info.show("发布Topic到Kafka成功!表单状态修改成功！", true);
-						}, function(result) {
-							show_op_info.show("发布Topic到Kafka成功!表单状态修改失败！", false);
-						});
-					}, function(response) {
-						console.log(response.data);
-						topic_resource.remove({
-							name : $scope.view.name
-						}, function(success_resp) {
-							show_op_info.show("发布Topic到Kafka失败, 删除脏数据成功!", false);
-						}, function(error_resp) {
-							show_op_info.show("发布Topic到Kafka失败, 删除脏数据失败! " + error_resp.data, false);
-						});
-					});
-				} else {
+	$scope.permit_topic_application = function() {
+		document.getElementById("permitTopicButton").disabled = "disabled";
+		show_op_info.show("正在创建Topic...", true);
+		topic_resource.save($scope.view, function(save_result) {
+			if ($scope.view.storageType == 'kafka') {
+				show_op_info.show("保存Topic成功，正在发布Topic至Kafka...", true);
+				topic_resource.deploy_topic({}, {
+					"name" : $scope.view.name
+				}, function(response) {
 					ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
-						$window["location"].replace("/console/topic#detail/mysql/mysql/" + $scope.view.name);
-						show_op_info.show("Topic创建成功！表单状态修改成功", true);
+						$window["location"].replace("/console/topic#detail/kafka/kafka/" + $scope.view.name);
+						show_op_info.show("发布Topic到Kafka成功!表单状态修改成功！", true);
 					}, function(result) {
-						show_op_info.show("Topic创建成功！表单状态修改失败", false);
+						show_op_info.show("发布Topic到Kafka成功!表单状态修改失败！", false);
 					});
-				}
-			}, function(error_result) {
-				show_op_info.show("新增 " + $scope.view.name + " 失败: " + error_result.data, false);
-				document.getElementById("permitButton").disabled = false;
+				}, function(response) {
+					console.log(response.data);
+					topic_resource.remove({
+						name : $scope.view.name
+					}, function(success_resp) {
+						show_op_info.show("发布Topic到Kafka失败, 删除脏数据成功!", false);
+					}, function(error_resp) {
+						show_op_info.show("发布Topic到Kafka失败, 删除脏数据失败! " + error_resp.data, false);
+					});
+				});
+			} else {
+				ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
+					$window["location"].replace("/console/topic#detail/mysql/mysql/" + $scope.view.name);
+					show_op_info.show("Topic创建成功！表单状态修改成功", true);
+				}, function(result) {
+					show_op_info.show("Topic创建成功！表单状态修改失败", false);
+				});
+			}
+		}, function(error_result) {
+			show_op_info.show("新增 " + $scope.view.name + " 失败: " + error_result.data, false);
+			document.getElementById("permitButton").disabled = false;
+		});
+	}
+	$scope.permit_consumer_application = function() {
+		document.getElementById("permitConsumerButton").disabled = "disabled";
+		show_op_info.show("正在创建Consumer...", true);
+		consumer_resource.add_consumer({}, $scope.view, function(save_result) {
+			ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
+				$scope.application = result;
+				show_op_info.show("Consumer创建成功！表单状态修改成功", true);
+			}, function(result) {
+				show_op_info.show("Consumer创建成功！表单状态修改失败", false);
 			});
-			break;
-		case 1:
-			$scope.currentPageType = "Consumer创建";
-			break;
-		case 2:
-			$scope.currentPageType = "Topic修改";
-			break;
-		case 3:
-			$scope.currentPageType = "Consumer修改";
-			break;
-		default:
-			console.log("default");
-		}
+		}, function(error_result) {
+			show_op_info.show("新增 consumer失败! " + error_result.data, false);
+			document.getElementById("permitConsumerButton").disabled = false;
+		});
 	}
 
 	$scope.reject_application = function() {

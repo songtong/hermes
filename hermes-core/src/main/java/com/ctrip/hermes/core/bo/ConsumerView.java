@@ -5,7 +5,7 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 public class ConsumerView {
 	private String topicName;
 
-	
+	private String owner;
 
 	private String groupName;
 
@@ -27,19 +27,20 @@ public class ConsumerView {
 		this.retryPolicy = consumer.getRetryPolicy();
 		this.ackTimeoutSeconds = consumer.getAckTimeoutSeconds();
 		this.orderedConsume = consumer.getOrderedConsume();
+		this.owner = consumer.getOwner();
 	}
 
-	public  ConsumerGroup toMetaConsumer() {
+	public ConsumerGroup toMetaConsumer() {
 		ConsumerGroup consumer = new ConsumerGroup();
 		consumer.setAckTimeoutSeconds(this.ackTimeoutSeconds);
 		consumer.setAppIds(this.appId);
 		consumer.setName(this.groupName);
 		consumer.setRetryPolicy(this.retryPolicy);
 		consumer.setOrderedConsume(this.orderedConsume);
+		consumer.setOwner(this.owner);
 
 		return consumer;
 	}
-
 
 	public String getTopicName() {
 		return topicName;
@@ -89,10 +90,18 @@ public class ConsumerView {
 		this.orderedConsume = orderedConsume;
 	}
 
+	public String getOwner() {
+		return owner;
+	}
+
+	public void setOwner(String owner) {
+		this.owner = owner;
+	}
+
 	@Override
 	public String toString() {
 		return "ConsumerView [topicName=" + topicName + ", groupName=" + groupName + ", appId=" + appId
 				+ ", retryPolicy=" + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume="
-				+ orderedConsume + "]";
+				+ orderedConsume + ", owner=" + owner + "]";
 	}
 }

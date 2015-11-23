@@ -17,4 +17,5 @@
 	<script type="text/javascript" src="${model.webapp}/js/application/app-review-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/application/app-approval-list-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/application/app-approval-detail-controller.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/application/app-consumer-controller.js"></script>
 </a:layout>

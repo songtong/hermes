@@ -92,7 +92,7 @@
 								<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">${page.title} <span class="caret"></span></a>
 									<ul class="dropdown-menu">
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/topic">Topic</a></li>
-										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=consumer">ConsumerGroup</a></li>
+										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/consumer">ConsumerGroup</a></li>
 										<c:if test="${requestScope.logined}">
 											<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/approval/list">Examination & Approval</a></li>
 										</c:if>

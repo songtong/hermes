@@ -88,7 +88,18 @@ public abstract class HermesApplication {
 		this.m_lastModifiedTime = lastModifiedTime;
 	}
 
-	public abstract Application toDBEntity();
+	public static Application toDBEntity(HermesApplication app) {
+		Application dbApp = new Application();
+		dbApp.setId(app.getId());
+		dbApp.setType(app.getType());
+		dbApp.setStatus(app.getStatus());
+		dbApp.setContent(app.getContent());
+		dbApp.setComment(app.getComment());
+		dbApp.setOwner(app.getOwnerEmail());
+		dbApp.setApprover(app.getApprover());
+		dbApp.setCreateTime(app.getCreateTime());
+		return dbApp;
+	};
 
 	public String getOwnerEmail() {
 		return m_ownerEmail;
@@ -99,7 +110,7 @@ public abstract class HermesApplication {
 	}
 
 	public static HermesApplication parse(Application dbApp) {
-		//except for content value
+		// except for content value
 		HermesApplicationType type = HermesApplicationType.findByTypeCode(dbApp.getType());
 		HermesApplication app = JSON.parseObject(dbApp.getContent(), type.getClazz());
 		app.setType(dbApp.getType());

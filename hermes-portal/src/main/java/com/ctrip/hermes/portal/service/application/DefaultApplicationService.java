@@ -2,6 +2,7 @@ package com.ctrip.hermes.portal.service.application;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,9 +10,11 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.bo.ConsumerView;
 import com.ctrip.hermes.core.bo.TopicView;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
+import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.config.PortalConstants;
@@ -28,7 +31,7 @@ public class DefaultApplicationService implements ApplicationService {
 	@Override
 	public TopicApplication saveTopicApplication(TopicApplication topicApplication) {
 		try {
-			Application dbApp = topicApplication.toDBEntity();
+			Application dbApp = HermesApplication.toDBEntity(topicApplication);
 			m_dao.saveApplication(dbApp);
 			return (TopicApplication) HermesApplication.parse(dbApp);
 		} catch (DalException e) {
@@ -88,8 +91,8 @@ public class DefaultApplicationService implements ApplicationService {
 			List<Property> kafkaProperties = new ArrayList<>();
 			kafkaProperties.add(new Property("partitions").setValue("3"));
 			kafkaProperties.add(new Property("replication-factor").setValue("2"));
-			kafkaProperties
-					.add(new Property("retention.ms").setValue("" + (app.getRetentionDays() * 24 * 3600 * 1000)));
+			kafkaProperties.add(new Property("retention.ms")
+					.setValue(String.valueOf(TimeUnit.DAYS.toMillis(app.getRetentionDays()))));
 			topicView.setProperties(kafkaProperties);
 			defaultReadDS = "kafka-consumer";
 			defaultWriteDS = "kafka-producer";
@@ -142,7 +145,7 @@ public class DefaultApplicationService implements ApplicationService {
 	public HermesApplication updateApplication(HermesApplication app) {
 		try {
 			app.setStatus(PortalConstants.APP_STATUS_PROCESSING);
-			Application dbApp = app.toDBEntity();
+			Application dbApp = HermesApplication.toDBEntity(app);
 			dbApp = m_dao.updateApplication(dbApp);
 			app = HermesApplication.parse(dbApp);
 			return app;
@@ -165,6 +168,43 @@ public class DefaultApplicationService implements ApplicationService {
 			log.error("Update status of apllication: id={} failed.", id, e);
 		}
 		return null;
+	}
+
+	@Override
+	public ConsumerApplication saveConsumerApplication(ConsumerApplication consumerApplication) {
+		try {
+			Application dbApp = HermesApplication.toDBEntity(consumerApplication);
+			m_dao.saveApplication(dbApp);
+			return (ConsumerApplication) HermesApplication.parse(dbApp);
+		} catch (DalException e) {
+			log.error("Create new consumer application : {}.{}.{} failed", consumerApplication.getProductLine(),
+					consumerApplication.getProduct(), consumerApplication.getProject(), e);
+		}
+		return null;
+	}
+
+	@Override
+	public ConsumerView generateConsumerView(ConsumerApplication app) {
+		ConsumerView consumerView = new ConsumerView();
+		consumerView.setTopicName(app.getTopicName());
+		consumerView.setGroupName(app.getProductLine() + "." + app.getProduct() + "." + app.getProject());
+		consumerView.setAckTimeoutSeconds(app.getAckTimeoutSeconds());
+		consumerView.setAppId(app.getAppName());
+		consumerView.setOwner(app.getOwnerName() + "/" + app.getOwnerEmail());
+		StringBuilder retryPolicy = new StringBuilder();
+		if (app.isNeedRetry()) {
+			retryPolicy.append("1:[");
+			retryPolicy.append(app.getRetryInterval());
+			for (int i = 0; i < (app.getRetryCount() - 1); i++) {
+				retryPolicy.append(":" + app.getRetryInterval());
+			}
+			retryPolicy.append("]");
+		} else {
+			retryPolicy.append("2:[]");
+		}
+		consumerView.setRetryPolicy(retryPolicy.toString());
+
+		return consumerView;
 	}
 
 }

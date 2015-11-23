@@ -43,6 +43,10 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			method : 'POST',
 			url : '/api/applications/topic/create'
 		},
+		create_consumer_application : {
+			method : 'POST',
+			url : '/api/applications/consumer/create'
+		},
 		get_application : {
 			method : 'GET',
 			url : '/api/applications/review/:id'
@@ -66,7 +70,7 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			method : 'PUT',
 			url : '/api/applications/reject/:id',
 			params : {
-				id:'@id',
+				id : '@id',
 				comment : '@comment',
 				approver : '@approver'
 			}
@@ -75,10 +79,18 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			method : 'PUT',
 			url : '/api/applications/pass/:id',
 			params : {
-				id:'@id',
+				id : '@id',
 				comment : '@comment',
 				approver : '@approver'
 			}
+		}
+	});
+
+	meta_resource = $resource('/api/meta', {}, {
+		'get_topic_names' : {
+			method : 'GET',
+			isArray : true,
+			url : '/api/meta/topics/names'
 		}
 	});
 
@@ -88,6 +100,17 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			application_resource.create_topic_application(content, function(result) {
 				delay.resolve(result);
 			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'create_consumer_application' : function(content) {
+			console.log("application_servie.create_consumer_application");
+			var delay = $q.defer();
+			application_resource.create_consumer_application(content, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				console.log(delay);
 				delay.reject(result);
 			});
 			return delay.promise;
@@ -163,6 +186,18 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 				comment : app_comment,
 				approver : app_approver
 			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'get_productLines' : function() {
+			return [ 'fx', 'hotel', 'flight' ];
+		},
+		'get_topic_names' : function(id) {
+			var delay = $q.defer();
+			meta_resource.get_topic_names({}, function(result) {
 				delay.resolve(result);
 			}, function(result) {
 				delay.reject(result);
