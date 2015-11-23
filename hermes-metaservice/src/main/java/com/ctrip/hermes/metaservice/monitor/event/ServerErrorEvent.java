@@ -24,7 +24,7 @@ public abstract class ServerErrorEvent extends BaseMonitorEvent {
 	protected void toDBEntity0(MonitorEvent e) {
 		e.setKey1(m_host);
 		e.setKey2(String.valueOf(m_errorCount));
-		e.setMessage(String.format(getMessageFormat(), getCreateTime(), m_host, m_errorCount));
+		e.setMessage(String.format(getMessageFormat(), e.getCreateTime(), m_host, m_errorCount));
 	}
 
 	abstract String getMessageFormat();
