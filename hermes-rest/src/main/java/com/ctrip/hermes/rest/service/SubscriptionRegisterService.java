@@ -57,19 +57,16 @@ public class SubscriptionRegisterService {
 					if (logger.isTraceEnabled()) {
 						logger.trace("Received subscriptions: {}", remoteSubscriptions);
 					}
-					if (remoteSubscriptions == null || remoteSubscriptions.size() == 0) {
-						return;
-					}
 
 					Set<SubscriptionView> newSubscriptions = new HashSet<>(remoteSubscriptions);
 					SetView<SubscriptionView> created = Sets.difference(newSubscriptions, subscriptions);
 					SetView<SubscriptionView> removed = Sets.difference(subscriptions, newSubscriptions);
 
-					if (logger.isTraceEnabled()) {
-						logger.trace("Current: {}", subscriptions);
-						logger.trace("Remote: {}", newSubscriptions);
-						logger.trace("ToStart: {}", created);
-						logger.trace("ToStop: {}", removed);
+					if (created.size() > 0 || removed.size() > 0) {
+						logger.info("Current: {}", subscriptions);
+						logger.info("Remote: {}", newSubscriptions);
+						logger.info("ToStart: {}", created);
+						logger.info("ToStop: {}", removed);
 					}
 
 					for (SubscriptionView sub : created) {
@@ -156,4 +153,7 @@ public class SubscriptionRegisterService {
 		return isClosed;
 	}
 
+	public Set<SubscriptionView> listSubscriptions() {
+		return this.subscriptions;
+	}
 }
