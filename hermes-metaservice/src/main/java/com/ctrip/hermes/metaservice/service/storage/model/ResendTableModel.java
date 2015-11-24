@@ -20,7 +20,7 @@ public class ResendTableModel extends TableModel {
 		setMetaModels(id, producer_ip, producer_id, ref_key, attributes, codec_type, creation_date, payload,
 				  schedule_date, remaining_retries, priority, origin_id);
 		setPrimaryKey(id);
-		setIndexKey("id_schedule_date", id.columnName, schedule_date.columnName);
+		setIndexKey("schedule_date", schedule_date.columnName);
 
 		setTableName("resend_" + groupId);
 	}
