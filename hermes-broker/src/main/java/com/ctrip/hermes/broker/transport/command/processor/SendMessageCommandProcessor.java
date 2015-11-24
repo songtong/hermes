@@ -163,6 +163,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 				try {
 					if (m_written.compareAndSet(false, true)) {
 						logToCatIfHasError(m_result);
+						m_result.getHeader().addProperty("createTime", Long.toString(System.currentTimeMillis()));
 						m_ctx.write(m_result);
 					}
 				} finally {
@@ -191,6 +192,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		SendMessageAckCommand ack = new SendMessageAckCommand();
 		ack.correlate(req);
 		ack.setSuccess(success);
+		ack.getHeader().addProperty("createTime", Long.toString(System.currentTimeMillis()));
 		ctx.getChannel().writeAndFlush(ack);
 	}
 
