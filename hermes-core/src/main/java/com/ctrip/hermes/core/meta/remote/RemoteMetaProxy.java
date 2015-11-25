@@ -6,6 +6,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -301,7 +302,7 @@ public class RemoteMetaProxy implements MetaProxy {
 			if (log.isDebugEnabled()) {
 				log.debug("No response while getting meta server[listSchemas]");
 			}
-			return null;
+			return new ArrayList<SchemaView>();
 		}
 	}
 
@@ -314,7 +315,7 @@ public class RemoteMetaProxy implements MetaProxy {
 			if (log.isDebugEnabled()) {
 				log.debug("No response while getting meta server[listSubscriptions]");
 			}
-			return null;
+			return new ArrayList<SubscriptionView>();
 		}
 	}
 
