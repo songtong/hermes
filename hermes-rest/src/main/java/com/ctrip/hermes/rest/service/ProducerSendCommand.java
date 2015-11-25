@@ -11,6 +11,8 @@ import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 import com.google.common.io.ByteStreams;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixCommandProperties;
 
 public class ProducerSendCommand extends HystrixCommand<Future<SendResult>> {
 
@@ -23,7 +25,9 @@ public class ProducerSendCommand extends HystrixCommand<Future<SendResult>> {
 	private InputStream is;
 
 	public ProducerSendCommand(Producer producer, String topic, Map<String, String> params, InputStream is) {
-		super(HystrixCommandGroupKey.Factory.asKey(ProducerSendCommand.class.getSimpleName()));
+		super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(ProducerSendCommand.class.getSimpleName()))
+		      .andCommandKey(HystrixCommandKey.Factory.asKey(topic))
+		      .andCommandPropertiesDefaults(HystrixCommandProperties.Setter().withExecutionTimeoutInMilliseconds(5000)));
 		this.producer = producer;
 		this.topic = topic;
 		this.params = params;

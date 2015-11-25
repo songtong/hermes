@@ -23,6 +23,8 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixCommandProperties;
 
 public class HttpPushCommand extends HystrixCommand<HttpResponse> {
 
@@ -37,7 +39,9 @@ public class HttpPushCommand extends HystrixCommand<HttpResponse> {
 	private HttpClientContext context;
 
 	public HttpPushCommand(CloseableHttpClient client, RequestConfig config, ConsumerMessage<RawMessage> msg, String url) {
-		super(HystrixCommandGroupKey.Factory.asKey(HttpPushCommand.class.getSimpleName()));
+		super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(HttpPushCommand.class.getSimpleName()))
+		      .andCommandKey(HystrixCommandKey.Factory.asKey(url))
+		      .andCommandPropertiesDefaults(HystrixCommandProperties.Setter().withExecutionTimeoutInMilliseconds(5000)));
 		this.client = client;
 		// this.client = HttpClients.createDefault();
 		this.context = HttpClientContext.create();
@@ -96,18 +100,24 @@ public class HttpPushCommand extends HystrixCommand<HttpResponse> {
 				HttpResponse response = requestFailedException.getPayload();
 				return response;
 			} else {
-				return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1,
-				      Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), failedExecutionException.getMessage()));
+				return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, EXCEPTION_STATUS_CODE,
+				      failedExecutionException.getMessage()));
 			}
 		} else {
 			if (this.isResponseTimedOut()) {
-				return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1,
-				      Response.Status.REQUEST_TIMEOUT.getStatusCode(), "HystrixCommand Timeout"));
+				return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, HYSTRIX_TIMEOUT_STATUS_CODE,
+				      "HystrixCommand Timeout"));
 			}
-			return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1,
-			      Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), "HystrixCommand fallback"));
+			return new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, HYSTRIX_CIRCUIT_BREAK_STATUS_CODE,
+			      "HystrixCommand fallback"));
 		}
 	}
+
+	public static final int EXCEPTION_STATUS_CODE = 506;
+
+	public static final int HYSTRIX_TIMEOUT_STATUS_CODE = 507;
+
+	public static final int HYSTRIX_CIRCUIT_BREAK_STATUS_CODE = 508;
 
 	private static class RequestFailedException extends RuntimeException {
 

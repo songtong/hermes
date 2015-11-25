@@ -147,7 +147,7 @@ public class RestIntegrationTest extends JerseyTest {
 		String topic = "kafka.SimpleTextTopic1";
 		kafka.createTopic(topic);
 		String group = "SimpleTextTopic1Group";
-		String urls = "http://localhost:4321:/" + "onebox/pushNotExist," + getBaseUri() + "onebox/pushStandby";
+		String urls = "http://localhost:4321/" + "onebox/pushNotExist," + getBaseUri() + "onebox/pushStandby";
 		SubscriptionView sub = new SubscriptionView();
 		sub.setTopic(topic);
 		sub.setGroup(group);
