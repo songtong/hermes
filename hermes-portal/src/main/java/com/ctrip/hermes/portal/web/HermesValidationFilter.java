@@ -18,7 +18,7 @@ import com.ctrip.hermes.portal.resource.assists.ValidationUtils;
 public class HermesValidationFilter implements Filter {
 	private PortalConfig m_config = PlexusComponentLocator.lookup(PortalConfig.class);
 
-	private String[] m_protectedPages = { "/topic", "/comsumer", "/subscription", "/storage", "/endpoint", "/resender" };
+	private String[] m_protectedPages = { "/console/topic", "/console/consumer", "/console/subscription", "/console/storage", "/console/endpoint", "/console/resender" };
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
