@@ -2,6 +2,7 @@ package com.ctrip.hermes.monitor.service;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +46,9 @@ public class ESMonitorService {
 
 	private static final Logger log = LoggerFactory.getLogger(ESMonitorService.class);
 
-	public static final String DEFAULT_INDEX = "monitor";
+	private static final SimpleDateFormat INDEX_DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd");
+
+	public static final String MONITOR_INDEX_PREFIX = "monitor-";
 
 	private static final String QUERY_AGG_NAME = "hermes-agg";
 
@@ -78,7 +81,8 @@ public class ESMonitorService {
 	}
 
 	public IndexResponse prepareIndex(MonitorItem item) throws IOException {
-		IndexRequestBuilder builder = client.prepareIndex(DEFAULT_INDEX, item.getCategory(), generateId(item));
+		IndexRequestBuilder builder = client.prepareIndex(MONITOR_INDEX_PREFIX + INDEX_DATE_FORMAT.format(new Date()),
+		      item.getCategory(), generateId(item));
 		String source = JSON.toJSONString(item, SerializerFeature.WriteDateUseDateFormat);
 		IndexResponse response = builder.setSource(source).execute().actionGet();
 		return response;
@@ -160,8 +164,8 @@ public class ESMonitorService {
 	}
 
 	public MonitorItem queryLatestMonitorItem(String category) {
-		SearchResponse response = client.prepareSearch(DEFAULT_INDEX).setTypes(category).setSize(1)
-		      .addSort("startDate", SortOrder.DESC).execute().actionGet();
+		SearchResponse response = client.prepareSearch(MONITOR_INDEX_PREFIX + INDEX_DATE_FORMAT.format(new Date()))
+		      .setTypes(category).setSize(1).addSort("startDate", SortOrder.DESC).execute().actionGet();
 		MonitorItem latestItem = null;
 		SearchHits hits = response.getHits();
 		if (hits.getTotalHits() > 0) {
