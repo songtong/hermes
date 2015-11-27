@@ -44,7 +44,7 @@ hermes_storage.run(function(editableOptions) {
 			'type' : scope.selected.type,
 			'id' : ds.id
 		}, ds, function(result) {
-			show_op_info.show("更新Datasource：" + ds.id + " 成功！");
+			show_op_info.show("更新Datasource：" + ds.id + " 成功！",true);
 		});
 	}
 
