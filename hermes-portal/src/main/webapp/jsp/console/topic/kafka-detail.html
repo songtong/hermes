@@ -87,7 +87,7 @@
 					</thead>
 					<tbody>
 						<tr ng-repeat="property in topic.properties">
-							<td  style="width: 5%;"><label ng-bind="$index + 1"></label></td>
+							<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
 							<td>{{property.name}}</td>
 							<td>{{property.value}}</td>
 						</tr>
@@ -102,6 +102,9 @@
 		<div class="panel panel-info">
 			<div class="panel-heading">
 				<label class="label label-info">Partition 信息</label>
+				<button ng-click="add_partition()" class="btn btn-xs btn-success" style="float: right;">
+					<span class="glyphicon glyphicon-plus"></span> 增加 Partition
+				</button>
 			</div>
 			<div class="panel-body">
 				<table class="table table-condensed table-responsive">
@@ -110,13 +113,32 @@
 							<th style="border: none; width: 5%">#</th>
 							<th style="border: none;">Datasource / 读</th>
 							<th style="border: none;">Datasource / 写</th>
+							<th class="col-md-3"></th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr ng-repeat="partition in topic.partitions">
 							<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
-							<td>{{partition.readDatasource}}</td>
-							<td>{{partition.writeDatasource}}</td>
+							<td><span e-form="rowform" e-name="readDatasource" ng-bind="partition.readDatasource" onshow="load_datasource_names()" onbeforesave="check_not_null($data)" editable-select="partition.readDatasource" e-ng-options="storage for storage in datasource_names"></span></td>
+							<td><span e-form="rowform" e-name="writeDatasource" ng-bind="partition.writeDatasource" onbeforesave="check_not_null($data)" editable-select="partition.writeDatasource" e-ng-options="storage for storage in datasource_names"></span></td>
+							<td width="150px">
+								<form editable-form name="rowform" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted==partition" onbeforesave="save_partition($data,$index)">
+									<button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary btn-xs">
+										<span class="glyphicon glyphicon-floppy-save"></span> 保存
+									</button>
+									<button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-default btn-xs">
+										<span class="glyphicon glyphicon-remove-circle"></span> 取消
+									</button>
+								</form>
+								<div class="buttons" ng-show="!rowform.$visible">
+									<button class="btn btn-warning btn-xs" ng-if=false ng-click="rowform.$show()">
+										<span class="glyphicon glyphicon-edit"></span> 修改
+									</button>
+									<button class="btn btn-danger btn-xs" ng-if=false ng-click="remove_partition($index)">
+										<span class="glyphicon glyphicon-remove"></span> 删除
+									</button>
+								</div>
+							</td>
 						</tr>
 					</tbody>
 				</table>

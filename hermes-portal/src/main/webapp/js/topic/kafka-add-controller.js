@@ -1,7 +1,7 @@
 topic_module.controller('kafka-add-controller', [ '$scope', '$resource', 'TopicService', function($scope, $resource, TopicService) {
 	$scope.new_topic = {
 		partitions : [ {} ],
-		consumerRetryPolicy : '1:[3,6,9]',
+		consumerRetryPolicy : '3:[3,3000]',
 		ackTimeoutSeconds : 5,
 		endpointType : 'kafka',
 		storageType : 'kafka',
