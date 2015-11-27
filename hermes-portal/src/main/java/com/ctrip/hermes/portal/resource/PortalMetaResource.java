@@ -142,7 +142,7 @@ public class PortalMetaResource {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
 		Meta meta = metaService.getMeta();
-		Storage storage = metaService.getStorages().get(type);
+		Storage storage = meta.getStorages().get(type);
 		if (storage == null) {
 			throw new RestException("Invalid storage type", Status.NOT_FOUND);
 		}
