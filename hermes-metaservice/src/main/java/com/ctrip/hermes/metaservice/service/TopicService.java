@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import org.I0Itec.zkclient.ZkClient;
+import org.I0Itec.zkclient.ZkConnection;
 import org.I0Itec.zkclient.exception.ZkMarshallingError;
 import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
 
 import kafka.admin.AdminUtils;
+import kafka.utils.ZkUtils;
 
 @Named
 public class TopicService {
@@ -131,9 +133,10 @@ public class TopicService {
 			}
 		}
 
-		ZkClient zkClient = new ZkClient(zkConnect);
+		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		int partition = DEFAULT_KAFKA_PARTITIONS;
+		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
 		int replication = DEFAULT_KAFKA_REPLICATION_FACTOR;
 		Properties topicProp = new Properties();
 		for (Property prop : topic.getProperties()) {
@@ -147,8 +150,8 @@ public class TopicService {
 		}
 
 		m_logger.info("create topic in kafka, topic {}, partition {}, replication {}, prop {}", topic.getName(),
-				partition, replication, topicProp);
-		AdminUtils.createTopic(zkClient, topic.getName(), partition, replication, topicProp);
+		      partition, replication, topicProp);
+		AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
 	}
 
 	/**
@@ -179,11 +182,12 @@ public class TopicService {
 			}
 		}
 
-		ZkClient zkClient = new ZkClient(zkConnect);
+		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
+		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect),false);
 		zkClient.setZkSerializer(new ZKStringSerializer());
 
 		m_logger.info("delete topic in kafka, topic {}", topic.getName());
-		AdminUtils.deleteTopic(zkClient, topic.getName());
+		AdminUtils.deleteTopic(zkUtils, topic.getName());
 	}
 
 	/**
@@ -214,8 +218,9 @@ public class TopicService {
 			}
 		}
 
-		ZkClient zkClient = new ZkClient(zkConnect);
+		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
 		zkClient.setZkSerializer(new ZKStringSerializer());
+		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
 		Properties topicProp = new Properties();
 		for (Property prop : topic.getProperties()) {
 			if (validKafkaConfigKeys.contains(prop.getName())) {
@@ -224,7 +229,7 @@ public class TopicService {
 		}
 
 		m_logger.info("config topic in kafka, topic {}, prop {}", topic.getName(), topicProp);
-		AdminUtils.changeTopicConfig(zkClient, topic.getName(), topicProp);
+		AdminUtils.changeTopicConfig(zkUtils, topic.getName(), topicProp);
 	}
 
 	/**

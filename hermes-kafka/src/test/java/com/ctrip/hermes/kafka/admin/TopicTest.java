@@ -8,8 +8,10 @@ import java.util.Properties;
 
 import kafka.admin.AdminUtils;
 import kafka.api.TopicMetadata;
+import kafka.utils.ZkUtils;
 
 import org.I0Itec.zkclient.ZkClient;
+import org.I0Itec.zkclient.ZkConnection;
 import org.junit.Test;
 
 public class TopicTest {
@@ -18,17 +20,18 @@ public class TopicTest {
 	public void createTopicInTestEnv() {
 		// String LOCALHOST_BROKER = "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092";
 		String ZOOKEEPER_CONNECT = "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181";
-		ZkClient zkClient = new ZkClient(ZOOKEEPER_CONNECT);
+		ZkClient zkClient = new ZkClient(new ZkConnection(ZOOKEEPER_CONNECT));
+		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(ZOOKEEPER_CONNECT), false);
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		int partition = 1;
 		int replication = 1;
 		String topic = String.format("kafka.test_create_topic_p%s_r%s", partition, replication);
-		if (AdminUtils.topicExists(zkClient, topic)) {
-			TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient);
+		if (AdminUtils.topicExists(zkUtils, topic)) {
+			TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkUtils);
 			System.out.println(topicMetadata);
-			AdminUtils.deleteTopic(zkClient, topic);
+			AdminUtils.deleteTopic(zkUtils, topic);
 		}
-		AdminUtils.createTopic(zkClient, topic, partition, replication, new Properties());
+		AdminUtils.createTopic(zkUtils, topic, partition, replication, new Properties());
 	}
 
 	@Test

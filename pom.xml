@@ -9,8 +9,8 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>hermes-core</module>
 		<module>hermes-metrics</module>
+		<module>hermes-core</module>
 		<module>hermes-metaservice</module>
 		<module>hermes-metaserver</module>
 		<module>hermes-producer</module>
@@ -133,12 +133,12 @@
 			<dependency>
 				<groupId>org.apache.kafka</groupId>
 				<artifactId>kafka-clients</artifactId>
-				<version>0.8.2.1</version>
+				<version>0.9.0.0</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.kafka</groupId>
 				<artifactId>kafka_2.10</artifactId>
-				<version>0.8.2.1</version>
+				<version>0.9.0.0</version>
 			</dependency>
 			<dependency>
 				<groupId>mysql</groupId>

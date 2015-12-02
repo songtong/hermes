@@ -26,11 +26,14 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroDeserializer;
 import com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroSerializer;
 import com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient;
+import com.ctrip.hermes.kafka.producer.KafkaMessageSender;
 import com.ctrip.hermes.kafka.producer.KafkaSendResult;
 import com.ctrip.hermes.kafka.server.MockKafkaCluster;
 import com.ctrip.hermes.kafka.server.MockZookeeper;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
+import com.ctrip.hermes.producer.sender.MessageSender;
 
 public class KafkaAvroTest {
 
@@ -41,14 +44,18 @@ public class KafkaAvroTest {
 	private static String topic = "kafka.SimpleAvroTopic";
 
 	@BeforeClass
-	public static void before() {
+	public static void beforeClass() {
 		zk = new MockZookeeper();
 		kafkaCluster = new MockKafkaCluster(zk, 3);
 		kafkaCluster.createTopic(topic, 3, 1);
 	}
 
 	@AfterClass
-	public static void after() {
+	public static void afterClass() {
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
+		
 		kafkaCluster.stop();
 		zk.stop();
 	}
@@ -87,6 +94,7 @@ public class KafkaAvroTest {
 		});
 
 		System.out.println("Starting consumer...");
+		Thread.sleep(15000);
 
 		int i = 0;
 		while (i++ < 10) {

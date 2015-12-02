@@ -21,7 +21,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
-			<artifactId>kafka_2.10</artifactId>
+			<artifactId>kafka-clients</artifactId>
 			<exclusions>
 				<exclusion>
 					<artifactId>log4j</artifactId>
@@ -36,6 +36,11 @@
 					<groupId>io.netty</groupId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka_2.10</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.avro</groupId>

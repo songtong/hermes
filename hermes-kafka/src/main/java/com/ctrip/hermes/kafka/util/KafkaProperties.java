@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.unidal.net.Networks;
 
@@ -16,7 +18,8 @@ public class KafkaProperties {
 	 */
 	public static Properties getDefaultKafkaProducerProperties() {
 		Properties producerProperties = new Properties();
-		InputStream producerStream = KafkaProperties.class.getResourceAsStream("/hermes-producer-defaultkafka.properties");
+		InputStream producerStream = KafkaProperties.class
+		      .getResourceAsStream("/hermes-producer-defaultkafka.properties");
 		if (producerStream != null) {
 			try {
 				producerProperties.load(producerStream);
@@ -38,7 +41,8 @@ public class KafkaProperties {
 	 */
 	public static Properties getDefaultKafkaConsumerProperties() {
 		Properties consumerProperties = new Properties();
-		InputStream consumerStream = KafkaProperties.class.getResourceAsStream("/hermes-consumer-defaultkafka.properties");
+		InputStream consumerStream = KafkaProperties.class
+		      .getResourceAsStream("/hermes-consumer-defaultkafka.properties");
 		if (consumerStream != null) {
 			try {
 				consumerProperties.load(consumerStream);
@@ -63,7 +67,7 @@ public class KafkaProperties {
 		producerProp.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
 		producerProp.put("key.serializer", StringSerializer.class.getCanonicalName());
 		if (!producerProp.containsKey("client.id")) {
-			producerProp.put("client.id", Networks.forIp().getLocalHostAddress());
+			producerProp.put("client.id", Networks.forIp().getLocalHostAddress() + "_" + System.currentTimeMillis());
 		}
 
 		return producerProp;
@@ -75,6 +79,12 @@ public class KafkaProperties {
 	 * @return
 	 */
 	public static Properties overrideByCtripDefaultConsumerSetting(Properties consumerProp) {
+		consumerProp.put("value.deserializer", ByteArrayDeserializer.class.getCanonicalName());
+		consumerProp.put("key.deserializer", StringDeserializer.class.getCanonicalName());
+		if (!consumerProp.containsKey("client.id")) {
+			consumerProp.put("client.id", Networks.forIp().getLocalHostAddress() + "_" + System.currentTimeMillis());
+		}
+		
 		return consumerProp;
 	}
 }

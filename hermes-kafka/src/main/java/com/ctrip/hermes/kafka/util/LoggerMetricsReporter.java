@@ -78,6 +78,12 @@ public class LoggerMetricsReporter implements MetricsReporter {
 		}, millis, millis, TimeUnit.MILLISECONDS);
 	}
 
+	private String getMetricKey(MetricName metricName) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(metricName.group()).append('|').append(metricName.name()).append('|').append(metricName.tags());
+		return sb.toString();
+	}
+
 	@Override
 	public void init(List<KafkaMetric> metrics) {
 		for (KafkaMetric metric : metrics) {
@@ -90,9 +96,8 @@ public class LoggerMetricsReporter implements MetricsReporter {
 		addMetric(metric);
 	}
 
-	private String getMetricKey(MetricName metricName) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(metricName.group()).append('|').append(metricName.name()).append('|').append(metricName.tags());
-		return sb.toString();
+	@Override
+	public void metricRemoval(KafkaMetric metric) {
+		metrics.remove(metric.metricName());
 	}
 }

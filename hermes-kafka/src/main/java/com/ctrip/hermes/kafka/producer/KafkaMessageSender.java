@@ -117,10 +117,12 @@ public class KafkaMessageSender implements MessageSender {
 		return new KafkaFuture(sendResult);
 	}
 
+	//FIXME how to close when singleton
 	public void close() {
 		for (KafkaProducer<String, byte[]> producer : m_producers.values()) {
 			producer.close();
 		}
+		m_producers.clear();
 	}
 
 }
