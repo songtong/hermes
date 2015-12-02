@@ -38,7 +38,7 @@ public class HttpPushService implements Initializable, Disposable {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(HttpPushService.class);
 
-	@Inject
+	@Inject(value = "CatBizLogger")
 	private BizLogger m_bizLogger;
 
 	@Inject

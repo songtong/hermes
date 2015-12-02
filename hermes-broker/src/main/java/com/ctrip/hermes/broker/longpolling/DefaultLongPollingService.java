@@ -32,7 +32,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 @Named(type = LongPollingService.class)
 public class DefaultLongPollingService extends AbstractLongPollingService implements Initializable {
 
-	@Inject
+	@Inject(value = "CatBizLogger")
 	private BizLogger m_bizLogger;
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultLongPollingService.class);

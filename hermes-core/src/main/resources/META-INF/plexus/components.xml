@@ -189,7 +189,13 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.log.BizLogger</role>
-			<implementation>com.ctrip.hermes.core.log.DefaultBizLogger</implementation>
+			<role-hint>FileBizLogger</role-hint>
+			<implementation>com.ctrip.hermes.core.log.FileBizLogger</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.log.BizLogger</role>
+			<role-hint>CatBizLogger</role-hint>
+			<implementation>com.ctrip.hermes.core.log.CatBizLogger</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.service.RunningStatusStatisticsService</role>

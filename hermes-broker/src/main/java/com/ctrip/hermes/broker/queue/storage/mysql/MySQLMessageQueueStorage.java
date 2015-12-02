@@ -61,7 +61,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	private static final Logger log = LoggerFactory.getLogger(MySQLMessageQueueStorage.class);
 
-	@Inject
+	@Inject(value = "CatBizLogger")
 	private BizLogger m_bizLogger;
 
 	@Inject

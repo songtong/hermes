@@ -63,7 +63,7 @@ public class TopicsResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(TopicsResource.class);
 
-	private static final BizLogger bizLogger = PlexusComponentLocator.lookup(BizLogger.class);
+	private static final BizLogger bizLogger = PlexusComponentLocator.lookup(BizLogger.class,	"CatBizLogger");
 
 	public static final String PARTITION_KEY = "X-Hermes-Partition-Key";
 

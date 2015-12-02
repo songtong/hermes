@@ -46,7 +46,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 public class SendMessageCommandProcessor implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessor.class);
 
-	@Inject
+	@Inject(value = "CatBizLogger")
 	private BizLogger m_bizLogger;
 
 	@Inject

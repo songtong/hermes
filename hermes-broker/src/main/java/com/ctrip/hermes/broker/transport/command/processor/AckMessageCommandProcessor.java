@@ -29,7 +29,7 @@ import com.ctrip.hermes.core.transport.netty.NettyUtils;
 public class AckMessageCommandProcessor implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(AckMessageCommandProcessor.class);
 
-	@Inject
+	@Inject(value = "CatBizLogger")
 	private BizLogger m_bizLogger;
 
 	@Inject
