@@ -75,7 +75,6 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 		ensurePath(ZKPathUtils.getMetaServersZkPath());
 		ensurePath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
 		ensurePath(ZKPathUtils.getBaseMetaVersionZkPath());
-		ensurePath(ZKPathUtils.getBrokerAssignmentRootZkPath());
 		ensurePath(ZKPathUtils.getBrokerLeaseRootZkPath());
 		ensurePath(ZKPathUtils.getConsumerLeaseRootZkPath());
 
@@ -129,7 +128,6 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 		startEngine();
 		verify(m_metaHolder, times(1)).update(anyMap());
 		verify(m_metaServerAssignmentHolder, times(1)).reassign(anyListOf(Server.class), anyListOf(Topic.class));
-		verify(m_brokerAssignmentHolder, times(1)).reload();
 		verify(m_brokerAssignmentHolder, times(1)).reassign(anyMapOf(String.class, ClientContext.class),
 		      anyListOf(Topic.class));
 	}

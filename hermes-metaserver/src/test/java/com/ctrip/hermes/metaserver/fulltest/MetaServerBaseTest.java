@@ -169,7 +169,6 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		zkService.ensurePath(ZKPathUtils.getMetaInfoZkPath());
 		zkService.ensurePath(ZKPathUtils.getBrokerLeasesZkPath());
 		zkService.ensurePath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
-		zkService.ensurePath(ZKPathUtils.getBrokerAssignmentRootZkPath());
 		zkService.ensurePath(ZKPathUtils.getConsumerLeaseRootZkPath());
 	}
 

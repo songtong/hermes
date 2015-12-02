@@ -145,7 +145,6 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		      event.getStateHolder(), event.getVersion()));
 		ArrayList<Topic> topics = new ArrayList<>(baseMeta.getTopics().values());
 
-		m_brokerAssignmentHolder.reload();
 		m_brokerAssignmentHolder.reassign(brokers, topics);
 
 		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoint = m_endpointMaker.makeEndpoints(event.getEventBus(),

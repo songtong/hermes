@@ -5,7 +5,6 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.ctrip.hermes.metaserver.assign.AssignBalancerTest;
-import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolderTest;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolderTest;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocatorTest;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategyTest;
@@ -35,7 +34,6 @@ LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest.class,//
       DefaultBrokerPartitionAssigningStrategyTest.class, //
       DefaultBrokerLeaseAllocatorTest.class, //
       BrokerLeaseHolderTest.class, //
-      BrokerAssignmentHolderTest.class, //
       ActiveConsumerListTest.class, //
       ConsumerAssignmentHolderTest.class, //
       NonOrderedConsumeConsumerLeaseAllocatorTest.class, //
@@ -45,7 +43,7 @@ LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest.class,//
       EndpointMakerTest.class, //
       FollowerEventEngineTest.class, //
       LeaderEventEngineTest.class, //
-      // add test classes here
+// add test classes here
 
 })
 public class AllTests {

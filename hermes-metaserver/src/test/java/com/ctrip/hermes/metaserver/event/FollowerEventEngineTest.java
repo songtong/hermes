@@ -58,7 +58,6 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 		ensurePath(ZKPathUtils.getMetaInfoZkPath());
 		ensurePath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
 		ensurePath(ZKPathUtils.getBaseMetaVersionZkPath());
-		ensurePath(ZKPathUtils.getBrokerAssignmentRootZkPath());
 		ensurePath(ZKPathUtils.getBrokerLeaseRootZkPath());
 		ensurePath(ZKPathUtils.getConsumerLeaseRootZkPath());
 

@@ -201,12 +201,6 @@
 			<implementation>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
 				</requirement>
 			</requirements>

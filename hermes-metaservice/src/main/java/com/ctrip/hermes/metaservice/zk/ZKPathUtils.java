@@ -26,12 +26,6 @@ public class ZKPathUtils {
 
 	private static final String META_SERVER_ASSIGNMENT_PATH_PATTERN = META_SERVER_ASSIGNMENT_PATH_ROOT + "/%s";
 
-	private static final String BROKER_ASSIGNMENT_PATH_ROOT = "/broker-assignment";
-
-	private static final String BROKER_ASSIGNMENT_PATH_PREFIX_PATTERN = BROKER_ASSIGNMENT_PATH_ROOT + "/%s";
-
-	private static final String BROKER_ASSIGNMENT_PATH_PATTERN = BROKER_ASSIGNMENT_PATH_PREFIX_PATTERN + "/%s";
-
 	private static final String CONSUMER_LEASE_PATH_ROOT = "/consumer-lease";
 
 	private static final String CONSUMER_LEASE_PATH_PREFIX_PATTERN = CONSUMER_LEASE_PATH_ROOT + "/%s";
@@ -192,18 +186,6 @@ public class ZKPathUtils {
 
 	public static String getConsumerLeaseRootZkPath() {
 		return CONSUMER_LEASE_PATH_ROOT;
-	}
-
-	public static String getBrokerAssignmentZkPath(String topic, int partition) {
-		return String.format(BROKER_ASSIGNMENT_PATH_PATTERN, topic, partition);
-	}
-
-	public static String getBrokerAssignmentRootZkPath() {
-		return BROKER_ASSIGNMENT_PATH_ROOT;
-	}
-
-	public static String getBrokerAssignmentTopicParentZkPath(String topic) {
-		return String.format(BROKER_ASSIGNMENT_PATH_PREFIX_PATTERN, topic);
 	}
 
 	public static String getMetaServerAssignmentRootZkPath() {
