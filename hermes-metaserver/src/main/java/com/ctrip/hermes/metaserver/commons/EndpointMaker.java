@@ -51,9 +51,12 @@ public class EndpointMaker implements Initializable {
 	}
 
 	public Map<String, Map<Integer, Endpoint>> makeEndpoints(EventBus eventBus, long version,
-	      ClusterStateHolder stateHolder, Map<String, Assignment<Integer>> brokerAssignments) throws Exception {
+	      ClusterStateHolder stateHolder, Map<String, Assignment<Integer>> brokerAssignments, boolean mergeOnce)
+	      throws Exception {
 
 		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoints = new HashMap<>();
+
+		Pair<Long, Long> delayRebalanceTimespan = new Pair<>(0L, 0L);
 
 		for (Map.Entry<String, Assignment<Integer>> topicAssignment : brokerAssignments.entrySet()) {
 
@@ -66,7 +69,8 @@ public class EndpointMaker implements Initializable {
 
 				for (Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment : assignment.entrySet()) {
 					topicPartition2Endpoints.get(topic).putAll(
-					      makePartition2Endpoints(eventBus, version, stateHolder, topic, partitionAssignment));
+					      makePartition2Endpoints(eventBus, version, stateHolder, topic, partitionAssignment,
+					            delayRebalanceTimespan));
 
 				}
 
@@ -74,12 +78,17 @@ public class EndpointMaker implements Initializable {
 
 		}
 
+		if (!mergeOnce) {
+			scheduleDelayReblanceTasks(eventBus, version, stateHolder, delayRebalanceTimespan);
+		}
+
 		return topicPartition2Endpoints;
 	}
 
 	private Map<Integer, Endpoint> makePartition2Endpoints(EventBus eventBus, long version,
 	      ClusterStateHolder stateHolder, String topic,
-	      Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment) throws Exception {
+	      Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment, Pair<Long, Long> delayRebalanceTimespan)
+	      throws Exception {
 
 		Map<Integer, Endpoint> partition2Endpoints = new HashMap<>();
 
@@ -114,7 +123,7 @@ public class EndpointMaker implements Initializable {
 					endpoint.setId(brokerLeaseEntry.getKey());
 					endpoint.setPort(leaseHoldingBroker.getPort());
 
-					scheduleLeaseExpireBrokerReblanceTask(eventBus, version, stateHolder, lease);
+					updateDelayRebalanceTimespan(delayRebalanceTimespan, lease);
 				}
 			}
 
@@ -124,18 +133,48 @@ public class EndpointMaker implements Initializable {
 		return partition2Endpoints;
 	}
 
-	private void scheduleLeaseExpireBrokerReblanceTask(final EventBus eventBus, final long version,
-	      final ClusterStateHolder stateHolder, Lease lease) {
-		long delayMillis = lease.getRemainingTime() > 0 ? lease.getRemainingTime()
-		      + m_config.getLeaseExpireRebalanceTriggerDelayMillis() : m_config
-		      .getLeaseExpireRebalanceTriggerDelayMillis();
-		m_scheduledExecutor.schedule(new Runnable() {
+	private void updateDelayRebalanceTimespan(Pair<Long, Long> delayRebalanceTimespan, Lease lease) {
+		long rebalanceTaskDelay = calculateRebalanceTaskDelay(lease);
 
-			@Override
-			public void run() {
-				eventBus.pubEvent(new Event(EventType.BROKER_LEASE_CHANGED, version, stateHolder, null));
+		if (delayRebalanceTimespan.getKey() == 0) {
+			delayRebalanceTimespan.setKey(rebalanceTaskDelay);
+		}
+		if (delayRebalanceTimespan.getValue() == 0) {
+			delayRebalanceTimespan.setValue(rebalanceTaskDelay);
+		}
+
+		if (rebalanceTaskDelay < delayRebalanceTimespan.getKey()) {
+			delayRebalanceTimespan.setKey(rebalanceTaskDelay);
+		} else if (rebalanceTaskDelay > delayRebalanceTimespan.getValue()) {
+			delayRebalanceTimespan.setValue(rebalanceTaskDelay);
+		}
+	}
+
+	private long calculateRebalanceTaskDelay(Lease lease) {
+		long leaseRemainingTime = lease.getRemainingTime();
+		return leaseRemainingTime > 0 ? leaseRemainingTime + m_config.getLeaseExpireRebalanceTriggerDelayMillis()
+		      : m_config.getLeaseExpireRebalanceTriggerDelayMillis();
+	}
+
+	private void scheduleDelayReblanceTasks(final EventBus eventBus, final long version,
+	      final ClusterStateHolder stateHolder, Pair<Long, Long> delayTimespan) {
+
+		long interval = 1000L;
+
+		Long delayStart = delayTimespan.getKey();
+		Long delayEnd = delayTimespan.getValue();
+		if (delayStart > 0) {
+			for (long delay = delayStart; delay < delayEnd + interval; delay += interval) {
+				m_scheduledExecutor.schedule(new Runnable() {
+
+					@Override
+					public void run() {
+						eventBus.pubEvent(new Event(EventType.BROKER_LEASE_CHANGED, version, stateHolder, Boolean
+						      .valueOf(true)));
+					}
+				}, delay, TimeUnit.MILLISECONDS);
 			}
-		}, delayMillis, TimeUnit.MILLISECONDS);
+		}
 	}
 
 	@Override

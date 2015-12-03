@@ -51,7 +51,7 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 
 		m_metaHolder.setBaseMeta(baseMeta);
 		m_metaHolder.update(m_endpointMaker.makeEndpoints(event.getEventBus(), event.getVersion(),
-		      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments()));
+		      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), false));
 
 		m_metaServerAssignmentHolder.reassign(null, topics);
 	}

@@ -148,7 +148,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		m_brokerAssignmentHolder.reassign(brokers, topics);
 
 		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoint = m_endpointMaker.makeEndpoints(event.getEventBus(),
-		      event.getVersion(), event.getStateHolder(), m_brokerAssignmentHolder.getAssignments());
+		      event.getVersion(), event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), false);
 
 		m_metaHolder.setBaseMeta(baseMeta);
 		m_metaHolder.setMetaServers(metaServers);

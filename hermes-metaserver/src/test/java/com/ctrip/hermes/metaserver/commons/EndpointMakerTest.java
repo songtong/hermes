@@ -76,7 +76,7 @@ public class EndpointMakerTest {
 		when(m_brokerLeaseHolder.getAllValidLeases()).thenReturn(leases);
 		when(m_scheduledExecutor.schedule(any(Runnable.class), anyLong(), eq(TimeUnit.MILLISECONDS))).thenReturn(null);
 
-		Map<String, Map<Integer, Endpoint>> endpoints = m_maker.makeEndpoints(null, -1, null, brokerAssignments);
+		Map<String, Map<Integer, Endpoint>> endpoints = m_maker.makeEndpoints(null, -1, null, brokerAssignments, false);
 
 		verify(m_scheduledExecutor, times(1)).schedule(any(Runnable.class), anyLong(), eq(TimeUnit.MILLISECONDS));
 

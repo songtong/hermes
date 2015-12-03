@@ -43,7 +43,7 @@ public class BrokerListChangedEventHandler extends BaseEventHandler {
 
 			m_brokerAssignmentHolder.reassign(brokers);
 			m_metaHolder.update(m_endpointMaker.makeEndpoints(event.getEventBus(), event.getVersion(),
-			      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments()));
+			      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), false));
 		}
 	}
 

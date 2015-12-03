@@ -36,9 +36,16 @@ public class BrokerLeaseChangedEventHandler extends BaseEventHandler {
 
 	@Override
 	protected void processEvent(Event event) throws Exception {
+		Object data = event.getData();
+		boolean mergeOnce = false;
+
+		if (data != null) {
+			mergeOnce = (Boolean) data;
+		}
+
 		m_brokerAssignmentHolder.reassign(new ArrayList<Topic>(m_metaHolder.getMeta().getTopics().values()));
 		m_metaHolder.update(m_endpointMaker.makeEndpoints(event.getEventBus(), event.getVersion(),
-		      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments()));
+		      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), mergeOnce));
 	}
 
 	@Override
