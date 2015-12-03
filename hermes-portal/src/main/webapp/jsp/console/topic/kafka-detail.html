@@ -10,7 +10,7 @@
 					</button>
 					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="topicForm.$waiting" ng-click="topicForm.$cancel()">取消</button>
 				</form>
-				<button class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="topicForm.$show()" ng-show="!topicForm.$visible">
+				<button id ="updateButton" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="topicForm.$show()" ng-show="!topicForm.$visible">
 					<span class="glyphicon glyphicon-pencil"></span> 修改
 				</button>
 			</div>
@@ -102,7 +102,7 @@
 		<div class="panel panel-info">
 			<div class="panel-heading">
 				<label class="label label-info">Partition 信息</label>
-				<button ng-click="add_partition()" class="btn btn-xs btn-success" style="float: right;">
+				<button ng-click="add_partition()" class="btn btn-xs btn-success" style="float: right;" ng-show="topicForm.$visible">
 					<span class="glyphicon glyphicon-plus"></span> 增加 Partition
 				</button>
 			</div>
@@ -119,25 +119,17 @@
 					<tbody>
 						<tr ng-repeat="partition in topic.partitions">
 							<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
-							<td><span e-form="rowform" e-name="readDatasource" ng-bind="partition.readDatasource" onshow="load_datasource_names()" onbeforesave="check_not_null($data)" editable-select="partition.readDatasource" e-ng-options="storage for storage in datasource_names"></span></td>
-							<td><span e-form="rowform" e-name="writeDatasource" ng-bind="partition.writeDatasource" onbeforesave="check_not_null($data)" editable-select="partition.writeDatasource" e-ng-options="storage for storage in datasource_names"></span></td>
+							<td><span ng-bind="partition.readDatasource"></span></td>
+							<td><span ng-bind="partition.writeDatasource"></span></td>
+						</tr>
+						<tr ng-repeat="partition in new_partitions" ng-show="topicForm.$visible">
+							<td style="width: 5%;"><label ng-bind="$index + 1 + {{partitionCount}}"></td>
+							<td><select ng-model="partition.readDatasource" onshow="load_datasource_names()" ng-options="ds for ds in datasource_names" class="form-control"></select></td>
+							<td><select ng-model="partition.writeDatasource" ng-options="ds for ds in datasource_names" class="form-control"></select></td>
 							<td width="150px">
-								<form editable-form name="rowform" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted==partition" onbeforesave="save_partition($data,$index)">
-									<button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary btn-xs">
-										<span class="glyphicon glyphicon-floppy-save"></span> 保存
-									</button>
-									<button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-default btn-xs">
-										<span class="glyphicon glyphicon-remove-circle"></span> 取消
-									</button>
-								</form>
-								<div class="buttons" ng-show="!rowform.$visible">
-									<button class="btn btn-warning btn-xs" ng-if=false ng-click="rowform.$show()">
-										<span class="glyphicon glyphicon-edit"></span> 修改
-									</button>
-									<button class="btn btn-danger btn-xs" ng-if=false ng-click="remove_partition($index)">
-										<span class="glyphicon glyphicon-remove"></span> 删除
-									</button>
-								</div>
+								<button type="button" ng-show="partition.id==-1" ng-click="remove_partition($index)" class="btn btn-danger btn-xs">
+									<span class="glyphicon glyphicon-remove-circle"></span> 删除
+								</button>
 							</td>
 						</tr>
 					</tbody>
