@@ -39,12 +39,12 @@ public class TopicService {
 	private ZookeeperService m_zookeeperService;
 
 	private List<String> validKafkaConfigKeys = new ArrayList<String>();
-	
+
 	public static final int DEFAULT_KAFKA_PARTITIONS = 3;
-	
+
 	public static final int DEFAULT_KAFKA_REPLICATION_FACTOR = 2;
 
-	public TopicService(){
+	public TopicService() {
 		validKafkaConfigKeys.add("segment.index.bytes");
 		validKafkaConfigKeys.add("segment.jitter.ms");
 		validKafkaConfigKeys.add("min.cleanable.dirty.ratio");
@@ -61,7 +61,7 @@ public class TopicService {
 		validKafkaConfigKeys.add("segment.bytes");
 		validKafkaConfigKeys.add("segment.ms");
 	}
-	
+
 	/**
 	 * @param topic
 	 * @return
@@ -133,7 +133,7 @@ public class TopicService {
 
 		ZkClient zkClient = new ZkClient(zkConnect);
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		int partition = DEFAULT_KAFKA_PARTITIONS; 
+		int partition = DEFAULT_KAFKA_PARTITIONS;
 		int replication = DEFAULT_KAFKA_REPLICATION_FACTOR;
 		Properties topicProp = new Properties();
 		for (Property prop : topic.getProperties()) {
@@ -147,7 +147,7 @@ public class TopicService {
 		}
 
 		m_logger.info("create topic in kafka, topic {}, partition {}, replication {}, prop {}", topic.getName(),
-		      partition, replication, topicProp);
+				partition, replication, topicProp);
 		AdminUtils.createTopic(zkClient, topic.getName(), partition, replication, topicProp);
 	}
 
@@ -294,12 +294,12 @@ public class TopicService {
 	/**
 	 * @param topic
 	 * @return
-	 * @throws DalException
+	 * @throws Exception
 	 */
-	public Topic updateTopic(Topic topic) throws DalException {
+	public Topic updateTopic(Topic topic) throws Exception {
 		Meta meta = m_metaService.getMeta();
 		Topic originTopic = meta.findTopic(topic.getName());
-		
+
 		originTopic.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 		originTopic.setCodecType(topic.getCodecType());
 		originTopic.setConsumerRetryPolicy(topic.getConsumerRetryPolicy());
@@ -309,8 +309,17 @@ public class TopicService {
 		originTopic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 		originTopic.setStatus(topic.getStatus());
 
+		List<Partition> partitions = new ArrayList<>();
+		for (Partition partition : topic.getPartitions()) {
+			if (partition.getId() == -1) {
+				partitions.add(partition);
+			}
+		}
+		addPartitionsForTopic(originTopic, partitions);
+
 		meta.removeTopic(originTopic.getName());
 		meta.addTopic(originTopic);
+
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
@@ -318,6 +327,33 @@ public class TopicService {
 
 		m_metaService.updateMeta(meta);
 		return originTopic;
+	}
+
+	private Topic addPartitionsForTopic(Topic topic, List<Partition> partitions) throws Exception {
+
+		int partitionId = 0;
+		for (Partition p : topic.getPartitions()) {
+			if (p.getId() != null && p.getId() > partitionId) {
+				partitionId = p.getId();
+			}
+		}
+
+		for (Partition partition : partitions) {
+			partitionId++;
+			partition.setId(partitionId);
+			topic.addPartition(partition);
+			if (Storage.MYSQL.equals(topic.getStorageType())) {
+				if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
+					topic.removePartition(partition.getId());
+					partitionId--;
+					m_logger.error("Add new topic partition failed, please try later.");
+					throw new RuntimeException("Add new topic partition failed, please try later.");
+				}
+
+			}
+		}
+
+		return topic;
 	}
 
 	public Integer queryStorageSize(String ds) throws StorageHandleErrorException {
@@ -333,7 +369,7 @@ public class TopicService {
 	}
 
 	public List<StoragePartition> queryStorageTablePartitions(String ds, String table)
-	      throws StorageHandleErrorException {
+			throws StorageHandleErrorException {
 		return m_topicStorageService.queryTablePartitions(ds, table);
 	}
 
@@ -342,7 +378,7 @@ public class TopicService {
 	 * @param topicName
 	 * @param partition
 	 */
-	public Topic addPartitionForTopic(String topicName, Partition partition) throws Exception {
+	public Topic addPartitionsForTopic(String topicName, List<Partition> partitions) throws Exception {
 		Meta meta = m_metaService.getMeta();
 		Topic topic = meta.findTopic(topicName);
 
@@ -355,27 +391,30 @@ public class TopicService {
 			}
 		}
 
-		partition.setId(partitionId + 1);
+		for (Partition partition : partitions) {
+			partition.setId(partitionId++);
+			topic.addPartition(partition);
+			if (Storage.MYSQL.equals(topic.getStorageType())) {
+				if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
+					topic.removePartition(partition.getId());
+					partitionId--;
+					m_logger.error("Add new topic partition failed, please try later.");
+					throw new RuntimeException("Add new topic partition failed, please try later.");
+				}
 
-		topic.addPartition(partition);
+			}
+		}
 
 		meta.removeTopic(topicName);
 		meta.addTopic(topic);
 
+		if (!m_metaService.updateMeta(meta)) {
+			// 增加回滚
+			throw new RuntimeException("Update meta failed, please try later");
+		}
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
-			
-			if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
-				m_logger.error("Add new topic partition failed, please try later.");
-				throw new RuntimeException("Add new topic partition failed, please try later.");
-			}
-
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
-		}
-
-		if (!m_metaService.updateMeta(meta)) {
-			//增加回滚
-			throw new RuntimeException("Update meta failed, please try later");
 		}
 
 		return topic;

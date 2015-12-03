@@ -10,6 +10,7 @@ topic_module.run(function(editableOptions) {
 
 	scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {
 		scope.topic = result;
+		scope.partitionCount = scope.topic.partitions.length;
 	});
 	scope.consumers = TopicService.fetch_consumers_for_topic(scope.topic_name).then(function(result) {
 		scope.consumers = result;
@@ -21,16 +22,23 @@ topic_module.run(function(editableOptions) {
 		});
 	}
 	scope.update_topic = function() {
+		scope.topic.partitions = scope.topic.partitions.concat(scope.new_partitions);
 		bootbox.confirm({
 			title : "请确认",
 			message : "确认要修改 Topic: <label class='label label-success'>" + scope.topic_name + "</label> 吗？",
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
+					document.getElementById("updateButton").disabled = "disabled";
+					show_op_info.show("更新中，请稍候......", true);
 					TopicService.update_topic(scope.topic_name, scope.topic).then(function(result) {
+						document.getElementById("updateButton").disabled = false;
 						show_op_info.show("修改topic ( " + scope.topic_name + " ) 成功!", true);
 						scope.topic = result;
+						scope.new_partitions = [];
+						scope.partitionCount = scope.topic.partitions.length;
 					}, function(data) {
+						document.getElementById("updateButton").disabled = false;
 						show_op_info.show("修改topic ( " + scope.topic_name + " ) 失败!" + data, false);
 					});
 				} else {
@@ -41,14 +49,16 @@ topic_module.run(function(editableOptions) {
 			}
 		});
 	}
+	scope.new_partitions = [];
 	scope.add_partition = function() {
+		scope.load_datasource_names();
 		scope.inserted = {
 			id : -1,
 			readDatasource : null,
 			writeDatasource : null
 		}
 
-		scope.topic.partitions.push(scope.inserted);
+		scope.new_partitions.push(scope.inserted);
 	};
 
 	scope.save_partition = function(data, index) {
@@ -75,7 +85,7 @@ topic_module.run(function(editableOptions) {
 	}
 
 	scope.remove_partition = function(index) {
-		scope.topic.partitions.splice(index, 1);
+		scope.new_partitions.splice(index, 1);
 	};
 
 } ]);
