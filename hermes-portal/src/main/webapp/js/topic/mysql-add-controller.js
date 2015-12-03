@@ -37,7 +37,6 @@ topic_module.controller('mysql-add-controller', [ '$scope', '$resource', 'TopicS
 		new_partition.readDatasource = $scope.current_datasource_names[0];
 		new_partition.writeDatasource = $scope.current_datasource_names[0];
 		$scope.new_topic.partitions.push(new_partition);
-		console.log($scope.new_topic.partitions);
 	};
 
 	$scope.delete_partition = function(index) {
