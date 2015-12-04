@@ -1,4 +1,4 @@
-package com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy;
+package com.ctrip.hermes.monitor.job.partition.strategy;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -8,10 +8,10 @@ import java.util.concurrent.TimeUnit;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.monitor.checker.mysql.dal.entity.PartitionInfo;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.finder.CreationStampFinder;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.finder.CreationStampFinder.CreationStamp;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.job.partition.context.TableContext;
+import com.ctrip.hermes.monitor.job.partition.finder.CreationStampFinder;
+import com.ctrip.hermes.monitor.job.partition.finder.CreationStampFinder.CreationStamp;
 
 public abstract class BasePartitionCheckerStrategy implements PartitionCheckerStrategy {
 	private static final int SPEED_SAMPLE_COUNT = 3;

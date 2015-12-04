@@ -29,6 +29,8 @@ import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.checker.mysql.task.ConsumeBacklogCheckerTask;
+import com.ctrip.hermes.monitor.utils.MonitorUtils;
+import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
 
 @Component(value = ConsumeLargeBacklogChecker.ID)
 public class ConsumeLargeBacklogChecker extends DBBasedChecker {
@@ -90,7 +92,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 	private Map<Pair<Topic, ConsumerGroup>, Long> parseIncludes( //
 	      Meta meta, final String topicPattern, final String groupPattern, long limit) {
 		Map<Pair<Topic, ConsumerGroup>, Long> limits = new HashMap<Pair<Topic, ConsumerGroup>, Long>();
-		List<Entry<String, Topic>> includeTopics = findMatched(meta.getTopics().entrySet(),
+		List<Entry<String, Topic>> includeTopics = MonitorUtils.findMatched(meta.getTopics().entrySet(),
 		      new Matcher<Entry<String, Topic>>() {
 			      @Override
 			      public boolean match(Entry<String, Topic> obj) {
@@ -100,12 +102,13 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 		for (Entry<String, Topic> entry : includeTopics) {
 			Topic topic = entry.getValue();
 			if (Storage.MYSQL.equals(topic.getStorageType())) {
-				List<ConsumerGroup> includeGroups = findMatched(topic.getConsumerGroups(), new Matcher<ConsumerGroup>() {
-					@Override
-					public boolean match(ConsumerGroup obj) {
-						return Pattern.matches(groupPattern, obj.getName());
-					}
-				});
+				List<ConsumerGroup> includeGroups = MonitorUtils.findMatched(topic.getConsumerGroups(),
+				      new Matcher<ConsumerGroup>() {
+					      @Override
+					      public boolean match(ConsumerGroup obj) {
+						      return Pattern.matches(groupPattern, obj.getName());
+					      }
+				      });
 				for (ConsumerGroup group : includeGroups) {
 					limits.put(new Pair<Topic, ConsumerGroup>(topic, group), limit);
 				}
@@ -116,7 +119,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 
 	private void removeExcludes(Map<Pair<Topic, ConsumerGroup>, Long> limits, //
 	      Meta meta, final String topicPattern, final String groupPattern) {
-		List<Entry<String, Topic>> excludeTopics = findMatched(meta.getTopics().entrySet(),
+		List<Entry<String, Topic>> excludeTopics = MonitorUtils.findMatched(meta.getTopics().entrySet(),
 		      new Matcher<Entry<String, Topic>>() {
 			      @Override
 			      public boolean match(Entry<String, Topic> obj) {
@@ -125,12 +128,13 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 		      });
 		for (Entry<String, Topic> entry : excludeTopics) {
 			Topic topic = entry.getValue();
-			List<ConsumerGroup> excludeGroups = findMatched(topic.getConsumerGroups(), new Matcher<ConsumerGroup>() {
-				@Override
-				public boolean match(ConsumerGroup obj) {
-					return Pattern.matches(groupPattern, obj.getName());
-				}
-			});
+			List<ConsumerGroup> excludeGroups = MonitorUtils.findMatched(topic.getConsumerGroups(),
+			      new Matcher<ConsumerGroup>() {
+				      @Override
+				      public boolean match(ConsumerGroup obj) {
+					      return Pattern.matches(groupPattern, obj.getName());
+				      }
+			      });
 			for (ConsumerGroup group : excludeGroups) {
 				limits.remove(new Pair<Topic, ConsumerGroup>(topic, group));
 			}
@@ -145,7 +149,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 			Map<Pair<Topic, ConsumerGroup>, Long> limits = parseLimits(fetchMeta(), //
 			      m_config.getConsumeBacklogCheckerIncludeTopics(), m_config.getConsumeBacklogCheckerExcludeTopics());
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
-			List<Map<Pair<Topic, ConsumerGroup>, Long>> splited = splitMap(limits, DB_CHECKER_THREAD_COUNT);
+			List<Map<Pair<Topic, ConsumerGroup>, Long>> splited = MonitorUtils.splitMap(limits, DB_CHECKER_THREAD_COUNT);
 			final CountDownLatch latch = new CountDownLatch(splited.size());
 			for (final Map<Pair<Topic, ConsumerGroup>, Long> batchLimits : splited) {
 				es.execute(new ConsumeBacklogCheckerTask(batchLimits, m_msgDao, m_offsetDao, result, latch, exceptions));

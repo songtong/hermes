@@ -43,6 +43,7 @@ import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
 
 public class DefaultMessageStream<T> implements MessageStream<T> {
@@ -171,10 +172,10 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 		return msgs;
 	}
 
-	private Command executePullMessageCommand(AbstractPullMessageCommand cmd, long timeout) {
+	private Command executePullMessageCommand(Endpoint endpoint, AbstractPullMessageCommand cmd, long timeout) {
 		try {
 			m_pullMonitor.monitor(cmd);
-			m_endpointClient.writeCommand(m_endpointManager.getEndpoint(m_topic, m_partitionId), cmd);
+			m_endpointClient.writeCommand(endpoint, cmd);
 			ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_topic, m_partitionId, m_groupId);
 			return cmd.getFuture().get(timeout, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
@@ -194,29 +195,31 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 		      (int) TimeUnit.SECONDS.toMillis(m_coreConfig.getMetaCacheRefreshIntervalSeconds()), (int) timeout);
 
 		while (System.currentTimeMillis() < expired && !Thread.interrupted()) {
-			AbstractPullMessageCommand cmd = cmdCreator.createPullCommand();
+			Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partitionId);
 
-			Context context = timer.time();
-			PullMessageResultCommandV2 ack = (PullMessageResultCommandV2) executePullMessageCommand(cmd, timeout);
-			context.stop();
+			if (endpoint == null) {
+				log.warn("No endpoint found for topic {} partition {}, will retry later", m_topic, m_partitionId);
+			} else {
+				AbstractPullMessageCommand cmd = cmdCreator.createPullCommand();
+				Context context = timer.time();
+				PullMessageResultCommandV2 ack = (PullMessageResultCommandV2) executePullMessageCommand(endpoint, cmd,
+				      timeout);
+				context.stop();
 
-			if (ack == null) {
-				log.warn("Wrong command result when fetch messages. {} {} {}", m_topic, m_partitionId, m_groupId);
-				return new ArrayList<ConsumerMessage<T>>();
-			}
-
-			try {
-				if (ack.isBrokerAccepted()) {
-					return decodeBatches(ack.getBatches(), ack.getChannel());
+				if (ack == null) {
+					log.warn("Wrong command result when fetch messages. {} {} {}", m_topic, m_partitionId, m_groupId);
+					return new ArrayList<ConsumerMessage<T>>();
 				}
-				log.warn("Broker reject fetch message request. Maybe requst is invalided.");
-				return new ArrayList<ConsumerMessage<T>>();
-			} catch (Exception e) {
-				log.error("Fetch message failed.", e);
-				schedulePolicy.fail(true);
-			} finally {
-				ack.release();
+
+				try {
+					if (ack.isBrokerAccepted()) {
+						return decodeBatches(ack.getBatches(), ack.getChannel());
+					}
+				} finally {
+					ack.release();
+				}
 			}
+			schedulePolicy.fail(true);
 		}
 
 		log.warn("Fetch message timeout. {} {} {}", m_topic, m_partitionId, m_groupId);

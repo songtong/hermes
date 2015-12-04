@@ -1,9 +1,9 @@
-package com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy;
+package com.ctrip.hermes.monitor.job.partition.strategy;
 
 import java.util.List;
 
 import com.ctrip.hermes.monitor.checker.mysql.dal.entity.PartitionInfo;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
+import com.ctrip.hermes.monitor.job.partition.context.TableContext;
 
 public interface PartitionCheckerStrategy {
 	public AnalysisResult analysisTable(TableContext ctx);
@@ -24,6 +24,11 @@ public interface PartitionCheckerStrategy {
 
 		public List<PartitionInfo> getDropList() {
 			return m_dropList;
+		}
+
+		@Override
+		public String toString() {
+			return "AnalysisResult [m_addList=" + m_addList + ", m_dropList=" + m_dropList + "]";
 		}
 	}
 }

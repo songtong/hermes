@@ -1,4 +1,4 @@
-package com.ctrip.hermes.monitor.checker.mysql.task.partition.finder;
+package com.ctrip.hermes.monitor.job.partition.finder;
 
 import java.util.Iterator;
 
@@ -12,10 +12,10 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityEntity;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.MessageTableContext;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
+import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
+import com.ctrip.hermes.monitor.job.partition.context.TableContext;
 
-//@Component
+@Component
 public class MessageCreationStampFinder implements CreationStampFinder {
 	private static final Logger log = LoggerFactory.getLogger(MessageCreationStampFinder.class);
 

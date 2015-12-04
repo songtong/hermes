@@ -1,4 +1,4 @@
-package com.ctrip.hermes.monitor.checker.mysql.task.partition.context;
+package com.ctrip.hermes.monitor.job.partition.context;
 
 import java.util.List;
 

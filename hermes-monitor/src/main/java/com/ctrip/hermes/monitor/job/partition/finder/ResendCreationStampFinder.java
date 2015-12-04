@@ -1,4 +1,4 @@
-package com.ctrip.hermes.monitor.checker.mysql.task.partition.finder;
+package com.ctrip.hermes.monitor.job.partition.finder;
 
 import java.util.Iterator;
 
@@ -11,10 +11,10 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.queue.ResendGroupId;
 import com.ctrip.hermes.metaservice.queue.ResendGroupIdDao;
 import com.ctrip.hermes.metaservice.queue.ResendGroupIdEntity;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.ResendTableContext;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
+import com.ctrip.hermes.monitor.job.partition.context.ResendTableContext;
+import com.ctrip.hermes.monitor.job.partition.context.TableContext;
 
-//@Component
+@Component
 public class ResendCreationStampFinder implements CreationStampFinder {
 
 	private static final Logger log = LoggerFactory.getLogger(ResendCreationStampFinder.class);

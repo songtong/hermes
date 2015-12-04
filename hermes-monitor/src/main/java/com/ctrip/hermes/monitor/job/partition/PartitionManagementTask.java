@@ -1,4 +1,4 @@
-package com.ctrip.hermes.monitor.checker.mysql.task.partition;
+package com.ctrip.hermes.monitor.job.partition;
 
 import io.netty.util.internal.ConcurrentSet;
 
@@ -12,16 +12,16 @@ import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent;
 import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent.PartitionOperation;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.mysql.dal.entity.PartitionInfo;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy.MessagePartitionCheckerStrategy;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy.PartitionCheckerStrategy;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy.PartitionCheckerStrategy.AnalysisResult;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.strategy.ResendPartitionCheckerStrategy;
+import com.ctrip.hermes.monitor.job.partition.context.TableContext;
+import com.ctrip.hermes.monitor.job.partition.strategy.MessagePartitionCheckerStrategy;
+import com.ctrip.hermes.monitor.job.partition.strategy.PartitionCheckerStrategy;
+import com.ctrip.hermes.monitor.job.partition.strategy.ResendPartitionCheckerStrategy;
+import com.ctrip.hermes.monitor.job.partition.strategy.PartitionCheckerStrategy.AnalysisResult;
 import com.ctrip.hermes.monitor.service.PartitionService;
 import com.ctrip.hermes.monitor.utils.ApplicationContextUtil;
 
-public class PartitionCheckerTask implements Runnable {
-	private static final Logger log = LoggerFactory.getLogger(PartitionCheckerTask.class);
+public class PartitionManagementTask implements Runnable {
+	private static final Logger log = LoggerFactory.getLogger(PartitionManagementTask.class);
 
 	private TableContext m_task;
 
@@ -33,7 +33,7 @@ public class PartitionCheckerTask implements Runnable {
 
 	private PartitionService m_service;
 
-	public PartitionCheckerTask(TableContext task, CheckerResult result, CountDownLatch latch,
+	public PartitionManagementTask(TableContext task, CheckerResult result, CountDownLatch latch,
 	      ConcurrentSet<Exception> exceptions, PartitionService service) {
 		m_task = task;
 		m_result = result;
