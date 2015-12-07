@@ -35,11 +35,11 @@
 										<span>ID: {{ds.id}}</span>
 										<span ng-if="is_mysql(selected.type)">Size: {{ds.storage_size}}</span>
 										<div style="float: right">
-											<button type="button" class="btn btn-default" ng-if="is_mysql(selected.type)" ng-click="isShowAll()">显示所有表</button>
+											<!-- <button type="button" class="btn btn-default" ng-if="is_mysql(selected.type)" ng-click="isShowAll()">显示所有表</button> -->
 											<button class="btn btn-danger btn-sm" ng-click="del_datasource(ds)">删除</button>
 										</div>
 									</div>
-									<storage id="ds.id" type="selected.type" ng-if="is_mysql(selected.type)"> </storage>
+									<!-- <storage id="ds.id" type="selected.type" ng-if="is_mysql(selected.type)"> </storage> -->
 								</div>
 								<table class="table table-condensed table-responsive table-bordered">
 									<thead>

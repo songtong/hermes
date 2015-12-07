@@ -14,8 +14,8 @@ hermes_storage.controller('MysqlCtrl', function ($scope, $resource, $log, $attrs
     $scope.showThreshold = 1000;
 
     // update and watch db_size and tables.
-    StorageService.updateDBSize($scope.storage_id)
-    StorageService.updateTables($scope.storage_id)
+//    StorageService.updateDBSize($scope.storage_id)
+//    StorageService.updateTables($scope.storage_id)
     $scope.$watch(StorageService.get_db_size, function (newValue, oldValue) {
         if (newValue != oldValue) {
             var db_size = StorageService.get_db_size();
@@ -28,9 +28,9 @@ hermes_storage.controller('MysqlCtrl', function ($scope, $resource, $log, $attrs
         }
     })
 
-    $scope.$watch(StorageService.get_db_tables, function () {
-        $scope.tables = StorageService.get_db_tables();
-    })
+//    $scope.$watch(StorageService.get_db_tables, function () {
+//        $scope.tables = StorageService.get_db_tables();
+//    })
 
 
     // add_partition and delete_partition
@@ -68,9 +68,9 @@ hermes_storage.controller('MysqlCtrl', function ($scope, $resource, $log, $attrs
 
 
     // for show main tables or show all tables
-    $scope.$watch(function() {return $scope.$parent.isShowAllTables}, function(){
-        $scope.isShowAllTables = $scope.$parent.isShowAllTables;
-    })
+//    $scope.$watch(function() {return $scope.$parent.isShowAllTables}, function(){
+//        $scope.isShowAllTables = $scope.$parent.isShowAllTables;
+//    })
 
     $scope.briefOrAll = function (table) {
         if ($scope.isShowAllTables) {
