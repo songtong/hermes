@@ -2,7 +2,6 @@ package com.ctrip.hermes.monitor.checker;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
@@ -16,14 +15,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.monitor.checker.mysql.PartitionChecker;
+import com.ctrip.hermes.monitor.job.partition.PartitionManagementJob;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = BaseCheckerTest.class)
 public class PartitionCheckerTest extends BaseCheckerTest {
 
 	@Component("MockPartitionChecker")
-	public static class MockPartitionChecker extends PartitionChecker {
+	public static class MockPartitionManagementJob extends PartitionManagementJob {
 		@Override
 		protected Meta fetchMeta() {
 			try {
@@ -37,11 +36,11 @@ public class PartitionCheckerTest extends BaseCheckerTest {
 
 	@Autowired
 	@Qualifier("MockPartitionChecker")
-	private MockPartitionChecker m_checker;
+	private MockPartitionManagementJob m_job;
 
 	@Test
 	public void testChecker() {
-		CheckerResult result = m_checker.check(new Date(), 5);
+		CheckerResult result = m_job.check();
 		List<MonitorEvent> events = result.getMonitorEvents();
 		for (MonitorEvent event : events) {
 			System.out.println(event);

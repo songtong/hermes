@@ -1,4 +1,4 @@
-package com.ctrip.hermes.monitor.checker.mysql.dal.entity;
+package com.ctrip.hermes.monitor.job.partition.entity;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

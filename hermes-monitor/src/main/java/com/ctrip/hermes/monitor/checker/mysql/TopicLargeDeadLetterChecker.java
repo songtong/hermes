@@ -25,6 +25,8 @@ import com.ctrip.hermes.metaservice.queue.DeadLetterDao;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.checker.mysql.task.DeadLetterCheckerTask;
+import com.ctrip.hermes.monitor.utils.MonitorUtils;
+import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
 
 @Component(value = TopicLargeDeadLetterChecker.ID)
 public class TopicLargeDeadLetterChecker extends DBBasedChecker {
@@ -76,7 +78,7 @@ public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 	}
 
 	private List<Entry<String, Topic>> findTopics(final String pattern, Meta meta) {
-		return findMatched(meta.getTopics().entrySet(), new Matcher<Entry<String, Topic>>() {
+		return MonitorUtils.findMatched(meta.getTopics().entrySet(), new Matcher<Entry<String, Topic>>() {
 			@Override
 			public boolean match(Entry<String, Topic> obj) {
 				return Pattern.matches(pattern, obj.getKey());
@@ -94,7 +96,7 @@ public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 			Map<Topic, Integer> limits = parseLimits(fetchMeta(), //
 			      m_config.getDeadLetterCheckerIncludeTopics(), m_config.getDeadLetterCheckerExcludeTopics());
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
-			List<Map<Topic, Integer>> splited = splitMap(limits, DB_CHECKER_THREAD_COUNT);
+			List<Map<Topic, Integer>> splited = MonitorUtils.splitMap(limits, DB_CHECKER_THREAD_COUNT);
 			final CountDownLatch latch = new CountDownLatch(splited.size());
 			for (final Map<Topic, Integer> map : splited) {
 				es.execute(new DeadLetterCheckerTask(map, m_dao, from, to, result, latch, exceptions));

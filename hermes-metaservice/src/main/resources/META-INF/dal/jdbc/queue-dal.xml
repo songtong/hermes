@@ -122,7 +122,7 @@
 		</query-defs>
 	</entity>
 
-	<entity name="resend-group-id" implements="com.ctrip.hermes.metaservice.queue.ds.TopicPartitionPriorityAware">
+	<entity name="resend-group-id" implements="com.ctrip.hermes.metaservice.queue.ds.TopicPartitionPriorityGroupAware">
 		<relation name="message-priority" entity-name="message-priority" entity-alias="mp" />
 
 		<var name="topic" value-type="String" />

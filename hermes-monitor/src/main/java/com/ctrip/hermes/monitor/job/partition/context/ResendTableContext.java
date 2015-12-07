@@ -1,9 +1,9 @@
-package com.ctrip.hermes.monitor.checker.mysql.task.partition.context;
+package com.ctrip.hermes.monitor.job.partition.context;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.monitor.checker.mysql.PartitionChecker.TableType;
+import com.ctrip.hermes.monitor.job.partition.PartitionManagementJob.TableType;
 
 public class ResendTableContext extends BaseTableContext {
 	private ConsumerGroup m_consumer;

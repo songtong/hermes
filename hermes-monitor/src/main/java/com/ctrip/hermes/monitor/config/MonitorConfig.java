@@ -113,13 +113,13 @@ public class MonitorConfig {
 	/**
 	 * { ".*" : 30, "song.test" : 60, "song..*" : 40 }
 	 */
-	@Value("${partition.checker.retain.day:{\".*\":30}}")
+	@Value("${partition.checker.include.topics.retain.day:{\"hotel.product.seqrules\":30}}")
 	private String partitionRetainInDay;
 
-	@Value("${partition.checker.watermark.day:5}")
+	@Value("${partition.checker.watermark.day:10}")
 	private int partitionWatermarkInDay;
 
-	@Value("${partition.checker.increment.day:15}")
+	@Value("${partition.checker.increment.day:20}")
 	private int partitionIncrementInDay;
 
 	@Value("${partition.checker.increment.max.count:100}")
@@ -128,7 +128,7 @@ public class MonitorConfig {
 	@Value("${partition.checker.increment.partition.max.size:50000000}")
 	private int partitionMaxSize;
 
-	@Value("${partition.checker.size.increment.size:1000000}")
+	@Value("${partition.checker.size.increment.step:1000000}")
 	private int partitionSizeIncrementStep;
 
 	public String getEsClusterName() {

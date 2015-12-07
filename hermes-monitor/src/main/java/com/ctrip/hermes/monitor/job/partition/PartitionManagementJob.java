@@ -1,13 +1,14 @@
-package com.ctrip.hermes.monitor.checker.mysql;
+package com.ctrip.hermes.monitor.job.partition;
 
 import io.netty.util.internal.ConcurrentSet;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,17 +31,19 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
-import com.ctrip.hermes.monitor.checker.mysql.dal.entity.PartitionInfo;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.PartitionCheckerTask;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.MessageTableContext;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.ResendTableContext;
-import com.ctrip.hermes.monitor.checker.mysql.task.partition.context.TableContext;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
+import com.ctrip.hermes.monitor.job.partition.context.ResendTableContext;
+import com.ctrip.hermes.monitor.job.partition.context.TableContext;
+import com.ctrip.hermes.monitor.job.partition.entity.PartitionInfo;
 import com.ctrip.hermes.monitor.service.PartitionService;
+import com.ctrip.hermes.monitor.utils.MonitorUtils;
+import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
 
-//@Component(value = PartitionChecker.ID)
-public class PartitionChecker extends DBBasedChecker {
+@Component(value = PartitionManagementJob.ID)
+public class PartitionManagementJob {
 
-	private static final Logger log = LoggerFactory.getLogger(PartitionChecker.class);
+	private static final Logger log = LoggerFactory.getLogger(PartitionManagementJob.class);
 
 	public static final String ID = "PartitionChecker";
 
@@ -51,31 +54,34 @@ public class PartitionChecker extends DBBasedChecker {
 	@Autowired
 	private PartitionService m_partitionService;
 
-	@Override
-	public String name() {
-		return ID;
-	}
+	@Autowired
+	private MonitorConfig m_config;
 
 	public static enum TableType {
 		MESSAGE, RESEND;
 	}
 
-	@Override
-	public CheckerResult check(Date toDate, int minutesBefore) {
+	public CheckerResult check() {
 		CheckerResult result = new CheckerResult();
 		ExecutorService es = Executors.newFixedThreadPool(PARTITION_TASK_SIZE);
 		try {
 			Meta meta = fetchMeta();
 			Map<String, Integer> limits = parseLimits(meta, m_config.getPartitionRetainInDay());
 			Map<String, Pair<Datasource, List<PartitionInfo>>> ps = new HashMap<>();
+			Set<String> checkedDatasource = new HashSet<String>();
 			for (Datasource ds : meta.getStorages().get(Storage.MYSQL).getDatasources()) {
-				ps.putAll(m_partitionService.getDatasourcePartitions(ds));
+				if (!checkedDatasource.contains(ds.getProperties().get("url").getValue())) {
+					checkedDatasource.add(ds.getProperties().get("url").getValue());
+					ps.putAll(m_partitionService.getDatasourcePartitions(ds));
+				} else {
+					log.info("Already checked datasource:{}", ds.getProperties());
+				}
 			}
 			List<TableContext> tasks = getTableContexts(meta, ps, limits);
 			CountDownLatch latch = new CountDownLatch(tasks.size());
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			for (TableContext task : tasks) {
-				es.execute(new PartitionCheckerTask(task, result, latch, exceptions, m_partitionService));
+				es.execute(new PartitionManagementTask(task, result, latch, exceptions, m_partitionService));
 			}
 			if (latch.await(PARTITION_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
 				result.setRunSuccess(true);
@@ -117,7 +123,7 @@ public class PartitionChecker extends DBBasedChecker {
 	}
 
 	private List<Entry<String, Topic>> findTopics(final String pattern, Meta meta) {
-		return findMatched(meta.getTopics().entrySet(), new Matcher<Entry<String, Topic>>() {
+		return MonitorUtils.findMatched(meta.getTopics().entrySet(), new Matcher<Entry<String, Topic>>() {
 			@Override
 			public boolean match(Entry<String, Topic> obj) {
 				return Pattern.matches(pattern, obj.getKey());
@@ -132,27 +138,40 @@ public class PartitionChecker extends DBBasedChecker {
 
 		List<TableContext> ctxes = new ArrayList<TableContext>();
 		for (Topic topic : meta.getTopics().values()) {
-			int retain = topicRetainDays.get(topic.getName());
-			for (Partition partition : topic.getPartitions()) {
-				MessageTableContext pMsgCtx = new MessageTableContext(topic, partition, 0, retain, cordon, increment);
-				ctxes.add(pMsgCtx.setPartitionInfos(partitions.get(pMsgCtx.getTableName()).getValue()));
+			if (topicRetainDays.containsKey(topic.getName())) {
+				int retain = topicRetainDays.get(topic.getName());
+				for (Partition partition : topic.getPartitions()) {
+					MessageTableContext pMsgCtx = new MessageTableContext(topic, partition, 0, retain, cordon, increment);
+					if (partitions.containsKey(pMsgCtx.getTableName())) {
+						ctxes.add(pMsgCtx.setPartitionInfos(partitions.get(pMsgCtx.getTableName()).getValue()));
 
-				MessageTableContext npMsgCtx = new MessageTableContext(topic, partition, 1, retain, cordon, increment);
-				ctxes.add(npMsgCtx.setPartitionInfos(partitions.get(npMsgCtx.getTableName()).getValue()));
+						MessageTableContext npMsgCtx = new MessageTableContext(topic, partition, 1, retain, cordon, increment);
+						ctxes.add(npMsgCtx.setPartitionInfos(partitions.get(npMsgCtx.getTableName()).getValue()));
 
-				Datasource ds = partitions.get(pMsgCtx.getTableName()).getKey();
-				pMsgCtx.setDatasource(ds);
-				npMsgCtx.setDatasource(ds);
+						Datasource ds = partitions.get(pMsgCtx.getTableName()).getKey();
+						pMsgCtx.setDatasource(ds);
+						npMsgCtx.setDatasource(ds);
 
-				for (ConsumerGroup consumer : topic.getConsumerGroups()) {
-					ResendTableContext cCtx = new ResendTableContext(topic, partition, consumer, retain, cordon, increment);
-					Pair<Datasource, List<PartitionInfo>> pair = partitions.get(cCtx.getTableName());
-					if (pair != null) {
-						ctxes.add(cCtx.setPartitionInfos(pair.getValue()).setDatasource(ds));
+						for (ConsumerGroup consumer : topic.getConsumerGroups()) {
+							ResendTableContext cCtx = new ResendTableContext(topic, partition, consumer, retain, cordon,
+							      increment);
+							Pair<Datasource, List<PartitionInfo>> pair = partitions.get(cCtx.getTableName());
+							if (pair != null) {
+								ctxes.add(cCtx.setPartitionInfos(pair.getValue()).setDatasource(ds));
+							}
+						}
 					}
 				}
 			}
 		}
 		return ctxes;
+	}
+
+	protected Meta fetchMeta() {
+		try {
+			return JSON.parseObject(MonitorUtils.curl(m_config.getMetaRestUrl(), 3000, 1000), Meta.class);
+		} catch (Exception e) {
+			throw new RuntimeException("Fetch meta failed.", e);
+		}
 	}
 }
