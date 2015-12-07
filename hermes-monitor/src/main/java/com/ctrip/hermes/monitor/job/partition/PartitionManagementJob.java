@@ -72,7 +72,7 @@ public class PartitionManagementJob {
 			for (Datasource ds : meta.getStorages().get(Storage.MYSQL).getDatasources()) {
 				if (!checkedDatasource.contains(ds.getProperties().get("url").getValue())) {
 					checkedDatasource.add(ds.getProperties().get("url").getValue());
-					ps.putAll(m_partitionService.getDatasourcePartitions(ds));
+					ps.putAll(m_partitionService.queryDatasourcePartitions(ds));
 				} else {
 					log.info("Already checked datasource:{}", ds.getProperties());
 				}

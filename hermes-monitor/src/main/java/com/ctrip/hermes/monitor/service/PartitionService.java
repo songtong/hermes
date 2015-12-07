@@ -33,7 +33,7 @@ public class PartitionService {
 		String sql = getAddPartitionSQL(ctx, list);
 		log.info("Add partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
-		executeSQL(ctx.getDatasource(), sql);
+//		executeSQL(ctx.getDatasource(), sql);
 		return sql;
 	}
 
@@ -41,11 +41,11 @@ public class PartitionService {
 		String sql = getDropPartitionSQL(ctx, list);
 		log.info("Drop partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
-		executeSQL(ctx.getDatasource(), sql);
+//		executeSQL(ctx.getDatasource(), sql);
 		return sql;
 	}
 
-	public static String getAddPartitionSQL(TableContext ctx, List<PartitionInfo> list) {
+	private String getAddPartitionSQL(TableContext ctx, List<PartitionInfo> list) {
 		StringBuilder sb = new StringBuilder(String.format("ALTER TABLE %s ADD PARTITION (", ctx.getTableName()));
 		for (PartitionInfo pInfo : list) {
 			sb.append( //
@@ -54,7 +54,7 @@ public class PartitionService {
 		return sb.toString().substring(0, sb.length() - 2) + ");";
 	}
 
-	public static String getDropPartitionSQL(TableContext ctx, List<PartitionInfo> list) {
+	private String getDropPartitionSQL(TableContext ctx, List<PartitionInfo> list) {
 		StringBuilder sb = new StringBuilder(String.format("ALTER TABLE %s DROP PARTITION ", ctx.getTableName()));
 		for (PartitionInfo pInfo : list) {
 			sb.append(pInfo.getName() + ", ");
@@ -62,24 +62,24 @@ public class PartitionService {
 		return sb.toString().substring(0, sb.length() - 2) + ";";
 	}
 
-	public boolean executeSQL(Datasource ds, String sql) throws Exception {
-		Connection conn = null;
-		Statement stat = null;
-		try {
-			conn = getConnection(ds, false);
-			stat = conn.createStatement();
-			return stat.execute(sql);
-		} finally {
-			if (stat != null) {
-				stat.close();
-			}
-			if (conn != null) {
-				conn.close();
-			}
-		}
-	}
+//	public boolean executeSQL(Datasource ds, String sql) throws Exception {
+//		Connection conn = null;
+//		Statement stat = null;
+//		try {
+//			conn = getConnection(ds, false);
+//			stat = conn.createStatement();
+//			return stat.execute(sql);
+//		} finally {
+//			if (stat != null) {
+//				stat.close();
+//			}
+//			if (conn != null) {
+//				conn.close();
+//			}
+//		}
+//	}
 
-	public Map<String, Pair<Datasource, List<PartitionInfo>>> getDatasourcePartitions(Datasource ds) throws Exception {
+	public Map<String, Pair<Datasource, List<PartitionInfo>>> queryDatasourcePartitions(Datasource ds) throws Exception {
 		Connection conn = getConnection(ds, true);
 		Statement stat = null;
 		ResultSet rs = null;
@@ -100,7 +100,7 @@ public class PartitionService {
 		}
 	}
 
-	public Map<String, Pair<Datasource, List<PartitionInfo>>> formatPartitionMap( //
+	private Map<String, Pair<Datasource, List<PartitionInfo>>> formatPartitionMap( //
 	      Map<String, List<PartitionInfo>> origin, Datasource ds) {
 		Map<String, Pair<Datasource, List<PartitionInfo>>> map = new HashMap<String, Pair<Datasource, List<PartitionInfo>>>();
 		for (Entry<String, List<PartitionInfo>> entry : origin.entrySet()) {
