@@ -40,7 +40,7 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Component(value = "ProduceAckedTriedRatioChecker")
+//@Component(value = "ProduceAckedTriedRatioChecker")
 public class ProduceAckedTriedRatioChecker extends CatBasedChecker implements InitializingBean {
 
 	private List<String> m_excludedTopics = new LinkedList<>();
