@@ -2,8 +2,8 @@ package com.ctrip.hermes.monitor.job.partition.strategy;
 
 import java.util.List;
 
-import com.ctrip.hermes.monitor.checker.mysql.dal.entity.PartitionInfo;
 import com.ctrip.hermes.monitor.job.partition.context.TableContext;
+import com.ctrip.hermes.monitor.job.partition.entity.PartitionInfo;
 
 public interface PartitionCheckerStrategy {
 	public AnalysisResult analysisTable(TableContext ctx);

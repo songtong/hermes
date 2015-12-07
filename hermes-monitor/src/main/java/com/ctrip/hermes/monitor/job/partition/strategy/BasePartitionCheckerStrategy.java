@@ -7,9 +7,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.monitor.checker.mysql.dal.entity.PartitionInfo;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.job.partition.context.TableContext;
+import com.ctrip.hermes.monitor.job.partition.entity.PartitionInfo;
 import com.ctrip.hermes.monitor.job.partition.finder.CreationStampFinder;
 import com.ctrip.hermes.monitor.job.partition.finder.CreationStampFinder.CreationStamp;
 
