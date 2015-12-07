@@ -113,7 +113,7 @@ public class MonitorConfig {
 	/**
 	 * { ".*" : 30, "song.test" : 60, "song..*" : 40 }
 	 */
-	@Value("${partition.checker.include.topics.retain.day:{\"hotel.product.seqrules\":30}}")
+	@Value("${partition.checker.include.topics.retain.day:{\".*\":30}}")
 	private String partitionRetainInDay;
 
 	@Value("${partition.checker.watermark.day:10}")
