@@ -13,8 +13,8 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
-import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public enum PullMessageAnswer implements Answer<Void> {
@@ -25,14 +25,14 @@ public enum PullMessageAnswer implements Answer<Void> {
 				waitUntilTrigger();
 			}
 			m_answeredCount.incrementAndGet();
-			PullMessageCommandV2 pullMessageCmd = invocation.getArgumentAt(1, PullMessageCommandV2.class);
+			PullMessageCommandV3 pullMessageCmd = invocation.getArgumentAt(1, PullMessageCommandV3.class);
 			if (pullMessageCmd != null && m_msgCreator != null) {
-				PullMessageResultCommandV2 resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
+				PullMessageResultCommandV3 resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
 				      pullMessageCmd.getTopic(), Arrays.asList(new Pair<String, String>("hello", "hermes")), 0, 0, false,
 				      "hermes-key", m_msgCreator.createRawMessages());
 				resultCmd.correlate(pullMessageCmd);
 
-				PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V2.toString())
+				PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V3.toString())
 				      .process(new CommandProcessorContext(resultCmd, m_channel));
 			}
 			return null;

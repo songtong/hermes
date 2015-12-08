@@ -209,6 +209,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 						ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(m_topic, m_partition,
 						      cmd.getMessageCount());
 						m_messageAcceptanceMonitor.cancel(correlationId);
+						m_messageResultMonitor.cancel(cmd);
 					}
 
 					acceptTimer.stop();

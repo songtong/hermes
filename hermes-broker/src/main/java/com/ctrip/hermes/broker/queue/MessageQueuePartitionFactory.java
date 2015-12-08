@@ -23,11 +23,12 @@ public class MessageQueuePartitionFactory extends ContainerHolder {
 	@Inject
 	private BrokerConfig m_config;
 
-	public MessageQueue getMessageQueue(String topic, int partition, ScheduledExecutorService ackOpExecutor) {
+	public MessageQueue getMessageQueue(String topic, int partition, ScheduledExecutorService ackOpExecutor,
+	      ScheduledExecutorService ackMessagesTaskExecutor) {
 		Storage storage = m_metaService.findStorageByTopic(topic);
 		try {
 			return new DefaultMessageQueue(topic, partition, lookup(MessageQueueStorage.class, storage.getType()),
-			      m_metaService, m_config, ackOpExecutor);
+			      m_metaService, m_config, ackOpExecutor, ackMessagesTaskExecutor);
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Unsupported storage type " + storage.getType(), e);
 		}

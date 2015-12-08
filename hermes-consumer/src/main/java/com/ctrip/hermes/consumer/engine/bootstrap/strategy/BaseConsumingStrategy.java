@@ -1,5 +1,7 @@
 package com.ctrip.hermes.consumer.engine.bootstrap.strategy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
@@ -13,6 +15,8 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
  */
 public abstract class BaseConsumingStrategy implements ConsumingStrategy {
 
+	private static final Logger log = LoggerFactory.getLogger(BaseConsumingStrategy.class);
+
 	@Inject
 	protected ConsumerConfig m_config;
 
@@ -21,8 +25,19 @@ public abstract class BaseConsumingStrategy implements ConsumingStrategy {
 
 		try {
 			int localCacheSize = m_config.getLocalCacheSize(context.getTopic().getName());
+			int maxAckHolderSize = m_config.getMaxAckHolderSize(context.getTopic().getName());
 
-			final ConsumerTask consumerTask = getConsumerTask(context, partitionId, localCacheSize);
+			int notifierThreadCount = m_config.getNotifierThreadCount(context.getTopic().getName());
+			int maxDeliveredMsgCount = (2 * notifierThreadCount + 1) * localCacheSize;
+
+			if (maxAckHolderSize < maxDeliveredMsgCount) {
+				log.warn(
+				      "Bad maxAckHolderSize({}), will use {} as maxAckHolderSize(notifierThreadCount={}, localCacheSize={}).",
+				      maxAckHolderSize, maxDeliveredMsgCount, notifierThreadCount, localCacheSize);
+				maxAckHolderSize = maxDeliveredMsgCount;
+			}
+
+			final ConsumerTask consumerTask = getConsumerTask(context, partitionId, localCacheSize, maxAckHolderSize);
 
 			Thread thread = HermesThreadFactory
 			      .create(
@@ -52,6 +67,7 @@ public abstract class BaseConsumingStrategy implements ConsumingStrategy {
 		}
 	}
 
-	protected abstract ConsumerTask getConsumerTask(ConsumerContext context, int partitionId, int localCacheSize);
+	protected abstract ConsumerTask getConsumerTask(ConsumerContext context, int partitionId, int localCacheSize,
+	      int maxAckHolderSize);
 
 }

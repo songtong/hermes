@@ -36,6 +36,7 @@ import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.Command;
+import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
 import com.ctrip.hermes.core.transport.netty.MagicNumberPrepender;
@@ -44,6 +45,7 @@ import com.ctrip.hermes.core.transport.netty.NettyEncoder;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.dianping.cat.Cat;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -84,6 +86,11 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 		if (m_writerStarted.compareAndSet(false, true)) {
 			scheduleWriterTask();
+		}
+
+		CommandType type = cmd.getHeader().getType();
+		if (type != null) {
+			Cat.logEvent("Hermes.Command.Version", type + "-SEND");
 		}
 
 		getChannel(endpoint).write(cmd, timeout, timeUnit);

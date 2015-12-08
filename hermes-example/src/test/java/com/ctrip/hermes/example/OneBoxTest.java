@@ -146,7 +146,7 @@ public class OneBoxTest extends ComponentTestCase {
 
 	@Test
 	public void test() throws Exception {
-		Cat.initialize("cat.fws.qa.nt.ctripcorp.com");
+		Cat.initializeByDomain("hermes", "cat.fws.qa.nt.ctripcorp.com");
 		startBroker();
 
 		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
@@ -156,7 +156,7 @@ public class OneBoxTest extends ComponentTestCase {
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
 		// subscribers.put("group2", Arrays.asList("1-a"));
-		subscribers.put("group1", Arrays.asList("1-a"));
+		subscribers.put("leo1", Arrays.asList("1-a"));
 		// subscribers.put("group2", Arrays.asList("2-a", "2-b"));
 		// subscribers.put("group3", Arrays.asList("3-a", "3-b", "3-c"));
 
@@ -165,7 +165,7 @@ public class OneBoxTest extends ComponentTestCase {
 			Map<String, Integer> nacks = findNacks(groupId);
 			for (String id : entry.getValue()) {
 				MessageListenerConfig config = new MessageListenerConfig();
-				config.setStrictlyOrderingRetryPolicy(StrictlyOrderingRetryPolicy.evenRetry(3000, 3));
+//				config.setStrictlyOrderingRetryPolicy(StrictlyOrderingRetryPolicy.evenRetry(3000, 3));
 				System.out.println("Starting consumer " + groupId + ":" + id);
 				Consumer.getInstance().start(topic, groupId, new MyConsumer(nacks, id), config);
 			}

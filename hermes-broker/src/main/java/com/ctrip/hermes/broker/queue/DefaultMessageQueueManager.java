@@ -32,8 +32,8 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 import com.ctrip.hermes.core.utils.CollectionUtil;
-import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.google.common.util.concurrent.ListenableFuture;
 
 @Named(type = MessageQueueManager.class)
@@ -57,6 +57,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 	private ScheduledExecutorService m_ackOpExecutor;
 
+	private ScheduledExecutorService m_ackMessagesTaskExecutor;
+
 	@Override
 	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data, Lease lease) {
 		if (!m_stopped.get()) {
@@ -67,9 +69,9 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	}
 
 	@Override
-	public MessageQueueCursor getCursor(Tpg tpg, Lease lease) {
+	public MessageQueueCursor getCursor(Tpg tpg, Lease lease, Offset offset) {
 		if (!m_stopped.get()) {
-			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).getCursor(tpg.getGroupId(), lease);
+			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).getCursor(tpg.getGroupId(), lease, offset);
 		} else {
 			return null;
 		}
@@ -80,7 +82,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		if (!m_messageQueues.containsKey(key)) {
 			synchronized (m_messageQueues) {
 				if (!m_messageQueues.containsKey(key)) {
-					MessageQueue mqp = m_queueFactory.getMessageQueue(topic, partition, m_ackOpExecutor);
+					MessageQueue mqp = m_queueFactory.getMessageQueue(topic, partition, m_ackOpExecutor,
+					      m_ackMessagesTaskExecutor);
 					m_messageQueues.put(key, mqp);
 				}
 			}
@@ -92,9 +95,18 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	@Override
 	public void stop() {
 		m_ackOpExecutor.shutdown();
+		m_ackMessagesTaskExecutor.shutdown();
 		while (!m_ackOpExecutor.isTerminated()) {
 			try {
 				m_ackOpExecutor.awaitTermination(1, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				// ignore
+			}
+		}
+
+		while (!m_ackMessagesTaskExecutor.isTerminated()) {
+			try {
+				m_ackMessagesTaskExecutor.awaitTermination(1, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				// ignore
 			}
@@ -106,25 +118,29 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	}
 
 	@Override
-	public void delivered(TppConsumerMessageBatch batch, String groupId, boolean withOffset) {
-		if (m_stopped.get()) {
-			return;
+	public void delivered(TppConsumerMessageBatch batch, String groupId, boolean withOffset,
+	      boolean needServerSideAckHolder) {
+		// TODO remove legacy code
+		if (needServerSideAckHolder) {
+			if (m_stopped.get()) {
+				return;
+			}
+
+			Tpp tpp = new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority());
+			resetPriorityIfResend(tpp, batch.isResend());
+			Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
+			List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>(batch.getMessageMetas().size());
+			for (MessageMeta msgMeta : batch.getMessageMetas()) {
+				msgId2Metas.add(new Pair<>(msgMeta.getId(), msgMeta));
+			}
+
+			AckHolderType ackHolderType = withOffset ? AckHolderType.FORWARD_ONLY : AckHolderType.NORMAL;
+			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offerAckHolderOp(
+			      new Operation(key, batch.isResend(), OperationType.DELIVERED, ackHolderType, msgId2Metas,
+			            m_systemClockService.now()));
+
+			logIfOfferFail("delivered", offered);
 		}
-
-		Tpp tpp = new Tpp(batch.getTopic(), batch.getPartition(), batch.isPriority());
-		resetPriorityIfResend(tpp, batch.isResend());
-		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
-		List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>(batch.getMessageMetas().size());
-		for (MessageMeta msgMeta : batch.getMessageMetas()) {
-			msgId2Metas.add(new Pair<>(msgMeta.getId(), msgMeta));
-		}
-
-		AckHolderType ackHolderType = withOffset ? AckHolderType.FORWARD_ONLY : AckHolderType.NORMAL;
-		boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offer(
-		      new Operation(key, batch.isResend(), OperationType.DELIVERED, ackHolderType, msgId2Metas,
-		            m_systemClockService.now()));
-
-		logIfOfferFail("delivered", offered);
 	}
 
 	@Override
@@ -135,7 +151,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		resetPriorityIfResend(tpp, resend);
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
 		for (AckContext context : ackContexts) {
-			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offer(
+			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offerAckHolderOp(
 			      new Operation(key, resend, OperationType.ACK, getHolderType(ackType), context.getMsgSeq(),
 			            m_systemClockService.now()));
 			logIfOfferFail("acked", offered);
@@ -150,11 +166,22 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		resetPriorityIfResend(tpp, resend);
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
 		for (AckContext context : nackContexts) {
-			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offer(
+			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offerAckHolderOp(
 			      new Operation(key, resend, OperationType.NACK, getHolderType(ackType), context.getMsgSeq(),
 			            m_systemClockService.now()));
 			logIfOfferFail("nacked", offered);
 		}
+	}
+
+	@Override
+	public void submitAckMessagesTask(AckMessagesTask task) {
+		if (m_stopped.get()) {
+			return;
+		}
+
+		boolean offered = getMessageQueue(task.getTopic(), task.getPartition()).offerAckMessagesTask(task);
+		logIfOfferFail("offerAckMessageTask", offered);
+
 	}
 
 	private AckHolderType getHolderType(int ackType) {
@@ -231,6 +258,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	public void initialize() throws InitializationException {
 		m_ackOpExecutor = Executors.newScheduledThreadPool(m_config.getAckOpExecutorThreadCount(),
 		      HermesThreadFactory.create("AckOp", true));
+		m_ackMessagesTaskExecutor = Executors.newScheduledThreadPool(m_config.getAckMessagesTaskExecutorThreadCount(),
+		      HermesThreadFactory.create("AckMessagesTaskExecutor", true));
 	}
 
 	@Override
@@ -280,4 +309,5 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		}
 		return result;
 	}
+
 }

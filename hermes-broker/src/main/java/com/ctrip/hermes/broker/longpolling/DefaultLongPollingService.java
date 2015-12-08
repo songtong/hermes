@@ -109,28 +109,40 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	private boolean queryAndResponseData(PullMessageTask pullTask) {
 		Tpg tpg = pullTask.getTpg();
 
-		MessageQueueCursor cursor = m_queueManager.getCursor(tpg, pullTask.getBrokerLease());
+		MessageQueueCursor cursor = m_queueManager.getCursor(tpg, pullTask.getBrokerLease(), pullTask.getStartOffset());
 
 		if (cursor == null) {
 			return false;
 		}
 
-		Pair<Offset, List<TppConsumerMessageBatch>> p = cursor.next(pullTask.getStartOffset(), pullTask.getBatchSize());
+		Pair<Offset, List<TppConsumerMessageBatch>> p = null;
 
-		Offset currentOffset = p.getKey();
-		List<TppConsumerMessageBatch> batches = p.getValue();
+		try {
+			p = cursor.next(pullTask.getBatchSize());
+		} finally {
+			cursor.stop();
+		}
 
-		if (batches != null && !batches.isEmpty()) {
+		if (p != null) {
+			Offset currentOffset = p.getKey();
+			List<TppConsumerMessageBatch> batches = p.getValue();
 
-			String ip = NettyUtils.parseChannelRemoteAddr(pullTask.getChannel(), false);
-			for (TppConsumerMessageBatch batch : batches) {
-				m_queueManager.delivered(batch, tpg.getGroupId(), pullTask.isWithOffset());
+			if (batches != null && !batches.isEmpty()) {
 
-				bizLogDelivered(ip, batch.getMessageMetas(), tpg);
+				String ip = NettyUtils.parseChannelRemoteAddr(pullTask.getChannel(), false);
+				for (TppConsumerMessageBatch batch : batches) {
+					// TODO remove legacy code
+					boolean needServerSideAckHolder = pullTask.getPullMessageCommandVersion() < 3 ? true : false;
+					m_queueManager.delivered(batch, tpg.getGroupId(), pullTask.isWithOffset(), needServerSideAckHolder);
+
+					bizLogDelivered(ip, batch.getMessageMetas(), tpg);
+				}
+
+				response(pullTask, batches, currentOffset);
+				return true;
+			} else {
+				return false;
 			}
-
-			response(pullTask, batches, currentOffset);
-			return true;
 		} else {
 			return false;
 		}

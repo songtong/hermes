@@ -104,6 +104,25 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>MESSAGE_PULL_V3</role-hint>
+			<implementation>com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV3</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.longpolling.LongPollingService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
 			<role-hint>MESSAGE_PULL_SPECIFIC</role-hint>
 			<implementation>com.ctrip.hermes.broker.transport.command.processor.PullSpecificMessageCommandProcessor</implementation>
 			<requirements>
@@ -133,8 +152,40 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>MESSAGE_ACK_V3</role-hint>
+			<implementation>com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV3</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.log.BizLogger</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
 			<role-hint>QUERY_LATEST_CONSUMER_OFFSET</role-hint>
 			<implementation>com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOffsetCommandProcessor</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>QUERY_LATEST_CONSUMER_OFFSET_V3</role-hint>
+			<implementation>com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOffsetCommandProcessorV3</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</role>

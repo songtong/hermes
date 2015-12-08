@@ -7,10 +7,10 @@ import java.util.concurrent.ExecutorService;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
-import com.ctrip.hermes.core.message.BrokerConsumerMessage;
+import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
+import com.ctrip.hermes.consumer.message.NackDelayedBrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
-import com.ctrip.hermes.core.message.NackDelayedBrokerConsumerMessage;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.core.pipeline.Pipeline;
 

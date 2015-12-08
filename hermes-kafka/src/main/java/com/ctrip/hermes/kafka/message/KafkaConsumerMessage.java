@@ -110,4 +110,14 @@ public class KafkaConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHo
 	public boolean isPriority() {
 		return false;
 	}
+
+	@Override
+	public boolean isResend() {
+		return false;
+	}
+
+	@Override
+	public int getRemainingRetries() {
+		return 0;
+	}
 }

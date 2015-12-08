@@ -25,12 +25,16 @@ public interface ConsumerMessage<T> {
 	public MessageStatus getStatus();
 
 	public void ack();
-	
+
 	public int getPartition();
-	
+
 	public long getOffset();
-	
+
 	public boolean isPriority();
-	
+
 	public int getResendTimes();
+
+	public boolean isResend();
+
+	public int getRemainingRetries();
 }

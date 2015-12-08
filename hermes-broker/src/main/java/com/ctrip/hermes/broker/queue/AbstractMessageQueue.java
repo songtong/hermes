@@ -27,11 +27,16 @@ import com.ctrip.hermes.broker.ack.internal.ForwardOnlyAckHolder;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
+import com.ctrip.hermes.core.bo.AckContext;
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
+import com.ctrip.hermes.core.transport.command.v3.AckMessageResultCommandV3;
+import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -65,7 +70,11 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private BlockingQueue<Operation> m_opQueue;
 
-	private AckTask m_ackTask;
+	private AckOpTaskHandler m_ackOpTaskHandler;
+
+	private BlockingQueue<AckMessagesTask> m_ackMessageTaskQueue;
+
+	private AckMessagesTaskHandler m_ackMsgsTaskHandler;
 
 	private BrokerConfig m_config;
 
@@ -73,8 +82,10 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private ScheduledExecutorService m_ackOpExecutor;
 
+	private ScheduledExecutorService m_ackMessagesTaskExecutor;
+
 	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage,
-	      ScheduledExecutorService ackOpExecutor) {
+	      ScheduledExecutorService ackOpExecutor, ScheduledExecutorService ackMessagesTaskExecutor) {
 		m_topic = topic;
 		m_partition = partition;
 		m_storage = storage;
@@ -82,6 +93,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		m_resendAckHolders = new ConcurrentHashMap<>();
 		m_forwardOnlyAckHolders = new ConcurrentHashMap<>();
 		m_ackOpExecutor = ackOpExecutor;
+		m_ackMessagesTaskExecutor = ackMessagesTaskExecutor;
 		m_config = PlexusComponentLocator.lookup(BrokerConfig.class);
 		m_metaService = PlexusComponentLocator.lookup(MetaService.class);
 
@@ -90,8 +102,13 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private void init() {
 		m_opQueue = new LinkedBlockingQueue<>(m_config.getAckOpQueueSize());
-		m_ackTask = new AckTask();
-		m_ackOpExecutor.schedule(m_ackTask, m_config.getAckOpCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+		m_ackOpTaskHandler = new AckOpTaskHandler();
+		m_ackOpExecutor.schedule(m_ackOpTaskHandler, m_config.getAckOpCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+
+		m_ackMessageTaskQueue = new LinkedBlockingQueue<>(m_config.getAckMessagesTaskQueueSize());
+		m_ackMsgsTaskHandler = new AckMessagesTaskHandler();
+		m_ackMessagesTaskExecutor.schedule(m_ackMsgsTaskHandler,
+		      m_config.getAckMessagesTaskExecutorCheckIntervalMillis(), TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -102,7 +119,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		}
 
 		MessageQueueDumper existingDumper = m_dumper.get();
-		if (existingDumper == null || existingDumper.getLease().getId() != lease.getId() || existingDumper.getLease().isExpired()) {
+		if (existingDumper == null || existingDumper.getLease().getId() != lease.getId()
+		      || existingDumper.getLease().isExpired()) {
 			MessageQueueDumper newDumper = createDumper(lease);
 			if (m_dumper.compareAndSet(existingDumper, newDumper)) {
 				newDumper.start();
@@ -116,26 +134,74 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	}
 
 	@Override
-	public MessageQueueCursor getCursor(String groupId, Lease lease) {
+	public MessageQueueCursor getCursor(String groupId, Lease lease, Offset offset) {
 		if (m_stopped.get()) {
 			return null;
 		}
 
-		m_cursors.putIfAbsent(groupId, new AtomicReference<MessageQueueCursor>(null));
+		if (offset == null) {
+			// TODO remove legacy code, getCursor must pass offset in the latest version
+			m_cursors.putIfAbsent(groupId, new AtomicReference<MessageQueueCursor>(null));
 
-		MessageQueueCursor existingCursor = m_cursors.get(groupId).get();
+			MessageQueueCursor existingCursor = m_cursors.get(groupId).get();
 
-		if (existingCursor == null || existingCursor.getLease().getId() != lease.getId() || existingCursor.hasError()) {
-			MessageQueueCursor newCursor = create(groupId, lease);
-			if (m_cursors.get(groupId).compareAndSet(existingCursor, newCursor)) {
-				clearHolders(groupId);
-				newCursor.init();
+			if (existingCursor == null || existingCursor.getLease().getId() != lease.getId() || existingCursor.hasError()) {
+				MessageQueueCursor newCursor = create(groupId, lease, null);
+				if (m_cursors.get(groupId).compareAndSet(existingCursor, newCursor)) {
+					clearHolders(groupId);
+					newCursor.init();
+				}
 			}
+
+			MessageQueueCursor cursor = m_cursors.get(groupId).get();
+
+			return cursor.isInited() ? new PooledMessageQueueCursor(cursor) : new NoopMessageQueueCursor();
+
+		} else {
+			MessageQueueCursor cursor = create(groupId, lease, offset);
+			cursor.init();
+			return cursor;
 		}
 
-		MessageQueueCursor cursor = m_cursors.get(groupId).get();
+	}
 
-		return cursor.isInited() ? cursor : new NoopMessageQueueCursor();
+	// TODO remove legacy code
+	private static class PooledMessageQueueCursor implements MessageQueueCursor {
+		private MessageQueueCursor m_cursor;
+
+		public PooledMessageQueueCursor(MessageQueueCursor cursor) {
+			m_cursor = cursor;
+		}
+
+		@Override
+		public Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize) {
+			return m_cursor.next(batchSize);
+		}
+
+		@Override
+		public void init() {
+			// do nothing
+		}
+
+		@Override
+		public Lease getLease() {
+			return m_cursor.getLease();
+		}
+
+		@Override
+		public boolean hasError() {
+			return m_cursor.hasError();
+		}
+
+		@Override
+		public boolean isInited() {
+			return m_cursor.isInited();
+		}
+
+		@Override
+		public void stop() {
+			// do nothing
+		}
 	}
 
 	private void clearHolders(String groupId) {
@@ -169,6 +235,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 				dumper.stop();
 			}
 
+			// TODO remove legacy code
 			for (AtomicReference<MessageQueueCursor> cursorRef : m_cursors.values()) {
 				MessageQueueCursor cursor = cursorRef.get();
 				if (cursor != null) {
@@ -176,7 +243,9 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 				}
 			}
 
-			m_ackTask.run();
+			m_ackOpTaskHandler.run();
+
+			m_ackMsgsTaskHandler.run();
 
 			doStop();
 		}
@@ -238,7 +307,87 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		}
 	}
 
-	private class AckTask implements Runnable {
+	private class AckMessagesTaskHandler implements Runnable {
+
+		@Override
+		public void run() {
+			try {
+				List<AckMessagesTask> todos = new ArrayList<>();
+				m_ackMessageTaskQueue.drainTo(todos);
+
+				for (AckMessagesTask todo : todos) {
+					try {
+						executeTask(todo);
+					} catch (Exception e) {
+						log.error("Exception occurred while executing ack message task.", e);
+					}
+				}
+
+			} finally {
+				if (!m_stopped.get()) {
+					m_ackOpExecutor.schedule(m_ackMsgsTaskHandler, m_config.getAckMessagesTaskExecutorCheckIntervalMillis(),
+					      TimeUnit.MILLISECONDS);
+				}
+			}
+		}
+
+		private void executeTask(AckMessagesTask task) {
+			boolean success = false;
+			try {
+				doNackAndAck(task.getGroupId(), false, false, task.getAckedContexts(), task.getNackedContexts());
+				doNackAndAck(task.getGroupId(), true, false, task.getAckedPriorityContexts(),
+				      task.getNackedPriorityContexts());
+				doNackAndAck(task.getGroupId(), false, true, task.getAckedResendContexts(), task.getNackedResendContexts());
+				success = true;
+			} finally {
+				AckMessageResultCommandV3 resCmd = new AckMessageResultCommandV3();
+				resCmd.getHeader().setCorrelationId(task.getCorrelationId());
+				resCmd.setSuccess(success);
+				task.getChannel().writeAndFlush(resCmd);
+			}
+		}
+
+		private void doNackAndAck(String groupId, boolean isPriority, boolean isResend, List<AckContext> ackedContexts,
+		      List<AckContext> nackedContexts) {
+			long maxAckOffset = calMaxAckOffset(ackedContexts, nackedContexts);
+
+			if (CollectionUtil.isNotEmpty(nackedContexts)) {
+				List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>();
+				for (AckContext ackContext : nackedContexts) {
+					msgId2Metas.add(new Pair<>(ackContext.getMsgSeq(), new MessageMeta(ackContext.getMsgSeq(), ackContext
+					      .getRemainingRetries(), -1L, isPriority ? 0 : 1, isResend)));
+				}
+				doNack(isResend, isPriority, groupId, msgId2Metas);
+			}
+
+			if (maxAckOffset >= 0) {
+				doAck(isResend, isPriority, groupId, maxAckOffset);
+			}
+		}
+
+		private long calMaxAckOffset(List<AckContext> ackedContexts, List<AckContext> nackedContexts) {
+			long maxAckOffset = -1L;
+			if (CollectionUtil.isNotEmpty(ackedContexts)) {
+				for (AckContext context : ackedContexts) {
+					if (context.getMsgSeq() > maxAckOffset) {
+						maxAckOffset = context.getMsgSeq();
+					}
+				}
+			}
+			if (CollectionUtil.isNotEmpty(nackedContexts)) {
+				for (AckContext context : nackedContexts) {
+					if (context.getMsgSeq() > maxAckOffset) {
+						maxAckOffset = context.getMsgSeq();
+					}
+				}
+			}
+
+			return maxAckOffset;
+		}
+
+	}
+
+	private class AckOpTaskHandler implements Runnable {
 		private List<Operation> m_todos = new ArrayList<Operation>();
 
 		@Override
@@ -250,8 +399,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 				log.error("Exception occurred while executing ack task.", e);
 			} finally {
 				if (!m_stopped.get()) {
-					m_ackOpExecutor
-					      .schedule(m_ackTask, m_config.getAckOpCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+					m_ackOpExecutor.schedule(m_ackOpTaskHandler, m_config.getAckOpCheckIntervalMillis(),
+					      TimeUnit.MILLISECONDS);
 				}
 			}
 		}
@@ -300,8 +449,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			if (holder == null) {
 				int timeout = m_metaService.getAckTimeoutSecondsByTopicAndConsumerGroup(m_topic, op.getKey().getValue()) * 1000;
 
-				holder = isForwordOnly(op) ? new ForwardOnlyAckHolder() : new DefaultAckHolder<MessageMeta>(
-				      timeout);
+				holder = isForwordOnly(op) ? new ForwardOnlyAckHolder() : new DefaultAckHolder<MessageMeta>(timeout);
 				holders.put(op.getKey(), holder);
 			}
 
@@ -318,15 +466,20 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	}
 
 	@Override
-	public boolean offer(Operation operation) {
+	public boolean offerAckHolderOp(Operation operation) {
 		return m_opQueue.offer(operation);
+	}
+
+	@Override
+	public boolean offerAckMessagesTask(AckMessagesTask task) {
+		return m_ackMessageTaskQueue.offer(task);
 	}
 
 	protected abstract void doStop();
 
 	protected abstract MessageQueueDumper createDumper(Lease lease);
 
-	protected abstract MessageQueueCursor create(String groupId, Lease lease);
+	protected abstract MessageQueueCursor create(String groupId, Lease lease, Offset offset);
 
 	protected abstract void doNack(boolean resend, boolean isPriority, String groupId,
 	      List<Pair<Long, MessageMeta>> msgId2Metas);

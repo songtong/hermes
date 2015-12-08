@@ -61,6 +61,26 @@ public enum ConsumerStatusMonitor {
 			      .mark(msgCount);
 		}
 
+		public void ackMessageCmdSent() {
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "ackMessageCmdSent")).mark();
+		}
+
+		public void waitBrokerAckMessageTimeout() {
+			HermesMetricsRegistry.getMetricRegistry()
+			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "waitBrokerAckMessageTimeout")).mark();
+		}
+
+		public void brokerAcked() {
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "brokerAcked"))
+			      .mark();
+		}
+
+		public void brokerAckFailed() {
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "brokerAckFailed"))
+			      .mark();
+		}
+
 		public void queryOffsetCmdSent() {
 			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "queryOffsetSent"))
 			      .mark();
@@ -159,6 +179,30 @@ public enum ConsumerStatusMonitor {
 		getStatusHolder(topic, partition, group).pullMessageCmdResultReadTimeout();
 	}
 
+	public void messageReceived(String topic, int partition, String group, int msgCount) {
+		getStatusHolder(topic, partition, group).messageReceived(msgCount);
+	}
+
+	public void messageProcessed(String topic, int partition, String group, int msgCount) {
+		getStatusHolder(topic, partition, group).messageProcessed(msgCount);
+	}
+
+	public void ackMessageCmdSent(String topic, int partition, String group) {
+		getStatusHolder(topic, partition, group).ackMessageCmdSent();
+	}
+
+	public void waitBrokerAckMessageTimeout(String topic, int partition, String group) {
+		getStatusHolder(topic, partition, group).waitBrokerAckMessageTimeout();
+	}
+
+	public void brokerAcked(String topic, int partition, String group) {
+		getStatusHolder(topic, partition, group).brokerAcked();
+	}
+
+	public void brokerAckFailed(String topic, int partition, String group) {
+		getStatusHolder(topic, partition, group).brokerAckFailed();
+	}
+
 	public void queryOffsetCmdSent(String topic, int partition, String group) {
 		getStatusHolder(topic, partition, group).queryOffsetCmdSent();
 	}
@@ -173,13 +217,5 @@ public enum ConsumerStatusMonitor {
 
 	public void queryOffsetCmdResultReceived(String topic, int partition, String group) {
 		getStatusHolder(topic, partition, group).queryOffsetCmdResultReceived();
-	}
-
-	public void messageReceived(String topic, int partition, String group, int msgCount) {
-		getStatusHolder(topic, partition, group).messageReceived(msgCount);
-	}
-
-	public void messageProcessed(String topic, int partition, String group, int msgCount) {
-		getStatusHolder(topic, partition, group).messageProcessed(msgCount);
 	}
 }

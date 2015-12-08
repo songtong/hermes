@@ -9,6 +9,12 @@ import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullSpecificMessageCommand;
+import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.AckMessageResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -18,9 +24,12 @@ public enum CommandType {
 	MESSAGE_SEND(101, 1, SendMessageCommand.class), //
 	MESSAGE_ACK(102, 1, AckMessageCommand.class), //
 	MESSAGE_ACK_V2(102, 2, AckMessageCommandV2.class), //
+	MESSAGE_ACK_V3(102, 3, AckMessageCommandV3.class), //
 	MESSAGE_PULL(103, 1, PullMessageCommand.class), //
 	MESSAGE_PULL_V2(103, 2, PullMessageCommandV2.class), //
+	MESSAGE_PULL_V3(103, 3, PullMessageCommandV3.class), //
 	QUERY_LATEST_CONSUMER_OFFSET(104, 1, QueryLatestConsumerOffsetCommand.class), //
+	QUERY_LATEST_CONSUMER_OFFSET_V3(104, 3, QueryLatestConsumerOffsetCommandV3.class), //
 	QUERY_MESSAGE_OFFSET_BY_TIME(105, 1, QueryMessageOffsetByTimeCommand.class), //
 	MESSAGE_PULL_SPECIFIC(106, 1, PullSpecificMessageCommand.class), //
 
@@ -28,8 +37,11 @@ public enum CommandType {
 
 	RESULT_MESSAGE_PULL(302, 1, PullMessageResultCommand.class), //
 	RESULT_MESSAGE_PULL_V2(302, 2, PullMessageResultCommandV2.class), //
+	RESULT_MESSAGE_PULL_V3(302, 3, PullMessageResultCommandV3.class), //
 	RESULT_MESSAGE_SEND(301, 1, SendMessageResultCommand.class), //
-	RESULT_QUERY_OFFSET(303, 1, QueryOffsetResultCommand.class) //
+	RESULT_QUERY_OFFSET(303, 1, QueryOffsetResultCommand.class), //
+	RESULT_QUERY_OFFSET_V3(303, 3, QueryOffsetResultCommandV3.class), //
+	RESULT_ACK_MESSAGE_V3(304, 3, AckMessageResultCommandV3.class), //
 	;
 
 	private static Map<Pair<Integer, Integer>, CommandType> m_types = new HashMap<>();

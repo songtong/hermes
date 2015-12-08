@@ -19,8 +19,7 @@ import com.ctrip.hermes.consumer.api.MessageListenerConfig;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
-import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.message.BrokerConsumerMessage;
+import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -47,9 +46,6 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 	@Inject
 	private SystemClockService m_systemClockService;
 
-	@Inject
-	private ClientEnvironment m_clientEnv;
-
 	@Override
 	public void register(long correlationId, final ConsumerContext context) {
 		try {
@@ -58,8 +54,7 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 				      .getTopic().getName(), context.getGroupId(), context.getSessionId());
 			}
 
-			int threadCount = Integer.valueOf(m_clientEnv.getConsumerConfig(context.getTopic().getName()).getProperty(
-			      "consumer.notifier.threadcount", m_config.getDefaultNotifierThreadCount()));
+			int threadCount = m_config.getNotifierThreadCount(context.getTopic().getName());
 
 			MessageListenerConfig messageListenerConfig = context.getMessageListenerConfig();
 			NotifyStrategy notifyStrategy = null;

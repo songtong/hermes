@@ -111,21 +111,14 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public synchronized Pair<Offset, List<TppConsumerMessageBatch>> next(Offset offset, int batchSize) {
-		if (offset != null) {
-			m_priorityOffset = offset.getPriorityOffset();
-			m_nonPriorityOffset = offset.getNonPriorityOffset();
-			m_resendOffset = offset.getResendOffset();
-		}
+	public synchronized Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize) {
+		List<TppConsumerMessageBatch> batches = doNext(batchSize);
+		Offset offset = new Offset((long) m_priorityOffset, (long) m_nonPriorityOffset, (Pair<Date, Long>) m_resendOffset);
 
-		List<TppConsumerMessageBatch> batches = next(batchSize);
-		Offset curOff = new Offset((long) m_priorityOffset, (long) m_nonPriorityOffset, (Pair<Date, Long>) m_resendOffset);
-
-		return new Pair<Offset, List<TppConsumerMessageBatch>>(batches == null ? null : curOff, batches);
+		return new Pair<Offset, List<TppConsumerMessageBatch>>(batches == null ? null : offset, batches);
 	}
 
-	@Override
-	public synchronized List<TppConsumerMessageBatch> next(int batchSize) {
+	protected List<TppConsumerMessageBatch> doNext(int batchSize) {
 		if (m_stopped.get() || m_lease.isExpired()) {
 			return null;
 		}
@@ -176,7 +169,6 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		}
 
 		return null;
-
 	}
 
 	@Override

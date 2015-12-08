@@ -11,7 +11,6 @@ import com.ctrip.hermes.core.message.retry.RetryPolicyFactoryTest;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaServiceTest;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicyTest;
 import com.ctrip.hermes.core.transport.command.AckMessageCommandTest;
-import com.ctrip.hermes.core.transport.command.PullMessageResultCommandTest;
 import com.ctrip.hermes.core.transport.command.SendMessageCommandTest;
 import com.ctrip.hermes.core.transport.netty.MagicTest;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodecTest;
@@ -26,10 +25,9 @@ FrequencySpecifiedRetryPolicyTest.class,//
       ExponentialSchedulePolicyTest.class, //
       DefaultMessageCodecTest.class, //
       SendMessageCommandTest.class, //
-      PullMessageResultCommandTest.class, //
       AckMessageCommandTest.class, //
       DefaultMetaServiceTest.class, //
-      // add test classes here
+// add test classes here
 
 })
 public class AllTests {

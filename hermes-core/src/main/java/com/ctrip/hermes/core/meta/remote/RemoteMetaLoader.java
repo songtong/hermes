@@ -63,7 +63,7 @@ public class RemoteMetaLoader implements MetaLoader {
 				String uri = m_clientEnvironment.getGlobalConfig().getProperty("meta.fetch.remote.uri");
 				if (StringUtils.isBlank(uri)) {
 					if (log.isDebugEnabled()) {
-						log.debug("Can not find meta fetch uri, use \"/meta\" as default.");
+						log.debug("Use \"/meta\" as default meta fetch uri.");
 					}
 					uri = "/meta";
 				}

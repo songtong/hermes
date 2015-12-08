@@ -15,9 +15,7 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
  */
 public interface MessageQueueCursor {
 
-	List<TppConsumerMessageBatch> next(int batchSize);
-
-	Pair<Offset, List<TppConsumerMessageBatch>> next(Offset offset, int batchSize);
+	Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize);
 
 	void init();
 

@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.ack.internal.AckHolder;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
@@ -33,8 +32,8 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	private BrokerConfig m_config;
 
 	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService,
-	      BrokerConfig config, ScheduledExecutorService ackOpExecutor) {
-		super(topic, partition, storage, ackOpExecutor);
+	      BrokerConfig config, ScheduledExecutorService ackOpExecutor, ScheduledExecutorService ackMessagesTaskExecutor) {
+		super(topic, partition, storage, ackOpExecutor, ackMessagesTaskExecutor);
 		m_metaService = metaService;
 		m_config = config;
 	}
@@ -45,9 +44,14 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	}
 
 	@Override
-	protected MessageQueueCursor create(String groupId, Lease lease) {
-		return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), lease, m_storage, m_metaService,
-		      this);
+	protected MessageQueueCursor create(String groupId, Lease lease, Offset offset) {
+		if (offset == null) {
+			return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), lease, m_storage, m_metaService,
+			      this);
+		} else {
+			return new DefaultMessageQueueCursorV2(new Tpg(m_topic, m_partition, groupId), lease, m_storage,
+			      m_metaService, this, offset);
+		}
 	}
 
 	@Override
@@ -69,10 +73,8 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 		int groupIdInt = m_metaService.translateToIntGroupId(m_topic, groupId);
 		try {
 			long pOffset = (long) m_storage.findLastOffset(new Tpp(m_topic, m_partition, true), groupIdInt);
-			pOffset = getMaxOffset(pOffset, m_forwardOnlyAckHolders.get(new Pair<Boolean, String>(true, groupId)));
 
 			long npOffset = (long) m_storage.findLastOffset(new Tpp(m_topic, m_partition, false), groupIdInt);
-			npOffset = getMaxOffset(npOffset, m_forwardOnlyAckHolders.get(new Pair<Boolean, String>(false, groupId)));
 
 			@SuppressWarnings("unchecked")
 			Pair<Date, Long> rOffset = (Pair<Date, Long>) m_storage.findLastResendOffset(new Tpg(m_topic, m_partition,
@@ -82,10 +84,6 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 			log.error("Find latest offset failed: topic= {}, partition= {}, group= {}.", m_topic, m_partition, groupId, e);
 		}
 		return null;
-	}
-
-	private long getMaxOffset(long offset, AckHolder<MessageMeta> holder) {
-		return holder == null ? offset : Math.max(holder.getMaxAckedOffset(), offset);
 	}
 
 	@Override

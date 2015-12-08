@@ -22,7 +22,7 @@ public interface MessageQueue {
 	ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch,
 	      Lease lease);
 
-	MessageQueueCursor getCursor(String groupId, Lease lease);
+	MessageQueueCursor getCursor(String groupId, Lease lease, Offset offset);
 
 	Offset findLatestConsumerOffset(String groupId);
 
@@ -38,5 +38,7 @@ public interface MessageQueue {
 
 	void checkHolders();
 
-	boolean offer(Operation operation);
+	boolean offerAckHolderOp(Operation operation);
+
+	boolean offerAckMessagesTask(AckMessagesTask task);
 }

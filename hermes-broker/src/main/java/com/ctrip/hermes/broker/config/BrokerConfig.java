@@ -148,4 +148,16 @@ public class BrokerConfig implements Initializable {
 	public int getFetchMessageWithOffsetBatchSize() {
 		return 500;
 	}
+
+	public int getAckMessagesTaskQueueSize() {
+		return 500000;
+	}
+
+	public int getAckMessagesTaskExecutorThreadCount() {
+		return 10;
+	}
+
+	public long getAckMessagesTaskExecutorCheckIntervalMillis() {
+		return 100;
+	}
 }

@@ -1,7 +1,6 @@
 package com.ctrip.hermes.consumer.stream;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,11 +19,11 @@ import com.ctrip.hermes.consumer.api.MessageStreamOffset;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.status.ConsumerStatusMonitor;
+import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
-import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
@@ -35,9 +34,9 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.core.transport.command.v2.AbstractPullMessageCommand;
-import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
-import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullSpecificMessageCommand;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.CollectionUtil;
@@ -137,7 +136,7 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 		}
 	}
 
-	protected List<ConsumerMessage<T>> decodeBatches(List<TppConsumerMessageBatch> batches, Channel channel) {
+	protected List<ConsumerMessage<T>> decodeBatches(List<TppConsumerMessageBatch> batches) {
 		List<ConsumerMessage<T>> msgs = new ArrayList<ConsumerMessage<T>>();
 		if (batches != null && !batches.isEmpty()) {
 			for (TppConsumerMessageBatch batch : batches) {
@@ -159,9 +158,7 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 					brokerMsg.setPriority(messageMeta.getPriority() == 0 ? true : false);
 					brokerMsg.setResend(messageMeta.isResend());
 					brokerMsg.setRetryTimesOfRetryPolicy(0);
-					brokerMsg.setChannel(channel);
 					brokerMsg.setMsgSeq(messageMeta.getId());
-					brokerMsg.setAckWithForwardOnly(true);
 
 					context.stop();
 
@@ -202,7 +199,7 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 			} else {
 				AbstractPullMessageCommand cmd = cmdCreator.createPullCommand();
 				Context context = timer.time();
-				PullMessageResultCommandV2 ack = (PullMessageResultCommandV2) executePullMessageCommand(endpoint, cmd,
+				PullMessageResultCommandV3 ack = (PullMessageResultCommandV3) executePullMessageCommand(endpoint, cmd,
 				      timeout);
 				context.stop();
 
@@ -213,7 +210,7 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 
 				try {
 					if (ack.isBrokerAccepted()) {
-						return decodeBatches(ack.getBatches(), ack.getChannel());
+						return decodeBatches(ack.getBatches());
 					}
 				} finally {
 					ack.release();
@@ -231,7 +228,7 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 		return pullMessages(new PullMessageCommandCreator() {
 			@Override
 			public AbstractPullMessageCommand createPullCommand() {
-				SettableFuture<PullMessageResultCommandV2> future = SettableFuture.create();
+				SettableFuture<PullMessageResultCommandV3> future = SettableFuture.create();
 
 				@SuppressWarnings("unchecked")
 				List<Offset> cmdOffs = (List<Offset>) CollectionUtil.collect(offsets, new Transformer() {
@@ -261,11 +258,11 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 		return pullMessages(new PullMessageCommandCreator() {
 			@Override
 			public AbstractPullMessageCommand createPullCommand() {
-				SettableFuture<PullMessageResultCommandV2> future = SettableFuture.create();
+				SettableFuture<PullMessageResultCommandV3> future = SettableFuture.create();
 				long expireTime = m_systemClockService.now() + m_config.getPullMessageTimeoutMills();
 				Offset off = new Offset(offset.getPriorityOffset() - 1, offset.getNonPriorityOffset() - 1, null);
-				PullMessageCommandV2 cmd = new PullMessageCommandV2( //
-				      PullMessageCommandV2.PULL_WITH_OFFSET, m_topic, m_partitionId, m_groupId, off, size, expireTime);
+				PullMessageCommandV3 cmd = new PullMessageCommandV3(m_topic, m_partitionId, m_groupId, off, size,
+				      expireTime);
 				cmd.getHeader().setCorrelationId(CorrelationIdGenerator.generateCorrelationId());
 				cmd.setFuture(future);
 				return cmd;

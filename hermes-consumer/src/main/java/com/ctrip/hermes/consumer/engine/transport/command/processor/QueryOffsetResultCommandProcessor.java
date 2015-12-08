@@ -7,9 +7,9 @@ import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.core.transport.command.CommandType;
-import com.ctrip.hermes.core.transport.command.QueryOffsetResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -22,12 +22,12 @@ public class QueryOffsetResultCommandProcessor implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.RESULT_QUERY_OFFSET);
+		return Arrays.asList(CommandType.RESULT_QUERY_OFFSET_V3);
 	}
 
 	@Override
 	public void process(CommandProcessorContext ctx) {
-		QueryOffsetResultCommand cmd = (QueryOffsetResultCommand) ctx.getCommand();
+		QueryOffsetResultCommandV3 cmd = (QueryOffsetResultCommandV3) ctx.getCommand();
 		m_queryOffsetResultMonitor.resultReceived(cmd);
 	}
 

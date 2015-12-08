@@ -29,7 +29,7 @@ public class StartProducer extends ComponentTestCase {
 	public void test() throws Exception {
 		System.out.println("Producer started...");
 
-		Cat.initializeByDomain("52061", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
+		Cat.initializeByDomain("hermes", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
