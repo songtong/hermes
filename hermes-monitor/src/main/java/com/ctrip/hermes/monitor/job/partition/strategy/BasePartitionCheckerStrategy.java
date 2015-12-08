@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.TableContext;
 import com.ctrip.hermes.monitor.job.partition.entity.PartitionInfo;
 import com.ctrip.hermes.monitor.job.partition.finder.CreationStampFinder;
@@ -55,10 +56,17 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		return new AnalysisResult(addList, dropList);
 	}
 
+	private int getPartitionIncrementStepByTableContext(TableContext ctx) {
+		return ctx instanceof MessageTableContext ? getConfig().getPartitionSizeIncrementStep() : //
+		      getConfig().getResendPartitionSizeIncrementStep();
+	}
+
 	private long getLatestCapacityPerPartition(TableContext ctx) {
 		List<PartitionInfo> ps = ctx.getPartitionInfos();
-		return ps.size() < 2 ? getConfig().getPartitionSizeIncrementStep() : //
-		      ps.get(ps.size() - 1).getUpperbound() - ps.get(ps.size() - 2).getUpperbound();
+
+		long partitionSize = getPartitionIncrementStepByTableContext(ctx);
+		return ps.size() < 2 ? partitionSize : //
+		      Math.max(partitionSize, ps.get(ps.size() - 1).getUpperbound() - ps.get(ps.size() - 2).getUpperbound());
 	}
 
 	private List<PartitionInfo> calculateDecrementPartitions(TableContext ctx) {
@@ -84,7 +92,8 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		if (speed > 0) {
 			long incrementPartitionCount = ctx.getIncrementInDay() * speed / partitionSize;
 			if (incrementPartitionCount > getConfig().getPartitionIncrementMaxCount()) {
-				Pair<Long, Long> pair = renewPartitionSizeAndCount(ctx.getIncrementInDay() * speed, ctx.getIncrementInDay());
+				Pair<Long, Long> pair = renewPartitionSizeAndCount(ctx, ctx.getIncrementInDay() * speed,
+				      ctx.getIncrementInDay());
 				partitionSize = pair.getKey();
 				incrementPartitionCount = pair.getValue();
 			}
@@ -108,7 +117,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		for (int idx = 0; idx < MIN_PARTITION_COUNT - ctx.getPartitionInfos().size(); idx++) {
 			PartitionInfo nextPartitionInfo = new PartitionInfo();
 			nextPartitionInfo.setUpperbound( //
-			      latestPartitionInfo.getUpperbound() + getConfig().getPartitionSizeIncrementStep());
+			      latestPartitionInfo.getUpperbound() + getPartitionIncrementStepByTableContext(ctx));
 			nextPartitionInfo.setName(nextPartitionName(latestPartitionInfo));
 			nextPartitionInfo.setTable(ctx.getTableName());
 			list.add(nextPartitionInfo);
@@ -118,9 +127,9 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		return list;
 	}
 
-	private Pair<Long, Long> renewPartitionSizeAndCount(long capacityInCount, int capacityInDay) {
+	private Pair<Long, Long> renewPartitionSizeAndCount(TableContext ctx, long capacityInCount, int capacityInDay) {
 		long capacityPerDay = capacityInCount / capacityInDay;
-		long step = getConfig().getPartitionSizeIncrementStep();
+		long step = getPartitionIncrementStepByTableContext(ctx);
 		long size = step;
 		while (size < getConfig().getPartitionMaxSize() && size < capacityPerDay) {
 			size += step;

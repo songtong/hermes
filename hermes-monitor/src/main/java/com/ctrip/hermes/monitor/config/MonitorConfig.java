@@ -416,6 +416,10 @@ public class MonitorConfig {
 		return partitionSizeIncrementStep;
 	}
 
+	public int getResendPartitionSizeIncrementStep() {
+		return partitionSizeIncrementStep / 10;
+	}
+
 	public void setPartitionSizeIncrementStep(int partitionSizeIncrementStep) {
 		this.partitionSizeIncrementStep = partitionSizeIncrementStep;
 	}
