@@ -1,7 +1,6 @@
 package com.ctrip.hermes.consumer.engine.bootstrap.strategy;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,17 +24,20 @@ import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.consumer.engine.ack.AckManager;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.status.ConsumerStatusMonitor;
+import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
+import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
-import com.ctrip.hermes.core.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
@@ -46,8 +48,10 @@ import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
-import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
-import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -63,19 +67,13 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	private static final Logger log = LoggerFactory.getLogger(BaseConsumerTask.class);
 
-	protected ConsumerNotifier m_consumerNotifier;
-
-	protected MessageCodec m_messageCodec;
-
-	protected EndpointManager m_endpointManager;
-
-	protected EndpointClient m_endpointClient;
+	protected SystemClockService m_systemClockService;
 
 	protected LeaseManager<ConsumerLeaseKey> m_leaseManager;
 
-	protected SystemClockService m_systemClockService;
-
 	protected ConsumerConfig m_config;
+
+	protected ConsumerNotifier m_consumerNotifier;
 
 	protected ExecutorService m_pullMessageTaskExecutor;
 
@@ -95,26 +93,28 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	protected RetryPolicy m_retryPolicy;
 
-	protected PullMessageResultMonitor m_pullMessageResultMonitor;
-
 	protected AtomicReference<Runnable> m_pullMessagesTask = new AtomicReference<>(null);
 
+	protected AtomicReference<Offset> m_offset = new AtomicReference<>(null);
+
+	protected AckManager m_ackManager;
+
+	protected int m_maxAckHolderSize;
+
 	@SuppressWarnings("unchecked")
-	public BaseConsumerTask(ConsumerContext context, int partitionId, int localCacheSize) {
+	public BaseConsumerTask(ConsumerContext context, int partitionId, int localCacheSize, int maxAckHolderSize) {
 		m_context = context;
 		m_partitionId = partitionId;
 		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(localCacheSize);
+		m_maxAckHolderSize = maxAckHolderSize;
 
 		m_leaseManager = PlexusComponentLocator.lookup(LeaseManager.class, BuildConstants.CONSUMER);
 		m_consumerNotifier = PlexusComponentLocator.lookup(ConsumerNotifier.class);
-		m_endpointClient = PlexusComponentLocator.lookup(EndpointClient.class);
-		m_endpointManager = PlexusComponentLocator.lookup(EndpointManager.class);
-		m_messageCodec = PlexusComponentLocator.lookup(MessageCodec.class);
 		m_systemClockService = PlexusComponentLocator.lookup(SystemClockService.class);
 		m_config = PlexusComponentLocator.lookup(ConsumerConfig.class);
 		m_retryPolicy = PlexusComponentLocator.lookup(MetaService.class).findRetryPolicyByTopicAndGroup(
 		      context.getTopic().getName(), context.getGroupId());
-		m_pullMessageResultMonitor = PlexusComponentLocator.lookup(PullMessageResultMonitor.class);
+		m_ackManager = PlexusComponentLocator.lookup(AckManager.class);
 
 		m_pullMessageTaskExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create(
 		      String.format("PullMessageThread-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
@@ -185,6 +185,8 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	protected void startConsuming(ConsumerLeaseKey key, long correlationId) {
 		m_consumerNotifier.register(correlationId, m_context);
+		m_ackManager.register(correlationId,
+		      new Tpg(m_context.getTopic().getName(), m_partitionId, m_context.getGroupId()), m_maxAckHolderSize);
 		doBeforeConsuming(key, correlationId);
 
 		m_msgs.clear();
@@ -225,6 +227,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		}
 
 		m_consumerNotifier.deregister(correlationId);
+		m_ackManager.deregister(correlationId);
 		m_lease.set(null);
 		doAfterConsuming(key, correlationId);
 	}
@@ -239,9 +242,90 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		return m_pullMessagesTask.get();
 	}
 
-	protected abstract void doBeforeConsuming(ConsumerLeaseKey key, long correlationId);
+	protected Runnable createPullMessageTask(long correlationId, SchedulePolicy noEndpointSchedulePolicy) {
+		return new BasePullMessagesTask(correlationId, noEndpointSchedulePolicy);
+	}
 
-	protected abstract void doAfterConsuming(ConsumerLeaseKey key, long correlationId);
+	protected void doBeforeConsuming(ConsumerLeaseKey key, long correlationId) {
+		queryLatestOffset(key, correlationId);
+
+		SchedulePolicy noEndpointSchedulePolicy = new ExponentialSchedulePolicy(m_config.getNoEndpointWaitBaseMillis(),
+		      m_config.getNoEndpointWaitMaxMillis());
+		m_pullMessagesTask.set(createPullMessageTask(correlationId, noEndpointSchedulePolicy));
+	}
+
+	protected void queryLatestOffset(ConsumerLeaseKey key, long correlationId) {
+
+		SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(10, 100);
+
+		while (!isClosed() && !Thread.currentThread().isInterrupted() && !m_lease.get().isExpired()) {
+
+			Endpoint endpoint = PlexusComponentLocator.lookup(EndpointManager.class).getEndpoint(
+			      m_context.getTopic().getName(), m_partitionId);
+			if (endpoint == null) {
+				log.warn("No endpoint found for topic {} partition {}, will retry later", m_context.getTopic().getName(),
+				      m_partitionId);
+				schedulePolicy.fail(true);
+			} else {
+				final SettableFuture<QueryOffsetResultCommandV3> future = SettableFuture.create();
+
+				QueryLatestConsumerOffsetCommandV3 cmd = new QueryLatestConsumerOffsetCommandV3(m_context.getTopic()
+				      .getName(), m_partitionId, m_context.getGroupId());
+
+				cmd.getHeader().setCorrelationId(correlationId);
+				cmd.setFuture(future);
+
+				QueryOffsetResultCommandV3 offsetRes = null;
+
+				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
+				      m_context.getGroupId(), "query-offset-cmd-duration");
+
+				Context context = timer.time();
+
+				long timeout = m_config.getQueryOffsetTimeoutMillis();
+
+				QueryOffsetResultMonitor queryOffsetResultMonitor = PlexusComponentLocator
+				      .lookup(QueryOffsetResultMonitor.class);
+
+				queryOffsetResultMonitor.monitor(cmd);
+				PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, timeout,
+				      TimeUnit.MILLISECONDS);
+
+				ConsumerStatusMonitor.INSTANCE.queryOffsetCmdSent(m_context.getTopic().getName(), m_partitionId,
+				      m_context.getGroupId());
+
+				try {
+					offsetRes = future.get(timeout, TimeUnit.MILLISECONDS);
+				} catch (TimeoutException e) {
+					ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReadTimeout(m_context.getTopic().getName(),
+					      m_partitionId, m_context.getGroupId());
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} catch (ExecutionException e) {
+					ConsumerStatusMonitor.INSTANCE.queryOffsetCmdError(m_context.getTopic().getName(), m_partitionId,
+					      m_context.getGroupId());
+				} finally {
+					queryOffsetResultMonitor.remove(cmd);
+				}
+
+				context.stop();
+
+				if (offsetRes != null && offsetRes.getOffset() != null) {
+					ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReceived(m_context.getTopic().getName(),
+					      m_partitionId, m_context.getGroupId());
+					m_offset.set(offsetRes.getOffset());
+					return;
+				} else {
+					schedulePolicy.fail(true);
+				}
+			}
+		}
+	}
+
+	protected void doAfterConsuming(ConsumerLeaseKey key, long correlationId) {
+		m_pullMessagesTask.set(null);
+		m_offset.set(null);
+	}
 
 	protected void scheduleRenewLeaseTask(final ConsumerLeaseKey key, long delay) {
 		m_renewLeaseTaskExecutor.schedule(new Runnable() {
@@ -357,8 +441,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 	}
 
 	@SuppressWarnings("rawtypes")
-	protected List<ConsumerMessage<?>> decodeBatches(List<TppConsumerMessageBatch> batches, Class bodyClazz,
-	      Channel channel) {
+	protected List<ConsumerMessage<?>> decodeBatches(List<TppConsumerMessageBatch> batches, Class bodyClazz) {
 		List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 		for (TppConsumerMessageBatch batch : batches) {
 			List<MessageMeta> msgMetas = batch.getMessageMetas();
@@ -371,14 +454,14 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				      m_context.getGroupId(), "decode-duration");
 				Context context = timer.time();
 
-				BaseConsumerMessage baseMsg = m_messageCodec.decode(batch.getTopic(), batchData, bodyClazz);
+				BaseConsumerMessage baseMsg = PlexusComponentLocator.lookup(MessageCodec.class).decode(batch.getTopic(),
+				      batchData, bodyClazz);
 				BrokerConsumerMessage brokerMsg = new BrokerConsumerMessage(baseMsg);
 				MessageMeta messageMeta = msgMetas.get(j);
 				brokerMsg.setPartition(partition);
 				brokerMsg.setPriority(messageMeta.getPriority() == 0 ? true : false);
 				brokerMsg.setResend(messageMeta.isResend());
 				brokerMsg.setRetryTimesOfRetryPolicy(m_retryPolicy.getRetryTimes());
-				brokerMsg.setChannel(channel);
 				brokerMsg.setMsgSeq(messageMeta.getId());
 
 				context.stop();
@@ -398,7 +481,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		m_closed.set(true);
 	}
 
-	protected abstract class BasePullMessagesTask implements Runnable {
+	protected class BasePullMessagesTask implements Runnable {
 		protected long m_correlationId;
 
 		protected SchedulePolicy m_noEndpointSchedulePolicy;
@@ -415,7 +498,8 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					return;
 				}
 
-				Endpoint endpoint = m_endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
+				Endpoint endpoint = PlexusComponentLocator.lookup(EndpointManager.class).getEndpoint(
+				      m_context.getTopic().getName(), m_partitionId);
 
 				if (endpoint == null) {
 					log.warn("No endpoint found for topic {} partition {}, will retry later",
@@ -444,14 +528,14 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 		protected void pullMessages(Endpoint endpoint, long timeout) throws InterruptedException, TimeoutException,
 		      ExecutionException {
-			final SettableFuture<PullMessageResultCommandV2> future = SettableFuture.create();
+			final SettableFuture<PullMessageResultCommandV3> future = SettableFuture.create();
 
-			PullMessageCommandV2 cmd = createPullMessageCommand(timeout);
+			PullMessageCommandV3 cmd = createPullMessageCommand(timeout);
 
 			cmd.getHeader().setCorrelationId(m_correlationId);
 			cmd.setFuture(future);
 
-			PullMessageResultCommandV2 ack = null;
+			PullMessageResultCommandV3 ack = null;
 
 			try {
 
@@ -460,8 +544,12 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 				Context context = timer.time();
 
-				m_pullMessageResultMonitor.monitor(cmd);
-				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
+				PullMessageResultMonitor pullMessageResultMonitor = PlexusComponentLocator
+				      .lookup(PullMessageResultMonitor.class);
+
+				pullMessageResultMonitor.monitor(cmd);
+				PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, timeout,
+				      TimeUnit.MILLISECONDS);
 
 				ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_context.getTopic().getName(), m_partitionId,
 				      m_context.getGroupId());
@@ -472,7 +560,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
 					      m_partitionId, m_context.getGroupId());
 				} finally {
-					m_pullMessageResultMonitor.remove(cmd);
+					pullMessageResultMonitor.remove(cmd);
 				}
 
 				context.stop();
@@ -492,19 +580,31 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			}
 		}
 
-		protected abstract void resultReceived(PullMessageResultCommandV2 ack);
+		protected void resultReceived(PullMessageResultCommandV3 ack) {
+			if (ack.getOffset() != null) {
+				m_offset.set(ack.getOffset());
+			}
+		}
 
-		protected abstract PullMessageCommandV2 createPullMessageCommand(long timeout);
+		protected PullMessageCommandV3 createPullMessageCommand(long timeout) {
+			return new PullMessageCommandV3(m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
+			      m_offset.get(), m_msgs.remainingCapacity(), m_systemClockService.now() + timeout
+			            + m_config.getPullMessageBrokerExpireTimeAdjustmentMills());
+		}
 
-		protected void appendToMsgQueue(PullMessageResultCommandV2 ack) {
+		protected void appendToMsgQueue(PullMessageResultCommandV3 ack) {
 			List<TppConsumerMessageBatch> batches = ack.getBatches();
 			if (batches != null && !batches.isEmpty()) {
 				ConsumerContext context = m_consumerNotifier.find(m_correlationId);
 				if (context != null) {
 					Class<?> bodyClazz = context.getMessageClazz();
 
-					List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz, ack.getChannel());
+					List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz);
 					m_msgs.addAll(msgs);
+
+					for (ConsumerMessage<?> msg : msgs) {
+						m_ackManager.delivered(m_correlationId, msg);
+					}
 
 					ConsumerStatusMonitor.INSTANCE.messageReceived(m_context.getTopic().getName(), m_partitionId,
 					      m_context.getGroupId(), msgs.size());

@@ -8,6 +8,7 @@ import com.codahale.metrics.Timer;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.metrics.HermesMetricsRegistry;
+import com.dianping.cat.Cat;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -34,6 +35,9 @@ public enum StatusMonitor {
 	public void commandReceived(CommandType type) {
 		HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name("commandProcessor", "commandReceived"))
 		      .mark();
+		if (type != null) {
+			Cat.logEvent("Hermes.Command.Version", type.toString() + "-RCV");
+		}
 	}
 
 	public Timer getProcessCommandTimer(CommandType type, CommandProcessor processor) {

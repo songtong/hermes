@@ -24,7 +24,7 @@ import com.ctrip.hermes.consumer.api.MessageStream;
 import com.ctrip.hermes.consumer.api.MessageStreamOffset;
 import com.ctrip.hermes.consumer.api.OffsetStorage;
 import com.ctrip.hermes.consumer.api.PartitionMetaListener;
-import com.ctrip.hermes.core.message.BrokerConsumerMessage;
+import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.metrics.HttpMetricsServer;
 import com.dianping.cat.Cat;
@@ -79,7 +79,7 @@ public class StartConsumer extends ComponentTestCase {
 		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
 		server.start();
 
-		Cat.initializeByDomain("52061", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
+		Cat.initializeByDomain("hermes", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
 
 		Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers = new HashMap<Pair<String, String>, List<Pair<String, ConsumerHolder>>>();
 

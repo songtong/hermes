@@ -24,6 +24,14 @@ public class AckContext {
 		return m_remainingRetries;
 	}
 
+	public void setOnMessageStartTimeMillis(long onMessageStartTimeMillis) {
+		m_onMessageStartTimeMillis = onMessageStartTimeMillis;
+	}
+
+	public void setOnMessageEndTimeMillis(long onMessageEndTimeMillis) {
+		m_onMessageEndTimeMillis = onMessageEndTimeMillis;
+	}
+
 	public long getOnMessageStartTimeMillis() {
 		return m_onMessageStartTimeMillis;
 	}

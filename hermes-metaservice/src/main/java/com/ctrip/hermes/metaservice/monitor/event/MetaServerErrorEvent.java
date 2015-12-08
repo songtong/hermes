@@ -19,6 +19,6 @@ public class MetaServerErrorEvent extends ServerErrorEvent {
 
 	@Override
 	String getMessageFormat() {
-		return "[%s] Broker %s has got %s times error.";
+		return "[%s] MetaServer %s has got %s times error.";
 	}
 }

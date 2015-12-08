@@ -21,17 +21,21 @@ public interface MessageQueueManager {
 
 	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data, Lease lease);
 
-	public MessageQueueCursor getCursor(Tpg tpg, Lease lease);
+	public MessageQueueCursor getCursor(Tpg tpg, Lease lease, Offset offset);
 
 	public List<TppConsumerMessageBatch> findMessagesByOffsets(String topic, int partition, List<Offset> offsets);
 
 	public void stop();
 
-	void delivered(TppConsumerMessageBatch batch, String groupId, boolean withOffset);
+	void delivered(TppConsumerMessageBatch batch, String groupId, boolean withOffset, boolean needServerSideAckHolder);
 
+	// TODO remove legacy code
 	void acked(Tpp tpp, String groupId, boolean resend, List<AckContext> ackContexts, int ackType);
 
+	// TODO remove legacy code
 	void nacked(Tpp tpp, String groupId, boolean resend, List<AckContext> nackContexts, int ackType);
+
+	void submitAckMessagesTask(AckMessagesTask task);
 
 	public Offset findLatestConsumerOffset(Tpg tpg);
 

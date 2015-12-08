@@ -1,8 +1,14 @@
-package com.ctrip.hermes.core.message;
+package com.ctrip.hermes.consumer.message;
 
 import io.netty.channel.Channel;
 
 import java.util.Iterator;
+
+import com.ctrip.hermes.core.message.BaseConsumerMessage;
+import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
+import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.message.PropertiesHolder;
+import com.ctrip.hermes.core.message.PropertiesHolderAware;
 
 public class NackDelayedBrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesHolderAware,
       BaseConsumerMessageAware<T> {
@@ -20,6 +26,7 @@ public class NackDelayedBrokerConsumerMessage<T> implements ConsumerMessage<T>, 
 		m_brokerMsg.getBaseConsumerMessage().nack();
 	}
 
+	@Override
 	public int getResendTimes() {
 		return m_resendTimes;
 	}
@@ -106,6 +113,7 @@ public class NackDelayedBrokerConsumerMessage<T> implements ConsumerMessage<T>, 
 		m_brokerMsg.setResend(resend);
 	}
 
+	@Override
 	public boolean isResend() {
 		return m_brokerMsg.isResend();
 	}

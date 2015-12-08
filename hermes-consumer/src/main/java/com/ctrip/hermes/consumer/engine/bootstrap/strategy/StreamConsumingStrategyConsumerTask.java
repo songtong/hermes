@@ -13,8 +13,9 @@ import com.ctrip.hermes.core.schedule.SchedulePolicy;
 public class StreamConsumingStrategyConsumerTask extends StrictlyOrderedConsumingStrategyConsumerTask {
 	private static final Logger log = LoggerFactory.getLogger(StreamConsumingStrategyConsumerTask.class);
 
-	public StreamConsumingStrategyConsumerTask(ConsumerContext context, int partitionId, int localCacheSize) {
-		super(context, partitionId, localCacheSize);
+	public StreamConsumingStrategyConsumerTask(ConsumerContext context, int partitionId, int localCacheSize,
+	      int maxAckHolderSize) {
+		super(context, partitionId, localCacheSize, maxAckHolderSize);
 	}
 
 	@Override

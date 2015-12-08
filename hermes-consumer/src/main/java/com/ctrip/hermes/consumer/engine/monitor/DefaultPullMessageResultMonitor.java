@@ -7,8 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.transport.command.v2.PullMessageResultListener;
-import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
+import com.ctrip.hermes.core.transport.command.PullMessageResultListener;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -28,7 +28,7 @@ public class DefaultPullMessageResultMonitor implements PullMessageResultMonitor
 	}
 
 	@Override
-	public void resultReceived(PullMessageResultCommandV2 result) {
+	public void resultReceived(PullMessageResultCommandV3 result) {
 		if (result != null) {
 			PullMessageResultListener listener = m_cmds.remove(result.getHeader().getCorrelationId());
 

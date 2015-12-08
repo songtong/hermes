@@ -2,6 +2,8 @@ package com.ctrip.hermes.core.transport.command.v2;
 
 import com.ctrip.hermes.core.transport.command.AbstractCommand;
 import com.ctrip.hermes.core.transport.command.CommandType;
+import com.ctrip.hermes.core.transport.command.PullMessageResultListener;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
@@ -18,7 +20,7 @@ abstract public class AbstractPullMessageCommand extends AbstractCommand impleme
 
 	protected long m_expireTime;
 
-	private transient SettableFuture<PullMessageResultCommandV2> m_future;
+	private transient SettableFuture<PullMessageResultCommandV3> m_future;
 
 	public AbstractPullMessageCommand(CommandType commandType, int commandVersion, String topic, int partition,
 	      long expireTime) {
@@ -28,11 +30,11 @@ abstract public class AbstractPullMessageCommand extends AbstractCommand impleme
 		m_expireTime = expireTime;
 	}
 
-	public SettableFuture<PullMessageResultCommandV2> getFuture() {
+	public SettableFuture<PullMessageResultCommandV3> getFuture() {
 		return m_future;
 	}
 
-	public void setFuture(SettableFuture<PullMessageResultCommandV2> future) {
+	public void setFuture(SettableFuture<PullMessageResultCommandV3> future) {
 		m_future = future;
 	}
 
@@ -48,7 +50,7 @@ abstract public class AbstractPullMessageCommand extends AbstractCommand impleme
 		return m_partition;
 	}
 
-	public void onResultReceived(PullMessageResultCommandV2 ack) {
+	public void onResultReceived(PullMessageResultCommandV3 ack) {
 		getFuture().set(ack);
 	}
 
