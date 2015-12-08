@@ -1,6 +1,7 @@
 package com.ctrip.hermes.monitor.job.partition.strategy;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -159,12 +160,17 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 
 	private long calculateAverageSpeed(//
 	      TableContext ctx, List<PartitionInfo> ps, CreationStamp oldest, CreationStamp latest) {
+		final long _1DayMillis = TimeUnit.DAYS.toMillis(1);
 		oldest = ps.get(0).getOrdinal() == 1 ? oldest : //
 		      getCreationStampFinder().findSpecific(ctx, ps.get(0).getUpperbound() - ps.get(0).getRows());
 		if (oldest != null && latest != null) {
 			long period = latest.getDate().getTime() - oldest.getDate().getTime();
 			period = Math.max(1, period);
-			return (long) ((latest.getId() - oldest.getId()) / (float) period * TimeUnit.DAYS.toMillis(1));
+			if (period < _1DayMillis / 3) { // In case invalid speed
+				return (latest.getId() - oldest.getId()) * 3;
+			} else {
+				return (long) ((latest.getId() - oldest.getId()) / (float) period * _1DayMillis);
+			}
 		}
 		return -1L;
 	}
