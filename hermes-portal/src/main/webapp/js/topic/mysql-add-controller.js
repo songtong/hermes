@@ -2,7 +2,7 @@ topic_module.controller('mysql-add-controller', [ '$scope', '$resource', 'TopicS
 	$scope.new_topic = {
 		partitions : [ {} ],
 		consumerRetryPolicy : '3:[3,3000]',
-		ackTimeoutSeconds : 5,
+		ackTimeoutSeconds : 30,
 		endpointType : 'broker',
 		storageType : 'mysql',
 		codecType : 'json',
