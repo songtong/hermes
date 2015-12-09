@@ -325,8 +325,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 			} finally {
 				if (!m_stopped.get()) {
-					m_ackOpExecutor.schedule(m_ackMsgsTaskHandler, m_config.getAckMessagesTaskExecutorCheckIntervalMillis(),
-					      TimeUnit.MILLISECONDS);
+					m_ackMessagesTaskExecutor.schedule(m_ackMsgsTaskHandler,
+					      m_config.getAckMessagesTaskExecutorCheckIntervalMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		}

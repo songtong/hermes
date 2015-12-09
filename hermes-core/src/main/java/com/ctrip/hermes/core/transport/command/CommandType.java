@@ -35,10 +35,10 @@ public enum CommandType {
 
 	ACK_MESSAGE_SEND(201, 1, SendMessageAckCommand.class), //
 
+	RESULT_MESSAGE_SEND(301, 1, SendMessageResultCommand.class), //
 	RESULT_MESSAGE_PULL(302, 1, PullMessageResultCommand.class), //
 	RESULT_MESSAGE_PULL_V2(302, 2, PullMessageResultCommandV2.class), //
 	RESULT_MESSAGE_PULL_V3(302, 3, PullMessageResultCommandV3.class), //
-	RESULT_MESSAGE_SEND(301, 1, SendMessageResultCommand.class), //
 	RESULT_QUERY_OFFSET(303, 1, QueryOffsetResultCommand.class), //
 	RESULT_QUERY_OFFSET_V3(303, 3, QueryOffsetResultCommandV3.class), //
 	RESULT_ACK_MESSAGE_V3(304, 3, AckMessageResultCommandV3.class), //
