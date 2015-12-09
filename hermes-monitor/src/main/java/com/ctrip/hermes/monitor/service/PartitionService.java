@@ -33,7 +33,7 @@ public class PartitionService {
 		String sql = getAddPartitionSQL(ctx, list);
 		log.info("Add partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
-//		executeSQL(ctx.getDatasource(), sql);
+		executeSQL(ctx.getDatasource(), sql);
 		return sql;
 	}
 
@@ -41,7 +41,7 @@ public class PartitionService {
 		String sql = getDropPartitionSQL(ctx, list);
 		log.info("Drop partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
-//		executeSQL(ctx.getDatasource(), sql);
+		executeSQL(ctx.getDatasource(), sql);
 		return sql;
 	}
 
@@ -62,22 +62,30 @@ public class PartitionService {
 		return sb.toString().substring(0, sb.length() - 2) + ";";
 	}
 
-//	public boolean executeSQL(Datasource ds, String sql) throws Exception {
-//		Connection conn = null;
-//		Statement stat = null;
-//		try {
-//			conn = getConnection(ds, false);
-//			stat = conn.createStatement();
-//			return stat.execute(sql);
-//		} finally {
-//			if (stat != null) {
-//				stat.close();
-//			}
-//			if (conn != null) {
-//				conn.close();
-//			}
-//		}
-//	}
+	public boolean executeSQL(Datasource ds, String sql) throws Exception {
+		Connection conn = null;
+		Statement stat = null;
+		try {
+			conn = getConnection(ds, false);
+			stat = conn.createStatement();
+			return stat.execute(sql);
+		} finally {
+			if (stat != null) {
+				try {
+					stat.close();
+				} catch (Exception e) {
+					log.error("Close statement failed: {}", sql, e);
+				}
+			}
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (Exception e) {
+					log.error("Close connection failed: {}", ds.getProperties().get("url"), e);
+				}
+			}
+		}
+	}
 
 	public Map<String, Pair<Datasource, List<PartitionInfo>>> queryDatasourcePartitions(Datasource ds) throws Exception {
 		Connection conn = getConnection(ds, true);
