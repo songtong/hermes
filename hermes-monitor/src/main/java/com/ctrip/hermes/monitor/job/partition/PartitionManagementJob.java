@@ -47,7 +47,7 @@ public class PartitionManagementJob {
 
 	public static final String ID = "PartitionChecker";
 
-	private static final int PARTITION_TASK_SIZE = 20;
+	private static final int PARTITION_TASK_SIZE = 1;
 
 	private static final int PARTITION_CHECKER_TIMEOUT_MINUTE = 720;
 
@@ -82,6 +82,7 @@ public class PartitionManagementJob {
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			for (TableContext task : tasks) {
 				es.execute(new PartitionManagementTask(task, result, latch, exceptions, m_partitionService));
+				TimeUnit.SECONDS.sleep(3);
 			}
 			if (latch.await(PARTITION_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
 				result.setRunSuccess(true);
