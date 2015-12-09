@@ -36,6 +36,7 @@ import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.dianping.cat.Cat;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -124,14 +125,16 @@ public class DefaultAckManager implements AckManager {
 	public void deregister(long correlationId) {
 		TpgAckHolder holder = m_ackHolders.get(correlationId);
 
-		holder.stop();
+		if (holder != null) {
+			holder.stop();
 
-		while (Thread.interrupted()) {
-			if (holder.hasUnhandleOperation()) {
-				try {
-					TimeUnit.MILLISECONDS.sleep(50);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
+			while (!Thread.interrupted()) {
+				if (holder.hasUnhandleOperation()) {
+					try {
+						TimeUnit.MILLISECONDS.sleep(50);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					}
 				}
 			}
 		}
@@ -402,6 +405,7 @@ public class DefaultAckManager implements AckManager {
 						}
 					} catch (AckHolderException e) {
 						log.error("Exception occurred while handling operations({}).", m_tpg, e);
+						Cat.logError(e);
 					}
 				}
 			}

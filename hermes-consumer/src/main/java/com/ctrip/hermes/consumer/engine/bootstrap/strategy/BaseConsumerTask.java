@@ -600,11 +600,12 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					Class<?> bodyClazz = context.getMessageClazz();
 
 					List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz);
-					m_msgs.addAll(msgs);
 
 					for (ConsumerMessage<?> msg : msgs) {
 						m_ackManager.delivered(m_correlationId, msg);
 					}
+
+					m_msgs.addAll(msgs);
 
 					ConsumerStatusMonitor.INSTANCE.messageReceived(m_context.getTopic().getName(), m_partitionId,
 					      m_context.getGroupId(), msgs.size());
