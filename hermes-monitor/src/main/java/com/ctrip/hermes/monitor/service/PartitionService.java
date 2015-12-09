@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,8 @@ public class PartitionService {
 
 	private static final String INFO_SCHEMA_TABLE = "information_schema";
 
+	private static final int SQL_COOL_TIME_SECOND = 1;
+
 	@Autowired
 	private DataSourceManager m_dsManager;
 
@@ -34,6 +37,7 @@ public class PartitionService {
 		log.info("Add partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
 		executeSQL(ctx.getDatasource(), sql);
+		TimeUnit.SECONDS.sleep(SQL_COOL_TIME_SECOND);
 		return sql;
 	}
 
@@ -42,6 +46,7 @@ public class PartitionService {
 		log.info("Drop partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
 		executeSQL(ctx.getDatasource(), sql);
+		TimeUnit.SECONDS.sleep(SQL_COOL_TIME_SECOND);
 		return sql;
 	}
 
