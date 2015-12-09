@@ -24,11 +24,13 @@ public class ConsumerConfig implements Initializable {
 
 	private static final int DEFAULT_NOTIFIER_THREAD_COUNT = 1;
 
+	private static final int DEFAULT_NOTIFIER_WORK_QUEUE_SIZE = 1;
+
 	private static final int DEFAULT_ACK_CHECKER_INTERVAL_MILLIS = 1000;
 
 	private static final int DEFAULT_ACK_CHECKER_IO_THREAD_COUNT = 3;
 
-	private static final int DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS = 2000;
+	private static final int DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS = 10000;
 
 	@Inject
 	private ClientEnvironment m_env;
@@ -146,6 +148,14 @@ public class ConsumerConfig implements Initializable {
 
 	public int getAckCheckerIoTimeoutMillis() {
 		return m_ackCheckerIoTimeoutMillis;
+	}
+
+	public int getNotifierWorkQueueSize(String topic) throws IOException {
+		String workQueueSizeStr = m_env.getConsumerConfig(topic).getProperty("consumer.notifier.work.queue.size");
+		if (StringUtils.isNumeric(workQueueSizeStr)) {
+			return Integer.valueOf(workQueueSizeStr);
+		}
+		return DEFAULT_NOTIFIER_WORK_QUEUE_SIZE;
 	}
 
 }

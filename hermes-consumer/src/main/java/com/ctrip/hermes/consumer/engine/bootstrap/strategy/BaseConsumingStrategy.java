@@ -28,13 +28,14 @@ public abstract class BaseConsumingStrategy implements ConsumingStrategy {
 			int maxAckHolderSize = m_config.getMaxAckHolderSize(context.getTopic().getName());
 
 			int notifierThreadCount = m_config.getNotifierThreadCount(context.getTopic().getName());
-			int maxDeliveredMsgCount = (2 * notifierThreadCount + 1) * localCacheSize;
+			int notifierWorkQueueSize = m_config.getNotifierWorkQueueSize(context.getTopic().getName());
+			int minDeliveredMsgCount = (notifierWorkQueueSize + notifierThreadCount + 1) * localCacheSize;
 
-			if (maxAckHolderSize < maxDeliveredMsgCount) {
+			if (maxAckHolderSize < minDeliveredMsgCount) {
 				log.warn(
 				      "Bad maxAckHolderSize({}), will use {} as maxAckHolderSize(notifierThreadCount={}, localCacheSize={}).",
-				      maxAckHolderSize, maxDeliveredMsgCount, notifierThreadCount, localCacheSize);
-				maxAckHolderSize = maxDeliveredMsgCount;
+				      maxAckHolderSize, minDeliveredMsgCount, notifierThreadCount, localCacheSize);
+				maxAckHolderSize = minDeliveredMsgCount;
 			}
 
 			final ConsumerTask consumerTask = getConsumerTask(context, partitionId, localCacheSize, maxAckHolderSize);

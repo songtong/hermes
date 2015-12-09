@@ -55,6 +55,7 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 			}
 
 			int threadCount = m_config.getNotifierThreadCount(context.getTopic().getName());
+			int notifierWorkQueueSize = m_config.getNotifierWorkQueueSize(context.getTopic().getName());
 
 			MessageListenerConfig messageListenerConfig = context.getMessageListenerConfig();
 			NotifyStrategy notifyStrategy = null;
@@ -66,7 +67,7 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 			}
 
 			m_consumerContexs.putIfAbsent(correlationId, new Triple<ConsumerContext, NotifyStrategy, ExecutorService>(
-			      context, notifyStrategy, createNotifierExecutor(context, threadCount, correlationId)));
+			      context, notifyStrategy, createNotifierExecutor(context, threadCount,notifierWorkQueueSize, correlationId)));
 		} catch (Exception e) {
 			throw new RuntimeException("Register consumer notifier failed", e);
 		}
@@ -126,13 +127,14 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 		return triple == null ? null : triple.getFirst();
 	}
 
-	private ExecutorService createNotifierExecutor(ConsumerContext context, int threadCount, long correlationId) {
+	private ExecutorService createNotifierExecutor(ConsumerContext context, int threadCount, int notifierWorkQueueSize,
+	      long correlationId) {
 		return new ThreadPoolExecutor(threadCount, //
 		      threadCount,//
 		      0L, //
 		      TimeUnit.MILLISECONDS,//
 
-		      new LinkedBlockingQueue<Runnable>(threadCount), //
+		      new LinkedBlockingQueue<Runnable>(notifierWorkQueueSize), //
 		      HermesThreadFactory.create(String.format("ConsumerNotifier-%s-%s-%s", context.getTopic().getName(),
 		            context.getGroupId(), correlationId), false), //
 		      new BlockUntilSubmittedPolicy());
