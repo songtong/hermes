@@ -82,7 +82,6 @@ public class PartitionManagementJob {
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			for (TableContext task : tasks) {
 				es.execute(new PartitionManagementTask(task, result, latch, exceptions, m_partitionService));
-				TimeUnit.SECONDS.sleep(3);
 			}
 			if (latch.await(PARTITION_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
 				result.setRunSuccess(true);
