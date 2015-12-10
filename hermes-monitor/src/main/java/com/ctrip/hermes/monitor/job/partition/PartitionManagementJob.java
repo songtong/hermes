@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,30 +88,34 @@ public class PartitionManagementJob {
 			Map<String, Integer> limits = parseLimits(meta);
 			Map<String, Pair<Datasource, List<PartitionInfo>>> table2PartitionInfos = getPartitionInfosFromMeta(meta);
 			List<TableContext> tableContexts = createTableContexts(meta, table2PartitionInfos, limits);
-			partitionCheckerResult.setPartitionChangeListResult(doExecuteManagementJob(tableContexts));
-			partitionCheckerResult.setPartitionInfo(generatePartitionInfoResult(tableContexts));
+			ConcurrentHashMap<String, List<PartitionInfo>> wastes = new ConcurrentHashMap<String, List<PartitionInfo>>();
+			partitionCheckerResult.setPartitionChangeListResult(doExecuteManagementJob(tableContexts, wastes));
+			partitionCheckerResult.setPartitionInfo(generatePartitionInfoResult(tableContexts, wastes));
 		} catch (Exception e) {
 			log.error("Check partition status failed.", e);
 		}
 		return partitionCheckerResult;
 	}
 
-	private CheckerResult generatePartitionInfoResult(List<TableContext> tableContexts) {
+	private CheckerResult generatePartitionInfoResult( //
+	      List<TableContext> tableContexts, ConcurrentHashMap<String, List<PartitionInfo>> wastes) {
 		CheckerResult partitionInfos = new CheckerResult();
-		PartitionInformationEvent event = new PartitionInformationEvent(tableContexts);
+		PartitionInformationEvent event = new PartitionInformationEvent(tableContexts, wastes);
 		partitionInfos.addMonitorEvent(event);
 		partitionInfos.setRunSuccess(true);
 		return partitionInfos;
 	}
 
-	private CheckerResult doExecuteManagementJob(List<TableContext> tableContexts) {
+	private CheckerResult doExecuteManagementJob( //
+	      List<TableContext> tableContexts, ConcurrentHashMap<String, List<PartitionInfo>> wastePartitionInfos) {
 		CheckerResult changeResult = new CheckerResult();
 		ExecutorService es = Executors.newFixedThreadPool(PARTITION_TASK_SIZE);
 		try {
 			CountDownLatch latch = new CountDownLatch(tableContexts.size());
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			for (TableContext ctx : tableContexts) {
-				es.execute(new PartitionManagementTask(ctx, changeResult, latch, exceptions, m_partitionService));
+				es.execute(//
+				new PartitionManagementTask(ctx, changeResult, wastePartitionInfos, latch, exceptions, m_partitionService));
 			}
 			if (latch.await(PARTITION_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
 				changeResult.setRunSuccess(true);

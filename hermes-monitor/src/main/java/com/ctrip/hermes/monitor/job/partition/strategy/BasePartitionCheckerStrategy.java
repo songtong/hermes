@@ -32,11 +32,13 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		}
 
 		if (ctx.getPartitionInfos().size() < MIN_PARTITION_COUNT) {
-			return new AnalysisResult(calculateMinimalIncrementPartitions(ctx), new ArrayList<PartitionInfo>());
+			return new AnalysisResult(//
+			      calculateMinimalIncrementPartitions(ctx), new ArrayList<PartitionInfo>(), new ArrayList<PartitionInfo>());
 		}
 
 		List<PartitionInfo> addList = new ArrayList<PartitionInfo>();
 		List<PartitionInfo> dropList = new ArrayList<PartitionInfo>();
+		List<PartitionInfo> wasteList = new ArrayList<PartitionInfo>();
 
 		excludeWrongPartition(ctx.getPartitionInfos(), dropList);
 
@@ -46,14 +48,27 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		if (oldest != null && latest != null) {
 			long leftCapacity = getLeftCapacity(ctx, latest);
 			long dailyTotal = getLatestSpeedPerDay(ctx, oldest, latest);
-
 			if (shouldAddPartition(leftCapacity, dailyTotal, ctx.getWatermarkInDay())) {
 				addList.addAll(calculateIncrementPartitions(ctx, dailyTotal, getLatestCapacityPerPartition(ctx)));
+			} else {
+				wasteList.addAll(calculateWastePartitions(ctx, latest, dailyTotal));
 			}
 			dropList.addAll(calculateDecrementPartitions(ctx));
 		}
 
-		return new AnalysisResult(addList, dropList);
+		return new AnalysisResult(addList, dropList, wasteList);
+	}
+
+	private List<PartitionInfo> calculateWastePartitions(TableContext ctx, CreationStamp latest, long dailyTotal) {
+		List<PartitionInfo> ps = ctx.getPartitionInfos();
+		List<PartitionInfo> wasteList = new ArrayList<PartitionInfo>();
+		long upperBound = latest.getId() + ctx.getRetainInDay() * dailyTotal;
+		for (PartitionInfo info : ps) {
+			if (info.getUpperbound() > upperBound) {
+				wasteList.add(info);
+			}
+		}
+		return wasteList;
 	}
 
 	private int getPartitionIncrementStepByTableContext(TableContext ctx) {

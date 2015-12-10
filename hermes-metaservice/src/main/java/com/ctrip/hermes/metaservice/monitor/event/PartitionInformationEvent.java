@@ -1,16 +1,19 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.model.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
+import com.ctrip.hermes.metaservice.queue.PartitionInfo;
 import com.ctrip.hermes.metaservice.queue.TableContext;
 
 public class PartitionInformationEvent extends BaseMonitorEvent {
@@ -21,23 +24,28 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 
 	private int m_totalPartitionCount = 0;
 
+	private int m_totalWastePartitionCount = 0;
+
 	private Map<String, DatasourceInformation> m_dsInfos;
 
 	public PartitionInformationEvent() {
-		this(null);
+		this(null, null);
 	}
 
-	public PartitionInformationEvent(List<TableContext> tableContexts) {
+	public PartitionInformationEvent( //
+	      List<TableContext> tableContexts, ConcurrentHashMap<String, List<PartitionInfo>> wastes) {
 		super(MonitorEventType.PARTITION_INFO);
-		m_dsInfos = generateDatasourceInformations(tableContexts);
+		m_dsInfos = generateDatasourceInformations(tableContexts, wastes);
 		for (Entry<String, DatasourceInformation> entry : m_dsInfos.entrySet()) {
 			m_totalDatasourceCount++;
 			m_totalTableCount += entry.getValue().getTotalTableCount();
 			m_totalPartitionCount += entry.getValue().getTotalPartitionCount();
+			m_totalWastePartitionCount += entry.getValue().getTotalWastePartitionCount();
 		}
 	}
 
-	private Map<String, DatasourceInformation> generateDatasourceInformations(List<TableContext> tableContexts) {
+	private Map<String, DatasourceInformation> generateDatasourceInformations( //
+	      List<TableContext> tableContexts, Map<String, List<PartitionInfo>> wastes) {
 		Map<String, DatasourceInformation> result = new HashMap<>();
 		for (TableContext ctx : tableContexts) {
 			String dsUrl = ctx.getDatasource().getProperties().get("url").getValue();
@@ -46,7 +54,7 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 				datasourceInformation = new DatasourceInformation(dsUrl);
 				result.put(dsUrl, datasourceInformation);
 			}
-			datasourceInformation.recordTableContext(ctx);
+			datasourceInformation.recordTableContext(ctx, wastes.get(ctx.getTableName()));
 		}
 		return result;
 	}
@@ -56,6 +64,7 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 		m_totalDatasourceCount = Integer.valueOf(dbEntity.getKey1());
 		m_totalTableCount = Integer.valueOf(dbEntity.getKey2());
 		m_totalPartitionCount = Integer.valueOf(dbEntity.getKey3());
+		m_totalWastePartitionCount = Integer.valueOf(dbEntity.getKey4());
 		m_dsInfos = JSON.parseObject(dbEntity.getMessage(), new TypeReference<Map<String, DatasourceInformation>>() {
 		});
 	}
@@ -65,26 +74,28 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 		e.setKey1(String.valueOf(m_totalDatasourceCount));
 		e.setKey2(String.valueOf(m_totalTableCount));
 		e.setKey3(String.valueOf(m_totalPartitionCount));
-		e.setKey4(new SimpleDateFormat("yyyy-mm-dd hh:MM:ss").format(e.getCreateTime()));
+		e.setKey4(String.valueOf(m_totalWastePartitionCount));
 		e.setMessage(JSON.toJSONString(m_dsInfos));
 	}
 
 	public static class DatasourceInformation {
 		private String m_datasource;
 
-		private Map<String, Integer> m_table2PartitionCount;
+		private Map<String, Pair<Integer, Integer>> m_table2PartitionCount;
 
 		public DatasourceInformation(String datasource) {
 			if (StringUtils.isBlank(datasource)) {
 				throw new IllegalArgumentException("Datasource name can not be null!");
 			}
 			m_datasource = datasource;
-			m_table2PartitionCount = new HashMap<String, Integer>();
+			m_table2PartitionCount = new HashMap<String, Pair<Integer, Integer>>();
 		}
 
-		public boolean recordTableContext(TableContext ctx) {
+		public boolean recordTableContext(TableContext ctx, List<PartitionInfo> wastes) {
 			if (m_datasource.equals(ctx.getDatasource().getProperties().get("url").getValue())) {
-				m_table2PartitionCount.put(ctx.getTableName(), ctx.getPartitionInfos().size());
+				m_table2PartitionCount.put( //
+				      ctx.getTableName(), //
+				      new Pair<Integer, Integer>(ctx.getPartitionInfos().size(), wastes == null ? 0 : wastes.size()));
 				return true;
 			}
 			return false;
@@ -100,13 +111,21 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 
 		public int getTotalPartitionCount() {
 			int total = 0;
-			for (Integer count : m_table2PartitionCount.values()) {
-				total += count;
+			for (Pair<Integer, Integer> pair : m_table2PartitionCount.values()) {
+				total += pair.getKey();
 			}
 			return total;
 		}
 
-		public Map<String, Integer> getTable2PartitionCount() {
+		public int getTotalWastePartitionCount() {
+			int total = 0;
+			for (Pair<Integer, Integer> pair : m_table2PartitionCount.values()) {
+				total += pair.getValue();
+			}
+			return total;
+		}
+
+		public Map<String, Pair<Integer, Integer>> getTable2PartitionCount() {
 			return m_table2PartitionCount;
 		}
 

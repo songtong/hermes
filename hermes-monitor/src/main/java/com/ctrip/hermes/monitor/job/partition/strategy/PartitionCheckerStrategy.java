@@ -13,9 +13,12 @@ public interface PartitionCheckerStrategy {
 
 		private List<PartitionInfo> m_dropList;
 
-		public AnalysisResult(List<PartitionInfo> adds, List<PartitionInfo> drops) {
+		private List<PartitionInfo> m_wasteList;
+
+		public AnalysisResult(List<PartitionInfo> adds, List<PartitionInfo> drops, List<PartitionInfo> wasteList) {
 			m_addList = adds;
 			m_dropList = drops;
+			m_wasteList = wasteList;
 		}
 
 		public List<PartitionInfo> getAddList() {
@@ -24,6 +27,10 @@ public interface PartitionCheckerStrategy {
 
 		public List<PartitionInfo> getDropList() {
 			return m_dropList;
+		}
+
+		public List<PartitionInfo> getWasteList() {
+			return m_wasteList;
 		}
 
 		@Override
