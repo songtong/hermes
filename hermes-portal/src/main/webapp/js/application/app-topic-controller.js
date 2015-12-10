@@ -6,6 +6,15 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 		languageType : 'java'
 	};
 	$scope.productLines = ApplicationService.get_productLines();
+	$scope.getFilteredProductLine = function(val) {
+		var result = [];
+		for (var idx = 0; idx < $scope.productLines.length; idx++) {
+			if ($scope.productLines[idx].indexOf(val) > -1) {
+				result.push($scope.productLines[idx]);
+			}
+		}
+		return result;
+	};
 	$scope.storageTypes = [ 'mysql', 'kafka' ];
 	$scope.codecTypes = [ 'json', 'avro' ];
 	$scope.languageTypes = [ 'java', '.net' ];

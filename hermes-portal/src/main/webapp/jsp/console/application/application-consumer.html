@@ -1,9 +1,9 @@
 <div>
-	<div class="col-md-10 col-md-offset-1">
+	<div class="col-md-12">
 		<h1 style="font-family: 微软雅黑;">ConsumerGroup申请</h1>
 		<hr>
 		<div class="row">
-			<div class="col-md-3">
+			<div class="col-md-5">
 				<h3 style="font-family: 微软雅黑;">Topic名称</h3>
 			</div>
 			<div class="col-md-7">
@@ -16,7 +16,7 @@
 		</div>
 		<hr>
 		<div class="row">
-			<div class="col-md-3">
+			<div class="col-md-5">
 				<h3 style="font-family: 微软雅黑;">ConsumerGroup名称</h3>
 				<span class="help-block"><small>用于表明消费者的身份.<br>ConsumerGroup组成：ProductLine.Product.Project [.Sub-Project | .Function]<br>例如：<br> <ins>search.antibot.orderspider.checker</ins>，<br> <ins>sys.mcd.builderprocessor.updater</ins><br> <mark>千万不要出现*.consumer之类的哟</mark><br> <strong> <span ng-if="!(new_application.productLine==''||new_application.productLine==null)">当前ConsumerGroup名称：<br> {{new_application.productLine}}
 						</span> <span ng-if="!(new_application.product==''||new_application.product==null)">.{{new_application.product}}</span> <span ng-if="!(new_application.project==''||new_application.project==null)">.{{new_application.project}}</span></strong>
@@ -24,8 +24,9 @@
 			</div>
 			<div class="col-md-7">
 				<div class="form-group">
-					<label>ProductLine</label> <select class="form-control" ng-model="new_application.productLine" ng-options="productLine for productLine in productLines" placeholder="Product line">
-					</select>
+					<label>ProductLine</label>
+					<input class="form-control" autocomplete="off" ng-model="new_application.productLine" typeahead="productLine for productLine in getFilteredProductLine($viewValue)" typeahead-loading="loadingProductlines" placeholder="Product line"/>
+					<i ng-show="loadingProductlines" class="glyphicon glyphicon-refresh"></i>
 				</div>
 				<div class="form-group" style="margin-bottom: 0px;">
 					<label>Product</label> <input class="form-control" ng-model="new_application.product" type="text"></input>
@@ -43,7 +44,7 @@
 		</div>
 		<hr>
 		<div class="row" ng-if="topicStorageType=='mysql'">
-			<div class="col-md-3">
+			<div class="col-md-5">
 				<h3 style="font-family: 微软雅黑;">参数</h3>
 				<span class="help-block"><small>仅mysql存储类型的Topic需要填写该栏，kafka存储类型请略过。</small></span>
 			</div>
@@ -70,7 +71,7 @@
 		</div>
 		<hr>
 		<div class="row">
-			<div class="col-md-3">
+			<div class="col-md-5">
 				<h3 style="font-family: 微软雅黑;">负责人信息</h3>
 			</div>
 			<div class="col-md-7">

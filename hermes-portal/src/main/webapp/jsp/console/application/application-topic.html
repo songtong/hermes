@@ -1,10 +1,10 @@
 
 <div>
-	<div class="col-md-10 col-md-offset-1">
+	<div class="col-md-11 col-md-offset-1">
 		<h1 style="font-family: 微软雅黑;">Topic申请</h1>
 		<hr>
 		<div class="row">
-			<div class="col-md-3">
+			<div class="col-md-4">
 				<h3 style="font-family: 微软雅黑;">Topic名称</h3>
 				<span class="help-block"><small>Topic组成：ProdictLine.Entity.Event<br>例如：fx.topic.created<br><strong> <span ng-if="!(new_application.productLine==''||new_application.productLine==null)">当前topic名称：<br> {{new_application.productLine}}
 						</span> <span ng-if="!(new_application.entity==''||new_application.entity==null)">.{{new_application.entity}}</span> <span ng-if="!(new_application.event==''||new_application.event==null)">.{{new_application.event}}</span></strong>
@@ -12,8 +12,9 @@
 			</div>
 			<div class="col-md-7">
 				<div class="form-group">
-					<label>ProductLine</label> <select class="form-control" ng-model="new_application.productLine" ng-options="productLine for productLine in productLines" placeholder="Product line">
-					</select>
+					<label>ProductLine</label> 
+					<input class="form-control" autocomplete="off" ng-model="new_application.productLine" typeahead="productLine for productLine in getFilteredProductLine($viewValue)" typeahead-loading="loadingProductlines" placeholder="Product line"/>
+					<i ng-show="loadingProductlines" class="glyphicon glyphicon-refresh"></i>
 				</div>
 				<div class="form-group" style="margin-bottom: 0px;">
 					<label>Entity</label> <input class="form-control" ng-model="new_application.entity" type="text"></input>
@@ -31,7 +32,7 @@
 		</div>
 		<hr>
 		<div class="row">
-			<div class="col-md-3">
+			<div class="col-md-4">
 				<h3 style="font-family: 微软雅黑;">参数</h3>
 			</div>
 			<div class="col-md-7">
@@ -59,7 +60,7 @@
 		</div>
 		<hr>
 		<div class="row">
-			<div class="col-md-3">
+			<div class="col-md-4">
 				<h3 style="font-family: 微软雅黑;">负责人信息</h3>
 			</div>
 			<div class="col-md-7">

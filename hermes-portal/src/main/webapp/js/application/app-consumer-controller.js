@@ -1,6 +1,15 @@
 application_module.controller('app-consumer-controller', [ '$scope', 'ApplicationService', '$location', function($scope, ApplicationService, $location) {
 	$scope.topicStorageType = "mysql";
 	$scope.productLines = ApplicationService.get_productLines();
+	$scope.getFilteredProductLine = function(val) {
+		var result = [];
+		for (var idx = 0; idx < $scope.productLines.length; idx++) {
+			if ($scope.productLines[idx].indexOf(val) > -1) {
+				result.push($scope.productLines[idx]);
+			}
+		}
+		return result;
+	};
 	ApplicationService.get_topic_names().then(function(result) {
 		var result = new Bloodhound({
 			local : result,
