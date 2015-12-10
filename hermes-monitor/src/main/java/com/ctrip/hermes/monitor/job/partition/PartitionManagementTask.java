@@ -3,6 +3,7 @@ package com.ctrip.hermes.monitor.job.partition;
 import io.netty.util.internal.ConcurrentSet;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
@@ -33,10 +34,14 @@ public class PartitionManagementTask implements Runnable {
 
 	private PartitionService m_service;
 
-	public PartitionManagementTask(TableContext task, CheckerResult result, CountDownLatch latch,
-	      ConcurrentSet<Exception> exceptions, PartitionService service) {
+	private ConcurrentHashMap<String, List<PartitionInfo>> m_wastePartitionInfos;
+
+	public PartitionManagementTask(TableContext task, //
+	      CheckerResult result, ConcurrentHashMap<String, List<PartitionInfo>> wastePartitionInfos, //
+	      CountDownLatch latch, ConcurrentSet<Exception> exceptions, PartitionService service) {
 		m_task = task;
 		m_result = result;
+		m_wastePartitionInfos = wastePartitionInfos;
 		m_latch = latch;
 		m_exceptions = exceptions;
 		m_service = service;
@@ -48,6 +53,7 @@ public class PartitionManagementTask implements Runnable {
 			AnalysisResult analysisResult = null;
 			try {
 				analysisResult = findStrategy(m_task).analysisTable(m_task);
+				m_wastePartitionInfos.putIfAbsent(m_task.getTableName(), analysisResult.getWasteList());
 			} catch (Exception e) {
 				log.debug("Analysis table failed: {}", m_task, e);
 			}
