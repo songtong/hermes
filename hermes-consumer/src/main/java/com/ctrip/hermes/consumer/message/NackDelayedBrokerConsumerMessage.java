@@ -17,6 +17,10 @@ public class NackDelayedBrokerConsumerMessage<T> implements ConsumerMessage<T>, 
 
 	private int m_resendTimes;
 
+	private boolean m_resend;
+
+	private int m_remainingRetries;
+
 	public NackDelayedBrokerConsumerMessage(BrokerConsumerMessage<T> brokerMsg) {
 		m_brokerMsg = brokerMsg;
 	}
@@ -26,9 +30,27 @@ public class NackDelayedBrokerConsumerMessage<T> implements ConsumerMessage<T>, 
 		m_brokerMsg.getBaseConsumerMessage().nack();
 	}
 
+	public void setResend(boolean resend) {
+		m_resend = resend;
+	}
+
 	@Override
 	public int getResendTimes() {
 		return m_resendTimes;
+	}
+
+	@Override
+	public boolean isResend() {
+		return m_resend;
+	}
+
+	public void setRemainingRetries(int remainingRetries) {
+		m_remainingRetries = remainingRetries;
+	}
+
+	@Override
+	public int getRemainingRetries() {
+		return m_remainingRetries;
 	}
 
 	// below are delegate methods
@@ -107,19 +129,6 @@ public class NackDelayedBrokerConsumerMessage<T> implements ConsumerMessage<T>, 
 
 	public com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus getStatus() {
 		return m_brokerMsg.getStatus();
-	}
-
-	public void setResend(boolean resend) {
-		m_brokerMsg.setResend(resend);
-	}
-
-	@Override
-	public boolean isResend() {
-		return m_brokerMsg.isResend();
-	}
-
-	public int getRemainingRetries() {
-		return m_brokerMsg.getRemainingRetries();
 	}
 
 	public PropertiesHolder getPropertiesHolder() {

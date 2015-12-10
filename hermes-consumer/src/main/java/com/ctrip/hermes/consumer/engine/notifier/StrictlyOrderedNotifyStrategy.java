@@ -40,6 +40,8 @@ public class StrictlyOrderedNotifyStrategy implements NotifyStrategy {
 					nackDelayedMsg.getBaseConsumerMessage().resetStatus();
 					if (retries < m_retryPolicy.getRetryTimes()) {
 						sleep(m_retryPolicy.nextScheduleTimeMillis(retries, 0));
+						nackDelayedMsg.setResend(true);
+						nackDelayedMsg.setRemainingRetries(m_retryPolicy.getRetryTimes() - retries);
 						retries++;
 					} else {
 						msg.nack();
