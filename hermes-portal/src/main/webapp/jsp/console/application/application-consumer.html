@@ -24,8 +24,8 @@
 			</div>
 			<div class="col-md-7">
 				<div class="form-group">
-					<label>ProductLine</label>
-					<input class="form-control" autocomplete="off" ng-model="new_application.productLine" typeahead="productLine for productLine in getFilteredProductLine($viewValue)" typeahead-loading="loadingProductlines" placeholder="Product line"/>
+					<label>产品线</label>
+					<input class="form-control" autocomplete="off" ng-model="new_application.productLine" typeahead="productLine for productLine in getFilteredProductLine($viewValue)" typeahead-loading="loadingProductlines" placeholder="项目所处的产品线, 例如: flight, hotel, fx ..."/>
 					<i ng-show="loadingProductlines" class="glyphicon glyphicon-refresh"></i>
 				</div>
 				<div class="form-group" style="margin-bottom: 0px;">
