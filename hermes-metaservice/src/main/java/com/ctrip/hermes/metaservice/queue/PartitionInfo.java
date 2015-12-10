@@ -1,4 +1,4 @@
-package com.ctrip.hermes.monitor.job.partition.entity;
+package com.ctrip.hermes.metaservice.queue;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

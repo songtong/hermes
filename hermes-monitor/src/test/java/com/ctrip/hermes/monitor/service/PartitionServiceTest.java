@@ -13,9 +13,9 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.queue.PartitionInfo;
 import com.ctrip.hermes.monitor.checker.BaseCheckerTest;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
-import com.ctrip.hermes.monitor.job.partition.entity.PartitionInfo;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = BaseCheckerTest.class)

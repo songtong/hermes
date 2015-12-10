@@ -17,9 +17,9 @@ import org.unidal.dal.jdbc.datasource.model.entity.PropertiesDef;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.meta.entity.Datasource;
+import com.ctrip.hermes.metaservice.queue.PartitionInfo;
+import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.mysql.dal.ds.DataSourceManager;
-import com.ctrip.hermes.monitor.job.partition.context.TableContext;
-import com.ctrip.hermes.monitor.job.partition.entity.PartitionInfo;
 
 @Service
 public class PartitionService {
@@ -36,7 +36,12 @@ public class PartitionService {
 		String sql = getAddPartitionSQL(ctx, list);
 		log.info("Add partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
-		executeSQL(ctx.getDatasource(), sql);
+		try {
+			executeSQL(ctx.getDatasource(), sql);
+		} catch (Exception e) {
+			log.error("Add partition failed: {}, {}", ctx.getTableName(), list, e);
+			throw e;
+		}
 		TimeUnit.SECONDS.sleep(SQL_COOL_TIME_SECOND);
 		return sql;
 	}
@@ -45,7 +50,12 @@ public class PartitionService {
 		String sql = getDropPartitionSQL(ctx, list);
 		log.info("Drop partitions[{} {} {}]: {}", //
 		      ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getTableName(), sql);
-		executeSQL(ctx.getDatasource(), sql);
+		try {
+			executeSQL(ctx.getDatasource(), sql);
+		} catch (Exception e) {
+			log.error("Drop partition failed: {}, {}", ctx.getTableName(), list, e);
+			throw e;
+		}
 		TimeUnit.SECONDS.sleep(SQL_COOL_TIME_SECOND);
 		return sql;
 	}
@@ -102,13 +112,25 @@ public class PartitionService {
 			return formatPartitionMap(PartitionInfo.parseResultSet(rs), ds);
 		} finally {
 			if (rs != null) {
-				rs.close();
+				try {
+					rs.close();
+				} catch (Exception e) {
+					log.error("Close result set failed.", e);
+				}
 			}
 			if (stat != null) {
-				stat.close();
+				try {
+					stat.close();
+				} catch (Exception e) {
+					log.error("Close statement failed.", e);
+				}
 			}
 			if (conn != null) {
-				conn.close();
+				try {
+					conn.close();
+				} catch (Exception e) {
+					log.error("Close connection failed.", e);
+				}
 			}
 		}
 	}

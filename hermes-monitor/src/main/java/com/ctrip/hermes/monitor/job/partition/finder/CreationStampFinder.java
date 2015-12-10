@@ -2,7 +2,7 @@ package com.ctrip.hermes.monitor.job.partition.finder;
 
 import java.util.Date;
 
-import com.ctrip.hermes.monitor.job.partition.context.TableContext;
+import com.ctrip.hermes.metaservice.queue.TableContext;
 
 public interface CreationStampFinder {
 	public CreationStamp findLatest(TableContext ctx);

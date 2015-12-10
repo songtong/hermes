@@ -116,6 +116,9 @@ public class MonitorConfig {
 	@Value("${partition.checker.include.topics.retain.day:{\".*\":30}}")
 	private String partitionRetainInDay;
 
+	@Value("${partition.checker.exclude.topics:[]}")
+	private String partitionCheckerExcludeTopics;
+
 	@Value("${partition.checker.watermark.day:10}")
 	private int partitionWatermarkInDay;
 
@@ -422,5 +425,13 @@ public class MonitorConfig {
 
 	public void setPartitionSizeIncrementStep(int partitionSizeIncrementStep) {
 		this.partitionSizeIncrementStep = partitionSizeIncrementStep;
+	}
+
+	public String getPartitionCheckerExcludeTopics() {
+		return partitionCheckerExcludeTopics;
+	}
+
+	public void setPartitionCheckerExcludeTopics(String partitionCheckerExcludeTopics) {
+		this.partitionCheckerExcludeTopics = partitionCheckerExcludeTopics;
 	}
 }
