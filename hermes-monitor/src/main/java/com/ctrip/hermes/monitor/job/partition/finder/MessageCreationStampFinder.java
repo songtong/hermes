@@ -12,8 +12,8 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityEntity;
+import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
-import com.ctrip.hermes.monitor.job.partition.context.TableContext;
 
 @Component
 public class MessageCreationStampFinder implements CreationStampFinder {

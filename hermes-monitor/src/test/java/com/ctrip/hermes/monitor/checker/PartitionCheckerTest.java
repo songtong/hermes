@@ -40,7 +40,7 @@ public class PartitionCheckerTest extends BaseCheckerTest {
 
 	@Test
 	public void testChecker() {
-		CheckerResult result = m_job.check();
+		CheckerResult result = m_job.check().getPartitionChangeListResult();
 		List<MonitorEvent> events = result.getMonitorEvents();
 		for (MonitorEvent event : events) {
 			System.out.println(event);

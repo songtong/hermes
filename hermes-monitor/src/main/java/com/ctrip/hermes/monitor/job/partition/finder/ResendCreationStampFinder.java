@@ -11,8 +11,8 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.queue.ResendGroupId;
 import com.ctrip.hermes.metaservice.queue.ResendGroupIdDao;
 import com.ctrip.hermes.metaservice.queue.ResendGroupIdEntity;
+import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.job.partition.context.ResendTableContext;
-import com.ctrip.hermes.monitor.job.partition.context.TableContext;
 
 @Component
 public class ResendCreationStampFinder implements CreationStampFinder {

@@ -18,6 +18,7 @@ import com.ctrip.hermes.metaservice.model.MonitorEventDao;
 import com.ctrip.hermes.metaservice.monitor.event.CheckerExceptionEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+import com.ctrip.hermes.monitor.job.partition.PartitionManagementJob.PartitionCheckerResult;
 
 @Component
 public class PartitionManagementScheduler {
@@ -29,17 +30,19 @@ public class PartitionManagementScheduler {
 
 	private MonitorEventDao m_monitorEventDao = PlexusComponentLocator.lookup(MonitorEventDao.class);
 
-	@Scheduled(cron = "17 3 20 * * *")
+	@Scheduled(cron = "13 17 2 * * *")
+	// @Scheduled(fixedDelay = 86400000L, initialDelay = 0L)
 	public void execute() {
 		printStartInfo();
-		CheckerResult result = null;
+		PartitionCheckerResult result = null;
 		try {
 			result = m_job.check();
-			saveMonitorEvents(result);
+			saveMonitorEvents(result.getPartitionChangeListResult());
+			saveMonitorEvents(result.getPartitionInfo());
 		} catch (Exception e) {
 			log.error("Exception occurred while runing partition management job. ", e);
 		}
-		printEndInfo(result);
+		printEndInfo(result.getPartitionChangeListResult());
 	}
 
 	private String formatExceptionDetail(String errorMessage, Exception exception) {

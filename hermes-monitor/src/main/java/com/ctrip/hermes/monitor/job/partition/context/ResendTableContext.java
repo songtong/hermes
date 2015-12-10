@@ -3,7 +3,6 @@ package com.ctrip.hermes.monitor.job.partition.context;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.monitor.job.partition.PartitionManagementJob.TableType;
 
 public class ResendTableContext extends BaseTableContext {
 	private ConsumerGroup m_consumer;

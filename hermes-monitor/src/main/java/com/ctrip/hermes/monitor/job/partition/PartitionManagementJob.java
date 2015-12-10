@@ -29,13 +29,14 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.monitor.event.PartitionInformationEvent;
+import com.ctrip.hermes.metaservice.queue.PartitionInfo;
+import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.ResendTableContext;
-import com.ctrip.hermes.monitor.job.partition.context.TableContext;
-import com.ctrip.hermes.monitor.job.partition.entity.PartitionInfo;
 import com.ctrip.hermes.monitor.service.PartitionService;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
 import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
@@ -57,59 +58,110 @@ public class PartitionManagementJob {
 	@Autowired
 	private MonitorConfig m_config;
 
-	public static enum TableType {
-		MESSAGE, RESEND;
+	public static class PartitionCheckerResult {
+		private CheckerResult m_partitionInfo;
+
+		private CheckerResult m_partitionChangeListResult;
+
+		public CheckerResult getPartitionInfo() {
+			return m_partitionInfo;
+		}
+
+		public void setPartitionInfo(CheckerResult partitionInfo) {
+			m_partitionInfo = partitionInfo;
+		}
+
+		public CheckerResult getPartitionChangeListResult() {
+			return m_partitionChangeListResult;
+		}
+
+		public void setPartitionChangeListResult(CheckerResult partitionChangeList) {
+			m_partitionChangeListResult = partitionChangeList;
+		}
 	}
 
-	public CheckerResult check() {
-		CheckerResult result = new CheckerResult();
-		ExecutorService es = Executors.newFixedThreadPool(PARTITION_TASK_SIZE);
+	public PartitionCheckerResult check() {
+		PartitionCheckerResult partitionCheckerResult = new PartitionCheckerResult();
 		try {
 			Meta meta = fetchMeta();
-			Map<String, Integer> limits = parseLimits(meta, m_config.getPartitionRetainInDay());
-			Map<String, Pair<Datasource, List<PartitionInfo>>> ps = new HashMap<>();
-			Set<String> checkedDatasource = new HashSet<String>();
-			for (Datasource ds : meta.getStorages().get(Storage.MYSQL).getDatasources()) {
-				if (!checkedDatasource.contains(ds.getProperties().get("url").getValue())) {
-					checkedDatasource.add(ds.getProperties().get("url").getValue());
-					ps.putAll(m_partitionService.queryDatasourcePartitions(ds));
-				} else {
-					log.info("Already checked datasource:{}", ds.getProperties());
-				}
-			}
-			List<TableContext> tasks = getTableContexts(meta, ps, limits);
-			CountDownLatch latch = new CountDownLatch(tasks.size());
+			Map<String, Integer> limits = parseLimits(meta);
+			Map<String, Pair<Datasource, List<PartitionInfo>>> table2PartitionInfos = getPartitionInfosFromMeta(meta);
+			List<TableContext> tableContexts = createTableContexts(meta, table2PartitionInfos, limits);
+			partitionCheckerResult.setPartitionChangeListResult(doExecuteManagementJob(tableContexts));
+			partitionCheckerResult.setPartitionInfo(generatePartitionInfoResult(tableContexts));
+		} catch (Exception e) {
+			log.error("Check partition status failed.", e);
+		}
+		return partitionCheckerResult;
+	}
+
+	private CheckerResult generatePartitionInfoResult(List<TableContext> tableContexts) {
+		CheckerResult partitionInfos = new CheckerResult();
+		PartitionInformationEvent event = new PartitionInformationEvent(tableContexts);
+		partitionInfos.addMonitorEvent(event);
+		partitionInfos.setRunSuccess(true);
+		return partitionInfos;
+	}
+
+	private CheckerResult doExecuteManagementJob(List<TableContext> tableContexts) {
+		CheckerResult changeResult = new CheckerResult();
+		ExecutorService es = Executors.newFixedThreadPool(PARTITION_TASK_SIZE);
+		try {
+			CountDownLatch latch = new CountDownLatch(tableContexts.size());
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
-			for (TableContext task : tasks) {
-				es.execute(new PartitionManagementTask(task, result, latch, exceptions, m_partitionService));
+			for (TableContext ctx : tableContexts) {
+				es.execute(new PartitionManagementTask(ctx, changeResult, latch, exceptions, m_partitionService));
 			}
 			if (latch.await(PARTITION_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
-				result.setRunSuccess(true);
+				changeResult.setRunSuccess(true);
 			} else {
-				result.setRunSuccess(false);
-				result.setErrorMessage("Check partition status timeout, check result is not completely.");
+				changeResult.setRunSuccess(false);
+				changeResult.setErrorMessage("Check partition status timeout, check result is not completely.");
 			}
 			if (exceptions.size() > 0) {
-				result.setRunSuccess(false);
-				result.setErrorMessage("Check partition status task has exceptions!");
-				result.setException(new CompositeException(exceptions));
+				changeResult.setRunSuccess(false);
+				changeResult.setErrorMessage("Check partition status task has exceptions!");
+				changeResult.setException(new CompositeException(exceptions));
 			}
 		} catch (Exception e) {
 			log.error("Check partition status failed.", e);
-			result.setException(e);
+			changeResult.setException(e);
 		} finally {
 			es.shutdownNow();
 		}
-		return result;
+		return changeResult;
 	}
 
-	private Map<String, Integer> parseLimits(Meta meta, String partitionRetainInDay) {
+	private Map<String, Pair<Datasource, List<PartitionInfo>>> getPartitionInfosFromMeta(Meta meta) throws Exception {
+		Map<String, Pair<Datasource, List<PartitionInfo>>> table2PartitionInfos = new HashMap<>();
+		Set<String> checkedDatasource = new HashSet<String>();
+		for (Datasource ds : meta.getStorages().get(Storage.MYSQL).getDatasources()) {
+			if (!checkedDatasource.contains(ds.getProperties().get("url").getValue())) {
+				checkedDatasource.add(ds.getProperties().get("url").getValue());
+				table2PartitionInfos.putAll(m_partitionService.queryDatasourcePartitions(ds));
+			} else {
+				log.info("Already checked datasource:{}", ds.getProperties());
+			}
+		}
+		return table2PartitionInfos;
+	}
+
+	private Map<String, Integer> parseLimits(Meta meta) {
 		Map<String, Integer> limits = new HashMap<String, Integer>();
-		Map<String, Integer> includes = JSON.parseObject(partitionRetainInDay, new TypeReference<Map<String, Integer>>() {
-		});
+
+		Map<String, Integer> includes = JSON.parseObject(m_config.getPartitionRetainInDay(),
+		      new TypeReference<Map<String, Integer>>() {
+		      });
+		Set<String> excludes = JSON.parseObject(m_config.getPartitionCheckerExcludeTopics(),
+		      new TypeReference<Set<String>>() {
+		      });
+		log.info("***** Partition manager config, include: {}", includes);
+		log.info("***** Partition manager config, exclude: {}", excludes);
 		if (includes.containsKey(".*")) {
 			for (Entry<String, Topic> entry : findTopics(".*", meta)) {
-				limits.put(entry.getValue().getName(), includes.get(".*"));
+				if (!excludes.contains(entry.getValue().getName())) {
+					limits.put(entry.getValue().getName(), includes.get(".*"));
+				}
 			}
 		}
 		for (Entry<String, Integer> item : includes.entrySet()) {
@@ -119,6 +171,7 @@ public class PartitionManagementJob {
 				}
 			}
 		}
+		log.info("**** Partition manager config, effective: {}", limits.keySet());
 		return limits;
 	}
 
@@ -131,7 +184,7 @@ public class PartitionManagementJob {
 		});
 	}
 
-	private List<TableContext> getTableContexts(//
+	private List<TableContext> createTableContexts(//
 	      Meta meta, Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, Map<String, Integer> topicRetainDays) {
 		int cordon = m_config.getPartitionWatermarkInDay();
 		int increment = m_config.getPartitionIncrementInDay();

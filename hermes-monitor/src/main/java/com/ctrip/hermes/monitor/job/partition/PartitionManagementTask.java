@@ -4,16 +4,15 @@ import io.netty.util.internal.ConcurrentSet;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent;
 import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent.PartitionOperation;
+import com.ctrip.hermes.metaservice.queue.PartitionInfo;
+import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
-import com.ctrip.hermes.monitor.job.partition.context.TableContext;
-import com.ctrip.hermes.monitor.job.partition.entity.PartitionInfo;
 import com.ctrip.hermes.monitor.job.partition.strategy.MessagePartitionCheckerStrategy;
 import com.ctrip.hermes.monitor.job.partition.strategy.PartitionCheckerStrategy;
 import com.ctrip.hermes.monitor.job.partition.strategy.PartitionCheckerStrategy.AnalysisResult;
