@@ -133,7 +133,9 @@
 		<var name="group-id" value-type="int" />
 		<var name="batch-size" value-type="int" />
 		<var name="message-ids" value-type="Long[]" />
-		<var name="current-time" value-type="Date" />
+		<var name="last-id" value-type="long" />
+		<var name="max-id" value-type="long" />
+		<var name="max-schedule-date" value-type="Date" />
 
 		<query-defs>
 			<query name="insert" type="INSERT" batch='true'>
@@ -141,23 +143,30 @@
         		VALUES(<VALUES/>)]]>
 				</statement>
 			</query>
+			<query name="findMaxIdByMaxScheduleDate" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group-id" />
+				<param name="max-schedule-date" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='schedule-date'/> <= ${max-schedule-date}
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT 1]]>
+				</statement>
+			</query>
 			<query name="find" type="SELECT" multiple="true">
 				<param name="topic" />
 				<param name="partition" />
 				<param name="group-id" />
-				<param name="schedule-date" />
 				<param name="batch-size" />
-				<param name="id" />
-				<param name="current-time" />
+				<param name="last-id" />
+				<param name="max-id" />
 				<statement><![CDATA[SELECT <FIELDS/>
         		FROM <TABLE/>
-        		WHERE <FIELD name='schedule-date'/> < ${current-time}
-        		AND (<FIELD name='schedule-date'/> > ${schedule-date}
-        			OR (<FIELD name='schedule-date'/> = ${schedule-date}
-        				AND <FIELD name='id'/> > ${id}
-        			)
-        		)
-        		ORDER BY <FIELD name='schedule-date'/>,<FIELD name='id'/> ASC
+        		WHERE <FIELD name='id'/> > ${last-id} 
+        		AND <FIELD name='id'/> <= ${max-id}
+        		ORDER BY <FIELD name='id'/> ASC
         		LIMIT ${batch-size}]]>
 				</statement>
 			</query>
@@ -228,16 +237,12 @@
 				<param name="topic" />
 				<param name="partition" />
 				<param name="id" />
-				<param name="last-schedule-date" />
 				<param name="last-id" />
 				<statement><![CDATA[UPDATE <TABLE/>
 			        SET <FIELDS/>
 			        WHERE <FIELD name='id'/> = ${id}
-	        		AND (<FIELD name='last-schedule-date'/> < ${last-schedule-date}
-	        			OR (<FIELD name='last-schedule-date'/> = ${last-schedule-date}
-	        				AND <FIELD name='last-id'/> < ${last-id}
-	        			)
-	        		)]]>
+	        		AND <FIELD name='last-id'/> < ${last-id}
+	        		]]>
 				</statement>
 			</query>
 		</query-defs>

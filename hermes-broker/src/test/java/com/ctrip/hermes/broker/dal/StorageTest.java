@@ -79,8 +79,7 @@ public class StorageTest extends ComponentTestCase {
 	}
 
 	private List<ResendGroupId> readResendMessage() throws DalException {
-		return resendDao
-		      .find(topic, partition, groupId, new Date(), 10, 1L, new Date(), ResendGroupIdEntity.READSET_FULL);
+		return resendDao.find(topic, partition, groupId, 10, 1L, 3, ResendGroupIdEntity.READSET_FULL);
 	}
 
 	private void updateMessageOffset(MessagePriority msg) throws DalException {

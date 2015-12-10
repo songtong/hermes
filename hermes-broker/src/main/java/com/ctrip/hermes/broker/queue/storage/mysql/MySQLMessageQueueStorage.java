@@ -380,13 +380,10 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			if (resend) {
 				OffsetResend proto = getOffsetResend(topic, partition, intGroupId);
 
-				ResendGroupId resendRow = m_resendDao.findByPK(msgSeq, topic, partition, intGroupId,
-				      ResendGroupIdEntity.READSET_FULL);
-
 				proto.setTopic(topic);
 				proto.setPartition(partition);
-				proto.setLastScheduleDate(resendRow.getScheduleDate());
-				proto.setLastId(resendRow.getId());
+				proto.setLastScheduleDate(new Date(0));
+				proto.setLastId(msgSeq);
 
 				m_offsetResendDao.increaseOffset(proto, OffsetResendEntity.UPDATESET_OFFSET);
 			} else {
@@ -466,52 +463,59 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		FetchResult result = new FetchResult();
 
 		try {
-			final List<ResendGroupId> dataObjs = m_resendDao.find(tpg.getTopic(), tpg.getPartition(),
-			      m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId()), startPair.getKey(), batchSize,
-			      startPair.getValue(), new Date(), ResendGroupIdEntity.READSET_FULL);
+			int groupId = m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId());
+			List<ResendGroupId> maxIdByMaxScheduleDate = m_resendDao.findMaxIdByMaxScheduleDate(tpg.getTopic(),
+			      tpg.getPartition(), groupId, new Date(m_systemClockService.now()), ResendGroupIdEntity.READSET_FULL);
 
-			if (CollectionUtil.isNotEmpty(dataObjs)) {
-				TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
-				ResendGroupId latestResend = new ResendGroupId();
-				latestResend.setScheduleDate(new Date(0));
-				latestResend.setId(0L);
+			if (CollectionUtil.isNotEmpty(maxIdByMaxScheduleDate)) {
+				long maxId = maxIdByMaxScheduleDate.get(0).getId();
 
-				for (ResendGroupId dataObj : dataObjs) {
-					if (resendAfter(dataObj, latestResend)) {
-						latestResend = dataObj;
-					}
-					MessageMeta msgMeta = new MessageMeta(dataObj.getId(), dataObj.getRemainingRetries(), dataObj.getOriginId(),
-					      dataObj.getPriority(), true);
+				final List<ResendGroupId> dataObjs = m_resendDao.find(tpg.getTopic(), tpg.getPartition(), groupId,
+				      batchSize, startPair.getValue(), maxId, ResendGroupIdEntity.READSET_FULL);
 
-					batch.addMessageMeta(msgMeta);
+				if (CollectionUtil.isNotEmpty(dataObjs)) {
+					TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
+					ResendGroupId latestResend = new ResendGroupId();
+					latestResend.setScheduleDate(new Date(0));
+					latestResend.setId(0L);
 
-				}
-				final String topic = tpg.getTopic();
-				batch.setTopic(topic);
-				batch.setPartition(tpg.getPartition());
-				batch.setResend(true);
-
-				batch.setTransferCallback(new TransferCallback() {
-
-					@Override
-					public void transfer(ByteBuf out) {
-						for (ResendGroupId dataObj : dataObjs) {
-							PartialDecodedMessage partialMsg = new PartialDecodedMessage();
-							partialMsg.setRemainingRetries(dataObj.getRemainingRetries());
-							partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
-							partialMsg.setBody(Unpooled.wrappedBuffer(dataObj.getPayload()));
-							partialMsg.setBornTime(dataObj.getCreationDate().getTime());
-							partialMsg.setKey(dataObj.getRefKey());
-							partialMsg.setBodyCodecType(dataObj.getCodecType());
-
-							m_messageCodec.encodePartial(partialMsg, out);
+					for (ResendGroupId dataObj : dataObjs) {
+						if (resendAfter(dataObj, latestResend)) {
+							latestResend = dataObj;
 						}
+						MessageMeta msgMeta = new MessageMeta(dataObj.getId(), dataObj.getRemainingRetries(),
+						      dataObj.getOriginId(), dataObj.getPriority(), true);
+
+						batch.addMessageMeta(msgMeta);
+
 					}
+					final String topic = tpg.getTopic();
+					batch.setTopic(topic);
+					batch.setPartition(tpg.getPartition());
+					batch.setResend(true);
 
-				});
+					batch.setTransferCallback(new TransferCallback() {
 
-				result.setBatch(batch);
-				result.setOffset(new Pair<Date, Long>(latestResend.getScheduleDate(), latestResend.getId()));
+						@Override
+						public void transfer(ByteBuf out) {
+							for (ResendGroupId dataObj : dataObjs) {
+								PartialDecodedMessage partialMsg = new PartialDecodedMessage();
+								partialMsg.setRemainingRetries(dataObj.getRemainingRetries());
+								partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
+								partialMsg.setBody(Unpooled.wrappedBuffer(dataObj.getPayload()));
+								partialMsg.setBornTime(dataObj.getCreationDate().getTime());
+								partialMsg.setKey(dataObj.getRefKey());
+								partialMsg.setBodyCodecType(dataObj.getCodecType());
+
+								m_messageCodec.encodePartial(partialMsg, out);
+							}
+						}
+
+					});
+
+					result.setBatch(batch);
+					result.setOffset(new Pair<Date, Long>(latestResend.getScheduleDate(), latestResend.getId()));
+				}
 			}
 			return result;
 		} catch (DalException e) {
