@@ -1,4 +1,4 @@
-var application_module = angular.module('application', [ 'ngResource', 'ngRoute', 'xeditable', 'smart-table' ]);
+var application_module = angular.module('application', [ 'ngResource', 'ngRoute', 'xeditable', 'smart-table','ui.bootstrap' ]);
 
 application_module.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';

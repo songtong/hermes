@@ -36,7 +36,7 @@ public class DefaultApplicationService implements ApplicationService {
 			return (TopicApplication) HermesApplication.parse(dbApp);
 		} catch (DalException e) {
 			log.error("Create new topic application : {}.{}.{} failed", topicApplication.getProductLine(),
-					topicApplication.getEntity(), topicApplication.getEvent(), e);
+			      topicApplication.getEntity(), topicApplication.getEvent(), e);
 		}
 		return null;
 	}
@@ -91,8 +91,8 @@ public class DefaultApplicationService implements ApplicationService {
 			List<Property> kafkaProperties = new ArrayList<>();
 			kafkaProperties.add(new Property("partitions").setValue("3"));
 			kafkaProperties.add(new Property("replication-factor").setValue("2"));
-			kafkaProperties.add(new Property("retention.ms")
-					.setValue(String.valueOf(TimeUnit.DAYS.toMillis(app.getRetentionDays()))));
+			kafkaProperties.add(new Property("retention.ms").setValue(String.valueOf(TimeUnit.DAYS.toMillis(app
+			      .getRetentionDays()))));
 			topicView.setProperties(kafkaProperties);
 			defaultReadDS = "kafka-consumer";
 			defaultWriteDS = "kafka-producer";
@@ -131,7 +131,7 @@ public class DefaultApplicationService implements ApplicationService {
 		topicView.setName(app.getProductLine() + "." + app.getEntity() + "." + app.getEvent());
 		topicView.setStorageType(app.getStorageType());
 		topicView.setCodecType(app.getCodecType());
-		topicView.setConsumerRetryPolicy("1:[3,3,3]");
+		topicView.setConsumerRetryPolicy("3:[3,3000]");
 		topicView.setAckTimeoutSeconds(5);
 		topicView.setStoragePartitionSize(1000000);
 		topicView.setResendPartitionSize(5000);
@@ -178,7 +178,7 @@ public class DefaultApplicationService implements ApplicationService {
 			return (ConsumerApplication) HermesApplication.parse(dbApp);
 		} catch (DalException e) {
 			log.error("Create new consumer application : {}.{}.{} failed", consumerApplication.getProductLine(),
-					consumerApplication.getProduct(), consumerApplication.getProject(), e);
+			      consumerApplication.getProduct(), consumerApplication.getProject(), e);
 		}
 		return null;
 	}
@@ -191,20 +191,12 @@ public class DefaultApplicationService implements ApplicationService {
 		consumerView.setAckTimeoutSeconds(app.getAckTimeoutSeconds());
 		consumerView.setAppId(app.getAppName());
 		consumerView.setOwner(app.getOwnerName() + "/" + app.getOwnerEmail());
-		StringBuilder retryPolicy = new StringBuilder();
 		if (app.isNeedRetry()) {
-			retryPolicy.append("1:[");
-			retryPolicy.append(app.getRetryInterval());
-			for (int i = 0; i < (app.getRetryCount() - 1); i++) {
-				retryPolicy.append(":" + app.getRetryInterval());
-			}
-			retryPolicy.append("]");
+			consumerView.setRetryPolicy(String.format("3:[%s,%s]", app.getRetryCount(), app.getRetryInterval() * 1000L));
 		} else {
-			retryPolicy.append("2:[]");
+			consumerView.setRetryPolicy("2:[]");
 		}
-		consumerView.setRetryPolicy(retryPolicy.toString());
 
 		return consumerView;
 	}
-
 }
