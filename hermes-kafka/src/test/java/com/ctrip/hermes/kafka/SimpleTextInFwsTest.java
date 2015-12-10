@@ -17,12 +17,12 @@ import com.ctrip.hermes.metrics.MetricsUtils;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 
-public class SimpleTextInDevTest {
+public class SimpleTextInFwsTest {
 
 	@Test
 	public void simpleTextMessageTest() throws IOException {
-		String topic = "kafka.SimpleTextTopic";
-		String group = "kafka.SimpleTextTopic.group";
+		String topic = "test.hermes.kafka";
+		String group = "group.test.hermes.kafka";
 		MetricRegistry metrics = HermesMetricsRegistry.getMetricRegistryByT(topic);
 		final Meter sent = metrics.meter("sent");
 		final Meter received = metrics.meter("received");

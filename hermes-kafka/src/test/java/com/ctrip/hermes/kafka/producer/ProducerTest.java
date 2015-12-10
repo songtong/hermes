@@ -28,18 +28,18 @@ public class ProducerTest {
 	private static String topic = "kafka.SimpleTextTopic5";
 
 	@BeforeClass
-	public static void before() {
+	public static void beforeClass() {
 		zk = new MockZookeeper();
 		kafkaCluster = new MockKafkaCluster(zk, 3);
 		kafkaCluster.createTopic(topic, 3, 1);
 	}
 
 	@AfterClass
-	public static void after() {
+	public static void afterClass() {
 		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
 		      Endpoint.KAFKA);
 		kafkaSender.close();
-
+		
 		kafkaCluster.stop();
 		zk.stop();
 	}

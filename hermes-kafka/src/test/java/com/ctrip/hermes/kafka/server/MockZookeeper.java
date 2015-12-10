@@ -2,6 +2,7 @@ package com.ctrip.hermes.kafka.server;
 
 import java.io.IOException;
 
+import org.I0Itec.zkclient.ZkConnection;
 import org.apache.curator.test.TestingServer;
 
 public class MockZookeeper {
@@ -38,7 +39,7 @@ public class MockZookeeper {
 		}
 	}
 
-	public String getConnectionString() {
-		return zkTestServer.getConnectString();
+	public ZkConnection getConnection() {
+		return new ZkConnection(zkTestServer.getConnectString());
 	}
 }

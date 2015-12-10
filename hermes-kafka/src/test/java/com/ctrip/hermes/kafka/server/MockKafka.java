@@ -7,6 +7,7 @@ import kafka.admin.AdminUtils;
 import kafka.api.TopicMetadata;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
+import kafka.utils.ZkUtils;
 
 import org.I0Itec.zkclient.ZkClient;
 
@@ -22,7 +23,7 @@ public class MockKafka {
 		properties.put("host.name", "localhost");
 		properties.put("offsets.topic.replication.factor", "1");
 		properties.put("delete.topic.enable", "true");
-		properties.put("zookeeper.connect", zkServer.getConnectionString());
+		properties.put("zookeeper.connect", zkServer.getConnection().getServers());
 		return properties;
 	}
 
@@ -53,9 +54,10 @@ public class MockKafka {
 	}
 
 	public void createTopic(String topic, int partition, int replication) {
-		ZkClient zkClient = new ZkClient(zkServer.getConnectionString());
+		ZkClient zkClient = new ZkClient(zkServer.getConnection());
+		ZkUtils zkUtils = new ZkUtils(zkClient, zkServer.getConnection(), false);
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		AdminUtils.createTopic(zkClient, topic, partition, replication, new Properties());
+		AdminUtils.createTopic(zkUtils, topic, partition, replication, new Properties());
 		zkClient.close();
 	}
 
@@ -64,9 +66,10 @@ public class MockKafka {
 	}
 
 	public TopicMetadata fetchTopicMeta(String topic) {
-		ZkClient zkClient = new ZkClient(zkServer.getConnectionString());
+		ZkClient zkClient = new ZkClient(zkServer.getConnection());
+		ZkUtils zkUtils = new ZkUtils(zkClient, zkServer.getConnection(), false);
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient);
+		TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkUtils);
 		zkClient.close();
 		return topicMetadata;
 	}
@@ -77,9 +80,10 @@ public class MockKafka {
 	 * @param topic
 	 */
 	public void deleteTopic(String topic) {
-		ZkClient zkClient = new ZkClient(zkServer.getConnectionString());
+		ZkClient zkClient = new ZkClient(zkServer.getConnection());
+		ZkUtils zkUtils = new ZkUtils(zkClient, zkServer.getConnection(), false);
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		AdminUtils.deleteTopic(zkClient, topic);
+		AdminUtils.deleteTopic(zkUtils, topic);
 		zkClient.close();
 	}
 

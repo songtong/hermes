@@ -2,11 +2,12 @@ package com.ctrip.hermes.kafka;
 
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
-import io.confluent.kafka.serializers.KafkaAvroDecoder;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,14 +16,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import kafka.consumer.Consumer;
-import kafka.consumer.ConsumerConfig;
-import kafka.consumer.KafkaStream;
-import kafka.javaapi.consumer.ConsumerConnector;
-import kafka.message.MessageAndMetadata;
-import kafka.utils.VerifiableProperties;
-
 import org.I0Itec.zkclient.ZkClient;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -36,7 +33,7 @@ public class NativeKafkaWithAvroDecoderTest {
 
 	@Test
 	public void testNative() throws IOException, InterruptedException, ExecutionException {
-		String topic = "kafka.SimpleAvroTopic";
+		final String topic = "kafka.SimpleAvroTopic";
 		ZkClient zkClient = new ZkClient("10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		int msgNum = 100000;
@@ -58,40 +55,40 @@ public class NativeKafkaWithAvroDecoderTest {
 		KafkaAvroSerializer avroValueSerializer = new KafkaAvroSerializer();
 		avroValueSerializer.configure(configs, false);
 
-		Properties specificDecoderProps = new Properties();
-		specificDecoderProps.put("specific.avro.reader", Boolean.TRUE.toString());
-		specificDecoderProps.put("schema.registry.url", "http://10.3.8.63:8081/");
-		KafkaAvroDecoder avroDecoder = new KafkaAvroDecoder(schemaRegistry,
-		      new VerifiableProperties(specificDecoderProps));
+		Map<String, String> deserializerConfigs = new HashMap<String, String>();
+		deserializerConfigs.put("specific.avro.reader", Boolean.TRUE.toString());
+		deserializerConfigs.put("schema.registry.url", "http://10.3.8.63:8081/");
+		KafkaAvroDeserializer avroKeyDeserializer = new KafkaAvroDeserializer(schemaRegistry, deserializerConfigs);
+		avroKeyDeserializer.configure(configs, true);
+		KafkaAvroDeserializer avroValueDeserializer = new KafkaAvroDeserializer(schemaRegistry, deserializerConfigs);
+		avroValueDeserializer.configure(configs, false);
 
 		// Consumer
-		Properties consumerProps = new Properties();
+		final Properties consumerProps = new Properties();
 		consumerProps.put("zookeeper.connect", "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
 		consumerProps.put("group.id", "GROUP_" + topic);
 
 		final List<Object> actualResult = new ArrayList<Object>();
 		final List<Object> expectedResult = new ArrayList<Object>();
 
-		ConsumerConnector consumerConnector = Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerProps));
-		Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
-		topicCountMap.put(topic, 1);
-		final List<KafkaStream<Object, Object>> streams = consumerConnector.createMessageStreams(topicCountMap,
-		      avroDecoder, avroDecoder).get(topic);
-		for (final KafkaStream<Object, Object> stream : streams) {
-			new Thread() {
-				public void run() {
-					for (MessageAndMetadata<Object, Object> msgAndMetadata : stream) {
-						try {
-							System.out.println("received: " + msgAndMetadata.message());
-							actualResult.add(msgAndMetadata.message());
-							countDown.countDown();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
+		final KafkaConsumer<Object, Object> consumer = new KafkaConsumer<Object, Object>(consumerProps,
+		      avroKeyDeserializer, avroValueDeserializer);
+		consumer.subscribe(Arrays.asList(topic));
+
+		new Thread() {
+			public void run() {
+				ConsumerRecords<Object, Object> records = consumer.poll(10000);
+				for (ConsumerRecord<Object, Object> consumerRecord : records) {
+					try {
+						System.out.println("received: " + consumerRecord.value());
+						actualResult.add(consumerRecord.value());
+						countDown.countDown();
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
-			}.start();
-		}
+			}
+		}.start();
 
 		KafkaProducer<Object, Object> producer = new KafkaProducer<Object, Object>(producerProps, avroKeySerializer,
 		      avroValueSerializer);
@@ -111,7 +108,7 @@ public class NativeKafkaWithAvroDecoderTest {
 
 		Assert.assertArrayEquals(expectedResult.toArray(), actualResult.toArray());
 
-		consumerConnector.shutdown();
+		consumer.close();
 		producer.close();
 	}
 }

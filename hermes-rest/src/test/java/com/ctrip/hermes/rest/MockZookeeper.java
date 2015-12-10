@@ -2,6 +2,7 @@ package com.ctrip.hermes.rest;
 
 import java.io.IOException;
 
+import org.I0Itec.zkclient.ZkConnection;
 import org.apache.curator.test.TestingServer;
 
 public class MockZookeeper {
@@ -42,7 +43,7 @@ public class MockZookeeper {
 		}
 	}
 
-	public String getConnectionString() {
-		return ZK_HOST + ":" + ZK_PORT;
+	public ZkConnection getConnection() {
+		return new ZkConnection(ZK_HOST + ":" + ZK_PORT);
 	}
 }

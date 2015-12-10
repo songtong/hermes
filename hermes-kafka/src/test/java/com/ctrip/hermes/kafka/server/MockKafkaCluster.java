@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import scala.collection.Iterator;
+import scala.collection.Seq;
+import kafka.api.PartitionMetadata;
 import kafka.api.TopicMetadata;
 
 public class MockKafkaCluster {
@@ -56,5 +59,34 @@ public class MockKafkaCluster {
 		Random random = new Random();
 		MockKafka kafka = kafkaCluster.get(random.nextInt(kafkaCluster.size()));
 		return kafka.fetchTopicMeta(topic);
+	}
+
+	public TopicMetadata waitTopicUntilReady(String topic) {
+		boolean isReady = false;
+		TopicMetadata topicMeta = null;
+		while (!isReady) {
+			Random random = new Random();
+			MockKafka kafka = kafkaCluster.get(random.nextInt(kafkaCluster.size()));
+			topicMeta = kafka.fetchTopicMeta(topic);
+			Seq<PartitionMetadata> partitionsMetadata = topicMeta.partitionsMetadata();
+			Iterator<PartitionMetadata> iterator = partitionsMetadata.iterator();
+			boolean hasGotLeader = true;
+			while (iterator.hasNext()) {
+				PartitionMetadata partitionMeta = iterator.next();
+				hasGotLeader &= (!partitionMeta.leader().isEmpty());
+				if (partitionMeta.leader().isEmpty()) {
+					System.out.println("Partition leader is not ready, wait 1s.");
+					break;
+				}
+			}
+			isReady = hasGotLeader;
+			if (!isReady) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+		return topicMeta;
 	}
 }

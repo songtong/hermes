@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import kafka.api.TopicMetadata;
+
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -32,18 +34,16 @@ public class OneBoxTest {
 
 	private static MockKafkaCluster kafkaCluster;
 
+	private static final int CONSUMER_WAIT_BEFORE_READY = 10000;
+
 	@BeforeClass
-	public static void before() {
+	public static void beforeClass() {
 		zk = new MockZookeeper();
 		kafkaCluster = new MockKafkaCluster(zk, 3);
 	}
 
 	@AfterClass
-	public static void after() {
-		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
-		      Endpoint.KAFKA);
-		kafkaSender.close();
-
+	public static void afterClass() {
 		kafkaCluster.stop();
 		zk.stop();
 	}
@@ -53,7 +53,7 @@ public class OneBoxTest {
 		String topic = "kafka.SimpleTextTopic1";
 		String group = "NonExistGroup";
 
-		Consumer.getInstance().start(topic, group, new BaseMessageListener<String>() {
+		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group, new BaseMessageListener<String>() {
 
 			@Override
 			protected void onMessage(ConsumerMessage<String> msg) {
@@ -62,12 +62,15 @@ public class OneBoxTest {
 			}
 		});
 
+		consumerHolder.close();
 	}
 
 	@Test
 	public void simpleTextOneProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
 		String topic = "kafka.SimpleTextTopic1";
 		kafkaCluster.createTopic(topic, 3, 1);
+		TopicMetadata topicMeta = kafkaCluster.waitTopicUntilReady(topic);
+		System.out.println(topicMeta);
 		String group = "SimpleTextTopic1Group";
 
 		List<String> expected = new ArrayList<String>();
@@ -88,12 +91,12 @@ public class OneBoxTest {
 			protected void onMessage(ConsumerMessage<String> msg) {
 				String body = msg.getBody();
 				actual.add(body);
-				System.out.println("Receive: " + body);
+				System.out.println("Receive1: " + body);
 			}
 		});
 
 		System.out.println("Starting consumer...");
-		Thread.sleep(1000);
+		Thread.sleep(CONSUMER_WAIT_BEFORE_READY);
 
 		for (int i = 0; i < expected.size(); i++) {
 			String proMsg = expected.get(i);
@@ -111,6 +114,9 @@ public class OneBoxTest {
 		}
 
 		consumer.close();
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
 		Assert.assertEquals(expected.size(), actual.size());
 		Assert.assertEquals(new HashSet<String>(expected), new HashSet<String>(actual));
 	}
@@ -127,6 +133,8 @@ public class OneBoxTest {
 	      ExecutionException {
 		String topic = "kafka.SimpleTextTopic2";
 		kafkaCluster.createTopic(topic, 3, 1);
+		TopicMetadata topicMeta = kafkaCluster.waitTopicUntilReady(topic);
+		System.out.println(topicMeta);
 		String group = "SimpleTextTopic2Group";
 
 		List<String> expected = new ArrayList<String>();
@@ -152,7 +160,7 @@ public class OneBoxTest {
 		});
 
 		System.out.println("Starting consumer1");
-		Thread.sleep(1000);
+		Thread.sleep(CONSUMER_WAIT_BEFORE_READY);
 
 		ConsumerHolder consumer2 = Consumer.getInstance().start(topic, group, new BaseMessageListener<String>() {
 
@@ -164,7 +172,7 @@ public class OneBoxTest {
 			}
 		});
 		System.out.println("Starting consumer2");
-		Thread.sleep(1000);
+		Thread.sleep(CONSUMER_WAIT_BEFORE_READY);
 
 		for (int i = 0; i < expected.size(); i++) {
 			String proMsg = expected.get(i);
@@ -183,6 +191,9 @@ public class OneBoxTest {
 
 		consumer1.close();
 		consumer2.close();
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
 		Assert.assertEquals(expected.size(), actual.size());
 		Assert.assertEquals(new HashSet<String>(expected), new HashSet<String>(actual));
 	}
@@ -192,6 +203,8 @@ public class OneBoxTest {
 	      ExecutionException {
 		String topic = "kafka.SimpleTextTopic3";
 		kafkaCluster.createTopic(topic, 3, 1);
+		TopicMetadata topicMeta = kafkaCluster.waitTopicUntilReady(topic);
+		System.out.println(topicMeta);
 		String group1 = "SimpleTextTopic3Group1";
 		String group2 = "SimpleTextTopic3Group2";
 
@@ -214,12 +227,12 @@ public class OneBoxTest {
 			protected void onMessage(ConsumerMessage<String> msg) {
 				String body = msg.getBody();
 				actual1.add(body);
-				System.out.println("Receive: " + body);
+				System.out.println("Receive1: " + body);
 			}
 		});
 
 		System.out.println("Starting consumer1");
-		Thread.sleep(1000);
+		Thread.sleep(CONSUMER_WAIT_BEFORE_READY);
 
 		ConsumerHolder consumer2 = Consumer.getInstance().start(topic, group2, new BaseMessageListener<String>() {
 
@@ -227,11 +240,11 @@ public class OneBoxTest {
 			protected void onMessage(ConsumerMessage<String> msg) {
 				String body = msg.getBody();
 				actual2.add(body);
-				System.out.println("Receive: " + body);
+				System.out.println("Receive2: " + body);
 			}
 		});
 		System.out.println("Starting consumer2");
-		Thread.sleep(1000);
+		Thread.sleep(15000);
 
 		for (int i = 0; i < expected.size(); i++) {
 			String proMsg = expected.get(i);
@@ -250,6 +263,9 @@ public class OneBoxTest {
 
 		consumer1.close();
 		consumer2.close();
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
 		Assert.assertEquals(expected.size(), actual1.size());
 		Assert.assertEquals(expected.size(), actual2.size());
 		Assert.assertEquals(new HashSet<String>(expected), new HashSet<String>(actual1));
@@ -260,6 +276,8 @@ public class OneBoxTest {
 	public void simpleTextMultipleProducerOneConsumerTest() throws IOException, InterruptedException, ExecutionException {
 		final String topic = "kafka.SimpleTextTopic4";
 		kafkaCluster.createTopic(topic, 3, 1);
+		TopicMetadata topicMeta = kafkaCluster.waitTopicUntilReady(topic);
+		System.out.println(topicMeta);
 		final String group = "SimpleTextTopic4Group";
 
 		final List<String> expected = new ArrayList<String>();
@@ -278,12 +296,12 @@ public class OneBoxTest {
 			protected void onMessage(ConsumerMessage<String> msg) {
 				String body = msg.getBody();
 				actual.add(body);
-				System.out.println("Receive: " + body);
+				System.out.println("Receive1: " + body);
 			}
 		});
 
 		System.out.println("Starting consumer...");
-		Thread.sleep(1000);
+		Thread.sleep(CONSUMER_WAIT_BEFORE_READY);
 
 		Thread producer1 = new Thread() {
 			public void run() {
@@ -296,7 +314,7 @@ public class OneBoxTest {
 					KafkaSendResult result;
 					try {
 						result = future.get();
-						System.out.println(String.format("Sent:%s, Partition:%s, Offset:%s", proMsg, result.getPartition(),
+						System.out.println(String.format("Sent1:%s, Partition:%s, Offset:%s", proMsg, result.getPartition(),
 						      result.getOffset()));
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -319,7 +337,7 @@ public class OneBoxTest {
 					KafkaSendResult result;
 					try {
 						result = future.get();
-						System.out.println(String.format("Sent:%s, Partition:%s, Offset:%s", proMsg, result.getPartition(),
+						System.out.println(String.format("Sent2:%s, Partition:%s, Offset:%s", proMsg, result.getPartition(),
 						      result.getOffset()));
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -337,6 +355,9 @@ public class OneBoxTest {
 		}
 
 		consumer.close();
+		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
+		      Endpoint.KAFKA);
+		kafkaSender.close();
 		Assert.assertEquals(expected.size() * 2, actual.size());
 	}
 }
