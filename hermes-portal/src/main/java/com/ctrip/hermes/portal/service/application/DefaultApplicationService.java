@@ -196,7 +196,8 @@ public class DefaultApplicationService implements ApplicationService {
 		} else {
 			consumerView.setRetryPolicy("2:[]");
 		}
-
+		consumerView.setOrderedConsume(true);
+		
 		return consumerView;
 	}
 }
