@@ -465,7 +465,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		try {
 			int groupId = m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId());
 			List<ResendGroupId> maxIdByMaxScheduleDate = m_resendDao.findMaxIdByMaxScheduleDate(tpg.getTopic(),
-			      tpg.getPartition(), groupId, new Date(m_systemClockService.now()), ResendGroupIdEntity.READSET_FULL);
+			      tpg.getPartition(), groupId, new Date(m_systemClockService.now()), ResendGroupIdEntity.READSET_ID);
 
 			if (CollectionUtil.isNotEmpty(maxIdByMaxScheduleDate)) {
 				long maxId = maxIdByMaxScheduleDate.get(0).getId();
