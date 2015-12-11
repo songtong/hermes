@@ -18,7 +18,7 @@ public interface ApplicationService {
 
 	public List<HermesApplication> getApplicationsByStatus(int Status);
 
-	public TopicView generageTopicView(TopicApplication app);
+	public TopicView generateTopicView(TopicApplication app);
 
 	public ConsumerView generateConsumerView(ConsumerApplication app);
 
