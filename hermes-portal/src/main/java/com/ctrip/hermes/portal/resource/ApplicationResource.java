@@ -235,7 +235,7 @@ public class ApplicationResource {
 		HermesApplication app = appService.getApplicationById(id);
 		switch (HermesApplicationType.findByTypeCode(app.getType())) {
 		case CREATE_TOPIC:
-			TopicView topicView = appService.generageTopicView((TopicApplication) app);
+			TopicView topicView = appService.generateTopicView((TopicApplication) app);
 			return Response.status(Status.OK).entity(new Pair<HermesApplication, TopicView>(app, topicView)).build();
 		case CREATE_CONSUMER:
 			ConsumerView consumerView = appService.generateConsumerView((ConsumerApplication) app);

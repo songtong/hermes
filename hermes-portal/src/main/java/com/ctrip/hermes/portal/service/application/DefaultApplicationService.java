@@ -70,7 +70,7 @@ public class DefaultApplicationService implements ApplicationService {
 	}
 
 	@Override
-	public TopicView generageTopicView(TopicApplication app) {
+	public TopicView generateTopicView(TopicApplication app) {
 		TopicView topicView = new TopicView();
 
 		String defaultReadDS = "ds0";
@@ -186,6 +186,7 @@ public class DefaultApplicationService implements ApplicationService {
 	@Override
 	public ConsumerView generateConsumerView(ConsumerApplication app) {
 		ConsumerView consumerView = new ConsumerView();
+		consumerView.setOrderedConsume(true);
 		consumerView.setTopicName(app.getTopicName());
 		consumerView.setGroupName(app.getProductLine() + "." + app.getProduct() + "." + app.getProject());
 		consumerView.setAckTimeoutSeconds(app.getAckTimeoutSeconds());
@@ -196,7 +197,7 @@ public class DefaultApplicationService implements ApplicationService {
 		} else {
 			consumerView.setRetryPolicy("2:[]");
 		}
-
+		
 		return consumerView;
 	}
 }
