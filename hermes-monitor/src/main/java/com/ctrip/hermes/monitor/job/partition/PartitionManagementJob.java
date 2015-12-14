@@ -36,6 +36,7 @@ import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.job.partition.context.DeadLetterTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.ResendTableContext;
 import com.ctrip.hermes.monitor.service.PartitionService;
@@ -189,35 +190,48 @@ public class PartitionManagementJob {
 		});
 	}
 
+	private void addMessageTableContext(Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, //
+	      Topic topic, Partition partition, int priority, int retain, List<TableContext> contexts) {
+		MessageTableContext ctx = new MessageTableContext(topic, partition, priority, //
+		      retain, m_config.getPartitionWatermarkInDay(), m_config.getPartitionIncrementInDay());
+		Pair<Datasource, List<PartitionInfo>> pair = partitions.get(ctx.getTableName());
+		if (pair != null) {
+			contexts.add(ctx.setPartitionInfos(pair.getValue()).setDatasource(pair.getKey()));
+		}
+	}
+
+	private void addResendTableContext(Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, //
+	      Topic topic, Partition partition, ConsumerGroup consumer, int retain, List<TableContext> contexts) {
+		ResendTableContext ctx = new ResendTableContext(topic, partition, consumer, //
+		      retain, m_config.getPartitionWatermarkInDay(), m_config.getPartitionIncrementInDay());
+		Pair<Datasource, List<PartitionInfo>> pair = partitions.get(ctx.getTableName());
+		if (pair != null) {
+			contexts.add(ctx.setPartitionInfos(pair.getValue()).setDatasource(pair.getKey()));
+		}
+	}
+
+	private void addDeadLetterTableContext(Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, //
+	      Topic topic, Partition partition, int retain, List<TableContext> contexts) {
+		DeadLetterTableContext ctx = new DeadLetterTableContext(topic, partition, //
+		      retain, m_config.getPartitionWatermarkInDay(), m_config.getPartitionIncrementInDay());
+		Pair<Datasource, List<PartitionInfo>> pair = partitions.get(ctx.getTableName());
+		if (pair != null) {
+			contexts.add(ctx.setPartitionInfos(pair.getValue()).setDatasource(pair.getKey()));
+		}
+	}
+
 	private List<TableContext> createTableContexts(//
 	      Meta meta, Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, Map<String, Integer> topicRetainDays) {
-		int cordon = m_config.getPartitionWatermarkInDay();
-		int increment = m_config.getPartitionIncrementInDay();
-
 		List<TableContext> ctxes = new ArrayList<TableContext>();
 		for (Topic topic : meta.getTopics().values()) {
 			if (topicRetainDays.containsKey(topic.getName())) {
 				int retain = topicRetainDays.get(topic.getName());
 				for (Partition partition : topic.getPartitions()) {
-					MessageTableContext pMsgCtx = new MessageTableContext(topic, partition, 0, retain, cordon, increment);
-					if (partitions.containsKey(pMsgCtx.getTableName())) {
-						ctxes.add(pMsgCtx.setPartitionInfos(partitions.get(pMsgCtx.getTableName()).getValue()));
-
-						MessageTableContext npMsgCtx = new MessageTableContext(topic, partition, 1, retain, cordon, increment);
-						ctxes.add(npMsgCtx.setPartitionInfos(partitions.get(npMsgCtx.getTableName()).getValue()));
-
-						Datasource ds = partitions.get(pMsgCtx.getTableName()).getKey();
-						pMsgCtx.setDatasource(ds);
-						npMsgCtx.setDatasource(ds);
-
-						for (ConsumerGroup consumer : topic.getConsumerGroups()) {
-							ResendTableContext cCtx = new ResendTableContext(topic, partition, consumer, retain, cordon,
-							      increment);
-							Pair<Datasource, List<PartitionInfo>> pair = partitions.get(cCtx.getTableName());
-							if (pair != null) {
-								ctxes.add(cCtx.setPartitionInfos(pair.getValue()).setDatasource(ds));
-							}
-						}
+					addMessageTableContext(partitions, topic, partition, 0, retain, ctxes);
+					addMessageTableContext(partitions, topic, partition, 1, retain, ctxes);
+					addDeadLetterTableContext(partitions, topic, partition, retain * 5, ctxes);
+					for (ConsumerGroup consumer : topic.getConsumerGroups()) {
+						addResendTableContext(partitions, topic, partition, consumer, retain, ctxes);
 					}
 				}
 			}
