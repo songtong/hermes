@@ -14,6 +14,7 @@ import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent.Par
 import com.ctrip.hermes.metaservice.queue.PartitionInfo;
 import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+import com.ctrip.hermes.monitor.job.partition.strategy.DeadLetterPartitionCheckerStrategy;
 import com.ctrip.hermes.monitor.job.partition.strategy.MessagePartitionCheckerStrategy;
 import com.ctrip.hermes.monitor.job.partition.strategy.PartitionCheckerStrategy;
 import com.ctrip.hermes.monitor.job.partition.strategy.PartitionCheckerStrategy.AnalysisResult;
@@ -98,6 +99,8 @@ public class PartitionManagementTask implements Runnable {
 			return ApplicationContextUtil.getBean(MessagePartitionCheckerStrategy.class);
 		case RESEND:
 			return ApplicationContextUtil.getBean(ResendPartitionCheckerStrategy.class);
+		case DEAD_LETTER:
+			return ApplicationContextUtil.getBean(DeadLetterPartitionCheckerStrategy.class);
 		default:
 			throw new RuntimeException("No such table type!");
 		}

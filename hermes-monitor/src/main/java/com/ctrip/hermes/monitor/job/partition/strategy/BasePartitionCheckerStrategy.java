@@ -64,7 +64,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		List<PartitionInfo> wasteList = new ArrayList<PartitionInfo>();
 		long upperBound = latest.getId() + ctx.getRetainInDay() * dailyTotal;
 		for (PartitionInfo info : ps) {
-			if (info.getUpperbound() > upperBound) {
+			if (info.getUpperbound() > upperBound && info.getRows() == 0) {
 				wasteList.add(info);
 			}
 		}

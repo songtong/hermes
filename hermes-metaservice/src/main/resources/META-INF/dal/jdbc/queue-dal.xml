@@ -268,6 +268,10 @@
 			<readset name="COUNT">
 				<member name="count-of-time-range" />
 			</readset>
+			<readset name="CREATE_DATE">
+				<member name="id" />
+				<member name="creation-date"></member>
+			</readset>
 		</readsets>
 
 		<query-defs>
@@ -310,6 +314,34 @@
         		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${dead-date},${group-id},${priority},origin_id
         		FROM <TABLE name="resend-group-id"/>
         		WHERE id IN <IN>${message-ids}</IN>]]>
+				</statement>
+			</query>
+			<query name="find-by-PK" type="SELECT">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="key-id" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+			</query>
+			<query name="latest" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT 1
+        		]]>
+				</statement>
+			</query>
+			<query name="oldest" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> ASC
+        		LIMIT 1
+        		]]>
 				</statement>
 			</query>
 		</query-defs>
