@@ -79,7 +79,11 @@ public class DefaultMessageQueueDao implements MessageQueueDao {
 
 	private List<MessagePriority> doFindLatestMessages(String topic, int partition, int priority, int count) {
 		try {
-			return m_msgDao.topK(topic, partition, priority, count, MessagePriorityEntity.READSET_FULL);
+			List<MessagePriority> l = m_msgDao.topK(topic, partition, priority, count, MessagePriorityEntity.READSET_FULL);
+			for (MessagePriority msg : l) {
+				msg.setPriority(priority);
+			}
+			return l;
 		} catch (Exception e) {
 			if (log.isDebugEnabled()) {
 				log.debug("Find top K failed: {} {}", topic, partition, e);
