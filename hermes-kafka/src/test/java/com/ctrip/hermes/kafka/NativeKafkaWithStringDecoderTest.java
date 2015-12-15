@@ -17,7 +17,6 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import kafka.serializer.StringDecoder;
 
-import org.I0Itec.zkclient.ZkClient;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -25,22 +24,17 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
-
 public class NativeKafkaWithStringDecoderTest {
 
 	@Test
 	public void testNative() throws IOException, InterruptedException, ExecutionException {
 		String topic = "kafka.SimpleTextTopic";
-		ZkClient zkClient = new ZkClient("10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
-		zkClient.setZkSerializer(new ZKStringSerializer());
-		int msgNum = 100000;
+		int msgNum = 200;
 		final CountDownLatch countDown = new CountDownLatch(msgNum);
 
 		Properties producerProps = new Properties();
 		// Producer
-		producerProps.put("metadata.broker.list", "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092");
-		producerProps.put("bootstrap.servers", "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
+		producerProps.put("bootstrap.servers", "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092");
 		producerProps.put("value.serializer", StringSerializer.class.getCanonicalName());
 		producerProps.put("key.serializer", StringSerializer.class.getCanonicalName());
 		// Consumer

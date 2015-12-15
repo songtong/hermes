@@ -72,9 +72,6 @@ public class KafkaMessageBrokerSender {
 		if (!producerProp.containsKey("client.id")) {
 			producerProp.put("client.id", Networks.forIp().getLocalHostAddress());
 		}
-		if (!producerProp.containsKey("block.on.buffer.full")) {
-			producerProp.put("block.on.buffer.full", false);
-		}
 		if (!producerProp.containsKey("linger.ms")) {
 			producerProp.put("linger.ms", 50);
 		}

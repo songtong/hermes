@@ -15,18 +15,18 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.I0Itec.zkclient.ZkClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.errors.WakeupException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 import com.ctrip.hermes.kafka.avro.KafkaAvroTest;
 
 public class NativeKafkaWithAvroDecoderTest {
@@ -34,21 +34,17 @@ public class NativeKafkaWithAvroDecoderTest {
 	@Test
 	public void testNative() throws IOException, InterruptedException, ExecutionException {
 		final String topic = "kafka.SimpleAvroTopic";
-		ZkClient zkClient = new ZkClient("10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
-		zkClient.setZkSerializer(new ZKStringSerializer());
-		int msgNum = 100000;
+		int msgNum = 200;
 		final CountDownLatch countDown = new CountDownLatch(msgNum);
 
 		Properties producerProps = new Properties();
-		// Producer
-		producerProps.put("metadata.broker.list", "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092");
-		producerProps.put("bootstrap.servers", "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
+		producerProps.put("bootstrap.servers", "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092");
 
 		// Avro Decoder/Encoder
-		CachedSchemaRegistryClient schemaRegistry = new CachedSchemaRegistryClient("http://10.3.8.63:8081/",
+		CachedSchemaRegistryClient schemaRegistry = new CachedSchemaRegistryClient("http://10.3.6.237:8081/",
 		      AbstractKafkaAvroSerDeConfig.MAX_SCHEMAS_PER_SUBJECT_DEFAULT);
 		Map<String, String> configs = new HashMap<String, String>();
-		configs.put("schema.registry.url", "http://10.3.8.63:8081/");
+		configs.put("schema.registry.url", "http://10.3.6.237:8081/");
 
 		KafkaAvroSerializer avroKeySerializer = new KafkaAvroSerializer();
 		avroKeySerializer.configure(configs, true);
@@ -57,7 +53,7 @@ public class NativeKafkaWithAvroDecoderTest {
 
 		Map<String, String> deserializerConfigs = new HashMap<String, String>();
 		deserializerConfigs.put("specific.avro.reader", Boolean.TRUE.toString());
-		deserializerConfigs.put("schema.registry.url", "http://10.3.8.63:8081/");
+		deserializerConfigs.put("schema.registry.url", "http://10.3.6.237:8081/");
 		KafkaAvroDeserializer avroKeyDeserializer = new KafkaAvroDeserializer(schemaRegistry, deserializerConfigs);
 		avroKeyDeserializer.configure(configs, true);
 		KafkaAvroDeserializer avroValueDeserializer = new KafkaAvroDeserializer(schemaRegistry, deserializerConfigs);
@@ -65,7 +61,7 @@ public class NativeKafkaWithAvroDecoderTest {
 
 		// Consumer
 		final Properties consumerProps = new Properties();
-		consumerProps.put("zookeeper.connect", "10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181");
+		consumerProps.put("bootstrap.servers", "10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092");
 		consumerProps.put("group.id", "GROUP_" + topic);
 
 		final List<Object> actualResult = new ArrayList<Object>();
@@ -75,20 +71,37 @@ public class NativeKafkaWithAvroDecoderTest {
 		      avroKeyDeserializer, avroValueDeserializer);
 		consumer.subscribe(Arrays.asList(topic));
 
-		new Thread() {
+		class KafkaConsumerThread implements Runnable {
+
+			private final AtomicBoolean closed = new AtomicBoolean(false);
+
 			public void run() {
-				ConsumerRecords<Object, Object> records = consumer.poll(10000);
-				for (ConsumerRecord<Object, Object> consumerRecord : records) {
-					try {
-						System.out.println("received: " + consumerRecord.value());
-						actualResult.add(consumerRecord.value());
-						countDown.countDown();
-					} catch (Exception e) {
-						e.printStackTrace();
+				try {
+					while (!closed.get()) {
+						ConsumerRecords<Object, Object> records = consumer.poll(100);
+						for (ConsumerRecord<Object, Object> consumerRecord : records) {
+							System.out.println("received: " + consumerRecord.value());
+							actualResult.add(consumerRecord.value());
+							countDown.countDown();
+						}
 					}
+				} catch (WakeupException e) {
+					if (!closed.get())
+						throw e;
+				} finally {
+					consumer.commitSync();
+					consumer.close();
 				}
 			}
-		}.start();
+
+			public void shutdown() {
+				closed.set(true);
+				consumer.wakeup();
+			}
+		}
+
+		KafkaConsumerThread thread = new KafkaConsumerThread();
+		new Thread(thread).start();
 
 		KafkaProducer<Object, Object> producer = new KafkaProducer<Object, Object>(producerProps, avroKeySerializer,
 		      avroValueSerializer);
@@ -106,9 +119,9 @@ public class NativeKafkaWithAvroDecoderTest {
 
 		countDown.await();
 
-		Assert.assertArrayEquals(expectedResult.toArray(), actualResult.toArray());
-
-		consumer.close();
+		thread.shutdown();
 		producer.close();
+
+		Assert.assertEquals(expectedResult.size(), actualResult.size());
 	}
 }
