@@ -10,6 +10,7 @@ import org.unidal.dal.jdbc.DalException;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.queue.CreationStamp;
 import com.ctrip.hermes.metaservice.queue.DeadLetter;
 import com.ctrip.hermes.metaservice.queue.DeadLetterDao;
 import com.ctrip.hermes.metaservice.queue.DeadLetterEntity;

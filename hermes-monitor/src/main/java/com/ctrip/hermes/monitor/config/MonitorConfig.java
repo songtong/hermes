@@ -134,6 +134,18 @@ public class MonitorConfig {
 	@Value("${partition.checker.size.increment.step:1000000}")
 	private int partitionSizeIncrementStep;
 
+	/**
+	 * { ".*" : 10, "song.test" : 100 } in minute
+	 */
+	@Value("${long.time.no.produce.checker.include.topics:{\".*\": 30}}")
+	private String longTimeNoProduceCheckerIncludeTopics;
+
+	/**
+	 * [ "song.test" ]
+	 */
+	@Value("${long.time.no.produce.checker.exclude.topics:[\"cmessage_fws\"]}")
+	private String longTimeNoProduceCheckerExcludeTopics;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -433,5 +445,21 @@ public class MonitorConfig {
 
 	public void setPartitionCheckerExcludeTopics(String partitionCheckerExcludeTopics) {
 		this.partitionCheckerExcludeTopics = partitionCheckerExcludeTopics;
+	}
+
+	public String getLongTimeNoProduceCheckerIncludeTopics() {
+		return longTimeNoProduceCheckerIncludeTopics;
+	}
+
+	public void setLongTimeNoProduceCheckerIncludeTopics(String longTimeNoProduceCheckerIncludeTopics) {
+		this.longTimeNoProduceCheckerIncludeTopics = longTimeNoProduceCheckerIncludeTopics;
+	}
+
+	public String getLongTimeNoProduceCheckerExcludeTopics() {
+		return longTimeNoProduceCheckerExcludeTopics;
+	}
+
+	public void setLongTimeNoProduceCheckerExcludeTopics(String longTimeNoProduceCheckerExcludeTopics) {
+		this.longTimeNoProduceCheckerExcludeTopics = longTimeNoProduceCheckerExcludeTopics;
 	}
 }
