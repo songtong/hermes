@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.ctrip.hermes.metaservice.model.MonitorEvent;
@@ -7,6 +8,9 @@ import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 import com.ctrip.hermes.metaservice.queue.CreationStamp;
 
 public class LongTimeNoProduceEvent extends BaseMonitorEvent {
+
+	private static final SimpleDateFormat m_formatter = new SimpleDateFormat("yyyy-mm-dd hh:MM:ss");
+
 	private String m_topic;
 
 	private int m_partitionId;
@@ -28,7 +32,11 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 	protected void parse0(MonitorEvent dbEntity) {
 		m_topic = dbEntity.getKey1();
 		m_partitionId = Integer.valueOf(dbEntity.getKey2());
-		m_latest = new CreationStamp(Long.valueOf(dbEntity.getKey3()), new Date(Long.valueOf(dbEntity.getKey4())));
+		try {
+			m_latest = new CreationStamp(Long.valueOf(dbEntity.getKey3()), m_formatter.parse(dbEntity.getKey4()));
+		} catch (Exception e) {
+			m_latest = new CreationStamp(Long.valueOf(dbEntity.getKey3()), new Date(0));
+		}
 	}
 
 	@Override
@@ -36,7 +44,7 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 		e.setKey1(m_topic);
 		e.setKey2(String.valueOf(m_partitionId));
 		e.setKey3(String.valueOf(m_latest.getId()));
-		e.setKey4(String.valueOf(m_latest.getDate().getTime()));
+		e.setKey4(m_formatter.format(m_latest.getDate()));
 		e.setMessage(String.format("[%s] Long time no produce for topic: %s[%s], %s", //
 		      e.getCreateTime(), m_topic, m_partitionId, m_latest));
 	}

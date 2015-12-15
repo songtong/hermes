@@ -20,6 +20,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
@@ -115,7 +116,9 @@ public class LongTimeNoProduceChecker extends DBBasedChecker {
 			      }
 		      });
 		for (Entry<String, Topic> entry : includeTopics) {
-			limits.put(entry.getValue(), limit);
+			if (Storage.MYSQL.equals(entry.getValue().getStorageType())) {
+				limits.put(entry.getValue(), limit);
+			}
 		}
 		return limits;
 	}
