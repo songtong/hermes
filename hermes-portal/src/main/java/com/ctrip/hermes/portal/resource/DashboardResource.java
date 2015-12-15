@@ -120,7 +120,7 @@ public class DashboardResource {
 					log.warn("Find latest messages of {}[{}] failed", topic.getName(), partition.getId(), e);
 				}
 			}
-			list = ListUtils.getTopK(15, MessagePriority.DATE_COMPARATOR_DESC, ls);
+			list = ListUtils.getTopK(20, MessagePriority.DATE_COMPARATOR_DESC, ls);
 		}
 
 		return Response.status(Status.OK).entity(CollectionUtil.collect(list, new Transformer() {
