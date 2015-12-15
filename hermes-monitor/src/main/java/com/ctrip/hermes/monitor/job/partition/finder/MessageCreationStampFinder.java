@@ -9,6 +9,7 @@ import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metaservice.queue.CreationStamp;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityEntity;
