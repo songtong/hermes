@@ -22,6 +22,7 @@
     <attribute name="create-by" value-type="String" />
     <attribute name="endpoint-type" value-type="String" />
     <attribute name="ack-timeout-seconds" value-type="int" />
+    <attribute name="priority-message-enabled" value-type="boolean" />
     <attribute name="codec-type" value-type="String" />
     <entity-ref name="consumer-group" type="list" names="consumer-groups" />
     <entity-ref name="producer" type="list" names="producers" />
