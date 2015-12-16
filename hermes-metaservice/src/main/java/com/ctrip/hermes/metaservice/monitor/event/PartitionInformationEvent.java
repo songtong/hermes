@@ -18,7 +18,7 @@ import com.ctrip.hermes.metaservice.queue.TableContext;
 
 public class PartitionInformationEvent extends BaseMonitorEvent {
 
-	private static final int IMAGINED_RESERVE_COUNT_WHEN_NOT_SURE = 100;
+	public static final int IMAGINED_RESERVE_COUNT_WHEN_NOT_SURE = 100;
 
 	private int m_totalDatasourceCount = 0;
 
@@ -99,9 +99,7 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 		public boolean recordTableContext(TableContext ctx, List<PartitionInfo> wastes) {
 			if (m_datasource.equals(ctx.getDatasource().getProperties().get("url").getValue())) {
 				m_table2PartitionCount.put(ctx.getTableName(), //
-				      new Pair<Integer, Integer>(ctx.getPartitionInfos().size(), //
-				            wastes != null ? wastes.size() : //
-				                  Math.max(0, ctx.getPartitionInfos().size() - IMAGINED_RESERVE_COUNT_WHEN_NOT_SURE)));
+				      new Pair<Integer, Integer>(ctx.getPartitionInfos().size(), wastes != null ? wastes.size() : 0));
 				long totalRowsCount = 0;
 				for (PartitionInfo partition : ctx.getPartitionInfos()) {
 					if (partition.getRows() == 0) {
