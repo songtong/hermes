@@ -18,6 +18,8 @@ import com.ctrip.hermes.metaservice.queue.TableContext;
 
 public class PartitionInformationEvent extends BaseMonitorEvent {
 
+	private static final int IMAGINED_RESERVE_COUNT_WHEN_NOT_SURE = 100;
+
 	private int m_totalDatasourceCount = 0;
 
 	private int m_totalTableCount = 0;
@@ -83,19 +85,31 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 
 		private Map<String, Pair<Integer, Integer>> m_table2PartitionCount;
 
+		private Map<String, Long> m_table2RowsCount;
+
 		public DatasourceInformation(String datasource) {
 			if (StringUtils.isBlank(datasource)) {
 				throw new IllegalArgumentException("Datasource name can not be null!");
 			}
 			m_datasource = datasource;
-			m_table2PartitionCount = new HashMap<String, Pair<Integer, Integer>>();
+			m_table2PartitionCount = new HashMap<>();
+			m_table2RowsCount = new HashMap<>();
 		}
 
 		public boolean recordTableContext(TableContext ctx, List<PartitionInfo> wastes) {
 			if (m_datasource.equals(ctx.getDatasource().getProperties().get("url").getValue())) {
-				m_table2PartitionCount.put( //
-				      ctx.getTableName(), //
-				      new Pair<Integer, Integer>(ctx.getPartitionInfos().size(), wastes == null ? 0 : wastes.size()));
+				m_table2PartitionCount.put(ctx.getTableName(), //
+				      new Pair<Integer, Integer>(ctx.getPartitionInfos().size(), //
+				            wastes != null ? wastes.size() : //
+				                  Math.max(0, ctx.getPartitionInfos().size() - IMAGINED_RESERVE_COUNT_WHEN_NOT_SURE)));
+				long totalRowsCount = 0;
+				for (PartitionInfo partition : ctx.getPartitionInfos()) {
+					if (partition.getRows() == 0) {
+						break;
+					}
+					totalRowsCount += partition.getRows();
+				}
+				m_table2RowsCount.put(ctx.getTableName(), totalRowsCount);
 				return true;
 			}
 			return false;
@@ -127,6 +141,10 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 
 		public Map<String, Pair<Integer, Integer>> getTable2PartitionCount() {
 			return m_table2PartitionCount;
+		}
+
+		public Map<String, Long> getTable2RowsCount() {
+			return m_table2RowsCount;
 		}
 
 		@Override
