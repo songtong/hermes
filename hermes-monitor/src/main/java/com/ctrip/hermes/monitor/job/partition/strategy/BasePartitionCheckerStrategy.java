@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.metaservice.monitor.event.PartitionInformationEvent;
 import com.ctrip.hermes.metaservice.queue.CreationStamp;
 import com.ctrip.hermes.metaservice.queue.PartitionInfo;
 import com.ctrip.hermes.metaservice.queue.TableContext;
@@ -54,9 +55,20 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 				wasteList.addAll(calculateWastePartitions(ctx, latest, dailyTotal));
 			}
 			dropList.addAll(calculateDecrementPartitions(ctx));
+		} else {
+			correctWasteListWhenTableIsEmpty(ctx, wasteList);
 		}
 
 		return new AnalysisResult(addList, dropList, wasteList);
+	}
+
+	private void correctWasteListWhenTableIsEmpty(TableContext ctx, List<PartitionInfo> wasteList) {
+		int imagined = PartitionInformationEvent.IMAGINED_RESERVE_COUNT_WHEN_NOT_SURE;
+		if (ctx.getPartitionInfos().size() > imagined) {
+			for (int i = imagined - 1; i < ctx.getPartitionInfos().size(); i++) {
+				wasteList.add(ctx.getPartitionInfos().get(i));
+			}
+		}
 	}
 
 	private List<PartitionInfo> calculateWastePartitions(TableContext ctx, CreationStamp latest, long dailyTotal) {
