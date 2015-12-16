@@ -7,7 +7,7 @@ import io.netty.buffer.Unpooled;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -341,21 +341,26 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 				m_resendDao.copyFromMessageTable(proto);
 			} else {
-				List<ResendGroupId> protos = new LinkedList<>();
+				int intGroupId = m_metaService.translateToIntGroupId(tpp.getTopic(), groupId);
+				Map<Long, Integer> id2RemainingRetries = new HashMap<Long, Integer>();
 				for (Pair<Long, MessageMeta> pair : msgId2Metas) {
-					ResendGroupId proto = new ResendGroupId();
-					proto.setTopic(tpp.getTopic());
-					proto.setPartition(tpp.getPartition());
-					proto.setPriority(tpp.getPriorityInt());
-					proto.setGroupId(m_metaService.translateToIntGroupId(tpp.getTopic(), groupId));
-					int retryTimes = retryPolicy.getRetryTimes() - pair.getValue().getRemainingRetries();
-					proto.setScheduleDate(new Date(retryPolicy.nextScheduleTimeMillis(retryTimes, now)));
-					proto.setId(pair.getKey());
-
-					protos.add(proto);
-
+					id2RemainingRetries.put(pair.getKey(), pair.getValue().getRemainingRetries());
 				}
-				m_resendDao.copyFromResendTable(protos.toArray(new ResendGroupId[protos.size()]));
+
+				Long[] pks = id2RemainingRetries.keySet().toArray(new Long[id2RemainingRetries.size()]);
+				List<ResendGroupId> resends = m_resendDao.findByPKs(tpp.getTopic(), tpp.getPartition(), intGroupId, pks,
+				      ResendGroupIdEntity.READSET_FULL);
+
+				for (ResendGroupId r : resends) {
+					r.setTopic(tpp.getTopic());
+					r.setPartition(tpp.getPartition());
+					r.setGroupId(intGroupId);
+
+					int retryTimes = retryPolicy.getRetryTimes() - id2RemainingRetries.get(r.getId());
+					r.setScheduleDate(new Date(retryPolicy.nextScheduleTimeMillis(retryTimes, now)));
+					r.setRemainingRetries(r.getRemainingRetries() - 1);
+				}
+				m_resendDao.insert(resends.toArray(new ResendGroupId[resends.size()]));
 			}
 
 		}
