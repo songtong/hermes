@@ -15,7 +15,7 @@ import com.ctrip.hermes.metaservice.queue.OffsetMessage;
 import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 
-public class ConsumerBacklogGenerateTask implements Runnable {
+public class ConsumerBacklogCalculateTask implements Runnable {
 	private static final Logger log = LoggerFactory.getLogger(DefaultDashboardService.class);
 	private String topicName;
 	private ConsumerGroup consumer;
@@ -24,7 +24,7 @@ public class ConsumerBacklogGenerateTask implements Runnable {
 	private List<DelayDetail> consumerDelay;
 	private MessageQueueDao dao;
 
-	public ConsumerBacklogGenerateTask(String topicName, ConsumerGroup consumer, int partitionId, CountDownLatch latch,
+	public ConsumerBacklogCalculateTask(String topicName, ConsumerGroup consumer, int partitionId, CountDownLatch latch,
 			MessageQueueDao dao, List<DelayDetail> consumerDelay) {
 		this.topicName = topicName;
 		this.consumer = consumer;

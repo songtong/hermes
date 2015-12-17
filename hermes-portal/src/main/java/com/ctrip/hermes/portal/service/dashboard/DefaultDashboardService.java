@@ -258,7 +258,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			ConsumerGroup c = t.findConsumerGroup(consumer);
 			if (Storage.MYSQL.equals(t.getStorageType())) {
 				for (Partition p : t.getPartitions()) {
-					es.execute(new ConsumerBacklogGenerateTask(topic, c, p.getId(), latch, m_dao, consumerDelay));
+					es.execute(new ConsumerBacklogCalculateTask(topic, c, p.getId(), latch, m_dao, consumerDelay));
 				}
 				latch.await(1, TimeUnit.MINUTES);
 				for (DelayDetail delay : consumerDelay) {
