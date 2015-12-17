@@ -397,8 +397,6 @@ public class TopicResource {
 
 	private TopicView prepareTopicView(Topic topic) {
 		TopicView topicView = new TopicView(topic);
-		long delay = monitorService.getDelay(topic.getName());
-		topicView.setTotalDelay(delay);
 		topicView.setLatestProduced(monitorService.getLatestProduced(topic.getName()));
 		return topicView;
 	}

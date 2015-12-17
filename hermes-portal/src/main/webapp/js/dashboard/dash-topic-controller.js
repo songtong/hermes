@@ -1,47 +1,56 @@
 dashtopic.controller('dash-topic-controller', function($scope, $http, $resource, $sce, $routeParams, DashboardTopicService) {
-	var latest_msgs_resource = $resource('/api/dashboard/topics/:topic/latest');
+	var route_topic = $routeParams['topic'];
+	var route_consumer = $routeParams['consumer'];
+
 	var topic_delay_resource = $resource('/api/dashboard/detail/topics/:topic/delay', {}, {
 		query : {
 			method : "GET",
 			isArray : false
 		}
 	});
-
-	if ($scope.topic_briefs == undefined) {
-		console.log('Topic brief is undefined, refresh it.')
-		$http.get('/api/dashboard/brief/topics').success(function(data, status, headers, config) {
-			$scope.topic_briefs = data;
-		}).error(function(data, status, headers, config) {
-			console.log(data);
-		});
-	}
-
-	var route_topic = $routeParams['topic'];
 	$scope.current_topic = route_topic == "_default" ? $scope.topic_briefs != undefined ? $scope.topic_briefs[0].topic : 'leo_test' : route_topic;
 	$scope.current_consumer = $routeParams['consumer'];
+	DashboardTopicService.get_topic_briefs().then(function(result) {
+		$scope.topic_briefs = result;
+		$scope.topic = find($scope.current_topic, $scope.topic_briefs);
+		if ($scope.topic.storageType == 'kafka') {
+			$scope.trifecta_urls = DashboardTopicService.get_trifecta_urls();
+		} else if ($scope.topic.storageType = 'mysql') {
+			// ************** kibana urls **************** //
+			$scope.k_topic_produce_history = k_topic_produce_history($scope.current_topic, $sce);
+			$scope.k_consume_history = k_consumer_consume_history($scope.current_topic, $scope.current_consumer, $sce);
+			$scope.k_consume_process_history = k_consumer_process_history($scope.current_topic, $scope.current_consumer, $sce);
+			$scope.k_top_producer_current = k_top_producer_current($scope.current_topic, $sce);
+			$scope.k_bottom_producer_current = k_bottom_producer_current($scope.current_topic, $sce);
+			$scope.k_top_consumer_current = k_top_consumer_current($scope.current_topic, $sce);
+			$scope.k_bottom_consumer_current = k_bottom_consumer_current($scope.current_topic, $sce);
+			$scope.k_bottom_process_current = k_bottom_process_current($scope.current_topic, $sce);
+			$scope.k_max_did_current = k_max_did_current($scope.current_topic, $sce);
+			$scope.k_max_aid_current = k_max_aid_current($scope.current_topic, $sce);
+
+			// ************** latest messages **************** //
+			DashboardTopicService.get_topic_latest_msgs($scope.current_topic).then(function(result) {
+				$scope.topic_latest = result;
+			});
+			
+			// ************** consumer delays **************** //
+			$scope.consumers = DashboardTopicService.get_consumers_for_topic($scope.current_topic).then(function(result) {
+				$scope.consumers = result;
+				$scope.display_filtered_consumers = $scope.consumers;
+			});
+
+			if ($scope.current_consumer != null) {
+				$scope.consumer_delay = DashboardTopicService.get_consumer_delay_for_topic($scope.current_topic, $scope.current_consumer).then(function(result) {
+					$scope.consumer_delay = result;
+					console.log(result);
+				})
+			}
+
+			$scope.display_topic_delay = [].concat($scope.topic_delay);
+		}
+	})
+
 	DashboardTopicService.set_current_topic($scope.current_topic);
-
-	// ************** kibana urls **************** //
-	$scope.k_topic_produce_history = k_topic_produce_history($scope.current_topic, $sce);
-	$scope.k_consume_history = k_consumer_consume_history($scope.current_topic, $scope.current_consumer, $sce);
-	$scope.k_consume_process_history = k_consumer_process_history($scope.current_topic, $scope.current_consumer, $sce);
-	$scope.k_top_producer_current = k_top_producer_current($scope.current_topic, $sce);
-	$scope.k_bottom_producer_current = k_bottom_producer_current($scope.current_topic, $sce);
-	$scope.k_top_consumer_current = k_top_consumer_current($scope.current_topic, $sce);
-	$scope.k_bottom_consumer_current = k_bottom_consumer_current($scope.current_topic, $sce);
-	$scope.k_bottom_process_current = k_bottom_process_current($scope.current_topic, $sce);
-	$scope.k_max_did_current = k_max_did_current($scope.current_topic, $sce);
-	$scope.k_max_aid_current = k_max_aid_current($scope.current_topic, $sce);
-
-	// ************** latest messages **************** //
-	$scope.refresh_topic_latest = function() {
-		latest_msgs_resource.query({
-			'topic' : $scope.current_topic
-		}, function(data) {
-			$scope.topic_latest = data;
-		});
-	}
-	$scope.topic_latest = $scope.refresh_topic_latest();
 
 	$scope.show_tree = function(ref_key, json_str, replace) {
 		$scope.current_refkey = ref_key;
@@ -59,8 +68,8 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 		});
 		$("#attr-view").modal('show');
 	};
-	
-	$scope.show_payload = function(payload){
+
+	$scope.show_payload = function(payload) {
 		payload = payload.replace(/\\"/g, '"');
 		if (starts_with(payload, '"{') && ends_with(payload, '}"')) {
 			payload = payload.substring(1, payload.length - 1);
@@ -70,20 +79,6 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 		$("#payload-view").modal('show');
 	}
 
-	// ************** consumer delays **************** //
-	$scope.refresh_topic_delay = function() {
-		topic_delay_resource.query({
-			'topic' : $scope.current_topic
-		}, function(data) {
-			$scope.topic_delay=[];
-			for(var consumer_name in data.details){
-				$scope.topic_delay=$scope.topic_delay.concat(data.details[consumer_name]);
-			}
-			console.log($scope.topic_delay);
-		});
-	}
-	$scope.topic_delay = $scope.refresh_topic_delay();
-	$scope.display_topic_delay = [].concat($scope.topic_delay);
 });
 
 function format_tree(obj) {
@@ -108,4 +103,13 @@ function format_tree(obj) {
 		});
 	}
 	return data;
+}
+
+function find(key, list) {
+	for (var i = 0; i < list.length; i++) {
+		if (list[i].topic == key) {
+			return list[i];
+		}
+	}
+	return null;
 }

@@ -15,15 +15,18 @@ public class TopicDelayBriefView {
 	private long totalDelay = 0;
 
 	private int dangerLevel = 0;
-	
+
+	private String storageType;
+
 	public TopicDelayBriefView() {
 
 	}
 
-	public TopicDelayBriefView(String topic, Date date, long delay) {
+	public TopicDelayBriefView(String topic, Date date, long delay, String storageType) {
 		this.topic = topic;
 		this.latestProduced = date;
 		this.totalDelay = delay;
+		this.storageType = storageType;
 
 		long now = System.currentTimeMillis();
 		if (now - this.latestProduced.getTime() > NON_PRODUCE_LIMIT) {
@@ -56,7 +59,7 @@ public class TopicDelayBriefView {
 	public void setTotalDelay(long totalDelay) {
 		this.totalDelay = totalDelay;
 	}
-	
+
 	public int getDangerLevel() {
 		return dangerLevel;
 	}
@@ -88,5 +91,13 @@ public class TopicDelayBriefView {
 		} else if (!topic.equals(other.topic))
 			return false;
 		return true;
+	}
+
+	public String getStorageType() {
+		return storageType;
+	}
+
+	public void setStorageType(String storageType) {
+		this.storageType = storageType;
 	}
 }

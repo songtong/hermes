@@ -42,7 +42,6 @@ import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
-import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.dashboard.DashboardService;
 
@@ -66,8 +65,8 @@ public class DashboardResource {
 		List<TopicDelayBriefView> list = new ArrayList<TopicDelayBriefView>();
 		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
 			Topic t = entry.getValue();
-			long delay = m_monitorService.getDelay(t.getName());
-			list.add(new TopicDelayBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), delay));
+			list.add(new TopicDelayBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), 0,
+					t.getStorageType()));
 		}
 
 		Collections.sort(list, new Comparator<TopicDelayBriefView>() {
@@ -87,17 +86,18 @@ public class DashboardResource {
 		return Response.status(Status.OK).entity(m_monitorService.getLatestBrokers()).build();
 	}
 
+
 	@GET
-	@Path("detail/topics/{topic}/delay")
-	public Response getTopicDelay(@PathParam("topic") String name) {
-		Topic topic = m_metaService.findTopicByName(name);
-		TopicDelayDetailView view = new TopicDelayDetailView(name);
+	@Path("/{topic}/{consumer}/delay")
+	public Response getConsumerDelay(@PathParam("topic") String topicName, @PathParam("consumer") String consumerName) {
+		Topic topic = m_metaService.findTopicByName(topicName);
+		List<DelayDetail> consumerDelay = new ArrayList<>();
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
-			view = m_monitorService.getTopicDelayDetail(name);
+			consumerDelay = m_monitorService.getDelayDetailForConsumer(topicName, consumerName);
 		}
 
-		return Response.status(Status.OK).entity(view).build();
+		return Response.status(Status.OK).entity(consumerDelay).build();
 	}
 
 	@GET
@@ -163,11 +163,6 @@ public class DashboardResource {
 		}
 	}
 
-	@GET
-	@Path("top/delays")
-	public Response getTopDelays(@QueryParam("top") @DefaultValue("100") int top) {
-		return Response.status(Status.OK).entity(m_monitorService.getTopDelays(top)).build();
-	}
 
 	@GET
 	@Path("top/outdate-topics")
@@ -239,25 +234,4 @@ public class DashboardResource {
 		return list;
 	}
 
-	@GET
-	@Path("delay/{topic}/{groupName}")
-	// not in use
-	public Response getConsumeDelay(@PathParam("topic") String topic, @PathParam("groupName") String groupName) {
-		Long delay = m_monitorService.getDelay(topic, groupName);
-		if (delay == null) {
-			throw new RestException(String.format("Delay [%s, %s] not found.", topic, groupName), Status.NOT_FOUND);
-		}
-		return Response.status(Status.OK).entity(delay).build();
-	}
-
-	@GET
-	@Path("delay/{topic}/{groupName}/detail")
-	// not in use
-	public Response getConsumeDelayDetail(@PathParam("topic") String topic, @PathParam("groupName") String groupName) {
-		List<DelayDetail> delayDetails = m_monitorService.getDelayDetailForConsumer(topic, groupName);
-		if (delayDetails == null || delayDetails.size() == 0) {
-			throw new RestException(String.format("Delay [%s, %s] not found.", topic, groupName), Status.NOT_FOUND);
-		}
-		return Response.status(Status.OK).entity(delayDetails).build();
-	}
 }

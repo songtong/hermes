@@ -1,7 +1,7 @@
 var dashtopic = angular.module("dash-topic", [ 'ngResource', 'ui.bootstrap', 'smart-table', 'ngRoute' ]);
 
 dashtopic.config(function($routeProvider) {
-	$routeProvider.when('/detail/:topic', {
+	$routeProvider.when('/detail/:topic/:consumer?', {
 		templateUrl : '/jsp/console/dashboard/dash-topic-detail.html',
 		controller : 'dash-topic-controller'
 	}).when('/latest/:topic', {
@@ -51,10 +51,98 @@ dashtopic.filter('delay', function() {
 	}
 });
 
-dashtopic.service("DashboardTopicService", function() {
+dashtopic.service("DashboardTopicService", [ '$resource', '$q', function($resource, $q) {
 	var current_topic = 'NONE';
 
+	var trifecta_urls = {
+		fws : "http://10.3.6.90:8888/",
+		uat : "http://10.3.8.63:8888/",
+		prod : "http://10.8.82.31:8888/"
+	}
+	var get_consumers_for_topic = $resource('/api/consumers/:topic');
+	var dash_resource = $resource('/api/dashboard', {}, {
+		get_topic_delay : {
+			method : 'GET',
+			url : '/api/dashboard/detail/topics/:topic/delay'
+		},
+		get_topic_briefs : {
+			method : 'GET',
+			isArray : true,
+			url : '/api/dashboard/brief/topics'
+		},
+		get_topic_latest_msgs : {
+			method : 'GET',
+			isArray : true,
+			url : '/api/dashboard/topics/:topic/latest'
+		},
+		get_consumer_delay_for_topic : {
+			method : 'GET',
+			isArray : true,
+			url : '/api/dashboard/:topic/:consumer/delay'
+		}
+	});
 	return {
+		get_trifecta_urls : function() {
+			return trifecta_urls;
+		},
+		get_consumer_delay_for_topic : function(topicName, consumerName) {
+			var delay = $q.defer();
+			dash_resource.get_consumer_delay_for_topic({
+				topic : topicName,
+				consumer : consumerName
+			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+				show_op_info.show("获取consumer延迟信息失败！Error Msg：" + result.data, false)
+			});
+			return delay.promise;
+		},
+		get_consumers_for_topic : function(topicName) {
+			var delay = $q.defer();
+			get_consumers_for_topic.query({
+				topic : topicName
+			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+				show_op_info.show("获取consumers列表失败！Error Msg：" + result.data, false)
+			});
+			return delay.promise;
+		},
+		get_topic_delay : function(topicName) {
+			var delay = $q.defer();
+			dash_resource.get_topic_delay({
+				topic : topicName
+			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		get_topic_briefs : function() {
+			var delay = $q.defer();
+			dash_resource.get_topic_briefs(function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+				show_op_info.show("获取topic基本信息失败！Error Msg：" + result.data, false);
+			});
+			return delay.promise;
+		},
+		get_topic_latest_msgs : function(topicName) {
+			var delay = $q.defer();
+			dash_resource.get_topic_latest_msgs({
+				topic : topicName
+			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+				show_op_info.show("获取topic基本信息失败！Error Msg：" + result.data, false);
+			});
+			return delay.promise;
+		},
 		get_current_topic : function() {
 			return current_topic;
 		},
@@ -62,4 +150,4 @@ dashtopic.service("DashboardTopicService", function() {
 			current_topic = topic;
 		}
 	}
-})
+} ])
