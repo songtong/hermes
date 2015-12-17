@@ -44,6 +44,11 @@
 			<role>com.ctrip.hermes.core.pipeline.spi.Valve</role>
 			<role-hint>tracing</role-hint>
 			<implementation>com.ctrip.hermes.producer.pipeline.TracingMessageValve</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.pipeline.spi.Valve</role>
