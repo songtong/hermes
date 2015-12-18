@@ -48,8 +48,6 @@ import com.ctrip.hermes.portal.resource.view.BrokerQPSBriefView;
 import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.elastic.PortalElasticClient;
-import com.dianping.cat.Cat;
-import com.dianping.cat.message.Transaction;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
@@ -57,6 +55,10 @@ import com.google.common.cache.CacheBuilder;
 public class DefaultDashboardService implements DashboardService, Initializable {
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultDashboardService.class);
+
+	private static final int CONSUMER_BACKLOG_CALCULATE_THREAD_COUNT = 10;
+
+	private static final int CONSUMER_BACKLOG_CALCULATE_AWAITTIME_MINUTE = 1;
 
 	@Inject
 	private MessageQueueDao m_dao;
@@ -88,15 +90,16 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	// key: consumer ip, value.key: consumerName, value.value: topics
 	private Map<String, Map<String, Set<String>>> m_consumer2topics = new HashMap<>();
 
-	private String m_metaServer;
-
 	private long m_timeStamp = -1;
 
-	private Map<Tpg, String> consumerLeases = new HashMap<>();
+	private Map<Tpg, String> m_consumerLeases = new HashMap<>();
 
-	private Map<Pair<String, Integer>, String> brokerLeases = new HashMap<>();
+	private Map<Pair<String, Integer>, String> m_brokerLeases = new HashMap<>();
 
-	private Cache<Pair<String, String>, List<DelayDetail>> cachedDelays = CacheBuilder.newBuilder().maximumSize(20)
+	private ExecutorService m_es = Executors.newFixedThreadPool(CONSUMER_BACKLOG_CALCULATE_THREAD_COUNT);
+
+	private Cache<Pair<String, String>, List<DelayDetail>> cachedConsumerBacklogs = CacheBuilder.newBuilder()
+			.maximumSize(20)
 			.expireAfterWrite(PortalConstants.CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS, TimeUnit.MILLISECONDS).build();
 
 	@Override
@@ -149,29 +152,31 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		return m_metaService.getMeta();
 	}
 
-	private void loadMetaServer() {
+	private String getMetaserverStatusString() {
+		String metaServer = null;
 		String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(),
 				m_env.getGlobalConfig().getProperty("meta.port", "80").trim(), "metaserver/status");
 		try {
 			HttpResponse response = Request.Get(url).execute().returnResponse();
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) {
-				m_metaServer = EntityUtils.toString(response.getEntity());
+				metaServer = EntityUtils.toString(response.getEntity());
 			}
 		} catch (IOException e) {
 			if (log.isDebugEnabled()) {
 				log.debug("Load metaserver/status from meta-servers faied.", e);
 			}
 		}
+		return metaServer;
 	}
 
-	private void generateLeases() {
-		Map<Tpg, String> temp_consumerIps = new HashMap<>();
-		Map<Pair<String, Integer>, String> temp_brokerIps = new HashMap<>();
-		JSONObject jsonObject = JSON.parseObject(m_metaServer);
+	private void parseLeases(String metaServer) {
+		Map<Tpg, String> temp_consumerLeases = new HashMap<>();
+		Map<Pair<String, Integer>, String> temp_brokerLeases = new HashMap<>();
+		JSONObject metaServerJsonObject = JSON.parseObject(metaServer);
 
-		JSONObject consumerLease = jsonObject.getJSONObject("consumerLeases");
-		for (Entry<String, Object> entry : consumerLease.entrySet()) {
+		JSONObject consumerLeases = metaServerJsonObject.getJSONObject("consumerLeases");
+		for (Entry<String, Object> entry : consumerLeases.entrySet()) {
 			JSONObject lease = (JSONObject) entry.getValue();
 			String ip = ((JSONObject) lease.entrySet().iterator().next().getValue()).getString("ip");
 			String[] splitKey = entry.getKey().split(",|=|]");
@@ -183,12 +188,12 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			int partition = new Integer(splitKey[3].trim());
 			String group = splitKey[5].trim();
 			Tpg tpg = new Tpg(topic, partition, group);
-			temp_consumerIps.put(tpg, ip);
+			temp_consumerLeases.put(tpg, ip);
 		}
-		consumerLeases = temp_consumerIps;
+		m_consumerLeases = temp_consumerLeases;
 
-		JSONObject brokerLease = jsonObject.getJSONObject("brokerLeases");
-		for (Entry<String, Object> entry : brokerLease.entrySet()) {
+		JSONObject brokerLeases = metaServerJsonObject.getJSONObject("brokerLeases");
+		for (Entry<String, Object> entry : brokerLeases.entrySet()) {
 			JSONObject lease = (JSONObject) entry.getValue();
 			String ip = ((JSONObject) lease.entrySet().iterator().next().getValue()).getString("ip");
 			String[] splitKey = entry.getKey().split(",|=|]");
@@ -198,9 +203,9 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			}
 			String topic = splitKey[1].trim();
 			int partition = new Integer(splitKey[3].trim());
-			temp_brokerIps.put(new Pair<String, Integer>(topic, partition), ip);
+			temp_brokerLeases.put(new Pair<String, Integer>(topic, partition), ip);
 		}
-		brokerLeases = temp_brokerIps;
+		m_brokerLeases = temp_brokerLeases;
 
 	}
 
@@ -223,66 +228,49 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	@Override
 	public List<DelayDetail> getDelayDetailForConsumer(String topic, String consumer) {
-		List<DelayDetail> consumerDelay = cachedDelays.getIfPresent(new Pair<String, String>(topic, consumer));
-		if (consumerDelay != null) {
-			return consumerDelay;
+		List<DelayDetail> consumerDelays = cachedConsumerBacklogs
+				.getIfPresent(new Pair<String, String>(topic, consumer));
+		if (consumerDelays != null) {
+			return consumerDelays;
 		}
-		consumerDelay = new ArrayList<>();
-		Transaction tx = Cat.newTransaction("Message.Portal", "ConsumerBacklog");
-		tx.addData("topic", topic);
-		try {
-			if (System.currentTimeMillis() - m_timeStamp > PortalConstants.CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS) {
-				synchronized (this) {
-					if (System.currentTimeMillis()
-							- m_timeStamp > PortalConstants.CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS) {
-						loadMeta();
-						loadMetaServer();
-						generateLeases();
-						m_timeStamp = System.currentTimeMillis();
-					}
+		consumerDelays = new ArrayList<>();
+		if (System.currentTimeMillis() - m_timeStamp > PortalConstants.CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS) {
+			synchronized (this) {
+				if (System.currentTimeMillis() - m_timeStamp > PortalConstants.CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS) {
+					loadMeta();
+					parseLeases(getMetaserverStatusString());
+					m_timeStamp = System.currentTimeMillis();
 				}
 			}
-			tx.setStatus(Transaction.SUCCESS);
-		} catch (Exception e) {
-			tx.setStatus("XXX");
-		} finally {
-			tx.complete();
 		}
 
 		Topic t = m_metaService.findTopicByName(topic);
-		ExecutorService es = Executors.newFixedThreadPool(10);
 		CountDownLatch latch = new CountDownLatch(t.getPartitions().size());
 		try {
-			tx = Cat.newTransaction("Message.Portal", "ConsumerBacklogCalculator");
-			tx.addData("topic", topic);
 			ConsumerGroup c = t.findConsumerGroup(consumer);
 			if (Storage.MYSQL.equals(t.getStorageType())) {
 				for (Partition p : t.getPartitions()) {
-					es.execute(new ConsumerBacklogCalculateTask(topic, c, p.getId(), latch, m_dao, consumerDelay));
+					m_es.execute(new ConsumerBacklogCalculateTask(topic, c, p.getId(), latch, m_dao, consumerDelays));
 				}
-				latch.await(1, TimeUnit.MINUTES);
-				for (DelayDetail delay : consumerDelay) {
-					delay.setCurrentConsumerIp(consumerLeases.get(new Tpg(topic, delay.getPartitionId(), consumer)));
+				latch.await(CONSUMER_BACKLOG_CALCULATE_AWAITTIME_MINUTE, TimeUnit.MINUTES);
+				for (DelayDetail delay : consumerDelays) {
+					delay.setCurrentConsumerIp(m_consumerLeases.get(new Tpg(topic, delay.getPartitionId(), consumer)));
 					delay.setCurrentBrokerIp(
-							brokerLeases.get(new Pair<String, Integer>(topic, delay.getPartitionId())));
+							m_brokerLeases.get(new Pair<String, Integer>(topic, delay.getPartitionId())));
 				}
 			}
-			tx.setStatus(Transaction.SUCCESS);
-		} catch (Exception e) {
-			tx.setStatus("XXX");
-		} finally {
-			es.shutdownNow();
-			tx.complete();
+		} catch (InterruptedException e) {
+			log.warn("Generate consumer: {} backlog info failed.", consumer);
 		}
-		Collections.sort(consumerDelay, new Comparator<DelayDetail>() {
+		Collections.sort(consumerDelays, new Comparator<DelayDetail>() {
 
 			@Override
 			public int compare(DelayDetail delay1, DelayDetail delay2) {
 				return delay1.getPartitionId() - delay2.getPartitionId();
 			}
 		});
-		cachedDelays.put(new Pair<String, String>(topic, consumer), consumerDelay);
-		return consumerDelay;
+		cachedConsumerBacklogs.put(new Pair<String, String>(topic, consumer), consumerDelays);
+		return consumerDelays;
 	}
 
 	private void updateLatestProduced() {

@@ -39,7 +39,7 @@
 							<input class="form-control" ng-model="search.groupName"> <br>
 							<div class="well" style="overflow-y: auto; height: 280px; padding: 0px;">
 								<ul class="nav nav-pills nav-stacked" ng-repeat="consumer in consumers|filter:search:strict">
-									<li role="presentation" ng-class="'{{current_consumer}}'=='{{consumer.groupName}}'?'active':''"><a href="#/detail/{{current_topic}}/{{consumer.groupName}}">{{consumer.groupName|short:18}}</a></li>
+									<li role="presentation" ng-class="'{{current_consumer}}'=='{{consumer.groupName}}'?'active':''" tooltip="{{consumer.groupName}}"><a href="#/detail/{{current_topic}}/{{consumer.groupName}}">{{consumer.groupName|short:26}}</a></li>
 								</ul>
 							</div>
 						</div>
