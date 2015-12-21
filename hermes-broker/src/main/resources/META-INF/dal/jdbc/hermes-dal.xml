@@ -136,6 +136,7 @@
 		<var name="last-id" value-type="long" />
 		<var name="max-id" value-type="long" />
 		<var name="max-schedule-date" value-type="Date" />
+		<var name="pks" value-type="Long[]" />
 
 		<readsets>
 			<readset name="ID" all="false">
@@ -191,18 +192,14 @@
         		WHERE id IN <IN>${message-ids}</IN>]]>
 				</statement>
 			</query>
-			<query name="copyFromResendTable" type="INSERT" batch="true">
+			<query name="find-by-PKs" type="SELECT" multiple="true">
 				<param name="topic" />
 				<param name="partition" />
-				<param name="priority" />
 				<param name="group-id" />
-				<param name="schedule-date" />
-				<param name="id" />
-				<statement><![CDATA[INSERT INTO <TABLE/> 
-				(producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,schedule_date,remaining_retries,priority,origin_id) 
-        		SELECT producer_ip,producer_id,ref_key,attributes,codec_type,creation_date,payload,${schedule-date},remaining_retries-1,priority,origin_id
-        		FROM <TABLE name="resend-group-id"/>
-        		WHERE id = ${id}]]>
+				<param name="pks" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        				FROM <TABLE/>
+        				WHERE <FIELD name='id'/> IN <IN>${pks}</IN>]]>
 				</statement>
 			</query>
 			<query name="find-by-PK" type="SELECT">

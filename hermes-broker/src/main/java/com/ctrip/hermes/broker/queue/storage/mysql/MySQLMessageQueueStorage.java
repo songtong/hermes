@@ -7,7 +7,7 @@ import io.netty.buffer.Unpooled;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +51,7 @@ import com.ctrip.hermes.core.transport.TransferCallback;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.meta.entity.Topic;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -98,6 +99,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	public void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception {
 		List<MessagePriority> msgs = new ArrayList<>();
 
+		Topic topic = m_metaService.findTopicByName(tpp.getTopic());
+
 		for (MessageBatchWithRawData batch : batches) {
 			List<PartialDecodedMessage> pdmsgs = batch.getMessages();
 			for (PartialDecodedMessage pdmsg : pdmsgs) {
@@ -106,7 +109,11 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				msg.setCreationDate(new Date(pdmsg.getBornTime()));
 				msg.setPartition(tpp.getPartition());
 				msg.setPayload(pdmsg.readBody());
-				msg.setPriority(tpp.isPriority() ? 0 : 1);
+				if (topic.isPriorityMessageEnabled()) {
+					msg.setPriority(tpp.isPriority() ? 0 : 1);
+				} else {
+					msg.setPriority(1);
+				}
 				// TODO set producer id and producer id in producer
 				msg.setProducerId(0);
 				msg.setProducerIp("");
@@ -163,6 +170,10 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		int partition = tpp.getPartition();
 		int priority = tpp.getPriorityInt();
 
+		if (!hasStorageForPriority(tpp.getTopic(), tpp.getPriorityInt())) {
+			return 0L;
+		}
+
 		List<OffsetMessage> lastOffset = m_offsetMessageDao.find(topic, partition, priority, groupId,
 		      OffsetMessageEntity.READSET_FULL);
 
@@ -202,6 +213,11 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	@Override
 	public FetchResult fetchMessages(Tpp tpp, List<Object> offsets) {
 		List<MessagePriority> msgs = new ArrayList<MessagePriority>();
+
+		if (!hasStorageForPriority(tpp.getTopic(), tpp.getPriorityInt())) {
+			return buildFetchResult(tpp, msgs);
+		}
+
 		for (Long[] subOffsets : splitOffsets(offsets)) {
 			try {
 				msgs.addAll(m_msgDao.findWithOffsets(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), subOffsets,
@@ -216,6 +232,10 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 	@Override
 	public FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize) {
+		if (!hasStorageForPriority(tpp.getTopic(), tpp.getPriorityInt())) {
+			return buildFetchResult(tpp, new ArrayList<MessagePriority>());
+		}
+
 		try {
 			return buildFetchResult(tpp, m_msgDao.findIdAfter(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(),
 			      (Long) startOffset, batchSize, MessagePriorityEntity.READSET_FULL));
@@ -321,21 +341,26 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 				m_resendDao.copyFromMessageTable(proto);
 			} else {
-				List<ResendGroupId> protos = new LinkedList<>();
+				int intGroupId = m_metaService.translateToIntGroupId(tpp.getTopic(), groupId);
+				Map<Long, Integer> id2RemainingRetries = new HashMap<Long, Integer>();
 				for (Pair<Long, MessageMeta> pair : msgId2Metas) {
-					ResendGroupId proto = new ResendGroupId();
-					proto.setTopic(tpp.getTopic());
-					proto.setPartition(tpp.getPartition());
-					proto.setPriority(tpp.getPriorityInt());
-					proto.setGroupId(m_metaService.translateToIntGroupId(tpp.getTopic(), groupId));
-					int retryTimes = retryPolicy.getRetryTimes() - pair.getValue().getRemainingRetries();
-					proto.setScheduleDate(new Date(retryPolicy.nextScheduleTimeMillis(retryTimes, now)));
-					proto.setId(pair.getKey());
-
-					protos.add(proto);
-
+					id2RemainingRetries.put(pair.getKey(), pair.getValue().getRemainingRetries());
 				}
-				m_resendDao.copyFromResendTable(protos.toArray(new ResendGroupId[protos.size()]));
+
+				Long[] pks = id2RemainingRetries.keySet().toArray(new Long[id2RemainingRetries.size()]);
+				List<ResendGroupId> resends = m_resendDao.findByPKs(tpp.getTopic(), tpp.getPartition(), intGroupId, pks,
+				      ResendGroupIdEntity.READSET_FULL);
+
+				for (ResendGroupId r : resends) {
+					r.setTopic(tpp.getTopic());
+					r.setPartition(tpp.getPartition());
+					r.setGroupId(intGroupId);
+
+					int retryTimes = retryPolicy.getRetryTimes() - id2RemainingRetries.get(r.getId());
+					r.setScheduleDate(new Date(retryPolicy.nextScheduleTimeMillis(retryTimes, now)));
+					r.setRemainingRetries(r.getRemainingRetries() - 1);
+				}
+				m_resendDao.insert(resends.toArray(new ResendGroupId[resends.size()]));
 			}
 
 		}
@@ -539,6 +564,10 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 	@Override
 	public Object findMessageOffsetByTime(Tpp tpp, long time) {
+		if (!hasStorageForPriority(tpp.getTopic(), tpp.getPriorityInt())) {
+			return 0L;
+		}
+
 		MessagePriority oldestMsg = findOldestMessageOffset(tpp);
 		MessagePriority latestMsg = findLatestMessageOffset(tpp);
 
@@ -626,5 +655,18 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 	private int compareWithPrecision(long src, long dst, long precisionMillis) {
 		return src < dst - precisionMillis ? -1 : src > dst + precisionMillis ? 1 : 0;
+	}
+
+	private boolean hasStorageForPriority(String topicName, int priority) {
+		Topic topic = m_metaService.findTopicByName(topicName);
+		if (topic != null) {
+			if (topic.isPriorityMessageEnabled()) {
+				return true;
+			} else {
+				return priority != 0;
+			}
+		} else {
+			return false;
+		}
 	}
 }
