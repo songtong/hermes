@@ -1,10 +1,12 @@
 package com.ctrip.hermes.producer.pipeline;
 
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ProducerMessage;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
 import com.ctrip.hermes.core.pipeline.spi.Valve;
 import com.dianping.cat.Cat;
@@ -16,10 +18,15 @@ import com.dianping.cat.message.spi.MessageTree;
 public class TracingMessageValve implements Valve {
 	public static final String ID = "tracing";
 
+	@Inject
+	private MetaService m_metaService;
+
 	@Override
 	public void handle(PipelineContext<?> ctx, Object payload) {
 		ProducerMessage<?> msg = (ProducerMessage<?>) payload;
 		String topic = msg.getTopic();
+
+		boolean connectCatTransactions = m_metaService.findTopicByName(topic).isConnectCatTransactions();
 
 		Transaction t = Cat.newTransaction("Message.Produce.Tried", topic);
 		t.addData("key", msg.getKey());
@@ -28,8 +35,8 @@ public class TracingMessageValve implements Valve {
 			String ip = Networks.forIp().getLocalHostAddress();
 			Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
 			Cat.logEvent("Producer:" + ip, topic, Event.SUCCESS, "key=" + msg.getKey());
-			
-			if (msg.isWithCatTrace()) {
+
+			if (msg.isWithCatTrace() && connectCatTransactions) {
 				MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 				String childMsgId = Cat.createMessageId();
 				String rootMsgId = tree.getRootMessageId();
