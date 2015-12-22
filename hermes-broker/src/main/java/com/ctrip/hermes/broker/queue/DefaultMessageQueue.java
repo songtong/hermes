@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
 import com.ctrip.hermes.core.bo.Offset;
@@ -29,18 +28,10 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 
 	private MetaService m_metaService;
 
-	private BrokerConfig m_config;
-
 	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService,
-	      BrokerConfig config, ScheduledExecutorService ackOpExecutor, ScheduledExecutorService ackMessagesTaskExecutor) {
+	      ScheduledExecutorService ackOpExecutor, ScheduledExecutorService ackMessagesTaskExecutor) {
 		super(topic, partition, storage, ackOpExecutor, ackMessagesTaskExecutor);
 		m_metaService = metaService;
-		m_config = config;
-	}
-
-	@Override
-	protected MessageQueueDumper createDumper(Lease lease) {
-		return new DefaultMessageQueueDumper(m_topic, m_partition, m_storage, m_config, lease);
 	}
 
 	@Override
@@ -99,4 +90,5 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 		FetchResult fetchResult = m_storage.fetchMessages(tpp, new ArrayList<Object>(offsets));
 		return fetchResult == null ? null : fetchResult.getBatch();
 	}
+
 }

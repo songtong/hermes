@@ -9,7 +9,7 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
+import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)

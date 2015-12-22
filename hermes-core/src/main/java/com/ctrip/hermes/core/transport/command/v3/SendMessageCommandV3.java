@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.transport.command;
+package com.ctrip.hermes.core.transport.command.v3;
 
 import io.netty.buffer.ByteBuf;
 
@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.unidal.tuple.Pair;
 
@@ -19,6 +20,10 @@ import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.ManualRelease;
+import com.ctrip.hermes.core.transport.command.AbstractCommand;
+import com.ctrip.hermes.core.transport.command.CommandType;
+import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
+import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.google.common.util.concurrent.SettableFuture;
@@ -28,7 +33,7 @@ import com.google.common.util.concurrent.SettableFuture;
  *
  */
 @ManualRelease
-public class SendMessageCommand extends AbstractCommand {
+public class SendMessageCommandV3 extends AbstractCommand {
 
 	private static final long serialVersionUID = 8443575812437722822L;
 
@@ -38,18 +43,20 @@ public class SendMessageCommand extends AbstractCommand {
 
 	private int m_partition;
 
+	private AtomicLong m_timeout = new AtomicLong(-1L);
+
 	private ConcurrentMap<Integer, List<ProducerMessage<?>>> m_msgs = new ConcurrentHashMap<Integer, List<ProducerMessage<?>>>();
 
 	private transient Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<Integer, MessageBatchWithRawData>();
 
 	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<Integer, SettableFuture<SendResult>>();
 
-	public SendMessageCommand() {
+	public SendMessageCommandV3() {
 		this(null, -1);
 	}
 
-	public SendMessageCommand(String topic, int partition) {
-		super(CommandType.MESSAGE_SEND, 1);
+	public SendMessageCommandV3(String topic, int partition) {
+		super(CommandType.MESSAGE_SEND_V3, 3);
 		m_topic = topic;
 		m_partition = partition;
 	}
@@ -64,6 +71,14 @@ public class SendMessageCommand extends AbstractCommand {
 
 	public int getPartition() {
 		return m_partition;
+	}
+
+	public void setTimeout(long timeout) {
+		m_timeout.set(timeout);
+	}
+
+	public long getTimeout() {
+		return m_timeout.get();
 	}
 
 	public void addMessage(ProducerMessage<?> msg, SettableFuture<SendResult> future) {
@@ -86,7 +101,7 @@ public class SendMessageCommand extends AbstractCommand {
 	private void validate(ProducerMessage<?> msg) {
 		if (!m_topic.equals(msg.getTopic()) || m_partition != msg.getPartition()) {
 			throw new IllegalArgumentException(String.format(
-			      "Illegal message[topic=%s, partition=%s] try to add to SendMessageCommand[topic=%s, partition=%s]",
+			      "Illegal message[topic=%s, partition=%s] try to add to SendMessageCommandV3[topic=%s, partition=%s]",
 			      msg.getTopic(), msg.getPartition(), m_topic, m_partition));
 		}
 	}
@@ -120,6 +135,7 @@ public class SendMessageCommand extends AbstractCommand {
 
 		m_topic = codec.readString();
 		m_partition = codec.readInt();
+		m_timeout.set(codec.readLong());
 
 		readDatas(buf, codec, m_topic);
 
@@ -133,6 +149,7 @@ public class SendMessageCommand extends AbstractCommand {
 
 		codec.writeString(m_topic);
 		codec.writeInt(m_partition);
+		codec.writeLong(m_timeout.get());
 
 		writeDatas(buf, codec, m_msgs);
 	}

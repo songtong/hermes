@@ -23,11 +23,11 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.processor.SingleThreaded;
+import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.StringUtils;
@@ -43,8 +43,8 @@ import com.google.common.util.concurrent.ListenableFuture;
  *
  */
 @SingleThreaded
-public class SendMessageCommandProcessor implements CommandProcessor {
-	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessor.class);
+public class SendMessageCommandProcessorV3 implements CommandProcessor {
+	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessorV3.class);
 
 	@Inject
 	private BizLogger m_bizLogger;
@@ -66,12 +66,12 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.MESSAGE_SEND);
+		return Arrays.asList(CommandType.MESSAGE_SEND_V3);
 	}
 
 	@Override
 	public void process(final CommandProcessorContext ctx) {
-		SendMessageCommand reqCmd = (SendMessageCommand) ctx.getCommand();
+		SendMessageCommandV3 reqCmd = (SendMessageCommandV3) ctx.getCommand();
 
 		Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(), m_config.getSessionId());
 
@@ -102,7 +102,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 					Tpp tpp = new Tpp(reqCmd.getTopic(), reqCmd.getPartition(), entry.getKey() == 0 ? true : false);
 					try {
 						ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(tpp, batch,
-						      m_systemClockService.now() + 10 * 1000L);
+						      m_systemClockService.now() + reqCmd.getTimeout());
 
 						if (future != null) {
 							Futures.addCallback(future, completionCallback);
@@ -130,7 +130,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		reqCmd.release();
 	}
 
-	private void logElapseToCat(SendMessageCommand reqCmd) {
+	private void logElapseToCat(SendMessageCommandV3 reqCmd) {
 		try {
 			String strCreateTime = reqCmd.getHeader().getProperties().get("createTime");
 			if (StringUtils.isNumeric(strCreateTime)) {
@@ -208,7 +208,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	}
 
 	private void writeAck(CommandProcessorContext ctx, boolean success) {
-		SendMessageCommand req = (SendMessageCommand) ctx.getCommand();
+		SendMessageCommandV3 req = (SendMessageCommandV3) ctx.getCommand();
 
 		SendMessageAckCommand ack = new SendMessageAckCommand();
 		ack.correlate(req);

@@ -13,8 +13,8 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ProducerMessage;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
+import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
 import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
@@ -30,16 +30,16 @@ import com.google.common.util.concurrent.SettableFuture;
 public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor {
 	private static final Logger log = LoggerFactory.getLogger(DefaultSendMessageResultMonitor.class);
 
-	private Map<Long, Pair<SendMessageCommand, SettableFuture<Boolean>>> m_cmds = new ConcurrentHashMap<>();
+	private Map<Long, Pair<SendMessageCommandV3, SettableFuture<Boolean>>> m_cmds = new ConcurrentHashMap<>();
 
 	private ReentrantLock m_lock = new ReentrantLock();
 
 	@Override
-	public Future<Boolean> monitor(SendMessageCommand cmd) {
+	public Future<Boolean> monitor(SendMessageCommandV3 cmd) {
 		m_lock.lock();
 		try {
 			SettableFuture<Boolean> future = SettableFuture.create();
-			m_cmds.put(cmd.getHeader().getCorrelationId(), new Pair<SendMessageCommand, SettableFuture<Boolean>>(cmd,
+			m_cmds.put(cmd.getHeader().getCorrelationId(), new Pair<SendMessageCommandV3, SettableFuture<Boolean>>(cmd,
 			      future));
 			return future;
 		} finally {
@@ -50,7 +50,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	@Override
 	public void resultReceived(SendMessageResultCommand result) {
 		if (result != null) {
-			Pair<SendMessageCommand, SettableFuture<Boolean>> pair = null;
+			Pair<SendMessageCommandV3, SettableFuture<Boolean>> pair = null;
 			m_lock.lock();
 			try {
 				pair = m_cmds.remove(result.getHeader().getCorrelationId());
@@ -59,7 +59,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 			}
 			if (pair != null) {
 				try {
-					SendMessageCommand sendMessageCommand = pair.getKey();
+					SendMessageCommandV3 sendMessageCommand = pair.getKey();
 					SettableFuture<Boolean> future = pair.getValue();
 
 					ProducerStatusMonitor.INSTANCE.brokerResultReceived(sendMessageCommand.getTopic(),
@@ -91,7 +91,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 		return true;
 	}
 
-	private void tracking(SendMessageCommand sendMessageCommand, boolean success) {
+	private void tracking(SendMessageCommandV3 sendMessageCommand, boolean success) {
 		String status = success ? Transaction.SUCCESS : "Timeout";
 
 		for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
@@ -122,7 +122,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	}
 
 	@Override
-	public void cancel(SendMessageCommand cmd) {
+	public void cancel(SendMessageCommandV3 cmd) {
 		m_lock.lock();
 		try {
 			m_cmds.remove(cmd.getHeader().getCorrelationId());

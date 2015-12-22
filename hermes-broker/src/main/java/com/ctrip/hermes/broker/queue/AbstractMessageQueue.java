@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,12 +35,12 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
+import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.v3.AckMessageResultCommandV3;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.dianping.cat.Cat;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -52,8 +53,6 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	protected String m_topic;
 
 	protected int m_partition;
-
-	protected AtomicReference<MessageQueueDumper> m_dumper = new AtomicReference<>(null);
 
 	protected MessageQueueStorage m_storage;
 
@@ -84,6 +83,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private ScheduledExecutorService m_ackMessagesTaskExecutor;
 
+	private MessageQueueFlusher m_flusher;
+
 	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage,
 	      ScheduledExecutorService ackOpExecutor, ScheduledExecutorService ackMessagesTaskExecutor) {
 		m_topic = topic;
@@ -96,6 +97,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		m_ackMessagesTaskExecutor = ackMessagesTaskExecutor;
 		m_config = PlexusComponentLocator.lookup(BrokerConfig.class);
 		m_metaService = PlexusComponentLocator.lookup(MetaService.class);
+		m_flusher = new DefaultMessageQueueFlusher(m_topic, m_partition, m_storage);
 
 		init();
 	}
@@ -111,26 +113,49 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		      m_config.getAckMessagesTaskExecutorCheckIntervalMillis(), TimeUnit.MILLISECONDS);
 	}
 
+	public String getTopic() {
+		return m_topic;
+	}
+
+	public int getPartition() {
+		return m_partition;
+	}
+
 	@Override
 	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch,
-	      Lease lease) {
+	      long expireTime) {
 		if (m_stopped.get()) {
 			return null;
 		}
 
-		MessageQueueDumper existingDumper = m_dumper.get();
-		if (existingDumper == null || existingDumper.getLease().getId() != lease.getId()
-		      || existingDumper.getLease().isExpired()) {
-			MessageQueueDumper newDumper = createDumper(lease);
-			if (m_dumper.compareAndSet(existingDumper, newDumper)) {
-				newDumper.start();
-			}
+		return m_flusher.append(isPriority, batch, expireTime);
+	}
+
+	@Override
+	public boolean flush(ExecutorService executor, final int batchSize) {
+		if (m_flusher.hasUnflushedMessages() && m_flusher.startFlush()) {
+			executor.submit(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						m_flusher.flush(batchSize);
+					} catch (RuntimeException e) {
+						String errorMsg = String
+						      .format("Exception occurred while flushing message queue(topic={}, partition={})", m_topic,
+						            m_partition);
+						Cat.logError(errorMsg, e);
+						// ignore
+						log.warn(errorMsg, e);
+					} finally {
+						m_flusher.finishFlush();
+					}
+				}
+			});
+			return true;
+		} else {
+			return false;
 		}
-
-		SettableFuture<Map<Integer, Boolean>> future = SettableFuture.create();
-
-		m_dumper.get().submit(future, batch, isPriority);
-		return future;
 	}
 
 	@Override
@@ -230,11 +255,6 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	@Override
 	public void stop() {
 		if (m_stopped.compareAndSet(false, true)) {
-			MessageQueueDumper dumper = m_dumper.get();
-			if (dumper != null) {
-				dumper.stop();
-			}
-
 			// TODO remove legacy code
 			for (AtomicReference<MessageQueueCursor> cursorRef : m_cursors.values()) {
 				MessageQueueCursor cursor = cursorRef.get();
@@ -476,8 +496,6 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	}
 
 	protected abstract void doStop();
-
-	protected abstract MessageQueueDumper createDumper(Lease lease);
 
 	protected abstract MessageQueueCursor create(String groupId, Lease lease, Offset offset);
 

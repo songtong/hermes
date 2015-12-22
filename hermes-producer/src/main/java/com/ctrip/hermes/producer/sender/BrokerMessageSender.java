@@ -33,7 +33,7 @@ import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand;
+import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.config.ProducerConfig;
@@ -167,7 +167,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		public void run() {
 			try {
 				int batchSize = m_config.getBrokerSenderBatchSize();
-				SendMessageCommand cmd = m_taskQueue.pop(batchSize);
+				SendMessageCommandV3 cmd = m_taskQueue.pop(batchSize);
 
 				if (cmd != null) {
 					Context wholeSendProcessTimer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(),
@@ -185,7 +185,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		}
 
-		private boolean sendMessagesToBroker(SendMessageCommand cmd) {
+		private boolean sendMessagesToBroker(SendMessageCommandV3 cmd) {
 			try {
 				Endpoint endpoint = m_endpointManager.getEndpoint(m_topic, m_partition);
 				if (endpoint != null) {
@@ -195,6 +195,8 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					Future<Boolean> resultFuture = m_messageResultMonitor.monitor(cmd);
 
 					long timeout = m_config.getBrokerSenderSendTimeoutMillis();
+
+					cmd.setTimeout(m_config.getSendMessageReadResultTimeoutMillis());
 
 					Context acceptTimer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(), cmd.getPartition(),
 					      "broker-accept-duration").time();
@@ -236,7 +238,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			}
 		}
 
-		private boolean waitForBrokerResult(SendMessageCommand cmd, Future<Boolean> resultFuture)
+		private boolean waitForBrokerResult(SendMessageCommandV3 cmd, Future<Boolean> resultFuture)
 		      throws InterruptedException, ExecutionException {
 			try {
 				Boolean result = resultFuture.get(m_config.getSendMessageReadResultTimeoutMillis(), TimeUnit.MILLISECONDS);
@@ -254,7 +256,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 		private int m_partition;
 
-		private AtomicReference<SendMessageCommand> m_cmd = new AtomicReference<SendMessageCommand>(null);
+		private AtomicReference<SendMessageCommandV3> m_cmd = new AtomicReference<>(null);
 
 		private BlockingQueue<ProducerWorkerContext> m_queue;
 
@@ -266,23 +268,23 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			ProducerStatusMonitor.INSTANCE.addTaskQueueGauge(m_topic, m_partition, m_queue);
 		}
 
-		public void push(SendMessageCommand cmd) {
+		public void push(SendMessageCommandV3 cmd) {
 			m_cmd.set(cmd);
 		}
 
-		public SendMessageCommand pop(int size) {
+		public SendMessageCommandV3 pop(int size) {
 			if (m_cmd.get() == null) {
 				return createSendMessageCommand(size);
 			}
 			return m_cmd.getAndSet(null);
 		}
 
-		private SendMessageCommand createSendMessageCommand(int size) {
-			SendMessageCommand cmd = null;
+		private SendMessageCommandV3 createSendMessageCommand(int size) {
+			SendMessageCommandV3 cmd = null;
 			List<ProducerWorkerContext> contexts = new ArrayList<ProducerWorkerContext>(size);
 			m_queue.drainTo(contexts, size);
 			if (!contexts.isEmpty()) {
-				cmd = new SendMessageCommand(m_topic, m_partition);
+				cmd = new SendMessageCommandV3(m_topic, m_partition);
 				for (ProducerWorkerContext context : contexts) {
 					cmd.addMessage(context.m_msg, context.m_future);
 				}
