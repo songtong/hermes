@@ -196,8 +196,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 					long timeout = m_config.getBrokerSenderSendTimeoutMillis();
 
-					cmd.setTimeout(m_config.getSendMessageReadResultTimeoutMillis());
-
 					Context acceptTimer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(), cmd.getPartition(),
 					      "broker-accept-duration").time();
 
@@ -284,7 +282,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			List<ProducerWorkerContext> contexts = new ArrayList<ProducerWorkerContext>(size);
 			m_queue.drainTo(contexts, size);
 			if (!contexts.isEmpty()) {
-				cmd = new SendMessageCommandV3(m_topic, m_partition);
+				cmd = new SendMessageCommandV3(m_topic, m_partition, m_config.getSendMessageReadResultTimeoutMillis());
 				for (ProducerWorkerContext context : contexts) {
 					cmd.addMessage(context.m_msg, context.m_future);
 				}

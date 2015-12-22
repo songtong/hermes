@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.unidal.tuple.Pair;
 
@@ -43,7 +42,7 @@ public class SendMessageCommandV3 extends AbstractCommand {
 
 	private int m_partition;
 
-	private AtomicLong m_timeout = new AtomicLong(-1L);
+	private long m_timeout;
 
 	private ConcurrentMap<Integer, List<ProducerMessage<?>>> m_msgs = new ConcurrentHashMap<Integer, List<ProducerMessage<?>>>();
 
@@ -52,13 +51,14 @@ public class SendMessageCommandV3 extends AbstractCommand {
 	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<Integer, SettableFuture<SendResult>>();
 
 	public SendMessageCommandV3() {
-		this(null, -1);
+		this(null, -1, -1L);
 	}
 
-	public SendMessageCommandV3(String topic, int partition) {
+	public SendMessageCommandV3(String topic, int partition, long timeout) {
 		super(CommandType.MESSAGE_SEND_V3, 3);
 		m_topic = topic;
 		m_partition = partition;
+		m_timeout = timeout;
 	}
 
 	public ConcurrentMap<Integer, List<ProducerMessage<?>>> getMsgs() {
@@ -73,12 +73,8 @@ public class SendMessageCommandV3 extends AbstractCommand {
 		return m_partition;
 	}
 
-	public void setTimeout(long timeout) {
-		m_timeout.set(timeout);
-	}
-
 	public long getTimeout() {
-		return m_timeout.get();
+		return m_timeout;
 	}
 
 	public void addMessage(ProducerMessage<?> msg, SettableFuture<SendResult> future) {
@@ -135,7 +131,7 @@ public class SendMessageCommandV3 extends AbstractCommand {
 
 		m_topic = codec.readString();
 		m_partition = codec.readInt();
-		m_timeout.set(codec.readLong());
+		m_timeout = codec.readLong();
 
 		readDatas(buf, codec, m_topic);
 
@@ -149,7 +145,7 @@ public class SendMessageCommandV3 extends AbstractCommand {
 
 		codec.writeString(m_topic);
 		codec.writeInt(m_partition);
-		codec.writeLong(m_timeout.get());
+		codec.writeLong(m_timeout);
 
 		writeDatas(buf, codec, m_msgs);
 	}
