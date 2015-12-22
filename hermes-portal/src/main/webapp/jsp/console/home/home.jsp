@@ -11,6 +11,10 @@
 			<div class="col-md-6">
 				<div class="panel panel-info">
 					<div class="panel-heading">消费延迟排行</div>
+				<h2 style="text-align: center;">
+					<label class="label label-warning">HELLO HERMES!</label>
+				</h2>
+					<!--  
 					<table class="table table-hover" st-pipe="get_consume_delays" st-safe-src="consume_delays_detail" st-table="display_consume_delays_deail">
 						<thead>
 							<tr>
@@ -39,6 +43,7 @@
 							</tr>
 						</tbody>
 					</table>
+				-->
 				</div>
 			</div>
 			<div class="col-md-6">

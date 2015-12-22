@@ -97,10 +97,10 @@ homeapp.controller("hermes-dashboard-controller", function($scope, $http,
 	});
 
 	function update_datas() {
-		dashboard_resource.get_consume_delays({}, function(data) {
-			$scope.consume_delays_detail = recombineDelays(data);
-			$scope.delay_table_is_loading = false;
-		});
+//		dashboard_resource.get_consume_delays({}, function(data) {
+//			$scope.consume_delays_detail = recombineDelays(data);
+//			$scope.delay_table_is_loading = false;
+//		});
 
 		dashboard_resource.get_outdate_topics({}, function(data) {
 			$scope.outdate_topics = data;

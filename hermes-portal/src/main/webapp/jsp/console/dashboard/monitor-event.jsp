@@ -31,21 +31,17 @@
 						<tr ng-repeat="monitor_event in monitor_event_displayed">
 							<td><span ng-bind="monitor_event.eventType"></span></td>
 							<td><span ng-bind="monitor_event.createTime | date:'yyyy-MM-dd HH:mm:ss'"></span></td>
-							<td><a href="" tooltip="{{monitor_event.key1}}">
-									<span ng-bind="monitor_event.key1 | short:25"></span>
-								</a></td>
-							<td><a href="" tooltip="{{monitor_event.key2}}">
-									<span ng-bind="monitor_event.key2 | short:25"></span>
-								</a></td>
-							<td><a href="" tooltip="{{monitor_event.key3}}">
-									<span ng-bind="monitor_event.key3 | short:25"></span>
-								</a></td>
-							<td><a href="" tooltip="{{monitor_event.key4}}">
-									<span ng-bind="monitor_event.key4 | short:25"></span>
-								</a></td>
-							<td><a href="" tooltip="点击查看详情" ng-click="show_message(monitor_event.message)">
-									<span ng-bind="monitor_event.message | short:20"></span>
-								</a></td>
+							<td><a href="/console/dashboard#/detail/{{monitor_event.key1}}" tooltip="{{monitor_event.key1}}" ng-if="jump(monitor_event.eventType,monitor_event.key1)==true"> <span ng-bind="monitor_event.key1 | short:25"></span>
+							</a><a href="" tooltip="{{monitor_event.key1}}" ng-if="jump(monitor_event.eventType,monitor_event.key1)==false"> <span ng-bind="monitor_event.key1 | short:25"></span>
+							</a></td>
+							<td><a href="" tooltip="{{monitor_event.key2}}"> <span ng-bind="monitor_event.key2 | short:25"></span>
+							</a></td>
+							<td><a href="" tooltip="{{monitor_event.key3}}"> <span ng-bind="monitor_event.key3 | short:25"></span>
+							</a></td>
+							<td><a href="" tooltip="{{monitor_event.key4}}"> <span ng-bind="monitor_event.key4 | short:25"></span>
+							</a></td>
+							<td><a href="" tooltip="点击查看详情" ng-click="show_message(monitor_event.message)"> <span ng-bind="monitor_event.message | short:20"></span>
+							</a></td>
 							<td><span ng-bind="monitor_event.notifyTime || 'NOT_YET'| date:'yyyy-MM-dd HH:mm:ss'"></span></td>
 						</tr>
 					</tbody>
@@ -67,7 +63,9 @@
 				<div class="modal-dialog" style="width: 1024px">
 					<div class="modal-content">
 						<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
 							<h4 class="modal-title" id="message-label">Message</h4>
 						</div>
 						<div class="modal-body">

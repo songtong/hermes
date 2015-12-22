@@ -46,22 +46,25 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		private int partitionId;
 
-		private long delay;
+		private Long priorityDelay;
 
-		private long priorityMsgId;
+		private Long nonPriorityDelay;
 
-		private long nonPriorityMsgId;
+		private Long priorityMsgId;
 
-		private long priorityMsgOffset;
+		private Long nonPriorityMsgId;
 
-		private long nonPriorityMsgOffset;
+		private Long priorityMsgOffset;
+
+		private Long nonPriorityMsgOffset;
 
 		private String lastConsumedPriorityMsg;
 
 		private String lastConsumedNonPriorityMsg;
-		
+
 		private String currentConsumerIp;
 
+		private String currentBrokerIp;
 
 		public DelayDetail() {
 
@@ -88,14 +91,6 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 			this.partitionId = partitionId;
 		}
 
-
-		public long getDelay() {
-			return delay;
-		}
-
-		public void setDelay(long delay) {
-			this.delay = delay;
-		}
 
 		@Override
 		public int hashCode() {
@@ -125,36 +120,35 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 			return true;
 		}
 
-
-		public long getPriorityMsgId() {
+		public Long getPriorityMsgId() {
 			return priorityMsgId;
 		}
 
-		public void setPriorityMsgId(long priorityMsgId) {
+		public void setPriorityMsgId(Long priorityMsgId) {
 			this.priorityMsgId = priorityMsgId;
 		}
 
-		public long getNonPriorityMsgId() {
+		public Long getNonPriorityMsgId() {
 			return nonPriorityMsgId;
 		}
 
-		public void setNonPriorityMsgId(long nonPriorityMsgId) {
+		public void setNonPriorityMsgId(Long nonPriorityMsgId) {
 			this.nonPriorityMsgId = nonPriorityMsgId;
 		}
 
-		public long getPriorityMsgOffset() {
+		public Long getPriorityMsgOffset() {
 			return priorityMsgOffset;
 		}
 
-		public void setPriorityMsgOffset(long priorityMsgOffset) {
+		public void setPriorityMsgOffset(Long priorityMsgOffset) {
 			this.priorityMsgOffset = priorityMsgOffset;
 		}
 
-		public long getNonPriorityMsgOffset() {
+		public Long getNonPriorityMsgOffset() {
 			return nonPriorityMsgOffset;
 		}
 
-		public void setNonPriorityMsgOffset(long nonPriorityMsgOffset) {
+		public void setNonPriorityMsgOffset(Long nonPriorityMsgOffset) {
 			this.nonPriorityMsgOffset = nonPriorityMsgOffset;
 		}
 
@@ -182,9 +176,29 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 			this.currentConsumerIp = currentConsumerIp;
 		}
 
-		
+		public String getCurrentBrokerIp() {
+			return currentBrokerIp;
+		}
 
+		public void setCurrentBrokerIp(String currentBrokerIp) {
+			this.currentBrokerIp = currentBrokerIp;
+		}
 
-		
+		public Long getPriorityDelay() {
+			return priorityDelay;
+		}
+
+		public void setPriorityDelay(Long priorityDelay) {
+			this.priorityDelay = priorityDelay;
+		}
+
+		public Long getNonPriorityDelay() {
+			return nonPriorityDelay;
+		}
+
+		public void setNonPriorityDelay(Long nonPriorityDelay) {
+			this.nonPriorityDelay = nonPriorityDelay;
+		}
+
 	}
 }
