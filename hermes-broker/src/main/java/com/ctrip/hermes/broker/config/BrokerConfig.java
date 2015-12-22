@@ -23,11 +23,11 @@ public class BrokerConfig implements Initializable {
 
 	private long m_leaseRenewTimeMillsBeforeExpire = 2 * 1000L;
 
-	private static final int DEFAULT_DUMPER_BATCH_SIZE = 5000;
+	private static final int DEFAULT_MESSAGE_QUEUE_FLUSH_BATCH_SIZE = 5000;
 
 	private static final int DEFAULT_MYSQL_BATCH_INSERT_SIZE = 2000;
 
-	private int m_dumperBatchSzie = DEFAULT_DUMPER_BATCH_SIZE;
+	private int m_messageQueueFlushBatchSzie = DEFAULT_MESSAGE_QUEUE_FLUSH_BATCH_SIZE;
 
 	private int m_mySQLBatchInsertSzie = DEFAULT_MYSQL_BATCH_INSERT_SIZE;
 
@@ -37,9 +37,9 @@ public class BrokerConfig implements Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		String dumperBatchSizeStr = m_env.getGlobalConfig().getProperty("broker.dumper.batch.size");
-		if (StringUtils.isNumeric(dumperBatchSizeStr)) {
-			m_dumperBatchSzie = Integer.valueOf(dumperBatchSizeStr);
+		String flushBatchSizeStr = m_env.getGlobalConfig().getProperty("broker.flush.batch.size");
+		if (StringUtils.isNumeric(flushBatchSizeStr)) {
+			m_messageQueueFlushBatchSzie = Integer.valueOf(flushBatchSizeStr);
 		}
 		String mysqlBatchInsertSizeStr = m_env.getGlobalConfig().getProperty("broker.mysql.batch.size");
 		if (StringUtils.isNumeric(mysqlBatchInsertSizeStr)) {
@@ -75,19 +75,19 @@ public class BrokerConfig implements Initializable {
 		return 500;
 	}
 
-	public int getDumperBatchSize() {
-		return m_dumperBatchSzie;
+	public int getMessageQueueFlushBatchSize() {
+		return m_messageQueueFlushBatchSzie;
 	}
 
 	public int getMySQLBatchInsertSize() {
 		return m_mySQLBatchInsertSzie;
 	}
 
-	public int getDumperNoMessageWaitIntervalBaseMillis() {
+	public int getFlushCheckerNoMessageWaitIntervalBaseMillis() {
 		return 5;
 	}
 
-	public int getDumperNoMessageWaitIntervalMaxMillis() {
+	public int getFlushCheckerNoMessageWaitIntervalMaxMillis() {
 		return 50;
 	}
 

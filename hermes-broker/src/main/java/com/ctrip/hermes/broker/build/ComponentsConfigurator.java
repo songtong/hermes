@@ -36,10 +36,12 @@ import com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOf
 import com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOffsetCommandProcessorV3;
 import com.ctrip.hermes.broker.transport.command.processor.QueryMessageOffsetByTimeCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor;
+import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessorV3;
 import com.ctrip.hermes.broker.zk.ZKClient;
 import com.ctrip.hermes.broker.zk.ZKConfig;
 import com.ctrip.hermes.core.log.BizLogger;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 
@@ -63,6 +65,15 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(BrokerConfig.class)//
 		      .req(BizLogger.class)//
 		      .req(MetaService.class)//
+		      .req(SystemClockService.class)//
+		);
+		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND_V3.toString(), SendMessageCommandProcessorV3.class)//
+		      .req(MessageQueueManager.class)//
+		      .req(BrokerLeaseContainer.class)//
+		      .req(BrokerConfig.class)//
+		      .req(BizLogger.class)//
+		      .req(MetaService.class)//
+		      .req(SystemClockService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL.toString(), PullMessageCommandProcessor.class)//
 		      .req(LongPollingService.class)//

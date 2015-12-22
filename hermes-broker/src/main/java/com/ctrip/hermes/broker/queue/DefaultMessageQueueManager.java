@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,8 +29,10 @@ import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
+import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
+import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
+import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
@@ -59,10 +62,16 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 	private ScheduledExecutorService m_ackMessagesTaskExecutor;
 
+	private ExecutorService m_flushExecutor;
+
+	private FlusherScheduleTask m_flushCheckerTask;
+
 	@Override
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data, Lease lease) {
+	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data,
+	      long expireTime) {
 		if (!m_stopped.get()) {
-			return getMessageQueue(tpp.getTopic(), tpp.getPartition()).appendMessageAsync(tpp.isPriority(), data, lease);
+			return getMessageQueue(tpp.getTopic(), tpp.getPartition()).appendMessageAsync(tpp.isPriority(), data,
+			      expireTime);
 		} else {
 			return null;
 		}
@@ -94,26 +103,32 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 	@Override
 	public void stop() {
-		m_ackOpExecutor.shutdown();
-		m_ackMessagesTaskExecutor.shutdown();
-		while (!m_ackOpExecutor.isTerminated()) {
-			try {
-				m_ackOpExecutor.awaitTermination(1, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-				// ignore
-			}
-		}
+		if (m_stopped.compareAndSet(false, true)) {
+			m_ackOpExecutor.shutdown();
+			m_ackMessagesTaskExecutor.shutdown();
 
-		while (!m_ackMessagesTaskExecutor.isTerminated()) {
-			try {
-				m_ackMessagesTaskExecutor.awaitTermination(1, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-				// ignore
+			while (!m_ackOpExecutor.isTerminated()) {
+				try {
+					m_ackOpExecutor.awaitTermination(1, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					// ignore
+				}
 			}
-		}
 
-		for (MessageQueue mq : m_messageQueues.values()) {
-			mq.stop();
+			while (!m_ackMessagesTaskExecutor.isTerminated()) {
+				try {
+					m_ackMessagesTaskExecutor.awaitTermination(1, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					// ignore
+				}
+			}
+
+			m_flushCheckerTask.stop();
+
+			for (MessageQueue mq : m_messageQueues.values()) {
+				mq.stop();
+			}
+
 		}
 	}
 
@@ -260,6 +275,12 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		      HermesThreadFactory.create("AckOp", true));
 		m_ackMessagesTaskExecutor = Executors.newScheduledThreadPool(m_config.getAckMessagesTaskExecutorThreadCount(),
 		      HermesThreadFactory.create("AckMessagesTaskExecutor", true));
+
+		m_flushExecutor = Executors.newCachedThreadPool(HermesThreadFactory.create("MessageQueueFlushExecutor", true));
+		m_flushCheckerTask = new FlusherScheduleTask();
+		Thread checkerThread = HermesThreadFactory.create("MessageQueueFlushChecker", false)
+		      .newThread(m_flushCheckerTask);
+		checkerThread.start();
 	}
 
 	@Override
@@ -308,6 +329,47 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 			}
 		}
 		return result;
+	}
+
+	private class FlusherScheduleTask implements Runnable {
+
+		private AtomicBoolean m_stopped = new AtomicBoolean(false);
+
+		@Override
+		public void run() {
+			int checkIntervalBase = m_config.getFlushCheckerNoMessageWaitIntervalBaseMillis();
+			int checkIntervalMax = m_config.getFlushCheckerNoMessageWaitIntervalMaxMillis();
+
+			SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkIntervalBase, checkIntervalMax);
+
+			while (!m_stopped.get() && !Thread.interrupted()) {
+				boolean flushed = false;
+
+				for (MessageQueue mq : m_messageQueues.values()) {
+					flushed = flush(mq, m_config.getMessageQueueFlushBatchSize()) || flushed;
+				}
+
+				if (flushed) {
+					schedulePolicy.succeess();
+				} else {
+					schedulePolicy.fail(true);
+				}
+
+			}
+
+			for (MessageQueue mq : m_messageQueues.values()) {
+				flush(mq, -1);
+			}
+			log.info("Message queue flush checker stopped.");
+		}
+
+		public void stop() {
+			m_stopped.set(true);
+		}
+
+		private boolean flush(final MessageQueue mq, final int batchSize) {
+			return mq.flush(m_flushExecutor, batchSize);
+		}
 	}
 
 }

@@ -47,10 +47,10 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -171,7 +171,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		doAnswer(new CompositeAnswer(answers))//
 		      .when(m_endpointClient)//
 		      .writeCommand(any(Endpoint.class), //
-		            any(SendMessageCommand.class), //
+		            any(SendMessageCommandV3.class), //
 		            anyLong(), //
 		            any(TimeUnit.class));
 	}
@@ -242,7 +242,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		NotAccept() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
-				SendMessageCommand sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommand.class);
+				SendMessageCommandV3 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV3.class);
 				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
 				      CommandType.ACK_MESSAGE_SEND.toString());
 
@@ -259,7 +259,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		Accept() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
-				SendMessageCommand sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommand.class);
+				SendMessageCommandV3 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV3.class);
 				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
 				      CommandType.ACK_MESSAGE_SEND.toString());
 
@@ -276,7 +276,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		ResponseSucessResult() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
-				SendMessageCommand sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommand.class);
+				SendMessageCommandV3 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV3.class);
 				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
 				      CommandType.RESULT_MESSAGE_SEND.toString());
 
@@ -300,7 +300,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		ResponseFailResult() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
-				SendMessageCommand sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommand.class);
+				SendMessageCommandV3 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV3.class);
 				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
 				      CommandType.RESULT_MESSAGE_SEND.toString());
 

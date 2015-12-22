@@ -15,6 +15,7 @@ import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -22,6 +23,7 @@ import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
  */
 public enum CommandType {
 	MESSAGE_SEND(101, 1, SendMessageCommand.class), //
+	MESSAGE_SEND_V3(101, 3, SendMessageCommandV3.class), //
 	MESSAGE_ACK(102, 1, AckMessageCommand.class), //
 	MESSAGE_ACK_V2(102, 2, AckMessageCommandV2.class), //
 	MESSAGE_ACK_V3(102, 3, AckMessageCommandV3.class), //

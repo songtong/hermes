@@ -2,6 +2,7 @@ package com.ctrip.hermes.broker.queue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.unidal.tuple.Pair;
 
@@ -10,7 +11,7 @@ import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand.MessageBatchWithRawData;
+import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
@@ -19,8 +20,12 @@ import com.google.common.util.concurrent.ListenableFuture;
  */
 public interface MessageQueue {
 
+	String getTopic();
+
+	int getPartition();
+
 	ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch,
-	      Lease lease);
+	      long expireTime);
 
 	MessageQueueCursor getCursor(String groupId, Lease lease, Offset offset);
 
@@ -41,4 +46,7 @@ public interface MessageQueue {
 	boolean offerAckHolderOp(Operation operation);
 
 	boolean offerAckMessagesTask(AckMessagesTask task);
+
+	boolean flush(ExecutorService executor, int batchSize);
+
 }
