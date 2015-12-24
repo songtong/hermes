@@ -407,7 +407,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 				proto.setTopic(topic);
 				proto.setPartition(partition);
-				proto.setLastScheduleDate(new Date(0));
+				proto.setLastScheduleDate(new Date());
 				proto.setLastId(msgSeq);
 
 				m_offsetResendDao.increaseOffset(proto, OffsetResendEntity.UPDATESET_OFFSET);
