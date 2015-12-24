@@ -2,10 +2,7 @@
 <div class="panel panel-info">
 	<div class="panel-heading">
 		<label class="label label-danger"> <span ng-bind="current_topic_type" style="text-transform: uppercase;"></span> TOPICS
-		</label>
-		<a href="#/add/{{current_topic_type}}/{{current_topic_type}}" class="btn btn-xs btn-success" style="text-align: center; float: right;">
-			<span class="glyphicon glyphicon-plus"></span>
-			新增
+		</label> <a href="#/add/{{current_topic_type}}/{{current_topic_type}}" class="btn btn-xs btn-success" style="text-align: center; float: right;"> <span class="glyphicon glyphicon-plus"></span> 新增
 		</a>
 	</div>
 	<div class="panel-body" ng-if="current_topics.length == 0">
@@ -50,59 +47,32 @@
 				<td align="center"><span ng-bind="row.partitions.length"></td>
 				<td ng-if="current_topic_type == 'mysql'" style="width: 20%"><a href="" ng-bind="row.consumerRetryPolicy | short:20" tooltip="{{row.consumerRetryPolicy}}"></a></td>
 				<td ng-if="current_topic_type == 'mysql'" style="width: 10%"><span ng-bind="row.ackTimeoutSeconds"></span></td>
-				<td ng-if="current_topic_type == 'mysql'" align="center" style="width: 5%"><span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}}"
-						class="status-ok" ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.totalDelay&lt;delayLimit"></span> <span
-						tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}} " class="status-danger"
-						ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.totalDelay&gt;=delayLimit"></span> <span
-						tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}} " class="status-warn" ng-if="cur_time-row.latestProduced&gt;noProduceLimit"></span></td>
+				<td ng-if="current_topic_type == 'mysql'" align="center" style="width: 5%"><span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}}" class="status-ok" ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.totalDelay&lt;delayLimit"></span> <span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}} " class="status-danger"
+					ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.totalDelay&gt;=delayLimit"></span> <span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}} " class="status-warn" ng-if="cur_time-row.latestProduced&gt;noProduceLimit"></span></td>
 				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.endpointType"></span></td>
 				<td ng-if="current_topic_type == 'kafka'" style="width: 20%"><a href="" ng-bind="row.schema.name | short:20" tooltip="{{row.schema.name}}"></a></td>
 				<td ng-if="current_topic_type == 'kafka'" style="width: 10%"><a href="" ng-bind="row.schema.version" ng-click="show_schema_view(row.schema)" tooltip="点击查看详情"></a></td>
 				<td style="text-align: right;" class="col-md-2">
-					<div ng-if="current_topic_type == 'kafka'" ng-click="set_selected(row)" data="schema_data" upload-button url="/api/schemas" tooltip="上传Schema文件" class="btn btn-xs btn-success btn-upload"
-						on-success="upload_result(row, true, response)" on-error="upload_result(row, false, response)">
+					<div ng-if="current_topic_type == 'kafka'" ng-click="set_selected(row)" data="schema_data" upload-button url="/api/schemas" tooltip="上传Schema文件" class="btn btn-xs btn-success btn-upload" on-success="upload_result(row, true, response)" on-error="upload_result(row, false, response)">
 						<span class="glyphicon glyphicon-upload"></span>
 					</div>
-					<div class="btn-group">
-						<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">操作 <span class="caret"></span>
+					<div class="btn-group" ng-if="logined">
+						<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							操作 <span class="caret"></span>
 						</button>
 						<ul class="dropdown-menu dropdown-menu-right" role="group">
-							<li>
-								<a ng-click="sync_topic(row)" href="">
-									<span class="glyphicon glyphicon-cloud" style="color: green"></span>
-									同步Topic
-								</a>
-							</li>
-							<li ng-if="current_topic_type == 'kafka' && row.schema != null">
-								<a ng-click="sync_schema(row)" href="">
-									<span class="glyphicon glyphicon-cloud" style="color: orange;"></span>
-									同步Schema
-								</a>
-							</li>
-							<li>
-								<a ng-click="delete_topic(row, $index)" href="">
-									<span class="glyphicon glyphicon-remove" style="color: red;"></span>
-									删除Topic
-								</a>
-							</li>
-							<li ng-if="current_topic_type == 'kafka' && row.schema != null">
-								<a target="_self" href="/api/schemas/{{row.schema.id}}/jar">
-									<span class="glyphicon glyphicon-download"></span>
-									下载Schema Jar文件
-								</a>
-							</li>
-							<li ng-if="current_topic_type == 'kafka' && row.schema != null">
-								<a target="_self" href="/api/schemas/{{row.schema.id}}/schema">
-									<span class="glyphicon glyphicon-download" style="color: blue;"></span>
-									下载Schema描述文件
-								</a>
-							</li>
-							<li ng-if="current_topic_type == 'kafka' && row.schema != null">
-								<a ng-click="deploy_to_maven(row)" href="">
-									<span class="glyphicon glyphicon glyphicon-flag" style="color: purple;"></span>
-									部署Schema Jar
-								</a>
-							</li>
+							<li><a ng-click="sync_topic(row)" href=""> <span class="glyphicon glyphicon-cloud" style="color: green"></span> 同步Topic
+							</a></li>
+							<li ng-if="current_topic_type == 'kafka' && row.schema != null"><a ng-click="sync_schema(row)" href=""> <span class="glyphicon glyphicon-cloud" style="color: orange;"></span> 同步Schema
+							</a></li>
+							<li><a ng-click="delete_topic(row, $index)" href=""> <span class="glyphicon glyphicon-remove" style="color: red;"></span> 删除Topic
+							</a></li>
+							<li ng-if="current_topic_type == 'kafka' && row.schema != null"><a target="_self" href="/api/schemas/{{row.schema.id}}/jar"> <span class="glyphicon glyphicon-download"></span> 下载Schema Jar文件
+							</a></li>
+							<li ng-if="current_topic_type == 'kafka' && row.schema != null"><a target="_self" href="/api/schemas/{{row.schema.id}}/schema"> <span class="glyphicon glyphicon-download" style="color: blue;"></span> 下载Schema描述文件
+							</a></li>
+							<li ng-if="current_topic_type == 'kafka' && row.schema != null"><a ng-click="deploy_to_maven(row)" href=""> <span class="glyphicon glyphicon glyphicon-flag" style="color: purple;"></span> 部署Schema Jar
+							</a></li>
 						</ul>
 					</div>
 				</td>
@@ -119,10 +89,11 @@
 	<div class="modal-dialog" style="width: 1024px">
 		<div class="modal-content">
 			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
 				<h4 class="modal-title" id="schema-view-label">
-					Schema ID:
-					<span ng-bind="current_schema"></span>
+					Schema ID: <span ng-bind="current_schema"></span>
 				</h4>
 			</div>
 			<div class="modal-body">
