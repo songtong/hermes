@@ -237,7 +237,6 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		if (System.currentTimeMillis() - m_timeStamp > PortalConstants.CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS) {
 			synchronized (this) {
 				if (System.currentTimeMillis() - m_timeStamp > PortalConstants.CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS) {
-					loadMeta();
 					parseLeases(getMetaserverStatusString());
 					m_timeStamp = System.currentTimeMillis();
 				}

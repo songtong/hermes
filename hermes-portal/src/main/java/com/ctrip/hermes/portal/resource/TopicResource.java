@@ -101,8 +101,8 @@ public class TopicResource {
 			if (topic.getStoragePartitionSize() < 10000) {
 				reason = "Database partition size should be bigger than 10000";
 				passed = false;
-			} else if (topic.getStoragePartitionCount() < 5) {
-				reason = "Database partition count should be bigger than 5";
+			} else if (topic.getStoragePartitionCount() < 1) {
+				reason = "Database partition count should be bigger than 1";
 				passed = false;
 			} else if (topic.getResendPartitionSize() < 500) {
 				reason = "Resend partition count should be bigger than 500";
