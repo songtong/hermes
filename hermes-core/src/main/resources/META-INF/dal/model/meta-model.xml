@@ -58,8 +58,9 @@
 		<attribute name="storage-partition-size" value-type="long" default-value="1000000" />
 		<attribute name="resend-partition-size" value-type="long" default-value="50000" />
 		<attribute name="storage-partition-count" value-type="int" default-value="10" />
+		<attribute name="priority-message-enabled" value-type="boolean" default-value="true" />
 		<entity-ref name="consumer-group" type="list" names="consumer-groups" />
-		
+
 		<snippet lang='java'><![CDATA[
 			public boolean isConnectCatTransactions() {
 				Property p = findProperty("connect-cat-transactions");
@@ -67,7 +68,7 @@
 			}
 			]]>
 		</snippet>
-		
+
 	</entity>
 	<entity name="codec">
 		<attribute name="type" value-type="String" key='true' />
