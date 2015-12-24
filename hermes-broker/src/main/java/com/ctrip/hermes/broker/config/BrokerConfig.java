@@ -25,7 +25,7 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_MESSAGE_QUEUE_FLUSH_BATCH_SIZE = 5000;
 
-	private static final int DEFAULT_MYSQL_BATCH_INSERT_SIZE = 2000;
+	private static final int DEFAULT_MYSQL_BATCH_INSERT_SIZE = 200;
 
 	private int m_messageQueueFlushBatchSzie = DEFAULT_MESSAGE_QUEUE_FLUSH_BATCH_SIZE;
 
