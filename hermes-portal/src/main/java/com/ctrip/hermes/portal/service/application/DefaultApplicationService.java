@@ -36,7 +36,7 @@ public class DefaultApplicationService implements ApplicationService {
 			return (TopicApplication) HermesApplication.parse(dbApp);
 		} catch (DalException e) {
 			log.error("Create new topic application : {}.{}.{} failed", topicApplication.getProductLine(),
-			      topicApplication.getEntity(), topicApplication.getEvent(), e);
+					topicApplication.getEntity(), topicApplication.getEvent(), e);
 		}
 		return null;
 	}
@@ -91,8 +91,8 @@ public class DefaultApplicationService implements ApplicationService {
 			List<Property> kafkaProperties = new ArrayList<>();
 			kafkaProperties.add(new Property("partitions").setValue("3"));
 			kafkaProperties.add(new Property("replication-factor").setValue("2"));
-			kafkaProperties.add(new Property("retention.ms").setValue(String.valueOf(TimeUnit.DAYS.toMillis(app
-			      .getRetentionDays()))));
+			kafkaProperties.add(new Property("retention.ms")
+					.setValue(String.valueOf(TimeUnit.DAYS.toMillis(app.getRetentionDays()))));
 			topicView.setProperties(kafkaProperties);
 			defaultReadDS = "kafka-consumer";
 			defaultWriteDS = "kafka-producer";
@@ -104,19 +104,12 @@ public class DefaultApplicationService implements ApplicationService {
 
 		}
 		int partitionCount = 1;
-		int storagePartitionCount = 10;
-		if (app.getMaxMsgNumPerDay() > 10000000) {
+		if (app.getMaxMsgNumPerDay() >= 20000000) {
+			partitionCount = 20;
+		} else if (app.getMaxMsgNumPerDay() >= 10000000) {
 			partitionCount = 10;
-			storagePartitionCount = partitionCount / 1000000 * app.getRetentionDays() / 10;
-		} else if (app.getMaxMsgNumPerDay() > 1000000) {
-			partitionCount = 5;
-			storagePartitionCount = partitionCount / 1000000 * app.getRetentionDays() / 5;
 		} else {
-			partitionCount = 3;
-			storagePartitionCount = partitionCount * app.getRetentionDays() / 1000000 / 5;
-		}
-		if (storagePartitionCount < 5) {
-			storagePartitionCount = 5;
+			partitionCount = 5;
 		}
 		List<Partition> topicPartition = new ArrayList<Partition>();
 		for (int i = 0; i < partitionCount; i++) {
@@ -126,6 +119,7 @@ public class DefaultApplicationService implements ApplicationService {
 			topicPartition.add(p);
 		}
 
+		topicView.setStoragePartitionSize(5000000);
 		topicView.setCreateBy(app.getOwnerName() + "/" + app.getOwnerEmail());
 		topicView.setPartitions(topicPartition);
 		topicView.setName(app.getProductLine() + "." + app.getEntity() + "." + app.getEvent());
@@ -133,9 +127,8 @@ public class DefaultApplicationService implements ApplicationService {
 		topicView.setCodecType(app.getCodecType());
 		topicView.setConsumerRetryPolicy("3:[3,3000]");
 		topicView.setAckTimeoutSeconds(5);
-		topicView.setStoragePartitionSize(1000000);
-		topicView.setResendPartitionSize(5000);
-		topicView.setStoragePartitionCount(storagePartitionCount);
+		topicView.setStoragePartitionCount(3);
+		topicView.setResendPartitionSize(topicView.getStoragePartitionSize() / 10);
 		topicView.setDescription(app.getDescription());
 
 		return topicView;
@@ -178,7 +171,7 @@ public class DefaultApplicationService implements ApplicationService {
 			return (ConsumerApplication) HermesApplication.parse(dbApp);
 		} catch (DalException e) {
 			log.error("Create new consumer application : {}.{}.{} failed", consumerApplication.getProductLine(),
-			      consumerApplication.getProduct(), consumerApplication.getProject(), e);
+					consumerApplication.getProduct(), consumerApplication.getProject(), e);
 		}
 		return null;
 	}
@@ -193,11 +186,12 @@ public class DefaultApplicationService implements ApplicationService {
 		consumerView.setAppId(app.getAppName());
 		consumerView.setOwner(app.getOwnerName() + "/" + app.getOwnerEmail());
 		if (app.isNeedRetry()) {
-			consumerView.setRetryPolicy(String.format("3:[%s,%s]", app.getRetryCount(), app.getRetryInterval() * 1000L));
+			consumerView
+					.setRetryPolicy(String.format("3:[%s,%s]", app.getRetryCount(), app.getRetryInterval() * 1000L));
 		} else {
 			consumerView.setRetryPolicy("2:[]");
 		}
-		
+
 		return consumerView;
 	}
 }
