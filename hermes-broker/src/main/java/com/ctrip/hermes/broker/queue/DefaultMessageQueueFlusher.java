@@ -81,12 +81,20 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 			}
 
 			Transaction catTx = Cat.newTransaction("Message.Broker.Flush", m_topic + "-" + m_partition);
-			catTx.addData("count", todos.size());
+			catTx.addData("count", getMessageCount(todos));
 
 			appendMessageSync(todos);
 			catTx.setStatus(Transaction.SUCCESS);
 			catTx.complete();
 		}
+	}
+
+	private int getMessageCount(List<PendingMessageWrapper> todos) {
+		int count = 0;
+		for (PendingMessageWrapper todo : todos) {
+			count += todo.getBatch().getMsgSeqs().size();
+		}
+		return count;
 	}
 
 	private void purgeExpiredMsgs() {
