@@ -5,7 +5,7 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 		get_topic_names : {
 			method : 'GET',
 			isArray : true,
-			url : '/api/meta/topics/names'
+			url : '/api/topics/names'
 		},
 		get_consumer_names : {
 			method : 'GET',

@@ -2,19 +2,19 @@ var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable
 hermes_storage.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
 }).controller('storage-controller', [ '$scope', '$resource', 'StorageService', function(scope, resource, StorageService) {
-	var meta_resource = resource('/api/meta/', {}, {
+	var meta_resource = resource('/api/storages', {}, {
 		'get_storages' : {
 			method : 'GET',
 			isArray : true,
-			url : '/api/meta/storages'
+			url : ''
 		},
 		'update_datasource' : {
 			method : 'POST',
-			url : '/api/meta/storages/:type/:id/update'
+			url : ':type/:id/update'
 		},
 		'delete_property' : {
 			method : 'DELETE',
-			url : '/api/meta/storages/:type/:id/delprop'
+			url : ':type/:id/delprop'
 		}
 	});
 

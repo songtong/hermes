@@ -1,18 +1,18 @@
 package com.ctrip.hermes.metaservice.service;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
+import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 
 @Named
@@ -26,6 +26,9 @@ public class ConsumerService {
 	@Inject
 	private ZookeeperService m_zookeeperService;
 
+	@Inject
+	private ConsumerGroupDao m_consumerGroupDao;
+
 	public ConsumerGroup getConsumer(String topic, String consumer) {
 		for (ConsumerGroup c : getConsumers(topic)) {
 			if (c.getName().equals(consumer)) {
@@ -36,71 +39,75 @@ public class ConsumerService {
 	}
 
 	public List<ConsumerGroup> getConsumers(String topic) {
-		return new ArrayList<>(m_metaService.getMeta().getTopics().get(topic).getConsumerGroups());
+		return m_metaService.findConsumersByTopic(topic);
 	}
 
 	public Map<String, List<ConsumerGroup>> getConsumers() {
 		Map<String, List<ConsumerGroup>> map = new LinkedHashMap<String, List<ConsumerGroup>>();
-		for (Entry<String, Topic> entry : m_metaService.getMeta().getTopics().entrySet()) {
-			map.put(entry.getKey(), new ArrayList<>(entry.getValue().getConsumerGroups()));
+		try {
+			List<Topic> topics = m_metaService.findTopics();
+			for (Topic topic : topics) {
+				map.put(topic.getName(), topic.getConsumerGroups());
+			}
+		} catch (DalException e) {
+			e.printStackTrace();
 		}
 		return map;
 	}
 
 	public void deleteConsumerFromTopic(String topic, String consumer) throws Exception {
-		Meta meta = m_metaService.getMeta();
-		Topic t = meta.getTopics().get(topic);
-		ConsumerGroup consumerGroup = t.findConsumerGroup(consumer);
+		Topic t = m_metaService.findTopicByName(topic);
+		ConsumerGroup consumerGroupEntity = t.findConsumerGroup(consumer);
+		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
+		      t.getId(), consumer, ConsumerGroupEntity.READSET_FULL);
 		if (consumerGroup != null) {
-			boolean removed = t.removeConsumerGroup(consumer);
+			boolean removed = m_consumerGroupDao.deleteByPK(consumerGroup) == 1 ? true : false;
 			if (removed && Storage.MYSQL.equals(t.getStorageType())) {
-				m_storageService.delConsumerStorage(t, consumerGroup);
+				m_storageService.delConsumerStorage(t, consumerGroupEntity);
 				m_zookeeperService.deleteConsumerLeaseZkPath(t, consumer);
 			}
 		}
-		m_metaService.updateMeta(meta);
 	}
 
 	public synchronized ConsumerGroup addConsumerForTopics(String topicName, ConsumerGroup consumer) throws Exception {
-		Meta meta = m_metaService.getMeta();
+		Topic t = m_metaService.findTopicByName(topicName);
+		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = new com.ctrip.hermes.metaservice.model.ConsumerGroup();
+		consumerGroupModel.setName(consumer.getName());
+		consumerGroupModel.setAppids(consumer.getAppIds());
+		consumerGroupModel.setRetryPolicy(consumer.getRetryPolicy());
+		if (consumer.getAckTimeoutSeconds() != null)
+			consumerGroupModel.setAckTimeoutSeconds(consumer.getAckTimeoutSeconds());
+		consumerGroupModel.setOrderedConsume(consumer.getOrderedConsume());
+		consumerGroupModel.setOwner(consumer.getOwner());
+		consumerGroupModel.setTopicId(t.getId());
+		m_consumerGroupDao.insert(consumerGroupModel);
 
-		int maxConsumerId = 0;
-		for (Entry<String, Topic> entry : meta.getTopics().entrySet()) {
-			for (ConsumerGroup cg : entry.getValue().getConsumerGroups()) {
-				if (cg.getId() != null && cg.getId() > maxConsumerId) {
-					maxConsumerId = cg.getId();
-				}
-			}
-		}
-
-		consumer.setId(maxConsumerId + 1);
-		Topic t = meta.getTopics().get(topicName);
-		t.addConsumerGroup(consumer);
 		if (Storage.MYSQL.equals(t.getStorageType())) {
 			m_storageService.addConsumerStorage(t, consumer);
 			m_zookeeperService.ensureConsumerLeaseZkPath(t);
 		}
 
-		if (!m_metaService.updateMeta(meta)) {
-			throw new RuntimeException("Update meta failed, please try later");
-		}
-
 		return consumer;
 	}
 
-	public synchronized ConsumerGroup updateGroupForTopic(String topicName, ConsumerGroup c)
-			throws Exception {
-		Meta meta = m_metaService.getMeta();
-		Topic t = meta.getTopics().get(topicName);
+	public synchronized ConsumerGroup updateGroupForTopic(String topicName, ConsumerGroup c) throws Exception {
+		Topic t = m_metaService.findTopicByName(topicName);
 		ConsumerGroup originConsumer = t.findConsumerGroup(c.getName());
 		c.setId(originConsumer.getId());
-		t.removeConsumerGroup(c.getName());
-		t.addConsumerGroup(c);
+
+		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = m_consumerGroupDao.findByTopicIdAndName(
+		      t.getId(), c.getName(), ConsumerGroupEntity.READSET_FULL);
+		consumerGroupModel.setName(c.getName());
+		consumerGroupModel.setAppids(c.getAppIds());
+		consumerGroupModel.setRetryPolicy(c.getRetryPolicy());
+		if (c.getAckTimeoutSeconds() != null)
+			consumerGroupModel.setAckTimeoutSeconds(c.getAckTimeoutSeconds());
+		consumerGroupModel.setOrderedConsume(c.getOrderedConsume());
+		consumerGroupModel.setOwner(c.getOwner());
+		m_consumerGroupDao.updateByPK(consumerGroupModel, ConsumerGroupEntity.UPDATESET_FULL);
+
 		if (Storage.MYSQL.equals(t.getStorageType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(t);
-		}
-		if (!m_metaService.updateMeta(meta)) {
-			throw new RuntimeException("Update meta failed, please try later");
 		}
 		return c;
 	}

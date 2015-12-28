@@ -13,6 +13,16 @@
          <table name="schema"/>
          <table name="subscription"/>
          <table name="monitor_event"/>
+         <table name="codec"/>
+         <table name="app"/>
+         <table name="consumer_group"/>
+         <table name="datasource"/>
+         <table name="endpoint"/>
+         <table name="partition"/>
+         <table name="producer"/>
+         <table name="server"/>
+         <table name="storage"/>
+         <table name="topic"/>
       </group>
    </jdbc>
 </wizard>

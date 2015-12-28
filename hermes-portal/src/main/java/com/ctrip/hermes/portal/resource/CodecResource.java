@@ -1,8 +1,5 @@
 package com.ctrip.hermes.portal.resource;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
@@ -11,6 +8,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
@@ -43,13 +41,8 @@ public class CodecResource {
 	}
 
 	@GET
-	public List<CodecView> listCodecs() throws IOException {
+	public Response getCodecs() {
 		Map<String, Codec> codecs = codecService.getCodecs();
-		List<CodecView> result = new ArrayList<>();
-		for (Codec codec : codecs.values()) {
-			CodecView codecView = new CodecView(codec);
-			result.add(codecView);
-		}
-		return result;
+		return Response.status(Status.OK).entity(codecs.values()).build();
 	}
 }

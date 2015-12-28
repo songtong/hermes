@@ -5,7 +5,7 @@ Storage.service("StorageService", ["$resource", function ($resource) {
     var db_size = 0;
     var db_tables = [];
 
-    var storage_resource = $resource('/api/subscriptions/', {}, {
+    var storage_resource = $resource('/api/', {}, {
         get_size: {
             method: 'GET',
             isArray: false,
@@ -34,12 +34,12 @@ Storage.service("StorageService", ["$resource", function ($resource) {
         add_datasource: {
             method: 'POST',
             isArray: false,
-            url: '/api/meta/datasource/:type'
+            url: '/api/datasources/:type'
         },
         delete_datasource: {
             method: 'DELETE',
             isArray: false,
-            url: '/api/meta/datasource/:type/:id'
+            url: '/api/datasources/:type/:id'
         }
     });
 

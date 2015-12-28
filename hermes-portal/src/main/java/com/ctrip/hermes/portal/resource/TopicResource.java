@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -434,6 +435,17 @@ public class TopicResource {
 		return topicView;
 	}
 
+	@GET
+	@Path("names")
+	public Response getTopicNames() {
+		List<String> topicNames = new ArrayList<String>();
+		for (Topic topic : metaService.getTopics().values()) {
+			topicNames.add(topic.getName());
+		}
+		Collections.sort(topicNames);
+		return Response.status(Status.OK).entity(topicNames).build();
+	}
+	
 	@GET
 	@Path("{name}/schemas")
 	public List<SchemaView> getSchemas(@PathParam("name") String name) {

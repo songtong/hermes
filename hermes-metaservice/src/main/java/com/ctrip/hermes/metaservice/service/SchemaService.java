@@ -31,6 +31,8 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.model.SchemaDao;
 import com.ctrip.hermes.metaservice.model.SchemaEntity;
+import com.ctrip.hermes.metaservice.model.TopicDao;
+import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 @Named
 public class SchemaService {
@@ -39,6 +41,9 @@ public class SchemaService {
 
 	private SchemaRegistryClient avroSchemaRegistry;
 
+	@Inject
+	private TopicDao m_topicDao;
+	
 	@Inject
 	private SchemaDao m_schemaDao;
 
@@ -150,26 +155,14 @@ public class SchemaService {
 		m_compileService.delete(destDir);
 	}
 
-	public Topic updateTopic(Topic topic) throws DalException {
-		Meta meta = m_metaService.getMeta();
-		meta.removeTopic(topic.getName());
-		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
-		meta.addTopic(topic);
-		m_metaService.updateMeta(meta);
-		return topic;
-	}
-
 	/**
 	 * 
 	 * @param schemaView
 	 * @param topicId
 	 * @return
-	 * @throws DalException
-	 * @throws RestClientException
-	 * @throws IOException
+	 * @throws Exception
 	 */
-	public SchemaView createSchema(SchemaView schemaView, Topic topic) throws DalException, IOException,
-	      RestClientException {
+	public SchemaView createSchema(SchemaView schemaView, Topic topic) throws Exception {
 		m_logger.info("Creating schema for topic: {}, schema: {}", topic.getName(), schemaView);
 		Schema schema = toSchema(schemaView);
 		Date now = new Date(System.currentTimeMillis());
@@ -185,8 +178,9 @@ public class SchemaService {
 		}
 		m_schemaDao.insert(schema);
 
-		topic.setSchemaId(schema.getId());
-		updateTopic(topic);
+		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(), TopicEntity.READSET_FULL);
+		topicModel.setSchemaId(schema.getId());
+		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
 		if ("avro".equals(schema.getType())) {
 			if (StringUtils.isNotEmpty(schema.getCompatibility())) {
@@ -201,9 +195,9 @@ public class SchemaService {
 	/**
 	 * 
 	 * @param id
-	 * @throws DalException
+	 * @throws Exception
 	 */
-	public void deleteSchema(long id) throws DalException {
+	public void deleteSchema(long id) throws Exception {
 		m_logger.info("Deleting schema id: {}", id);
 		Schema schema = m_schemaDao.findByPK(id, SchemaEntity.READSET_FULL);
 		Topic topic = m_metaService.findTopicById(schema.getTopicId());
@@ -215,13 +209,15 @@ public class SchemaService {
 					break;
 				}
 			}
+			
+			com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(), TopicEntity.READSET_FULL);
 			if (schemas.size() > 0 && topic.getSchemaId() != schemas.get(0).getId()) {
-				topic.setSchemaId(schemas.get(0).getId());
-				updateTopic(topic);
+				topicModel.setSchemaId(schemas.get(0).getId());
 			} else if (schemas.size() == 0) {
-				topic.setSchemaId(null);
-				updateTopic(topic);
+				topicModel.setSchemaId(0);
 			}
+			m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
+			
 			m_schemaDao.deleteByPK(schema);
 			m_logger.info("Deleted schema id: {}", id);
 		}

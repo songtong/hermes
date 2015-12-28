@@ -14,7 +14,13 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.*;
+import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
+import com.ctrip.hermes.metaservice.model.PartitionDao;
+import com.ctrip.hermes.metaservice.model.ProducerDao;
+import com.ctrip.hermes.metaservice.model.TopicDao;
+import com.ctrip.hermes.metaservice.model.TopicEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
@@ -36,6 +42,18 @@ public class TopicService {
 
 	@Inject
 	private TopicStorageService m_topicStorageService;
+
+	@Inject
+	private TopicDao m_topicDao;
+
+	@Inject
+	private PartitionDao m_partitionDao;
+
+	@Inject
+	private ConsumerGroupDao m_consumerGroupDao;
+
+	@Inject
+	private ProducerDao m_producerDao;
 
 	@Inject
 	private ZookeeperService m_zookeeperService;
@@ -65,44 +83,73 @@ public class TopicService {
 	}
 
 	/**
-	 * @param topic
+	 * @param topicEntity
 	 * @return
 	 * @throws DalException
 	 */
-	public Topic createTopic(Topic topic) throws Exception {
-		Meta meta = m_metaService.getMeta();
-		topic.setCreateTime(new Date(System.currentTimeMillis()));
-		topic.setLastModifiedTime(new Date());
+	public Topic createTopic(Topic topicEntity) throws Exception {
+		topicEntity.setCreateTime(new Date(System.currentTimeMillis()));
+		topicEntity.setLastModifiedTime(new Date());
 		long maxTopicId = 0;
-		for (Topic topic2 : meta.getTopics().values()) {
+		for (Topic topic2 : m_metaService.findTopics()) {
 			if (topic2.getId() != null && topic2.getId() > maxTopicId) {
 				maxTopicId = topic2.getId();
 			}
 		}
-		topic.setId(maxTopicId + 1);
+		topicEntity.setId(maxTopicId + 1);
 
 		int partitionId = 0;
-		for (Partition partition : topic.getPartitions()) {
+		for (Partition partition : topicEntity.getPartitions()) {
 			partition.setId(partitionId++);
 		}
 
-		meta.addTopic(topic);
+		com.ctrip.hermes.metaservice.model.Topic topicModel = new com.ctrip.hermes.metaservice.model.Topic();
+		if (topicEntity.getId() != null)
+			topicModel.setId(topicEntity.getId());
+		topicModel.setName(topicEntity.getName());
+		if (topicEntity.getPartitionCount() != null)
+			topicModel.setPartitionCount(topicEntity.getPartitionCount());
+		topicModel.setStorageType(topicEntity.getStorageType());
+		topicModel.setDescription(topicEntity.getDescription());
+		topicModel.setStatus(topicEntity.getStatus());
+		topicModel.setCreateTime(topicEntity.getCreateTime());
+		if (topicEntity.getSchemaId() != null)
+			topicModel.setSchemaId(topicEntity.getSchemaId());
+		topicModel.setConsumerRetryPolicy(topicEntity.getConsumerRetryPolicy());
+		topicModel.setCreateBy(topicEntity.getCreateBy());
+		topicModel.setEndpointType(topicEntity.getEndpointType());
+		topicModel.setAckTimeoutSeconds(topicEntity.getAckTimeoutSeconds());
+		topicModel.setCodecType(topicEntity.getCodecType());
+		topicModel.setOtherInfo(topicEntity.getOtherInfo());
+		topicModel.setStoragePartitionSize(topicEntity.getStoragePartitionCount());
+		topicModel.setResendPartitionSize(topicEntity.getResendPartitionSize());
+		topicModel.setStoragePartitionCount(topicEntity.getStoragePartitionCount());
+		topicModel.setProperties(JSON.toJSONString(topicEntity.getProperties()));
+		topicModel.setPriorityMessageEnabled(topicEntity.isPriorityMessageEnabled());
+		topicModel.setMetaId(m_metaService.getMetaEntity().getId());
+		m_topicDao.insert(topicModel);
 
-		if (Storage.MYSQL.equals(topic.getStorageType())) {
-			if (!m_topicStorageService.initTopicStorage(topic)) {
+		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicEntity.getPartitions()) {
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = new com.ctrip.hermes.metaservice.model.Partition();
+			partitionModel.setId(partitionEntity.getId());
+			partitionModel.setEndpointId(partitionEntity.getEndpoint());
+			partitionModel.setReadDatasourceId(partitionEntity.getReadDatasource());
+			partitionModel.setWriteDatasourceId(partitionEntity.getWriteDatasource());
+			partitionModel.setTopicId(topicModel.getId());
+			m_partitionDao.insert(partitionModel);
+		}
+
+		if (Storage.MYSQL.equals(topicEntity.getStorageType())) {
+			if (!m_topicStorageService.initTopicStorage(topicEntity)) {
 				m_logger.error("Init topic storage failed, please try later.");
 				throw new RuntimeException("Init topic storage failed, please try later.");
 			}
 
-			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
-			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
+			m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
+			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 		}
 
-		if (!m_metaService.updateMeta(meta)) {
-			throw new RuntimeException("Update meta failed, please try later");
-		}
-
-		return topic;
+		return topicEntity;
 	}
 
 	/**
@@ -183,7 +230,7 @@ public class TopicService {
 		}
 
 		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
-		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect),false);
+		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
 		zkClient.setZkSerializer(new ZKStringSerializer());
 
 		m_logger.info("delete topic in kafka, topic {}", topic.getName());
@@ -237,12 +284,28 @@ public class TopicService {
 	 * @throws DalException
 	 */
 	public void deleteTopic(String name) throws Exception {
-		Meta meta = m_metaService.getMeta();
-		Topic topic = meta.findTopic(name);
+		Topic topic = m_metaService.findTopicByName(name);
 		if (topic == null)
 			return;
-		meta.removeTopic(name);
+		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topic.getPartitions()) {
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = new com.ctrip.hermes.metaservice.model.Partition();
+			partitionModel.setId(partitionEntity.getId());
+			m_partitionDao.deleteByPK(partitionModel);
+		}
+		for (com.ctrip.hermes.meta.entity.ConsumerGroup cgEntity : topic.getConsumerGroups()) {
+			com.ctrip.hermes.metaservice.model.ConsumerGroup cgModel = new com.ctrip.hermes.metaservice.model.ConsumerGroup();
+			cgModel.setId(cgEntity.getId());
+			m_consumerGroupDao.deleteByPK(cgModel);
+		}
+		for (com.ctrip.hermes.meta.entity.Producer producerEntity : topic.getProducers()) {
+			com.ctrip.hermes.metaservice.model.Producer producerModel = new com.ctrip.hermes.metaservice.model.Producer();
+			producerModel.setAppId(producerEntity.getAppId());
+			m_producerDao.deleteByPK(producerModel);
+		}
 
+		com.ctrip.hermes.metaservice.model.Topic proto = new com.ctrip.hermes.metaservice.model.Topic();
+		proto.setId(topic.getId());
+		m_topicDao.deleteByPK(proto);
 		// Remove related schemas
 		if (topic.getId() != null && topic.getId() > 0) {
 			try {
@@ -266,7 +329,6 @@ public class TopicService {
 				}
 			}
 		}
-		m_metaService.updateMeta(meta);
 	}
 
 	public List<Topic> findTopics(String pattern) {
@@ -302,8 +364,7 @@ public class TopicService {
 	 * @throws Exception
 	 */
 	public Topic updateTopic(Topic topic) throws Exception {
-		Meta meta = m_metaService.getMeta();
-		Topic originTopic = meta.findTopic(topic.getName());
+		Topic originTopic = m_metaService.findTopicByName(topic.getName());
 
 		originTopic.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 		originTopic.setCodecType(topic.getCodecType());
@@ -320,45 +381,40 @@ public class TopicService {
 				partitions.add(partition);
 			}
 		}
-		addPartitionsForTopic(originTopic, partitions);
-
-		meta.removeTopic(originTopic.getName());
-		meta.addTopic(originTopic);
+		addPartitionsForTopic(originTopic.getName(), partitions);
+		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao
+		      .findByPK(topic.getId(), TopicEntity.READSET_FULL);
+		if (originTopic.getId() != null)
+			topicModel.setId(originTopic.getId());
+		topicModel.setName(originTopic.getName());
+		if (originTopic.getPartitionCount() != null)
+			topicModel.setPartitionCount(originTopic.getPartitionCount());
+		topicModel.setStorageType(originTopic.getStorageType());
+		topicModel.setDescription(originTopic.getDescription());
+		topicModel.setStatus(originTopic.getStatus());
+		topicModel.setCreateTime(originTopic.getCreateTime());
+		if (originTopic.getSchemaId() != null)
+			topicModel.setSchemaId(originTopic.getSchemaId());
+		topicModel.setConsumerRetryPolicy(originTopic.getConsumerRetryPolicy());
+		topicModel.setCreateBy(originTopic.getCreateBy());
+		topicModel.setEndpointType(originTopic.getEndpointType());
+		topicModel.setAckTimeoutSeconds(originTopic.getAckTimeoutSeconds());
+		topicModel.setCodecType(originTopic.getCodecType());
+		topicModel.setOtherInfo(originTopic.getOtherInfo());
+		topicModel.setStoragePartitionSize(originTopic.getStoragePartitionCount());
+		topicModel.setResendPartitionSize(originTopic.getResendPartitionSize());
+		topicModel.setStoragePartitionCount(originTopic.getStoragePartitionCount());
+		topicModel.setProperties(JSON.toJSONString(originTopic.getProperties()));
+		topicModel.setPriorityMessageEnabled(originTopic.isPriorityMessageEnabled());
+		topicModel.setMetaId(m_metaService.getMetaEntity().getId());
+		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 		}
 
-		m_metaService.updateMeta(meta);
 		return originTopic;
-	}
-
-	private Topic addPartitionsForTopic(Topic topic, List<Partition> partitions) throws Exception {
-
-		int partitionId = 0;
-		for (Partition p : topic.getPartitions()) {
-			if (p.getId() != null && p.getId() > partitionId) {
-				partitionId = p.getId();
-			}
-		}
-
-		for (Partition partition : partitions) {
-			partitionId++;
-			partition.setId(partitionId);
-			topic.addPartition(partition);
-			if (Storage.MYSQL.equals(topic.getStorageType())) {
-				if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
-					topic.removePartition(partition.getId());
-					partitionId--;
-					m_logger.error("Add new topic partition failed, please try later.");
-					throw new RuntimeException("Add new topic partition failed, please try later.");
-				}
-
-			}
-		}
-
-		return topic;
 	}
 
 	public Integer queryStorageSize(String ds) throws StorageHandleErrorException {
@@ -374,7 +430,7 @@ public class TopicService {
 	}
 
 	public List<StoragePartition> queryStorageTablePartitions(String ds, String table)
-			throws StorageHandleErrorException {
+	      throws StorageHandleErrorException {
 		return m_topicStorageService.queryTablePartitions(ds, table);
 	}
 
@@ -384,8 +440,7 @@ public class TopicService {
 	 * @param partition
 	 */
 	public Topic addPartitionsForTopic(String topicName, List<Partition> partitions) throws Exception {
-		Meta meta = m_metaService.getMeta();
-		Topic topic = meta.findTopic(topicName);
+		Topic topic = m_metaService.findTopicByName(topicName);
 
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 
@@ -398,10 +453,16 @@ public class TopicService {
 
 		for (Partition partition : partitions) {
 			partition.setId(partitionId++);
-			topic.addPartition(partition);
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = new com.ctrip.hermes.metaservice.model.Partition();
+			partitionModel.setId(partition.getId());
+			partitionModel.setEndpointId(partition.getEndpoint());
+			partitionModel.setReadDatasourceId(partition.getReadDatasource());
+			partitionModel.setWriteDatasourceId(partition.getWriteDatasource());
+			partitionModel.setTopicId(topic.getId());
+			m_partitionDao.insert(partitionModel);
+
 			if (Storage.MYSQL.equals(topic.getStorageType())) {
 				if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
-					topic.removePartition(partition.getId());
 					partitionId--;
 					m_logger.error("Add new topic partition failed, please try later.");
 					throw new RuntimeException("Add new topic partition failed, please try later.");
@@ -410,13 +471,6 @@ public class TopicService {
 			}
 		}
 
-		meta.removeTopic(topicName);
-		meta.addTopic(topic);
-
-		if (!m_metaService.updateMeta(meta)) {
-			// 增加回滚
-			throw new RuntimeException("Update meta failed, please try later");
-		}
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);

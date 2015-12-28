@@ -13,7 +13,7 @@ topic_module.controller('mysql-add-controller', [ '$scope', '$resource', 'TopicS
 	$scope.codec_types = [ 'json', 'cmessaging' ];
 	$scope.current_datasource_names = [];
 
-	var meta_resource = $resource('/api/meta/storages', {}, {
+	var meta_resource = $resource('/api/storages', {}, {
 		'get_storage' : {
 			method : 'GET',
 			isArray : true,

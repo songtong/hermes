@@ -13,7 +13,7 @@ topic_module.controller('kafka-add-controller', [ '$scope', '$resource', 'TopicS
 	$scope.endpoint_types = [ 'kafka', 'broker' ];
 	$scope.codec_types = [ 'avro', 'json' ];
 
-	var meta_resource = $resource('/api/meta/storages', {}, {
+	var meta_resource = $resource('/api/storages', {}, {
 		'get_storage' : {
 			method : 'GET',
 			isArray : true,

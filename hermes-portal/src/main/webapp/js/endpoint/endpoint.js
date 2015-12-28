@@ -13,19 +13,19 @@ function reload_table(scope, data) {
 
 angular.module('hermes-endpoint', [ 'ngResource', 'smart-table' ]).controller('endpoint-controller',
 		[ '$scope', '$filter', '$resource', function(scope, filter, resource) {
-			var meta_resource = resource('/api/meta/', {}, {
+			var meta_resource = resource('/api/endpoints', {}, {
 				'get_endpoints' : {
 					method : 'GET',
 					isArray : true,
-					url : '/api/meta/endpoints'
+					url : ''
 				},
 				'add_endpoint' : {
 					method : 'POST',
-					url : '/api/meta/endpoints'
+					url : ''
 				},
 				'delete_endpoint' : {
 					method : 'DELETE',
-					url : '/api/meta/endpoints/:id'
+					url : ':id'
 				}
 			});
 

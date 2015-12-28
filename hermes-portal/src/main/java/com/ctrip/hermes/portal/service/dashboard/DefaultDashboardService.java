@@ -149,7 +149,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				log.debug("Load meta from meta-servers faied.", e);
 			}
 		}
-		return m_metaService.getMeta();
+		return m_metaService.getMetaEntity();
 	}
 
 	private String getMetaserverStatusString() {

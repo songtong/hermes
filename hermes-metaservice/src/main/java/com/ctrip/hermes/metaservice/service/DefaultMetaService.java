@@ -1,5 +1,8 @@
 package com.ctrip.hermes.metaservice.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -8,10 +11,39 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.metaservice.model.App;
+import com.ctrip.hermes.metaservice.model.AppDao;
+import com.ctrip.hermes.metaservice.model.AppEntity;
+import com.ctrip.hermes.metaservice.model.Codec;
+import com.ctrip.hermes.metaservice.model.CodecDao;
+import com.ctrip.hermes.metaservice.model.CodecEntity;
+import com.ctrip.hermes.metaservice.model.ConsumerGroup;
+import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
+import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
+import com.ctrip.hermes.metaservice.model.Datasource;
+import com.ctrip.hermes.metaservice.model.DatasourceDao;
+import com.ctrip.hermes.metaservice.model.DatasourceEntity;
+import com.ctrip.hermes.metaservice.model.Endpoint;
+import com.ctrip.hermes.metaservice.model.EndpointDao;
+import com.ctrip.hermes.metaservice.model.EndpointEntity;
+import com.ctrip.hermes.metaservice.model.Meta;
 import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
+import com.ctrip.hermes.metaservice.model.Partition;
+import com.ctrip.hermes.metaservice.model.PartitionDao;
+import com.ctrip.hermes.metaservice.model.PartitionEntity;
+import com.ctrip.hermes.metaservice.model.Producer;
+import com.ctrip.hermes.metaservice.model.ProducerDao;
+import com.ctrip.hermes.metaservice.model.ProducerEntity;
+import com.ctrip.hermes.metaservice.model.Server;
+import com.ctrip.hermes.metaservice.model.ServerDao;
+import com.ctrip.hermes.metaservice.model.ServerEntity;
+import com.ctrip.hermes.metaservice.model.Storage;
+import com.ctrip.hermes.metaservice.model.StorageDao;
+import com.ctrip.hermes.metaservice.model.StorageEntity;
+import com.ctrip.hermes.metaservice.model.Topic;
+import com.ctrip.hermes.metaservice.model.TopicDao;
+import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -24,13 +56,295 @@ public class DefaultMetaService implements MetaService {
 	@Inject
 	protected MetaDao m_metaDao;
 
+	@Inject
+	protected AppDao m_appDao;
+
+	@Inject
+	protected CodecDao m_codecDao;
+
+	@Inject
+	protected EndpointDao m_endpointDao;
+
+	@Inject
+	protected ServerDao m_serverDao;
+
+	@Inject
+	protected StorageDao m_storageDao;
+
+	@Inject
+	protected TopicDao m_topicDao;
+
+	@Inject
+	protected ConsumerGroupDao m_consumerGroupDao;
+
+	@Inject
+	protected PartitionDao m_partitionDao;
+
+	@Inject
+	protected ProducerDao m_producerDao;
+
+	@Inject
+	protected DatasourceDao m_datasourceDao;
+
+	private Meta m_metaModel;
+
+	private com.ctrip.hermes.meta.entity.Meta m_metaEntity;
+
 	@Override
-	public Meta findLatestMeta() throws DalException {
-		try {
-			return JSON.parseObject(m_metaDao.findLatest(MetaEntity.READSET_FULL).getValue(), Meta.class);
-		} catch (DalNotFoundException e) {
-			return new Meta().addStorage(new Storage(Storage.MYSQL)).addStorage(new Storage(Storage.KAFKA)).setVersion(0L);
+	public synchronized com.ctrip.hermes.meta.entity.Meta buildNewMeta() throws DalException {
+		m_metaModel = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+		m_metaModel.setVersion(m_metaModel.getVersion() + 1);
+		m_metaEntity = new com.ctrip.hermes.meta.entity.Meta();
+		m_metaEntity.setVersion(m_metaModel.getVersion());
+		m_metaEntity.setId(m_metaModel.getId());
+		List<com.ctrip.hermes.meta.entity.App> apps = findApps();
+		for (com.ctrip.hermes.meta.entity.App entity : apps) {
+			m_metaEntity.addApp(entity);
 		}
+		List<com.ctrip.hermes.meta.entity.Codec> codecs = findCodecs();
+		for (com.ctrip.hermes.meta.entity.Codec entity : codecs) {
+			m_metaEntity.addCodec(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Endpoint> endpoints = findEndpoints();
+		for (com.ctrip.hermes.meta.entity.Endpoint entity : endpoints) {
+			m_metaEntity.addEndpoint(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Server> servers = findServers();
+		for (com.ctrip.hermes.meta.entity.Server entity : servers) {
+			m_metaEntity.addServer(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Storage> storages = findStorages();
+		for (com.ctrip.hermes.meta.entity.Storage entity : storages) {
+			m_metaEntity.addStorage(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Topic> topics = findTopics();
+		for (com.ctrip.hermes.meta.entity.Topic entity : topics) {
+			m_metaEntity.addTopic(entity);
+		}
+		m_metaModel.setValue(JSON.toJSONString(m_metaEntity));
+		m_metaDao.insert(m_metaModel);
+		return m_metaEntity;
 	}
 
+	public synchronized com.ctrip.hermes.meta.entity.Meta previewNewMeta() throws DalException {
+		Meta metaModel = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+		metaModel.setVersion(metaModel.getVersion() + 1);
+		com.ctrip.hermes.meta.entity.Meta metaEntity = new com.ctrip.hermes.meta.entity.Meta();
+		metaEntity.setVersion(metaModel.getVersion());
+		metaEntity.setId(metaModel.getId());
+		List<com.ctrip.hermes.meta.entity.App> apps = findApps();
+		for (com.ctrip.hermes.meta.entity.App entity : apps) {
+			metaEntity.addApp(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Codec> codecs = findCodecs();
+		for (com.ctrip.hermes.meta.entity.Codec entity : codecs) {
+			metaEntity.addCodec(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Endpoint> endpoints = findEndpoints();
+		for (com.ctrip.hermes.meta.entity.Endpoint entity : endpoints) {
+			metaEntity.addEndpoint(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Server> servers = findServers();
+		for (com.ctrip.hermes.meta.entity.Server entity : servers) {
+			metaEntity.addServer(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Storage> storages = findStorages();
+		for (com.ctrip.hermes.meta.entity.Storage entity : storages) {
+			metaEntity.addStorage(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Topic> topics = findTopics();
+		for (com.ctrip.hermes.meta.entity.Topic entity : topics) {
+			metaEntity.addTopic(entity);
+		}
+		metaModel.setValue(JSON.toJSONString(metaEntity));
+		return metaEntity;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.App> findApps() throws DalException {
+		List<App> models = m_appDao.findByMetaId(getMetaModel().getId(), AppEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.App> entities = new ArrayList<>();
+		for (App model : models) {
+			com.ctrip.hermes.meta.entity.App entity = ModelToEntityConverter.convert(model);
+			entities.add(entity);
+		}
+		return entities;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.Codec> findCodecs() throws DalException {
+		List<Codec> models = m_codecDao.findByMetaId(getMetaModel().getId(), CodecEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.Codec> entities = new ArrayList<>();
+		for (Codec model : models) {
+			com.ctrip.hermes.meta.entity.Codec entity = ModelToEntityConverter.convert(model);
+			entities.add(entity);
+		}
+		return entities;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.ConsumerGroup> findConsumerGroups(
+	      com.ctrip.hermes.metaservice.model.Topic topicModel) throws DalException {
+		List<ConsumerGroup> models = m_consumerGroupDao.findByTopicId(topicModel.getId(),
+		      ConsumerGroupEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.ConsumerGroup> entities = new ArrayList<>();
+		for (ConsumerGroup model : models) {
+			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
+			entities.add(entity);
+		}
+		return entities;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.Datasource> findDatasources(
+	      com.ctrip.hermes.metaservice.model.Storage storageModel) throws DalException {
+		List<Datasource> models = m_datasourceDao
+		      .findByStorageType(storageModel.getType(), DatasourceEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.Datasource> entities = new ArrayList<>();
+		for (Datasource model : models) {
+			com.ctrip.hermes.meta.entity.Datasource entity = ModelToEntityConverter.convert(model);
+			entities.add(entity);
+		}
+		return entities;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.Endpoint> findEndpoints() throws DalException {
+		List<Endpoint> models = m_endpointDao.findByMetaId(getMetaModel().getId(), EndpointEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.Endpoint> entities = new ArrayList<>();
+		for (Endpoint model : models) {
+			com.ctrip.hermes.meta.entity.Endpoint entity = ModelToEntityConverter.convert(model);
+			entities.add(entity);
+		}
+		return entities;
+	}
+
+	@Override
+	public com.ctrip.hermes.meta.entity.Meta findLatestMeta() throws DalException {
+		try {
+			m_metaModel = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+			m_metaEntity = ModelToEntityConverter.convert(m_metaModel);
+		} catch (DalNotFoundException e) {
+			m_logger.warn("find Latest Meta failed", e);
+			m_metaEntity = new com.ctrip.hermes.meta.entity.Meta();
+			m_metaEntity.addStorage(new com.ctrip.hermes.meta.entity.Storage(com.ctrip.hermes.meta.entity.Storage.MYSQL));
+			m_metaEntity.addStorage(new com.ctrip.hermes.meta.entity.Storage(com.ctrip.hermes.meta.entity.Storage.KAFKA));
+			m_metaEntity.setVersion(0L);
+		}
+		return m_metaEntity;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.Partition> findPartitions(
+	      com.ctrip.hermes.metaservice.model.Topic topicModel) throws DalException {
+		List<Partition> models = m_partitionDao.findByTopicId(topicModel.getId(), PartitionEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.Partition> entities = new ArrayList<>();
+		for (Partition model : models) {
+			com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
+			entities.add(entity);
+		}
+		return entities;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.Producer> findProducers(com.ctrip.hermes.metaservice.model.Topic topicModel)
+	      throws DalException {
+		List<Producer> models = m_producerDao.findByTopicId(topicModel.getId(), ProducerEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.Producer> entities = new ArrayList<>();
+		for (Producer model : models) {
+			com.ctrip.hermes.meta.entity.Producer entity = ModelToEntityConverter.convert(model);
+			entities.add(entity);
+		}
+		return entities;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.Server> findServers() throws DalException {
+		List<Server> models = m_serverDao.findByMetaId(getMetaModel().getId(), ServerEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.Server> entities = new ArrayList<>();
+		for (Server model : models) {
+			com.ctrip.hermes.meta.entity.Server entity = ModelToEntityConverter.convert(model);
+			entities.add(entity);
+		}
+		return entities;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.Storage> findStorages() throws DalException {
+		List<Storage> models = m_storageDao.findByMetaId(getMetaModel().getId(), StorageEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.Storage> entities = new ArrayList<>();
+		for (Storage model : models) {
+			entities.add(fillStorage(model));
+		}
+		return entities;
+	}
+
+	protected com.ctrip.hermes.meta.entity.Storage fillStorage(Storage model) throws DalException {
+		com.ctrip.hermes.meta.entity.Storage entity = ModelToEntityConverter.convert(model);
+		List<com.ctrip.hermes.meta.entity.Datasource> datasources = findDatasources(model);
+		for (com.ctrip.hermes.meta.entity.Datasource ds : datasources) {
+			entity.addDatasource(ds);
+		}
+		return entity;
+	}
+
+	@Override
+	public List<com.ctrip.hermes.meta.entity.Topic> findTopics() throws DalException {
+		List<Topic> models = m_topicDao.findByMetaId(getMetaModel().getId(), TopicEntity.READSET_FULL);
+		List<com.ctrip.hermes.meta.entity.Topic> entities = new ArrayList<>();
+		for (Topic model : models) {
+			entities.add(fillTopic(model));
+		}
+		return entities;
+	}
+
+	protected com.ctrip.hermes.meta.entity.Topic fillTopic(Topic model) throws DalException {
+		com.ctrip.hermes.meta.entity.Topic entity = ModelToEntityConverter.convert(model);
+		List<com.ctrip.hermes.meta.entity.ConsumerGroup> consumerGroups = findConsumerGroups(model);
+		for (com.ctrip.hermes.meta.entity.ConsumerGroup cg : consumerGroups) {
+			entity.addConsumerGroup(cg);
+		}
+		List<com.ctrip.hermes.meta.entity.Partition> partitions = findPartitions(model);
+		for (com.ctrip.hermes.meta.entity.Partition p : partitions) {
+			entity.addPartition(p);
+		}
+		List<com.ctrip.hermes.meta.entity.Producer> producers = findProducers(model);
+		for (com.ctrip.hermes.meta.entity.Producer p : producers) {
+			entity.addProducer(p);
+		}
+		return entity;
+	}
+
+	public com.ctrip.hermes.metaservice.model.Meta getMetaModel() throws DalException {
+		if (m_metaModel == null || m_metaEntity == null) {
+			findLatestMeta();
+		}
+		return m_metaModel;
+	}
+
+	public com.ctrip.hermes.meta.entity.Meta getMetaEntity() {
+		if (m_metaModel == null || m_metaEntity == null) {
+			try {
+				findLatestMeta();
+			} catch (DalException e) {
+				m_logger.warn("get meta entity failed", e);
+				return new com.ctrip.hermes.meta.entity.Meta();
+			}
+		}
+		return m_metaEntity;
+	}
+
+	protected boolean isMetaUpdated() {
+		try {
+			Meta latestMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+			if (m_metaModel == null || latestMeta.getVersion() > m_metaModel.getVersion()) {
+				m_metaModel = latestMeta;
+				m_metaEntity = ModelToEntityConverter.convert(m_metaModel);
+				return true;
+			}
+		} catch (DalException e) {
+			m_logger.warn("Update meta from db failed.", e);
+		}
+		return false;
+	}
 }

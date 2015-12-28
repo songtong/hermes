@@ -56,15 +56,15 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 		}
 	});
 
-	var meta_resource = $resource('/api/meta/', {}, {
+	var meta_resource = $resource('/api/', {}, {
 		get_storages : {
 			method : 'GET',
-			url : '/api/meta/storages',
+			url : '/api/storages',
 			isArray : true
 		},
 		get_endpoints : {
 			method : 'GET',
-			url : '/api/meta/endpoints',
+			url : '/api/endpoints',
 			isArray : true
 		}
 	});
