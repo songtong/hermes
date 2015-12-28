@@ -185,6 +185,13 @@ public class DefaultMetaServiceTest extends ComponentTestCase {
 		assertTrue(ms.isTopicMatch("a.#.c", "a.bbb.xxx.c"));
 		assertFalse(ms.isTopicMatch("a.#.c", "a.bbb.d"));
 		assertFalse(ms.isTopicMatch("a.#.c", "a.bbb.xxx.d"));
+
+		assertTrue(ms.isTopicMatch("a.*.c", "a.b--c.c"));
+		assertTrue(ms.isTopicMatch("a.#.c", "a.b-c.d-d.c"));
+		assertTrue(ms.isTopicMatch("a.#.c", "a.b-c..c"));
+		assertFalse(ms.isTopicMatch("a.*.c", "a.b-c.dd.c"));
+		assertFalse(ms.isTopicMatch("a.#.c", "a.b-c.d-d.d"));
+		assertFalse(ms.isTopicMatch("a.#.c", "a.b-c..d"));
 	}
 
 	@Test
