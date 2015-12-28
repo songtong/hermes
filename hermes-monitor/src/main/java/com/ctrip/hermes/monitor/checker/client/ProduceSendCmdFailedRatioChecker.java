@@ -7,9 +7,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,7 +22,6 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -33,21 +34,21 @@ import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceAckedTriedRatioErrorEvent;
+import com.ctrip.hermes.metaservice.monitor.event.ProduceSendCmdFailedRatioErrorEvent;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-//@Component(value = "ProduceAckedTriedRatioChecker")
-public class ProduceAckedTriedRatioChecker extends CatBasedChecker implements InitializingBean {
+// @Component(value = "ProduceSendCmdFailedRatioChecker")
+public class ProduceSendCmdFailedRatioChecker extends CatBasedChecker implements InitializingBean {
 
 	private List<String> m_excludedTopics = new LinkedList<>();
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		String excludedTopicsStr = m_config.getProduceAckedTriedRatioCheckerExcludedTopics();
+		String excludedTopicsStr = m_config.getProduceSendCmdFailedRatioCheckerExcludedTopics();
 		if (!StringUtils.isBlank(excludedTopicsStr)) {
 			List<String> configedExcludedTopics = JSON.parseObject(excludedTopicsStr, new TypeReference<List<String>>() {
 			});
@@ -60,16 +61,11 @@ public class ProduceAckedTriedRatioChecker extends CatBasedChecker implements In
 	@Override
 	protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
 		Meta meta = fetchMeta();
-
-		Map<String, List<Pair<Integer, Integer>>> topic2TriedCount = getTriedCountListData(timespan);
-		Map<String, List<Pair<Integer, Integer>>> topic2AckedCount = getAckedCountListData(timespan);
-
-		bizCheck(topic2TriedCount, topic2AckedCount, timespan, meta, result);
+		bizCheck(getSendCmdCountListData(timespan), timespan, meta, result);
 	}
 
-	private void bizCheck(Map<String, List<Pair<Integer, Integer>>> topic2TriedCount,
-	      Map<String, List<Pair<Integer, Integer>>> topic2AckedCount, Timespan timespan, Meta meta, CheckerResult result) {
-
+	private void bizCheck(Map<String, Map<Integer, Pair<Integer, Integer>>> topic2SendCmdCount, Timespan timespan,
+	      Meta meta, CheckerResult result) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 		Calendar calendar = Calendar.getInstance();
@@ -84,27 +80,20 @@ public class ProduceAckedTriedRatioChecker extends CatBasedChecker implements In
 		for (Topic topic : meta.getTopics().values()) {
 			String topicName = topic.getName();
 			if (Storage.MYSQL.equals(topic.getStorageType()) && !m_excludedTopics.contains(topicName)) {
-				int triedCountSum = sumCount(topic2TriedCount.get(topicName), timespan);
-				int ackedCountSum = sumCount(topic2AckedCount.get(topicName), timespan);
+				Pair<Integer, Integer> sendCmdCountSum = sumCount(topic2SendCmdCount.get(topicName), timespan);
 
 				boolean shouldAlert = false;
-				if (triedCountSum == 0) {
-					if (ackedCountSum > m_config.getProduceAckedTriedRatioAckedCountThresholdWhileNoProduceTried()) {
-						shouldAlert = true;
-					}
-				} else {
-					if (triedCountSum != ackedCountSum
-					      && Math.abs(triedCountSum - ackedCountSum) / (double) triedCountSum > m_config
-					            .getProduceAckedTriedRatioThreshold()) {
-						shouldAlert = true;
-					}
+				if (sendCmdCountSum.getValue() > 0
+				      && Math.abs(sendCmdCountSum.getValue()) / (double) sendCmdCountSum.getKey() > m_config
+				            .getProduceSendCmdFailedRatioThreshold()) {
+					shouldAlert = true;
 				}
 
 				if (shouldAlert) {
-					ProduceAckedTriedRatioErrorEvent monitorEvent = new ProduceAckedTriedRatioErrorEvent();
+					ProduceSendCmdFailedRatioErrorEvent monitorEvent = new ProduceSendCmdFailedRatioErrorEvent();
 					monitorEvent.setTopic(topicName);
-					monitorEvent.setTried(triedCountSum);
-					monitorEvent.setAcked(ackedCountSum);
+					monitorEvent.setTotal(sendCmdCountSum.getKey());
+					monitorEvent.setFailed(sendCmdCountSum.getValue());
 					monitorEvent.setTimespan(sdf.format(fromDate) + " ~ " + sdf.format(toDate));
 					result.addMonitorEvent(monitorEvent);
 				}
@@ -114,35 +103,27 @@ public class ProduceAckedTriedRatioChecker extends CatBasedChecker implements In
 		result.setRunSuccess(true);
 	}
 
-	private int sumCount(List<Pair<Integer, Integer>> minuteCountPairList, Timespan timespan) {
-		int sum = 0;
-		if (minuteCountPairList != null) {
-			for (Pair<Integer, Integer> minuteCountPair : minuteCountPairList) {
+	private Pair<Integer, Integer> sumCount(Map<Integer, Pair<Integer, Integer>> map, Timespan timespan) {
+		int totalSum = 0;
+		int failsSum = 0;
+		if (map != null) {
+			for (Entry<Integer, Pair<Integer, Integer>> minuteCountPair : map.entrySet()) {
 				int minute = minuteCountPair.getKey();
-				int count = minuteCountPair.getValue();
+				int totalCount = minuteCountPair.getValue().getKey();
+				int failsCount = minuteCountPair.getValue().getValue();
 				if (timespan.getMinutes().contains(minute)) {
-					sum += count;
+					totalSum += totalCount;
+					failsSum += failsCount;
 				}
 			}
 		}
-		return sum;
+		return new Pair<Integer, Integer>(totalSum, failsSum);
 	}
 
-	private Map<String, List<Pair<Integer, Integer>>> getAckedCountListData(Timespan timespan) throws IOException,
-	      XPathExpressionException, SAXException, ParserConfigurationException {
-		return getTopic2CountListFromCat(timespan, "Message.Produce.Acked");
-	}
-
-	private Map<String, List<Pair<Integer, Integer>>> getTriedCountListData(Timespan timespan) throws IOException,
-	      XPathExpressionException, SAXException, ParserConfigurationException {
-		return getTopic2CountListFromCat(timespan, "Message.Produce.Tried");
-	}
-
-	protected Map<String, List<Pair<Integer, Integer>>> getTopic2CountListFromCat(Timespan timespan,
-	      String transactionType) throws IOException, XPathExpressionException, SAXException,
-	      ParserConfigurationException {
+	private Map<String, Map<Integer, Pair<Integer, Integer>>> getSendCmdCountListData(Timespan timespan)
+	      throws IOException, XPathExpressionException, SAXException, ParserConfigurationException {
+		String transactionType = "Message.Produce.Cmd.Send";
 		String transactionReportXml = getTransactionReportFromCat(timespan, transactionType);
-
 		return extractDatasFromXml(transactionReportXml, transactionType);
 	}
 
@@ -154,9 +135,10 @@ public class ProduceAckedTriedRatioChecker extends CatBasedChecker implements In
 		return transactionReportXml;
 	}
 
-	private Map<String, List<Pair<Integer, Integer>>> extractDatasFromXml(String xmlContent, String transactionType)
-	      throws SAXException, IOException, ParserConfigurationException, XPathExpressionException {
-		Map<String, List<Pair<Integer, Integer>>> topic2CountList = new HashMap<>();
+	private Map<String, Map<Integer, Pair<Integer, Integer>>> extractDatasFromXml(String xmlContent,
+	      String transactionType) throws SAXException, IOException, ParserConfigurationException,
+	      XPathExpressionException {
+		Map<String, Map<Integer, Pair<Integer, Integer>>> topic2CountList = new HashMap<>();
 
 		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -174,7 +156,7 @@ public class ProduceAckedTriedRatioChecker extends CatBasedChecker implements In
 			Node transactionNode = transactionNodes.item(i);
 
 			String topic = transactionNode.getAttributes().getNamedItem("id").getNodeValue();
-			topic2CountList.put(topic, new LinkedList<Pair<Integer, Integer>>());
+			topic2CountList.put(topic, new LinkedHashMap<Integer, Pair<Integer, Integer>>());
 
 			String allRangesExpression = "range";
 
@@ -184,9 +166,10 @@ public class ProduceAckedTriedRatioChecker extends CatBasedChecker implements In
 			for (int j = 0; j < rangeNodes.getLength(); j++) {
 				Node rangeNode = rangeNodes.item(j);
 				String countStr = rangeNode.getAttributes().getNamedItem("count").getNodeValue();
+				String failsStr = rangeNode.getAttributes().getNamedItem("fails").getNodeValue();
 				String minuteStr = rangeNode.getAttributes().getNamedItem("value").getNodeValue();
-				topic2CountList.get(topic).add(
-				      new Pair<Integer, Integer>(Integer.parseInt(minuteStr), Integer.parseInt(countStr)));
+				topic2CountList.get(topic).put(Integer.parseInt(minuteStr),
+				      new Pair<Integer, Integer>(Integer.parseInt(countStr), Integer.parseInt(failsStr)));
 			}
 		}
 
@@ -200,6 +183,6 @@ public class ProduceAckedTriedRatioChecker extends CatBasedChecker implements In
 
 	@Override
 	public String name() {
-		return "ProduceAckedTriedRatioChecker";
+		return "ProduceSendCmdFailedRatioChecker";
 	}
 }

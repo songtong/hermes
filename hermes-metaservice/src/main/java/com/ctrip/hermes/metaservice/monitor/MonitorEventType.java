@@ -10,9 +10,9 @@ import com.ctrip.hermes.metaservice.monitor.event.MetaServerErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.PartitionInformationEvent;
 import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceAckedTriedRatioErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceFailureCountTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
+import com.ctrip.hermes.metaservice.monitor.event.ProduceSendCmdFailedRatioErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.TopicLargeDeadLetterEvent;
 
 public enum MonitorEventType {
@@ -21,18 +21,14 @@ public enum MonitorEventType {
 
 	PRODUCE_LARGE_LATENCY(3, "produce_large_latency", ProduceLatencyTooLargeEvent.class), //
 	PRODUCE_LARGE_FAILURE_COUNT(4, "produce_large_failure_count", ProduceFailureCountTooLargeEvent.class), //
-	PRODUCE_ACKED_TRIED_RATIO_ERROR(5, "produce_acked_tried_ratio_error", ProduceAckedTriedRatioErrorEvent.class), //
 
 	CONSUME_LARGE_DELAY(6, "consume_large_delay", ConsumeDelayTooLargeEvent.class), //
 	CONSUME_LARGE_BACKLOG(7, "consume_large_backlog", ConsumeLargeBacklogEvent.class), //
-
 	TOPIC_LARGE_DEAD_LETTER(8, "topic_large_dead_letter", TopicLargeDeadLetterEvent.class), //
-
 	PARTITION_MODIFICATION(9, "partition_modification", PartitionModificationEvent.class), //
-
 	LONG_TIME_NO_PRODUCE(10, "long_time_no_produce", LongTimeNoProduceEvent.class), //
-
 	PARTITION_INFO(11, "partition_informations", PartitionInformationEvent.class), //
+	PRODUCE_SEND_CMD_FAILED_RATIO_ERROR(12, "produce_send_cmd_failed_ratio_error", ProduceSendCmdFailedRatioErrorEvent.class), //
 
 	ES_DATASOURCE_ERROR(40, null, null), //
 	CAT_DATASOURCE_ERROR(41, null, null), //

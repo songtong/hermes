@@ -6,7 +6,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import com.ctrip.hermes.monitor.checker.CatBasedCheckerTest;
 import com.ctrip.hermes.monitor.checker.ConsumeDelayCheckerTest;
-import com.ctrip.hermes.monitor.checker.ProduceAckedTriedRatioCheckerTest;
+import com.ctrip.hermes.monitor.checker.ProduceSendCmdFailedRatioCheckerTest;
 import com.ctrip.hermes.monitor.checker.ProduceFailureCheckerTest;
 import com.ctrip.hermes.monitor.checker.ProduceLatencyCheckerTest;
 
@@ -16,7 +16,7 @@ CatBasedCheckerTest.class,//
       ProduceLatencyCheckerTest.class,//
       ConsumeDelayCheckerTest.class,//
       ProduceFailureCheckerTest.class,//
-      ProduceAckedTriedRatioCheckerTest.class,//
+      ProduceSendCmdFailedRatioCheckerTest.class,//
 
 })
 public class AllTests {
