@@ -41,7 +41,7 @@ public class StorageDataSourceProvider implements DataSourceProvider {
 					m_metaService = PlexusComponentLocator.lookup(MetaService.class);
 				}
 
-				for (Storage storage : m_metaService.findLatestMeta().getStorages().values()) {
+				for (Storage storage : m_metaService.findStorages()) {
 					if (storage.getType().equals("mysql")) {
 						dataSources.addAll(storage.getDatasources());
 					}

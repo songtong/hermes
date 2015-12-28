@@ -26,7 +26,7 @@ public interface MetaService {
 
 	com.ctrip.hermes.metaservice.model.Meta getMetaModel() throws DalException;
 
-	Meta findLatestMeta() throws DalException;
+	Meta refreshMeta() throws DalException;
 
 	Meta buildNewMeta() throws DalException;
 
@@ -50,6 +50,8 @@ public interface MetaService {
 
 	List<Storage> findStorages() throws DalException;
 
+	Storage getStorage(String type) throws DalException;
+	
 	List<Topic> findTopics() throws DalException;
 
 }

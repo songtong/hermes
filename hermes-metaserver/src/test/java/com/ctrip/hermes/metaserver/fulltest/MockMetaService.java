@@ -20,7 +20,7 @@ import com.ctrip.hermes.metaservice.service.MetaService;
 public class MockMetaService implements MetaService {
 
 	@Override
-	public Meta findLatestMeta() throws DalException {
+	public Meta refreshMeta() {
 		Meta meta = null;
 		try {
 			meta = loadMeta();
@@ -106,5 +106,10 @@ public class MockMetaService implements MetaService {
 	public List<com.ctrip.hermes.meta.entity.Topic> findTopics() throws DalException {
 		return null;
 	}
+
+	@Override
+   public com.ctrip.hermes.meta.entity.Storage getStorage(String type) throws DalException {
+	   return null;
+   }
 
 }

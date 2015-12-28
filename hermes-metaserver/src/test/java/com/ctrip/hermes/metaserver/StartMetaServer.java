@@ -48,7 +48,7 @@ public class StartMetaServer extends JettyServer {
 		ZookeeperService zkService = PlexusComponentLocator.lookup(ZookeeperService.class);
 		MetaService metaService = PlexusComponentLocator.lookup(MetaService.class);
 
-		Meta meta = metaService.findLatestMeta();
+		Meta meta = metaService.getMetaEntity();
 		for (Topic topic : meta.getTopics().values()) {
 			if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 				zkService.ensureBrokerLeaseZkPath(topic);

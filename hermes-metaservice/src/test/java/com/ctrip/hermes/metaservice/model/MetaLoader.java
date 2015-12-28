@@ -18,7 +18,7 @@ public class MetaLoader extends ComponentTestCase {
 	@Test
 	public void loadMeta() throws DalException, IOException {
 		MetaService metaService = lookup(MetaService.class);
-		com.ctrip.hermes.meta.entity.Meta metaDB = metaService.findLatestMeta();
+		com.ctrip.hermes.meta.entity.Meta metaDB = metaService.getMetaEntity();
 		System.out.println(metaDB);
 
 		String text = Files.toString(new File("src/test/resources/meta-dev.json"), Charset.forName("UTF-8"));

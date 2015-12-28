@@ -220,7 +220,7 @@ public class DefaultMetaService implements MetaService {
 	}
 
 	@Override
-	public com.ctrip.hermes.meta.entity.Meta findLatestMeta() throws DalException {
+	public com.ctrip.hermes.meta.entity.Meta refreshMeta() throws DalException {
 		try {
 			m_metaModel = m_metaDao.findLatest(MetaEntity.READSET_FULL);
 			m_metaEntity = ModelToEntityConverter.convert(m_metaModel);
@@ -279,6 +279,17 @@ public class DefaultMetaService implements MetaService {
 		return entities;
 	}
 
+	@Override
+	public com.ctrip.hermes.meta.entity.Storage getStorage(String type) throws DalException {
+		List<com.ctrip.hermes.meta.entity.Storage> storages = findStorages();
+		for (com.ctrip.hermes.meta.entity.Storage s : storages) {
+			if (s.getType().equals(type)) {
+				return s;
+			}
+		}
+		return new com.ctrip.hermes.meta.entity.Storage();
+	}
+
 	protected com.ctrip.hermes.meta.entity.Storage fillStorage(Storage model) throws DalException {
 		com.ctrip.hermes.meta.entity.Storage entity = ModelToEntityConverter.convert(model);
 		List<com.ctrip.hermes.meta.entity.Datasource> datasources = findDatasources(model);
@@ -317,7 +328,7 @@ public class DefaultMetaService implements MetaService {
 
 	public com.ctrip.hermes.metaservice.model.Meta getMetaModel() throws DalException {
 		if (m_metaModel == null || m_metaEntity == null) {
-			findLatestMeta();
+			refreshMeta();
 		}
 		return m_metaModel;
 	}
@@ -325,7 +336,7 @@ public class DefaultMetaService implements MetaService {
 	public com.ctrip.hermes.meta.entity.Meta getMetaEntity() {
 		if (m_metaModel == null || m_metaEntity == null) {
 			try {
-				findLatestMeta();
+				refreshMeta();
 			} catch (DalException e) {
 				m_logger.warn("get meta entity failed", e);
 				return new com.ctrip.hermes.meta.entity.Meta();

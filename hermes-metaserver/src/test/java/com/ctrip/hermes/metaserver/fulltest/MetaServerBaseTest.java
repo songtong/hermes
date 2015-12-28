@@ -155,7 +155,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 	private void setupZKNodes() throws Exception {
 		ZookeeperService zkService = PlexusComponentLocator.lookup(ZookeeperService.class);
 
-		Meta meta = new MockMetaService().findLatestMeta();
+		Meta meta = new MockMetaService().refreshMeta();
 		for (Topic topic : meta.getTopics().values()) {
 			if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 				zkService.ensureBrokerLeaseZkPath(topic);

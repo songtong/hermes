@@ -32,7 +32,7 @@ public class PortalMetaResource {
 	public Response refreshMeta() {
 		Meta meta = null;
 		try {
-			meta = metaService.findLatestMeta();
+			meta = metaService.refreshMeta();
 			if (meta == null) {
 				throw new RestException("Meta not found", Status.NOT_FOUND);
 			}
