@@ -11,7 +11,6 @@ import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.model.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 import com.ctrip.hermes.metaservice.queue.PartitionInfo;
@@ -54,7 +53,8 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 			String dsUrl = ctx.getDatasource().getProperties().get("url").getValue();
 			DatasourceInformation datasourceInformation = result.get(dsUrl);
 			if (datasourceInformation == null) {
-				datasourceInformation = new DatasourceInformation(dsUrl);
+				datasourceInformation = new DatasourceInformation();
+				datasourceInformation.setDatasource(dsUrl);
 				result.put(dsUrl, datasourceInformation);
 			}
 			datasourceInformation.recordTableContext(ctx, wastes.get(ctx.getTableName()));
@@ -84,18 +84,9 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 	public static class DatasourceInformation {
 		private String m_datasource;
 
-		private Map<String, Pair<Integer, Integer>> m_table2PartitionCount;
+		private Map<String, Pair<Integer, Integer>> m_table2PartitionCount = new HashMap<>();
 
-		private Map<String, Long> m_table2RowsCount;
-
-		public DatasourceInformation(String datasource) {
-			if (StringUtils.isBlank(datasource)) {
-				throw new IllegalArgumentException("Datasource name can not be null!");
-			}
-			m_datasource = datasource;
-			m_table2PartitionCount = new HashMap<>();
-			m_table2RowsCount = new HashMap<>();
-		}
+		private Map<String, Long> m_table2RowsCount = new HashMap<>();
 
 		public boolean recordTableContext(TableContext ctx, List<PartitionInfo> wastes) {
 			if (m_datasource.equals(ctx.getDatasource().getProperties().get("url").getValue())) {
@@ -112,6 +103,10 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 				return true;
 			}
 			return false;
+		}
+
+		public void setDatasource(String datasource) {
+			m_datasource = datasource;
 		}
 
 		public String getDatasource() {

@@ -20,6 +20,9 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.metaservice.queue.PartitionInfo;
 import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.mysql.dal.ds.DataSourceManager;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Message;
+import com.dianping.cat.message.Transaction;
 
 @Service
 public class PartitionService {
@@ -103,14 +106,21 @@ public class PartitionService {
 	}
 
 	public Map<String, Pair<Datasource, List<PartitionInfo>>> queryDatasourcePartitions(Datasource ds) throws Exception {
+		Transaction t = Cat.newTransaction("Partition.Query", getDbName(ds));
+		t.addData("SQL", PartitionInfo.SQL_PARTITION);
 		Connection conn = getConnection(ds, true);
 		Statement stat = null;
 		ResultSet rs = null;
 		try {
 			stat = conn.createStatement();
 			rs = stat.executeQuery(PartitionInfo.SQL_PARTITION);
+			t.setStatus(Message.SUCCESS);
 			return formatPartitionMap(PartitionInfo.parseResultSet(rs), ds);
+		} catch (Exception e) {
+			t.setStatus("Failed");
+			throw e;
 		} finally {
+			t.complete();
 			if (rs != null) {
 				try {
 					rs.close();
@@ -132,6 +142,14 @@ public class PartitionService {
 					log.error("Close connection failed.", e);
 				}
 			}
+		}
+	}
+
+	public static String getDbName(Datasource ds) {
+		try {
+			return ds.getProperties().get("url").getValue().split("[\\//.]")[2];
+		} catch (Exception e) {
+			return "Unknow";
 		}
 	}
 
