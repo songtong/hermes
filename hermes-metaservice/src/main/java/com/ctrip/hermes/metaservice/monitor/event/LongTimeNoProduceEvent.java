@@ -51,8 +51,8 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 		StringBuilder sb = new StringBuilder(String.format("[%s] Long time no produce(%s): ",
 		      m_formatter.format(new Date()), m_topic));
 		for (Entry<Integer, Pair<Integer, CreationStamp>> entry : limitsAndStamps.entrySet()) {
-			sb.append(String.format("[Partition: %s, Limit: %sm, Latest: %s(%s)] ", entry.getKey(),//
-			      entry.getValue().getKey(), m_formatter.format(entry.getValue().getValue()), entry.getValue().getKey()));
+			sb.append(String.format("[Partition: %s, Limit: %sm, Latest: %s(%s)] ", entry.getKey(), entry.getValue()
+			      .getKey(), m_formatter.format(entry.getValue().getValue().getDate()), entry.getValue().getKey()));
 		}
 		return sb.toString();
 	}
