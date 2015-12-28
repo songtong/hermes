@@ -18,7 +18,7 @@ import com.ctrip.hermes.monitor.job.partition.finder.CreationStampFinder;
 public abstract class BasePartitionCheckerStrategy implements PartitionCheckerStrategy {
 	private static final int SPEED_SAMPLE_COUNT = 3;
 
-	private static final int MIN_PARTITION_COUNT = 5;
+	private static final int MIN_PARTITION_COUNT = 2;
 
 	abstract protected CreationStampFinder getCreationStampFinder();
 
