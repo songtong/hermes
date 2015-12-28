@@ -2,7 +2,13 @@ package com.ctrip.hermes.metaservice.monitor.event;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import org.unidal.tuple.Pair;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.metaservice.model.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 import com.ctrip.hermes.metaservice.queue.CreationStamp;
@@ -13,40 +19,42 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 
 	private String m_topic;
 
-	private int m_partitionId;
-
-	private CreationStamp m_latest;
+	Map<Integer, Pair<Integer, CreationStamp>> m_limitsAndStamps;
 
 	public LongTimeNoProduceEvent() {
-		this(null, -1, null);
+		this(null, null);
 	}
 
-	public LongTimeNoProduceEvent(String topic, int partitionId, CreationStamp latest) {
+	public LongTimeNoProduceEvent(String topic, Map<Integer, Pair<Integer, CreationStamp>> limitsAndStamps) {
 		super(MonitorEventType.LONG_TIME_NO_PRODUCE);
 		m_topic = topic;
-		m_partitionId = partitionId;
-		m_latest = latest;
+		m_limitsAndStamps = limitsAndStamps;
 	}
 
 	@Override
 	protected void parse0(MonitorEvent dbEntity) {
 		m_topic = dbEntity.getKey1();
-		m_partitionId = Integer.valueOf(dbEntity.getKey2());
-		try {
-			m_latest = new CreationStamp(Long.valueOf(dbEntity.getKey3()), m_formatter.parse(dbEntity.getKey4()));
-		} catch (Exception e) {
-			m_latest = new CreationStamp(Long.valueOf(dbEntity.getKey3()), new Date(0));
-		}
+		m_limitsAndStamps = JSON.parseObject(dbEntity.getKey3(),
+		      new TypeReference<Map<Integer, Pair<Integer, CreationStamp>>>() {
+		      });
 	}
 
 	@Override
 	protected void toDBEntity0(MonitorEvent e) {
 		e.setKey1(m_topic);
-		e.setKey2(String.valueOf(m_partitionId));
-		e.setKey3(String.valueOf(m_latest.getId()));
-		e.setKey4(m_formatter.format(m_latest.getDate()));
-		e.setMessage(String.format("[%s] Long time no produce for topic: %s[%s], %s", //
-		      e.getCreateTime(), m_topic, m_partitionId, m_latest));
+		e.setKey2(JSON.toJSONString(m_limitsAndStamps.keySet()));
+		e.setKey3(JSON.toJSONString(m_limitsAndStamps));
+		e.setMessage(generateMessage(m_limitsAndStamps));
+	}
+
+	private String generateMessage(Map<Integer, Pair<Integer, CreationStamp>> limitsAndStamps) {
+		StringBuilder sb = new StringBuilder(String.format("[%s] Long time no produce(%s): ",
+		      m_formatter.format(new Date()), m_topic));
+		for (Entry<Integer, Pair<Integer, CreationStamp>> entry : limitsAndStamps.entrySet()) {
+			sb.append(String.format("[Partition: %s, Limit: %sm, Latest: %s(%s)] ", entry.getKey(),//
+			      entry.getValue().getKey(), m_formatter.format(entry.getValue().getValue()), entry.getValue().getKey()));
+		}
+		return sb.toString();
 	}
 
 	public String getTopic() {
@@ -57,28 +65,19 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 		m_topic = topic;
 	}
 
-	public int getPartitionId() {
-		return m_partitionId;
+	public Map<Integer, Pair<Integer, CreationStamp>> getLimitsAndStamps() {
+		return m_limitsAndStamps;
 	}
 
-	public void setPartitionId(int partitionId) {
-		m_partitionId = partitionId;
-	}
-
-	public CreationStamp getLatest() {
-		return m_latest;
-	}
-
-	public void setLatest(CreationStamp latest) {
-		m_latest = latest;
+	public void setLimitsAndStamps(Map<Integer, Pair<Integer, CreationStamp>> limitsAndStamps) {
+		m_limitsAndStamps = limitsAndStamps;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((m_latest == null) ? 0 : m_latest.hashCode());
-		result = prime * result + m_partitionId;
+		result = prime * result + ((m_limitsAndStamps == null) ? 0 : m_limitsAndStamps.hashCode());
 		result = prime * result + ((m_topic == null) ? 0 : m_topic.hashCode());
 		return result;
 	}
@@ -92,12 +91,10 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 		if (getClass() != obj.getClass())
 			return false;
 		LongTimeNoProduceEvent other = (LongTimeNoProduceEvent) obj;
-		if (m_latest == null) {
-			if (other.m_latest != null)
+		if (m_limitsAndStamps == null) {
+			if (other.m_limitsAndStamps != null)
 				return false;
-		} else if (!m_latest.equals(other.m_latest))
-			return false;
-		if (m_partitionId != other.m_partitionId)
+		} else if (!m_limitsAndStamps.equals(other.m_limitsAndStamps))
 			return false;
 		if (m_topic == null) {
 			if (other.m_topic != null)
@@ -109,7 +106,7 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 
 	@Override
 	public String toString() {
-		return "LongTimeNoProduceEvent [m_topic=" + m_topic + ", m_partitionId=" + m_partitionId + ", m_latest="
-		      + m_latest + "]";
+		return "LongTimeNoProduceEvent [m_topic=" + m_topic + ", m_limitsAndStamps=" + m_limitsAndStamps + "]";
 	}
+
 }

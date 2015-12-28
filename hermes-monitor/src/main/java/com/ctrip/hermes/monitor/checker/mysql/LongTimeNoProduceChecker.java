@@ -20,6 +20,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
@@ -50,11 +51,11 @@ public class LongTimeNoProduceChecker extends DBBasedChecker {
 		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
 
 		try {
-			Map<Topic, Integer> limits = parseLimits(meta, //
+			Map<Topic, Map<Integer, Integer>> limits = parseLimits(meta, //
 			      m_config.getLongTimeNoProduceCheckerIncludeTopics(), m_config.getLongTimeNoProduceCheckerExcludeTopics());
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			final CountDownLatch latch = new CountDownLatch(limits.size());
-			for (final Entry<Topic, Integer> limit : limits.entrySet()) {
+			for (final Entry<Topic, Map<Integer, Integer>> limit : limits.entrySet()) {
 				es.execute(//
 				new LongTimeNoProduceCheckerTask(limit.getKey(), limit.getValue(), m_msgDao, result, latch, exceptions));
 			}
@@ -79,19 +80,20 @@ public class LongTimeNoProduceChecker extends DBBasedChecker {
 		return result;
 	}
 
-	protected Map<Topic, Integer> parseLimits(Meta meta, String includeString, String excludeString) {
+	protected Map<Topic, Map<Integer, Integer>> parseLimits(Meta meta, String includeString, String excludeString) {
 		if (meta == null || StringUtils.isBlank(includeString) || StringUtils.isBlank(excludeString)) {
 			return null;
 		}
-		Map<Topic, Integer> limits = new HashMap<>();
-		Map<String, Integer> includes = JSON.parseObject(includeString, new TypeReference<Map<String, Integer>>() {
-		});
+		Map<Topic, Map<Integer, Integer>> limits = new HashMap<>();
+		Map<String, Map<Integer, Integer>> includesPatterns = JSON.parseObject(includeString,
+		      new TypeReference<Map<String, Map<Integer, Integer>>>() {
+		      });
 
-		if (includes.containsKey(".*")) {
-			limits.putAll(parseIncludes(meta, ".*", includes.get(".*")));
+		if (includesPatterns.containsKey(".*")) {
+			limits.putAll(parseIncludes(meta, ".*", includesPatterns.get(".*")));
 		}
 
-		for (Entry<String, Integer> item : includes.entrySet()) {
+		for (Entry<String, Map<Integer, Integer>> item : includesPatterns.entrySet()) {
 			if (!item.getKey().equals(".*")) {
 				limits.putAll(parseIncludes(meta, item.getKey(), item.getValue()));
 			}
@@ -106,8 +108,9 @@ public class LongTimeNoProduceChecker extends DBBasedChecker {
 		return limits;
 	}
 
-	private Map<Topic, Integer> parseIncludes(Meta meta, final String topicPattern, int limit) {
-		Map<Topic, Integer> limits = new HashMap<>();
+	private Map<Topic, Map<Integer, Integer>> parseIncludes(//
+	      Meta meta, final String topicPattern, Map<Integer, Integer> limit) {
+		Map<Topic, Map<Integer, Integer>> limits = new HashMap<>();
 		List<Entry<String, Topic>> includeTopics = MonitorUtils.findMatched(meta.getTopics().entrySet(),
 		      new Matcher<Entry<String, Topic>>() {
 			      @Override
@@ -117,13 +120,24 @@ public class LongTimeNoProduceChecker extends DBBasedChecker {
 		      });
 		for (Entry<String, Topic> entry : includeTopics) {
 			if (Storage.MYSQL.equals(entry.getValue().getStorageType())) {
-				limits.put(entry.getValue(), limit);
+				Map<Integer, Integer> partitionLimits = new HashMap<>();
+				if (limit.containsKey(-1)) {
+					for (Partition partition : entry.getValue().getPartitions()) {
+						partitionLimits.put(partition.getId(), limit.get(-1));
+					}
+				}
+				for (Entry<Integer, Integer> p2l : limit.entrySet()) {
+					if (p2l.getKey() != -1) {
+						partitionLimits.put(p2l.getKey(), p2l.getValue());
+					}
+				}
+				limits.put(entry.getValue(), partitionLimits);
 			}
 		}
 		return limits;
 	}
 
-	private void removeExcludes(Map<Topic, Integer> limits, Meta meta, final String topicPattern) {
+	private void removeExcludes(Map<Topic, Map<Integer, Integer>> limits, Meta meta, final String topicPattern) {
 		List<Entry<String, Topic>> excludeTopics = MonitorUtils.findMatched(meta.getTopics().entrySet(),
 		      new Matcher<Entry<String, Topic>>() {
 			      @Override
