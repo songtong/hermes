@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 	private Map<String, DatasourceInformation> m_dsInfos;
 
 	public PartitionInformationEvent() {
-		this(null, null);
+		this(new ArrayList<TableContext>(), new ConcurrentHashMap<String, List<PartitionInfo>>());
 	}
 
 	public PartitionInformationEvent( //

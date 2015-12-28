@@ -15,7 +15,7 @@ import com.ctrip.hermes.metaservice.queue.CreationStamp;
 
 public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 
-	private static final SimpleDateFormat m_formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+	private static final SimpleDateFormat m_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private String m_topic;
 
@@ -108,5 +108,4 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 	public String toString() {
 		return "LongTimeNoProduceEvent [m_topic=" + m_topic + ", m_limitsAndStamps=" + m_limitsAndStamps + "]";
 	}
-
 }
