@@ -148,9 +148,9 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 			char curChar = topicPattern.charAt(i);
 			if (curChar == '*') {
-				sb.append("\\w+");
+				sb.append("[\\w-]+");
 			} else if (curChar == '#') {
-				sb.append("(\\w\\.?)+");
+				sb.append("[\\w-\\.?]+");
 			} else {
 				sb.append(curChar);
 			}

@@ -30,7 +30,7 @@ public class PartitionManagementScheduler {
 
 	private MonitorEventDao m_monitorEventDao = PlexusComponentLocator.lookup(MonitorEventDao.class);
 
-	@Scheduled(cron = "13 37 * * * *")
+	@Scheduled(initialDelay = 0L, fixedDelay = 900000L)
 	public void execute() {
 		printStartInfo();
 		PartitionCheckerResult result = null;

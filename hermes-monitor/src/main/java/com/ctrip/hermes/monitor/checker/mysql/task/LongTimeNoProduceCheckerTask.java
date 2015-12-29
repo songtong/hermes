@@ -2,7 +2,10 @@ package com.ctrip.hermes.monitor.checker.mysql.task;
 
 import io.netty.util.internal.ConcurrentSet;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -13,6 +16,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.monitor.event.LongTimeNoProduceEvent;
+import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.metaservice.queue.CreationStamp;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
@@ -28,18 +32,18 @@ public class LongTimeNoProduceCheckerTask implements Runnable {
 
 	private Topic m_topic;
 
-	private int m_limitInMin;
+	private Map<Integer, Integer> m_limitsInMin;
 
 	private CheckerResult m_result;
 
 	private ConcurrentSet<Exception> m_exceptions;
 
-	public LongTimeNoProduceCheckerTask(Topic topic, int limitInMin, MessagePriorityDao dao, CheckerResult result,
-	      CountDownLatch latch, ConcurrentSet<Exception> exceptions) {
+	public LongTimeNoProduceCheckerTask(Topic topic, Map<Integer, Integer> limitInMin, MessagePriorityDao dao,
+	      CheckerResult result, CountDownLatch latch, ConcurrentSet<Exception> exceptions) {
 		m_latch = latch;
 		m_dao = dao;
 		m_topic = topic;
-		m_limitInMin = limitInMin;
+		m_limitsInMin = limitInMin;
 		m_result = result;
 		m_exceptions = exceptions;
 	}
@@ -58,36 +62,52 @@ public class LongTimeNoProduceCheckerTask implements Runnable {
 		return left == null ? right : left;
 	}
 
-	private Pair<Integer, CreationStamp> getLatestProduceTime() {
-		int latestPartitionId = -1;
-		CreationStamp latestCreationStamp = null;
-		try {
-			for (Partition partition : m_topic.getPartitions()) {
+	private Map<Integer, CreationStamp> getLatestProduceCreationStamps() {
+		Map<Integer, CreationStamp> stamps = new HashMap<>();
+		for (Partition partition : m_topic.getPartitions()) {
+			try {
 				CreationStamp newer = newerStamp(queryLatestProduceCreationStamp(partition.getId(), 1),
-				      newerStamp(queryLatestProduceCreationStamp(partition.getId(), 0), latestCreationStamp));
-				if (newer != null && !newer.equals(latestCreationStamp)) {
-					latestCreationStamp = newer;
-					latestPartitionId = partition.getId();
+				      queryLatestProduceCreationStamp(partition.getId(), 0));
+				if (newer != null) {
+					stamps.put(partition.getId(), newer);
 				}
+			} catch (Exception e) {
+				log.warn("Query latest message failed: {}", m_topic.getName());
 			}
-		} catch (Exception e) {
-			log.warn("Query latest message failed: {}", m_topic.getName());
 		}
-		return latestPartitionId == -1 ? null : new Pair<Integer, CreationStamp>(latestPartitionId, latestCreationStamp);
+		return stamps;
 	}
 
 	@Override
 	public void run() {
 		try {
 			long now = System.currentTimeMillis();
-			Pair<Integer, CreationStamp> latest = getLatestProduceTime();
-			if (latest != null && now - latest.getValue().getDate().getTime() >= TimeUnit.MINUTES.toMillis(m_limitInMin)) {
-				m_result.addMonitorEvent(new LongTimeNoProduceEvent(m_topic.getName(), latest.getKey(), latest.getValue()));
+			Map<Integer, CreationStamp> stamps = getLatestProduceCreationStamps();
+			Iterator<Entry<Integer, CreationStamp>> iter = stamps.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<Integer, CreationStamp> entry = iter.next();
+				CreationStamp stamp = entry.getValue();
+				int partitionId = entry.getKey();
+				if (m_limitsInMin.get(partitionId) == null
+				      || now - stamp.getDate().getTime() < TimeUnit.MINUTES.toMillis(m_limitsInMin.get(partitionId))) {
+					iter.remove();
+				}
+			}
+			if (stamps.size() > 0) {
+				m_result.addMonitorEvent(generateLongTimeNoProduceEvent(stamps));
 			}
 		} catch (Exception e) {
 			m_exceptions.add(e);
 		} finally {
 			m_latch.countDown();
 		}
+	}
+
+	private MonitorEvent generateLongTimeNoProduceEvent(Map<Integer, CreationStamp> stamps) {
+		Map<Integer, Pair<Integer, CreationStamp>> map = new HashMap<>();
+		for (Entry<Integer, CreationStamp> entry : stamps.entrySet()) {
+			map.put(entry.getKey(), new Pair<Integer, CreationStamp>(m_limitsInMin.get(entry.getKey()), entry.getValue()));
+		}
+		return new LongTimeNoProduceEvent(m_topic.getName(), map);
 	}
 }

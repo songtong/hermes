@@ -38,6 +38,8 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -175,6 +177,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 					if (!sendMessagesToBroker(cmd)) {
 						m_taskQueue.push(cmd);
+						tracking(cmd, false);
+					} else {
+						tracking(cmd, true);
 					}
 
 					wholeSendProcessTimer.stop();
@@ -183,6 +188,18 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				m_running.set(false);
 			}
 
+		}
+
+		private void tracking(SendMessageCommandV3 sendMessageCommand, boolean success) {
+			String status = success ? Transaction.SUCCESS : "FAILED";
+
+			for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
+				for (ProducerMessage<?> msg : msgs) {
+					Transaction t = Cat.newTransaction("Message.Produce.Transport", msg.getTopic());
+					t.setStatus(status);
+					t.complete();
+				}
+			}
 		}
 
 		private boolean sendMessagesToBroker(SendMessageCommandV3 cmd) {

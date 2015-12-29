@@ -3,6 +3,8 @@ package com.ctrip.hermes.monitor.job.partition;
 import io.netty.util.internal.ConcurrentSet;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -88,6 +90,7 @@ public class PartitionManagementJob {
 			Meta meta = fetchMeta();
 			Map<String, Integer> limits = parseLimits(meta);
 			Map<String, Pair<Datasource, List<PartitionInfo>>> table2PartitionInfos = getPartitionInfosFromMeta(meta);
+			sortPartitionsInOrdinal(table2PartitionInfos);
 			List<TableContext> tableContexts = createTableContexts(meta, table2PartitionInfos, limits);
 			ConcurrentHashMap<String, List<PartitionInfo>> wastes = new ConcurrentHashMap<String, List<PartitionInfo>>();
 			partitionCheckerResult.setPartitionChangeListResult(doExecuteManagementJob(tableContexts, wastes));
@@ -96,6 +99,17 @@ public class PartitionManagementJob {
 			log.error("Check partition status failed.", e);
 		}
 		return partitionCheckerResult;
+	}
+
+	private void sortPartitionsInOrdinal(Map<String, Pair<Datasource, List<PartitionInfo>>> table2PartitionInfos) {
+		for (Entry<String, Pair<Datasource, List<PartitionInfo>>> entry : table2PartitionInfos.entrySet()) {
+			Collections.sort(entry.getValue().getValue(), new Comparator<PartitionInfo>() {
+				@Override
+				public int compare(PartitionInfo o1, PartitionInfo o2) {
+					return o1.getOrdinal() - o2.getOrdinal();
+				}
+			});
+		}
 	}
 
 	private CheckerResult generatePartitionInfoResult( //

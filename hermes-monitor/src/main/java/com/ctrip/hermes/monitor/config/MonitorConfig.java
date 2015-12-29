@@ -44,8 +44,8 @@ public class MonitorConfig {
 	@Value("${produce.failure.checker.threshold:10}")
 	private int produceFailureCountThreshold;
 
-	@Value("${produce.ackedtriedratio.checker.excluded.topics:[\"All\"]}")
-	private String produceAckedTriedRatioCheckerExcludedTopics;
+	@Value("${produce.transport.failedratio.checker.excluded.topics:[\"All\"]}")
+	private String produceTransportFailedRatioCheckerExcludedTopics;
 
 	@Value("${meta.rest.url:http://meta.hermes.fx.ctripcorp.com/meta/complete}")
 	private String metaRestUrl;
@@ -55,6 +55,9 @@ public class MonitorConfig {
 
 	@Value("${produce.acktriedratio.checker.threshold:1}")
 	private double produceAckedTriedRatioThreshold;
+
+	@Value("${produce.send.cmd.failedratio.checker.threshold:0.5}")
+	private double produceTransportFailedRatioThreshold;
 
 	@Value("${zabbix.kafka.broker.hosts}")
 	private String[] zabbixKafkaBrokerHosts;
@@ -135,9 +138,9 @@ public class MonitorConfig {
 	private int partitionSizeIncrementStep;
 
 	/**
-	 * { ".*" : 10, "song.test" : 100 } in minute
+	 * { ".*" : {-1:10}, "song.test" : {-1:100} } in minute
 	 */
-	@Value("${long.time.no.produce.checker.include.topics:{\".*\": 30}}")
+	@Value("${long.time.no.produce.checker.include.topics:{\".*\": {-1:30}}}")
 	private String longTimeNoProduceCheckerIncludeTopics;
 
 	/**
@@ -242,12 +245,12 @@ public class MonitorConfig {
 		this.produceFailureCountThreshold = produceFailureCountThreshold;
 	}
 
-	public String getProduceAckedTriedRatioCheckerExcludedTopics() {
-		return produceAckedTriedRatioCheckerExcludedTopics;
+	public String getProduceTransportFailedRatioCheckerExcludedTopics() {
+		return produceTransportFailedRatioCheckerExcludedTopics;
 	}
 
-	public void setProduceAckedTriedRatioCheckerExcludedTopics(String produceAckedTriedRatioCheckerExcludedTopics) {
-		this.produceAckedTriedRatioCheckerExcludedTopics = produceAckedTriedRatioCheckerExcludedTopics;
+	public void setProduceTransportFailedRatioCheckerExcludedTopics(String produceTransportRailedRatioCheckerExcludedTopics) {
+		this.produceTransportFailedRatioCheckerExcludedTopics = produceTransportRailedRatioCheckerExcludedTopics;
 	}
 
 	public String getMetaRestUrl() {
@@ -461,5 +464,13 @@ public class MonitorConfig {
 
 	public void setLongTimeNoProduceCheckerExcludeTopics(String longTimeNoProduceCheckerExcludeTopics) {
 		this.longTimeNoProduceCheckerExcludeTopics = longTimeNoProduceCheckerExcludeTopics;
+	}
+
+	public double getProduceTransportFailedRatioThreshold() {
+		return produceTransportFailedRatioThreshold;
+	}
+
+	public void setProduceTransportFailedRatioThreshold(double produceTransportFailedRatioThreshold) {
+		this.produceTransportFailedRatioThreshold = produceTransportFailedRatioThreshold;
 	}
 }
