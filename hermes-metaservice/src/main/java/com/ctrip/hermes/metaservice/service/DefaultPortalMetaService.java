@@ -62,7 +62,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		} catch (DalException e) {
 			logger.warn("findTopicById failed", e);
 		}
-		return new Topic();
+		return null;
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		} catch (DalException e) {
 			logger.warn("findTopicById failed", e);
 		}
-		return new Topic();
+		return null;
 	}
 
 	@Override
@@ -163,7 +163,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		} catch (Exception e) {
 			logger.warn("findStorageByTopic failed", e);
 		}
-		return new Storage();
+		return null;
 	}
 
 	@Override
@@ -185,7 +185,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				return d;
 			}
 		}
-		return new Datasource();
+		return null;
 	}
 
 	@Override
@@ -262,7 +262,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				return partition;
 			}
 		}
-		return new Partition();
+		return null;
 	}
 
 	@Override

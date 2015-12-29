@@ -138,6 +138,7 @@ public class PortalMetaResource {
 
 			for (com.ctrip.hermes.meta.entity.Codec entity : metaEntity.getCodecs().values()) {
 				com.ctrip.hermes.metaservice.model.Codec codecModel = EntityToModelConverter.convert(entity);
+				codecDao.insert(codecModel);
 				System.out.println(codecModel);
 			}
 

@@ -273,18 +273,16 @@
   </entity>
   <entity name="partition" table="partition" alias="p">
     <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" />
-    <member name="read-datasource-id" field="read_datasource_id" value-type="String" length="500" nullable="false" />
-    <member name="write-datasource-id" field="write_datasource_id" value-type="String" length="500" nullable="false" />
-    <member name="endpoint-id" field="endpoint_id" value-type="String" length="50" nullable="false" />
+    <member name="read-datasource" field="read_datasource" value-type="String" length="500" nullable="false" />
+    <member name="write-datasource" field="write_datasource" value-type="String" length="500" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" key="true" />
     <var name="key-id" value-type="int" key-member="id" />
     <var name="key-topic-id" value-type="long" key-member="topic-id" />
     <primary-key name="PRIMARY" members="id, topic_id" />
-    <index name="FK_partition_datasource" members="read_datasource_id ASC" />
-    <index name="FK_partition_datasource_2" members="write_datasource_id ASC" />
-    <index name="FK_partition_endpoint" members="endpoint_id ASC" />
     <index name="FK_partition_topic" members="topic_id ASC" />
+    <index name="FK_partition_datasource_read" members="read_datasource ASC" />
+    <index name="FK_partition_datasource_write" members="write_datasource ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

@@ -77,19 +77,16 @@ CREATE TABLE `topic` (
 
 CREATE TABLE `partition` (
 	`id` INT(10) UNSIGNED NOT NULL,
-	`read_datasource_id` VARCHAR(500) NOT NULL,
-	`write_datasource_id` VARCHAR(500) NOT NULL,
-	`endpoint_id` VARCHAR(50) NOT NULL,
+	`read_datasource` VARCHAR(500) NOT NULL,
+	`write_datasource` VARCHAR(500) NOT NULL,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`topic_id` BIGINT(20) UNSIGNED NOT NULL,
 	PRIMARY KEY (`id`, `topic_id`),
-	INDEX `FK_partition_datasource` (`read_datasource_id`),
-	INDEX `FK_partition_datasource_2` (`write_datasource_id`),
-	INDEX `FK_partition_endpoint` (`endpoint_id`),
+	INDEX `FK_partition_datasource_read` (`read_datasource`),
+	INDEX `FK_partition_datasource_write` (`write_datasource`),
 	INDEX `FK_partition_topic` (`topic_id`),
-	CONSTRAINT `FK_partition_datasource` FOREIGN KEY (`read_datasource_id`) REFERENCES `datasource` (`id`),
-	CONSTRAINT `FK_partition_datasource_2` FOREIGN KEY (`write_datasource_id`) REFERENCES `datasource` (`id`),
-	CONSTRAINT `FK_partition_endpoint` FOREIGN KEY (`endpoint_id`) REFERENCES `endpoint` (`id`),
+	CONSTRAINT `FK_partition_datasource_read` FOREIGN KEY (`read_datasource`) REFERENCES `datasource` (`id`),
+	CONSTRAINT `FK_partition_datasource_write` FOREIGN KEY (`write_datasource`) REFERENCES `datasource` (`id`),
 	CONSTRAINT `FK_partition_topic` FOREIGN KEY (`topic_id`) REFERENCES `topic` (`id`)
 )
 

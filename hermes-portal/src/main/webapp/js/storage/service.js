@@ -40,7 +40,15 @@ Storage.service("StorageService", ["$resource", function ($resource) {
             method: 'DELETE',
             isArray: false,
             url: '/api/datasources/:type/:id'
-        }
+        },
+       	update_datasource : {
+			method : 'POST',
+			url : '/api/datasources/:type/:id/update'
+		},
+		delete_property : {
+			method : 'DELETE',
+			url : '/api/datasources/:type/:id/delprop'
+		}
     });
 
 
@@ -94,6 +102,23 @@ Storage.service("StorageService", ["$resource", function ($resource) {
 
     return {
         value: service_value,
+        update_datasource : function(type,id,ds) {
+     		storage_resource.update_datasource({
+				'type' : type,
+				'id' : id
+				}, ds, function(result) {
+					show_op_info.show("更新Datasource：" + ds.id + " 成功！",true);
+			});
+		},
+		delete_property : function(type,id,name){
+			storage_resource.delete_property({
+					'type' : type,
+					'id' : id,
+					'name' : name
+				}, function(remove_result) {
+					show_op_info.show("删除属性: " + ds.id + "(" + name + ") 成功！");
+				});
+		},
         get_db_size: function () {
             return sizeToString(db_size);
         },

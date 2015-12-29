@@ -17,15 +17,13 @@ angular.module('hermes-endpoint', [ 'ngResource', 'smart-table' ]).controller('e
 				'get_endpoints' : {
 					method : 'GET',
 					isArray : true,
-					url : ''
 				},
 				'add_endpoint' : {
 					method : 'POST',
-					url : ''
 				},
 				'delete_endpoint' : {
 					method : 'DELETE',
-					url : ':id'
+					url : '/api/endpoints/:id'
 				}
 			});
 

@@ -140,7 +140,8 @@ public class TopicResource {
 		}
 
 		try {
-			topicView = new TopicView(topicService.createTopic(topic));
+			Topic topicEntity = topicService.createTopic(topic);
+			topicView = new TopicView(topicEntity);
 		} catch (Exception e) {
 			log.error("Create topic failed: {}.", content, e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
