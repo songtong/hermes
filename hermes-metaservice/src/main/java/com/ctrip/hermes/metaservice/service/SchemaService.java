@@ -26,7 +26,6 @@ import org.unidal.lookup.util.StringUtils;
 
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.meta.entity.Codec;
-import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.model.SchemaDao;

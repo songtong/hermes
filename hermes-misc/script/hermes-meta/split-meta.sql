@@ -5,20 +5,14 @@ ALTER TABLE `meta`
 CREATE TABLE `app` (
 	`id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`meta_id` BIGINT(11) NOT NULL,
-	PRIMARY KEY (`id`),
-	INDEX `FK_app_meta` (`meta_id`),
-	CONSTRAINT `FK_app_meta` FOREIGN KEY (`meta_id`) REFERENCES `meta` (`id`)
+	PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `codec` (
 	`type` VARCHAR(50) NOT NULL COMMENT 'json/avro',
 	`properties` VARCHAR(5000) NULL DEFAULT NULL,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`meta_id` BIGINT(20) NOT NULL,
-	PRIMARY KEY (`type`),
-	INDEX `FK_codec_meta` (`meta_id`),
-	CONSTRAINT `FK_codec_meta` FOREIGN KEY (`meta_id`) REFERENCES `meta` (`id`)
+	PRIMARY KEY (`type`)
 );
 
 CREATE TABLE `endpoint` (
@@ -27,10 +21,7 @@ CREATE TABLE `endpoint` (
 	`host` VARCHAR(500) NULL DEFAULT NULL,
 	`port` SMALLINT(6) NULL DEFAULT NULL,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`meta_id` BIGINT(20) NOT NULL,
-	PRIMARY KEY (`id`),
-	INDEX `FK_endpoint_meta` (`meta_id`),
-	CONSTRAINT `FK_endpoint_meta` FOREIGN KEY (`meta_id`) REFERENCES `meta` (`id`)
+	PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `server` (
@@ -38,10 +29,7 @@ CREATE TABLE `server` (
 	`host` VARCHAR(500) NOT NULL,
 	`port` SMALLINT(6) NOT NULL,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`meta_id` BIGINT(20) NOT NULL,
-	PRIMARY KEY (`id`),
-	INDEX `FK_server_meta` (`meta_id`),
-	CONSTRAINT `FK_server_meta` FOREIGN KEY (`meta_id`) REFERENCES `meta` (`id`)
+	PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `storage` (
@@ -49,10 +37,7 @@ CREATE TABLE `storage` (
 	`default` BIT(1) NOT NULL,
 	`properties` VARCHAR(5000) NOT NULL,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`meta_id` BIGINT(20) NOT NULL,
-	PRIMARY KEY (`type`),
-	INDEX `FK_storage_meta` (`meta_id`),
-	CONSTRAINT `FK_storage_meta` FOREIGN KEY (`meta_id`) REFERENCES `meta` (`id`)
+	PRIMARY KEY (`type`)
 );
 
 CREATE TABLE `datasource` (
@@ -86,30 +71,27 @@ CREATE TABLE `topic` (
 	`storage_partition_count` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`properties` VARCHAR(5000) NULL DEFAULT NULL,
 	`priority_message_enabled` BIT(1) NULL DEFAULT NULL,
-	`meta_id` BIGINT(20) NOT NULL,
 	PRIMARY KEY (`id`),
-	INDEX `FK_topic_meta` (`meta_id`),
-	INDEX `FK_topic_schema` (`schema_id`),
-	CONSTRAINT `FK_topic_meta` FOREIGN KEY (`meta_id`) REFERENCES `meta` (`id`)
+	INDEX `FK_topic_schema` (`schema_id`)
 );
 
 CREATE TABLE `partition` (
-	`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`id` INT(10) UNSIGNED NOT NULL,
 	`read_datasource_id` VARCHAR(500) NOT NULL,
 	`write_datasource_id` VARCHAR(500) NOT NULL,
 	`endpoint_id` VARCHAR(50) NOT NULL,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`topic_id` BIGINT(20) UNSIGNED NOT NULL,
-	PRIMARY KEY (`id`),
+	PRIMARY KEY (`id`, `topic_id`),
 	INDEX `FK_partition_datasource` (`read_datasource_id`),
 	INDEX `FK_partition_datasource_2` (`write_datasource_id`),
 	INDEX `FK_partition_endpoint` (`endpoint_id`),
 	INDEX `FK_partition_topic` (`topic_id`),
-	CONSTRAINT `FK_partition_topic` FOREIGN KEY (`topic_id`) REFERENCES `topic` (`id`),
 	CONSTRAINT `FK_partition_datasource` FOREIGN KEY (`read_datasource_id`) REFERENCES `datasource` (`id`),
 	CONSTRAINT `FK_partition_datasource_2` FOREIGN KEY (`write_datasource_id`) REFERENCES `datasource` (`id`),
-	CONSTRAINT `FK_partition_endpoint` FOREIGN KEY (`endpoint_id`) REFERENCES `endpoint` (`id`)
-);
+	CONSTRAINT `FK_partition_endpoint` FOREIGN KEY (`endpoint_id`) REFERENCES `endpoint` (`id`),
+	CONSTRAINT `FK_partition_topic` FOREIGN KEY (`topic_id`) REFERENCES `topic` (`id`)
+)
 
 CREATE TABLE `producer` (
 	`app_id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,

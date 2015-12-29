@@ -22,12 +22,12 @@ import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.DatasourceEntity;
-import com.ctrip.hermes.metaservice.model.PartitionEntity;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 @Named(type = PortalMetaService.class, value = DefaultPortalMetaService.ID)
@@ -84,7 +84,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				result.put(codec.getType(), codec);
 			}
 		} catch (DalException e) {
-			e.printStackTrace();
+			logger.warn("getCodecs failed", e);
 		}
 		return result;
 	}
@@ -108,7 +108,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				result.put(e.getId(), e);
 			}
 		} catch (DalException e) {
-			e.printStackTrace();
+			logger.warn("getEndpoints failed", e);
 		}
 		return result;
 	}
@@ -116,7 +116,6 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	@Override
 	public synchronized void addEndpoint(Endpoint endpoint) throws Exception {
 		com.ctrip.hermes.metaservice.model.Endpoint proto = EntityToModelConverter.convert(endpoint);
-		proto.setMetaId(getMetaEntity().getId());
 		m_endpointDao.insert(proto);
 		logger.info("Add Endpoint: {} done.", endpoint);
 	}
@@ -129,7 +128,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				result.put(s.getType(), s);
 			}
 		} catch (DalException e) {
-			e.printStackTrace();
+			logger.warn("getStorages failed", e);
 		}
 		return result;
 	}
@@ -162,24 +161,15 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 					return s;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.warn("findStorageByTopic failed", e);
 		}
 		return new Storage();
 	}
 
 	@Override
 	public List<Partition> findPartitionsByTopic(String topicName) {
-		List<Partition> result = new ArrayList<>();
-		try {
-			Topic topic = findTopicByName(topicName);
-			for (com.ctrip.hermes.metaservice.model.Partition p : m_partitionDao.findByTopicId(topic.getId(),
-			      PartitionEntity.READSET_FULL)) {
-				result.add(ModelToEntityConverter.convert(p));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return result;
+		Topic topic = findTopicByName(topicName);
+		return topic.getPartitions();
 	}
 
 	@Override
@@ -210,6 +200,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	public void addDatasource(Datasource datasource, String dsType) throws Exception {
 		com.ctrip.hermes.metaservice.model.Datasource proto = EntityToModelConverter.convert(datasource);
 		proto.setId(datasource.getId());
+		proto.setStorageType(dsType);
 		m_datasourceDao.insert(proto);
 		logger.info("Add Datasource: DS: {} done.", datasource);
 	}
@@ -253,6 +244,17 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	}
 
 	@Override
+	public synchronized Meta buildNewMeta() throws DalException {
+		Meta newMeta = super.buildNewMeta();
+		try {
+			m_zookeeperService.updateZkBaseMetaVersion(this.getMetaEntity().getVersion());
+		} catch (Exception e) {
+			m_logger.warn("update zk base meta failed", e);
+		}
+		return newMeta;
+	}
+
+	@Override
 	public Partition findPartition(String topicName, int partitionId) {
 		List<Partition> partitions = findPartitionsByTopic(topicName);
 		for (Partition partition : partitions) {
@@ -273,7 +275,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				result.add(ModelToEntityConverter.convert(d));
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.warn("findDatasources failed", e);
 		}
 		return result;
 	}
@@ -281,12 +283,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	@Override
 	public List<ConsumerGroup> findConsumersByTopic(String topicName) {
 		Topic topic = findTopicByName(topicName);
-		try {
-			return findConsumerGroups(EntityToModelConverter.convert(topic));
-		} catch (DalException e) {
-			e.printStackTrace();
-		}
-		return new ArrayList<>();
+		return topic.getConsumerGroups();
 	}
 
 	@Override
@@ -295,7 +292,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		try {
 			storages = findStorages();
 		} catch (DalException e) {
-			e.printStackTrace();
+			logger.warn("findStorages failed", e);
 		}
 		for (Storage storage : storages) {
 			if ("kafka".equals(storage.getType())) {
@@ -317,7 +314,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		try {
 			storages = findStorages();
 		} catch (DalException e) {
-			e.printStackTrace();
+			logger.warn("findStorages failed", e);
 		}
 		for (Storage storage : storages) {
 			if ("kafka".equals(storage.getType())) {

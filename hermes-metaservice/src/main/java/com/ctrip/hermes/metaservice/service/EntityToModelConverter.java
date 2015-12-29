@@ -14,8 +14,8 @@ public class EntityToModelConverter {
 
 	public static com.ctrip.hermes.metaservice.model.Codec convert(com.ctrip.hermes.meta.entity.Codec entity) {
 		com.ctrip.hermes.metaservice.model.Codec model = new com.ctrip.hermes.metaservice.model.Codec();
-		model.setProperties(JSON.toJSONString(entity.getProperties()));
 		BeanUtils.copyProperties(entity, model);
+		model.setProperties(JSON.toJSONString(entity.getProperties()));
 		return model;
 	}
 
@@ -28,8 +28,8 @@ public class EntityToModelConverter {
 
 	public static com.ctrip.hermes.metaservice.model.Datasource convert(com.ctrip.hermes.meta.entity.Datasource entity) {
 		com.ctrip.hermes.metaservice.model.Datasource model = new com.ctrip.hermes.metaservice.model.Datasource();
-		model.setProperties(JSON.toJSONString(entity.getProperties()));
 		BeanUtils.copyProperties(entity, model);
+		model.setProperties(JSON.toJSONString(entity.getProperties()));
 		return model;
 	}
 
@@ -42,6 +42,7 @@ public class EntityToModelConverter {
 	public static com.ctrip.hermes.metaservice.model.Meta convert(com.ctrip.hermes.meta.entity.Meta entity) {
 		com.ctrip.hermes.metaservice.model.Meta model = new com.ctrip.hermes.metaservice.model.Meta();
 		BeanUtils.copyProperties(entity, model);
+		model.setValue(JSON.toJSONString(entity));
 		return model;
 	}
 
@@ -65,15 +66,15 @@ public class EntityToModelConverter {
 
 	public static com.ctrip.hermes.metaservice.model.Storage convert(com.ctrip.hermes.meta.entity.Storage entity) {
 		com.ctrip.hermes.metaservice.model.Storage model = new com.ctrip.hermes.metaservice.model.Storage();
-		model.setProperties(JSON.toJSONString(entity.getProperties()));
 		BeanUtils.copyProperties(entity, model);
+		model.setProperties(JSON.toJSONString(entity.getProperties()));
 		return model;
 	}
 
 	public static com.ctrip.hermes.metaservice.model.Topic convert(com.ctrip.hermes.meta.entity.Topic entity) {
 		com.ctrip.hermes.metaservice.model.Topic model = new com.ctrip.hermes.metaservice.model.Topic();
-		model.setProperties(JSON.toJSONString(entity.getProperties()));
 		BeanUtils.copyProperties(entity, model);
+		model.setProperties(JSON.toJSONString(entity.getProperties()));
 		return model;
 	}
 }

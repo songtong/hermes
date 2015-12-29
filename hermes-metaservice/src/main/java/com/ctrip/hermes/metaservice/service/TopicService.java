@@ -1,8 +1,17 @@
 package com.ctrip.hermes.metaservice.service;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Pattern;
+
+import kafka.admin.AdminUtils;
+import kafka.utils.ZkUtils;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
@@ -14,8 +23,11 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.meta.entity.*;
+import com.ctrip.hermes.meta.entity.Datasource;
+import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Property;
+import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
 import com.ctrip.hermes.metaservice.model.PartitionDao;
 import com.ctrip.hermes.metaservice.model.ProducerDao;
@@ -25,9 +37,6 @@ import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
-
-import kafka.admin.AdminUtils;
-import kafka.utils.ZkUtils;
 
 @Named
 public class TopicService {
@@ -89,52 +98,14 @@ public class TopicService {
 	 */
 	public Topic createTopic(Topic topicEntity) throws Exception {
 		topicEntity.setCreateTime(new Date(System.currentTimeMillis()));
-		topicEntity.setLastModifiedTime(new Date());
-		long maxTopicId = 0;
-		for (Topic topic2 : m_metaService.findTopics()) {
-			if (topic2.getId() != null && topic2.getId() > maxTopicId) {
-				maxTopicId = topic2.getId();
-			}
-		}
-		topicEntity.setId(maxTopicId + 1);
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+		m_topicDao.insert(topicModel);
+		topicEntity.setId(topicModel.getId());
 
 		int partitionId = 0;
-		for (Partition partition : topicEntity.getPartitions()) {
-			partition.setId(partitionId++);
-		}
-
-		com.ctrip.hermes.metaservice.model.Topic topicModel = new com.ctrip.hermes.metaservice.model.Topic();
-		if (topicEntity.getId() != null)
-			topicModel.setId(topicEntity.getId());
-		topicModel.setName(topicEntity.getName());
-		if (topicEntity.getPartitionCount() != null)
-			topicModel.setPartitionCount(topicEntity.getPartitionCount());
-		topicModel.setStorageType(topicEntity.getStorageType());
-		topicModel.setDescription(topicEntity.getDescription());
-		topicModel.setStatus(topicEntity.getStatus());
-		topicModel.setCreateTime(topicEntity.getCreateTime());
-		if (topicEntity.getSchemaId() != null)
-			topicModel.setSchemaId(topicEntity.getSchemaId());
-		topicModel.setConsumerRetryPolicy(topicEntity.getConsumerRetryPolicy());
-		topicModel.setCreateBy(topicEntity.getCreateBy());
-		topicModel.setEndpointType(topicEntity.getEndpointType());
-		topicModel.setAckTimeoutSeconds(topicEntity.getAckTimeoutSeconds());
-		topicModel.setCodecType(topicEntity.getCodecType());
-		topicModel.setOtherInfo(topicEntity.getOtherInfo());
-		topicModel.setStoragePartitionSize(topicEntity.getStoragePartitionCount());
-		topicModel.setResendPartitionSize(topicEntity.getResendPartitionSize());
-		topicModel.setStoragePartitionCount(topicEntity.getStoragePartitionCount());
-		topicModel.setProperties(JSON.toJSONString(topicEntity.getProperties()));
-		topicModel.setPriorityMessageEnabled(topicEntity.isPriorityMessageEnabled());
-		topicModel.setMetaId(m_metaService.getMetaEntity().getId());
-		m_topicDao.insert(topicModel);
-
 		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicEntity.getPartitions()) {
-			com.ctrip.hermes.metaservice.model.Partition partitionModel = new com.ctrip.hermes.metaservice.model.Partition();
-			partitionModel.setId(partitionEntity.getId());
-			partitionModel.setEndpointId(partitionEntity.getEndpoint());
-			partitionModel.setReadDatasourceId(partitionEntity.getReadDatasource());
-			partitionModel.setWriteDatasourceId(partitionEntity.getWriteDatasource());
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
+			partitionModel.setId(partitionId++);
 			partitionModel.setTopicId(topicModel.getId());
 			m_partitionDao.insert(partitionModel);
 		}
@@ -288,23 +259,20 @@ public class TopicService {
 		if (topic == null)
 			return;
 		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topic.getPartitions()) {
-			com.ctrip.hermes.metaservice.model.Partition partitionModel = new com.ctrip.hermes.metaservice.model.Partition();
-			partitionModel.setId(partitionEntity.getId());
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
+			partitionModel.setTopicId(topic.getId());
 			m_partitionDao.deleteByPK(partitionModel);
 		}
 		for (com.ctrip.hermes.meta.entity.ConsumerGroup cgEntity : topic.getConsumerGroups()) {
-			com.ctrip.hermes.metaservice.model.ConsumerGroup cgModel = new com.ctrip.hermes.metaservice.model.ConsumerGroup();
-			cgModel.setId(cgEntity.getId());
+			com.ctrip.hermes.metaservice.model.ConsumerGroup cgModel = EntityToModelConverter.convert(cgEntity);
 			m_consumerGroupDao.deleteByPK(cgModel);
 		}
 		for (com.ctrip.hermes.meta.entity.Producer producerEntity : topic.getProducers()) {
-			com.ctrip.hermes.metaservice.model.Producer producerModel = new com.ctrip.hermes.metaservice.model.Producer();
-			producerModel.setAppId(producerEntity.getAppId());
+			com.ctrip.hermes.metaservice.model.Producer producerModel = EntityToModelConverter.convert(producerEntity);
 			m_producerDao.deleteByPK(producerModel);
 		}
 
-		com.ctrip.hermes.metaservice.model.Topic proto = new com.ctrip.hermes.metaservice.model.Topic();
-		proto.setId(topic.getId());
+		com.ctrip.hermes.metaservice.model.Topic proto = EntityToModelConverter.convert(topic);
 		m_topicDao.deleteByPK(proto);
 		// Remove related schemas
 		if (topic.getId() != null && topic.getId() > 0) {
@@ -382,31 +350,7 @@ public class TopicService {
 			}
 		}
 		addPartitionsForTopic(originTopic.getName(), partitions);
-		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao
-		      .findByPK(topic.getId(), TopicEntity.READSET_FULL);
-		if (originTopic.getId() != null)
-			topicModel.setId(originTopic.getId());
-		topicModel.setName(originTopic.getName());
-		if (originTopic.getPartitionCount() != null)
-			topicModel.setPartitionCount(originTopic.getPartitionCount());
-		topicModel.setStorageType(originTopic.getStorageType());
-		topicModel.setDescription(originTopic.getDescription());
-		topicModel.setStatus(originTopic.getStatus());
-		topicModel.setCreateTime(originTopic.getCreateTime());
-		if (originTopic.getSchemaId() != null)
-			topicModel.setSchemaId(originTopic.getSchemaId());
-		topicModel.setConsumerRetryPolicy(originTopic.getConsumerRetryPolicy());
-		topicModel.setCreateBy(originTopic.getCreateBy());
-		topicModel.setEndpointType(originTopic.getEndpointType());
-		topicModel.setAckTimeoutSeconds(originTopic.getAckTimeoutSeconds());
-		topicModel.setCodecType(originTopic.getCodecType());
-		topicModel.setOtherInfo(originTopic.getOtherInfo());
-		topicModel.setStoragePartitionSize(originTopic.getStoragePartitionCount());
-		topicModel.setResendPartitionSize(originTopic.getResendPartitionSize());
-		topicModel.setStoragePartitionCount(originTopic.getStoragePartitionCount());
-		topicModel.setProperties(JSON.toJSONString(originTopic.getProperties()));
-		topicModel.setPriorityMessageEnabled(originTopic.isPriorityMessageEnabled());
-		topicModel.setMetaId(m_metaService.getMetaEntity().getId());
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(originTopic);
 		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
@@ -441,23 +385,18 @@ public class TopicService {
 	 */
 	public Topic addPartitionsForTopic(String topicName, List<Partition> partitions) throws Exception {
 		Topic topic = m_metaService.findTopicByName(topicName);
-
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 
 		int partitionId = 0;
 		for (Partition p : topic.getPartitions()) {
-			if (p.getId() != null && p.getId() > partitionId) {
-				partitionId = p.getId();
+			if (p.getId() != null && p.getId() >= partitionId) {
+				partitionId = p.getId() + 1;
 			}
 		}
 
 		for (Partition partition : partitions) {
 			partition.setId(partitionId++);
-			com.ctrip.hermes.metaservice.model.Partition partitionModel = new com.ctrip.hermes.metaservice.model.Partition();
-			partitionModel.setId(partition.getId());
-			partitionModel.setEndpointId(partition.getEndpoint());
-			partitionModel.setReadDatasourceId(partition.getReadDatasource());
-			partitionModel.setWriteDatasourceId(partition.getWriteDatasource());
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partition);
 			partitionModel.setTopicId(topic.getId());
 			m_partitionDao.insert(partitionModel);
 

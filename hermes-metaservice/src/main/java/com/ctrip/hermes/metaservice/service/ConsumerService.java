@@ -58,8 +58,7 @@ public class ConsumerService {
 	public void deleteConsumerFromTopic(String topic, String consumer) throws Exception {
 		Topic t = m_metaService.findTopicByName(topic);
 		ConsumerGroup consumerGroupEntity = t.findConsumerGroup(consumer);
-		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
-		      t.getId(), consumer, ConsumerGroupEntity.READSET_FULL);
+		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroup = EntityToModelConverter.convert(consumerGroupEntity);
 		if (consumerGroup != null) {
 			boolean removed = m_consumerGroupDao.deleteByPK(consumerGroup) == 1 ? true : false;
 			if (removed && Storage.MYSQL.equals(t.getStorageType())) {
@@ -71,17 +70,11 @@ public class ConsumerService {
 
 	public synchronized ConsumerGroup addConsumerForTopics(String topicName, ConsumerGroup consumer) throws Exception {
 		Topic t = m_metaService.findTopicByName(topicName);
-		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = new com.ctrip.hermes.metaservice.model.ConsumerGroup();
-		consumerGroupModel.setName(consumer.getName());
-		consumerGroupModel.setAppids(consumer.getAppIds());
-		consumerGroupModel.setRetryPolicy(consumer.getRetryPolicy());
-		if (consumer.getAckTimeoutSeconds() != null)
-			consumerGroupModel.setAckTimeoutSeconds(consumer.getAckTimeoutSeconds());
-		consumerGroupModel.setOrderedConsume(consumer.getOrderedConsume());
-		consumerGroupModel.setOwner(consumer.getOwner());
+		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = EntityToModelConverter.convert(consumer);
 		consumerGroupModel.setTopicId(t.getId());
 		m_consumerGroupDao.insert(consumerGroupModel);
-
+		consumer.setId(consumerGroupModel.getId());
+		
 		if (Storage.MYSQL.equals(t.getStorageType())) {
 			m_storageService.addConsumerStorage(t, consumer);
 			m_zookeeperService.ensureConsumerLeaseZkPath(t);
@@ -95,15 +88,7 @@ public class ConsumerService {
 		ConsumerGroup originConsumer = t.findConsumerGroup(c.getName());
 		c.setId(originConsumer.getId());
 
-		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = m_consumerGroupDao.findByTopicIdAndName(
-		      t.getId(), c.getName(), ConsumerGroupEntity.READSET_FULL);
-		consumerGroupModel.setName(c.getName());
-		consumerGroupModel.setAppids(c.getAppIds());
-		consumerGroupModel.setRetryPolicy(c.getRetryPolicy());
-		if (c.getAckTimeoutSeconds() != null)
-			consumerGroupModel.setAckTimeoutSeconds(c.getAckTimeoutSeconds());
-		consumerGroupModel.setOrderedConsume(c.getOrderedConsume());
-		consumerGroupModel.setOwner(c.getOwner());
+		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = EntityToModelConverter.convert(c);
 		m_consumerGroupDao.updateByPK(consumerGroupModel, ConsumerGroupEntity.UPDATESET_FULL);
 
 		if (Storage.MYSQL.equals(t.getStorageType())) {

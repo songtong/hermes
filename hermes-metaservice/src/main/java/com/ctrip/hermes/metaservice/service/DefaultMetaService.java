@@ -92,37 +92,11 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public synchronized com.ctrip.hermes.meta.entity.Meta buildNewMeta() throws DalException {
-		m_metaModel = m_metaDao.findLatest(MetaEntity.READSET_FULL);
-		m_metaModel.setVersion(m_metaModel.getVersion() + 1);
-		m_metaEntity = new com.ctrip.hermes.meta.entity.Meta();
-		m_metaEntity.setVersion(m_metaModel.getVersion());
-		m_metaEntity.setId(m_metaModel.getId());
-		List<com.ctrip.hermes.meta.entity.App> apps = findApps();
-		for (com.ctrip.hermes.meta.entity.App entity : apps) {
-			m_metaEntity.addApp(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Codec> codecs = findCodecs();
-		for (com.ctrip.hermes.meta.entity.Codec entity : codecs) {
-			m_metaEntity.addCodec(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Endpoint> endpoints = findEndpoints();
-		for (com.ctrip.hermes.meta.entity.Endpoint entity : endpoints) {
-			m_metaEntity.addEndpoint(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Server> servers = findServers();
-		for (com.ctrip.hermes.meta.entity.Server entity : servers) {
-			m_metaEntity.addServer(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Storage> storages = findStorages();
-		for (com.ctrip.hermes.meta.entity.Storage entity : storages) {
-			m_metaEntity.addStorage(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Topic> topics = findTopics();
-		for (com.ctrip.hermes.meta.entity.Topic entity : topics) {
-			m_metaEntity.addTopic(entity);
-		}
-		m_metaModel.setValue(JSON.toJSONString(m_metaEntity));
-		m_metaDao.insert(m_metaModel);
+		com.ctrip.hermes.meta.entity.Meta metaEntity = previewNewMeta();
+		Meta metaModel = EntityToModelConverter.convert(metaEntity);
+		m_metaDao.insert(metaModel);
+		m_metaModel = metaModel;
+		m_metaEntity = metaEntity;
 		return m_metaEntity;
 	}
 
@@ -162,7 +136,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.App> findApps() throws DalException {
-		List<App> models = m_appDao.findByMetaId(getMetaModel().getId(), AppEntity.READSET_FULL);
+		List<App> models = m_appDao.list(AppEntity.READSET_FULL);
 		List<com.ctrip.hermes.meta.entity.App> entities = new ArrayList<>();
 		for (App model : models) {
 			com.ctrip.hermes.meta.entity.App entity = ModelToEntityConverter.convert(model);
@@ -173,7 +147,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Codec> findCodecs() throws DalException {
-		List<Codec> models = m_codecDao.findByMetaId(getMetaModel().getId(), CodecEntity.READSET_FULL);
+		List<Codec> models = m_codecDao.list(CodecEntity.READSET_FULL);
 		List<com.ctrip.hermes.meta.entity.Codec> entities = new ArrayList<>();
 		for (Codec model : models) {
 			com.ctrip.hermes.meta.entity.Codec entity = ModelToEntityConverter.convert(model);
@@ -210,7 +184,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Endpoint> findEndpoints() throws DalException {
-		List<Endpoint> models = m_endpointDao.findByMetaId(getMetaModel().getId(), EndpointEntity.READSET_FULL);
+		List<Endpoint> models = m_endpointDao.list(EndpointEntity.READSET_FULL);
 		List<com.ctrip.hermes.meta.entity.Endpoint> entities = new ArrayList<>();
 		for (Endpoint model : models) {
 			com.ctrip.hermes.meta.entity.Endpoint entity = ModelToEntityConverter.convert(model);
@@ -260,7 +234,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Server> findServers() throws DalException {
-		List<Server> models = m_serverDao.findByMetaId(getMetaModel().getId(), ServerEntity.READSET_FULL);
+		List<Server> models = m_serverDao.list(ServerEntity.READSET_FULL);
 		List<com.ctrip.hermes.meta.entity.Server> entities = new ArrayList<>();
 		for (Server model : models) {
 			com.ctrip.hermes.meta.entity.Server entity = ModelToEntityConverter.convert(model);
@@ -271,7 +245,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Storage> findStorages() throws DalException {
-		List<Storage> models = m_storageDao.findByMetaId(getMetaModel().getId(), StorageEntity.READSET_FULL);
+		List<Storage> models = m_storageDao.list(StorageEntity.READSET_FULL);
 		List<com.ctrip.hermes.meta.entity.Storage> entities = new ArrayList<>();
 		for (Storage model : models) {
 			entities.add(fillStorage(model));
@@ -301,7 +275,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Topic> findTopics() throws DalException {
-		List<Topic> models = m_topicDao.findByMetaId(getMetaModel().getId(), TopicEntity.READSET_FULL);
+		List<Topic> models = m_topicDao.list(TopicEntity.READSET_FULL);
 		List<com.ctrip.hermes.meta.entity.Topic> entities = new ArrayList<>();
 		for (Topic model : models) {
 			entities.add(fillTopic(model));

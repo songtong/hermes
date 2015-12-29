@@ -19,7 +19,6 @@ public class MetaMerger {
 		// App
 		com.ctrip.hermes.metaservice.model.App appModel = new com.ctrip.hermes.metaservice.model.App();
 		appModel.setId(100);
-		appModel.setMetaId(1);
 		com.ctrip.hermes.meta.entity.App appEntity = new com.ctrip.hermes.meta.entity.App();
 		BeanUtils.copyProperties(appModel, appEntity);
 		System.out.println(appEntity);
@@ -27,7 +26,6 @@ public class MetaMerger {
 		// Codec
 		com.ctrip.hermes.metaservice.model.Codec codecModel = new com.ctrip.hermes.metaservice.model.Codec();
 		codecModel.setType("avro");
-		codecModel.setMetaId(1);
 
 		Map<String, Property> properties = new HashMap<String, Property>();
 		Property prop1 = new Property("schema.server.url");

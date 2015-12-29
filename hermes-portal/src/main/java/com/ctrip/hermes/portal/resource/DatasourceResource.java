@@ -27,7 +27,6 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
-
 @Path("/datasources/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
@@ -82,7 +81,7 @@ public class DatasourceResource {
 		}
 		return Response.status(Status.OK).build();
 	}
-	
+
 	@DELETE
 	@Path("{type}/{id}/delprop")
 	public Response delDsProp(@PathParam("type") String type, @PathParam("id") String id, @QueryParam("name") String name) {
@@ -92,18 +91,17 @@ public class DatasourceResource {
 		}
 
 		try {
-		Meta meta = metaService.getMetaEntity();
-		List<Datasource> dss = meta.getStorages().get(type).getDatasources();
-		for (Datasource ds : dss) {
-			if (ds.getId().equals(id) && ds.getProperties().containsKey(name)) {
-				ds.getProperties().remove(name);
+			Meta meta = metaService.getMetaEntity();
+			List<Datasource> dss = meta.getStorages().get(type).getDatasources();
+			for (Datasource ds : dss) {
+				if (ds.getId().equals(id) && ds.getProperties().containsKey(name)) {
+					ds.getProperties().remove(name);
 
-//					metaService.updateMeta(meta);
 					metaService.deleteDatasource(ds.getId(), type);
 					return Response.status(Status.OK).build();
-			}				
+				}
 			}
-		}catch (Exception e) {
+		} catch (Exception e) {
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		throw new RestException(String.format("Property %s not found in %s", name, id), Status.NOT_FOUND);
@@ -127,11 +125,8 @@ public class DatasourceResource {
 		for (int idx = 0; idx < datasources.size(); idx++) {
 			Datasource ds = datasources.get(idx);
 			if (ds.getId().equals(dsn.getId())) {
-//				datasources.remove(idx);
-//				datasources.add(dsn);
 				try {
 					metaService.updateDatasource(dsn);
-//					metaService.updateMeta(meta);
 				} catch (Exception e) {
 					throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 				}

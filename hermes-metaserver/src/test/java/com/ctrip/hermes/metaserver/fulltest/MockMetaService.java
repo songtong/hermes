@@ -108,8 +108,8 @@ public class MockMetaService implements MetaService {
 	}
 
 	@Override
-   public com.ctrip.hermes.meta.entity.Storage getStorage(String type) throws DalException {
-	   return null;
-   }
+	public com.ctrip.hermes.meta.entity.Storage getStorage(String type) throws DalException {
+		return null;
+	}
 
 }
