@@ -44,8 +44,8 @@ public class MonitorConfig {
 	@Value("${produce.failure.checker.threshold:10}")
 	private int produceFailureCountThreshold;
 
-	@Value("${produce.send.cmd.failedratio.checker.excluded.topics:[\"All\"]}")
-	private String produceSendCmdFailedRatioCheckerExcludedTopics;
+	@Value("${produce.transport.failedratio.checker.excluded.topics:[\"All\"]}")
+	private String produceTransportFailedRatioCheckerExcludedTopics;
 
 	@Value("${meta.rest.url:http://meta.hermes.fx.ctripcorp.com/meta/complete}")
 	private String metaRestUrl;
@@ -57,7 +57,7 @@ public class MonitorConfig {
 	private double produceAckedTriedRatioThreshold;
 
 	@Value("${produce.send.cmd.failedratio.checker.threshold:0.5}")
-	private double produceSendCmdFailedRatioThreshold;
+	private double produceTransportFailedRatioThreshold;
 
 	@Value("${zabbix.kafka.broker.hosts}")
 	private String[] zabbixKafkaBrokerHosts;
@@ -245,12 +245,12 @@ public class MonitorConfig {
 		this.produceFailureCountThreshold = produceFailureCountThreshold;
 	}
 
-	public String getProduceSendCmdFailedRatioCheckerExcludedTopics() {
-		return produceSendCmdFailedRatioCheckerExcludedTopics;
+	public String getProduceTransportFailedRatioCheckerExcludedTopics() {
+		return produceTransportFailedRatioCheckerExcludedTopics;
 	}
 
-	public void setProduceSendCmdFailedRatioCheckerExcludedTopics(String produceSendCmdRailedRatioCheckerExcludedTopics) {
-		this.produceSendCmdFailedRatioCheckerExcludedTopics = produceSendCmdRailedRatioCheckerExcludedTopics;
+	public void setProduceTransportFailedRatioCheckerExcludedTopics(String produceTransportRailedRatioCheckerExcludedTopics) {
+		this.produceTransportFailedRatioCheckerExcludedTopics = produceTransportRailedRatioCheckerExcludedTopics;
 	}
 
 	public String getMetaRestUrl() {
@@ -466,11 +466,11 @@ public class MonitorConfig {
 		this.longTimeNoProduceCheckerExcludeTopics = longTimeNoProduceCheckerExcludeTopics;
 	}
 
-	public double getProduceSendCmdFailedRatioThreshold() {
-		return produceSendCmdFailedRatioThreshold;
+	public double getProduceTransportFailedRatioThreshold() {
+		return produceTransportFailedRatioThreshold;
 	}
 
-	public void setProduceSendCmdFailedRatioThreshold(double produceSendCmdFailedRatioThreshold) {
-		this.produceSendCmdFailedRatioThreshold = produceSendCmdFailedRatioThreshold;
+	public void setProduceTransportFailedRatioThreshold(double produceTransportFailedRatioThreshold) {
+		this.produceTransportFailedRatioThreshold = produceTransportFailedRatioThreshold;
 	}
 }

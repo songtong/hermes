@@ -21,8 +21,8 @@ import org.xml.sax.SAXException;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceSendCmdFailedRatioErrorEvent;
-import com.ctrip.hermes.monitor.checker.client.ProduceSendCmdFailedRatioChecker;
+import com.ctrip.hermes.metaservice.monitor.event.ProduceTransportFailedRatioErrorEvent;
+import com.ctrip.hermes.monitor.checker.client.ProduceTransportFailedRatioChecker;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -30,15 +30,15 @@ import com.ctrip.hermes.monitor.checker.client.ProduceSendCmdFailedRatioChecker;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = BaseCheckerTest.class)
-public class ProduceSendCmdFailedRatioCheckerTest extends BaseCheckerTest {
-	@Component("MockProduceSendCmdFailedRatioChecker")
-	public static class MockProduceCmdSendFailedRatioChecker extends ProduceSendCmdFailedRatioChecker {
-		private String m_catAckedReportXml;
+public class ProduceTransportFailedRatioCheckerTest extends BaseCheckerTest {
+	@Component("MockProduceTransportFailedRatioChecker")
+	public static class MockProduceTransportFailedRatioChecker extends ProduceTransportFailedRatioChecker {
+		private String m_catTransportReportXml;
 
 		private Meta m_meta;
 
-		public void setCatSendCmdReportXml(String catAckedReportXml) {
-			m_catAckedReportXml = catAckedReportXml;
+		public void setTransportCmdReportXml(String catTransportReportXml) {
+			m_catTransportReportXml = catTransportReportXml;
 		}
 
 		public void setMeta(Meta meta) {
@@ -52,8 +52,8 @@ public class ProduceSendCmdFailedRatioCheckerTest extends BaseCheckerTest {
 
 		@Override
 		protected String getTransactionReportFromCat(Timespan timespan, String transactionType) throws IOException {
-			if ("Message.Produce.Cmd.Send".equals(transactionType)) {
-				return m_catAckedReportXml;
+			if ("Message.Produce.Transport".equals(transactionType)) {
+				return m_catTransportReportXml;
 			}
 
 			return null;
@@ -61,13 +61,13 @@ public class ProduceSendCmdFailedRatioCheckerTest extends BaseCheckerTest {
 	}
 
 	@Autowired
-	@Qualifier("MockProduceSendCmdFailedRatioChecker")
-	private MockProduceCmdSendFailedRatioChecker m_checker;
+	@Qualifier("MockProduceTransportFailedRatioChecker")
+	private MockProduceTransportFailedRatioChecker m_checker;
 
 	@Test
 	public void testAlert() throws Exception {
-		String catSendCmdReportXml = loadTestData("testAlert-send.cmd");
-		m_checker.setCatSendCmdReportXml(catSendCmdReportXml);
+		String catTransportReportXml = loadTestData("testAlert-transport");
+		m_checker.setTransportCmdReportXml(catTransportReportXml);
 
 		Meta meta = DefaultSaxParser.parse(loadTestData("testAlert-meta"));
 		m_checker.setMeta(meta);
@@ -89,9 +89,9 @@ public class ProduceSendCmdFailedRatioCheckerTest extends BaseCheckerTest {
 
 		List<MonitorEvent> expectedEvents = new ArrayList<>();
 
-		expectedEvents.add(new ProduceSendCmdFailedRatioErrorEvent("c.d.e", "2015-10-10 10:00:00 ~ 2015-10-10 10:04:59",
+		expectedEvents.add(new ProduceTransportFailedRatioErrorEvent("c.d.e", "2015-10-10 10:00:00 ~ 2015-10-10 10:04:59",
 		      10, 2));
-		expectedEvents.add(new ProduceSendCmdFailedRatioErrorEvent("d.e.f", "2015-10-10 10:00:00 ~ 2015-10-10 10:04:59",
+		expectedEvents.add(new ProduceTransportFailedRatioErrorEvent("d.e.f", "2015-10-10 10:00:00 ~ 2015-10-10 10:04:59",
 		      0, 130));
 
 		for (MonitorEvent expectedEvent : expectedEvents) {

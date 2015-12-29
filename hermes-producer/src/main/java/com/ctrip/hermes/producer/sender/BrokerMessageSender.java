@@ -27,7 +27,6 @@ import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.codahale.metrics.Timer.Context;
-import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
@@ -41,7 +40,6 @@ import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
-import com.dianping.cat.message.spi.MessageTree;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -197,17 +195,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 			for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
 				for (ProducerMessage<?> msg : msgs) {
-					Transaction t = Cat.newTransaction("Message.Produce.Cmd.Send", msg.getTopic());
-					MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
-
-					String msgId = msg.getDurableSysProperty(CatConstants.SERVER_MESSAGE_ID);
-					String parentMsgId = msg.getDurableSysProperty(CatConstants.CURRENT_MESSAGE_ID);
-					String rootMsgId = msg.getDurableSysProperty(CatConstants.ROOT_MESSAGE_ID);
-
-					tree.setMessageId(msgId);
-					tree.setParentMessageId(parentMsgId);
-					tree.setRootMessageId(rootMsgId);
-
+					Transaction t = Cat.newTransaction("Message.Produce.Transport", msg.getTopic());
 					t.setStatus(status);
 					t.complete();
 				}

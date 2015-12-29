@@ -34,21 +34,21 @@ import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceSendCmdFailedRatioErrorEvent;
+import com.ctrip.hermes.metaservice.monitor.event.ProduceTransportFailedRatioErrorEvent;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-// @Component(value = "ProduceSendCmdFailedRatioChecker")
-public class ProduceSendCmdFailedRatioChecker extends CatBasedChecker implements InitializingBean {
+// @Component(value = "ProduceTransportFailedRatioChecker")
+public class ProduceTransportFailedRatioChecker extends CatBasedChecker implements InitializingBean {
 
 	private List<String> m_excludedTopics = new LinkedList<>();
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		String excludedTopicsStr = m_config.getProduceSendCmdFailedRatioCheckerExcludedTopics();
+		String excludedTopicsStr = m_config.getProduceTransportFailedRatioCheckerExcludedTopics();
 		if (!StringUtils.isBlank(excludedTopicsStr)) {
 			List<String> configedExcludedTopics = JSON.parseObject(excludedTopicsStr, new TypeReference<List<String>>() {
 			});
@@ -61,7 +61,7 @@ public class ProduceSendCmdFailedRatioChecker extends CatBasedChecker implements
 	@Override
 	protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
 		Meta meta = fetchMeta();
-		bizCheck(getSendCmdCountListData(timespan), timespan, meta, result);
+		bizCheck(getTransportCountListData(timespan), timespan, meta, result);
 	}
 
 	private void bizCheck(Map<String, Map<Integer, Pair<Integer, Integer>>> topic2SendCmdCount, Timespan timespan,
@@ -85,12 +85,12 @@ public class ProduceSendCmdFailedRatioChecker extends CatBasedChecker implements
 				boolean shouldAlert = false;
 				if (sendCmdCountSum.getValue() > 0
 				      && Math.abs(sendCmdCountSum.getValue()) / (double) sendCmdCountSum.getKey() > m_config
-				            .getProduceSendCmdFailedRatioThreshold()) {
+				            .getProduceTransportFailedRatioThreshold()) {
 					shouldAlert = true;
 				}
 
 				if (shouldAlert) {
-					ProduceSendCmdFailedRatioErrorEvent monitorEvent = new ProduceSendCmdFailedRatioErrorEvent();
+					ProduceTransportFailedRatioErrorEvent monitorEvent = new ProduceTransportFailedRatioErrorEvent();
 					monitorEvent.setTopic(topicName);
 					monitorEvent.setTotal(sendCmdCountSum.getKey());
 					monitorEvent.setFailed(sendCmdCountSum.getValue());
@@ -120,9 +120,9 @@ public class ProduceSendCmdFailedRatioChecker extends CatBasedChecker implements
 		return new Pair<Integer, Integer>(totalSum, failsSum);
 	}
 
-	private Map<String, Map<Integer, Pair<Integer, Integer>>> getSendCmdCountListData(Timespan timespan)
+	private Map<String, Map<Integer, Pair<Integer, Integer>>> getTransportCountListData(Timespan timespan)
 	      throws IOException, XPathExpressionException, SAXException, ParserConfigurationException {
-		String transactionType = "Message.Produce.Cmd.Send";
+		String transactionType = "Message.Produce.Transport";
 		String transactionReportXml = getTransactionReportFromCat(timespan, transactionType);
 		return extractDatasFromXml(transactionReportXml, transactionType);
 	}
@@ -183,6 +183,6 @@ public class ProduceSendCmdFailedRatioChecker extends CatBasedChecker implements
 
 	@Override
 	public String name() {
-		return "ProduceSendCmdFailedRatioChecker";
+		return "ProduceTransportFailedRatioChecker";
 	}
 }

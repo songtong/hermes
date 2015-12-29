@@ -12,7 +12,7 @@ import com.ctrip.hermes.metaservice.monitor.event.PartitionInformationEvent;
 import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceFailureCountTooLargeEvent;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceSendCmdFailedRatioErrorEvent;
+import com.ctrip.hermes.metaservice.monitor.event.ProduceTransportFailedRatioErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.TopicLargeDeadLetterEvent;
 
 public enum MonitorEventType {
@@ -28,7 +28,7 @@ public enum MonitorEventType {
 	PARTITION_MODIFICATION(9, "partition_modification", PartitionModificationEvent.class), //
 	LONG_TIME_NO_PRODUCE(10, "long_time_no_produce", LongTimeNoProduceEvent.class), //
 	PARTITION_INFO(11, "partition_informations", PartitionInformationEvent.class), //
-	PRODUCE_SEND_CMD_FAILED_RATIO_ERROR(12, "produce_send_cmd_failed_ratio_error", ProduceSendCmdFailedRatioErrorEvent.class), //
+	PRODUCE_TRANSPORT_FAILED_RATIO_ERROR(12, "produce_transport_failed_ratio_error", ProduceTransportFailedRatioErrorEvent.class), //
 
 	ES_DATASOURCE_ERROR(40, null, null), //
 	CAT_DATASOURCE_ERROR(41, null, null), //

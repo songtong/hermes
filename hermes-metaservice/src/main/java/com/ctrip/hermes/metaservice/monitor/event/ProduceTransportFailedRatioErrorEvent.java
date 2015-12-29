@@ -3,7 +3,7 @@ package com.ctrip.hermes.metaservice.monitor.event;
 import com.ctrip.hermes.metaservice.model.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
-public class ProduceSendCmdFailedRatioErrorEvent extends BaseMonitorEvent {
+public class ProduceTransportFailedRatioErrorEvent extends BaseMonitorEvent {
 
 	private String m_topic;
 
@@ -13,12 +13,12 @@ public class ProduceSendCmdFailedRatioErrorEvent extends BaseMonitorEvent {
 
 	private int m_failed;
 
-	public ProduceSendCmdFailedRatioErrorEvent() {
+	public ProduceTransportFailedRatioErrorEvent() {
 		this(null, null, 0, 0);
 	}
 
-	public ProduceSendCmdFailedRatioErrorEvent(String topic, String timespan, int total, int failed) {
-		super(MonitorEventType.PRODUCE_SEND_CMD_FAILED_RATIO_ERROR);
+	public ProduceTransportFailedRatioErrorEvent(String topic, String timespan, int total, int failed) {
+		super(MonitorEventType.PRODUCE_TRANSPORT_FAILED_RATIO_ERROR);
 		m_topic = topic;
 		m_timespan = timespan;
 		m_total = total;
@@ -71,7 +71,7 @@ public class ProduceSendCmdFailedRatioErrorEvent extends BaseMonitorEvent {
 		e.setKey2(m_timespan);
 		e.setKey3(Integer.toString(m_total));
 		e.setKey4(Integer.toString(m_failed));
-		e.setMessage(String.format("[%s]Topic %s |Send.Cmd.Failed|/Send.Cmd.Total error(total=%s, failed=%s).", //
+		e.setMessage(String.format("[%s]Topic %s |Transport.Failed|/Transport.Total error(total=%s, failed=%s).", //
 		      m_timespan, m_topic, m_total, m_failed));
 	}
 
@@ -92,7 +92,7 @@ public class ProduceSendCmdFailedRatioErrorEvent extends BaseMonitorEvent {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		ProduceSendCmdFailedRatioErrorEvent other = (ProduceSendCmdFailedRatioErrorEvent) obj;
+		ProduceTransportFailedRatioErrorEvent other = (ProduceTransportFailedRatioErrorEvent) obj;
 		if (m_timespan == null) {
 			if (other.m_timespan != null)
 				return false;
