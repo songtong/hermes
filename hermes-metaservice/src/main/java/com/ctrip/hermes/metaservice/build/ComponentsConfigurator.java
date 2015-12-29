@@ -7,6 +7,8 @@ import org.unidal.dal.jdbc.configuration.AbstractJdbcResourceConfigurator;
 import org.unidal.dal.jdbc.mapping.TableProvider;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.mail.DefaultMailService;
+import com.ctrip.hermes.mail.FileMailAccountProvider;
 import com.ctrip.hermes.metaservice.monitor.dao.DefaultMonitorEventStorage;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueDatasourceProvider;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider;
@@ -41,6 +43,9 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(TableProvider.class, "offset-resend", MessageQueueTableProvider.class));
 		all.add(C(TableProvider.class, "dead-letter", MessageQueueTableProvider.class));
 		all.add(A(MessageQueueDatasourceProvider.class));
+
+		all.add(A(FileMailAccountProvider.class));
+		all.add(A(DefaultMailService.class));
 
 		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
 		all.addAll(new FxHermesShardDbDatabaseConfigurator().defineComponents());
