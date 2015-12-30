@@ -105,7 +105,6 @@ public class DefaultMetaService implements MetaService {
 		metaModel.setVersion(metaModel.getVersion() + 1);
 		com.ctrip.hermes.meta.entity.Meta metaEntity = new com.ctrip.hermes.meta.entity.Meta();
 		metaEntity.setVersion(metaModel.getVersion());
-		metaEntity.setId(metaModel.getId());
 		List<com.ctrip.hermes.meta.entity.App> apps = findApps();
 		for (com.ctrip.hermes.meta.entity.App entity : apps) {
 			metaEntity.addApp(entity);

@@ -19,7 +19,6 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
-import com.ctrip.hermes.metaservice.service.MetaService;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
@@ -36,9 +35,6 @@ public class MetaHolder implements Initializable {
 
 	@Inject
 	private MetaServerConfig m_config;
-
-	@Inject
-	private MetaService m_metaService;
 
 	@Inject
 	private ZKClient m_zkClient;
@@ -78,14 +74,6 @@ public class MetaHolder implements Initializable {
 
 	public void setBaseMeta(Meta baseMeta) {
 		m_baseCache.set(baseMeta);
-	}
-
-	public void update(final Meta baseMeta) {
-		update(baseMeta, null, null);
-	}
-
-	public void update() {
-		update(null, null, null);
 	}
 
 	public void update(final List<Server> metaServerList) {
