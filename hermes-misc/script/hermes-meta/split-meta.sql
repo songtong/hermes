@@ -45,9 +45,7 @@ CREATE TABLE `datasource` (
 	`properties` VARCHAR(5000) NOT NULL,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`storage_type` VARCHAR(50) NULL DEFAULT NULL,
-	PRIMARY KEY (`id`),
-	INDEX `FK_datasource_storage` (`storage_type`),
-	CONSTRAINT `FK_datasource_storage` FOREIGN KEY (`storage_type`) REFERENCES `storage` (`type`)
+	PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `topic` (
@@ -71,8 +69,7 @@ CREATE TABLE `topic` (
 	`storage_partition_count` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`properties` VARCHAR(5000) NULL DEFAULT NULL,
 	`priority_message_enabled` BIT(1) NULL DEFAULT NULL,
-	PRIMARY KEY (`id`),
-	INDEX `FK_topic_schema` (`schema_id`)
+	PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `partition` (
@@ -81,22 +78,14 @@ CREATE TABLE `partition` (
 	`write_datasource` VARCHAR(500) NOT NULL,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`topic_id` BIGINT(20) UNSIGNED NOT NULL,
-	PRIMARY KEY (`id`, `topic_id`),
-	INDEX `FK_partition_datasource_read` (`read_datasource`),
-	INDEX `FK_partition_datasource_write` (`write_datasource`),
-	INDEX `FK_partition_topic` (`topic_id`),
-	CONSTRAINT `FK_partition_datasource_read` FOREIGN KEY (`read_datasource`) REFERENCES `datasource` (`id`),
-	CONSTRAINT `FK_partition_datasource_write` FOREIGN KEY (`write_datasource`) REFERENCES `datasource` (`id`),
-	CONSTRAINT `FK_partition_topic` FOREIGN KEY (`topic_id`) REFERENCES `topic` (`id`)
+	PRIMARY KEY (`id`, `topic_id`)
 )
 
 CREATE TABLE `producer` (
 	`app_id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`topic_id` BIGINT(20) UNSIGNED NOT NULL,
 	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (`app_id`),
-	INDEX `FK_producer_topic` (`topic_id`),
-	CONSTRAINT `FK_producer_topic` FOREIGN KEY (`topic_id`) REFERENCES `topic` (`id`)
+	PRIMARY KEY (`app_id`)
 );
 
 CREATE TABLE `consumer_group` (

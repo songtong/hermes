@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.hermes.metaservice.model" gen="true">
 	<entity name="meta">
+	    <member name="version" value-type="Long" />
 		<query-defs>
 			<query name="findLatest" type="SELECT">
 				<statement><![CDATA[SELECT <FIELDS/>
@@ -81,6 +82,7 @@
 		</query-defs>
 	</entity>
 	<entity name="schema">
+		<member name="avroid" value-type="Integer" />
 		<var name="tId" value-type="long" />
 		<var name="aId" value-type="int" />
 		<query-defs>
@@ -150,6 +152,8 @@
 		</query-defs>
 	</entity>
 	<entity name="consumer-group">
+		<member name="ack-timeout-seconds" value-type="Integer" />
+		<member name="ordered-consume" value-type="Boolean" />
 		<var name="tId" value-type="long" />
 		<var name="cName" value-type="String"/>
 		<query-defs>
@@ -180,6 +184,7 @@
 		</query-defs>
 	</entity>
 	<entity name="endpoint">
+		<member name="port" value-type="Integer" />
 		<query-defs>
 			<query name="list" type="SELECT" multiple="true">
 				<statement><![CDATA[SELECT <FIELDS/>
@@ -226,6 +231,13 @@
 		</query-defs>
 	</entity>
 	<entity name="topic">
+		<member name="partition-count" value-type="Integer" />
+		<member name="schema-id" value-type="Long" />
+		<member name="ack-timeout-seconds" value-type="Integer" />
+		<member name="storage-partition-size" value-type="Long" />
+		<member name="resend-partition-size" value-type="Long" />
+		<member name="storage-partition-count" value-type="Integer" />
+		<member name="priority-message-enabled" value-type="Boolean" />
 		<var name="tName" value-type="String" />
 		<query-defs>
 			<query name="list" type="SELECT" multiple="true">

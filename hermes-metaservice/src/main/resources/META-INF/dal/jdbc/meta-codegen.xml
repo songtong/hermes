@@ -121,7 +121,6 @@
     <member name="storage-type" field="storage_type" value-type="String" length="50" />
     <var name="key-id" value-type="String" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="FK_datasource_storage" members="storage_type ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -280,9 +279,6 @@
     <var name="key-id" value-type="int" key-member="id" />
     <var name="key-topic-id" value-type="long" key-member="topic-id" />
     <primary-key name="PRIMARY" members="id, topic_id" />
-    <index name="FK_partition_topic" members="topic_id ASC" />
-    <index name="FK_partition_datasource_read" members="read_datasource ASC" />
-    <index name="FK_partition_datasource_write" members="write_datasource ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -322,7 +318,6 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-app-id" value-type="long" key-member="app-id" />
     <primary-key name="PRIMARY" members="app_id" />
-    <index name="FK_producer_topic" members="topic_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -537,7 +532,6 @@
     <member name="priority-message-enabled" field="priority_message_enabled" value-type="boolean" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="FK_topic_schema" members="schema_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

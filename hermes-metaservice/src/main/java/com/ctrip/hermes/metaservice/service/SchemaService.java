@@ -42,7 +42,7 @@ public class SchemaService {
 
 	@Inject
 	private TopicDao m_topicDao;
-	
+
 	@Inject
 	private SchemaDao m_schemaDao;
 
@@ -177,7 +177,8 @@ public class SchemaService {
 		}
 		m_schemaDao.insert(schema);
 
-		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(), TopicEntity.READSET_FULL);
+		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(),
+		      TopicEntity.READSET_FULL);
 		topicModel.setSchemaId(schema.getId());
 		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
@@ -208,15 +209,16 @@ public class SchemaService {
 					break;
 				}
 			}
-			
-			com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(), TopicEntity.READSET_FULL);
+
+			com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(),
+			      TopicEntity.READSET_FULL);
 			if (schemas.size() > 0 && topic.getSchemaId() != schemas.get(0).getId()) {
 				topicModel.setSchemaId(schemas.get(0).getId());
 			} else if (schemas.size() == 0) {
-				topicModel.setSchemaId(0);
+				topicModel.setSchemaId(null);
 			}
 			m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
-			
+
 			m_schemaDao.deleteByPK(schema);
 			m_logger.info("Deleted schema id: {}", id);
 		}
