@@ -10,6 +10,7 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.metaservice.service.MetaRefactor;
 import com.ctrip.hermes.metaservice.service.MetaService;
 import com.google.common.io.Files;
 
@@ -34,5 +35,11 @@ public class MetaLoader extends ComponentTestCase {
 		Assert.assertEquals(metaFile.getVersion(), metaDB.getVersion());
 		Assert.assertEquals(metaFile.getId(), metaDB.getId());
 		Assert.assertEquals(metaFile, metaDB);
+	}
+	
+	@Test
+	public void refactorMeta() throws Exception {
+		MetaRefactor refactor = lookup(MetaRefactor.class);
+		refactor.refactor();
 	}
 }

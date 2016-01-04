@@ -14,6 +14,7 @@ import com.ctrip.hermes.metaservice.queue.ds.MessageQueueDatasourceProvider;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider;
 import com.ctrip.hermes.metaservice.service.DefaultMetaService;
 import com.ctrip.hermes.metaservice.service.DefaultZookeeperService;
+import com.ctrip.hermes.metaservice.service.MetaRefactor;
 import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.StorageDataSourceProvider;
 import com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler;
@@ -53,6 +54,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
 		all.addAll(new FxHermesShardDbDatabaseConfigurator().defineComponents());
 
+		all.add(A(MetaRefactor.class));
+		
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/ctrip/data/hermes/datasources.xml"));
 
 		return all;
