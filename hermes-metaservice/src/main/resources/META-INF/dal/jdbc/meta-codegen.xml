@@ -277,13 +277,13 @@
     </query-defs>
   </entity>
   <entity name="partition" table="partition" alias="p">
-    <member name="partition-id" field="partition_id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="partition-id" field="partition_id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
     <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
     <member name="id" field="id" value-type="int" length="10" nullable="false" />
     <member name="read-datasource" field="read_datasource" value-type="String" length="500" nullable="false" />
     <member name="write-datasource" field="write_datasource" value-type="String" length="500" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
-    <var name="key-partition-id" value-type="int" key-member="partition-id" />
+    <var name="key-partition-id" value-type="long" key-member="partition-id" />
     <primary-key name="PRIMARY" members="partition_id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <index name="topic_id" members="topic_id ASC" />

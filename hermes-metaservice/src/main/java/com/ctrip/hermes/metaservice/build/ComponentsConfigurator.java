@@ -26,9 +26,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 	public List<Component> defineComponents() {
 		List<Component> all = new ArrayList<Component>();
 
-		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
-		all.addAll(new FxHermesShardDbDatabaseConfigurator().defineComponents());
-		
 		all.add(A(DefaultMetaService.class));
 		all.add(A(DefaultZookeeperService.class));
 		all.add(A(ZKConfig.class));

@@ -84,15 +84,4 @@ public class PortalMetaResource {
 		return Response.status(Status.OK).build();
 	}
 
-	@POST
-	@Path("restore")
-	public Response restoreMeta() {
-		try {
-			metaRefactor.restore();
-		} catch (Exception e) {
-			logger.warn("restore meta failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-		}
-		return Response.status(Status.OK).build();
-	}
 }

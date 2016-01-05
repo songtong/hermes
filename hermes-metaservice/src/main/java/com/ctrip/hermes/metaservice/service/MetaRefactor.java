@@ -1,35 +1,21 @@
 package com.ctrip.hermes.metaservice.service;
 
-import java.util.List;
-
-import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.metaservice.model.AppDao;
-import com.ctrip.hermes.metaservice.model.AppEntity;
 import com.ctrip.hermes.metaservice.model.CodecDao;
-import com.ctrip.hermes.metaservice.model.CodecEntity;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
 import com.ctrip.hermes.metaservice.model.DatasourceDao;
-import com.ctrip.hermes.metaservice.model.DatasourceEntity;
 import com.ctrip.hermes.metaservice.model.EndpointDao;
-import com.ctrip.hermes.metaservice.model.EndpointEntity;
 import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.PartitionDao;
-import com.ctrip.hermes.metaservice.model.PartitionEntity;
 import com.ctrip.hermes.metaservice.model.ProducerDao;
-import com.ctrip.hermes.metaservice.model.ProducerEntity;
 import com.ctrip.hermes.metaservice.model.ServerDao;
-import com.ctrip.hermes.metaservice.model.ServerEntity;
 import com.ctrip.hermes.metaservice.model.StorageDao;
-import com.ctrip.hermes.metaservice.model.StorageEntity;
-import com.ctrip.hermes.metaservice.model.Topic;
 import com.ctrip.hermes.metaservice.model.TopicDao;
-import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 @Named
 public class MetaRefactor {
@@ -69,48 +55,6 @@ public class MetaRefactor {
 
 	@Inject
 	private ConsumerGroupDao consumerGroupDao;
-
-	public void restore() throws Exception {
-		for (com.ctrip.hermes.metaservice.model.Topic model : topicDao.list(TopicEntity.READSET_FULL)) {
-			for (com.ctrip.hermes.metaservice.model.ConsumerGroup cg : consumerGroupDao.findByTopicId(model.getId(),
-			      ConsumerGroupEntity.READSET_FULL)) {
-				consumerGroupDao.deleteByPK(cg);
-			}
-			for (com.ctrip.hermes.metaservice.model.Producer producer : producerDao.findByTopicId(model.getId(),
-			      ProducerEntity.READSET_FULL)) {
-				producerDao.deleteByPK(producer);
-			}
-			for (com.ctrip.hermes.metaservice.model.Partition partition : partitionDao.findByTopicId(model.getId(),
-			      PartitionEntity.READSET_FULL)) {
-				partitionDao.deleteByTopicId(partition);
-			}
-			topicDao.deleteByPK(model);
-		}
-
-		for (com.ctrip.hermes.metaservice.model.Codec model : codecDao.list(CodecEntity.READSET_FULL)) {
-			codecDao.deleteByPK(model);
-		}
-
-		for (com.ctrip.hermes.metaservice.model.App model : appDao.list(AppEntity.READSET_FULL)) {
-			appDao.deleteByPK(model);
-		}
-
-		for (com.ctrip.hermes.metaservice.model.Endpoint model : endpointDao.list(EndpointEntity.READSET_FULL)) {
-			endpointDao.deleteByPK(model);
-		}
-
-		for (com.ctrip.hermes.metaservice.model.Storage model : storageDao.list(StorageEntity.READSET_FULL)) {
-			for (com.ctrip.hermes.metaservice.model.Datasource ds : datasourceDao.findByStorageType(model.getType(),
-			      DatasourceEntity.READSET_FULL)) {
-				datasourceDao.deleteByPK(ds);
-			}
-			storageDao.deleteByPK(model);
-		}
-
-		for (com.ctrip.hermes.metaservice.model.Server model : serverDao.list(ServerEntity.READSET_FULL)) {
-			serverDao.deleteByPK(model);
-		}
-	}
 
 	public void refactor() throws Exception {
 		tm.startTransaction("fxhermesmetadb");
@@ -187,7 +131,8 @@ public class MetaRefactor {
 				tm.commitTransaction();
 			}
 		} catch (Exception e) {
-			tm.rollbackTransaction();
+			e.printStackTrace();
+//			tm.rollbackTransaction();
 			throw e;
 		}
 	}
