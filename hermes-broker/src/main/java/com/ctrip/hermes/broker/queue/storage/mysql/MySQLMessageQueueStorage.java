@@ -165,7 +165,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	}
 
 	@Override
-	public synchronized Object findLastOffset(Tpp tpp, int groupId) throws Exception {
+	public synchronized Object findLastOffset(Tpp tpp, int groupId) throws DalException {
 		String topic = tpp.getTopic();
 		int partition = tpp.getPartition();
 		int priority = tpp.getPriorityInt();
@@ -174,7 +174,12 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			return 0L;
 		}
 
-		List<OffsetMessage> lastOffset = m_offsetMessageDao.find(topic, partition, priority, groupId,
+		return findLastOffset(topic, partition, priority, groupId).getOffset();
+	}
+
+	private synchronized OffsetMessage findLastOffset(String topic, int partition, int priority, int intGroupId)
+	      throws DalException {
+		List<OffsetMessage> lastOffset = m_offsetMessageDao.find(topic, partition, priority, intGroupId,
 		      OffsetMessageEntity.READSET_FULL);
 
 		if (lastOffset.isEmpty()) {
@@ -187,16 +192,16 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 			OffsetMessage offset = new OffsetMessage();
 			offset.setCreationDate(new Date());
-			offset.setGroupId(groupId);
+			offset.setGroupId(intGroupId);
 			offset.setOffset(startOffset);
 			offset.setPartition(partition);
 			offset.setPriority(priority);
 			offset.setTopic(topic);
 
 			m_offsetMessageDao.insert(offset);
-			return offset.getOffset();
+			return offset;
 		} else {
-			return CollectionUtil.last(lastOffset).getOffset();
+			return CollectionUtil.last(lastOffset);
 		}
 	}
 
@@ -431,11 +436,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		if (!m_offsetMessageCache.containsKey(key)) {
 			synchronized (m_offsetMessageCache) {
 				if (!m_offsetMessageCache.containsKey(key)) {
-					List<OffsetMessage> offsetMessageRow = m_offsetMessageDao.find(tpp.getTopic(), tpp.getPartition(),
-					      tpp.getPriorityInt(), intGroupId, OffsetMessageEntity.READSET_FULL);
-
-					OffsetMessage proto = CollectionUtil.first(offsetMessageRow);
-					m_offsetMessageCache.put(key, proto);
+					m_offsetMessageCache.put(key,
+					      findLastOffset(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), intGroupId));
 				}
 			}
 		}
@@ -448,11 +450,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		if (!m_offsetResendCache.containsKey(tpg)) {
 			synchronized (m_offsetResendCache) {
 				if (!m_offsetResendCache.containsKey(tpg)) {
-					List<OffsetResend> offsetResendRow = m_offsetResendDao.top(tpg.getFirst(), tpg.getMiddle(),
-					      tpg.getLast(), OffsetResendEntity.READSET_FULL);
-
-					OffsetResend proto = CollectionUtil.first(offsetResendRow);
-					m_offsetResendCache.put(tpg, proto);
+					m_offsetResendCache.put(tpg, findLastResendOffset(topic, partition, intGroupId));
 				}
 			}
 		}
@@ -460,24 +458,29 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	}
 
 	@Override
-	public synchronized Object findLastResendOffset(Tpg tpg) throws Exception {
-		int groupId = m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId());
-		List<OffsetResend> tops = m_offsetResendDao.top(tpg.getTopic(), tpg.getPartition(), groupId,
-		      OffsetResendEntity.READSET_FULL);
+	public synchronized Object findLastResendOffset(Tpg tpg) throws DalException {
+		int intGroupId = m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId());
+		OffsetResend offset = findLastResendOffset(tpg.getTopic(), tpg.getPartition(), intGroupId);
+		return new Pair<>(offset.getLastScheduleDate(), offset.getLastId());
+	}
+
+	private synchronized OffsetResend findLastResendOffset(String topic, int partition, int intGroupId)
+	      throws DalException {
+		List<OffsetResend> tops = m_offsetResendDao.top(topic, partition, intGroupId, OffsetResendEntity.READSET_FULL);
 		if (CollectionUtil.isNotEmpty(tops)) {
 			OffsetResend top = CollectionUtil.first(tops);
-			return new Pair<>(top.getLastScheduleDate(), top.getLastId());
+			return top;
 		} else {
 			OffsetResend proto = new OffsetResend();
-			proto.setTopic(tpg.getTopic());
-			proto.setPartition(tpg.getPartition());
-			proto.setGroupId(m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId()));
+			proto.setTopic(topic);
+			proto.setPartition(partition);
+			proto.setGroupId(intGroupId);
 			proto.setLastScheduleDate(new Date(0));
 			proto.setLastId(0L);
 			proto.setCreationDate(new Date());
 
 			m_offsetResendDao.insert(proto);
-			return new Pair<>(proto.getLastScheduleDate(), proto.getLastId());
+			return proto;
 		}
 	}
 
