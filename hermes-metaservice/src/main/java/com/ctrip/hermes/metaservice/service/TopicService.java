@@ -261,7 +261,7 @@ public class TopicService {
 		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topic.getPartitions()) {
 			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
 			partitionModel.setTopicId(topic.getId());
-			m_partitionDao.deleteByPK(partitionModel);
+			m_partitionDao.deleteByTopicId(partitionModel);
 		}
 		for (com.ctrip.hermes.meta.entity.ConsumerGroup cgEntity : topic.getConsumerGroups()) {
 			com.ctrip.hermes.metaservice.model.ConsumerGroup cgModel = EntityToModelConverter.convert(cgEntity);

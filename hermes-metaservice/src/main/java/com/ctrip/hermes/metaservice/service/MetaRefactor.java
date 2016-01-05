@@ -82,7 +82,7 @@ public class MetaRefactor {
 			}
 			for (com.ctrip.hermes.metaservice.model.Partition partition : partitionDao.findByTopicId(model.getId(),
 			      PartitionEntity.READSET_FULL)) {
-				partitionDao.deleteByPK(partition);
+				partitionDao.deleteByTopicId(partition);
 			}
 			topicDao.deleteByPK(model);
 		}

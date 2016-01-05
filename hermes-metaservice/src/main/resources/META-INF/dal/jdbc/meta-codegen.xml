@@ -5,6 +5,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -41,6 +42,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-type" value-type="String" key-member="type" />
     <primary-key name="PRIMARY" members="type" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -84,6 +86,7 @@
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="FK_consumer_group_topic" members="topic_id ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -115,12 +118,13 @@
     </query-defs>
   </entity>
   <entity name="datasource" table="datasource" alias="d">
-    <member name="id" field="id" value-type="String" length="500" nullable="false" key="true" />
-    <member name="properties" field="properties" value-type="String" length="5000" nullable="false" />
+    <member name="id" field="id" value-type="String" length="200" nullable="false" key="true" />
+    <member name="properties" field="properties" value-type="String" length="5000" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <member name="storage-type" field="storage_type" value-type="String" length="50" />
     <var name="key-id" value-type="String" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -159,6 +163,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="String" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -191,11 +196,12 @@
   </entity>
   <entity name="meta" table="meta" alias="m">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
-    <member name="value" field="value" value-type="String" length="65535" />
+    <member name="value" field="value" value-type="String" length="2147483647" nullable="false" />
     <member name="version" field="version" value-type="long" length="19" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -271,14 +277,17 @@
     </query-defs>
   </entity>
   <entity name="partition" table="partition" alias="p">
-    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" />
+    <member name="partition-id" field="partition_id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
+    <member name="id" field="id" value-type="int" length="10" nullable="false" />
     <member name="read-datasource" field="read_datasource" value-type="String" length="500" nullable="false" />
     <member name="write-datasource" field="write_datasource" value-type="String" length="500" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
-    <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" key="true" />
-    <var name="key-id" value-type="int" key-member="id" />
-    <var name="key-topic-id" value-type="long" key-member="topic-id" />
-    <primary-key name="PRIMARY" members="id, topic_id" />
+    <var name="key-partition-id" value-type="int" key-member="partition-id" />
+    <primary-key name="PRIMARY" members="partition_id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="topic_id" members="topic_id ASC" />
+    <index name="id" members="id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -287,28 +296,25 @@
     </updatesets>
     <query-defs>
       <query name="find-by-PK" type="SELECT">
-        <param name="key-id" />
-        <param name="key-topic-id" />
+        <param name="key-partition-id" />
         <statement><![CDATA[SELECT <FIELDS/>
         FROM <TABLE/>
-        WHERE <FIELD name='id'/> = ${key-id} AND <FIELD name='topic-id'/> = ${key-topic-id}]]></statement>
+        WHERE <FIELD name='partition-id'/> = ${key-partition-id}]]></statement>
       </query>
       <query name="insert" type="INSERT">
         <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
         VALUES(<VALUES/>)]]></statement>
       </query>
       <query name="update-by-PK" type="UPDATE">
-        <param name="key-id" />
-        <param name="key-topic-id" />
+        <param name="key-partition-id" />
         <statement><![CDATA[UPDATE <TABLE/>
         SET <FIELDS/>
-        WHERE <FIELD name='id'/> = ${key-id} AND <FIELD name='topic-id'/> = ${key-topic-id}]]></statement>
+        WHERE <FIELD name='partition-id'/> = ${key-partition-id}]]></statement>
       </query>
       <query name="delete-by-PK" type="DELETE">
-        <param name="key-id" />
-        <param name="key-topic-id" />
+        <param name="key-partition-id" />
         <statement><![CDATA[DELETE FROM <TABLE/>
-        WHERE <FIELD name='id'/> = ${key-id} AND <FIELD name='topic-id'/> = ${key-topic-id}]]></statement>
+        WHERE <FIELD name='partition-id'/> = ${key-partition-id}]]></statement>
       </query>
     </query-defs>
   </entity>
@@ -318,6 +324,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-app-id" value-type="long" key-member="app-id" />
     <primary-key name="PRIMARY" members="app_id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -356,15 +363,16 @@
     <member name="version" field="version" value-type="int" length="10" nullable="false" />
     <member name="description" field="description" value-type="String" length="5000" />
     <member name="compatibility" field="compatibility" value-type="String" length="50" />
-    <member name="create-time" field="create_time" value-type="Date" nullable="false" />
+    <member name="create-time" field="create_time" value-type="Date" />
     <member name="schema-content" field="schema_content" value-type="byte[]" length="16777215" />
     <member name="schema-properties" field="schema_properties" value-type="String" length="65535" />
     <member name="jar-content" field="jar_content" value-type="byte[]" length="16777215" />
     <member name="jar-properties" field="jar_properties" value-type="String" length="65535" />
     <member name="avroid" field="avroid" value-type="int" length="10" />
-    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -402,6 +410,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="String" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -435,10 +444,11 @@
   <entity name="storage" table="storage" alias="s3">
     <member name="type" field="type" value-type="String" length="50" nullable="false" key="true" />
     <member name="default" field="default" value-type="boolean" nullable="false" />
-    <member name="properties" field="properties" value-type="String" length="5000" nullable="false" />
+    <member name="properties" field="properties" value-type="String" length="5000" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-type" value-type="String" key-member="type" />
     <primary-key name="PRIMARY" members="type" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -479,6 +489,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -532,6 +543,7 @@
     <member name="priority-message-enabled" field="priority_message_enabled" value-type="boolean" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

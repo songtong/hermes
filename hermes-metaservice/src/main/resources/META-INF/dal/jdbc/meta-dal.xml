@@ -194,12 +194,19 @@
 	</entity>
 	<entity name="partition">
 		<var name="tId" value-type="long" />
+		<var name="pId" value-type="int" />
 		<query-defs>
 			<query name="find-by-topicId" type="SELECT" multiple="true">
 				<param name="tId" />
 				<statement><![CDATA[SELECT <FIELDS/>
         FROM <TABLE/>
         WHERE <FIELD name='topic-id'/> = ${tId} ]]></statement>
+			</query>
+			<query name="delete-by-topicId" type="DELETE">
+				<param name="tId"/>
+				<param name="pId"/>
+				<statement><![CDATA[DELETE FROM <TABLE/>
+		WHERE <FIELD name='topic-id'/> = ${tId} AND <FIELD name='id'/> = ${pId} ]]></statement>
 			</query>
 		</query-defs>
 	</entity>
