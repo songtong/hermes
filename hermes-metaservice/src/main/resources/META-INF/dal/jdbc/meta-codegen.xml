@@ -85,8 +85,8 @@
     <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="FK_consumer_group_topic" members="topic_id ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="topic_id" members="topic_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
