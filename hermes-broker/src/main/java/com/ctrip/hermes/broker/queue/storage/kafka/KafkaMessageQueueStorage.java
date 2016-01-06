@@ -48,7 +48,7 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 					byte[] bytes = new byte[bodyBuf.readableBytes()];
 					bodyBuf.readBytes(bytes);
 					bodyBuf.clear();
-					
+
 					ByteBuf propertiesBuf = pdmsg.getDurableProperties();
 					HermesPrimitiveCodec codec = new HermesPrimitiveCodec(propertiesBuf);
 					Map<String, String> propertiesMap = codec.readStringStringMap();
@@ -105,12 +105,12 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 
 	@Override
 	public Object findMessageOffsetByTime(Tpp tpp, long time) {
-		return null;
+		throw new UnsupportedOperationException("Kafka topic doesn't support this operation!");
 	}
 
 	@Override
-   public FetchResult fetchMessages(Tpp tpp, List<Object> offsets) {
-	   return null;
-   }
+	public FetchResult fetchMessages(Tpp tpp, List<Object> offsets) {
+		throw new UnsupportedOperationException("Kafka topic doesn't support this operation!");
+	}
 
 }

@@ -358,17 +358,16 @@ public class RemoteMetaProxy implements MetaProxy {
 		String response = get("/message/offset", params);
 		if (response != null) {
 			try {
-				return parseFromJsonObject((Map<Integer, JSONObject>) JSON.parse(response));
-			} catch (Exception e) {
-				log.warn("Parse Offset object failed when query message offset[{}:{} {}].", topic, partition, time, e);
-				if (log.isDebugEnabled()) {
-					log.debug("Error response string: {}", response);
+				Map<Integer, JSONObject> map = (Map<Integer, JSONObject>) JSON.parse(response);
+				if (map != null) {
+					return parseFromJsonObject(map);
 				}
+			} catch (Exception e) {
+				log.warn("Parse Offset object failed: [{}({}), {}], response:{}.", topic, partition, time, response, e);
 			}
-		} else {
-			log.warn("No response while getting meta server[findMessageOffsetByTime]");
 		}
-		return null;
+		throw new RuntimeException(String.format("Find message offset failed: [%s(%s), %s], response:%s.", //
+		      topic, partition, time, response));
 	}
 
 	public Map<Integer, Offset> parseFromJsonObject(Map<Integer, JSONObject> map) {

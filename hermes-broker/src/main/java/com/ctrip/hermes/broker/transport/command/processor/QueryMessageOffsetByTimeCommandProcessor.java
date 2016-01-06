@@ -41,6 +41,7 @@ public class QueryMessageOffsetByTimeCommandProcessor extends ContainerHolder im
 		return Arrays.asList(CommandType.QUERY_MESSAGE_OFFSET_BY_TIME);
 	}
 
+	// return null[when error] or (0, 0)[when not found]
 	@Override
 	public void process(CommandProcessorContext ctx) {
 		QueryMessageOffsetByTimeCommand reqCmd = (QueryMessageOffsetByTimeCommand) ctx.getCommand();

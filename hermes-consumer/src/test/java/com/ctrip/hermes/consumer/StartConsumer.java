@@ -43,6 +43,11 @@ public class StartConsumer extends ComponentTestCase {
 	}
 
 	@Test
+	public void testQueryMessageOffset() throws Exception {
+		System.out.println(Consumer.getInstance().getOffsetByTime("song.test", 0, Long.MIN_VALUE));
+	}
+
+	@Test
 	public void testMessageStream() throws Exception {
 		MessageStreamHolder<String> holder = Consumer.getInstance().openMessageStreams("song.test", "song.test.group",
 		      String.class, new HermesOffsetStorage(), new PartitionMetaListener() {

@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.core.transport.command.QueryMessageOffsetByTimeCommand;
 import com.ctrip.hermes.core.transport.command.QueryOffsetResultCommand;
@@ -147,24 +148,32 @@ public class MessageAssistResource {
 	}
 
 	private Offset findOffsetByTime(String topic, int partition, long time, Endpoint endpoint) throws Exception {
-		SettableFuture<QueryOffsetResultCommand> future = SettableFuture.create();
-
-		QueryMessageOffsetByTimeCommand cmd = new QueryMessageOffsetByTimeCommand(topic, partition, time);
-		cmd.getHeader().setCorrelationId(CorrelationIdGenerator.generateCorrelationId());
-		cmd.setFuture(future);
-
 		long timeout = m_config.getQueryMessageOffsetTimeoutMillis();
+		ExponentialSchedulePolicy backoff = new ExponentialSchedulePolicy(500, (int) timeout);
 
-		m_monitor.monitor(cmd);
+		long expire = System.currentTimeMillis() + timeout;
+		while (!Thread.interrupted() && System.currentTimeMillis() < expire) {
+			SettableFuture<QueryOffsetResultCommand> future = SettableFuture.create();
+			QueryMessageOffsetByTimeCommand cmd = new QueryMessageOffsetByTimeCommand(topic, partition, time);
+			cmd.getHeader().setCorrelationId(CorrelationIdGenerator.generateCorrelationId());
+			cmd.setFuture(future);
 
-		m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
-		QueryOffsetResultCommand resultCmd = null;
-		try {
-			resultCmd = future.get(timeout, TimeUnit.MILLISECONDS);
-			return resultCmd == null ? null : resultCmd.getOffset();
-		} finally {
-			m_monitor.remove(cmd);
+			m_monitor.monitor(cmd);
+			m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
+			QueryOffsetResultCommand resultCmd = null;
+			try {
+				resultCmd = future.get(timeout, TimeUnit.MILLISECONDS);
+				if (resultCmd != null && resultCmd.getOffset() != null) {
+					return resultCmd.getOffset();
+				} else {
+					log.debug("Find offset[topic:{}({})] from broker[{}] failed, will retry!", topic, partition, endpoint);
+					backoff.fail(true);
+				}
+			} finally {
+				m_monitor.remove(cmd);
+			}
 		}
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")
