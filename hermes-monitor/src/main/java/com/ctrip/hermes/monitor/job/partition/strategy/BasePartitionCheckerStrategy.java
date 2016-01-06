@@ -121,7 +121,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 	private List<PartitionInfo> calculateIncrementPartitions(TableContext ctx, long speed, long partitionSize) {
 		List<PartitionInfo> list = new ArrayList<PartitionInfo>();
 		if (speed > 0) {
-			long incrementPartitionCount = ctx.getIncrementInDay() * speed / partitionSize;
+			long incrementPartitionCount = ctx.getIncrementInDay() * speed / partitionSize + 1;
 			if (incrementPartitionCount > getConfig().getPartitionIncrementMaxCount()) {
 				Pair<Long, Long> pair = renewPartitionSizeAndCount(ctx, ctx.getIncrementInDay() * speed,
 				      ctx.getIncrementInDay());
