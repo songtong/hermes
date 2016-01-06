@@ -49,7 +49,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		if (oldest != null && latest != null) {
 			long leftCapacity = getLeftCapacity(ctx, latest);
 			long dailyTotal = getLatestSpeedPerDay(ctx, oldest, latest);
-			if (shouldAddPartition(leftCapacity, dailyTotal, ctx.getWatermarkInDay())) {
+			if (shouldAddPartition(leftCapacity, dailyTotal, ctx.getWatermarkInDay()) || isWrittingLastPartition(ctx)) {
 				addList.addAll(calculateIncrementPartitions(ctx, dailyTotal, getLatestCapacityPerPartition(ctx)));
 			} else {
 				wasteList.addAll(calculateWastePartitions(ctx, latest, dailyTotal));
@@ -60,6 +60,10 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		}
 
 		return new AnalysisResult(addList, dropList, wasteList);
+	}
+
+	private boolean isWrittingLastPartition(TableContext ctx) {
+		return ctx.getPartitionInfos().get(ctx.getPartitionInfos().size() - 1).getRows() != 0;
 	}
 
 	private void correctWasteListWhenTableIsEmpty(TableContext ctx, List<PartitionInfo> wasteList) {
