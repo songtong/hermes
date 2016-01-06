@@ -26,10 +26,6 @@ public interface MetaService {
 
 	Meta refreshMeta() throws DalException;
 
-	Meta buildNewMeta() throws DalException;
-
-	Meta previewNewMeta() throws DalException;
-
 	List<App> findApps() throws DalException;
 
 	List<Codec> findCodecs() throws DalException;

@@ -203,7 +203,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 	}
 
 	private Meta loadBaseMeta() throws Exception {
-		return m_metaService.getMetaEntity();
+		return m_metaService.refreshMeta();
 	}
 
 	@Override

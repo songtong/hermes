@@ -28,6 +28,7 @@ import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.DatasourceEntity;
+import com.ctrip.hermes.metaservice.model.MetaEntity;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 @Named(type = PortalMetaService.class, value = DefaultPortalMetaService.ID)
@@ -38,6 +39,54 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 
 	@Inject
 	private ZookeeperService m_zookeeperService;
+
+	@Override
+	public synchronized Meta buildNewMeta() throws DalException {
+		Meta metaEntity = previewNewMeta();
+		com.ctrip.hermes.metaservice.model.Meta metaModel = EntityToModelConverter.convert(metaEntity);
+		m_metaDao.insert(metaModel);
+		refreshMeta();
+		try {
+			m_zookeeperService.updateZkBaseMetaVersion(this.getMetaEntity().getVersion());
+		} catch (Exception e) {
+			m_logger.warn("update zk base meta failed", e);
+		}
+		return metaEntity;
+	}
+
+	@Override
+	public synchronized Meta previewNewMeta() throws DalException {
+		com.ctrip.hermes.metaservice.model.Meta metaModel = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+		metaModel.setVersion(metaModel.getVersion() + 1);
+		Meta metaEntity = new Meta();
+		metaEntity.setVersion(metaModel.getVersion());
+		List<com.ctrip.hermes.meta.entity.App> apps = findApps();
+		for (com.ctrip.hermes.meta.entity.App entity : apps) {
+			metaEntity.addApp(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Codec> codecs = findCodecs();
+		for (com.ctrip.hermes.meta.entity.Codec entity : codecs) {
+			metaEntity.addCodec(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Endpoint> endpoints = findEndpoints();
+		for (com.ctrip.hermes.meta.entity.Endpoint entity : endpoints) {
+			metaEntity.addEndpoint(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Server> servers = findServers();
+		for (com.ctrip.hermes.meta.entity.Server entity : servers) {
+			metaEntity.addServer(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Storage> storages = findStorages();
+		for (com.ctrip.hermes.meta.entity.Storage entity : storages) {
+			metaEntity.addStorage(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Topic> topics = findTopics();
+		for (com.ctrip.hermes.meta.entity.Topic entity : topics) {
+			metaEntity.addTopic(entity);
+		}
+		metaModel.setValue(JSON.toJSONString(metaEntity));
+		return metaEntity;
+	}
 
 	@Override
 	public Map<String, Topic> getTopics() {
@@ -241,17 +290,6 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				      syncMetaFromDB();
 			      }
 		      }, 1, 1, TimeUnit.MINUTES); // sync from db with interval: 1 mins
-	}
-
-	@Override
-	public synchronized Meta buildNewMeta() throws DalException {
-		Meta newMeta = super.buildNewMeta();
-		try {
-			m_zookeeperService.updateZkBaseMetaVersion(this.getMetaEntity().getVersion());
-		} catch (Exception e) {
-			m_logger.warn("update zk base meta failed", e);
-		}
-		return newMeta;
 	}
 
 	@Override

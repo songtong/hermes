@@ -10,7 +10,6 @@ import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.metaservice.model.App;
 import com.ctrip.hermes.metaservice.model.AppDao;
 import com.ctrip.hermes.metaservice.model.AppEntity;
@@ -89,49 +88,6 @@ public class DefaultMetaService implements MetaService {
 	private Meta m_metaModel;
 
 	private com.ctrip.hermes.meta.entity.Meta m_metaEntity;
-
-	@Override
-	public synchronized com.ctrip.hermes.meta.entity.Meta buildNewMeta() throws DalException {
-		com.ctrip.hermes.meta.entity.Meta metaEntity = previewNewMeta();
-		Meta metaModel = EntityToModelConverter.convert(metaEntity);
-		m_metaDao.insert(metaModel);
-		m_metaModel = metaModel;
-		m_metaEntity = metaEntity;
-		return m_metaEntity;
-	}
-
-	public synchronized com.ctrip.hermes.meta.entity.Meta previewNewMeta() throws DalException {
-		Meta metaModel = m_metaDao.findLatest(MetaEntity.READSET_FULL);
-		metaModel.setVersion(metaModel.getVersion() + 1);
-		com.ctrip.hermes.meta.entity.Meta metaEntity = new com.ctrip.hermes.meta.entity.Meta();
-		metaEntity.setVersion(metaModel.getVersion());
-		List<com.ctrip.hermes.meta.entity.App> apps = findApps();
-		for (com.ctrip.hermes.meta.entity.App entity : apps) {
-			metaEntity.addApp(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Codec> codecs = findCodecs();
-		for (com.ctrip.hermes.meta.entity.Codec entity : codecs) {
-			metaEntity.addCodec(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Endpoint> endpoints = findEndpoints();
-		for (com.ctrip.hermes.meta.entity.Endpoint entity : endpoints) {
-			metaEntity.addEndpoint(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Server> servers = findServers();
-		for (com.ctrip.hermes.meta.entity.Server entity : servers) {
-			metaEntity.addServer(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Storage> storages = findStorages();
-		for (com.ctrip.hermes.meta.entity.Storage entity : storages) {
-			metaEntity.addStorage(entity);
-		}
-		List<com.ctrip.hermes.meta.entity.Topic> topics = findTopics();
-		for (com.ctrip.hermes.meta.entity.Topic entity : topics) {
-			metaEntity.addTopic(entity);
-		}
-		metaModel.setValue(JSON.toJSONString(metaEntity));
-		return metaEntity;
-	}
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.App> findApps() throws DalException {

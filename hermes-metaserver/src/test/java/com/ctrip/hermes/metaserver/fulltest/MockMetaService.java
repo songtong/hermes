@@ -38,16 +38,6 @@ public class MockMetaService implements MetaService {
 	}
 
 	@Override
-	public Meta buildNewMeta() throws DalException {
-		return null;
-	}
-
-	@Override
-	public Meta previewNewMeta() throws DalException {
-		return null;
-	}
-
-	@Override
 	public Meta getMetaEntity() {
 		return null;
 	}
