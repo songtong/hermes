@@ -27,10 +27,10 @@ import org.unidal.lookup.util.StringUtils;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.model.SchemaDao;
 import com.ctrip.hermes.metaservice.model.SchemaEntity;
-import com.ctrip.hermes.metaservice.model.TopicDao;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 @Named
@@ -41,7 +41,7 @@ public class SchemaService {
 	private SchemaRegistryClient avroSchemaRegistry;
 
 	@Inject
-	private TopicDao m_topicDao;
+	private CachedTopicDao m_topicDao;
 
 	@Inject
 	private SchemaDao m_schemaDao;

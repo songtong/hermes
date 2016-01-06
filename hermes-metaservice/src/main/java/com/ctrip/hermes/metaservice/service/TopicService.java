@@ -28,10 +28,10 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
+import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
+import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.PartitionDao;
 import com.ctrip.hermes.metaservice.model.ProducerDao;
-import com.ctrip.hermes.metaservice.model.TopicDao;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
@@ -53,13 +53,13 @@ public class TopicService {
 	private TopicStorageService m_topicStorageService;
 
 	@Inject
-	private TopicDao m_topicDao;
+	private CachedTopicDao m_topicDao;
 
 	@Inject
 	private PartitionDao m_partitionDao;
 
 	@Inject
-	private ConsumerGroupDao m_consumerGroupDao;
+	private CachedConsumerGroupDao m_consumerGroupDao;
 
 	@Inject
 	private ProducerDao m_producerDao;

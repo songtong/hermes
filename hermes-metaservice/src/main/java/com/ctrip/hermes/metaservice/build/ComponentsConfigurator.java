@@ -9,6 +9,14 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.mail.DefaultMailService;
 import com.ctrip.hermes.mail.FileMailAccountProvider;
+import com.ctrip.hermes.metaservice.dal.CachedAppDao;
+import com.ctrip.hermes.metaservice.dal.CachedCodecDao;
+import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
+import com.ctrip.hermes.metaservice.dal.CachedDatasourceDao;
+import com.ctrip.hermes.metaservice.dal.CachedEndpointDao;
+import com.ctrip.hermes.metaservice.dal.CachedServerDao;
+import com.ctrip.hermes.metaservice.dal.CachedStorageDao;
+import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.monitor.dao.DefaultMonitorEventStorage;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueDatasourceProvider;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider;
@@ -52,6 +60,14 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.addAll(new FxHermesShardDbDatabaseConfigurator().defineComponents());
 
 		all.add(A(MetaRefactor.class));
+		all.add(A(CachedAppDao.class));
+		all.add(A(CachedCodecDao.class));
+		all.add(A(CachedConsumerGroupDao.class));
+		all.add(A(CachedDatasourceDao.class));
+		all.add(A(CachedEndpointDao.class));
+		all.add(A(CachedServerDao.class));
+		all.add(A(CachedStorageDao.class));
+		all.add(A(CachedTopicDao.class));
 		
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/ctrip/data/hermes/datasources.xml"));
 

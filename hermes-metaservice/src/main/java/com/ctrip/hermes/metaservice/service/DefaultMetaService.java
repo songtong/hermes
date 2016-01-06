@@ -1,6 +1,7 @@
 package com.ctrip.hermes.metaservice.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -10,21 +11,21 @@ import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.metaservice.dal.CachedAppDao;
+import com.ctrip.hermes.metaservice.dal.CachedCodecDao;
+import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
+import com.ctrip.hermes.metaservice.dal.CachedDatasourceDao;
+import com.ctrip.hermes.metaservice.dal.CachedEndpointDao;
+import com.ctrip.hermes.metaservice.dal.CachedServerDao;
+import com.ctrip.hermes.metaservice.dal.CachedStorageDao;
+import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.App;
-import com.ctrip.hermes.metaservice.model.AppDao;
-import com.ctrip.hermes.metaservice.model.AppEntity;
 import com.ctrip.hermes.metaservice.model.Codec;
-import com.ctrip.hermes.metaservice.model.CodecDao;
-import com.ctrip.hermes.metaservice.model.CodecEntity;
 import com.ctrip.hermes.metaservice.model.ConsumerGroup;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
 import com.ctrip.hermes.metaservice.model.Datasource;
-import com.ctrip.hermes.metaservice.model.DatasourceDao;
 import com.ctrip.hermes.metaservice.model.DatasourceEntity;
 import com.ctrip.hermes.metaservice.model.Endpoint;
-import com.ctrip.hermes.metaservice.model.EndpointDao;
-import com.ctrip.hermes.metaservice.model.EndpointEntity;
 import com.ctrip.hermes.metaservice.model.Meta;
 import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
@@ -35,14 +36,8 @@ import com.ctrip.hermes.metaservice.model.Producer;
 import com.ctrip.hermes.metaservice.model.ProducerDao;
 import com.ctrip.hermes.metaservice.model.ProducerEntity;
 import com.ctrip.hermes.metaservice.model.Server;
-import com.ctrip.hermes.metaservice.model.ServerDao;
-import com.ctrip.hermes.metaservice.model.ServerEntity;
 import com.ctrip.hermes.metaservice.model.Storage;
-import com.ctrip.hermes.metaservice.model.StorageDao;
-import com.ctrip.hermes.metaservice.model.StorageEntity;
 import com.ctrip.hermes.metaservice.model.Topic;
-import com.ctrip.hermes.metaservice.model.TopicDao;
-import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -56,25 +51,25 @@ public class DefaultMetaService implements MetaService {
 	protected MetaDao m_metaDao;
 
 	@Inject
-	protected AppDao m_appDao;
+	protected CachedAppDao m_appDao;
 
 	@Inject
-	protected CodecDao m_codecDao;
+	protected CachedCodecDao m_codecDao;
 
 	@Inject
-	protected EndpointDao m_endpointDao;
+	protected CachedEndpointDao m_endpointDao;
 
 	@Inject
-	protected ServerDao m_serverDao;
+	protected CachedServerDao m_serverDao;
 
 	@Inject
-	protected StorageDao m_storageDao;
+	protected CachedStorageDao m_storageDao;
 
 	@Inject
-	protected TopicDao m_topicDao;
+	protected CachedTopicDao m_topicDao;
 
 	@Inject
-	protected ConsumerGroupDao m_consumerGroupDao;
+	protected CachedConsumerGroupDao m_consumerGroupDao;
 
 	@Inject
 	protected PartitionDao m_partitionDao;
@@ -83,7 +78,7 @@ public class DefaultMetaService implements MetaService {
 	protected ProducerDao m_producerDao;
 
 	@Inject
-	protected DatasourceDao m_datasourceDao;
+	protected CachedDatasourceDao m_datasourceDao;
 
 	private Meta m_metaModel;
 
@@ -91,7 +86,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.App> findApps() throws DalException {
-		List<App> models = m_appDao.list(AppEntity.READSET_FULL);
+		Collection<App> models = m_appDao.list();
 		List<com.ctrip.hermes.meta.entity.App> entities = new ArrayList<>();
 		for (App model : models) {
 			com.ctrip.hermes.meta.entity.App entity = ModelToEntityConverter.convert(model);
@@ -102,7 +97,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Codec> findCodecs() throws DalException {
-		List<Codec> models = m_codecDao.list(CodecEntity.READSET_FULL);
+		Collection<Codec> models = m_codecDao.list();
 		List<com.ctrip.hermes.meta.entity.Codec> entities = new ArrayList<>();
 		for (Codec model : models) {
 			com.ctrip.hermes.meta.entity.Codec entity = ModelToEntityConverter.convert(model);
@@ -139,7 +134,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Endpoint> findEndpoints() throws DalException {
-		List<Endpoint> models = m_endpointDao.list(EndpointEntity.READSET_FULL);
+		Collection<Endpoint> models = m_endpointDao.list();
 		List<com.ctrip.hermes.meta.entity.Endpoint> entities = new ArrayList<>();
 		for (Endpoint model : models) {
 			com.ctrip.hermes.meta.entity.Endpoint entity = ModelToEntityConverter.convert(model);
@@ -189,7 +184,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Server> findServers() throws DalException {
-		List<Server> models = m_serverDao.list(ServerEntity.READSET_FULL);
+		Collection<Server> models = m_serverDao.list();
 		List<com.ctrip.hermes.meta.entity.Server> entities = new ArrayList<>();
 		for (Server model : models) {
 			com.ctrip.hermes.meta.entity.Server entity = ModelToEntityConverter.convert(model);
@@ -200,7 +195,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Storage> findStorages() throws DalException {
-		List<Storage> models = m_storageDao.list(StorageEntity.READSET_FULL);
+		Collection<Storage> models = m_storageDao.list();
 		List<com.ctrip.hermes.meta.entity.Storage> entities = new ArrayList<>();
 		for (Storage model : models) {
 			entities.add(fillStorage(model));
@@ -230,7 +225,7 @@ public class DefaultMetaService implements MetaService {
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Topic> findTopics() throws DalException {
-		List<Topic> models = m_topicDao.list(TopicEntity.READSET_FULL);
+		Collection<Topic> models = m_topicDao.list();
 		List<com.ctrip.hermes.meta.entity.Topic> entities = new ArrayList<>();
 		for (Topic model : models) {
 			entities.add(fillTopic(model));
