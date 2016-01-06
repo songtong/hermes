@@ -63,7 +63,7 @@
 		<snippet lang='java'><![CDATA[
 			public boolean isConnectCatTransactions() {
 				Property p = findProperty("connect-cat-transactions");
-				return p != null && "true".equals(p.getValue());
+				return p == null || "true".equals(p.getValue());
 			}
 			]]>
 		</snippet>
