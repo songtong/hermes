@@ -565,6 +565,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		return false;
 	}
 
+	// return 0 if not found
 	@Override
 	public Object findMessageOffsetByTime(Tpp tpp, long time) {
 		if (!hasStorageForPriority(tpp.getTopic(), tpp.getPriorityInt())) {
@@ -607,24 +608,18 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	private long findMessageOffsetByTimeInRange(Tpp tpp, MessagePriority left, MessagePriority right, long time) {
 		long precisionMillis = m_config.getMessageOffsetQueryPrecisionMillis();
 
-		switch (compareWithPrecision(left.getCreationDate().getTime(), time, precisionMillis)) {
-		case 0:
+		if (compareWithPrecision(left.getCreationDate().getTime(), time, precisionMillis) >= 0) {
 			return left.getId();
-		case 1:
-			return 0L;
 		}
 
-		switch (compareWithPrecision(right.getCreationDate().getTime(), time, precisionMillis)) {
-		case 0:
+		if (compareWithPrecision(right.getCreationDate().getTime(), time, precisionMillis) <= 0) {
 			return right.getId();
-		case -1:
-			return 0L;
 		}
 
 		try {
 			long leftId = left.getId();
 			long rightId = right.getId();
-			while (leftId < rightId) {
+			while (leftId <= rightId) {
 				long midId = leftId + (rightId - leftId) / 2L;
 				MessagePriority mid = m_msgDao.findOffsetById( //
 				      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), midId, READSET_OFFSET);
@@ -641,13 +636,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 					throw new RuntimeException("Impossible compare status!");
 				}
 			}
-			if (leftId == rightId) {
-				MessagePriority msg = m_msgDao.findOffsetById( //
-				      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), leftId, READSET_OFFSET);
-				if (compareWithPrecision(msg.getCreationDate().getTime(), time, precisionMillis) == 0) {
-					return msg.getId();
-				}
-			}
+			MessagePriority msg = m_msgDao.findOffsetById( //
+			      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), rightId, READSET_OFFSET);
+			return msg.getId();
 		} catch (DalException e) {
 			if (log.isDebugEnabled()) {
 				log.debug("Find message by offset failed. {}", tpp, e);
