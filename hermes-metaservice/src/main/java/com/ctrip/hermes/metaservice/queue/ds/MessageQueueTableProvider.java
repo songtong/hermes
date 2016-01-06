@@ -90,7 +90,7 @@ public class MessageQueueTableProvider implements TableProvider {
 
 	private synchronized void updateMeta() {
 		try {
-			m_meta.set(PlexusComponentLocator.lookup(MetaService.class).findLatestMeta());
+			m_meta.set(PlexusComponentLocator.lookup(MetaService.class).refreshMeta());
 		} catch (DalException e) {
 			log.error("Couldn't find latest meta-info from meta-db.", e);
 		}

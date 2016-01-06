@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.hermes.metaservice.model" gen="true">
 	<entity name="meta">
+	    <member name="version" value-type="Long" />
 		<query-defs>
 			<query name="findLatest" type="SELECT">
 				<statement><![CDATA[SELECT <FIELDS/>
@@ -81,6 +82,7 @@
 		</query-defs>
 	</entity>
 	<entity name="schema">
+		<member name="avroid" value-type="Integer" />
 		<var name="tId" value-type="long" />
 		<var name="aId" value-type="int" />
 		<query-defs>
@@ -130,6 +132,131 @@
 				<statement><![CDATA[SELECT <FIELDS/>
       	FROM <TABLE/>
       	WHERE <FIELD name='status'/> = ${tStatus} ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="app">
+		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/> ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="codec">
+		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/> ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="consumer-group">
+		<member name="ack-timeout-seconds" value-type="Integer" />
+		<member name="ordered-consume" value-type="Boolean" />
+		<var name="tId" value-type="long" />
+		<var name="cName" value-type="String"/>
+		<query-defs>
+			<query name="find-by-topicId" type="SELECT" multiple="true">
+				<param name="tId" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='topic-id'/> = ${tId} ]]></statement>
+			</query>
+			<query name="find-by-topicId-and-name" type="SELECT">
+				<param name="tId" />
+				<param name="cName" />
+				<statement><![CDATA[SELECT <FIELDS/>
+		FROM <TABLE/>
+		WHERE <FIELD name='topic-id'/> = ${tId} AND <FIELD name='name'/> = ${cName} ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="datasource">
+		<var name="sType" value-type="String" />
+		<query-defs>
+			<query name="find-by-storageType" type="SELECT" multiple="true">
+				<param name="sType" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='storage-type'/> = ${sType} ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="endpoint">
+		<member name="port" value-type="Integer" />
+		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/> ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="partition">
+		<var name="tId" value-type="long" />
+		<var name="pId" value-type="int" />
+		<query-defs>
+			<query name="find-by-topicId" type="SELECT" multiple="true">
+				<param name="tId" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='topic-id'/> = ${tId} ]]></statement>
+			</query>
+			<query name="delete-by-topicId" type="DELETE">
+				<param name="tId"/>
+				<param name="pId"/>
+				<statement><![CDATA[DELETE FROM <TABLE/>
+		WHERE <FIELD name='topic-id'/> = ${tId} AND <FIELD name='id'/> = ${pId} ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="producer">
+		<var name="tId" value-type="long" />
+		<query-defs>
+			<query name="find-by-topicId" type="SELECT" multiple="true">
+				<param name="tId" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='topic-id'/> = ${tId} ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="server">
+		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/> ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="storage">
+		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/> ]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="topic">
+		<member name="partition-count" value-type="Integer" />
+		<member name="schema-id" value-type="Long" />
+		<member name="ack-timeout-seconds" value-type="Integer" />
+		<member name="storage-partition-size" value-type="Long" />
+		<member name="resend-partition-size" value-type="Long" />
+		<member name="storage-partition-count" value-type="Integer" />
+		<member name="priority-message-enabled" value-type="Boolean" />
+		<var name="tName" value-type="String" />
+		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/> ]]></statement>
+			</query>
+			<query name="find-by-name" type="SELECT">
+				<param name="tName" />
+				<statement><![CDATA[SELECT <FIELDS/>
+		FROM <TABLE/>
+		WHERE <FIELD name='name'/> = ${tName} ]]>
+				</statement>
 			</query>
 		</query-defs>
 	</entity>

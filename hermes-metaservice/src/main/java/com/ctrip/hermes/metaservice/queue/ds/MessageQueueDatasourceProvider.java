@@ -39,7 +39,7 @@ public class MessageQueueDatasourceProvider implements DataSourceProvider {
 		}
 
 		try {
-			Storage storage = m_metaService.findLatestMeta().getStorages().get(Storage.MYSQL);
+			Storage storage = m_metaService.getStorage(Storage.MYSQL);
 			if (storage != null) {
 				for (Datasource ds : storage.getDatasources()) {
 					Map<String, Property> dsProps = ds.getProperties();

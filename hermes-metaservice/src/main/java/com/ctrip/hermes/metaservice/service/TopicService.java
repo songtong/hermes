@@ -1,8 +1,17 @@
 package com.ctrip.hermes.metaservice.service;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Pattern;
+
+import kafka.admin.AdminUtils;
+import kafka.utils.ZkUtils;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
@@ -14,14 +23,20 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.meta.entity.*;
+import com.ctrip.hermes.meta.entity.Datasource;
+import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Property;
+import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
+import com.ctrip.hermes.metaservice.model.PartitionDao;
+import com.ctrip.hermes.metaservice.model.ProducerDao;
+import com.ctrip.hermes.metaservice.model.TopicDao;
+import com.ctrip.hermes.metaservice.model.TopicEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
-
-import kafka.admin.AdminUtils;
-import kafka.utils.ZkUtils;
 
 @Named
 public class TopicService {
@@ -36,6 +51,18 @@ public class TopicService {
 
 	@Inject
 	private TopicStorageService m_topicStorageService;
+
+	@Inject
+	private TopicDao m_topicDao;
+
+	@Inject
+	private PartitionDao m_partitionDao;
+
+	@Inject
+	private ConsumerGroupDao m_consumerGroupDao;
+
+	@Inject
+	private ProducerDao m_producerDao;
 
 	@Inject
 	private ZookeeperService m_zookeeperService;
@@ -65,44 +92,35 @@ public class TopicService {
 	}
 
 	/**
-	 * @param topic
+	 * @param topicEntity
 	 * @return
 	 * @throws DalException
 	 */
-	public Topic createTopic(Topic topic) throws Exception {
-		Meta meta = m_metaService.getMeta();
-		topic.setCreateTime(new Date(System.currentTimeMillis()));
-		topic.setLastModifiedTime(new Date());
-		long maxTopicId = 0;
-		for (Topic topic2 : meta.getTopics().values()) {
-			if (topic2.getId() != null && topic2.getId() > maxTopicId) {
-				maxTopicId = topic2.getId();
-			}
-		}
-		topic.setId(maxTopicId + 1);
+	public Topic createTopic(Topic topicEntity) throws Exception {
+		topicEntity.setCreateTime(new Date(System.currentTimeMillis()));
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+		m_topicDao.insert(topicModel);
+		topicEntity.setId(topicModel.getId());
 
 		int partitionId = 0;
-		for (Partition partition : topic.getPartitions()) {
-			partition.setId(partitionId++);
+		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicEntity.getPartitions()) {
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
+			partitionModel.setId(partitionId++);
+			partitionModel.setTopicId(topicModel.getId());
+			m_partitionDao.insert(partitionModel);
 		}
 
-		meta.addTopic(topic);
-
-		if (Storage.MYSQL.equals(topic.getStorageType())) {
-			if (!m_topicStorageService.initTopicStorage(topic)) {
+		if (Storage.MYSQL.equals(topicEntity.getStorageType())) {
+			if (!m_topicStorageService.initTopicStorage(topicEntity)) {
 				m_logger.error("Init topic storage failed, please try later.");
 				throw new RuntimeException("Init topic storage failed, please try later.");
 			}
 
-			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
-			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
+			m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
+			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 		}
 
-		if (!m_metaService.updateMeta(meta)) {
-			throw new RuntimeException("Update meta failed, please try later");
-		}
-
-		return topic;
+		return topicEntity;
 	}
 
 	/**
@@ -183,7 +201,7 @@ public class TopicService {
 		}
 
 		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
-		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect),false);
+		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
 		zkClient.setZkSerializer(new ZKStringSerializer());
 
 		m_logger.info("delete topic in kafka, topic {}", topic.getName());
@@ -237,12 +255,25 @@ public class TopicService {
 	 * @throws DalException
 	 */
 	public void deleteTopic(String name) throws Exception {
-		Meta meta = m_metaService.getMeta();
-		Topic topic = meta.findTopic(name);
+		Topic topic = m_metaService.findTopicByName(name);
 		if (topic == null)
 			return;
-		meta.removeTopic(name);
+		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topic.getPartitions()) {
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
+			partitionModel.setTopicId(topic.getId());
+			m_partitionDao.deleteByTopicId(partitionModel);
+		}
+		for (com.ctrip.hermes.meta.entity.ConsumerGroup cgEntity : topic.getConsumerGroups()) {
+			com.ctrip.hermes.metaservice.model.ConsumerGroup cgModel = EntityToModelConverter.convert(cgEntity);
+			m_consumerGroupDao.deleteByPK(cgModel);
+		}
+		for (com.ctrip.hermes.meta.entity.Producer producerEntity : topic.getProducers()) {
+			com.ctrip.hermes.metaservice.model.Producer producerModel = EntityToModelConverter.convert(producerEntity);
+			m_producerDao.deleteByPK(producerModel);
+		}
 
+		com.ctrip.hermes.metaservice.model.Topic proto = EntityToModelConverter.convert(topic);
+		m_topicDao.deleteByPK(proto);
 		// Remove related schemas
 		if (topic.getId() != null && topic.getId() > 0) {
 			try {
@@ -266,7 +297,6 @@ public class TopicService {
 				}
 			}
 		}
-		m_metaService.updateMeta(meta);
 	}
 
 	public List<Topic> findTopics(String pattern) {
@@ -302,8 +332,7 @@ public class TopicService {
 	 * @throws Exception
 	 */
 	public Topic updateTopic(Topic topic) throws Exception {
-		Meta meta = m_metaService.getMeta();
-		Topic originTopic = meta.findTopic(topic.getName());
+		Topic originTopic = m_metaService.findTopicByName(topic.getName());
 
 		originTopic.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 		originTopic.setCodecType(topic.getCodecType());
@@ -320,45 +349,16 @@ public class TopicService {
 				partitions.add(partition);
 			}
 		}
-		addPartitionsForTopic(originTopic, partitions);
-
-		meta.removeTopic(originTopic.getName());
-		meta.addTopic(originTopic);
+		addPartitionsForTopic(originTopic.getName(), partitions);
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(originTopic);
+		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 		}
 
-		m_metaService.updateMeta(meta);
 		return originTopic;
-	}
-
-	private Topic addPartitionsForTopic(Topic topic, List<Partition> partitions) throws Exception {
-
-		int partitionId = 0;
-		for (Partition p : topic.getPartitions()) {
-			if (p.getId() != null && p.getId() > partitionId) {
-				partitionId = p.getId();
-			}
-		}
-
-		for (Partition partition : partitions) {
-			partitionId++;
-			partition.setId(partitionId);
-			topic.addPartition(partition);
-			if (Storage.MYSQL.equals(topic.getStorageType())) {
-				if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
-					topic.removePartition(partition.getId());
-					partitionId--;
-					m_logger.error("Add new topic partition failed, please try later.");
-					throw new RuntimeException("Add new topic partition failed, please try later.");
-				}
-
-			}
-		}
-
-		return topic;
 	}
 
 	public Integer queryStorageSize(String ds) throws StorageHandleErrorException {
@@ -374,7 +374,7 @@ public class TopicService {
 	}
 
 	public List<StoragePartition> queryStorageTablePartitions(String ds, String table)
-			throws StorageHandleErrorException {
+	      throws StorageHandleErrorException {
 		return m_topicStorageService.queryTablePartitions(ds, table);
 	}
 
@@ -384,24 +384,24 @@ public class TopicService {
 	 * @param partition
 	 */
 	public Topic addPartitionsForTopic(String topicName, List<Partition> partitions) throws Exception {
-		Meta meta = m_metaService.getMeta();
-		Topic topic = meta.findTopic(topicName);
-
+		Topic topic = m_metaService.findTopicByName(topicName);
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 
 		int partitionId = 0;
 		for (Partition p : topic.getPartitions()) {
-			if (p.getId() != null && p.getId() > partitionId) {
-				partitionId = p.getId();
+			if (p.getId() != null && p.getId() >= partitionId) {
+				partitionId = p.getId() + 1;
 			}
 		}
 
 		for (Partition partition : partitions) {
 			partition.setId(partitionId++);
-			topic.addPartition(partition);
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partition);
+			partitionModel.setTopicId(topic.getId());
+			m_partitionDao.insert(partitionModel);
+
 			if (Storage.MYSQL.equals(topic.getStorageType())) {
 				if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
-					topic.removePartition(partition.getId());
 					partitionId--;
 					m_logger.error("Add new topic partition failed, please try later.");
 					throw new RuntimeException("Add new topic partition failed, please try later.");
@@ -410,13 +410,6 @@ public class TopicService {
 			}
 		}
 
-		meta.removeTopic(topicName);
-		meta.addTopic(topic);
-
-		if (!m_metaService.updateMeta(meta)) {
-			// 增加回滚
-			throw new RuntimeException("Update meta failed, please try later");
-		}
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);

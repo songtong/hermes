@@ -36,3 +36,5 @@ bld/
 hermes-portal/data/elasticsearch/nodes/0/node.lock
 
 hermes-metaserver/src/test/resources/MetaServerTest.xml
+
+datasources.xml

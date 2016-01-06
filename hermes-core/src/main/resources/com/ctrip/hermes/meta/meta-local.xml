@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<meta dev-mode='false' version='1'>
+<meta dev-mode='false' version='1' id='1'>
 
 	<endpoint id='br0' type="broker" host="127.0.0.1" port="4376" />
 

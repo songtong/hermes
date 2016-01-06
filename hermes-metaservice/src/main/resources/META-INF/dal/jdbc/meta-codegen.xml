@@ -1,11 +1,207 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities>
-  <entity name="meta" table="meta" alias="m">
-    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
-    <member name="value" field="value" value-type="String" length="65535" nullable="false" />
+  <entity name="app" table="app" alias="a">
+    <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="codec" table="codec" alias="c">
+    <member name="type" field="type" value-type="String" length="50" nullable="false" key="true" />
+    <member name="properties" field="properties" value-type="String" length="5000" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-type" value-type="String" key-member="type" />
+    <primary-key name="PRIMARY" members="type" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-type" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='type'/> = ${key-type}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-type" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='type'/> = ${key-type}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-type" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='type'/> = ${key-type}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="consumer-group" table="consumer_group" alias="cg">
+    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="name" field="name" value-type="String" length="500" nullable="false" />
+    <member name="appids" field="appids" value-type="String" length="500" />
+    <member name="retry-policy" field="retry_policy" value-type="String" length="500" />
+    <member name="ack-timeout-seconds" field="ack_timeout_seconds" value-type="int" length="10" />
+    <member name="ordered-consume" field="ordered_consume" value-type="boolean" />
+    <member name="owner" field="owner" value-type="String" length="500" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
+    <var name="key-id" value-type="int" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="topic_id" members="topic_id ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="datasource" table="datasource" alias="d">
+    <member name="id" field="id" value-type="String" length="200" nullable="false" key="true" />
+    <member name="properties" field="properties" value-type="String" length="5000" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <member name="storage-type" field="storage_type" value-type="String" length="50" />
+    <var name="key-id" value-type="String" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="endpoint" table="endpoint" alias="e">
+    <member name="id" field="id" value-type="String" length="50" nullable="false" key="true" />
+    <member name="type" field="type" value-type="String" length="500" nullable="false" />
+    <member name="host" field="host" value-type="String" length="500" />
+    <member name="port" field="port" value-type="int" length="5" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="String" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="meta" table="meta" alias="m">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="value" field="value" value-type="String" length="2147483647" nullable="false" />
+    <member name="version" field="version" value-type="long" length="19" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -80,6 +276,85 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="partition" table="partition" alias="p">
+    <member name="partition-id" field="partition_id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
+    <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
+    <member name="id" field="id" value-type="int" length="10" nullable="false" />
+    <member name="read-datasource" field="read_datasource" value-type="String" length="500" nullable="false" />
+    <member name="write-datasource" field="write_datasource" value-type="String" length="500" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-partition-id" value-type="long" key-member="partition-id" />
+    <primary-key name="PRIMARY" members="partition_id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="topic_id" members="topic_id ASC" />
+    <index name="id" members="id ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-partition-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='partition-id'/> = ${key-partition-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-partition-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='partition-id'/> = ${key-partition-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-partition-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='partition-id'/> = ${key-partition-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="producer" table="producer" alias="p2">
+    <member name="app-id" field="app_id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
+    <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-app-id" value-type="long" key-member="app-id" />
+    <primary-key name="PRIMARY" members="app_id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-app-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='app-id'/> = ${key-app-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-app-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='app-id'/> = ${key-app-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-app-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='app-id'/> = ${key-app-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="schema" table="schema" alias="s">
     <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
     <member name="name" field="name" value-type="String" length="500" nullable="false" />
@@ -88,15 +363,16 @@
     <member name="version" field="version" value-type="int" length="10" nullable="false" />
     <member name="description" field="description" value-type="String" length="5000" />
     <member name="compatibility" field="compatibility" value-type="String" length="50" />
-    <member name="create-time" field="create_time" value-type="Date" nullable="false" />
+    <member name="create-time" field="create_time" value-type="Date" />
     <member name="schema-content" field="schema_content" value-type="byte[]" length="16777215" />
     <member name="schema-properties" field="schema_properties" value-type="String" length="65535" />
     <member name="jar-content" field="jar_content" value-type="byte[]" length="16777215" />
     <member name="jar-properties" field="jar_properties" value-type="String" length="65535" />
     <member name="avroid" field="avroid" value-type="int" length="10" />
-    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -127,7 +403,83 @@
       </query>
     </query-defs>
   </entity>
-  <entity name="subscription" table="subscription" alias="s2">
+  <entity name="server" table="server" alias="s2">
+    <member name="id" field="id" value-type="String" length="50" nullable="false" key="true" />
+    <member name="host" field="host" value-type="String" length="500" nullable="false" />
+    <member name="port" field="port" value-type="int" length="5" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="String" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="storage" table="storage" alias="s3">
+    <member name="type" field="type" value-type="String" length="50" nullable="false" key="true" />
+    <member name="default" field="default" value-type="boolean" nullable="false" />
+    <member name="properties" field="properties" value-type="String" length="5000" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-type" value-type="String" key-member="type" />
+    <primary-key name="PRIMARY" members="type" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-type" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='type'/> = ${key-type}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-type" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='type'/> = ${key-type}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-type" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='type'/> = ${key-type}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="subscription" table="subscription" alias="s4">
     <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
     <member name="name" field="name" value-type="String" length="500" nullable="false" />
     <member name="topic" field="topic" value-type="String" length="500" nullable="false" />
@@ -137,6 +489,61 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="topic" table="topic" alias="t">
+    <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
+    <member name="name" field="name" value-type="String" length="500" nullable="false" />
+    <member name="partition-count" field="partition_count" value-type="int" length="5" />
+    <member name="storage-type" field="storage_type" value-type="String" length="50" />
+    <member name="description" field="description" value-type="String" length="5000" />
+    <member name="status" field="status" value-type="String" length="50" />
+    <member name="create-time" field="create_time" value-type="Date" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <member name="schema-id" field="schema_id" value-type="long" length="20" />
+    <member name="consumer-retry-policy" field="consumer_retry_policy" value-type="String" length="500" />
+    <member name="create-by" field="create_by" value-type="String" length="500" />
+    <member name="endpoint-type" field="endpoint_type" value-type="String" length="500" />
+    <member name="ack-timeout-seconds" field="ack_timeout_seconds" value-type="int" length="10" />
+    <member name="codec-type" field="codec_type" value-type="String" length="50" />
+    <member name="other-info" field="other_info" value-type="String" length="5000" />
+    <member name="storage-partition-size" field="storage_partition_size" value-type="long" length="20" />
+    <member name="resend-partition-size" field="resend_partition_size" value-type="long" length="20" />
+    <member name="storage-partition-count" field="storage_partition_count" value-type="int" length="10" />
+    <member name="properties" field="properties" value-type="String" length="5000" />
+    <member name="priority-message-enabled" field="priority_message_enabled" value-type="boolean" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

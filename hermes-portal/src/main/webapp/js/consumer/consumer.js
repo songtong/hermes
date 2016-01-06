@@ -42,11 +42,11 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 									url:'/api/consumers/update'
 								}
 							});
-					meta_resource = resource('/api/meta', {}, {
+					meta_resource = resource('/api/', {}, {
 						'get_topic_names' : {
 							method : 'GET',
 							isArray : true,
-							url : '/api/meta/topics/names'
+							url : '/api/topics/names'
 						}
 					});
 

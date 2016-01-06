@@ -16,7 +16,9 @@ import com.ctrip.hermes.meta.entity.Topic;
 
 public interface PortalMetaService extends MetaService {
 
-	boolean updateMeta(Meta meta) throws DalException;
+	public Meta buildNewMeta() throws DalException;
+
+	public Meta previewNewMeta() throws DalException;
 
 	public Storage findStorageByTopic(String topicName);
 
@@ -34,8 +36,6 @@ public interface PortalMetaService extends MetaService {
 
 	public List<Datasource> findDatasources(String storageType);
 
-	public Meta getMeta();
-
 	public List<Partition> findPartitionsByTopic(String topicName);
 
 	public Map<String, Endpoint> getEndpoints();
@@ -51,6 +51,8 @@ public interface PortalMetaService extends MetaService {
 	public void addDatasource(Datasource datasource, String dsType) throws Exception;
 
 	public void deleteDatasource(String datasourceId, String dsType) throws Exception;
+
+	public void updateDatasource(Datasource datasource) throws Exception;
 
 	public Map<String, Topic> getTopics();
 

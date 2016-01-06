@@ -44,7 +44,7 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 
 	@Override
 	protected void processEvent(Event event) throws Exception {
-		Meta baseMeta = m_metaService.findLatestMeta();
+		Meta baseMeta = m_metaService.refreshMeta();
 
 		ArrayList<Topic> topics = new ArrayList<Topic>(baseMeta.getTopics().values());
 		m_brokerAssignmentHolder.reassign(topics);

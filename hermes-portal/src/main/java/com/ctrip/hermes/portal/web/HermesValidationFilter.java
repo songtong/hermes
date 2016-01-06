@@ -11,6 +11,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.resource.assists.ValidationUtils;
@@ -33,7 +35,10 @@ public class HermesValidationFilter implements Filter {
 		boolean isLogined = false;
 		if (req.getCookies() != null) {
 			try {
-				isLogined = validateCookie(getToken(req));
+				String token = getToken(req);
+				if (StringUtils.isNotEmpty(token)) {
+					isLogined = validateCookie(token);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -53,6 +58,10 @@ public class HermesValidationFilter implements Filter {
 
 	private String getToken(HttpServletRequest request) {
 		String header = request.getHeader("Cookie");
+		if (header == null) {
+			return "";
+		}
+
 		for (String part : header.split("; ")) {
 			int sep = part.indexOf("=");
 			if (sep > 0) {

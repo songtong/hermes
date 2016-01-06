@@ -1,12 +1,9 @@
 package com.ctrip.hermes.metaservice.service;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -20,10 +17,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.core.utils.ObjectUtils;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
@@ -33,6 +27,9 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.model.DatasourceEntity;
+import com.ctrip.hermes.metaservice.model.MetaEntity;
+import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 @Named(type = PortalMetaService.class, value = DefaultPortalMetaService.ID)
 public class DefaultPortalMetaService extends DefaultMetaService implements PortalMetaService, Initializable {
@@ -41,104 +38,148 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	protected static final Logger logger = LoggerFactory.getLogger(DefaultPortalMetaService.class);
 
 	@Inject
-	private ClientEnvironment m_env;
-
-	@Inject
 	private ZookeeperService m_zookeeperService;
 
-	protected Meta m_meta;
-
 	@Override
-	public Meta getMeta() {
-		return ObjectUtils.deepCopy(m_meta, Meta.class);
-	}
-
-	@Override
-	public synchronized boolean updateMeta(Meta meta) throws DalException {
-		if (!meta.getVersion().equals(m_meta.getVersion())) {
-			m_logger.error(String.format("Version isn't match. Required: %s.", m_meta.getVersion()));
-			syncMetaFromDB(); // maybe cached meta is outdate, sync it from db to make sure it is latest
-			return false;
-		}
-
-		if (doUpdateMeta(meta)) { // update db
-			m_meta = meta; // update memory
-			return true;
-		}
-
-		return false;
-	}
-
-	public synchronized boolean doUpdateMeta(Meta meta) throws DalException {
-		Meta latest = findLatestMeta();
-		if (!latest.getVersion().equals(meta.getVersion())) {
-			String e = String.format("Outdated Version. Latest: %s, Offered: %s", latest.getVersion(), meta.getVersion());
-			throw new RuntimeException(e);
-		}
-
-		com.ctrip.hermes.metaservice.model.Meta dalMeta = new com.ctrip.hermes.metaservice.model.Meta();
+	public synchronized Meta buildNewMeta() throws DalException {
+		Meta metaEntity = previewNewMeta();
+		com.ctrip.hermes.metaservice.model.Meta metaModel = EntityToModelConverter.convert(metaEntity);
+		m_metaDao.insert(metaModel);
+		refreshMeta();
 		try {
-			meta.setVersion(meta.getVersion() + 1);
-			dalMeta.setValue(JSON.toJSONString(meta));
-			dalMeta.setDataChangeLastTime(new Date(System.currentTimeMillis()));
-			m_metaDao.insert(dalMeta);
-			m_zookeeperService.updateZkBaseMetaVersion(meta.getVersion());
+			m_zookeeperService.updateZkBaseMetaVersion(this.getMetaEntity().getVersion());
 		} catch (Exception e) {
-			m_logger.warn("Update meta failed", e);
-			throw new RuntimeException("Update meta failed.", e);
+			m_logger.warn("update zk base meta failed", e);
 		}
-		return true;
+		return metaEntity;
+	}
+
+	@Override
+	public synchronized Meta previewNewMeta() throws DalException {
+		com.ctrip.hermes.metaservice.model.Meta metaModel = m_metaDao.findLatest(MetaEntity.READSET_FULL);
+		metaModel.setVersion(metaModel.getVersion() + 1);
+		Meta metaEntity = new Meta();
+		metaEntity.setVersion(metaModel.getVersion());
+		List<com.ctrip.hermes.meta.entity.App> apps = findApps();
+		for (com.ctrip.hermes.meta.entity.App entity : apps) {
+			metaEntity.addApp(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Codec> codecs = findCodecs();
+		for (com.ctrip.hermes.meta.entity.Codec entity : codecs) {
+			metaEntity.addCodec(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Endpoint> endpoints = findEndpoints();
+		for (com.ctrip.hermes.meta.entity.Endpoint entity : endpoints) {
+			metaEntity.addEndpoint(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Server> servers = findServers();
+		for (com.ctrip.hermes.meta.entity.Server entity : servers) {
+			metaEntity.addServer(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Storage> storages = findStorages();
+		for (com.ctrip.hermes.meta.entity.Storage entity : storages) {
+			metaEntity.addStorage(entity);
+		}
+		List<com.ctrip.hermes.meta.entity.Topic> topics = findTopics();
+		for (com.ctrip.hermes.meta.entity.Topic entity : topics) {
+			metaEntity.addTopic(entity);
+		}
+		metaModel.setValue(JSON.toJSONString(metaEntity));
+		return metaEntity;
 	}
 
 	@Override
 	public Map<String, Topic> getTopics() {
-		return m_meta.getTopics();
+		Map<String, Topic> result = new HashMap<String, Topic>();
+		try {
+			List<Topic> topics = findTopics();
+			for (Topic t : topics) {
+				result.put(t.getName(), t);
+			}
+		} catch (DalException e) {
+			logger.warn("get topics failed", e);
+		}
+		return result;
 	}
 
 	@Override
 	public Topic findTopicById(long id) {
-		for (Entry<String, Topic> entry : m_meta.getTopics().entrySet()) {
-			if (entry.getValue().getId() != null && id == entry.getValue().getId()) {
-				return entry.getValue();
-			}
+		try {
+			com.ctrip.hermes.metaservice.model.Topic model = this.m_topicDao.findByPK(id, TopicEntity.READSET_FULL);
+			return fillTopic(model);
+
+		} catch (DalException e) {
+			logger.warn("findTopicById failed", e);
 		}
 		return null;
 	}
 
 	@Override
 	public Topic findTopicByName(String topic) {
-		return m_meta.findTopic(topic);
+		try {
+			com.ctrip.hermes.metaservice.model.Topic model = this.m_topicDao.findByName(topic, TopicEntity.READSET_FULL);
+			return fillTopic(model);
+		} catch (DalException e) {
+			logger.warn("findTopicById failed", e);
+		}
+		return null;
 	}
 
 	@Override
 	public Map<String, Codec> getCodecs() {
-		return m_meta.getCodecs();
+		Map<String, Codec> result = new HashMap<String, Codec>();
+		try {
+			for (Codec codec : findCodecs()) {
+				result.put(codec.getType(), codec);
+			}
+		} catch (DalException e) {
+			logger.warn("getCodecs failed", e);
+		}
+		return result;
 	}
 
 	@Override
 	public Codec findCodecByType(String type) {
-		return m_meta.findCodec(type);
+		return getCodecs().get(type);
 	}
 
 	@Override
 	public Codec findCodecByTopic(String topicName) {
-		Topic topic = m_meta.findTopic(topicName);
-		return topic != null ? m_meta.findCodec(topic.getCodecType()) : null;
+		Topic topic = findTopicByName(topicName);
+		return topic != null ? findCodecByType(topic.getCodecType()) : null;
 	}
 
 	@Override
 	public Map<String, Endpoint> getEndpoints() {
-		return m_meta.getEndpoints();
+		Map<String, Endpoint> result = new HashMap<String, Endpoint>();
+		try {
+			for (Endpoint e : findEndpoints()) {
+				result.put(e.getId(), e);
+			}
+		} catch (DalException e) {
+			logger.warn("getEndpoints failed", e);
+		}
+		return result;
 	}
 
 	@Override
 	public synchronized void addEndpoint(Endpoint endpoint) throws Exception {
-		updateMeta(getMeta().addEndpoint(endpoint));
+		com.ctrip.hermes.metaservice.model.Endpoint proto = EntityToModelConverter.convert(endpoint);
+		m_endpointDao.insert(proto);
+		logger.info("Add Endpoint: {} done.", endpoint);
 	}
 
-	@Override
 	public Map<String, Storage> getStorages() {
-		return m_meta.getStorages();
+		Map<String, Storage> result = new HashMap<>();
+		try {
+			List<Storage> storages = findStorages();
+			for (Storage s : storages) {
+				result.put(s.getType(), s);
+			}
+		} catch (DalException e) {
+			logger.warn("getStorages failed", e);
+		}
+		return result;
 	}
 
 	@Override
@@ -146,7 +187,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		Map<String, Datasource> idMap = new HashMap<>();
 		List<Datasource> dss = new ArrayList<>();
 
-		for (Storage storage : m_meta.getStorages().values()) {
+		for (Storage storage : getStorages().values()) {
 			dss.addAll(storage.getDatasources());
 		}
 
@@ -161,29 +202,36 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 
 	@Override
 	public Storage findStorageByTopic(String topicName) {
-		Topic topic = m_meta.findTopic(topicName);
-		return topic != null ? m_meta.findStorage(topic.getStorageType()) : null;
+		Topic topic = findTopicByName(topicName);
+		try {
+			List<Storage> storages = findStorages();
+			for (Storage s : storages) {
+				if (s.getType().equals(topic.getStorageType()))
+					return s;
+			}
+		} catch (Exception e) {
+			logger.warn("findStorageByTopic failed", e);
+		}
+		return null;
 	}
 
 	@Override
 	public List<Partition> findPartitionsByTopic(String topicName) {
-		Topic topic = m_meta.findTopic(topicName);
-		return topic != null ? topic.getPartitions() : null;
+		Topic topic = findTopicByName(topicName);
+		return topic.getPartitions();
 	}
 
 	@Override
 	public Datasource findDatasource(String storageType, String datasourceId) {
-		Storage storage = m_meta.findStorage(storageType);
-		if (storage != null) {
-			for (Datasource datasource : storage.getDatasources()) {
-				if (datasource.getId().equals(datasourceId)) {
-					Property p = datasource.getProperties().get("password");
-					if (p != null && p.getValue().startsWith("~{") && p.getValue().endsWith("}")) {
-						p.setValue(Codes.forDecode().decode(p.getValue().substring(2, p.getValue().length() - 1)));
-						datasource.getProperties().put("password", p);
-					}
-					return datasource;
+		List<Datasource> datasources = findDatasources(storageType);
+		for (Datasource d : datasources) {
+			if (d.getId().equals(datasourceId)) {
+				Property p = d.getProperties().get("password");
+				if (p != null && p.getValue().startsWith("~{") && p.getValue().endsWith("}")) {
+					p.setValue(Codes.forDecode().decode(p.getValue().substring(2, p.getValue().length() - 1)));
+					d.getProperties().put("password", p);
 				}
+				return d;
 			}
 		}
 		return null;
@@ -191,58 +239,42 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 
 	@Override
 	public void deleteEndpoint(String endpointId) throws Exception {
-		Meta meta = getMeta();
-		if (meta.removeEndpoint(endpointId)) {
-			updateMeta(meta);
-		}
+		com.ctrip.hermes.metaservice.model.Endpoint proto = new com.ctrip.hermes.metaservice.model.Endpoint();
+		proto.setId(endpointId);
+		m_endpointDao.deleteByPK(proto);
+		logger.info("Delete Endpoint: id:{} done.", endpointId);
 	}
 
 	@Override
 	public void addDatasource(Datasource datasource, String dsType) throws Exception {
-		Meta meta = getMeta();
-		Map<String, Storage> storages = meta.getStorages();
-		if (storages.containsKey(dsType)) {
-			meta.getStorages().get(dsType).addDatasource(datasource);
-			updateMeta(meta);
-			logger.info("Add Datasource: DS: {}, done.", datasource);
-		} else {
-			logger.warn("Add Datasource: unknown DSType: {}! DS: {}, won't update meta!", dsType, datasource);
-		}
+		com.ctrip.hermes.metaservice.model.Datasource proto = EntityToModelConverter.convert(datasource);
+		proto.setId(datasource.getId());
+		proto.setStorageType(dsType);
+		m_datasourceDao.insert(proto);
+		logger.info("Add Datasource: DS: {} done.", datasource);
 	}
 
 	@Override
 	public void deleteDatasource(String id, String dsType) throws Exception {
-		Meta meta = getMeta();
-		Storage storage = meta.getStorages().get(dsType);
-		if (null != storage) {
-			List<Datasource> dss = storage.getDatasources();
-			Iterator<Datasource> it = dss.iterator();
-			while (it.hasNext()) {
-				if (it.next().getId().equals(id)) {
-					it.remove();
-				}
-			}
+		com.ctrip.hermes.metaservice.model.Datasource proto = new com.ctrip.hermes.metaservice.model.Datasource();
+		proto.setId(id);
+		m_datasourceDao.deleteByPK(proto);
+		logger.info("Delete Datasource: type:{}, id:{} done. updating Meta.", dsType, id);
+	}
 
-			updateMeta(meta);
-			logger.info("Delete Datasource: type:{}, id:{} done. updating Meta.", dsType, id);
-		} else {
-			logger.info("Delete Datasource: unknown type:{}, id:{}, won't delete anything.", dsType);
-		}
+	@Override
+	public void updateDatasource(Datasource dsEntity) throws Exception {
+		com.ctrip.hermes.metaservice.model.Datasource dsModel = m_datasourceDao.findByPK(dsEntity.getId(),
+		      DatasourceEntity.READSET_FULL);
+		dsModel.setProperties(JSON.toJSONString(dsEntity.getProperties()));
+		m_datasourceDao.updateByPK(dsModel, DatasourceEntity.UPDATESET_FULL);
 	}
 
 	private void syncMetaFromDB() {
 		try {
-			if (m_env.isLocalMode()) { // TODO: local mode should use db?
-				m_meta = new LocalMetaLoader().load();
-			} else {
-				Meta latestMeta = findLatestMeta();
-				if (m_meta == null || latestMeta.getVersion() > m_meta.getVersion()) {
-					m_meta = latestMeta;
-					m_zookeeperService.updateZkBaseMetaVersion(m_meta.getVersion());
-				}
+			if (isMetaUpdated()) {
+				m_zookeeperService.updateZkBaseMetaVersion(this.getMetaEntity().getVersion());
 			}
-		} catch (DalException e) {
-			m_logger.warn("Update meta from db failed.", e);
 		} catch (Exception e) {
 			m_logger.warn("Update meta from db failed, maybe update base meta version in zk failed.", e);
 		}
@@ -250,10 +282,6 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 
 	@Override
 	public void initialize() throws InitializationException {
-		if (m_env.isLocalMode()) {
-			m_logger.info(">>>>> Portal started at local mode. <<<<<");
-		}
-
 		syncMetaFromDB();
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("UpdateMetaUseDB", true))
 		      .scheduleWithFixedDelay(new Runnable() {
@@ -265,8 +293,9 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	}
 
 	@Override
-	public Partition findPartition(String topic, int partitionId) {
-		for (Partition partition : getTopics().get(topic).getPartitions()) {
+	public Partition findPartition(String topicName, int partitionId) {
+		List<Partition> partitions = findPartitionsByTopic(topicName);
+		for (Partition partition : partitions) {
 			if (partitionId == partition.getId()) {
 				return partition;
 			}
@@ -276,23 +305,34 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 
 	@Override
 	public List<Datasource> findDatasources(String storageType) {
-		Storage storage = getStorages().get(storageType);
-		return storage == null ? new ArrayList<Datasource>() : storage.getDatasources();
+		List<Datasource> result = new ArrayList<>();
+		try {
+			List<com.ctrip.hermes.metaservice.model.Datasource> datasources = m_datasourceDao.findByStorageType(
+			      storageType, DatasourceEntity.READSET_FULL);
+			for (com.ctrip.hermes.metaservice.model.Datasource d : datasources) {
+				result.add(ModelToEntityConverter.convert(d));
+			}
+		} catch (Exception e) {
+			logger.warn("findDatasources failed", e);
+		}
+		return result;
 	}
 
 	@Override
 	public List<ConsumerGroup> findConsumersByTopic(String topicName) {
-		Topic topic = m_meta.findTopic(topicName);
-		if (topic != null) {
-			return topic.getConsumerGroups();
-		}
-		return new ArrayList<ConsumerGroup>();
+		Topic topic = findTopicByName(topicName);
+		return topic.getConsumerGroups();
 	}
 
 	@Override
 	public String getZookeeperList() {
-		Map<String, Storage> storages = m_meta.getStorages();
-		for (Storage storage : storages.values()) {
+		List<Storage> storages = new ArrayList<>();
+		try {
+			storages = findStorages();
+		} catch (DalException e) {
+			logger.warn("findStorages failed", e);
+		}
+		for (Storage storage : storages) {
 			if ("kafka".equals(storage.getType())) {
 				for (Datasource ds : storage.getDatasources()) {
 					for (Property property : ds.getProperties().values()) {
@@ -308,8 +348,13 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 
 	@Override
 	public String getKafkaBrokerList() {
-		Map<String, Storage> storages = m_meta.getStorages();
-		for (Storage storage : storages.values()) {
+		List<Storage> storages = new ArrayList<>();
+		try {
+			storages = findStorages();
+		} catch (DalException e) {
+			logger.warn("findStorages failed", e);
+		}
+		for (Storage storage : storages) {
 			if ("kafka".equals(storage.getType())) {
 				for (Datasource ds : storage.getDatasources()) {
 					for (Property property : ds.getProperties().values()) {

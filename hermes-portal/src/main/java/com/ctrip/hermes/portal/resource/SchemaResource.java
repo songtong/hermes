@@ -25,7 +25,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
 import com.alibaba.fastjson.JSON;
@@ -117,7 +116,7 @@ public class SchemaResource {
 			if (schemaView.getId() != null) {
 				try {
 					schemaService.deleteSchema(schemaView.getId());
-				} catch (DalException e1) {
+				} catch (Exception e1) {
 					throw new RestException(e1, Status.INTERNAL_SERVER_ERROR);
 				}
 			}
@@ -139,7 +138,7 @@ public class SchemaResource {
 			schemaService.deleteSchema(schemaId);
 		} catch (DalNotFoundException e) {
 			throw new RestException("Schema not found: " + schemaId, Status.NOT_FOUND);
-		} catch (DalException e) {
+		} catch (Exception e) {
 			logger.warn("Delete schema failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}

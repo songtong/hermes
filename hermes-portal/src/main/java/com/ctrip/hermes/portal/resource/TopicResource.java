@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -139,7 +140,8 @@ public class TopicResource {
 		}
 
 		try {
-			topicView = new TopicView(topicService.createTopic(topic));
+			Topic topicEntity = topicService.createTopic(topic);
+			topicView = new TopicView(topicEntity);
 		} catch (Exception e) {
 			log.error("Create topic failed: {}.", content, e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -161,7 +163,7 @@ public class TopicResource {
 	@POST
 	@Path("{topic}/sync")
 	public Response syncTopic(@PathParam("topic") String topicName,
-			@QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
+	      @QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
 		Topic topic = metaService.findTopicByName(topicName);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
@@ -172,7 +174,7 @@ public class TopicResource {
 			exist = isTopicExistOnTarget(topicName, target);
 		} catch (Exception e) {
 			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
-					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
 		if (exist && !forceSchema) {
 			throw new RestException(String.format("Topic %s is already exists.", topicName), Status.CONFLICT);
@@ -202,9 +204,9 @@ public class TopicResource {
 			ConsumerView requestView = new ConsumerView(topic.getName(), consumer);
 			Response response = request.post(Entity.json(requestView));
 			if (!(Status.CREATED.getStatusCode() == response.getStatus()//
-					|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
+			|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
 				throw new RestException(String.format("Add consumer %s failed.", consumer.getName()),
-						Status.INTERNAL_SERVER_ERROR);
+				      Status.INTERNAL_SERVER_ERROR);
 			}
 		}
 	}
@@ -216,7 +218,7 @@ public class TopicResource {
 			view = request.post(Entity.json(topic), TopicView.class);
 		} catch (Exception e) {
 			throw new RestException(String.format("Sync mysql topic: %s failed: %s", topic.getName(), e.getMessage()),
-					Status.NOT_ACCEPTABLE);
+			      Status.NOT_ACCEPTABLE);
 		}
 		if (view == null || !view.getName().equals(topic.getName())) {
 			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
@@ -255,7 +257,7 @@ public class TopicResource {
 		} catch (Exception e) {
 			log.warn("Sync kafka topic failed.", e);
 			throw new RestException(String.format("Sync kafka topic: %s failed: %s", topic.getName(), e.getMessage()),
-					Status.NOT_ACCEPTABLE);
+			      Status.NOT_ACCEPTABLE);
 		}
 	}
 
@@ -330,8 +332,8 @@ public class TopicResource {
 			}
 		} catch (Exception e) {
 			throw new RestException(
-					"Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
-					Status.INTERNAL_SERVER_ERROR);
+			      "Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
+			      Status.INTERNAL_SERVER_ERROR);
 		}
 		Set<String> ret = new HashSet<String>();
 		for (String ds : iDses) {
@@ -432,6 +434,22 @@ public class TopicResource {
 		topicView.setCodec(codec);
 
 		return topicView;
+	}
+
+	@GET
+	@Path("names")
+	public Response getTopicNames() {
+		List<String> topicNames = new ArrayList<String>();
+		try {
+			for (Topic topic : metaService.findTopics()) {
+				topicNames.add(topic.getName());
+			}
+		} catch (DalException e) {
+			log.warn("get topic name failed", e);
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		Collections.sort(topicNames);
+		return Response.status(Status.OK).entity(topicNames).build();
 	}
 
 	@GET

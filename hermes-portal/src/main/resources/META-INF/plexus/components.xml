@@ -33,6 +33,18 @@
 					<role>com.ctrip.hermes.metaservice.service.storage.TopicStorageService</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.TopicDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.PartitionDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.ConsumerGroupDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.ProducerDao</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
 			</requirements>
@@ -41,6 +53,9 @@
 			<role>com.ctrip.hermes.metaservice.service.SchemaService</role>
 			<implementation>com.ctrip.hermes.metaservice.service.SchemaService</implementation>
 			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.TopicDao</role>
+				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.SchemaDao</role>
 				</requirement>
@@ -90,6 +105,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.ConsumerGroupDao</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -116,13 +134,40 @@
 			<implementation>com.ctrip.hermes.metaservice.service.DefaultPortalMetaService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.AppDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.CodecDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.EndpointDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.ServerDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.StorageDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.TopicDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.ConsumerGroupDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.PartitionDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.ProducerDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.DatasourceDao</role>
 				</requirement>
 			</requirements>
 		</component>

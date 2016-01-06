@@ -2,19 +2,11 @@ var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable
 hermes_storage.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
 }).controller('storage-controller', [ '$scope', '$resource', 'StorageService', function(scope, resource, StorageService) {
-	var meta_resource = resource('/api/meta/', {}, {
+	var meta_resource = resource('/api/storages', {}, {
 		'get_storages' : {
 			method : 'GET',
 			isArray : true,
-			url : '/api/meta/storages'
-		},
-		'update_datasource' : {
-			method : 'POST',
-			url : '/api/meta/storages/:type/:id/update'
-		},
-		'delete_property' : {
-			method : 'DELETE',
-			url : '/api/meta/storages/:type/:id/delprop'
+			url : ''
 		}
 	});
 
@@ -40,12 +32,7 @@ hermes_storage.run(function(editableOptions) {
 	}
 
 	scope.update_datasource = function update_datasource(ds) {
-		meta_resource.update_datasource({
-			'type' : scope.selected.type,
-			'id' : ds.id
-		}, ds, function(result) {
-			show_op_info.show("更新Datasource：" + ds.id + " 成功！",true);
-		});
+		StorageService.update_datasource(scope.selected.type, ds.id,ds);
 	}
 
 	scope.add_row = function add_row(ds) {
@@ -59,13 +46,7 @@ hermes_storage.run(function(editableOptions) {
 	scope.del_row = function del_row(ds, name) {
 		bootbox.confirm("确认删除属性: " + ds.id + "(" + name + ")?", function(result) {
 			if (result) {
-				meta_resource.delete_property({
-					'type' : scope.selected.type,
-					'id' : ds.id,
-					'name' : name
-				}, function(remove_result) {
-					show_op_info.show("删除属性: " + ds.id + "(" + name + ") 成功！");
-				});
+				StorageService.delete_property(scope.selected.type,ds.id,name);
 				delete ds.properties[name];
 			}
 		});

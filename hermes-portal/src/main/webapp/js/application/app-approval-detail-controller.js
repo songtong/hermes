@@ -15,7 +15,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			url : '/api/consumers/add'
 		}
 	});
-	var meta_resource = $resource('/api/meta/storages', {}, {
+	var meta_resource = $resource('/api/storages', {}, {
 		'get_storage' : {
 			method : 'GET',
 			isArray : true,
