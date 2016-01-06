@@ -53,11 +53,6 @@ public class MockMetaService implements MetaService {
 	}
 
 	@Override
-	public com.ctrip.hermes.metaservice.model.Meta getMetaModel() {
-		return null;
-	}
-
-	@Override
 	public List<App> findApps() throws DalException {
 		return null;
 	}

@@ -24,8 +24,6 @@ public interface MetaService {
 
 	Meta getMetaEntity();
 
-	com.ctrip.hermes.metaservice.model.Meta getMetaModel();
-
 	Meta refreshMeta() throws DalException;
 
 	Meta buildNewMeta() throws DalException;

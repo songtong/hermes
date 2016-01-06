@@ -299,18 +299,6 @@ public class DefaultMetaService implements MetaService {
 		return entity;
 	}
 
-	public com.ctrip.hermes.metaservice.model.Meta getMetaModel() {
-		if (m_metaModel == null || m_metaEntity == null) {
-			try {
-				refreshMeta();
-			} catch (DalException e) {
-				m_logger.warn("get meta model failed", e);
-				return new com.ctrip.hermes.metaservice.model.Meta();
-			}
-		}
-		return m_metaModel;
-	}
-
 	public com.ctrip.hermes.meta.entity.Meta getMetaEntity() {
 		if (m_metaModel == null || m_metaEntity == null) {
 			try {

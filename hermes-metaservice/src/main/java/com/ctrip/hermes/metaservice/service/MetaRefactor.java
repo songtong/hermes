@@ -128,11 +128,11 @@ public class MetaRefactor {
 					consumerGroupDao.insert(model);
 					System.out.println(model);
 				}
-				tm.commitTransaction();
 			}
+			tm.commitTransaction();
 		} catch (Exception e) {
 			e.printStackTrace();
-//			tm.rollbackTransaction();
+			tm.rollbackTransaction();
 			throw e;
 		}
 	}
