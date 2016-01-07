@@ -6,6 +6,8 @@ import java.util.List;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.mail.DefaultMailService;
+import com.ctrip.hermes.mail.FileMailAccountProvider;
 import com.ctrip.hermes.metaservice.queue.DefaultMessageQueueDao;
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.CompileService;
@@ -50,9 +52,12 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(DefaultDashboardService.class));
 
 		all.add(A(DefaultPortalElasticClient.class));
-		
+
 		all.add(A(DefaultApplicationService.class));
 
+		all.add(A(DefaultMailService.class));
+		
+		all.add(A(FileMailAccountProvider.class));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

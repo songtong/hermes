@@ -181,26 +181,31 @@ public class ApplicationResource {
 		} else if (StringUtils.isBlank(app.getOwnerEmail())) {
 			pass = false;
 			reason = "邮箱填写有误！";
-		} else if (app.getAckTimeoutSeconds() <= 0) {
-			pass = false;
-			reason = "超时不能小于0！";
 		} else {
-			Topic t = topicService.findTopicByName(app.getTopicName());
-			for (ConsumerGroup c : t.getConsumerGroups()) {
-				String currentConsuemrName = app.getProductLine() + "." + app.getProduct() + "." + app.getProject();
-				if (currentConsuemrName.equals(c.getName())) {
-					pass = false;
-					reason = "当前Topic下已有ConsumerGroup名字为" + currentConsuemrName;
-					break;
+			String[] topicNames = app.getTopicName().split(",");
+			for (String topicName : topicNames) {
+				Topic t = topicService.findTopicByName(topicName);
+				for (ConsumerGroup c : t.getConsumerGroups()) {
+					String currentConsuemrName = app.getProductLine() + "." + app.getProduct() + "." + app.getProject();
+					if (currentConsuemrName.equals(c.getName())) {
+						pass = false;
+						reason = "当前Topic下已有ConsumerGroup名字为" + currentConsuemrName;
+						return new Pair<Boolean, String>(pass, reason);
+					}
 				}
-			}
-			if ("mysql".equals(t.getStorageType()) && app.isNeedRetry()) {
-				if (app.getRetryCount() <= 0) {
-					pass = false;
-					reason = "重试次数不能小于0！";
-				} else if (app.getRetryInterval() <= 0) {
-					pass = false;
-					reason = "重试时间间隔不能小于0！";
+				if ("mysql".equals(t.getStorageType())) {
+					if (app.getAckTimeoutSeconds() <= 0) {
+						pass = false;
+						reason = "超时不能小于0！";
+					} else if (app.isNeedRetry()) {
+						if (app.getRetryCount() <= 0) {
+							pass = false;
+							reason = "重试次数不能小于0！";
+						} else if (app.getRetryInterval() <= 0) {
+							pass = false;
+							reason = "重试时间间隔不能小于0！";
+						}
+					}
 				}
 			}
 		}

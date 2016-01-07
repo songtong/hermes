@@ -9,13 +9,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			}
 		}
 	});
-	consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
-		'add_consumer' : {
-			method : 'POST',
-			url : '/api/consumers/add'
-		}
-	});
-	var meta_resource = $resource('/api/storages', {}, {
+	var meta_resource = $resource('/api/meta/storages', {}, {
 		'get_storage' : {
 			method : 'GET',
 			isArray : true,
@@ -104,6 +98,18 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		}
 	}
 
+	function get_new_consuemr(view, topics, i) {
+		var consumer = {};
+		consumer.topicName = topics[i];
+		consumer.orderedConsume = view.orderedConsume;
+		consumer.appId = view.appId;
+		consumer.groupName = view.groupName;
+		consumer.retryPolicy = view.retryPolicy;
+		consumer.ackTimeoutSeconds = view.ackTimeoutSeconds;
+		consumer.owner = view.owner;
+		return consumer;
+	}
+
 	$scope.permit_topic_application = function() {
 		document.getElementById("permitTopicButton").disabled = "disabled";
 		show_op_info.show("正在创建Topic...", true);
@@ -144,15 +150,22 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	}
 	$scope.permit_consumer_application = function() {
 		document.getElementById("permitConsumerButton").disabled = "disabled";
+		var topics = $scope.view.topicName.split(",");
+		console.log(topics);
 		show_op_info.show("正在创建Consumer...", true);
-		consumer_resource.add_consumer({}, $scope.view, function(save_result) {
+		var consumers = [];
+		for (var i = 0; i < topics.length; i++) {
+			consumers.push(get_new_consuemr($scope.view, topics, i));
+		}
+		ApplicationService.add_consumers(consumers).then(function(result1) {
 			ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
 				$scope.application = result;
-				show_op_info.show("Consumer创建成功！表单状态修改成功", true);
+				show_op_info.show("为Topic：" + result1.success_topics + "创建Consumer成功！(共"+result1.success_topics.length+"个成功，"+(topics.length-result1.success_topics.length)+"个失败)，表单状态修改成功", true);
 			}, function(result) {
-				show_op_info.show("Consumer创建成功！表单状态修改失败", false);
+				show_op_info.show("为Topic：" + result1.success_topics + "创建Consumer成功！(共"+result1.success_topics.length+"个成功，"+(topics.length-result1.success_topics.length)+"个失败)，表单状态修改失败", false);
 			});
-		}, function(error_result) {
+
+		}, function(result) {
 			show_op_info.show("新增 consumer失败! " + error_result.data, false);
 			document.getElementById("permitConsumerButton").disabled = false;
 		});

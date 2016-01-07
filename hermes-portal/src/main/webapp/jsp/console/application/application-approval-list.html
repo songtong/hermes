@@ -17,7 +17,8 @@
 				<div ng-if="application.type==1">创建Consumer</div>
 				<div ng-if="application.type==2">修改Topic</div>
 				<div ng-if="application.type==3">修改Consumer</div></td>
-			<td>{{application.productLine}}.{{application.entity}}.{{application.event}}</td>
+			<td><div ng-if="application.type==0">{{application.productLine}}.{{application.entity}}.{{application.event}}</div>
+				<div ng-if="application.type==1">{{application.topicName}}</div></td>
 			<td>{{application.ownerName}}</td>
 			<td><div ng-if="application.status==0" class="text-info">审核中</div>
 				<div ng-if="application.status==1" class="text-danger">拒绝</div>

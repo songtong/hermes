@@ -18,7 +18,7 @@ public class PortalConfig {
 	private static final Logger log = LoggerFactory.getLogger(PortalConfig.class);
 
 	@Inject
-	ClientEnvironment m_env;
+	private ClientEnvironment m_env;
 
 	public String getKibanaBaseUrl() {
 		if (Env.LOCAL.equals(m_env.getEnv())) {
@@ -39,6 +39,22 @@ public class PortalConfig {
 		String username = m_env.getGlobalConfig().getProperty("portal.account.username", "hermes");
 		String password = m_env.getGlobalConfig().getProperty("portal.account.password", "hermes123");
 		return new Pair<String, String>(username, password);
+	}
+
+	public String getPortalFwsUrl() {
+		return m_env.getGlobalConfig().getProperty("portal.application.url", "hermes.fws.qa.nt.ctripcorp.com");
+	}
+
+	public String getHermesEmailGroupAddress() {
+		return m_env.getGlobalConfig().getProperty("hermes.emailgroup.address", "Rdkjmes@Ctrip.com");
+	}
+
+	public String getEmailTemplateDir() {
+		return m_env.getGlobalConfig().getProperty("hermes.emailtemplates.dir", "/templates");
+	}
+	
+	public String getApplicationEmailTemplate(){
+		return m_env.getGlobalConfig().getProperty("hermes.applicationemail.template", "applicationMailTemplate.html");
 	}
 
 	public List<Pair<String, Integer>> getElasticClusterNodes() {
@@ -66,7 +82,8 @@ public class PortalConfig {
 			try {
 				for (String host : str.split(",")) {
 					String[] parts = host.split(":");
-					l.add(new Pair<String, Integer>(parts[0], parts.length > 1 ? Integer.valueOf(parts[1]) : defaultPort));
+					l.add(new Pair<String, Integer>(parts[0],
+							parts.length > 1 ? Integer.valueOf(parts[1]) : defaultPort));
 				}
 			} catch (Exception e) {
 				log.error("Parse endpoints failed.", e);

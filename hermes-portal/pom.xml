@@ -72,7 +72,7 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
 		</dependency>
-
+		
 		<!-- unidal automation -->
 		<dependency>
 			<groupId>org.unidal.framework</groupId>

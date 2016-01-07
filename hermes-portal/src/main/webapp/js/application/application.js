@@ -1,4 +1,4 @@
-var application_module = angular.module('application', [ 'ngResource', 'ngRoute', 'xeditable', 'smart-table','ui.bootstrap' ]);
+var application_module = angular.module('application', [ 'ngResource', 'ngRoute', 'xeditable', 'smart-table', 'ui.bootstrap' ]);
 
 application_module.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
@@ -93,8 +93,55 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			url : '/api/meta/topics/names'
 		}
 	});
+	consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
+		'add_consumer' : {
+			method : 'POST',
+			url : '/api/consumers/add'
+		}
+	});
 
 	return {
+		'add_consumer' : function(consumer) {
+			var delay = $q.defer();
+			consumer_resource.add_consumer(consumer, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				result.consumer = consumer;
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'add_consumers' : function(consumers) {
+			var delay = $q.defer();
+			var success_topics = [];
+			var failed_topics = [];
+			var count = 0;
+			for (var i = 0; i < consumers.length; i++) {
+				consumer_resource.add_consumer(consumers[i], function(result) {
+					success_topics.push(result.topicName);
+					count = count + 1;
+					console.log("count = " + count + " topicName = " + result.topicName);
+					if (count == consumers.length) {
+						var result = {
+							'success_topics' : success_topics,
+						};
+						delay.resolve(result);
+					}
+				}, function(result) {
+					count = count + 1;
+					console.log("count = " + count);
+					if (count == consumers.length) {
+						var result = {
+							'success_topics' : success_topics,
+						};
+						delay.resolve(result);
+
+					}
+				});
+			}
+			return delay.promise;
+
+		},
 		'create_topic_application' : function(content) {
 			var delay = $q.defer();
 			application_resource.create_topic_application(content, function(result) {
