@@ -40,13 +40,21 @@ public class PortalConfig {
 		String password = m_env.getGlobalConfig().getProperty("portal.account.password", "hermes123");
 		return new Pair<String, String>(username, password);
 	}
-	
-	public String getApplicationUrl(){
+
+	public String getPortalFwsUrl() {
 		return m_env.getGlobalConfig().getProperty("portal.application.url", "hermes.fws.qa.nt.ctripcorp.com");
 	}
+
+	public String getHermesEmailGroupAddress() {
+		return m_env.getGlobalConfig().getProperty("hermes.emailgroup.address", "Rdkjmes@Ctrip.com");
+	}
+
+	public String getEmailTemplateDir() {
+		return m_env.getGlobalConfig().getProperty("hermes.emailtemplates.dir", "/templates");
+	}
 	
-	public String getHermesEmailGroupAddress(){
-		return m_env.getGlobalConfig().getProperty("hermes.emailgroup.address","Rdkjmes@Ctrip.com");
+	public String getApplicationEmailTemplate(){
+		return m_env.getGlobalConfig().getProperty("hermes.applicationemail.template", "applicationMailTemplate.html");
 	}
 
 	public List<Pair<String, Integer>> getElasticClusterNodes() {
@@ -74,7 +82,8 @@ public class PortalConfig {
 			try {
 				for (String host : str.split(",")) {
 					String[] parts = host.split(":");
-					l.add(new Pair<String, Integer>(parts[0], parts.length > 1 ? Integer.valueOf(parts[1]) : defaultPort));
+					l.add(new Pair<String, Integer>(parts[0],
+							parts.length > 1 ? Integer.valueOf(parts[1]) : defaultPort));
 				}
 			} catch (Exception e) {
 				log.error("Parse endpoints failed.", e);
