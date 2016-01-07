@@ -34,7 +34,7 @@ public class StreamConsumingStrategyConsumerTask extends StrictlyOrderedConsumin
 				m_offset.set(new Offset(offset.getPriorityOffset(), offset.getNonPriorityOffset(), null));
 				return;
 			} catch (Exception e) {
-				log.error("Query latest offset failed: {}:{}", m_context.getTopic(), m_partitionId);
+				log.error("Query latest offset failed: {}:{}", m_context.getTopic().getName(), m_partitionId, e);
 			}
 		}
 	}
