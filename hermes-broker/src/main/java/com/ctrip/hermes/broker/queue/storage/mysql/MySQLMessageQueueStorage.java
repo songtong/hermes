@@ -590,7 +590,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			return m_msgDao.findOldestOffset( //
 			      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), READSET_OFFSET);
 		} catch (Exception e) {
-			log.warn("Find oldest message offset failed.{}", tpp, e);
+			log.warn("Find oldest message offset failed.{}", tpp);
 			return null;
 		}
 	}
@@ -600,7 +600,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			return m_msgDao.findLatestOffset( //
 			      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), READSET_OFFSET);
 		} catch (Exception e) {
-			log.warn("Find latest message offset failed.{}", tpp, e);
+			log.warn("Find latest message offset failed.{}", tpp);
 			return null;
 		}
 	}
