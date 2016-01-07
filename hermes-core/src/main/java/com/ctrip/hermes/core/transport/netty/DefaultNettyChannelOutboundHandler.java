@@ -15,7 +15,7 @@ public class DefaultNettyChannelOutboundHandler extends ChannelOutboundHandlerAd
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		log.error("Exception caught in outbound", cause);
+		log.warn("Exception caught in outbound, client ip {}", NettyUtils.parseChannelRemoteAddr(ctx.channel()), cause);
 	}
 
 }
