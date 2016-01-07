@@ -20,7 +20,7 @@
 			<implementation>com.ctrip.hermes.rest.service.HttpPushService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.log.BizLogger</role>
+					<role>com.ctrip.hermes.core.log.CatFileBizLogger</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
@@ -32,7 +32,7 @@
 			<implementation>com.ctrip.hermes.rest.service.SoaPushService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.log.BizLogger</role>
+					<role>com.ctrip.hermes.core.log.CatFileBizLogger</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>

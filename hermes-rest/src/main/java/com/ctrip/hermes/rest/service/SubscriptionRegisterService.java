@@ -57,6 +57,9 @@ public class SubscriptionRegisterService {
 					if (logger.isTraceEnabled()) {
 						logger.trace("Received subscriptions: {}", remoteSubscriptions);
 					}
+					if (remoteSubscriptions == null) {
+						return;
+					}
 
 					Set<SubscriptionView> newSubscriptions = new HashSet<>(remoteSubscriptions);
 					SetView<SubscriptionView> created = Sets.difference(newSubscriptions, subscriptions);

@@ -39,7 +39,7 @@ import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.BizLogger;
+import com.ctrip.hermes.core.log.CatFileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
@@ -62,7 +62,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	private static final Logger log = LoggerFactory.getLogger(MySQLMessageQueueStorage.class);
 
 	@Inject
-	private BizLogger m_bizLogger;
+	private CatFileBizLogger m_bizLogger;
 
 	@Inject
 	private MessageCodec m_messageCodec;

@@ -7,8 +7,8 @@ import org.unidal.net.Networks;
 
 import com.alibaba.fastjson.JSON;
 
-@Named(type = BizLogger.class)
-public class DefaultBizLogger implements BizLogger {
+@Named
+public class FileBizLogger implements BizLogger {
 
 	private final static Logger log = LoggerFactory.getLogger(LoggerNames.BIZ);
 

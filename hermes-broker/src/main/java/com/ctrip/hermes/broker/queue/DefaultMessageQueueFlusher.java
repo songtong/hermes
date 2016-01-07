@@ -18,7 +18,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.BizLogger;
+import com.ctrip.hermes.core.log.CatFileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
@@ -38,7 +38,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueueFlusher.class);
 
-	protected BizLogger m_bizLogger;
+	protected CatFileBizLogger m_bizLogger;
 
 	private String m_topic;
 
@@ -54,7 +54,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		m_topic = topic;
 		m_partition = partition;
 		m_storage = storage;
-		m_bizLogger = PlexusComponentLocator.lookup(BizLogger.class);
+		m_bizLogger = PlexusComponentLocator.lookup(CatFileBizLogger.class);
 	}
 
 	@Override
