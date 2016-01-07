@@ -16,8 +16,8 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullSpecificMessageCommand;
+import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 
 public class PullSpecificMessageCommandProcessor implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(PullSpecificMessageCommandProcessor.class);
@@ -50,7 +50,7 @@ public class PullSpecificMessageCommandProcessor implements CommandProcessor {
 				List<TppConsumerMessageBatch> batches = m_messageQueueManager.findMessagesByOffsets( //
 				      topic, partition, offsets);
 				if (!batches.isEmpty()) {
-					PullMessageResultCommandV2 cmd = new PullMessageResultCommandV2();
+					PullMessageResultCommandV3 cmd = new PullMessageResultCommandV3();
 					cmd.setBrokerAccepted(true);
 					cmd.addBatches(batches);
 					cmd.getHeader().setCorrelationId(correlationId);
@@ -63,7 +63,7 @@ public class PullSpecificMessageCommandProcessor implements CommandProcessor {
 		} catch (Exception e) {
 			log.debug("Handle pull message reqeust failed. [op-id: {}] {} {}", correlationId, topic, partition, e);
 		}
-		PullMessageResultCommandV2 cmd = new PullMessageResultCommandV2();
+		PullMessageResultCommandV3 cmd = new PullMessageResultCommandV3();
 		cmd.setBrokerAccepted(false);
 		cmd.getHeader().setCorrelationId(correlationId);
 		ctx.getChannel().writeAndFlush(cmd);
