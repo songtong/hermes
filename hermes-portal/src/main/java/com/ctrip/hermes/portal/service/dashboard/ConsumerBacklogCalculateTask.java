@@ -50,8 +50,8 @@ public class ConsumerBacklogCalculateTask implements Runnable {
 			Long nonPriorityMsgOffset = null;
 			Pair<OffsetMessage, OffsetMessage> offsets = offsetMsgMap.get(consumer.getId());
 			if (offsets != null) {
-				priorityMsgOffset = offsets.getKey().getOffset();
-				nonPriorityMsgOffset = offsets.getValue().getOffset();
+				priorityMsgOffset = offsets.getKey() == null ? 0 : offsets.getKey().getOffset();
+				nonPriorityMsgOffset = offsets.getValue() == null ? 0 : offsets.getValue().getOffset();
 				priorityDelay = priorityMsgId - priorityMsgOffset;
 				nonPriorityDelay = nonPriorityMsgId - nonPriorityMsgOffset;
 			}

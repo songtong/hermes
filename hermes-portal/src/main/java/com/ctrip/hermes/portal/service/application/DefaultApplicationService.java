@@ -1,7 +1,14 @@
 package com.ctrip.hermes.portal.service.application;
 
+import java.io.File;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -12,14 +19,21 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.bo.ConsumerView;
 import com.ctrip.hermes.core.bo.TopicView;
+import com.ctrip.hermes.mail.HermesMail;
+import com.ctrip.hermes.mail.MailService;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;
+import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.dal.application.Application;
 import com.ctrip.hermes.portal.dal.application.HermesApplicationDao;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateExceptionHandler;
 
 @Named(type = ApplicationService.class)
 public class DefaultApplicationService implements ApplicationService {
@@ -28,17 +42,31 @@ public class DefaultApplicationService implements ApplicationService {
 	@Inject
 	private HermesApplicationDao m_dao;
 
+	@Inject
+	private MailService m_mailService;
+
+	@Inject
+	private PortalConfig m_config;
+
 	@Override
 	public TopicApplication saveTopicApplication(TopicApplication topicApplication) {
+		Application dbApp = HermesApplication.toDBEntity(topicApplication);
 		try {
-			Application dbApp = HermesApplication.toDBEntity(topicApplication);
 			m_dao.saveApplication(dbApp);
-			return (TopicApplication) HermesApplication.parse(dbApp);
 		} catch (DalException e) {
 			log.error("Create new topic application : {}.{}.{} failed", topicApplication.getProductLine(),
 					topicApplication.getEntity(), topicApplication.getEvent(), e);
+			return null;
 		}
-		return null;
+
+		HermesMail mail;
+		try {
+			mail = generateEmail(dbApp);
+			m_mailService.sendEmail(mail);
+		} catch (Exception e) {
+			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
+		}
+		return (TopicApplication) HermesApplication.parse(dbApp);
 	}
 
 	@Override
@@ -136,44 +164,115 @@ public class DefaultApplicationService implements ApplicationService {
 
 	@Override
 	public HermesApplication updateApplication(HermesApplication app) {
+		Application dbApp = null;
 		try {
 			app.setStatus(PortalConstants.APP_STATUS_PROCESSING);
-			Application dbApp = HermesApplication.toDBEntity(app);
+			dbApp = HermesApplication.toDBEntity(app);
 			dbApp = m_dao.updateApplication(dbApp);
 			app = HermesApplication.parse(dbApp);
-			return app;
 		} catch (Exception e) {
 			log.error("Update application:id={} failed!", app.getId(), e);
+			return null;
 		}
-		return null;
+		HermesMail mail;
+		try {
+			mail = generateEmail(dbApp);
+			m_mailService.sendEmail(mail);
+		} catch (Exception e) {
+			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
+		}
+		return app;
+
 	}
 
 	@Override
 	public HermesApplication updateStatus(long id, int status, String comment, String approver) {
+		Application dbApp = null;
 		try {
-			Application dbApp = m_dao.getAppById(id);
+			dbApp = m_dao.getAppById(id);
 			dbApp.setStatus(status);
 			dbApp.setComment(comment);
 			dbApp.setApprover(approver);
 			dbApp = m_dao.updateApplication(dbApp);
-			return HermesApplication.parse(dbApp);
 		} catch (DalException e) {
 			log.error("Update status of apllication: id={} failed.", id, e);
+			return null;
 		}
-		return null;
+		HermesMail mail;
+		try {
+			mail = generateEmail(dbApp);
+			m_mailService.sendEmail(mail);
+		} catch (Exception e) {
+			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
+		}
+		return HermesApplication.parse(dbApp);
+	}
+
+	private HermesMail generateEmail(Application app) throws Exception {
+		Configuration cfg = new Configuration(Configuration.VERSION_2_3_22);
+		String title;
+		String content = null;
+		Map<String, Object> root = new HashMap<>();
+
+		cfg.setDirectoryForTemplateLoading(new File(getClass().getResource("/templates").toURI()));
+		cfg.setDefaultEncoding("UTF-8");
+		cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+
+		String url = String.format("http://%s:%d/%s/%d", m_config.getApplicationUrl(), 80,
+				"console/application#/review", app.getId());
+		root.put("url", url);
+		root.put("id", app.getId());
+		DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		root.put("createTime", sdf.format(app.getCreateTime()));
+		String statusString;
+		switch (app.getStatus()) {
+		case PortalConstants.APP_STATUS_PROCESSING:
+			title = "Hermes申请单处理中";
+			statusString = "进入处理流程";
+			break;
+		case PortalConstants.APP_STATUS_SUCCESS:
+			title = "Hermes申请单已生效";
+			statusString = "生效";
+			break;
+		case PortalConstants.APP_STATUS_REJECTED:
+			title = "Hermes申请单已被拒绝";
+			statusString = "被拒绝";
+			break;
+		default:
+			title = "Hermes申请单状态改变";
+			statusString = "改变";
+			break;
+		}
+
+		root.put("status", statusString);
+		Template temp = cfg.getTemplate("applicationMailTemplate.html");
+		Writer out = new StringWriter();
+		temp.process(root, out);
+		content = out.toString();
+
+		HermesMail mail = new HermesMail(title, content, app.getOwner() + "," + m_config.getHermesEmailGroupAddress());
+		return mail;
 	}
 
 	@Override
 	public ConsumerApplication saveConsumerApplication(ConsumerApplication consumerApplication) {
+		Application dbApp = null;
 		try {
-			Application dbApp = HermesApplication.toDBEntity(consumerApplication);
+			dbApp = HermesApplication.toDBEntity(consumerApplication);
 			m_dao.saveApplication(dbApp);
-			return (ConsumerApplication) HermesApplication.parse(dbApp);
 		} catch (DalException e) {
 			log.error("Create new consumer application : {}.{}.{} failed", consumerApplication.getProductLine(),
 					consumerApplication.getProduct(), consumerApplication.getProject(), e);
+			return null;
 		}
-		return null;
+		HermesMail mail;
+		try {
+			mail = generateEmail(dbApp);
+			m_mailService.sendEmail(mail);
+		} catch (Exception e) {
+			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
+		}
+		return (ConsumerApplication) HermesApplication.parse(dbApp);
 	}
 
 	@Override

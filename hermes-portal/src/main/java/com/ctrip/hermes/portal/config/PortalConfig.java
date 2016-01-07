@@ -18,7 +18,7 @@ public class PortalConfig {
 	private static final Logger log = LoggerFactory.getLogger(PortalConfig.class);
 
 	@Inject
-	ClientEnvironment m_env;
+	private ClientEnvironment m_env;
 
 	public String getKibanaBaseUrl() {
 		if (Env.LOCAL.equals(m_env.getEnv())) {
@@ -39,6 +39,14 @@ public class PortalConfig {
 		String username = m_env.getGlobalConfig().getProperty("portal.account.username", "hermes");
 		String password = m_env.getGlobalConfig().getProperty("portal.account.password", "hermes123");
 		return new Pair<String, String>(username, password);
+	}
+	
+	public String getApplicationUrl(){
+		return m_env.getGlobalConfig().getProperty("portal.application.url", "hermes.fws.qa.nt.ctripcorp.com");
+	}
+	
+	public String getHermesEmailGroupAddress(){
+		return m_env.getGlobalConfig().getProperty("hermes.emailgroup.address","Rdkjmes@Ctrip.com");
 	}
 
 	public List<Pair<String, Integer>> getElasticClusterNodes() {
