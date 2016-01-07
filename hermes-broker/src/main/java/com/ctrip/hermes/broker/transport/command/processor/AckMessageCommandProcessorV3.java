@@ -10,7 +10,7 @@ import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.BizLogger;
+import com.ctrip.hermes.core.log.CatFileBizLogger;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
@@ -25,7 +25,7 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
 public class AckMessageCommandProcessorV3 implements CommandProcessor {
 
 	@Inject
-	private BizLogger m_bizLogger;
+	private CatFileBizLogger m_bizLogger;
 
 	@Inject
 	private MessageQueueManager m_messageQueueManager;

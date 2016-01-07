@@ -26,7 +26,7 @@ import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.BizLogger;
+import com.ctrip.hermes.core.log.CatFileBizLogger;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
@@ -38,8 +38,8 @@ public class HttpPushService implements Initializable, Disposable {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(HttpPushService.class);
 
-	@Inject(value = "CatBizLogger")
-	private BizLogger m_bizLogger;
+	@Inject
+	private CatFileBizLogger m_bizLogger;
 
 	@Inject
 	private ClientEnvironment m_env;

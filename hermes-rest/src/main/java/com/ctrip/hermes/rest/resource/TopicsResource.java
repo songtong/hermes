@@ -33,7 +33,7 @@ import com.codahale.metrics.Timer;
 import com.ctrip.hermes.Hermes.Env;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.BizLogger;
+import com.ctrip.hermes.core.log.CatFileBizLogger;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -63,7 +63,7 @@ public class TopicsResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(TopicsResource.class);
 
-	private static final BizLogger bizLogger = PlexusComponentLocator.lookup(BizLogger.class,	"CatBizLogger");
+	private static final CatFileBizLogger bizLogger = PlexusComponentLocator.lookup(CatFileBizLogger.class);
 
 	public static final String PARTITION_KEY = "X-Hermes-Partition-Key";
 

@@ -76,7 +76,7 @@
 					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.log.BizLogger</role>
+					<role>com.ctrip.hermes.core.log.CatFileBizLogger</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
@@ -101,7 +101,7 @@
 					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.log.BizLogger</role>
+					<role>com.ctrip.hermes.core.log.CatFileBizLogger</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
@@ -174,7 +174,7 @@
 					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.log.BizLogger</role>
+					<role>com.ctrip.hermes.core.log.CatFileBizLogger</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -187,7 +187,7 @@
 					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.log.BizLogger</role>
+					<role>com.ctrip.hermes.core.log.CatFileBizLogger</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -272,8 +272,7 @@
 			<implementation>com.ctrip.hermes.broker.longpolling.DefaultLongPollingService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.log.BizLogger</role>
-					<role-hint>CatBizLogger</role-hint>
+					<role>com.ctrip.hermes.core.log.CatFileBizLogger</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
@@ -345,8 +344,7 @@
 			<implementation>com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.log.BizLogger</role>
-					<role-hint>CatBizLogger</role-hint>
+					<role>com.ctrip.hermes.core.log.CatFileBizLogger</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.message.codec.MessageCodec</role>

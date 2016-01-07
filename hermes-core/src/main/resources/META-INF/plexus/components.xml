@@ -188,14 +188,24 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.log.BizLogger</role>
-			<role-hint>FileBizLogger</role-hint>
+			<role>com.ctrip.hermes.core.log.FileBizLogger</role>
 			<implementation>com.ctrip.hermes.core.log.FileBizLogger</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.core.log.BizLogger</role>
-			<role-hint>CatBizLogger</role-hint>
+			<role>com.ctrip.hermes.core.log.CatBizLogger</role>
 			<implementation>com.ctrip.hermes.core.log.CatBizLogger</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.log.CatFileBizLogger</role>
+			<implementation>com.ctrip.hermes.core.log.CatFileBizLogger</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.log.FileBizLogger</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.log.CatBizLogger</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.service.RunningStatusStatisticsService</role>

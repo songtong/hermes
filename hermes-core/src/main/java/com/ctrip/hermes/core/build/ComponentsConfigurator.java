@@ -10,6 +10,7 @@ import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.DefaultClientEnvironment;
 import com.ctrip.hermes.core.env.FileEnvProvider;
 import com.ctrip.hermes.core.log.CatBizLogger;
+import com.ctrip.hermes.core.log.CatFileBizLogger;
 import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.codec.DefaultMessageCodec;
 import com.ctrip.hermes.core.message.partition.HashPartitioningStrategy;
@@ -71,6 +72,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		
 		all.add(A(FileBizLogger.class));
 		all.add(A(CatBizLogger.class));
+		all.add(A(CatFileBizLogger.class));
 
 		all.add(A(RunningStatusStatisticsService.class));
 

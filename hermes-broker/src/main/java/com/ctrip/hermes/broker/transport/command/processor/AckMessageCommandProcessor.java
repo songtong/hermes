@@ -13,7 +13,7 @@ import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.BizLogger;
+import com.ctrip.hermes.core.log.CatFileBizLogger;
 import com.ctrip.hermes.core.transport.command.AckMessageCommand;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
@@ -29,8 +29,8 @@ import com.ctrip.hermes.core.transport.netty.NettyUtils;
 public class AckMessageCommandProcessor implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(AckMessageCommandProcessor.class);
 
-	@Inject(value = "CatBizLogger")
-	private BizLogger m_bizLogger;
+	@Inject
+	private CatFileBizLogger m_bizLogger;
 
 	@Inject
 	private MessageQueueManager m_messageQueueManager;

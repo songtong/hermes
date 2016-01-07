@@ -8,12 +8,12 @@ import org.unidal.net.Networks;
 
 import com.dianping.cat.Cat;
 
-@Named(value = "CatBizLogger", type = BizLogger.class)
+@Named
 public class CatBizLogger implements BizLogger {
 
 	private final static String m_localhost = Networks.forIp().getLocalHostAddress();
 
-	public final static String scenario = "framework";
+	public final static String scenario = "hermes";
 
 	public final static String type = "biz";
 
