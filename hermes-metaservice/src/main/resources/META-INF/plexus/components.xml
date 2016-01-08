@@ -8,25 +8,25 @@
 					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.AppDao</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedAppDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.CodecDao</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedCodecDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.EndpointDao</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedEndpointDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.ServerDao</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedServerDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.StorageDao</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedStorageDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.TopicDao</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.ConsumerGroupDao</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.PartitionDao</role>
@@ -35,7 +35,7 @@
 					<role>com.ctrip.hermes.metaservice.model.ProducerDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.DatasourceDao</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedDatasourceDao</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -486,6 +486,38 @@
 					<role>com.ctrip.hermes.metaservice.model.ConsumerGroupDao</role>
 				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.dal.CachedAppDao</role>
+			<implementation>com.ctrip.hermes.metaservice.dal.CachedAppDao</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.dal.CachedCodecDao</role>
+			<implementation>com.ctrip.hermes.metaservice.dal.CachedCodecDao</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao</role>
+			<implementation>com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.dal.CachedDatasourceDao</role>
+			<implementation>com.ctrip.hermes.metaservice.dal.CachedDatasourceDao</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.dal.CachedEndpointDao</role>
+			<implementation>com.ctrip.hermes.metaservice.dal.CachedEndpointDao</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.dal.CachedServerDao</role>
+			<implementation>com.ctrip.hermes.metaservice.dal.CachedServerDao</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.dal.CachedStorageDao</role>
+			<implementation>com.ctrip.hermes.metaservice.dal.CachedStorageDao</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
+			<implementation>com.ctrip.hermes.metaservice.dal.CachedTopicDao</implementation>
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>
