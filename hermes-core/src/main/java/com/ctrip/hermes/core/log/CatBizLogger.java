@@ -25,7 +25,7 @@ public class CatBizLogger implements BizLogger {
 		indexedTags.put("eventType", event.getEventType());
 		indexedTags.put("eventTime", String.valueOf(event.getEventTime()));
 		for (Map.Entry<String, Object> entry : event.getDatas().entrySet()) {
-			indexedTags.put("datas." + entry.getKey(), String.valueOf(entry.getValue()));
+			indexedTags.put(entry.getKey(), String.valueOf(entry.getValue()));
 		}
 		Map<String, String> storedTags = new HashMap<String, String>();
 		Cat.logTags(scenario, indexedTags, storedTags);

@@ -101,7 +101,7 @@ public class HttpPushService implements Initializable, Disposable {
 							            msg, url);
 							      HttpResponse pushResponse = command.execute();
 
-							      pushEvent.addData("result", pushResponse.getStatusLine().getStatusCode());
+							      pushEvent.addData("restResult", pushResponse.getStatusLine().getStatusCode());
 							      if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
 								      isCouldAck = true;
 								      break;
