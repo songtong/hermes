@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.Updateset;
@@ -18,7 +19,8 @@ import com.google.common.cache.CacheBuilder;
 @Named
 public class CachedServerDao extends ServerDao implements CachedDao<String, Server> {
 
-	private Cache<String, Server> cache = CacheBuilder.newBuilder().maximumSize(100).build();
+	private Cache<String, Server> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
+	      .maximumSize(100).build();
 
 	@Override
 	public int deleteByPK(Server proto) throws DalException {
