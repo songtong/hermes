@@ -21,7 +21,7 @@ import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
 import com.ctrip.hermes.metaservice.queue.OffsetMessageEntity;
 import com.ctrip.hermes.monitor.service.ESMonitorService;
 
-@Component
+//@Component
 public class RoomStatusConsumeBacklogEmittor {
 
 	private static final Logger log = LoggerFactory.getLogger(DashboardSuite.class);
