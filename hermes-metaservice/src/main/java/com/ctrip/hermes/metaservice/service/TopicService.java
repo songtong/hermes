@@ -107,6 +107,7 @@ public class TopicService {
 			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
 			partitionModel.setId(partitionId++);
 			partitionModel.setTopicId(topicModel.getId());
+			partitionEntity.setId(partitionModel.getId());
 			m_partitionDao.insert(partitionModel);
 		}
 
