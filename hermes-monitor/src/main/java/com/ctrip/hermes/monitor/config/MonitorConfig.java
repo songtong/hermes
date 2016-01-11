@@ -83,10 +83,10 @@ public class MonitorConfig {
 	@Value("${zabbix.password:}")
 	private String zabbixPassword;
 
-	@Value("${broker.log.error.checker.threshold:100}")
+	@Value("${broker.log.error.checker.threshold:1}")
 	private int brokerErrorThreshold;
 
-	@Value("${metaserver.log.error.checker.threshold:20}")
+	@Value("${metaserver.log.error.checker.threshold:1}")
 	private int metaserverErrorThreshold;
 
 	/**
