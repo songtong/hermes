@@ -3,6 +3,7 @@ package com.ctrip.hermes.rest.resource;
 import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -20,8 +21,10 @@ public class SubscriptionResource {
 	      .lookup(SubscriptionRegisterService.class);
 
 	@Path("list")
+	@GET
 	public Set<SubscriptionView> list() {
-		return subscritionRegisterService.listSubscriptions();
+		Set<SubscriptionView> result = subscritionRegisterService.listSubscriptions();
+		return result;
 	}
 
 }
