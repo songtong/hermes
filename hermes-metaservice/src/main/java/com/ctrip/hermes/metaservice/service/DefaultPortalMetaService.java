@@ -120,7 +120,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 			com.ctrip.hermes.metaservice.model.Topic model = this.m_topicDao.findByName(topic, TopicEntity.READSET_FULL);
 			return fillTopic(model);
 		} catch (DalException e) {
-			logger.warn("findTopicById failed", e);
+			logger.warn("findTopicByName failed, name: " + topic, e);
 		}
 		return null;
 	}

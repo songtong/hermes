@@ -2,6 +2,7 @@ package com.ctrip.hermes.metaservice.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -124,6 +125,7 @@ public class DefaultMetaService implements MetaService {
 	      com.ctrip.hermes.metaservice.model.Storage storageModel) throws DalException {
 		List<Datasource> models = m_datasourceDao
 		      .findByStorageType(storageModel.getType(), DatasourceEntity.READSET_FULL);
+		Collections.reverse(models);
 		List<com.ctrip.hermes.meta.entity.Datasource> entities = new ArrayList<>();
 		for (Datasource model : models) {
 			com.ctrip.hermes.meta.entity.Datasource entity = ModelToEntityConverter.convert(model);
