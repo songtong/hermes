@@ -315,7 +315,7 @@ public class RemoteMetaProxy implements MetaProxy {
 			if (log.isDebugEnabled()) {
 				log.debug("No response while getting meta server[listSubscriptions]");
 			}
-			return new ArrayList<SubscriptionView>();
+			return null; // Get remote info failed.
 		}
 	}
 
