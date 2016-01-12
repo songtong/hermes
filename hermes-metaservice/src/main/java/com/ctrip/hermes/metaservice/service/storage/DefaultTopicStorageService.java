@@ -45,6 +45,7 @@ public class DefaultTopicStorageService implements TopicStorageService {
 					createTables0(writeDatasource, topic, partition);
 					addPartition0(writeDatasource, topic, partition);
 				} catch (Exception e) {
+					log.warn("init topic storage failed", e);
 					dropTopicStorage(topic);
 					return false;
 				}

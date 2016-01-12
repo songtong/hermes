@@ -86,11 +86,11 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 		}
 	});
 
-	meta_resource = $resource('/api/meta', {}, {
+	topic_resource = $resource('/api/topics', {}, {
 		'get_topic_names' : {
 			method : 'GET',
 			isArray : true,
-			url : '/api/meta/topics/names'
+			url : '/api/topics/names'
 		}
 	});
 	consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
@@ -244,7 +244,7 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 		},
 		'get_topic_names' : function(id) {
 			var delay = $q.defer();
-			meta_resource.get_topic_names({}, function(result) {
+			topic_resource.get_topic_names({}, function(result) {
 				delay.resolve(result);
 			}, function(result) {
 				delay.reject(result);

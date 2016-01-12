@@ -20,7 +20,7 @@ import com.google.common.cache.CacheBuilder;
 public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDao<Integer, ConsumerGroup> {
 
 	private Cache<Integer, ConsumerGroup> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
-	      .maximumSize(100).build();
+	      .maximumSize(500).build();
 
 	@Override
 	public int deleteByPK(ConsumerGroup proto) throws DalException {

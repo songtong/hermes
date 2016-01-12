@@ -19,7 +19,7 @@ import com.google.common.cache.CacheBuilder;
 @Named
 public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
-	private Cache<Long, Topic> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(100)
+	private Cache<Long, Topic> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(500)
 	      .build();
 
 	@Override

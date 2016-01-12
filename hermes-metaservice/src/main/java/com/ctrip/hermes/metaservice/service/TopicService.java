@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -20,10 +19,10 @@ import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -42,6 +41,9 @@ import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
 public class TopicService {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(TopicService.class);
+
+	@Inject
+	private TransactionManager tm;
 
 	@Inject
 	private PortalMetaService m_metaService;
@@ -97,20 +99,28 @@ public class TopicService {
 	 * @throws DalException
 	 */
 	public Topic createTopic(Topic topicEntity) throws Exception {
-		topicEntity.setCreateTime(new Date(System.currentTimeMillis()));
-		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
-		m_topicDao.insert(topicModel);
-		topicEntity.setId(topicModel.getId());
+		tm.startTransaction("fxhermesmetadb");
+		try {
+			topicEntity.setCreateTime(new Date(System.currentTimeMillis()));
+			com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+			m_topicDao.insert(topicModel);
+			topicEntity.setId(topicModel.getId());
 
-		int partitionId = 0;
-		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicEntity.getPartitions()) {
-			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
-			partitionModel.setId(partitionId++);
-			partitionModel.setTopicId(topicModel.getId());
-			partitionEntity.setId(partitionModel.getId());
-			m_partitionDao.insert(partitionModel);
+			int partitionId = 0;
+			for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicEntity.getPartitions()) {
+				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
+				      .convert(partitionEntity);
+				partitionModel.setId(partitionId++);
+				partitionModel.setTopicId(topicModel.getId());
+				partitionEntity.setId(partitionModel.getId());
+				m_partitionDao.insert(partitionModel);
+			}
+			tm.commitTransaction();
+		} catch (Exception e) {
+			m_logger.warn("create topic failed", e);
+			tm.rollbackTransaction();
+			throw e;
 		}
-
 		if (Storage.MYSQL.equals(topicEntity.getStorageType())) {
 			if (!m_topicStorageService.initTopicStorage(topicEntity)) {
 				m_logger.error("Init topic storage failed, please try later.");
@@ -128,30 +138,7 @@ public class TopicService {
 	 * @param topic
 	 */
 	public void createTopicInKafka(Topic topic) {
-		List<Partition> partitions = m_metaService.findPartitionsByTopic(topic.getName());
-		if (partitions == null || partitions.size() < 1) {
-			return;
-		}
-
-		String consumerDatasource = partitions.get(0).getReadDatasource();
-		Storage targetStorage = m_metaService.findStorageByTopic(topic.getName());
-		if (targetStorage == null) {
-			return;
-		}
-
-		String zkConnect = null;
-		for (Datasource datasource : targetStorage.getDatasources()) {
-			if (consumerDatasource.equals(datasource.getId())) {
-				Map<String, Property> properties = datasource.getProperties();
-				for (Map.Entry<String, Property> prop : properties.entrySet()) {
-					if ("zookeeper.connect".equals(prop.getValue().getName())) {
-						zkConnect = prop.getValue().getValue();
-						break;
-					}
-				}
-			}
-		}
-
+		String zkConnect = m_metaService.getZookeeperList();
 		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		int partition = DEFAULT_KAFKA_PARTITIONS;
@@ -177,29 +164,7 @@ public class TopicService {
 	 * @param topic
 	 */
 	public void deleteTopicInKafka(Topic topic) {
-		List<Partition> partitions = m_metaService.findPartitionsByTopic(topic.getName());
-		if (partitions == null || partitions.size() < 1) {
-			return;
-		}
-
-		String consumerDatasource = partitions.get(0).getReadDatasource();
-		Storage targetStorage = m_metaService.findStorageByTopic(topic.getName());
-		if (targetStorage == null) {
-			return;
-		}
-
-		String zkConnect = null;
-		for (Datasource datasource : targetStorage.getDatasources()) {
-			if (consumerDatasource.equals(datasource.getId())) {
-				Map<String, Property> properties = datasource.getProperties();
-				for (Map.Entry<String, Property> prop : properties.entrySet()) {
-					if ("zookeeper.connect".equals(prop.getValue().getName())) {
-						zkConnect = prop.getValue().getValue();
-						break;
-					}
-				}
-			}
-		}
+		String zkConnect = m_metaService.getZookeeperList();
 
 		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
 		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
@@ -213,30 +178,7 @@ public class TopicService {
 	 * @param topic
 	 */
 	public void configTopicInKafka(Topic topic) {
-		List<Partition> partitions = m_metaService.findPartitionsByTopic(topic.getName());
-		if (partitions == null || partitions.size() < 1) {
-			return;
-		}
-
-		String consumerDatasource = partitions.get(0).getReadDatasource();
-		Storage targetStorage = m_metaService.findStorageByTopic(topic.getName());
-		if (targetStorage == null) {
-			return;
-		}
-
-		String zkConnect = null;
-		for (Datasource datasource : targetStorage.getDatasources()) {
-			if (consumerDatasource.equals(datasource.getId())) {
-				Map<String, Property> properties = datasource.getProperties();
-				for (Map.Entry<String, Property> prop : properties.entrySet()) {
-					if ("zookeeper.connect".equals(prop.getValue().getName())) {
-						zkConnect = prop.getValue().getValue();
-						break;
-					}
-				}
-			}
-		}
-
+		String zkConnect = m_metaService.getZookeeperList();;
 		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
 		zkClient.setZkSerializer(new ZKStringSerializer());
 		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
