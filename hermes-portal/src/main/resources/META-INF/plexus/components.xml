@@ -57,6 +57,9 @@
 			<implementation>com.ctrip.hermes.metaservice.service.SchemaService</implementation>
 			<requirements>
 				<requirement>
+					<role>org.unidal.dal.jdbc.transaction.TransactionManager</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
 				</requirement>
 				<requirement>

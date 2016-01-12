@@ -20,6 +20,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.lookup.util.StringUtils;
@@ -37,6 +38,9 @@ import com.ctrip.hermes.metaservice.model.TopicEntity;
 public class SchemaService {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(SchemaService.class);
+
+	@Inject
+	private TransactionManager tm;
 
 	private SchemaRegistryClient avroSchemaRegistry;
 
@@ -81,7 +85,7 @@ public class SchemaService {
 			return false;
 		}
 		for (Schema schema : schemas) {
-			if (schema.getAvroid() == avroid) {
+			if (schema.getAvroid() != null && schema.getAvroid() == avroid) {
 				return true;
 			}
 		}
@@ -164,30 +168,36 @@ public class SchemaService {
 	public SchemaView createSchema(SchemaView schemaView, Topic topic) throws Exception {
 		m_logger.info("Creating schema for topic: {}, schema: {}", topic.getName(), schemaView);
 		Schema schema = toSchema(schemaView);
-		Date now = new Date(System.currentTimeMillis());
-		schema.setCreateTime(now);
-		schema.setDataChangeLastTime(now);
-		schema.setName(topic.getName() + "-value");
-		schema.setTopicId(topic.getId());
 		try {
-			Schema maxVersionSchemaMeta = m_schemaDao.getMaxVersionByTopic(topic.getId(), SchemaEntity.READSET_FULL);
-			schema.setVersion(maxVersionSchemaMeta.getVersion() + 1);
-		} catch (Exception e) {
-			schema.setVersion(1);
-		}
-		m_schemaDao.insert(schema);
-
-		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(),
-		      TopicEntity.READSET_FULL);
-		topicModel.setSchemaId(schema.getId());
-		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
-
-		if ("avro".equals(schema.getType())) {
-			if (StringUtils.isNotEmpty(schema.getCompatibility())) {
-				getAvroSchemaRegistry().updateCompatibility(schema.getName(), schema.getCompatibility());
+			tm.startTransaction("fxhermesmetadb");
+			Date now = new Date(System.currentTimeMillis());
+			schema.setCreateTime(now);
+			schema.setDataChangeLastTime(now);
+			schema.setName(topic.getName() + "-value");
+			schema.setTopicId(topic.getId());
+			try {
+				Schema maxVersionSchemaMeta = m_schemaDao.getMaxVersionByTopic(topic.getId(), SchemaEntity.READSET_FULL);
+				schema.setVersion(maxVersionSchemaMeta.getVersion() + 1);
+			} catch (Exception e) {
+				schema.setVersion(1);
 			}
-		}
+			m_schemaDao.insert(schema);
 
+			com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(),
+			      TopicEntity.READSET_FULL);
+			topicModel.setSchemaId(schema.getId());
+			m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
+
+			if ("avro".equals(schema.getType())) {
+				if (StringUtils.isNotEmpty(schema.getCompatibility())) {
+					getAvroSchemaRegistry().updateCompatibility(schema.getName(), schema.getCompatibility());
+				}
+			}
+			tm.commitTransaction();
+		} catch (Exception e) {
+			tm.rollbackTransaction();
+			throw e;
+		}
 		m_logger.info("Created schema: {}", schema);
 		return toSchemaView(schema);
 	}
@@ -199,28 +209,35 @@ public class SchemaService {
 	 */
 	public void deleteSchema(long id) throws Exception {
 		m_logger.info("Deleting schema id: {}", id);
-		Schema schema = m_schemaDao.findByPK(id, SchemaEntity.READSET_FULL);
-		Topic topic = m_metaService.findTopicById(schema.getTopicId());
-		if (topic != null) {
-			List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
-			for (Schema s : schemas) {
-				if (s.getId() == id) {
-					schemas.remove(s);
-					break;
+		try {
+			tm.startTransaction("fxhermesmetadb");
+			Schema schema = m_schemaDao.findByPK(id, SchemaEntity.READSET_FULL);
+			Topic topic = m_metaService.findTopicById(schema.getTopicId());
+			if (topic != null) {
+				List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
+				for (Schema s : schemas) {
+					if (s.getId() == id) {
+						schemas.remove(s);
+						break;
+					}
 				}
-			}
 
-			com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(),
-			      TopicEntity.READSET_FULL);
-			if (schemas.size() > 0 && topic.getSchemaId() != schemas.get(0).getId()) {
-				topicModel.setSchemaId(schemas.get(0).getId());
-			} else if (schemas.size() == 0) {
-				topicModel.setSchemaId(null);
-			}
-			m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
+				com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(),
+				      TopicEntity.READSET_FULL);
+				if (schemas.size() > 0 && topic.getSchemaId() != schemas.get(0).getId()) {
+					topicModel.setSchemaId(schemas.get(0).getId());
+				} else if (schemas.size() == 0) {
+					topicModel.setSchemaId(null);
+				}
+				m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
-			m_schemaDao.deleteByPK(schema);
-			m_logger.info("Deleted schema id: {}", id);
+				m_schemaDao.deleteByPK(schema);
+				m_logger.info("Deleted schema id: {}", id);
+				tm.commitTransaction();
+			}
+		} catch (Exception e) {
+			tm.rollbackTransaction();
+			throw e;
 		}
 	}
 
@@ -545,7 +562,9 @@ public class SchemaService {
 		view.setDescription(schema.getDescription());
 		view.setCompatibility(schema.getCompatibility());
 		view.setTopicId(schema.getTopicId());
-		view.setAvroId(schema.getAvroid());
+		if (schema.getAvroid() != null) {
+			view.setAvroId(schema.getAvroid());
+		}
 		if (schema.getSchemaContent() != null) {
 			view.setSchemaPreview(new String(schema.getSchemaContent()));
 		}
