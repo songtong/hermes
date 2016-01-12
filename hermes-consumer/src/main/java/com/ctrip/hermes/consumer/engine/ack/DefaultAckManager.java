@@ -128,13 +128,11 @@ public class DefaultAckManager implements AckManager {
 		if (holder != null) {
 			holder.stop();
 
-			while (!Thread.interrupted()) {
-				if (holder.hasUnhandleOperation()) {
-					try {
-						TimeUnit.MILLISECONDS.sleep(50);
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-					}
+			while (!Thread.interrupted() && holder.hasUnhandleOperation()) {
+				try {
+					TimeUnit.MILLISECONDS.sleep(50);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
 				}
 			}
 		}
