@@ -22,9 +22,12 @@ public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec>
 	private Cache<String, Codec> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(5)
 	      .build();
 
+	private volatile boolean isNeedReload = true;
+
 	@Override
 	public int deleteByPK(Codec proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.deleteByPK(proto);
 	}
 
@@ -45,15 +48,17 @@ public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec>
 
 	public int insert(Codec proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.insert(proto);
 	}
 
 	public Collection<Codec> list() throws DalException {
-		if (cache.size() == 0) {
+		if (isNeedReload) {
 			List<Codec> models = list(CodecEntity.READSET_FULL);
 			for (Codec model : models) {
 				cache.put(model.getKeyType(), model);
 			}
+			isNeedReload = false;
 		}
 		return cache.asMap().values();
 	}
@@ -61,6 +66,7 @@ public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec>
 	@Override
 	public int updateByPK(Codec proto, Updateset<Codec> updateset) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.updateByPK(proto, updateset);
 	}
 

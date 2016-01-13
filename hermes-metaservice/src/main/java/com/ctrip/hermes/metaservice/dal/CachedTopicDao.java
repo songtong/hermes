@@ -22,9 +22,15 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 	private Cache<Long, Topic> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(500)
 	      .build();
 
+	private Cache<String, Topic> nameCache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
+	      .maximumSize(500).build();
+
+	private volatile boolean isNeedReload = true;
+
 	@Override
 	public int deleteByPK(Topic proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.deleteByPK(proto);
 	}
 
@@ -43,13 +49,29 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 		}
 	}
 
+	public Topic findByName(final String name) throws DalException {
+		try {
+			return nameCache.get(name, new Callable<Topic>() {
+
+				@Override
+				public Topic call() throws Exception {
+					return findByName(name, TopicEntity.READSET_FULL);
+				}
+
+			});
+		} catch (ExecutionException e) {
+			throw new DalException(null, e.getCause());
+		}
+	}
+
 	public int insert(Topic proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.insert(proto);
 	}
 
 	public Collection<Topic> list() throws DalException {
-		if (cache.size() == 0) {
+		if (isNeedReload) {
 			List<Topic> models = list(TopicEntity.READSET_FULL);
 			for (Topic model : models) {
 				cache.put(model.getKeyId(), model);
@@ -60,6 +82,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 					cache.put(model.getKeyId(), model);
 				}
 			}
+			isNeedReload = false;
 		}
 		return cache.asMap().values();
 	}
@@ -67,6 +90,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 	@Override
 	public int updateByPK(Topic proto, Updateset<Topic> updateset) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.updateByPK(proto, updateset);
 	}
 

@@ -17,25 +17,19 @@ import com.ctrip.hermes.metaservice.dal.CachedCodecDao;
 import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.dal.CachedDatasourceDao;
 import com.ctrip.hermes.metaservice.dal.CachedEndpointDao;
+import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
 import com.ctrip.hermes.metaservice.dal.CachedServerDao;
 import com.ctrip.hermes.metaservice.dal.CachedStorageDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.App;
 import com.ctrip.hermes.metaservice.model.Codec;
 import com.ctrip.hermes.metaservice.model.ConsumerGroup;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
 import com.ctrip.hermes.metaservice.model.Datasource;
-import com.ctrip.hermes.metaservice.model.DatasourceEntity;
 import com.ctrip.hermes.metaservice.model.Endpoint;
 import com.ctrip.hermes.metaservice.model.Meta;
 import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
 import com.ctrip.hermes.metaservice.model.Partition;
-import com.ctrip.hermes.metaservice.model.PartitionDao;
-import com.ctrip.hermes.metaservice.model.PartitionEntity;
-import com.ctrip.hermes.metaservice.model.Producer;
-import com.ctrip.hermes.metaservice.model.ProducerDao;
-import com.ctrip.hermes.metaservice.model.ProducerEntity;
 import com.ctrip.hermes.metaservice.model.Server;
 import com.ctrip.hermes.metaservice.model.Storage;
 import com.ctrip.hermes.metaservice.model.Topic;
@@ -73,10 +67,10 @@ public class DefaultMetaService implements MetaService {
 	protected CachedConsumerGroupDao m_consumerGroupDao;
 
 	@Inject
-	protected PartitionDao m_partitionDao;
+	protected CachedPartitionDao m_partitionDao;
 
-	@Inject
-	protected ProducerDao m_producerDao;
+	// @Inject
+	// protected CachedProducerDao m_producerDao;
 
 	@Inject
 	protected CachedDatasourceDao m_datasourceDao;
@@ -110,8 +104,7 @@ public class DefaultMetaService implements MetaService {
 	@Override
 	public List<com.ctrip.hermes.meta.entity.ConsumerGroup> findConsumerGroups(
 	      com.ctrip.hermes.metaservice.model.Topic topicModel) throws DalException {
-		List<ConsumerGroup> models = m_consumerGroupDao.findByTopicId(topicModel.getId(),
-		      ConsumerGroupEntity.READSET_FULL);
+		List<ConsumerGroup> models = m_consumerGroupDao.findByTopic(topicModel.getId());
 		List<com.ctrip.hermes.meta.entity.ConsumerGroup> entities = new ArrayList<>();
 		for (ConsumerGroup model : models) {
 			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
@@ -121,16 +114,16 @@ public class DefaultMetaService implements MetaService {
 	}
 
 	@Override
-	public List<com.ctrip.hermes.meta.entity.Datasource> findDatasources(
-	      com.ctrip.hermes.metaservice.model.Storage storageModel) throws DalException {
-		List<Datasource> models = m_datasourceDao
-		      .findByStorageType(storageModel.getType(), DatasourceEntity.READSET_FULL);
-		Collections.reverse(models);
+	public List<com.ctrip.hermes.meta.entity.Datasource> findDatasources(String storageType) throws DalException {
+		Collection<Datasource> models = m_datasourceDao.list();
 		List<com.ctrip.hermes.meta.entity.Datasource> entities = new ArrayList<>();
 		for (Datasource model : models) {
-			com.ctrip.hermes.meta.entity.Datasource entity = ModelToEntityConverter.convert(model);
-			entities.add(entity);
+			if (storageType.equals(model.getStorageType())) {
+				com.ctrip.hermes.meta.entity.Datasource entity = ModelToEntityConverter.convert(model);
+				entities.add(entity);
+			}
 		}
+		Collections.reverse(entities);
 		return entities;
 	}
 
@@ -163,7 +156,7 @@ public class DefaultMetaService implements MetaService {
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Partition> findPartitions(
 	      com.ctrip.hermes.metaservice.model.Topic topicModel) throws DalException {
-		List<Partition> models = m_partitionDao.findByTopicId(topicModel.getId(), PartitionEntity.READSET_FULL);
+		List<Partition> models = m_partitionDao.findByTopic(topicModel.getId());
 		List<com.ctrip.hermes.meta.entity.Partition> entities = new ArrayList<>();
 		for (Partition model : models) {
 			com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
@@ -172,17 +165,17 @@ public class DefaultMetaService implements MetaService {
 		return entities;
 	}
 
-	@Override
-	public List<com.ctrip.hermes.meta.entity.Producer> findProducers(com.ctrip.hermes.metaservice.model.Topic topicModel)
-	      throws DalException {
-		List<Producer> models = m_producerDao.findByTopicId(topicModel.getId(), ProducerEntity.READSET_FULL);
-		List<com.ctrip.hermes.meta.entity.Producer> entities = new ArrayList<>();
-		for (Producer model : models) {
-			com.ctrip.hermes.meta.entity.Producer entity = ModelToEntityConverter.convert(model);
-			entities.add(entity);
-		}
-		return entities;
-	}
+	// @Override
+	// public List<com.ctrip.hermes.meta.entity.Producer> findProducers(com.ctrip.hermes.metaservice.model.Topic topicModel)
+	// throws DalException {
+	// List<Producer> models = m_producerDao.findByTopic(topicModel.getId());
+	// List<com.ctrip.hermes.meta.entity.Producer> entities = new ArrayList<>();
+	// for (Producer model : models) {
+	// com.ctrip.hermes.meta.entity.Producer entity = ModelToEntityConverter.convert(model);
+	// entities.add(entity);
+	// }
+	// return entities;
+	// }
 
 	@Override
 	public List<com.ctrip.hermes.meta.entity.Server> findServers() throws DalException {
@@ -218,7 +211,7 @@ public class DefaultMetaService implements MetaService {
 
 	protected com.ctrip.hermes.meta.entity.Storage fillStorage(Storage model) throws DalException {
 		com.ctrip.hermes.meta.entity.Storage entity = ModelToEntityConverter.convert(model);
-		List<com.ctrip.hermes.meta.entity.Datasource> datasources = findDatasources(model);
+		List<com.ctrip.hermes.meta.entity.Datasource> datasources = findDatasources(model.getType());
 		for (com.ctrip.hermes.meta.entity.Datasource ds : datasources) {
 			entity.addDatasource(ds);
 		}
@@ -226,11 +219,15 @@ public class DefaultMetaService implements MetaService {
 	}
 
 	@Override
-	public List<com.ctrip.hermes.meta.entity.Topic> findTopics() throws DalException {
+	public List<com.ctrip.hermes.meta.entity.Topic> findTopics(boolean isFillDetail) throws DalException {
 		Collection<Topic> models = m_topicDao.list();
 		List<com.ctrip.hermes.meta.entity.Topic> entities = new ArrayList<>();
 		for (Topic model : models) {
-			entities.add(fillTopic(model));
+			if (isFillDetail) {
+				entities.add(fillTopic(model));
+			} else {
+				entities.add(ModelToEntityConverter.convert(model));
+			}
 		}
 		return entities;
 	}
@@ -245,10 +242,10 @@ public class DefaultMetaService implements MetaService {
 		for (com.ctrip.hermes.meta.entity.Partition p : partitions) {
 			entity.addPartition(p);
 		}
-		List<com.ctrip.hermes.meta.entity.Producer> producers = findProducers(model);
-		for (com.ctrip.hermes.meta.entity.Producer p : producers) {
-			entity.addProducer(p);
-		}
+		// List<com.ctrip.hermes.meta.entity.Producer> producers = findProducers(model);
+		// for (com.ctrip.hermes.meta.entity.Producer p : producers) {
+		// entity.addProducer(p);
+		// }
 		return entity;
 	}
 

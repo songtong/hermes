@@ -14,15 +14,29 @@ import com.ctrip.hermes.metaservice.dal.CachedCodecDao;
 import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.dal.CachedDatasourceDao;
 import com.ctrip.hermes.metaservice.dal.CachedEndpointDao;
+import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
+import com.ctrip.hermes.metaservice.dal.CachedProducerDao;
+import com.ctrip.hermes.metaservice.dal.CachedSchemaDao;
 import com.ctrip.hermes.metaservice.dal.CachedServerDao;
 import com.ctrip.hermes.metaservice.dal.CachedStorageDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.monitor.dao.DefaultMonitorEventStorage;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueDatasourceProvider;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider;
+import com.ctrip.hermes.metaservice.service.CodecService;
+import com.ctrip.hermes.metaservice.service.CompileService;
+import com.ctrip.hermes.metaservice.service.ConsumerService;
+import com.ctrip.hermes.metaservice.service.DatasourceService;
 import com.ctrip.hermes.metaservice.service.DefaultMetaService;
+import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.DefaultZookeeperService;
+import com.ctrip.hermes.metaservice.service.EndpointService;
 import com.ctrip.hermes.metaservice.service.MetaRefactor;
+import com.ctrip.hermes.metaservice.service.PartitionService;
+import com.ctrip.hermes.metaservice.service.SchemaRegistryService;
+import com.ctrip.hermes.metaservice.service.SchemaService;
+import com.ctrip.hermes.metaservice.service.SubscriptionService;
+import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.StorageDataSourceProvider;
 import com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler;
@@ -59,6 +73,19 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
 		all.addAll(new FxHermesShardDbDatabaseConfigurator().defineComponents());
 
+		all.add(A(CodecService.class));
+		all.add(A(CompileService.class));
+		all.add(A(ConsumerService.class));
+		all.add(A(DatasourceService.class));
+		all.add(A(DefaultPortalMetaService.class));
+		all.add(A(DefaultZookeeperService.class));
+		all.add(A(EndpointService.class));
+		all.add(A(PartitionService.class));
+		all.add(A(SchemaService.class));
+		all.add(A(SchemaRegistryService.class));
+		all.add(A(SubscriptionService.class));
+		all.add(A(TopicService.class));
+		
 		all.add(A(MetaRefactor.class));
 		all.add(A(CachedAppDao.class));
 		all.add(A(CachedCodecDao.class));
@@ -68,7 +95,10 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(CachedServerDao.class));
 		all.add(A(CachedStorageDao.class));
 		all.add(A(CachedTopicDao.class));
-		
+		all.add(A(CachedSchemaDao.class));
+		all.add(A(CachedPartitionDao.class));
+		all.add(A(CachedProducerDao.class));
+
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/ctrip/data/hermes/datasources.xml"));
 
 		return all;

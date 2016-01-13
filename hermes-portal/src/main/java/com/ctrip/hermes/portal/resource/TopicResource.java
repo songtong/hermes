@@ -35,7 +35,6 @@ import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
-import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
@@ -53,7 +52,8 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.CodecService;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.ConsumerService;
+import com.ctrip.hermes.metaservice.service.DatasourceService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.config.PortalConfig;
@@ -69,7 +69,9 @@ public class TopicResource {
 
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
-	private PortalMetaService metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
+	private ConsumerService consumerService = PlexusComponentLocator.lookup(ConsumerService.class);
+	
+	private DatasourceService datasourceService = PlexusComponentLocator.lookup(DatasourceService.class);
 
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
 
@@ -164,7 +166,7 @@ public class TopicResource {
 	@Path("{topic}/sync")
 	public Response syncTopic(@PathParam("topic") String topicName,
 	      @QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
-		Topic topic = metaService.findTopicByName(topicName);
+		Topic topic = topicService.findTopicByName(topicName);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
 		}
@@ -199,7 +201,7 @@ public class TopicResource {
 	}
 
 	private void syncConsumers(TopicView topic, WebTarget target) {
-		for (ConsumerGroup consumer : metaService.findConsumersByTopic(topic.getName())) {
+		for (ConsumerGroup consumer : consumerService.getConsumers(topic.getName())) {
 			Builder request = target.path("/api/consumers/add").request();
 			ConsumerView requestView = new ConsumerView(topic.getName(), consumer);
 			Response response = request.post(Entity.json(requestView));
@@ -317,7 +319,7 @@ public class TopicResource {
 			iDses.add(partition.getWriteDatasource());
 		}
 		Set<String> set = new HashSet<String>();
-		Builder request = target.path("/api/meta/storages").queryParam("type", topic.getStorageType()).request();
+		Builder request = target.path("/api/storages").queryParam("type", topic.getStorageType()).request();
 		try {
 			List<Storage> storages = request.get(new GenericType<List<Storage>>() {
 			});
@@ -371,19 +373,15 @@ public class TopicResource {
 			for (Topic topic : topics) {
 				TopicView topicView = prepareTopicView(topic);
 
-				Storage storage = metaService.findStorageByTopic(topic.getName());
-				topicView.setStorage(storage);
-
 				if (topic.getSchemaId() != null) {
+					SchemaView schemaView;
 					try {
-						SchemaView schemaView = schemaService.getSchemaView(topic.getSchemaId());
+						schemaView = schemaService.getSchemaView(topic.getSchemaId());
 						topicView.setSchema(schemaView);
-					} catch (DalNotFoundException e) {
+					} catch (Exception e) {
+						throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 					}
 				}
-
-				Codec codec = codecService.getCodec(topic.getName());
-				topicView.setCodec(codec);
 				if (type != null && type.equals(topicView.getStorageType())) {
 					returnResult.add(topicView);
 				} else if (type == null) {
@@ -413,9 +411,13 @@ public class TopicResource {
 		}
 
 		TopicView topicView = prepareTopicView(topic);
+		fillTopicView(topic, topicView);
+		return topicView;
+	}
 
+	private TopicView fillTopicView(Topic topic, TopicView topicView) {
 		// Fill Storage
-		Storage storage = metaService.findStorageByTopic(topic.getName());
+		Storage storage = datasourceService.findStorageByTopic(topic.getName());
 		topicView.setStorage(storage);
 
 		// Fill Schema
@@ -430,9 +432,8 @@ public class TopicResource {
 		}
 
 		// Fill Codec
-		Codec codec = codecService.getCodec(topic.getName());
+		Codec codec = codecService.getCodecs().get(topic.getCodecType());
 		topicView.setCodec(codec);
-
 		return topicView;
 	}
 
@@ -440,14 +441,7 @@ public class TopicResource {
 	@Path("names")
 	public Response getTopicNames() {
 		List<String> topicNames = new ArrayList<String>();
-		try {
-			for (Topic topic : metaService.findTopics()) {
-				topicNames.add(topic.getName());
-			}
-		} catch (DalException e) {
-			log.warn("get topic name failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-		}
+		topicNames.addAll(topicService.getTopics().keySet());
 		Collections.sort(topicNames);
 		return Response.status(Status.OK).entity(topicNames).build();
 	}

@@ -22,9 +22,16 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 	private Cache<Integer, ConsumerGroup> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
 	      .maximumSize(500).build();
 
+	private Cache<Long, List<ConsumerGroup>> topicCache = CacheBuilder.newBuilder()
+	      .expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(500).build();
+
+	private volatile boolean isNeedReload = true;
+
 	@Override
 	public int deleteByPK(ConsumerGroup proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
+		topicCache.invalidate(proto.getTopicId());
 		return super.deleteByPK(proto);
 	}
 
@@ -43,13 +50,28 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 		}
 	}
 
+	public List<ConsumerGroup> findByTopic(final Long topicId) throws DalException {
+		try {
+			return topicCache.get(topicId, new Callable<List<ConsumerGroup>>() {
+				@Override
+				public List<ConsumerGroup> call() throws Exception {
+					return findByTopicId(topicId, ConsumerGroupEntity.READSET_FULL);
+				}
+			});
+		} catch (ExecutionException e) {
+			throw new DalException(null, e.getCause());
+		}
+	}
+
 	public int insert(ConsumerGroup proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
+		topicCache.invalidate(proto.getTopicId());
 		return super.insert(proto);
 	}
 
 	public Collection<ConsumerGroup> list() throws DalException {
-		if (cache.size() == 0) {
+		if (isNeedReload) {
 			List<ConsumerGroup> models = list(ConsumerGroupEntity.READSET_FULL);
 			for (ConsumerGroup model : models) {
 				cache.put(model.getKeyId(), model);
@@ -60,6 +82,7 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 					cache.put(model.getKeyId(), model);
 				}
 			}
+			isNeedReload = false;
 		}
 		return cache.asMap().values();
 	}
@@ -67,6 +90,8 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 	@Override
 	public int updateByPK(ConsumerGroup proto, Updateset<ConsumerGroup> updateset) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
+		topicCache.invalidate(proto.getTopicId());
 		return super.updateByPK(proto, updateset);
 	}
 

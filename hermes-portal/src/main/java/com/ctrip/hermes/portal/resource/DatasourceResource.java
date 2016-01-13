@@ -16,7 +16,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.dal.jdbc.DalException;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -24,7 +23,7 @@ import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.DatasourceService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/datasources/")
@@ -34,7 +33,7 @@ public class DatasourceResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(DatasourceResource.class);
 
-	private PortalMetaService metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
+	private DatasourceService dsService = PlexusComponentLocator.lookup(DatasourceService.class);
 
 	@POST
 	@Path("{type}")
@@ -56,13 +55,13 @@ public class DatasourceResource {
 			throw new RestException("Datasource Id is empty", Status.BAD_REQUEST);
 		}
 
-		if (metaService.getDatasources().containsKey(datasource.getId())) {
+		if (dsService.getDatasources().containsKey(datasource.getId())) {
 			throw new RestException(String.format("Datasource id: %s, type: %s, already exists.", datasource.getId(),
 			      dsType), Status.CONFLICT);
 		}
 
 		try {
-			metaService.addDatasource(datasource, dsType);
+			dsService.addDatasource(datasource, dsType);
 			return Response.status(Status.CREATED).build();
 		} catch (Exception e) {
 			logger.error("Add Datasource failed.", e);
@@ -74,7 +73,7 @@ public class DatasourceResource {
 	@Path("{type}/{id}")
 	public Response deleteDatasource(@PathParam("id") String id, @PathParam("type") String dsType) {
 		try {
-			metaService.deleteDatasource(id, dsType);
+			dsService.deleteDatasource(id, dsType);
 		} catch (Exception e) {
 			logger.warn("Delete Datasource failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -91,13 +90,13 @@ public class DatasourceResource {
 		}
 
 		try {
-			Storage storage = metaService.getStorage(type);
+			Storage storage = dsService.getStorages().get(type);
 			List<Datasource> dss = storage.getDatasources();
 			for (Datasource ds : dss) {
 				if (ds.getId().equals(id) && ds.getProperties().containsKey(name)) {
 					ds.getProperties().remove(name);
 
-					metaService.updateDatasource(ds);
+					dsService.updateDatasource(ds);
 					return Response.status(Status.OK).build();
 				}
 			}
@@ -114,12 +113,7 @@ public class DatasourceResource {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
 
-		Storage storage = null;
-		try {
-			storage = metaService.getStorage(type);
-		} catch (DalException e) {
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-		}
+		Storage storage = dsService.getStorages().get(type);
 		if (storage == null) {
 			throw new RestException("Invalid storage type", Status.NOT_FOUND);
 		}
@@ -131,7 +125,7 @@ public class DatasourceResource {
 			Datasource ds = datasources.get(idx);
 			if (ds.getId().equals(dsn.getId())) {
 				try {
-					metaService.updateDatasource(dsn);
+					dsService.updateDatasource(dsn);
 				} catch (Exception e) {
 					throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 				}

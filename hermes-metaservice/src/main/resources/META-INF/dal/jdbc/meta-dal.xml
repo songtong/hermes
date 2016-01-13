@@ -183,12 +183,6 @@
 				<statement><![CDATA[SELECT <FIELDS/>
 		FROM <TABLE/> ]]></statement>
 			</query>
-			<query name="find-by-storageType" type="SELECT" multiple="true">
-				<param name="sType" />
-				<statement><![CDATA[SELECT <FIELDS/>
-        FROM <TABLE/>
-        WHERE <FIELD name='storage-type'/> = ${sType} ]]></statement>
-			</query>
 		</query-defs>
 	</entity>
 	<entity name="endpoint">

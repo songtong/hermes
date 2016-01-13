@@ -38,7 +38,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.ListUtils;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
@@ -55,18 +55,18 @@ public class DashboardResource {
 
 	private DashboardService m_monitorService = PlexusComponentLocator.lookup(DashboardService.class);
 
-	private PortalMetaService m_metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
-
 	private MessageQueueDao m_messageQueueDao = PlexusComponentLocator.lookup(MessageQueueDao.class);
+
+	private TopicService m_topicService = PlexusComponentLocator.lookup(TopicService.class);
 
 	@GET
 	@Path("brief/topics")
 	public Response getTopics() {
 		List<TopicDelayBriefView> list = new ArrayList<TopicDelayBriefView>();
-		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
+		for (Entry<String, Topic> entry : m_topicService.getTopics().entrySet()) {
 			Topic t = entry.getValue();
-			list.add(new TopicDelayBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), 0,
-					t.getStorageType()));
+			list.add(new TopicDelayBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), 0, t
+			      .getStorageType()));
 		}
 
 		Collections.sort(list, new Comparator<TopicDelayBriefView>() {
@@ -86,11 +86,10 @@ public class DashboardResource {
 		return Response.status(Status.OK).entity(m_monitorService.getLatestBrokers()).build();
 	}
 
-
 	@GET
 	@Path("/{topic}/{consumer}/delay")
 	public Response getConsumerDelay(@PathParam("topic") String topicName, @PathParam("consumer") String consumerName) {
-		Topic topic = m_metaService.findTopicByName(topicName);
+		Topic topic = m_topicService.findTopicByName(topicName);
 		List<DelayDetail> consumerDelay = new ArrayList<>();
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
@@ -103,7 +102,7 @@ public class DashboardResource {
 	@GET
 	@Path("topics/{topic}/latest")
 	public Response getTopicLatest(@PathParam("topic") String name) {
-		Topic topic = m_metaService.findTopicByName(name);
+		Topic topic = m_topicService.findTopicByName(name);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found", name), Status.NOT_FOUND);
 		}
@@ -162,7 +161,6 @@ public class DashboardResource {
 			return m_rawMessage;
 		}
 	}
-
 
 	@GET
 	@Path("top/outdate-topics")

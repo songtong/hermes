@@ -11,9 +11,7 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.meta.entity.Producer;
 import com.ctrip.hermes.meta.entity.Server;
-import com.ctrip.hermes.metaservice.model.Storage;
 import com.ctrip.hermes.metaservice.model.Topic;
 import com.ctrip.hermes.metaservice.service.MetaService;
 
@@ -58,7 +56,7 @@ public class MockMetaService implements MetaService {
 	}
 
 	@Override
-	public List<Datasource> findDatasources(Storage storageModel) throws DalException {
+	public List<Datasource> findDatasources(String storageType) throws DalException {
 		return null;
 	}
 
@@ -73,11 +71,6 @@ public class MockMetaService implements MetaService {
 	}
 
 	@Override
-	public List<Producer> findProducers(Topic topicModel) throws DalException {
-		return null;
-	}
-
-	@Override
 	public List<Server> findServers() throws DalException {
 		return null;
 	}
@@ -88,7 +81,7 @@ public class MockMetaService implements MetaService {
 	}
 
 	@Override
-	public List<com.ctrip.hermes.meta.entity.Topic> findTopics() throws DalException {
+	public List<com.ctrip.hermes.meta.entity.Topic> findTopics(boolean isFillDetail) throws DalException {
 		return null;
 	}
 

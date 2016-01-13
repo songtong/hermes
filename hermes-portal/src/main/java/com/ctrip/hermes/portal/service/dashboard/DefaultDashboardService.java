@@ -42,7 +42,9 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
+import com.ctrip.hermes.metaservice.service.PartitionService;
+import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.resource.view.BrokerQPSBriefView;
 import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
@@ -64,8 +66,14 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private MessageQueueDao m_dao;
 
 	@Inject
-	private PortalMetaService m_metaService;
+	private DefaultPortalMetaService m_metaService;
 
+	@Inject
+	private TopicService m_topicService;
+	
+	@Inject
+	private PartitionService m_partitionService;
+	
 	@Inject
 	private PortalElasticClient m_elasticClient;
 
@@ -243,7 +251,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			}
 		}
 
-		Topic t = m_metaService.findTopicByName(topic);
+		Topic t = m_topicService.findTopicByName(topic);
 		CountDownLatch latch = new CountDownLatch(t.getPartitions().size());
 		try {
 			ConsumerGroup c = t.findConsumerGroup(consumer);
@@ -274,13 +282,13 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private void updateLatestProduced() {
 		Map<String, Date> m = new HashMap<String, Date>();
-		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
+		for (Entry<String, Topic> entry : m_topicService.getTopics().entrySet()) {
 			Topic topic = entry.getValue();
 			if (Storage.MYSQL.equals(topic.getStorageType())) {
 				String topicName = topic.getName();
 				Date current = m_latestProduced.get(topicName) == null ? new Date(0) : m_latestProduced.get(topicName);
 				Date latest = new Date(0);
-				for (Partition partition : m_metaService.findPartitionsByTopic(topicName)) {
+				for (Partition partition : m_partitionService.findPartitionsByTopic(topic.getId())) {
 					try {
 						MessagePriority msgPriority = m_dao.getLatestProduced(topicName, partition.getId(),
 								PortalConstants.PRIORITY_TRUE);
@@ -304,7 +312,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private void updateProducerTopicRelationship() {
 		Map<String, Set<String>> topic2producers = new HashMap<String, Set<String>>();
-		for (String topic : m_metaService.getTopics().keySet()) {
+		for (String topic : m_topicService.getTopics().keySet()) {
 			topic2producers.put(topic, new HashSet<String>(m_elasticClient.getLastWeekProducers(topic)));
 		}
 		m_topic2producers = topic2producers;
@@ -325,7 +333,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private void updateConsumerTopicRelationship() {
 		Map<String, Map<String, Set<String>>> topic2consumers = new HashMap<>();
-		for (Entry<String, Topic> entry : m_metaService.getTopics().entrySet()) {
+		for (Entry<String, Topic> entry : m_topicService.getTopics().entrySet()) {
 			String topic = entry.getKey();
 			for (ConsumerGroup c : entry.getValue().getConsumerGroups()) {
 				String consumer = c.getName();

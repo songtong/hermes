@@ -22,9 +22,12 @@ public class CachedDatasourceDao extends DatasourceDao implements CachedDao<Stri
 	private Cache<String, Datasource> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
 	      .maximumSize(100).build();
 
+	private volatile boolean isNeedReload = true;
+
 	@Override
 	public int deleteByPK(Datasource proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.deleteByPK(proto);
 	}
 
@@ -45,23 +48,25 @@ public class CachedDatasourceDao extends DatasourceDao implements CachedDao<Stri
 
 	public int insert(Datasource proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.insert(proto);
 	}
 
 	public Collection<Datasource> list() throws DalException {
-		if (cache.size() == 0) {
+		if (isNeedReload) {
 			List<Datasource> models = list(DatasourceEntity.READSET_FULL);
 			for (Datasource model : models) {
 				cache.put(model.getKeyId(), model);
 			}
+			isNeedReload = false;
 		}
 		return cache.asMap().values();
 	}
 
-	@Override
-	public int updateByPK(Datasource proto, Updateset<Datasource> updateset) throws DalException {
+	public int updateByPK(Datasource proto) throws DalException {
 		cache.invalidateAll();
-		return super.updateByPK(proto, updateset);
+		isNeedReload = true;
+		return super.updateByPK(proto, DatasourceEntity.UPDATESET_FULL);
 	}
 
 }

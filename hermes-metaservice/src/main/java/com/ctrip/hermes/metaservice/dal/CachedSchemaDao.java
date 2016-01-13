@@ -10,34 +10,34 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.Updateset;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.metaservice.model.Server;
-import com.ctrip.hermes.metaservice.model.ServerDao;
-import com.ctrip.hermes.metaservice.model.ServerEntity;
+import com.ctrip.hermes.metaservice.model.Schema;
+import com.ctrip.hermes.metaservice.model.SchemaDao;
+import com.ctrip.hermes.metaservice.model.SchemaEntity;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 @Named
-public class CachedServerDao extends ServerDao implements CachedDao<String, Server> {
+public class CachedSchemaDao extends SchemaDao implements CachedDao<Long, Schema> {
 
-	private Cache<String, Server> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
-	      .maximumSize(100).build();
+	private Cache<Long, Schema> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
+	      .maximumSize(500).build();
 
 	private volatile boolean isNeedReload = true;
 
 	@Override
-	public int deleteByPK(Server proto) throws DalException {
+	public int deleteByPK(Schema proto) throws DalException {
 		cache.invalidateAll();
 		isNeedReload = true;
 		return super.deleteByPK(proto);
 	}
 
-	public Server findByPK(final String keyId) throws DalException {
+	public Schema findByPK(final Long keyId) throws DalException {
 		try {
-			return cache.get(keyId, new Callable<Server>() {
+			return cache.get(keyId, new Callable<Schema>() {
 
 				@Override
-				public Server call() throws Exception {
-					return findByPK(keyId, ServerEntity.READSET_FULL);
+				public Schema call() throws Exception {
+					return findByPK(keyId, SchemaEntity.READSET_FULL);
 				}
 
 			});
@@ -46,16 +46,16 @@ public class CachedServerDao extends ServerDao implements CachedDao<String, Serv
 		}
 	}
 
-	public int insert(Server proto) throws DalException {
+	public int insert(Schema proto) throws DalException {
 		cache.invalidateAll();
 		isNeedReload = true;
 		return super.insert(proto);
 	}
 
-	public Collection<Server> list() throws DalException {
+	public Collection<Schema> list() throws DalException {
 		if (isNeedReload) {
-			List<Server> models = list(ServerEntity.READSET_FULL);
-			for (Server model : models) {
+			List<Schema> models = list(SchemaEntity.READSET_FULL);
+			for (Schema model : models) {
 				cache.put(model.getKeyId(), model);
 			}
 			isNeedReload = false;
@@ -64,7 +64,7 @@ public class CachedServerDao extends ServerDao implements CachedDao<String, Serv
 	}
 
 	@Override
-	public int updateByPK(Server proto, Updateset<Server> updateset) throws DalException {
+	public int updateByPK(Schema proto, Updateset<Schema> updateset) throws DalException {
 		cache.invalidateAll();
 		isNeedReload = true;
 		return super.updateByPK(proto, updateset);

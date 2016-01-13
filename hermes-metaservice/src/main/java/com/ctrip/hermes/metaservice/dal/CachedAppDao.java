@@ -22,9 +22,12 @@ public class CachedAppDao extends AppDao implements CachedDao<Long, App> {
 	private Cache<Long, App> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(100)
 	      .build();
 
+	private volatile boolean isNeedReload = true;
+
 	@Override
 	public int deleteByPK(App proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.deleteByPK(proto);
 	}
 
@@ -45,15 +48,17 @@ public class CachedAppDao extends AppDao implements CachedDao<Long, App> {
 
 	public int insert(App proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.insert(proto);
 	}
 
 	public Collection<App> list() throws DalException {
-		if (cache.size() == 0) {
+		if (isNeedReload) {
 			List<App> models = list(AppEntity.READSET_FULL);
 			for (App model : models) {
 				cache.put(model.getKeyId(), model);
 			}
+			isNeedReload = false;
 		}
 		return cache.asMap().values();
 	}
@@ -61,6 +66,7 @@ public class CachedAppDao extends AppDao implements CachedDao<Long, App> {
 	@Override
 	public int updateByPK(App proto, Updateset<App> updateset) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.updateByPK(proto, updateset);
 	}
 

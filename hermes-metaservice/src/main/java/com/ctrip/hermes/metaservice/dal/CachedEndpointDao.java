@@ -22,9 +22,12 @@ public class CachedEndpointDao extends EndpointDao implements CachedDao<String, 
 	private Cache<String, Endpoint> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
 	      .maximumSize(100).build();
 
+	private volatile boolean isNeedReload = true;
+
 	@Override
 	public int deleteByPK(Endpoint proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.deleteByPK(proto);
 	}
 
@@ -45,15 +48,17 @@ public class CachedEndpointDao extends EndpointDao implements CachedDao<String, 
 
 	public int insert(Endpoint proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.insert(proto);
 	}
 
 	public Collection<Endpoint> list() throws DalException {
-		if (cache.size() == 0) {
+		if (isNeedReload) {
 			List<Endpoint> models = list(EndpointEntity.READSET_FULL);
 			for (Endpoint model : models) {
 				cache.put(model.getKeyId(), model);
 			}
+			isNeedReload = false;
 		}
 		return cache.asMap().values();
 	}
@@ -61,6 +66,7 @@ public class CachedEndpointDao extends EndpointDao implements CachedDao<String, 
 	@Override
 	public int updateByPK(Endpoint proto, Updateset<Endpoint> updateset) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.updateByPK(proto, updateset);
 	}
 

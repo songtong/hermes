@@ -28,9 +28,9 @@ import org.unidal.lookup.util.StringUtils;
 import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.dal.CachedSchemaDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.Schema;
-import com.ctrip.hermes.metaservice.model.SchemaDao;
 import com.ctrip.hermes.metaservice.model.SchemaEntity;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
 
@@ -48,13 +48,16 @@ public class SchemaService {
 	private CachedTopicDao m_topicDao;
 
 	@Inject
-	private SchemaDao m_schemaDao;
+	private CachedSchemaDao m_schemaDao;
 
 	@Inject
-	private PortalMetaService m_metaService;
+	private DefaultPortalMetaService m_metaService;
 
 	@Inject
 	private CompileService m_compileService;
+
+	@Inject
+	private CodecService m_codecService;
 
 	/**
 	 * 
@@ -184,8 +187,7 @@ public class SchemaService {
 			}
 			m_schemaDao.insert(schema);
 
-			com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(),
-					TopicEntity.READSET_FULL);
+			com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName());
 			topicModel.setSchemaId(schema.getId());
 			m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
@@ -213,7 +215,7 @@ public class SchemaService {
 		try {
 			tm.startTransaction("fxhermesmetadb");
 			Schema schema = m_schemaDao.findByPK(id, SchemaEntity.READSET_FULL);
-			Topic topic = m_metaService.findTopicById(schema.getTopicId());
+			com.ctrip.hermes.metaservice.model.Topic topic = m_topicDao.findByPK(schema.getTopicId());
 			if (topic != null) {
 				List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
 				for (Schema s : schemas) {
@@ -223,8 +225,7 @@ public class SchemaService {
 					}
 				}
 
-				com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName(),
-						TopicEntity.READSET_FULL);
+				com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topic.getName());
 				if (schemas.size() > 0 && topic.getSchemaId() != schemas.get(0).getId()) {
 					topicModel.setSchemaId(schemas.get(0).getId());
 				} else if (schemas.size() == 0) {
@@ -303,7 +304,7 @@ public class SchemaService {
 
 	private SchemaRegistryClient getAvroSchemaRegistry() throws IOException {
 		if (avroSchemaRegistry == null) {
-			Codec avroCodec = m_metaService.findCodecByType("avro");
+			Codec avroCodec = m_codecService.findCodecByType("avro");
 			if (avroCodec == null) {
 				throw new RuntimeException("Could not get the avro codec");
 			}

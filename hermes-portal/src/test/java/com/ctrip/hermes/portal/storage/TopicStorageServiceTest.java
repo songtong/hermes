@@ -9,6 +9,7 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
@@ -18,6 +19,8 @@ import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTopic;
 
 public class TopicStorageServiceTest extends ComponentTestCase {
 	PortalMetaService metaService;
+	
+	TopicService topicService;
 
 	TopicStorageService service;
 
@@ -33,6 +36,7 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 		// defineComponent(StorageHandler.class, MockStorageHandler.class);
 		service = lookup(TopicStorageService.class, DefaultTopicStorageService.ID);
 		metaService = lookup(PortalMetaService.class, DefaultPortalMetaService.ID);
+		topicService = lookup(TopicService.class);
 	}
 
 	@Test
@@ -85,7 +89,7 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	}
 
 	private Topic buildTopic() {
-		return metaService.findTopicByName("cmessage_fws");
+		return topicService.findTopicByName("cmessage_fws");
 	}
 
 	@Test(expected = TopicIsNullException.class)

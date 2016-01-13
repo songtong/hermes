@@ -22,9 +22,12 @@ public class CachedStorageDao extends StorageDao implements CachedDao<String, St
 	private Cache<String, Storage> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
 	      .maximumSize(100).build();
 
+	private volatile boolean isNeedReload = true;
+
 	@Override
 	public int deleteByPK(Storage proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.deleteByPK(proto);
 	}
 
@@ -45,15 +48,17 @@ public class CachedStorageDao extends StorageDao implements CachedDao<String, St
 
 	public int insert(Storage proto) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.insert(proto);
 	}
 
 	public Collection<Storage> list() throws DalException {
-		if (cache.size() == 0) {
+		if (isNeedReload) {
 			List<Storage> models = list(StorageEntity.READSET_FULL);
 			for (Storage model : models) {
 				cache.put(model.getKeyType(), model);
 			}
+			isNeedReload = false;
 		}
 		return cache.asMap().values();
 	}
@@ -61,6 +66,7 @@ public class CachedStorageDao extends StorageDao implements CachedDao<String, St
 	@Override
 	public int updateByPK(Storage proto, Updateset<Storage> updateset) throws DalException {
 		cache.invalidateAll();
+		isNeedReload = true;
 		return super.updateByPK(proto, updateset);
 	}
 

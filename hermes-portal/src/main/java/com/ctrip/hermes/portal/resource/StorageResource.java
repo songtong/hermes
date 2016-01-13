@@ -18,19 +18,19 @@ import javax.ws.rs.core.Response.Status;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.DatasourceService;
 
 @Path("/storages/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class StorageResource {
 
-	private PortalMetaService metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
+	private DatasourceService dsService = PlexusComponentLocator.lookup(DatasourceService.class);
 
 	@GET
 	public Response getStorages(@QueryParam("type") String type) {
-		List<Storage> storages = StringUtils.isBlank(type) ? new ArrayList<Storage>(metaService.getStorages().values())
-		      : Arrays.asList(metaService.getStorages().get(type));
+		List<Storage> storages = StringUtils.isBlank(type) ? new ArrayList<Storage>(dsService.getStorages().values())
+		      : Arrays.asList(dsService.getStorages().get(type));
 		Collections.sort(storages, new Comparator<Storage>() {
 			@Override
 			public int compare(Storage o1, Storage o2) {
