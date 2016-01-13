@@ -162,6 +162,9 @@ public class CompileService {
 			if (hasErr) {
 				throw new RuntimeException(errorMsg.toString());
 			}
+			if(process!=null&&process.exitValue()!=0){
+				throw new RuntimeException("Deploy maven failed! Maybe this dependency already exist on maven.");
+			}
 		}
 	}
 

@@ -1,21 +1,20 @@
-var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-table', 'ui.bootstrap', 'lr.upload', 'xeditable' ]).config(
-		function($routeProvider) {
-			$routeProvider.when('/list/:type', {
-				templateUrl : '/jsp/console/topic/topic-list.html',
-				controller : 'list-controller'
-			}).when('/add/mysql/:type', {
-				templateUrl : '/jsp/console/topic/mysql-add.html',
-				controller : 'mysql-add-controller'
-			}).when('/add/kafka/:type', {
-				templateUrl : '/jsp/console/topic/kafka-add.html',
-				controller : 'kafka-add-controller'
-			}).when('/detail/mysql/:type/:topicName', {
-				templateUrl : '/jsp/console/topic/mysql-detail.html',
-				controller : 'mysql-detail-controller'
-			}).when('/detail/kafka/:type/:topicName', {
-				templateUrl : '/jsp/console/topic/kafka-detail.html',
-				controller : 'kafka-detail-controller'
-			});
+var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-table', 'ui.bootstrap', 'lr.upload', 'xeditable' ]).config(function($routeProvider) {
+	$routeProvider.when('/list/:type', {
+		templateUrl : '/jsp/console/topic/topic-list.html',
+		controller : 'list-controller'
+	}).when('/add/mysql/:type', {
+		templateUrl : '/jsp/console/topic/mysql-add.html',
+		controller : 'mysql-add-controller'
+	}).when('/add/kafka/:type', {
+		templateUrl : '/jsp/console/topic/kafka-add.html',
+		controller : 'kafka-add-controller'
+	}).when('/detail/mysql/:type/:topicName', {
+		templateUrl : '/jsp/console/topic/mysql-detail.html',
+		controller : 'mysql-detail-controller'
+	}).when('/detail/kafka/:type/:topicName', {
+		templateUrl : '/jsp/console/topic/kafka-detail.html',
+		controller : 'kafka-detail-controller'
+	});
 }).service('TopicService', [ '$resource', '$window', '$q', function($resource, $window, $q) {
 	var topic_resource = $resource("/api/topics/:name", {}, {
 		get_topic_detail : {
@@ -56,7 +55,21 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 		}
 	});
 
-	var meta_resource = $resource('/api/', {}, {
+	var schema_resource = $resource('/api/schemas/', {}, {
+		deploy_schema_to_maven : {
+			method : 'POST',
+			url : '/api/schemas/:id/deploy',
+			params : {
+				id : '@id',
+				groupId : '@groupId',
+				artifactId : '@artifactId',
+				version : '@version',
+				repositoryId : '@repositoryId'
+			}
+		}
+	})
+
+	var meta_resource = $resource('/api/meta/', {}, {
 		get_storages : {
 			method : 'GET',
 			url : '/api/storages',
@@ -230,6 +243,21 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 			}, function(error_resp) {
 				show_op_info.show("同步失败: " + error_resp.data, false);
 			});
+		},
+		'deploy_schema_to_maven' : function(schemaId, groupId, artifactId, version, repositoryId) {
+			var d = $q.defer();
+			schema_resource.deploy_schema_to_maven({
+				id : schemaId,
+				groupId : groupId,
+				artifactId : artifactId,
+				version : version,
+				repositoryId : repositoryId
+			}, function(result) {
+				d.resolve(result);
+			}, function(result) {
+				d.reject(result);
+			});
+			return d.promise;
 		}
 	}
 } ]);

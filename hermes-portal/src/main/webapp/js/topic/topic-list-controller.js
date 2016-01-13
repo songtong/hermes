@@ -1,9 +1,10 @@
 topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParams', 'TopicService', 'upload', function($scope, $resource, $routeParams, TopicService, upload) {
 	$scope.logined = logined;
+	$scope.environment = environment;
 	$scope.routeParams = $routeParams;
 	$scope.cur_time = new Date();
 	$scope.current_topic_type = $scope.routeParams['type'] == undefined ? 'mysql' : $scope.routeParams['type'];
-
+	$scope.repositoryTypes = [ 'snapshots', 'releases' ];
 	TopicService.fetch_topics($scope.current_topic_type);
 
 	$scope.$watch(TopicService.get_topics, function() {
@@ -30,13 +31,20 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 		};
 	};
 
+	$scope.newSchema = {};
+	$scope.deploy_maven_row_selected = function(row) {
+		$scope.newSchema.id = row.schemaId;
+		$scope.newSchema.version = row.schema.version;
+		console.log($scope.newSchema);
+	}
+	$scope.set_current_dependencyString = function(dependencyString) {
+		$scope.current_dependencyString = dependencyString;
+	}
+
 	$scope.upload_result = function(row, success, response) {
 		if (success) {
 			show_op_info.show("上传schema成功!", true);
-			row.schema = row.schema == null || row.schema == undefined ? {} : row_schema;
-			row.schema.version = row.schema.version == undefined ? 1 : row.schema.version + 1;
-			row.schema.name = row.name + '-value';
-			row.schema.id += 1;
+			TopicService.fetch_topics($scope.current_topic_type);
 		} else {
 			if (response.status == 409) {
 				show_op_info.show("上传失败, Schema已经存在!", false);
@@ -72,6 +80,25 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 		});
 	}
 
+	$scope.deploy_schema_to_maven = function(row) {
+		console.log($scope.newSchema);
+		bootbox.confirm({
+			title : "请确认",
+			message : "确认要部署Schema至Maven吗？",
+			locale : "zh_CN",
+			callback : function(result) {
+				if (result) {
+					$scope.prompt = "正在部署中...";
+					TopicService.deploy_schema_to_maven($scope.newSchema.id, $scope.newSchema.groupId, $scope.newSchema.artifactId, $scope.newSchema.version, $scope.newSchema.repositoryId).then(function(result) {
+						$scope.prompt = "部署成功！";
+						TopicService.fetch_topics($scope.current_topic_type);
+					}, function(result) {
+						$scope.prompt = "部署失败！";
+					});
+				}
+			}
+		});
+	}
 	function format_fields(fields) {
 		var data = [];
 		for ( var idx in fields) {
