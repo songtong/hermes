@@ -107,11 +107,21 @@
 						</c:forEach>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
+						<%
+							String ssoTip = "";
+							try {
+								java.util.Map ssoInfo = (java.util.Map)org.jasig.cas.client.util.AssertionHolder.getAssertion().getPrincipal().getAttributes();
+								String ssoUser = (String)ssoInfo.get("name");
+								String ssoMail = (String)ssoInfo.get("mail");
+								ssoTip = String.format("%s(%s)", ssoUser, ssoMail);
+							} catch(Exception e) {
+							}
+						%>
 						<c:if test="${requestScope.logined}">
-							<li><a class="btn btn-link" ng-click="logout()">Sign out</a></li>
+							<li><a class="btn btn-link" ng-click="logout()">Sign out <%=ssoTip%></a></li>
 						</c:if>
 						<c:if test="${!requestScope.logined}">
-							<li><a class="btn btn-link" data-toggle="modal" data-target="#sign_in_modal">Sign in</a></li>
+							<li><a class="btn btn-link" data-toggle="modal" data-target="#sign_in_modal">Sign in <%=ssoTip%></a></li>
 						</c:if>
 					</ul>
 
