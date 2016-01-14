@@ -9,23 +9,24 @@ import org.unidal.dal.jdbc.datasource.DataSourceProvider;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourceDef;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourcesDef;
 import org.unidal.dal.jdbc.datasource.model.entity.PropertiesDef;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.service.MetaService;
+import com.ctrip.hermes.metaservice.service.StorageService;
 
 @Named(type = DataSourceProvider.class, value = StorageDataSourceProvider.ID)
 public class StorageDataSourceProvider implements DataSourceProvider {
 	public static final String ID = "storage";
 
 	/**
-	 * Note: Can't use @Inject, "Caused by: org.codehaus.plexus.component.factory.ComponentInstantiationException:
-	 * Creation circularity ..."
+	 * Note: Can't use @Inject, "Caused by: org.codehaus.plexus.component.factory.ComponentInstantiationException: Creation
+	 * circularity ..."
 	 */
-	private MetaService m_metaService;
+	private StorageService m_dsService;
 
 	int avoidInitialize = 0;
 
@@ -37,11 +38,11 @@ public class StorageDataSourceProvider implements DataSourceProvider {
 			List<Datasource> dataSources = new ArrayList<>();
 			try {
 
-				if (null == m_metaService) {
-					m_metaService = PlexusComponentLocator.lookup(MetaService.class);
+				if (null == m_dsService) {
+					m_dsService = PlexusComponentLocator.lookup(StorageService.class);
 				}
-
-				for (Storage storage : m_metaService.findStorages()) {
+				
+				for (Storage storage : m_dsService.findStorages()) {
 					if (storage.getType().equals("mysql")) {
 						dataSources.addAll(storage.getDatasources());
 					}
@@ -58,7 +59,8 @@ public class StorageDataSourceProvider implements DataSourceProvider {
 
 				props.setDriver("com.mysql.jdbc.Driver");
 				if (dsProps.get("url") == null || dsProps.get("user") == null) {
-					throw new IllegalArgumentException("url and user property can not be null in datasource definition " + ds);
+					throw new IllegalArgumentException("url and user property can not be null in datasource definition "
+					      + ds);
 				}
 				props.setUrl(dsProps.get("url").getValue());
 				props.setUser(dsProps.get("user").getValue());

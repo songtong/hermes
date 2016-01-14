@@ -53,8 +53,9 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
-import com.ctrip.hermes.metaservice.service.DatasourceService;
+import com.ctrip.hermes.metaservice.service.StorageService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
+import com.ctrip.hermes.metaservice.service.TopicDeployService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.resource.assists.RestException;
@@ -68,10 +69,12 @@ public class TopicResource {
 	private static final Logger log = LoggerFactory.getLogger(TopicResource.class);
 
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
+	
+	private TopicDeployService topicDeployService =  PlexusComponentLocator.lookup(TopicDeployService.class);
 
 	private ConsumerService consumerService = PlexusComponentLocator.lookup(ConsumerService.class);
 	
-	private DatasourceService datasourceService = PlexusComponentLocator.lookup(DatasourceService.class);
+	private StorageService datasourceService = PlexusComponentLocator.lookup(StorageService.class);
 
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
 
@@ -417,7 +420,7 @@ public class TopicResource {
 
 	private TopicView fillTopicView(Topic topic, TopicView topicView) {
 		// Fill Storage
-		Storage storage = datasourceService.findStorageByTopic(topic.getName());
+		Storage storage = datasourceService.getStorages().get(topic.getStorageType());
 		topicView.setStorage(storage);
 
 		// Fill Schema
@@ -546,7 +549,7 @@ public class TopicResource {
 		try {
 			Topic topic = topicView.toMetaTopic();
 			if ("kafka".equalsIgnoreCase(topic.getStorageType())) {
-				topicService.createTopicInKafka(topic);
+				topicDeployService.createTopicInKafka(topic);
 			}
 		} catch (Exception e) {
 			log.warn("deploy topic failed", e);
@@ -563,7 +566,7 @@ public class TopicResource {
 		try {
 			Topic topic = topicView.toMetaTopic();
 			if ("kafka".equalsIgnoreCase(topic.getStorageType())) {
-				topicService.deleteTopicInKafka(topic);
+				topicDeployService.deleteTopicInKafka(topic);
 			}
 		} catch (Exception e) {
 			log.warn("undeploy topic failed", e);
@@ -580,7 +583,7 @@ public class TopicResource {
 		try {
 			Topic topic = topicView.toMetaTopic();
 			if ("kafka".equalsIgnoreCase(topic.getStorageType())) {
-				topicService.configTopicInKafka(topic);
+				topicDeployService.configTopicInKafka(topic);
 			}
 		} catch (Exception e) {
 			log.warn("config topic failed", e);

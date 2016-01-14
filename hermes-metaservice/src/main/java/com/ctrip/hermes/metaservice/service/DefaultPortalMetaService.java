@@ -1,6 +1,5 @@
 package com.ctrip.hermes.metaservice.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,10 +14,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.meta.entity.Property;
-import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
 
 @Named
@@ -26,6 +22,30 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	public static final String ID = "portal-meta-service";
 
 	protected static final Logger logger = LoggerFactory.getLogger(DefaultPortalMetaService.class);
+
+	@Inject
+	private AppService m_appService;
+
+	@Inject
+	private CodecService m_codecService;
+
+	@Inject
+	private ConsumerService m_consumerService;
+
+	@Inject
+	private StorageService m_dsService;
+
+	@Inject
+	private EndpointService m_endpointService;
+
+	@Inject
+	private PartitionService m_partitionService;
+
+	@Inject
+	private ServerService m_serverService;
+
+	@Inject
+	private TopicService m_topicService;
 
 	@Inject
 	private ZookeeperService m_zookeeperService;
@@ -50,34 +70,34 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		metaModel.setVersion(metaModel.getVersion() + 1);
 		Meta metaEntity = new Meta();
 		metaEntity.setVersion(metaModel.getVersion());
-		List<com.ctrip.hermes.meta.entity.App> apps = findApps();
+		List<com.ctrip.hermes.meta.entity.App> apps = m_appService.findApps();
 		for (com.ctrip.hermes.meta.entity.App entity : apps) {
 			metaEntity.addApp(entity);
 		}
-		List<com.ctrip.hermes.meta.entity.Codec> codecs = findCodecs();
+		List<com.ctrip.hermes.meta.entity.Codec> codecs = m_codecService.findCodecs();
 		for (com.ctrip.hermes.meta.entity.Codec entity : codecs) {
 			metaEntity.addCodec(entity);
 		}
-		List<com.ctrip.hermes.meta.entity.Endpoint> endpoints = findEndpoints();
+		List<com.ctrip.hermes.meta.entity.Endpoint> endpoints = m_endpointService.findEndpoints();
 		for (com.ctrip.hermes.meta.entity.Endpoint entity : endpoints) {
 			metaEntity.addEndpoint(entity);
 		}
-		List<com.ctrip.hermes.meta.entity.Server> servers = findServers();
+		List<com.ctrip.hermes.meta.entity.Server> servers = m_serverService.findServers();
 		for (com.ctrip.hermes.meta.entity.Server entity : servers) {
 			metaEntity.addServer(entity);
 		}
-		List<com.ctrip.hermes.meta.entity.Storage> storages = findStorages();
+		List<com.ctrip.hermes.meta.entity.Storage> storages = m_dsService.findStorages();
 		for (com.ctrip.hermes.meta.entity.Storage entity : storages) {
 			metaEntity.addStorage(entity);
 		}
-		List<com.ctrip.hermes.meta.entity.Topic> topics = findTopics(true);
+		List<com.ctrip.hermes.meta.entity.Topic> topics = m_topicService.findTopics(true);
 		for (com.ctrip.hermes.meta.entity.Topic entity : topics) {
 			metaEntity.addTopic(entity);
 		}
 		metaModel.setValue(JSON.toJSONString(metaEntity));
 		return metaEntity;
 	}
-	
+
 	private void syncMetaFromDB() {
 		try {
 			if (isMetaUpdated()) {
@@ -98,50 +118,6 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				      syncMetaFromDB();
 			      }
 		      }, 1, 1, TimeUnit.MINUTES); // sync from db with interval: 1 mins
-	}
-
-	@Override
-	public String getZookeeperList() {
-		List<Storage> storages = new ArrayList<>();
-		try {
-			storages = findStorages();
-		} catch (DalException e) {
-			logger.warn("findStorages failed", e);
-		}
-		for (Storage storage : storages) {
-			if ("kafka".equals(storage.getType())) {
-				for (Datasource ds : storage.getDatasources()) {
-					for (Property property : ds.getProperties().values()) {
-						if ("zookeeper.connect".equals(property.getName())) {
-							return property.getValue();
-						}
-					}
-				}
-			}
-		}
-		return "";
-	}
-
-	@Override
-	public String getKafkaBrokerList() {
-		List<Storage> storages = new ArrayList<>();
-		try {
-			storages = findStorages();
-		} catch (DalException e) {
-			logger.warn("findStorages failed", e);
-		}
-		for (Storage storage : storages) {
-			if ("kafka".equals(storage.getType())) {
-				for (Datasource ds : storage.getDatasources()) {
-					for (Property property : ds.getProperties().values()) {
-						if ("bootstrap.servers".equals(property.getName())) {
-							return property.getValue();
-						}
-					}
-				}
-			}
-		}
-		return "";
 	}
 
 }

@@ -2,20 +2,15 @@ package com.ctrip.hermes.metaservice.service;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
-import kafka.admin.AdminUtils;
-import kafka.utils.ZkUtils;
-
-import org.I0Itec.zkclient.ZkClient;
-import org.I0Itec.zkclient.ZkConnection;
 import org.I0Itec.zkclient.exception.ZkMarshallingError;
 import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.slf4j.Logger;
@@ -26,7 +21,6 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
@@ -44,15 +38,8 @@ public class TopicService {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(TopicService.class);
 
-	public static final int DEFAULT_KAFKA_PARTITIONS = 3;
-
-	public static final int DEFAULT_KAFKA_REPLICATION_FACTOR = 2;
-
 	@Inject
 	private TransactionManager tm;
-
-	@Inject
-	private DefaultPortalMetaService m_metaService;
 
 	@Inject
 	private SchemaService m_schemaService;
@@ -74,26 +61,6 @@ public class TopicService {
 
 	@Inject
 	private ZookeeperService m_zookeeperService;
-
-	private List<String> validKafkaConfigKeys = new ArrayList<String>();
-
-	public TopicService() {
-		validKafkaConfigKeys.add("segment.index.bytes");
-		validKafkaConfigKeys.add("segment.jitter.ms");
-		validKafkaConfigKeys.add("min.cleanable.dirty.ratio");
-		validKafkaConfigKeys.add("retention.bytes");
-		validKafkaConfigKeys.add("file.delete.delay.ms");
-		validKafkaConfigKeys.add("flush.ms");
-		validKafkaConfigKeys.add("cleanup.policy");
-		validKafkaConfigKeys.add("unclean.leader.election.enable");
-		validKafkaConfigKeys.add("flush.messages");
-		validKafkaConfigKeys.add("retention.ms");
-		validKafkaConfigKeys.add("min.insync.replicas");
-		validKafkaConfigKeys.add("delete.retention.ms");
-		validKafkaConfigKeys.add("index.interval.bytes");
-		validKafkaConfigKeys.add("segment.bytes");
-		validKafkaConfigKeys.add("segment.ms");
-	}
 
 	/**
 	 * 
@@ -139,26 +106,7 @@ public class TopicService {
 		m_topicStorageService.addPartitionStorage(ds, table, span);
 	}
 
-	/**
-	 * @param topic
-	 */
-	public void configTopicInKafka(Topic topic) {
-		String zkConnect = m_metaService.getZookeeperList();
-		;
-		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
-		zkClient.setZkSerializer(new ZKStringSerializer());
-		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
-		Properties topicProp = new Properties();
-		for (Property prop : topic.getProperties()) {
-			if (validKafkaConfigKeys.contains(prop.getName())) {
-				topicProp.setProperty(prop.getName(), prop.getValue());
-			}
-		}
-
-		m_logger.info("config topic in kafka, topic {}, prop {}", topic.getName(), topicProp);
-		AdminUtils.changeTopicConfig(zkUtils, topic.getName(), topicProp);
-	}
-
+	
 	/**
 	 * @param topicEntity
 	 * @return
@@ -198,32 +146,6 @@ public class TopicService {
 		}
 
 		return topicEntity;
-	}
-
-	/**
-	 * @param topic
-	 */
-	public void createTopicInKafka(Topic topic) {
-		String zkConnect = m_metaService.getZookeeperList();
-		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
-		zkClient.setZkSerializer(new ZKStringSerializer());
-		int partition = DEFAULT_KAFKA_PARTITIONS;
-		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
-		int replication = DEFAULT_KAFKA_REPLICATION_FACTOR;
-		Properties topicProp = new Properties();
-		for (Property prop : topic.getProperties()) {
-			if ("replication-factor".equals(prop.getName())) {
-				replication = Integer.parseInt(prop.getValue());
-			} else if ("partitions".equals(prop.getName())) {
-				partition = Integer.parseInt(prop.getValue());
-			} else if (validKafkaConfigKeys.contains(prop.getName())) {
-				topicProp.setProperty(prop.getName(), prop.getValue());
-			}
-		}
-
-		m_logger.info("create topic in kafka, topic {}, partition {}, replication {}, prop {}", topic.getName(),
-		      partition, replication, topicProp);
-		AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
 	}
 
 	/**
@@ -275,20 +197,6 @@ public class TopicService {
 		}
 	}
 
-	/**
-	 * @param topic
-	 */
-	public void deleteTopicInKafka(Topic topic) {
-		String zkConnect = m_metaService.getZookeeperList();
-
-		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
-		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
-		zkClient.setZkSerializer(new ZKStringSerializer());
-
-		m_logger.info("delete topic in kafka, topic {}", topic.getName());
-		AdminUtils.deleteTopic(zkUtils, topic.getName());
-	}
-
 	public void delPartitionStorage(String ds, String table) throws StorageHandleErrorException {
 		m_topicStorageService.delPartitionStorage(ds, table);
 	}
@@ -296,8 +204,7 @@ public class TopicService {
 	public Topic findTopicById(long id) {
 		try {
 			com.ctrip.hermes.metaservice.model.Topic model = this.m_topicDao.findByPK(id);
-			return m_metaService.fillTopic(model);
-
+			return fillTopic(model);
 		} catch (DalException e) {
 			m_logger.warn("findTopicById failed", e);
 		}
@@ -307,7 +214,7 @@ public class TopicService {
 	public Topic findTopicByName(String topic) {
 		try {
 			com.ctrip.hermes.metaservice.model.Topic model = this.m_topicDao.findByName(topic);
-			return m_metaService.fillTopic(model);
+			return fillTopic(model);
 		} catch (DalException e) {
 			m_logger.warn("findTopicByName failed, name: " + topic, e);
 		}
@@ -336,7 +243,7 @@ public class TopicService {
 	public Map<String, Topic> getTopics() {
 		Map<String, Topic> result = new HashMap<String, Topic>();
 		try {
-			List<Topic> topics = m_metaService.findTopics(false);
+			List<Topic> topics = findTopics(true);
 			for (Topic t : topics) {
 				result.put(t.getName(), t);
 			}
@@ -397,6 +304,52 @@ public class TopicService {
 
 		return originTopic;
 	}
+
+	public List<com.ctrip.hermes.meta.entity.Topic> findTopics(boolean isFillDetail) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.Topic> models = m_topicDao.list();
+		List<com.ctrip.hermes.meta.entity.Topic> entities = new ArrayList<>();
+		for (com.ctrip.hermes.metaservice.model.Topic model : models) {
+			if (isFillDetail) {
+				entities.add(fillTopic(model));
+			} else {
+				entities.add(ModelToEntityConverter.convert(model));
+			}
+		}
+		return entities;
+	}
+
+	protected com.ctrip.hermes.meta.entity.Topic fillTopic(com.ctrip.hermes.metaservice.model.Topic topicModel)
+	      throws DalException {
+		com.ctrip.hermes.meta.entity.Topic topicEntity = ModelToEntityConverter.convert(topicModel);
+		List<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.findByTopic(topicModel
+		      .getId());
+		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : cgModels) {
+			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
+			topicEntity.addConsumerGroup(entity);
+		}
+		List<com.ctrip.hermes.metaservice.model.Partition> partitionModels = m_partitionDao.findByTopic(topicModel
+		      .getId());
+		for (com.ctrip.hermes.metaservice.model.Partition model : partitionModels) {
+			com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
+			topicEntity.addPartition(entity);
+		}
+		// List<com.ctrip.hermes.meta.entity.Producer> producers = findProducers(model);
+		// for (com.ctrip.hermes.meta.entity.Producer p : producers) {
+		// entity.addProducer(p);
+		// }
+		return topicEntity;
+	}
+	// @Override
+	// public List<com.ctrip.hermes.meta.entity.Producer> findProducers(com.ctrip.hermes.metaservice.model.Topic topicModel)
+	// throws DalException {
+	// List<Producer> models = m_producerDao.findByTopic(topicModel.getId());
+	// List<com.ctrip.hermes.meta.entity.Producer> entities = new ArrayList<>();
+	// for (Producer model : models) {
+	// com.ctrip.hermes.meta.entity.Producer entity = ModelToEntityConverter.convert(model);
+	// entities.add(entity);
+	// }
+	// return entities;
+	// }
 }
 
 class ZKStringSerializer implements ZkSerializer {

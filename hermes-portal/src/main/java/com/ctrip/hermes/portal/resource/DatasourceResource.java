@@ -23,7 +23,7 @@ import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.service.DatasourceService;
+import com.ctrip.hermes.metaservice.service.StorageService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/datasources/")
@@ -33,7 +33,7 @@ public class DatasourceResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(DatasourceResource.class);
 
-	private DatasourceService dsService = PlexusComponentLocator.lookup(DatasourceService.class);
+	private StorageService dsService = PlexusComponentLocator.lookup(StorageService.class);
 
 	@POST
 	@Path("{type}")

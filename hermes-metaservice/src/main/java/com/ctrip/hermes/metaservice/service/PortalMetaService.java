@@ -10,8 +10,4 @@ public interface PortalMetaService extends MetaService {
 
 	public Meta previewNewMeta() throws DalException;
 
-	public String getZookeeperList();
-
-	public String getKafkaBrokerList();
-
 }

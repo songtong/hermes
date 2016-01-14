@@ -18,14 +18,14 @@ import javax.ws.rs.core.Response.Status;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.service.DatasourceService;
+import com.ctrip.hermes.metaservice.service.StorageService;
 
 @Path("/storages/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class StorageResource {
 
-	private DatasourceService dsService = PlexusComponentLocator.lookup(DatasourceService.class);
+	private StorageService dsService = PlexusComponentLocator.lookup(StorageService.class);
 
 	@GET
 	public Response getStorages(@QueryParam("type") String type) {

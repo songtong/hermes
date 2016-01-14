@@ -51,9 +51,6 @@ public class SchemaService {
 	private CachedSchemaDao m_schemaDao;
 
 	@Inject
-	private DefaultPortalMetaService m_metaService;
-
-	@Inject
 	private CompileService m_compileService;
 
 	@Inject
@@ -304,7 +301,7 @@ public class SchemaService {
 
 	private SchemaRegistryClient getAvroSchemaRegistry() throws IOException {
 		if (avroSchemaRegistry == null) {
-			Codec avroCodec = m_codecService.findCodecByType("avro");
+			Codec avroCodec = m_codecService.getCodecs().get("avro");
 			if (avroCodec == null) {
 				throw new RuntimeException("Could not get the avro codec");
 			}

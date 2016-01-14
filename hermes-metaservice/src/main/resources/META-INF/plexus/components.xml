@@ -7,33 +7,6 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedAppDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedCodecDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedEndpointDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedServerDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedStorageDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedPartitionDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedDatasourceDao</role>
-				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -443,6 +416,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.metaservice.service.AppService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.AppService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.dal.CachedAppDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaservice.service.CacheDalService</role>
 			<implementation>com.ctrip.hermes.metaservice.service.CacheDalService</implementation>
 			<requirements>
@@ -486,7 +468,7 @@
 			<implementation>com.ctrip.hermes.metaservice.service.CodecService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.DefaultPortalMetaService</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedCodecDao</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -499,6 +481,9 @@
 			<implementation>com.ctrip.hermes.metaservice.service.ConsumerService</implementation>
 			<requirements>
 				<requirement>
+					<role>org.unidal.dal.jdbc.transaction.TransactionManager</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.storage.TopicStorageService</role>
 				</requirement>
 				<requirement>
@@ -508,22 +493,22 @@
 					<role>com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.service.DatasourceService</role>
-			<implementation>com.ctrip.hermes.metaservice.service.DatasourceService</implementation>
+			<role>com.ctrip.hermes.metaservice.service.StorageService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.StorageService</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedDatasourceDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedStorageDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.DefaultPortalMetaService</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -532,37 +517,34 @@
 			<implementation>com.ctrip.hermes.metaservice.service.DefaultPortalMetaService</implementation>
 			<requirements>
 				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.AppService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.CodecService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.StorageService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.EndpointService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.PartitionService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ServerService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedAppDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedCodecDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedEndpointDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedServerDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedStorageDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedPartitionDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedDatasourceDao</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -585,9 +567,6 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedEndpointDao</role>
 				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.DefaultPortalMetaService</role>
-				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -596,6 +575,15 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedPartitionDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.ServerService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.ServerService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.dal.CachedServerDao</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -613,9 +601,6 @@
 					<role>com.ctrip.hermes.metaservice.dal.CachedSchemaDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.DefaultPortalMetaService</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.CompileService</role>
 				</requirement>
 				<requirement>
@@ -628,7 +613,7 @@
 			<implementation>com.ctrip.hermes.metaservice.service.SchemaRegistryService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PortalMetaService</role>
+					<role>com.ctrip.hermes.metaservice.service.StorageService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.SchemaService</role>
@@ -652,9 +637,6 @@
 					<role>org.unidal.dal.jdbc.transaction.TransactionManager</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.DefaultPortalMetaService</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.SchemaService</role>
 				</requirement>
 				<requirement>
@@ -674,6 +656,15 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.TopicDeployService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.TopicDeployService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.StorageService</role>
 				</requirement>
 			</requirements>
 		</component>
