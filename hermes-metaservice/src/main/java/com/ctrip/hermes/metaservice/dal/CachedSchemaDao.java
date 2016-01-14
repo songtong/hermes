@@ -1,7 +1,9 @@
 package com.ctrip.hermes.metaservice.dal;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -15,12 +17,21 @@ import com.ctrip.hermes.metaservice.model.SchemaDao;
 import com.ctrip.hermes.metaservice.model.SchemaEntity;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
 
 @Named
 public class CachedSchemaDao extends SchemaDao implements CachedDao<Long, Schema> {
 
-	private Cache<Long, Schema> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
-	      .maximumSize(500).build();
+	private Cache<Long, Schema> cache = CacheBuilder.newBuilder().maximumSize(500).recordStats()
+	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Schema>() {
+
+		      @Override
+		      public Schema load(Long key) throws Exception {
+			      return findByPK(key, SchemaEntity.READSET_FULL);
+		      }
+
+	      });
 
 	private volatile boolean isNeedReload = true;
 
@@ -68,6 +79,18 @@ public class CachedSchemaDao extends SchemaDao implements CachedDao<Long, Schema
 		cache.invalidateAll();
 		isNeedReload = true;
 		return super.updateByPK(proto, updateset);
+	}
+
+	public Map<String, CacheStats> getStats() {
+		Map<String, CacheStats> result = new HashMap<>();
+		result.put(CachedSchemaDao.class.getSimpleName() + "_cache", cache.stats());
+		return result;
+	}
+
+	@Override
+	public void invalidateAll() {
+		cache.invalidateAll();
+		isNeedReload = true;
 	}
 
 }

@@ -1,13 +1,14 @@
 package com.ctrip.hermes.metaservice.dal;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.unidal.dal.jdbc.DalException;
-import org.unidal.dal.jdbc.Updateset;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.metaservice.model.Datasource;
@@ -15,12 +16,21 @@ import com.ctrip.hermes.metaservice.model.DatasourceDao;
 import com.ctrip.hermes.metaservice.model.DatasourceEntity;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
 
 @Named
 public class CachedDatasourceDao extends DatasourceDao implements CachedDao<String, Datasource> {
 
-	private Cache<String, Datasource> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
-	      .maximumSize(100).build();
+	private Cache<String, Datasource> cache = CacheBuilder.newBuilder().maximumSize(100).recordStats()
+	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Datasource>() {
+
+		      @Override
+		      public Datasource load(String key) throws Exception {
+			      return findByPK(key, DatasourceEntity.READSET_FULL);
+		      }
+
+	      });
 
 	private volatile boolean isNeedReload = true;
 
@@ -46,10 +56,22 @@ public class CachedDatasourceDao extends DatasourceDao implements CachedDao<Stri
 		}
 	}
 
+	public Map<String, CacheStats> getStats() {
+		Map<String, CacheStats> result = new HashMap<>();
+		result.put(CachedDatasourceDao.class.getSimpleName() + "_cache", cache.stats());
+		return result;
+	}
+
 	public int insert(Datasource proto) throws DalException {
 		cache.invalidateAll();
 		isNeedReload = true;
 		return super.insert(proto);
+	}
+
+	@Override
+	public void invalidateAll() {
+		cache.invalidateAll();
+		isNeedReload = true;
 	}
 
 	public Collection<Datasource> list() throws DalException {

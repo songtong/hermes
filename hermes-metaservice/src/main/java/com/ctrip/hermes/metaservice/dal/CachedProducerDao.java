@@ -2,7 +2,9 @@ package com.ctrip.hermes.metaservice.dal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -15,12 +17,26 @@ import com.ctrip.hermes.metaservice.model.ProducerDao;
 import com.ctrip.hermes.metaservice.model.ProducerEntity;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
 
 @Named
 public class CachedProducerDao extends ProducerDao implements CachedDao<Long, Producer> {
 
-	private Cache<Long, List<Producer>> topicCache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
-	      .maximumSize(5).build();
+	private Cache<Long, List<Producer>> topicCache = CacheBuilder.newBuilder().maximumSize(5).recordStats()
+	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<Producer>>() {
+
+		      @Override
+		      public List<Producer> load(Long key) throws Exception {
+			      return findByTopicId(key, ProducerEntity.READSET_FULL);
+		      }
+
+	      });
+
+	@Override
+	public Producer findByPK(Long key) throws DalException {
+		return new Producer();
+	}
 
 	public List<Producer> findByTopic(final Long keyType) throws DalException {
 		try {
@@ -37,13 +53,19 @@ public class CachedProducerDao extends ProducerDao implements CachedDao<Long, Pr
 		}
 	}
 
-	public Collection<Producer> list() throws DalException {
-		return new ArrayList<Producer>();
+	public Map<String, CacheStats> getStats() {
+		Map<String, CacheStats> result = new HashMap<>();
+		result.put(CachedProducerDao.class.getSimpleName() + "_topicCache", topicCache.stats());
+		return result;
 	}
 
 	@Override
-	public Producer findByPK(Long key) throws DalException {
-		return new Producer();
+	public void invalidateAll() {
+		topicCache.invalidateAll();
+	}
+
+	public Collection<Producer> list() throws DalException {
+		return new ArrayList<Producer>();
 	}
 
 }

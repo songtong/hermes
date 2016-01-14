@@ -88,6 +88,7 @@ public class ConsumerService {
 		
 		if (Storage.MYSQL.equals(t.getStorageType())) {
 			m_storageService.addConsumerStorage(t, consumer);
+			t.getConsumerGroups().add(consumer);
 			m_zookeeperService.ensureConsumerLeaseZkPath(t);
 		}
 

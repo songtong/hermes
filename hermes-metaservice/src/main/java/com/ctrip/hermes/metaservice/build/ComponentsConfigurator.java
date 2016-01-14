@@ -23,6 +23,7 @@ import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.monitor.dao.DefaultMonitorEventStorage;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueDatasourceProvider;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider;
+import com.ctrip.hermes.metaservice.service.CacheDalService;
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.CompileService;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
@@ -73,6 +74,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
 		all.addAll(new FxHermesShardDbDatabaseConfigurator().defineComponents());
 
+		all.add(A(CacheDalService.class));
 		all.add(A(CodecService.class));
 		all.add(A(CompileService.class));
 		all.add(A(ConsumerService.class));

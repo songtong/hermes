@@ -2,7 +2,6 @@ package com.ctrip.hermes.metaservice.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -123,7 +122,6 @@ public class DefaultMetaService implements MetaService {
 				entities.add(entity);
 			}
 		}
-		Collections.reverse(entities);
 		return entities;
 	}
 

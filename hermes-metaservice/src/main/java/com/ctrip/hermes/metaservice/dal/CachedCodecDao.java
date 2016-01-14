@@ -1,7 +1,9 @@
 package com.ctrip.hermes.metaservice.dal;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -15,12 +17,21 @@ import com.ctrip.hermes.metaservice.model.CodecDao;
 import com.ctrip.hermes.metaservice.model.CodecEntity;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
 
 @Named
 public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec> {
 
-	private Cache<String, Codec> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(5)
-	      .build();
+	private Cache<String, Codec> cache = CacheBuilder.newBuilder().maximumSize(5).recordStats()
+	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Codec>() {
+
+		      @Override
+		      public Codec load(String key) throws Exception {
+			      return findByPK(key, CodecEntity.READSET_FULL);
+		      }
+
+	      });
 
 	private volatile boolean isNeedReload = true;
 
@@ -46,10 +57,22 @@ public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec>
 		}
 	}
 
+	public Map<String, CacheStats> getStats() {
+		Map<String, CacheStats> result = new HashMap<>();
+		result.put(CachedCodecDao.class.getSimpleName() + "_cache", cache.stats());
+		return result;
+	}
+
 	public int insert(Codec proto) throws DalException {
 		cache.invalidateAll();
 		isNeedReload = true;
 		return super.insert(proto);
+	}
+
+	@Override
+	public void invalidateAll() {
+		cache.invalidateAll();
+		isNeedReload = true;
 	}
 
 	public Collection<Codec> list() throws DalException {

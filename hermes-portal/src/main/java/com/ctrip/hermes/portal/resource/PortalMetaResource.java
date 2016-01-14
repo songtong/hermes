@@ -15,8 +15,8 @@ import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.MetaRefactor;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/meta/")
@@ -26,7 +26,7 @@ public class PortalMetaResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(PortalMetaResource.class);
 
-	private PortalMetaService metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
+	private DefaultPortalMetaService metaService = PlexusComponentLocator.lookup(DefaultPortalMetaService.class);
 
 	private MetaRefactor metaRefactor = PlexusComponentLocator.lookup(MetaRefactor.class);
 

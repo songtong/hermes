@@ -76,7 +76,7 @@
   <entity name="consumer-group" table="consumer_group" alias="cg">
     <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
     <member name="name" field="name" value-type="String" length="500" nullable="false" />
-    <member name="appids" field="appids" value-type="String" length="500" />
+    <member name="app-ids" field="app_Ids" value-type="String" length="500" />
     <member name="retry-policy" field="retry_policy" value-type="String" length="500" />
     <member name="ack-timeout-seconds" field="ack_timeout_seconds" value-type="int" length="10" />
     <member name="ordered-consume" field="ordered_consume" value-type="boolean" />

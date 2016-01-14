@@ -1,7 +1,9 @@
 package com.ctrip.hermes.metaservice.dal;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -15,21 +17,38 @@ import com.ctrip.hermes.metaservice.model.TopicDao;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
 
 @Named
 public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
-	private Cache<Long, Topic> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(500)
-	      .build();
+	private Cache<Long, Topic> cache = CacheBuilder.newBuilder().maximumSize(1000).recordStats()
+	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Topic>() {
 
-	private Cache<String, Topic> nameCache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)
-	      .maximumSize(500).build();
+		      @Override
+		      public Topic load(Long key) throws Exception {
+			      return findByPK(key, TopicEntity.READSET_FULL);
+		      }
+
+	      });
+
+	private Cache<String, Topic> nameCache = CacheBuilder.newBuilder().maximumSize(1000).recordStats()
+	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Topic>() {
+
+		      @Override
+		      public Topic load(String key) throws Exception {
+			      return findByName(key, TopicEntity.READSET_FULL);
+		      }
+
+	      });
 
 	private volatile boolean isNeedReload = true;
 
 	@Override
 	public int deleteByPK(Topic proto) throws DalException {
-		cache.invalidateAll();
+		cache.invalidate(proto.getId());
+		nameCache.invalidate(proto.getName());
 		isNeedReload = true;
 		return super.deleteByPK(proto);
 	}
@@ -66,6 +85,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
 	public int insert(Topic proto) throws DalException {
 		cache.invalidateAll();
+		nameCache.invalidateAll();
 		isNeedReload = true;
 		return super.insert(proto);
 	}
@@ -75,11 +95,13 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 			List<Topic> models = list(TopicEntity.READSET_FULL);
 			for (Topic model : models) {
 				cache.put(model.getKeyId(), model);
+				nameCache.put(model.getName(), model);
 			}
 			if (models.size() > cache.size()) {
 				cache = CacheBuilder.newBuilder().maximumSize(models.size() * 2).build();
 				for (Topic model : models) {
 					cache.put(model.getKeyId(), model);
+					nameCache.put(model.getName(), model);
 				}
 			}
 			isNeedReload = false;
@@ -89,9 +111,24 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
 	@Override
 	public int updateByPK(Topic proto, Updateset<Topic> updateset) throws DalException {
-		cache.invalidateAll();
+		cache.invalidate(proto.getId());
+		nameCache.invalidate(proto.getName());
 		isNeedReload = true;
 		return super.updateByPK(proto, updateset);
+	}
+
+	public Map<String, CacheStats> getStats() {
+		Map<String, CacheStats> result = new HashMap<>();
+		result.put(CachedTopicDao.class.getSimpleName() + "_cache", cache.stats());
+		result.put(CachedTopicDao.class.getSimpleName() + "_nameCache", nameCache.stats());
+		return result;
+	}
+
+	@Override
+	public void invalidateAll() {
+		cache.invalidateAll();
+		nameCache.invalidateAll();
+		isNeedReload = true;
 	}
 
 }
