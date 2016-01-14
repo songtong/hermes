@@ -145,7 +145,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			}
 		}, function(error_result) {
 			show_op_info.show("新增 " + $scope.view.name + " 失败: " + error_result.data, false);
-			document.getElementById("permitButton").disabled = false;
+			document.getElementById("permitTopicButton").disabled = false;
 		});
 	}
 	$scope.permit_consumer_application = function() {

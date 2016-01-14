@@ -27,6 +27,8 @@ public class SchemaView {
 	private Long topicId;
 	
 	private int avroId;
+	
+	private String dependencyString;
 
 	public SchemaView() {
 
@@ -119,5 +121,13 @@ public class SchemaView {
 	public void setAvroId(int avroId) {
 	   this.avroId = avroId;
    }
+
+	public String getDependencyString() {
+		return dependencyString;
+	}
+
+	public void setDependencyString(String dependencyString) {
+		this.dependencyString = dependencyString;
+	}
 
 }

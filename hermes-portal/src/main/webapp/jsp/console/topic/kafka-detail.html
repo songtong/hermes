@@ -10,7 +10,7 @@
 					</button>
 					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="topicForm.$waiting" ng-click="topicForm.$cancel()">取消</button>
 				</form>
-				<button id ="updateButton" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="topicForm.$show()" ng-show="!topicForm.$visible">
+				<button  ng-if="logined" id ="updateButton" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="topicForm.$show()" ng-show="!topicForm.$visible">
 					<span class="glyphicon glyphicon-pencil"></span> 修改
 				</button>
 			</div>

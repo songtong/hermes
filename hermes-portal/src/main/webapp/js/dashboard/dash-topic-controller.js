@@ -32,18 +32,20 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 			DashboardTopicService.get_topic_latest_msgs($scope.current_topic).then(function(result) {
 				$scope.topic_latest = result;
 			});
-			
+
 			// ************** consumer delays **************** //
 			$scope.consumers = DashboardTopicService.get_consumers_for_topic($scope.current_topic).then(function(result) {
 				$scope.consumers = result;
 				$scope.display_filtered_consumers = $scope.consumers;
 			});
 
-			if ($scope.current_consumer != null) {
-				$scope.consumer_delay = DashboardTopicService.get_consumer_delay_for_topic($scope.current_topic, $scope.current_consumer).then(function(result) {
+			$scope.get_consumer_delay_for_topic = function(topic_name, consumer_name) {
+				DashboardTopicService.get_consumer_delay_for_topic(topic_name, consumer_name).then(function(result) {
 					$scope.consumer_delay = result;
-					console.log(result);
-				})
+				});
+			}
+			if ($scope.current_consumer != null) {
+				$scope.get_consumer_delay_for_topic($scope.current_topic, $scope.current_consumer);
 			}
 
 			$scope.display_topic_delay = [].concat($scope.topic_delay);

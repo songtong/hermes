@@ -370,6 +370,7 @@
     <member name="jar-properties" field="jar_properties" value-type="String" length="65535" />
     <member name="avroid" field="avroid" value-type="int" length="10" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <member name="dependency-string" field="dependencyString" value-type="String" length="2000" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />

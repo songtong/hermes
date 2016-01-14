@@ -40,6 +40,7 @@
 
 <script type="text/javascript">
 	var contextpath = "${model.webapp}";
+	var environment = "${navBar.environment}";
 </script>
 
 <jsp:invoke fragment="head" />
@@ -88,7 +89,7 @@
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=monitor_event">Monitor Event</a></li>
 									</ul></li>
 							</c:if>
-							<c:if test="${page.name == 'application' }">
+							<c:if test="${page.name == 'application' and navBar.environment=='FWS'}">
 								<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">${page.title} <span class="caret"></span></a>
 									<ul class="dropdown-menu">
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/topic">Topic</a></li>
