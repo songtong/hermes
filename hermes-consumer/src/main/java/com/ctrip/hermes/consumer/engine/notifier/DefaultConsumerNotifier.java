@@ -15,6 +15,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Triple;
 
+import com.ctrip.hermes.consumer.ConsumerType;
 import com.ctrip.hermes.consumer.api.MessageListenerConfig;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
@@ -59,15 +60,24 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 			MessageListenerConfig messageListenerConfig = context.getMessageListenerConfig();
 			NotifyStrategy notifyStrategy = null;
-			if (!Storage.KAFKA.equals(context.getTopic().getStorageType()) //
-			      && messageListenerConfig.isStrictlyOrdering()) {
-				notifyStrategy = new StrictlyOrderedNotifyStrategy(messageListenerConfig.getStrictlyOrderingRetryPolicy());
-			} else {
+			String storageType = context.getTopic().getStorageType();
+
+			if (Storage.KAFKA.equals(storageType)) {
 				notifyStrategy = new DefaultNotifyStrategy();
+			} else {
+				if (context.getConsumerType() == ConsumerType.PULL) {
+					notifyStrategy = new PullNotifyStrategy();
+				} else if (messageListenerConfig.isStrictlyOrdering()) {
+					notifyStrategy = new StrictlyOrderedNotifyStrategy(
+					      messageListenerConfig.getStrictlyOrderingRetryPolicy());
+				} else {
+					notifyStrategy = new DefaultNotifyStrategy();
+				}
 			}
 
-			m_consumerContexs.putIfAbsent(correlationId, new Triple<ConsumerContext, NotifyStrategy, ExecutorService>(
-			      context, notifyStrategy, createNotifierExecutor(context, threadCount,notifierWorkQueueSize, correlationId)));
+			m_consumerContexs.putIfAbsent(correlationId,
+			      new Triple<ConsumerContext, NotifyStrategy, ExecutorService>(context, notifyStrategy,
+			            createNotifierExecutor(context, threadCount, notifierWorkQueueSize, correlationId)));
 		} catch (Exception e) {
 			throw new RuntimeException("Register consumer notifier failed", e);
 		}

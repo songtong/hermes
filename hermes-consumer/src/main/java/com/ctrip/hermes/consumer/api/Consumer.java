@@ -15,6 +15,9 @@ public abstract class Consumer {
 	public abstract <T> MessageStreamHolder<T> openMessageStreams(String topic, String groupId, Class<T> messageClass,
 	      OffsetStorage offsetStorage, PartitionMetaListener partitionListener);
 
+	public abstract <T> PullConsumerHolder<T> openPullConsumer(String topic, String groupId, Class<T> messageClass,
+	      PullConsumerConfig config);
+
 	public abstract Map<Integer, MessageStreamOffset> getOffsetByTime(String topic, long time);
 
 	public abstract MessageStreamOffset getOffsetByTime(String topic, int partitionId, long time);

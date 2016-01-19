@@ -8,5 +8,6 @@ public enum ConsumerType {
 	DEFAULT, //
 	STRICTLY_ORDERING, //
 	MESSAGE_STREAM, //
+	PULL, //
 	;
 }

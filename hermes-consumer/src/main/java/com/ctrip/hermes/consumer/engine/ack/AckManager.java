@@ -2,6 +2,7 @@ package com.ctrip.hermes.consumer.engine.ack;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -17,4 +18,6 @@ public interface AckManager {
 	public void delivered(long correlationId, ConsumerMessage<?> msg);
 
 	public void deregister(long correlationId);
+
+	boolean writeAckToBroker(AckMessageCommandV3 cmd);
 }

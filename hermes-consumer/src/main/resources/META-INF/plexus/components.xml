@@ -97,6 +97,16 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.consumer.engine.bootstrap.strategy.ConsumingStrategy</role>
+			<role-hint>PULL</role-hint>
+			<implementation>com.ctrip.hermes.consumer.engine.bootstrap.strategy.PullConsumingStrategy</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.config.ConsumerConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.core.pipeline.PipelineSink</role>
 			<role-hint>consumer</role-hint>
 			<implementation>com.ctrip.hermes.consumer.engine.pipeline.DefaultConsumerPipelineSink</implementation>

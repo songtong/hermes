@@ -101,8 +101,17 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	protected int m_maxAckHolderSize;
 
-	@SuppressWarnings("unchecked")
+	public BaseConsumerTask(ConsumerContext context, int partitionId, int localCacheSize, AckManager ackManager) {
+		this(context, partitionId, localCacheSize, 0, ackManager);
+	}
+
 	public BaseConsumerTask(ConsumerContext context, int partitionId, int localCacheSize, int maxAckHolderSize) {
+		this(context, partitionId, localCacheSize, maxAckHolderSize, PlexusComponentLocator.lookup(AckManager.class));
+	}
+
+	@SuppressWarnings("unchecked")
+	private BaseConsumerTask(ConsumerContext context, int partitionId, int localCacheSize, int maxAckHolderSize,
+	      AckManager ackManager) {
 		m_context = context;
 		m_partitionId = partitionId;
 		m_msgs = new LinkedBlockingQueue<ConsumerMessage<?>>(localCacheSize);
@@ -114,7 +123,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		m_config = PlexusComponentLocator.lookup(ConsumerConfig.class);
 		m_retryPolicy = PlexusComponentLocator.lookup(MetaService.class).findRetryPolicyByTopicAndGroup(
 		      context.getTopic().getName(), context.getGroupId());
-		m_ackManager = PlexusComponentLocator.lookup(AckManager.class);
+		m_ackManager = ackManager;
 
 		m_pullMessageTaskExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create(
 		      String.format("PullMessageThread-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
