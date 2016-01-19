@@ -5,13 +5,15 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.ctrip.hermes.broker.ack.internal.DefaultAckHolderTest;
-import com.ctrip.hermes.broker.integration.ProduceTest;
+import com.ctrip.hermes.broker.queue.storage.mysql.cache.DefaultMessageCacheTest;
+import com.ctrip.hermes.broker.queue.storage.mysql.cache.DefaultPageCacheTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({//
 DefaultAckHolderTest.class,//
-ProduceTest.class,//
-// add test classes here
+      DefaultPageCacheTest.class,//
+      DefaultMessageCacheTest.class,//
+      // add test classes here
 
 })
 public class AllTests {

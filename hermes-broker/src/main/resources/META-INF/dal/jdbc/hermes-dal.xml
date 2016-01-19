@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.hermes.broker.dal.hermes" gen="true">
-	<entity name="message-priority" implements="com.ctrip.hermes.broker.queue.storage.mysql.dal.TopicPartitionPriorityAware">
+	<entity name="message-priority"
+		implements="com.ctrip.hermes.broker.queue.storage.mysql.dal.TopicPartitionPriorityAware, com.ctrip.hermes.broker.queue.storage.mysql.dal.IdAware">
 		<var name="topic" value-type="String" />
 		<var name="partition" value-type="int" />
 		<var name="priority" value-type="int" />
@@ -19,6 +20,7 @@
         		VALUES(<VALUES/>)]]>
 				</statement>
 			</query>
+			<!-- Don't rename -->
 			<query name="findIdAfter" type="SELECT" multiple="true">
 				<param name="topic" />
 				<param name="partition" />
