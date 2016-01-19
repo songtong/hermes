@@ -147,6 +147,54 @@ public class DefaultAckManager implements AckManager {
 		            m_config.getAckCheckerIntervalMillis(), TimeUnit.MILLISECONDS);
 	}
 
+	@Override
+	public boolean writeAckToBroker(AckMessageCommandV3 cmd) {
+		String topic = cmd.getTopic();
+		int partition = cmd.getPartition();
+		String groupId = cmd.getGroup();
+
+		Endpoint endpoint = m_endpointManager.getEndpoint(topic, partition);
+
+		boolean acked = false;
+		if (endpoint != null) {
+			long correlationId = cmd.getHeader().getCorrelationId();
+			Future<Boolean> resultFuture = m_resultMonitor.monitor(correlationId);
+
+			int timeout = m_config.getAckCheckerIoTimeoutMillis();
+
+			Context ackedTimer = ConsumerStatusMonitor.INSTANCE
+			      .getTimer(topic, partition, groupId, "ack-msg-cmd-duration").time();
+
+			m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
+			ConsumerStatusMonitor.INSTANCE.ackMessageCmdSent(topic, partition, groupId);
+
+			try {
+				acked = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
+
+				if (acked) {
+					ConsumerStatusMonitor.INSTANCE.brokerAcked(topic, partition, groupId);
+				} else {
+					ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+				}
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				m_resultMonitor.cancel(correlationId);
+			} catch (TimeoutException e) {
+				ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(topic, partition, groupId);
+				m_resultMonitor.cancel(correlationId);
+			} catch (Exception e) {
+				ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+				m_resultMonitor.cancel(correlationId);
+			}
+
+			ackedTimer.stop();
+
+		} else {
+			log.debug("No endpoint found, ignore it");
+		}
+		return acked;
+	}
+
 	private class AckHolderChecker implements Runnable {
 
 		public void run() {
@@ -183,49 +231,9 @@ public class DefaultAckManager implements AckManager {
 				AckMessageCommandV3 cmd = m_holder.pop();
 				try {
 					if (cmd != null) {
-						Endpoint endpoint = m_endpointManager.getEndpoint(cmd.getTopic(), cmd.getPartition());
-
-						if (endpoint != null) {
-							long correlationId = cmd.getHeader().getCorrelationId();
-							Future<Boolean> resultFuture = m_resultMonitor.monitor(correlationId);
-
-							int timeout = m_config.getAckCheckerIoTimeoutMillis();
-
-							Context ackedTimer = ConsumerStatusMonitor.INSTANCE.getTimer(tpg.getTopic(), tpg.getPartition(),
-							      tpg.getGroupId(), "ack-msg-cmd-duration").time();
-
-							m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
-							ConsumerStatusMonitor.INSTANCE.ackMessageCmdSent(tpg.getTopic(), tpg.getPartition(),
-							      tpg.getGroupId());
-
-							try {
-								Boolean acked = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
-
-								if (acked != null && acked) {
-									ConsumerStatusMonitor.INSTANCE.brokerAcked(tpg.getTopic(), tpg.getPartition(),
-									      tpg.getGroupId());
-									cmd = null;
-								} else {
-									ConsumerStatusMonitor.INSTANCE.brokerAckFailed(tpg.getTopic(), tpg.getPartition(),
-									      tpg.getGroupId());
-								}
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt();
-								m_resultMonitor.cancel(correlationId);
-							} catch (TimeoutException e) {
-								ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(tpg.getTopic(), tpg.getPartition(),
-								      tpg.getGroupId());
-								m_resultMonitor.cancel(correlationId);
-							} catch (Exception e) {
-								ConsumerStatusMonitor.INSTANCE.brokerAckFailed(tpg.getTopic(), tpg.getPartition(),
-								      tpg.getGroupId());
-								m_resultMonitor.cancel(correlationId);
-							}
-
-							ackedTimer.stop();
-
-						} else {
-							log.debug("No endpoint found, ignore it");
+						boolean success = writeAckToBroker(cmd);
+						if (success) {
+							cmd = null;
 						}
 					} else {
 						if (m_holder.isStopped()) {
