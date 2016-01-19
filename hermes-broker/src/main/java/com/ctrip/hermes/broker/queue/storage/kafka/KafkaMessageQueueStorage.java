@@ -12,6 +12,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.broker.queue.storage.FetchResult;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpg;

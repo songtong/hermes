@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -35,7 +37,9 @@ import com.ctrip.hermes.broker.dal.hermes.OffsetResendEntity;
 import com.ctrip.hermes.broker.dal.hermes.ResendGroupId;
 import com.ctrip.hermes.broker.dal.hermes.ResendGroupIdDao;
 import com.ctrip.hermes.broker.dal.hermes.ResendGroupIdEntity;
+import com.ctrip.hermes.broker.queue.storage.FetchResult;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
+import com.ctrip.hermes.broker.queue.storage.mysql.dal.CachedMessagePriorityDaoInterceptor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
@@ -58,7 +62,7 @@ import com.ctrip.hermes.meta.entity.Topic;
  *
  */
 @Named(type = MessageQueueStorage.class, value = Storage.MYSQL)
-public class MySQLMessageQueueStorage implements MessageQueueStorage {
+public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializable {
 	private static final Logger log = LoggerFactory.getLogger(MySQLMessageQueueStorage.class);
 
 	@Inject
@@ -251,45 +255,94 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	}
 
 	private FetchResult buildFetchResult(Tpp tpp, final List<MessagePriority> msgs) {
-		FetchResult result = new FetchResult();
-		try {
+		if (CollectionUtil.isNotEmpty(msgs)) {
+			FetchResult result = new FetchResult();
+
 			long biggestOffset = 0L;
-			if (msgs != null && !msgs.isEmpty()) {
-				final TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
-				for (MessagePriority dataObj : msgs) {
-					MessageMeta msgMeta = new MessageMeta(dataObj.getId(), 0, dataObj.getId(), tpp.getPriorityInt(), false);
-					biggestOffset = Math.max(biggestOffset, dataObj.getId());
-					batch.addMessageMeta(msgMeta);
-				}
-				final String topic = tpp.getTopic();
-				batch.setTopic(topic);
-				batch.setPartition(tpp.getPartition());
-				batch.setResend(false);
-				batch.setPriority(tpp.getPriorityInt());
-
-				batch.setTransferCallback(new TransferCallback() {
-					@Override
-					public void transfer(ByteBuf out) {
-						for (MessagePriority dataObj : msgs) {
-							PartialDecodedMessage partialMsg = new PartialDecodedMessage();
-							partialMsg.setRemainingRetries(0);
-							partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
-							partialMsg.setBody(Unpooled.wrappedBuffer(dataObj.getPayload()));
-							partialMsg.setBornTime(dataObj.getCreationDate().getTime());
-							partialMsg.setKey(dataObj.getRefKey());
-							partialMsg.setBodyCodecType(dataObj.getCodecType());
-
-							m_messageCodec.encodePartial(partialMsg, out);
-						}
-					}
-				});
-
-				result.setBatch(batch);
-				result.setOffset(biggestOffset);
-				return result;
+			final TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
+			for (MessagePriority dataObj : msgs) {
+				MessageMeta msgMeta = new MessageMeta(dataObj.getId(), 0, dataObj.getId(), tpp.getPriorityInt(), false);
+				biggestOffset = Math.max(biggestOffset, dataObj.getId());
+				batch.addMessageMeta(msgMeta);
 			}
-		} catch (Exception e) {
-			log.error("Failed to fetch message({}).", tpp, e);
+			final String topic = tpp.getTopic();
+			batch.setTopic(topic);
+			batch.setPartition(tpp.getPartition());
+			batch.setResend(false);
+			batch.setPriority(tpp.getPriorityInt());
+
+			batch.setTransferCallback(new TransferCallback() {
+				@Override
+				public void transfer(ByteBuf out) {
+					for (MessagePriority dataObj : msgs) {
+						PartialDecodedMessage partialMsg = new PartialDecodedMessage();
+						partialMsg.setRemainingRetries(0);
+						partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
+						partialMsg.setBody(Unpooled.wrappedBuffer(dataObj.getPayload()));
+						partialMsg.setBornTime(dataObj.getCreationDate().getTime());
+						partialMsg.setKey(dataObj.getRefKey());
+						partialMsg.setBodyCodecType(dataObj.getCodecType());
+
+						m_messageCodec.encodePartial(partialMsg, out);
+					}
+				}
+			});
+
+			result.setBatch(batch);
+			result.setOffset(biggestOffset);
+			return result;
+		}
+
+		return null;
+	}
+
+	private FetchResult buildFetchResult(Tpg tpg, final List<ResendGroupId> msgs) {
+		if (CollectionUtil.isNotEmpty(msgs)) {
+
+			FetchResult result = new FetchResult();
+
+			TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
+			ResendGroupId latestResend = new ResendGroupId();
+			latestResend.setScheduleDate(new Date(0));
+			latestResend.setId(0L);
+
+			for (ResendGroupId dataObj : msgs) {
+				if (resendAfter(dataObj, latestResend)) {
+					latestResend = dataObj;
+				}
+				MessageMeta msgMeta = new MessageMeta(dataObj.getId(), dataObj.getRemainingRetries(),
+				      dataObj.getOriginId(), dataObj.getPriority(), true);
+
+				batch.addMessageMeta(msgMeta);
+
+			}
+			final String topic = tpg.getTopic();
+			batch.setTopic(topic);
+			batch.setPartition(tpg.getPartition());
+			batch.setResend(true);
+
+			batch.setTransferCallback(new TransferCallback() {
+
+				@Override
+				public void transfer(ByteBuf out) {
+					for (ResendGroupId dataObj : msgs) {
+						PartialDecodedMessage partialMsg = new PartialDecodedMessage();
+						partialMsg.setRemainingRetries(dataObj.getRemainingRetries());
+						partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
+						partialMsg.setBody(Unpooled.wrappedBuffer(dataObj.getPayload()));
+						partialMsg.setBornTime(dataObj.getCreationDate().getTime());
+						partialMsg.setKey(dataObj.getRefKey());
+						partialMsg.setBodyCodecType(dataObj.getCodecType());
+
+						m_messageCodec.encodePartial(partialMsg, out);
+					}
+				}
+
+			});
+
+			result.setBatch(batch);
+			result.setOffset(new Pair<Date, Long>(latestResend.getScheduleDate(), latestResend.getId()));
+			return result;
 		}
 
 		return null;
@@ -488,7 +541,6 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 	@Override
 	public FetchResult fetchResendMessages(Tpg tpg, Object startOffset, int batchSize) {
 		Pair<Date, Long> startPair = (Pair<Date, Long>) startOffset;
-		FetchResult result = new FetchResult();
 
 		try {
 			int groupId = m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId());
@@ -501,51 +553,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 				final List<ResendGroupId> dataObjs = m_resendDao.find(tpg.getTopic(), tpg.getPartition(), groupId,
 				      batchSize, startPair.getValue(), maxId, ResendGroupIdEntity.READSET_FULL);
 
-				if (CollectionUtil.isNotEmpty(dataObjs)) {
-					TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
-					ResendGroupId latestResend = new ResendGroupId();
-					latestResend.setScheduleDate(new Date(0));
-					latestResend.setId(0L);
-
-					for (ResendGroupId dataObj : dataObjs) {
-						if (resendAfter(dataObj, latestResend)) {
-							latestResend = dataObj;
-						}
-						MessageMeta msgMeta = new MessageMeta(dataObj.getId(), dataObj.getRemainingRetries(),
-						      dataObj.getOriginId(), dataObj.getPriority(), true);
-
-						batch.addMessageMeta(msgMeta);
-
-					}
-					final String topic = tpg.getTopic();
-					batch.setTopic(topic);
-					batch.setPartition(tpg.getPartition());
-					batch.setResend(true);
-
-					batch.setTransferCallback(new TransferCallback() {
-
-						@Override
-						public void transfer(ByteBuf out) {
-							for (ResendGroupId dataObj : dataObjs) {
-								PartialDecodedMessage partialMsg = new PartialDecodedMessage();
-								partialMsg.setRemainingRetries(dataObj.getRemainingRetries());
-								partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
-								partialMsg.setBody(Unpooled.wrappedBuffer(dataObj.getPayload()));
-								partialMsg.setBornTime(dataObj.getCreationDate().getTime());
-								partialMsg.setKey(dataObj.getRefKey());
-								partialMsg.setBodyCodecType(dataObj.getCodecType());
-
-								m_messageCodec.encodePartial(partialMsg, out);
-							}
-						}
-
-					});
-
-					result.setBatch(batch);
-					result.setOffset(new Pair<Date, Long>(latestResend.getScheduleDate(), latestResend.getId()));
-				}
+				return buildFetchResult(tpg, dataObjs);
 			}
-			return result;
 		} catch (DalException e) {
 			log.error("Failed to fetch resend messages(topic={}, partition={}, groupId={}).", tpg.getTopic(),
 			      tpg.getPartition(), tpg.getGroupId(), e);
@@ -661,6 +670,13 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 			}
 		} else {
 			return false;
+		}
+	}
+
+	@Override
+	public void initialize() throws InitializationException {
+		if (m_config.getMySQLCacheConfig().isEnabled()) {
+			m_msgDao = CachedMessagePriorityDaoInterceptor.createProxy(m_msgDao, m_config.getMySQLCacheConfig());
 		}
 	}
 }

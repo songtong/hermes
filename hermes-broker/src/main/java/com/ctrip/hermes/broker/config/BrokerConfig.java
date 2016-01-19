@@ -35,6 +35,8 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_SHUTDOWN_PORT = 4888;
 
+	private MySQLCacheConfig m_cacheConfig = new MySQLCacheConfig();
+
 	@Override
 	public void initialize() throws InitializationException {
 		String flushBatchSizeStr = m_env.getGlobalConfig().getProperty("broker.flush.batch.size");
@@ -45,6 +47,8 @@ public class BrokerConfig implements Initializable {
 		if (StringUtils.isNumeric(mysqlBatchInsertSizeStr)) {
 			m_mySQLBatchInsertSzie = Integer.valueOf(mysqlBatchInsertSizeStr);
 		}
+
+		m_cacheConfig.init(m_env.getGlobalConfig());
 	}
 
 	public String getSessionId() {
@@ -159,5 +163,9 @@ public class BrokerConfig implements Initializable {
 
 	public long getAckMessagesTaskExecutorCheckIntervalMillis() {
 		return 100;
+	}
+
+	public MySQLCacheConfig getMySQLCacheConfig() {
+		return m_cacheConfig;
 	}
 }

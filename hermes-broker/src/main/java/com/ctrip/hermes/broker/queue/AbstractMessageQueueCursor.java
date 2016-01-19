@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
+import com.ctrip.hermes.broker.queue.storage.FetchResult;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;

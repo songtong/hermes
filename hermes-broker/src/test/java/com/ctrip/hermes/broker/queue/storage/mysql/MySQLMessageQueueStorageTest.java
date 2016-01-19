@@ -12,8 +12,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
+import com.ctrip.hermes.broker.queue.storage.FetchResult;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
-import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage.FetchResult;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;

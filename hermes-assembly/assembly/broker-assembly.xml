@@ -18,7 +18,7 @@
 			<fileMode>0755</fileMode>
 		</fileSet>
 		<fileSet>
-			<directory>${project.basedir}/script/env/broker</directory>
+			<directory>${project.basedir}/script/env/broker/${package.environment}</directory>
 			<outputDirectory>/bin</outputDirectory>
 			<includes>
 				<include>env.sh</include>
