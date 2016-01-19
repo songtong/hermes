@@ -1,5 +1,7 @@
 package com.ctrip.hermes.core.log;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
@@ -17,6 +19,10 @@ public class FileBizLogger implements BizLogger {
 	@Override
 	public void log(BizEvent event) {
 		event.addData("brokerIp", m_localhost);
-		log.info(JSON.toJSONString(event));
+		Map<String, Object> datas = event.getDatas();
+		datas.put("host", m_localhost);
+		datas.put("eventType", event.getEventType());
+		datas.put("eventTime", event.getEventTime());
+		log.info(JSON.toJSONString(datas));
 	}
 }

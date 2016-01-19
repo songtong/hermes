@@ -1,0 +1,122 @@
+{
+  "files": [
+    {
+      "paths": [
+        "/opt/logs/hermes-broker/biz.log"
+      ],
+      "Fields": {
+        "type": "biz",
+        "source": "broker"
+      },
+      "DeadTime": "30m"
+    },
+    {
+      "paths": [
+        "/opt/logs/hermes-rest/biz.log"
+      ],
+      "Fields": {
+        "type": "biz",
+        "source": "rest"
+      },
+      "DeadTime": "30m"
+    },
+    {
+      "paths": [
+        "/opt/logs/hermes-broker/hermes-broker.log",
+        "/opt/logs/hermes-broker/sysout.log",
+        "/opt/logs/hermes-broker/gc.log",
+        "/opt/logs/hermes-broker/op.log"
+      ],
+      "Fields": {
+        "type": "log",
+        "source": "broker"
+      },
+      "DeadTime": "30m"
+    },
+    {
+      "paths": [
+        "/opt/logs/hermes-rest/hermes-rest.log",
+        "/opt/logs/hermes-rest/sysout.log",
+        "/opt/logs/hermes-rest/gc.log",
+        "/opt/logs/hermes-rest/op.log"
+      ],
+      "Fields": {
+        "type": "log",
+        "source": "rest"
+      },
+      "DeadTime": "30m"
+    },
+    {
+      "paths": [
+        "/opt/logs/hermes-metaserver/hermes-metaserver.log",
+        "/opt/logs/hermes-metaserver/sysout.log",
+        "/opt/logs/hermes-metaserver/gc.log",
+        "/opt/logs/hermes-metaserver/op.log"
+      ],
+      "Fields": {
+        "type": "log",
+        "source": "metaserver"
+      },
+      "DeadTime": "30m"
+    },
+    {
+      "paths": [
+        "/opt/logs/hermes-portal/hermes-portal.log",
+        "/opt/logs/hermes-portal/sysout.log",
+        "/opt/logs/hermes-portal/gc.log",
+        "/opt/logs/hermes-portal/op.log"
+      ],
+      "Fields": {
+        "type": "log",
+        "source": "portal"
+      },
+      "DeadTime": "30m"
+    },
+    {
+      "paths": [
+        "/opt/logs/kafka/controller.log",
+        "/opt/logs/kafka/kafka-request.log",
+        "/opt/logs/kafka/kafkaServer-gc.log",
+        "/opt/logs/kafka/log-cleaner.log",
+        "/opt/logs/kafka/server.log",
+        "/opt/logs/kafka/state-change.log"
+      ],
+      "Fields": {
+        "type": "log",
+        "source": "kafka"
+      },
+      "DeadTime": "30m"
+    },
+    {
+      "paths": [
+        "/opt/logs/elasticsearch/hermes-es-dev.log"
+      ],
+      "Fields": {
+        "type": "log",
+        "source": "elasticsearch"
+      },
+      "DeadTime": "30m"
+    },
+    {
+      "paths": [
+        "/opt/zookeeper-3.4.6/zookeeper.out"
+      ],
+      "Fields": {
+        "type": "log",
+        "source": "zookeeper"
+      },
+      "DeadTime": "30m"
+    }
+  ],
+  "kafka": {
+    "broker_list": [
+      "10.3.6.237:9092",
+      "10.3.6.239:9092",
+      "10.3.6.24:9092"
+    ],
+    "topic_id": "hermes-{{.type}}",
+    "ack_timeout_ms": 100,
+    "required_acks": "no_response",
+    "flush_frequency_ms": 100
+  }
+}
