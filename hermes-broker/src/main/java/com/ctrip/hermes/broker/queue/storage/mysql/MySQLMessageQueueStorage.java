@@ -492,12 +492,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 
 		try {
 			int groupId = m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId());
-			List<ResendGroupId> maxIdByMaxScheduleDate = m_resendDao.findMaxIdByMaxScheduleDate(tpg.getTopic(),
-			      tpg.getPartition(), groupId, new Date(m_systemClockService.now()), ResendGroupIdEntity.READSET_ID);
+			Long maxId = findMaxDuedResendId(tpg, groupId);
 
-			if (CollectionUtil.isNotEmpty(maxIdByMaxScheduleDate)) {
-				long maxId = maxIdByMaxScheduleDate.get(0).getId();
-
+			if (maxId != null) {
 				final List<ResendGroupId> dataObjs = m_resendDao.find(tpg.getTopic(), tpg.getPartition(), groupId,
 				      batchSize, startPair.getValue(), maxId, ResendGroupIdEntity.READSET_FULL);
 
@@ -549,6 +546,21 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage {
 		} catch (DalException e) {
 			log.error("Failed to fetch resend messages(topic={}, partition={}, groupId={}).", tpg.getTopic(),
 			      tpg.getPartition(), tpg.getGroupId(), e);
+		}
+
+		return null;
+	}
+
+	private Long findMaxDuedResendId(Tpg tpg, int groupId) throws DalException {
+		List<ResendGroupId> maxDuedRow = m_resendDao.findMaxDuedScheduleDate(tpg.getTopic(), tpg.getPartition(), groupId,
+		      new Date(m_systemClockService.now()), ResendGroupIdEntity.READSET_SCHEDULE_DATE);
+		if (CollectionUtil.isNotEmpty(maxDuedRow)) {
+			Date maxDuedScheduleDate = maxDuedRow.get(0).getScheduleDate();
+			List<ResendGroupId> maxDuedId = m_resendDao.findMaxIdByScheduleDate(tpg.getTopic(), tpg.getPartition(),
+			      groupId, maxDuedScheduleDate, ResendGroupIdEntity.READSET_ID);
+			if (CollectionUtil.isNotEmpty(maxDuedId)) {
+				return maxDuedId.get(0).getId();
+			}
 		}
 
 		return null;
