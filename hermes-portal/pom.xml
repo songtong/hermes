@@ -106,6 +106,14 @@
 			<artifactId>jsp-2.1</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.jasig.cas.client</groupId>
+			<artifactId>cas-client-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jasig.cas.client</groupId>
+			<artifactId>cas-client-core-infosec-credis</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -168,6 +176,11 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.6</version>
 				<configuration>
+					<filters>
+						<filter>${project.basedir}/conf/${package.environment}/sso.properties</filter>
+					</filters>
+					<webXml>${project.basedir}/conf/web.xml</webXml>
+					<filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>
 					<webResources>
 						<resource>
 							<directory>${project.basedir}/conf/${package.environment}</directory>
