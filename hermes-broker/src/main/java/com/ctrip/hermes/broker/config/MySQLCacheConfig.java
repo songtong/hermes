@@ -149,7 +149,13 @@ public class MySQLCacheConfig {
 			parseDisabledTopics(props.getProperty(BROKER_MYSQL_CACHE_DISABLED_TOPICS));
 			parsePriorityCacheConfig(props);
 			parseNonpriorityCacheConfig(props);
+
+			logAllConfiguration();
 		}
+	}
+
+	private void logAllConfiguration() {
+		log.info("Cache config: {}", JSON.toJSON(this));
 	}
 
 	private void parsePriorityCacheConfig(Properties props) {
@@ -188,7 +194,7 @@ public class MySQLCacheConfig {
 						if (entry.getValue() != null && entry.getValue().size() == 2) {
 							m_topicPriorityPageCacheSizes.put(entry.getKey(),
 							      new Pair<Integer, Integer>(entry.getValue().get(0), entry.getValue().get(1)));
-							log.info("Topic %s specified page cache's core size %s and maximum size %s(priority)",
+							log.info("Topic {} specified page cache's core size {} and maximum size {}(priority)",
 							      entry.getKey(), entry.getValue().get(0), entry.getValue().get(1));
 						}
 					}
@@ -208,7 +214,7 @@ public class MySQLCacheConfig {
 				if (topicPriorityPageSizes != null) {
 					for (Map.Entry<String, Integer> entry : topicPriorityPageSizes.entrySet()) {
 						m_topicPriorityPageSizes.put(entry.getKey(), entry.getValue());
-						log.info("Topic %s specified page cache's page size %s(priority)", entry.getKey(), entry.getValue());
+						log.info("Topic {} specified page cache's page size {}(priority)", entry.getKey(), entry.getValue());
 					}
 				}
 
@@ -254,7 +260,7 @@ public class MySQLCacheConfig {
 						if (entry.getValue() != null && entry.getValue().size() == 2) {
 							m_topicNonpriorityPageCacheSizes.put(entry.getKey(), new Pair<Integer, Integer>(entry.getValue()
 							      .get(0), entry.getValue().get(1)));
-							log.info("Topic %s specified page cache's core size %s and maximum size %s(nonpriority)",
+							log.info("Topic {} specified page cache's core size {} and maximum size {}(nonpriority)",
 							      entry.getKey(), entry.getValue().get(0), entry.getValue().get(1));
 						}
 					}
@@ -274,7 +280,7 @@ public class MySQLCacheConfig {
 				if (topicNonpriorityPageSizes != null) {
 					for (Map.Entry<String, Integer> entry : topicNonpriorityPageSizes.entrySet()) {
 						m_topicNonpriorityPageSizes.put(entry.getKey(), entry.getValue());
-						log.info("Topic %s specified page cache's page size %s(nonpriority)", entry.getKey(),
+						log.info("Topic {} specified page cache's page size {}(nonpriority)", entry.getKey(),
 						      entry.getValue());
 					}
 				}
@@ -294,7 +300,7 @@ public class MySQLCacheConfig {
 				if (enabledTopicRegexs != null) {
 					for (String regex : enabledTopicRegexs) {
 						m_enabledTopicPatterns.add(Pattern.compile(regex));
-						log.info("Topic pattern %s enabled cache", regex);
+						log.info("Topic pattern {} enabled cache", regex);
 					}
 				}
 
@@ -314,7 +320,7 @@ public class MySQLCacheConfig {
 				if (disabledTopicRegexs != null) {
 					for (String regex : disabledTopicRegexs) {
 						m_disabledTopicPatterns.add(Pattern.compile(regex));
-						log.info("Topic pattern %s disabled cache", regex);
+						log.info("Topic pattern {} disabled cache", regex);
 					}
 				}
 
@@ -331,6 +337,8 @@ public class MySQLCacheConfig {
 		} else {
 			m_enabled = !FALSE.equalsIgnoreCase(props.getProperty(BROKER_MYSQL_CACHE_ENABLE, Boolean.TRUE.toString()));
 		}
+
+		log.info("Cache enabled: {}", m_enabled);
 	}
 
 	public boolean isEnabled() {
