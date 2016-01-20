@@ -48,6 +48,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.producer.config.ProducerConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -134,6 +137,11 @@
 		<component>
 			<role>com.ctrip.hermes.producer.monitor.SendMessageResultMonitor</role>
 			<implementation>com.ctrip.hermes.producer.monitor.DefaultSendMessageResultMonitor</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.producer.config.ProducerConfig</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.producer.monitor.SendMessageAcceptanceMonitor</role>

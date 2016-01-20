@@ -52,6 +52,8 @@ public class ProducerConfig implements Initializable {
 
 	private boolean m_logEnrichInfoEnabled = false;
 
+	private boolean m_catEnabled = true;
+
 	@Override
 	public void initialize() throws InitializationException {
 		String brokerSenderNetworkIoThreadCountStr = m_clientEnv.getGlobalConfig().getProperty(
@@ -96,7 +98,16 @@ public class ProducerConfig implements Initializable {
 			m_logEnrichInfoEnabled = true;
 		}
 
+		String catEnabled = m_clientEnv.getGlobalConfig().getProperty("producer.cat.enable");
+		if (!StringUtils.isBlank(catEnabled)) {
+			m_catEnabled = !"false".equalsIgnoreCase(catEnabled);
+		}
+
 		// FIXME log config loading details.
+	}
+
+	public boolean isCatEnabled() {
+		return m_catEnabled;
 	}
 
 	public int getBrokerSenderNetworkIoThreadCount() {

@@ -8,6 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
@@ -15,6 +16,7 @@ import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
+import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
@@ -33,6 +35,9 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	private Map<Long, Pair<SendMessageCommandV3, SettableFuture<Boolean>>> m_cmds = new ConcurrentHashMap<>();
 
 	private ReentrantLock m_lock = new ReentrantLock();
+
+	@Inject
+	private ProducerConfig m_config;
 
 	@Override
 	public Future<Boolean> monitor(SendMessageCommandV3 cmd) {
@@ -92,31 +97,32 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	}
 
 	private void tracking(SendMessageCommandV3 sendMessageCommand, boolean success) {
-		String status = success ? Transaction.SUCCESS : "Timeout";
+		if (!success || m_config.isCatEnabled()) {
+			String status = success ? Transaction.SUCCESS : "Timeout";
+			for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
+				for (ProducerMessage<?> msg : msgs) {
+					Transaction t = Cat.newTransaction("Message.Produce.Acked", msg.getTopic());
+					MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 
-		for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
-			for (ProducerMessage<?> msg : msgs) {
-				Transaction t = Cat.newTransaction("Message.Produce.Acked", msg.getTopic());
-				MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
+					String msgId = msg.getDurableSysProperty(CatConstants.SERVER_MESSAGE_ID);
+					String parentMsgId = msg.getDurableSysProperty(CatConstants.CURRENT_MESSAGE_ID);
+					String rootMsgId = msg.getDurableSysProperty(CatConstants.ROOT_MESSAGE_ID);
 
-				String msgId = msg.getDurableSysProperty(CatConstants.SERVER_MESSAGE_ID);
-				String parentMsgId = msg.getDurableSysProperty(CatConstants.CURRENT_MESSAGE_ID);
-				String rootMsgId = msg.getDurableSysProperty(CatConstants.ROOT_MESSAGE_ID);
+					tree.setMessageId(msgId);
+					tree.setParentMessageId(parentMsgId);
+					tree.setRootMessageId(rootMsgId);
 
-				tree.setMessageId(msgId);
-				tree.setParentMessageId(parentMsgId);
-				tree.setRootMessageId(rootMsgId);
+					Transaction elapseT = Cat.newTransaction("Message.Produce.Elapse", msg.getTopic());
+					if (elapseT instanceof DefaultTransaction) {
+						((DefaultTransaction) elapseT).setDurationStart(msg.getBornTimeNano());
+						elapseT.addData("command.message.count", sendMessageCommand.getMessageCount());
+					}
+					elapseT.setStatus(status);
+					elapseT.complete();
 
-				Transaction elapseT = Cat.newTransaction("Message.Produce.Elapse", msg.getTopic());
-				if (elapseT instanceof DefaultTransaction) {
-					((DefaultTransaction) elapseT).setDurationStart(msg.getBornTimeNano());
-					elapseT.addData("command.message.count", sendMessageCommand.getMessageCount());
+					t.setStatus(status);
+					t.complete();
 				}
-				elapseT.setStatus(status);
-				elapseT.complete();
-
-				t.setStatus(status);
-				t.complete();
 			}
 		}
 	}
