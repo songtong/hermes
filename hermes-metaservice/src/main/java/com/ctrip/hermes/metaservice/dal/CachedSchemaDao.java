@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -15,15 +14,17 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.model.SchemaDao;
 import com.ctrip.hermes.metaservice.model.SchemaEntity;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
+import com.google.common.cache.LoadingCache;
 
 @Named
 public class CachedSchemaDao extends SchemaDao implements CachedDao<Long, Schema> {
 
-	private Cache<Long, Schema> cache = CacheBuilder.newBuilder().maximumSize(500).recordStats()
+	private int max_size = 500;
+	
+	private LoadingCache<Long, Schema> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Schema>() {
 
 		      @Override
@@ -44,14 +45,7 @@ public class CachedSchemaDao extends SchemaDao implements CachedDao<Long, Schema
 
 	public Schema findByPK(final Long keyId) throws DalException {
 		try {
-			return cache.get(keyId, new Callable<Schema>() {
-
-				@Override
-				public Schema call() throws Exception {
-					return findByPK(keyId, SchemaEntity.READSET_FULL);
-				}
-
-			});
+			return cache.get(keyId);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}

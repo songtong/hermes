@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -15,15 +14,17 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.metaservice.model.Producer;
 import com.ctrip.hermes.metaservice.model.ProducerDao;
 import com.ctrip.hermes.metaservice.model.ProducerEntity;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
+import com.google.common.cache.LoadingCache;
 
 @Named
 public class CachedProducerDao extends ProducerDao implements CachedDao<Long, Producer> {
 
-	private Cache<Long, List<Producer>> topicCache = CacheBuilder.newBuilder().maximumSize(5).recordStats()
+	private int max_size = 5;
+	
+	private LoadingCache<Long, List<Producer>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<Producer>>() {
 
 		      @Override
@@ -40,14 +41,7 @@ public class CachedProducerDao extends ProducerDao implements CachedDao<Long, Pr
 
 	public List<Producer> findByTopic(final Long keyType) throws DalException {
 		try {
-			return topicCache.get(keyType, new Callable<List<Producer>>() {
-
-				@Override
-				public List<Producer> call() throws Exception {
-					return findByTopicId(keyType, ProducerEntity.READSET_FULL);
-				}
-
-			});
+			return topicCache.get(keyType);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}

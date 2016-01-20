@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -14,15 +13,17 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.metaservice.model.Datasource;
 import com.ctrip.hermes.metaservice.model.DatasourceDao;
 import com.ctrip.hermes.metaservice.model.DatasourceEntity;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
+import com.google.common.cache.LoadingCache;
 
 @Named
 public class CachedDatasourceDao extends DatasourceDao implements CachedDao<String, Datasource> {
 
-	private Cache<String, Datasource> cache = CacheBuilder.newBuilder().maximumSize(100).recordStats()
+	private int max_size = 100;
+	
+	private LoadingCache<String, Datasource> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Datasource>() {
 
 		      @Override
@@ -43,14 +44,7 @@ public class CachedDatasourceDao extends DatasourceDao implements CachedDao<Stri
 
 	public Datasource findByPK(final String keyId) throws DalException {
 		try {
-			return cache.get(keyId, new Callable<Datasource>() {
-
-				@Override
-				public Datasource call() throws Exception {
-					return findByPK(keyId, DatasourceEntity.READSET_FULL);
-				}
-
-			});
+			return cache.get(keyId);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}

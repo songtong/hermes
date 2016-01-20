@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -15,15 +14,17 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.metaservice.model.Endpoint;
 import com.ctrip.hermes.metaservice.model.EndpointDao;
 import com.ctrip.hermes.metaservice.model.EndpointEntity;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
+import com.google.common.cache.LoadingCache;
 
 @Named
 public class CachedEndpointDao extends EndpointDao implements CachedDao<String, Endpoint> {
 
-	private Cache<String, Endpoint> cache = CacheBuilder.newBuilder().maximumSize(10).recordStats()
+	private int max_size = 10;
+	
+	private LoadingCache<String, Endpoint> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Endpoint>() {
 
 		      @Override
@@ -44,14 +45,7 @@ public class CachedEndpointDao extends EndpointDao implements CachedDao<String, 
 
 	public Endpoint findByPK(final String keyId) throws DalException {
 		try {
-			return cache.get(keyId, new Callable<Endpoint>() {
-
-				@Override
-				public Endpoint call() throws Exception {
-					return findByPK(keyId, EndpointEntity.READSET_FULL);
-				}
-
-			});
+			return cache.get(keyId);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}

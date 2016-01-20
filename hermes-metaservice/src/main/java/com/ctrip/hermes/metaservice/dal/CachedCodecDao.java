@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -15,15 +14,17 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.metaservice.model.Codec;
 import com.ctrip.hermes.metaservice.model.CodecDao;
 import com.ctrip.hermes.metaservice.model.CodecEntity;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
+import com.google.common.cache.LoadingCache;
 
 @Named
 public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec> {
 
-	private Cache<String, Codec> cache = CacheBuilder.newBuilder().maximumSize(5).recordStats()
+	private int max_size = 5;
+	
+	private LoadingCache<String, Codec> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Codec>() {
 
 		      @Override
@@ -44,14 +45,7 @@ public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec>
 
 	public Codec findByPK(final String keyType) throws DalException {
 		try {
-			return cache.get(keyType, new Callable<Codec>() {
-
-				@Override
-				public Codec call() throws Exception {
-					return findByPK(keyType, CodecEntity.READSET_FULL);
-				}
-
-			});
+			return cache.get(keyType);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}

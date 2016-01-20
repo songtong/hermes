@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -15,15 +14,17 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.metaservice.model.Topic;
 import com.ctrip.hermes.metaservice.model.TopicDao;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
+import com.google.common.cache.LoadingCache;
 
 @Named
 public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
-	private Cache<Long, Topic> cache = CacheBuilder.newBuilder().maximumSize(1000).recordStats()
+	private int max_size = 1000;
+
+	private LoadingCache<Long, Topic> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Topic>() {
 
 		      @Override
@@ -33,7 +34,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
 	      });
 
-	private Cache<String, Topic> nameCache = CacheBuilder.newBuilder().maximumSize(1000).recordStats()
+	private LoadingCache<String, Topic> nameCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Topic>() {
 
 		      @Override
@@ -55,14 +56,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
 	public Topic findByPK(final Long keyId) throws DalException {
 		try {
-			return cache.get(keyId, new Callable<Topic>() {
-
-				@Override
-				public Topic call() throws Exception {
-					return findByPK(keyId, TopicEntity.READSET_FULL);
-				}
-
-			});
+			return cache.get(keyId);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}
@@ -70,14 +64,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
 	public Topic findByName(final String name) throws DalException {
 		try {
-			return nameCache.get(name, new Callable<Topic>() {
-
-				@Override
-				public Topic call() throws Exception {
-					return findByName(name, TopicEntity.READSET_FULL);
-				}
-
-			});
+			return nameCache.get(name);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}
@@ -93,16 +80,30 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 	public Collection<Topic> list() throws DalException {
 		if (isNeedReload) {
 			List<Topic> models = list(TopicEntity.READSET_FULL);
+			if (models.size() > max_size) {
+				max_size = models.size() * 2;
+				cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Topic>() {
+
+					      @Override
+					      public Topic load(Long key) throws Exception {
+						      return findByPK(key, TopicEntity.READSET_FULL);
+					      }
+
+				      });
+				nameCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Topic>() {
+
+					      @Override
+					      public Topic load(String key) throws Exception {
+						      return findByName(key, TopicEntity.READSET_FULL);
+					      }
+
+				      });
+			}
 			for (Topic model : models) {
 				cache.put(model.getKeyId(), model);
 				nameCache.put(model.getName(), model);
-			}
-			if (models.size() > cache.size()) {
-				cache = CacheBuilder.newBuilder().maximumSize(models.size() * 2).build();
-				for (Topic model : models) {
-					cache.put(model.getKeyId(), model);
-					nameCache.put(model.getName(), model);
-				}
 			}
 			isNeedReload = false;
 		}

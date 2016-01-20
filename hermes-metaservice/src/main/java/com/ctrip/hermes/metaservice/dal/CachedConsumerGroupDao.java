@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -16,15 +15,17 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.metaservice.model.ConsumerGroup;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
+import com.google.common.cache.LoadingCache;
 
 @Named
 public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDao<Integer, ConsumerGroup> {
 
-	private Cache<Integer, ConsumerGroup> cache = CacheBuilder.newBuilder().maximumSize(1000).recordStats()
+	private int max_size = 1000;
+
+	private LoadingCache<Integer, ConsumerGroup> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Integer, ConsumerGroup>() {
 
 		      @Override
@@ -34,8 +35,8 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 
 	      });
 
-	private Cache<Long, List<ConsumerGroup>> topicCache = CacheBuilder.newBuilder().maximumSize(1000).recordStats()
-	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<ConsumerGroup>>() {
+	private LoadingCache<Long, List<ConsumerGroup>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size)
+	      .recordStats().refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<ConsumerGroup>>() {
 
 		      @Override
 		      public List<ConsumerGroup> load(Long key) throws Exception {
@@ -56,14 +57,7 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 
 	public ConsumerGroup findByPK(final Integer keyId) throws DalException {
 		try {
-			return cache.get(keyId, new Callable<ConsumerGroup>() {
-
-				@Override
-				public ConsumerGroup call() throws Exception {
-					return findByPK(keyId, ConsumerGroupEntity.READSET_FULL);
-				}
-
-			});
+			return cache.get(keyId);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}
@@ -71,12 +65,7 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 
 	public List<ConsumerGroup> findByTopic(final Long topicId) throws DalException {
 		try {
-			return topicCache.get(topicId, new Callable<List<ConsumerGroup>>() {
-				@Override
-				public List<ConsumerGroup> call() throws Exception {
-					return findByTopicId(topicId, ConsumerGroupEntity.READSET_FULL);
-				}
-			});
+			return topicCache.get(topicId);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}
@@ -106,6 +95,27 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 	public Collection<ConsumerGroup> list() throws DalException {
 		if (isNeedReload) {
 			List<ConsumerGroup> models = list(ConsumerGroupEntity.READSET_FULL);
+			if (models.size() > max_size) {
+				max_size = models.size() * 2;
+				cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Integer, ConsumerGroup>() {
+
+					      @Override
+					      public ConsumerGroup load(Integer key) throws Exception {
+						      return findByPK(key, ConsumerGroupEntity.READSET_FULL);
+					      }
+
+				      });
+				topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<ConsumerGroup>>() {
+
+					      @Override
+					      public List<ConsumerGroup> load(Long key) throws Exception {
+						      return findByTopicId(key, ConsumerGroupEntity.READSET_FULL);
+					      }
+
+				      });
+			}
 			for (ConsumerGroup model : models) {
 				cache.put(model.getKeyId(), model);
 				List<ConsumerGroup> cgs = topicCache.getIfPresent(model.getTopicId());
@@ -114,18 +124,6 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 					topicCache.put(model.getTopicId(), cgs);
 				}
 				cgs.add(model);
-			}
-			if (models.size() > cache.size()) {
-				cache = CacheBuilder.newBuilder().maximumSize(models.size() * 2).build();
-				for (ConsumerGroup model : models) {
-					cache.put(model.getKeyId(), model);
-					List<ConsumerGroup> cgs = topicCache.getIfPresent(model.getTopicId());
-					if (cgs == null) {
-						cgs = new ArrayList<ConsumerGroup>();
-						topicCache.put(model.getTopicId(), cgs);
-					}
-					cgs.add(model);
-				}
 			}
 			isNeedReload = false;
 		}
