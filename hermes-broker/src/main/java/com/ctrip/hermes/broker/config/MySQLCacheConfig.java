@@ -155,7 +155,25 @@ public class MySQLCacheConfig {
 	}
 
 	private void logAllConfiguration() {
-		log.info("Cache config: {}", JSON.toJSON(this));
+		log.info("shrinkAfterLastResizeTimeMillis : {}", m_shrinkAfterLastResizeTimeMillis);
+		log.info("enabledTopicPatterns : {}", m_enabledTopicPatterns);
+		log.info("disabledTopicPatterns : {}", m_disabledTopicPatterns);
+		log.info("defaultPriorityPageCacheCoreSize : {}", m_defaultPriorityPageCacheCoreSize);
+		log.info("defaultPriorityPageCacheMaximumSize : {}", m_defaultPriorityPageCacheMaximumSize);
+		log.info("defaultPriorityPageSize : {}", m_defaultPriorityPageSize);
+		log.info("priorityMessageMaximumCapacity : {}", m_priorityMessageMaximumCapacity);
+		log.info("priorityMessageConcurrencyLevel : {}", m_priorityMessageConcurrencyLevel);
+		log.info("priorityPageLoadIntervalMillis : {}", m_priorityPageLoadIntervalMillis);
+		log.info("topicPriorityPageCacheSizes : {}", m_topicPriorityPageCacheSizes);
+		log.info("topicPriorityPageSizes : {}", m_topicPriorityPageSizes);
+		log.info("defaultNonpriorityPageCacheCoreSize : {}", m_defaultNonpriorityPageCacheCoreSize);
+		log.info("defaultNonpriorityPageCacheMaximumSize : {}", m_defaultNonpriorityPageCacheMaximumSize);
+		log.info("defaultNonpriorityPageSize : {}", m_defaultNonpriorityPageSize);
+		log.info("nonpriorityMessageMaximumCapacity : {}", m_nonpriorityMessageMaximumCapacity);
+		log.info("nonpriorityMessageConcurrencyLevel : {}", m_nonpriorityMessageConcurrencyLevel);
+		log.info("nonpriorityPageLoadIntervalMillis : {}", m_nonpriorityPageLoadIntervalMillis);
+		log.info("topicNonpriorityPageCacheSizes : {}", m_topicNonpriorityPageCacheSizes);
+		log.info("topicNonpriorityPageSizes : {}", m_topicNonpriorityPageSizes);
 	}
 
 	private void parsePriorityCacheConfig(Properties props) {
@@ -194,7 +212,7 @@ public class MySQLCacheConfig {
 						if (entry.getValue() != null && entry.getValue().size() == 2) {
 							m_topicPriorityPageCacheSizes.put(entry.getKey(),
 							      new Pair<Integer, Integer>(entry.getValue().get(0), entry.getValue().get(1)));
-							log.info("Topic {} specified page cache's core size {} and maximum size {}(priority)",
+							log.info("Topic [{}] specified page cache's core size {} and maximum size {}(priority)",
 							      entry.getKey(), entry.getValue().get(0), entry.getValue().get(1));
 						}
 					}
@@ -214,7 +232,7 @@ public class MySQLCacheConfig {
 				if (topicPriorityPageSizes != null) {
 					for (Map.Entry<String, Integer> entry : topicPriorityPageSizes.entrySet()) {
 						m_topicPriorityPageSizes.put(entry.getKey(), entry.getValue());
-						log.info("Topic {} specified page cache's page size {}(priority)", entry.getKey(), entry.getValue());
+						log.info("Topic [{}] specified page cache's page size {}(priority)", entry.getKey(), entry.getValue());
 					}
 				}
 
@@ -260,7 +278,7 @@ public class MySQLCacheConfig {
 						if (entry.getValue() != null && entry.getValue().size() == 2) {
 							m_topicNonpriorityPageCacheSizes.put(entry.getKey(), new Pair<Integer, Integer>(entry.getValue()
 							      .get(0), entry.getValue().get(1)));
-							log.info("Topic {} specified page cache's core size {} and maximum size {}(nonpriority)",
+							log.info("Topic [{}] specified page cache's core size {} and maximum size {}(nonpriority)",
 							      entry.getKey(), entry.getValue().get(0), entry.getValue().get(1));
 						}
 					}
@@ -280,7 +298,7 @@ public class MySQLCacheConfig {
 				if (topicNonpriorityPageSizes != null) {
 					for (Map.Entry<String, Integer> entry : topicNonpriorityPageSizes.entrySet()) {
 						m_topicNonpriorityPageSizes.put(entry.getKey(), entry.getValue());
-						log.info("Topic {} specified page cache's page size {}(nonpriority)", entry.getKey(),
+						log.info("Topic [{}] specified page cache's page size {}(nonpriority)", entry.getKey(),
 						      entry.getValue());
 					}
 				}
@@ -300,7 +318,7 @@ public class MySQLCacheConfig {
 				if (enabledTopicRegexs != null) {
 					for (String regex : enabledTopicRegexs) {
 						m_enabledTopicPatterns.add(Pattern.compile(regex));
-						log.info("Topic pattern {} enabled cache", regex);
+						log.info("Topic pattern [{}] enabled cache", regex);
 					}
 				}
 
@@ -320,7 +338,7 @@ public class MySQLCacheConfig {
 				if (disabledTopicRegexs != null) {
 					for (String regex : disabledTopicRegexs) {
 						m_disabledTopicPatterns.add(Pattern.compile(regex));
-						log.info("Topic pattern {} disabled cache", regex);
+						log.info("Topic pattern [{}] disabled cache", regex);
 					}
 				}
 
