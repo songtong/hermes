@@ -16,7 +16,7 @@ import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.CatFileBizLogger;
+import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -47,7 +47,7 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessorV3.class);
 
 	@Inject
-	private CatFileBizLogger m_bizLogger;
+	private FileBizLogger m_bizLogger;
 
 	@Inject
 	private MessageQueueManager m_queueManager;

@@ -110,13 +110,9 @@
   ],
   "kafka": {
     "broker_list": [
-      "10.2.7.70:9092",
-      "10.2.7.71:9092",
-      "10.2.7.72:9092",
-      "10.2.7.73:9092",
-      "10.2.7.74:9092"
+      "10.2.7.109:9092"
     ],
-    "topic_id": "hermes-{{type}}",
+    "topic_id": "hermes-{{.type}}",
     "ack_timeout_ms": 100,
     "required_acks": "no_response",
     "flush_frequency_ms": 100
