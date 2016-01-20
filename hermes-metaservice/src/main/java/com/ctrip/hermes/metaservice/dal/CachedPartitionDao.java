@@ -23,9 +23,9 @@ import com.google.common.cache.LoadingCache;
 public class CachedPartitionDao extends PartitionDao implements CachedDao<Long, Partition> {
 
 	private int max_size = 1000;
-	
-	private LoadingCache<Long, List<Partition>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
-	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<Partition>>() {
+
+	private LoadingCache<Long, List<Partition>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size)
+	      .recordStats().refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<Partition>>() {
 
 		      @Override
 		      public List<Partition> load(Long key) throws Exception {

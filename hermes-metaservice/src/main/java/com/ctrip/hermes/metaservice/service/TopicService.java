@@ -321,7 +321,7 @@ public class TopicService {
 	protected com.ctrip.hermes.meta.entity.Topic fillTopic(com.ctrip.hermes.metaservice.model.Topic topicModel)
 	      throws DalException {
 		com.ctrip.hermes.meta.entity.Topic topicEntity = ModelToEntityConverter.convert(topicModel);
-		List<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.findByTopic(topicModel
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.findByTopic(topicModel
 		      .getId());
 		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : cgModels) {
 			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);

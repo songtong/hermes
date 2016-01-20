@@ -100,7 +100,7 @@ public class ConsumerService {
 
 	public List<com.ctrip.hermes.meta.entity.ConsumerGroup> findConsumerGroups(
 	      com.ctrip.hermes.metaservice.model.Topic topicModel) throws DalException {
-		List<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao
 		      .findByTopic(topicModel.getId());
 		List<com.ctrip.hermes.meta.entity.ConsumerGroup> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : models) {
