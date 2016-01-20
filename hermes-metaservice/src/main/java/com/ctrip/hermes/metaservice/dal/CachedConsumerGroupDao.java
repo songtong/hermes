@@ -1,6 +1,5 @@
 package com.ctrip.hermes.metaservice.dal;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -35,12 +34,18 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 
 	      });
 
-	private LoadingCache<Long, List<ConsumerGroup>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size)
-	      .recordStats().refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<ConsumerGroup>>() {
+	private LoadingCache<Long, Map<Integer, ConsumerGroup>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size)
+	      .recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
+	      .build(new CacheLoader<Long, Map<Integer, ConsumerGroup>>() {
 
 		      @Override
-		      public List<ConsumerGroup> load(Long key) throws Exception {
-			      return findByTopicId(key, ConsumerGroupEntity.READSET_FULL);
+		      public Map<Integer, ConsumerGroup> load(Long key) throws Exception {
+			      List<ConsumerGroup> cgs = findByTopicId(key, ConsumerGroupEntity.READSET_FULL);
+			      Map<Integer, ConsumerGroup> result = new HashMap<Integer, ConsumerGroup>();
+			      for (ConsumerGroup cg : cgs) {
+				      result.put(cg.getKeyId(), cg);
+			      }
+			      return result;
 		      }
 
 	      });
@@ -63,9 +68,9 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 		}
 	}
 
-	public List<ConsumerGroup> findByTopic(final Long topicId) throws DalException {
+	public Collection<ConsumerGroup> findByTopic(final Long topicId) throws DalException {
 		try {
-			return topicCache.get(topicId);
+			return topicCache.get(topicId).values();
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
 		}
@@ -107,23 +112,28 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 
 				      });
 				topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
-				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<ConsumerGroup>>() {
+				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Map<Integer, ConsumerGroup>>() {
 
 					      @Override
-					      public List<ConsumerGroup> load(Long key) throws Exception {
-						      return findByTopicId(key, ConsumerGroupEntity.READSET_FULL);
+					      public Map<Integer, ConsumerGroup> load(Long key) throws Exception {
+						      List<ConsumerGroup> cgs = findByTopicId(key, ConsumerGroupEntity.READSET_FULL);
+						      Map<Integer, ConsumerGroup> result = new HashMap<Integer, ConsumerGroup>();
+						      for (ConsumerGroup cg : cgs) {
+							      result.put(cg.getKeyId(), cg);
+						      }
+						      return result;
 					      }
 
 				      });
 			}
 			for (ConsumerGroup model : models) {
 				cache.put(model.getKeyId(), model);
-				List<ConsumerGroup> cgs = topicCache.getIfPresent(model.getTopicId());
+				Map<Integer, ConsumerGroup> cgs = topicCache.getIfPresent(model.getTopicId());
 				if (cgs == null) {
-					cgs = new ArrayList<ConsumerGroup>();
+					cgs = new HashMap<Integer, ConsumerGroup>();
 					topicCache.put(model.getTopicId(), cgs);
 				}
-				cgs.add(model);
+				cgs.put(model.getKeyId(), model);
 			}
 			isNeedReload = false;
 		}

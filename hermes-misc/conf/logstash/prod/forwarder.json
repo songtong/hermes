@@ -99,7 +99,7 @@
     },
     {
       "paths": [
-        "/opt/zookeeper-3.4.6/zookeeper.out"
+        "/opt/ctrip/app/zookeeper-3.4.6/zookeeper.out"
       ],
       "Fields": {
         "type": "log",
