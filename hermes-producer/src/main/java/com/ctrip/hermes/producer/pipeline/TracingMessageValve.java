@@ -9,6 +9,7 @@ import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
 import com.ctrip.hermes.core.pipeline.spi.Valve;
+import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
 import com.dianping.cat.message.Transaction;
@@ -21,42 +22,54 @@ public class TracingMessageValve implements Valve {
 	@Inject
 	private MetaService m_metaService;
 
+	@Inject
+	private ProducerConfig m_config;
+
 	@Override
 	public void handle(PipelineContext<?> ctx, Object payload) {
-		ProducerMessage<?> msg = (ProducerMessage<?>) payload;
-		String topic = msg.getTopic();
+		if (m_config.isCatEnabled()) {
+			ProducerMessage<?> msg = (ProducerMessage<?>) payload;
+			String topic = msg.getTopic();
 
-		boolean connectCatTransactions = m_metaService.findTopicByName(topic).isConnectCatTransactions();
+			boolean connectCatTransactions = m_metaService.findTopicByName(topic).isConnectCatTransactions();
 
-		Transaction t = Cat.newTransaction("Message.Produce.Tried", topic);
-		t.addData("key", msg.getKey());
+			Transaction t = Cat.newTransaction("Message.Produce.Tried", topic);
+			t.addData("key", msg.getKey());
 
-		try {
-			String ip = Networks.forIp().getLocalHostAddress();
-			Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
-			Cat.logEvent("Producer:" + ip, topic, Event.SUCCESS, "key=" + msg.getKey());
+			try {
+				String ip = Networks.forIp().getLocalHostAddress();
+				Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
+				Cat.logEvent("Producer:" + ip, topic, Event.SUCCESS, "key=" + msg.getKey());
 
-			if (msg.isWithCatTrace() && connectCatTransactions) {
-				MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
-				String childMsgId = Cat.createMessageId();
-				String rootMsgId = tree.getRootMessageId();
-				String msgId = Cat.getCurrentMessageId();
-				rootMsgId = rootMsgId == null ? msgId : rootMsgId;
+				if (msg.isWithCatTrace() && connectCatTransactions) {
+					MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
+					String childMsgId = Cat.createMessageId();
+					String rootMsgId = tree.getRootMessageId();
+					String msgId = Cat.getCurrentMessageId();
+					rootMsgId = rootMsgId == null ? msgId : rootMsgId;
 
-				msg.addDurableSysProperty(CatConstants.CURRENT_MESSAGE_ID, msgId);
-				msg.addDurableSysProperty(CatConstants.SERVER_MESSAGE_ID, childMsgId);
-				msg.addDurableSysProperty(CatConstants.ROOT_MESSAGE_ID, rootMsgId);
-				Cat.logEvent(CatConstants.TYPE_REMOTE_CALL, "", Event.SUCCESS, childMsgId);
+					msg.addDurableSysProperty(CatConstants.CURRENT_MESSAGE_ID, msgId);
+					msg.addDurableSysProperty(CatConstants.SERVER_MESSAGE_ID, childMsgId);
+					msg.addDurableSysProperty(CatConstants.ROOT_MESSAGE_ID, rootMsgId);
+					Cat.logEvent(CatConstants.TYPE_REMOTE_CALL, "", Event.SUCCESS, childMsgId);
+				}
+				ctx.next(payload);
+
+				t.setStatus(Transaction.SUCCESS);
+			} catch (Exception e) {
+				Cat.logError(e);
+				t.setStatus(e);
+				throw new RuntimeException(e);
+			} finally {
+				t.complete();
 			}
-			ctx.next(payload);
-
-			t.setStatus(Transaction.SUCCESS);
-		} catch (Exception e) {
-			Cat.logError(e);
-			t.setStatus(e);
-			throw new RuntimeException(e);
-		} finally {
-			t.complete();
+		} else {
+			try {
+				ctx.next(payload);
+			} catch (Exception e) {
+				Cat.logError(e);
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
