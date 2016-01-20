@@ -169,12 +169,11 @@ public class PartitionManagementJob {
 	private Map<String, Integer> parseLimits(Meta meta) {
 		Map<String, Integer> limits = new HashMap<String, Integer>();
 
-		Map<String, Integer> includes = JSON.parseObject(m_config.getPartitionRetainInDay(),
+		Map<String, Integer> includes = JSON.parseObject(m_config.getPartitionRetainInHour(),
 		      new TypeReference<Map<String, Integer>>() {
 		      });
-		Set<String> excludes = JSON.parseObject(m_config.getPartitionCheckerExcludeTopics(),
-		      new TypeReference<Set<String>>() {
-		      });
+		Set<String> excludes = JSON.parseObject(m_config.getPartitionCheckerExcludeTopics(), new TypeReference<Set<String>>() {
+		});
 		log.info("***** Partition manager config, include: {}", includes);
 		log.info("***** Partition manager config, exclude: {}", excludes);
 		if (includes.containsKey(".*")) {
@@ -235,11 +234,11 @@ public class PartitionManagementJob {
 	}
 
 	private List<TableContext> createTableContexts(//
-	      Meta meta, Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, Map<String, Integer> topicRetainDays) {
+	      Meta meta, Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, Map<String, Integer> topicRetainHours) {
 		List<TableContext> ctxes = new ArrayList<TableContext>();
 		for (Topic topic : meta.getTopics().values()) {
-			if (topicRetainDays.containsKey(topic.getName())) {
-				int retain = topicRetainDays.get(topic.getName());
+			if (topicRetainHours.containsKey(topic.getName())) {
+				int retain = topicRetainHours.get(topic.getName());
 				for (Partition partition : topic.getPartitions()) {
 					addMessageTableContext(partitions, topic, partition, 0, retain, ctxes);
 					addMessageTableContext(partitions, topic, partition, 1, retain, ctxes);

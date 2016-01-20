@@ -116,8 +116,8 @@ public class MonitorConfig {
 	/**
 	 * { ".*" : 30, "song.test" : 60, "song..*" : 40 }
 	 */
-	@Value("${partition.checker.include.topics.retain.day:{\".*\":30}}")
-	private String partitionRetainInDay;
+	@Value("${partition.checker.include.topics.retain.hour:{\".*\":240}}")
+	private String partitionRetainInHour;
 
 	@Value("${partition.checker.exclude.topics:[]}")
 	private String partitionCheckerExcludeTopics;
@@ -390,12 +390,12 @@ public class MonitorConfig {
 		this.consumeBacklogCheckerExcludeTopics = consumeBacklogCheckerExcludeTopics;
 	}
 
-	public String getPartitionRetainInDay() {
-		return partitionRetainInDay;
+	public String getPartitionRetainInHour() {
+		return partitionRetainInHour;
 	}
 
-	public void setPartitionRetainInDay(String partitionRetainInDay) {
-		this.partitionRetainInDay = partitionRetainInDay;
+	public void setPartitionRetainInHour(String partitionRetainInHour) {
+		this.partitionRetainInHour = partitionRetainInHour;
 	}
 
 	public int getPartitionWatermarkInDay() {
