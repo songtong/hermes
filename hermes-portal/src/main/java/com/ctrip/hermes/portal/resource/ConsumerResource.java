@@ -26,7 +26,9 @@ import com.ctrip.hermes.core.bo.ConsumerView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
+import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/consumers/")
@@ -36,6 +38,8 @@ public class ConsumerResource {
 	private static final Logger logger = LoggerFactory.getLogger(ConsumerResource.class);
 
 	private ConsumerService consumerService = PlexusComponentLocator.lookup(ConsumerService.class);
+
+	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
 	@GET
 	public List<ConsumerView> getConsumers() {
@@ -85,10 +89,11 @@ public class ConsumerResource {
 
 	@DELETE
 	@Path("{topic}/{consumer}")
-	public Response deleteConsumer(@PathParam("topic") String topic, @PathParam("consumer") String consumer) {
-		logger.debug("Delete consumer: {} {}", topic, consumer);
+	public Response deleteConsumer(@PathParam("topic") String topicName, @PathParam("consumer") String consumer) {
+		logger.debug("Delete consumer: {} {}", topicName, consumer);
 		try {
-			consumerService.deleteConsumerFromTopic(topic, consumer);
+			Topic topic = topicService.findTopicByName(topicName);
+			consumerService.deleteConsumerFromTopic(topic.getId(), consumer);
 		} catch (Exception e) {
 			logger.warn("delete topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -112,13 +117,14 @@ public class ConsumerResource {
 		}
 		String consumerName = consumerView.getGroupName();
 		String topicName = consumerView.getTopicName();
-			if (consumerService.getConsumer(topicName, consumerName) != null) {
-				throw new RestException("Consumer for " + topicName + " already exists.", Status.CONFLICT);
-			}
+		Topic topic = topicService.findTopicByName(topicName);
+		if (consumerService.findConsumerGroup(topic.getId(), consumerName) != null) {
+			throw new RestException("Consumer for " + topicName + " already exists.", Status.CONFLICT);
+		}
 
 		ConsumerGroup c = consumerView.toMetaConsumer();
 		try {
-			c = consumerService.addConsumerForTopics(topicName,c);
+			c = consumerService.addConsumerForTopics(topic.getId(), c);
 		} catch (Exception e) {
 			logger.warn("Create consumer failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -132,23 +138,24 @@ public class ConsumerResource {
 	public Response updateConsumer(String content) {
 		if (StringUtils.isEmpty(content))
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
-		
+
 		ConsumerView consumerView = null;
 		try {
 			consumerView = JSON.parseObject(content, ConsumerView.class);
 		} catch (Exception e) {
 			logger.error("Parse consumer failed, content:{}", content, e);
-			throw new RestException(e,Status.BAD_REQUEST);
+			throw new RestException(e, Status.BAD_REQUEST);
 		}
-		
+
 		ConsumerGroup c = consumerView.toMetaConsumer();
 		try {
-			c = consumerService.updateGroupForTopic(consumerView.getTopicName(),c);
+			Topic topic = topicService.findTopicByName(consumerView.getTopicName());
+			c = consumerService.updateGroupForTopic(topic.getId(), c);
 		} catch (Exception e) {
 			logger.warn("Update consumer failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
-		consumerView = new ConsumerView(consumerView.getTopicName(),c);
+		consumerView = new ConsumerView(consumerView.getTopicName(), c);
 		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
 }

@@ -23,7 +23,7 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.EndpointService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/endpoints/")
@@ -33,11 +33,11 @@ public class EndpointResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(EndpointResource.class);
 
-	private PortalMetaService metaService = PlexusComponentLocator.lookup(PortalMetaService.class);
+	private EndpointService endpointService = PlexusComponentLocator.lookup(EndpointService.class);
 
 	@GET
 	public Response getEndpoints() {
-		List<Endpoint> endpoints = new ArrayList<Endpoint>(metaService.getEndpoints().values());
+		List<Endpoint> endpoints = new ArrayList<Endpoint>(endpointService.getEndpoints().values());
 		Collections.sort(endpoints, new Comparator<Endpoint>() {
 			@Override
 			public int compare(Endpoint o1, Endpoint o2) {
@@ -46,7 +46,7 @@ public class EndpointResource {
 		});
 		return Response.status(Status.OK).entity(endpoints).build();
 	}
-	
+
 	@POST
 	public Response addEndpoint(String content) {
 		logger.info("Add endpoint: " + content);
@@ -63,12 +63,12 @@ public class EndpointResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
-		if (metaService.getEndpoints().containsKey(endpoint.getId())) {
+		if (endpointService.getEndpoints().containsKey(endpoint.getId())) {
 			throw new RestException(String.format("Endpoint %s already exists.", endpoint.getId()), Status.CONFLICT);
 		}
 
 		try {
-			metaService.addEndpoint(endpoint);
+			endpointService.addEndpoint(endpoint);
 			return Response.status(Status.CREATED).build();
 		} catch (Exception e) {
 			logger.error("Add endpoint failed.", e);
@@ -81,7 +81,7 @@ public class EndpointResource {
 	public Response deleteEndpoint(@PathParam("id") String id) {
 		logger.info("Delete endpoint: {}", id);
 		try {
-			metaService.deleteEndpoint(id);
+			endpointService.deleteEndpoint(id);
 		} catch (Exception e) {
 			logger.warn("Delete endpoint failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);

@@ -11,25 +11,25 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.Updateset;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.metaservice.model.Storage;
-import com.ctrip.hermes.metaservice.model.StorageDao;
-import com.ctrip.hermes.metaservice.model.StorageEntity;
+import com.ctrip.hermes.metaservice.model.Schema;
+import com.ctrip.hermes.metaservice.model.SchemaDao;
+import com.ctrip.hermes.metaservice.model.SchemaEntity;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
 
 @Named
-public class CachedStorageDao extends StorageDao implements CachedDao<String, Storage> {
+public class CachedSchemaDao extends SchemaDao implements CachedDao<Long, Schema> {
 
-	private int max_size = 10;
+	private int max_size = 500;
 	
-	private LoadingCache<String, Storage> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
-	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Storage>() {
+	private LoadingCache<Long, Schema> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Schema>() {
 
 		      @Override
-		      public Storage load(String key) throws Exception {
-			      return findByPK(key, StorageEntity.READSET_FULL);
+		      public Schema load(Long key) throws Exception {
+			      return findByPK(key, SchemaEntity.READSET_FULL);
 		      }
 
 	      });
@@ -37,13 +37,13 @@ public class CachedStorageDao extends StorageDao implements CachedDao<String, St
 	private volatile boolean isNeedReload = true;
 
 	@Override
-	public int deleteByPK(Storage proto) throws DalException {
+	public int deleteByPK(Schema proto) throws DalException {
 		cache.invalidateAll();
 		isNeedReload = true;
 		return super.deleteByPK(proto);
 	}
 
-	public Storage findByPK(final String keyId) throws DalException {
+	public Schema findByPK(final Long keyId) throws DalException {
 		try {
 			return cache.get(keyId);
 		} catch (ExecutionException e) {
@@ -51,17 +51,17 @@ public class CachedStorageDao extends StorageDao implements CachedDao<String, St
 		}
 	}
 
-	public int insert(Storage proto) throws DalException {
+	public int insert(Schema proto) throws DalException {
 		cache.invalidateAll();
 		isNeedReload = true;
 		return super.insert(proto);
 	}
 
-	public Collection<Storage> list() throws DalException {
+	public Collection<Schema> list() throws DalException {
 		if (isNeedReload) {
-			List<Storage> models = list(StorageEntity.READSET_FULL);
-			for (Storage model : models) {
-				cache.put(model.getKeyType(), model);
+			List<Schema> models = list(SchemaEntity.READSET_FULL);
+			for (Schema model : models) {
+				cache.put(model.getKeyId(), model);
 			}
 			isNeedReload = false;
 		}
@@ -69,7 +69,7 @@ public class CachedStorageDao extends StorageDao implements CachedDao<String, St
 	}
 
 	@Override
-	public int updateByPK(Storage proto, Updateset<Storage> updateset) throws DalException {
+	public int updateByPK(Schema proto, Updateset<Schema> updateset) throws DalException {
 		cache.invalidateAll();
 		isNeedReload = true;
 		return super.updateByPK(proto, updateset);
@@ -77,7 +77,7 @@ public class CachedStorageDao extends StorageDao implements CachedDao<String, St
 
 	public Map<String, CacheStats> getStats() {
 		Map<String, CacheStats> result = new HashMap<>();
-		result.put(CachedStorageDao.class.getSimpleName() + "_cache", cache.stats());
+		result.put(CachedSchemaDao.class.getSimpleName() + "_cache", cache.stats());
 		return result;
 	}
 

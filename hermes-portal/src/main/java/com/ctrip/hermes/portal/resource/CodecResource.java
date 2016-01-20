@@ -33,7 +33,7 @@ public class CodecResource {
 	@Path("{name}")
 	public CodecView getCodec(@PathParam("name") String name) {
 		logger.debug("get codec {}", name);
-		Codec codec = codecService.getCodec(name);
+		Codec codec = codecService.getCodecs().get(name);
 		if (codec == null) {
 			throw new RestException("Codec not found: " + name, Status.NOT_FOUND);
 		}

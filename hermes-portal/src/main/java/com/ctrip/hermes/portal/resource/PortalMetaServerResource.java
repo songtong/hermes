@@ -7,26 +7,24 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
-import com.ctrip.hermes.metaservice.service.PortalMetaService;
+import com.ctrip.hermes.metaservice.service.StorageService;
 
 @Path("/metaserver/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class PortalMetaServerResource {
 
-	private PortalMetaService metaService = PlexusComponentLocator.lookup(PortalMetaService.class,
-	      DefaultPortalMetaService.ID);
+	private StorageService dsService = PlexusComponentLocator.lookup(StorageService.class);
 
 	@GET
 	@Path("kafka/zookeeper")
 	public String getZookeeperList() {
-		return metaService.getZookeeperList();
+		return dsService.getZookeeperList();
 	}
 
 	@GET
 	@Path("kafka/brokers")
 	public String getKafkaBrokerList() {
-		return metaService.getKafkaBrokerList();
+		return dsService.getKafkaBrokerList();
 	}
 }

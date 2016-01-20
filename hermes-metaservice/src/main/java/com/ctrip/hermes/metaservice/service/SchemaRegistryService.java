@@ -21,7 +21,7 @@ import com.ctrip.hermes.metaservice.schemaregistry.SchemaValue;
 public class SchemaRegistryService {
 
 	@Inject
-	private PortalMetaService metaService;
+	private StorageService dsService;
 	
 	@Inject
 	private SchemaService schemaService;
@@ -29,7 +29,7 @@ public class SchemaRegistryService {
 	public boolean updateSchemaInKafkaStorage(String topic, SchemaKey schemaKey, SchemaValue schemaValue)
 	      throws InterruptedException, ExecutionException {
 		Properties configs = new Properties();
-		configs.put("bootstrap.servers", metaService.getKafkaBrokerList());
+		configs.put("bootstrap.servers", dsService.getKafkaBrokerList());
 		configs.put("client.id", "SchemaRegistryService");
 		configs.put("key.serializer", ByteArraySerializer.class.getCanonicalName());
 		configs.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
