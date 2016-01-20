@@ -19,7 +19,7 @@ public interface TableContext {
 
 	public List<PartitionInfo> getPartitionInfos();
 
-	public int getRetainInDay();
+	public int getRetainInHour();
 
 	public int getWatermarkInDay();
 

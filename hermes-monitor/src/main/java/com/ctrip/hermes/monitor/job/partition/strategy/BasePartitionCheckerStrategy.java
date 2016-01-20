@@ -78,7 +78,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 	private List<PartitionInfo> calculateWastePartitions(TableContext ctx, CreationStamp latest, long dailyTotal) {
 		List<PartitionInfo> ps = ctx.getPartitionInfos();
 		List<PartitionInfo> wasteList = new ArrayList<PartitionInfo>();
-		long upperBound = latest.getId() + ctx.getRetainInDay() * dailyTotal;
+		long upperBound = latest.getId() + (ctx.getRetainInHour() / 24) * dailyTotal;
 		for (PartitionInfo info : ps) {
 			if (info.getUpperbound() > upperBound && info.getRows() == 0) {
 				wasteList.add(info);
@@ -109,7 +109,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 			}
 			PartitionInfo p = ps.get(idx);
 			CreationStamp stamp = getCreationStampFinder().findSpecific(ctx, p.getUpperbound() - 1);
-			if (stamp.getDate().getTime() < System.currentTimeMillis() - TimeUnit.DAYS.toMillis(ctx.getRetainInDay())) {
+			if (stamp.getDate().getTime() < System.currentTimeMillis() - TimeUnit.HOURS.toMillis(ctx.getRetainInHour())) {
 				list.add(p);
 			} else {
 				break;
@@ -123,8 +123,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		if (speed > 0) {
 			long incrementPartitionCount = ctx.getIncrementInDay() * speed / partitionSize + 1;
 			if (incrementPartitionCount > getConfig().getPartitionIncrementMaxCount()) {
-				Pair<Long, Long> pair = renewPartitionSizeAndCount(ctx, ctx.getIncrementInDay() * speed,
-				      ctx.getIncrementInDay());
+				Pair<Long, Long> pair = renewPartitionSizeAndCount(ctx, ctx.getIncrementInDay() * speed, ctx.getIncrementInDay());
 				partitionSize = pair.getKey();
 				incrementPartitionCount = pair.getValue();
 			}

@@ -64,7 +64,7 @@ public abstract class BaseTableContext implements TableContext {
 	}
 
 	@Override
-	public int getRetainInDay() {
+	public int getRetainInHour() {
 		return m_retainInDay;
 	}
 
