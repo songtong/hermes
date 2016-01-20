@@ -39,7 +39,7 @@ import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandPro
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessorV3;
 import com.ctrip.hermes.broker.zk.ZKClient;
 import com.ctrip.hermes.broker.zk.ZKConfig;
-import com.ctrip.hermes.core.log.CatFileBizLogger;
+import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CommandType;
@@ -63,7 +63,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//
-		      .req(CatFileBizLogger.class)//
+		      .req(FileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
 		);
@@ -71,7 +71,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//
-		      .req(CatFileBizLogger.class)//
+		      .req(FileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
 		);
@@ -95,11 +95,11 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class)//
-		      .req(CatFileBizLogger.class) //
+		      .req(FileBizLogger.class) //
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK_V3.toString(), AckMessageCommandProcessorV3.class)//
 		      .req(MessageQueueManager.class)//
-		      .req(CatFileBizLogger.class) //
+		      .req(FileBizLogger.class) //
 		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET.toString(),
 		      QueryLatestConsumerOffsetCommandProcessor.class)//

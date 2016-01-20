@@ -13,7 +13,7 @@ import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.log.CatFileBizLogger;
+import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 
@@ -23,7 +23,7 @@ public class SoaPushService implements Initializable, Disposable {
 	private static final Logger m_logger = LoggerFactory.getLogger(SoaPushService.class);
 
 	@Inject
-	private CatFileBizLogger m_bizLogger;
+	private FileBizLogger m_bizLogger;
 
 	@Inject
 	private ClientEnvironment m_env;

@@ -17,7 +17,7 @@ import com.ctrip.hermes.broker.queue.MessageQueueCursor;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.CatFileBizLogger;
+import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
@@ -33,7 +33,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 public class DefaultLongPollingService extends AbstractLongPollingService implements Initializable {
 
 	@Inject
-	private CatFileBizLogger m_bizLogger;
+	private FileBizLogger m_bizLogger;
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultLongPollingService.class);
 
