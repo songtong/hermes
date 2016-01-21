@@ -27,6 +27,7 @@ import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
 import com.ctrip.hermes.metaservice.dal.CachedProducerDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
+import com.ctrip.hermes.metaservice.model.PartitionEntity;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
@@ -79,18 +80,27 @@ public class TopicService {
 		}
 
 		for (Partition partition : partitions) {
-			partition.setId(partitionId++);
-			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partition);
-			partitionModel.setTopicId(topic.getId());
-			m_partitionDao.insert(partitionModel);
+			if (partition.getId() < 0) {
+				partition.setId(partitionId++);
+				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partition);
+				partitionModel.setTopicId(topic.getId());
+				m_partitionDao.insert(partitionModel);
 
-			if (Storage.MYSQL.equals(topic.getStorageType())) {
-				if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
-					partitionId--;
-					m_logger.error("Add new topic partition failed, please try later.");
-					throw new RuntimeException("Add new topic partition failed, please try later.");
+				if (Storage.MYSQL.equals(topic.getStorageType())) {
+					if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
+						partitionId--;
+						m_logger.error("Add new topic partition failed, please try later.");
+						throw new RuntimeException("Add new topic partition failed, please try later.");
+					}
+
 				}
-
+			} else {
+				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partition);
+				partitionModel.setTId(topic.getId());
+				partitionModel.setPId(partition.getId());
+				partitionModel.setTopicId(topic.getId());
+				partitionModel.setId(partition.getId());
+				m_partitionDao.updateByTopicAndPartition(partitionModel, PartitionEntity.UPDATESET_FULL);
 			}
 		}
 
@@ -106,7 +116,6 @@ public class TopicService {
 		m_topicStorageService.addPartitionStorage(ds, table, span);
 	}
 
-	
 	/**
 	 * @param topicEntity
 	 * @return
@@ -122,8 +131,7 @@ public class TopicService {
 
 			int partitionId = 0;
 			for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicEntity.getPartitions()) {
-				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
-				      .convert(partitionEntity);
+				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
 				partitionModel.setId(partitionId++);
 				partitionModel.setTopicId(topicModel.getId());
 				partitionEntity.setId(partitionModel.getId());
@@ -261,8 +269,7 @@ public class TopicService {
 		return m_topicStorageService.queryStorageSize(ds, table);
 	}
 
-	public List<StoragePartition> queryStorageTablePartitions(String ds, String table)
-	      throws StorageHandleErrorException {
+	public List<StoragePartition> queryStorageTablePartitions(String ds, String table) throws StorageHandleErrorException {
 		return m_topicStorageService.queryTablePartitions(ds, table);
 	}
 
@@ -289,9 +296,7 @@ public class TopicService {
 
 		List<Partition> partitions = new ArrayList<>();
 		for (Partition partition : topic.getPartitions()) {
-			if (partition.getId() == -1) {
-				partitions.add(partition);
-			}
+			partitions.add(partition);
 		}
 		addPartitionsForTopic(originTopic.getName(), partitions);
 		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(originTopic);
@@ -302,7 +307,7 @@ public class TopicService {
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 		}
 
-		return originTopic;
+		return findTopicByName(topic.getName());
 	}
 
 	public List<com.ctrip.hermes.meta.entity.Topic> findTopics(boolean isFillDetail) throws DalException {
@@ -321,14 +326,12 @@ public class TopicService {
 	protected com.ctrip.hermes.meta.entity.Topic fillTopic(com.ctrip.hermes.metaservice.model.Topic topicModel)
 	      throws DalException {
 		com.ctrip.hermes.meta.entity.Topic topicEntity = ModelToEntityConverter.convert(topicModel);
-		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.findByTopic(topicModel
-		      .getId());
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.findByTopic(topicModel.getId());
 		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : cgModels) {
 			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
 			topicEntity.addConsumerGroup(entity);
 		}
-		List<com.ctrip.hermes.metaservice.model.Partition> partitionModels = m_partitionDao.findByTopic(topicModel
-		      .getId());
+		List<com.ctrip.hermes.metaservice.model.Partition> partitionModels = m_partitionDao.findByTopic(topicModel.getId());
 		for (com.ctrip.hermes.metaservice.model.Partition model : partitionModels) {
 			com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
 			topicEntity.addPartition(entity);

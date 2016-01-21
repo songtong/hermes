@@ -210,6 +210,14 @@
 				<statement><![CDATA[DELETE FROM <TABLE/>
 		WHERE <FIELD name='topic-id'/> = ${tId} AND <FIELD name='id'/> = ${pId} ]]></statement>
 			</query>
+	        <query name="update-by-topic-and-partition" type="UPDATE">
+		        <param name="tId" />
+		        <param name="pId"/>
+		        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='topic-id'/> = ${tId}
+        AND <FIELD name='id'/> = ${pId}]]></statement>
+	        </query>
 		</query-defs>
 	</entity>
 	<entity name="producer">

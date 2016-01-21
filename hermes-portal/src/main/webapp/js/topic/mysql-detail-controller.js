@@ -1,7 +1,7 @@
 topic_module.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
 }).controller('mysql-detail-controller', [ '$scope', '$resource', '$routeParams', 'TopicService', '$q', function(scope, resource, routeParams, TopicService, $q) {
-
+	scope.logined = logined;
 	scope.current_topic_type = routeParams['type'];
 	scope.topic_name = routeParams['topicName'];
 

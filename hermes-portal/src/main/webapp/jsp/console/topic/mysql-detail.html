@@ -126,9 +126,9 @@
 					</thead>
 					<tbody>
 						<tr ng-repeat="partition in topic.partitions">
-							<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
-							<td><span ng-bind="partition.readDatasource"></span></td>
-							<td><span ng-bind="partition.writeDatasource"></span></td>
+							<td style="width: 5%;"><span ng-bind="partition.id"></label></td>
+							<td ng-bind="partition.readDatasource" onshow="load_datasource_names()" editable-select="partition.readDatasource" e-form="topicForm" e-name="partition.readDatasource" e-ng-options="ds for ds in datasource_names"></td>
+							<td e-form="topicForm" e-name="partition.writeDatasource"><span ng-bind="partition.writeDatasource"></span></td>
 						</tr>
 						<tr ng-repeat="partition in new_partitions" ng-show="topicForm.$visible">
 							<td style="width: 5%;"><label ng-bind="$index + 1 + {{partitionCount}}"></td>
