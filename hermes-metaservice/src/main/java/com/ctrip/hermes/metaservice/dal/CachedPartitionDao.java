@@ -24,8 +24,8 @@ public class CachedPartitionDao extends PartitionDao implements CachedDao<Long, 
 
 	private int max_size = 1000;
 
-	private LoadingCache<Long, List<Partition>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size)
-	      .recordStats().refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<Partition>>() {
+	private LoadingCache<Long, List<Partition>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<Partition>>() {
 
 		      @Override
 		      public List<Partition> load(Long key) throws Exception {
@@ -38,6 +38,13 @@ public class CachedPartitionDao extends PartitionDao implements CachedDao<Long, 
 		topicCache.invalidate(proto.getTopicId());
 		return super.deleteByTopicId(proto);
 	}
+
+	@Override
+	public int updateByTopicAndPartition(Partition proto, org.unidal.dal.jdbc.Updateset<Partition> updateset) throws DalException {
+		int ret = super.updateByTopicAndPartition(proto, updateset);
+		topicCache.invalidate(proto.getTopicId());
+		return ret;
+	};
 
 	@Override
 	public Partition findByPK(Long key) throws DalException {
