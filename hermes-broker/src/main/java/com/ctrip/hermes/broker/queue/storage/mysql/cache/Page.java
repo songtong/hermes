@@ -22,6 +22,8 @@ public class Page<T> {
 
 	private long m_endOffset;
 
+	private int m_pageSize;
+
 	private AtomicReferenceArray<T> m_datas;
 
 	private long m_loadingIntervalMillis;
@@ -34,17 +36,25 @@ public class Page<T> {
 
 	private AtomicBoolean m_fresh = new AtomicBoolean(false);
 
+	private AtomicLong m_nextPageNo = new AtomicLong(-1);
+
 	public Page(long pageNo, int pageSize, long loadingIntervalMillis) {
+		m_pageSize = pageSize;
 		m_pageNo = pageNo;
-		m_startOffset = m_pageNo * pageSize;
-		m_endOffset = (m_pageNo + 1) * pageSize - 1;
-		m_datas = new AtomicReferenceArray<>(pageSize);
+		m_startOffset = m_pageNo * m_pageSize;
+		m_endOffset = (m_pageNo + 1) * m_pageSize - 1;
+		m_datas = new AtomicReferenceArray<>(m_pageSize);
 		m_loadingIntervalMillis = loadingIntervalMillis;
 		m_latestLoadedOffset.set(m_startOffset - 1);
+		m_nextPageNo.set(m_pageNo + 1);
 	}
 
 	public long getPageNo() {
 		return m_pageNo;
+	}
+
+	public long getNextPageNo() {
+		return m_nextPageNo.get();
 	}
 
 	public boolean isFresh() {
@@ -69,14 +79,27 @@ public class Page<T> {
 	public void addData(List<Pair<Long, T>> idDataPairs) {
 		if (CollectionUtil.isNotEmpty(idDataPairs)) {
 			long maxId = -1L;
+			long minNextPageDataOffset = Long.MAX_VALUE;
+			boolean dataOutOfBound = false;
 			for (Pair<Long, T> pair : idDataPairs) {
-				int pos = (int) (pair.getKey() - m_startOffset);
+				Long offset = pair.getKey();
+				int pos = (int) (offset - m_startOffset);
 				if (pos >= 0 && pos < m_datas.length() && m_datas.get(pos) == null) {
 					m_datas.set(pos, pair.getValue());
 				}
 
-				maxId = Math.max(maxId, pair.getKey());
+				if (offset > m_endOffset) {
+					minNextPageDataOffset = Math.min(minNextPageDataOffset, offset);
+					dataOutOfBound = true;
+				}
+
+				maxId = Math.max(maxId, offset);
 			}
+
+			if (dataOutOfBound) {
+				m_nextPageNo.set(minNextPageDataOffset / m_pageSize);
+			}
+
 			updateLatestLoadedOffset(maxId);
 		}
 	}

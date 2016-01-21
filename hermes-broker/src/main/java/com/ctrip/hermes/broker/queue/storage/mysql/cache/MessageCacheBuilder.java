@@ -315,7 +315,7 @@ public class MessageCacheBuilder {
 				if (!page.isComplete()) {
 					break;
 				}
-				pageNo++;
+				pageNo = page.getNextPageNo();
 				startOffsetInclusive = pageNo * pageCache.pageSize();
 			}
 
