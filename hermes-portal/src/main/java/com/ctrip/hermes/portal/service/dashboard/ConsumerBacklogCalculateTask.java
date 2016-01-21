@@ -12,6 +12,8 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
 import com.ctrip.hermes.metaservice.queue.OffsetMessage;
+import com.ctrip.hermes.metaservice.queue.OffsetResend;
+import com.ctrip.hermes.metaservice.queue.ResendGroupId;
 import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 
@@ -40,8 +42,10 @@ public class ConsumerBacklogCalculateTask implements Runnable {
 			MessagePriority msgPriority = dao.getLatestProduced(topicName, partitionId, PortalConstants.PRIORITY_TRUE);
 			MessagePriority msgNonPriority = dao.getLatestProduced(topicName, partitionId,
 					PortalConstants.PRIORITY_FALSE);
+			ResendGroupId maxResend = dao.getMaxResend(topicName, partitionId, consumer.getId());
 			Long priorityMsgId = msgPriority == null ? 0 : msgPriority.getId();
 			Long nonPriorityMsgId = msgNonPriority == null ? 0 : msgNonPriority.getId();
+			Long maxResendId = maxResend == null ? 0 : maxResend.getId();
 			Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = dao.getLatestConsumed(topicName,
 					partitionId);
 			Long priorityDelay = null;
@@ -55,6 +59,14 @@ public class ConsumerBacklogCalculateTask implements Runnable {
 				priorityDelay = priorityMsgId - priorityMsgOffset;
 				nonPriorityDelay = nonPriorityMsgId - nonPriorityMsgOffset;
 			}
+			Map<Integer, OffsetResend> offsetResendMap = dao.getLatestResend(topicName, partitionId);
+			Long resendOffset = null;
+			Long resendDelay = null;
+			OffsetResend offsetResend = offsetResendMap.get(consumer.getId());
+			if (offsetResend != null) {
+				resendOffset = offsetResend.getLastId();
+				resendDelay = maxResendId - resendOffset;
+			}
 			DelayDetail delayDetail = new DelayDetail(consumer.getName(), partitionId);
 			delayDetail.setPriorityDelay(priorityDelay);
 			delayDetail.setNonPriorityDelay(nonPriorityDelay);
@@ -62,6 +74,9 @@ public class ConsumerBacklogCalculateTask implements Runnable {
 			delayDetail.setNonPriorityMsgId(nonPriorityMsgId);
 			delayDetail.setPriorityMsgOffset(priorityMsgOffset);
 			delayDetail.setNonPriorityMsgOffset(nonPriorityMsgOffset);
+			delayDetail.setResendDelay(resendDelay);
+			delayDetail.setResendOffset(resendOffset);
+			delayDetail.setMaxResendId(maxResendId);
 			consumerDelay.add(delayDetail);
 		} catch (Exception e) {
 			log.warn("Get delay of topic: {}, partition: {}, consumer: {} failed.", topicName, partitionId,

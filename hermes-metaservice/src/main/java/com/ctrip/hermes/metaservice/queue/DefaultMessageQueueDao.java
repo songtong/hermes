@@ -23,6 +23,12 @@ public class DefaultMessageQueueDao implements MessageQueueDao {
 	@Inject
 	private OffsetMessageDao m_offsetDao;
 
+	@Inject
+	private ResendGroupIdDao m_resendDao;
+
+	@Inject
+	private OffsetResendDao m_offsetResendDao;
+
 	@Override
 	public MessagePriority getLatestProduced(String topic, int partition, int priority) throws DalException {
 		MessagePriority msg = doFindLatestMessage(topic, partition, priority);
@@ -35,13 +41,13 @@ public class DefaultMessageQueueDao implements MessageQueueDao {
 			return null;
 		}
 		List<MessagePriority> msgs = m_msgDao.findIdAfter(topic, partition, priority, id - 1, 1,
-		      MessagePriorityEntity.READSET_FULL);
+				MessagePriorityEntity.READSET_FULL);
 		return msgs.size() > 0 ? msgs.get(0) : null;
 	}
 
 	@Override
 	public Map<Integer, Pair<OffsetMessage, OffsetMessage>> getLatestConsumed(String topic, int partition)
-	      throws DalException {
+			throws DalException {
 		List<OffsetMessage> offsetMsgs = m_offsetDao.findAll(topic, partition, OffsetMessageEntity.READSET_FULL);
 		Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = new HashMap<>();
 		for (OffsetMessage offsetMsg : offsetMsgs) {
@@ -79,7 +85,8 @@ public class DefaultMessageQueueDao implements MessageQueueDao {
 
 	private List<MessagePriority> doFindLatestMessages(String topic, int partition, int priority, int count) {
 		try {
-			List<MessagePriority> l = m_msgDao.topK(topic, partition, priority, count, MessagePriorityEntity.READSET_FULL);
+			List<MessagePriority> l = m_msgDao.topK(topic, partition, priority, count,
+					MessagePriorityEntity.READSET_FULL);
 			for (MessagePriority msg : l) {
 				msg.setPriority(priority);
 			}
@@ -90,6 +97,26 @@ public class DefaultMessageQueueDao implements MessageQueueDao {
 			}
 			return new ArrayList<MessagePriority>();
 		}
+	}
+
+	@Override
+	public ResendGroupId getMaxResend(String topic, int partition, int groupId) throws DalException {
+		List<ResendGroupId> resends = m_resendDao.latest(topic, partition, groupId, ResendGroupIdEntity.READSET_FULL);
+		if (resends == null || resends.size() == 0) {
+			return null;
+		} else {
+			return resends.get(0);
+		}
+	}
+
+	@Override
+	public Map<Integer, OffsetResend> getLatestResend(String topic, int partition) throws DalException {
+		List<OffsetResend> msgs = m_offsetResendDao.findAll(topic, partition, OffsetResendEntity.READSET_FULL);
+		Map<Integer, OffsetResend> map = new HashMap<>();
+		for (OffsetResend msg : msgs) {
+			map.put(msg.getGroupId(), msg);
+		}
+		return map;
 	}
 
 }

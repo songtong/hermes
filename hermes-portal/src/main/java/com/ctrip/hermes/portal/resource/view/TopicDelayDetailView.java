@@ -66,6 +66,12 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		private String currentBrokerIp;
 
+		private Long maxResendId;
+
+		private Long resendOffset;
+
+		private Long resendDelay;
+
 		public DelayDetail() {
 
 		}
@@ -90,7 +96,6 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 		public void setPartitionId(int partitionId) {
 			this.partitionId = partitionId;
 		}
-
 
 		@Override
 		public int hashCode() {
@@ -198,6 +203,30 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		public void setNonPriorityDelay(Long nonPriorityDelay) {
 			this.nonPriorityDelay = nonPriorityDelay;
+		}
+
+		public Long getMaxResendId() {
+			return maxResendId;
+		}
+
+		public void setMaxResendId(Long maxResendId) {
+			this.maxResendId = maxResendId;
+		}
+
+		public Long getResendOffset() {
+			return resendOffset;
+		}
+
+		public void setResendOffset(Long resendOffset) {
+			this.resendOffset = resendOffset;
+		}
+
+		public Long getResendDelay() {
+			return resendDelay;
+		}
+
+		public void setResendDelay(Long resendDelay) {
+			this.resendDelay = resendDelay;
 		}
 
 	}

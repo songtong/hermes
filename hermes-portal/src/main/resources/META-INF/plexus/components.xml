@@ -38,6 +38,12 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.queue.OffsetMessageDao</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.queue.ResendGroupIdDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.queue.OffsetResendDao</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
