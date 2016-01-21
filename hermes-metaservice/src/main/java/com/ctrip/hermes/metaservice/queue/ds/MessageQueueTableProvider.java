@@ -1,18 +1,15 @@
 package com.ctrip.hermes.metaservice.queue.ds;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.QueryDef;
 import org.unidal.dal.jdbc.QueryEngine;
 import org.unidal.dal.jdbc.QueryType;
 import org.unidal.dal.jdbc.mapping.TableProvider;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.MetaService;
@@ -29,8 +26,6 @@ public class MessageQueueTableProvider implements TableProvider {
 	private static final String MESSAGE_TABLE = "message-priority";
 
 	private static final Logger log = LoggerFactory.getLogger(MessageQueueTableProvider.class);
-
-	private AtomicReference<Meta> m_meta = new AtomicReference<Meta>();
 
 	@Override
 	public String getDataSourceName(Map<String, Object> hints, String logicalTableName) {
@@ -98,54 +93,20 @@ public class MessageQueueTableProvider implements TableProvider {
 		}
 	}
 
-	private synchronized void updateMeta() {
-		try {
-			m_meta.set(PlexusComponentLocator.lookup(MetaService.class).refreshMeta());
-		} catch (DalException e) {
-			log.error("Couldn't find latest meta-info from meta-db.", e);
-		}
-	}
-
 	private Topic findTopic(String topicName) {
-		if (m_meta.get() == null) {
-			synchronized (m_meta) {
-				if (m_meta.get() == null) {
-					updateMeta();
-				}
-			}
+		try {
+			return PlexusComponentLocator.lookup(MetaService.class).refreshMeta().findTopic(topicName);
+		} catch (Exception e) {
+			log.error("Find topic failed.", e);
+			return null;
 		}
-
-		Topic topic = null;
-		if (m_meta.get() != null) {
-			topic = m_meta.get().findTopic(topicName);
-			if (topic == null) {
-				updateMeta();
-				topic = m_meta.get().findTopic(topicName);
-			}
-		}
-
-		if (topic == null) {
-			throw new RuntimeException("Topic not found: " + topicName);
-		}
-
-		return topic;
 	}
 
 	private Partition findPartition(String topicName, int partitionId) {
-		Partition partition = null;
 		Topic topic = findTopic(topicName);
 		if (topic != null) {
-			partition = topic.findPartition(partitionId);
-			if (partition == null) {
-				updateMeta();
-				partition = findTopic(topicName).findPartition(partitionId);
-			}
+			return topic.findPartition(partitionId);
 		}
-
-		if (partition == null) {
-			throw new RuntimeException(String.format("Partition %s of topic %s not found.", partitionId, topicName));
-		}
-
-		return partition;
+		throw new RuntimeException("Can not find topic: " + topicName);
 	}
 }
