@@ -251,7 +251,15 @@
         		]]>
 				</statement>
 			</query>
+			<query name="find-all" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>]]>
+				</statement>
+			</query>
 		</query-defs>
+
 	</entity>
 
 	<entity name="dead-letter" implements="com.ctrip.hermes.metaservice.queue.ds.TopicPartitionPriorityGroupAware">

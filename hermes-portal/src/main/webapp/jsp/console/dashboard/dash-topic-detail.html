@@ -53,6 +53,8 @@
 										<th>消费至/积压</th>
 										<th>最新非优先消息ID</th>
 										<th>消费至/积压</th>
+										<th>最新重发消息</th>
+										<th>消费至/积压</th>
 										<th>Consumer Ip</th>
 										<th>Broker Ip</th>
 									</tr>
@@ -64,6 +66,8 @@
 										<td><span>{{delaydetail.priorityMsgOffset || '-'}} / {{delaydeatil.priorityDelay || '-'}}</span></td>
 										<td><span>{{delaydetail.nonPriorityMsgId}}</span></td>
 										<td><span>{{delaydetail.nonPriorityMsgOffset || '-'}} / {{delaydetail.nonPriorityDelay || '-'}}</span></td>
+										<td><span>{{delaydetail.maxResendId}}</span></td>
+										<td><span>{{delaydetail.resendOffset || '-'}} / {{delaydetail.resendDelay || '-'}}</span></td>
 										<td><span ng-bind="delaydetail.currentConsumerIp"></span></td>
 										<td><span ng-bind="delaydetail.currentBrokerIp"></span></td>
 									</tr>
