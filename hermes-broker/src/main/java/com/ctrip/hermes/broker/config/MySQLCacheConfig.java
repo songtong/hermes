@@ -70,21 +70,21 @@ public class MySQLCacheConfig {
 
 	private static final int DEFAULT_SHRINK_AFTER_LAST_RESIZE_TIME_MILLIS = 60 * 1000;
 
-	private static final int DEFAULT_PRIORITY_PAGE_CACHE_CORE_SIZE = 2;
+	private static final int DEFAULT_PRIORITY_PAGE_CACHE_CORE_SIZE = 1;
 
-	private static final int DEFAULT_PRIORITY_PAGE_CACHE_MAXIMUM_SIZE = 16;
+	private static final int DEFAULT_PRIORITY_PAGE_CACHE_MAXIMUM_SIZE = 8;
 
-	private static final int DEFAULT_PRIORITY_PAGE_SIZE = 200;
+	private static final int DEFAULT_PRIORITY_PAGE_SIZE = 400;
 
 	private static final int DEFAULT_PRIORITY_MESSAGE_MAXIMUM_CAPACITY = 1024 * 1024;
 
 	private static final int DEFAULT_PRIORITY_PAGE_LOAD_INTERVAL_MILLIS = 200;
 
-	private static final int DEFAULT_NONPRIORITY_PAGE_CACHE_CORE_SIZE = 4;
+	private static final int DEFAULT_NONPRIORITY_PAGE_CACHE_CORE_SIZE = 2;
 
-	private static final int DEFAULT_NONPRIORITY_PAGE_CACHE_MAXIMUM_SIZE = 32;
+	private static final int DEFAULT_NONPRIORITY_PAGE_CACHE_MAXIMUM_SIZE = 16;
 
-	private static final int DEFAULT_NONPRIORITY_PAGE_SIZE = 200;
+	private static final int DEFAULT_NONPRIORITY_PAGE_SIZE = 400;
 
 	private static final int DEFAULT_NONPRIORITY_MESSAGE_MAXIMUM_CAPACITY = 1024 * 2048;
 
