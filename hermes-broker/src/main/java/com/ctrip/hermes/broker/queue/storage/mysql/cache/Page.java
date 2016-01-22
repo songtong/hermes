@@ -136,4 +136,8 @@ public class Page<T> {
 		return m_latestLoadedOffset.get() == m_endOffset;
 	}
 
+	public boolean endOffsetExists() {
+		return m_datas.get((int) (m_endOffset - m_startOffset)) != null;
+	}
+
 }

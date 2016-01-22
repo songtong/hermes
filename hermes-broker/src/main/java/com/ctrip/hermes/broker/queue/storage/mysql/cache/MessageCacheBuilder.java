@@ -318,15 +318,11 @@ public class MessageCacheBuilder {
 					loadedSize += readPageDataToResult(page, startOffsetInclusive, batchSize - loadedSize, datas);
 
 					if (loadedSize < batchSize) {
-						long nextOffset = datas.isEmpty() ? -1L : datas.getLast().getId() + 1;
-						startOffsetInclusive = Math.max(nextOffset, page.getNextPageNo() * pageCache.pageSize());
-						long nextPageNo = startOffsetInclusive / pageCache.pageSize();
-
-						if (nextPageNo == pageNo + 1) {
-							pageNo = nextPageNo;
-						} else {
-							Page<T> nextPage = waitUntilPageFilled(pageCache, nextPageNo, startOffsetInclusive, batchSize
-							      - loadedSize, 3000);
+						pageNo = page.getNextPageNo();
+						startOffsetInclusive = pageNo * pageCache.pageSize();
+						if (!page.endOffsetExists()) {
+							Page<T> nextPage = waitUntilPageFilled(pageCache, pageNo, startOffsetInclusive, batchSize
+							      - loadedSize, 2000);
 
 							if (nextPage != null) {
 								loadedSize += readPageDataToResult(nextPage, startOffsetInclusive, batchSize - loadedSize,
@@ -359,7 +355,7 @@ public class MessageCacheBuilder {
 				}
 			}
 
-			return page;
+			return page.getDatas(startOffsetInclusive, batchSize).isEmpty() ? null : page;
 		}
 
 		private int readPageDataToResult(Page<T> page, long startOffsetInclusive, int batchSize, LinkedList<T> datas) {
