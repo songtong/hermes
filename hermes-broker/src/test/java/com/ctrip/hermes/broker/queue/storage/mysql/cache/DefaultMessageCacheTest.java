@@ -123,6 +123,62 @@ public class DefaultMessageCacheTest {
 
 	}
 
+	@Test
+	public void testTwoOffsetGap() throws Exception {
+
+		final int pageSize = 10;
+
+		MessageCache<TestValue> cache = MessageCacheBuilder.newBuilder()//
+		      .concurrencyLevel(1)//
+		      .defaultPageSize(pageSize)//
+		      .defaultPageCacheCoreSize(6)//
+		      .defaultPageCacheMaximumSize(6)//
+		      .maximumMessageCapacity(60)//
+		      .name("cache")//
+		      .shrinkStrategy(new DefaultShrinkStrategy<TestValue>(5000))//
+		      .messageLoader(new MessageLoader<TestValue>() {
+
+			      @Override
+			      public List<TestValue> load(String topic, int partition, long startOffsetExclusive, int batchSize) {
+				      long startOffsetInclusive = startOffsetExclusive + 1;
+				      long pageNo = startOffsetInclusive / pageSize;
+
+				      if (pageNo == 100) {
+					      return Arrays.asList(new TestValue(1000, topic, partition), new TestValue(1003, topic, partition),
+					            new TestValue(1030, topic, partition));
+				      } else if (pageNo == 103) {
+					      return Arrays.asList(new TestValue(1030, topic, partition), new TestValue(1039, topic, partition),
+					            new TestValue(1053, topic, partition));
+				      } else if (pageNo == 105) {
+					      return Arrays.asList(new TestValue(1053, topic, partition), new TestValue(1055, topic, partition));
+				      } else if (pageNo == 104) {
+					      return Arrays.asList(new TestValue(1053, topic, partition));
+				      } else if (pageNo < 100) {
+					      return Arrays.asList(new TestValue(1000, topic, partition));
+				      } else {
+					      return new ArrayList<TestValue>();
+				      }
+
+			      }
+		      }).build();
+
+		List<TestValue> list = null;
+		int retries = 0;
+		int batchSize = 6;
+		while ((list == null || list.size() != batchSize) && retries++ < 25) {
+			list = cache.getOffsetAfter("t1", 1, 1, batchSize);
+			TimeUnit.MILLISECONDS.sleep(200);
+		}
+		assertEquals(batchSize, list.size());
+		assertEquals(1000, list.get(0).getId());
+		assertEquals(1003, list.get(1).getId());
+		assertEquals(1030, list.get(2).getId());
+		assertEquals(1039, list.get(3).getId());
+		assertEquals(1053, list.get(4).getId());
+		assertEquals(1055, list.get(5).getId());
+
+	}
+
 	private void assertGetTopic(MessageCache<TestValue> cache, String topic, int partition, long startOffsetExclusive,
 	      int batchSize) throws InterruptedException {
 		List<TestValue> list = null;
