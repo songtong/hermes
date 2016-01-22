@@ -3,6 +3,7 @@ package com.ctrip.hermes.broker.queue.storage.mysql.cache;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -75,11 +76,58 @@ public class DefaultMessageCacheTest {
 		assertGetTopic(cache, "t2", 0, 9, 39);
 	}
 
+	@Test
+	public void testWithLargeOffsetGap() throws Exception {
+
+		final int gap = 999999;
+
+		MessageCache<TestValue> cache = MessageCacheBuilder.newBuilder()//
+		      .concurrencyLevel(1)//
+		      .defaultPageSize(10)//
+		      .defaultPageCacheCoreSize(6)//
+		      .defaultPageCacheMaximumSize(6)//
+		      .maximumMessageCapacity(60)//
+		      .name("cache")//
+		      .shrinkStrategy(new DefaultShrinkStrategy<TestValue>(5000))//
+		      .messageLoader(new MessageLoader<TestValue>() {
+
+			      @Override
+			      public List<TestValue> load(String topic, int partition, long startOffsetExclusive, int batchSize) {
+				      if (startOffsetExclusive < gap) {
+					      return Arrays.asList(new TestValue(gap + 1, topic, partition));
+				      } else {
+					      List<TestValue> res = new ArrayList<>(batchSize);
+					      for (int i = 0; i < batchSize; i++) {
+						      res.add(new TestValue(startOffsetExclusive + i + 1, topic, partition));
+					      }
+
+					      return res;
+				      }
+			      }
+		      }).build();
+
+		List<TestValue> list = null;
+		int retries = 0;
+		int batchSize = 45;
+		while ((list == null || list.size() != batchSize) && retries++ < 25) {
+			list = cache.getOffsetAfter("t1", 1, 1, batchSize);
+			TimeUnit.MILLISECONDS.sleep(200);
+		}
+		assertEquals(batchSize, list.size());
+		for (int i = 0; i < batchSize; i++) {
+			TestValue value = list.get(i);
+			assertEquals(i + gap + 1, value.getId());
+			assertEquals("t1", value.getTopic());
+			assertEquals(1, value.getPartition());
+		}
+
+	}
+
 	private void assertGetTopic(MessageCache<TestValue> cache, String topic, int partition, long startOffsetExclusive,
 	      int batchSize) throws InterruptedException {
 		List<TestValue> list = null;
 		int retries = 0;
-		while ((list == null || list.size() != batchSize) && retries++ < 100) {
+		while ((list == null || list.size() != batchSize) && retries++ < 1000) {
 			list = cache.getOffsetAfter(topic, partition, startOffsetExclusive, batchSize);
 			TimeUnit.MILLISECONDS.sleep(5);
 		}
@@ -130,6 +178,11 @@ public class DefaultMessageCacheTest {
 
 		public int getPartition() {
 			return m_partition;
+		}
+
+		@Override
+		public String toString() {
+			return String.valueOf(m_id);
 		}
 
 	}

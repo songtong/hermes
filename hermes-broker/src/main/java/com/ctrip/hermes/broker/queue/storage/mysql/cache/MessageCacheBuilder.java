@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.tuple.Pair;
@@ -303,23 +304,64 @@ public class MessageCacheBuilder {
 		}
 
 		private List<T> getFromPageCache(PageCache<T> pageCache, long startOffsetInclusive, int batchSize) {
-			List<T> datas = new LinkedList<>();
+			LinkedList<T> datas = new LinkedList<>();
 
 			int loadedSize = 0;
 			long pageNo = startOffsetInclusive / pageCache.pageSize();
 			while (loadedSize < batchSize) {
 				Page<T> page = pageCache.get(pageNo);
-				List<T> cachedDatas = page.getDatas(startOffsetInclusive, batchSize - loadedSize);
-				datas.addAll(cachedDatas);
-				loadedSize += cachedDatas.size();
+
 				if (!page.isComplete()) {
+					readPageDataToResult(page, startOffsetInclusive, batchSize - loadedSize, datas);
 					break;
+				} else {
+					loadedSize += readPageDataToResult(page, startOffsetInclusive, batchSize - loadedSize, datas);
+
+					if (loadedSize < batchSize) {
+						pageNo = page.getNextPageNo();
+						startOffsetInclusive = pageNo * pageCache.pageSize();
+						if (!page.endOffsetExists()) {
+							Page<T> nextPage = waitUntilPageFilled(pageCache, pageNo, startOffsetInclusive, batchSize
+							      - loadedSize, 2000);
+
+							if (nextPage != null) {
+								loadedSize += readPageDataToResult(nextPage, startOffsetInclusive, batchSize - loadedSize,
+								      datas);
+								startOffsetInclusive = datas.getLast().getId() + 1;
+								pageNo = startOffsetInclusive / pageCache.pageSize();
+							} else {
+								break;
+							}
+
+						}
+					}
 				}
-				pageNo = page.getNextPageNo();
-				startOffsetInclusive = pageNo * pageCache.pageSize();
 			}
 
 			return datas;
+		}
+
+		private Page<T> waitUntilPageFilled(PageCache<T> pageCache, long pageNo, long startOffsetInclusive,
+		      int batchSize, int timeoutMillis) {
+			int maxRetries = timeoutMillis / m_pageLoadIntervalMillis;
+			Page<T> page = pageCache.get(pageNo);
+			int retries = 0;
+			while (retries++ < maxRetries && page.getDatas(startOffsetInclusive, batchSize).isEmpty()) {
+				try {
+					TimeUnit.MILLISECONDS.sleep(m_pageLoadIntervalMillis);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
+			}
+
+			return page.getDatas(startOffsetInclusive, batchSize).isEmpty() ? null : page;
+		}
+
+		private int readPageDataToResult(Page<T> page, long startOffsetInclusive, int batchSize, LinkedList<T> datas) {
+			List<T> loadedData = page.getDatas(startOffsetInclusive, batchSize);
+			datas.addAll(loadedData);
+			return loadedData.size();
 		}
 
 		@Override
