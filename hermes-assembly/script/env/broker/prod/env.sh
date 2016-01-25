@@ -10,7 +10,7 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dio.netty.allocator.type=pooled \
             -Xms12g \
             -Xmx12g \
-            -Xmn4g \
+            -Xmn5g \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
             -XX:MaxDirectMemorySize=4g \
