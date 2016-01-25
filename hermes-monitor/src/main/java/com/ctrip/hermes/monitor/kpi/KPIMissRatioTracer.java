@@ -55,7 +55,6 @@ public class KPIMissRatioTracer {
 				private long lastIdx = -1;
 
 				private void trace(boolean success) {
-					log.error("***************** WTF: " + success);
 					Transaction tx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_MISS_RATIO, "HERMES");
 					tx.setStatus(success ? Transaction.SUCCESS : "MISSED");
 					tx.complete();
