@@ -16,6 +16,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.broker.queue.MessageQueueCursor;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
@@ -23,6 +24,7 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 /**
@@ -107,6 +109,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	}
 
 	private boolean queryAndResponseData(PullMessageTask pullTask) {
+		long startTime = System.currentTimeMillis();
 		Tpg tpg = pullTask.getTpg();
 
 		MessageQueueCursor cursor = m_queueManager.getCursor(tpg, pullTask.getBrokerLease(), pullTask.getStartOffset());
@@ -139,6 +142,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				}
 
 				response(pullTask, batches, currentOffset);
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime);
 				return true;
 			} else {
 				return false;

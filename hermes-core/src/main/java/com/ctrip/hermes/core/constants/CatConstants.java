@@ -10,4 +10,8 @@ public interface CatConstants {
 
 	public static final String TYPE_REMOTE_CALL = "RemoteCall";
 
+	public static final String TYPE_MESSAGE_DELIVER_ELAPSE = "Message.Deliver.Elapse";
+
+	public static final String TYPE_MESSAGE_MISS_RATIO = "Hermes.KPI.Miss.Ratio";
+
 }
