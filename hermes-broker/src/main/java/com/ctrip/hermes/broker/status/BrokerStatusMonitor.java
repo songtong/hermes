@@ -42,7 +42,7 @@ public enum BrokerStatusMonitor {
 				Meter cacheCalls = HermesMetricsRegistry.getMetricRegistryByTP(topic, partition).meter(
 				      MetricRegistry.name("cache", "calls"));
 				Meter cacheHits = HermesMetricsRegistry.getMetricRegistryByTP(topic, partition).meter(
-				      MetricRegistry.name("cache", "hit"));
+				      MetricRegistry.name("cache", "hasData"));
 				return Ratio.of(cacheHits.getOneMinuteRate(), cacheCalls.getOneMinuteRate());
 			}
 
@@ -56,7 +56,7 @@ public enum BrokerStatusMonitor {
 				Meter cacheCalls = HermesMetricsRegistry.getMetricRegistryByTP(topic, partition).meter(
 				      MetricRegistry.name("cache", "calls"));
 				Meter cacheHits = HermesMetricsRegistry.getMetricRegistryByTP(topic, partition).meter(
-				      MetricRegistry.name("cache", "hit"));
+				      MetricRegistry.name("cache", "hasData"));
 				return Ratio.of(cacheHits.getFiveMinuteRate(), cacheCalls.getFiveMinuteRate());
 			}
 
@@ -70,7 +70,7 @@ public enum BrokerStatusMonitor {
 				Meter cacheCalls = HermesMetricsRegistry.getMetricRegistryByTP(topic, partition).meter(
 				      MetricRegistry.name("cache", "calls"));
 				Meter cacheHits = HermesMetricsRegistry.getMetricRegistryByTP(topic, partition).meter(
-				      MetricRegistry.name("cache", "hit"));
+				      MetricRegistry.name("cache", "hasData"));
 				return Ratio.of(cacheHits.getFifteenMinuteRate(), cacheCalls.getFifteenMinuteRate());
 			}
 
@@ -84,7 +84,7 @@ public enum BrokerStatusMonitor {
 				Meter cacheCalls = HermesMetricsRegistry.getMetricRegistryByTP(topic, partition).meter(
 				      MetricRegistry.name("cache", "calls"));
 				Meter cacheHits = HermesMetricsRegistry.getMetricRegistryByTP(topic, partition).meter(
-				      MetricRegistry.name("cache", "hit"));
+				      MetricRegistry.name("cache", "hasData"));
 				return Ratio.of(cacheHits.getMeanRate(), cacheCalls.getMeanRate());
 			}
 
