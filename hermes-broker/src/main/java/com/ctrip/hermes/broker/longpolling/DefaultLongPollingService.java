@@ -14,6 +14,7 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.MessageQueueCursor;
+import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.constants.CatConstants;
@@ -23,7 +24,6 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
-import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
@@ -132,13 +132,12 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 			if (batches != null && !batches.isEmpty()) {
 
-				String ip = NettyUtils.parseChannelRemoteAddr(pullTask.getChannel(), false);
 				for (TppConsumerMessageBatch batch : batches) {
 					// TODO remove legacy code
 					boolean needServerSideAckHolder = pullTask.getPullMessageCommandVersion() < 3 ? true : false;
 					m_queueManager.delivered(batch, tpg.getGroupId(), pullTask.isWithOffset(), needServerSideAckHolder);
 
-					bizLogDelivered(ip, batch.getMessageMetas(), tpg);
+					bizLogDelivered(pullTask.getClientIp(), batch.getMessageMetas(), tpg);
 				}
 
 				response(pullTask, batches, currentOffset);
@@ -153,6 +152,8 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	}
 
 	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg) {
+		BrokerStatusMonitor.INSTANCE.msgDelivered(tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), ip, metas.size());
+
 		for (MessageMeta meta : metas) {
 			BizEvent event = new BizEvent("Message.Delivered");
 			event.addData("msgId", meta.getOriginId());

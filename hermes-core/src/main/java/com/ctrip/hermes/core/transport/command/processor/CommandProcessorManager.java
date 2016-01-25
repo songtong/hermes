@@ -50,7 +50,7 @@ public class CommandProcessorManager implements Initializable {
 		if (processor == null) {
 			log.error("Command processor not found for type {}", type);
 		} else {
-			StatusMonitor.INSTANCE.commandReceived(type);
+			StatusMonitor.INSTANCE.commandReceived(type, ctx.getRemoteIp());
 
 			ExecutorService executorService = m_executors.get(processor);
 

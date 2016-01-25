@@ -32,9 +32,11 @@ public enum StatusMonitor {
 		      });
 	}
 
-	public void commandReceived(CommandType type) {
+	public void commandReceived(CommandType type, String clientIp) {
 		HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name("commandProcessor", "commandReceived"))
 		      .mark();
+		HermesMetricsRegistry.getMetricRegistry()
+		      .meter(MetricRegistry.name("commandProcessor", "commandReceived", clientIp)).mark();
 		if (type != null) {
 			Cat.logEvent("Hermes.Command.Version", type.toString() + "-RCV");
 		}

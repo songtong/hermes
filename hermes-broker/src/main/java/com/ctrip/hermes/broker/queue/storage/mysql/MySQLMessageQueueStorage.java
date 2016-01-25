@@ -40,6 +40,7 @@ import com.ctrip.hermes.broker.dal.hermes.ResendGroupIdEntity;
 import com.ctrip.hermes.broker.queue.storage.FetchResult;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.CachedMessagePriorityDaoInterceptor;
+import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
@@ -107,6 +108,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 		for (MessageBatchWithRawData batch : batches) {
 			List<PartialDecodedMessage> pdmsgs = batch.getMessages();
+			BrokerStatusMonitor.INSTANCE.msgSaved(tpp.getTopic(), tpp.getPartition(), pdmsgs.size());
 			for (PartialDecodedMessage pdmsg : pdmsgs) {
 				MessagePriority msg = new MessagePriority();
 				msg.setAttributes(pdmsg.readDurableProperties());

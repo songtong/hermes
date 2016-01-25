@@ -25,6 +25,16 @@ public class PullMessageTask {
 
 	private boolean m_withOffset;
 
+	private String m_clientIp;
+
+	public String getClientIp() {
+		return m_clientIp;
+	}
+
+	public void setClientIp(String clientIp) {
+		m_clientIp = clientIp;
+	}
+
 	public void setTpg(Tpg tpg) {
 		m_tpg = tpg;
 	}
@@ -102,7 +112,7 @@ public class PullMessageTask {
 		return "PullMessageTask [m_tpg=" + m_tpg + ", m_correlationId=" + m_correlationId + ", m_pullCommandVersion="
 		      + m_pullCommandVersion + ", m_startOffset=" + m_startOffset + ", m_batchSize=" + m_batchSize
 		      + ", m_channel=" + m_channel + ", m_expireTime=" + m_expireTime + ", m_brokerLease=" + m_brokerLease
-		      + ", m_withOffset=" + m_withOffset + "]";
+		      + ", m_withOffset=" + m_withOffset + ", m_clientIp=" + m_clientIp + "]";
 	}
 
 }

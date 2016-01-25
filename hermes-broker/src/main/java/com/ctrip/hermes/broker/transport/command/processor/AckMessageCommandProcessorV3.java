@@ -15,7 +15,6 @@ import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
-import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 
 /**
@@ -38,7 +37,6 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 	@Override
 	public void process(CommandProcessorContext ctx) {
 		AckMessageCommandV3 reqCmd = (AckMessageCommandV3) ctx.getCommand();
-		String consumerIp = NettyUtils.parseChannelRemoteAddr(ctx.getChannel(), false);
 
 		String topic = reqCmd.getTopic();
 		int partition = reqCmd.getPartition();
@@ -52,8 +50,9 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 		List<AckContext> nackedContexts = reqCmd.getNackedMsgs().get(1);
 		List<AckContext> nackedResendContexts = reqCmd.getNackedResendMsgs().get(1);
 
-		logAcked(consumerIp, topic, partition, groupId, ackedPriorityContexts, ackedContexts, ackedResendContexts);
-		logNacked(consumerIp, topic, partition, groupId, nackedPriorityContexts, nackedContexts, nackedResendContexts);
+		logAcked(ctx.getRemoteIp(), topic, partition, groupId, ackedPriorityContexts, ackedContexts, ackedResendContexts);
+		logNacked(ctx.getRemoteIp(), topic, partition, groupId, nackedPriorityContexts, nackedContexts,
+		      nackedResendContexts);
 
 		AckMessagesTask task = new AckMessagesTask(topic, partition, groupId, reqCmd.getHeader().getCorrelationId(),
 		      ctx.getChannel());

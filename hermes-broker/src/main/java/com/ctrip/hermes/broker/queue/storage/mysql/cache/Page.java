@@ -61,6 +61,10 @@ public class Page<T> {
 		return m_fresh.compareAndSet(false, true);
 	}
 
+	public boolean isFilled() {
+		return m_latestLoadedOffset.get() != m_startOffset - 1;
+	}
+
 	public List<T> getDatas(long startOffset, int batchSize) {
 		List<T> datas = new LinkedList<>();
 		if (startOffset >= m_startOffset && startOffset <= m_endOffset) {

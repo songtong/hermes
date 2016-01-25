@@ -20,9 +20,11 @@ import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
 import com.google.common.base.Function;
@@ -48,13 +50,16 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 	private BlockingQueue<PendingMessageWrapper> m_pendingMessages = new LinkedBlockingQueue<>();
 
+	private MetaService m_metaService;
+
 	private AtomicBoolean m_flushing = new AtomicBoolean(false);
 
-	public DefaultMessageQueueFlusher(String topic, int partition, MessageQueueStorage storage) {
+	public DefaultMessageQueueFlusher(String topic, int partition, MessageQueueStorage storage, MetaService metaService) {
 		m_topic = topic;
 		m_partition = partition;
 		m_storage = storage;
 		m_bizLogger = PlexusComponentLocator.lookup(FileBizLogger.class);
+		m_metaService = metaService;
 	}
 
 	@Override
@@ -204,15 +209,17 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	private void bizLog(boolean isPriority, MessageBatchWithRawData batch, boolean success) {
-		for (PartialDecodedMessage msg : batch.getMessages()) {
-			BizEvent event = new BizEvent("Message.Saved");
-			event.addData("topic", batch.getTopic());
-			event.addData("partition", m_partition);
-			event.addData("priority", isPriority ? 0 : 1);
-			event.addData("refKey", msg.getKey());
-			event.addData("success", success);
+		if (!Storage.KAFKA.equals(m_metaService.findTopicByName(batch.getTopic()).getStorageType())) {
+			for (PartialDecodedMessage msg : batch.getMessages()) {
+				BizEvent event = new BizEvent("Message.Saved");
+				event.addData("topic", batch.getTopic());
+				event.addData("partition", m_partition);
+				event.addData("priority", isPriority ? 0 : 1);
+				event.addData("refKey", msg.getKey());
+				event.addData("success", success);
 
-			m_bizLogger.log(event);
+				m_bizLogger.log(event);
+			}
 		}
 	}
 

@@ -97,7 +97,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		m_ackMessagesTaskExecutor = ackMessagesTaskExecutor;
 		m_config = PlexusComponentLocator.lookup(BrokerConfig.class);
 		m_metaService = PlexusComponentLocator.lookup(MetaService.class);
-		m_flusher = new DefaultMessageQueueFlusher(m_topic, m_partition, m_storage);
+		m_flusher = new DefaultMessageQueueFlusher(m_topic, m_partition, m_storage, m_metaService);
 
 		init();
 	}

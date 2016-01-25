@@ -134,7 +134,7 @@ public class HermesMetricsRegistry {
 	 * @return
 	 */
 	public static MetricRegistry getMetricRegistryByTP(String topic, int partition) {
-		String key = topic + "_" + partition;
+		String key = topic + "|" + partition;
 		if (!tp_metrics.containsKey(key)) {
 			synchronized (tp_metrics) {
 				if (!tp_metrics.containsKey(key)) {
@@ -157,7 +157,7 @@ public class HermesMetricsRegistry {
 	 * @return
 	 */
 	public static MetricRegistry getMetricRegistryByTPG(String topic, int partition, String group) {
-		String key = topic + "_" + partition + "_" + group;
+		String key = topic + "|" + partition + "|" + group;
 		if (!tpg_metrics.containsKey(key)) {
 			synchronized (tpg_metrics) {
 				if (!tpg_metrics.containsKey(key)) {
