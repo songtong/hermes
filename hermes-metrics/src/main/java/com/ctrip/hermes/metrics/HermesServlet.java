@@ -143,39 +143,49 @@ public class HermesServlet extends HttpServlet {
 			sb.append("<li><a href=\"").append(path).append(pingUri).append("?pretty=true\">Ping</a></li>");
 			sb.append("<li><a href=\"").append(path).append(healthcheckUri).append("?pretty=true\">Health Check</a></li>");
 			sb.append("</ul>");
-			sb.append("<h3>Metrics By T</h3>");
+			sb.append("<h3>Metrics By Topic</h3>");
 			sb.append("<ul>");
+
+			String liFormatter = "<li><a href=\"%s\">%s</a></li>";
+
 			Set<String> tKeys = HermesMetricsRegistry.getMetricRegistiesGroupByT().keySet();
-			for (String t : tKeys) {
-				sb.append("<li><a href=\"").append(metricsUri).append("/t/").append(t)
-				      .append("?pretty=true&topic=" + tKeys + "\">").append(t).append("</a></li>");
+			for (String topic : tKeys) {
+				if (topic != null && topic.trim().length() != 0) {
+					topic = topic.trim();
+					String link = String.format("%s?pretty=true&topic=%s", metricsUri + "/t/", topic);
+					sb.append(String.format(liFormatter, link, topic));
+				}
 			}
 			sb.append("</ul>");
-			sb.append("<h3>Metrics By TP</h3>");
+			sb.append("<h3>Metrics By Topic-Partition</h3>");
 			sb.append("<ul>");
 			Set<String> tpKeys = HermesMetricsRegistry.getMetricRegistiesGroupByTP().keySet();
 			for (String tp : tpKeys) {
 				String[] splits = tp.split("\\|");
-				if (splits != null && splits.length == 2) {
-					sb.append("<li><a href=\"").append(metricsUri).append("/tp/").append(tp)
-					      .append("?pretty=true&topic=" + splits[0] + "&partition=" + splits[1] + "\">").append(tp)
-					      .append("</a></li>");
+				if (splits != null && splits.length == 2 && splits[0] != null && splits[0].trim().length() != 0
+				      && splits[1] != null && splits[1].trim().length() != 0) {
+					String topic = splits[0].trim();
+					String partition = splits[1].trim();
+					String link = String.format("%s?pretty=true&topic=%s&partition=%s", metricsUri + "/tp/", topic,
+					      partition);
+					sb.append(String.format(liFormatter, link, topic + "-" + partition));
 				}
 			}
 			sb.append("</ul>");
-			sb.append("<h3>Metrics By TPG</h3>");
+			sb.append("<h3>Metrics By Topic-Partition-Group</h3>");
 			sb.append("<ul>");
 			Set<String> tpgKeys = HermesMetricsRegistry.getMetricRegistiesGroupByTPG().keySet();
 			for (String tpg : tpgKeys) {
 				String[] splits = tpg.split("\\|");
-				if (splits != null && splits.length == 3) {
-					sb.append("<li><a href=\"")
-					      .append(metricsUri)
-					      .append("/tpg/")
-					      .append(tpg)
-					      .append(
-					            "?pretty=true&topic=" + splits[0] + "&partition=" + splits[1] + "&group=" + splits[2]
-					                  + "\">").append(tpg).append("</a></li>");
+				if (splits != null && splits.length == 3 && splits[0] != null && splits[0].trim().length() != 0
+				      && splits[1] != null && splits[1].trim().length() != 0 && splits[2] != null
+				      && splits[2].trim().length() != 0) {
+					String topic = splits[0].trim();
+					String partition = splits[1].trim();
+					String group = splits[2].trim();
+					String link = String.format("%s?pretty=true&topic=%s&partition=%s&group=%s", metricsUri + "/tpg/",
+					      topic, partition, group);
+					sb.append(String.format(liFormatter, link, topic + "-" + partition + "-" + group));
 				}
 			}
 			sb.append("</ul>");
