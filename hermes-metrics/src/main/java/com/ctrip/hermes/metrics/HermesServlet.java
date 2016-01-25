@@ -156,9 +156,11 @@ public class HermesServlet extends HttpServlet {
 			Set<String> tpKeys = HermesMetricsRegistry.getMetricRegistiesGroupByTP().keySet();
 			for (String tp : tpKeys) {
 				String[] splits = tp.split("\\|");
-				sb.append("<li><a href=\"").append(metricsUri).append("/tp/").append(tp)
-				      .append("?pretty=true&topic=" + splits[0] + "&partition=" + splits[1] + "\">").append(tp)
-				      .append("</a></li>");
+				if (splits != null && splits.length == 2) {
+					sb.append("<li><a href=\"").append(metricsUri).append("/tp/").append(tp)
+					      .append("?pretty=true&topic=" + splits[0] + "&partition=" + splits[1] + "\">").append(tp)
+					      .append("</a></li>");
+				}
 			}
 			sb.append("</ul>");
 			sb.append("<h3>Metrics By TPG</h3>");
@@ -166,12 +168,15 @@ public class HermesServlet extends HttpServlet {
 			Set<String> tpgKeys = HermesMetricsRegistry.getMetricRegistiesGroupByTPG().keySet();
 			for (String tpg : tpgKeys) {
 				String[] splits = tpg.split("\\|");
-				sb.append("<li><a href=\"")
-				      .append(metricsUri)
-				      .append("/tpg/")
-				      .append(tpg)
-				      .append("?pretty=true&topic=" + splits[0] + "&partition=" + splits[1] + "&group=" + splits[2] + "\">")
-				      .append(tpg).append("</a></li>");
+				if (splits != null && splits.length == 3) {
+					sb.append("<li><a href=\"")
+					      .append(metricsUri)
+					      .append("/tpg/")
+					      .append(tpg)
+					      .append(
+					            "?pretty=true&topic=" + splits[0] + "&partition=" + splits[1] + "&group=" + splits[2]
+					                  + "\">").append(tpg).append("</a></li>");
+				}
 			}
 			sb.append("</ul>");
 			sb.append("</body></html>");
