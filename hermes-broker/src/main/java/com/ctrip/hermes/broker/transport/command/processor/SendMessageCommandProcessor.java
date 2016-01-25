@@ -13,6 +13,7 @@ import org.unidal.lookup.annotation.Inject;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
+import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
@@ -28,9 +29,9 @@ import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.processor.SingleThreaded;
-import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
 import com.google.common.util.concurrent.FutureCallback;
@@ -143,20 +144,23 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	}
 
 	private void bizLog(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches, int partition) {
-		String ip = NettyUtils.parseChannelRemoteAddr(ctx.getChannel(), false);
 		for (Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
 			MessageBatchWithRawData batch = entry.getValue();
-			List<PartialDecodedMessage> msgs = batch.getMessages();
-			for (PartialDecodedMessage msg : msgs) {
-				BizEvent event = new BizEvent("Message.Received");
-				event.addData("topic", batch.getTopic());
-				event.addData("partition", partition);
-				event.addData("priority", entry.getKey());
-				event.addData("producerIp", ip);
-				event.addData("bornTime", msg.getBornTime());
-				event.addData("refKey", msg.getKey());
+			if (!Storage.KAFKA.equals(m_metaService.findTopicByName(batch.getTopic()).getStorageType())) {
+				List<PartialDecodedMessage> msgs = batch.getMessages();
+				BrokerStatusMonitor.INSTANCE.msgReceived(batch.getTopic(), partition, ctx.getRemoteIp(), batch.getRawData()
+				      .readableBytes(), msgs.size());
+				for (PartialDecodedMessage msg : msgs) {
+					BizEvent event = new BizEvent("Message.Received");
+					event.addData("topic", batch.getTopic());
+					event.addData("partition", partition);
+					event.addData("priority", entry.getKey());
+					event.addData("producerIp", ctx.getRemoteIp());
+					event.addData("bornTime", msg.getBornTime());
+					event.addData("refKey", msg.getKey());
 
-				m_bizLogger.log(event);
+					m_bizLogger.log(event);
+				}
 			}
 		}
 	}

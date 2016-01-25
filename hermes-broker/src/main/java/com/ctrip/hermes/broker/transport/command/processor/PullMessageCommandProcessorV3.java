@@ -56,7 +56,7 @@ public class PullMessageCommandProcessorV3 implements CommandProcessor {
 				      m_config.getSessionId());
 				if (lease != null) {
 
-					PullMessageTask task = createPullMessageTask(reqCmd, lease, ctx.getChannel());
+					PullMessageTask task = createPullMessageTask(reqCmd, lease, ctx.getChannel(), ctx.getRemoteIp());
 					m_longPollingService.schedulePush(task);
 					return;
 				} else {
@@ -83,7 +83,8 @@ public class PullMessageCommandProcessorV3 implements CommandProcessor {
 
 	}
 
-	private PullMessageTask createPullMessageTask(PullMessageCommandV3 cmd, Lease brokerLease, Channel channel) {
+	private PullMessageTask createPullMessageTask(PullMessageCommandV3 cmd, Lease brokerLease, Channel channel,
+	      String clientIp) {
 		PullMessageTask task = new PullMessageTask();
 
 		task.setBatchSize(cmd.getSize());
@@ -95,6 +96,7 @@ public class PullMessageCommandProcessorV3 implements CommandProcessor {
 		task.setWithOffset(true);
 		task.setStartOffset(cmd.getOffset());
 		task.setTpg(new Tpg(cmd.getTopic(), cmd.getPartition(), cmd.getGroupId()));
+		task.setClientIp(clientIp);
 
 		return task;
 	}

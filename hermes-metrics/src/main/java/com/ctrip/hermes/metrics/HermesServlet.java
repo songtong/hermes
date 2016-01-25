@@ -107,13 +107,15 @@ public class HermesServlet extends HttpServlet {
 		} else if (uri.equals(threadsUri)) {
 			threadDumpServlet.service(req, resp);
 		} else if (uri.startsWith("/t/")) {
-			MetricsServlet metricsServlet = getServletFromUri(uri);
+			MetricsServlet metricsServlet = getServletFromUri(uri, req.getParameter("topic"), null, null);
 			metricsServlet.service(req, resp);
 		} else if (uri.startsWith("/tp/")) {
-			MetricsServlet metricsServlet = getServletFromUri(uri);
+			MetricsServlet metricsServlet = getServletFromUri(uri, req.getParameter("topic"),
+			      req.getParameter("partition"), null);
 			metricsServlet.service(req, resp);
 		} else if (uri.startsWith("/tpg/")) {
-			MetricsServlet metricsServlet = getServletFromUri(uri);
+			MetricsServlet metricsServlet = getServletFromUri(uri, req.getParameter("topic"),
+			      req.getParameter("partition"), req.getParameter("group"));
 			metricsServlet.service(req, resp);
 		} else {
 			super.service(req, resp);
@@ -145,23 +147,30 @@ public class HermesServlet extends HttpServlet {
 			sb.append("<ul>");
 			Set<String> tKeys = HermesMetricsRegistry.getMetricRegistiesGroupByT().keySet();
 			for (String t : tKeys) {
-				sb.append("<li><a href=\"").append(metricsUri).append("/t/").append(t).append("?pretty=true\">").append(t)
-				      .append("</a></li>");
+				sb.append("<li><a href=\"").append(metricsUri).append("/t/").append(t)
+				      .append("?pretty=true&topic=" + tKeys + "\">").append(t).append("</a></li>");
 			}
 			sb.append("</ul>");
 			sb.append("<h3>Metrics By TP</h3>");
 			sb.append("<ul>");
 			Set<String> tpKeys = HermesMetricsRegistry.getMetricRegistiesGroupByTP().keySet();
 			for (String tp : tpKeys) {
-				sb.append("<li><a href=\"").append(metricsUri).append("/tp/").append(tp).append("?pretty=true\">")
-				      .append(tp).append("</a></li>");
+				String[] splits = tp.split("\\|");
+				sb.append("<li><a href=\"").append(metricsUri).append("/tp/").append(tp)
+				      .append("?pretty=true&topic=" + splits[0] + "&partition=" + splits[1] + "\">").append(tp)
+				      .append("</a></li>");
 			}
 			sb.append("</ul>");
 			sb.append("<h3>Metrics By TPG</h3>");
 			sb.append("<ul>");
 			Set<String> tpgKeys = HermesMetricsRegistry.getMetricRegistiesGroupByTPG().keySet();
 			for (String tpg : tpgKeys) {
-				sb.append("<li><a href=\"").append(metricsUri).append("/tpg/").append(tpg).append("?pretty=true\">")
+				String[] splits = tpg.split("\\|");
+				sb.append("<li><a href=\"")
+				      .append(metricsUri)
+				      .append("/tpg/")
+				      .append(tpg)
+				      .append("?pretty=true&topic=" + splits[0] + "&partition=" + splits[1] + "&group=" + splits[2] + "\">")
 				      .append(tpg).append("</a></li>");
 			}
 			sb.append("</ul>");
@@ -172,37 +181,40 @@ public class HermesServlet extends HttpServlet {
 		}
 	}
 
-	private MetricsServlet getServletFromUri(String fullUri) throws ServletException {
+	private MetricsServlet getServletFromUri(String fullUri, String topic, String partition, String group)
+	      throws ServletException {
 		MetricsServlet metricServlet = null;
+
 		if (fullUri.startsWith("/t/")) {
-			String T = fullUri.substring("/t/".length());
-			if (!metricServletGroupByT.containsKey(T)) {
-				MetricRegistry metricRegistry = HermesMetricsRegistry.getMetricRegistryByT(T);
+			if (!metricServletGroupByT.containsKey(topic)) {
+				MetricRegistry metricRegistry = HermesMetricsRegistry.getMetricRegistryByT(topic);
 				metricServlet = new MetricsServlet(metricRegistry);
 				metricServlet.init(config);
-				metricServletGroupByT.put(T, metricServlet);
+				metricServletGroupByT.put(topic, metricServlet);
 			} else {
-				metricServlet = metricServletGroupByT.get(T);
+				metricServlet = metricServletGroupByT.get(topic);
 			}
 		} else if (fullUri.startsWith("/tp/")) {
-			String TP = fullUri.substring("/tp/".length());
-			if (!metricServletGroupByTP.containsKey(TP)) {
-				MetricRegistry metricRegistry = HermesMetricsRegistry.getMetricRegistryByT(TP);
+			String tp = topic + "#" + partition;
+			if (!metricServletGroupByTP.containsKey(tp)) {
+				MetricRegistry metricRegistry = HermesMetricsRegistry.getMetricRegistryByTP(topic,
+				      Integer.valueOf(partition));
 				metricServlet = new MetricsServlet(metricRegistry);
 				metricServlet.init(config);
-				metricServletGroupByTP.put(TP, metricServlet);
+				metricServletGroupByTP.put(tp, metricServlet);
 			} else {
-				metricServlet = metricServletGroupByTP.get(TP);
+				metricServlet = metricServletGroupByTP.get(tp);
 			}
 		} else if (fullUri.startsWith("/tpg/")) {
-			String TPG = fullUri.substring("/tpg/".length());
-			if (!metricServletGroupByTPG.containsKey(TPG)) {
-				MetricRegistry metricRegistry = HermesMetricsRegistry.getMetricRegistryByT(TPG);
+			String tpg = topic + "#" + partition + "#" + group;
+			if (!metricServletGroupByTPG.containsKey(tpg)) {
+				MetricRegistry metricRegistry = HermesMetricsRegistry.getMetricRegistryByTPG(topic,
+				      Integer.valueOf(partition), group);
 				metricServlet = new MetricsServlet(metricRegistry);
 				metricServlet.init(config);
-				metricServletGroupByTPG.put(TPG, metricServlet);
+				metricServletGroupByTPG.put(tpg, metricServlet);
 			} else {
-				metricServlet = metricServletGroupByTPG.get(TPG);
+				metricServlet = metricServletGroupByTPG.get(tpg);
 			}
 		}
 		return metricServlet;

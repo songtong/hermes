@@ -19,6 +19,7 @@ import com.ctrip.hermes.broker.queue.storage.mysql.cache.MessageCache.ShrinkStra
 import com.ctrip.hermes.broker.queue.storage.mysql.cache.PageCache.PageLoader;
 import com.ctrip.hermes.broker.queue.storage.mysql.cache.PageCache.ResizeListener;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.IdAware;
+import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.dianping.cat.Cat;
@@ -249,7 +250,9 @@ public class MessageCacheBuilder {
 				maximumSize = pair.getValue();
 			}
 
-			return createPageCacheBuilder(topic, partition, pageSize, coreSize, maximumSize).build();
+			PageCache<T> pageCache = createPageCacheBuilder(topic, partition, pageSize, coreSize, maximumSize).build();
+			BrokerStatusMonitor.INSTANCE.addCacheSizeGauge(tp.getKey(), tp.getValue(), m_name, pageCache);
+			return pageCache;
 		}
 
 		private PageCacheBuilder createPageCacheBuilder(final String topic, final int partition, int pageSize,
@@ -304,6 +307,7 @@ public class MessageCacheBuilder {
 		}
 
 		private List<T> getFromPageCache(PageCache<T> pageCache, long startOffsetInclusive, int batchSize) {
+
 			LinkedList<T> datas = new LinkedList<>();
 
 			int loadedSize = 0;
@@ -322,7 +326,7 @@ public class MessageCacheBuilder {
 						startOffsetInclusive = pageNo * pageCache.pageSize();
 						if (!page.endOffsetExists()) {
 							Page<T> nextPage = waitUntilPageFilled(pageCache, pageNo, startOffsetInclusive, batchSize
-							      - loadedSize, 2000);
+							      - loadedSize, 5000);
 
 							if (nextPage != null) {
 								loadedSize += readPageDataToResult(nextPage, startOffsetInclusive, batchSize - loadedSize,
@@ -346,7 +350,7 @@ public class MessageCacheBuilder {
 			int maxRetries = timeoutMillis / m_pageLoadIntervalMillis;
 			Page<T> page = pageCache.get(pageNo);
 			int retries = 0;
-			while (retries++ < maxRetries && page.getDatas(startOffsetInclusive, batchSize).isEmpty()) {
+			while (retries++ < maxRetries && !page.isFilled()) {
 				try {
 					TimeUnit.MILLISECONDS.sleep(m_pageLoadIntervalMillis);
 				} catch (InterruptedException e) {
@@ -370,7 +374,9 @@ public class MessageCacheBuilder {
 			try {
 				PageCache<T> pageCache = getPageCache(topic, partition);
 				// find next offset in page cache
-				return getFromPageCache(pageCache, startOffsetExclusive + 1, batchSize);
+				List<T> rows = getFromPageCache(pageCache, startOffsetExclusive + 1, batchSize);
+				BrokerStatusMonitor.INSTANCE.cacheCall(topic, partition, CollectionUtil.isNotEmpty(rows));
+				return rows;
 			} finally {
 				catTx.setStatus(Transaction.SUCCESS);
 				catTx.complete();

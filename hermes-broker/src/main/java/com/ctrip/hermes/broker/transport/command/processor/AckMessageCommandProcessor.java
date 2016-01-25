@@ -20,7 +20,6 @@ import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
-import com.ctrip.hermes.core.transport.netty.NettyUtils;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -66,14 +65,13 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 			return;
 		}
 
-		String consumerIp = NettyUtils.parseChannelRemoteAddr(ctx.getChannel(), false);
 		for (Map.Entry<Triple<Tpp, String, Boolean>, List<AckContext>> entry : ackMsgs.entrySet()) {
 			Tpp tpp = entry.getKey().getFirst();
 			String groupId = entry.getKey().getMiddle();
 			boolean isResend = entry.getKey().getLast();
 			List<AckContext> ackContexts = entry.getValue();
 			m_messageQueueManager.acked(tpp, groupId, isResend, ackContexts, ackType);
-			bizLogAcked(tpp, consumerIp, groupId, ackContexts, isResend, true);
+			bizLogAcked(tpp, ctx.getRemoteIp(), groupId, ackContexts, isResend, true);
 
 			if (log.isDebugEnabled()) {
 				log.debug("Client acked(topic={}, partition={}, pirority={}, groupId={}, isResend={}, contexts={})",
@@ -87,7 +85,7 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 			boolean isResend = entry.getKey().getLast();
 			List<AckContext> nackContexts = entry.getValue();
 			m_messageQueueManager.nacked(tpp, groupId, isResend, nackContexts, ackType);
-			bizLogAcked(tpp, consumerIp, groupId, nackContexts, isResend, false);
+			bizLogAcked(tpp, ctx.getRemoteIp(), groupId, nackContexts, isResend, false);
 
 			if (log.isDebugEnabled()) {
 				log.debug("Client nacked(topic={}, partition={}, pirority={}, groupId={}, isResend={}, contexts={})",

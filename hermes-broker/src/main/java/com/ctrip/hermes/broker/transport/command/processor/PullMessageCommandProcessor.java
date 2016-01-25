@@ -106,6 +106,7 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 		task.setCorrelationId(cmd.getHeader().getCorrelationId());
 		task.setExpireTime(cmd.getExpireTime());
 		task.setTpg(new Tpg(cmd.getTopic(), cmd.getPartition(), cmd.getGroupId()));
+		task.setClientIp(ctx.getRemoteIp());
 
 		return task;
 	}
@@ -121,6 +122,7 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 		task.setCorrelationId(cmd.getHeader().getCorrelationId());
 		task.setExpireTime(cmd.getExpireTime());
 		task.setTpg(new Tpg(cmd.getTopic(), cmd.getPartition(), cmd.getGroupId()));
+		task.setClientIp(ctx.getRemoteIp());
 
 		task.setStartOffset(cmd.getOffset());
 		task.setWithOffset(PullMessageCommandV2.PULL_WITH_OFFSET == cmd.getPullType());
