@@ -51,10 +51,10 @@ CREATE TABLE IF NOT EXISTS `monitor_event` (
   `event_type` int(11) NOT NULL,
   `create_time` datetime DEFAULT NULL,
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
-  `key1` varchar(500) DEFAULT NULL,
-  `key2` varchar(500) DEFAULT NULL,
-  `key3` varchar(500) DEFAULT NULL,
-  `key4` varchar(500) DEFAULT NULL,
+  `key1` varchar(4096) DEFAULT NULL,
+  `key2` varchar(4096) DEFAULT NULL,
+  `key3` varchar(4096) DEFAULT NULL,
+  `key4` varchar(4096) DEFAULT NULL,
   `message` longtext,
   `notify_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -203,3 +203,18 @@ CREATE TABLE `consumer_group` (
 COMMENT='consumer_group'
 ENGINE=InnoDB
 ;
+
+ALTER TABLE `consumer_group`
+CHANGE COLUMN `appids` `app_Ids` VARCHAR(500) NULL DEFAULT NULL COMMENT '应用id';
+
+ALTER TABLE `topic`
+CHANGE COLUMN `create_by` `create_by_1` VARCHAR(500) NULL DEFAULT NULL COMMENT 'name and email for create_by_1' AFTER `consumer_retry_policy`,
+ADD COLUMN `create_by_2` VARCHAR(500) NULL DEFAULT NULL COMMENT 'name and email for create_by_2' AFTER `create_by_1`,
+ADD COLUMN `phone_1` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for create_by_1' AFTER `create_by_2`,
+ADD COLUMN `phone_2` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for create_by_2' AFTER `phone_1`;
+
+ALTER TABLE `consumer_group`
+CHANGE COLUMN `owner` `owner_1` VARCHAR(500) NULL DEFAULT NULL COMMENT '负责人1：名字+邮箱' AFTER `ordered_consume`,
+ADD COLUMN `owner_2` VARCHAR(500) NULL DEFAULT NULL COMMENT '负责人2：名字+邮箱' AFTER `owner_1`,
+ADD COLUMN `phone_1` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for owner_1' AFTER `owner_2`,
+ADD COLUMN `phone_2` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for owner_2' AFTER `phone_1`;

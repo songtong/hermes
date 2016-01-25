@@ -80,7 +80,10 @@
     <member name="retry-policy" field="retry_policy" value-type="String" length="500" />
     <member name="ack-timeout-seconds" field="ack_timeout_seconds" value-type="int" length="10" />
     <member name="ordered-consume" field="ordered_consume" value-type="boolean" />
-    <member name="owner" field="owner" value-type="String" length="500" />
+    <member name="owner-1" field="owner_1" value-type="String" length="500" />
+    <member name="owner-2" field="owner_2" value-type="String" length="500" />
+    <member name="phone-1" field="phone_1" value-type="String" length="20" />
+    <member name="phone-2" field="phone_2" value-type="String" length="20" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
@@ -237,10 +240,10 @@
     <member name="event-type" field="event_type" value-type="int" length="10" nullable="false" />
     <member name="create-time" field="create_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
-    <member name="key1" field="key1" value-type="String" length="500" />
-    <member name="key2" field="key2" value-type="String" length="500" />
-    <member name="key3" field="key3" value-type="String" length="500" />
-    <member name="key4" field="key4" value-type="String" length="500" />
+    <member name="key1" field="key1" value-type="String" length="4096" />
+    <member name="key2" field="key2" value-type="String" length="4096" />
+    <member name="key3" field="key3" value-type="String" length="4096" />
+    <member name="key4" field="key4" value-type="String" length="4096" />
     <member name="message" field="message" value-type="String" length="2147483647" />
     <member name="notify-time" field="notify_time" value-type="Date" />
     <var name="key-id" value-type="long" key-member="id" />
@@ -532,7 +535,10 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <member name="schema-id" field="schema_id" value-type="long" length="20" />
     <member name="consumer-retry-policy" field="consumer_retry_policy" value-type="String" length="500" />
-    <member name="create-by" field="create_by" value-type="String" length="500" />
+    <member name="create-by-1" field="create_by_1" value-type="String" length="500" />
+    <member name="create-by-2" field="create_by_2" value-type="String" length="500" />
+    <member name="phone-1" field="phone_1" value-type="String" length="20" />
+    <member name="phone-2" field="phone_2" value-type="String" length="20" />
     <member name="endpoint-type" field="endpoint_type" value-type="String" length="500" />
     <member name="ack-timeout-seconds" field="ack_timeout_seconds" value-type="int" length="10" />
     <member name="codec-type" field="codec_type" value-type="String" length="50" />
