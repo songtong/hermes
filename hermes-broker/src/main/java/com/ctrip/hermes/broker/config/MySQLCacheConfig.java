@@ -86,7 +86,7 @@ public class MySQLCacheConfig {
 
 	private static final int DEFAULT_NONPRIORITY_PAGE_SIZE = 500;
 
-	private static final int DEFAULT_NONPRIORITY_MESSAGE_MAXIMUM_CAPACITY = 1024 * 1048 * 4;
+	private static final int DEFAULT_NONPRIORITY_MESSAGE_MAXIMUM_CAPACITY = 1024 * 1024 * 4;
 
 	private static final int DEFAULT_NONPRIORITY_PAGE_LOAD_INTERVAL_MILLIS = 200;
 
