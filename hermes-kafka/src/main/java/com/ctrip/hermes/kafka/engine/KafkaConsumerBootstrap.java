@@ -171,7 +171,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			return configs;
 		}
 
-		//FIXME will switch back to ReadDatasource later
+		// FIXME will switch back to ReadDatasource later
 		String consumerDatasource = partitions.get(0).getWriteDatasource();
 		Storage targetStorage = m_metaService.findStorageByTopic(topic);
 		if (targetStorage == null) {
@@ -188,6 +188,6 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			}
 		}
 		configs.put("group.id", group);
-		return KafkaProperties.overrideByCtripDefaultConsumerSetting(configs);
+		return KafkaProperties.overrideByCtripDefaultConsumerSetting(configs, topic, group);
 	}
 }

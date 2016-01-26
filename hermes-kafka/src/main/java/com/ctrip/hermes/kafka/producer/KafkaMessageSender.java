@@ -75,7 +75,7 @@ public class KafkaMessageSender implements MessageSender {
 			}
 		}
 
-		return KafkaProperties.overrideByCtripDefaultProducerSetting(configs);
+		return KafkaProperties.overrideByCtripDefaultProducerSetting(configs, topic);
 	}
 
 	/**
@@ -117,7 +117,7 @@ public class KafkaMessageSender implements MessageSender {
 		return new KafkaFuture(sendResult);
 	}
 
-	//FIXME how to close when singleton
+	// FIXME how to close when singleton
 	public void close() {
 		for (KafkaProducer<String, byte[]> producer : m_producers.values()) {
 			producer.close();
