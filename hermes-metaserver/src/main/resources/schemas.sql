@@ -208,8 +208,8 @@ ALTER TABLE `consumer_group`
 CHANGE COLUMN `appids` `app_Ids` VARCHAR(500) NULL DEFAULT NULL COMMENT '应用id';
 
 ALTER TABLE `topic`
-CHANGE COLUMN `create_by` `create_by_1` VARCHAR(500) NULL DEFAULT NULL COMMENT 'name and email for create_by_1' AFTER `consumer_retry_policy`,
-ADD COLUMN `create_by_2` VARCHAR(500) NULL DEFAULT NULL COMMENT 'name and email for create_by_2' AFTER `create_by_1`,
+CHANGE COLUMN `create_by` `owner_1` VARCHAR(500) NULL DEFAULT NULL COMMENT 'name and email for owner_1' AFTER `consumer_retry_policy`,
+ADD COLUMN `owner_2` VARCHAR(500) NULL DEFAULT NULL COMMENT 'name and email for owner_2' AFTER `create_by_1`,
 ADD COLUMN `phone_1` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for create_by_1' AFTER `create_by_2`,
 ADD COLUMN `phone_2` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for create_by_2' AFTER `phone_1`;
 
@@ -218,3 +218,7 @@ CHANGE COLUMN `owner` `owner_1` VARCHAR(500) NULL DEFAULT NULL COMMENT '负责�
 ADD COLUMN `owner_2` VARCHAR(500) NULL DEFAULT NULL COMMENT '负责人2：名字+邮箱' AFTER `owner_1`,
 ADD COLUMN `phone_1` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for owner_1' AFTER `owner_2`,
 ADD COLUMN `phone_2` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for owner_2' AFTER `phone_1`;
+
+ALTER TABLE `application`
+CHANGE COLUMN `owner` `owner_1` VARCHAR(128) NULL DEFAULT NULL COMMENT '申请人邮箱1' AFTER `comment`,
+ADD COLUMN `owner_2` VARCHAR(128) NULL DEFAULT NULL COMMENT '申请人邮箱2' AFTER `owner1`;
