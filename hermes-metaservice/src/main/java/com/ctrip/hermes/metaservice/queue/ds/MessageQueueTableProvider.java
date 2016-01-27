@@ -1,19 +1,23 @@
 package com.ctrip.hermes.metaservice.queue.ds;
 
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.QueryDef;
 import org.unidal.dal.jdbc.QueryEngine;
 import org.unidal.dal.jdbc.QueryType;
 import org.unidal.dal.jdbc.mapping.TableProvider;
+import org.unidal.lookup.annotation.Inject;
+import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.MetaService;
+import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
+import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
+import com.ctrip.hermes.metaservice.model.Partition;
 
+@Named
 public class MessageQueueTableProvider implements TableProvider {
 	private static final String DEAD_LETTER_TABLE = "dead-letter";
 
@@ -26,6 +30,12 @@ public class MessageQueueTableProvider implements TableProvider {
 	private static final String MESSAGE_TABLE = "message-priority";
 
 	private static final Logger log = LoggerFactory.getLogger(MessageQueueTableProvider.class);
+
+	@Inject
+	private CachedTopicDao m_topicDao;
+
+	@Inject
+	private CachedPartitionDao m_partitionDao;
 
 	@Override
 	public String getDataSourceName(Map<String, Object> hints, String logicalTableName) {
@@ -71,8 +81,7 @@ public class MessageQueueTableProvider implements TableProvider {
 	}
 
 	private String toDbName(String topic, int partition) {
-		String fmt = "%s_%s";
-		return String.format(fmt, findTopic(topic).getId(), partition);
+		return String.format("%s_%s", getTopicId(topic), partition);
 	}
 
 	private String findDataSourceName(QueryDef def, TopicPartitionAware tpAware, String logicalTableName) {
@@ -93,20 +102,26 @@ public class MessageQueueTableProvider implements TableProvider {
 		}
 	}
 
-	private Topic findTopic(String topicName) {
+	private long getTopicId(String topicName) {
 		try {
-			return PlexusComponentLocator.lookup(MetaService.class).refreshMeta().findTopic(topicName);
-		} catch (Exception e) {
-			log.error("Find topic failed.", e);
-			return null;
+			return m_topicDao.findByName(topicName).getId();
+		} catch (DalException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
 	private Partition findPartition(String topicName, int partitionId) {
-		Topic topic = findTopic(topicName);
-		if (topic != null) {
-			return topic.findPartition(partitionId);
+		try {
+			List<Partition> partitions = m_partitionDao.findByTopic(getTopicId(topicName));
+			for (Partition p : partitions) {
+				if (p.getId() == partitionId) {
+					return p;
+				}
+			}
+		} catch (DalException e) {
+			log.error("Find partition [{}:{}] faile.d", topicName, partitionId, e);
+			throw new RuntimeException(String.format("Find partition [%s:%s] faile.d", topicName, partitionId), e);
 		}
-		throw new RuntimeException("Can not find topic: " + topicName);
+		throw new RuntimeException(String.format("Find partition [%s:%s] faile.d", topicName, partitionId));
 	}
 }

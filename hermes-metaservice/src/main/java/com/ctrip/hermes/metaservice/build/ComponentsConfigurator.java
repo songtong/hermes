@@ -64,11 +64,16 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(DefaultMonitorEventStorage.class));
 
-		all.add(C(TableProvider.class, "message-priority", MessageQueueTableProvider.class));
-		all.add(C(TableProvider.class, "resend-group-id", MessageQueueTableProvider.class));
-		all.add(C(TableProvider.class, "offset-message", MessageQueueTableProvider.class));
-		all.add(C(TableProvider.class, "offset-resend", MessageQueueTableProvider.class));
-		all.add(C(TableProvider.class, "dead-letter", MessageQueueTableProvider.class));
+		all.add(C(TableProvider.class, "message-priority", MessageQueueTableProvider.class) //
+		      .req(CachedTopicDao.class).req(CachedPartitionDao.class));
+		all.add(C(TableProvider.class, "resend-group-id", MessageQueueTableProvider.class) //
+		      .req(CachedTopicDao.class).req(CachedPartitionDao.class));
+		all.add(C(TableProvider.class, "offset-message", MessageQueueTableProvider.class) //
+		      .req(CachedTopicDao.class).req(CachedPartitionDao.class));
+		all.add(C(TableProvider.class, "offset-resend", MessageQueueTableProvider.class) //
+		      .req(CachedTopicDao.class).req(CachedPartitionDao.class));
+		all.add(C(TableProvider.class, "dead-letter", MessageQueueTableProvider.class) //
+		      .req(CachedTopicDao.class).req(CachedPartitionDao.class));
 		all.add(A(MessageQueueDatasourceProvider.class));
 
 		all.add(A(FileMailAccountProvider.class));
