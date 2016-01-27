@@ -66,11 +66,11 @@ public class MetaRefactor {
 			metaModel.setVersion(metaEntity.getVersion());
 			metaDao.insert(metaModel);
 
-			for (com.ctrip.hermes.meta.entity.Server entity : metaEntity.getServers().values()) {
-				com.ctrip.hermes.metaservice.model.Server serverModel = EntityToModelConverter.convert(entity);
-				serverDao.insert(serverModel);
-				System.out.println(serverModel);
-			}
+//			for (com.ctrip.hermes.meta.entity.Server entity : metaEntity.getServers().values()) {
+//				com.ctrip.hermes.metaservice.model.Server serverModel = EntityToModelConverter.convert(entity);
+//				serverDao.insert(serverModel);
+//				System.out.println(serverModel);
+//			}
 
 			for (com.ctrip.hermes.meta.entity.Storage entity : metaEntity.getStorages().values()) {
 				com.ctrip.hermes.metaservice.model.Storage storageModel = EntityToModelConverter.convert(entity);
