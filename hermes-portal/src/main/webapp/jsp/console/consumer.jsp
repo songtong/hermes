@@ -19,6 +19,7 @@
 						<th st-sort="orderedConsume">有序</th>
 						<th st-sort="retryPolicy">消费重试策略</th>
 						<th st-sort="ackTimeoutSeconds">ACK超时</th>
+						<th st-sort="owner1">负责人1</th>
 						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-consumer-modal" class="btn btn-xs btn-success" style="text-align: center;">新增</button></th>
 					</tr>
 					<tr>
@@ -39,6 +40,7 @@
 						<td><span e-form="rowform" editable-select="row.orderedConsume" ng-bind="row.orderedConsume" e-name="orderedConsume" e-ng-options="order for order in order_opts"></td>
 						<td><span e-form="rowform" editable-text="row.retryPolicy" ng-bind="row.retryPolicy" e-name="retryPolicy"></td>
 						<td><span e-form="rowform" editable-text="row.ackTimeoutSeconds" ng-bind="row.ackTimeoutSeconds" e-name="ackTimeoutSeconds"></td>
+						<td><span e-form="rowform" editable-text="row.owner1" ng-bind="row.owner1" e-name="owner1"></td>
 						<td style="white-space: nowrap">
 							<form editable-form name="rowform" onbeforesave="update_consumer($data,row.topicName,row.groupName)" ng-show="rowform.$visible">
 								<button type="submit" ng-disabled="rowform.$waiting" class="btn btn-xs btn-primary">保存</button>
@@ -104,6 +106,30 @@
 								<label for="inputAckTimeoutSeconds" class="col-sm-3 control-label">ACK 超时</label>
 								<div class="col-sm-3">
 									<input class="form-control" id="inputAckTimeoutSeconds" placeholder="ACK Timeout in Seconds" ng-model="new_consumer.ackTimeoutSeconds">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inputOwner1" class="col-sm-3 control-label">负责人1</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="inputOwner1" ng-model="new_consumer.owner1">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inputPhone1" class="col-sm-3 control-label">电话1</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="inputPhone1" ng-model="new_consumer.phone1">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inputOwner2" class="col-sm-3 control-label">负责人2</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="inputOwner2" ng-model="new_consumer.owner2">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="inputPhone2" class="col-sm-3 control-label">电话2</label>
+								<div class="col-sm-3">
+									<input class="form-control" id="inputPhone2" ng-model="new_consumer.phone2">
 								</div>
 							</div>
 						</form>

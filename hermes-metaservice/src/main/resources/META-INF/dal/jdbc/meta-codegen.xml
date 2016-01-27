@@ -535,8 +535,8 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <member name="schema-id" field="schema_id" value-type="long" length="20" />
     <member name="consumer-retry-policy" field="consumer_retry_policy" value-type="String" length="500" />
-    <member name="create-by-1" field="create_by_1" value-type="String" length="500" />
-    <member name="create-by-2" field="create_by_2" value-type="String" length="500" />
+    <member name="owner-1" field="owner_1" value-type="String" length="500" />
+    <member name="owner-2" field="owner_2" value-type="String" length="500" />
     <member name="phone-1" field="phone_1" value-type="String" length="20" />
     <member name="phone-2" field="phone_2" value-type="String" length="20" />
     <member name="endpoint-type" field="endpoint_type" value-type="String" length="500" />

@@ -3,9 +3,17 @@ package com.ctrip.hermes.core.bo;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 
 public class ConsumerView {
+	private Integer id;
+	
 	private String topicName;
 
-	private String owner;
+	private String owner1;
+
+	private String owner2;
+
+	private String phone1;
+
+	private String phone2;
 
 	private String groupName;
 
@@ -27,7 +35,11 @@ public class ConsumerView {
 		this.retryPolicy = consumer.getRetryPolicy();
 		this.ackTimeoutSeconds = consumer.getAckTimeoutSeconds();
 		this.orderedConsume = consumer.getOrderedConsume();
-		this.owner = consumer.getOwner();
+		this.owner1 = consumer.getOwner1();
+		this.owner2 = consumer.getOwner2();
+		this.phone1 = consumer.getPhone1();
+		this.phone2 = consumer.getPhone2();
+		this.id = consumer.getId();
 	}
 
 	public ConsumerGroup toMetaConsumer() {
@@ -37,7 +49,11 @@ public class ConsumerView {
 		consumer.setName(this.groupName);
 		consumer.setRetryPolicy(this.retryPolicy);
 		consumer.setOrderedConsume(this.orderedConsume);
-		consumer.setOwner(this.owner);
+		consumer.setOwner1(this.owner1);
+		consumer.setOwner2(this.owner2);
+		consumer.setPhone1(this.phone1);
+		consumer.setPhone2(this.phone2);
+		consumer.setId(this.id);
 
 		return consumer;
 	}
@@ -90,18 +106,55 @@ public class ConsumerView {
 		this.orderedConsume = orderedConsume;
 	}
 
-	public String getOwner() {
-		return owner;
+	public String getOwner1() {
+		return owner1;
 	}
 
-	public void setOwner(String owner) {
-		this.owner = owner;
+	public void setOwner1(String owner1) {
+		this.owner1 = owner1;
+	}
+
+	public String getOwner2() {
+		return owner2;
+	}
+
+	public void setOwner2(String owner2) {
+		this.owner2 = owner2;
+	}
+
+	public String getPhone1() {
+		return phone1;
+	}
+
+	public void setPhone1(String phone1) {
+		this.phone1 = phone1;
+	}
+
+	public String getPhone2() {
+		return phone2;
+	}
+
+	public void setPhone2(String phone2) {
+		this.phone2 = phone2;
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
 	@Override
 	public String toString() {
-		return "ConsumerView [topicName=" + topicName + ", groupName=" + groupName + ", appId=" + appId
+		return "ConsumerView [id=" + id + ", topicName=" + topicName + ", owner1=" + owner1 + ", owner2=" + owner2
+				+ ", phone1=" + phone1 + ", phone2=" + phone2 + ", groupName=" + groupName + ", appId=" + appId
 				+ ", retryPolicy=" + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume="
-				+ orderedConsume + ", owner=" + owner + "]";
+				+ orderedConsume + "]";
 	}
+
+
+	
+
 }

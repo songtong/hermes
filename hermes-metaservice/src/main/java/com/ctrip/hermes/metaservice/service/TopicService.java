@@ -131,7 +131,8 @@ public class TopicService {
 
 			int partitionId = 0;
 			for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicEntity.getPartitions()) {
-				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
+				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
+						.convert(partitionEntity);
 				partitionModel.setId(partitionId++);
 				partitionModel.setTopicId(topicModel.getId());
 				partitionEntity.setId(partitionModel.getId());
@@ -165,7 +166,8 @@ public class TopicService {
 		if (topic == null)
 			return;
 		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topic.getPartitions()) {
-			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
+					.convert(partitionEntity);
 			partitionModel.setTopicId(topic.getId());
 			m_partitionDao.deleteByTopicId(partitionModel);
 		}
@@ -269,7 +271,8 @@ public class TopicService {
 		return m_topicStorageService.queryStorageSize(ds, table);
 	}
 
-	public List<StoragePartition> queryStorageTablePartitions(String ds, String table) throws StorageHandleErrorException {
+	public List<StoragePartition> queryStorageTablePartitions(String ds, String table)
+			throws StorageHandleErrorException {
 		return m_topicStorageService.queryTablePartitions(ds, table);
 	}
 
@@ -288,7 +291,10 @@ public class TopicService {
 		originTopic.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 		originTopic.setCodecType(topic.getCodecType());
 		originTopic.setConsumerRetryPolicy(topic.getConsumerRetryPolicy());
-		originTopic.setCreateBy(topic.getCreateBy());
+		originTopic.setOwner1(topic.getOwner1());
+		originTopic.setOwner2(topic.getOwner2());
+		originTopic.setPhone1(topic.getPhone1());
+		originTopic.setPhone2(topic.getPhone2());
 		originTopic.setDescription(topic.getDescription());
 		originTopic.setEndpointType(topic.getEndpointType());
 		originTopic.setLastModifiedTime(new Date(System.currentTimeMillis()));
@@ -324,31 +330,36 @@ public class TopicService {
 	}
 
 	protected com.ctrip.hermes.meta.entity.Topic fillTopic(com.ctrip.hermes.metaservice.model.Topic topicModel)
-	      throws DalException {
+			throws DalException {
 		com.ctrip.hermes.meta.entity.Topic topicEntity = ModelToEntityConverter.convert(topicModel);
-		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.findByTopic(topicModel.getId());
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao
+				.findByTopic(topicModel.getId());
 		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : cgModels) {
 			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
 			topicEntity.addConsumerGroup(entity);
 		}
-		List<com.ctrip.hermes.metaservice.model.Partition> partitionModels = m_partitionDao.findByTopic(topicModel.getId());
+		List<com.ctrip.hermes.metaservice.model.Partition> partitionModels = m_partitionDao
+				.findByTopic(topicModel.getId());
 		for (com.ctrip.hermes.metaservice.model.Partition model : partitionModels) {
 			com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
 			topicEntity.addPartition(entity);
 		}
-		// List<com.ctrip.hermes.meta.entity.Producer> producers = findProducers(model);
+		// List<com.ctrip.hermes.meta.entity.Producer> producers =
+		// findProducers(model);
 		// for (com.ctrip.hermes.meta.entity.Producer p : producers) {
 		// entity.addProducer(p);
 		// }
 		return topicEntity;
 	}
 	// @Override
-	// public List<com.ctrip.hermes.meta.entity.Producer> findProducers(com.ctrip.hermes.metaservice.model.Topic topicModel)
+	// public List<com.ctrip.hermes.meta.entity.Producer>
+	// findProducers(com.ctrip.hermes.metaservice.model.Topic topicModel)
 	// throws DalException {
 	// List<Producer> models = m_producerDao.findByTopic(topicModel.getId());
 	// List<com.ctrip.hermes.meta.entity.Producer> entities = new ArrayList<>();
 	// for (Producer model : models) {
-	// com.ctrip.hermes.meta.entity.Producer entity = ModelToEntityConverter.convert(model);
+	// com.ctrip.hermes.meta.entity.Producer entity =
+	// ModelToEntityConverter.convert(model);
 	// entities.add(entity);
 	// }
 	// return entities;

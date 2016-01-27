@@ -12,7 +12,13 @@ public class ConsumerApplication extends HermesApplication {
 
 	private String m_appName;
 
-	private String m_ownerName;
+	private String m_ownerName1;
+
+	private String m_ownerName2;
+
+	private String m_ownerPhone1;
+
+	private String m_ownerPhone2;
 
 	private int m_ackTimeoutSeconds;
 
@@ -62,14 +68,6 @@ public class ConsumerApplication extends HermesApplication {
 		this.m_appName = appName;
 	}
 
-	public String getOwnerName() {
-		return m_ownerName;
-	}
-
-	public void setOwnerName(String ownerName) {
-		this.m_ownerName = ownerName;
-	}
-
 	public int getAckTimeoutSeconds() {
 		return m_ackTimeoutSeconds;
 	}
@@ -100,6 +98,47 @@ public class ConsumerApplication extends HermesApplication {
 
 	public void setRetryInterval(int retryInterval) {
 		this.m_retryInterval = retryInterval;
+	}
+
+	public String getOwnerName1() {
+		return m_ownerName1;
+	}
+
+	public void setOwnerName1(String ownerName1) {
+		this.m_ownerName1 = ownerName1;
+	}
+
+	public String getOwnerName2() {
+		return m_ownerName2;
+	}
+
+	public void setOwnerName2(String ownerName2) {
+		this.m_ownerName2 = ownerName2;
+	}
+
+	public String getOwnerPhone1() {
+		return m_ownerPhone1;
+	}
+
+	public void setOwnerPhone1(String ownerPhone1) {
+		this.m_ownerPhone1 = ownerPhone1;
+	}
+
+	public String getOwnerPhone2() {
+		return m_ownerPhone2;
+	}
+
+	public void setOwnerPhone2(String ownerPhone2) {
+		this.m_ownerPhone2 = ownerPhone2;
+	}
+
+	@Override
+	public String toString() {
+		return "ConsumerApplication [m_topicName=" + m_topicName + ", m_productLine=" + m_productLine + ", m_product="
+				+ m_product + ", m_project=" + m_project + ", m_appName=" + m_appName + ", m_ownerName1=" + m_ownerName1
+				+ ", m_ownerName2=" + m_ownerName2 + ", m_ownerPhone1=" + m_ownerPhone1 + ", m_ownerPhone2="
+				+ m_ownerPhone2 + ", m_ackTimeoutSeconds=" + m_ackTimeoutSeconds + ", m_needRetry=" + m_needRetry
+				+ ", m_retryCount=" + m_retryCount + ", m_retryInterval=" + m_retryInterval + "]";
 	}
 
 }

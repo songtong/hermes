@@ -44,15 +44,39 @@
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="col-md-4 control-label">负责人姓名</label>
+					<label class="col-md-4 control-label">负责人姓名1</label>
 					<div class="col-md-6">
-						<div class="form-control-static">{{ application.ownerName }}</div>
+						<div class="form-control-static">{{ application.ownerName1 }}</div>
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="col-md-4 control-label">负责人邮箱</label>
+					<label class="col-md-4 control-label">负责人邮箱1</label>
 					<div class="col-md-6">
-						<div class="form-control-static">{{ application.ownerEmail }}</div>
+						<div class="form-control-static">{{ application.ownerEmail1 }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人电话1</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerPhone1 }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人姓名2</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerName2 }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人邮箱2</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerEmail2 }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人电话2</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerPhone2 }}</div>
 					</div>
 				</div>
 				<div class="form-group">
@@ -106,15 +130,39 @@
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="col-md-4 control-label">负责人姓名 </label>
+					<label class="col-md-4 control-label">负责人姓名1</label>
 					<div class="col-md-6">
-						<div class="form-control-static">{{application.ownerName}}</div>
+						<div class="form-control-static">{{ application.ownerName1 }}</div>
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="col-md-4 control-label">负责人邮箱 </label>
+					<label class="col-md-4 control-label">负责人邮箱1</label>
 					<div class="col-md-6">
-						<div class="form-control-static">{{application.ownerEmail}}</div>
+						<div class="form-control-static">{{ application.ownerEmail1 }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人电话1</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerPhone1 }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人姓名2</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerName2 }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人邮箱2</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerEmail2 }}</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">负责人电话2</label>
+					<div class="col-md-6">
+						<div class="form-control-static">{{ application.ownerPhone2 }}</div>
 					</div>
 				</div>
 			</div>
@@ -161,7 +209,6 @@
 	<span style="font-size: 18px;">AUTO GENERATED</span>
 </div>
 <div class="row">
-
 	<div class="col-md-12">
 		<div class="well clearfix" name="topicViewWell" ng-if="application.type==0">
 			<div class="col-md-6">
@@ -218,9 +265,27 @@
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="inputCreateBy" class="col-sm-4 control-label">负责人</label>
+						<label for="inputOwner1" class="col-sm-4 control-label">负责人1</label>
 						<div class="col-sm-6">
-							<input class="form-control" id="inputCreateBy" placeholder="Topic Creator" ng-model="view.createBy">
+							<input class="form-control" id="inputOwner1" placeholder="Topic Creator 1" ng-model="view.owner1">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputPhone1" class="col-sm-4 control-label">电话1</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputPhone1" placeholder="Topic Creator 1's Phone Number" ng-model="view.phone1">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputOwner2" class="col-sm-4 control-label">负责人2</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputOwner2" placeholder="Topic Creator 2" ng-model="view.owner2">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputPhone2" class="col-sm-4 control-label">电话2</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputPhone2" placeholder="Topic Creator 2's Phone Number" ng-model="view.phone2">
 						</div>
 					</div>
 					<div class="form-group">
@@ -232,7 +297,7 @@
 				</div>
 				<div ng-if="view.storageType=='kafka'">
 					<label class="label label-default">属性</label>
-					<button ng-click="add_property()" class="btn btn-xs btn-success" style="float: right;">
+					<button ng-click="add_property(view)" class="btn btn-xs btn-success" style="float: right;">
 						<span class="glyphicon glyphicon-plus"></span> 增加属性
 					</button>
 					<div class="well">
@@ -245,7 +310,7 @@
 									<td class="col-md-5" style="padding: 5px"><select class="form-control" ng-model="property.name" ng-options="property for property in properties"></select></td>
 									<td class="col-md-7" style="padding: 5px"><input class="form-control" ng-model="property.value" placeholder="Property Value"></td>
 									<td>
-										<button class="btn btn-danger btn-xs" ng-click="delete_property($index)">
+										<button class="btn btn-danger btn-xs" ng-click="delete_property(view,$index)">
 											<span class="glyphicon glyphicon-remove"></span> 删除
 										</button>
 									</td>
@@ -257,7 +322,7 @@
 			</div>
 			<div class="col-md-6">
 				<label class="label label-default">Partition 信息</label>
-				<button ng-click="add_partition()" class="btn btn-xs btn-success" style="float: right;">
+				<button ng-click="add_partition(view)" class="btn btn-xs btn-success" style="float: right;">
 					<span class="glyphicon glyphicon-plus"></span> 增加 Partition
 				</button>
 				<div class="well clearfix">
@@ -275,7 +340,7 @@
 								<td style="border: none; width: 5%;"><label style="line-height: 2.2" ng-bind="$index + 1"></label></td>
 								<td style="border: none;"><select ng-model="partition.readDatasource" ng-options="ds for ds in datasources" class="form-control"></select></td>
 								<td style="border: none;"><select ng-model="partition.writeDatasource" ng-options="ds for ds in datasources" class="form-control"></select></td>
-								<td style="border: none; line-height: 2.2"><button ng-click="delete_partition($index)" class="btn btn-xs btn-danger">
+								<td style="border: none; line-height: 2.2"><button ng-click="delete_partition(view,$index)" class="btn btn-xs btn-danger">
 										<span class="glyphicon glyphicon-remove"></span> 删除
 									</button></td>
 							</tr>
@@ -283,7 +348,7 @@
 					</table>
 
 				</div>
-				<button type="button" class="btn btn-success pull-right" aria-hidden="true" ng-click="permit_topic_application()" id="permitTopicButton">
+				<button type="button" ng-click="initTopicInfo()" class="btn btn-success pull-right" aria-hidden="true" data-toggle="modal" data-target="#topicDetail">
 					<span class="glyphicon glyphicon-saved"></span> 通过申请
 				</button>
 			</div>
@@ -330,9 +395,27 @@
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">负责人</label>
-						<div class="col-md-8">
-							<input class="form-control" ng-model="view.owner">
+						<label for="inputOwner1" class="col-sm-4 control-label">负责人1</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputOwner1" placeholder="Topic Creator 1" ng-model="view.owner1">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputPhone1" class="col-sm-4 control-label">电话1</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputPhone1" placeholder="Topic Creator 1's Phone Number" ng-model="view.phone1">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputOwner2" class="col-sm-4 control-label">负责人2</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputOwner2" placeholder="Topic Creator 2" ng-model="view.owner2">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputPhone2" class="col-sm-4 control-label">电话2</label>
+						<div class="col-sm-6">
+							<input class="form-control" id="inputPhone2" placeholder="Topic Creator 2's Phone Number" ng-model="view.phone2">
 						</div>
 					</div>
 				</div>
@@ -341,6 +424,201 @@
 				<button type="button" class="btn btn-success pull-right" aria-hidden="true" ng-click="permit_consumer_application()" id="permitConsumerButton">
 					<span class="glyphicon glyphicon-saved"></span> 通过申请
 				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="topicDetail" tabindex="-1" role="dialog" aria-labelledby="topicDetail">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Topic创建细节</h4>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label class="col-md-4">在以下环境创建Topic：</label><label class="checkbox-inline"><input type="checkbox" ng-model="topicDetailForm.createTopicOnFws">Fws</label>
+					<button ng-show="topicDetailForm.createTopicOnFws" ng-click="currentTopicView=fwsTopicView" class="btn-link" data-toggle="modal" data-target="#topicInfoModal" style="padding-right: 5px;">detail</button>
+					<label class="checkbox-inline "><input type="checkbox" ng-model="topicDetailForm.createTopicOnUat">Uat</label>
+					<button ng-show="topicDetailForm.createTopicOnUat" ng-click="currentTopicView=uatTopicView" class="btn-link" data-toggle="modal" data-target="#topicInfoModal" style="padding-right: 5px;">detail</button>
+					<label class="checkbox-inline"><input type="checkbox" ng-model="topicDetailForm.createTopicOnProd">Prod</label>
+					<button ng-show="topicDetailForm.createTopicOnProd" ng-click="currentTopicView=prodTopicView" class="btn-link" data-toggle="modal" data-target="#topicInfoModal">detail</button>
+				</div>
+				<div class="form-group" ng-if=false>
+					<label class="col-md-4">在以下环境build meta：</label> <label class="checkbox-inline" disable><input type="checkbox" ng-model="topicDetailForm.buildMetaOnFws" disable>Fws</label> <label class="checkbox-inline "><input type="checkbox" ng-model="topicDetailForm.buildMetaOnUat" disable>Uat</label><label class="checkbox-inline"><input type="checkbox" ng-model="topicDetailForm.buildMetaOnProd" disable>Prod</label>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<div id="progressBarprompt" class="form-group" style="display: none">
+					<p>{{topicDetailForm.progressInfo}}</p>
+					<div class="progress">
+						<div class="progress-bar progress-bar-striped active" role="progressbar" id="progressbar" aria-valuenow="progressBarValue" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: 0%;"></div>
+					</div>
+				</div>
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" ng-click="permit_topic_application()" id="permitTopicButton">创建topic</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="topicInfoModal" tabindex="-1" role="dialog" aria-labelledby="topicInfoModal">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Topic信息</h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="col-md-6">
+							<label class="label label-info">基本信息</label>
+							<div class="form-horizontal">
+								<div class="form-group">
+									<label for="inputTopicName" class="col-md-4 control-label">名称</label>
+									<div class="col-md-8">
+										<input class="form-control" id="inputTopicName" placeholder="Topic" ng-model="currentTopicView.name">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputCodec" class="col-md-4 control-label">编码类型</label>
+									<div class="col-md-4">
+										<select class="form-control" id="inputCodec" ng-model="currentTopicView.codecType" ng-options="codec for codec in codec_types">
+										</select>
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputEndpoint" class="col-md-4 control-label">Endpoint类型</label>
+									<div class="col-md-4">
+										<select class="form-control" id="inputEndpoint" ng-model="currentTopicView.endpointType" ng-options="endpointType for endpointType in endpoint_types">
+										</select>
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputConsumeRetryPolicy" class="col-sm-4 control-label">消费重试策略</label>
+									<div class="col-sm-4">
+										<input class="form-control" id="inputConsumeRetryPolicy" placeholder="Consume Retry Policy" ng-model="currentTopicView.consumerRetryPolicy">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputAckTimeout" class="col-sm-4 control-label">ACK 超时(秒)</label>
+									<div class="col-sm-4">
+										<input type="number" class="form-control" id="inputAckTimeout" placeholder="ACK Timeout" ng-model="currentTopicView.ackTimeoutSeconds">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputStoragePartitionSize" class="col-sm-4 control-label">数据库分区大小</label>
+									<div class="col-sm-6">
+										<input class="form-control" id="inputStoragePartitionSize" placeholder="Storage Partition Size" ng-model="currentTopicView.storagePartitionSize">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputResendPartitionSize" class="col-sm-4 control-label">重发分区大小</label>
+									<div class="col-sm-6">
+										<input class="form-control" id="inputResendPartitionSize" placeholder="Resend Partition Size" ng-model="currentTopicView.resendPartitionSize">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputStoragePartitionCount" class="col-sm-4 control-label">数据库分区数量</label>
+									<div class="col-sm-6">
+										<input class="form-control" id="inputStoragePartitionCount" placeholder="Storage Partition Count" ng-model="currentTopicView.storagePartitionCount">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputOwner1" class="col-sm-4 control-label">负责人1</label>
+									<div class="col-sm-6">
+										<input class="form-control" id="inputOwner1" placeholder="Topic Creator 1" ng-model="view.owner1">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputPhone1" class="col-sm-4 control-label">电话1</label>
+									<div class="col-sm-6">
+										<input class="form-control" id="inputPhone1" placeholder="Topic Creator 1's Phone Number" ng-model="view.phone1">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputOwner2" class="col-sm-4 control-label">负责人2</label>
+									<div class="col-sm-6">
+										<input class="form-control" id="inputOwner2" placeholder="Topic Creator 2" ng-model="view.owner2">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputPhone2" class="col-sm-4 control-label">电话2</label>
+									<div class="col-sm-6">
+										<input class="form-control" id="inputPhone2" placeholder="Topic Creator 2's Phone Number" ng-model="view.phone2">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputDescription" class="col-sm-4 control-label">描述</label>
+									<div class="col-sm-8">
+										<input class="form-control" id="inputDescription" placeholder="Topic Description" ng-model="currentTopicView.description">
+									</div>
+								</div>
+							</div>
+							<div ng-if="currentTopicView.storageType=='kafka'">
+								<label class="label label-default">属性</label>
+								<button ng-click="add_property(currentTopicView)" class="btn btn-xs btn-success" style="float: right;">
+									<span class="glyphicon glyphicon-plus"></span> 增加属性
+								</button>
+								<div class="well">
+									<h2 ng-if="currentTopicView.properties.length == 0" style="text-align: center;">
+										<label class="label label-warning">NO PROPERTY WAS DEFINED</label>
+									</h2>
+									<table ng-if="currentTopicView.properties.length > 0">
+										<tbody>
+											<tr ng-repeat="property in currentTopicView.properties">
+												<td class="col-md-5" style="padding: 5px"><select class="form-control" ng-model="property.name" ng-options="property for property in properties"></select></td>
+												<td class="col-md-7" style="padding: 5px"><input class="form-control" ng-model="property.value" placeholder="Property Value"></td>
+												<td>
+													<button class="btn btn-danger btn-xs" ng-click="delete_property(currentTopicView,$index)">
+														<span class="glyphicon glyphicon-remove"></span> 删除
+													</button>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<label class="label label-default">Partition 信息</label>
+							<button ng-click="add_partition(currentTopicView)" class="btn btn-xs btn-success" style="float: right;">
+								<span class="glyphicon glyphicon-plus"></span> 增加 Partition
+							</button>
+							<div class="well clearfix">
+								<table class="table table-condensed table-responsive">
+									<thead>
+										<tr>
+											<th style="border: none; width: 5%"></th>
+											<th style="border: none;">Datasource / 读</th>
+											<th style="border: none;">Datasource / 写</th>
+											<th style="border: none;"></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr ng-repeat="partition in currentTopicView.partitions">
+											<td style="border: none; width: 5%;"><label style="line-height: 2.2" ng-bind="$index + 1"></label></td>
+											<td style="border: none;"><select ng-model="partition.readDatasource" ng-options="ds for ds in datasources" class="form-control"></select></td>
+											<td style="border: none;"><select ng-model="partition.writeDatasource" ng-options="ds for ds in datasources" class="form-control"></select></td>
+											<td style="border: none; line-height: 2.2"><button ng-click="delete_partition(currentTopicView,$index)" class="btn btn-xs btn-danger">
+													<span class="glyphicon glyphicon-remove"></span> 删除
+												</button></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" data-dismiss="modal">确定</button>
 			</div>
 		</div>
 	</div>

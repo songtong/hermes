@@ -24,9 +24,7 @@
 			</div>
 			<div class="col-md-7">
 				<div class="form-group">
-					<label>产品线</label>
-					<input class="form-control" autocomplete="off" ng-model="new_application.productLine" typeahead="productLine for productLine in getFilteredProductLine($viewValue)" typeahead-loading="loadingProductlines" placeholder="项目所处的产品线, 例如: flight, hotel, fx ..."/>
-					<i ng-show="loadingProductlines" class="glyphicon glyphicon-refresh"></i>
+					<label>产品线</label> <input class="form-control" autocomplete="off" ng-model="new_application.productLine" typeahead="productLine for productLine in getFilteredProductLine($viewValue)" typeahead-loading="loadingProductlines" placeholder="项目所处的产品线, 例如: flight, hotel, fx ..." /> <i ng-show="loadingProductlines" class="glyphicon glyphicon-refresh"></i>
 				</div>
 				<div class="form-group" style="margin-bottom: 0px;">
 					<label>Product</label> <input class="form-control" ng-model="new_application.product" type="text"></input>
@@ -76,12 +74,31 @@
 			</div>
 			<div class="col-md-7">
 				<div class="form-group">
-					<label class=>负责人姓名</label> <input class="form-control" ng-model="new_application.ownerName" type="text"></input>
+					<label class=>负责人1 姓名</label> <input class="form-control" ng-model="new_application.ownerName1" type="text"></input>
 				</div>
-				<div class="form-group" style="margin-bottom: 0px;">
-					<label class=>负责人邮箱</label> <input class="form-control" ng-model="new_application.ownerEmail" type="email"></input>
+				<div class="form-group">
+					<label class=>负责人1 邮箱</label>
+					<div class="input-group">
+						<input class="form-control" ng-model="new_application.ownerEmail1" type="text"></input>
+						<div class="input-group-addon">@Ctrip.com</div>
+					</div>
 				</div>
-				<span class="help-block"><small>*@Ctrip.com</small></span>
+				<div class="form-group">
+					<label class=>负责人1 电话</label> <input class="form-control" ng-model="new_application.ownerPhone1" type="tel"></input>
+				</div>
+				<div class="form-group">
+					<label class=>负责人2 姓名</label> <input class="form-control" ng-model="new_application.ownerName2" type="text"></input>
+				</div>
+				<div class="form-group">
+					<label class=>负责人2 邮箱</label>
+					<div class="input-group">
+						<input class="form-control" ng-model="new_application.ownerEmail2" type="text"></input>
+						<div class="input-group-addon">@Ctrip.com</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class=>负责人2 电话</label> <input class="form-control" ng-model="new_application.ownerPhone2" type="tel"></input>
+				</div>
 			</div>
 		</div>
 		<hr>

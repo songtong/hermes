@@ -17,7 +17,13 @@ public class TopicApplication extends HermesApplication {
 
 	private int m_size;
 
-	private String m_ownerName;
+	private String m_ownerName1;
+
+	private String m_ownerName2;
+
+	private String m_ownerPhone1;
+
+	private String m_ownerPhone2;
 
 	private String m_description;
 
@@ -95,20 +101,44 @@ public class TopicApplication extends HermesApplication {
 		this.m_description = description;
 	}
 
-	public String getOwnerName() {
-		return m_ownerName;
-	}
-
-	public void setOwnerName(String ownerName) {
-		this.m_ownerName = ownerName;
-	}
-
 	public String getLanguageType() {
 		return m_languageType;
 	}
 
 	public void setLanguageType(String languageType) {
 		this.m_languageType = languageType;
+	}
+
+	public String getOwnerName1() {
+		return m_ownerName1;
+	}
+
+	public void setOwnerName1(String ownerName1) {
+		this.m_ownerName1 = ownerName1;
+	}
+
+	public String getOwnerName2() {
+		return m_ownerName2;
+	}
+
+	public void setOwnerName2(String ownerName2) {
+		this.m_ownerName2 = ownerName2;
+	}
+
+	public String getOwnerPhone1() {
+		return m_ownerPhone1;
+	}
+
+	public void setOwnerPhone1(String ownerPhone1) {
+		this.m_ownerPhone1 = ownerPhone1;
+	}
+
+	public String getOwnerPhone2() {
+		return m_ownerPhone2;
+	}
+
+	public void setOwnerPhone2(String ownerPhone2) {
+		this.m_ownerPhone2 = ownerPhone2;
 	}
 
 }

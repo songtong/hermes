@@ -54,6 +54,8 @@ application_module.controller('app-consumer-controller', [ '$scope', 'Applicatio
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
+					new_consumer.ownerEmail1 = new_consumer.ownerEmail1 + "@Ctrip.com";
+					new_consumer.ownerEmail2 = new_consumer.ownerEmail2 + "@Ctrip.com";
 					console.log(new_consumer);
 					ApplicationService.create_consumer_application(new_consumer).then(function(result) {
 						show_op_info.show("申请提交成功！", true);
