@@ -89,7 +89,7 @@
     },
     {
       "paths": [
-        "/opt/logs/elasticsearch/hermes-es-uat.log"
+        "/opt/logs/elasticsearch/hermes-es-tools.log"
       ],
       "Fields": {
         "type": "log",
