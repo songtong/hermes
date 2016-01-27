@@ -6,24 +6,24 @@
 		<div class="row">
 			<div class="col-md-4">
 				<h3 style="font-family: 微软雅黑;">Topic名称</h3>
-				<span class="help-block"><small>Topic组成：ProdictLine.Entity.Event<br>例如：fx.topic.created<br><strong> <span ng-if="!(new_application.productLine==''||new_application.productLine==null)">当前topic名称：<br> {{new_application.productLine}}
+				<span class="help-block"><small>Topic组成：ProdictLine.Entity.Event<br>例如：fx.topic.created<br> <strong> <span ng-if="!(new_application.productLine==''||new_application.productLine==null)">当前topic名称：<br> {{new_application.productLine}}
 						</span> <span ng-if="!(new_application.entity==''||new_application.entity==null)">.{{new_application.entity}}</span> <span ng-if="!(new_application.event==''||new_application.event==null)">.{{new_application.event}}</span></strong>
 				</small></span>
 			</div>
 			<div class="col-md-7">
 				<div class="form-group">
-					<label>产品线</label> 
-					<input class="form-control" autocomplete="off" ng-model="new_application.productLine" typeahead="productLine for productLine in getFilteredProductLine($viewValue)" typeahead-loading="loadingProductlines" placeholder="项目所处的产品线, 例如: flight, hotel, fx ..."/>
-					<i ng-show="loadingProductlines" class="glyphicon glyphicon-refresh"></i>
+					<label>产品线</label> <input class="form-control" autocomplete="off" ng-model="new_application.productLine" typeahead="productLine for productLine in getFilteredProductLine($viewValue)" typeahead-loading="loadingProductlines" placeholder="项目所处的产品线, 例如: flight, hotel, fx ..." /> <i ng-show="loadingProductlines" class="glyphicon glyphicon-refresh"></i>
 				</div>
 				<div class="form-group" style="margin-bottom: 0px;">
 					<label>Entity</label> <input class="form-control" ng-model="new_application.entity" type="text"></input>
 				</div>
-				<span class="help-block"><small>消息实体，可使用小写字母和数字，可多段，使用 ' . ' 隔开。<br>举例：海外酒店订单：overseahotel.order，用户信息：userinfo。</small></span>
+				<span class="help-block"><small>消息实体，可使用小写字母和数字，可多段，使用 ' . ' 隔开。<br>举例：海外酒店订单：overseahotel.order，用户信息：userinfo。
+				</small></span>
 				<div class="form-group" style="margin-bottom: 0px;">
 					<label>Event</label> <input class="form-control" ng-model="new_application.event" type="text"></input>
 				</div>
-				<span class="help-block"><small>消息产生的情形，可使用小写字母和数字。<br>举例：创建事件：created，查询事件：inquired，删除事件：deleted。</small></span>
+				<span class="help-block"><small>消息产生的情形，可使用小写字母和数字。<br>举例：创建事件：created，查询事件：inquired，删除事件：deleted。
+				</small></span>
 				<div class="form-group" style="margin-bottom: 0px;">
 					<label>描述</label> <input class="form-control" ng-model="new_application.description" type="text"></input>
 				</div>
@@ -65,12 +65,31 @@
 			</div>
 			<div class="col-md-7">
 				<div class="form-group">
-					<label class=>负责人姓名</label> <input class="form-control" ng-model="new_application.ownerName" type="text"></input>
+					<label class=>负责人1 姓名</label> <input class="form-control" ng-model="new_application.ownerName1" type="text"></input>
 				</div>
-				<div class="form-group" style="margin-bottom: 0px;">
-					<label class=>负责人邮箱</label> <input class="form-control" ng-model="new_application.ownerEmail" type="email"></input>
+				<div class="form-group">
+					<label class=>负责人1 邮箱</label>
+					<div class="input-group">
+						<input class="form-control" ng-model="new_application.ownerEmail1" type="text"></input>
+						<div class="input-group-addon">@Ctrip.com</div>
+					</div>
 				</div>
-				<span class="help-block"><small>*@Ctrip.com</small></span>
+				<div class="form-group">
+					<label class=>负责人1 电话</label> <input class="form-control" ng-model="new_application.ownerPhone1" type="tel"></input>
+				</div>
+				<div class="form-group">
+					<label class=>负责人2 姓名</label> <input class="form-control" ng-model="new_application.ownerName2" type="text"></input>
+				</div>
+				<div class="form-group">
+					<label class=>负责人2 邮箱</label>
+					<div class="input-group">
+						<input class="form-control" ng-model="new_application.ownerEmail2" type="text"></input>
+						<div class="input-group-addon">@Ctrip.com</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class=>负责人2 电话</label> <input class="form-control" ng-model="new_application.ownerPhone2" type="tel"></input>
+				</div>
 			</div>
 		</div>
 		<hr>

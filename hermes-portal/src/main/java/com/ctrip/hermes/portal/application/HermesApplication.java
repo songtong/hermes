@@ -20,7 +20,9 @@ public abstract class HermesApplication {
 
 	private Date m_createTime;
 
-	private String m_ownerEmail;
+	private String m_ownerEmail1;
+
+	private String m_ownerEmail2;
 
 	private Date m_lastModifiedTime;
 
@@ -95,18 +97,27 @@ public abstract class HermesApplication {
 		dbApp.setStatus(app.getStatus());
 		dbApp.setContent(app.getContent());
 		dbApp.setComment(app.getComment());
-		dbApp.setOwner(app.getOwnerEmail());
+		dbApp.setOwner1(app.getOwnerEmail1());
+		dbApp.setOwner2(app.getOwnerEmail2());
 		dbApp.setApprover(app.getApprover());
 		dbApp.setCreateTime(app.getCreateTime());
 		return dbApp;
 	};
 
-	public String getOwnerEmail() {
-		return m_ownerEmail;
+	public String getOwnerEmail1() {
+		return m_ownerEmail1;
 	}
 
-	public void setOwnerEmail(String ownerEmail) {
-		this.m_ownerEmail = ownerEmail;
+	public void setOwnerEmail1(String ownerEmail1) {
+		this.m_ownerEmail1 = ownerEmail1;
+	}
+
+	public String getOwnerEmail2() {
+		return m_ownerEmail2;
+	}
+
+	public void setOwnerEmail2(String ownerEmail2) {
+		this.m_ownerEmail2 = ownerEmail2;
 	}
 
 	public static HermesApplication parse(Application dbApp) {
@@ -121,6 +132,14 @@ public abstract class HermesApplication {
 		app.setStatus(dbApp.getStatus());
 		return app;
 
+	}
+
+	@Override
+	public String toString() {
+		return "HermesApplication [m_id=" + m_id + ", m_comment=" + m_comment + ", m_type=" + m_type + ", m_status="
+				+ m_status + ", m_content=" + m_content + ", m_approver=" + m_approver + ", m_createTime="
+				+ m_createTime + ", m_ownerEmail1=" + m_ownerEmail1 + ", m_ownerEmail2=" + m_ownerEmail2
+				+ ", m_lastModifiedTime=" + m_lastModifiedTime + "]";
 	};
 
 }

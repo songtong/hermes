@@ -41,7 +41,13 @@ public class TopicView {
 
 	private Codec codec;
 
-	private String createBy;
+	private String owner1;
+
+	private String owner2;
+
+	private String phone1;
+
+	private String phone2;
 
 	private String endpointType;
 
@@ -76,7 +82,10 @@ public class TopicView {
 		this.codecType = topic.getCodecType();
 		this.schemaId = topic.getSchemaId();
 		this.otherinfo = topic.getOtherInfo();
-		this.createBy = topic.getCreateBy();
+		this.owner1 = topic.getOwner1();
+		this.owner2 = topic.getOwner2();
+		this.phone1 = topic.getPhone1();
+		this.phone2 = topic.getPhone2();
 		this.consumerRetryPolicy = topic.getConsumerRetryPolicy();
 		this.storagePartitionCount = topic.getStoragePartitionCount();
 		this.storagePartitionSize = topic.getStoragePartitionSize();
@@ -93,9 +102,6 @@ public class TopicView {
 		return codecType;
 	}
 
-	public String getCreateBy() {
-		return createBy;
-	}
 
 	public Date getCreateTime() {
 		return createTime;
@@ -157,9 +163,6 @@ public class TopicView {
 		this.codecType = codecType;
 	}
 
-	public void setCreateBy(String createBy) {
-		this.createBy = createBy;
-	}
 
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
@@ -253,7 +256,10 @@ public class TopicView {
 		topic.setCodecType(this.codecType);
 		topic.setSchemaId(this.schemaId);
 		topic.setOtherInfo(this.otherinfo);
-		topic.setCreateBy(this.createBy);
+		topic.setOwner1(this.owner1);
+		topic.setOwner2(this.owner2);
+		topic.setPhone1(this.phone1);
+		topic.setPhone2(this.phone2);
 		topic.setAckTimeoutSeconds(this.ackTimeoutSeconds);
 		topic.setEndpointType(this.endpointType);
 		topic.setConsumerRetryPolicy(this.consumerRetryPolicy);
@@ -270,7 +276,7 @@ public class TopicView {
 	public void setConsumerRetryPolicy(String consumerRetryPolicy) {
 		this.consumerRetryPolicy = consumerRetryPolicy;
 	}
-	
+
 	public Long getTotalDelay() {
 		return totalDelay;
 	}
@@ -278,7 +284,7 @@ public class TopicView {
 	public void setTotalDelay(Long totalDelay) {
 		this.totalDelay = totalDelay;
 	}
-	
+
 	public Date getLatestProduced() {
 		return latestProduced;
 	}
@@ -309,5 +315,37 @@ public class TopicView {
 
 	public void setResendPartitionSize(long resendPartitionSize) {
 		this.resendPartitionSize = resendPartitionSize;
+	}
+
+	public String getOwner1() {
+		return owner1;
+	}
+
+	public void setOwner1(String owner1) {
+		this.owner1 = owner1;
+	}
+
+	public String getOwner2() {
+		return owner2;
+	}
+
+	public void setOwner2(String owner2) {
+		this.owner2 = owner2;
+	}
+
+	public String getPhone1() {
+		return phone1;
+	}
+
+	public void setPhone1(String phone1) {
+		this.phone1 = phone1;
+	}
+
+	public String getPhone2() {
+		return phone2;
+	}
+
+	public void setPhone2(String phone2) {
+		this.phone2 = phone2;
 	}
 }

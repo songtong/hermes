@@ -42,7 +42,7 @@ public class MetaMerger {
 		// ConsumerGroup
 		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerModel = new com.ctrip.hermes.metaservice.model.ConsumerGroup();
 		consumerModel.setName("consumer group");
-		consumerModel.setOwner("fx");
+		consumerModel.setOwner1("fx");
 		consumerModel.setOrderedConsume(true);
 		consumerModel.setAckTimeoutSeconds(5);
 		consumerModel.setDataChangeLastTime(new Date(System.currentTimeMillis() - 640000));

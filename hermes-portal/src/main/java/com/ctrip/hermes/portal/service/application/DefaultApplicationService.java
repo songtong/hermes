@@ -3,7 +3,6 @@ package com.ctrip.hermes.portal.service.application;
 import java.io.File;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -147,7 +146,10 @@ public class DefaultApplicationService implements ApplicationService {
 		}
 
 		topicView.setStoragePartitionSize(5000000);
-		topicView.setCreateBy(app.getOwnerName() + "/" + app.getOwnerEmail());
+		topicView.setOwner1(app.getOwnerName1() + "/" + app.getOwnerEmail1());
+		topicView.setOwner2(app.getOwnerName2() + "/" + app.getOwnerEmail2());
+		topicView.setPhone1(app.getOwnerPhone1());
+		topicView.setPhone2(app.getOwnerPhone2());
 		topicView.setPartitions(topicPartition);
 		topicView.setName(app.getProductLine() + "." + app.getEntity() + "." + app.getEvent());
 		topicView.setStorageType(app.getStorageType());
@@ -207,8 +209,8 @@ public class DefaultApplicationService implements ApplicationService {
 
 	private HermesMail generateApplicationEmail(Application app) throws Exception {
 		String title = getApplicationEmailTitle(app.getStatus());
-		String approver=app.getOwner() + "," + m_config.getHermesEmailGroupAddress();
-		
+		String approver = app.getOwner1() + "," + app.getOwner2() + "," + m_config.getHermesEmailGroupAddress();
+
 		String content = null;
 		Map<String, Object> mailContent = new HashMap<>();
 		Configuration cfg = new Configuration(Configuration.VERSION_2_3_22);
@@ -295,7 +297,10 @@ public class DefaultApplicationService implements ApplicationService {
 		consumerView.setGroupName(app.getProductLine() + "." + app.getProduct() + "." + app.getProject());
 		consumerView.setAckTimeoutSeconds(app.getAckTimeoutSeconds());
 		consumerView.setAppId(app.getAppName());
-		consumerView.setOwner(app.getOwnerName() + "/" + app.getOwnerEmail());
+		consumerView.setOwner1(app.getOwnerName1() + "/" + app.getOwnerEmail1());
+		consumerView.setOwner2(app.getOwnerName2() + "/" + app.getOwnerEmail2());
+		consumerView.setPhone1(app.getOwnerPhone1());
+		consumerView.setPhone2(app.getOwnerPhone2());
 		if (app.isNeedRetry()) {
 			consumerView
 					.setRetryPolicy(String.format("3:[%s,%s]", app.getRetryCount(), app.getRetryInterval() * 1000L));

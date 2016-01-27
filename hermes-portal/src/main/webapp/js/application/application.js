@@ -86,15 +86,32 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 		}
 	});
 
-	topic_resource = $resource('/api/topics', {}, {
-		'get_topic_names' : {
+	topic_resource = $resource('/api/topics/:name', {}, {
+		get_topic_names : {
 			method : 'GET',
 			isArray : true,
 			url : '/api/topics/names'
+		},
+		deploy_topic : {
+			method : 'POST',
+			isArray : false,
+			url : '/api/topics/:name/deploy',
+			params : {
+				name : '@name'
+			}
+		},
+		sync_topic : {
+			method : 'POST',
+			isArray : false,
+			url : '/api/topics/sync',
+			params : {
+				environment : '@environment',
+				force_schema : '@forceSchema'
+			}
 		}
 	});
 	consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
-		'add_consumer' : {
+		add_consumer : {
 			method : 'POST',
 			url : '/api/consumers/add'
 		}
@@ -245,6 +262,50 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 		'get_topic_names' : function(id) {
 			var delay = $q.defer();
 			topic_resource.get_topic_names({}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'deploy_topic' : function(name) {
+			var delay = $q.defer();
+			topic_resource.deploy_topic({
+				name : name
+			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'sync_topic' : function(topic, environment, forceSchema) {
+			var delay = $q.defer();
+			console.log(topic);
+			topic_resource.sync_topic({
+				environment : environment,
+				forceSchema : forceSchema
+			}, topic, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'remove_topic' : function(topicName) {
+			var delay = $q.defer();
+			topic_resource.remove({
+				name : topicName
+			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'create_topic' : function(topic) {
+			var delay = $q.defer();
+			topic_resource.save(topic, function(result) {
 				delay.resolve(result);
 			}, function(result) {
 				delay.reject(result);

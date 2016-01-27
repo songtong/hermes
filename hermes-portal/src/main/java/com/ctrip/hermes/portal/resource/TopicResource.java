@@ -179,7 +179,7 @@ public class TopicResource {
 			exist = isTopicExistOnTarget(topicName, target);
 		} catch (Exception e) {
 			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
-			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
 		if (exist && !forceSchema) {
 			throw new RestException(String.format("Topic %s is already exists.", topicName), Status.CONFLICT);
@@ -203,15 +203,74 @@ public class TopicResource {
 		return Response.status(Status.OK).build();
 	}
 
+	@POST
+	@Path("sync")
+	public Response syncTopic(@QueryParam("environment") String environment,
+			@QueryParam("forceSchema") @DefaultValue("false") boolean forceSchema, String content) {
+		log.info("Sync topic with payload {}.", content);
+		if (StringUtils.isEmpty(content)) {
+			log.error("Payload content is empty, sync topic failed.");
+			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
+		}
+
+		Pair<Boolean, ?> result = null;
+		try {
+			result = validateTopicView(JSON.parseObject(content, TopicView.class));
+		} catch (Exception e) {
+			log.error("Can not parse payload: {}, sync topic failed.", content);
+			throw new RestException(e, Status.BAD_REQUEST);
+		}
+		if (!result.getKey()) {
+			throw new RestException((String) result.getValue());
+		}
+
+		TopicView topicView = (TopicView) result.getValue();
+
+		WebTarget target = null;
+		if ("uat".equals(environment)) {
+			target = ClientBuilder.newClient().target("http://" + config.getPortalUatHost());
+		} else if ("prod".equals(environment)) {
+			target = ClientBuilder.newClient().target("http://" + config.getPortalProdHost());
+		} else {
+			throw new RestException("Unvalid environment:" + environment + "!", Status.BAD_REQUEST);
+		}
+		boolean exist = false;
+		try {
+			exist = isTopicExistOnTarget(topicView.getName(), target);
+		} catch (Exception e) {
+			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicView.getName(),
+					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+		}
+		if (exist && !forceSchema) {
+			throw new RestException(String.format("Topic %s is already exists.", topicView.getName()), Status.CONFLICT);
+		}
+
+		Set<String> missedDatasources = getMissedDatasourceOnTarget(topicView, target);
+		if (missedDatasources.size() == 0) {
+			switch (topicView.getStorageType()) {
+			case Storage.MYSQL:
+				syncMysqlTopic(topicView, target);
+				break;
+			case Storage.KAFKA:
+				syncKafkaTopic(topicView, target, exist, forceSchema);
+				break;
+			}
+			syncConsumers(topicView, target);
+		} else {
+			throw new RestException("Target has missed datasources, pls init them: " + missedDatasources);
+		}
+		return Response.status(Status.OK).build();
+	}
+
 	private void syncConsumers(TopicView topic, WebTarget target) {
 		for (ConsumerGroup consumer : consumerService.getConsumers(topic.getName())) {
 			Builder request = target.path("/api/consumers/add").request();
 			ConsumerView requestView = new ConsumerView(topic.getName(), consumer);
 			Response response = request.post(Entity.json(requestView));
 			if (!(Status.CREATED.getStatusCode() == response.getStatus()//
-			|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
+					|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
 				throw new RestException(String.format("Add consumer %s failed.", consumer.getName()),
-				      Status.INTERNAL_SERVER_ERROR);
+						Status.INTERNAL_SERVER_ERROR);
 			}
 		}
 	}
@@ -223,7 +282,7 @@ public class TopicResource {
 			view = request.post(Entity.json(topic), TopicView.class);
 		} catch (Exception e) {
 			throw new RestException(String.format("Sync mysql topic: %s failed: %s", topic.getName(), e.getMessage()),
-			      Status.NOT_ACCEPTABLE);
+					Status.NOT_ACCEPTABLE);
 		}
 		if (view == null || !view.getName().equals(topic.getName())) {
 			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
@@ -262,7 +321,7 @@ public class TopicResource {
 		} catch (Exception e) {
 			log.warn("Sync kafka topic failed.", e);
 			throw new RestException(String.format("Sync kafka topic: %s failed: %s", topic.getName(), e.getMessage()),
-			      Status.NOT_ACCEPTABLE);
+					Status.NOT_ACCEPTABLE);
 		}
 	}
 
@@ -337,8 +396,8 @@ public class TopicResource {
 			}
 		} catch (Exception e) {
 			throw new RestException(
-			      "Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
-			      Status.INTERNAL_SERVER_ERROR);
+					"Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
+					Status.INTERNAL_SERVER_ERROR);
 		}
 		Set<String> ret = new HashSet<String>();
 		for (String ds : iDses) {

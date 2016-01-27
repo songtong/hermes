@@ -34,6 +34,22 @@ public class PortalConfig {
 		}
 		return host;
 	}
+	
+	public String getPortalUatHost(){
+		String host = m_env.getGlobalConfig().getProperty("portal.uat.host");
+		if (StringUtils.isBlank(host) && Env.LOCAL.equals(m_env.getEnv())) {
+			return "127.0.0.1";
+		}
+		return host;
+	}
+	
+	public String getPortalProdHost(){
+		String host = m_env.getGlobalConfig().getProperty("portal.prod.host");
+		if (StringUtils.isBlank(host) && Env.LOCAL.equals(m_env.getEnv())) {
+			return "127.0.0.1";
+		}
+		return host;
+	}
 
 	public Pair<String, String> getAccount() {
 		String username = m_env.getGlobalConfig().getProperty("portal.account.username", "hermes");

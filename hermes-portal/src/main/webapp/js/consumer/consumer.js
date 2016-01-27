@@ -20,6 +20,10 @@ function get_new_consuemr(newconsumer, topics, i){
 	consumer.groupName = newconsumer.groupName;
 	consumer.retryPolicy = newconsumer.retryPolicy;
 	consumer.ackTimeoutSeconds = newconsumer.ackTimeoutSeconds;
+	consumer.owner1 = newconsumer.owner1;
+	consumer.owner2 = newconsumer.owner2;
+	consumer.phone1 = newconsumer.phone1;
+	consumer.phone2 = newconsumer.phone2;
 	return consumer;
 }
 

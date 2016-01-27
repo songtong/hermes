@@ -1,15 +1,5 @@
-application_module.controller('app-approval-detail-controller', [ '$scope', '$routeParams', '$resource', 'ApplicationService', '$location', '$window', function($scope, $routeParams, $resource, ApplicationService, $location, $window) {
-	var topic_resource = $resource("/api/topics/:name", {}, {
-		deploy_topic : {
-			method : 'POST',
-			isArray : false,
-			url : '/api/topics/:name/deploy',
-			params : {
-				name : '@name'
-			}
-		}
-	});
-	var meta_resource = $resource('/api/storages', {}, {
+application_module.controller('app-approval-detail-controller', [ '$scope', '$routeParams', '$resource', 'ApplicationService', '$location', '$window', '$q', function($scope, $routeParams, $resource, ApplicationService, $location, $window, $q) {
+	var storage_resource = $resource('/api/storages', {}, {
 		'get_storage' : {
 			method : 'GET',
 			isArray : true,
@@ -21,17 +11,19 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	ApplicationService.get_generated_application($routeParams['id']).then(function(result) {
 		$scope.application = result["key"];
 		$scope.view = result["value"];
+		console.log($scope.view.partitions);
 		updatePageType($scope.application["type"]);
 		if ($scope.application["type"] == 0 || $scope.application["type"] == 2) {// create
 			$scope.defaultReadDS = $scope.view.partitions[0].readDatasource;
 			$scope.defaultWriteDS = $scope.view.partitions[0].writeDatasource;
 			if ($scope.view["storageType"] == "mysql") {
-				meta_resource.get_storage({
+				storage_resource.get_storage({
 					'type' : 'mysql'
 				}, function(data) {
-					for (var i = 0; i < data[0].datasources.length; i++) {
-						$scope.datasources.push(data[0].datasources[i].id);
-					}
+					// for (var i = 0; i < data[0].datasources.length; i++) {
+					// $scope.datasources.push(data[0].datasources[i].id);
+					// }
+					$scope.datasources = [ "ds0" ];
 					for (var i = 0; i < $scope.view.partitions.length; i++) {
 						$scope.view.partitions[i].readDatasource = $scope.defaultReadDS;
 						$scope.view.partitions[i].writeDatasource = $scope.defaultWriteDS;
@@ -41,12 +33,13 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 				$scope.endpoint_types = [ 'broker' ];
 
 			} else {
-				meta_resource.get_storage({
+				storage_resource.get_storage({
 					'type' : 'kafka'
 				}, function(data) {
-					for (var i = 0; i < data[0].datasources.length; i++) {
-						$scope.datasources.push(data[0].datasources[i].id);
-					}
+					// for (var i = 0; i < data[0].datasources.length; i++) {
+					// $scope.datasources.push(data[0].datasources[i].id);
+					// }
+					$scope.datasources = [ "kafka-consumer", "kafka-producer" ];
 					for (var i = 0; i < $scope.view.partitions.length; i++) {
 						$scope.view.partitions[i].readDatasource = $scope.defaultReadDS;
 						$scope.view.partitions[i].writeDatasource = $scope.defaultWriteDS;
@@ -58,25 +51,29 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			}
 		}
 	});
-
-	$scope.add_partition = function() {
+	$scope.add_partition = function(view) {
 		var new_partition = {};
-		new_partition.readDatasource = $scope.defaultReadDS;
-		new_partition.writeDatasource = $scope.defaultWriteDS;
-		$scope.view.partitions.push(new_partition);
+		if (view.partitions.length == 0) {
+			new_partition.readDatasource = $scope.defaultReadDS;
+			new_partition.writeDatasource = $scope.defaultWriteDS;
+		} else {
+			new_partition.readDatasource = view.partitions[view.partitions.length - 1].readDatasource;
+			new_partition.writeDatasource = view.partitions[view.partitions.length - 1].writeDatasource;
+		}
+		view.partitions.push(new_partition);
 	};
 
-	$scope.delete_partition = function(index) {
-		$scope.view.partitions.splice(index, 1);
+	$scope.delete_partition = function(view, index) {
+		view.partitions.splice(index, 1);
 	};
 
-	$scope.add_property = function() {
+	$scope.add_property = function(view) {
 		var new_property = {};
-		$scope.view.properties.push(new_property);
+		view.properties.push(new_property);
 	};
 
-	$scope.delete_property = function(index) {
-		$scope.view.properties.splice(index, 1);
+	$scope.delete_property = function(view, index) {
+		view.properties.splice(index, 1);
 	};
 
 	function updatePageType(typeCode) {
@@ -106,50 +103,189 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		consumer.groupName = view.groupName;
 		consumer.retryPolicy = view.retryPolicy;
 		consumer.ackTimeoutSeconds = view.ackTimeoutSeconds;
-		consumer.owner = view.owner;
+		consumer.owner1 = view.owner1;
+		consumer.owner2 = view.owner2;
+		consumer.phone1 = view.phone1;
+		consumer.phone2 = view.phone2;
 		return consumer;
 	}
 
-	$scope.permit_topic_application = function() {
-		document.getElementById("permitTopicButton").disabled = "disabled";
-		show_op_info.show("正在创建Topic...", true);
-		topic_resource.save($scope.view, function(save_result) {
-			if ($scope.view.storageType == 'kafka') {
-				show_op_info.show("保存Topic成功，正在发布Topic至Kafka...", true);
-				topic_resource.deploy_topic({}, {
-					"name" : $scope.view.name
-				}, function(response) {
-					ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
-						$window["location"].replace("/console/topic#detail/kafka/kafka/" + $scope.view.name);
-						show_op_info.show("发布Topic到Kafka成功!表单状态修改成功！", true);
-					}, function(result) {
-						show_op_info.show("发布Topic到Kafka成功!表单状态修改失败！", false);
-					});
-				}, function(response) {
-					console.log(response.data);
-					topic_resource.remove({
-						name : $scope.view.name
-					}, function(success_resp) {
-						show_op_info.show("发布Topic到Kafka失败, 删除脏数据成功!", false);
-					}, function(error_resp) {
-						show_op_info.show("发布Topic到Kafka失败, 删除脏数据失败! " + error_resp.data, false);
-					});
-				});
-			} else {
-				ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
-					$window["location"].replace("/console/topic#detail/mysql/mysql/" + $scope.view.name);
-					show_op_info.show("Topic创建成功！表单状态修改成功", true);
-				}, function(result) {
-					show_op_info.show("Topic创建成功！表单状态修改失败", false);
-				});
-			}
-		}, function(error_result) {
-			show_op_info.show("新增 " + $scope.view.name + " 失败: " + error_result.data, false);
+	$scope.topicDetailForm = {
+		createTopicOnFws : true,
+		createTopicOnUat : true,
+		createTopicOnProd : true,
+		buildMetaOnFws : true,
+		buildMetaOnUat : true,
+		buildMetaOnProd : true,
+		progressInfo : "",
+		totalTaskCount : 7,
+		terminated : false,
+		setProgreaaBarValue : function(value) {
+			document.getElementById("progressbar").style.width = value;
+		},
+		disablePermitTopicButton : function() {
+			document.getElementById("permitTopicButton").disabled = true;
+		},
+		enablePermitTopicButton : function() {
 			document.getElementById("permitTopicButton").disabled = false;
-		});
+		},
+		showProgressBar : function() {
+			$("#progressBarprompt").show();
+		},
+		hideProgressBar : function() {
+			$("#progressBarprompt").hide();
+		},
+		disactiveProgressBar : function() {
+			$("#progressbar").removeClass("active");
+		},
+		activeProgressBar : function() {
+			$("#progressbar").addClass("active");
+		},
+		setProgressStatus : function(progressInfo, value, taskCount) {
+			var currentValue = (value + taskCount - 1) / this.totalTaskCount * 100 + "%";
+			console.log(currentValue);
+			this.progressInfo = progressInfo;
+			this.setProgreaaBarValue(currentValue);
+			if (currentValue == "100%") {
+				this.disactiveProgressBar();
+			}
+		},
+		initProgressBar : function() {
+			this.showProgressBar();
+			this.activeProgressBar();
+			this.setProgreaaBarValue("0%");
+			this.progressInfo = "";
+			this.disablePermitTopicButton();
+		}
 	}
+
+	function syncTopicToUat() {
+		var delay = $q.defer();
+		if (!$scope.topicDetailForm.createTopicOnUat) {
+			$scope.topicDetailForm.setProgressStatus("同步topic至Uat环境:略过。", 1, 2);
+			delay.resolve();
+		} else {
+			$scope.topicDetailForm.setProgressStatus("正在同步topic至Uat环境", 0.3, 2);
+			ApplicationService.sync_topic($scope.uatTopicView, 'uat', false).then(function(result) {
+				$scope.topicDetailForm.setProgressStatus("同步至Uat环境成功。", 1, 2);
+				delay.resolve();
+			}, function(result) {
+				$scope.topicDetailForm.setProgressStatus("同步至Uat环境失败: " + result.data, 1, 2);
+				delay.reject();
+			})
+		}
+		return delay.promise;
+	}
+
+	function syncTopicToProd() {
+		var delay = $q.defer();
+		if (!$scope.topicDetailForm.createTopicOnProd) {
+			$scope.topicDetailForm.setProgressStatus("同步topic至Prod环境:略过。", 1, 3);
+			delay.resolve();
+		} else {
+			$scope.topicDetailForm.setProgressStatus("正在同步topic至Prod环境", 0.3, 3);
+			ApplicationService.sync_topic($scope.ProdTopicView, 'prod', false).then(function(result) {
+				$scope.topicDetailForm.setProgressStatus("同步至Prod环境成功。", 1, 3);
+				delay.resolve();
+			}, function(result) {
+				$scope.topicDetailForm.setProgressStatus("同步至Prod环境失败: " + result.data, 1, 3);
+				delay.reject();
+			})
+		}
+		return delay.promise;
+	}
+
+	function createTopic() {
+		var delay = $q.defer();
+		if (!$scope.topicDetailForm.createTopicOnFws) {
+			$scope.topicDetailForm.setProgressStatus("创建topic至Fws环境:略过。", 1, 1);
+			delay.resolve();
+		} else {
+			$scope.topicDetailForm.setProgressStatus("正在Fws环境创建Topic...", 0.3, 1);
+			ApplicationService.create_topic($scope.fwsTopicView).then(function(save_result) {
+				if ($scope.view.storageType == 'kafka') {
+					$scope.topicDetailForm.setProgressStatus("正在发布Topic至Kafka...", 0.6, 1);
+					ApplicationService.deploy_topic($scope.view.name).then(function(response) {
+						$scope.topicDetailForm.setProgressStatus("Topic创建成功！", 1, 1);
+						delay.resolve();
+					}, function(response) {
+						$scope.topicDetailForm.setProgressStatus("发布Topic到Kafka失败!正在删除Topic...！", 0.8, 1);
+						ApplicationService.remove_topic($scope.view.name).then(function(success_resp) {
+							$scope.topicDetailForm.setProgressStatus("发布Topic到Kafka失败, 删除脏数据成功！", 1, 1);
+							$scope.topicDetailForm.enablePermitTopicButton();
+							delay.reject();
+						}, function(error_resp) {
+							$scope.topicDetailForm.setProgressStatus("发布Topic到Kafka失败, 删除脏数据失败！", 1, 1);
+							$scope.topicDetailForm.enablePermitTopicButton();
+							delay.reject();
+						});
+					});
+				} else {
+					$scope.topicDetailForm.setProgressStatus("Topic创建成功！", 1, 1);
+					delay.resolve();
+				}
+			}, function(error_result) {
+				$scope.topicDetailForm.setProgressStatus("创建topic失败：" + error_result.data, 1, 1);
+				$scope.topicDetailForm.enablePermitTopicButton();
+				delay.reject();
+			});
+		}
+		return delay.promise;
+	}
+
+	function passApplication() {
+		var delay = $q.defer();
+		$scope.topicDetailForm.setProgressStatus("正在更新表单...", 0.3, 7);
+		ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
+			$scope.topicDetailForm.setProgressStatus("表单更新成功", 1, 7);
+			delay.resolve();
+			// $window["location"].replace("/console/topic#detail/mysql/mysql/"
+			// + $scope.view.name);
+		}, function(result) {
+			$scope.topicDetailForm.setProgressStatus("表单更新失败", 1, 7);
+			delay.reject(result);
+		});
+		return delay.promise;
+
+	}
+	// $scope.topicDetailForm.showProgressBar();
+	$scope.permit_topic_application = function() {
+		$scope.topicDetailForm.initProgressBar();
+		// 在fws创建topic
+		createTopic().then(function(result) {
+			console.log("create success.")
+			syncTopicToUat().then(function(result) {
+				console.log("sync to uat success.")
+				syncTopicToProd().then(function() {
+					console.log("sync to prod success.")
+					// build meta
+					passApplication();
+
+				})
+			})
+		});
+
+	}
+	function clone(myObj) {
+		if (typeof (myObj) != 'object' || myObj == null)
+			return myObj;
+		var newObj = new Object();
+		for ( var i in myObj) {
+			newObj[i] = clone(myObj[i]);
+		}
+		return newObj;
+	}
+
+	$scope.initTopicInfo = function() {
+		$scope.fwsTopicView = $scope.view;
+		$scope.uatTopicView = clone($scope.view);
+		$scope.prodTopicView = clone($scope.view);
+		console.log($scope.fwsTopicView);
+		console.log($scope.uatTopicView);
+		console.log($scope.prodTopicView);
+	}
+
 	$scope.permit_consumer_application = function() {
-		document.getElementById("permitConsumerButton").disabled = "disabled";
 		var topics = $scope.view.topicName.split(",");
 		console.log(topics);
 		show_op_info.show("正在创建Consumer...", true);
@@ -160,9 +296,9 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		ApplicationService.add_consumers(consumers).then(function(result1) {
 			ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
 				$scope.application = result;
-				show_op_info.show("为Topic：" + result1.success_topics + "创建Consumer成功！(共"+result1.success_topics.length+"个成功，"+(topics.length-result1.success_topics.length)+"个失败)，表单状态修改成功", true);
+				show_op_info.show("为Topic：" + result1.success_topics + "创建Consumer成功！(共" + result1.success_topics.length + "个成功，" + (topics.length - result1.success_topics.length) + "个失败)，表单状态修改成功", true);
 			}, function(result) {
-				show_op_info.show("为Topic：" + result1.success_topics + "创建Consumer成功！(共"+result1.success_topics.length+"个成功，"+(topics.length-result1.success_topics.length)+"个失败)，表单状态修改失败", false);
+				show_op_info.show("为Topic：" + result1.success_topics + "创建Consumer成功！(共" + result1.success_topics.length + "个成功，" + (topics.length - result1.success_topics.length) + "个失败)，表单状态修改失败", false);
 			});
 
 		}, function(result) {
