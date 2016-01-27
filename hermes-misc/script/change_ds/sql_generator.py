@@ -27,6 +27,24 @@ class SqlGenerator:
     def select_message_max_id(self, t, p, pr):
         return "select max(id) from {0}_{1}_message_{2};".format(t, p, pr)
     
+    def select_resend_min_id(self, t, p, g):
+        return "select min(id) from {0}_{1}_resend_{2};".format(t, p, g)
+    
+    def select_message_min_id(self, t, p, pr):
+        return "select min(id) from {0}_{1}_message_{2};".format(t, p, pr)
+    
+    def insert_dummy_into_resend(self, t, p, g):
+        return "insert into {0}_{1}_resend_{2} value (null, '', 0, '', '', '', '2016-01-01 01:01:01', '', '2016-01-01 01:01:01', 0, 0, 0);".format(t, p, g)
+
+    def insert_dummy_into_message(self, t, p, pr):
+        return "insert into {0}_{1}_message_{2} value (null, '', 0, '', '', '', '2016-01-01 01:01:01', '');".format(t, p, pr)
+    
+    def delete_dummy_resend(self, t, p, g, id):
+        return "delete from {0}_{1}_resend_{2} where `id`={3};".format(t, p, g, id)
+
+    def delete_dummy_message(self, t, p, pr, id):
+        return "delete from {0}_{1}_message_{2} where `id`={3};".format(t, p, pr, id)
+    
     def select_offset_message(self, t, p):
         return "select `id`, `priority`, `group_id`, `offset`, `creation_date`, `last_modified_date` from {0}_{1}_offset_message;".format(t, p)
     

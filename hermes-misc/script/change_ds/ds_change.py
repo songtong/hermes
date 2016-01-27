@@ -12,6 +12,8 @@ CAT_HOST = 'cat.ctripcorp.com'
 
 META_PATH = 'XXXXX'
 
+NEED_DUMMY = True
+
 def get_meta():
     conn = HTTPConnection(META_HOST)
     conn.request('get', META_PATH)
@@ -122,7 +124,7 @@ def ensure_buffer(topic, dom):
     buf = -1
     qps = float(get_produce_qps_from_dom(dom, topic['name']))
     while buf < 5000:
-        input_str = raw_input('5. Please enter message table BUFFER size [QPS: {0} * 2h = {1}]: '.format(qps, qps * 60 * 60 * 2))
+        input_str = raw_input('5. Please enter message table BUFFER size [QPS: {0}]: '.format('{0} * 2h = {1}'.format(qps, qps * 60 * 60 * 2) if qps > 0 else 'UNKNOWN'))
         if len(input_str) > 0:
             buf = int(input_str)
             if buf < 5000:
@@ -155,6 +157,7 @@ def create_dead_letter_table(tdb, tid, pid, buf, psize):
     except:
         traceback.print_exc()
     finally:
+        tdb.commit()
         tcursor.close()
 
 def create_offset_message_table(db, tdb, tid, pid):
@@ -176,6 +179,7 @@ def create_offset_message_table(db, tdb, tid, pid):
     except:
         traceback.print_exc()
     finally:
+        tdb.commit()
         cursor.close()
         tcursor.close()
 
@@ -198,10 +202,11 @@ def create_offset_resend_table(db, tdb, tid, pid):
     except:
         traceback.print_exc()
     finally:
+        tdb.commit()
         cursor.close()
         tcursor.close()
 
-def create_message_table(db, tdb, tid, pid, pr, buf, psize):
+def create_message_table(db, tdb, tid, pid, pr, buf, psize, insert_dummy):
     cursor = db.cursor()
     tcursor = tdb.cursor()
     try:
@@ -214,13 +219,18 @@ def create_message_table(db, tdb, tid, pid, pr, buf, psize):
         create_sql = sql_generator.create_message_table(tid, pid, pr, max_id, buf, psize)
         print_sql('Create Message Table', create_sql)
         tcursor.execute(create_sql)
+        if insert_dummy:
+            dummy_sql = sql_generator.insert_dummy_into_message(tid, pid, pr)
+            print_sql('Insert Dummy Row', dummy_sql)
+            tcursor.execute(dummy_sql)
     except:
         traceback.print_exc()
     finally:
+        tdb.commit()
         cursor.close()
         tcursor.close()
         
-def create_resend_table(db, tdb, tid, pid, gid, buf, psize):
+def create_resend_table(db, tdb, tid, pid, gid, buf, psize, insert_dummy):
     cursor = db.cursor()
     tcursor = tdb.cursor()
     try:
@@ -233,23 +243,75 @@ def create_resend_table(db, tdb, tid, pid, gid, buf, psize):
         create_sql = sql_generator.create_resend_table(tid, pid, gid, max_id, buf, psize)
         print_sql('Create Resend Table', create_sql)
         tcursor.execute(create_sql)
+        if insert_dummy:
+            dummy_sql = sql_generator.insert_dummy_into_resend(tid, pid, gid)
+            print_sql('Insert Dummy Row', dummy_sql)
+            tcursor.execute(dummy_sql)
     except:
         traceback.print_exc()
     finally:
+        tdb.commit()
         cursor.close()
         tcursor.close()
 
-def init_target_db(db, tdb, topic, partition, consumers, buf, msg_psize):
+def delete_message_dummy(tdb, tid, pid, pr):
+    tcursor = tdb.cursor()
+    try:
+        print '****** Deleting message table dummy row: [topic: {0}, partition: {1}, priority: {2}] '.format(tid, pid, pr)
+        min_id_sql = sql_generator.select_message_min_id(tid, pid, pr)
+        print_sql('Min Message ID', min_id_sql)
+        tcursor.execute(min_id_sql)
+        row = tcursor.fetchone()
+        min_id = 1 if row == None else row[0]
+
+        dummy_sql = sql_generator.delete_dummy_message(tid, pid, pr, min_id)
+        print_sql('Delete Dummy Row', dummy_sql)
+        tcursor.execute(dummy_sql)
+    except:
+        traceback.print_exc()
+    finally:
+        tdb.commit()
+        tcursor.close()
+
+def delete_resend_dummy(tdb, tid, pid, gid):
+    tcursor = tdb.cursor()
+    try:
+        print '****** Deleting resend table dummy row: [topic: {0}, partition: {1}, consumer: {2}] '.format(tid, pid, gid)
+        min_id_sql = sql_generator.select_resend_min_id(tid, pid, gid)
+        print_sql('Min Message ID', min_id_sql)
+        tcursor.execute(min_id_sql)
+        row = tcursor.fetchone()
+        min_id = 1 if row == None else row[0]
+        
+        dummy_sql = sql_generator.delete_dummy_resend(tid, pid, gid, min_id)
+        print_sql('Delete Dummy Row', dummy_sql)
+        tcursor.execute(dummy_sql)
+    except:
+        traceback.print_exc()
+    finally:
+        tdb.commit()
+        tcursor.close()
+        
+def delete_dummy_rows(tdb, topic, partition, consumers):
+    tid = topic['id']
+    pid = partition['id']
+    print '\n++++++++++++++  Starting delete dummy rows in target datasource !!  ++++++++++++++++++++++'
+    delete_message_dummy(tdb, tid, pid, 0)
+    delete_message_dummy(tdb, tid, pid, 1)
+    for consumer in consumers:
+        delete_resend_dummy(tdb, tid, pid, consumer['id'])
+
+def init_target_db(db, tdb, topic, partition, consumers, buf, msg_psize, insert_dummy):
     tid = topic['id']
     pid = partition['id']
     print '\n++++++++++++++  Starting init tables in target datasource !!  ++++++++++++++++++++++'
-    create_message_table(db, tdb, tid, pid, 0, buf, msg_psize)
-    create_message_table(db, tdb, tid, pid, 1, buf, msg_psize)
+    create_message_table(db, tdb, tid, pid, 0, buf, msg_psize, insert_dummy)
+    create_message_table(db, tdb, tid, pid, 1, buf, msg_psize, insert_dummy)
     create_dead_letter_table(tdb, tid, pid, buf, msg_psize / 10)
     create_offset_message_table(db, tdb, tid, pid)
     create_offset_resend_table(db, tdb, tid, pid)
     for consumer in consumers:
-        create_resend_table(db, tdb, tid, pid, consumer['id'], buf, msg_psize / 5)
+        create_resend_table(db, tdb, tid, pid, consumer['id'], buf, msg_psize / 5, insert_dummy)
 
 def get_test_db():
     return MySQLdb.connect(host="localhost", port=3306, db='test', user='root', passwd='')
@@ -263,10 +325,10 @@ def get_all_produce_dom_from_cat():
 
 def get_produce_qps_from_dom(root, topic):
     if root == None:
-        return None
+        return -1
     
     node = root.find('report').find('machine[@ip="All"]//type//name[@id="{0}"]'.format(topic))
-    return None if node == None else node.attrib['tps']
+    return -1 if node == None else node.attrib['tps']
 
 if __name__ == '__main__':
     meta = get_meta()
@@ -274,13 +336,28 @@ if __name__ == '__main__':
     partitions = ensure_partitions(topic)
     consumers = ensure_consumers(topic)
     dses = get_datasources(meta)
-    tdb = get_db_from_properties(ensure_datasource(dses)['properties'])
-#     tdb = get_test_db()
+#     tdb = get_db_from_properties(ensure_datasource(dses)['properties'])
+    tdb = get_test_db()
     buf = ensure_buffer(topic, get_all_produce_dom_from_cat())
     
     tid = topic['id']
-    print partitions
     for partition in partitions:
         db = get_db_from_properties(dses[partition['readDatasource']]['properties'])
-        init_target_db(db, tdb, topic, partition, consumers, buf, 5000000)
+        try:
+            init_target_db(db, tdb, topic, partition, consumers, buf, 5000000, NEED_DUMMY)
+        except:
+            traceback.print_exc()
+        finally:
+            if not db == None:
+                db.close()
         raw_input('\nPress any key to continue next partition ...')
+    
+    if NEED_DUMMY:
+        input_str = 'init'
+        while not input_str.strip() == 'yes' and not input_str.strip() == 'no':  
+            input_str = raw_input('\nDo you want to delete dummy rows? (yes/no) ')
+        if input_str.strip() == 'yes':
+            for partition in partitions:
+                delete_dummy_rows(tdb, topic, partition, consumers)
+                raw_input('\nPress any key to continue next partition ...')
+    tdb.close()
