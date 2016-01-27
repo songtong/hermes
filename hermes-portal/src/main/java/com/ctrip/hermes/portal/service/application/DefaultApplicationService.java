@@ -200,7 +200,7 @@ public class DefaultApplicationService implements ApplicationService {
 		}
 		try {
 			HermesMail mail = generateApplicationEmail(dbApp);
-			// m_mailService.sendEmail(mail);
+			m_mailService.sendEmail(mail);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
 		}
