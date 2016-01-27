@@ -3,9 +3,9 @@
    <jdbc package="com.ctrip.hermes.metaservice.dal" name="fxhermesmetadb">
       <datasource>
          <driver>com.mysql.jdbc.Driver</driver>
-         <url>jdbc:mysql://pub.mysql.db.dev.sh.ctripcorp.com:28747/fxhermesmetadb</url>
-         <user>uws_allinone_1</user>
-         <password>~{e4d21737b646a3f34483b6a3878387a62177960346f0d073d5d1d0d0d1d4f1c305b59}</password>
+         <url>jdbc:mysql://localhost:3306/fxhermesmetadb</url>
+         <user>root</user>
+         <password>~{f4f8f0d0f18040f0f1f5fa8e8660d}</password>
          <properties>useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</properties>
       </datasource>
       <group name="meta" package="com.ctrip.hermes.metaservice.model">
