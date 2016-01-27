@@ -81,6 +81,7 @@
 		<snippet lang='java'><![CDATA[
 			public final static String JSON = "json";
 			public final static String AVRO = "avro";
+			public final static String GZIP = "gzip";
 			public final static String CMESSAGING = "cmessaging";
 			]]>
 		</snippet>

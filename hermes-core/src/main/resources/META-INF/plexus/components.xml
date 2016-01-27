@@ -150,6 +150,11 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.message.payload.PayloadCodec</role>
+			<role-hint>gzip</role-hint>
+			<implementation>com.ctrip.hermes.core.message.payload.GZipPayloadCodec</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.message.payload.PayloadCodec</role>
 			<role-hint>cmessaging</role-hint>
 			<implementation>com.ctrip.hermes.core.message.payload.CMessagingPayloadCodec</implementation>
 		</component>

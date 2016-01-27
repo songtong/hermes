@@ -15,6 +15,7 @@ import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.codec.DefaultMessageCodec;
 import com.ctrip.hermes.core.message.partition.HashPartitioningStrategy;
 import com.ctrip.hermes.core.message.payload.CMessagingPayloadCodec;
+import com.ctrip.hermes.core.message.payload.GZipPayloadCodec;
 import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaManager;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaService;
@@ -61,6 +62,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		// codec
 		all.add(A(DefaultMessageCodec.class));
 		all.add(A(JsonPayloadCodec.class));
+		all.add(A(GZipPayloadCodec.class));
 		all.add(A(CMessagingPayloadCodec.class));
 
 		// env

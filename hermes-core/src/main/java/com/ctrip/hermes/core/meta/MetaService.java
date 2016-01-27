@@ -9,7 +9,6 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
-import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
@@ -22,8 +21,6 @@ import com.ctrip.hermes.meta.entity.Topic;
  *
  */
 public interface MetaService {
-
-	Codec findCodecByTopic(String topic);
 
 	Endpoint findEndpointByTopicAndPartition(String topic, int partition);
 

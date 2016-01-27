@@ -28,7 +28,6 @@ import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.message.retry.FrequencySpecifiedRetryPolicy;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.core.meta.MetaService;
-import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -128,19 +127,6 @@ public class DefaultMetaServiceTest extends ComponentTestCase {
 	@Test(expected = RuntimeException.class)
 	public void testFindStorageByTopicTopicNotFound() throws Exception {
 		m_metaService.findStorageByTopic("topicNotFound");
-	}
-
-	@Test
-	public void testFindCodecByTopic() throws Exception {
-		Codec brokerCodec = m_metaService.findCodecByTopic("test_broker");
-		assertEquals(Codec.JSON, brokerCodec.getType());
-		Codec kafkaCodec = m_metaService.findCodecByTopic("test_kafka");
-		assertEquals(Codec.CMESSAGING, kafkaCodec.getType());
-	}
-
-	@Test(expected = RuntimeException.class)
-	public void testFindCodecByTopicTopicNotFound() throws Exception {
-		m_metaService.findCodecByTopic("topicNotFound");
 	}
 
 	@Test
