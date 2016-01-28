@@ -97,23 +97,17 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 	private void bizLogAcked(Tpp tpp, String consumerIp, String groupId, List<AckContext> ackContexts, boolean isResend,
 	      boolean ack) {
 		for (AckContext ctx : ackContexts) {
-			BizEvent bizStartEvent = new BizEvent("Message.BizProcessStart", ctx.getOnMessageStartTimeMillis());
-			addBizData(bizStartEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
-			m_bizLogger.log(bizStartEvent);
-
-			BizEvent bizEndEvent = new BizEvent("Message.BizProcessEnd", ctx.getOnMessageEndTimeMillis());
-			addBizData(bizEndEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
-			m_bizLogger.log(bizEndEvent);
-
 			BizEvent ackEvent = new BizEvent("Message.Acked");
 			addBizData(ackEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
-			addConsumerProcessTime(ackEvent, ctx.getOnMessageEndTimeMillis() - ctx.getOnMessageStartTimeMillis());
+			addConsumerProcessTime(ackEvent, ctx.getOnMessageStartTimeMillis(), ctx.getOnMessageEndTimeMillis());
 			m_bizLogger.log(ackEvent);
 		}
 	}
 
-	private void addConsumerProcessTime(BizEvent event, long processTime) {
-		event.addData("processTime", processTime);
+	private void addConsumerProcessTime(BizEvent event, long startTime, long endTime) {
+		event.addData("bizProcessStartTime", startTime);
+		event.addData("bizProcessEndTime", endTime);
+		event.addData("processTime", endTime - startTime);
 	}
 
 	private void addBizData(BizEvent event, Tpp tpp, String consumerIp, String groupId, AckContext ctx,
