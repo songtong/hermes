@@ -20,10 +20,9 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 				storage_resource.get_storage({
 					'type' : 'mysql'
 				}, function(data) {
-					// for (var i = 0; i < data[0].datasources.length; i++) {
-					// $scope.datasources.push(data[0].datasources[i].id);
-					// }
-					$scope.datasources = [ "ds0" ];
+					for (var i = 0; i < data[0].datasources.length; i++) {
+						$scope.datasources.push(data[0].datasources[i].id);
+					}
 					for (var i = 0; i < $scope.view.partitions.length; i++) {
 						$scope.view.partitions[i].readDatasource = $scope.defaultReadDS;
 						$scope.view.partitions[i].writeDatasource = $scope.defaultWriteDS;
@@ -36,10 +35,9 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 				storage_resource.get_storage({
 					'type' : 'kafka'
 				}, function(data) {
-					// for (var i = 0; i < data[0].datasources.length; i++) {
-					// $scope.datasources.push(data[0].datasources[i].id);
-					// }
-					$scope.datasources = [ "kafka-consumer", "kafka-producer" ];
+					for (var i = 0; i < data[0].datasources.length; i++) {
+						$scope.datasources.push(data[0].datasources[i].id);
+					}
 					for (var i = 0; i < $scope.view.partitions.length; i++) {
 						$scope.view.partitions[i].readDatasource = $scope.defaultReadDS;
 						$scope.view.partitions[i].writeDatasource = $scope.defaultWriteDS;
