@@ -19,10 +19,11 @@ public class SsoApiFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
 	      ServletException {
-		String path = ((HttpServletRequest) request).getRequestURI();
+		HttpServletRequest req = ((HttpServletRequest) request);
+		String path = req.getRequestURI();
 
 		String apiPrefix = "/api/";
-		if (path.startsWith(apiPrefix)) {
+		if (path.startsWith(apiPrefix) && !"delete".equalsIgnoreCase(req.getMethod())) {
 			request.getRequestDispatcher("/apisso/" + path.substring(apiPrefix.length())).forward(request, response);
 		} else {
 			chain.doFilter(request, response);
