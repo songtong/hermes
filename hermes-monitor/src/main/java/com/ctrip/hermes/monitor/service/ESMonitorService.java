@@ -1,6 +1,13 @@
 package com.ctrip.hermes.monitor.service;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -23,23 +30,25 @@ import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.unidal.helper.Files.IO;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.monitor.checker.server.ServerCheckerConstans;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.dashboard.DashboardItem;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
+import com.google.common.base.Charsets;
 
 @Service
 public class ESMonitorService {
@@ -53,6 +62,9 @@ public class ESMonitorService {
 	private static final String QUERY_AGG_NAME = "hermes-agg";
 
 	private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHH");
+
+	private static final int ES_QUERY_TIMEOUT_IN_MILLIS = 30000;
+
 	static {
 		JSON.DEFFAULT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 	}
@@ -114,7 +126,7 @@ public class ESMonitorService {
 		ctx.setIndex(ServerCheckerConstans.ES_INDEX);
 		ctx.setFrom(from);
 		ctx.setTo(to);
-		ctx.setGroupSchema("host.raw");
+		ctx.setGroupSchema("hostname");
 		ctx.setKeyWord("ERROR");
 		ctx.setQuerySchema("message");
 
@@ -128,39 +140,126 @@ public class ESMonitorService {
 		ctx.setIndex(ServerCheckerConstans.ES_INDEX);
 		ctx.setFrom(from);
 		ctx.setTo(to);
-		ctx.setGroupSchema("host.raw");
+		ctx.setGroupSchema("hostname");
 		ctx.setKeyWord("ERROR");
 		ctx.setQuerySchema("message");
 
 		return queryCountInTimeRange(ctx);
 	}
 
-	private Map<String, Long> queryCountInTimeRange(ESQueryContext ctx) {
+	private String loadElasticSearchToken() throws Exception {
+		File f = new File(config.getElasticSearchTokenPath());
+		for (String line : Files.readAllLines(Paths.get(f.toURI()), Charsets.UTF_8)) {
+			if (!StringUtils.isBlank(line)) {
+				return line.trim();
+			}
+		}
+		throw new RuntimeException("Load elastic search token failed.");
+	}
 
-		String query = String.format("_type:%s AND %s:%s", ctx.getDocumentType(), ctx.getQuerySchema(), ctx.getKeyWord());
+	private Map<String, Long> queryCountInTimeRange(ESQueryContext ctx) {
+		String query = String.format("source:%s AND %s:%s", ctx.getDocumentType(), ctx.getQuerySchema(), ctx.getKeyWord());
 
 		QueryBuilder qb = QueryBuilders.queryStringQuery(query);
 		FilterBuilder fb = FilterBuilders.rangeFilter("@timestamp").from(ctx.getFrom()).to(ctx.getTo());
 		TermsBuilder tb = new TermsBuilder(QUERY_AGG_NAME).field(ctx.getGroupSchema());
 
-		SearchRequestBuilder sb = client.prepareSearch(ctx.getIndex());
+		@SuppressWarnings("resource")
+		SearchRequestBuilder sb = new TransportClient().prepareSearch(ctx.getIndex());
 		sb.setTypes(ctx.getDocumentType());
 		sb.setSearchType(SearchType.COUNT);
 		sb.setQuery(QueryBuilders.filteredQuery(qb, fb));
 		sb.addAggregation(tb);
 
-		SearchResponse sr = sb.execute().actionGet();
+		String esQueryCondition = sb.toString();
 
-		Map<String, Long> map = new HashMap<String, Long>();
-		if (RestStatus.OK.equals(sr.status())) {
-			for (Bucket bucket : ((StringTerms) sr.getAggregations().get(QUERY_AGG_NAME)).getBuckets()) {
-				map.put(bucket.getKey(), bucket.getDocCount());
+		try {
+			Map<String, Object> payload = new HashMap<>();
+			payload.put("access_token", loadElasticSearchToken());
+			payload.put("request_body", esQueryCondition);
+			String response = requestElasticSearch(ctx.getIndex(), payload);
+			if (!StringUtils.isBlank(response)) {
+				return parseCountFromElasticResponse(response);
 			}
-			return map;
+		} catch (Exception e) {
+			log.error("Query count from es service failed.", e);
+		}
+		throw new RuntimeException("Query count from es service failed.");
+	}
+
+	private Map<String, Long> parseCountFromElasticResponse(String response) {
+		Map<String, Long> m = new HashMap<>();
+
+		JSONArray ja = JSON.parseObject(response) //
+		      .getJSONObject("aggregations") //
+		      .getJSONObject(QUERY_AGG_NAME) //
+		      .getJSONArray("buckets");
+
+		for (Object obj : ja) {
+			JSONObject jObj = (JSONObject) obj;
+			String host = jObj.getString("key");
+			long count = jObj.getLongValue("doc_count");
+			m.put(host, count);
 		}
 
-		log.warn("Elastic clusters response error: {}", sr.status());
-		throw new RuntimeException(String.format("Elastic clusters response error: %s", sr.status()));
+		return m;
+	}
+
+	private String requestElasticSearch(final String indexPattern, final Object payload) {
+		String path = String.format("/api/10900/%s/_search", indexPattern);
+		String url = String.format("http://%s%s", config.getElasticSearchQueryHost(), path);
+		InputStream is = null;
+		OutputStream os = null;
+
+		try {
+			HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+
+			conn.setConnectTimeout(ES_QUERY_TIMEOUT_IN_MILLIS);
+			conn.setReadTimeout(ES_QUERY_TIMEOUT_IN_MILLIS);
+			conn.setRequestMethod("POST");
+			conn.addRequestProperty("content-type", "application/json");
+
+			if (payload != null) {
+				conn.setDoOutput(true);
+				conn.connect();
+				os = conn.getOutputStream();
+				os.write(JSON.toJSONBytes(payload));
+			} else {
+				conn.connect();
+			}
+
+			int statusCode = conn.getResponseCode();
+
+			if (statusCode == 200) {
+				is = conn.getInputStream();
+				return IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
+			} else {
+				if (log.isDebugEnabled()) {
+					log.debug("Response error while posting es server error({url={}, status={}}).", url, statusCode);
+				}
+				return null;
+			}
+
+		} catch (Exception e) {
+			log.debug("Post es server error.", e);
+			return null;
+		} finally {
+			if (is != null) {
+				try {
+					is.close();
+				} catch (Exception e) {
+					// ignore it
+				}
+			}
+
+			if (os != null) {
+				try {
+					os.close();
+				} catch (Exception e) {
+					// ignore it
+				}
+			}
+		}
 	}
 
 	public MonitorItem queryLatestMonitorItem(String category) {
