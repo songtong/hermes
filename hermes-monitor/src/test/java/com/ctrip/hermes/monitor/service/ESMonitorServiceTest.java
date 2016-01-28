@@ -30,7 +30,7 @@ public class ESMonitorServiceTest {
 	@Test
 	public void testQueryBrokerError() {
 		long now = System.currentTimeMillis();
-		long before = now - TimeUnit.DAYS.toMillis(90);
+		long before = now - TimeUnit.HOURS.toMillis(12);
 		Map<String, Long> errors = m_es.queryBrokerErrorCount(before, now);
 		for (Entry<String, Long> entry : errors.entrySet()) {
 			System.out.println(entry.getKey() + "\t" + entry.getValue());

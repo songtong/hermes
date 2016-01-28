@@ -149,6 +149,12 @@ public class MonitorConfig {
 	@Value("${long.time.no.produce.checker.exclude.topics:[\"cmessage_fws\"]}")
 	private String longTimeNoProduceCheckerExcludeTopics;
 
+	@Value("${elastic.search.query.host:osg.ops.ctripcorp.com}")
+	private String elasticSearchQueryHost;
+
+	@Value("${elastic.search.token.path:/opt/ctrip/data/hermes/hermes-es.token}")
+	private String elasticSearchTokenPath;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -472,5 +478,21 @@ public class MonitorConfig {
 
 	public void setProduceTransportFailedRatioThreshold(double produceTransportFailedRatioThreshold) {
 		this.produceTransportFailedRatioThreshold = produceTransportFailedRatioThreshold;
+	}
+
+	public String getElasticSearchQueryHost() {
+		return elasticSearchQueryHost;
+	}
+
+	public void setElasticSearchQueryHost(String elasticSearchQueryHost) {
+		this.elasticSearchQueryHost = elasticSearchQueryHost;
+	}
+
+	public String getElasticSearchTokenPath() {
+		return elasticSearchTokenPath;
+	}
+
+	public void setElasticSearchTokenPath(String elasticSearchTokenPath) {
+		this.elasticSearchTokenPath = elasticSearchTokenPath;
 	}
 }
