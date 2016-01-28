@@ -10,7 +10,6 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
-import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.producer.monitor.SendMessageAcceptanceMonitor;
 import com.ctrip.hermes.producer.monitor.SendMessageResultMonitor;
 
@@ -52,8 +51,7 @@ public abstract class AbstractMessageSender implements MessageSender {
 	protected abstract Future<SendResult> doSend(ProducerMessage<?> msg);
 
 	protected void preSend(ProducerMessage<?> msg) {
-		Storage storage = m_metaService.findStorageByTopic(msg.getTopic());
-		if (Storage.KAFKA.equals(storage.getType()) && msg.getPartitionKey() != null) {
+		if (msg.getPartitionKey() != null) {
 			msg.addDurableSysProperty("pK", String.valueOf(msg.getPartitionKey().hashCode()));
 		}
 		int partitionNo = m_partitioningAlgo.computePartitionNo(msg.getPartitionKey(), m_metaService
