@@ -9,6 +9,9 @@
 					<role>com.ctrip.hermes.producer.sender.MessageSender</role>
 					<role-hint>kafka</role-hint>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.producer.config.ProducerConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
