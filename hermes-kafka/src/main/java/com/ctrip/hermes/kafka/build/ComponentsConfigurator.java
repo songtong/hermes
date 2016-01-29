@@ -14,6 +14,7 @@ import com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient;
 import com.ctrip.hermes.kafka.engine.KafkaConsumerBootstrap;
 import com.ctrip.hermes.kafka.producer.KafkaMessageSender;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSink;
 import com.ctrip.hermes.producer.sender.MessageSender;
 
@@ -24,7 +25,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		List<Component> all = new ArrayList<Component>();
 
 		all.add(C(PipelineSink.class, Endpoint.KAFKA, DefaultProducerPipelineSink.class) //
-		      .req(MessageSender.class, Endpoint.KAFKA));
+		      .req(MessageSender.class, Endpoint.KAFKA).req(ProducerConfig.class));
 		all.add(A(KafkaMessageSender.class));
 
 		all.add(A(KafkaConsumerBootstrap.class));
