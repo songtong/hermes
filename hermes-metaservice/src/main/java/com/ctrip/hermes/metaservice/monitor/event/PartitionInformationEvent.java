@@ -9,8 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.unidal.tuple.Pair;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.metaservice.model.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 import com.ctrip.hermes.metaservice.queue.PartitionInfo;
@@ -68,8 +66,8 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 		m_totalTableCount = Integer.valueOf(dbEntity.getKey2());
 		m_totalPartitionCount = Integer.valueOf(dbEntity.getKey3());
 		m_totalWastePartitionCount = Integer.valueOf(dbEntity.getKey4());
-		m_dsInfos = JSON.parseObject(dbEntity.getMessage(), new TypeReference<Map<String, DatasourceInformation>>() {
-		});
+//		m_dsInfos = JSON.parseObject(dbEntity.getMessage(), new TypeReference<Map<String, DatasourceInformation>>() {
+//		});
 	}
 
 	@Override
@@ -78,7 +76,7 @@ public class PartitionInformationEvent extends BaseMonitorEvent {
 		e.setKey2(String.valueOf(m_totalTableCount));
 		e.setKey3(String.valueOf(m_totalPartitionCount));
 		e.setKey4(String.valueOf(m_totalWastePartitionCount));
-		e.setMessage(JSON.toJSONString(m_dsInfos));
+//		e.setMessage(JSON.toJSONString(m_dsInfos));
 	}
 
 	public static class DatasourceInformation {
