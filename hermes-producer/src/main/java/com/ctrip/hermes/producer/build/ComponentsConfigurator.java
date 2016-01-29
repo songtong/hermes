@@ -53,6 +53,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(DefaultProducerPipelineSinkManager.class));
 		all.add(C(PipelineSink.class, Endpoint.BROKER, DefaultProducerPipelineSink.class) //
 		      .req(MessageSender.class, Endpoint.BROKER)//
+		      .req(ProducerConfig.class)//
 		);
 
 		// message sender
