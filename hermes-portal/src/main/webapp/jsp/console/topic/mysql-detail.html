@@ -17,104 +17,110 @@
 			<div class="panel-body">
 				<div class="form-horizontal">
 					<div class="form-group">
-						<label class="col-md-4 control-label">名称</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">Topic ID</label>
+						<div class="col-md-8">
+							<span ng-bind="topic.id"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">名称</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.name"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">编码类型</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">编码类型</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.codecType" editable-select="topic.codecType" e-form="topicForm" e-name="codecType" e-ng-options="codec for codec in codec_types"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label ">存储类型</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label " style="padding-top: 0px">存储类型</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.storageType"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">Endpoint</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">Endpoint</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.endpointType"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">消费重试策略</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">消费重试策略</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.consumerRetryPolicy" editable-text="topic.consumerRetryPolicy" e-form="topicForm" e-name="consumerRetryPolicy"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">ACK 超时(秒)</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">ACK 超时(秒)</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.ackTimeoutSeconds" editable-range="topic.ackTimeoutSeconds" e-form="topicForm" e-name="ackTimeoutSeconds" e-step="5" e-min="5" e-max="200"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">状态</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">状态</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.status|| 'Not Set'"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">数据库分区大小</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">数据库分区大小</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.storagePartitionSize"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">重发分区大小</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">重发分区大小</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.resendPartitionSize"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">数据库分区数量</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">数据库分区数量</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.storagePartitionCount"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">创建时间</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">创建时间</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.createTime | date : 'y/M/d, h:mm:ss a'"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">修改时间</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">修改时间</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.lastModifiedTime | date : 'y/M/d, h:mm:ss a'"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">负责人1</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">负责人1</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.owner1" editable-text="topic.owner1" e-form="topicForm" e-name="owner1"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">电话1</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">电话1</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.phone1" editable-text="topic.phone1" e-form="topicForm" e-name="phone1"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">负责人2</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">负责人2</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.owner2" editable-text="topic.owner2" e-form="topicForm" e-name="owner2"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">电话2</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">电话2</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.phone2" editable-text="topic.phone2" e-form="topicForm" e-name="phone2"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label">描述</label>
-						<div class="col-md-8" style="padding-top: 7px">
+						<label class="col-md-4 control-label" style="padding-top: 0px">描述</label>
+						<div class="col-md-8">
 							<span ng-bind="topic.description" editable-text="topic.description" e-form="topicForm" e-name="description"></span>
 						</div>
 					</div>
@@ -169,7 +175,7 @@
 			<div class="panel-body">
 				<table class="table table-condensed table-responsive">
 					<thead>
-						<th class="col-md-1">id</th>
+						<th class="col-md-1">ID</th>
 						<th class="col-md-5">消费集群</th>
 						<th class="col-md-5">应用</th>
 					</thead>
