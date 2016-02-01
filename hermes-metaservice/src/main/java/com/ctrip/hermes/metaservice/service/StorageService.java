@@ -50,10 +50,10 @@ public class StorageService {
 		logger.info("Delete Datasource: type:{}, id:{} done. updating Meta.", dsType, id);
 	}
 
-	protected com.ctrip.hermes.meta.entity.Storage fillStorage(com.ctrip.hermes.metaservice.model.Storage model)
+	protected com.ctrip.hermes.meta.entity.Storage fillStorage(com.ctrip.hermes.metaservice.model.Storage model, boolean fromDB)
 	      throws DalException {
 		com.ctrip.hermes.meta.entity.Storage entity = ModelToEntityConverter.convert(model);
-		List<com.ctrip.hermes.meta.entity.Datasource> datasources = findDatasources(model.getType());
+		List<com.ctrip.hermes.meta.entity.Datasource> datasources = findDatasources(model.getType(), fromDB);
 		for (com.ctrip.hermes.meta.entity.Datasource ds : datasources) {
 			entity.addDatasource(ds);
 		}
@@ -62,7 +62,7 @@ public class StorageService {
 
 	public Datasource findDatasource(String storageType, String datasourceId) {
 		try {
-			List<Datasource> datasources = findDatasources(storageType);
+			List<Datasource> datasources = findDatasources(storageType, false);
 			for (Datasource d : datasources) {
 				if (d.getId().equals(datasourceId)) {
 					Property p = d.getProperties().get("password");
@@ -79,8 +79,8 @@ public class StorageService {
 		return null;
 	}
 
-	public List<com.ctrip.hermes.meta.entity.Datasource> findDatasources(String storageType) throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.Datasource> models = m_datasourceDao.list();
+	public List<com.ctrip.hermes.meta.entity.Datasource> findDatasources(String storageType, boolean fromDB) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.Datasource> models = m_datasourceDao.list(fromDB);
 		List<com.ctrip.hermes.meta.entity.Datasource> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.Datasource model : models) {
 			if (storageType.equals(model.getStorageType())) {
@@ -91,11 +91,11 @@ public class StorageService {
 		return entities;
 	}
 
-	public List<com.ctrip.hermes.meta.entity.Storage> findStorages() throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.Storage> models = m_storageDao.list();
+	public List<com.ctrip.hermes.meta.entity.Storage> findStorages(boolean fromDB) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.Storage> models = m_storageDao.list(fromDB);
 		List<com.ctrip.hermes.meta.entity.Storage> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.Storage model : models) {
-			entities.add(fillStorage(model));
+			entities.add(fillStorage(model, fromDB));
 		}
 		return entities;
 	}
@@ -120,7 +120,7 @@ public class StorageService {
 	public String getKafkaBrokerList() {
 		List<Storage> storages = new ArrayList<>();
 		try {
-			storages = findStorages();
+			storages = findStorages(false);
 		} catch (DalException e) {
 			logger.warn("findStorages failed", e);
 		}
@@ -141,7 +141,7 @@ public class StorageService {
 	public Map<String, Storage> getStorages() {
 		Map<String, Storage> result = new HashMap<>();
 		try {
-			List<Storage> storages = findStorages();
+			List<Storage> storages = findStorages(false);
 			for (Storage s : storages) {
 				result.put(s.getType(), s);
 			}
@@ -154,7 +154,7 @@ public class StorageService {
 	public String getZookeeperList() {
 		List<Storage> storages = new ArrayList<>();
 		try {
-			storages = findStorages();
+			storages = findStorages(false);
 		} catch (DalException e) {
 			logger.warn("findStorages failed", e);
 		}

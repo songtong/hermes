@@ -26,9 +26,9 @@ public class PartitionService {
 		return null;
 	}
 
-	public List<com.ctrip.hermes.meta.entity.Partition> findPartitions(
-	      com.ctrip.hermes.metaservice.model.Topic topicModel) throws DalException {
-		List<com.ctrip.hermes.metaservice.model.Partition> models = partitionDao.findByTopic(topicModel.getId());
+	public List<com.ctrip.hermes.meta.entity.Partition> findPartitions(com.ctrip.hermes.metaservice.model.Topic topicModel)
+	      throws DalException {
+		List<com.ctrip.hermes.metaservice.model.Partition> models = partitionDao.findByTopic(topicModel.getId(), false);
 		List<com.ctrip.hermes.meta.entity.Partition> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.Partition model : models) {
 			com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
@@ -40,7 +40,7 @@ public class PartitionService {
 	public List<Partition> findPartitionsByTopic(Long topicId) {
 		List<com.ctrip.hermes.meta.entity.Partition> entities = new ArrayList<>();
 		try {
-			List<com.ctrip.hermes.metaservice.model.Partition> models = partitionDao.findByTopic(topicId);
+			List<com.ctrip.hermes.metaservice.model.Partition> models = partitionDao.findByTopic(topicId, false);
 			for (com.ctrip.hermes.metaservice.model.Partition model : models) {
 				com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
 				entities.add(entity);

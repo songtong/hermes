@@ -23,7 +23,7 @@ import com.google.common.cache.LoadingCache;
 public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec> {
 
 	private int max_size = 5;
-	
+
 	private LoadingCache<String, Codec> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Codec>() {
 
@@ -69,8 +69,8 @@ public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec>
 		isNeedReload = true;
 	}
 
-	public Collection<Codec> list() throws DalException {
-		if (isNeedReload) {
+	public Collection<Codec> list(boolean fromDB) throws DalException {
+		if (isNeedReload || fromDB) {
 			List<Codec> models = list(CodecEntity.READSET_FULL);
 			for (Codec model : models) {
 				cache.put(model.getKeyType(), model);

@@ -1,6 +1,5 @@
 package com.ctrip.hermes.metaservice.dal;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -51,8 +50,11 @@ public class CachedPartitionDao extends PartitionDao implements CachedDao<Long, 
 		return new Partition();
 	}
 
-	public List<Partition> findByTopic(final Long keyId) throws DalException {
+	public List<Partition> findByTopic(final Long keyId, boolean fromDB) throws DalException {
 		try {
+			if (fromDB) {
+				topicCache.invalidate(keyId);
+			}
 			return topicCache.get(keyId);
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
@@ -75,7 +77,8 @@ public class CachedPartitionDao extends PartitionDao implements CachedDao<Long, 
 		topicCache.invalidateAll();
 	}
 
-	public Collection<Partition> list() throws DalException {
-		return new ArrayList<Partition>();
+	public Collection<Partition> list(boolean fromDB) throws DalException {
+		// TODO: list depend to parameter[fromDB]
+		return list(PartitionEntity.READSET_FULL);
 	}
 }

@@ -9,7 +9,6 @@ import org.unidal.dal.jdbc.datasource.DataSourceProvider;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourceDef;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourcesDef;
 import org.unidal.dal.jdbc.datasource.model.entity.PropertiesDef;
-import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -42,7 +41,7 @@ public class StorageDataSourceProvider implements DataSourceProvider {
 					m_dsService = PlexusComponentLocator.lookup(StorageService.class);
 				}
 				
-				for (Storage storage : m_dsService.findStorages()) {
+				for (Storage storage : m_dsService.findStorages(true)) {
 					if (storage.getType().equals("mysql")) {
 						dataSources.addAll(storage.getDatasources());
 					}

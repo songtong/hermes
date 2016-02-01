@@ -58,7 +58,7 @@ public class CachedProducerDao extends ProducerDao implements CachedDao<Long, Pr
 		topicCache.invalidateAll();
 	}
 
-	public Collection<Producer> list() throws DalException {
+	public Collection<Producer> list(boolean fromDB) throws DalException {
 		return new ArrayList<Producer>();
 	}
 

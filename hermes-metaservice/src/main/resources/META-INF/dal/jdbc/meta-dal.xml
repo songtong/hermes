@@ -198,6 +198,10 @@
 		<var name="tId" value-type="long" />
 		<var name="pId" value-type="int" />
 		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+		FROM <TABLE/> ]]></statement>
+			</query>
 			<query name="find-by-topicId" type="SELECT" multiple="true">
 				<param name="tId" />
 				<statement><![CDATA[SELECT <FIELDS/>

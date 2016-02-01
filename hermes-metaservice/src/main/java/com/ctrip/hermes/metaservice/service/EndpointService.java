@@ -36,8 +36,8 @@ public class EndpointService {
 		logger.info("Delete Endpoint: id:{} done.", endpointId);
 	}
 
-	public List<com.ctrip.hermes.meta.entity.Endpoint> findEndpoints() throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.Endpoint> models = m_endpointDao.list();
+	public List<com.ctrip.hermes.meta.entity.Endpoint> findEndpoints(boolean fromDB) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.Endpoint> models = m_endpointDao.list(fromDB);
 		List<com.ctrip.hermes.meta.entity.Endpoint> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.Endpoint model : models) {
 			com.ctrip.hermes.meta.entity.Endpoint entity = ModelToEntityConverter.convert(model);
@@ -49,7 +49,7 @@ public class EndpointService {
 	public Map<String, Endpoint> getEndpoints() {
 		Map<String, Endpoint> result = new HashMap<String, Endpoint>();
 		try {
-			for (Endpoint e : findEndpoints()) {
+			for (Endpoint e : findEndpoints(false)) {
 				result.put(e.getId(), e);
 			}
 		} catch (DalException e) {

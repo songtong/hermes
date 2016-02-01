@@ -23,7 +23,7 @@ import com.google.common.cache.LoadingCache;
 public class CachedSchemaDao extends SchemaDao implements CachedDao<Long, Schema> {
 
 	private int max_size = 500;
-	
+
 	private LoadingCache<Long, Schema> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Schema>() {
 
@@ -57,8 +57,8 @@ public class CachedSchemaDao extends SchemaDao implements CachedDao<Long, Schema
 		return super.insert(proto);
 	}
 
-	public Collection<Schema> list() throws DalException {
-		if (isNeedReload) {
+	public Collection<Schema> list(boolean fromDB) throws DalException {
+		if (isNeedReload || fromDB) {
 			List<Schema> models = list(SchemaEntity.READSET_FULL);
 			for (Schema model : models) {
 				cache.put(model.getKeyId(), model);
