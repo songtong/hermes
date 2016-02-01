@@ -11,7 +11,6 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	ApplicationService.get_generated_application($routeParams['id']).then(function(result) {
 		$scope.application = result["key"];
 		$scope.view = result["value"];
-		console.log($scope.view.partitions);
 		updatePageType($scope.application["type"]);
 		if ($scope.application["type"] == 0 || $scope.application["type"] == 2) {// create
 			$scope.defaultReadDS = $scope.view.partitions[0].readDatasource;
@@ -141,7 +140,6 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		},
 		setProgressStatus : function(progressInfo, value, taskCount) {
 			var currentValue = (value + taskCount - 1) / this.totalTaskCount * 100 + "%";
-			console.log(currentValue);
 			this.progressInfo = progressInfo;
 			this.setProgreaaBarValue(currentValue);
 			if (currentValue == "100%") {
@@ -268,6 +266,9 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		if (typeof (myObj) != 'object' || myObj == null)
 			return myObj;
 		var newObj = new Object();
+		if (myObj instanceof Array) {
+			newObj = new Array();
+		}
 		for ( var i in myObj) {
 			newObj[i] = clone(myObj[i]);
 		}
