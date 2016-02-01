@@ -16,8 +16,8 @@ public class ServerService {
 	@Inject
 	protected CachedServerDao m_serverDao;
 
-	public List<com.ctrip.hermes.meta.entity.Server> findServers() throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.Server> models = m_serverDao.list();
+	public List<com.ctrip.hermes.meta.entity.Server> findServers(boolean fromDB) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.Server> models = m_serverDao.list(fromDB);
 		List<com.ctrip.hermes.meta.entity.Server> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.Server model : models) {
 			com.ctrip.hermes.meta.entity.Server entity = ModelToEntityConverter.convert(model);

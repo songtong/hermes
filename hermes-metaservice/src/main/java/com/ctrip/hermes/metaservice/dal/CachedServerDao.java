@@ -23,7 +23,7 @@ import com.google.common.cache.LoadingCache;
 public class CachedServerDao extends ServerDao implements CachedDao<String, Server> {
 
 	private int max_size = 10;
-	
+
 	private LoadingCache<String, Server> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Server>() {
 
@@ -57,8 +57,8 @@ public class CachedServerDao extends ServerDao implements CachedDao<String, Serv
 		return super.insert(proto);
 	}
 
-	public Collection<Server> list() throws DalException {
-		if (isNeedReload) {
+	public Collection<Server> list(boolean fromDB) throws DalException {
+		if (isNeedReload || fromDB) {
 			List<Server> models = list(ServerEntity.READSET_FULL);
 			for (Server model : models) {
 				cache.put(model.getKeyId(), model);

@@ -22,7 +22,7 @@ import com.google.common.cache.LoadingCache;
 public class CachedDatasourceDao extends DatasourceDao implements CachedDao<String, Datasource> {
 
 	private int max_size = 100;
-	
+
 	private LoadingCache<String, Datasource> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Datasource>() {
 
@@ -68,8 +68,8 @@ public class CachedDatasourceDao extends DatasourceDao implements CachedDao<Stri
 		isNeedReload = true;
 	}
 
-	public Collection<Datasource> list() throws DalException {
-		if (isNeedReload) {
+	public Collection<Datasource> list(boolean fromDB) throws DalException {
+		if (isNeedReload || fromDB) {
 			List<Datasource> models = list(DatasourceEntity.READSET_FULL);
 			for (Datasource model : models) {
 				cache.put(model.getKeyId(), model);
@@ -78,7 +78,7 @@ public class CachedDatasourceDao extends DatasourceDao implements CachedDao<Stri
 		}
 		return cache.asMap().values();
 	}
-
+	
 	public int updateByPK(Datasource proto) throws DalException {
 		cache.invalidateAll();
 		isNeedReload = true;

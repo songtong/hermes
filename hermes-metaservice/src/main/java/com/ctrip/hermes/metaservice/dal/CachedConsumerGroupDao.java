@@ -35,8 +35,7 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 	      });
 
 	private LoadingCache<Long, Map<Integer, ConsumerGroup>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size)
-	      .recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
-	      .build(new CacheLoader<Long, Map<Integer, ConsumerGroup>>() {
+	      .recordStats().refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Map<Integer, ConsumerGroup>>() {
 
 		      @Override
 		      public Map<Integer, ConsumerGroup> load(Long key) throws Exception {
@@ -68,8 +67,11 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 		}
 	}
 
-	public Collection<ConsumerGroup> findByTopic(final Long topicId) throws DalException {
+	public Collection<ConsumerGroup> findByTopic(final Long topicId, boolean fromDB) throws DalException {
 		try {
+			if (fromDB) {
+				topicCache.invalidate(topicId);
+			}
 			return topicCache.get(topicId).values();
 		} catch (ExecutionException e) {
 			throw new DalException(null, e.getCause());
@@ -97,13 +99,13 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 		isNeedReload = true;
 	}
 
-	public Collection<ConsumerGroup> list() throws DalException {
-		if (isNeedReload) {
+	public Collection<ConsumerGroup> list(boolean fromDB) throws DalException {
+		if (isNeedReload || fromDB) {
 			List<ConsumerGroup> models = list(ConsumerGroupEntity.READSET_FULL);
 			if (models.size() > max_size) {
 				max_size = models.size() * 2;
-				cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
-				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Integer, ConsumerGroup>() {
+				cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
+				      .build(new CacheLoader<Integer, ConsumerGroup>() {
 
 					      @Override
 					      public ConsumerGroup load(Integer key) throws Exception {
@@ -111,8 +113,8 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 					      }
 
 				      });
-				topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
-				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Map<Integer, ConsumerGroup>>() {
+				topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
+				      .build(new CacheLoader<Long, Map<Integer, ConsumerGroup>>() {
 
 					      @Override
 					      public Map<Integer, ConsumerGroup> load(Long key) throws Exception {

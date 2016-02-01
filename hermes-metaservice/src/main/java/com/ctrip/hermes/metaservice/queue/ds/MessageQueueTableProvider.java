@@ -112,7 +112,7 @@ public class MessageQueueTableProvider implements TableProvider {
 
 	private Partition findPartition(String topicName, int partitionId) {
 		try {
-			List<Partition> partitions = m_partitionDao.findByTopic(getTopicId(topicName));
+			List<Partition> partitions = m_partitionDao.findByTopic(getTopicId(topicName), true);
 			for (Partition p : partitions) {
 				if (p.getId() == partitionId) {
 					return p;

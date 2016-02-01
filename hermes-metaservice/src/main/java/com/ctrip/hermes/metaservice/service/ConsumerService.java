@@ -96,7 +96,8 @@ public class ConsumerService {
 	}
 
 	public List<com.ctrip.hermes.meta.entity.ConsumerGroup> findConsumerGroups(Topic topicModel) throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.findByTopic(topicModel.getId());
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.findByTopic(topicModel.getId(),
+		      false);
 		List<com.ctrip.hermes.meta.entity.ConsumerGroup> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : models) {
 			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
@@ -108,7 +109,7 @@ public class ConsumerService {
 	public Map<String, List<ConsumerGroup>> getConsumers() {
 		Map<String, List<ConsumerGroup>> map = new LinkedHashMap<String, List<ConsumerGroup>>();
 		try {
-			Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.list();
+			Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.list(false);
 			for (com.ctrip.hermes.metaservice.model.ConsumerGroup cgModel : cgModels) {
 				Topic topic = m_topicService.findTopicById(cgModel.getTopicId());
 				if (!map.containsKey(topic.getName())) {

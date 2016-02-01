@@ -6,7 +6,6 @@ import org.unidal.dal.jdbc.datasource.DataSourceProvider;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourceDef;
 import org.unidal.dal.jdbc.datasource.model.entity.DataSourcesDef;
 import org.unidal.dal.jdbc.datasource.model.entity.PropertiesDef;
-import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;

@@ -16,8 +16,8 @@ public class AppService {
 	@Inject
 	private CachedAppDao appDao;
 
-	public List<com.ctrip.hermes.meta.entity.App> findApps() throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.App> models = appDao.list();
+	public List<com.ctrip.hermes.meta.entity.App> findApps(boolean fromDB) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.App> models = appDao.list(fromDB);
 		List<com.ctrip.hermes.meta.entity.App> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.App model : models) {
 			com.ctrip.hermes.meta.entity.App entity = ModelToEntityConverter.convert(model);

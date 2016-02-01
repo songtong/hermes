@@ -23,7 +23,7 @@ import com.google.common.cache.LoadingCache;
 public class CachedEndpointDao extends EndpointDao implements CachedDao<String, Endpoint> {
 
 	private int max_size = 10;
-	
+
 	private LoadingCache<String, Endpoint> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Endpoint>() {
 
@@ -69,8 +69,8 @@ public class CachedEndpointDao extends EndpointDao implements CachedDao<String, 
 		isNeedReload = true;
 	}
 
-	public Collection<Endpoint> list() throws DalException {
-		if (isNeedReload) {
+	public Collection<Endpoint> list(boolean fromDB) throws DalException {
+		if (isNeedReload || fromDB) {
 			List<Endpoint> models = list(EndpointEntity.READSET_FULL);
 			for (Endpoint model : models) {
 				cache.put(model.getKeyId(), model);

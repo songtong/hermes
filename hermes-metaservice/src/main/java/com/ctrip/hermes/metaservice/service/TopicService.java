@@ -27,6 +27,7 @@ import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
 import com.ctrip.hermes.metaservice.dal.CachedProducerDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
+import com.ctrip.hermes.metaservice.model.ConsumerGroup;
 import com.ctrip.hermes.metaservice.model.PartitionEntity;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
@@ -131,8 +132,7 @@ public class TopicService {
 
 			int partitionId = 0;
 			for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicEntity.getPartitions()) {
-				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
-						.convert(partitionEntity);
+				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
 				partitionModel.setId(partitionId++);
 				partitionModel.setTopicId(topicModel.getId());
 				partitionEntity.setId(partitionModel.getId());
@@ -166,8 +166,7 @@ public class TopicService {
 		if (topic == null)
 			return;
 		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topic.getPartitions()) {
-			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
-					.convert(partitionEntity);
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
 			partitionModel.setTopicId(topic.getId());
 			m_partitionDao.deleteByTopicId(partitionModel);
 		}
@@ -271,8 +270,7 @@ public class TopicService {
 		return m_topicStorageService.queryStorageSize(ds, table);
 	}
 
-	public List<StoragePartition> queryStorageTablePartitions(String ds, String table)
-			throws StorageHandleErrorException {
+	public List<StoragePartition> queryStorageTablePartitions(String ds, String table) throws StorageHandleErrorException {
 		return m_topicStorageService.queryTablePartitions(ds, table);
 	}
 
@@ -317,7 +315,7 @@ public class TopicService {
 	}
 
 	public List<com.ctrip.hermes.meta.entity.Topic> findTopics(boolean isFillDetail) throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.Topic> models = m_topicDao.list();
+		Collection<com.ctrip.hermes.metaservice.model.Topic> models = m_topicDao.list(false);
 		List<com.ctrip.hermes.meta.entity.Topic> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.Topic model : models) {
 			if (isFillDetail) {
@@ -329,41 +327,82 @@ public class TopicService {
 		return entities;
 	}
 
+	public List<com.ctrip.hermes.meta.entity.Topic> findTopicsFromDB(boolean isFillDetail) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.Topic> models = m_topicDao.list(true);
+		Map<Long, Collection<ConsumerGroup>> consumers = consumerListToMap(m_consumerGroupDao.list(true));
+		Map<Long, Collection<com.ctrip.hermes.metaservice.model.Partition>> partitions = partitionListToMap(m_partitionDao
+		      .list(true));
+		List<com.ctrip.hermes.meta.entity.Topic> entities = new ArrayList<>();
+		for (com.ctrip.hermes.metaservice.model.Topic model : models) {
+			if (isFillDetail) {
+				Topic topic = ModelToEntityConverter.convert(model);
+				addConsumerGroups4Topic(topic, consumers.get(topic.getId()));
+				addPartitions4Topic(topic, partitions.get(topic.getId()));
+				entities.add(topic);
+			} else {
+				entities.add(ModelToEntityConverter.convert(model));
+			}
+		}
+		return entities;
+	}
+
+	private void addConsumerGroups4Topic(Topic topic, Collection<ConsumerGroup> consumers) {
+		if (consumers != null) {
+			for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : consumers) {
+				com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
+				topic.addConsumerGroup(entity);
+			}
+		}
+	}
+
+	private void addPartitions4Topic(Topic topic, Collection<com.ctrip.hermes.metaservice.model.Partition> partitions) {
+		if (partitions != null) {
+			for (com.ctrip.hermes.metaservice.model.Partition model : partitions) {
+				com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
+				topic.addPartition(entity);
+			}
+		}
+	}
+
+	private Map<Long, Collection<com.ctrip.hermes.metaservice.model.Partition>> partitionListToMap(
+	      Collection<com.ctrip.hermes.metaservice.model.Partition> collection) {
+		Map<Long, Collection<com.ctrip.hermes.metaservice.model.Partition>> map = new HashMap<>();
+		if (collection != null) {
+			for (com.ctrip.hermes.metaservice.model.Partition partition : collection) {
+				Collection<com.ctrip.hermes.metaservice.model.Partition> list = map.get(partition.getTopicId());
+				if (list == null) {
+					list = new ArrayList<>();
+					map.put(partition.getTopicId(), list);
+				}
+				list.add(partition);
+			}
+		}
+		return map;
+	}
+
+	private Map<Long, Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup>> consumerListToMap(
+	      Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> collection) {
+		Map<Long, Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup>> map = new HashMap<>();
+		if (collection != null) {
+			for (com.ctrip.hermes.metaservice.model.ConsumerGroup consumer : collection) {
+				Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> list = map.get(consumer.getTopicId());
+				if (list == null) {
+					list = new ArrayList<>();
+					map.put(consumer.getTopicId(), list);
+				}
+				list.add(consumer);
+			}
+		}
+		return map;
+	}
+
 	protected com.ctrip.hermes.meta.entity.Topic fillTopic(com.ctrip.hermes.metaservice.model.Topic topicModel)
-			throws DalException {
+	      throws DalException {
 		com.ctrip.hermes.meta.entity.Topic topicEntity = ModelToEntityConverter.convert(topicModel);
-		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao
-				.findByTopic(topicModel.getId());
-		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : cgModels) {
-			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
-			topicEntity.addConsumerGroup(entity);
-		}
-		List<com.ctrip.hermes.metaservice.model.Partition> partitionModels = m_partitionDao
-				.findByTopic(topicModel.getId());
-		for (com.ctrip.hermes.metaservice.model.Partition model : partitionModels) {
-			com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
-			topicEntity.addPartition(entity);
-		}
-		// List<com.ctrip.hermes.meta.entity.Producer> producers =
-		// findProducers(model);
-		// for (com.ctrip.hermes.meta.entity.Producer p : producers) {
-		// entity.addProducer(p);
-		// }
+		addConsumerGroups4Topic(topicEntity, m_consumerGroupDao.findByTopic(topicModel.getId(), false));
+		addPartitions4Topic(topicEntity, m_partitionDao.findByTopic(topicModel.getId(), false));
 		return topicEntity;
 	}
-	// @Override
-	// public List<com.ctrip.hermes.meta.entity.Producer>
-	// findProducers(com.ctrip.hermes.metaservice.model.Topic topicModel)
-	// throws DalException {
-	// List<Producer> models = m_producerDao.findByTopic(topicModel.getId());
-	// List<com.ctrip.hermes.meta.entity.Producer> entities = new ArrayList<>();
-	// for (Producer model : models) {
-	// com.ctrip.hermes.meta.entity.Producer entity =
-	// ModelToEntityConverter.convert(model);
-	// entities.add(entity);
-	// }
-	// return entities;
-	// }
 }
 
 class ZKStringSerializer implements ZkSerializer {

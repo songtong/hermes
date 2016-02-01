@@ -77,13 +77,13 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 		return super.insert(proto);
 	}
 
-	public Collection<Topic> list() throws DalException {
-		if (isNeedReload) {
+	public Collection<Topic> list(boolean fromDB) throws DalException {
+		if (isNeedReload || fromDB) {
 			List<Topic> models = list(TopicEntity.READSET_FULL);
 			if (models.size() > max_size) {
 				max_size = models.size() * 2;
-				cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
-				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Topic>() {
+				cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
+				      .build(new CacheLoader<Long, Topic>() {
 
 					      @Override
 					      public Topic load(Long key) throws Exception {
@@ -91,8 +91,8 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 					      }
 
 				      });
-				nameCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
-				      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Topic>() {
+				nameCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
+				      .build(new CacheLoader<String, Topic>() {
 
 					      @Override
 					      public Topic load(String key) throws Exception {

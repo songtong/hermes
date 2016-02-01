@@ -22,7 +22,7 @@ public class CodecService {
 	public Map<String, Codec> getCodecs() {
 		Map<String, Codec> result = new HashMap<String, Codec>();
 		try {
-			for (Codec codec : findCodecs()) {
+			for (Codec codec : findCodecs(false)) {
 				result.put(codec.getType(), codec);
 			}
 		} catch (DalException e) {
@@ -31,8 +31,8 @@ public class CodecService {
 		return result;
 	}
 
-	public List<com.ctrip.hermes.meta.entity.Codec> findCodecs() throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.Codec> models = codecDao.list();
+	public List<com.ctrip.hermes.meta.entity.Codec> findCodecs(boolean fromDB) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.Codec> models = codecDao.list(fromDB);
 		List<com.ctrip.hermes.meta.entity.Codec> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.Codec model : models) {
 			com.ctrip.hermes.meta.entity.Codec entity = ModelToEntityConverter.convert(model);
