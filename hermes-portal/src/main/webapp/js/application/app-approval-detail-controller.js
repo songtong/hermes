@@ -180,7 +180,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			delay.resolve();
 		} else {
 			$scope.topicDetailForm.setProgressStatus("正在同步topic至Prod环境", 0.3, 3);
-			ApplicationService.sync_topic($scope.ProdTopicView, 'prod', false).then(function(result) {
+			ApplicationService.sync_topic($scope.prodTopicView, 'prod', false).then(function(result) {
 				$scope.topicDetailForm.setProgressStatus("同步至Prod环境成功。", 1, 3);
 				delay.resolve();
 			}, function(result) {
