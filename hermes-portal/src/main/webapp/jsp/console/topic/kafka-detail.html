@@ -17,6 +17,12 @@
 			<div class="panel-body">
 				<div class="form-horizontal">
 					<div class="form-group">
+						<label class="col-md-4 control-label">Topic ID</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.id"></span>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-4 control-label">名称</label>
 						<div class="col-md-8" style="padding-top: 7px">
 							<span ng-bind="topic.name"></span>
@@ -161,13 +167,13 @@
 			<div class="panel-body">
 				<table class="table table-condensed table-responsive">
 					<thead>
-						<th class="col-md-1">#</th>
+						<th class="col-md-1">ID</th>
 						<th class="col-md-5">消费集群</th>
 						<th class="col-md-5">应用</th>
 					</thead>
 					<tbody>
 						<tr ng-repeat="consumer in consumers">
-							<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
+							<td>{{consumer.id}}</td>
 							<td>{{consumer.groupName}}</td>
 							<td>{{consumer.appId}}</td>
 						</tr>

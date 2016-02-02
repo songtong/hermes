@@ -1,5 +1,6 @@
 <span ng-bind="current_topic" class="label label-success"></span>
-<hr>
+<br>
+<br>
 <div ng-if="topic.storageType=='kafka'">
 	<h4>Kafka Topic 消息产生和消费请查询对应环境下trifecta：</h4>
 	<ul>
@@ -8,22 +9,24 @@
 		<li>prod: <a href="{{trifecta_urls.prod}}">{{trifecta_urls.prod}}</a></li>
 	</ul>
 </div>
-<div ng-if="topic.storageType=='mysql'" style="height: 85%">
-	<div class="row" style="height: 30%">
-		<div class="col-md-12" style="height: 100%">
-			<div class="panel panel-success" style="height: 100%">
-				<div class="panel-heading">
-					<a href="#top/produce/{{current_topic}}" class="btn btn-xs btn-success" style="text-align: center;"> <span class="glyphicon glyphicon-th-list"></span> 生产速度排行
+<div ng-if="topic.storageType=='mysql'">
+	<div class="row" style="height: 40%">
+		<div class="col-md-12" >
+			<div class="panel panel-success">
+				<div class="panel-heading">生产速度
+					<!-- <a href="#top/produce/{{current_topic}}" class="btn btn-xs btn-success" style="text-align: center;"> <span class="glyphicon glyphicon-th-list"></span> 生产速度排行
 					</a> <a href="#top/consume/{{current_topic}}" class="btn btn-xs btn-warning" style="text-align: center;"> <span class="glyphicon glyphicon-th-list"></span> 消费速度排行
 					</a> <a href="#top/process/{{current_topic}}" class="btn btn-xs btn-primary" style="text-align: center;"> <span class="glyphicon glyphicon-time"></span> 消费耗时排行
-					</a> <a href="#latest/{{current_topic}}" class="btn btn-xs btn-info" style="text-align: center;"> <span class="glyphicon glyphicon-eye-open"></span> 最新消息
+					</a>  -->
+					<a href="#latest/{{current_topic}}" class="btn btn-xs btn-info" style="text-align: center;"> <span class="glyphicon glyphicon-eye-open"></span> 最新消息
 					</a>
 				</div>
-				<iframe style="border: 0" ng-src="{{k_topic_produce_history}}" height="80%" width="100%"></iframe>
+				<div class="panel-body">
+					<iframe style="border: 0" ng-src="{{k_topic_produce_history}}" width="100%"></iframe>
+				</div>
 			</div>
 		</div>
 	</div>
-	<hr>
 	<div class="row" style="height: 60%">
 		<div class="col-md-12" style="height: 100%">
 			<div class="panel panel-success" style="height: 100%">

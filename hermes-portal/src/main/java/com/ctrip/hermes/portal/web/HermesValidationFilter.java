@@ -32,8 +32,8 @@ public class HermesValidationFilter implements Filter {
 
 	private PortalConfig m_config = PlexusComponentLocator.lookup(PortalConfig.class);
 
-	private String[] m_protectedPages = { "/console/consumer", "/console/subscription", "/console/storage",
-	      "/console/endpoint", "/console/resender" };
+	private String[] m_protectedPages = { "/console/consumer", "/console/subscription", "/console/storage", "/console/endpoint",
+	      "/console/resender" };
 
 	private AtomicReference<Set<String>> m_admins = new AtomicReference<>();
 
@@ -60,8 +60,7 @@ public class HermesValidationFilter implements Filter {
 	}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
-	      ServletException {
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse res = (HttpServletResponse) response;
 
@@ -79,8 +78,8 @@ public class HermesValidationFilter implements Filter {
 		// reject unauthorized Delete operation
 		if (req.getRequestURI().startsWith("/api") && "delete".equalsIgnoreCase(req.getMethod())) {
 			if (!isAdmin(user)) {
-				log.warn("User:{} from ip:{} attemp to call unauthorized url:{}", user, req.getRemoteAddr(), req
-				      .getRequestURL().toString());
+				log.warn("User:{} from ip:{} attemp to call unauthorized url:{}", user, req.getRemoteAddr(), req.getRequestURL()
+				      .toString());
 				res.sendRedirect("/console");
 				return;
 			}
@@ -98,6 +97,7 @@ public class HermesValidationFilter implements Filter {
 			}
 		}
 		String requestUrl = ((HttpServletRequest) request).getRequestURI();
+		String apiPrefix = "/api/";
 		if (isLogined == false) {
 			for (String page : m_protectedPages) {
 				if (requestUrl.startsWith(page)) {
@@ -107,7 +107,11 @@ public class HermesValidationFilter implements Filter {
 			}
 		}
 		request.setAttribute("logined", isLogined);
-		chain.doFilter(request, response);
+		if (isLogined && requestUrl.startsWith(apiPrefix)) {
+			request.getRequestDispatcher("/apisso/" + requestUrl.substring(apiPrefix.length())).forward(request, response);
+		} else {
+			chain.doFilter(request, response);
+		}
 	}
 
 	private boolean isAdmin(String ssoUser) {
