@@ -1,11 +1,8 @@
 package com.ctrip.hermes.core.meta.internal;
 
-import java.util.List;
 import java.util.Map;
 
 import com.ctrip.hermes.core.bo.Offset;
-import com.ctrip.hermes.core.bo.SchemaView;
-import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
@@ -19,10 +16,6 @@ public interface MetaProxy {
 	LeaseAcquireResponse tryRenewBrokerLease(String topic, int partition, Lease lease, String sessionId, int brokerPort);
 
 	LeaseAcquireResponse tryAcquireBrokerLease(String topic, int partition, String sessionId, int brokerPort);
-
-	List<SchemaView> listSchemas();
-
-	List<SubscriptionView> listSubscriptions(String status);
 
 	int registerSchema(String schema, String subject);
 

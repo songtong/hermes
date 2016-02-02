@@ -17,8 +17,6 @@
 		<attribute name="app-ids" value-type="String" />
 		<attribute name="retry-policy" value-type="String" />
 		<attribute name="ordered-consume" value-type="boolean" default-value="true" />
-		<attribute name="phone-1" value-type="String" />
-		<attribute name="phone-2" value-type="String" />
 	</entity>
 
 	<entity name="producer">
@@ -53,7 +51,6 @@
 		<attribute name="name" key='true' />
 		<attribute name="id" value-type="long" />
 		<attribute name="schema-id" value-type="long" />
-		<attribute name="description" value-type="String" />
 		<attribute name="other-info" value-type="String" />
 		<attribute name="endpoint-type" value-type="String" default-value="broker" />
 		<attribute name="consumer-retry-policy" default-value="3:[3,3000]" />
@@ -62,8 +59,6 @@
 		<attribute name="resend-partition-size" value-type="long" default-value="50000" />
 		<attribute name="storage-partition-count" value-type="int" default-value="10" />
 		<attribute name="priority-message-enabled" value-type="boolean" default-value="true" />
-		<attribute name="phone-1" value-type="String" />
-		<attribute name="phone-2" value-type="String" />
 		<entity-ref name="consumer-group" type="list" names="consumer-groups" />
 
 		<snippet lang='java'><![CDATA[

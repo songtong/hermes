@@ -96,8 +96,8 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		var consumer = {};
 		consumer.topicName = topics[i];
 		consumer.orderedConsume = view.orderedConsume;
-		consumer.appId = view.appId;
-		consumer.groupName = view.groupName;
+		consumer.appIds = view.appIds;
+		consumer.name = view.name;
 		consumer.retryPolicy = view.retryPolicy;
 		consumer.ackTimeoutSeconds = view.ackTimeoutSeconds;
 		consumer.owner1 = view.owner1;

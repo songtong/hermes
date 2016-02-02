@@ -8,8 +8,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metaservice.view.SubscriptionView;
 import com.ctrip.hermes.rest.service.SubscriptionRegisterService;
 
 @Path("/subscriptions/")

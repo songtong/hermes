@@ -11,6 +11,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Charsets;
 
@@ -49,7 +50,7 @@ public class OneBoxResource {
 			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 		}
-		return Response.ok().build();
+		return Response.status(Status.GATEWAY_TIMEOUT).build();
 	}
 
 	@Path("pushStandby")

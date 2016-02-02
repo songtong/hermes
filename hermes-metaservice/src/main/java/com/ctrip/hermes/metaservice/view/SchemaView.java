@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.bo;
+package com.ctrip.hermes.metaservice.view;
 
 import java.util.Date;
 import java.util.List;

@@ -251,7 +251,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			}
 		}
 
-		Topic t = m_topicService.findTopicByName(topic);
+		Topic t = m_topicService.findTopicEntityByName(topic);
 		CountDownLatch latch = new CountDownLatch(t.getPartitions().size());
 		try {
 			ConsumerGroup c = t.findConsumerGroup(consumer);

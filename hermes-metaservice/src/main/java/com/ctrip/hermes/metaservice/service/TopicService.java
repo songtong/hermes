@@ -23,6 +23,9 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
+import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
+import com.ctrip.hermes.metaservice.converter.ModelToViewConverter;
 import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
 import com.ctrip.hermes.metaservice.dal.CachedProducerDao;
@@ -34,6 +37,7 @@ import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
+import com.ctrip.hermes.metaservice.view.TopicView;
 
 @Named
 public class TopicService {
@@ -70,7 +74,7 @@ public class TopicService {
 	 * @param partition
 	 */
 	public Topic addPartitionsForTopic(String topicName, List<Partition> partitions) throws Exception {
-		Topic topic = findTopicByName(topicName);
+		Topic topic = findTopicEntityByName(topicName);
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 
 		int partitionId = 0;
@@ -162,7 +166,7 @@ public class TopicService {
 	 * @throws DalException
 	 */
 	public void deleteTopic(String name) throws Exception {
-		Topic topic = findTopicByName(name);
+		Topic topic = findTopicEntityByName(name);
 		if (topic == null)
 			return;
 		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topic.getPartitions()) {
@@ -221,7 +225,7 @@ public class TopicService {
 		return null;
 	}
 
-	public Topic findTopicByName(String topic) {
+	public Topic findTopicEntityByName(String topic) {
 		try {
 			com.ctrip.hermes.metaservice.model.Topic model = this.m_topicDao.findByName(topic);
 			return fillTopic(model);
@@ -284,35 +288,34 @@ public class TopicService {
 	 * @return
 	 * @throws Exception
 	 */
-	public Topic updateTopic(Topic topic) throws Exception {
-		Topic originTopic = findTopicByName(topic.getName());
+	public TopicView updateTopic(TopicView topicView) throws Exception {
+		com.ctrip.hermes.metaservice.model.Topic topicModel = this.m_topicDao.findByName(topicView.getName());
 
-		originTopic.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
-		originTopic.setCodecType(topic.getCodecType());
-		originTopic.setConsumerRetryPolicy(topic.getConsumerRetryPolicy());
-		originTopic.setOwner1(topic.getOwner1());
-		originTopic.setOwner2(topic.getOwner2());
-		originTopic.setPhone1(topic.getPhone1());
-		originTopic.setPhone2(topic.getPhone2());
-		originTopic.setDescription(topic.getDescription());
-		originTopic.setEndpointType(topic.getEndpointType());
-		originTopic.setLastModifiedTime(new Date(System.currentTimeMillis()));
-		originTopic.setStatus(topic.getStatus());
+		topicModel.setAckTimeoutSeconds(topicView.getAckTimeoutSeconds());
+		topicModel.setCodecType(topicView.getCodecType());
+		topicModel.setConsumerRetryPolicy(topicView.getConsumerRetryPolicy());
+		topicModel.setOwner1(topicView.getOwner1());
+		topicModel.setOwner2(topicView.getOwner2());
+		topicModel.setPhone1(topicView.getPhone1());
+		topicModel.setPhone2(topicView.getPhone2());
+		topicModel.setDescription(topicView.getDescription());
+		topicModel.setEndpointType(topicView.getEndpointType());
+		topicModel.setStatus(topicView.getStatus());
 
 		List<Partition> partitions = new ArrayList<>();
-		for (Partition partition : topic.getPartitions()) {
+		for (Partition partition : topicView.getPartitions()) {
 			partitions.add(partition);
 		}
-		addPartitionsForTopic(originTopic.getName(), partitions);
-		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(originTopic);
+		addPartitionsForTopic(topicModel.getName(), partitions);
 		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
-		if (Storage.MYSQL.equals(topic.getStorageType())) {
-			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
-			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
+		if (Storage.MYSQL.equals(topicView.getStorageType())) {
+			Topic topicEntity = ModelToEntityConverter.convert(topicModel);
+			m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
+			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 		}
 
-		return findTopicByName(topic.getName());
+		return ModelToViewConverter.convert(topicModel);
 	}
 
 	public List<com.ctrip.hermes.meta.entity.Topic> findTopics(boolean isFillDetail) throws DalException {

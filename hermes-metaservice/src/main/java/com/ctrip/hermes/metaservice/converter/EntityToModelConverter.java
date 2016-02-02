@@ -1,4 +1,4 @@
-package com.ctrip.hermes.metaservice.service;
+package com.ctrip.hermes.metaservice.converter;
 
 import java.util.HashSet;
 import java.util.Set;

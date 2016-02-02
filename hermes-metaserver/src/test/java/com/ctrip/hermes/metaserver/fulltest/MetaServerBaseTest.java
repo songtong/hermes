@@ -568,9 +568,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 			topic.setAckTimeoutSeconds(555);
 			topic.setCodecType("json");
 			topic.setConsumerRetryPolicy("1:[3,6,9]");
-			topic.setOwner1("hermes");
 			topic.setCreateTime(new Date());
-			topic.setDescription("description");
 			topic.setEndpointType("broker");
 			topic.setId(999L);
 			topic.setPartitionCount(2);
@@ -590,9 +588,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 			topic.setAckTimeoutSeconds(555);
 			topic.setCodecType("JSON");
 			topic.setConsumerRetryPolicy("1:[3,6,9]");
-			topic.setOwner1("UPDATED");
 			topic.setCreateTime(new Date());
-			topic.setDescription("DESCRIPTION");
 			topic.setEndpointType("BR0");
 			topic.setId(111L);
 			topic.setPartitionCount(2);

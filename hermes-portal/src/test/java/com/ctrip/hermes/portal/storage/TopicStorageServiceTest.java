@@ -89,7 +89,7 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	}
 
 	private Topic buildTopic() {
-		return topicService.findTopicByName("cmessage_fws");
+		return topicService.findTopicEntityByName("cmessage_fws");
 	}
 
 	@Test(expected = TopicIsNullException.class)

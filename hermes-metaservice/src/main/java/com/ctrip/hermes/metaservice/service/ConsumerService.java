@@ -16,6 +16,8 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
+import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
 import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
@@ -128,7 +130,7 @@ public class ConsumerService {
 
 	public List<ConsumerGroup> getConsumers(String topicName) {
 		try {
-			Topic topic = m_topicService.findTopicByName(topicName);
+			Topic topic = m_topicService.findTopicEntityByName(topicName);
 			return findConsumerGroups(topic);
 		} catch (DalException e) {
 			logger.warn("getConsumers failed", e);

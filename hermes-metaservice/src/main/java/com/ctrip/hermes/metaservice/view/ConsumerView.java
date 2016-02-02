@@ -1,6 +1,4 @@
-package com.ctrip.hermes.core.bo;
-
-import com.ctrip.hermes.meta.entity.ConsumerGroup;
+package com.ctrip.hermes.metaservice.view;
 
 public class ConsumerView {
 	private Integer id;
@@ -15,9 +13,9 @@ public class ConsumerView {
 
 	private String phone2;
 
-	private String groupName;
+	private String name;
 
-	private String appId;
+	private String appIds;
 
 	private String retryPolicy;
 
@@ -28,36 +26,6 @@ public class ConsumerView {
 	public ConsumerView() {
 	}
 
-	public ConsumerView(String topicName, ConsumerGroup consumer) {
-		this.topicName = topicName;
-		this.groupName = consumer.getName();
-		this.appId = consumer.getAppIds();
-		this.retryPolicy = consumer.getRetryPolicy();
-		this.ackTimeoutSeconds = consumer.getAckTimeoutSeconds();
-		this.orderedConsume = consumer.getOrderedConsume();
-		this.owner1 = consumer.getOwner1();
-		this.owner2 = consumer.getOwner2();
-		this.phone1 = consumer.getPhone1();
-		this.phone2 = consumer.getPhone2();
-		this.id = consumer.getId();
-	}
-
-	public ConsumerGroup toMetaConsumer() {
-		ConsumerGroup consumer = new ConsumerGroup();
-		consumer.setAckTimeoutSeconds(this.ackTimeoutSeconds);
-		consumer.setAppIds(this.appId);
-		consumer.setName(this.groupName);
-		consumer.setRetryPolicy(this.retryPolicy);
-		consumer.setOrderedConsume(this.orderedConsume);
-		consumer.setOwner1(this.owner1);
-		consumer.setOwner2(this.owner2);
-		consumer.setPhone1(this.phone1);
-		consumer.setPhone2(this.phone2);
-		consumer.setId(this.id);
-
-		return consumer;
-	}
-
 	public String getTopicName() {
 		return topicName;
 	}
@@ -66,20 +34,20 @@ public class ConsumerView {
 		this.topicName = topicName;
 	}
 
-	public String getGroupName() {
-		return groupName;
+	public String getName() {
+		return name;
 	}
 
-	public void setGroupName(String groupName) {
-		this.groupName = groupName;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public String getAppId() {
-		return appId;
+	public String getAppIds() {
+		return appIds;
 	}
 
-	public void setAppId(String appId) {
-		this.appId = appId;
+	public void setAppIds(String appIds) {
+		this.appIds = appIds;
 	}
 
 	public String getRetryPolicy() {
@@ -149,7 +117,7 @@ public class ConsumerView {
 	@Override
 	public String toString() {
 		return "ConsumerView [id=" + id + ", topicName=" + topicName + ", owner1=" + owner1 + ", owner2=" + owner2
-				+ ", phone1=" + phone1 + ", phone2=" + phone2 + ", groupName=" + groupName + ", appId=" + appId
+				+ ", phone1=" + phone1 + ", phone2=" + phone2 + ", name=" + name + ", appIds=" + appIds
 				+ ", retryPolicy=" + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume="
 				+ orderedConsume + "]";
 	}

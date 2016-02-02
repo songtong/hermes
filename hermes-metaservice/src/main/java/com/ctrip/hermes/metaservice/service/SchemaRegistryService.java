@@ -13,9 +13,9 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.metaservice.schemaregistry.SchemaKey;
 import com.ctrip.hermes.metaservice.schemaregistry.SchemaValue;
+import com.ctrip.hermes.metaservice.view.SchemaView;
 
 @Named
 public class SchemaRegistryService {

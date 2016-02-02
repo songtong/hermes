@@ -89,7 +89,7 @@ public class DashboardResource {
 	@GET
 	@Path("/{topic}/{consumer}/delay")
 	public Response getConsumerDelay(@PathParam("topic") String topicName, @PathParam("consumer") String consumerName) {
-		Topic topic = m_topicService.findTopicByName(topicName);
+		Topic topic = m_topicService.findTopicEntityByName(topicName);
 		List<DelayDetail> consumerDelay = new ArrayList<>();
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
@@ -102,7 +102,7 @@ public class DashboardResource {
 	@GET
 	@Path("topics/{topic}/latest")
 	public Response getTopicLatest(@PathParam("topic") String name) {
-		Topic topic = m_topicService.findTopicByName(name);
+		Topic topic = m_topicService.findTopicEntityByName(name);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found", name), Status.NOT_FOUND);
 		}

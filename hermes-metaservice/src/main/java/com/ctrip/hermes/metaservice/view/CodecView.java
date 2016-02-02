@@ -1,10 +1,8 @@
-package com.ctrip.hermes.core.bo;
+package com.ctrip.hermes.metaservice.view;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Property;
 
 public class CodecView {
@@ -15,14 +13,6 @@ public class CodecView {
 
 	public CodecView() {
 
-	}
-
-	public CodecView(Codec codec) {
-		this.type = codec.getType();
-		properties = new ArrayList<Property>();
-		for (Property property : codec.getProperties().values()) {
-			properties.add(property);
-		}
 	}
 
 	public List<Property> getProperties() {
@@ -39,18 +29,6 @@ public class CodecView {
 
 	public void setType(String type) {
 		this.type = type;
-	}
-
-	public Codec toMetaCodec() {
-		Codec codec = new Codec();
-		codec.setType(this.type);
-		if (this.properties != null) {
-			for (Property prop : this.properties) {
-				if (prop != null)
-					codec.addProperty(prop);
-			}
-		}
-		return codec;
 	}
 
 	public int hashCode() {

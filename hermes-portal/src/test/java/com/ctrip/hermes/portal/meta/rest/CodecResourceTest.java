@@ -16,7 +16,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.ctrip.hermes.core.bo.CodecView;
+import com.ctrip.hermes.metaservice.view.CodecView;
 import com.ctrip.hermes.portal.StartPortal;
 
 public class CodecResourceTest extends StartPortal {

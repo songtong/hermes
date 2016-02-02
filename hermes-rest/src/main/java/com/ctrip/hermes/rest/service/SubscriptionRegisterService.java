@@ -15,9 +15,10 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
-import com.ctrip.hermes.core.bo.SubscriptionView;
-import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.metaservice.service.SubscriptionService;
+import com.ctrip.hermes.metaservice.service.SubscriptionService.SubscriptionStatus;
+import com.ctrip.hermes.metaservice.view.SubscriptionView;
 import com.ctrip.hermes.rest.status.SubscriptionPushStatusMonitor;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -38,7 +39,7 @@ public class SubscriptionRegisterService {
 	private SoaPushService soaService;
 
 	@Inject
-	private MetaService metaService;
+	private SubscriptionService subscriptionService;
 
 	private ScheduledExecutorService scheduledExecutor;
 
@@ -53,7 +54,7 @@ public class SubscriptionRegisterService {
 			@Override
 			public void run() {
 				try {
-					List<SubscriptionView> remoteSubscriptions = metaService.listSubscriptions("RUNNING");
+					List<SubscriptionView> remoteSubscriptions = subscriptionService.getSubscriptions(SubscriptionStatus.RUNNING);
 					if (logger.isTraceEnabled()) {
 						logger.trace("Received subscriptions: {}", remoteSubscriptions);
 					}

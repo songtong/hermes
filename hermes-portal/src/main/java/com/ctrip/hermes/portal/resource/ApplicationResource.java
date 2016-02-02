@@ -20,13 +20,13 @@ import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.bo.ConsumerView;
-import com.ctrip.hermes.core.bo.TopicView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.TopicService;
+import com.ctrip.hermes.metaservice.view.ConsumerView;
+import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.HermesApplicationType;
@@ -71,7 +71,7 @@ public class ApplicationResource {
 		// 检验重复
 		String topicName = topicApplication.getProductLine() + topicApplication.getEntity()
 				+ topicApplication.getEvent();
-		if (topicService.findTopicByName(topicName) != null) {
+		if (topicService.findTopicEntityByName(topicName) != null) {
 			throw new RestException("Topic already exists.", Status.CONFLICT);
 		}
 
@@ -208,7 +208,7 @@ public class ApplicationResource {
 		} else {
 			String[] topicNames = app.getTopicName().split(",");
 			for (String topicName : topicNames) {
-				Topic t = topicService.findTopicByName(topicName);
+				Topic t = topicService.findTopicEntityByName(topicName);
 				for (ConsumerGroup c : t.getConsumerGroups()) {
 					String currentConsuemrName = app.getProductLine() + "." + app.getProduct() + "." + app.getProject();
 					if (currentConsuemrName.equals(c.getName())) {

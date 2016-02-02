@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,6 +119,8 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 		public void run() {
 			try {
 				consumer.subscribe(Arrays.asList(consumerContext.getTopic().getName()));
+				Set<TopicPartition> assignment = consumer.assignment();
+				m_logger.info("Current assignment: " + assignment);
 				while (!closed.get()) {
 					ConsumerRecords<String, byte[]> records = consumer.poll(5000);
 					for (ConsumerRecord<String, byte[]> consumerRecord : records) {

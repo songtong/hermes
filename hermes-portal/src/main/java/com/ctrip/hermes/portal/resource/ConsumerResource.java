@@ -22,13 +22,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.bo.ConsumerView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.converter.EntityToViewConverter;
+import com.ctrip.hermes.metaservice.converter.ViewToEntityConverter;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
+import com.ctrip.hermes.metaservice.view.ConsumerView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/consumers/")
@@ -48,7 +50,9 @@ public class ConsumerResource {
 			Map<String, List<ConsumerGroup>> consumers = consumerService.getConsumers();
 			for (Entry<String, List<ConsumerGroup>> entry : consumers.entrySet()) {
 				for (ConsumerGroup consumer : entry.getValue()) {
-					returnResult.add(new ConsumerView(entry.getKey(), consumer));
+					ConsumerView view = EntityToViewConverter.convert(consumer);
+					view.setTopicName(entry.getKey());
+					returnResult.add(view);
 				}
 			}
 		} catch (Exception e) {
@@ -58,10 +62,10 @@ public class ConsumerResource {
 			@Override
 			public int compare(ConsumerView o1, ConsumerView o2) {
 				int ret = 0;
-				if (!StringUtils.isEmpty(o1.getGroupName()) && !StringUtils.isEmpty(o2.getGroupName()))
-					ret = ret == 0 ? o1.getGroupName().compareTo(o2.getGroupName()) : ret;
-				if (!StringUtils.isEmpty(o1.getAppId()) && !StringUtils.isEmpty(o2.getAppId()))
-					ret = ret == 0 ? o1.getAppId().compareTo(o2.getAppId()) : ret;
+				if (!StringUtils.isEmpty(o1.getName()) && !StringUtils.isEmpty(o2.getName()))
+					ret = ret == 0 ? o1.getName().compareTo(o2.getName()) : ret;
+				if (!StringUtils.isEmpty(o1.getAppIds()) && !StringUtils.isEmpty(o2.getAppIds()))
+					ret = ret == 0 ? o1.getAppIds().compareTo(o2.getAppIds()) : ret;
 				if (!StringUtils.isEmpty(o1.getTopicName()) && !StringUtils.isEmpty(o2.getTopicName()))
 					ret = ret == 0 ? o1.getTopicName().compareTo(o2.getTopicName()) : ret;
 				return ret;
@@ -78,7 +82,9 @@ public class ConsumerResource {
 		try {
 			List<ConsumerGroup> consumers = consumerService.getConsumers(topic);
 			for (ConsumerGroup c : consumers) {
-				returnResult.add(new ConsumerView(topic, c));
+				ConsumerView view = EntityToViewConverter.convert(c);
+				view.setTopicName(topic);
+				returnResult.add(view);
 			}
 		} catch (Exception e) {
 			throw new RestException(e, Status.NOT_FOUND);
@@ -92,7 +98,7 @@ public class ConsumerResource {
 	public Response deleteConsumer(@PathParam("topic") String topicName, @PathParam("consumer") String consumer) {
 		logger.debug("Delete consumer: {} {}", topicName, consumer);
 		try {
-			Topic topic = topicService.findTopicByName(topicName);
+			Topic topic = topicService.findTopicEntityByName(topicName);
 			consumerService.deleteConsumerFromTopic(topic.getId(), consumer);
 		} catch (Exception e) {
 			logger.warn("delete topic failed", e);
@@ -115,21 +121,22 @@ public class ConsumerResource {
 			logger.error("Parse consumer failed, content: {}", content, e);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
-		String consumerName = consumerView.getGroupName();
+		String consumerName = consumerView.getName();
 		String topicName = consumerView.getTopicName();
-		Topic topic = topicService.findTopicByName(topicName);
+		Topic topic = topicService.findTopicEntityByName(topicName);
 		if (consumerService.findConsumerGroup(topic.getId(), consumerName) != null) {
 			throw new RestException("Consumer for " + topicName + " already exists.", Status.CONFLICT);
 		}
 
-		ConsumerGroup c = consumerView.toMetaConsumer();
+		ConsumerGroup consumerEntity = ViewToEntityConverter.convert(consumerView);
 		try {
-			c = consumerService.addConsumerForTopics(topic.getId(), c);
+			consumerEntity = consumerService.addConsumerForTopics(topic.getId(), consumerEntity);
 		} catch (Exception e) {
 			logger.warn("Create consumer failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
-		consumerView = new ConsumerView(consumerView.getTopicName(), c);
+		consumerView = EntityToViewConverter.convert(consumerEntity);
+		consumerView.setTopicName(topicName);
 		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
 
@@ -147,15 +154,17 @@ public class ConsumerResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
-		ConsumerGroup c = consumerView.toMetaConsumer();
+		String topicName = consumerView.getTopicName();
+		ConsumerGroup consumerEntity = ViewToEntityConverter.convert(consumerView);
 		try {
-			Topic topic = topicService.findTopicByName(consumerView.getTopicName());
-			c = consumerService.updateGroupForTopic(topic.getId(), c);
+			Topic topic = topicService.findTopicEntityByName(consumerView.getTopicName());
+			consumerEntity = consumerService.updateGroupForTopic(topic.getId(), consumerEntity);
 		} catch (Exception e) {
 			logger.warn("Update consumer failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
-		consumerView = new ConsumerView(consumerView.getTopicName(), c);
+		consumerView = EntityToViewConverter.convert(consumerEntity);
+		consumerView.setTopicName(topicName);
 		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
 }

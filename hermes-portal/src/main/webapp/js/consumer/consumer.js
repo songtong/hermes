@@ -16,8 +16,8 @@ function get_new_consuemr(newconsumer, topics, i){
 	var consumer={};
 	consumer.topicName = topics[i];
 	consumer.orderedConsume = newconsumer.orderedConsume;
-	consumer.appId = newconsumer.appId;
-	consumer.groupName = newconsumer.groupName;
+	consumer.appIds = newconsumer.appIds;
+	consumer.name = newconsumer.name;
 	consumer.retryPolicy = newconsumer.retryPolicy;
 	consumer.ackTimeoutSeconds = newconsumer.ackTimeoutSeconds;
 	consumer.owner1 = newconsumer.owner1;
@@ -122,20 +122,20 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 										query_result) {
 									reload_table(scope, query_result);
 									show_op_info.show("新增 consumer "
-											+ new_consumer.groupName + " for topoics ("
+											+ new_consumer.name + " for topic ("
 											+ save_result.topicName+ ") 成功!", true);
 								});
 							}, function(error_result) {
 								console.log(error_result.data);
-								show_op_info.show("新增 consumer " + new_consumer.groupName
-										+ " for topoics (" + this_consumer.topicName + ") 失败! "
+								show_op_info.show("新增 consumer " + new_consumer.name
+										+ " for topics (" + this_consumer.topicName + ") 失败! "
 										+ error_result.data, false);
 							});
 							
 						}
 					};
-					scope.update_consumer = function update_consumer(data,topicName,groupName){
-						data.groupName=groupName;
+					scope.update_consumer = function update_consumer(data,topicName,name){
+						data.name=name;
 						data.topicName=topicName;
 						consumer_resource.update_consumer({}, data, function(save_result) {
 							console.log(save_result);
@@ -143,37 +143,37 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 									query_result) {
 								reload_table(scope, query_result);
 								show_op_info.show("修改 consumer "
-										+ data.groupName + " for topoic ("
+										+ data.name + " for topic ("
 										+ data.topicName + ") 成功!", true);
 							});
 						}, function(error_result) {
-							show_op_info.show("修改 consumer " + data.groupName
-									+ " for topoic (" + data.topicName + ") 失败! "
+							show_op_info.show("修改 consumer " + data.name
+									+ " for topic (" + data.topicName + ") 失败! "
 									+ error_result.data, false);
 						});
 						
 					}
 
 					scope.del_consumer = function del_consumer(topicName,
-							groupName) {
-						bootbox.confirm("确认删除 Consumer: " + groupName + "("
+							name) {
+						bootbox.confirm("确认删除 Consumer: " + name + "("
 								+ topicName + ")?", function(result) {
 							if (result) {
 								consumer_resource.remove({
 									topic : topicName,
-									consumer : groupName
+									consumer : name
 								}, function(remove_result) {
 									consumer_resource.query({},
 											function(query_result) {
 												reload_table(scope,
 														query_result);
 												show_op_info.show("删除成功: "
-														+ groupName + "("
+														+ name + "("
 														+ topicName + ")",
 														true);
 											});
 								}, function(error_result) {
-									show_op_info.show("删除失败: " + groupName
+									show_op_info.show("删除失败: " + name
 											+ "(" + topicName + "), "
 											+ error_result.data, false);
 								});

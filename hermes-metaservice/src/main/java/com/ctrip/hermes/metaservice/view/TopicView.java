@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.bo;
+package com.ctrip.hermes.metaservice.view;
 
 import java.util.Date;
 import java.util.List;
@@ -7,7 +7,6 @@ import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.meta.entity.Topic;
 
 public class TopicView {
 
@@ -67,31 +66,6 @@ public class TopicView {
 
 	public TopicView() {
 
-	}
-
-	public TopicView(Topic topic) {
-		this.id = topic.getId();
-		this.name = topic.getName();
-		this.storageType = topic.getStorageType();
-		this.description = topic.getDescription();
-		this.status = topic.getStatus();
-		this.createTime = topic.getCreateTime();
-		this.lastModifiedTime = topic.getLastModifiedTime();
-		this.partitions = topic.getPartitions();
-		this.properties = topic.getProperties();
-		this.codecType = topic.getCodecType();
-		this.schemaId = topic.getSchemaId();
-		this.otherinfo = topic.getOtherInfo();
-		this.owner1 = topic.getOwner1();
-		this.owner2 = topic.getOwner2();
-		this.phone1 = topic.getPhone1();
-		this.phone2 = topic.getPhone2();
-		this.consumerRetryPolicy = topic.getConsumerRetryPolicy();
-		this.storagePartitionCount = topic.getStoragePartitionCount();
-		this.storagePartitionSize = topic.getStoragePartitionSize();
-		this.resendPartitionSize = topic.getResendPartitionSize();
-		this.setEndpointType(topic.getEndpointType());
-		this.setAckTimeoutSeconds(topic.getAckTimeoutSeconds());
 	}
 
 	public Codec getCodec() {
@@ -230,43 +204,6 @@ public class TopicView {
 
 	public void setAckTimeoutSeconds(Integer ackTimeoutSeconds) {
 		this.ackTimeoutSeconds = ackTimeoutSeconds;
-	}
-
-	public Topic toMetaTopic() {
-		Topic topic = new Topic();
-		topic.setId(this.id);
-		topic.setName(this.name);
-		topic.setStorageType(this.storageType);
-		topic.setDescription(this.description);
-		if (this.properties != null) {
-			for (Property prop : this.properties) {
-				if (prop != null)
-					topic.addProperty(prop);
-			}
-		}
-		if (this.partitions != null) {
-			for (Partition partition : this.partitions) {
-				if (partition != null)
-					topic.addPartition(partition);
-			}
-		}
-		topic.setStatus(this.status);
-		topic.setCreateTime(this.createTime);
-		topic.setLastModifiedTime(this.lastModifiedTime);
-		topic.setCodecType(this.codecType);
-		topic.setSchemaId(this.schemaId);
-		topic.setOtherInfo(this.otherinfo);
-		topic.setOwner1(this.owner1);
-		topic.setOwner2(this.owner2);
-		topic.setPhone1(this.phone1);
-		topic.setPhone2(this.phone2);
-		topic.setAckTimeoutSeconds(this.ackTimeoutSeconds);
-		topic.setEndpointType(this.endpointType);
-		topic.setConsumerRetryPolicy(this.consumerRetryPolicy);
-		topic.setStoragePartitionSize(this.storagePartitionSize);
-		topic.setStoragePartitionCount(this.storagePartitionCount);
-		topic.setResendPartitionSize(this.resendPartitionSize);
-		return topic;
 	}
 
 	public String getConsumerRetryPolicy() {

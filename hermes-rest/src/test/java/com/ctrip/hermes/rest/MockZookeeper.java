@@ -2,8 +2,11 @@ package com.ctrip.hermes.rest;
 
 import java.io.IOException;
 
+import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.curator.test.TestingServer;
+
+import com.ctrip.hermes.kafka.admin.ZKStringSerializer;
 
 public class MockZookeeper {
 
@@ -46,4 +49,11 @@ public class MockZookeeper {
 	public ZkConnection getConnection() {
 		return new ZkConnection(ZK_HOST + ":" + ZK_PORT);
 	}
+	
+	public boolean isPathExist(String path){
+		ZkClient zkClient = new ZkClient(getConnection());
+		zkClient.setZkSerializer(new ZKStringSerializer());
+		return zkClient.exists(path);
+	}
+	
 }

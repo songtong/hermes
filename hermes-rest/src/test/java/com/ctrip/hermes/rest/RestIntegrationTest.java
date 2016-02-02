@@ -34,8 +34,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metaservice.view.SubscriptionView;
 import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 import com.ctrip.hermes.rest.service.SubscriptionRegisterService;
 import com.google.common.base.Charsets;
@@ -86,6 +86,9 @@ public class RestIntegrationTest extends JerseyTest {
 
 		String topic = "kafka.SimpleTextTopic";
 		kafka.createTopic(topic);
+		kafka.createOffsetStorage();
+		System.out.println("Wait kafka storage ready");
+		Thread.sleep(10000);
 		String group = "SimpleTextTopicGroup";
 		String urls = getBaseUri() + "onebox/push";
 
@@ -146,6 +149,9 @@ public class RestIntegrationTest extends JerseyTest {
 
 		String topic = "kafka.SimpleTextTopic1";
 		kafka.createTopic(topic);
+		kafka.createOffsetStorage();
+		System.out.println("Wait kafka storage ready");
+		Thread.sleep(10000);
 		String group = "SimpleTextTopic1Group";
 		String urls = "http://localhost:4321/" + "onebox/pushNotExist," + getBaseUri() + "onebox/pushStandby";
 		SubscriptionView sub = new SubscriptionView();
@@ -388,7 +394,7 @@ public class RestIntegrationTest extends JerseyTest {
 				Thread.sleep(10000);
 			} catch (InterruptedException e) {
 			}
-			return Response.ok().build();
+			return Response.status(Status.GATEWAY_TIMEOUT).build();
 		}
 
 		@Path("pushStandby")

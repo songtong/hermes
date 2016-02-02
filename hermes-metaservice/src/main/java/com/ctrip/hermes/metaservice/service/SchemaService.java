@@ -25,7 +25,6 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.lookup.util.StringUtils;
 
-import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.dal.CachedSchemaDao;
@@ -33,6 +32,7 @@ import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.model.SchemaEntity;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
+import com.ctrip.hermes.metaservice.view.SchemaView;
 
 @Named
 public class SchemaService {

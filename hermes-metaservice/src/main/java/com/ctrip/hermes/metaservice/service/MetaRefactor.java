@@ -5,6 +5,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
 import com.ctrip.hermes.metaservice.model.AppDao;
 import com.ctrip.hermes.metaservice.model.CodecDao;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
