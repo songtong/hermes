@@ -69,11 +69,11 @@ public class TopicResource {
 	private static final Logger log = LoggerFactory.getLogger(TopicResource.class);
 
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
-	
-	private TopicDeployService topicDeployService =  PlexusComponentLocator.lookup(TopicDeployService.class);
+
+	private TopicDeployService topicDeployService = PlexusComponentLocator.lookup(TopicDeployService.class);
 
 	private ConsumerService consumerService = PlexusComponentLocator.lookup(ConsumerService.class);
-	
+
 	private StorageService datasourceService = PlexusComponentLocator.lookup(StorageService.class);
 
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
@@ -168,7 +168,7 @@ public class TopicResource {
 	@POST
 	@Path("{topic}/sync")
 	public Response syncTopic(@PathParam("topic") String topicName,
-	      @QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
+			@QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
 		Topic topic = topicService.findTopicByName(topicName);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
@@ -188,6 +188,7 @@ public class TopicResource {
 		TopicView view = getTopic(topicName);
 		Set<String> missedDatasources = getMissedDatasourceOnTarget(view, target);
 		if (missedDatasources.size() == 0) {
+			view.setId(null);
 			switch (topic.getStorageType()) {
 			case Storage.MYSQL:
 				syncMysqlTopic(view, target);
@@ -264,6 +265,7 @@ public class TopicResource {
 
 	private void syncConsumers(TopicView topic, WebTarget target) {
 		for (ConsumerGroup consumer : consumerService.getConsumers(topic.getName())) {
+			consumer.setId(null);
 			Builder request = target.path("/api/consumers/add").request();
 			ConsumerView requestView = new ConsumerView(topic.getName(), consumer);
 			Response response = request.post(Entity.json(requestView));
@@ -312,7 +314,7 @@ public class TopicResource {
 				targetTopicId = getTopicOnTarget(topic.getName(), target).getId();
 			}
 
-			if (targetTopicId > -1) {
+			if (forceSchema && targetTopicId > -1) {
 				// handle schemas
 				syncSchema(topic, targetTopicId, target);
 			}
