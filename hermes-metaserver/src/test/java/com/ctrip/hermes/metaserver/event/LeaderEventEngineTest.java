@@ -94,7 +94,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 		leaderInitEventHandler.setMetaHolder(m_metaHolder);
 		leaderInitEventHandler.setBrokerAssignmentHolder(m_brokerAssignmentHolder);
 
-		when(m_metaService.getMetaEntity()).thenReturn(TestHelper.loadLocalMeta(this));
+		when(m_metaService.refreshMeta()).thenReturn(TestHelper.loadLocalMeta(this));
 
 		m_curator.setData().forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(1L));
 
