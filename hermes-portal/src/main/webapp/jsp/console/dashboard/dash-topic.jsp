@@ -13,15 +13,18 @@
 	<div ng-app="dash-topic">
 		<div class="row" ng-controller="dash-topic-nav-controller">
 			<div class="well col-md-3 sidebar">
-				<input class="form-control" ng-model="filter_key">
-				<hr>
-				<ul class="nav nav-sidebar">
-					<li ng-repeat="topic_brief in filtered_topic_briefs" ng-class="'{{topic_brief.topic}}' == nav_current_topic ? 'active' : ''"><a href="#detail/{{topic_brief.topic}}" role="tab"> <span ng-bind="topic_brief.topic | short" tooltip="{{topic_brief.topic}}" tooltip-class="side-tooltip"></span> <span style="float: right; margin-top: 6px" class="status-ok" ng-if="topic_brief.dangerLevel==0"></span> <span style="float: right; margin-top: 6px" class="status-danger"
-							ng-if="topic_brief.dangerLevel==2"></span> <span style="float: right; margin-top: 6px" class="status-warn" ng-if="topic_brief.dangerLevel==1"></span>
-					</a></li>
-				</ul>
+				<div class="well row col-md-3" style="position:fixed; z-index: 1030;background:#f5f5f5; margin-left: -21; margin-top: -25">
+					<input class="form-control" ng-model="filter_key">
+				</div>
+				<div class="row" style="margin-top: 60px;">
+					<ul class="nav nav-sidebar">
+						<li ng-repeat="topic_brief in filtered_topic_briefs" ng-class="'{{topic_brief.topic}}' == nav_current_topic ? 'active' : ''"><a href="#detail/{{topic_brief.topic}}" role="tab"> <span ng-bind="topic_brief.topic | short" tooltip="{{topic_brief.topic}}" tooltip-class="side-tooltip"></span> <span style="float: right; margin-top: 6px" class="status-ok" ng-if="topic_brief.dangerLevel==0"></span> <span style="float: right; margin-top: 6px" class="status-danger"
+								ng-if="topic_brief.dangerLevel==2"></span> <span style="float: right; margin-top: 6px" class="status-warn" ng-if="topic_brief.dangerLevel==1"></span>
+						</a></li>
+					</ul>
+				</div>
 			</div>
-			<div ng-view class="col-md-9 col-md-offset-3 main" style="margin-left: 25%; padding-left: 80px; padding-right: 80px"></div>
+			<div ng-view class="col-md-9 col-md-offset-3 main"></div>
 		</div>
 	</div>
 	<script type="text/javascript" src="${model.webapp}/js/bootstrap-treeview.min.js"></script>
