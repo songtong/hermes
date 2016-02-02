@@ -3,6 +3,7 @@ package com.ctrip.hermes.consumer.integration.assist;
 import io.netty.channel.Channel;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -10,11 +11,15 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
+import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public enum PullMessageAnswer implements Answer<Void> {
@@ -24,17 +29,30 @@ public enum PullMessageAnswer implements Answer<Void> {
 			if (m_answerDelay > 0) {
 				waitUntilTrigger();
 			}
-			m_answeredCount.incrementAndGet();
-			PullMessageCommandV3 pullMessageCmd = invocation.getArgumentAt(1, PullMessageCommandV3.class);
-			if (pullMessageCmd != null && m_msgCreator != null) {
-				PullMessageResultCommandV3 resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
-				      pullMessageCmd.getTopic(), Arrays.asList(new Pair<String, String>("hello", "hermes")), 0, 0, false,
-				      "hermes-key", m_msgCreator.createRawMessages());
-				resultCmd.correlate(pullMessageCmd);
+			Object[] arguments = invocation.getArguments();
 
-				PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V3.toString())
+			Command cmd = (Command) arguments[1];
+
+			if (cmd instanceof PullMessageCommandV3) {
+				m_answeredCount.incrementAndGet();
+				PullMessageCommandV3 pullMessageCmd = (PullMessageCommandV3) cmd;
+				if (pullMessageCmd != null && m_msgCreator != null) {
+					PullMessageResultCommandV3 resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
+					      pullMessageCmd.getTopic(), Arrays.asList(new Pair<String, String>("hello", "hermes")), 0, 0,
+					      false, "hermes-key", m_msgCreator.createRawMessages());
+					resultCmd.correlate(pullMessageCmd);
+
+					PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V3.toString())
+					      .process(new CommandProcessorContext(resultCmd, m_channel));
+				}
+			} else if (cmd instanceof QueryLatestConsumerOffsetCommandV3) {
+				QueryOffsetResultCommandV3 resultCmd = new QueryOffsetResultCommandV3(new Offset(0L, 0L, new Pair<>(
+				      new Date(), 0L)));
+				resultCmd.correlate(cmd);
+				PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_QUERY_OFFSET_V3.toString())
 				      .process(new CommandProcessorContext(resultCmd, m_channel));
 			}
+
 			return null;
 		}
 	},
