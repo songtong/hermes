@@ -471,6 +471,7 @@
 									<exclude>com/ctrip/hermes/portal/dal/*.class</exclude>
 									<exclude>com/ctrip/hermes/meta/**/*.class</exclude>
 									<exclude>com/ctrip/hermes/metaservice/model/*.class</exclude>
+									<exclude>com/ctrip/framework/**/*.class</exclude>
 								</excludes>
 							</instrumentation>
 							<format>xml</format>
