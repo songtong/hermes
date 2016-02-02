@@ -10,6 +10,20 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 	});
 	$scope.current_topic = route_topic == "_default" ? $scope.topic_briefs != undefined ? $scope.topic_briefs[0].topic : 'leo_test' : route_topic;
 	$scope.current_consumer = $routeParams['consumer'];
+	latest_message_resource = $resource('/api/dashboard', {}, {
+		get_topic_latest_msgs : {
+			method : 'GET',
+			isArray : true,
+			url : '/api/dashboard/topics/:topic/latest'
+		}
+	});
+	$scope.refresh_topic_latest = function() {
+		latest_message_resource.get_topic_latest_msgs({
+			'topic' : $scope.current_topic
+		}, function(data) {
+			$scope.topic_latest = data;
+		});
+	}
 	DashboardTopicService.get_topic_briefs().then(function(result) {
 		$scope.topic_briefs = result;
 		$scope.topic = find($scope.current_topic, $scope.topic_briefs);
