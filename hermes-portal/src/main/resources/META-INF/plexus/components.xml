@@ -117,6 +117,15 @@
 			<implementation>com.ctrip.hermes.mail.FileMailAccountProvider</implementation>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.portal.service.SyncService</role>
+			<implementation>com.ctrip.hermes.portal.service.SyncService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>org.unidal.web.mvc.model.ModuleRegistry</role>
 			<implementation>org.unidal.web.mvc.model.ModuleRegistry</implementation>
 			<configuration>

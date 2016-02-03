@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaservice.view;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -76,7 +77,6 @@ public class TopicView {
 		return codecType;
 	}
 
-
 	public Date getCreateTime() {
 		return createTime;
 	}
@@ -106,6 +106,9 @@ public class TopicView {
 	}
 
 	public List<Property> getProperties() {
+		if (properties == null) {
+			properties = new ArrayList<>();
+		}
 		return properties;
 	}
 
@@ -136,7 +139,6 @@ public class TopicView {
 	public void setCodecType(String codecType) {
 		this.codecType = codecType;
 	}
-
 
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;

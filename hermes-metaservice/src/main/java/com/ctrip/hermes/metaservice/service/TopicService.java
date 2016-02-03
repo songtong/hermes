@@ -1,6 +1,8 @@
 package com.ctrip.hermes.metaservice.service;
 
-import java.io.UnsupportedEncodingException;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.I0Itec.zkclient.exception.ZkMarshallingError;
-import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -20,12 +20,15 @@ import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
+import com.ctrip.hermes.metaservice.converter.EntityToViewConverter;
 import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
 import com.ctrip.hermes.metaservice.converter.ModelToViewConverter;
+import com.ctrip.hermes.metaservice.converter.ViewToModelConverter;
 import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
 import com.ctrip.hermes.metaservice.dal.CachedProducerDao;
@@ -37,6 +40,7 @@ import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
 import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
+import com.ctrip.hermes.metaservice.view.SchemaView;
 import com.ctrip.hermes.metaservice.view.TopicView;
 
 @Named
@@ -66,14 +70,20 @@ public class TopicService {
 	private CachedProducerDao m_producerDao;
 
 	@Inject
+	private CodecService m_codecService;
+
+	@Inject
 	private ZookeeperService m_zookeeperService;
+
+	@Inject
+	private StorageService m_datasourceService;
 
 	/**
 	 * 
 	 * @param topicName
 	 * @param partition
 	 */
-	public Topic addPartitionsForTopic(String topicName, List<Partition> partitions) throws Exception {
+	public TopicView addPartitionsForTopic(String topicName, List<Partition> partitions) throws Exception {
 		Topic topic = findTopicEntityByName(topicName);
 		topic.setLastModifiedTime(new Date(System.currentTimeMillis()));
 
@@ -114,7 +124,9 @@ public class TopicService {
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 		}
 
-		return topic;
+		TopicView topicView = EntityToViewConverter.convert(topic);
+		fillTopicView(topicView);
+		return topicView;
 	}
 
 	public void addPartitionStorage(String ds, String table, int span) throws StorageHandleErrorException {
@@ -126,17 +138,18 @@ public class TopicService {
 	 * @return
 	 * @throws DalException
 	 */
-	public Topic createTopic(Topic topicEntity) throws Exception {
+	public TopicView createTopic(TopicView topicView) throws Exception {
 		tm.startTransaction("fxhermesmetadb");
+		com.ctrip.hermes.metaservice.model.Topic topicModel = ViewToModelConverter.convert(topicView);
 		try {
-			topicEntity.setCreateTime(new Date(System.currentTimeMillis()));
-			com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+			topicModel.setCreateTime(new Date(System.currentTimeMillis()));
 			m_topicDao.insert(topicModel);
-			topicEntity.setId(topicModel.getId());
+			topicView.setId(topicModel.getId());
 
 			int partitionId = 0;
-			for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicEntity.getPartitions()) {
-				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
+			for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicView.getPartitions()) {
+				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
+				      .convert(partitionEntity);
 				partitionModel.setId(partitionId++);
 				partitionModel.setTopicId(topicModel.getId());
 				partitionEntity.setId(partitionModel.getId());
@@ -148,7 +161,9 @@ public class TopicService {
 			tm.rollbackTransaction();
 			throw e;
 		}
-		if (Storage.MYSQL.equals(topicEntity.getStorageType())) {
+		if (Storage.MYSQL.equals(topicModel.getStorageType())) {
+			Topic topicEntity = ModelToEntityConverter.convert(topicModel);
+			fillTopicEntity(topicEntity);
 			if (!m_topicStorageService.initTopicStorage(topicEntity)) {
 				m_logger.error("Init topic storage failed, please try later.");
 				throw new RuntimeException("Init topic storage failed, please try later.");
@@ -158,7 +173,7 @@ public class TopicService {
 			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 		}
 
-		return topicEntity;
+		return topicView;
 	}
 
 	/**
@@ -215,10 +230,11 @@ public class TopicService {
 		m_topicStorageService.delPartitionStorage(ds, table);
 	}
 
-	public Topic findTopicById(long id) {
+	public Topic findTopicEntityById(long id) {
 		try {
 			com.ctrip.hermes.metaservice.model.Topic model = this.m_topicDao.findByPK(id);
-			return fillTopic(model);
+			Topic entity = ModelToEntityConverter.convert(model);
+			return fillTopicEntity(entity);
 		} catch (DalException e) {
 			m_logger.warn("findTopicById failed", e);
 		}
@@ -228,25 +244,37 @@ public class TopicService {
 	public Topic findTopicEntityByName(String topic) {
 		try {
 			com.ctrip.hermes.metaservice.model.Topic model = this.m_topicDao.findByName(topic);
-			return fillTopic(model);
+			Topic topicEntity = ModelToEntityConverter.convert(model);
+			return fillTopicEntity(topicEntity);
 		} catch (DalException e) {
 			m_logger.warn("findTopicByName failed, name: " + topic, e);
 		}
 		return null;
 	}
 
-	public List<Topic> findTopics(String pattern) {
-		List<Topic> filtered = new ArrayList<Topic>();
+	public TopicView findTopicViewByName(String topicName) {
+		try {
+			com.ctrip.hermes.metaservice.model.Topic topicModel = this.m_topicDao.findByName(topicName);
+			TopicView topicView = ModelToViewConverter.convert(topicModel);
+			return fillTopicView(topicView);
+		} catch (Exception e) {
+			m_logger.warn("findTopicViewByName failed, name: " + topicName, e);
+		}
+		return null;
+	}
 
-		for (Topic topic : getTopics().values()) {
+	public List<TopicView> findTopicViews(String pattern) {
+		List<TopicView> filtered = new ArrayList<TopicView>();
+
+		for (TopicView topic : getTopicViews().values()) {
 			if (Pattern.matches(pattern, topic.getName())) {
 				filtered.add(topic);
 			}
 		}
 
-		Collections.sort(filtered, new Comparator<Topic>() {
+		Collections.sort(filtered, new Comparator<TopicView>() {
 			@Override
-			public int compare(Topic o1, Topic o2) {
+			public int compare(TopicView o1, TopicView o2) {
 				return o1.getName().compareTo(o2.getName());
 			}
 		});
@@ -254,14 +282,40 @@ public class TopicService {
 		return filtered;
 	}
 
-	public Map<String, Topic> getTopics() {
+	public Map<String, TopicView> getTopicViews() {
+		Map<String, TopicView> result = new HashMap<String, TopicView>();
+		try {
+			List<TopicView> topics = findTopicViews(true);
+			for (TopicView t : topics) {
+				result.put(t.getName(), t);
+			}
+		} catch (Exception e) {
+			m_logger.warn("get topics failed", e);
+		}
+		return result;
+	}
+
+	public List<String> getTopicNames() {
+		List<String> result = new ArrayList<String>();
+		try {
+			Collection<com.ctrip.hermes.metaservice.model.Topic> topicModels = m_topicDao.list(false);
+			for (com.ctrip.hermes.metaservice.model.Topic topicModel : topicModels) {
+				result.add(topicModel.getName());
+			}
+		} catch (Exception e) {
+			m_logger.warn("getTopicNames failed", e);
+		}
+		return result;
+	}
+
+	public Map<String, Topic> getTopicEntities() {
 		Map<String, Topic> result = new HashMap<String, Topic>();
 		try {
-			List<Topic> topics = findTopics(true);
+			List<Topic> topics = findTopicEntities(true);
 			for (Topic t : topics) {
 				result.put(t.getName(), t);
 			}
-		} catch (DalException e) {
+		} catch (Exception e) {
 			m_logger.warn("get topics failed", e);
 		}
 		return result;
@@ -275,7 +329,8 @@ public class TopicService {
 		return m_topicStorageService.queryStorageSize(ds, table);
 	}
 
-	public List<StoragePartition> queryStorageTablePartitions(String ds, String table) throws StorageHandleErrorException {
+	public List<StoragePartition> queryStorageTablePartitions(String ds, String table)
+	      throws StorageHandleErrorException {
 		return m_topicStorageService.queryTablePartitions(ds, table);
 	}
 
@@ -311,6 +366,7 @@ public class TopicService {
 
 		if (Storage.MYSQL.equals(topicView.getStorageType())) {
 			Topic topicEntity = ModelToEntityConverter.convert(topicModel);
+			fillTopicEntity(topicEntity);
 			m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 		}
@@ -318,20 +374,21 @@ public class TopicService {
 		return ModelToViewConverter.convert(topicModel);
 	}
 
-	public List<com.ctrip.hermes.meta.entity.Topic> findTopics(boolean isFillDetail) throws DalException {
+	public List<TopicView> findTopicViews(boolean isFillDetail) throws DalException, IOException, RestClientException {
 		Collection<com.ctrip.hermes.metaservice.model.Topic> models = m_topicDao.list(false);
-		List<com.ctrip.hermes.meta.entity.Topic> entities = new ArrayList<>();
+		List<TopicView> views = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.Topic model : models) {
+			TopicView view = ModelToViewConverter.convert(model);
 			if (isFillDetail) {
-				entities.add(fillTopic(model));
+				views.add(fillTopicView(view));
 			} else {
-				entities.add(ModelToEntityConverter.convert(model));
+				views.add(view);
 			}
 		}
-		return entities;
+		return views;
 	}
 
-	public List<com.ctrip.hermes.meta.entity.Topic> findTopicsFromDB(boolean isFillDetail) throws DalException {
+	public List<com.ctrip.hermes.meta.entity.Topic> findTopicEntities(boolean isFillDetail) throws DalException {
 		Collection<com.ctrip.hermes.metaservice.model.Topic> models = m_topicDao.list(true);
 		Map<Long, Collection<ConsumerGroup>> consumers = consumerListToMap(m_consumerGroupDao.list(true));
 		Map<Long, Collection<com.ctrip.hermes.metaservice.model.Partition>> partitions = partitionListToMap(m_partitionDao
@@ -400,38 +457,27 @@ public class TopicService {
 		return map;
 	}
 
-	protected com.ctrip.hermes.meta.entity.Topic fillTopic(com.ctrip.hermes.metaservice.model.Topic topicModel)
-	      throws DalException {
-		com.ctrip.hermes.meta.entity.Topic topicEntity = ModelToEntityConverter.convert(topicModel);
-		addConsumerGroups4Topic(topicEntity, m_consumerGroupDao.findByTopic(topicModel.getId(), false));
-		addPartitions4Topic(topicEntity, m_partitionDao.findByTopic(topicModel.getId(), false));
+	protected Topic fillTopicEntity(Topic topicEntity) throws DalException {
+		addConsumerGroups4Topic(topicEntity, m_consumerGroupDao.findByTopic(topicEntity.getId(), false));
+		addPartitions4Topic(topicEntity, m_partitionDao.findByTopic(topicEntity.getId(), false));
 		return topicEntity;
 	}
-}
 
-class ZKStringSerializer implements ZkSerializer {
+	private TopicView fillTopicView(TopicView topicView) throws DalException, IOException, RestClientException {
+		// Fill Storage
+		Storage storage = m_datasourceService.getStorages().get(topicView.getStorageType());
+		topicView.setStorage(storage);
 
-	@Override
-	public Object deserialize(byte[] bytes) throws ZkMarshallingError {
-		if (bytes == null)
-			return null;
-		else
-			try {
-				return new String(bytes, "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				throw new ZkMarshallingError(e);
-			}
-	}
-
-	@Override
-	public byte[] serialize(Object data) throws ZkMarshallingError {
-		byte[] bytes = null;
-		try {
-			bytes = data.toString().getBytes("UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new ZkMarshallingError(e);
+		// Fill Schema
+		if (topicView.getSchemaId() != null) {
+			SchemaView schemaView;
+			schemaView = m_schemaService.getSchemaView(topicView.getSchemaId());
+			topicView.setSchema(schemaView);
 		}
-		return bytes;
-	}
 
+		// Fill Codec
+		Codec codec = m_codecService.getCodecs().get(topicView.getCodecType());
+		topicView.setCodec(codec);
+		return topicView;
+	}
 }

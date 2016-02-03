@@ -70,10 +70,10 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	@Inject
 	private TopicService m_topicService;
-	
+
 	@Inject
 	private PartitionService m_partitionService;
-	
+
 	@Inject
 	private PortalElasticClient m_elasticClient;
 
@@ -107,8 +107,8 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private ExecutorService m_es = Executors.newFixedThreadPool(CONSUMER_BACKLOG_CALCULATE_THREAD_COUNT);
 
 	private Cache<Pair<String, String>, List<DelayDetail>> cachedConsumerBacklogs = CacheBuilder.newBuilder()
-			.maximumSize(20)
-			.expireAfterWrite(PortalConstants.CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS, TimeUnit.MILLISECONDS).build();
+	      .maximumSize(20).expireAfterWrite(PortalConstants.CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS, TimeUnit.MILLISECONDS)
+	      .build();
 
 	@Override
 	public Date getLatestProduced(String topic) {
@@ -143,8 +143,8 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private Meta loadMeta() {
 		try {
-			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(),
-					m_env.getGlobalConfig().getProperty("meta.port", "80").trim(), "meta");
+			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
+			      .getProperty("meta.port", "80").trim(), "meta");
 			HttpResponse response = Request.Get(url).execute().returnResponse();
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) {
@@ -162,8 +162,8 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private String getMetaserverStatusString() {
 		String metaServer = null;
-		String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(),
-				m_env.getGlobalConfig().getProperty("meta.port", "80").trim(), "metaserver/status");
+		String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
+		      .getProperty("meta.port", "80").trim(), "metaserver/status");
 		try {
 			HttpResponse response = Request.Get(url).execute().returnResponse();
 			int statusCode = response.getStatusLine().getStatusCode();
@@ -236,8 +236,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	@Override
 	public List<DelayDetail> getDelayDetailForConsumer(String topic, String consumer) {
-		List<DelayDetail> consumerDelays = cachedConsumerBacklogs
-				.getIfPresent(new Pair<String, String>(topic, consumer));
+		List<DelayDetail> consumerDelays = cachedConsumerBacklogs.getIfPresent(new Pair<String, String>(topic, consumer));
 		if (consumerDelays != null) {
 			return consumerDelays;
 		}
@@ -262,8 +261,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				latch.await(CONSUMER_BACKLOG_CALCULATE_AWAITTIME_MINUTE, TimeUnit.MINUTES);
 				for (DelayDetail delay : consumerDelays) {
 					delay.setCurrentConsumerIp(m_consumerLeases.get(new Tpg(topic, delay.getPartitionId(), consumer)));
-					delay.setCurrentBrokerIp(
-							m_brokerLeases.get(new Pair<String, Integer>(topic, delay.getPartitionId())));
+					delay.setCurrentBrokerIp(m_brokerLeases.get(new Pair<String, Integer>(topic, delay.getPartitionId())));
 				}
 			}
 		} catch (InterruptedException e) {
@@ -282,7 +280,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private void updateLatestProduced() {
 		Map<String, Date> m = new HashMap<String, Date>();
-		for (Entry<String, Topic> entry : m_topicService.getTopics().entrySet()) {
+		for (Entry<String, Topic> entry : m_topicService.getTopicEntities().entrySet()) {
 			Topic topic = entry.getValue();
 			if (Storage.MYSQL.equals(topic.getStorageType())) {
 				String topicName = topic.getName();
@@ -291,10 +289,10 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				for (Partition partition : m_partitionService.findPartitionsByTopic(topic.getId())) {
 					try {
 						MessagePriority msgPriority = m_dao.getLatestProduced(topicName, partition.getId(),
-								PortalConstants.PRIORITY_TRUE);
+						      PortalConstants.PRIORITY_TRUE);
 						Date datePriority = msgPriority == null ? latest : msgPriority.getCreationDate();
 						MessagePriority msgNonPriority = m_dao.getLatestProduced(topicName, partition.getId(),
-								PortalConstants.PRIORITY_FALSE);
+						      PortalConstants.PRIORITY_FALSE);
 
 						Date dateNonPriority = msgNonPriority == null ? latest : msgNonPriority.getCreationDate();
 						latest = datePriority.after(dateNonPriority) ? datePriority : dateNonPriority;
@@ -312,7 +310,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private void updateProducerTopicRelationship() {
 		Map<String, Set<String>> topic2producers = new HashMap<String, Set<String>>();
-		for (String topic : m_topicService.getTopics().keySet()) {
+		for (String topic : m_topicService.getTopicNames()) {
 			topic2producers.put(topic, new HashSet<String>(m_elasticClient.getLastWeekProducers(topic)));
 		}
 		m_topic2producers = topic2producers;
@@ -333,7 +331,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private void updateConsumerTopicRelationship() {
 		Map<String, Map<String, Set<String>>> topic2consumers = new HashMap<>();
-		for (Entry<String, Topic> entry : m_topicService.getTopics().entrySet()) {
+		for (Entry<String, Topic> entry : m_topicService.getTopicEntities().entrySet()) {
 			String topic = entry.getKey();
 			for (ConsumerGroup c : entry.getValue().getConsumerGroups()) {
 				String consumer = c.getName();
@@ -378,31 +376,31 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		updateLatestBroker();
 
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_MYSQL_UPDATE_TASK", true))
-				.scheduleWithFixedDelay(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							updateLatestProduced();
-							updateLatestBroker();
-						} catch (Throwable e) {
-							log.error("Update mysql monitor information failed.", e);
-						}
-					}
-				}, 0, 1, TimeUnit.MINUTES);
+		      .scheduleWithFixedDelay(new Runnable() {
+			      @Override
+			      public void run() {
+				      try {
+					      updateLatestProduced();
+					      updateLatestBroker();
+				      } catch (Throwable e) {
+					      log.error("Update mysql monitor information failed.", e);
+				      }
+			      }
+		      }, 0, 1, TimeUnit.MINUTES);
 
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_ELASTIC_UPDATE_TASK", true))
-				.scheduleWithFixedDelay(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							updateProducerTopicRelationship();
-							updateConsumerTopicRelationship();
-							updateLatestClients();
-						} catch (Throwable e) {
-							log.error("Update elastic monitor information failed.", e);
-						}
-					}
-				}, 0, 30, TimeUnit.MINUTES);
+		      .scheduleWithFixedDelay(new Runnable() {
+			      @Override
+			      public void run() {
+				      try {
+					      updateProducerTopicRelationship();
+					      updateConsumerTopicRelationship();
+					      updateLatestClients();
+				      } catch (Throwable e) {
+					      log.error("Update elastic monitor information failed.", e);
+				      }
+			      }
+		      }, 0, 30, TimeUnit.MINUTES);
 	}
 
 	@Override

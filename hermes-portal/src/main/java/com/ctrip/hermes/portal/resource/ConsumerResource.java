@@ -128,15 +128,12 @@ public class ConsumerResource {
 			throw new RestException("Consumer for " + topicName + " already exists.", Status.CONFLICT);
 		}
 
-		ConsumerGroup consumerEntity = ViewToEntityConverter.convert(consumerView);
 		try {
-			consumerEntity = consumerService.addConsumerForTopics(topic.getId(), consumerEntity);
+			consumerView = consumerService.addConsumerForTopics(topic.getId(), consumerView);
 		} catch (Exception e) {
 			logger.warn("Create consumer failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
-		consumerView = EntityToViewConverter.convert(consumerEntity);
-		consumerView.setTopicName(topicName);
 		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
 

@@ -77,7 +77,7 @@ public class SchemaResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
-		Topic topic = topicService.findTopicById(topicId);
+		Topic topic = topicService.findTopicEntityById(topicId);
 		if (topic == null) {
 			throw new RestException("Topic not found: " + topicId, Status.NOT_FOUND);
 		}

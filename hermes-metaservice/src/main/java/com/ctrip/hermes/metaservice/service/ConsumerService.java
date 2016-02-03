@@ -18,9 +18,11 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
 import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
+import com.ctrip.hermes.metaservice.converter.ViewToModelConverter;
 import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
+import com.ctrip.hermes.metaservice.view.ConsumerView;
 
 @Named
 public class ConsumerService {
@@ -42,11 +44,11 @@ public class ConsumerService {
 	@Inject
 	private CachedConsumerGroupDao m_consumerGroupDao;
 
-	public synchronized ConsumerGroup addConsumerForTopics(Long topicId, ConsumerGroup consumer) throws Exception {
+	public synchronized ConsumerView addConsumerForTopics(Long topicId, ConsumerView consumer) throws Exception {
 		try {
 			tm.startTransaction("fxhermesmetadb");
-			Topic topic = m_topicService.findTopicById(topicId);
-			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = EntityToModelConverter.convert(consumer);
+			Topic topic = m_topicService.findTopicEntityById(topicId);
+			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = ViewToModelConverter.convert(consumer);
 			consumerGroupModel.setTopicId(topic.getId());
 			m_consumerGroupDao.insert(consumerGroupModel);
 			consumer.setId(consumerGroupModel.getId());
@@ -56,7 +58,8 @@ public class ConsumerService {
 				for (com.ctrip.hermes.meta.entity.ConsumerGroup cg : consumerGroups) {
 					topic.addConsumerGroup(cg);
 				}
-				m_storageService.addConsumerStorage(topic, consumer);
+				ConsumerGroup consumerEntity = ModelToEntityConverter.convert(consumerGroupModel);
+				m_storageService.addConsumerStorage(topic, consumerEntity);
 				m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			}
 			tm.commitTransaction();
@@ -70,10 +73,10 @@ public class ConsumerService {
 	public void deleteConsumerFromTopic(Long topicId, String consumer) throws Exception {
 		try {
 			tm.startTransaction("fxhermesmetadb");
-			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(topicId,
-			      consumer, ConsumerGroupEntity.READSET_FULL);
+			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
+			      topicId, consumer, ConsumerGroupEntity.READSET_FULL);
 			m_consumerGroupDao.deleteByPK(consumerGroup);
-			Topic topic = m_topicService.findTopicById(topicId);
+			Topic topic = m_topicService.findTopicEntityById(topicId);
 			if (Storage.MYSQL.equals(topic.getStorageType())) {
 				ConsumerGroup consumerGroupEntity = ModelToEntityConverter.convert(consumerGroup);
 				m_storageService.delConsumerStorage(topic, consumerGroupEntity);
@@ -88,8 +91,8 @@ public class ConsumerService {
 
 	public ConsumerGroup findConsumerGroup(Long topicId, String consumer) {
 		try {
-			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(topicId,
-			      consumer, ConsumerGroupEntity.READSET_FULL);
+			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
+			      topicId, consumer, ConsumerGroupEntity.READSET_FULL);
 			return ModelToEntityConverter.convert(consumerGroup);
 		} catch (Exception e) {
 			logger.warn("findConsumerGroup failed", e);
@@ -98,8 +101,8 @@ public class ConsumerService {
 	}
 
 	public List<com.ctrip.hermes.meta.entity.ConsumerGroup> findConsumerGroups(Topic topicModel) throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.findByTopic(topicModel.getId(),
-		      false);
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.findByTopic(
+		      topicModel.getId(), false);
 		List<com.ctrip.hermes.meta.entity.ConsumerGroup> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : models) {
 			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
@@ -113,7 +116,7 @@ public class ConsumerService {
 		try {
 			Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.list(false);
 			for (com.ctrip.hermes.metaservice.model.ConsumerGroup cgModel : cgModels) {
-				Topic topic = m_topicService.findTopicById(cgModel.getTopicId());
+				Topic topic = m_topicService.findTopicEntityById(cgModel.getTopicId());
 				if (!map.containsKey(topic.getName())) {
 					map.put(topic.getName(), new ArrayList<ConsumerGroup>());
 				}
@@ -141,13 +144,13 @@ public class ConsumerService {
 	public synchronized ConsumerGroup updateGroupForTopic(Long topicId, ConsumerGroup consumer) throws Exception {
 		try {
 			tm.startTransaction("fxhermesmetadb");
-			com.ctrip.hermes.metaservice.model.ConsumerGroup originConsumer = m_consumerGroupDao.findByTopicIdAndName(topicId,
-			      consumer.getName(), ConsumerGroupEntity.READSET_FULL);
+			com.ctrip.hermes.metaservice.model.ConsumerGroup originConsumer = m_consumerGroupDao.findByTopicIdAndName(
+			      topicId, consumer.getName(), ConsumerGroupEntity.READSET_FULL);
 			consumer.setId(originConsumer.getId());
 
 			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = EntityToModelConverter.convert(consumer);
 			m_consumerGroupDao.updateByPK(consumerGroupModel, ConsumerGroupEntity.UPDATESET_FULL);
-			Topic topicModel = m_topicService.findTopicById(topicId);
+			Topic topicModel = m_topicService.findTopicEntityById(topicId);
 			if (Storage.MYSQL.equals(topicModel.getStorageType())) {
 				List<com.ctrip.hermes.meta.entity.ConsumerGroup> consumerGroups = findConsumerGroups(topicModel);
 				for (com.ctrip.hermes.meta.entity.ConsumerGroup cg : consumerGroups) {
