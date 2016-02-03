@@ -1,6 +1,6 @@
 package com.ctrip.hermes.metaservice.view;
 
-public class ConsumerView {
+public class ConsumerGroupView {
 	private Integer id;
 	
 	private String topicName;
@@ -23,7 +23,7 @@ public class ConsumerView {
 
 	private boolean orderedConsume;
 
-	public ConsumerView() {
+	public ConsumerGroupView() {
 	}
 
 	public String getTopicName() {

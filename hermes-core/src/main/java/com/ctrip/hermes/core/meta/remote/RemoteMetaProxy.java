@@ -290,32 +290,6 @@ public class RemoteMetaProxy implements MetaProxy {
 		}
 	}
 
-//	@Override
-//	public List<SchemaView> listSchemas() {
-//		String response = get("/schemas/", null);
-//		if (response != null) {
-//			return JSON.parseArray(response, SchemaView.class);
-//		} else {
-//			if (log.isDebugEnabled()) {
-//				log.debug("No response while getting meta server[listSchemas]");
-//			}
-//			return new ArrayList<SchemaView>();
-//		}
-//	}
-//
-//	@Override
-//	public List<SubscriptionView> listSubscriptions(String status) {
-//		String response = get("/subscriptions/" + status, null);
-//		if (response != null) {
-//			return JSON.parseArray(response, SubscriptionView.class);
-//		} else {
-//			if (log.isDebugEnabled()) {
-//				log.debug("No response while getting meta server[listSubscriptions]");
-//			}
-//			return null; // Get remote info failed.
-//		}
-//	}
-
 	@Override
 	public int registerSchema(String schema, String subject) {
 		Map<String, String> params = new HashMap<String, String>();

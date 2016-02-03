@@ -21,7 +21,7 @@ import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
-import com.ctrip.hermes.metaservice.view.ConsumerView;
+import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
 
 @Named
 public class ConsumerService {
@@ -46,7 +46,7 @@ public class ConsumerService {
 	@Inject
 	private CachedTopicDao m_topicDao;
 
-	public synchronized ConsumerView addConsumerForTopics(Long topicId, ConsumerView consumer) throws Exception {
+	public synchronized ConsumerGroupView addConsumerForTopics(Long topicId, ConsumerGroupView consumer) throws Exception {
 		try {
 			tm.startTransaction("fxhermesmetadb");
 			Topic topic = m_topicService.findTopicEntityById(topicId);
@@ -113,28 +113,28 @@ public class ConsumerService {
 		return entities;
 	}
 
-	public List<ConsumerView> findConsumerViews(Long topicId) throws DalException {
+	public List<ConsumerGroupView> findConsumerViews(Long topicId) throws DalException {
 		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.findByTopic(topicId,
 		      false);
-		List<ConsumerView> views = new ArrayList<>();
+		List<ConsumerGroupView> views = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : models) {
-			ConsumerView view = ModelToViewConverter.convert(model);
+			ConsumerGroupView view = ModelToViewConverter.convert(model);
 			views.add(fillConsumerView(view, model.getTopicId()));
 		}
 		return views;
 	}
 
-	public List<ConsumerView> getConsumerViews() throws DalException {
+	public List<ConsumerGroupView> getConsumerViews() throws DalException {
 		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.list(false);
-		List<ConsumerView> views = new ArrayList<>();
+		List<ConsumerGroupView> views = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : models) {
-			ConsumerView view = ModelToViewConverter.convert(model);
+			ConsumerGroupView view = ModelToViewConverter.convert(model);
 			views.add(fillConsumerView(view, model.getTopicId()));
 		}
 		return views;
 	}
 
-	public synchronized ConsumerView updateGroupForTopic(Long topicId, ConsumerView consumer) throws Exception {
+	public synchronized ConsumerGroupView updateGroupForTopic(Long topicId, ConsumerGroupView consumer) throws Exception {
 		try {
 			tm.startTransaction("fxhermesmetadb");
 			com.ctrip.hermes.metaservice.model.ConsumerGroup originConsumer = m_consumerGroupDao.findByTopicIdAndName(
@@ -160,7 +160,7 @@ public class ConsumerService {
 		return consumer;
 	}
 
-	private ConsumerView fillConsumerView(ConsumerView view, Long topicId) throws DalException {
+	private ConsumerGroupView fillConsumerView(ConsumerGroupView view, Long topicId) throws DalException {
 		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByPK(topicId);
 		view.setTopicName(topicModel.getName());
 		return view;

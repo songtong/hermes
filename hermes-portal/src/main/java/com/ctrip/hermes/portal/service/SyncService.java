@@ -31,7 +31,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.metaservice.converter.EntityToViewConverter;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
-import com.ctrip.hermes.metaservice.view.ConsumerView;
+import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
 import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
@@ -47,7 +47,7 @@ public class SyncService {
 		try {
 			for (ConsumerGroup consumer : consumerService.findConsumerGroupEntities(topic.getId())) {
 				Builder request = target.path("/api/consumers/").request();
-				ConsumerView consumerView = EntityToViewConverter.convert(consumer);
+				ConsumerGroupView consumerView = EntityToViewConverter.convert(consumer);
 				consumerView.setTopicName(topic.getName());
 				Response response = request.post(Entity.json(consumerView));
 				if (!(Status.CREATED.getStatusCode() == response.getStatus()//

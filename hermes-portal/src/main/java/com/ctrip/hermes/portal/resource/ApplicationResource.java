@@ -25,7 +25,7 @@ import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.TopicService;
-import com.ctrip.hermes.metaservice.view.ConsumerView;
+import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
 import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
@@ -267,8 +267,8 @@ public class ApplicationResource {
 			TopicView topicView = appService.generateTopicView((TopicApplication) app);
 			return Response.status(Status.OK).entity(new Pair<HermesApplication, TopicView>(app, topicView)).build();
 		case CREATE_CONSUMER:
-			ConsumerView consumerView = appService.generateConsumerView((ConsumerApplication) app);
-			return Response.status(Status.OK).entity(new Pair<HermesApplication, ConsumerView>(app, consumerView))
+			ConsumerGroupView consumerView = appService.generateConsumerView((ConsumerApplication) app);
+			return Response.status(Status.OK).entity(new Pair<HermesApplication, ConsumerGroupView>(app, consumerView))
 					.build();
 		default:
 			throw new RestException("Generate view failed.");

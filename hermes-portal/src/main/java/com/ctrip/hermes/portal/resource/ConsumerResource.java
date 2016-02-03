@@ -24,7 +24,7 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
-import com.ctrip.hermes.metaservice.view.ConsumerView;
+import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
 import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
@@ -39,16 +39,16 @@ public class ConsumerResource {
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
 	@GET
-	public List<ConsumerView> getConsumers() {
-		List<ConsumerView> consumers = null;
+	public List<ConsumerGroupView> getConsumers() {
+		List<ConsumerGroupView> consumers = null;
 		try {
 			consumers = consumerService.getConsumerViews();
 		} catch (Exception e) {
 			throw new RestException(e, Status.NOT_FOUND);
 		}
-		Collections.sort(consumers, new Comparator<ConsumerView>() {
+		Collections.sort(consumers, new Comparator<ConsumerGroupView>() {
 			@Override
-			public int compare(ConsumerView o1, ConsumerView o2) {
+			public int compare(ConsumerGroupView o1, ConsumerGroupView o2) {
 				int ret = 0;
 				if (!StringUtils.isEmpty(o1.getName()) && !StringUtils.isEmpty(o2.getName()))
 					ret = ret == 0 ? o1.getName().compareTo(o2.getName()) : ret;
@@ -64,9 +64,9 @@ public class ConsumerResource {
 
 	@GET
 	@Path("{topic}")
-	public List<ConsumerView> getConsumers(@PathParam("topic") String topicName) {
+	public List<ConsumerGroupView> getConsumers(@PathParam("topic") String topicName) {
 		logger.debug("Get consumers of topic: {}", topicName);
-		List<ConsumerView> consumers = null;
+		List<ConsumerGroupView> consumers = null;
 		try {
 			TopicView topic = topicService.findTopicViewByName(topicName);
 			consumers = consumerService.findConsumerViews(topic.getId());
@@ -97,9 +97,9 @@ public class ConsumerResource {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
 
-		ConsumerView consumerView = null;
+		ConsumerGroupView consumerView = null;
 		try {
-			consumerView = JSON.parseObject(content, ConsumerView.class);
+			consumerView = JSON.parseObject(content, ConsumerGroupView.class);
 		} catch (Exception e) {
 			logger.error("Parse consumer failed, content: {}", content, e);
 			throw new RestException(e, Status.BAD_REQUEST);
@@ -125,9 +125,9 @@ public class ConsumerResource {
 		if (StringUtils.isEmpty(content))
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 
-		ConsumerView consumerView = null;
+		ConsumerGroupView consumerView = null;
 		try {
-			consumerView = JSON.parseObject(content, ConsumerView.class);
+			consumerView = JSON.parseObject(content, ConsumerGroupView.class);
 		} catch (Exception e) {
 			logger.error("Parse consumer failed, content:{}", content, e);
 			throw new RestException(e, Status.BAD_REQUEST);

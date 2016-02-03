@@ -11,7 +11,7 @@ public class MockZookeeper {
 
 	public MockZookeeper() {
 		try {
-			zkTestServer = new TestingServer(2181, false);
+			zkTestServer = new TestingServer(8121, false);
 			start();
 		} catch (Exception e) {
 			e.printStackTrace();

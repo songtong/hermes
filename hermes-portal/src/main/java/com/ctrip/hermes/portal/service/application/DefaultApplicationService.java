@@ -20,7 +20,7 @@ import com.ctrip.hermes.mail.HermesMail;
 import com.ctrip.hermes.mail.MailService;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
-import com.ctrip.hermes.metaservice.view.ConsumerView;
+import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
 import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
@@ -290,8 +290,8 @@ public class DefaultApplicationService implements ApplicationService {
 	}
 
 	@Override
-	public ConsumerView generateConsumerView(ConsumerApplication app) {
-		ConsumerView consumerView = new ConsumerView();
+	public ConsumerGroupView generateConsumerView(ConsumerApplication app) {
+		ConsumerGroupView consumerView = new ConsumerGroupView();
 		consumerView.setOrderedConsume(true);
 		consumerView.setTopicName(app.getTopicName());
 		consumerView.setName(app.getProductLine() + "." + app.getProduct() + "." + app.getProject());

@@ -16,7 +16,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.ctrip.hermes.metaservice.view.CodecView;
+import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.portal.StartPortal;
 
 public class CodecResourceTest extends StartPortal {
@@ -34,7 +34,7 @@ public class CodecResourceTest extends StartPortal {
 		Builder request = webTarget.path("/api/codecs/" + topic).request();
 		Response response = request.get();
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		CodecView codec = response.readEntity(CodecView.class);
+		Codec codec = response.readEntity(Codec.class);
 		System.out.println(codec);
 		List<String> codecs = new ArrayList<>();
 		codecs.add("json");
@@ -54,13 +54,13 @@ public class CodecResourceTest extends StartPortal {
 		Response response = request.get();
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
-		List<CodecView> readEntity = response.readEntity(new GenericType<List<CodecView>>() {
+		List<Codec> readEntity = response.readEntity(new GenericType<List<Codec>>() {
 		});
 		List<String> codecs = new ArrayList<>();
 		codecs.add("json");
 		codecs.add("avro");
 		codecs.add("cmessaging");
-		for (CodecView codec : readEntity) {
+		for (Codec codec : readEntity) {
 			System.out.println(codec);
 			Assert.assertTrue(codecs.contains(codec.getType()));
 		}
