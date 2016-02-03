@@ -44,17 +44,22 @@ public class SyncService {
 	private ConsumerService consumerService;
 
 	public void syncConsumers(TopicView topic, WebTarget target) {
-		for (ConsumerGroup consumer : consumerService.getConsumers(topic.getName())) {
-			consumer.setId(null);
-			Builder request = target.path("/api/consumers/add").request();
-			ConsumerView consumerView = EntityToViewConverter.convert(consumer);
-			consumerView.setTopicName(topic.getName());
-			Response response = request.post(Entity.json(consumerView));
-			if (!(Status.CREATED.getStatusCode() == response.getStatus()//
-			|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
-				throw new RestException(String.format("Add consumer %s failed.", consumer.getName()),
-				      Status.INTERNAL_SERVER_ERROR);
+		try {
+			for (ConsumerGroup consumer : consumerService.findConsumerGroupEntities(topic.getId())) {
+				Builder request = target.path("/api/consumers/").request();
+				ConsumerView consumerView = EntityToViewConverter.convert(consumer);
+				consumerView.setTopicName(topic.getName());
+				Response response = request.post(Entity.json(consumerView));
+				if (!(Status.CREATED.getStatusCode() == response.getStatus()//
+				|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
+					throw new RestException(String.format("Add consumer %s failed.", consumer.getName()),
+					      Status.INTERNAL_SERVER_ERROR);
+				}
 			}
+		} catch (Exception e) {
+			log.warn("Sync Consumers failed.", e);
+			throw new RestException(String.format("Sync consumers: %s failed: %s", topic.getName(), e.getMessage()),
+			      Status.NOT_ACCEPTABLE);
 		}
 	}
 

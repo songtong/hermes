@@ -2,9 +2,7 @@ package com.ctrip.hermes.metaservice.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +14,11 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
 import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
+import com.ctrip.hermes.metaservice.converter.ModelToViewConverter;
 import com.ctrip.hermes.metaservice.converter.ViewToModelConverter;
 import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
+import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.view.ConsumerView;
@@ -44,6 +43,9 @@ public class ConsumerService {
 	@Inject
 	private CachedConsumerGroupDao m_consumerGroupDao;
 
+	@Inject
+	private CachedTopicDao m_topicDao;
+
 	public synchronized ConsumerView addConsumerForTopics(Long topicId, ConsumerView consumer) throws Exception {
 		try {
 			tm.startTransaction("fxhermesmetadb");
@@ -54,7 +56,7 @@ public class ConsumerService {
 			consumer.setId(consumerGroupModel.getId());
 
 			if (Storage.MYSQL.equals(topic.getStorageType())) {
-				List<com.ctrip.hermes.meta.entity.ConsumerGroup> consumerGroups = findConsumerGroups(topic);
+				List<com.ctrip.hermes.meta.entity.ConsumerGroup> consumerGroups = findConsumerGroupEntities(topic.getId());
 				for (com.ctrip.hermes.meta.entity.ConsumerGroup cg : consumerGroups) {
 					topic.addConsumerGroup(cg);
 				}
@@ -100,59 +102,51 @@ public class ConsumerService {
 		return null;
 	}
 
-	public List<com.ctrip.hermes.meta.entity.ConsumerGroup> findConsumerGroups(Topic topicModel) throws DalException {
-		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.findByTopic(
-		      topicModel.getId(), false);
+	public List<ConsumerGroup> findConsumerGroupEntities(Long topicId) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.findByTopic(topicId,
+		      false);
 		List<com.ctrip.hermes.meta.entity.ConsumerGroup> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : models) {
-			com.ctrip.hermes.meta.entity.ConsumerGroup entity = ModelToEntityConverter.convert(model);
+			ConsumerGroup entity = ModelToEntityConverter.convert(model);
 			entities.add(entity);
 		}
 		return entities;
 	}
 
-	public Map<String, List<ConsumerGroup>> getConsumers() {
-		Map<String, List<ConsumerGroup>> map = new LinkedHashMap<String, List<ConsumerGroup>>();
-		try {
-			Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> cgModels = m_consumerGroupDao.list(false);
-			for (com.ctrip.hermes.metaservice.model.ConsumerGroup cgModel : cgModels) {
-				Topic topic = m_topicService.findTopicEntityById(cgModel.getTopicId());
-				if (!map.containsKey(topic.getName())) {
-					map.put(topic.getName(), new ArrayList<ConsumerGroup>());
-				}
-				if (map.containsKey(topic.getName())) {
-					map.get(topic.getName()).add(ModelToEntityConverter.convert(cgModel));
-				}
-			}
-
-		} catch (DalException e) {
-			e.printStackTrace();
+	public List<ConsumerView> findConsumerViews(Long topicId) throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.findByTopic(topicId,
+		      false);
+		List<ConsumerView> views = new ArrayList<>();
+		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : models) {
+			ConsumerView view = ModelToViewConverter.convert(model);
+			views.add(fillConsumerView(view, model.getTopicId()));
 		}
-		return map;
+		return views;
 	}
 
-	public List<ConsumerGroup> getConsumers(String topicName) {
-		try {
-			Topic topic = m_topicService.findTopicEntityByName(topicName);
-			return findConsumerGroups(topic);
-		} catch (DalException e) {
-			logger.warn("getConsumers failed", e);
+	public List<ConsumerView> getConsumerViews() throws DalException {
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> models = m_consumerGroupDao.list(false);
+		List<ConsumerView> views = new ArrayList<>();
+		for (com.ctrip.hermes.metaservice.model.ConsumerGroup model : models) {
+			ConsumerView view = ModelToViewConverter.convert(model);
+			views.add(fillConsumerView(view, model.getTopicId()));
 		}
-		return new ArrayList<ConsumerGroup>();
+		return views;
 	}
 
-	public synchronized ConsumerGroup updateGroupForTopic(Long topicId, ConsumerGroup consumer) throws Exception {
+	public synchronized ConsumerView updateGroupForTopic(Long topicId, ConsumerView consumer) throws Exception {
 		try {
 			tm.startTransaction("fxhermesmetadb");
 			com.ctrip.hermes.metaservice.model.ConsumerGroup originConsumer = m_consumerGroupDao.findByTopicIdAndName(
 			      topicId, consumer.getName(), ConsumerGroupEntity.READSET_FULL);
 			consumer.setId(originConsumer.getId());
 
-			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = EntityToModelConverter.convert(consumer);
+			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = ViewToModelConverter.convert(consumer);
 			m_consumerGroupDao.updateByPK(consumerGroupModel, ConsumerGroupEntity.UPDATESET_FULL);
 			Topic topicModel = m_topicService.findTopicEntityById(topicId);
 			if (Storage.MYSQL.equals(topicModel.getStorageType())) {
-				List<com.ctrip.hermes.meta.entity.ConsumerGroup> consumerGroups = findConsumerGroups(topicModel);
+				List<com.ctrip.hermes.meta.entity.ConsumerGroup> consumerGroups = findConsumerGroupEntities(topicModel
+				      .getId());
 				for (com.ctrip.hermes.meta.entity.ConsumerGroup cg : consumerGroups) {
 					topicModel.addConsumerGroup(cg);
 				}
@@ -164,5 +158,11 @@ public class ConsumerService {
 			throw e;
 		}
 		return consumer;
+	}
+
+	private ConsumerView fillConsumerView(ConsumerView view, Long topicId) throws DalException {
+		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByPK(topicId);
+		view.setTopicName(topicModel.getName());
+		return view;
 	}
 }

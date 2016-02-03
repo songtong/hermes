@@ -113,7 +113,7 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 	consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
 		add_consumer : {
 			method : 'POST',
-			url : '/api/consumers/add'
+			url : '/api/consumers/'
 		}
 	});
 

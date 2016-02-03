@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaservice.view;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -25,9 +26,9 @@ public class SchemaView {
 	private String schemaPreview;
 
 	private Long topicId;
-	
+
 	private int avroId;
-	
+
 	private String dependencyString;
 
 	public SchemaView() {
@@ -55,6 +56,9 @@ public class SchemaView {
 	}
 
 	public List<Property> getProperties() {
+		if (properties == null) {
+			properties = new ArrayList<>();
+		}
 		return properties;
 	}
 
@@ -115,12 +119,12 @@ public class SchemaView {
 	}
 
 	public int getAvroId() {
-	   return avroId;
-   }
+		return avroId;
+	}
 
 	public void setAvroId(int avroId) {
-	   this.avroId = avroId;
-   }
+		this.avroId = avroId;
+	}
 
 	public String getDependencyString() {
 		return dependencyString;

@@ -39,11 +39,11 @@ angular.module('hermes-consumer', [ 'ngResource', 'smart-table','xeditable' ])
 							'/api/consumers/:topic/:consumer', {}, {
 								'add_consumer' : {
 									method:'POST',
-									url:'/api/consumers/add'
+									url:'/api/consumers/'
 								},
 								'update_consumer' : {
-									method:'POST',
-									url:'/api/consumers/update'
+									method:'PUT',
+									url:'/api/consumers/'
 								}
 							});
 					meta_resource = resource('/api/', {}, {

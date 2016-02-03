@@ -535,6 +535,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
