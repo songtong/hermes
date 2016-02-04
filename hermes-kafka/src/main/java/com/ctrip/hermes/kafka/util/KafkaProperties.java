@@ -82,8 +82,7 @@ public class KafkaProperties {
 		consumerProp.put("value.deserializer", ByteArrayDeserializer.class.getCanonicalName());
 		consumerProp.put("key.deserializer", StringDeserializer.class.getCanonicalName());
 		if (!consumerProp.containsKey("client.id")) {
-			consumerProp.put("client.id", topic + "_" + group + "_" + Networks.forIp().getLocalHostAddress() + "_"
-			      + System.currentTimeMillis());
+			consumerProp.put("client.id", topic + "_" + group + "_" + Networks.forIp().getLocalHostAddress());
 		}
 
 		return consumerProp;
