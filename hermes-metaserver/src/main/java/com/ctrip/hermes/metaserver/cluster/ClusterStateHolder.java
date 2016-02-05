@@ -1,7 +1,6 @@
 package com.ctrip.hermes.metaserver.cluster;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
@@ -43,8 +42,6 @@ public class ClusterStateHolder {
 
 	private AtomicBoolean m_hasLeadership = new AtomicBoolean(false);
 
-	private AtomicReference<HostPort> m_leader = new AtomicReference<>(null);
-
 	public void setHasLeadership(boolean hasLeadership) {
 		m_hasLeadership.set(hasLeadership);
 	}
@@ -63,7 +60,6 @@ public class ClusterStateHolder {
 			public void notLeader() {
 				log.info("Become follower");
 				m_hasLeadership.set(false);
-				m_leader.set(fetcheLeaderInfoFromZk());
 				m_eventBusBootstrapListener.notLeader(ClusterStateHolder.this);
 			}
 
@@ -71,7 +67,6 @@ public class ClusterStateHolder {
 			public void isLeader() {
 				log.info("Become leader");
 				m_hasLeadership.set(true);
-				m_leader.set(fetcheLeaderInfoFromZk());
 				m_eventBusBootstrapListener.isLeader(ClusterStateHolder.this);
 			}
 		}, m_eventBus.getExecutor());
@@ -93,9 +88,7 @@ public class ClusterStateHolder {
 	}
 
 	public HostPort getLeader() {
-		m_leader.compareAndSet(null, fetcheLeaderInfoFromZk());
-		return m_leader.get();
-
+		return fetcheLeaderInfoFromZk();
 	}
 
 	private HostPort fetcheLeaderInfoFromZk() {
