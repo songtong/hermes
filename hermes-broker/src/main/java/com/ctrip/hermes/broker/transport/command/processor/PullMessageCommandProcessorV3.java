@@ -21,6 +21,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
+import com.dianping.cat.Cat;
 
 public class PullMessageCommandProcessorV3 implements CommandProcessor {
 
@@ -52,6 +53,8 @@ public class PullMessageCommandProcessorV3 implements CommandProcessor {
 
 		try {
 			if (m_metaService.containsConsumerGroup(reqCmd.getTopic(), reqCmd.getGroupId())) {
+				Cat.logEvent("Hermes.PullMessage.Request",
+				      reqCmd.getTopic() + "-" + reqCmd.getPartition() + "-" + reqCmd.getGroupId());
 				Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(),
 				      m_config.getSessionId());
 				if (lease != null) {
