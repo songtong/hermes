@@ -92,24 +92,23 @@ public class LeaseResource {
 		Map<String, String> params = new HashMap<>();
 		params.put("sessionId", sessionId);
 		params.put("host", getRemoteAddr(host, req));
-		LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(tpg.getTopic(),
-		      "/consumer/acquire", params, tpg);
+		try {
+			LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(tpg.getTopic(),
+			      "/consumer/acquire", params, tpg);
 
-		if (leaseAcquireResponse == null) {
-			ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
-			      tpg.getGroupId());
-			try {
+			if (leaseAcquireResponse == null) {
+				ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
+				      tpg.getGroupId());
 				if (leaseAllocator != null) {
 					return leaseAllocator.tryAcquireLease(tpg, sessionId, getRemoteAddr(host, req));
 				} else {
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
 				}
-			} catch (Exception e) {
-				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+			} else {
+				return leaseAcquireResponse;
 			}
-		} else {
-			return leaseAcquireResponse;
+		} catch (Exception e) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 		}
 	}
 
@@ -127,24 +126,23 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("leaseId", Long.toString(leaseId));
 		params.put("host", getRemoteAddr(host, req));
-		LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(tpg.getTopic(),
-		      "/consumer/renew", params, tpg);
 
-		if (leaseAcquireResponse == null) {
-			ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
-			      tpg.getGroupId());
-			try {
+		try {
+			LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(tpg.getTopic(),
+			      "/consumer/renew", params, tpg);
+			if (leaseAcquireResponse == null) {
+				ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
+				      tpg.getGroupId());
 				if (leaseAllocator != null) {
 					return leaseAllocator.tryRenewLease(tpg, sessionId, leaseId, getRemoteAddr(host, req));
 				} else {
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_STRATEGY_DELAY_TIME_MILLIS);
 				}
-			} catch (Exception e) {
-				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+			} else {
+				return leaseAcquireResponse;
 			}
-		} else {
-			return leaseAcquireResponse;
+		} catch (Exception e) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 		}
 	}
 
@@ -165,17 +163,16 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
-		LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary("/broker/acquire", params, null);
+		try {
+			LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary("/broker/acquire", params, null);
 
-		if (leaseAcquireResponse == null) {
-			try {
+			if (leaseAcquireResponse == null) {
 				return m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId, getRemoteAddr(host, req), port);
-			} catch (Exception e) {
-				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+			} else {
+				return leaseAcquireResponse;
 			}
-		} else {
-			return leaseAcquireResponse;
+		} catch (Exception e) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 		}
 	}
 
@@ -198,18 +195,18 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
-		LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary("/broker/renew", params, null);
 
-		if (leaseAcquireResponse == null) {
-			try {
+		try {
+			LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary("/broker/renew", params, null);
+
+			if (leaseAcquireResponse == null) {
 				return m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId, getRemoteAddr(host, req),
 				      port);
-			} catch (Exception e) {
-				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+			} else {
+				return leaseAcquireResponse;
 			}
-		} else {
-			return leaseAcquireResponse;
+		} catch (Exception e) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 		}
 	}
 
