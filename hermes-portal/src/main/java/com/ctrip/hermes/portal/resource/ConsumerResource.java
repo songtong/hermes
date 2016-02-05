@@ -83,7 +83,7 @@ public class ConsumerResource {
 		logger.debug("Delete consumer: {} {}", topicName, consumer);
 		try {
 			TopicView topic = topicService.findTopicViewByName(topicName);
-			consumerService.deleteConsumerFromTopic(topic.getId(), consumer);
+			consumerService.deleteConsumerGroup(topic.getId(), consumer);
 		} catch (Exception e) {
 			logger.warn("delete topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -107,12 +107,12 @@ public class ConsumerResource {
 		String consumerName = consumerView.getName();
 		String topicName = consumerView.getTopicName();
 		TopicView topicView = topicService.findTopicViewByName(topicName);
-		if (consumerService.findConsumerGroup(topicView.getId(), consumerName) != null) {
+		if (consumerService.findConsumerGroupEntity(topicView.getId(), consumerName) != null) {
 			throw new RestException("Consumer for " + topicName + " already exists.", Status.CONFLICT);
 		}
 
 		try {
-			consumerView = consumerService.addConsumerForTopics(topicView.getId(), consumerView);
+			consumerView = consumerService.addConsumerGroup(topicView.getId(), consumerView);
 		} catch (Exception e) {
 			logger.warn("Create consumer failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -135,7 +135,7 @@ public class ConsumerResource {
 
 		try {
 			TopicView topicView = topicService.findTopicViewByName(consumerView.getTopicName());
-			consumerView = consumerService.updateGroupForTopic(topicView.getId(), consumerView);
+			consumerView = consumerService.updateConsumerGroup(topicView.getId(), consumerView);
 		} catch (Exception e) {
 			logger.warn("Update consumer failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
