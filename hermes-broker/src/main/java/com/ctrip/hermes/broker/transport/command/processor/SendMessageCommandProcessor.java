@@ -74,6 +74,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	public void process(final CommandProcessorContext ctx) {
 		SendMessageCommand reqCmd = (SendMessageCommand) ctx.getCommand();
 
+		Cat.logEvent("Hermes.SendMessage.Request", reqCmd.getTopic() + "-" + reqCmd.getPartition());
 		Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(), m_config.getSessionId());
 
 		if (m_metaService.findTopicByName(reqCmd.getTopic()) != null) {
