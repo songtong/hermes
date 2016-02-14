@@ -709,6 +709,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.metaservice.service.KafkaService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.KafkaService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.StorageService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaservice.service.MetaRefactor</role>
 			<implementation>com.ctrip.hermes.metaservice.service.MetaRefactor</implementation>
 			<requirements>

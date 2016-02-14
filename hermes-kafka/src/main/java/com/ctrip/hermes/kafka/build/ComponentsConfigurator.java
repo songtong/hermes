@@ -13,6 +13,7 @@ import com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroSerializer;
 import com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient;
 import com.ctrip.hermes.kafka.engine.KafkaConsumerBootstrap;
 import com.ctrip.hermes.kafka.producer.KafkaMessageSender;
+import com.ctrip.hermes.kafka.service.KafkaService;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.pipeline.DefaultProducerPipelineSink;
@@ -33,6 +34,9 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(HermesKafkaAvroSerializer.class));
 		all.add(A(HermesKafkaAvroDeserializer.class));
 		all.add(A(AvroPayloadCodec.class));
+		
+		all.add(A(KafkaService.class));
+		
 		return all;
 	}
 

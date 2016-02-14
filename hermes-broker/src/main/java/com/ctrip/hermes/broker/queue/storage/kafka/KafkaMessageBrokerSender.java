@@ -57,7 +57,7 @@ public class KafkaMessageBrokerSender {
 			}
 		}
 
-		return overrideByCtripDefaultSetting(configs);
+		return overrideByCtripDefaultSetting(configs, topic);
 	}
 
 	/**
@@ -65,12 +65,12 @@ public class KafkaMessageBrokerSender {
 	 * @param producerProp
 	 * @return
 	 */
-	private Properties overrideByCtripDefaultSetting(Properties producerProp) {
+	private Properties overrideByCtripDefaultSetting(Properties producerProp, String topic) {
 		producerProp.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
 		producerProp.put("key.serializer", StringSerializer.class.getCanonicalName());
 
 		if (!producerProp.containsKey("client.id")) {
-			producerProp.put("client.id", Networks.forIp().getLocalHostAddress());
+			producerProp.put("client.id", topic + "_" + Networks.forIp().getLocalHostAddress());
 		}
 		if (!producerProp.containsKey("linger.ms")) {
 			producerProp.put("linger.ms", 50);

@@ -18,21 +18,53 @@ import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 public class ConsumerTest {
 
 	@Test
+	public void testConsumerNotMessage() throws IOException {
+		String topic = "kafka.SimpleTextTopic";
+		String group = "SimpleTextTopicGroup";
+
+		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group, new BaseMessageListener<VisitEvent>() {
+
+			@Override
+			protected void onMessage(ConsumerMessage<VisitEvent> msg) {
+				VisitEvent event = msg.getBody();
+				System.out.println("Receive: " + event);
+			}
+		});
+
+		System.out.println("Starting consumer...");
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(System.in));
+			while (true) {
+				String line = in.readLine();
+				if ("q".equals(line)) {
+					break;
+				}
+			}
+		} finally {
+			if (in != null) {
+				in.close();
+			}
+		}
+
+		consumerHolder.close();
+	}
+
+	@Test
 	public void testOneConsumerOneGroup() throws IOException {
 		String topic = "kafka.SimpleTextTopic";
 		String group = "SimpleTextTopicGroup";
 
 		Producer producer = Producer.getInstance();
 
-		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group,
-		      new BaseMessageListener<VisitEvent>() {
+		ConsumerHolder consumerHolder = Consumer.getInstance().start(topic, group, new BaseMessageListener<VisitEvent>() {
 
-			      @Override
-			      protected void onMessage(ConsumerMessage<VisitEvent> msg) {
-				      VisitEvent event = msg.getBody();
-				      System.out.println("Receive: " + event);
-			      }
-		      });
+			@Override
+			protected void onMessage(ConsumerMessage<VisitEvent> msg) {
+				VisitEvent event = msg.getBody();
+				System.out.println("Receive: " + event);
+			}
+		});
 
 		System.out.println("Starting consumer...");
 		BufferedReader in = null;
