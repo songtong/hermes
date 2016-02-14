@@ -1,19 +1,25 @@
-package com.ctrip.hermes.metaservice.service;
+package com.ctrip.hermes.kafka.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.ByteArrayDeserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+
+import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.kafka.util.KafkaProperties;
+import com.ctrip.hermes.meta.entity.Datasource;
+import com.ctrip.hermes.meta.entity.Partition;
+import com.ctrip.hermes.meta.entity.Property;
+import com.ctrip.hermes.meta.entity.Storage;
 
 @Named
 public class KafkaService {
@@ -23,7 +29,7 @@ public class KafkaService {
 	};
 
 	@Inject
-	private StorageService storageService;
+	private MetaService m_metaService;
 
 	private static final Logger m_logger = LoggerFactory.getLogger(KafkaService.class);
 
@@ -64,13 +70,29 @@ public class KafkaService {
 
 	private Properties getProperties(String topic, String consumerGroup) {
 		Properties configs = new Properties();
+		List<Partition> partitions = m_metaService.listPartitionsByTopic(topic);
+		if (partitions == null || partitions.size() < 1) {
+			return configs;
+		}
 
-		String brokerList = storageService.getKafkaBrokerList();
-		configs.put("metadata.broker.list", brokerList);
+		String consumerDatasource = partitions.get(0).getWriteDatasource();
+		Storage targetStorage = m_metaService.findStorageByTopic(topic);
+		if (targetStorage == null) {
+			return configs;
+		}
+
+		for (Datasource datasource : targetStorage.getDatasources()) {
+			if (consumerDatasource.equals(datasource.getId())) {
+				Map<String, Property> properties = datasource.getProperties();
+				for (Map.Entry<String, Property> prop : properties.entrySet()) {
+					configs.put(prop.getValue().getName(), prop.getValue().getValue());
+				}
+				break;
+			}
+		}
+
 		configs.put("group.id", consumerGroup);
 		configs.put("enable.auto.commit", "false");
-		configs.put("value.deserializer", ByteArrayDeserializer.class.getCanonicalName());
-		configs.put("key.deserializer", StringDeserializer.class.getCanonicalName());
-		return configs;
+		return KafkaProperties.overrideByCtripDefaultConsumerSetting(configs, topic, consumerGroup);
 	}
 }

@@ -171,8 +171,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			return configs;
 		}
 
-		// FIXME will switch back to ReadDatasource later
-		String consumerDatasource = partitions.get(0).getWriteDatasource();
+		String consumerDatasource = partitions.get(0).getReadDatasource();
 		Storage targetStorage = m_metaService.findStorageByTopic(topic);
 		if (targetStorage == null) {
 			return configs;
