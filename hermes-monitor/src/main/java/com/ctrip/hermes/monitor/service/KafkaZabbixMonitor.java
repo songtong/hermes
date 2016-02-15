@@ -28,15 +28,15 @@ import com.zabbix4j.host.HostObject;
 import com.zabbix4j.item.ItemObject;
 
 @Service
-public class KafkaMonitor implements IZabbixMonitor {
+public class KafkaZabbixMonitor implements IZabbixMonitor {
 
-	private static final Logger logger = LoggerFactory.getLogger(KafkaMonitor.class);
+	private static final Logger logger = LoggerFactory.getLogger(KafkaZabbixMonitor.class);
 
 	public static void main(String[] args) throws Throwable {
 		int hours = Integer.parseInt(args[0]);
 		int requestIntervalSecond = Integer.parseInt(args[1]);
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
-		KafkaMonitor monitor = context.getBean(KafkaMonitor.class);
+		KafkaZabbixMonitor monitor = context.getBean(KafkaZabbixMonitor.class);
 		monitor.monitorPastHours(hours, requestIntervalSecond);
 		context.close();
 	}
