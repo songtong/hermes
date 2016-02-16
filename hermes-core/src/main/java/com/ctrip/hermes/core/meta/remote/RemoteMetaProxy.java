@@ -6,7 +6,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +21,6 @@ import org.unidal.net.Networks;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ctrip.hermes.core.bo.Offset;
-import com.ctrip.hermes.core.bo.SchemaView;
-import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.lease.Lease;
@@ -290,32 +287,6 @@ public class RemoteMetaProxy implements MetaProxy {
 			return sb.substring(0, sb.length() - 1);
 		} else {
 			return null;
-		}
-	}
-
-	@Override
-	public List<SchemaView> listSchemas() {
-		String response = get("/schemas/", null);
-		if (response != null) {
-			return JSON.parseArray(response, SchemaView.class);
-		} else {
-			if (log.isDebugEnabled()) {
-				log.debug("No response while getting meta server[listSchemas]");
-			}
-			return new ArrayList<SchemaView>();
-		}
-	}
-
-	@Override
-	public List<SubscriptionView> listSubscriptions(String status) {
-		String response = get("/subscriptions/" + status, null);
-		if (response != null) {
-			return JSON.parseArray(response, SubscriptionView.class);
-		} else {
-			if (log.isDebugEnabled()) {
-				log.debug("No response while getting meta server[listSubscriptions]");
-			}
-			return null; // Get remote info failed.
 		}
 	}
 

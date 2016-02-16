@@ -56,7 +56,7 @@ public class MockKafka {
 	public void createTopic(String topic, int partition, int replication) {
 		ZkClient zkClient = new ZkClient(zkServer.getConnection());
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		ZkUtils zkUtils = new ZkUtils(zkClient, zkServer.getConnection(),false);
+		ZkUtils zkUtils = new ZkUtils(zkClient, zkServer.getConnection(), false);
 		AdminUtils.createTopic(zkUtils, topic, partition, replication, new Properties());
 		zkClient.close();
 	}
@@ -68,7 +68,7 @@ public class MockKafka {
 	public TopicMetadata fetchTopicMeta(String topic) {
 		ZkClient zkClient = new ZkClient(zkServer.getConnection());
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		ZkUtils zkUtils = new ZkUtils(zkClient, zkServer.getConnection(),false);
+		ZkUtils zkUtils = new ZkUtils(zkClient, zkServer.getConnection(), false);
 		TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkUtils);
 		zkClient.close();
 		return topicMetadata;
@@ -82,7 +82,7 @@ public class MockKafka {
 	public void deleteTopic(String topic) {
 		ZkClient zkClient = new ZkClient(zkServer.getConnection());
 		zkClient.setZkSerializer(new ZKStringSerializer());
-		ZkUtils zkUtils = new ZkUtils(zkClient, zkServer.getConnection(),false);
+		ZkUtils zkUtils = new ZkUtils(zkClient, zkServer.getConnection(), false);
 		AdminUtils.deleteTopic(zkUtils, topic);
 		zkClient.close();
 	}
@@ -103,6 +103,13 @@ public class MockKafka {
 
 	public MockZookeeper getZookeeperServer() {
 		return this.zkServer;
+	}
+
+	public void createOffsetStorage() {
+		if (zkServer.isPathExist("/brokers/topics/__consumer_offsets/partitions"))
+			return;
+		this.createTopic("__consumer_offsets", 50, 1);
+		this.fetchTopicMeta("__consumer_offsets");
 	}
 
 }

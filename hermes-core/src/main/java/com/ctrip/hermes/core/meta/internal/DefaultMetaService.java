@@ -17,7 +17,6 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.bo.Offset;
-import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.lease.Lease;
@@ -321,11 +320,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 
 			throw new RuntimeException(String.format("Consumer group %s for topic %s not found", groupId, topicName));
 		}
-	}
-
-	@Override
-	public List<SubscriptionView> listSubscriptions(String status) {
-		return getMetaProxy().listSubscriptions(status);
 	}
 
 	@Override

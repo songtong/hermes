@@ -14,7 +14,6 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ctrip.hermes.core.bo.CodecView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.metaservice.service.CodecService;
@@ -31,13 +30,13 @@ public class CodecResource {
 
 	@GET
 	@Path("{name}")
-	public CodecView getCodec(@PathParam("name") String name) {
+	public Codec getCodec(@PathParam("name") String name) {
 		logger.debug("get codec {}", name);
 		Codec codec = codecService.getCodecs().get(name);
 		if (codec == null) {
 			throw new RestException("Codec not found: " + name, Status.NOT_FOUND);
 		}
-		return new CodecView(codec);
+		return codec;
 	}
 
 	@GET

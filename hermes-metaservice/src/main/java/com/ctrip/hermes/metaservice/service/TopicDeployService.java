@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaservice.service;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -9,28 +10,30 @@ import kafka.utils.ZkUtils;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
+import org.I0Itec.zkclient.exception.ZkMarshallingError;
+import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Property;
-import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.view.TopicView;
 
 @Named
 public class TopicDeployService {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(TopicDeployService.class);
-	
+
 	public static final int DEFAULT_KAFKA_PARTITIONS = 3;
 
 	public static final int DEFAULT_KAFKA_REPLICATION_FACTOR = 2;
-	
+
 	private List<String> validKafkaConfigKeys = new ArrayList<String>();
-	
+
 	@Inject
 	private StorageService m_dsService;
-	
+
 	public TopicDeployService() {
 		validKafkaConfigKeys.add("segment.index.bytes");
 		validKafkaConfigKeys.add("segment.jitter.ms");
@@ -48,11 +51,11 @@ public class TopicDeployService {
 		validKafkaConfigKeys.add("segment.bytes");
 		validKafkaConfigKeys.add("segment.ms");
 	}
-	
+
 	/**
 	 * @param topic
 	 */
-	public void configTopicInKafka(Topic topic) {
+	public void configTopicInKafka(TopicView topic) {
 		String zkConnect = m_dsService.getZookeeperList();
 		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
 		zkClient.setZkSerializer(new ZKStringSerializer());
@@ -71,7 +74,7 @@ public class TopicDeployService {
 	/**
 	 * @param topic
 	 */
-	public void createTopicInKafka(Topic topic) {
+	public void createTopicInKafka(TopicView topic) {
 		String zkConnect = m_dsService.getZookeeperList();
 		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
 		zkClient.setZkSerializer(new ZKStringSerializer());
@@ -97,7 +100,7 @@ public class TopicDeployService {
 	/**
 	 * @param topic
 	 */
-	public void deleteTopicInKafka(Topic topic) {
+	public void deleteTopicInKafka(TopicView topic) {
 		String zkConnect = m_dsService.getZookeeperList();
 
 		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
@@ -107,4 +110,31 @@ public class TopicDeployService {
 		m_logger.info("delete topic in kafka, topic {}", topic.getName());
 		AdminUtils.deleteTopic(zkUtils, topic.getName());
 	}
+}
+
+class ZKStringSerializer implements ZkSerializer {
+
+	@Override
+	public Object deserialize(byte[] bytes) throws ZkMarshallingError {
+		if (bytes == null)
+			return null;
+		else
+			try {
+				return new String(bytes, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				throw new ZkMarshallingError(e);
+			}
+	}
+
+	@Override
+	public byte[] serialize(Object data) throws ZkMarshallingError {
+		byte[] bytes = null;
+		try {
+			bytes = data.toString().getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new ZkMarshallingError(e);
+		}
+		return bytes;
+	}
+
 }

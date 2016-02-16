@@ -13,6 +13,8 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
+import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
 import com.ctrip.hermes.metaservice.dal.CachedEndpointDao;
 
 @Named

@@ -7,10 +7,10 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.metaservice.model.Subscription;
 import com.ctrip.hermes.metaservice.model.SubscriptionDao;
 import com.ctrip.hermes.metaservice.model.SubscriptionEntity;
+import com.ctrip.hermes.metaservice.view.SubscriptionView;
 
 @Named
 public class SubscriptionService {

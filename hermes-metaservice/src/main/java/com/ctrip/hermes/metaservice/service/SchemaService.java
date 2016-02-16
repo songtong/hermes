@@ -25,7 +25,6 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.lookup.util.StringUtils;
 
-import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.dal.CachedSchemaDao;
@@ -33,6 +32,7 @@ import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.model.SchemaEntity;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
+import com.ctrip.hermes.metaservice.view.SchemaView;
 
 @Named
 public class SchemaService {
@@ -80,7 +80,7 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public boolean isAvroSchemaExist(Topic topic, int avroid) throws DalException {
-		List<Schema> schemas = listSchemaMeta(topic);
+		List<Schema> schemas = listSchemaMeta(topic.getId());
 		if (schemas == null || schemas.size() == 0) {
 			return false;
 		}
@@ -100,8 +100,8 @@ public class SchemaService {
 	 * @throws IOException
 	 * @throws DalException
 	 */
-	public void compileAvro(Schema metaSchema, org.apache.avro.compiler.idl.Idl idl)
-			throws ParseException, IOException, DalException {
+	public void compileAvro(Schema metaSchema, org.apache.avro.compiler.idl.Idl idl) throws ParseException, IOException,
+	      DalException {
 		final Path destDir = Files.createTempDirectory("avroschema");
 		Protocol compilationUnit = idl.CompilationUnit();
 		for (org.apache.avro.Schema schema : compilationUnit.getTypes()) {
@@ -120,9 +120,9 @@ public class SchemaService {
 		byte[] jarContent = Files.readAllBytes(jarFile);
 		metaSchema.setJarContent(jarContent);
 		FormDataContentDisposition disposition = FormDataContentDisposition.name(metaSchema.getName())
-				.creationDate(new Date(System.currentTimeMillis()))
-				.fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar").size(jarFile.toFile().length())
-				.build();
+		      .creationDate(new Date(System.currentTimeMillis()))
+		      .fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar").size(jarFile.toFile().length())
+		      .build();
 		metaSchema.setJarProperties(disposition.toString());
 		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
 		Files.delete(jarFile);
@@ -149,9 +149,9 @@ public class SchemaService {
 		byte[] jarContent = Files.readAllBytes(jarFile);
 		metaSchema.setJarContent(jarContent);
 		FormDataContentDisposition disposition = FormDataContentDisposition.name(metaSchema.getName())
-				.creationDate(new Date(System.currentTimeMillis()))
-				.fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar").size(jarFile.toFile().length())
-				.build();
+		      .creationDate(new Date(System.currentTimeMillis()))
+		      .fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar").size(jarFile.toFile().length())
+		      .build();
 		metaSchema.setJarProperties(disposition.toString());
 		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
 		Files.delete(jarFile);
@@ -176,8 +176,7 @@ public class SchemaService {
 			schema.setName(topic.getName() + "-value");
 			schema.setTopicId(topic.getId());
 			try {
-				Schema maxVersionSchemaMeta = m_schemaDao.getMaxVersionByTopic(topic.getId(),
-						SchemaEntity.READSET_FULL);
+				Schema maxVersionSchemaMeta = m_schemaDao.getMaxVersionByTopic(topic.getId(), SchemaEntity.READSET_FULL);
 				schema.setVersion(maxVersionSchemaMeta.getVersion() + 1);
 			} catch (Exception e) {
 				schema.setVersion(1);
@@ -265,9 +264,9 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public void deployToMaven(Schema metaSchema, String groupId, String artifactId, String version, String repositoryId)
-			throws NumberFormatException, IOException, java.text.ParseException, DalException {
+	      throws NumberFormatException, IOException, java.text.ParseException, DalException {
 		m_logger.info("Deploying to maven, {}, groupId {}, artifactId {}, version {}, repositoryId {}", metaSchema,
-				groupId, artifactId, version, repositoryId);
+		      groupId, artifactId, version, repositoryId);
 		Path jarPath = Files.createTempFile(metaSchema.getName(), ".jar");
 		com.google.common.io.Files.write(metaSchema.getJarContent(), jarPath.toFile());
 		try {
@@ -283,7 +282,7 @@ public class SchemaService {
 		metaSchema.setDependencyString(getDependencyString(groupId, artifactId, version, repositoryId));
 		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
 		m_logger.info("Deployed groupId {}, artifactId {}, version {}, repositoryId {}", groupId, artifactId, version,
-				repositoryId);
+		      repositoryId);
 	}
 
 	private String getDependencyString(String groupId, String artifactId, String version, String repositoryId) {
@@ -391,8 +390,8 @@ public class SchemaService {
 	 * @return
 	 * @throws DalException
 	 */
-	public List<Schema> listSchemaMeta(Topic topic) throws DalException {
-		List<Schema> schemas = m_schemaDao.findByTopic(topic.getId(), SchemaEntity.READSET_FULL);
+	public List<Schema> listSchemaMeta(Long topicId) throws DalException {
+		List<Schema> schemas = m_schemaDao.findByTopic(topicId, SchemaEntity.READSET_FULL);
 		return schemas;
 	}
 
@@ -402,9 +401,9 @@ public class SchemaService {
 	 * @return
 	 * @throws DalException
 	 */
-	public List<SchemaView> listSchemaView(Topic topic) throws DalException {
+	public List<SchemaView> listSchemaView(Long topicId) throws DalException {
 		List<SchemaView> result = new ArrayList<SchemaView>();
-		List<Schema> schemaMetas = listSchemaMeta(topic);
+		List<Schema> schemaMetas = listSchemaMeta(topicId);
 		for (Schema schema : schemaMetas) {
 			SchemaView schemaView = SchemaService.toSchemaView(schema);
 			result.add(schemaView);
@@ -423,7 +422,7 @@ public class SchemaService {
 	 * @throws RestClientException
 	 */
 	public SchemaView updateSchemaFile(SchemaView schemaView, byte[] fileContent, FormDataContentDisposition fileHeader)
-			throws IOException, DalException, RestClientException {
+	      throws IOException, DalException, RestClientException {
 		m_logger.info("update schema {} by file {}", schemaView, fileHeader.getFileName());
 		SchemaView result = null;
 		if (schemaView.getType().equals("json")) {
@@ -446,8 +445,8 @@ public class SchemaService {
 	 * @throws RestClientException
 	 */
 	public SchemaView uploadAvroSchema(SchemaView schemaView, byte[] schemaContent,
-			FormDataContentDisposition schemaHeader, byte[] jarContent, FormDataContentDisposition jarHeader)
-					throws IOException, DalException, RestClientException {
+	      FormDataContentDisposition schemaHeader, byte[] jarContent, FormDataContentDisposition jarHeader)
+	      throws IOException, DalException, RestClientException {
 		if (schemaContent == null) {
 			return schemaView;
 		}
@@ -493,8 +492,8 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public SchemaView uploadJsonSchema(SchemaView schemaView, byte[] schemaContent,
-			FormDataContentDisposition schemaHeader, byte[] jarContent, FormDataContentDisposition jarHeader)
-					throws IOException, DalException {
+	      FormDataContentDisposition schemaHeader, byte[] jarContent, FormDataContentDisposition jarHeader)
+	      throws IOException, DalException {
 		if (schemaContent == null) {
 			return schemaView;
 		}

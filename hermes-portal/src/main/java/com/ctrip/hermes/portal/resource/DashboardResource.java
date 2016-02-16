@@ -39,6 +39,7 @@ import com.ctrip.hermes.metaservice.queue.ListUtils;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
 import com.ctrip.hermes.metaservice.service.TopicService;
+import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
@@ -63,8 +64,8 @@ public class DashboardResource {
 	@Path("brief/topics")
 	public Response getTopics() {
 		List<TopicDelayBriefView> list = new ArrayList<TopicDelayBriefView>();
-		for (Entry<String, Topic> entry : m_topicService.getTopics().entrySet()) {
-			Topic t = entry.getValue();
+		for (Entry<String, TopicView> entry : m_topicService.getTopicViews().entrySet()) {
+			TopicView t = entry.getValue();
 			list.add(new TopicDelayBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), 0, t
 			      .getStorageType()));
 		}
@@ -89,7 +90,7 @@ public class DashboardResource {
 	@GET
 	@Path("/{topic}/{consumer}/delay")
 	public Response getConsumerDelay(@PathParam("topic") String topicName, @PathParam("consumer") String consumerName) {
-		Topic topic = m_topicService.findTopicByName(topicName);
+		Topic topic = m_topicService.findTopicEntityByName(topicName);
 		List<DelayDetail> consumerDelay = new ArrayList<>();
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
@@ -102,7 +103,7 @@ public class DashboardResource {
 	@GET
 	@Path("topics/{topic}/latest")
 	public Response getTopicLatest(@PathParam("topic") String name) {
-		Topic topic = m_topicService.findTopicByName(name);
+		Topic topic = m_topicService.findTopicEntityByName(name);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found", name), Status.NOT_FOUND);
 		}

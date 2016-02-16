@@ -14,6 +14,7 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 		},
 		get_subscribers : {
 			method : 'GET',
+			url : '/api/subscriptions/',
 			isArray : true
 		},
 		delete_subscriber : {
@@ -45,7 +46,7 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 	});
 
 	scope.consumer_names = subscription_resource.get_consumer_names({}, function(data) {
-		scope.consumer_names = collect_schemas(data, 'groupName', true);
+		scope.consumer_names = collect_schemas(data, 'name', true);
 	});
 
 	scope.subscribers = subscription_resource.get_subscribers({}, function(data) {

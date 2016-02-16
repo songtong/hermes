@@ -7,6 +7,7 @@ import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
 import com.ctrip.hermes.metaservice.model.Meta;
 import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.MetaEntity;

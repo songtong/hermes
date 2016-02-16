@@ -47,7 +47,7 @@ public class Handler implements PageHandler<Context> {
 		switch (model.getAction()) {
 		case DETAIL:
 			model.setTopicName(topicName);
-			List<String> list = (List<String>) CollectionUtil.collect(m_topicService.findTopicByName(topicName)
+			List<String> list = (List<String>) CollectionUtil.collect(m_topicService.findTopicEntityByName(topicName)
 			      .getConsumerGroups(), new Transformer() {
 				@Override
 				public String transform(Object obj) {

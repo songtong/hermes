@@ -14,6 +14,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
 
 @Named
@@ -88,7 +89,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		for (com.ctrip.hermes.meta.entity.Storage entity : storages) {
 			metaEntity.addStorage(entity);
 		}
-		List<com.ctrip.hermes.meta.entity.Topic> topics = m_topicService.findTopicsFromDB(true);
+		List<com.ctrip.hermes.meta.entity.Topic> topics = m_topicService.findTopicEntities(true);
 		for (com.ctrip.hermes.meta.entity.Topic entity : topics) {
 			metaEntity.addTopic(entity);
 		}
@@ -108,8 +109,8 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	@Override
 	public void initialize() throws InitializationException {
 		syncMetaFromDB();
-		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("UpdateMetaUseDB", true)).scheduleWithFixedDelay(
-		      new Runnable() {
+		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("UpdateMetaUseDB", true))
+		      .scheduleWithFixedDelay(new Runnable() {
 			      @Override
 			      public void run() {
 				      syncMetaFromDB();

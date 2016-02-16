@@ -16,12 +16,12 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.bo.ConsumerView;
-import com.ctrip.hermes.core.bo.TopicView;
 import com.ctrip.hermes.mail.HermesMail;
 import com.ctrip.hermes.mail.MailService;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
+import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
+import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;
@@ -290,13 +290,13 @@ public class DefaultApplicationService implements ApplicationService {
 	}
 
 	@Override
-	public ConsumerView generateConsumerView(ConsumerApplication app) {
-		ConsumerView consumerView = new ConsumerView();
+	public ConsumerGroupView generateConsumerView(ConsumerApplication app) {
+		ConsumerGroupView consumerView = new ConsumerGroupView();
 		consumerView.setOrderedConsume(true);
 		consumerView.setTopicName(app.getTopicName());
-		consumerView.setGroupName(app.getProductLine() + "." + app.getProduct() + "." + app.getProject());
+		consumerView.setName(app.getProductLine() + "." + app.getProduct() + "." + app.getProject());
 		consumerView.setAckTimeoutSeconds(app.getAckTimeoutSeconds());
-		consumerView.setAppId(app.getAppName());
+		consumerView.setAppIds(app.getAppName());
 		consumerView.setOwner1(app.getOwnerName1() + "/" + app.getOwnerEmail1());
 		consumerView.setOwner2(app.getOwnerName2() + "/" + app.getOwnerEmail2());
 		consumerView.setPhone1(app.getOwnerPhone1());

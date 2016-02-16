@@ -1,18 +1,12 @@
 package com.ctrip.hermes.portal.resource;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -20,44 +14,26 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.bo.ConsumerView;
-import com.ctrip.hermes.core.bo.SchemaView;
-import com.ctrip.hermes.core.bo.TopicView;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
-import com.ctrip.hermes.meta.entity.Codec;
-import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.CodecService;
-import com.ctrip.hermes.metaservice.service.ConsumerService;
-import com.ctrip.hermes.metaservice.service.StorageService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
-import com.ctrip.hermes.metaservice.service.TopicDeployService;
 import com.ctrip.hermes.metaservice.service.TopicService;
-import com.ctrip.hermes.portal.config.PortalConfig;
+import com.ctrip.hermes.metaservice.view.SchemaView;
+import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.dashboard.DashboardService;
 import com.ctrip.hermes.producer.api.Producer;
@@ -70,21 +46,11 @@ public class TopicResource {
 
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
-	private TopicDeployService topicDeployService = PlexusComponentLocator.lookup(TopicDeployService.class);
-
-	private ConsumerService consumerService = PlexusComponentLocator.lookup(ConsumerService.class);
-
-	private StorageService datasourceService = PlexusComponentLocator.lookup(StorageService.class);
-
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
-
-	private CodecService codecService = PlexusComponentLocator.lookup(CodecService.class);
 
 	private DashboardService monitorService = PlexusComponentLocator.lookup(DashboardService.class);
 
-	private PortalConfig config = PlexusComponentLocator.lookup(PortalConfig.class);
-
-	private Pair<Boolean, ?> validateTopicView(TopicView topic) {
+	static Pair<Boolean, ?> validateTopicView(TopicView topic) {
 		boolean passed = true;
 		String reason = "";
 		if (StringUtils.isBlank(topic.getName())) {
@@ -139,14 +105,12 @@ public class TopicResource {
 
 		TopicView topicView = (TopicView) result.getValue();
 
-		Topic topic = topicView.toMetaTopic();
-		if (topicService.findTopicByName(topic.getName()) != null) {
+		if (topicService.findTopicEntityByName(topicView.getName()) != null) {
 			throw new RestException("Topic already exists.", Status.CONFLICT);
 		}
 
 		try {
-			Topic topicEntity = topicService.createTopic(topic);
-			topicView = new TopicView(topicEntity);
+			topicView = topicService.createTopic(topicView);
 		} catch (Exception e) {
 			log.error("Create topic failed: {}.", content, e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -165,265 +129,6 @@ public class TopicResource {
 		return Response.status(Status.OK).build();
 	}
 
-	@POST
-	@Path("{topic}/sync")
-	public Response syncTopic(@PathParam("topic") String topicName,
-			@QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
-		Topic topic = topicService.findTopicByName(topicName);
-		if (topic == null) {
-			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
-		}
-		WebTarget target = ClientBuilder.newClient().target("http://" + config.getSyncHost());
-		boolean exist = false;
-		try {
-			exist = isTopicExistOnTarget(topicName, target);
-		} catch (Exception e) {
-			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
-					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
-		}
-		if (exist && !forceSchema) {
-			throw new RestException(String.format("Topic %s is already exists.", topicName), Status.CONFLICT);
-		}
-
-		TopicView view = getTopic(topicName);
-		Set<String> missedDatasources = getMissedDatasourceOnTarget(view, target);
-		if (missedDatasources.size() == 0) {
-			view.setId(null);
-			switch (topic.getStorageType()) {
-			case Storage.MYSQL:
-				syncMysqlTopic(view, target);
-				break;
-			case Storage.KAFKA:
-				syncKafkaTopic(view, target, exist, forceSchema);
-				break;
-			}
-			syncConsumers(view, target);
-		} else {
-			throw new RestException("Target has missed datasources, pls init them: " + missedDatasources);
-		}
-		return Response.status(Status.OK).build();
-	}
-
-	@POST
-	@Path("sync")
-	public Response syncTopic(@QueryParam("environment") String environment,
-			@QueryParam("forceSchema") @DefaultValue("false") boolean forceSchema, String content) {
-		log.info("Sync topic with payload {}.", content);
-		if (StringUtils.isEmpty(content)) {
-			log.error("Payload content is empty, sync topic failed.");
-			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
-		}
-
-		Pair<Boolean, ?> result = null;
-		try {
-			result = validateTopicView(JSON.parseObject(content, TopicView.class));
-		} catch (Exception e) {
-			log.error("Can not parse payload: {}, sync topic failed.", content);
-			throw new RestException(e, Status.BAD_REQUEST);
-		}
-		if (!result.getKey()) {
-			throw new RestException((String) result.getValue());
-		}
-
-		TopicView topicView = (TopicView) result.getValue();
-
-		WebTarget target = null;
-		if ("uat".equals(environment)) {
-			target = ClientBuilder.newClient().target("http://" + config.getPortalUatHost());
-		} else if ("prod".equals(environment)) {
-			target = ClientBuilder.newClient().target("http://" + config.getPortalProdHost());
-		} else {
-			throw new RestException("Unvalid environment:" + environment + "!", Status.BAD_REQUEST);
-		}
-		boolean exist = false;
-		try {
-			exist = isTopicExistOnTarget(topicView.getName(), target);
-		} catch (Exception e) {
-			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicView.getName(),
-					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
-		}
-		if (exist && !forceSchema) {
-			throw new RestException(String.format("Topic %s is already exists.", topicView.getName()), Status.CONFLICT);
-		}
-
-		Set<String> missedDatasources = getMissedDatasourceOnTarget(topicView, target);
-		if (missedDatasources.size() == 0) {
-			switch (topicView.getStorageType()) {
-			case Storage.MYSQL:
-				syncMysqlTopic(topicView, target);
-				break;
-			case Storage.KAFKA:
-				syncKafkaTopic(topicView, target, exist, forceSchema);
-				break;
-			}
-			syncConsumers(topicView, target);
-		} else {
-			throw new RestException("Target has missed datasources, pls init them: " + missedDatasources);
-		}
-		return Response.status(Status.OK).build();
-	}
-
-	private void syncConsumers(TopicView topic, WebTarget target) {
-		for (ConsumerGroup consumer : consumerService.getConsumers(topic.getName())) {
-			consumer.setId(null);
-			Builder request = target.path("/api/consumers/add").request();
-			ConsumerView requestView = new ConsumerView(topic.getName(), consumer);
-			Response response = request.post(Entity.json(requestView));
-			if (!(Status.CREATED.getStatusCode() == response.getStatus()//
-					|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
-				throw new RestException(String.format("Add consumer %s failed.", consumer.getName()),
-						Status.INTERNAL_SERVER_ERROR);
-			}
-		}
-	}
-
-	private void syncMysqlTopic(TopicView topic, WebTarget target) {
-		Builder request = target.path("/api/topics").request();
-		TopicView view = null;
-		try {
-			view = request.post(Entity.json(topic), TopicView.class);
-		} catch (Exception e) {
-			throw new RestException(String.format("Sync mysql topic: %s failed: %s", topic.getName(), e.getMessage()),
-					Status.NOT_ACCEPTABLE);
-		}
-		if (view == null || !view.getName().equals(topic.getName())) {
-			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	private void syncKafkaTopic(TopicView topic, WebTarget target, boolean alreadyExist, boolean forceSchema) {
-		topic.setSchemaId(null);
-		try {
-			long targetTopicId = -1;
-			if (!alreadyExist) {
-				// create topic
-				Builder request;
-				TopicView view = createTopicOnTarget(topic, target);
-				targetTopicId = view.getId();
-
-				// deploy topic
-				request = target.path(String.format("/api/topics/%s/deploy", topic.getName())).request();
-				Response response = request.post(null);
-				if (response.getStatus() != Status.OK.getStatusCode()) {
-					String info = response.readEntity(String.class);
-					log.warn("Deploy topic {} failed [{}]. Clean it from remote meta.", topic.getName(), info);
-					deleteTopicMetaOnTarget(topic, target);
-					throw new RestException("Deploy kafka topic failed: " + info, Status.INTERNAL_SERVER_ERROR);
-				}
-			} else if (forceSchema) {
-				targetTopicId = getTopicOnTarget(topic.getName(), target).getId();
-			}
-
-			if (forceSchema && targetTopicId > -1) {
-				// handle schemas
-				syncSchema(topic, targetTopicId, target);
-			}
-		} catch (RestException e) {
-			throw e;
-		} catch (Exception e) {
-			log.warn("Sync kafka topic failed.", e);
-			throw new RestException(String.format("Sync kafka topic: %s failed: %s", topic.getName(), e.getMessage()),
-					Status.NOT_ACCEPTABLE);
-		}
-	}
-
-	private TopicView createTopicOnTarget(TopicView topic, WebTarget target) {
-		Builder request = target.path("/api/topics").request();
-		TopicView view = request.post(Entity.json(topic), TopicView.class);
-		if (view == null || !view.getName().equals(topic.getName())) {
-			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
-		}
-		return view;
-	}
-
-	private void syncSchema(TopicView topic, long targetTopicId, WebTarget target) {
-		Builder request;
-		Response response;
-		File tmp = writeTempPreview(topic);
-		if (tmp == null) {
-			throw new RestException("Deploy schema failed, can not write tmp file.", Status.INTERNAL_SERVER_ERROR);
-		}
-		target.register(MultiPartFeature.class);
-		request = target.path("/api/schemas").request();
-		FormDataMultiPart form = new FormDataMultiPart();
-		form.bodyPart(new FileDataBodyPart("file", tmp, MediaType.MULTIPART_FORM_DATA_TYPE));
-		form.field("schema", JSON.toJSONString(topic.getSchema()));
-		form.field("topicId", String.valueOf(targetTopicId));
-		response = request.post(Entity.entity(form, MediaType.MULTIPART_FORM_DATA_TYPE));
-		if (response.getStatus() != Status.CREATED.getStatusCode()) {
-			log.warn("Deploy schema response: " + response);
-			throw new RestException("Deploy schema failed.");
-		}
-	}
-
-	private File writeTempPreview(TopicView topic) {
-		try {
-			File f = new File("/tmp", topic.getSchema().getName() + ".avsc");
-			BufferedWriter bw = new BufferedWriter(new FileWriter(f));
-			bw.write(topic.getSchema().getSchemaPreview());
-			bw.flush();
-			bw.close();
-			return f;
-		} catch (IOException e) {
-			log.warn("Write tmp schema preview failed.", e);
-			return null;
-		}
-	}
-
-	private boolean deleteTopicMetaOnTarget(TopicView topic, WebTarget target) {
-		Builder request = target.path("/api/topics/" + topic.getName()).request();
-		Response response = request.delete();
-		return response.getStatus() == Status.OK.getStatusCode();
-	}
-
-	private Set<String> getMissedDatasourceOnTarget(TopicView topic, WebTarget target) {
-		Set<String> iDses = new HashSet<String>();
-		for (Partition partition : topic.getPartitions()) {
-			iDses.add(partition.getReadDatasource());
-			iDses.add(partition.getWriteDatasource());
-		}
-		Set<String> set = new HashSet<String>();
-		Builder request = target.path("/api/storages").queryParam("type", topic.getStorageType()).request();
-		try {
-			List<Storage> storages = request.get(new GenericType<List<Storage>>() {
-			});
-			for (Storage storage : storages) {
-				if (storage.getType().equals(topic.getStorageType())) {
-					for (Datasource ds : storage.getDatasources()) {
-						if (iDses.contains(ds.getId())) {
-							set.add(ds.getId());
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new RestException(
-					"Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
-					Status.INTERNAL_SERVER_ERROR);
-		}
-		Set<String> ret = new HashSet<String>();
-		for (String ds : iDses) {
-			if (!set.contains(ds)) {
-				ret.add(ds);
-			}
-		}
-		return ret;
-	}
-
-	private boolean isTopicExistOnTarget(String topicName, WebTarget target) {
-		TopicView topicView = getTopicOnTarget(topicName, target);
-		return topicView != null && topicView.getName().equals(topicName);
-	}
-
-	private TopicView getTopicOnTarget(String topicName, WebTarget target) {
-		Builder request = target.path("/api/topics/" + topicName).request();
-		try {
-			return request.get(TopicView.class);
-		} catch (Exception e) {
-			return null;
-		}
-	}
-
 	@GET
 	public List<TopicView> findTopics(@QueryParam("pattern") String pattern, @QueryParam("type") String type) {
 		log.debug("find topics, pattern {}", pattern);
@@ -431,81 +136,38 @@ public class TopicResource {
 			pattern = ".*";
 		}
 
-		List<Topic> topics = topicService.findTopics(pattern);
-		List<TopicView> returnResult = new ArrayList<TopicView>();
+		List<TopicView> result = new ArrayList<>();
 		try {
-			for (Topic topic : topics) {
-				TopicView topicView = prepareTopicView(topic);
-
-				if (topic.getSchemaId() != null) {
-					SchemaView schemaView;
-					try {
-						schemaView = schemaService.getSchemaView(topic.getSchemaId());
-						topicView.setSchema(schemaView);
-					} catch (Exception e) {
-						throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-					}
-				}
-				if (type != null && type.equals(topicView.getStorageType())) {
-					returnResult.add(topicView);
-				} else if (type == null) {
-					returnResult.add(topicView);
+			for (TopicView topicView : topicService.findTopicViews(pattern)) {
+				if (type == null || type.equals(topicView.getStorageType())) {
+					topicView.setLatestProduced(monitorService.getLatestProduced(topicView.getName()));
+					result.add(topicView);
 				}
 			}
 		} catch (Exception e) {
 			log.warn("find topics failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
-		return returnResult;
-	}
-
-	private TopicView prepareTopicView(Topic topic) {
-		TopicView topicView = new TopicView(topic);
-		topicView.setLatestProduced(monitorService.getLatestProduced(topic.getName()));
-		return topicView;
+		return result;
 	}
 
 	@GET
 	@Path("{name}")
 	public TopicView getTopic(@PathParam("name") String name) {
 		log.debug("get topic {}", name);
-		Topic topic = topicService.findTopicByName(name);
-		if (topic == null) {
+		TopicView topicView = topicService.findTopicViewByName(name);
+		if (topicView == null) {
 			throw new RestException("Topic not found: " + name, Status.NOT_FOUND);
 		}
 
-		TopicView topicView = prepareTopicView(topic);
-		fillTopicView(topic, topicView);
-		return topicView;
-	}
-
-	private TopicView fillTopicView(Topic topic, TopicView topicView) {
-		// Fill Storage
-		Storage storage = datasourceService.getStorages().get(topic.getStorageType());
-		topicView.setStorage(storage);
-
-		// Fill Schema
-		if (topic.getSchemaId() != null) {
-			SchemaView schemaView;
-			try {
-				schemaView = schemaService.getSchemaView(topic.getSchemaId());
-				topicView.setSchema(schemaView);
-			} catch (Exception e) {
-				throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-			}
-		}
-
-		// Fill Codec
-		Codec codec = codecService.getCodecs().get(topic.getCodecType());
-		topicView.setCodec(codec);
+		topicView.setLatestProduced(monitorService.getLatestProduced(topicView.getName()));
 		return topicView;
 	}
 
 	@GET
 	@Path("names")
 	public Response getTopicNames() {
-		List<String> topicNames = new ArrayList<String>();
-		topicNames.addAll(topicService.getTopics().keySet());
+		List<String> topicNames = topicService.getTopicNames();
 		Collections.sort(topicNames);
 		return Response.status(Status.OK).entity(topicNames).build();
 	}
@@ -515,9 +177,9 @@ public class TopicResource {
 	public List<SchemaView> getSchemas(@PathParam("name") String name) {
 		log.debug("get schemas, name: {}", name);
 		List<SchemaView> returnResult = null;
-		TopicView topic = getTopic(name);
+		TopicView topicView = getTopic(name);
 		try {
-			returnResult = schemaService.listSchemaView(topic.toMetaTopic());
+			returnResult = schemaService.listSchemaView(topicView.getId());
 		} catch (DalException e) {
 			log.warn("get schemas failed, name {}", name);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -541,14 +203,11 @@ public class TopicResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
-		Topic topic = topicView.toMetaTopic();
-
-		if (topicService.findTopicByName(topic.getName()) == null) {
+		if (topicService.findTopicEntityByName(topicView.getName()) == null) {
 			throw new RestException("Topic does not exists.", Status.NOT_FOUND);
 		}
 		try {
-			topic = topicService.updateTopic(topic);
-			topicView = new TopicView(topic);
+			topicView = topicService.updateTopic(topicView);
 		} catch (Exception e) {
 			log.warn("update topic failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -563,6 +222,7 @@ public class TopicResource {
 		if (StringUtils.isEmpty(content)) {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
 		}
+
 		Partition partition = null;
 		try {
 			partition = JSON.parseObject(content, Partition.class);
@@ -571,17 +231,13 @@ public class TopicResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
-		if (topicService.findTopicByName(name) == null) {
+		if (topicService.findTopicEntityByName(name) == null) {
 			throw new RestException("Topic does not exists.", Status.NOT_FOUND);
 		}
 
-		Topic topic = null;
 		TopicView topicView = null;
 		try {
-			List<Partition> partitions = new ArrayList<>();
-			partitions.add(partition);
-			topic = topicService.addPartitionsForTopic(name, partitions);
-			topicView = new TopicView(topic);
+			topicView = topicService.addPartitionsForTopic(name, Arrays.asList(partition));
 		} catch (Exception e) {
 			log.warn("add topic partition failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
@@ -602,54 +258,4 @@ public class TopicResource {
 		return Response.status(Status.OK).build();
 	}
 
-	@POST
-	@Path("{name}/deploy")
-	public Response deployTopic(@PathParam("name") String name) {
-		log.debug("deploy {}", name);
-		TopicView topicView = getTopic(name);
-		try {
-			Topic topic = topicView.toMetaTopic();
-			if ("kafka".equalsIgnoreCase(topic.getStorageType())) {
-				topicDeployService.createTopicInKafka(topic);
-			}
-		} catch (Exception e) {
-			log.warn("deploy topic failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-		}
-		return Response.status(Status.OK).build();
-	}
-
-	@POST
-	@Path("{name}/undeploy")
-	public Response undeployTopic(@PathParam("name") String name) {
-		log.debug("undeploy {}", name);
-		TopicView topicView = getTopic(name);
-		try {
-			Topic topic = topicView.toMetaTopic();
-			if ("kafka".equalsIgnoreCase(topic.getStorageType())) {
-				topicDeployService.deleteTopicInKafka(topic);
-			}
-		} catch (Exception e) {
-			log.warn("undeploy topic failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-		}
-		return Response.status(Status.OK).build();
-	}
-
-	@POST
-	@Path("{name}/config")
-	public Response configTopic(@PathParam("name") String name) {
-		log.debug("config {}", name);
-		TopicView topicView = getTopic(name);
-		try {
-			Topic topic = topicView.toMetaTopic();
-			if ("kafka".equalsIgnoreCase(topic.getStorageType())) {
-				topicDeployService.configTopicInKafka(topic);
-			}
-		} catch (Exception e) {
-			log.warn("config topic failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-		}
-		return Response.status(Status.OK).build();
-	}
 }

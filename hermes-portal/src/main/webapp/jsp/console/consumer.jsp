@@ -13,8 +13,8 @@
 			<table class="table table-hover" st-pipe="get_consumers" st-table="consumer_table">
 				<thead>
 					<tr>
-						<th st-sort="groupName">消费集群</th>
-						<th st-sort="appId">应用</th>
+						<th st-sort="name">消费集群</th>
+						<th st-sort="appIds">应用</th>
 						<th st-sort="topicName">Topic名称</th>
 						<th st-sort="orderedConsume">有序</th>
 						<th st-sort="retryPolicy">消费重试策略</th>
@@ -23,8 +23,8 @@
 						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-consumer-modal" class="btn btn-xs btn-success" style="text-align: center;">新增</button></th>
 					</tr>
 					<tr>
-						<th><input st-search="groupName" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-						<th><input st-search="appId" placeholder="App" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="name" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="appIds" placeholder="App" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="topicName" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="orderedConsume" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="retryPolicy" placeholder="Retry" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -34,21 +34,21 @@
 				</thead>
 				<tbody ng-show="!is_loading">
 					<tr ng-repeat="row in consumer_rows">
-						<td><span e-form="rowform" ng-bind="row.groupName" e-name="groupName"></td>
-						<td><span e-form="rowform" editable-text="row.appId" ng-bind="row.appId" e-name="appId"></td>
+						<td><span e-form="rowform" ng-bind="row.name" e-name="name"></td>
+						<td><span e-form="rowform" editable-text="row.appIds" ng-bind="row.appIds" e-name="appIds"></td>
 						<td><span e-form="rowform" ng-bind="row.topicName" e-name="topicName"></td>
 						<td><span e-form="rowform" editable-select="row.orderedConsume" ng-bind="row.orderedConsume" e-name="orderedConsume" e-ng-options="order for order in order_opts"></td>
 						<td><span e-form="rowform" editable-text="row.retryPolicy" ng-bind="row.retryPolicy" e-name="retryPolicy"></td>
 						<td><span e-form="rowform" editable-text="row.ackTimeoutSeconds" ng-bind="row.ackTimeoutSeconds" e-name="ackTimeoutSeconds"></td>
 						<td><span e-form="rowform" editable-text="row.owner1" ng-bind="row.owner1" e-name="owner1"></td>
 						<td style="white-space: nowrap">
-							<form editable-form name="rowform" onbeforesave="update_consumer($data,row.topicName,row.groupName)" ng-show="rowform.$visible">
+							<form editable-form name="rowform" onbeforesave="update_consumer($data,row.topicName,row.name)" ng-show="rowform.$visible">
 								<button type="submit" ng-disabled="rowform.$waiting" class="btn btn-xs btn-primary">保存</button>
 								<button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-xs btn-default">取消</button>
 							</form>
 							<div class="buttons" ng-show="!rowform.$visible">
 								<button type="button" ng-click="rowform.$show()" class="btn btn-xs btn-warning" style="text-align: center;">修改</button>
-								<button type="button" ng-click="del_consumer(row.topicName, row.groupName)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
+								<button type="button" ng-click="del_consumer(row.topicName, row.name)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
 							</div>
 						</td>
 					</tr>
@@ -78,9 +78,9 @@
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="inputGroupName" class="col-sm-3 control-label">消费集群名称</label>
+								<label for="inputName" class="col-sm-3 control-label">消费集群名称</label>
 								<div class="col-sm-8">
-									<input class="form-control" id="inputGroupName" placeholder="Consumer Group Name" ng-model="new_consumer.groupName">
+									<input class="form-control" id="inputName" placeholder="Consumer Group Name" ng-model="new_consumer.name">
 								</div>
 							</div>
 							<div class="form-group">
@@ -91,9 +91,9 @@
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="inputAppId" class="col-sm-3 control-label">应用名称</label>
+								<label for="inputAppIds" class="col-sm-3 control-label">应用名称</label>
 								<div class="col-sm-8">
-									<input class="form-control" id="inputAppId" placeholder="App Name" ng-model="new_consumer.appId">
+									<input class="form-control" id="inputAppIds" placeholder="App Name" ng-model="new_consumer.appIds">
 								</div>
 							</div>
 							<div class="form-group">

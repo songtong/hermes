@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.bo.SchemaView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Codec;
@@ -36,6 +35,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.TopicService;
+import com.ctrip.hermes.metaservice.view.SchemaView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.google.common.io.ByteStreams;
 
@@ -77,7 +77,7 @@ public class SchemaResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
-		Topic topic = topicService.findTopicById(topicId);
+		Topic topic = topicService.findTopicEntityById(topicId);
 		if (topic == null) {
 			throw new RestException("Topic not found: " + topicId, Status.NOT_FOUND);
 		}

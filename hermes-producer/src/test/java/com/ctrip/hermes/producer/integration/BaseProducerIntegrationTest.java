@@ -28,8 +28,6 @@ import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.Offset;
-import com.ctrip.hermes.core.bo.SchemaView;
-import com.ctrip.hermes.core.bo.SubscriptionView;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.exception.MessageSendException;
@@ -422,16 +420,6 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 			long expireTime = System.currentTimeMillis() + 10 * 1000L;
 			long leaseId = m_leaseId.incrementAndGet();
 			return new LeaseAcquireResponse(true, new Lease(leaseId, expireTime), expireTime);
-		}
-
-		@Override
-		public List<SchemaView> listSchemas() {
-			return new ArrayList<SchemaView>();
-		}
-
-		@Override
-		public List<SubscriptionView> listSubscriptions(String status) {
-			return new ArrayList<SubscriptionView>();
 		}
 
 		@Override

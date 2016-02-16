@@ -535,6 +535,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -695,7 +698,13 @@
 					<role>com.ctrip.hermes.metaservice.dal.CachedProducerDao</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.CodecService</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.StorageService</role>
 				</requirement>
 			</requirements>
 		</component>

@@ -16,7 +16,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.bo.SubscriptionView;
+import com.ctrip.hermes.metaservice.view.SubscriptionView;
 import com.ctrip.hermes.portal.StartPortal;
 
 public class SubscriptionResourceTest extends StartPortal {

@@ -44,8 +44,12 @@ public class OneBoxTest {
 
 	@AfterClass
 	public static void afterClass() {
-		kafkaCluster.stop();
-		zk.stop();
+		if (kafkaCluster != null) {
+			kafkaCluster.stop();
+		}
+		if (zk != null) {
+			zk.stop();
+		}
 	}
 
 	@Test(expected = IllegalArgumentException.class)

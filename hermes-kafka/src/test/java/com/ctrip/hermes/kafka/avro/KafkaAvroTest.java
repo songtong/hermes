@@ -55,9 +55,12 @@ public class KafkaAvroTest {
 		KafkaMessageSender kafkaSender = (KafkaMessageSender) PlexusComponentLocator.lookup(MessageSender.class,
 		      Endpoint.KAFKA);
 		kafkaSender.close();
-		
-		kafkaCluster.stop();
-		zk.stop();
+		if (kafkaCluster != null) {
+			kafkaCluster.stop();
+		}
+		if (zk != null) {
+			zk.stop();
+		}
 	}
 
 	@Test
@@ -71,11 +74,11 @@ public class KafkaAvroTest {
 		Mockito.when(restService.registerSchema(Mockito.anyString(), Mockito.anyString())).thenReturn(schemaId);
 		Mockito.when(restService.getId(Mockito.anyInt())).thenReturn(new SchemaString(schemaString));
 
-		HermesKafkaAvroSerializer serializer =  PlexusComponentLocator.lookup(HermesKafkaAvroSerializer.class);
-		HermesKafkaAvroDeserializer deserializer =  PlexusComponentLocator.lookup(HermesKafkaAvroDeserializer.class);
+		HermesKafkaAvroSerializer serializer = PlexusComponentLocator.lookup(HermesKafkaAvroSerializer.class);
+		HermesKafkaAvroDeserializer deserializer = PlexusComponentLocator.lookup(HermesKafkaAvroDeserializer.class);
 		serializer.setSchemaRestService(restService);
 		deserializer.setSchemaRestService(restService);
-		
+
 		Producer producer = Producer.getInstance();
 
 		final List<AvroVisitEvent> actualResult = new ArrayList<AvroVisitEvent>();
@@ -111,7 +114,7 @@ public class KafkaAvroTest {
 		while (actualResult.size() < expectedResult.size() && sleepCount++ < 50) {
 			Thread.sleep(100);
 		}
-		
+
 		Assert.assertEquals(expectedResult.size(), actualResult.size());
 		consumerHolder.close();
 	}

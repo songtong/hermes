@@ -181,7 +181,7 @@ public class CompileService {
 		manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VENDOR, "com.ctrip");
 		manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_TITLE, "Avro Schema");
 		manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VERSION, "");
-		manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VENDOR_ID, "com.ctrip");
+		manifest.getMainAttributes().put(Attributes.Name.CLASS_PATH, "com.ctrip");
 		manifest.getMainAttributes().put(Attributes.Name.SPECIFICATION_VENDOR, "com.ctrip");
 		manifest.getMainAttributes().put(Attributes.Name.SPECIFICATION_TITLE, "Avro Schema");
 		manifest.getMainAttributes().put(Attributes.Name.SPECIFICATION_VERSION, "");
