@@ -123,7 +123,7 @@ public class ESMonitorService {
 		ESQueryContext ctx = new ESQueryContext();
 
 		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_BROKER);
-		ctx.setIndex(ServerCheckerConstans.ES_INDEX);
+		ctx.setIndex(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN, INDEX_DATE_FORMAT.format(new Date())));
 		ctx.setFrom(from);
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
@@ -137,7 +137,7 @@ public class ESMonitorService {
 		ESQueryContext ctx = new ESQueryContext();
 
 		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_METASERVER);
-		ctx.setIndex(ServerCheckerConstans.ES_INDEX);
+		ctx.setIndex(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN, INDEX_DATE_FORMAT.format(new Date())));
 		ctx.setFrom(from);
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
