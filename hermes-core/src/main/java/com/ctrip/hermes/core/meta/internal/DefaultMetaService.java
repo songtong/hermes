@@ -90,14 +90,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public Codec findCodecByTopic(String topicName) {
-		Meta meta = getMeta();
-		Topic topic = findTopic(topicName, meta);
-		String codeType = topic.getCodecType();
-		return meta.getCodecs().get(codeType);
-	}
-
-	@Override
 	public Partition findPartitionByTopicAndPartition(String topicName, int partitionId) {
 		return findTopic(topicName, getMeta()).findPartition(partitionId);
 	}

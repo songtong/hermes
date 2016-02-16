@@ -14,7 +14,6 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaService;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
-import com.ctrip.hermes.meta.entity.Codec;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -47,11 +46,6 @@ public class HermesCoreBaseTest extends ComponentTestCase {
 	}
 
 	public static class TestMetaService extends DefaultMetaService {
-
-		@Override
-		public Codec findCodecByTopic(String topicName) {
-			return new Codec(Codec.JSON);
-		}
 
 		@Override
 		public void initialize() throws InitializationException {
