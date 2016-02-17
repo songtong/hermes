@@ -32,6 +32,9 @@
          <page name="application" title="Application" path="application" template="default">
             <description>Application</description>
          </page>
+         <page name="meta" title="Meta" path="meta" template="default">
+            <description>Meta</description>
+         </page>
       </module>
    </webapp>
 </wizard>

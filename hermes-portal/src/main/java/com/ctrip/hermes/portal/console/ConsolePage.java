@@ -23,7 +23,9 @@ public enum ConsolePage implements Page {
 
    HOME("home", "home", "Home", "Home", true),
 
-   APPLICATION("application", "application", "Application", "Application", true);
+   APPLICATION("application", "application", "Application", "Application", true),
+
+   META("meta", "meta", "Meta", "Meta", true);
 
    private String m_name;
 

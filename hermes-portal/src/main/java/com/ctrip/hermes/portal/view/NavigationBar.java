@@ -11,7 +11,7 @@ public class NavigationBar {
 			ConsolePage.APPLICATION };
 	private Page[] ALL_PAGES = new Page[] { ConsolePage.DASHBOARD, ConsolePage.TOPIC, ConsolePage.CONSUMER,
 			ConsolePage.SUBSCRIPTION, ConsolePage.STORAGE, ConsolePage.ENDPOINT, ConsolePage.TRACER,
-			ConsolePage.RESENDER, ConsolePage.APPLICATION };
+			ConsolePage.RESENDER, ConsolePage.APPLICATION,ConsolePage.META };
 
 	public Page[] getBasePages() {
 		return BASE_PAGES;

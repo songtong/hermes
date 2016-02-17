@@ -79,6 +79,12 @@ function ends_with(source, target) {
 	return matched == target.length;
 }
 
+function strToDivDom(str) {
+	var obj = document.createElement('div');
+	obj.innerHTML = str;
+	return obj;
+}
+
 $(function() {
 	show_op_info.init({
 		"selector" : ".op-alert"

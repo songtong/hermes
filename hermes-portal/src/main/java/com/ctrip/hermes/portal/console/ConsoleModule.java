@@ -25,7 +25,9 @@ com.ctrip.hermes.portal.console.resender.Handler.class,
 
 com.ctrip.hermes.portal.console.home.Handler.class,
 
-com.ctrip.hermes.portal.console.application.Handler.class
+com.ctrip.hermes.portal.console.application.Handler.class,
+
+com.ctrip.hermes.portal.console.meta.Handler.class
 })
 public class ConsoleModule extends AbstractModule {
 

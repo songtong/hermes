@@ -31,6 +31,21 @@ public class PortalMetaResource {
 	private MetaRefactor metaRefactor = PlexusComponentLocator.lookup(MetaRefactor.class);
 
 	@GET
+	public Response getMeta() {
+		Meta meta = null;
+		try {
+			meta = metaService.getMetaEntity();
+			if (meta == null) {
+				throw new RestException("Meta not found", Status.NOT_FOUND);
+			}
+		} catch (Exception e) {
+			logger.warn("get meta failed", e);
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		return Response.status(Status.OK).entity(meta).build();
+	}
+
+	@GET
 	@Path("refresh")
 	public Response refreshMeta() {
 		Meta meta = null;
