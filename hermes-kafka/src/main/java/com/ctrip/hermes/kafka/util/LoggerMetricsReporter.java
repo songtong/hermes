@@ -96,6 +96,7 @@ public class LoggerMetricsReporter implements MetricsReporter {
 
 	@Override
 	public void metricRemoval(KafkaMetric metric) {
+		m_logger.info("Remove kafka metric: {} {}", metric.metricName().group(), metric.metricName().name());
 		metrics.remove(metric.metricName());
 	}
 }
