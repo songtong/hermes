@@ -1,12 +1,17 @@
 package com.ctrip.hermes.portal.storage;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.curator.test.TestingServer;
 import org.junit.Before;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
 import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.PortalMetaService;
 import com.ctrip.hermes.metaservice.service.TopicService;
@@ -19,7 +24,7 @@ import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTopic;
 
 public class TopicStorageServiceTest extends ComponentTestCase {
 	PortalMetaService metaService;
-	
+
 	TopicService topicService;
 
 	TopicStorageService service;
@@ -41,42 +46,87 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 
 	@Test
 	public void createNewTopic() throws Exception {
-
-		service.initTopicStorage(buildTopic());
+		Topic topicEntity = buildTopic();
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+		List<com.ctrip.hermes.metaservice.model.Partition> partitions = new ArrayList<>();
+		for (Partition p : topicEntity.getPartitions()) {
+			partitions.add(EntityToModelConverter.convert(p));
+		}
+		service.initTopicStorage(topicModel, partitions);
 	}
 
 	@Test
 	public void deleteTopic() throws Exception {
-		service.dropTopicStorage(buildTopic());
+		Topic topicEntity = buildTopic();
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+		List<com.ctrip.hermes.metaservice.model.Partition> partitions = new ArrayList<>();
+		for (Partition p : topicEntity.getPartitions()) {
+			partitions.add(EntityToModelConverter.convert(p));
+		}
+		service.dropTopicStorage(topicModel, partitions, null);
 	}
 
 	@Test
 	public void addPartitionsStorage() throws Exception {
-		Topic topic = buildTopic();
-
-		service.addPartitionStorage(topic, topic.getPartitions().get(0));
+		Topic topicEntity = buildTopic();
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+		List<com.ctrip.hermes.metaservice.model.Partition> partitions = new ArrayList<>();
+		for (Partition p : topicEntity.getPartitions()) {
+			partitions.add(EntityToModelConverter.convert(p));
+		}
+		service.addPartitionStorage(topicModel, partitions.get(0));
 	}
 
 	@Test
 	public void delPartitionStorage() throws Exception {
-		Topic topic = buildTopic();
-
-		service.delPartitionStorage(topic, topic.getPartitions().get(0));
+		Topic topicEntity = buildTopic();
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+		List<com.ctrip.hermes.metaservice.model.Partition> partitions = new ArrayList<>();
+		for (Partition p : topicEntity.getPartitions()) {
+			partitions.add(EntityToModelConverter.convert(p));
+		}
+		List<com.ctrip.hermes.metaservice.model.ConsumerGroup> consumerGroups = new ArrayList<>();
+		for (ConsumerGroup cg : topicEntity.getConsumerGroups()) {
+			consumerGroups.add(EntityToModelConverter.convert(cg));
+		}
+		service.delPartitionStorage(topicModel, partitions.get(0), consumerGroups);
 	}
 
 	@Test
 	public void addConsumerGroup() throws Exception {
-		service.addConsumerStorage(buildTopic(), buildGroup());
+		Topic topicEntity = buildTopic();
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+		List<com.ctrip.hermes.metaservice.model.Partition> partitions = new ArrayList<>();
+		for (Partition p : topicEntity.getPartitions()) {
+			partitions.add(EntityToModelConverter.convert(p));
+		}
+		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = EntityToModelConverter
+		      .convert(buildGroup());
+		service.addConsumerStorage(topicModel, partitions, consumerGroupModel);
 	}
 
 	@Test
 	public void delConsumerGroup() throws Exception {
-		service.delConsumerStorage(buildTopic(), buildGroup());
+		Topic topicEntity = buildTopic();
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+		List<com.ctrip.hermes.metaservice.model.Partition> partitions = new ArrayList<>();
+		for (Partition p : topicEntity.getPartitions()) {
+			partitions.add(EntityToModelConverter.convert(p));
+		}
+		com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroupModel = EntityToModelConverter
+		      .convert(buildGroup());
+		service.delConsumerStorage(topicModel, partitions, consumerGroupModel);
 	}
 
 	@Test
 	public void showStorageTopic() throws Exception {
-		StorageTopic storageTopic = service.getTopicStorage(buildTopic());
+		Topic topicEntity = buildTopic();
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topicEntity);
+		List<com.ctrip.hermes.metaservice.model.Partition> partitions = new ArrayList<>();
+		for (Partition p : topicEntity.getPartitions()) {
+			partitions.add(EntityToModelConverter.convert(p));
+		}
+		StorageTopic storageTopic = service.getTopicStorage(topicModel, partitions);
 		System.out.println(storageTopic.toString());
 	}
 
@@ -95,7 +145,7 @@ public class TopicStorageServiceTest extends ComponentTestCase {
 	@Test(expected = TopicIsNullException.class)
 	public void createNullTopic() throws TopicAlreadyExistsException, StorageHandleErrorException, TopicIsNullException {
 		System.out.println("Try to Create Null Topic.");
-		service.initTopicStorage(null);
+		service.initTopicStorage(null, null);
 	}
 
 }

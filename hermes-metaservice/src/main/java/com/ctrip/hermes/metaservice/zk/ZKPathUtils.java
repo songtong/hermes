@@ -1,6 +1,7 @@
 package com.ctrip.hermes.metaservice.zk;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -50,11 +51,11 @@ public class ZKPathUtils {
 		return "/meta-info";
 	}
 
-	public static List<String> getBrokerLeaseZkPaths(Topic topic) {
+	public static List<String> getBrokerLeaseZkPaths(Topic topic, Collection<Partition> partitions) {
 		List<String> paths = new LinkedList<>();
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 			String topicName = topic.getName();
-			List<Integer> partitionIds = collectPartitionIds(topic);
+			List<Integer> partitionIds = collectPartitionIds(partitions);
 
 			for (Integer partitionId : partitionIds) {
 				paths.add(getBrokerLeaseZkPath(topicName, partitionId));
@@ -72,12 +73,13 @@ public class ZKPathUtils {
 		return String.format(BROKER_LEASE_PATH_PATTERN, topicName, partition);
 	}
 
-	public static List<String> getConsumerLeaseZkPaths(Topic topic) {
+	public static List<String> getConsumerLeaseZkPaths(Topic topic, List<Partition> partitions,
+			List<ConsumerGroup> consumerGroups) {
 		List<String> paths = new LinkedList<>();
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 			String topicName = topic.getName();
-			List<Integer> partitionIds = collectPartitionIds(topic);
-			List<String> consumerGroupNames = collectConsumerGroupNames(topic);
+			List<Integer> partitionIds = collectPartitionIds(partitions);
+			List<String> consumerGroupNames = collectConsumerGroupNames(consumerGroups);
 
 			for (Integer partitionId : partitionIds) {
 				for (String consumerGroupName : consumerGroupNames) {
@@ -97,11 +99,12 @@ public class ZKPathUtils {
 		return String.format(CONSUMER_LEASE_PATH_PATTERN, topicName, partition, groupName);
 	}
 
-	public static List<String> getConsumerLeaseZkPaths(Topic topic, String consumerGroupName) {
+	public static List<String> getConsumerLeaseZkPaths(Topic topic, Collection<Partition> partitions,
+	      String consumerGroupName) {
 		List<String> paths = new LinkedList<>();
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 			String topicName = topic.getName();
-			List<Integer> partitionIds = collectPartitionIds(topic);
+			List<Integer> partitionIds = collectPartitionIds(partitions);
 
 			for (Integer partitionId : partitionIds) {
 				paths.add(getConsumerLeaseZkPath(topicName, partitionId, consumerGroupName));
@@ -111,9 +114,9 @@ public class ZKPathUtils {
 		return paths;
 	}
 
-	private static List<String> collectConsumerGroupNames(Topic topic) {
+	private static List<String> collectConsumerGroupNames(Collection<ConsumerGroup> consumerGroups) {
 		List<String> groupNames = new ArrayList<>();
-		CollectionUtil.collect(topic.getConsumerGroups(), new Transformer() {
+		CollectionUtil.collect(consumerGroups, new Transformer() {
 
 			@Override
 			public Object transform(Object input) {
@@ -124,9 +127,9 @@ public class ZKPathUtils {
 		return groupNames;
 	}
 
-	private static List<Integer> collectPartitionIds(Topic topic) {
+	private static List<Integer> collectPartitionIds(Collection<Partition> partitions) {
 		List<Integer> partitionIds = new ArrayList<>();
-		CollectionUtil.collect(topic.getPartitions(), new Transformer() {
+		CollectionUtil.collect(partitions, new Transformer() {
 
 			@Override
 			public Object transform(Object input) {

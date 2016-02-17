@@ -1,6 +1,7 @@
 package com.ctrip.hermes.metaservice.service.storage;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -8,9 +9,9 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.model.ConsumerGroup;
+import com.ctrip.hermes.metaservice.model.Partition;
+import com.ctrip.hermes.metaservice.model.Topic;
 import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.metaservice.service.storage.exception.TopicAlreadyExistsException;
 import com.ctrip.hermes.metaservice.service.storage.exception.TopicIsNullException;
@@ -34,45 +35,42 @@ public class DefaultTopicStorageService implements TopicStorageService {
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultTopicStorageService.class);
 
+	// FIXME should create all datasources in one transaction
 	@Override
-	public boolean initTopicStorage(Topic topic)
-			throws TopicAlreadyExistsException, TopicIsNullException, StorageHandleErrorException {
-		if (null != topic) {
-			for (Partition partition : topic.getPartitions()) {
-				String writeDatasource = partition.getWriteDatasource();
+	public boolean initTopicStorage(Topic topic, Collection<Partition> partitions) throws TopicAlreadyExistsException,
+	      TopicIsNullException, StorageHandleErrorException {
+		for (Partition partition : partitions) {
+			String writeDatasource = partition.getWriteDatasource();
 
-				try {
-					createTables0(writeDatasource, topic, partition);
-					addPartition0(writeDatasource, topic, partition);
-				} catch (Exception e) {
-					log.warn("init topic storage failed", e);
-					dropTopicStorage(topic);
-					return false;
-				}
+			try {
+				createTables0(writeDatasource, topic, partition, null);
+				addPartition0(writeDatasource, topic, partition, null);
+			} catch (Exception e) {
+				log.warn("init topic storage failed", e);
+				dropTopicStorage(topic, partitions, null);
+				return false;
 			}
-			return true;
-		} else {
-			throw new TopicIsNullException("Topic is Null!");
 		}
+		return true;
 	}
 
 	/**
-	 * Create tables of deadletter, message_0, message_1, offset_message,
-	 * offset_resend and (resend_groupid)s for specific TP pair.
+	 * Create tables of deadletter, message_0, message_1, offset_message, offset_resend and (resend_groupid)s for specific TP pair.
 	 * 
 	 * @param dataSource
 	 * @param topic
 	 * @param partition
 	 * @throws StorageHandleErrorException
 	 */
-	private void createTables0(String dataSource, Topic topic, Partition partition) throws StorageHandleErrorException {
-		List<TableModel> tableModels = buildTableModels(topic);
+	private void createTables0(String dataSource, Topic topic, Partition partition,
+	      Collection<ConsumerGroup> consumerGroups) throws StorageHandleErrorException {
+		Collection<TableModel> tableModels = buildTableModels(topic, consumerGroups);
 		handler.createTable(topic.getId(), partition.getId(), tableModels, dataSource);
 		writeLog("CreateTable", topic, partition, dataSource);
 	}
 
-	private List<TableModel> buildTableModels(Topic topic) {
-		List<TableModel> tableModels = new ArrayList<>();
+	private Collection<TableModel> buildTableModels(Topic topic, Collection<ConsumerGroup> consumerGroups) {
+		Collection<TableModel> tableModels = new ArrayList<>();
 
 		tableModels.add(new DeadLetterTableModel()); // deadletter
 		tableModels.add(new MessageTableModel(0)); // message_0
@@ -80,24 +78,20 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		tableModels.add(new OffsetMessageTableModel()); // offset_message
 		tableModels.add(new OffsetResendTableModel()); // offset_resend
 
-		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
-			int groupId = consumerGroup.getId();
+		if (consumerGroups != null) {
+			for (ConsumerGroup consumerGroup : consumerGroups) {
+				int groupId = consumerGroup.getId();
 
-			tableModels.add(new ResendTableModel(groupId)); // resend_<groupid>
+				tableModels.add(new ResendTableModel(groupId)); // resend_<groupid>
+			}
 		}
 		return tableModels;
 	}
 
 	@Override
-	public void addPartitionStorage(Topic topic, Partition partition)
-			throws TopicIsNullException, StorageHandleErrorException {
-		if (null != topic) {
-			String writeDatasource = partition.getWriteDatasource();
-
-			addPartition0(writeDatasource, topic, partition);
-		} else {
-			throw new TopicIsNullException("Topic is Null!");
-		}
+	public void addPartitionStorage(Topic topic, Partition partition) throws StorageHandleErrorException {
+		String writeDatasource = partition.getWriteDatasource();
+		addPartition0(writeDatasource, topic, partition, null);
 	}
 
 	@Override
@@ -115,86 +109,93 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	 * @param partition
 	 * @throws StorageHandleErrorException
 	 */
-	private void addPartition0(String dataSource, Topic topic, Partition partition) throws StorageHandleErrorException {
+	private void addPartition0(String dataSource, Topic topic, Partition partition,
+	      Collection<ConsumerGroup> consumerGroups) throws StorageHandleErrorException {
 
 		handler.addPartition(topic.getId(), partition.getId(), new DeadLetterTableModel(),
-				Math.max((int) (topic.getStoragePartitionSize() / 100), 10000), topic.getStoragePartitionCount(),
-				dataSource);
+		      Math.max((int) (topic.getStoragePartitionSize() / 100), 10000), topic.getStoragePartitionCount(),
+		      dataSource);
 
-		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(0),
-				topic.getStoragePartitionSize().intValue(), topic.getStoragePartitionCount(), dataSource);
-		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(1),
-				topic.getStoragePartitionSize().intValue(), topic.getStoragePartitionCount(), dataSource);
+		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(0), topic.getStoragePartitionSize()
+		      .intValue(), topic.getStoragePartitionCount(), dataSource);
+		handler.addPartition(topic.getId(), partition.getId(), new MessageTableModel(1), topic.getStoragePartitionSize()
+		      .intValue(), topic.getStoragePartitionCount(), dataSource);
 
-		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
-			int groupId = consumerGroup.getId();
-			handler.addPartition(topic.getId(), partition.getId(), new ResendTableModel(groupId),
-					(int) Math.max(topic.getResendPartitionSize(), 100), topic.getStoragePartitionCount(), dataSource);
+		if (consumerGroups != null) {
+			for (ConsumerGroup consumerGroup : consumerGroups) {
+				int groupId = consumerGroup.getId();
+				handler.addPartition(topic.getId(), partition.getId(), new ResendTableModel(groupId),
+				      (int) Math.max(topic.getResendPartitionSize(), 100), topic.getStoragePartitionCount(), dataSource);
+			}
 		}
-
 		writeLog("AddPartition", topic, partition, dataSource);
 	}
 
 	@Override
-	public StorageTopic getTopicStorage(Topic topic) throws TopicIsNullException, StorageHandleErrorException {
-
-		if (null != topic) {
-			StorageTopic storageTopic = new StorageTopic(topic);
-			for (Partition partition : topic.getPartitions()) {
+	public StorageTopic getTopicStorage(Topic topic, Collection<Partition> partitions)
+	      throws StorageHandleErrorException {
+		StorageTopic storageTopic = new StorageTopic(topic);
+		if (partitions != null) {
+			for (Partition partition : partitions) {
 				String writeDatasource = partition.getWriteDatasource();
 
-				List<StorageTable> storageTables = handler.queryTable(topic.getId(), partition.getId(),
-						writeDatasource);
+				Collection<StorageTable> storageTables = handler.queryTable(topic.getId(), partition.getId(),
+				      writeDatasource);
 
 				if (storageTables.size() > 0) {
 					storageTopic.addInfo(writeDatasource, storageTables);
 				}
 			}
-			return storageTopic;
-		} else {
-			throw new TopicIsNullException("Topic is Null!");
 		}
+		return storageTopic;
 	}
 
+	// FIXME should be in one transaction
 	@Override
-	public boolean dropTopicStorage(Topic topic) throws StorageHandleErrorException, TopicIsNullException {
-		if (null != topic) {
-			for (Partition partition : topic.getPartitions()) {
+	public boolean dropTopicStorage(Topic topic, Collection<Partition> partitions,
+	      Collection<ConsumerGroup> consumerGroups) throws StorageHandleErrorException {
+		if (partitions != null) {
+			for (Partition partition : partitions) {
 				String writeDatasource = partition.getWriteDatasource();
 
 				try {
-					deleteTables0(writeDatasource, topic, partition);
+					deleteTables0(writeDatasource, topic, partition, consumerGroups);
 				} catch (Exception e) {
-					log.error(
-							String.format("Delete topic %s, partition %d failed.", topic.getName(), partition.getId()),
-							e);
+					log.error(String.format("Delete topic %s, partition %d failed.", topic.getName(), partition.getId()), e);
 					continue;
 				}
 			}
-			return true;
-		} else {
-			throw new TopicIsNullException("Topic is Null!");
 		}
+		return true;
 	}
 
-	private void deleteTables0(String writeDatasource, Topic topic, Partition partition)
-			throws StorageHandleErrorException {
-		List<TableModel> tableModels = buildTableModels(topic);
+	public boolean dropTopicStorage(Topic topic, Partition partition, Collection<ConsumerGroup> consumerGroups)
+	      throws StorageHandleErrorException {
+		String writeDatasource = partition.getWriteDatasource();
+
+		try {
+			deleteTables0(writeDatasource, topic, partition, consumerGroups);
+		} catch (Exception e) {
+			log.error(String.format("Delete topic %s, partition %d failed.", topic.getName(), partition.getId()), e);
+			return false;
+		}
+		return true;
+	}
+
+	private void deleteTables0(String writeDatasource, Topic topic, Partition partition,
+	      Collection<ConsumerGroup> consumerGroups) throws StorageHandleErrorException {
+		Collection<TableModel> tableModels = buildTableModels(topic, consumerGroups);
 		handler.dropTables(topic.getId(), partition.getId(), tableModels, writeDatasource);
 
 		writeLog("DeleteTables", topic, partition, writeDatasource);
 	}
 
 	@Override
-	public void delPartitionStorage(Topic topic, Partition partition)
-			throws StorageHandleErrorException, TopicIsNullException {
-		if (null != topic) {
-			String writeDatasource = partition.getWriteDatasource();
+	public void delPartitionStorage(Topic topic, Partition partition, Collection<ConsumerGroup> consumerGroups)
+	      throws StorageHandleErrorException {
+		String writeDatasource = partition.getWriteDatasource();
 
-			deletePartition0(writeDatasource, topic, partition);
-		} else {
-			throw new TopicIsNullException("Topic is Null!");
-		}
+		deletePartition0(writeDatasource, topic, partition, consumerGroups);
 	}
 
 	@Override
@@ -204,82 +205,75 @@ public class DefaultTopicStorageService implements TopicStorageService {
 		writeLog("delPartitionStorage", table, datasource);
 	}
 
-	private void deletePartition0(String datasource, Topic topic, Partition partition)
-			throws StorageHandleErrorException {
+	private void deletePartition0(String datasource, Topic topic, Partition partition,
+	      Collection<ConsumerGroup> consumerGroups) throws StorageHandleErrorException {
 		handler.deletePartition(topic.getId(), partition.getId(), new DeadLetterTableModel(), datasource);
 
 		// todo: 先做备份，再做删除
 		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(0), datasource);
 		handler.deletePartition(topic.getId(), partition.getId(), new MessageTableModel(1), datasource);
 
-		for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
-			int groupId = consumerGroup.getId();
+		if (consumerGroups != null) {
+			for (ConsumerGroup consumerGroup : consumerGroups) {
+				int groupId = consumerGroup.getId();
 
-			handler.deletePartition(topic.getId(), partition.getId(), new ResendTableModel(groupId), datasource);
+				handler.deletePartition(topic.getId(), partition.getId(), new ResendTableModel(groupId), datasource);
+			}
 		}
-
 		writeLog("DeletePartition", topic, partition, datasource);
 	}
 
 	@Override
-	public boolean addPartitionForTopic(Topic topic, Partition partition)
-			throws TopicIsNullException, StorageHandleErrorException {
-		if (null != topic) {
-			String writeDatasource = partition.getWriteDatasource();
+	public boolean addPartitionForTopic(Topic topic, Partition partition, Collection<ConsumerGroup> consumerGroups)
+	      throws StorageHandleErrorException {
+		String writeDatasource = partition.getWriteDatasource();
 
-			try {
-				createTables0(writeDatasource, topic, partition);
-				addPartition0(writeDatasource, topic, partition);
-			} catch (Exception e) {
-				dropTopicStorage(topic);
-				return false;
-			}
-			return true;
-		} else {
-			throw new TopicIsNullException("Topic is Null!");
+		try {
+			createTables0(writeDatasource, topic, partition, consumerGroups);
+			addPartition0(writeDatasource, topic, partition, consumerGroups);
+		} catch (Exception e) {
+			dropTopicStorage(topic, partition, consumerGroups);
+			return false;
 		}
+		return true;
 	}
 
 	@Override
-	public boolean addConsumerStorage(Topic topic, ConsumerGroup group)
-			throws StorageHandleErrorException, TopicIsNullException {
-		if (null != topic) {
-			for (Partition partition : topic.getPartitions()) {
+	public boolean addConsumerStorage(Topic topic, Collection<Partition> partitions, ConsumerGroup group)
+	      throws StorageHandleErrorException {
+		if (partitions != null) {
+			for (Partition partition : partitions) {
 				String writeDatasource = partition.getWriteDatasource();
 
 				addConsumerStorage0(writeDatasource, topic, partition, group);
 			}
-			return true;
-		} else {
-			throw new TopicIsNullException("Topic is Null!");
 		}
+		return true;
 	}
 
 	private void addConsumerStorage0(String datasource, Topic topic, Partition partition, ConsumerGroup group)
-			throws StorageHandleErrorException {
-		List<TableModel> tableModels = new ArrayList<>();
+	      throws StorageHandleErrorException {
+		Collection<TableModel> tableModels = new ArrayList<>();
 
 		tableModels.add(new ResendTableModel(group.getId()));
 		handler.createTable(topic.getId(), partition.getId(), tableModels, datasource);
 		handler.addPartition(topic.getId(), partition.getId(), new ResendTableModel(group.getId()),
-				(int) Math.max(topic.getResendPartitionSize(), 100), topic.getStoragePartitionCount(), datasource);
+		      (int) Math.max(topic.getResendPartitionSize(), 100), topic.getStoragePartitionCount(), datasource);
 
 		writeLog("AddConsumerStorage", topic, partition, datasource);
 	}
 
 	@Override
-	public boolean delConsumerStorage(Topic topic, ConsumerGroup group)
-			throws StorageHandleErrorException, TopicIsNullException {
-		if (null != topic) {
-			for (Partition partition : topic.getPartitions()) {
+	public boolean delConsumerStorage(Topic topic, Collection<Partition> partitions, ConsumerGroup group)
+	      throws StorageHandleErrorException {
+		if (partitions != null) {
+			for (Partition partition : partitions) {
 				String writeDatasource = partition.getWriteDatasource();
 
 				delConsumerStorage0(writeDatasource, topic, partition, group);
 			}
-			return true;
-		} else {
-			throw new TopicIsNullException("Topic is Null!");
 		}
+		return true;
 	}
 
 	@Override
@@ -299,13 +293,13 @@ public class DefaultTopicStorageService implements TopicStorageService {
 
 	@Override
 	public List<StoragePartition> queryTablePartitions(String datasource, String table)
-			throws StorageHandleErrorException {
+	      throws StorageHandleErrorException {
 		return handler.queryTablePartitions(table, datasource);
 	}
 
 	private void delConsumerStorage0(String datasource, Topic topic, Partition partition, ConsumerGroup group)
-			throws StorageHandleErrorException {
-		List<TableModel> tableModels = new ArrayList<>();
+	      throws StorageHandleErrorException {
+		Collection<TableModel> tableModels = new ArrayList<>();
 
 		tableModels.add(new ResendTableModel(group.getId()));
 		handler.dropTables(topic.getId(), partition.getId(), tableModels, datasource);
@@ -314,14 +308,13 @@ public class DefaultTopicStorageService implements TopicStorageService {
 	}
 
 	private void writeLog(String method, Topic topic, Partition partition, String datasource) {
-		log.info(String.format(
-				"DefaultTopicStorageService: %s is done. On Topic[%s_%d], Partition[%d] on " + "DataSource[%s].",
-				method, topic.getName(), topic.getId(), partition.getId(), datasource));
+		log.info(String.format("DefaultTopicStorageService: %s is done. On Topic[%s_%d], Partition[%d] on "
+		      + "DataSource[%s].", method, topic.getName(), topic.getId(), partition.getId(), datasource));
 	}
 
 	private void writeLog(String method, String table, String ds) {
-		log.info(String.format("DefaultTopicStorageService: %s is done. On Datasource[%s], Table[%s].", method, ds,
-				table));
+		log.info(String
+		      .format("DefaultTopicStorageService: %s is done. On Datasource[%s], Table[%s].", method, ds, table));
 	}
 
 }

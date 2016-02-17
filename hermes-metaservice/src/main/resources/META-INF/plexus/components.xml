@@ -527,16 +527,19 @@
 					<role>com.ctrip.hermes.metaservice.service.storage.TopicStorageService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+					<role>com.ctrip.hermes.metaservice.dal.CachedPartitionDao</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedTopicDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
 				</requirement>
 			</requirements>
 		</component>

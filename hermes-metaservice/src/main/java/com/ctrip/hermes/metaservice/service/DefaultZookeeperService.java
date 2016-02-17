@@ -47,7 +47,8 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 		try {
 			ensurePath(ZKPathUtils.getConsumerLeaseRootZkPath());
-			List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic);
+			List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic, topic.getPartitions(),
+			      topic.getConsumerGroups());
 
 			for (String path : paths) {
 				ensurePath(path);
@@ -79,7 +80,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 	@Override
 	public void deleteConsumerLeaseZkPath(Topic topic, String consumerGroupName) {
-		List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic, consumerGroupName);
+		List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic, topic.getPartitions(), consumerGroupName);
 		String topicParentPath = ZKPathUtils.getConsumerLeaseTopicParentZkPath(topic.getName());
 
 		long now = m_systemClockService.now();
@@ -126,7 +127,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 	@Override
 	public void ensureBrokerLeaseZkPath(Topic topic) {
-		List<String> paths = ZKPathUtils.getBrokerLeaseZkPaths(topic);
+		List<String> paths = ZKPathUtils.getBrokerLeaseZkPaths(topic, topic.getPartitions());
 
 		for (String path : paths) {
 			try {
