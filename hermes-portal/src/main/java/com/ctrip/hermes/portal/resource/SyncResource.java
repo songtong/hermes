@@ -132,7 +132,7 @@ public class SyncResource {
 				syncService.syncKafkaTopic(topicView, target, exist, forceSchema);
 				break;
 			}
-			syncService.syncConsumers(topicView, target);
+			//syncService.syncConsumers(topicView, target);
 		} else {
 			throw new RestException("Target has missed datasources, pls init them: " + missedDatasources);
 		}

@@ -37,8 +37,8 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
-					new_app.ownerEmail1 = new_app.ownerEmail1 + "@Ctrip.com";
-					new_app.ownerEmail2 = new_app.ownerEmail2 + "@Ctrip.com";
+					new_app.ownerEmail1 = new_app.ownerEmail1Prefix + "@Ctrip.com";
+					new_app.ownerEmail2 = new_app.ownerEmail2Prefix + "@Ctrip.com";
 					console.log(new_app);
 					ApplicationService.create_topic_application(new_app).then(function(result) {
 						show_op_info.show("申请添加Topic: <" + result.productLine + "." + result.entity + "." + result.event + "> 成功！", true);
