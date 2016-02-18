@@ -148,18 +148,18 @@ public class ApplicationResource {
 		} else if (StringUtils.isBlank(app.getOwnerName1())) {
 			pass = false;
 			reason = "负责人1不能为空！";
-		} else if (StringUtils.isBlank(app.getOwnerPhone1())) {
+		} else if (StringUtils.isBlank(app.getOwnerPhone1()) || app.getOwnerPhone1().length() != 11) {
 			pass = false;
-			reason = "负责人1联系电话不能为空！";
+			reason = "负责人1手机填写不正确！";
 		} else if (StringUtils.isBlank(app.getOwnerEmail1())) {
 			pass = false;
 			reason = "负责人1邮箱不能为空！";
 		} else if (StringUtils.isBlank(app.getOwnerName2())) {
 			pass = false;
 			reason = "负责人2不能为空！";
-		} else if (StringUtils.isBlank(app.getOwnerPhone2())) {
+		} else if (StringUtils.isBlank(app.getOwnerPhone2()) || app.getOwnerPhone2().length() != 11) {
 			pass = false;
-			reason = "负责人2联系电话不能为空！";
+			reason = "负责人2手机填写不正确！";
 		} else if (StringUtils.isBlank(app.getOwnerEmail2())) {
 			pass = false;
 			reason = "负责人2邮箱不能为空！";
