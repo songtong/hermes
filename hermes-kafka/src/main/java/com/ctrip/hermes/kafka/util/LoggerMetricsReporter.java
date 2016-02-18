@@ -1,6 +1,5 @@
 package com.ctrip.hermes.kafka.util;
 
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +44,7 @@ public class LoggerMetricsReporter implements MetricsReporter {
 	private ScheduledExecutorService scheduler;
 
 	private void addMetric(KafkaMetric metric) {
+		m_logger.info("Add kafka metric: {} {}", metric.metricName().group(), metric.metricName().name());
 		metrics.put(metric.metricName(), metric);
 	}
 
@@ -60,11 +60,9 @@ public class LoggerMetricsReporter implements MetricsReporter {
 		scheduler = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("KafkaMetricsLogger", true));
 		ClientEnvironment env = PlexusComponentLocator.lookup(ClientEnvironment.class);
 		int interval = 60;
-		try {
-			Properties producerConfig = env.getProducerConfig("");
-			interval = Integer.parseInt(producerConfig.getProperty("metric.reporters.interval.second"));
-		} catch (IOException e) {
-			m_logger.warn(e.getMessage());
+		Properties globalConfig = env.getGlobalConfig();
+		if (globalConfig.containsKey("metric.reporters.interval.second")) {
+			interval = Integer.parseInt(globalConfig.getProperty("metric.reporters.interval.second"));
 		}
 		long millis = TimeUnit.SECONDS.toMillis(interval);
 		scheduler.scheduleAtFixedRate(new Runnable() {
@@ -98,6 +96,7 @@ public class LoggerMetricsReporter implements MetricsReporter {
 
 	@Override
 	public void metricRemoval(KafkaMetric metric) {
+		m_logger.info("Remove kafka metric: {} {}", metric.metricName().group(), metric.metricName().name());
 		metrics.remove(metric.metricName());
 	}
 }

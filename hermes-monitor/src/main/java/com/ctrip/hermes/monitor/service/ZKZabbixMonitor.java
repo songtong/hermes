@@ -28,15 +28,15 @@ import com.zabbix4j.host.HostObject;
 import com.zabbix4j.item.ItemObject;
 
 @Service
-public class ZKMonitor implements IZabbixMonitor {
+public class ZKZabbixMonitor implements IZabbixMonitor {
 
-	private static final Logger logger = LoggerFactory.getLogger(ZKMonitor.class);
+	private static final Logger logger = LoggerFactory.getLogger(ZKZabbixMonitor.class);
 
 	public static void main(String[] args) throws Throwable {
 		int hours = Integer.parseInt(args[0]);
 		int requestIntervalSecond = Integer.parseInt(args[1]);
 		ConfigurableApplicationContext context = SpringApplication.run(Bootstrap.class);
-		ZKMonitor monitor = context.getBean(ZKMonitor.class);
+		ZKZabbixMonitor monitor = context.getBean(ZKZabbixMonitor.class);
 		monitor.monitorPastHours(hours, requestIntervalSecond);
 		context.close();
 	}
