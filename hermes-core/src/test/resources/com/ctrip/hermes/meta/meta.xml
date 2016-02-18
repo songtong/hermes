@@ -60,12 +60,11 @@
 	<storage type='kafka'>
 		<datasource id='kafka-ds-read'>
 			<property name='zookeeper.connect' value='10.3.6.90:2181,10.3.8.62:2181,10.3.8.63:2181' />
-			<property name='offsets.storage' value='kafka' />
+			<property name='bootstrap.servers' value='10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092' />
 		</datasource>
 		<datasource id='kafka-ds-write'>
 			<property name='bootstrap.servers' value='10.3.6.237:9092,10.3.6.239:9092,10.3.6.24:9092' />
 			<property name='request.required.acks' value='1' />
-			<property name='offsets.storage' value='kafka' />
 		</datasource>
 	</storage>
 
