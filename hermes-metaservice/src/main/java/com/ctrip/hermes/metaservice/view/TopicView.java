@@ -27,9 +27,9 @@ public class TopicView {
 
 	private Date lastModifiedTime;
 
-	private List<Partition> partitions;
+	private List<Partition> partitions = new ArrayList<Partition>();
 
-	private List<Property> properties;
+	private List<Property> properties = new ArrayList<Property>();
 
 	private Storage storage;
 
