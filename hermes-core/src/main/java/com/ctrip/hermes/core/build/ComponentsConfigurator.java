@@ -18,6 +18,7 @@ import com.ctrip.hermes.core.message.payload.CMessagingPayloadCodec;
 import com.ctrip.hermes.core.message.payload.DeflaterPayloadCodec;
 import com.ctrip.hermes.core.message.payload.GZipPayloadCodec;
 import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
+import com.ctrip.hermes.core.message.payload.PayloadCodec;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaManager;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaService;
 import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
@@ -31,6 +32,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager
 import com.ctrip.hermes.core.transport.command.processor.DefaultCommandProcessorRegistry;
 import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointManager;
+import com.ctrip.hermes.meta.entity.Codec;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -64,8 +66,12 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(DefaultMessageCodec.class));
 		all.add(A(JsonPayloadCodec.class));
 		all.add(A(GZipPayloadCodec.class));
-		all.add(A(DeflaterPayloadCodec.class));
 		all.add(A(CMessagingPayloadCodec.class));
+
+		for (int i = 1; i <= 9; i++) {
+			all.add(C(PayloadCodec.class, Codec.DEFLATER + "-" + i, DeflaterPayloadCodec.class)//
+			      .config(E("level").value(Integer.toString(i))));
+		}
 
 		// env
 		all.add(A(DefaultClientEnvironment.class));

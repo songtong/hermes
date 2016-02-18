@@ -10,12 +10,16 @@ import java.util.zip.InflaterInputStream;
 
 import org.unidal.helper.Files.AutoClose;
 import org.unidal.helper.Files.IO;
-import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Codec;
 
-@Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.DEFLATER)
 public class DeflaterPayloadCodec extends AbstractPayloadCodec {
+
+	private int m_level = 5;
+
+	public void setLevel(int level) {
+		m_level = level;
+	}
 
 	@Override
 	public String getType() {
@@ -32,10 +36,9 @@ public class DeflaterPayloadCodec extends AbstractPayloadCodec {
 
 		ByteArrayInputStream input = new ByteArrayInputStream((byte[]) obj);
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		int level = Deflater.DEFAULT_COMPRESSION;
 		// should be true to be compatible with C# DeflateStream
 		boolean nowrap = true;
-		Deflater def = new Deflater(level, nowrap);
+		Deflater def = new Deflater(m_level, nowrap);
 		try {
 			DeflaterOutputStream gout = new DeflaterOutputStream(bout, def);
 			IO.INSTANCE.copy(input, gout, AutoClose.INPUT_OUTPUT);
