@@ -1,0 +1,690 @@
+#prettydiff.white {
+    background: white
+}
+#prettydiff.white *:focus {
+    outline: 0.1em dashed #06f
+}
+#prettydiff.white .contentarea,
+#prettydiff.white legend,
+#prettydiff.white fieldset select,
+#prettydiff.white .diff td,
+#prettydiff.white .report td,
+#prettydiff.white .data li,
+#prettydiff.white .diff-right,
+#prettydiff.white fieldset input {
+    background: #fff;
+    border-color: #999
+}
+#prettydiff.white select,
+#prettydiff.white input,
+#prettydiff.white .diff,
+#prettydiff.white .beautify,
+#prettydiff.white .report,
+#prettydiff.white .beautify h3,
+#prettydiff.white .diff h3,
+#prettydiff.white .beautify h4,
+#prettydiff.white .diff h4,
+#prettydiff.white #pdsamples li div,
+#prettydiff.white #report,
+#prettydiff.white .author,
+#prettydiff.white #report .author,
+#prettydiff.white fieldset {
+    background: #eee;
+    border-color: #999
+}
+#prettydiff.white .diff h3 {
+    background: #ddd;
+    border-color: #999
+}
+#prettydiff.white fieldset fieldset {
+    background: #ddd
+}
+#prettydiff.white .contentarea {
+    box-shadow: 0 1em 1em #999
+}
+#prettydiff.white button {
+    background-color: #eee;
+    border-color: #999;
+    box-shadow: 0 0.25em 0.5em #ccc;
+    color: #666
+}
+#prettydiff.white button:hover {
+    background-color: #def;
+    border-color: #03c;
+    box-shadow: 0 0.25em 0.5em #ccf;
+    color: #03c
+}
+#prettydiff.white h2,
+#prettydiff.white h2 button,
+#prettydiff.white h3 {
+    color: #b00
+}
+#prettydiff.white th {
+    background: #eee;
+    color: #333
+}
+#prettydiff.white thead th {
+    background: #eef
+}
+#prettydiff.white .report strong {
+    color: #009
+}
+#prettydiff.white .report em {
+    color: #080
+}
+#prettydiff.white h2 button,
+#prettydiff.white td,
+#prettydiff.white th,
+#prettydiff.white .segment,
+#prettydiff.white .count li,
+#prettydiff.white .diff-right #prettydiff.white ol.segment li {
+    border-color: #ccc
+}
+#prettydiff.white .data li {
+    border-color: #ccc
+}
+#prettydiff.white .count li.fold {
+    color: #900
+}
+#prettydiff.white .count {
+    background: #eed;
+    border-color: #999
+}
+#prettydiff.white h2 button {
+    background: #f8f8f8;
+    box-shadow: 0.1em 0.1em 0.25em #ddd
+}
+#prettydiff.white li h4 {
+    color: #00f
+}
+#prettydiff.white code {
+    background: #eee;
+    border-color: #eee;
+    color: #009
+}
+#prettydiff.white ol.segment h4 strong {
+    color: #c00
+}
+#prettydiff.white .data .delete {
+    background: #ffd8d8
+}
+#prettydiff.white .data .delete em {
+    background: #fff8f8;
+    border-color: #c44;
+    color: #900
+}
+#prettydiff.white .data .insert {
+    background: #d8ffd8
+}
+#prettydiff.white .data .insert em {
+    background: #f8fff8;
+    border-color: #090;
+    color: #363
+}
+#prettydiff.white .data .replace {
+    background: #fec
+}
+#prettydiff.white .data .replace em {
+    background: #ffe;
+    border-color: #a86;
+    color: #852
+}
+#prettydiff.white .data .empty {
+    background: #ddd
+}
+#prettydiff.white .data em.s0 {
+    color: #000
+}
+#prettydiff.white .data em.s1 {
+    color: #f66
+}
+#prettydiff.white .data em.s2 {
+    color: #12f
+}
+#prettydiff.white .data em.s3 {
+    color: #090
+}
+#prettydiff.white .data em.s4 {
+    color: #d6d
+}
+#prettydiff.white .data em.s5 {
+    color: #7cc
+}
+#prettydiff.white .data em.s6 {
+    color: #c85
+}
+#prettydiff.white .data em.s7 {
+    color: #737
+}
+#prettydiff.white .data em.s8 {
+    color: #6d0
+}
+#prettydiff.white .data em.s9 {
+    color: #dd0
+}
+#prettydiff.white .data em.s10 {
+    color: #893
+}
+#prettydiff.white .data em.s11 {
+    color: #b97
+}
+#prettydiff.white .data em.s12 {
+    color: #bbb
+}
+#prettydiff.white .data em.s13 {
+    color: #cc3
+}
+#prettydiff.white .data em.s14 {
+    color: #333
+}
+#prettydiff.white .data em.s15 {
+    color: #9d9
+}
+#prettydiff.white .data em.s16 {
+    color: #880
+}
+#prettydiff.white .data .l0 {
+    background: #fff
+}
+#prettydiff.white .data .l1 {
+    background: #fed
+}
+#prettydiff.white .data .l2 {
+    background: #def
+}
+#prettydiff.white .data .l3 {
+    background: #efe
+}
+#prettydiff.white .data .l4 {
+    background: #fef
+}
+#prettydiff.white .data .l5 {
+    background: #eef
+}
+#prettydiff.white .data .l6 {
+    background: #fff8cc
+}
+#prettydiff.white .data .l7 {
+    background: #ede
+}
+#prettydiff.white .data .l8 {
+    background: #efc
+}
+#prettydiff.white .data .l9 {
+    background: #ffd
+}
+#prettydiff.white .data .l10 {
+    background: #edc
+}
+#prettydiff.white .data .l11 {
+    background: #fdb
+}
+#prettydiff.white .data .l12 {
+    background: #f8f8f8
+}
+#prettydiff.white .data .l13 {
+    background: #ffb
+}
+#prettydiff.white .data .l14 {
+    background: #eec
+}
+#prettydiff.white .data .l15 {
+    background: #cfc
+}
+#prettydiff.white .data .l16 {
+    background: #eea
+}
+#prettydiff.white .data .c0 {
+    background: inherit
+}
+#prettydiff.white #report p em {
+    color: #080
+}
+#prettydiff.white #report p strong {
+    color: #009
+}
+#prettydiff #report.contentarea {
+    font-family: 'Lucida Sans Unicode', 'Helvetica', 'Arial', sans-serif;
+    max-width: none;
+    overflow: inherit;
+}
+#prettydiff .diff .replace em,
+#prettydiff .diff .delete em,
+#prettydiff .diff .insert em {
+    border-style: solid;
+    border-width: 0.1em
+}
+#prettydiff #report dd,
+#prettydiff #report dt,
+#prettydiff #report p,
+#prettydiff #report li,
+#prettydiff #report td,
+#prettydiff #report blockquote,
+#prettydiff #report th {
+    font-family: 'Lucida Sans Unicode', 'Helvetica', 'Arial', sans-serif;
+    font-size: 1.2em
+}
+#prettydiff div#webtool {
+    background: transparent;
+    font-size: inherit;
+    margin: 0;
+    padding: 0
+}
+#prettydiff #jserror span {
+    display: block
+}
+#prettydiff #a11y {
+    background: transparent;
+    padding: 0
+}
+#prettydiff #a11y div {
+    margin: 0.5em 0;
+    border-style: solid;
+    border-width: 0.1em
+}
+#prettydiff #a11y h4 {
+    margin: 0.25em 0
+}
+#prettydiff #a11y ol {
+    border-style: solid;
+    border-width: 0.1em
+}
+#prettydiff #cssreport.doc table {
+    clear: none;
+    float: left;
+    margin-left: 1em
+}
+#prettydiff #css-size {
+    left: 24em
+}
+#prettydiff #css-uri {
+    left: 40em
+}
+#prettydiff #css-uri td {
+    text-align: left
+}
+#prettydiff .report .analysis th {
+    text-align: left
+}
+#prettydiff .report .analysis .parseData td {
+    font-family: 'Courier New', Courier, 'Lucida Console', monospace;
+    text-align: left;
+    white-space: pre
+}
+#prettydiff .report .analysis td {
+    text-align: right
+}
+#prettydiff .analysis {
+    float: left;
+    margin: 0 1em 1em 0
+}
+#prettydiff .analysis td,
+#prettydiff .analysis th {
+    padding: 0.5em
+}
+#prettydiff #statreport div {
+    border-style: none
+}
+#prettydiff .diff,
+#prettydiff .beautify {
+    border-style: solid;
+    border-width: 0.1em;
+    display: inline-block;
+    margin: 0 1em 1em 0;
+    position: relative
+}
+#prettydiff .diff,
+#prettydiff .diff li #prettydiff .diff h3,
+#prettydiff .diff h4,
+#prettydiff .beautify,
+#prettydiff .beautify li,
+#prettydiff .beautify h3,
+#prettydiff .beautify h4 {
+    font-family: 'Courier New', Courier, 'Lucida Console', monospace
+}
+#prettydiff .diff li,
+#prettydiff .beautify li,
+#prettydiff .diff h3,
+#prettydiff .diff h4,
+#prettydiff .beautify h3,
+#prettydiff .beautify h4 {
+    border-style: none none solid none;
+    border-width: 0 0 0.1em 0;
+    box-shadow: none;
+    display: block;
+    font-size: 1.2em;
+    margin: 0 0 0 -.1em;
+    padding: 0.2em 2em;
+    text-align: left
+}
+#prettydiff .diff .skip {
+    border-style: none none solid;
+    border-width: 0 0 0.1em
+}
+#prettydiff .diff .diff-left {
+    border-style: none;
+    display: table-cell
+}
+#prettydiff .diff .diff-right {
+    border-style: none none none solid;
+    border-width: 0 0 0 0.1em;
+    display: table-cell;
+    margin-left: -.1em;
+    min-width: 16.5em;
+    right: 0;
+    top: 0
+}
+#prettydiff .diff .data li,
+#prettydiff .beautify .data li {
+    min-width: 16.5em;
+    padding: 0.5em
+}
+#prettydiff .diff li,
+#prettydiff .diff p,
+#prettydiff .diff h3,
+#prettydiff .beautify li,
+#prettydiff .beautify p,
+#prettydiff .beautify h3 {
+    font-size: 1.2em
+}
+#prettydiff .diff li em,
+#prettydiff .beautify li em {
+    font-style: normal;
+    font-weight: bold;
+    margin: -0.5em -0.09em
+}
+#prettydiff .diff p.author {
+    border-style: solid;
+    border-width: 0.2em 0.1em 0.1em;
+    margin: 0;
+    overflow: hidden;
+    padding: 0.4em;
+    text-align: right
+}
+#prettydiff .difflabel {
+    display: block;
+    height: 0
+}
+#prettydiff .count {
+    border-style: solid;
+    border-width: 0 0.1em 0 0;
+    font-weight: normal;
+    padding: 0;
+    text-align: right
+}
+#prettydiff .count li {
+    padding: 0.5em 1em;
+    text-align: right
+}
+#prettydiff .count li.fold {
+    cursor: pointer;
+    font-weight: bold;
+    padding-left: 0.5em
+}
+#prettydiff .data {
+    text-align: left;
+    white-space: pre
+}
+#prettydiff .beautify .data em {
+    display: inline-block;
+    font-style: normal;
+    font-weight: bold
+}
+#prettydiff .beautify li,
+#prettydiff .diff li {
+    border-style: none none solid;
+    border-width: 0 0 0.1em;
+    display: block;
+    line-height: 1.2;
+    list-style-type: none;
+    margin: 0;
+    white-space: pre
+}
+#prettydiff .beautify ol,
+#prettydiff .diff ol {
+    display: table-cell;
+    margin: 0;
+    padding: 0
+}
+#prettydiff .beautify em.l0,
+#prettydiff .beautify em.l1,
+#prettydiff .beautify em.l2,
+#prettydiff .beautify em.l3,
+#prettydiff .beautify em.l4,
+#prettydiff .beautify em.l5,
+#prettydiff .beautify em.l6,
+#prettydiff .beautify em.l7,
+#prettydiff .beautify em.l8,
+#prettydiff .beautify em.l9,
+#prettydiff .beautify em.l10,
+#prettydiff .beautify em.l11,
+#prettydiff .beautify em.l12,
+#prettydiff .beautify em.l13,
+#prettydiff .beautify em.l14,
+#prettydiff .beautify em.l15,
+#prettydiff .beautify em.l16 {
+    height: 2.2em;
+    margin: 0 0 -1em;
+    position: relative;
+    top: -0.5em
+}
+#prettydiff .beautify em.l0 {
+    margin-left: -0.5em;
+    padding-left: 0.5em
+}
+#prettydiff #report .beautify,
+#prettydiff #report .beautify li,
+#prettydiff #report .diff,
+#prettydiff #report .diff li {
+    font-family: 'Courier New', Courier, 'Lucida Console', monospace
+}
+#prettydiff #report .beautify {
+    border-style: solid
+}
+#prettydiff #report .diff h3,
+#prettydiff #report .beautify h3 {
+    margin: 0
+}
+#prettydiff {
+    text-align: center;
+    font-size: 10px;
+    overflow-y: inherit;
+}
+#prettydiff .contentarea {
+    border-style: solid;
+    border-width: 0.1em;
+    font-family: 'Century Gothic', 'Trebuchet MS';
+    margin: 0 auto;
+    max-width: 93em;
+    padding: 1em;
+    text-align: left
+}
+#prettydiff dd,
+#prettydiff dt,
+#prettydiff p,
+#prettydiff li,
+#prettydiff td,
+#prettydiff blockquote,
+#prettydiff th {
+    clear: both;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    font-size: 1.6em;
+    line-height: 1.6em;
+    text-align: left
+}
+#prettydiff blockquote {
+    font-style: italic
+}
+#prettydiff dt {
+    font-size: 1.4em;
+    font-weight: bold;
+    line-height: inherit
+}
+#prettydiff li li,
+#prettydiff li p {
+    font-size: 1em
+}
+#prettydiff th,
+#prettydiff td {
+    border-style: solid;
+    border-width: 0.1em;
+    padding: 0.1em 0.2em
+}
+#prettydiff td span {
+    display: block
+}
+#prettydiff code,
+#prettydiff textarea {
+    font-family: 'Courier New', Courier, 'Lucida Console', monospace
+}
+#prettydiff code,
+#prettydiff textarea {
+    display: block;
+    font-size: 0.8em;
+    width: 100%
+}
+#prettydiff code span {
+    display: block;
+    white-space: pre
+}
+#prettydiff code {
+    border-style: solid;
+    border-width: 0.2em;
+    line-height: 1em
+}
+#prettydiff textarea {
+    line-height: 1.4em
+}
+#prettydiff label {
+    display: inline;
+    font-size: 1.4em
+}
+#prettydiff legend {
+    border-radius: 1em;
+    border-style: solid;
+    border-width: 0.1em;
+    font-size: 1.4em;
+    font-weight: bold;
+    margin-left: -0.25em;
+    padding: 0 0.5em
+}
+#prettydiff fieldset fieldset legend {
+    font-size: 1.2em
+}
+#prettydiff table {
+    border-collapse: collapse
+}
+#prettydiff div.report {
+    border-style: none
+}
+#prettydiff h2,
+#prettydiff h3,
+#prettydiff h4 {
+    clear: both
+}
+#prettydiff table {
+    margin: 0 0 1em
+}
+#prettydiff .analysis .bad,
+#prettydiff .analysis .good {
+    font-weight: bold
+}
+#prettydiff h1 {
+    font-size: 3em;
+    font-weight: normal;
+    margin-top: 0
+}
+#prettydiff h1 span {
+    font-size: 0.5em
+}
+#prettydiff h1 svg {
+    border-style: solid;
+    border-width: 0.05em;
+    float: left;
+    height: 1.5em;
+    margin-right: 0.5em;
+    width: 1.5em
+}
+#prettydiff h2 {
+    border-style: none;
+    background: transparent;
+    font-size: 1em;
+    box-shadow: none;
+    margin: 0
+}
+#prettydiff h2 button {
+    background: transparent;
+    border-style: solid;
+    cursor: pointer;
+    display: block;
+    font-size: 2.5em;
+    font-weight: normal;
+    text-align: left;
+    width: 100%;
+    border-width: 0.05em;
+    font-weight: normal;
+    margin: 1em 0 0;
+    padding: 0.1em
+}
+#prettydiff h2 span {
+    display: block;
+    float: right;
+    font-size: 0.5em
+}
+#prettydiff h3 {
+    font-size: 2em;
+    margin: 0;
+    background: transparent;
+    box-shadow: none;
+    border-style: none
+}
+#prettydiff h4 {
+    font-size: 1.6em;
+    font-family: 'Century Gothic', 'Trebuchet MS';
+    margin: 0
+}
+#prettydiff li h4 {
+    font-size: 1em
+}
+#prettydiff button,
+#prettydiff fieldset,
+#prettydiff div input,
+#prettydiff textarea {
+    border-style: solid;
+    border-width: 0.1em
+}
+#prettydiff section {
+    border-style: none
+}
+#prettydiff h2 button,
+#prettydiff select,
+#prettydiff option {
+    font-family: inherit
+}
+#prettydiff select {
+    border-style: inset;
+    border-width: 0.1em;
+    width: 13.5em
+}
+#prettydiff #dcolorScheme {
+    float: right;
+    margin: -3em 0 0
+}
+#prettydiff #dcolorScheme label,
+#prettydiff #dcolorScheme label {
+    display: inline-block;
+    font-size: 1em
+}
+#prettydiff .clear {
+    clear: both;
+    display: block
+}
+#prettydiff caption,
+#prettydiff .content-hide {
+    height: 1em;
+    left: -1000em;
+    overflow: hidden;
+    position: absolute;
+    top: -1000em;
+    width: 1em
+}
