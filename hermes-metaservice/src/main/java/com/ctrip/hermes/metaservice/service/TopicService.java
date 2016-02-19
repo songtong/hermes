@@ -149,7 +149,7 @@ public class TopicService {
 			int partitionId = 0;
 			for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topicView.getPartitions()) {
 				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
-				      .convert(partitionEntity);
+						.convert(partitionEntity);
 				partitionModel.setId(partitionId++);
 				partitionModel.setTopicId(topicModel.getId());
 				partitionEntity.setId(partitionModel.getId());
@@ -185,7 +185,8 @@ public class TopicService {
 		if (topic == null)
 			return;
 		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topic.getPartitions()) {
-			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partitionEntity);
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
+					.convert(partitionEntity);
 			partitionModel.setTopicId(topic.getId());
 			partitionModel.setTId(topic.getId());
 			m_partitionDao.deleteByTopicId(partitionModel);
@@ -330,7 +331,7 @@ public class TopicService {
 	}
 
 	public List<StoragePartition> queryStorageTablePartitions(String ds, String table)
-	      throws StorageHandleErrorException {
+			throws StorageHandleErrorException {
 		return m_topicStorageService.queryTablePartitions(ds, table);
 	}
 
@@ -391,8 +392,8 @@ public class TopicService {
 	public List<com.ctrip.hermes.meta.entity.Topic> findTopicEntities(boolean isFillDetail) throws DalException {
 		Collection<com.ctrip.hermes.metaservice.model.Topic> models = m_topicDao.list(true);
 		Map<Long, Collection<ConsumerGroup>> consumers = consumerListToMap(m_consumerGroupDao.list(true));
-		Map<Long, Collection<com.ctrip.hermes.metaservice.model.Partition>> partitions = partitionListToMap(m_partitionDao
-		      .list(true));
+		Map<Long, Collection<com.ctrip.hermes.metaservice.model.Partition>> partitions = partitionListToMap(
+				m_partitionDao.list(true));
 		List<com.ctrip.hermes.meta.entity.Topic> entities = new ArrayList<>();
 		for (com.ctrip.hermes.metaservice.model.Topic model : models) {
 			if (isFillDetail) {
@@ -425,8 +426,18 @@ public class TopicService {
 		}
 	}
 
+	private void addPartitions4TopicView(TopicView topicView,
+			Collection<com.ctrip.hermes.metaservice.model.Partition> partitions) {
+		if (partitions != null) {
+			for (com.ctrip.hermes.metaservice.model.Partition model : partitions) {
+				com.ctrip.hermes.meta.entity.Partition entity = ModelToEntityConverter.convert(model);
+				topicView.getPartitions().add(entity);
+			}
+		}
+	}
+
 	private Map<Long, Collection<com.ctrip.hermes.metaservice.model.Partition>> partitionListToMap(
-	      Collection<com.ctrip.hermes.metaservice.model.Partition> collection) {
+			Collection<com.ctrip.hermes.metaservice.model.Partition> collection) {
 		Map<Long, Collection<com.ctrip.hermes.metaservice.model.Partition>> map = new HashMap<>();
 		if (collection != null) {
 			for (com.ctrip.hermes.metaservice.model.Partition partition : collection) {
@@ -442,7 +453,7 @@ public class TopicService {
 	}
 
 	private Map<Long, Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup>> consumerListToMap(
-	      Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> collection) {
+			Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> collection) {
 		Map<Long, Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup>> map = new HashMap<>();
 		if (collection != null) {
 			for (com.ctrip.hermes.metaservice.model.ConsumerGroup consumer : collection) {
@@ -478,6 +489,11 @@ public class TopicService {
 		// Fill Codec
 		Codec codec = m_codecService.getCodecs().get(topicView.getCodecType());
 		topicView.setCodec(codec);
+
+		// Fill Partitions
+		addPartitions4TopicView(topicView, m_partitionDao.findByTopic(topicView.getId(), false));
+
 		return topicView;
+
 	}
 }
