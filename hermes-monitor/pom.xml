@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>hermes</artifactId>
 		<groupId>com.ctrip.hermes</groupId>
-		<version>0.6.5</version>
+		<version>0.6.6</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
