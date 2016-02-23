@@ -32,7 +32,7 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 	}
 
 	@Override
-	public void delivered(long id, T attachment) throws AckHolderException {
+	public synchronized void delivered(long id, T attachment) throws AckHolderException {
 		if (!m_items.isEmpty() && m_items.getLast().getId() >= id) {
 			throw new AckHolderException(String.format("Must deliver in ascending order of id(lastId=%s, id=%s)", m_items
 			      .getLast().getId(), id));
@@ -44,7 +44,7 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 	}
 
 	@Override
-	public void ack(long id, AckCallback<T> callback) {
+	public synchronized void ack(long id, AckCallback<T> callback) {
 		Item<T> item = m_itemIndex.get(id);
 		if (item != null) {
 			if (callback != null) {
@@ -55,7 +55,7 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 	}
 
 	@Override
-	public void nack(long id, NackCallback<T> callback) {
+	public synchronized void nack(long id, NackCallback<T> callback) {
 		Item<T> item = m_itemIndex.get(id);
 		if (item != null) {
 			if (callback != null) {
@@ -66,7 +66,7 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 	}
 
 	@Override
-	public AckHolderScanningResult<T> scan() {
+	public synchronized AckHolderScanningResult<T> scan() {
 		AckHolderScanningResult<T> res = new AckHolderScanningResult<T>();
 
 		while (!m_items.isEmpty()) {
