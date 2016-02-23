@@ -14,7 +14,6 @@
 	<entity name="consumer-group">
 		<attribute name="id" value-type="int" />
 		<attribute name="name" value-type="String" key="true" />
-		<attribute name="app-ids" value-type="String" />
 		<attribute name="retry-policy" value-type="String" />
 		<attribute name="ordered-consume" value-type="boolean" default-value="true" />
 	</entity>
@@ -51,13 +50,9 @@
 		<attribute name="name" key='true' />
 		<attribute name="id" value-type="long" />
 		<attribute name="schema-id" value-type="long" />
-		<attribute name="other-info" value-type="String" />
 		<attribute name="endpoint-type" value-type="String" default-value="broker" />
 		<attribute name="consumer-retry-policy" default-value="3:[3,3000]" />
 		<attribute name="ack-timeout-seconds" value-type="int" default-value="5" />
-		<attribute name="storage-partition-size" value-type="long" default-value="1000000" />
-		<attribute name="resend-partition-size" value-type="long" default-value="50000" />
-		<attribute name="storage-partition-count" value-type="int" default-value="10" />
 		<attribute name="priority-message-enabled" value-type="boolean" default-value="true" />
 		<entity-ref name="consumer-group" type="list" names="consumer-groups" />
 

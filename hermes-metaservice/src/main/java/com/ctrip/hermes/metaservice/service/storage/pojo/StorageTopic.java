@@ -1,22 +1,22 @@
 package com.ctrip.hermes.metaservice.service.storage.pojo;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.model.Topic;
 
 public class StorageTopic {
 
 	Topic topic;
-	Map<String /*ds name*/, List<StorageTable>/*tables info*/> storageTables;
+	Map<String /*ds name*/, Collection<StorageTable>/*tables info*/> storageTables;
 
 
 	public StorageTopic(Topic topic) {
 		this.topic = topic;
 	}
 
-	public void addInfo(String dsName, List<StorageTable> tables) {
+	public void addInfo(String dsName, Collection<StorageTable> tables) {
 		if (null == storageTables) {
 			storageTables = new HashMap<>();
 		}

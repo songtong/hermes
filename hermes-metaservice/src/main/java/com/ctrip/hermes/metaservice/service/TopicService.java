@@ -94,15 +94,19 @@ public class TopicService {
 			}
 		}
 
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topic);
+
 		for (Partition partition : partitions) {
+			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partition);
 			if (partition.getId() < 0) {
 				partition.setId(partitionId++);
-				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partition);
 				partitionModel.setTopicId(topic.getId());
 				m_partitionDao.insert(partitionModel);
 
 				if (Storage.MYSQL.equals(topic.getStorageType())) {
-					if (!m_topicStorageService.addPartitionForTopic(topic, partition)) {
+					Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> consumerGroupModels = m_consumerGroupDao
+					      .findByTopic(topic.getId(), false);
+					if (!m_topicStorageService.addPartitionForTopic(topicModel, partitionModel, consumerGroupModels)) {
 						partitionId--;
 						m_logger.error("Add new topic partition failed, please try later.");
 						throw new RuntimeException("Add new topic partition failed, please try later.");
@@ -110,7 +114,6 @@ public class TopicService {
 
 				}
 			} else {
-				com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partition);
 				partitionModel.setTId(topic.getId());
 				partitionModel.setPId(partition.getId());
 				partitionModel.setTopicId(topic.getId());
@@ -120,6 +123,7 @@ public class TopicService {
 		}
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
+			topic.getPartitions().addAll(partitions);
 			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 		}
@@ -141,6 +145,7 @@ public class TopicService {
 	public TopicView createTopic(TopicView topicView) throws Exception {
 		tm.startTransaction("fxhermesmetadb");
 		com.ctrip.hermes.metaservice.model.Topic topicModel = ViewToModelConverter.convert(topicView);
+		Collection<com.ctrip.hermes.metaservice.model.Partition> partitionModels = new ArrayList<>();
 		try {
 			topicModel.setCreateTime(new Date(System.currentTimeMillis()));
 			m_topicDao.insert(topicModel);
@@ -154,6 +159,7 @@ public class TopicService {
 				partitionModel.setTopicId(topicModel.getId());
 				partitionEntity.setId(partitionModel.getId());
 				m_partitionDao.insert(partitionModel);
+				partitionModels.add(partitionModel);
 			}
 			tm.commitTransaction();
 		} catch (Exception e) {
@@ -162,14 +168,12 @@ public class TopicService {
 			throw e;
 		}
 		if (Storage.MYSQL.equals(topicModel.getStorageType())) {
-			Topic topicEntity = ModelToEntityConverter.convert(topicModel);
-			fillTopicEntity(topicEntity);
-			if (!m_topicStorageService.initTopicStorage(topicEntity)) {
+			if (!m_topicStorageService.initTopicStorage(topicModel, partitionModels)) {
 				m_logger.error("Init topic storage failed, please try later.");
 				throw new RuntimeException("Init topic storage failed, please try later.");
 			}
 
-			m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
+			Topic topicEntity = findTopicEntityById(topicModel.getId());
 			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 		}
 
@@ -184,24 +188,28 @@ public class TopicService {
 		Topic topic = findTopicEntityByName(name);
 		if (topic == null)
 			return;
+		Collection<com.ctrip.hermes.metaservice.model.Partition> partitions = new ArrayList<>();
 		for (com.ctrip.hermes.meta.entity.Partition partitionEntity : topic.getPartitions()) {
 			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter
 					.convert(partitionEntity);
 			partitionModel.setTopicId(topic.getId());
 			partitionModel.setTId(topic.getId());
 			m_partitionDao.deleteByTopicId(partitionModel);
+			partitions.add(partitionModel);
 		}
+		Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> consumerGroups = new ArrayList<>();
 		for (com.ctrip.hermes.meta.entity.ConsumerGroup cgEntity : topic.getConsumerGroups()) {
 			com.ctrip.hermes.metaservice.model.ConsumerGroup cgModel = EntityToModelConverter.convert(cgEntity);
 			m_consumerGroupDao.deleteByPK(cgModel);
+			consumerGroups.add(cgModel);
 		}
 		for (com.ctrip.hermes.meta.entity.Producer producerEntity : topic.getProducers()) {
 			com.ctrip.hermes.metaservice.model.Producer producerModel = EntityToModelConverter.convert(producerEntity);
 			m_producerDao.deleteByPK(producerModel);
 		}
 
-		com.ctrip.hermes.metaservice.model.Topic proto = EntityToModelConverter.convert(topic);
-		m_topicDao.deleteByPK(proto);
+		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topic);
+		m_topicDao.deleteByPK(topicModel);
 		// Remove related schemas
 		if (topic.getId() != null && topic.getId() > 0) {
 			try {
@@ -213,7 +221,7 @@ public class TopicService {
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			try {
-				m_topicStorageService.dropTopicStorage(topic);
+				m_topicStorageService.dropTopicStorage(topicModel, partitions, consumerGroups);
 				m_zookeeperService.deleteConsumerLeaseTopicParentZkPath(topic.getName());
 				m_zookeeperService.deleteBrokerLeaseTopicParentZkPath(topic.getName());
 				m_zookeeperService.deleteMetaServerAssignmentZkPath(topic.getName());
@@ -366,8 +374,7 @@ public class TopicService {
 		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
 		if (Storage.MYSQL.equals(topicView.getStorageType())) {
-			Topic topicEntity = ModelToEntityConverter.convert(topicModel);
-			fillTopicEntity(topicEntity);
+			Topic topicEntity = findTopicEntityById(topicModel.getId());
 			m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
 			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 		}

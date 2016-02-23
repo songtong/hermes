@@ -71,6 +71,7 @@
 		</datasource>
 		<datasource id='kafka-consumer'>
 			<property name='zookeeper.connect' value='localhost:2181' />
+			<property name='bootstrap.servers' value='localhost:9092' />
 		</datasource>
 	</storage>
 </meta>
