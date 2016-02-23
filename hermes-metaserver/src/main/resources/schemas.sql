@@ -155,7 +155,10 @@ CREATE TABLE `topic` (
          `DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
          `schema_id` BIGINT(20) UNSIGNED NULL DEFAULT NULL COMMENT 'schema_id',
          `consumer_retry_policy` VARCHAR(500) NULL DEFAULT NULL COMMENT 'consumer_retry_policy',
-         `create_by` VARCHAR(500) NULL DEFAULT NULL COMMENT 'create_by',
+         `owner_1` VARCHAR(500) NULL DEFAULT NULL COMMENT 'owner_1',
+         `owner_2` VARCHAR(500) NULL DEFAULT NULL COMMENT 'owner_2',
+         `phone_1` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone_1',
+         `phone_2` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone_2',
          `endpoint_type` VARCHAR(500) NULL DEFAULT NULL COMMENT 'endpoint_type',
          `ack_timeout_seconds` INT(11) NULL DEFAULT NULL COMMENT 'ack_timeout_seconds',
          `codec_type` VARCHAR(50) NULL DEFAULT NULL COMMENT 'codec_type',
@@ -189,11 +192,14 @@ ENGINE=InnoDB
 CREATE TABLE `consumer_group` (
          `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'pk',
          `name` VARCHAR(500) NOT NULL DEFAULT 'name' COMMENT 'name',
-         `appids` VARCHAR(500) NULL DEFAULT NULL COMMENT '应用id',
+         `app_Ids` VARCHAR(500) NULL DEFAULT NULL COMMENT '应用id',
          `retry_policy` VARCHAR(500) NULL DEFAULT NULL COMMENT '重试',
          `ack_timeout_seconds` INT(11) NULL DEFAULT NULL COMMENT 'ack超时',
          `ordered_consume` BIT(1) NULL DEFAULT NULL COMMENT '是否有序',
-         `owner` VARCHAR(500) NULL DEFAULT NULL COMMENT '负责人',
+         `owner_1` VARCHAR(500) NULL DEFAULT NULL COMMENT 'owner_1',
+         `owner_2` VARCHAR(500) NULL DEFAULT NULL COMMENT 'owner_2',
+         `phone_1` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone_1',
+         `phone_2` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone_2',
          `DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
          `topic_id` BIGINT(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'topic id',
          PRIMARY KEY (`id`),
@@ -203,22 +209,20 @@ CREATE TABLE `consumer_group` (
 COMMENT='consumer_group'
 ENGINE=InnoDB
 ;
-
-ALTER TABLE `consumer_group`
-CHANGE COLUMN `appids` `app_Ids` VARCHAR(500) NULL DEFAULT NULL COMMENT '应用id';
-
-ALTER TABLE `topic`
-CHANGE COLUMN `create_by` `owner_1` VARCHAR(500) NULL DEFAULT NULL COMMENT 'name and email for owner_1' AFTER `consumer_retry_policy`,
-ADD COLUMN `owner_2` VARCHAR(500) NULL DEFAULT NULL COMMENT 'name and email for owner_2' AFTER `create_by_1`,
-ADD COLUMN `phone_1` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for create_by_1' AFTER `create_by_2`,
-ADD COLUMN `phone_2` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for create_by_2' AFTER `phone_1`;
-
-ALTER TABLE `consumer_group`
-CHANGE COLUMN `owner` `owner_1` VARCHAR(500) NULL DEFAULT NULL COMMENT '负责人1：名字+邮箱' AFTER `ordered_consume`,
-ADD COLUMN `owner_2` VARCHAR(500) NULL DEFAULT NULL COMMENT '负责人2：名字+邮箱' AFTER `owner_1`,
-ADD COLUMN `phone_1` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for owner_1' AFTER `owner_2`,
-ADD COLUMN `phone_2` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone for owner_2' AFTER `phone_1`;
-
-ALTER TABLE `application`
-CHANGE COLUMN `owner` `owner_1` VARCHAR(128) NULL DEFAULT NULL COMMENT '申请人邮箱1' AFTER `comment`,
-ADD COLUMN `owner_2` VARCHAR(128) NULL DEFAULT NULL COMMENT '申请人邮箱2' AFTER `owner1`;
+CREATE TABLE `application` (
+		`id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
+		`type` INT(11) NOT NULL DEFAULT '-1' COMMENT '创建Topic:0, 创建Consumer:1, 修改Topic:2, 修改Consumer:3',
+		`status` INT(11) NOT NULL DEFAULT '-1' COMMENT '待审批:0, 拒绝:1, 成功:2',
+		`content` VARCHAR(1024) NULL DEFAULT NULL COMMENT 'Topic/Consumer详细参数',
+		`comment` VARCHAR(1024) NULL DEFAULT NULL COMMENT '修改意见',
+		`owner_1` VARCHAR(128) NULL DEFAULT NULL COMMENT '申请人邮箱1',
+		`owner_2` VARCHAR(128) NULL DEFAULT NULL COMMENT '申请人邮箱2',
+		`approver` VARCHAR(128) NULL DEFAULT NULL COMMENT '审批人',
+		`create_time` DATETIME NULL DEFAULT NULL COMMENT 'this application create time',
+		`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'changed time',
+		PRIMARY KEY (`id`),
+		INDEX `DataChange_LastTime` (`DataChange_LastTime`)
+)
+COMMENT='for application'
+ENGINE=InnoDB
+;
