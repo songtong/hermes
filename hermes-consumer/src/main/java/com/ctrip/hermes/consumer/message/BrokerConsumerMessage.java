@@ -30,7 +30,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 
 	private String m_groupId;
 
-	private long m_correlationId;
+	private long m_token;
 
 	private Channel m_channel;
 
@@ -49,12 +49,12 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 		m_groupId = groupId;
 	}
 
-	public long getCorrelationId() {
-		return m_correlationId;
+	public long getToken() {
+		return m_token;
 	}
 
-	public void setCorrelationId(long correlationId) {
-		m_correlationId = correlationId;
+	public void setToken(long token) {
+		m_token = token;
 	}
 
 	public void setChannel(Channel channel) {
@@ -89,7 +89,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	@Override
 	public void nack() {
 		if (m_baseMsg.nack()) {
-			PlexusComponentLocator.lookup(AckManager.class).nack(m_correlationId, this);
+			PlexusComponentLocator.lookup(AckManager.class).nack(m_token, this);
 		}
 	}
 
@@ -126,7 +126,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	@Override
 	public void ack() {
 		if (m_baseMsg.ack()) {
-			PlexusComponentLocator.lookup(AckManager.class).ack(m_correlationId, this);
+			PlexusComponentLocator.lookup(AckManager.class).ack(m_token, this);
 		}
 	}
 
@@ -156,7 +156,7 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 	public String toString() {
 		return "BrokerConsumerMessage{" + "m_baseMsg=" + m_baseMsg + ", m_msgSeq=" + m_msgSeq + ", m_partition="
 		      + m_partition + ", m_priority=" + m_priority + ", m_resend=" + m_resend + ", m_groupId='" + m_groupId
-		      + '\'' + ", m_correlationId=" + m_correlationId + ", m_channel=" + m_channel + '}';
+		      + '\'' + ", token=" + m_token + ", m_channel=" + m_channel + '}';
 	}
 
 	@Override

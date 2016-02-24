@@ -66,17 +66,17 @@ public class DefaultAckManager implements AckManager {
 	private ConcurrentMap<Long, TpgAckHolder> m_ackHolders = new ConcurrentHashMap<>();
 
 	@Override
-	public void register(long correlationId, Tpg tpg, int maxAckHolderSize) {
+	public void register(long token, Tpg tpg, int maxAckHolderSize) {
 		if (m_started.compareAndSet(false, true)) {
 			startChecker();
 		}
 
-		m_ackHolders.putIfAbsent(correlationId, new TpgAckHolder(tpg, correlationId, maxAckHolderSize));
+		m_ackHolders.putIfAbsent(token, new TpgAckHolder(tpg, token, maxAckHolderSize));
 	}
 
 	@Override
-	public void ack(long correlationId, ConsumerMessage<?> msg) {
-		TpgAckHolder holder = findTpgAckHolder(msg.getTopic(), msg.getPartition(), correlationId);
+	public void ack(long token, ConsumerMessage<?> msg) {
+		TpgAckHolder holder = findTpgAckHolder(msg.getTopic(), msg.getPartition(), token);
 		if (holder != null) {
 			BaseConsumerMessage<?> bcm = msg instanceof BaseConsumerMessageAware ? ((BaseConsumerMessageAware<?>) msg)
 			      .getBaseConsumerMessage() : null;
@@ -89,8 +89,8 @@ public class DefaultAckManager implements AckManager {
 	}
 
 	@Override
-	public void nack(long correlationId, ConsumerMessage<?> msg) {
-		TpgAckHolder holder = findTpgAckHolder(msg.getTopic(), msg.getPartition(), correlationId);
+	public void nack(long token, ConsumerMessage<?> msg) {
+		TpgAckHolder holder = findTpgAckHolder(msg.getTopic(), msg.getPartition(), token);
 		if (holder != null) {
 			BaseConsumerMessage<?> bcm = msg instanceof BaseConsumerMessageAware ? ((BaseConsumerMessageAware<?>) msg)
 			      .getBaseConsumerMessage() : null;
@@ -103,16 +103,16 @@ public class DefaultAckManager implements AckManager {
 	}
 
 	@Override
-	public void delivered(long correlationId, ConsumerMessage<?> msg) {
-		TpgAckHolder holder = findTpgAckHolder(msg.getTopic(), msg.getPartition(), correlationId);
+	public void delivered(long token, ConsumerMessage<?> msg) {
+		TpgAckHolder holder = findTpgAckHolder(msg.getTopic(), msg.getPartition(), token);
 		if (holder != null) {
 			holder.offerOperation(new DeliveredOperation(msg.getOffset(), msg.isPriority(), msg.isResend(), msg
 			      .getRemainingRetries()));
 		}
 	}
 
-	private TpgAckHolder findTpgAckHolder(String topic, int partition, long correlationId) {
-		TpgAckHolder holder = m_ackHolders.get(correlationId);
+	private TpgAckHolder findTpgAckHolder(String topic, int partition, long token) {
+		TpgAckHolder holder = m_ackHolders.get(token);
 		if (holder == null) {
 			log.warn("TpgAckHolder not found(topic={}, partition={}).", topic, partition);
 			return null;
@@ -122,8 +122,8 @@ public class DefaultAckManager implements AckManager {
 	}
 
 	@Override
-	public void deregister(long correlationId) {
-		TpgAckHolder holder = m_ackHolders.get(correlationId);
+	public void deregister(long token) {
+		TpgAckHolder holder = m_ackHolders.get(token);
 
 		if (holder != null) {
 			holder.stop();
@@ -237,7 +237,7 @@ public class DefaultAckManager implements AckManager {
 						}
 					} else {
 						if (m_holder.isStopped()) {
-							m_ackHolders.remove(m_holder.getCorrelationId());
+							m_ackHolders.remove(m_holder.getToken());
 						}
 					}
 				} catch (Exception e) {
@@ -259,7 +259,7 @@ public class DefaultAckManager implements AckManager {
 
 		private int m_maxAckHolderSize;
 
-		private long m_correlationId;
+		private long m_token;
 
 		private AckHolder<AckContext> m_priorityAckHolder;
 
@@ -275,9 +275,9 @@ public class DefaultAckManager implements AckManager {
 
 		private AtomicBoolean m_flushing = new AtomicBoolean(false);
 
-		public TpgAckHolder(Tpg tpg, long correlationId, int maxAckHolderSize) {
+		public TpgAckHolder(Tpg tpg, long token, int maxAckHolderSize) {
 			m_tpg = tpg;
-			m_correlationId = correlationId;
+			m_token = token;
 			m_maxAckHolderSize = maxAckHolderSize;
 
 			m_priorityAckHolder = new DefaultAckHolder<>(m_tpg, m_maxAckHolderSize);
@@ -328,7 +328,6 @@ public class DefaultAckManager implements AckManager {
 			      || !resendScanningRes.getNacked().isEmpty()) {
 
 				cmd = new AckMessageCommandV3(m_tpg.getTopic(), m_tpg.getPartition(), m_tpg.getGroupId());
-				cmd.getHeader().setCorrelationId(m_correlationId);
 
 				// priority
 				for (AckContext ctx : priorityScanningRes.getAcked()) {
@@ -363,8 +362,8 @@ public class DefaultAckManager implements AckManager {
 			return cmd;
 		}
 
-		public long getCorrelationId() {
-			return m_correlationId;
+		public long getToken() {
+			return m_token;
 		}
 
 		private AckHolder<AckContext> findHolder(Operation op) {

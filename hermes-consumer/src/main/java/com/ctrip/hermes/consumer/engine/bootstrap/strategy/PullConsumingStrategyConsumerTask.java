@@ -21,23 +21,23 @@ public class PullConsumingStrategyConsumerTask extends BaseConsumerTask {
 		}
 
 		@Override
-		public void register(long correlationId, Tpg tpg, int maxAckHolderSize) {
+		public void register(long token, Tpg tpg, int maxAckHolderSize) {
 		}
 
 		@Override
-		public void ack(long correlationId, ConsumerMessage<?> msg) {
+		public void ack(long token, ConsumerMessage<?> msg) {
 		}
 
 		@Override
-		public void nack(long correlationId, ConsumerMessage<?> msg) {
+		public void nack(long token, ConsumerMessage<?> msg) {
 		}
 
 		@Override
-		public void delivered(long correlationId, ConsumerMessage<?> msg) {
+		public void delivered(long token, ConsumerMessage<?> msg) {
 		}
 
 		@Override
-		public void deregister(long correlationId) {
+		public void deregister(long token) {
 		}
 
 		@Override

@@ -157,19 +157,19 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 				if (!isClosed() && m_lease.get() != null && !m_lease.get().isExpired()) {
 
-					long correlationId = CorrelationIdGenerator.generateCorrelationId();
+					long token = CorrelationIdGenerator.generateCorrelationId();
 
 					log.info(
-					      "Consumer continue consuming(mode={}, topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease acquired",
+					      "Consumer continue consuming(mode={}, topic={}, partition={}, groupId={}, token={}, sessionId={}), since lease acquired",
 					      m_context.getConsumerType(), m_context.getTopic().getName(), m_partitionId,
-					      m_context.getGroupId(), correlationId, m_context.getSessionId());
+					      m_context.getGroupId(), token, m_context.getSessionId());
 
-					startConsuming(key, correlationId);
+					startConsuming(key, token);
 
 					log.info(
-					      "Consumer pause consuming(mode={}, topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease expired",
+					      "Consumer pause consuming(mode={}, topic={}, partition={}, groupId={}, token={}, sessionId={}), since lease expired",
 					      m_context.getConsumerType(), m_context.getTopic().getName(), m_partitionId,
-					      m_context.getGroupId(), correlationId, m_context.getSessionId());
+					      m_context.getGroupId(), token, m_context.getSessionId());
 				}
 			} catch (Exception e) {
 				log.error("Exception occurred in consumer's run method(topic={}, partition={}, groupId={}, sessionId={})",
@@ -192,11 +192,11 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		      m_context.getSessionId());
 	}
 
-	protected void startConsuming(ConsumerLeaseKey key, long correlationId) {
-		m_consumerNotifier.register(correlationId, m_context);
-		m_ackManager.register(correlationId,
-		      new Tpg(m_context.getTopic().getName(), m_partitionId, m_context.getGroupId()), m_maxAckHolderSize);
-		doBeforeConsuming(key, correlationId);
+	protected void startConsuming(ConsumerLeaseKey key, long token) {
+		m_consumerNotifier.register(token, m_context);
+		m_ackManager.register(token, new Tpg(m_context.getTopic().getName(), m_partitionId, m_context.getGroupId()),
+		      m_maxAckHolderSize);
+		doBeforeConsuming(key, token);
 
 		m_msgs.clear();
 
@@ -211,8 +211,8 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 					if (log.isDebugEnabled()) {
 						log.debug(
-						      "Consumer pre-pause(topic={}, partition={}, groupId={}, correlationId={}, sessionId={}), since lease will be expired soon",
-						      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), correlationId,
+						      "Consumer pre-pause(topic={}, partition={}, groupId={}, token={}, sessionId={}), since lease will be expired soon",
+						      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), token,
 						      m_context.getSessionId());
 					}
 					break;
@@ -223,7 +223,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				}
 
 				if (!m_msgs.isEmpty()) {
-					consumeMessages(correlationId);
+					consumeMessages(token);
 					noMessageSchedulePolicy.succeess();
 				} else {
 					noMessageSchedulePolicy.fail(true);
@@ -235,10 +235,10 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			}
 		}
 
-		m_consumerNotifier.deregister(correlationId);
-		m_ackManager.deregister(correlationId);
+		m_consumerNotifier.deregister(token);
+		m_ackManager.deregister(token);
 		m_lease.set(null);
-		doAfterConsuming(key, correlationId);
+		doAfterConsuming(key);
 	}
 
 	protected void schedulePullMessagesTask() {
@@ -251,21 +251,22 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		return m_pullMessagesTask.get();
 	}
 
-	protected Runnable createPullMessageTask(long correlationId, SchedulePolicy noEndpointSchedulePolicy) {
-		return new BasePullMessagesTask(correlationId, noEndpointSchedulePolicy);
+	protected Runnable createPullMessageTask(long token, SchedulePolicy noEndpointSchedulePolicy) {
+		return new BasePullMessagesTask(token, noEndpointSchedulePolicy);
 	}
 
-	protected void doBeforeConsuming(ConsumerLeaseKey key, long correlationId) {
-		queryLatestOffset(key, correlationId);
+	protected void doBeforeConsuming(ConsumerLeaseKey key, long token) {
+		queryLatestOffset(key);
 
 		SchedulePolicy noEndpointSchedulePolicy = new ExponentialSchedulePolicy(m_config.getNoEndpointWaitBaseMillis(),
 		      m_config.getNoEndpointWaitMaxMillis());
-		m_pullMessagesTask.set(createPullMessageTask(correlationId, noEndpointSchedulePolicy));
+		m_pullMessagesTask.set(createPullMessageTask(token, noEndpointSchedulePolicy));
 	}
 
-	protected void queryLatestOffset(ConsumerLeaseKey key, long correlationId) {
+	protected void queryLatestOffset(ConsumerLeaseKey key) {
 
-		SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(10, 100);
+		SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(m_config.getNoEndpointWaitBaseMillis(),
+		      m_config.getNoEndpointWaitMaxMillis());
 
 		while (!isClosed() && !Thread.currentThread().isInterrupted() && !m_lease.get().isExpired()) {
 
@@ -281,7 +282,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				QueryLatestConsumerOffsetCommandV3 cmd = new QueryLatestConsumerOffsetCommandV3(m_context.getTopic()
 				      .getName(), m_partitionId, m_context.getGroupId());
 
-				cmd.getHeader().setCorrelationId(correlationId);
 				cmd.setFuture(future);
 
 				QueryOffsetResultCommandV3 offsetRes = null;
@@ -331,7 +331,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		}
 	}
 
-	protected void doAfterConsuming(ConsumerLeaseKey key, long correlationId) {
+	protected void doAfterConsuming(ConsumerLeaseKey key) {
 		m_pullMessagesTask.set(null);
 		m_offset.set(null);
 	}
@@ -439,12 +439,12 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		}
 	}
 
-	protected void consumeMessages(long correlationId) {
+	protected void consumeMessages(long token) {
 		List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 
 		m_msgs.drainTo(msgs);
 
-		m_consumerNotifier.messageReceived(correlationId, msgs);
+		m_consumerNotifier.messageReceived(token, msgs);
 		ConsumerStatusMonitor.INSTANCE.messageProcessed(m_context.getTopic().getName(), m_partitionId,
 		      m_context.getGroupId(), msgs.size());
 	}
@@ -491,12 +491,12 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 	}
 
 	protected class BasePullMessagesTask implements Runnable {
-		protected long m_correlationId;
+		protected long m_token;
 
 		protected SchedulePolicy m_noEndpointSchedulePolicy;
 
-		public BasePullMessagesTask(long correlationId, SchedulePolicy noEndpointSchedulePolicy) {
-			m_correlationId = correlationId;
+		public BasePullMessagesTask(long token, SchedulePolicy noEndpointSchedulePolicy) {
+			m_token = token;
 			m_noEndpointSchedulePolicy = noEndpointSchedulePolicy;
 		}
 
@@ -541,7 +541,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 			PullMessageCommandV3 cmd = createPullMessageCommand(timeout);
 
-			cmd.getHeader().setCorrelationId(m_correlationId);
 			cmd.setFuture(future);
 
 			PullMessageResultCommandV3 ack = null;
@@ -604,14 +603,14 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		protected void appendToMsgQueue(PullMessageResultCommandV3 ack) {
 			List<TppConsumerMessageBatch> batches = ack.getBatches();
 			if (batches != null && !batches.isEmpty()) {
-				ConsumerContext context = m_consumerNotifier.find(m_correlationId);
+				ConsumerContext context = m_consumerNotifier.find(m_token);
 				if (context != null) {
 					Class<?> bodyClazz = context.getMessageClazz();
 
 					List<ConsumerMessage<?>> msgs = decodeBatches(batches, bodyClazz);
 
 					for (ConsumerMessage<?> msg : msgs) {
-						m_ackManager.delivered(m_correlationId, msg);
+						m_ackManager.delivered(m_token, msg);
 					}
 
 					m_msgs.addAll(msgs);

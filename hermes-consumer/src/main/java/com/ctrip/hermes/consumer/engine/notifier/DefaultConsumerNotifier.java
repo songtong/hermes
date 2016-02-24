@@ -48,11 +48,11 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 	private SystemClockService m_systemClockService;
 
 	@Override
-	public void register(long correlationId, final ConsumerContext context) {
+	public void register(long token, final ConsumerContext context) {
 		try {
 			if (log.isDebugEnabled()) {
-				log.debug("Registered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId, context
-				      .getTopic().getName(), context.getGroupId(), context.getSessionId());
+				log.debug("Registered(token={}, topic={}, groupId={}, sessionId={})", token, context.getTopic().getName(),
+				      context.getGroupId(), context.getSessionId());
 			}
 
 			int threadCount = m_config.getNotifierThreadCount(context.getTopic().getName());
@@ -75,30 +75,29 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 				}
 			}
 
-			m_consumerContexs.putIfAbsent(correlationId,
-			      new Triple<ConsumerContext, NotifyStrategy, ExecutorService>(context, notifyStrategy,
-			            createNotifierExecutor(context, threadCount, notifierWorkQueueSize, correlationId)));
+			m_consumerContexs.putIfAbsent(token, new Triple<ConsumerContext, NotifyStrategy, ExecutorService>(context,
+			      notifyStrategy, createNotifierExecutor(context, threadCount, notifierWorkQueueSize, token)));
 		} catch (Exception e) {
 			throw new RuntimeException("Register consumer notifier failed", e);
 		}
 	}
 
 	@Override
-	public void deregister(long correlationId) {
+	public void deregister(long token) {
 
-		Triple<ConsumerContext, NotifyStrategy, ExecutorService> triple = m_consumerContexs.remove(correlationId);
+		Triple<ConsumerContext, NotifyStrategy, ExecutorService> triple = m_consumerContexs.remove(token);
 		ConsumerContext context = triple.getFirst();
 		if (log.isDebugEnabled()) {
-			log.debug("Deregistered(correlationId={}, topic={}, groupId={}, sessionId={})", correlationId, context
-			      .getTopic().getName(), context.getGroupId(), context.getSessionId());
+			log.debug("Deregistered(token={}, topic={}, groupId={}, sessionId={})", token, context.getTopic().getName(),
+			      context.getGroupId(), context.getSessionId());
 		}
 		triple.getLast().shutdown();
 		return;
 	}
 
 	@Override
-	public void messageReceived(final long correlationId, final List<ConsumerMessage<?>> msgs) {
-		Triple<ConsumerContext, NotifyStrategy, ExecutorService> triple = m_consumerContexs.get(correlationId);
+	public void messageReceived(final long token, final List<ConsumerMessage<?>> msgs) {
+		Triple<ConsumerContext, NotifyStrategy, ExecutorService> triple = m_consumerContexs.get(token);
 		final ConsumerContext context = triple.getFirst();
 		final NotifyStrategy notifyStrategy = triple.getMiddle();
 		final ExecutorService executorService = triple.getLast();
@@ -113,7 +112,7 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 					for (ConsumerMessage<?> msg : msgs) {
 						if (msg instanceof BrokerConsumerMessage) {
 							BrokerConsumerMessage bmsg = (BrokerConsumerMessage) msg;
-							bmsg.setCorrelationId(correlationId);
+							bmsg.setToken(token);
 							bmsg.setGroupId(context.getGroupId());
 						}
 					}
@@ -123,8 +122,8 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 				} catch (Exception e) {
 					log.error(
 
-					      "Exception occurred while calling messageReceived(correlationId={}, topic={}, groupId={}, sessionId={})",
-					      correlationId, context.getTopic().getName(), context.getGroupId(), context.getSessionId(), e);
+					"Exception occurred while calling messageReceived(token={}, topic={}, groupId={}, sessionId={})", token,
+					      context.getTopic().getName(), context.getGroupId(), context.getSessionId(), e);
 				}
 			}
 		});
@@ -132,21 +131,22 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 	}
 
 	@Override
-	public ConsumerContext find(long correlationId) {
-		Triple<ConsumerContext, NotifyStrategy, ExecutorService> triple = m_consumerContexs.get(correlationId);
+	public ConsumerContext find(long token) {
+		Triple<ConsumerContext, NotifyStrategy, ExecutorService> triple = m_consumerContexs.get(token);
 		return triple == null ? null : triple.getFirst();
 	}
 
 	private ExecutorService createNotifierExecutor(ConsumerContext context, int threadCount, int notifierWorkQueueSize,
-	      long correlationId) {
+	      long token) {
 		return new ThreadPoolExecutor(threadCount, //
 		      threadCount,//
 		      0L, //
 		      TimeUnit.MILLISECONDS,//
 
 		      new LinkedBlockingQueue<Runnable>(notifierWorkQueueSize), //
-		      HermesThreadFactory.create(String.format("ConsumerNotifier-%s-%s-%s", context.getTopic().getName(),
-		            context.getGroupId(), correlationId), false), //
+		      HermesThreadFactory.create(
+		            String.format("ConsumerNotifier-%s-%s-%s", context.getTopic().getName(), context.getGroupId(), token),
+		            false), //
 		      new BlockUntilSubmittedPolicy());
 	}
 

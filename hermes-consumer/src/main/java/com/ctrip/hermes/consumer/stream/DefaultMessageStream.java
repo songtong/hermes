@@ -32,7 +32,6 @@ import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.Command;
-import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.core.transport.command.v2.AbstractPullMessageCommand;
 import com.ctrip.hermes.core.transport.command.v2.PullSpecificMessageCommand;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
@@ -241,7 +240,6 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 
 				long expireTime = m_systemClockService.now() + m_config.getPullMessageTimeoutMills();
 				PullSpecificMessageCommand cmd = new PullSpecificMessageCommand(m_topic, m_partitionId, cmdOffs, expireTime);
-				cmd.getHeader().setCorrelationId(CorrelationIdGenerator.generateCorrelationId());
 				cmd.setFuture(future);
 
 				return cmd;
@@ -263,7 +261,6 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 				Offset off = new Offset(offset.getPriorityOffset() - 1, offset.getNonPriorityOffset() - 1, null);
 				PullMessageCommandV3 cmd = new PullMessageCommandV3(m_topic, m_partitionId, m_groupId, off, size,
 				      expireTime);
-				cmd.getHeader().setCorrelationId(CorrelationIdGenerator.generateCorrelationId());
 				cmd.setFuture(future);
 				return cmd;
 			}
