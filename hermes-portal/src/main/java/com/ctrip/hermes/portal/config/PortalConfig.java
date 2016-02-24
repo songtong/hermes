@@ -60,6 +60,10 @@ public class PortalConfig {
 	public String getPortalFwsUrl() {
 		return m_env.getGlobalConfig().getProperty("portal.application.url", "hermes.fws.qa.nt.ctripcorp.com");
 	}
+	
+	public String getPortalToolsUrl(){
+		return m_env.getGlobalConfig().getProperty("portal.tools.host", "hermes.fx.tools.ctripcorp.com:8080");
+	}
 
 	public String getHermesEmailGroupAddress() {
 		return m_env.getGlobalConfig().getProperty("hermes.emailgroup.address", "Rdkjmes@Ctrip.com");
@@ -69,10 +73,6 @@ public class PortalConfig {
 		return m_env.getGlobalConfig().getProperty("hermes.emailtemplates.dir", "/templates");
 	}
 	
-	public String getApplicationEmailTemplate(){
-		return m_env.getGlobalConfig().getProperty("hermes.applicationemail.template", "applicationMailTemplate.html");
-	}
-
 	public List<Pair<String, Integer>> getElasticClusterNodes() {
 		String defaultHost = "localhost";
 		Integer defaultPort = 9300;

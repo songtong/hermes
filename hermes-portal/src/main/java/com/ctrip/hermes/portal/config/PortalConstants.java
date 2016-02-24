@@ -25,4 +25,12 @@ public class PortalConstants {
 
 	public static final int CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS = 5000;
 
+	public static final String APP_EMAIL_TEMPLATE_CREATE_TOPIC_FOR_PROPOSER = "createTopicApplicationMailTemplateForProposer.html";
+
+	public static final String APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_PROPOSER = "createConsumerApplicationMailTemplateForProposer.html";
+
+	public static final String APP_EMAIL_TEMPLATE_CREATE_TOPIC_FOR_HERMES = "createTopicApplicationMailTemplateForHermes.html";
+
+	public static final String APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_HERMES = "createConsumerApplicationMailTemplateForHermes.html";
+
 }

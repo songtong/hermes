@@ -1,9 +1,13 @@
 application_module.controller('app-topic-controller', [ '$scope', 'ApplicationService', '$location', function($scope, ApplicationService, $location) {
 	console.log("app-topic-controller");
+	console.log(ssoUser);
+	console.log(ssoMail);
 	$scope.new_application = {
 		storageType : 'mysql',
 		codecType : 'json',
-		languageType : 'java'
+		languageType : 'java',
+		ownerName1 : ssoUser,
+		ownerEmail1Prefix : ssoMail.split('@')[0]
 	};
 	$scope.productLines = ApplicationService.get_productLines();
 	$scope.getFilteredProductLine = function(val) {
@@ -18,18 +22,6 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 	$scope.storageTypes = [ 'mysql', 'kafka' ];
 	$scope.codecTypes = [ 'json', 'avro' ];
 	$scope.languageTypes = [ 'java', '.net' ];
-	$scope.example_request = {
-		productLine : 'fx',
-		entity : 'topic',
-		event : 'created',
-		codecType : 'json',
-		maxMsgNumPerDay : 1000000,
-		retentionDays : 7,
-		size : 1,
-		ownerName : '顾庆',
-		ownerEmail : 'q_gu@ctrip.com',
-		description : 'topic创建'
-	}
 	$scope.create_topic_application = function(new_app) {
 		bootbox.confirm({
 			title : "请确认",

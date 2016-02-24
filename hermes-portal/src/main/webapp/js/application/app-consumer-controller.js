@@ -10,6 +10,10 @@ application_module.controller('app-consumer-controller', [ '$scope', 'Applicatio
 		}
 		return result;
 	};
+	$scope.new_application = {
+		ownerName1 : ssoUser,
+		ownerEmail1Prefix : ssoMail.split('@')[0]
+	};
 	ApplicationService.get_topic_names().then(function(result) {
 		var result = new Bloodhound({
 			local : result,

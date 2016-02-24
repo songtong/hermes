@@ -99,6 +99,12 @@
 					<role>com.ctrip.hermes.mail.MailService</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.portal.config.PortalConfig</role>
 				</requirement>
 			</requirements>
