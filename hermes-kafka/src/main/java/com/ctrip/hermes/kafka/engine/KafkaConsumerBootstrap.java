@@ -60,7 +60,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 	private Map<ConsumerContext, KafkaConsumerThread> consumers = new HashMap<ConsumerContext, KafkaConsumerThread>();
 
-	private Map<ConsumerContext, Long> correlationIds = new HashMap<ConsumerContext, Long>();
+	private Map<ConsumerContext, Long> tokens = new HashMap<ConsumerContext, Long>();
 
 	@Override
 	protected SubscribeHandle doStart(final ConsumerContext consumerContext) {
@@ -70,13 +70,13 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 		KafkaConsumer<String, byte[]> consumer = new KafkaConsumer<String, byte[]>(prop);
 
-		long correlationId = CorrelationIdGenerator.generateCorrelationId();
-		m_consumerNotifier.register(correlationId, consumerContext);
-		KafkaConsumerThread consumerThread = new KafkaConsumerThread(consumer, consumerContext, correlationId);
+		long token = CorrelationIdGenerator.generateCorrelationId();
+		m_consumerNotifier.register(token, consumerContext);
+		KafkaConsumerThread consumerThread = new KafkaConsumerThread(consumer, consumerContext, token);
 		m_executor.submit(consumerThread);
 
 		consumers.put(consumerContext, consumerThread);
-		correlationIds.put(consumerContext, correlationId);
+		tokens.put(consumerContext, token);
 
 		return new SubscribeHandle() {
 
@@ -92,8 +92,8 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 		KafkaConsumerThread consumerThread = consumers.remove(consumerContext);
 		consumerThread.shutdown();
 
-		Long correlationId = correlationIds.remove(consumerContext);
-		m_consumerNotifier.deregister(correlationId);
+		Long token = tokens.remove(consumerContext);
+		m_consumerNotifier.deregister(token);
 
 		super.doStop(consumerContext);
 	}
@@ -106,13 +106,13 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 		private ConsumerContext consumerContext;
 
-		private long correlationId;
+		private long token;
 
 		public KafkaConsumerThread(KafkaConsumer<String, byte[]> consumer, ConsumerContext consumerContext,
-		      long correlationId) {
+		      long token) {
 			this.consumer = consumer;
 			this.consumerContext = consumerContext;
-			this.correlationId = correlationId;
+			this.token = token;
 		}
 
 		@Override
@@ -136,7 +136,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 							      consumerRecord.offset());
 							List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>(1);
 							msgs.add(kafkaMsg);
-							m_consumerNotifier.messageReceived(correlationId, msgs);
+							m_consumerNotifier.messageReceived(token, msgs);
 						} catch (Exception e) {
 							m_logger.warn(
 							      "Kafka consumer failed Topic:{} Partition:{} Offset:{} Group:{} SesssionId:{} Exception:{}",

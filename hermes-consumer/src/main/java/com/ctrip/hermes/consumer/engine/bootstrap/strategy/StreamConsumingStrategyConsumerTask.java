@@ -19,7 +19,7 @@ public class StreamConsumingStrategyConsumerTask extends StrictlyOrderedConsumin
 	}
 
 	@Override
-	protected void queryLatestOffset(ConsumerLeaseKey key, long correlationId) {
+	protected void queryLatestOffset(ConsumerLeaseKey key) {
 		SchedulePolicy queryOffsetSchedulePolicy = new ExponentialSchedulePolicy(
 		      (int) m_config.getQueryOffsetTimeoutMillis() / 5, (int) m_config.getQueryOffsetTimeoutMillis());
 

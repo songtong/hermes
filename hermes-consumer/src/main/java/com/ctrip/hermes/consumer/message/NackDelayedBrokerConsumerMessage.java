@@ -63,12 +63,12 @@ public class NackDelayedBrokerConsumerMessage<T> implements ConsumerMessage<T>, 
 		m_brokerMsg.setGroupId(groupId);
 	}
 
-	public long getCorrelationId() {
-		return m_brokerMsg.getCorrelationId();
+	public long getToken() {
+		return m_brokerMsg.getToken();
 	}
 
-	public void setCorrelationId(long correlationId) {
-		m_brokerMsg.setCorrelationId(correlationId);
+	public void setToken(long token) {
+		m_brokerMsg.setToken(token);
 	}
 
 	public void setChannel(Channel channel) {

@@ -9,15 +9,15 @@ import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
  *
  */
 public interface AckManager {
-	public void register(long correlationId, Tpg tpg, int maxAckHolderSize);
+	public void register(long token, Tpg tpg, int maxAckHolderSize);
 
-	public void ack(long correlationId, ConsumerMessage<?> msg);
+	public void ack(long token, ConsumerMessage<?> msg);
 
-	public void nack(long correlationId, ConsumerMessage<?> msg);
+	public void nack(long token, ConsumerMessage<?> msg);
 
-	public void delivered(long correlationId, ConsumerMessage<?> msg);
+	public void delivered(long token, ConsumerMessage<?> msg);
 
-	public void deregister(long correlationId);
+	public void deregister(long token);
 
 	boolean writeAckToBroker(AckMessageCommandV3 cmd);
 }

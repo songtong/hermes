@@ -29,7 +29,6 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
-import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.core.transport.command.QueryMessageOffsetByTimeCommand;
 import com.ctrip.hermes.core.transport.command.QueryOffsetResultCommand;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
@@ -155,7 +154,6 @@ public class MessageAssistResource {
 		while (!Thread.interrupted() && System.currentTimeMillis() < expire) {
 			SettableFuture<QueryOffsetResultCommand> future = SettableFuture.create();
 			QueryMessageOffsetByTimeCommand cmd = new QueryMessageOffsetByTimeCommand(topic, partition, time);
-			cmd.getHeader().setCorrelationId(CorrelationIdGenerator.generateCorrelationId());
 			cmd.setFuture(future);
 
 			m_monitor.monitor(cmd);

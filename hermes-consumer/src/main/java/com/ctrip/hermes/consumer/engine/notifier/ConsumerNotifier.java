@@ -11,12 +11,12 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
  */
 public interface ConsumerNotifier {
 
-	void register(long correlationId, ConsumerContext consumerContext);
+	void register(long token, ConsumerContext consumerContext);
 
-	void deregister(long correlationId);
+	void deregister(long token);
 
-	void messageReceived(long correlationId, List<ConsumerMessage<?>> msgs);
+	void messageReceived(long token, List<ConsumerMessage<?>> msgs);
 
-	ConsumerContext find(long correlationId);
+	ConsumerContext find(long token);
 
 }
