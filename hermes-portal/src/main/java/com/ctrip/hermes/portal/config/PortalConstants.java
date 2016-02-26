@@ -29,8 +29,8 @@ public class PortalConstants {
 
 	public static final String APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_PROPOSER = "createConsumerApplicationMailTemplateForProposer.html";
 
-	public static final String APP_EMAIL_TEMPLATE_CREATE_TOPIC_FOR_HERMES = "createTopicApplicationMailTemplateForHermes.html";
+	public static final String APP_EMAIL_TEMPLATE_CREATE_TOPIC_FOR_ADMIN = "createTopicApplicationMailTemplateForAdmin.html";
 
-	public static final String APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_HERMES = "createConsumerApplicationMailTemplateForHermes.html";
+	public static final String APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_ADMIN = "createConsumerApplicationMailTemplateForAdmin.html";
 
 }

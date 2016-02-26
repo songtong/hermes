@@ -1,13 +1,7 @@
 package com.ctrip.hermes.portal.service.application;
 
-import java.io.File;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -16,8 +10,6 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.mail.HermesMail;
-import com.ctrip.hermes.mail.MailService;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
@@ -31,10 +23,7 @@ import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.dal.application.Application;
 import com.ctrip.hermes.portal.dal.application.HermesApplicationDao;
-
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateExceptionHandler;
+import com.ctrip.hermes.portal.service.mail.PortalMailService;
 
 @Named(type = ApplicationService.class)
 public class DefaultApplicationService implements ApplicationService {
@@ -44,7 +33,7 @@ public class DefaultApplicationService implements ApplicationService {
 	private HermesApplicationDao m_dao;
 
 	@Inject
-	private MailService m_mailService;
+	private PortalMailService m_mailService;
 
 	@Inject
 	private TopicService m_topicService;
@@ -67,10 +56,7 @@ public class DefaultApplicationService implements ApplicationService {
 		}
 
 		try {
-			HermesMail mailToProposer = generateApplicationEmailForProposer(dbApp);
-			HermesMail mailToHermes = generateApplicationEmailForHermes(dbApp);
-			m_mailService.sendEmail(mailToProposer);
-			m_mailService.sendEmail(mailToHermes);
+			m_mailService.sendApplicationMail(dbApp);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
 		}
@@ -186,10 +172,7 @@ public class DefaultApplicationService implements ApplicationService {
 			return null;
 		}
 		try {
-			HermesMail mailToProposer = generateApplicationEmailForProposer(dbApp);
-			HermesMail mailToHermes = generateApplicationEmailForHermes(dbApp);
-			m_mailService.sendEmail(mailToProposer);
-			m_mailService.sendEmail(mailToHermes);
+			m_mailService.sendApplicationMail(dbApp);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
 		}
@@ -211,238 +194,11 @@ public class DefaultApplicationService implements ApplicationService {
 			return null;
 		}
 		try {
-			HermesMail mailToProposer = generateApplicationEmailForProposer(dbApp);
-			HermesMail mailToHermes = generateApplicationEmailForHermes(dbApp);
-			m_mailService.sendEmail(mailToProposer);
-			m_mailService.sendEmail(mailToHermes);
+			m_mailService.sendApplicationMail(dbApp);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
 		}
 		return HermesApplication.parse(dbApp);
-	}
-
-	private String getApplicationEmailTitle(int status) {
-		String title;
-		switch (status) {
-		case PortalConstants.APP_STATUS_PROCESSING:
-			title = "Hermes申请单处理中";
-			break;
-		case PortalConstants.APP_STATUS_SUCCESS:
-			title = "Hermes申请单已生效";
-			break;
-		case PortalConstants.APP_STATUS_REJECTED:
-			title = "Hermes申请单已被拒绝";
-			break;
-		default:
-			title = "Hermes申请单状态改变";
-			break;
-		}
-		return title;
-	}
-
-	private HermesMail generateApplicationEmailForProposer(Application app) throws Exception {
-		String title = getApplicationEmailTitle(app.getStatus());
-		String approver = app.getOwner1() + "," + app.getOwner2();
-		String content = generateMailContentForProposer(app);
-		HermesMail mail = new HermesMail(title, content, approver);
-		return mail;
-	}
-
-	private HermesMail generateApplicationEmailForHermes(Application app) throws Exception {
-		String title = getApplicationEmailTitle(app.getStatus());
-		String approver = m_config.getHermesEmailGroupAddress();
-		String content = generateMailContentForHermes(app);
-		HermesMail mail = new HermesMail(title, content, approver);
-		return mail;
-	}
-
-	private String generateMailContentForProposer(Application app) throws Exception {
-		String content = null;
-		switch (app.getType()) {
-		case PortalConstants.APP_TYPE_CREATE_TOPIC:
-			content = generateCreateTopicMailTemplateForProposer(app);
-			break;
-		case PortalConstants.APP_TYPE_CREATE_CONSUMER:
-			content = generateCreateConsumerMailTemplateForProposer(app);
-			break;
-		default:
-			break;
-		}
-		return content;
-	}
-
-	private String generateMailContentForHermes(Application app) throws Exception {
-		String content = null;
-		switch (app.getType()) {
-		case PortalConstants.APP_TYPE_CREATE_TOPIC:
-			content = generateCreateTopicMailTemplateForHermes(app);
-			break;
-		case PortalConstants.APP_TYPE_CREATE_CONSUMER:
-			content = generateCreateConsumerMailTemplateForHermes(app);
-			break;
-		default:
-			break;
-		}
-		return content;
-	}
-
-	private String generateCreateTopicMailTemplateForProposer(Application app) throws Exception {
-		TopicApplication topicApplication = (TopicApplication) HermesApplication.parse(app);
-		String content = null;
-		Map<String, Object> mailContent = new HashMap<>();
-		Configuration cfg = new Configuration(Configuration.VERSION_2_3_22);
-		cfg.setDirectoryForTemplateLoading(new File(getClass().getResource(m_config.getEmailTemplateDir()).toURI()));
-		cfg.setDefaultEncoding("UTF-8");
-		cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-		Template temp = cfg.getTemplate(PortalConstants.APP_EMAIL_TEMPLATE_CREATE_TOPIC_FOR_PROPOSER);
-
-		mailContent.put("createTime",
-				new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(topicApplication.getCreateTime()));
-		mailContent.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsUrl(),
-				"console/application#/review", topicApplication.getId()));
-		mailContent.put("app", topicApplication);
-		mailContent.put("status", getApplicationStatusString(topicApplication.getStatus()));
-		if (PortalConstants.APP_STATUS_REJECTED == topicApplication.getStatus())
-			mailContent.put("rejectReason", topicApplication.getComment());
-		if (PortalConstants.APP_STATUS_SUCCESS == topicApplication.getStatus()) {
-			TopicView topic = m_topicService.findTopicViewByName(topicApplication.getProductLine() + "."
-					+ topicApplication.getEntity() + "." + topicApplication.getEvent());
-			mailContent.put("topic", topic);
-			mailContent.put("fwsTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalFwsUrl(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-			mailContent.put("uatTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalUatHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-			mailContent.put("prodTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalProdHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-		}
-
-		Writer out = new StringWriter();
-		temp.process(mailContent, out);
-		content = out.toString();
-
-		return content;
-	}
-
-	private String generateCreateConsumerMailTemplateForProposer(Application app) throws Exception {
-		String content = null;
-		ConsumerApplication consumerApplication = (ConsumerApplication) HermesApplication.parse(app);
-		Map<String, Object> mailContent = new HashMap<>();
-		Configuration cfg = new Configuration(Configuration.VERSION_2_3_22);
-		cfg.setDirectoryForTemplateLoading(new File(getClass().getResource(m_config.getEmailTemplateDir()).toURI()));
-		cfg.setDefaultEncoding("UTF-8");
-		cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-		Template temp = cfg.getTemplate(PortalConstants.APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_PROPOSER);
-
-		mailContent.put("createTime",
-				new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(consumerApplication.getCreateTime()));
-		mailContent.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsUrl(),
-				"console/application#/review", consumerApplication.getId()));
-		mailContent.put("app", consumerApplication);
-		mailContent.put("status", getApplicationStatusString(consumerApplication.getStatus()));
-		if (PortalConstants.APP_STATUS_REJECTED == consumerApplication.getStatus())
-			mailContent.put("rejectReason", consumerApplication.getComment());
-		if (PortalConstants.APP_STATUS_SUCCESS == consumerApplication.getStatus()) {
-			TopicView topic = m_topicService.findTopicViewByName(consumerApplication.getTopicName());
-			ConsumerGroupView consumer = m_consumerService.findConsumerView(topic.getId(),
-					consumerApplication.getProductLine() + "." + consumerApplication.getProduct() + "."
-							+ consumerApplication.getProject());
-			mailContent.put("consumer", consumer);
-		}
-
-		Writer out = new StringWriter();
-		temp.process(mailContent, out);
-		content = out.toString();
-
-		return content;
-	}
-
-	private String generateCreateTopicMailTemplateForHermes(Application app) throws Exception {
-		TopicApplication topicApplication = (TopicApplication) HermesApplication.parse(app);
-		String content = null;
-		Map<String, Object> mailContent = new HashMap<>();
-		Configuration cfg = new Configuration(Configuration.VERSION_2_3_22);
-		cfg.setDirectoryForTemplateLoading(new File(getClass().getResource(m_config.getEmailTemplateDir()).toURI()));
-		cfg.setDefaultEncoding("UTF-8");
-		cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-		Template temp = cfg.getTemplate(PortalConstants.APP_EMAIL_TEMPLATE_CREATE_TOPIC_FOR_HERMES);
-
-		mailContent.put("createTime",
-				new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(topicApplication.getCreateTime()));
-		mailContent.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsUrl(),
-				"console/application#/approval", topicApplication.getId()));
-		mailContent.put("app", topicApplication);
-		mailContent.put("status", getApplicationStatusString(topicApplication.getStatus()));
-		if (PortalConstants.APP_STATUS_REJECTED == topicApplication.getStatus())
-			mailContent.put("rejectReason", topicApplication.getComment());
-		if (PortalConstants.APP_STATUS_SUCCESS == topicApplication.getStatus()) {
-			TopicView topic = m_topicService.findTopicViewByName(topicApplication.getProductLine() + "."
-					+ topicApplication.getEntity() + "." + topicApplication.getEvent());
-			mailContent.put("topic", topic);
-			mailContent.put("fwsTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalFwsUrl(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-			mailContent.put("uatTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalUatHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-			mailContent.put("prodTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalProdHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-		}
-
-		Writer out = new StringWriter();
-		temp.process(mailContent, out);
-		content = out.toString();
-
-		return content;
-	}
-
-	private String generateCreateConsumerMailTemplateForHermes(Application app) throws Exception {
-		String content = null;
-		ConsumerApplication consumerApplication = (ConsumerApplication) HermesApplication.parse(app);
-		Map<String, Object> mailContent = new HashMap<>();
-		Configuration cfg = new Configuration(Configuration.VERSION_2_3_22);
-		cfg.setDirectoryForTemplateLoading(new File(getClass().getResource(m_config.getEmailTemplateDir()).toURI()));
-		cfg.setDefaultEncoding("UTF-8");
-		cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-		Template temp = cfg.getTemplate(PortalConstants.APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_HERMES);
-
-		mailContent.put("createTime",
-				new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(consumerApplication.getCreateTime()));
-		mailContent.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsUrl(),
-				"console/application#/approval", consumerApplication.getId()));
-		mailContent.put("app", consumerApplication);
-		mailContent.put("status", getApplicationStatusString(consumerApplication.getStatus()));
-		if (PortalConstants.APP_STATUS_REJECTED == consumerApplication.getStatus())
-			mailContent.put("rejectReason", consumerApplication.getComment());
-		if (PortalConstants.APP_STATUS_SUCCESS == consumerApplication.getStatus()) {
-			TopicView topic = m_topicService.findTopicViewByName(consumerApplication.getTopicName());
-			ConsumerGroupView consumer = m_consumerService.findConsumerView(topic.getId(),
-					consumerApplication.getProductLine() + "." + consumerApplication.getProduct() + "."
-							+ consumerApplication.getProject());
-			mailContent.put("consumer", consumer);
-		}
-
-		Writer out = new StringWriter();
-		temp.process(mailContent, out);
-		content = out.toString();
-
-		return content;
-	}
-
-	private String getApplicationStatusString(int status) {
-		String statusString;
-		switch (status) {
-		case PortalConstants.APP_STATUS_PROCESSING:
-			statusString = "进入处理流程";
-			break;
-		case PortalConstants.APP_STATUS_SUCCESS:
-			statusString = "生效";
-			break;
-		case PortalConstants.APP_STATUS_REJECTED:
-			statusString = "被拒绝";
-			break;
-		default:
-			statusString = "改变";
-			break;
-		}
-		return statusString;
 	}
 
 	@Override
@@ -457,10 +213,7 @@ public class DefaultApplicationService implements ApplicationService {
 			return null;
 		}
 		try {
-			HermesMail mailToProposer = generateApplicationEmailForProposer(dbApp);
-			HermesMail mailToHermes = generateApplicationEmailForHermes(dbApp);
-			m_mailService.sendEmail(mailToProposer);
-			m_mailService.sendEmail(mailToHermes);
+			m_mailService.sendApplicationMail(dbApp);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
 		}

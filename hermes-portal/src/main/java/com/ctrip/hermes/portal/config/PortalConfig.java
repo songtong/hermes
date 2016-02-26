@@ -34,21 +34,13 @@ public class PortalConfig {
 		}
 		return host;
 	}
-	
-	public String getPortalUatHost(){
-		String host = m_env.getGlobalConfig().getProperty("portal.uat.host");
-		if (StringUtils.isBlank(host) && Env.LOCAL.equals(m_env.getEnv())) {
-			return "127.0.0.1";
-		}
-		return host;
+
+	public String getPortalUatHost() {
+		return m_env.getGlobalConfig().getProperty("portal.uat.host", "hermes.fx.uat.qa.nt.ctripcorp.com");
 	}
-	
-	public String getPortalProdHost(){
-		String host = m_env.getGlobalConfig().getProperty("portal.prod.host");
-		if (StringUtils.isBlank(host) && Env.LOCAL.equals(m_env.getEnv())) {
-			return "127.0.0.1";
-		}
-		return host;
+
+	public String getPortalProdHost() {
+		return m_env.getGlobalConfig().getProperty("portal.prod.host", "hermes.fx.ctripcorp.com");
 	}
 
 	public Pair<String, String> getAccount() {
@@ -57,11 +49,11 @@ public class PortalConfig {
 		return new Pair<String, String>(username, password);
 	}
 
-	public String getPortalFwsUrl() {
-		return m_env.getGlobalConfig().getProperty("portal.application.url", "hermes.fws.qa.nt.ctripcorp.com");
+	public String getPortalFwsHost() {
+		return m_env.getGlobalConfig().getProperty("portal.fws.host", "hermes.fws.qa.nt.ctripcorp.com");
 	}
-	
-	public String getPortalToolsUrl(){
+
+	public String getPortalToolsHost() {
 		return m_env.getGlobalConfig().getProperty("portal.tools.host", "hermes.fx.tools.ctripcorp.com:8080");
 	}
 
@@ -72,7 +64,7 @@ public class PortalConfig {
 	public String getEmailTemplateDir() {
 		return m_env.getGlobalConfig().getProperty("hermes.emailtemplates.dir", "/templates");
 	}
-	
+
 	public List<Pair<String, Integer>> getElasticClusterNodes() {
 		String defaultHost = "localhost";
 		Integer defaultPort = 9300;
