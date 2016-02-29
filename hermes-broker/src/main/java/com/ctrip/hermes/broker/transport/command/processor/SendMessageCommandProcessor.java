@@ -28,7 +28,6 @@ import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.processor.SingleThreaded;
 import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -43,7 +42,6 @@ import com.google.common.util.concurrent.ListenableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@SingleThreaded
 public class SendMessageCommandProcessor implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessor.class);
 
