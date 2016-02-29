@@ -107,10 +107,19 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 		while (!m_pendingMessages.isEmpty()) {
 			if (m_pendingMessages.peek().getExpireTime() < now) {
-				m_pendingMessages.poll();
+				purgeExpiredMsg();
 			} else {
 				break;
 			}
+		}
+	}
+
+	private void purgeExpiredMsg() {
+		PendingMessageWrapper messageWrapper = m_pendingMessages.poll();
+		if (messageWrapper != null && messageWrapper.getBatch() != null) {
+			Map<Integer, Boolean> result = new HashMap<>();
+			addResults(result, messageWrapper.getBatch().getMsgSeqs(), false);
+			messageWrapper.getFuture().set(result);
 		}
 	}
 
