@@ -43,7 +43,6 @@ import com.google.common.util.concurrent.ListenableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@SingleThreaded
 public class SendMessageCommandProcessorV3 implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessorV3.class);
 
