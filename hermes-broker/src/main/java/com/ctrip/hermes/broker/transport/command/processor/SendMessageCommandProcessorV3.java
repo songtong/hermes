@@ -1,6 +1,7 @@
 package com.ctrip.hermes.broker.transport.command.processor;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -156,7 +157,7 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 					event.addData("partition", partition);
 					event.addData("priority", entry.getKey());
 					event.addData("producerIp", ctx.getRemoteIp());
-					event.addData("bornTime", msg.getBornTime());
+					event.addData("bornTime", new Date(msg.getBornTime()));
 					event.addData("refKey", msg.getKey());
 
 					m_bizLogger.log(event);

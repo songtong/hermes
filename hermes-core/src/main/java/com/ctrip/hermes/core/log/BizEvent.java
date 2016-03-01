@@ -1,5 +1,6 @@
 package com.ctrip.hermes.core.log;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,16 +8,16 @@ public class BizEvent {
 
 	private String m_eventType;
 
-	private long m_eventTime;
+	private Date m_eventTime;
 
 	private Map<String, Object> m_datas = new HashMap<String, Object>();
 
 	public BizEvent(String eventType) {
 		m_eventType = eventType;
-		m_eventTime = System.currentTimeMillis();
+		m_eventTime = new Date();
 	}
 
-	public BizEvent(String eventType, long eventTime) {
+	public BizEvent(String eventType, Date eventTime) {
 		m_eventType = eventType;
 		m_eventTime = eventTime;
 	}
@@ -31,7 +32,7 @@ public class BizEvent {
 		return m_eventType;
 	}
 
-	public long getEventTime() {
+	public Date getEventTime() {
 		return m_eventTime;
 	}
 

@@ -1,6 +1,7 @@
 package com.ctrip.hermes.broker.transport.command.processor;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -105,8 +106,8 @@ public class AckMessageCommandProcessor implements CommandProcessor {
 	}
 
 	private void addConsumerProcessTime(BizEvent event, long startTime, long endTime) {
-		event.addData("bizProcessStartTime", startTime);
-		event.addData("bizProcessEndTime", endTime);
+		event.addData("bizProcessStartTime", new Date(startTime));
+		event.addData("bizProcessEndTime", new Date(endTime));
 		event.addData("processTime", endTime - startTime);
 	}
 
