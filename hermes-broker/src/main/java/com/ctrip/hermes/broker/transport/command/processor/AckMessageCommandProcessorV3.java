@@ -1,6 +1,7 @@
 package com.ctrip.hermes.broker.transport.command.processor;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.unidal.lookup.annotation.Inject;
@@ -89,11 +90,11 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 	      boolean ack) {
 		if (CollectionUtil.isNotEmpty(ackContexts)) {
 			for (AckContext ctx : ackContexts) {
-				BizEvent bizStartEvent = new BizEvent("Message.BizProcessStart", ctx.getOnMessageStartTimeMillis());
+				BizEvent bizStartEvent = new BizEvent("Message.BizProcessStart", new Date(ctx.getOnMessageStartTimeMillis()));
 				addBizData(bizStartEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
 				m_bizLogger.log(bizStartEvent);
 
-				BizEvent bizEndEvent = new BizEvent("Message.BizProcessEnd", ctx.getOnMessageEndTimeMillis());
+				BizEvent bizEndEvent = new BizEvent("Message.BizProcessEnd", new Date(ctx.getOnMessageEndTimeMillis()));
 				addBizData(bizEndEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
 				m_bizLogger.log(bizEndEvent);
 
