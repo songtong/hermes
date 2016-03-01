@@ -37,7 +37,7 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 			String topic = msgs.get(0).getTopic();
 
 			for (ConsumerMessage<T> msg : msgs) {
-				Transaction t = Cat.newTransaction("Message.Consumed", topic);
+				Transaction t = Cat.newTransaction("Message.Consumed", topic + ":" + m_groupId);
 				MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 
 				if (msg instanceof PropertiesHolderAware) {
