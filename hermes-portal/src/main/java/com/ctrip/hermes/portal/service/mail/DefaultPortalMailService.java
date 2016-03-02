@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -31,7 +33,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
 
 @Named(type = PortalMailService.class)
-public class DefaultPortalMailService implements PortalMailService {
+public class DefaultPortalMailService implements PortalMailService, Initializable {
 	private static final Logger log = LoggerFactory.getLogger(DefaultPortalMailService.class);
 
 	@Inject
@@ -46,19 +48,27 @@ public class DefaultPortalMailService implements PortalMailService {
 	@Inject
 	private PortalConfig m_config;
 
-	private Template getTemplate(String template) throws Exception {
-		Configuration cfg = new Configuration(Configuration.VERSION_2_3_22);
-		cfg.setDirectoryForTemplateLoading(new File(getClass().getResource(m_config.getEmailTemplateDir()).toURI()));
-		cfg.setDefaultEncoding("UTF-8");
-		cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-		Template temp = cfg.getTemplate(template);
-		return temp;
+	private Configuration m_templateConfig;
+
+	private final SimpleDateFormat m_dateFormatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+
+	@Override
+	public void initialize() throws InitializationException {
+		try {
+			m_templateConfig = new Configuration(Configuration.VERSION_2_3_22);
+			m_templateConfig.setDirectoryForTemplateLoading(
+					new File(getClass().getResource(m_config.getEmailTemplateDir()).toURI()));
+			m_templateConfig.setDefaultEncoding("UTF-8");
+			m_templateConfig.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+		} catch (Exception e) {
+			log.error("Initialize mail template configration failed!", e);
+		}
 	}
 
 	private void sendEmail(String title, String address, String template, Map<String, Object> contentMap) {
 		Template temp;
 		try {
-			temp = getTemplate(template);
+			temp = m_templateConfig.getTemplate(template);
 			Writer out = new StringWriter();
 			temp.process(contentMap, out);
 			String content = out.toString();
@@ -98,7 +108,7 @@ public class DefaultPortalMailService implements PortalMailService {
 		String address = app.getOwnerEmail1() + "," + app.getOwnerEmail2();
 
 		Map<String, Object> contentMap = new HashMap<>();
-		contentMap.put("createTime", new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(app.getCreateTime()));
+		contentMap.put("createTime", m_dateFormatter.format(app.getCreateTime()));
 		contentMap.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsHost(),
 				"console/application#/review", app.getId()));
 		contentMap.put("app", app);
@@ -127,7 +137,7 @@ public class DefaultPortalMailService implements PortalMailService {
 		String address = m_config.getHermesEmailGroupAddress();
 
 		Map<String, Object> contentMap = new HashMap<>();
-		contentMap.put("createTime", new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(app.getCreateTime()));
+		contentMap.put("createTime", m_dateFormatter.format(app.getCreateTime()));
 		contentMap.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsHost(),
 				"console/application#/approval", app.getId()));
 		contentMap.put("app", app);
@@ -158,7 +168,7 @@ public class DefaultPortalMailService implements PortalMailService {
 		String address = app.getOwnerEmail1() + "," + app.getOwnerEmail2();
 
 		Map<String, Object> contentMap = new HashMap<>();
-		contentMap.put("createTime", new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(app.getCreateTime()));
+		contentMap.put("createTime", m_dateFormatter.format(app.getCreateTime()));
 		contentMap.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsHost(),
 				"console/application#/review", app.getId()));
 		contentMap.put("app", app);
@@ -189,7 +199,7 @@ public class DefaultPortalMailService implements PortalMailService {
 		String address = m_config.getHermesEmailGroupAddress();
 
 		Map<String, Object> contentMap = new HashMap<>();
-		contentMap.put("createTime", new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(app.getCreateTime()));
+		contentMap.put("createTime", m_dateFormatter.format(app.getCreateTime()));
 		contentMap.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsHost(),
 				"console/application#/approval", app.getId()));
 		contentMap.put("app", app);
