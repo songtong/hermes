@@ -104,7 +104,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		String topicName = app.getProductLine() + "." + app.getEntity() + "." + app.getEvent();
 		String status = getApplicationStatusString(app.getStatus());
 
-		String title = String.format("Hermes申请单(type=create topic, id=%d, topic=%s)%s", app.getId(), topicName, status);
+		String title = String.format("[Hermes申请单(%d)%s] 类型：创建Topic, Topic名称：%s", app.getId(), status, topicName);
 		String address = app.getOwnerEmail1() + "," + app.getOwnerEmail2();
 
 		Map<String, Object> contentMap = new HashMap<>();
@@ -133,7 +133,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		String topicName = app.getProductLine() + "." + app.getEntity() + "." + app.getEvent();
 		String status = getApplicationStatusString(app.getStatus());
 
-		String title = String.format("Hermes申请单(type=create topic, id=%d, topic=%s)%s", app.getId(), topicName, status);
+		String title = String.format("[Hermes申请单(%d)%s] 类型：创建Topic, Topic名称：%s", app.getId(), status, topicName);
 		String address = m_config.getHermesEmailGroupAddress();
 
 		Map<String, Object> contentMap = new HashMap<>();
@@ -163,8 +163,8 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		String consumerName = String.format("%s.%s.%s", app.getProductLine(), app.getProduct(), app.getProject());
 		String status = getApplicationStatusString(app.getStatus());
 
-		String title = String.format("Hermes申请单(type=create consumer, id=%d, consumer=%s,topic=%s)%s", app.getId(),
-				consumerName, app.getTopicName(), status);
+		String title = String.format("[Hermes申请单(%d)%s] 类型：创建Consumer, Consumer名称：%s, Topic名称：%s ", app.getId(), status,
+				consumerName, app.getTopicName());
 		String address = app.getOwnerEmail1() + "," + app.getOwnerEmail2();
 
 		Map<String, Object> contentMap = new HashMap<>();
@@ -194,8 +194,8 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		String consumerName = String.format("%s.%s.%s", app.getProductLine(), app.getProduct(), app.getProject());
 		String status = getApplicationStatusString(app.getStatus());
 
-		String title = String.format("Hermes申请单(type=create consumer, id=%d, consumer=%s,topic=%s)%s", app.getId(),
-				consumerName, app.getTopicName(), status);
+		String title = String.format("[Hermes申请单(%d)%s] 类型：创建Consumer, Consumer名称：%s, Topic名称：%s ", app.getId(), status,
+				consumerName, app.getTopicName());
 		String address = m_config.getHermesEmailGroupAddress();
 
 		Map<String, Object> contentMap = new HashMap<>();
