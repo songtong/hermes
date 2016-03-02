@@ -8,9 +8,9 @@ import java.util.List;
  *
  */
 public class AckHolderScanningResult<T> {
-	public List<T> m_acked = new LinkedList<>();
+	private List<T> m_acked = new LinkedList<>();
 
-	public List<T> m_nacked = new LinkedList<>();
+	private List<T> m_nacked = new LinkedList<>();
 
 	public void addAcked(T item) {
 		m_acked.add(item);
