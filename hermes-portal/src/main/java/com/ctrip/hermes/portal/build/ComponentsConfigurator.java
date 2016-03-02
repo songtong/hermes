@@ -17,6 +17,7 @@ import com.ctrip.hermes.portal.service.SyncService;
 import com.ctrip.hermes.portal.service.application.DefaultApplicationService;
 import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService;
 import com.ctrip.hermes.portal.service.elastic.DefaultPortalElasticClient;
+import com.ctrip.hermes.portal.service.mail.DefaultPortalMailService;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -40,6 +41,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(DefaultApplicationService.class));
 
 		all.add(A(DefaultMailService.class));
+		all.add(A(DefaultPortalMailService.class));
 		
 		all.add(A(FileMailAccountProvider.class));
 		

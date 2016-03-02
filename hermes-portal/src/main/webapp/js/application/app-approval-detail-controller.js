@@ -293,7 +293,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			consumers.push(get_new_consuemr($scope.view, topics, i));
 		}
 		ApplicationService.add_consumers(consumers).then(function(result1) {
-			ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
+			ApplicationService.pass_application($scope.application.id, $scope.new_comment, ssoUser).then(function(result) {
 				$scope.application = result;
 				show_op_info.show("为Topic：" + result1.success_topics + "创建Consumer成功！(共" + result1.success_topics.length + "个成功，" + (topics.length - result1.success_topics.length) + "个失败)，表单状态修改成功", true);
 			}, function(result) {
@@ -309,7 +309,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.reject_application = function() {
 		document.getElementById("rejectButton").disabled = "disabled";
 		console.log($scope.application.comment);
-		ApplicationService.reject_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
+		ApplicationService.reject_application($scope.application.id, $scope.new_comment, ssoUser).then(function(result) {
 			show_op_info.show("拒绝申请成功", true);
 			document.getElementById("rejectButton").disabled = false;
 			$scope.application = result;
