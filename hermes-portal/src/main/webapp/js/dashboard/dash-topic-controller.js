@@ -68,20 +68,24 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 
 	DashboardTopicService.set_current_topic($scope.current_topic);
 
-	$scope.show_tree = function(ref_key, json_str, replace) {
-		$scope.current_refkey = ref_key;
-		if (replace) {
-			json_str = json_str.replace(/\\"/g, '"');
+	$scope.show_tree = function(ref_key, json_str) {
+		var obj = null;
+		try {
+			if (starts_with(json_str, '"'))
+				json_str = JSON.parse(json_str);
+			obj = JSON.parse(json_str);
+			console.log(obj);
+			$scope.current_refkey = ref_key;
+			$scope.current_attr_json = obj;
+			$("#data-tree").treeview({
+				data : format_tree(obj),
+				levels : 1
+			});
+		} catch (error) {
+			$scope.current_attr_json = json_str;
+			console.log($("#data-tree").children())
+			$("#data-tree")[0].innerHTML = '<b>不支持查看非Json格式消息。</b>';
 		}
-		if (starts_with(json_str, '"{') && ends_with(json_str, '}"')) {
-			json_str = json_str.substring(1, json_str.length - 1);
-		}
-		var obj = JSON.parse(json_str);
-		$scope.current_attr_json = obj;
-		$("#data-tree").treeview({
-			data : format_tree(obj),
-			levels : 1
-		});
 		$("#attr-view").modal('show');
 	};
 
