@@ -104,7 +104,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		String topicName = app.getProductLine() + "." + app.getEntity() + "." + app.getEvent();
 		String status = getApplicationStatusString(app.getStatus());
 
-		String title = String.format("[Hermes申请单(%d)%s] 类型：创建Topic, Topic名称：%s", app.getId(), status, topicName);
+		String title = String.format("[Hermes申请单(TC%06d)%s] Topic：%s", app.getId(), status, topicName);
 		String address = app.getOwnerEmail1() + "," + app.getOwnerEmail2();
 
 		Map<String, Object> contentMap = new HashMap<>();
@@ -133,7 +133,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		String topicName = app.getProductLine() + "." + app.getEntity() + "." + app.getEvent();
 		String status = getApplicationStatusString(app.getStatus());
 
-		String title = String.format("[Hermes申请单(%d)%s] 类型：创建Topic, Topic名称：%s", app.getId(), status, topicName);
+		String title = String.format("[Hermes申请单(TC%06d)%s] Topic：%s", app.getId(), status, topicName);
 		String address = m_config.getHermesEmailGroupAddress();
 
 		Map<String, Object> contentMap = new HashMap<>();
@@ -162,9 +162,9 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 	private void sendCreateConsumerMailToProposer(ConsumerApplication app) {
 		String consumerName = String.format("%s.%s.%s", app.getProductLine(), app.getProduct(), app.getProject());
 		String status = getApplicationStatusString(app.getStatus());
+		String[] topicNames = app.getTopicName().split(",");
 
-		String title = String.format("[Hermes申请单(%d)%s] 类型：创建Consumer, Consumer名称：%s, Topic名称：%s ", app.getId(), status,
-				consumerName, app.getTopicName());
+		String title = String.format("[Hermes申请单(CC%06d)%s] Consumer：%s", app.getId(), status, consumerName);
 		String address = app.getOwnerEmail1() + "," + app.getOwnerEmail2();
 
 		Map<String, Object> contentMap = new HashMap<>();
@@ -173,10 +173,12 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 				"console/application#/review", app.getId()));
 		contentMap.put("app", app);
 		contentMap.put("status", status);
+		contentMap.put("topicNames", topicNames);
+		contentMap.put("topicCount", topicNames.length);
 		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus())
 			contentMap.put("rejectReason", app.getComment());
 		if (PortalConstants.APP_STATUS_SUCCESS == app.getStatus()) {
-			TopicView topic = m_topicService.findTopicViewByName(app.getTopicName());
+			TopicView topic = m_topicService.findTopicViewByName(topicNames[0]);
 			ConsumerGroupView consumer;
 			try {
 				consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
@@ -193,9 +195,9 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 	private void sendCreateConsumerMailToAdmin(ConsumerApplication app) {
 		String consumerName = String.format("%s.%s.%s", app.getProductLine(), app.getProduct(), app.getProject());
 		String status = getApplicationStatusString(app.getStatus());
+		String[] topicNames = app.getTopicName().split(",");
 
-		String title = String.format("[Hermes申请单(%d)%s] 类型：创建Consumer, Consumer名称：%s, Topic名称：%s ", app.getId(), status,
-				consumerName, app.getTopicName());
+		String title = String.format("[Hermes申请单(CC%06d)%s] Consumer：%s", app.getId(), status, consumerName);
 		String address = m_config.getHermesEmailGroupAddress();
 
 		Map<String, Object> contentMap = new HashMap<>();
@@ -204,10 +206,12 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 				"console/application#/approval", app.getId()));
 		contentMap.put("app", app);
 		contentMap.put("status", status);
+		contentMap.put("topicNames", topicNames);
+		contentMap.put("topicCount", topicNames.length);
 		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus())
 			contentMap.put("rejectReason", app.getComment());
 		if (PortalConstants.APP_STATUS_SUCCESS == app.getStatus()) {
-			TopicView topic = m_topicService.findTopicViewByName(app.getTopicName());
+			TopicView topic = m_topicService.findTopicViewByName(topicNames[0]);
 			ConsumerGroupView consumer;
 			try {
 				consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
@@ -224,7 +228,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		String statusString;
 		switch (status) {
 		case PortalConstants.APP_STATUS_PROCESSING:
-			statusString = "进入处理流程";
+			statusString = "处理中";
 			break;
 		case PortalConstants.APP_STATUS_SUCCESS:
 			statusString = "生效";

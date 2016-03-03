@@ -29,6 +29,10 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
+					if (new_app.ownerEmail1Prefix)
+						new_app.ownerEmail1Prefix = new_app.ownerEmail1Prefix.split("@")[0];
+					if (new_app.ownerEmail2Prefix)
+						new_app.ownerEmail2Prefix = new_app.ownerEmail2Prefix.split("@")[0];
 					new_app.ownerEmail1 = new_app.ownerEmail1Prefix + "@Ctrip.com";
 					new_app.ownerEmail2 = new_app.ownerEmail2Prefix + "@Ctrip.com";
 					console.log(new_app);

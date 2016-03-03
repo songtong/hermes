@@ -6,12 +6,6 @@
 	<table border="0" cellpadding="0" cellspacing="0" width="100%">
 		<tr>
 			<td><table align="center" cellpadding="0" cellspacing="0" width="650" style="border: 1px solid #cccccc; border-collapse: collapse;">
-					<tr>
-						<td style="padding: 20px 30px 0px 30px; color: #153643; font-family: Arial, sans-serif; font-size: 18px;"><b>您好！单据(${app.id})于${createTime}已经${status}！</b></td>
-					</tr>
-					<tr>
-						<td style="padding: 0px 30px 0px 30px;"><hr></td>
-					</tr>
 					<#if rejectReason??>
 					<tr>
 						<td style="padding: 0px 30px 20px 30px;"><table cellpadding="0" cellspacing="0">
@@ -104,6 +98,18 @@
 										<td>${app.codecType}</td>
 									</tr>
 									</#if>
+									<tr>
+										<td>消息上限（条/天）</td>
+										<td>${app.maxMsgNumPerDay}</td>
+									</tr>
+									<tr>
+										<td>消息保留时间（天）</td>
+										<td>${app.retentionDays}</td>
+									</tr>
+									<tr>
+										<td>消息预估大小（Kb）</td>
+										<td>${app.size}</td>
+									</tr>
 									<tr>
 										<td>负责人1：</td>
 										<td>${app.ownerName1}/${app.ownerEmail1}</td>
