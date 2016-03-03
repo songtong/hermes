@@ -1,8 +1,8 @@
 function k_topic_produce_history(topic, $sce) {
 	var url = global_kibana_url
-			+ "/#/visualize/edit/Hermes-Message-Received?embed&_g=(refreshInterval:(display:'30%20seconds',pause:!t,section:1,value:30000),time:(from:now-1h,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Received%20AND%20topic:"
+			+ "/#/visualize/edit/Hermes-Message-Received?embed&_g=(refreshInterval:(display:Off,pause:!f,section:0,value:0),time:(from:now-1h,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Received%20AND%20topic:"
 			+ topic
-			+ "')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count),(id:'3',params:(customInterval:'2h',extended_bounds:(),field:eventTime,interval:m,min_doc_count:1),schema:segment,type:date_histogram)),listeners:(),params:(addLegend:!t,addTimeMarker:!f,addTooltip:!t,defaultYExtents:!f,mode:stacked,scale:linear,setYExtents:!f,shareYAxis:!t,times:!(),yAxis:()),type:histogram))"	
+			+ "')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count),(id:'3',params:(customInterval:'2h',extended_bounds:(),field:eventTime,interval:m,min_doc_count:1),schema:segment,type:date_histogram)),listeners:(),params:(addLegend:!f,addTimeMarker:!f,addTooltip:!t,defaultYExtents:!f,mode:stacked,scale:linear,setYExtents:!f,shareYAxis:!t,times:!(),yAxis:()),type:histogram))"	
 	return $sce.trustAsResourceUrl(url);
 };
 
