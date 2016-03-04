@@ -105,7 +105,6 @@ public class DefaultCommitter<T> implements Committer<T> {
 					} catch (Exception e) {
 						log.warn("Unexpected exception when commit consumer offet to broker, topic: {}, groupId: {}",
 						      m_topic, m_groupId, e);
-						m_retryPolicy.fail(true);
 					} finally {
 						if (op != null) {
 							opQueue.addFirst(op);
@@ -115,6 +114,8 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 				if (!ackWrote) {
 					m_retryPolicy.fail(true);
+				}else{
+					m_retryPolicy.succeess();
 				}
 			}
 		}
