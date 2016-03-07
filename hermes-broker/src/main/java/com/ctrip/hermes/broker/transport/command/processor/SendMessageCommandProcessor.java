@@ -29,8 +29,6 @@ import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.utils.CatUtil;
-import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
@@ -83,8 +81,6 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 					      reqCmd.getPartition(), reqCmd.getMessageCount());
 				}
 
-				logElapseToCat(reqCmd);
-
 				// FIXME if dumper's queue is full, reject it.
 				writeAck(ctx, true);
 
@@ -129,18 +125,6 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 		writeAck(ctx, false);
 		reqCmd.release();
-	}
-
-	private void logElapseToCat(SendMessageCommand reqCmd) {
-		try {
-			String strCreateTime = reqCmd.getHeader().getProperties().get("createTime");
-			if (StringUtils.isNumeric(strCreateTime)) {
-				long createTime = Long.parseLong(strCreateTime);
-				CatUtil.logElapse("Message.Produce.Trace", "SendMessageCommandNetworkDelay", createTime);
-			}
-		} catch (Exception e) {
-			// ignore
-		}
 	}
 
 	private void bizLog(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches, int partition) {
