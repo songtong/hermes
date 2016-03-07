@@ -517,12 +517,19 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 			OffsetResend top = CollectionUtil.first(tops);
 			return top;
 		} else {
+			List<ResendGroupId> topMsg = m_resendDao.topId(topic, partition, intGroupId, ResendGroupIdEntity.READSET_ID);
+
+			long lastId = 0L;
+			if (!topMsg.isEmpty()) {
+				lastId = CollectionUtil.last(topMsg).getId();
+			}
+			
 			OffsetResend proto = new OffsetResend();
 			proto.setTopic(topic);
 			proto.setPartition(partition);
 			proto.setGroupId(intGroupId);
 			proto.setLastScheduleDate(new Date(0));
-			proto.setLastId(0L);
+			proto.setLastId(lastId);
 			proto.setCreationDate(new Date());
 
 			m_offsetResendDao.insert(proto);
