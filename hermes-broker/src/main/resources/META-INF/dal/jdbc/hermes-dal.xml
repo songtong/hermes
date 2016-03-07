@@ -167,6 +167,16 @@
         		LIMIT 1]]>
 				</statement>
 			</query>
+			<query name="topId" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group-id" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT 1]]>
+				</statement>
+			</query>
 			<query name="findMaxIdByScheduleDate" type="SELECT" multiple="true">
 				<param name="topic" />
 				<param name="partition" />
