@@ -3,11 +3,11 @@ package com.ctrip.hermes.consumer.api;
 
 public class OffsetAndMetadata {
 
-	private long m_priorityOffset;
+	private Long m_priorityOffset;
 
-	private long m_nonPriorityOffset;
+	private Long m_nonPriorityOffset;
 
-	private long m_resendOffset;
+	private Long m_resendOffset;
 
 	public void setPriorityOffset(long priorityOffset) {
 		m_priorityOffset = priorityOffset;
