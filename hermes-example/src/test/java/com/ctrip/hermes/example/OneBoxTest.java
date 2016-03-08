@@ -147,12 +147,12 @@ public class OneBoxTest extends ComponentTestCase {
 	@Test
 	public void test() throws Exception {
 		Cat.initializeByDomain("hermes", "cat.fws.qa.nt.ctripcorp.com");
-		startBroker();
+//		startBroker();
 
 		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
 		server.start();
 
-		String topic = "order_new";
+		String topic = "hello_world";
 
 		Map<String, List<String>> subscribers = new HashMap<String, List<String>>();
 		// subscribers.put("group2", Arrays.asList("1-a"));

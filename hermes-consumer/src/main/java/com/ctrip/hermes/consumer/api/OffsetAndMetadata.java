@@ -9,27 +9,27 @@ public class OffsetAndMetadata {
 
 	private Long m_resendOffset;
 
-	public void setPriorityOffset(long priorityOffset) {
+	public void setPriorityOffset(Long priorityOffset) {
 		m_priorityOffset = priorityOffset;
 	}
 
-	public void setNonPriorityOffset(long nonPriorityOffset) {
+	public void setNonPriorityOffset(Long nonPriorityOffset) {
 		m_nonPriorityOffset = nonPriorityOffset;
 	}
 
-	public void setResendOffset(long resendOffset) {
+	public void setResendOffset(Long resendOffset) {
 		m_resendOffset = resendOffset;
 	}
 
-	public long getPriorityOffset() {
+	public Long getPriorityOffset() {
 		return m_priorityOffset;
 	}
 
-	public long getNonPriorityOffset() {
+	public Long getNonPriorityOffset() {
 		return m_nonPriorityOffset;
 	}
 
-	public long getResendOffset() {
+	public Long getResendOffset() {
 		return m_resendOffset;
 	}
 
