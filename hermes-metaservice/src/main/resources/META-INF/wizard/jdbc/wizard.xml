@@ -23,6 +23,7 @@
          <table name="server"/>
          <table name="storage"/>
          <table name="topic"/>
+         <table name="kv"/>
       </group>
    </jdbc>
 </wizard>

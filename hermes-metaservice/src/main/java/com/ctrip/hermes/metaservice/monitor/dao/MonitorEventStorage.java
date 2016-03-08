@@ -16,5 +16,5 @@ public interface MonitorEventStorage {
 
 	public List<com.ctrip.hermes.metaservice.model.MonitorEvent> findDBMonitorEvents(int pageCount, int pageNum);
 
-	public long totalPageCount(int pageCount);
+	public long totalPageCount(int pageSize);
 }
