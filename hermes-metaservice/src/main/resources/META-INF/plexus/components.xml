@@ -748,7 +748,7 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.service.DefaultKVService</role>
+			<role>com.ctrip.hermes.metaservice.service.KVService</role>
 			<implementation>com.ctrip.hermes.metaservice.service.DefaultKVService</implementation>
 			<requirements>
 				<requirement>

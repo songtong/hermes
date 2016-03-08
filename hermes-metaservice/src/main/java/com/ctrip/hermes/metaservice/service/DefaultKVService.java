@@ -14,7 +14,7 @@ import com.ctrip.hermes.metaservice.model.Kv;
 import com.ctrip.hermes.metaservice.model.KvDao;
 import com.ctrip.hermes.metaservice.model.KvEntity;
 
-@Named
+@Named(type = KVService.class)
 public class DefaultKVService implements KVService {
 	private static final Logger log = LoggerFactory.getLogger(DefaultKVService.class);
 
@@ -33,7 +33,7 @@ public class DefaultKVService implements KVService {
 			throw new IllegalArgumentException("DB key can not be blank.");
 		}
 		String[] parts = dbKey.split("_", 2);
-		return parts.length == 2 && parts[0].equals(tag.name()) ? parts[1] : parts[0];
+		return parts.length == 2 && parts[0].equals(tag.simple()) ? parts[1] : parts[0];
 	}
 
 	@Override
