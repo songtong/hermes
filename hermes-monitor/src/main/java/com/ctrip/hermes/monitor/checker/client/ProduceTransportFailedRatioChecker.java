@@ -22,6 +22,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -30,18 +31,20 @@ import org.xml.sax.SAXException;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceTransportFailedRatioErrorEvent;
+import com.ctrip.hermes.monitor.checker.CatBasedChecker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-// @Component(value = "ProduceTransportFailedRatioChecker")
+@Component(value = "ProduceTransportFailedRatioChecker")
 public class ProduceTransportFailedRatioChecker extends CatBasedChecker implements InitializingBean {
 
 	private List<String> m_excludedTopics = new LinkedList<>();
@@ -64,8 +67,8 @@ public class ProduceTransportFailedRatioChecker extends CatBasedChecker implemen
 		bizCheck(getTransportCountListData(timespan), timespan, meta, result);
 	}
 
-	private void bizCheck(Map<String, Map<Integer, Pair<Integer, Integer>>> topic2SendCmdCount, Timespan timespan,
-	      Meta meta, CheckerResult result) {
+	private void bizCheck(Map<String, Map<Integer, Pair<Integer, Integer>>> topic2SendCmdCount, Timespan timespan, Meta meta,
+	      CheckerResult result) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 		Calendar calendar = Calendar.getInstance();
@@ -120,11 +123,10 @@ public class ProduceTransportFailedRatioChecker extends CatBasedChecker implemen
 		return new Pair<Integer, Integer>(totalSum, failsSum);
 	}
 
-	private Map<String, Map<Integer, Pair<Integer, Integer>>> getTransportCountListData(Timespan timespan)
-	      throws IOException, XPathExpressionException, SAXException, ParserConfigurationException {
-		String transactionType = "Message.Produce.Transport";
-		String transactionReportXml = getTransactionReportFromCat(timespan, transactionType);
-		return extractDatasFromXml(transactionReportXml, transactionType);
+	private Map<String, Map<Integer, Pair<Integer, Integer>>> getTransportCountListData(Timespan timespan) throws IOException,
+	      XPathExpressionException, SAXException, ParserConfigurationException {
+		String transactionReportXml = getTransactionReportFromCat(timespan, CatConstants.TYPE_MESSAGE_PRODUCE_TRANSPORT);
+		return extractDatasFromXml(transactionReportXml, CatConstants.TYPE_MESSAGE_PRODUCE_TRANSPORT);
 	}
 
 	protected String getTransactionReportFromCat(Timespan timespan, String transactionType) throws IOException {
@@ -135,9 +137,8 @@ public class ProduceTransportFailedRatioChecker extends CatBasedChecker implemen
 		return transactionReportXml;
 	}
 
-	private Map<String, Map<Integer, Pair<Integer, Integer>>> extractDatasFromXml(String xmlContent,
-	      String transactionType) throws SAXException, IOException, ParserConfigurationException,
-	      XPathExpressionException {
+	private Map<String, Map<Integer, Pair<Integer, Integer>>> extractDatasFromXml(String xmlContent, String transactionType)
+	      throws SAXException, IOException, ParserConfigurationException, XPathExpressionException {
 		Map<String, Map<Integer, Pair<Integer, Integer>>> topic2CountList = new HashMap<>();
 
 		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -146,11 +147,10 @@ public class ProduceTransportFailedRatioChecker extends CatBasedChecker implemen
 
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
-		String allTransactionsExpression = "/transaction/report[@domain='All']/machine[@ip='All']/type[@id='"
-		      + transactionType + "']/name";
+		String allTransactionsExpression = "/transaction/report[@domain='All']/machine[@ip='All']/type[@id='" + transactionType
+		      + "']/name";
 
-		NodeList transactionNodes = (NodeList) xPath.compile(allTransactionsExpression).evaluate(doc,
-		      XPathConstants.NODESET);
+		NodeList transactionNodes = (NodeList) xPath.compile(allTransactionsExpression).evaluate(doc, XPathConstants.NODESET);
 
 		for (int i = 0; i < transactionNodes.getLength(); i++) {
 			Node transactionNode = transactionNodes.item(i);
@@ -160,8 +160,7 @@ public class ProduceTransportFailedRatioChecker extends CatBasedChecker implemen
 
 			String allRangesExpression = "range";
 
-			NodeList rangeNodes = (NodeList) xPath.compile(allRangesExpression).evaluate(transactionNode,
-			      XPathConstants.NODESET);
+			NodeList rangeNodes = (NodeList) xPath.compile(allRangesExpression).evaluate(transactionNode, XPathConstants.NODESET);
 
 			for (int j = 0; j < rangeNodes.getLength(); j++) {
 				Node rangeNode = rangeNodes.item(j);

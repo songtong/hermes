@@ -28,6 +28,7 @@ import com.ctrip.hermes.consumer.engine.monitor.AckMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.status.ConsumerStatusMonitor;
 import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -37,6 +38,7 @@ import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.dianping.cat.Cat;
+import com.dianping.cat.message.Transaction;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -165,26 +167,35 @@ public class DefaultAckManager implements AckManager {
 			Context ackedTimer = ConsumerStatusMonitor.INSTANCE
 			      .getTimer(topic, partition, groupId, "ack-msg-cmd-duration").time();
 
-			m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
-			ConsumerStatusMonitor.INSTANCE.ackMessageCmdSent(topic, partition, groupId);
-
+			Transaction tx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_ACK_TRANSPORT,
+			      String.format("%s:%s", topic, groupId));
 			try {
-				acked = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
+				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
+				ConsumerStatusMonitor.INSTANCE.ackMessageCmdSent(topic, partition, groupId);
 
-				if (acked) {
-					ConsumerStatusMonitor.INSTANCE.brokerAcked(topic, partition, groupId);
-				} else {
+				try {
+					acked = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
+
+					if (acked) {
+						ConsumerStatusMonitor.INSTANCE.brokerAcked(topic, partition, groupId);
+					} else {
+						ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+					}
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					m_resultMonitor.cancel(correlationId);
+				} catch (TimeoutException e) {
+					ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(topic, partition, groupId);
+					m_resultMonitor.cancel(correlationId);
+				} catch (Exception e) {
 					ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+					m_resultMonitor.cancel(correlationId);
 				}
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				m_resultMonitor.cancel(correlationId);
-			} catch (TimeoutException e) {
-				ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(topic, partition, groupId);
-				m_resultMonitor.cancel(correlationId);
+				tx.setStatus(acked ? Transaction.SUCCESS : "ACK_CMD_FAILED");
 			} catch (Exception e) {
-				ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
-				m_resultMonitor.cancel(correlationId);
+				tx.setStatus(e);
+			} finally {
+				tx.complete();
 			}
 
 			ackedTimer.stop();

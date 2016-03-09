@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.xml.sax.SAXException;
 
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
@@ -52,7 +53,7 @@ public class ProduceTransportFailedRatioCheckerTest extends BaseCheckerTest {
 
 		@Override
 		protected String getTransactionReportFromCat(Timespan timespan, String transactionType) throws IOException {
-			if ("Message.Produce.Transport".equals(transactionType)) {
+			if (CatConstants.TYPE_MESSAGE_PRODUCE_TRANSPORT.equals(transactionType)) {
 				return m_catTransportReportXml;
 			}
 
@@ -89,10 +90,10 @@ public class ProduceTransportFailedRatioCheckerTest extends BaseCheckerTest {
 
 		List<MonitorEvent> expectedEvents = new ArrayList<>();
 
-		expectedEvents.add(new ProduceTransportFailedRatioErrorEvent("c.d.e", "2015-10-10 10:00:00 ~ 2015-10-10 10:04:59",
-		      10, 2));
-		expectedEvents.add(new ProduceTransportFailedRatioErrorEvent("d.e.f", "2015-10-10 10:00:00 ~ 2015-10-10 10:04:59",
-		      0, 130));
+		expectedEvents.add(new ProduceTransportFailedRatioErrorEvent("c.d.e",
+		      "2015-10-10 10:00:00 ~ 2015-10-10 10:04:59", 10, 2));
+		expectedEvents.add(new ProduceTransportFailedRatioErrorEvent("d.e.f",
+		      "2015-10-10 10:00:00 ~ 2015-10-10 10:04:59", 0, 130));
 
 		for (MonitorEvent expectedEvent : expectedEvents) {
 			assertTrue(result.getMonitorEvents().contains(expectedEvent));

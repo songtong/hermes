@@ -101,7 +101,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 			String status = success ? Transaction.SUCCESS : "Timeout";
 			for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
 				for (ProducerMessage<?> msg : msgs) {
-					Transaction t = Cat.newTransaction("Message.Produce.Acked", msg.getTopic());
+					Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_ACKED, msg.getTopic());
 					MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 
 					String msgId = msg.getDurableSysProperty(CatConstants.SERVER_MESSAGE_ID);
@@ -112,7 +112,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 					tree.setParentMessageId(parentMsgId);
 					tree.setRootMessageId(rootMsgId);
 
-					Transaction elapseT = Cat.newTransaction("Message.Produce.Elapse", msg.getTopic());
+					Transaction elapseT = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE, msg.getTopic());
 					if (elapseT instanceof DefaultTransaction) {
 						((DefaultTransaction) elapseT).setDurationStart(msg.getBornTimeNano());
 						elapseT.addData("command.message.count", sendMessageCommand.getMessageCount());

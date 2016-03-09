@@ -27,8 +27,10 @@ import org.xml.sax.SAXException;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceFailureCountTooLargeEvent;
+import com.ctrip.hermes.monitor.checker.CatBasedChecker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 /**
@@ -39,8 +41,6 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
 public class ProduceFailureChecker extends CatBasedChecker implements InitializingBean {
 
 	private static final String CAT_DOMAIN = "hermes";
-
-	private static final String CAT_TRANSACTION_TYPE = "Message.Produce.Error";
 
 	private List<String> m_excludedTopics = new LinkedList<>();
 
@@ -60,7 +60,7 @@ public class ProduceFailureChecker extends CatBasedChecker implements Initializi
 	protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
 		String catReportUrl = m_config.getCatBaseUrl()
 		      + String.format(m_config.getCatEventUrlPattern(), CAT_DOMAIN, formatToCatUrlTime(timespan.getStartHour()),
-		            CAT_TRANSACTION_TYPE);
+		            CatConstants.TYPE_MESSAGE_PRODUCE_ERROR);
 		String transactionReportXml = curl(catReportUrl, m_config.getCatConnectTimeout(), m_config.getCatReadTimeout());
 		Map<String, List<Pair<Integer, Integer>>> topic2FailureCountList = extractFailureCountFromXml(transactionReportXml);
 		bizCheck(topic2FailureCountList, timespan, result);
@@ -111,7 +111,7 @@ public class ProduceFailureChecker extends CatBasedChecker implements Initializi
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
 		String allTransactionsExpression = "/event/report[@domain='" + CAT_DOMAIN + "']/machine[@ip='All']/type[@id='"
-		      + CAT_TRANSACTION_TYPE + "']/name";
+		      + CatConstants.TYPE_MESSAGE_PRODUCE_ERROR + "']/name";
 
 		NodeList transactionNodes = (NodeList) xPath.compile(allTransactionsExpression).evaluate(doc,
 		      XPathConstants.NODESET);

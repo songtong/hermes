@@ -27,6 +27,7 @@ import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.codahale.metrics.Timer.Context;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
@@ -196,7 +197,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			if (!success || m_config.isCatEnabled()) {
 				for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
 					for (ProducerMessage<?> msg : msgs) {
-						Transaction t = Cat.newTransaction("Message.Produce.Transport", msg.getTopic());
+						Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_TRANSPORT, msg.getTopic());
 						t.setStatus(status);
 						t.complete();
 					}

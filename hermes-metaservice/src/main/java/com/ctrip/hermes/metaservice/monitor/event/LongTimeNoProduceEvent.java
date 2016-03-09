@@ -1,6 +1,5 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,8 +13,6 @@ import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 import com.ctrip.hermes.metaservice.queue.CreationStamp;
 
 public class LongTimeNoProduceEvent extends BaseMonitorEvent {
-
-	private static final SimpleDateFormat m_formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private String m_topic;
 
@@ -49,10 +46,10 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 
 	private String generateMessage(Map<Integer, Pair<Integer, CreationStamp>> limitsAndStamps) {
 		StringBuilder sb = new StringBuilder(String.format("[%s] Long time no produce(%s): ",
-		      m_formatter.format(new Date()), m_topic));
+		      DATE_FORMATTER.format(new Date()), m_topic));
 		for (Entry<Integer, Pair<Integer, CreationStamp>> entry : limitsAndStamps.entrySet()) {
 			sb.append(String.format("[Partition: %s, Limit: %sm, Latest: %s(%s)] ", entry.getKey(), entry.getValue()
-			      .getKey(), m_formatter.format(entry.getValue().getValue().getDate()), entry.getValue().getKey()));
+			      .getKey(), DATE_FORMATTER.format(entry.getValue().getValue().getDate()), entry.getValue().getKey()));
 		}
 		return sb.toString();
 	}

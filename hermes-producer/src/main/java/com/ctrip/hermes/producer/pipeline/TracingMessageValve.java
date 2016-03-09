@@ -33,7 +33,7 @@ public class TracingMessageValve implements Valve {
 
 			boolean connectCatTransactions = m_metaService.findTopicByName(topic).isConnectCatTransactions();
 
-			Transaction t = Cat.newTransaction("Message.Produce.Tried", topic);
+			Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_TRIED, topic);
 			t.addData("key", msg.getKey());
 
 			try {

@@ -17,6 +17,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
@@ -85,7 +86,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 				m_pendingMessages.drainTo(todos, batchSize);
 			}
 
-			Transaction catTx = Cat.newTransaction("Message.Broker.Flush", m_topic + "-" + m_partition);
+			Transaction catTx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_BROKER_FLUSH, m_topic + "-" + m_partition);
 			catTx.addData("count", getMessageCount(todos));
 
 			appendMessageSync(todos);

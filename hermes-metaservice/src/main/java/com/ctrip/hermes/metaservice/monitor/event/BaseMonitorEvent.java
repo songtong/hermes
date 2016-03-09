@@ -1,10 +1,13 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
 public abstract class BaseMonitorEvent implements MonitorEvent {
+	public static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
 	private long m_id;
 
 	private Date m_createTime;
