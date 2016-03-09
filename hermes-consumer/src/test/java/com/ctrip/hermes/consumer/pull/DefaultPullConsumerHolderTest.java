@@ -365,8 +365,8 @@ public class DefaultPullConsumerHolderTest {
 		for (int i = 0; i < partitionCount; i++) {
 			OffsetAndMetadata offsetAndMeta = ctx.get().get(new TopicPartition(topic, i));
 			assertNotNull(offsetAndMeta);
-			assertEquals(i + msgPerPartitionPriority, offsetAndMeta.getPriorityOffset());
-			assertEquals(10 + i + msgPerPartitionPriority, offsetAndMeta.getNonPriorityOffset());
+			assertEquals(Long.valueOf(i + msgPerPartitionPriority), offsetAndMeta.getPriorityOffset());
+			assertEquals(Long.valueOf(10 + i + msgPerPartitionPriority), offsetAndMeta.getNonPriorityOffset());
 		}
 	}
 

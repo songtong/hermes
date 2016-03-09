@@ -28,6 +28,7 @@ import com.ctrip.hermes.metaservice.service.CacheDalService;
 import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.CompileService;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
+import com.ctrip.hermes.metaservice.service.DefaultKVService;
 import com.ctrip.hermes.metaservice.service.KafkaService;
 import com.ctrip.hermes.metaservice.service.StorageService;
 import com.ctrip.hermes.metaservice.service.DefaultMetaService;
@@ -100,6 +101,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(TopicService.class));
 		all.add(A(TopicDeployService.class));
 		all.add(A(KafkaService.class));
+		all.add(A(DefaultKVService.class));
 
 		all.add(A(MetaRefactor.class));
 		all.add(A(CachedAppDao.class));
