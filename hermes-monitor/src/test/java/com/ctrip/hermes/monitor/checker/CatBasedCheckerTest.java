@@ -143,7 +143,7 @@ public class CatBasedCheckerTest {
 	@Test
 	public void testGetCatReport() throws Exception {
 		Map<String, Map<Integer, CatRangeEntity>> map = m_checker.getCatCrossDomainData(
-		      m_checker.calTimespan(new Date(), 10), CatConstants.TYPE_MESSAGE_CONSUME_TRANSPORT);
+		      m_checker.calTimespan(new Date(), 10), CatConstants.TYPE_MESSAGE_CONSUME_ACK_TRANSPORT);
 		System.out.println(map);
 	}
 }

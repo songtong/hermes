@@ -43,7 +43,7 @@ public class ConsumerAckErrorChecker extends CatBasedChecker implements Initiali
 	@Override
 	protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
 		Map<String, Map<Integer, CatRangeEntity>> catNameRanges = //
-		getCatCrossDomainData(timespan, CatConstants.TYPE_MESSAGE_CONSUME_TRANSPORT);
+		getCatCrossDomainData(timespan, CatConstants.TYPE_MESSAGE_CONSUME_ACK_TRANSPORT);
 		System.out.println(catNameRanges);
 		for (Entry<String, Map<Integer, CatRangeEntity>> entry : catNameRanges.entrySet()) {
 			String[] parts = entry.getKey().split(":");

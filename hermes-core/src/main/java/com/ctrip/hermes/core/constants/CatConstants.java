@@ -30,5 +30,5 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_BROKER_FLUSH = "Message.Broker.Flush";
 
-	public static final String TYPE_MESSAGE_CONSUME_TRANSPORT = "Message.Consume.Transport";
+	public static final String TYPE_MESSAGE_CONSUME_ACK_TRANSPORT = "Message.Consume.Ack.Transport";
 }

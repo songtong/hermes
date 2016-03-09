@@ -167,7 +167,7 @@ public class DefaultAckManager implements AckManager {
 			Context ackedTimer = ConsumerStatusMonitor.INSTANCE
 			      .getTimer(topic, partition, groupId, "ack-msg-cmd-duration").time();
 
-			Transaction tx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_TRANSPORT,
+			Transaction tx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_ACK_TRANSPORT,
 			      String.format("%s:%s", topic, groupId));
 			try {
 				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
