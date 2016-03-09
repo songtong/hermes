@@ -2,6 +2,7 @@ package com.ctrip.hermes.monitor.kpi;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -46,51 +47,70 @@ public class KPIMissRatioTracer {
 		}
 	}
 
+	private static class KPIMessageListener extends BaseMessageListener<KPIMessage> {
+		long m_idx;
+
+		public KPIMessageListener(long initIdx) {
+			m_idx = initIdx;
+		}
+
+		@Override
+		protected void onMessage(ConsumerMessage<KPIMessage> hermesMsg) {
+			KPIMessage msg = hermesMsg.getBody();
+			try {
+				if (m_idx >= 0 && msg.getIndex() > m_idx) {
+					if (msg.getIndex() - m_idx == 1) {
+						trace(true);
+					} else {
+						for (long i = m_idx; i < msg.getIndex() - 1; i++) {
+							trace(false);
+						}
+					}
+				}
+			} catch (Exception e) {
+				log.error("Error happened when trace hermes-kpi.", e);
+			} finally {
+				m_idx = Math.max(msg.getIndex(), m_idx);
+				try {
+					persistOffset(KPIConstants.CONSUME_OFFSET_FILE, m_idx);
+				} catch (IOException e) {
+					log.error("Persist consume offset failed: {}", m_idx);
+				}
+			}
+		}
+
+		private void trace(boolean success) {
+			Transaction tx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_MISS_RATIO, "HERMES");
+			tx.setStatus(success ? Transaction.SUCCESS : "MISSED");
+			tx.complete();
+		}
+	}
+
 	private static class KPITracerTask implements Runnable {
 
 		@Override
 		public void run() {
 			log.info("****************  Starting Hermes KPI Tracer Task  *********************");
-			Consumer.getInstance().start(KPIConstants.TOPIC, KPIConstants.CONSUMER, new BaseMessageListener<KPIMessage>() {
-				private long lastIdx = -1;
+			long initOffset = -1;
+			try {
+				initOffset = loadOffset(KPIConstants.CONSUME_OFFSET_FILE);
+			} catch (IOException e) {
+				throw new RuntimeException("Load kpi_offset file failed. Please check it.");
+			}
 
-				private void trace(boolean success) {
-					Transaction tx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_MISS_RATIO, "HERMES");
-					tx.setStatus(success ? Transaction.SUCCESS : "MISSED");
-					tx.complete();
-				}
-
-				@Override
-				protected void onMessage(ConsumerMessage<KPIMessage> hermesMsg) {
-					KPIMessage msg = hermesMsg.getBody();
-					try {
-						if (lastIdx >= 0 && msg.getIndex() > lastIdx) {
-							if (msg.getIndex() - lastIdx == 1) {
-								trace(true);
-							} else {
-								for (long i = lastIdx; i < msg.getIndex() - 1; i++) {
-									trace(false);
-								}
-							}
-						}
-					} catch (Exception e) {
-						log.error("Error happened when trace hermes-kpi.", e);
-					} finally {
-						lastIdx = Math.max(msg.getIndex(), lastIdx);
-					}
-				}
-			});
+			Consumer.getInstance().start(KPIConstants.TOPIC, KPIConstants.CONSUMER, new KPIMessageListener(initOffset));
 
 			long producerMsgIdx = -1;
 			try {
-				producerMsgIdx = loadProducerOffset();
+				producerMsgIdx = loadOffset(KPIConstants.PRODUCE_OFFSET_FILE);
 			} catch (IOException e) {
 				throw new RuntimeException("Load kpi_offset file failed. Please check it.");
 			}
 			while (!Thread.interrupted()) {
 				try {
-					Producer.getInstance().message(KPIConstants.TOPIC, "PK-NONSENSE", new KPIMessage(producerMsgIdx++)).send();
-					persistProduceOffset(producerMsgIdx);
+					Producer.getInstance().message(KPIConstants.TOPIC, "PK-NONSENSE", new KPIMessage(producerMsgIdx++))
+					      .send();
+					persistOffset(KPIConstants.PRODUCE_OFFSET_FILE, producerMsgIdx);
 				} catch (Exception e) {
 					log.error("Producer KPIMessage for kpi-tracer failed, idx: " + producerMsgIdx);
 				} finally {
@@ -104,13 +124,13 @@ public class KPIMissRatioTracer {
 		}
 	}
 
-	private static long loadProducerOffset() throws IOException {
-		if (!KPIConstants.OFFSET_FILE.exists()) {
-			KPIConstants.OFFSET_FILE.createNewFile();
-			persistProduceOffset(-1);
+	private static long loadOffset(File file) throws IOException {
+		if (!file.exists()) {
+			file.createNewFile();
+			persistOffset(file, -1);
 		}
 
-		BufferedReader r = new BufferedReader(new FileReader(KPIConstants.OFFSET_FILE));
+		BufferedReader r = new BufferedReader(new FileReader(file));
 		try {
 			return Long.valueOf(r.readLine());
 		} catch (Exception e) {
@@ -123,14 +143,15 @@ public class KPIMissRatioTracer {
 		return -1;
 	}
 
-	private static void persistProduceOffset(long producerMsgIdx) throws IOException {
-		BufferedWriter w = new BufferedWriter(new FileWriter(KPIConstants.OFFSET_FILE));
+	private static void persistOffset(File file, long producerMsgIdx) throws IOException {
+		BufferedWriter w = new BufferedWriter(new FileWriter(file));
 		try {
 			w.write(String.valueOf(producerMsgIdx));
 		} catch (Exception e) {
 			log.error("Persist KPI_OFFSET failed.", e);
 		} finally {
 			if (w != null) {
+				w.flush();
 				w.close();
 			}
 		}

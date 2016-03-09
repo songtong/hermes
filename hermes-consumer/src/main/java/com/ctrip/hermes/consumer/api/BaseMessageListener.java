@@ -37,7 +37,7 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 			String topic = msgs.get(0).getTopic();
 
 			for (ConsumerMessage<T> msg : msgs) {
-				Transaction t = Cat.newTransaction("Message.Consumed", topic + ":" + m_groupId);
+				Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUMED, topic + ":" + m_groupId);
 				MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 
 				if (msg instanceof PropertiesHolderAware) {
@@ -93,7 +93,8 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 			long now = System.currentTimeMillis();
 			baseMsg.setOnMessageStartTimeMills(now);
 
-			Transaction latencyT = Cat.newTransaction("Message.Consume.Latency", msg.getTopic() + ":" + m_groupId);
+			Transaction latencyT = Cat.newTransaction( //
+			      CatConstants.TYPE_MESSAGE_CONSUME_LATENCY, msg.getTopic() + ":" + m_groupId);
 			if (latencyT instanceof DefaultTransaction) {
 				((DefaultTransaction) latencyT).setDurationStart(baseMsg.getBornTime() * 1000000);
 			}

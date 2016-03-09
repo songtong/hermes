@@ -17,6 +17,9 @@ public class MonitorConfig {
 	@Value("${cat.base.url:http://cat.ctripcorp.com}")
 	private String catBaseUrl;
 
+	@Value("${hermes.metaserver.list.url:http://meta.hermes.fws.qa.nt.ctripcorp.com/metaserver/servers}")
+	private String metaserverListUrl;
+
 	@Value("${cat.cross.transaction.url.pattern:/cat/r/t?op=graphs&domain=All&date=%s&ip=All&type=%s&forceDownload=xml}")
 	private String catCrossTransactionUrlPattern;
 
@@ -149,11 +152,62 @@ public class MonitorConfig {
 	@Value("${long.time.no.produce.checker.exclude.topics:[\"cmessage_fws\"]}")
 	private String longTimeNoProduceCheckerExcludeTopics;
 
+	/**
+	 * { ".*" : {"song.test.*": 30}, "song.test" : {"song.test.group": 100} } in minute
+	 */
+	@Value("${long.time.no.consume.checker.include.consumers:{\"hotel..*\": {\".*\": 60}}}")
+	private String longTimeNoConsumeCheckerIncludeConsumers;
+
+	/**
+	 * {"song.test":["song.test.group"], ".*":[".*"]}
+	 */
+	@Value("${long.time.no.consume.checker.exclude.consumers:{\"cmessage_fws\":[\".*\"]}}")
+	private String longTimeNoConsumeCheckerExcludeConsumers;
+
 	@Value("${elastic.search.query.host:osg.ops.ctripcorp.com}")
 	private String elasticSearchQueryHost;
 
 	@Value("${elastic.search.token.path:/opt/ctrip/data/hermes/hermes-es.token}")
 	private String elasticSearchTokenPath;
+
+	@Value("${lease.checker.exclude.topics:[]}")
+	private String leaseCheckerExcludeTopics;
+
+	@Value("${lease.acquire.timeout.millisecond.limit:2000}")
+	private int leaseAcquireTimeoutMillisecondLimit;
+
+	@Value("${lease.acquire.timeout.count.limit:10}")
+	private int leaseAcquireTimeoutCountLimit;
+
+	@Value("${lease.acquire.error.count.limit:10}")
+	private int leaseAcquireErrorCountLimit;
+
+	@Value("${lease.renew.timeout.millisecond.limit:2000}")
+	private int leaseRenewTimeoutMillisecondLimit;
+
+	@Value("${lease.renew.timeout.count.limit:10}")
+	private int leaseRenewTimeoutCountLimit;
+
+	@Value("${lease.renew.error.count.limit:10}")
+	private int leaseRenewErrorCountLimit;
+
+	@Value("${meta.request.error.count.limit:10}")
+	private int metaRequestErrorCountLimit;
+
+	@Value("${meta.request.timeout.count.limit:10}")
+	private int metaRequestTimeoutCountLimit;
+
+	@Value("${meta.request.timeout.millisecond.limit:2000}")
+	private int metaRequestTimeoutMillisecondLimit;
+
+	@Value("${consume.ack.cmd.fail.ratio.limit:0.5}")
+	private float consumeAckCmdFailRatioLimit;
+
+	@Value("${consume.ack.cmd.fail.ratio.exclude.consumers:[]}")
+	private String consumeAckCmdFailRatioExcludeConsumers;
+
+	@Value("${hermes.metaserver.cat.domain:hermes-metaserver}")
+	private String hermesMetaserverCatDomain;
 
 	public String getEsClusterName() {
 		return esClusterName;
@@ -255,7 +309,8 @@ public class MonitorConfig {
 		return produceTransportFailedRatioCheckerExcludedTopics;
 	}
 
-	public void setProduceTransportFailedRatioCheckerExcludedTopics(String produceTransportRailedRatioCheckerExcludedTopics) {
+	public void setProduceTransportFailedRatioCheckerExcludedTopics(
+	      String produceTransportRailedRatioCheckerExcludedTopics) {
 		this.produceTransportFailedRatioCheckerExcludedTopics = produceTransportRailedRatioCheckerExcludedTopics;
 	}
 
@@ -494,5 +549,133 @@ public class MonitorConfig {
 
 	public void setElasticSearchTokenPath(String elasticSearchTokenPath) {
 		this.elasticSearchTokenPath = elasticSearchTokenPath;
+	}
+
+	public String getLeaseCheckerExcludeTopics() {
+		return leaseCheckerExcludeTopics;
+	}
+
+	public void setLeaseCheckerExcludeTopics(String leaseCheckerExcludeTopics) {
+		this.leaseCheckerExcludeTopics = leaseCheckerExcludeTopics;
+	}
+
+	public int getLeaseAcquireErrorCountLimit() {
+		return leaseAcquireErrorCountLimit;
+	}
+
+	public void setLeaseAcquireErrorCountLimit(int leaseAcquireErrorCountLimit) {
+		this.leaseAcquireErrorCountLimit = leaseAcquireErrorCountLimit;
+	}
+
+	public int getLeaseRenewErrorCountLimit() {
+		return leaseRenewErrorCountLimit;
+	}
+
+	public void setLeaseRenewErrorCountLimit(int leaseRenewErrorCountLimit) {
+		this.leaseRenewErrorCountLimit = leaseRenewErrorCountLimit;
+	}
+
+	public int getLeaseAcquireTimeoutMillisecondLimit() {
+		return leaseAcquireTimeoutMillisecondLimit;
+	}
+
+	public void setLeaseAcquireTimeoutMillisecondLimit(int leaseAcquireTimeoutMillisecondLimit) {
+		this.leaseAcquireTimeoutMillisecondLimit = leaseAcquireTimeoutMillisecondLimit;
+	}
+
+	public int getLeaseAcquireTimeoutCountLimit() {
+		return leaseAcquireTimeoutCountLimit;
+	}
+
+	public void setLeaseAcquireTimeoutCountLimit(int leaseAcquireTimeoutCountLimit) {
+		this.leaseAcquireTimeoutCountLimit = leaseAcquireTimeoutCountLimit;
+	}
+
+	public int getLeaseRenewTimeoutMillisecondLimit() {
+		return leaseRenewTimeoutMillisecondLimit;
+	}
+
+	public void setLeaseRenewTimeoutMillisecondLimit(int leaseRenewTimeoutMillisecondLimit) {
+		this.leaseRenewTimeoutMillisecondLimit = leaseRenewTimeoutMillisecondLimit;
+	}
+
+	public int getLeaseRenewTimeoutCountLimit() {
+		return leaseRenewTimeoutCountLimit;
+	}
+
+	public void setLeaseRenewTimeoutCountLimit(int leaseRenewTimeoutCountLimit) {
+		this.leaseRenewTimeoutCountLimit = leaseRenewTimeoutCountLimit;
+	}
+
+	public int getMetaRequestErrorCountLimit() {
+		return metaRequestErrorCountLimit;
+	}
+
+	public void setMetaRequestErrorCountLimit(int metaRequestErrorCountLimit) {
+		this.metaRequestErrorCountLimit = metaRequestErrorCountLimit;
+	}
+
+	public int getMetaRequestTimeoutCountLimit() {
+		return metaRequestTimeoutCountLimit;
+	}
+
+	public void setMetaRequestTimeoutCountLimit(int metaRequestTimeoutCountLimit) {
+		this.metaRequestTimeoutCountLimit = metaRequestTimeoutCountLimit;
+	}
+
+	public int getMetaRequestTimeoutMillisecondLimit() {
+		return metaRequestTimeoutMillisecondLimit;
+	}
+
+	public void setMetaRequestTimeoutMillisecondLimit(int metaRequestTimeoutMillisecondLimit) {
+		this.metaRequestTimeoutMillisecondLimit = metaRequestTimeoutMillisecondLimit;
+	}
+
+	public float getConsumeAckCmdFailRatioLimit() {
+		return consumeAckCmdFailRatioLimit;
+	}
+
+	public void setConsumeAckCmdFailRatioLimit(float consumeAckCmdFailRatioLimit) {
+		this.consumeAckCmdFailRatioLimit = consumeAckCmdFailRatioLimit;
+	}
+
+	public String getConsumeAckCmdFailRatioExcludeConsumers() {
+		return consumeAckCmdFailRatioExcludeConsumers;
+	}
+
+	public void setConsumeAckCmdFailRatioExcludeConsumers(String consumeAckCmdFailRatioExcludeConsumers) {
+		this.consumeAckCmdFailRatioExcludeConsumers = consumeAckCmdFailRatioExcludeConsumers;
+	}
+
+	public String getLongTimeNoConsumeCheckerIncludeConsumers() {
+		return longTimeNoConsumeCheckerIncludeConsumers;
+	}
+
+	public void setLongTimeNoConsumeCheckerIncludeConsumers(String longTimeNoConsumeCheckerIncludeConsumers) {
+		this.longTimeNoConsumeCheckerIncludeConsumers = longTimeNoConsumeCheckerIncludeConsumers;
+	}
+
+	public String getLongTimeNoConsumeCheckerExcludeConsumers() {
+		return longTimeNoConsumeCheckerExcludeConsumers;
+	}
+
+	public void setLongTimeNoConsumeCheckerExcludeConsumers(String longTimeNoConsumeCheckerExcludeConsumers) {
+		this.longTimeNoConsumeCheckerExcludeConsumers = longTimeNoConsumeCheckerExcludeConsumers;
+	}
+
+	public String getMetaserverListUrl() {
+		return metaserverListUrl;
+	}
+
+	public void setMetaserverListUrl(String metaserverListUrl) {
+		this.metaserverListUrl = metaserverListUrl;
+	}
+
+	public String getHermesMetaserverCatDomain() {
+		return hermesMetaserverCatDomain;
+	}
+
+	public void setHermesMetaserverCatDomain(String hermesMetaserverCatDomain) {
+		this.hermesMetaserverCatDomain = hermesMetaserverCatDomain;
 	}
 }

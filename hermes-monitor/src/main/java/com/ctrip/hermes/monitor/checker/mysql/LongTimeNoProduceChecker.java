@@ -25,6 +25,7 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+import com.ctrip.hermes.monitor.checker.DBBasedChecker;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.checker.mysql.task.LongTimeNoProduceCheckerTask;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;

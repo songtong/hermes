@@ -11,7 +11,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.monitor.checker.server.BrokerLogErrorChecker;
-import com.ctrip.hermes.monitor.checker.server.MetaserverLogErrorChecker;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = BaseCheckerTest.class)
@@ -20,8 +19,6 @@ public class ServerLogErrorCheckerTest {
 	@Autowired
 	private BrokerLogErrorChecker m_brokerChecker;
 
-	@Autowired
-	private MetaserverLogErrorChecker m_metaChecker;
 
 	@Test
 	public void testBrokerLogError() {

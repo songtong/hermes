@@ -1,5 +1,8 @@
 package com.ctrip.hermes.core.utils;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 /**
  * copy some method from apache commons-lang
  * 
@@ -329,5 +332,49 @@ public class StringUtils {
 			return false;
 		}
 		return str.regionMatches(ignoreCase, 0, prefix, 0, prefix.length());
+	}
+
+	public static interface StringFormatter<T> {
+		public String format(T obj);
+	}
+
+	public static <T> String join(Collection<T> collection, String separator) {
+		return join(collection, separator, new StringFormatter<T>() {
+			@Override
+			public String format(T obj) {
+				return obj.toString();
+			}
+		});
+	}
+
+	public static <T> String join(Collection<T> collection, String separator, StringFormatter<T> formatter) {
+		Iterator<T> iterator = collection.iterator();
+		// handle null, zero and one elements before building a buffer
+		if (iterator == null) {
+			return null;
+		}
+		if (!iterator.hasNext()) {
+			return EMPTY;
+		}
+		T first = iterator.next();
+		if (!iterator.hasNext()) {
+			return first == null ? "" : formatter.format(first);
+		}
+
+		// two or more elements
+		StringBuilder buf = new StringBuilder(256); // Java default is 16, probably too small
+		if (first != null) {
+			buf.append(formatter.format(first));
+		}
+
+		while (iterator.hasNext()) {
+			buf.append(separator);
+			T obj = iterator.next();
+			if (obj != null) {
+				buf.append(formatter.format(obj));
+			}
+		}
+
+		return buf.toString();
 	}
 }

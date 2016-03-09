@@ -6,14 +6,19 @@ import static org.junit.Assert.assertTrue;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.ctrip.hermes.monitor.checker.client.CatBasedChecker;
-import com.ctrip.hermes.monitor.checker.client.CatBasedChecker.Timespan;
+import com.ctrip.hermes.core.constants.CatConstants;
+import com.ctrip.hermes.monitor.checker.CatBasedChecker.CatRangeEntity;
+import com.ctrip.hermes.monitor.checker.CatBasedChecker.Timespan;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -23,6 +28,7 @@ import com.ctrip.hermes.monitor.checker.client.CatBasedChecker.Timespan;
 @SpringApplicationConfiguration(classes = BaseCheckerTest.class)
 public class CatBasedCheckerTest {
 
+	@Component(value = "MockCatBasedChecker")
 	private static class MockCatBasedChecker extends CatBasedChecker {
 
 		@Override
@@ -41,6 +47,10 @@ public class CatBasedCheckerTest {
 		}
 
 	}
+
+	@Autowired
+	@Qualifier("MockCatBasedChecker")
+	private MockCatBasedChecker m_checker;
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testCalTimespanMinutesBeforeLargeThan60() {
@@ -124,4 +134,16 @@ public class CatBasedCheckerTest {
 
 	}
 
+	@Test
+	public void testGetMetaServers() throws Exception {
+		MockCatBasedChecker checker = new MockCatBasedChecker();
+		System.out.println(checker.getMetaServerList("http://meta.hermes.fws.qa.nt.ctripcorp.com/metaserver/servers"));
+	}
+
+	@Test
+	public void testGetCatReport() throws Exception {
+		Map<String, Map<Integer, CatRangeEntity>> map = m_checker.getCatCrossDomainData(
+		      m_checker.calTimespan(new Date(), 10), CatConstants.TYPE_MESSAGE_CONSUME_TRANSPORT);
+		System.out.println(map);
+	}
 }

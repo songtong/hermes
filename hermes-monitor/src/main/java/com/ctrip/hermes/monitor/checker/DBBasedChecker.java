@@ -1,10 +1,9 @@
-package com.ctrip.hermes.monitor.checker.mysql;
+package com.ctrip.hermes.monitor.checker;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.monitor.checker.Checker;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
 

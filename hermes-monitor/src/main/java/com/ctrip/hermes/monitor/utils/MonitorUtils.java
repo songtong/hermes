@@ -11,6 +11,8 @@ import java.util.Map.Entry;
 
 import org.apache.http.client.fluent.Request;
 
+import com.ctrip.hermes.metaservice.queue.CreationStamp;
+
 public class MonitorUtils {
 	public static <K, V> List<Map<K, V>> splitMap(Map<K, V> map, int batchCount) {
 		if (batchCount <= 0) {
@@ -64,4 +66,10 @@ public class MonitorUtils {
 		}
 	}
 
+	public static CreationStamp latestStamp(CreationStamp c1, CreationStamp c2) {
+		if (c1 != null && c2 != null) {
+			return c1.getDate().after(c2.getDate()) ? c1 : c2;
+		}
+		return c1 == null ? c2 : c1;
+	}
 }

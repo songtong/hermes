@@ -27,8 +27,10 @@ import org.xml.sax.SAXException;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeDelayTooLargeEvent;
+import com.ctrip.hermes.monitor.checker.CatBasedChecker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 /**
@@ -37,8 +39,6 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
  */
 @Component(value = "ConsumeDelayChecker")
 public class ConsumeDelayChecker extends CatBasedChecker implements InitializingBean {
-
-	private static final String CAT_TRANSACTION_TYPE = "Message.Consume.Latency";
 
 	// key: topic, value: threshold in millisecond
 	private Map<String, Double> m_thresholds = new HashMap<>();
@@ -61,7 +61,7 @@ public class ConsumeDelayChecker extends CatBasedChecker implements Initializing
 	protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
 		String catReportUrl = m_config.getCatBaseUrl()
 		      + String.format(m_config.getCatCrossTransactionUrlPattern(), formatToCatUrlTime(timespan.getStartHour()),
-		            CAT_TRANSACTION_TYPE);
+		            CatConstants.TYPE_MESSAGE_CONSUME_LATENCY);
 		String transactionReportXml = curl(catReportUrl, m_config.getCatConnectTimeout(), m_config.getCatReadTimeout());
 		Map<String, List<Pair<Integer, Double>>> topicConsumerGroup2DelayList = extractDelayDatasFromXml(transactionReportXml);
 		bizCheck(topicConsumerGroup2DelayList, timespan, result);
@@ -118,8 +118,8 @@ public class ConsumeDelayChecker extends CatBasedChecker implements Initializing
 
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
-		String allTransactionsExpression = "/transaction/report[@domain='All']/machine[@ip='All']/type[@id='" + CAT_TRANSACTION_TYPE
-		      + "']/name";
+		String allTransactionsExpression = "/transaction/report[@domain='All']/machine[@ip='All']/type[@id='"
+		      + CatConstants.TYPE_MESSAGE_CONSUME_LATENCY + "']/name";
 
 		NodeList transactionNodes = (NodeList) xPath.compile(allTransactionsExpression).evaluate(doc,
 		      XPathConstants.NODESET);

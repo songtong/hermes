@@ -27,8 +27,10 @@ import org.xml.sax.SAXException;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
+import com.ctrip.hermes.monitor.checker.CatBasedChecker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 /**
@@ -39,8 +41,6 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
 public class ProduceLatencyChecker extends CatBasedChecker implements InitializingBean {
 
 	private static final String DEFAULT_THRESHOLD_KEY = "Default";
-
-	private static final String CAT_TRANSACTION_TYPE = "Message.Produce.Elapse";
 
 	private List<String> m_excludedTopics = new LinkedList<>();
 
@@ -72,7 +72,7 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 	protected void doCheck(Timespan timespan, CheckerResult result) throws Exception {
 		String catReportUrl = m_config.getCatBaseUrl()
 		      + String.format(m_config.getCatCrossTransactionUrlPattern(), formatToCatUrlTime(timespan.getStartHour()),
-		            CAT_TRANSACTION_TYPE);
+		            CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE);
 		String transactionReportXml = curl(catReportUrl, m_config.getCatConnectTimeout(), m_config.getCatReadTimeout());
 		Map<String, List<Pair<Integer, Double>>> topic2LatencyList = extractLatencyDatasFromXml(transactionReportXml);
 		bizCheck(topic2LatencyList, timespan, result);
@@ -126,7 +126,7 @@ public class ProduceLatencyChecker extends CatBasedChecker implements Initializi
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
 		String allTransactionsExpression = "/transaction/report[@domain='All']/machine[@ip='All']/type[@id='"
-		      + CAT_TRANSACTION_TYPE + "']/name";
+		      + CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE + "']/name";
 
 		NodeList transactionNodes = (NodeList) xPath.compile(allTransactionsExpression).evaluate(doc,
 		      XPathConstants.NODESET);

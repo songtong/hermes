@@ -16,6 +16,7 @@ import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
@@ -28,7 +29,6 @@ import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.processor.SingleThreaded;
 import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
@@ -185,7 +185,7 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 		private void logToCatIfHasError(SendMessageResultCommand resultCmd) {
 			for (Boolean sendSuccess : resultCmd.getSuccesses().values()) {
 				if (!sendSuccess) {
-					Cat.logEvent("Message.Produce.Error", m_topic, Event.SUCCESS, "");
+					Cat.logEvent(CatConstants.TYPE_MESSAGE_PRODUCE_ERROR, m_topic, Event.SUCCESS, "");
 				}
 			}
 		}
