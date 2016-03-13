@@ -29,9 +29,10 @@ public class ESMonitorServiceTest {
 
 	@Test
 	public void testQueryBrokerError() {
+		System.out.println("++++++++++++++++++++++++++++");
 		long now = System.currentTimeMillis();
 		long before = now - TimeUnit.HOURS.toMillis(12);
-		Map<String, Long> errors = m_es.queryBrokerErrorCount(before, now);
+		Map<String, Long> errors = m_es.queryBrokerErrorCount(new Date(before), new Date(now));
 		for (Entry<String, Long> entry : errors.entrySet()) {
 			System.out.println(entry.getKey() + "\t" + entry.getValue());
 		}

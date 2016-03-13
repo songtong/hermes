@@ -14,9 +14,9 @@ public class ESQueryContext {
 
 	private String m_groupSchema;
 
-	private long m_from;
+	private Date m_from;
 
-	private long m_to;
+	private Date m_to;
 
 	public String getIndex() {
 		return m_index;
@@ -58,26 +58,26 @@ public class ESQueryContext {
 		this.m_groupSchema = groupSchema;
 	}
 
-	public long getFrom() {
+	public Date getFrom() {
 		return m_from;
 	}
 
-	public void setFrom(long from) {
+	public void setFrom(Date from) {
 		this.m_from = from;
 	}
 
-	public long getTo() {
+	public Date getTo() {
 		return m_to;
 	}
 
-	public void setTo(long to) {
+	public void setTo(Date to) {
 		this.m_to = to;
 	}
 
 	@Override
 	public String toString() {
 		return "ESQueryContext [index=" + m_index + ", documentType=" + m_documentType + ", keyWord=" + m_keyWord
-		      + ", querySchema=" + m_querySchema + ", groupSchema=" + m_groupSchema + ", from=" + new Date(m_from)
-		      + ", to=" + new Date(m_to) + "]";
+		      + ", querySchema=" + m_querySchema + ", groupSchema=" + m_groupSchema + ", from=" + m_from + ", to=" + m_to
+		      + "]";
 	}
 }

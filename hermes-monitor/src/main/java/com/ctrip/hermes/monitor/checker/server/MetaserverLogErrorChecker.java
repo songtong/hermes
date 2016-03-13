@@ -31,13 +31,12 @@ public class MetaserverLogErrorChecker implements Checker {
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
-		long to = toDate.getTime();
-		long from = to - TimeUnit.MINUTES.toMillis(minutesBefore);
+		long from = toDate.getTime() - TimeUnit.MINUTES.toMillis(minutesBefore);
 
 		CheckerResult r = new CheckerResult();
 
 		try {
-			Map<String, Long> map = m_es.queryMetaserverErrorCount(from, to);
+			Map<String, Long> map = m_es.queryMetaserverErrorCount(new Date(from), toDate);
 			for (Entry<String, Long> entry : map.entrySet()) {
 				if (entry.getValue() >= m_config.getMetaserverErrorThreshold()) {
 					r.addMonitorEvent(new MetaServerErrorEvent(entry.getKey(), entry.getValue()));
