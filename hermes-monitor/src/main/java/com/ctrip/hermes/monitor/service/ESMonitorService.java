@@ -63,6 +63,8 @@ public class ESMonitorService {
 
 	private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHH");
 
+	private static final SimpleDateFormat EVENT_TIME_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
+
 	private static final int ES_QUERY_TIMEOUT_IN_MILLIS = 30000;
 
 	static {
@@ -119,11 +121,12 @@ public class ESMonitorService {
 
 	// *********************** FOR ES QUERY *********************** //
 
-	public Map<String, Long> queryBrokerErrorCount(long from, long to) {
+	public Map<String, Long> queryBrokerErrorCount(Date from, Date to) {
 		ESQueryContext ctx = new ESQueryContext();
 
 		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_BROKER);
-		ctx.setIndex(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN, INDEX_DATE_FORMAT.format(new Date())));
+		ctx.setIndex(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN,
+		      INDEX_DATE_FORMAT.format(new Date())));
 		ctx.setFrom(from);
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
@@ -133,11 +136,12 @@ public class ESMonitorService {
 		return queryCountInTimeRange(ctx);
 	}
 
-	public Map<String, Long> queryMetaserverErrorCount(long from, long to) {
+	public Map<String, Long> queryMetaserverErrorCount(Date from, Date to) {
 		ESQueryContext ctx = new ESQueryContext();
 
 		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_METASERVER);
-		ctx.setIndex(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN, INDEX_DATE_FORMAT.format(new Date())));
+		ctx.setIndex(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN,
+		      INDEX_DATE_FORMAT.format(new Date())));
 		ctx.setFrom(from);
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
@@ -158,10 +162,13 @@ public class ESMonitorService {
 	}
 
 	private Map<String, Long> queryCountInTimeRange(ESQueryContext ctx) {
-		String query = String.format("source:%s AND %s:%s", ctx.getDocumentType(), ctx.getQuerySchema(), ctx.getKeyWord());
+		String query = String
+		      .format("source:%s AND %s:%s", ctx.getDocumentType(), ctx.getQuerySchema(), ctx.getKeyWord());
 
 		QueryBuilder qb = QueryBuilders.queryStringQuery(query);
-		FilterBuilder fb = FilterBuilders.rangeFilter("@timestamp").from(ctx.getFrom()).to(ctx.getTo());
+		FilterBuilder fb = FilterBuilders.rangeFilter("@eventTime") //
+		      .from(EVENT_TIME_FORMATTER.format(ctx.getFrom())) //
+		      .to(EVENT_TIME_FORMATTER.format(ctx.getTo()));
 		TermsBuilder tb = new TermsBuilder(QUERY_AGG_NAME).field(ctx.getGroupSchema());
 
 		@SuppressWarnings("resource")

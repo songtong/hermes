@@ -2,6 +2,7 @@ package com.ctrip.hermes.metaserver.rest.resource;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -89,7 +90,7 @@ public class MessageAssistResource {
 			result = findOffsetFromMetaLeader(leader.getHost(), leader.getPort(), params);
 		}
 
-		if (result == null) {
+		if (result == null || result.size() == 0) {
 			return Response.status(Status.NOT_FOUND)
 			      .entity(String.format("No offset found for [%s, %s, %s]", topic, partition, time)).build();
 		}
@@ -98,15 +99,22 @@ public class MessageAssistResource {
 	}
 
 	private Map<Integer, Offset> findOffsetFromBroker(final String topicName, final int partition, final long time) {
-		final Map<Integer, Offset> result = new HashMap<Integer, Offset>();
+		final Map<Integer, Offset> result = new ConcurrentHashMap<Integer, Offset>();
 		Topic topic = m_metaHolder.getMeta().findTopic(topicName);
 		if (topic != null) {
 			try {
 				final Assignment<Integer> assignment = m_brokerAssignments.getAssignment(topicName);
 
+				if (assignment == null) {
+					return null;
+				}
+
 				if (partition >= 0 && topic.findPartition(partition) != null) {
-					ClientContext context = assignment.getAssignment(partition).entrySet().iterator().next().getValue();
-					result.put(partition, findOffsetByTime(topicName, partition, time, getBrokerEndpoint(context)));
+					Map<String, ClientContext> partitionAssignment = assignment.getAssignment(partition);
+					if (partitionAssignment != null && partitionAssignment.size() > 0) {
+						ClientContext context = partitionAssignment.entrySet().iterator().next().getValue();
+						result.put(partition, findOffsetByTime(topicName, partition, time, getBrokerEndpoint(context)));
+					}
 				} else if (partition == -1) {
 					final CountDownLatch latch = new CountDownLatch(topic.getPartitions().size());
 					for (Partition p : topic.getPartitions()) {
@@ -115,8 +123,11 @@ public class MessageAssistResource {
 							@Override
 							public void run() {
 								try {
-									ClientContext client = assignment.getAssignment(id).entrySet().iterator().next().getValue();
-									result.put(id, findOffsetByTime(topicName, id, time, getBrokerEndpoint(client)));
+									Map<String, ClientContext> partitionAssignment = assignment.getAssignment(id);
+									if (partitionAssignment != null && partitionAssignment.size() > 0) {
+										ClientContext client = partitionAssignment.entrySet().iterator().next().getValue();
+										result.put(id, findOffsetByTime(topicName, id, time, getBrokerEndpoint(client)));
+									}
 								} catch (Exception e) {
 									log.error("Query message offset failed: {}:{} {}", topicName, partition, time, e);
 									result.put(id, null);
@@ -126,7 +137,7 @@ public class MessageAssistResource {
 							}
 						});
 					}
-					latch.await();
+					latch.await(m_config.getQueryMessageOffsetTimeoutMillis(), TimeUnit.MILLISECONDS);
 				}
 				return result;
 			} catch (Exception e) {
