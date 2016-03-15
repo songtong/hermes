@@ -71,9 +71,7 @@ public class BrokerAssignmentHolder {
 				}
 			}
 
-			if (!configedBrokers.isEmpty()) {
-				m_configedBrokers.set(configedBrokers);
-			}
+			m_configedBrokers.set(configedBrokers);
 		}
 	}
 
