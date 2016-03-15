@@ -23,6 +23,8 @@ public class BrokerConfig implements Initializable {
 
 	private long m_leaseRenewTimeMillsBeforeExpire = 2 * 1000L;
 
+	private int m_longPollingServiceThreadCount = 50;
+
 	private static final int DEFAULT_MESSAGE_QUEUE_FLUSH_BATCH_SIZE = 5000;
 
 	private static final int DEFAULT_MYSQL_BATCH_INSERT_SIZE = 200;
@@ -47,6 +49,11 @@ public class BrokerConfig implements Initializable {
 		if (StringUtils.isNumeric(mysqlBatchInsertSizeStr)) {
 			m_mySQLBatchInsertSzie = Integer.valueOf(mysqlBatchInsertSizeStr);
 		}
+		String longPollingServiceThreadCount = m_env.getGlobalConfig().getProperty(
+		      "broker.long.polling.service.thread.count");
+		if (StringUtils.isNumeric(longPollingServiceThreadCount)) {
+			m_longPollingServiceThreadCount = Integer.valueOf(longPollingServiceThreadCount);
+		}
 
 		m_cacheConfig.init(m_env.getGlobalConfig());
 	}
@@ -68,7 +75,7 @@ public class BrokerConfig implements Initializable {
 	}
 
 	public int getLongPollingServiceThreadCount() {
-		return 50;
+		return m_longPollingServiceThreadCount;
 	}
 
 	public int getLongPollingCheckIntervalBaseMillis() {
