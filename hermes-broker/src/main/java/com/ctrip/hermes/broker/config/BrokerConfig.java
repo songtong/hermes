@@ -99,7 +99,7 @@ public class BrokerConfig implements Initializable {
 	}
 
 	public int getFlushCheckerNoMessageWaitIntervalMaxMillis() {
-		return 50;
+		return 20;
 	}
 
 	public long getAckOpCheckIntervalMillis() {
