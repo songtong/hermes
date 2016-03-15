@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
-import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
@@ -40,6 +38,10 @@ import com.google.common.util.concurrent.SettableFuture;
 public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueueFlusher.class);
+
+	private static FutureBatchResultWrapperTransformer m_futureBatchResultWrapperTransformer = new FutureBatchResultWrapperTransformer();
+
+	private static MessageBatchAndResultTransformer m_messageBatchAndResultTransformer = new MessageBatchAndResultTransformer();
 
 	protected FileBizLogger m_bizLogger;
 
@@ -78,7 +80,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		purgeExpiredMsgs();
 
 		if (!m_pendingMessages.isEmpty()) {
-			List<PendingMessageWrapper> todos = new LinkedList<>();
+			List<PendingMessageWrapper> todos = new ArrayList<>(batchSize < 0 ? m_pendingMessages.size() : batchSize);
 
 			if (batchSize < 0) {
 				m_pendingMessages.drainTo(todos);
@@ -129,10 +131,18 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		m_flushing.set(false);
 	}
 
+	private static class FutureBatchResultWrapperTransformer implements
+	      Function<FutureBatchResultWrapper, Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> {
+		@Override
+		public Pair<MessageBatchWithRawData, Map<Integer, Boolean>> apply(FutureBatchResultWrapper input) {
+			return new Pair<MessageBatchWithRawData, Map<Integer, Boolean>>(input.getBatch(), input.getResult());
+		}
+	}
+
 	protected void appendMessageSync(List<PendingMessageWrapper> todos) {
 
-		List<FutureBatchResultWrapper> priorityTodos = new ArrayList<>();
-		List<FutureBatchResultWrapper> nonPriorityTodos = new ArrayList<>();
+		List<FutureBatchResultWrapper> priorityTodos = new ArrayList<>(todos.size());
+		List<FutureBatchResultWrapper> nonPriorityTodos = new ArrayList<>(todos.size());
 
 		for (PendingMessageWrapper todo : todos) {
 			Map<Integer, Boolean> result = new HashMap<>();
@@ -145,17 +155,9 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 			}
 		}
 
-		Function<FutureBatchResultWrapper, Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> transformFucntion = new Function<FutureBatchResultWrapper, Pair<MessageBatchWithRawData, Map<Integer, Boolean>>>() {
+		doAppendMessageSync(true, Collections2.transform(priorityTodos, m_futureBatchResultWrapperTransformer));
 
-			@Override
-			public Pair<MessageBatchWithRawData, Map<Integer, Boolean>> apply(FutureBatchResultWrapper input) {
-				return new Pair<MessageBatchWithRawData, Map<Integer, Boolean>>(input.getBatch(), input.getResult());
-			}
-		};
-
-		doAppendMessageSync(true, Collections2.transform(priorityTodos, transformFucntion));
-
-		doAppendMessageSync(false, Collections2.transform(nonPriorityTodos, transformFucntion));
+		doAppendMessageSync(false, Collections2.transform(nonPriorityTodos, m_futureBatchResultWrapperTransformer));
 
 		for (List<FutureBatchResultWrapper> todo : Arrays.asList(priorityTodos, nonPriorityTodos)) {
 			for (FutureBatchResultWrapper fbw : todo) {
@@ -189,18 +191,20 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		return future;
 	}
 
+	private static class MessageBatchAndResultTransformer implements
+	      Function<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>, MessageBatchWithRawData> {
+		@Override
+		public MessageBatchWithRawData apply(Pair<MessageBatchWithRawData, Map<Integer, Boolean>> input) {
+			return input.getKey();
+		}
+	}
+
 	protected void doAppendMessageSync(boolean isPriority,
 	      Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos) {
 
 		try {
-			m_storage.appendMessages(new Tpp(m_topic, m_partition, isPriority), Collections2.transform(todos,
-			      new Function<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>, MessageBatchWithRawData>() {
-
-				      @Override
-				      public MessageBatchWithRawData apply(Pair<MessageBatchWithRawData, Map<Integer, Boolean>> input) {
-					      return input.getKey();
-				      }
-			      }));
+			m_storage.appendMessages(m_topic, m_partition, isPriority,
+			      Collections2.transform(todos, m_messageBatchAndResultTransformer));
 
 			setBatchesResult(isPriority, todos, true);
 		} catch (Exception e) {

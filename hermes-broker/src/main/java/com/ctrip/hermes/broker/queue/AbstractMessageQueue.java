@@ -372,7 +372,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			long maxAckOffset = calMaxAckOffset(ackedContexts, nackedContexts);
 
 			if (CollectionUtil.isNotEmpty(nackedContexts)) {
-				List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>();
+				List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>(nackedContexts.size());
 				for (AckContext ackContext : nackedContexts) {
 					msgId2Metas.add(new Pair<>(ackContext.getMsgSeq(), new MessageMeta(ackContext.getMsgSeq(), ackContext
 					      .getRemainingRetries(), -1L, isPriority ? 0 : 1, isResend)));

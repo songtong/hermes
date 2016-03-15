@@ -19,8 +19,8 @@ import com.google.common.util.concurrent.ListenableFuture;
  */
 public interface MessageQueueManager {
 
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data,
-	      long expireTime);
+	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(String topic, int partition, boolean priority,
+	      MessageBatchWithRawData data, long expireTime);
 
 	public MessageQueueCursor getCursor(Tpg tpg, Lease lease, Offset offset);
 

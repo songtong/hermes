@@ -15,7 +15,6 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
-import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
@@ -33,6 +32,8 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext
 import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
+import com.dianping.cat.message.Transaction;
+import com.dianping.cat.message.internal.DefaultTransaction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -93,13 +94,13 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 				result.correlate(reqCmd);
 
 				FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx,
-				      reqCmd.getTopic());
+				      reqCmd.getTopic(), reqCmd.getPartition());
 
 				for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
 					MessageBatchWithRawData batch = entry.getValue();
-					Tpp tpp = new Tpp(reqCmd.getTopic(), reqCmd.getPartition(), entry.getKey() == 0 ? true : false);
 					try {
-						ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(tpp, batch,
+						ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(reqCmd.getTopic(),
+						      reqCmd.getPartition(), entry.getKey() == 0 ? true : false, batch,
 						      m_systemClockService.now() + 10 * 1000L);
 
 						if (future != null) {
@@ -159,10 +160,17 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 		private String m_topic;
 
-		public AppendMessageCompletionCallback(SendMessageResultCommand result, CommandProcessorContext ctx, String topic) {
+		private int m_partition;
+
+		private long m_start;
+
+		public AppendMessageCompletionCallback(SendMessageResultCommand result, CommandProcessorContext ctx,
+		      String topic, int partition) {
 			m_result = result;
 			m_ctx = ctx;
 			m_topic = topic;
+			m_partition = partition;
+			m_start = System.nanoTime();
 		}
 
 		@Override
@@ -175,11 +183,24 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 						logToCatIfHasError(m_result);
 						m_result.getHeader().addProperty("createTime", Long.toString(System.currentTimeMillis()));
 						m_ctx.write(m_result);
+
+						logElapse();
 					}
 				} finally {
 					m_ctx.getCommand().release();
 				}
 			}
+		}
+
+		private void logElapse() {
+			Transaction elapseT = Cat.newTransaction(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE, m_topic + "-"
+			      + m_partition);
+			if (elapseT instanceof DefaultTransaction) {
+				((DefaultTransaction) elapseT).setDurationStart(m_start);
+				elapseT.addData("command.message.count", m_result.getSuccesses().size());
+			}
+			elapseT.setStatus(Transaction.SUCCESS);
+			elapseT.complete();
 		}
 
 		private void logToCatIfHasError(SendMessageResultCommand resultCmd) {

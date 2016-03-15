@@ -23,6 +23,8 @@ public class CoreConfig implements Initializable {
 
 	private static final int DEFAULT_MAX_CLIENT_TIME_DIFF_MILLIS = 2000;
 
+	private static final int DEFAULT_COMMAND_PROCESSOR_THREAD_COUNT = 3;
+
 	public static final String TIME_UNSYNC_HEADER = "X-Hermes-Time-Unsync";
 
 	@Inject
@@ -35,6 +37,8 @@ public class CoreConfig implements Initializable {
 	private int m_channelAllIdle = DEFAULT_CHANNEL_ALL_IDLE_TIME_SECONDS;
 
 	private long m_maxClientTimeDiffMillis = DEFAULT_MAX_CLIENT_TIME_DIFF_MILLIS;
+
+	private int m_commandProcessorThreadCount = DEFAULT_COMMAND_PROCESSOR_THREAD_COUNT;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -56,10 +60,15 @@ public class CoreConfig implements Initializable {
 		if (StringUtils.isNumeric(maxClientTimeDiffMillis)) {
 			m_maxClientTimeDiffMillis = Long.valueOf(maxClientTimeDiffMillis);
 		}
+		
+		String commandProcessorThreadCountStr = m_env.getGlobalConfig().getProperty("command.processor.thread.count");
+		if (StringUtils.isNumeric(commandProcessorThreadCountStr)) {
+			m_commandProcessorThreadCount = Integer.valueOf(commandProcessorThreadCountStr);
+		}
 	}
 
 	public int getCommandProcessorThreadCount() {
-		return 10;
+		return m_commandProcessorThreadCount;
 	}
 
 	public int getMetaServerIpFetchInterval() {
