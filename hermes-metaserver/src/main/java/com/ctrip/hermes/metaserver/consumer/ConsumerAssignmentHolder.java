@@ -40,7 +40,7 @@ public class ConsumerAssignmentHolder implements Initializable {
 	private MetaHolder m_metaHolder;
 
 	@Inject
-	private OrderedConsumeConsumerPartitionAssigningStrategy m_partitionAssigningStrategy;
+	private ConsumerPartitionAssigningStrategy m_partitionAssigningStrategy;
 
 	@Inject
 	private ActiveConsumerListHolder m_activeConsumerListHolder;
@@ -63,7 +63,7 @@ public class ConsumerAssignmentHolder implements Initializable {
 		m_metaHolder = metaHolder;
 	}
 
-	public void setPartitionAssigningStrategy(OrderedConsumeConsumerPartitionAssigningStrategy partitionAssigningStrategy) {
+	public void setPartitionAssigningStrategy(ConsumerPartitionAssigningStrategy partitionAssigningStrategy) {
 		m_partitionAssigningStrategy = partitionAssigningStrategy;
 	}
 
@@ -138,13 +138,8 @@ public class ConsumerAssignmentHolder implements Initializable {
 				return null;
 			}
 
-			Map<Integer, Map<String, ClientContext>> newAssignment = null;
-			if (consumerGroup.isOrderedConsume()) {
-				newAssignment = m_partitionAssigningStrategy.assign(partitions, consumers, originAssignment == null ? null
-				      : originAssignment.getAssignments());
-			} else {
-				newAssignment = nonOrderedConsumeAssign(partitions, consumers);
-			}
+			Map<Integer, Map<String, ClientContext>> newAssignment = m_partitionAssigningStrategy.assign(partitions,
+			      consumers, originAssignment == null ? null : originAssignment.getAssignments());
 
 			if (newAssignment == null) {
 				return null;
@@ -160,17 +155,6 @@ public class ConsumerAssignmentHolder implements Initializable {
 		} else {
 			return null;
 		}
-	}
-
-	private Map<Integer, Map<String, ClientContext>> nonOrderedConsumeAssign(List<Partition> partitions,
-	      Map<String, ClientContext> consumers) {
-		Map<Integer, Map<String, ClientContext>> result = new HashMap<>();
-
-		for (Partition partition : partitions) {
-			result.put(partition.getId(), consumers);
-		}
-
-		return result;
 	}
 
 	private class ConusmerRebalanceCheckTask implements Runnable {

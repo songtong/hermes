@@ -20,10 +20,9 @@ import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
+import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocatorLocator;
-import com.ctrip.hermes.metaserver.consumer.LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy;
-import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAllocator;
-import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocator;
+import com.ctrip.hermes.metaserver.consumer.LeastAdjustmentConsumerPartitionAssigningStrategy;
 import com.ctrip.hermes.metaserver.event.DefaultEventBus;
 import com.ctrip.hermes.metaserver.event.DefaultEventHandlerRegistry;
 import com.ctrip.hermes.metaserver.event.Guard;
@@ -52,8 +51,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(MetaServerConfig.class));
 
 		// consumer lease
-		all.add(A(OrderedConsumeConsumerLeaseAllocator.class));
-		all.add(A(NonOrderedConsumeConsumerLeaseAllocator.class));
+		all.add(A(DefaultConsumerLeaseAllocator.class));
 		all.add(A(ActiveConsumerListHolder.class));
 		all.add(A(ConsumerLeaseHolder.class));
 		all.add(A(DefaultConsumerLeaseAllocatorLocator.class));
@@ -70,7 +68,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		// assignment
 		all.add(A(ConsumerAssignmentHolder.class));
-		all.add(A(LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy.class));
+		all.add(A(LeastAdjustmentConsumerPartitionAssigningStrategy.class));
 		all.add(A(BrokerAssignmentHolder.class));
 		all.add(A(DefaultBrokerPartitionAssigningStrategy.class));
 		all.add(A(MetaServerAssignmentHolder.class));

@@ -20,7 +20,7 @@ public class ActiveConsumerList {
 	public void heartbeat(String consumerName, long heartbeatTime, String ip) {
 		if (!m_consumers.containsKey(consumerName)) {
 			m_changed = true;
-			m_consumers.put(consumerName, new ClientContext(consumerName, ip, -1, heartbeatTime));
+			m_consumers.put(consumerName, new ClientContext(consumerName, ip, -1, null, heartbeatTime));
 		} else {
 			ClientContext consumerContext = m_consumers.get(consumerName);
 			if (!StringUtils.equals(consumerContext.getIp(), ip)) {

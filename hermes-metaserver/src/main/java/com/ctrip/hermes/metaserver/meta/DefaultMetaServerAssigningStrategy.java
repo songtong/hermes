@@ -38,7 +38,7 @@ public class DefaultMetaServerAssigningStrategy implements MetaServerAssigningSt
 						metaServerPos = (metaServerPos + 1) % metaServerCount;
 						Map<String, ClientContext> server = new HashMap<>();
 						server.put(metaServer.getId(),
-						      new ClientContext(metaServer.getId(), metaServer.getHost(), metaServer.getPort(), -1));
+						      new ClientContext(metaServer.getId(), metaServer.getHost(), metaServer.getPort(), null, -1));
 						newAssignments.addAssignment(topic.getName(), server);
 					}
 				}

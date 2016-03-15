@@ -8,11 +8,11 @@ STOP_TIMEOUT=30
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
             -Dio.netty.allocator.type=pooled \
-            -Xms4g \
-            -Xmx4g \
+            -Xms2g \
+            -Xmx2g \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
-            -XX:MaxDirectMemorySize=4g \
+            -XX:MaxDirectMemorySize=2g \
             -XX:+PrintGC \
             -XX:+PrintGCDetails \
             -XX:+PrintGCDateStamps \

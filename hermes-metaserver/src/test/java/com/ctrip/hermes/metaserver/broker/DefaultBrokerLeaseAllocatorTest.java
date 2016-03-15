@@ -170,7 +170,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> brokers = new HashMap<>();
-		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, 1L);
+		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, null, 1L);
 		brokers.put(brokerName, broker);
 		assignment.addAssignment(partition, brokers);
 
@@ -197,7 +197,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> brokers = new HashMap<>();
-		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, 1L);
+		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, null, 1L);
 		brokers.put(brokerName, broker);
 		assignment.addAssignment(partition, brokers);
 
@@ -220,7 +220,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> brokers = new HashMap<>();
-		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, 1L);
+		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, null, 1L);
 		brokers.put(brokerName, broker);
 		assignment.addAssignment(partition, brokers);
 
@@ -245,7 +245,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> brokers = new HashMap<>();
-		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, 1L);
+		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, null, 1L);
 		brokers.put(brokerName, broker);
 		assignment.addAssignment(partition, brokers);
 
@@ -270,7 +270,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> brokers = new HashMap<>();
-		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, 1L);
+		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, null, 1L);
 		brokers.put(brokerName, broker);
 		assignment.addAssignment(partition, brokers);
 
@@ -298,7 +298,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> brokers = new HashMap<>();
-		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, 1L);
+		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, null, 1L);
 		brokers.put(brokerName, broker);
 		assignment.addAssignment(partition, brokers);
 
@@ -318,7 +318,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 		assertEquals(10000 + DEFAULT_LEASE_TIME + DEFAULT_LEASE_ADJUST_TIME, lease.getExpireTime());
 		assertEquals(-1, response.getNextTryTime());
 	}
-	
+
 	@Test
 	public void testRenewLeaseFailSinceExistingLeaseIdNotMatch() throws Exception {
 		String topic = "topic";
@@ -327,7 +327,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> brokers = new HashMap<>();
-		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, 1L);
+		ClientContext broker = new ClientContext(brokerName, "1.1.1.1", 1234, null, 1L);
 		brokers.put(brokerName, broker);
 		assignment.addAssignment(partition, brokers);
 

@@ -1,10 +1,12 @@
 package com.ctrip.hermes.metaserver.event.impl;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
@@ -47,7 +49,9 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 		Meta baseMeta = m_metaService.refreshMeta();
 
 		ArrayList<Topic> topics = new ArrayList<Topic>(baseMeta.getTopics().values());
-		m_brokerAssignmentHolder.reassign(topics);
+		List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>() : new ArrayList<>(
+		      baseMeta.getEndpoints().values());
+		m_brokerAssignmentHolder.reassign(configedBrokers, topics);
 
 		m_metaHolder.setBaseMeta(baseMeta);
 		m_metaHolder.update(m_endpointMaker.makeEndpoints(event.getEventBus(), event.getVersion(),

@@ -28,6 +28,7 @@
 
 	<entity name="endpoint">
 		<attribute name="id" key='true' />
+		<attribute name="group" value-type="String" default-value="default" />
 		<snippet lang='java'><![CDATA[
 			public final static String LOCAL = "local";
 			public final static String BROKER = "broker";
@@ -54,6 +55,7 @@
 		<attribute name="consumer-retry-policy" default-value="3:[3,3000]" />
 		<attribute name="ack-timeout-seconds" value-type="int" default-value="5" />
 		<attribute name="priority-message-enabled" value-type="boolean" default-value="true" />
+		<attribute name="broker-group" value-type="String" default-value="default" />
 		<entity-ref name="consumer-group" type="list" names="consumer-groups" />
 
 		<snippet lang='java'><![CDATA[
