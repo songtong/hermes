@@ -31,7 +31,7 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest
 
 	@Test
 	public void testFirstAssign() {
-		LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy s = new LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy();
+		LeastAdjustmentConsumerPartitionAssigningStrategy s = new LeastAdjustmentConsumerPartitionAssigningStrategy();
 
 		List<Partition> partitions = Arrays.asList(p(1), p(2), p(3));
 
@@ -47,7 +47,7 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest
 
 	@Test
 	public void testMoreConsumerThanPartition() {
-		LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy s = new LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy();
+		LeastAdjustmentConsumerPartitionAssigningStrategy s = new LeastAdjustmentConsumerPartitionAssigningStrategy();
 
 		List<Partition> partitions = Arrays.asList(p(1), p(2), p(3));
 
@@ -69,7 +69,7 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest
 
 	@Test
 	public void testConsumerDown() {
-		LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy s = new LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy();
+		LeastAdjustmentConsumerPartitionAssigningStrategy s = new LeastAdjustmentConsumerPartitionAssigningStrategy();
 
 		List<Partition> partitions = Arrays.asList(p(1), p(2), p(3));
 
@@ -89,7 +89,7 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest
 
 	@Test
 	public void testConsumerUp() {
-		LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy s = new LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy();
+		LeastAdjustmentConsumerPartitionAssigningStrategy s = new LeastAdjustmentConsumerPartitionAssigningStrategy();
 
 		List<Partition> partitions = Arrays.asList(p(1), p(2), p(3));
 
@@ -110,7 +110,7 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest
 
 	@Test
 	public void testConsumerDownUp1() {
-		LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy s = new LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy();
+		LeastAdjustmentConsumerPartitionAssigningStrategy s = new LeastAdjustmentConsumerPartitionAssigningStrategy();
 
 		List<Partition> partitions = Arrays.asList(p(1), p(2), p(3));
 
@@ -130,7 +130,7 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest
 
 	@Test
 	public void testConsumerDownUp2() {
-		LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy s = new LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy();
+		LeastAdjustmentConsumerPartitionAssigningStrategy s = new LeastAdjustmentConsumerPartitionAssigningStrategy();
 
 		List<Partition> partitions = Arrays.asList(p(1), p(2), p(3));
 

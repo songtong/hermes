@@ -22,12 +22,12 @@ import com.ctrip.hermes.metaserver.commons.ClientContext;
  * @author Marsqing(q_gu@ctrip.com)
  *
  */
-@Named(type = OrderedConsumeConsumerPartitionAssigningStrategy.class)
-public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy implements
-      OrderedConsumeConsumerPartitionAssigningStrategy {
+@Named(type = ConsumerPartitionAssigningStrategy.class)
+public class LeastAdjustmentConsumerPartitionAssigningStrategy implements
+      ConsumerPartitionAssigningStrategy {
 
 	private final static Logger log = LoggerFactory
-	      .getLogger(LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy.class);
+	      .getLogger(LeastAdjustmentConsumerPartitionAssigningStrategy.class);
 
 	@Override
 	public Map<Integer, Map<String, ClientContext>> assign(List<Partition> partitions,
@@ -143,7 +143,7 @@ public class LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategy imp
 		for (Entry<Integer, Map<String, ClientContext>> entry : originAssignment.entrySet()) {
 			if (!entry.getValue().isEmpty()) {
 				if (entry.getValue().size() != 1) {
-					log.warn("Ordered partition have more than one consumer assigned");
+					log.warn("Partition have more than one consumer assigned");
 				}
 
 				String consumer = entry.getValue().keySet().iterator().next();

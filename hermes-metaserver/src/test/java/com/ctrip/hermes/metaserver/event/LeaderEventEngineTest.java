@@ -27,6 +27,7 @@ import org.mockito.stubbing.Answer;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.HostPort;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.TestHelper;
@@ -129,7 +130,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 		verify(m_metaHolder, times(1)).update(anyMap());
 		verify(m_metaServerAssignmentHolder, times(1)).reassign(anyListOf(Server.class), anyListOf(Topic.class));
 		verify(m_brokerAssignmentHolder, times(1)).reassign(anyMapOf(String.class, ClientContext.class),
-		      anyListOf(Topic.class));
+		      anyListOf(Endpoint.class), anyListOf(Topic.class));
 	}
 
 	@Test

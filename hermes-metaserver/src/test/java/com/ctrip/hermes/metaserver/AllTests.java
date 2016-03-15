@@ -14,7 +14,6 @@ import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListTest;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolderTest;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolderTest;
 import com.ctrip.hermes.metaserver.consumer.LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest;
-import com.ctrip.hermes.metaserver.consumer.NonOrderedConsumeConsumerLeaseAllocatorTest;
 import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocatorTest;
 import com.ctrip.hermes.metaserver.event.FollowerEventEngineTest;
 import com.ctrip.hermes.metaserver.event.LeaderEventEngineTest;
@@ -36,14 +35,13 @@ LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest.class,//
       BrokerLeaseHolderTest.class, //
       ActiveConsumerListTest.class, //
       ConsumerAssignmentHolderTest.class, //
-      NonOrderedConsumeConsumerLeaseAllocatorTest.class, //
       OrderedConsumeConsumerLeaseAllocatorTest.class, //
       ConsumerLeaseHolderTest.class, //
       ActiveConsumerListHolderTest.class, //
       EndpointMakerTest.class, //
       FollowerEventEngineTest.class, //
       LeaderEventEngineTest.class, //
-// add test classes here
+      // add test classes here
 
 })
 public class AllTests {

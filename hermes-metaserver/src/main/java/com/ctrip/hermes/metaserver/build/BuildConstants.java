@@ -5,9 +5,6 @@ package com.ctrip.hermes.metaserver.build;
  *
  */
 public class BuildConstants {
-	public static final String LEASE_ALLOCATOR_ORDERED_CONSUME = "ordered-consume";
-
-	public static final String LEASE_ALLOCATOR_NON_ORDERED_CONSUME = "non-ordered-consume";
 
 	public static final String LEADER = "leader";
 

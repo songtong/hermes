@@ -13,13 +13,16 @@ public class ClientContext {
 
 	private long m_lastHeartbeatTime;
 
+	private String m_group;
+
 	public ClientContext() {
 	}
 
-	public ClientContext(String name, String ip, int port, long lastHeartbeatTime) {
+	public ClientContext(String name, String ip, int port, String group, long lastHeartbeatTime) {
 		m_name = name;
 		m_ip = ip;
 		m_port = port;
+		m_group = group;
 		m_lastHeartbeatTime = lastHeartbeatTime;
 	}
 
@@ -47,6 +50,14 @@ public class ClientContext {
 		m_port = port;
 	}
 
+	public String getGroup() {
+		return m_group;
+	}
+
+	public void setGroup(String group) {
+		m_group = group;
+	}
+
 	public long getLastHeartbeatTime() {
 		return m_lastHeartbeatTime;
 	}
@@ -58,7 +69,7 @@ public class ClientContext {
 	@Override
 	public String toString() {
 		return "ClientContext [m_name=" + m_name + ", m_ip=" + m_ip + ", m_port=" + m_port + ", m_lastHeartbeatTime="
-		      + m_lastHeartbeatTime + "]";
+		      + m_lastHeartbeatTime + ", m_group=" + m_group + "]";
 	}
 
 }

@@ -66,7 +66,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 	@Mock
 	private ActiveConsumerListHolder m_activeConsumerList;
 
-	private OrderedConsumeConsumerLeaseAllocator m_allocator;
+	private DefaultConsumerLeaseAllocator m_allocator;
 
 	private List<HeartbeatInfo> m_heartbeats = new LinkedList<>();
 
@@ -138,7 +138,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 	@Before
 	public void before() throws Exception {
-		m_allocator = new OrderedConsumeConsumerLeaseAllocator();
+		m_allocator = new DefaultConsumerLeaseAllocator();
 		m_allocator.setAssignmentHolder(m_assignmentHolder);
 		m_allocator.setConfig(m_config);
 		m_allocator.setLeaseHolder(m_leaseHolder);
@@ -286,7 +286,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -315,7 +315,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -339,7 +339,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, ip, -1, 1L);
+		ClientContext consumer = new ClientContext(consumerName, ip, -1, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -367,7 +367,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -393,7 +393,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -423,7 +423,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -453,7 +453,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 

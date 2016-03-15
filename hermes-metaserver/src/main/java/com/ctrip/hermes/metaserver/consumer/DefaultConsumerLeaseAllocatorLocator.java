@@ -7,7 +7,6 @@ import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaserver.build.BuildConstants;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
 /**
@@ -22,25 +21,18 @@ public class DefaultConsumerLeaseAllocatorLocator implements ConsumerLeaseAlloca
 	@Inject
 	private MetaHolder m_metaHolder;
 
-	@Inject(value = BuildConstants.LEASE_ALLOCATOR_ORDERED_CONSUME)
-	private ConsumerLeaseAllocator m_orderedConsumeStrategy;
-
-	@Inject(value = BuildConstants.LEASE_ALLOCATOR_NON_ORDERED_CONSUME)
-	private ConsumerLeaseAllocator m_nonOrderedConsumeStrategy;
+	@Inject
+	private ConsumerLeaseAllocator m_consumeLeaseAllocator;
 
 	@Override
 	public ConsumerLeaseAllocator findAllocator(String topicName, String consumerGroupName) {
 		ConsumerGroup consumerGroup = getConsumerGroup(topicName, consumerGroupName);
-		if (consumerGroup != null && consumerGroup.isOrderedConsume()) {
-			return m_orderedConsumeStrategy;
-		} else {
-			if (consumerGroup == null) {
-				log.warn("ConsumerGroup {} not found for topic {}", topicName, consumerGroupName);
-				return null;
-			} else {
-				return m_nonOrderedConsumeStrategy;
-			}
+		if (consumerGroup != null) {
+			return m_consumeLeaseAllocator;
+		} else if (consumerGroup == null) {
+			log.warn("ConsumerGroup {} not found for topic {}", topicName, consumerGroupName);
 		}
+		return null;
 	}
 
 	private ConsumerGroup getConsumerGroup(String topicName, String consumerGroupName) {

@@ -15,9 +15,8 @@ import com.ctrip.hermes.metaserver.commons.ClientContext;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = OrderedConsumeConsumerPartitionAssigningStrategy.class)
-public class DefaultOrderedConsumeConsumerPartitionAssigningStrategy implements
-      OrderedConsumeConsumerPartitionAssigningStrategy {
+@Named(type = ConsumerPartitionAssigningStrategy.class)
+public class DefaultConsumerPartitionAssigningStrategy implements ConsumerPartitionAssigningStrategy {
 
 	@Override
 	public Map<Integer, Map<String, ClientContext>> assign(List<Partition> partitions,

@@ -144,8 +144,10 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		Map<String, ClientContext> brokers = loadAndAddBrokerListWatcher(new BrokerChangedListener(event.getEventBus(),
 		      event.getStateHolder(), event.getVersion()));
 		ArrayList<Topic> topics = new ArrayList<>(baseMeta.getTopics().values());
+		List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>() : new ArrayList<>(
+		      baseMeta.getEndpoints().values());
 
-		m_brokerAssignmentHolder.reassign(brokers, topics);
+		m_brokerAssignmentHolder.reassign(brokers, configedBrokers, topics);
 
 		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoint = m_endpointMaker.makeEndpoints(event.getEventBus(),
 		      event.getVersion(), event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), false);
@@ -168,7 +170,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			String name = instance.getId();
 			String ip = instance.getAddress();
 			int port = instance.getPort();
-			brokers.put(name, new ClientContext(name, ip, port, m_systemClockService.now()));
+			brokers.put(name, new ClientContext(name, ip, port, null, m_systemClockService.now()));
 		}
 		return brokers;
 	}
