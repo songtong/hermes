@@ -53,13 +53,12 @@ public class MySQLMessageQueueStorageTest extends ComponentTestCase {
 	@Test
 	public void testAppendMessages() throws Exception {
 		String topic = "order_new";
-		Tpp tpp = new Tpp(topic, 0, true);
 		Collection<MessageBatchWithRawData> batches = new ArrayList<>();
 		// TODO mock data
 		ByteBuf rawData = Unpooled.buffer();
 		MessageBatchWithRawData batch = new MessageBatchWithRawData(topic, Arrays.asList(1), rawData);
 		batches.add(batch);
-		s.appendMessages(tpp, batches);
+		s.appendMessages(topic, 0, true, batches);
 	}
 
 	@Test

@@ -38,9 +38,10 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 	private Map<String, KafkaMessageBrokerSender> m_senders = new HashMap<>();
 
 	@Override
-	public void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception {
+	public void appendMessages(String topic, int partition, boolean priority, Collection<MessageBatchWithRawData> batches)
+	      throws Exception {
 		ByteBuf bodyBuf = Unpooled.buffer();
-		KafkaMessageBrokerSender sender = getSender(tpp.getTopic());
+		KafkaMessageBrokerSender sender = getSender(topic);
 		try {
 			for (MessageBatchWithRawData batch : batches) {
 				List<PartialDecodedMessage> pdmsgs = batch.getMessages();
@@ -53,8 +54,8 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 					ByteBuf propertiesBuf = pdmsg.getDurableProperties();
 					HermesPrimitiveCodec codec = new HermesPrimitiveCodec(propertiesBuf);
 					Map<String, String> propertiesMap = codec.readStringStringMap();
-					sender.send(tpp.getTopic(), propertiesMap.get("pK"), bytes);
-					BrokerStatusMonitor.INSTANCE.kafkaSend(tpp.getTopic());
+					sender.send(topic, propertiesMap.get("pK"), bytes);
+					BrokerStatusMonitor.INSTANCE.kafkaSend(topic);
 				}
 			}
 		} finally {

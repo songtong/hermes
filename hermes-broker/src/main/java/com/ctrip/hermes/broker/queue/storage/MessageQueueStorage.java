@@ -16,7 +16,8 @@ import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
  */
 public interface MessageQueueStorage {
 
-	void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception;
+	void appendMessages(String topic, int partition, boolean priority, Collection<MessageBatchWithRawData> batches)
+	      throws Exception;
 
 	Object findLastOffset(Tpp tpp, int groupId) throws Exception;
 

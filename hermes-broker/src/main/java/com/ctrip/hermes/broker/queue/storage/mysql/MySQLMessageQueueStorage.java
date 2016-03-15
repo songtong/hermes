@@ -101,22 +101,23 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	private Map<Pair<Tpp, Integer>, OffsetMessage> m_offsetMessageCache = new ConcurrentHashMap<>();
 
 	@Override
-	public void appendMessages(Tpp tpp, Collection<MessageBatchWithRawData> batches) throws Exception {
-		List<MessagePriority> msgs = new ArrayList<>();
+	public void appendMessages(String topicName, int partition, boolean priority,
+	      Collection<MessageBatchWithRawData> batches) throws Exception {
+		List<MessagePriority> msgs = new ArrayList<>(m_config.getMySQLBatchInsertSize());
 
-		Topic topic = m_metaService.findTopicByName(tpp.getTopic());
+		Topic topic = m_metaService.findTopicByName(topicName);
 
 		for (MessageBatchWithRawData batch : batches) {
 			List<PartialDecodedMessage> pdmsgs = batch.getMessages();
-			BrokerStatusMonitor.INSTANCE.msgSaved(tpp.getTopic(), tpp.getPartition(), pdmsgs.size());
+			BrokerStatusMonitor.INSTANCE.msgSaved(topicName, partition, pdmsgs.size());
 			for (PartialDecodedMessage pdmsg : pdmsgs) {
 				MessagePriority msg = new MessagePriority();
 				msg.setAttributes(pdmsg.readDurableProperties());
 				msg.setCreationDate(new Date(pdmsg.getBornTime()));
-				msg.setPartition(tpp.getPartition());
+				msg.setPartition(partition);
 				msg.setPayload(pdmsg.readBody());
 				if (topic.isPriorityMessageEnabled()) {
-					msg.setPriority(tpp.isPriority() ? 0 : 1);
+					msg.setPriority(priority ? 0 : 1);
 				} else {
 					msg.setPriority(1);
 				}
@@ -124,36 +125,38 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				msg.setProducerId(0);
 				msg.setProducerIp("");
 				msg.setRefKey(pdmsg.getKey());
-				msg.setTopic(tpp.getTopic());
+				msg.setTopic(topicName);
 				msg.setCodecType(pdmsg.getBodyCodecType());
 
 				msgs.add(msg);
 
 				if (msgs.size() == m_config.getMySQLBatchInsertSize()) {
-					batchInsert(tpp, msgs);
+					batchInsert(topicName, partition, priority, msgs);
 					msgs.clear();
 				}
 			}
 		}
 
 		if (!msgs.isEmpty()) {
-			batchInsert(tpp, msgs);
+			batchInsert(topicName, partition, priority, msgs);
 		}
 	}
 
-	private void batchInsert(Tpp tpp, List<MessagePriority> msgs) throws DalException {
+	private void batchInsert(String topic, int partition, boolean priority, List<MessagePriority> msgs)
+	      throws DalException {
 		long startTime = m_systemClockService.now();
 		m_msgDao.insert(msgs.toArray(new MessagePriority[msgs.size()]));
 
-		bizLog(tpp, msgs, startTime, m_systemClockService.now());
+		bizLog(topic, partition, priority, msgs, startTime, m_systemClockService.now());
 	}
 
-	private void bizLog(Tpp tpp, List<MessagePriority> msgs, long startTime, long endTime) {
+	private void bizLog(String topic, int partition, boolean priority, List<MessagePriority> msgs, long startTime,
+	      long endTime) {
 		for (MessagePriority msg : msgs) {
 			BizEvent event = new BizEvent("RefKey.Transformed");
-			event.addData("topic", msg.getTopic());
-			event.addData("partition", tpp.getPartition());
-			event.addData("priority", tpp.getPriorityInt());
+			event.addData("topic", topic);
+			event.addData("partition", partition);
+			event.addData("priority", priority ? 0 : 1);
 			event.addData("refKey", msg.getRefKey());
 			event.addData("msgId", msg.getId());
 
@@ -523,7 +526,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 			if (!topMsg.isEmpty()) {
 				lastId = CollectionUtil.last(topMsg).getId();
 			}
-			
+
 			OffsetResend proto = new OffsetResend();
 			proto.setTopic(topic);
 			proto.setPartition(partition);

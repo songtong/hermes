@@ -67,11 +67,10 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	private FlusherScheduleTask m_flushCheckerTask;
 
 	@Override
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(Tpp tpp, MessageBatchWithRawData data,
-	      long expireTime) {
+	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(String topic, int partition, boolean priority,
+	      MessageBatchWithRawData data, long expireTime) {
 		if (!m_stopped.get()) {
-			return getMessageQueue(tpp.getTopic(), tpp.getPartition()).appendMessageAsync(tpp.isPriority(), data,
-			      expireTime);
+			return getMessageQueue(topic, partition).appendMessageAsync(priority, data, expireTime);
 		} else {
 			return null;
 		}
