@@ -15,6 +15,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
+import com.ctrip.hermes.metaserver.commons.Constants;
 
 public class MetaMerger {
 
@@ -44,7 +45,15 @@ public class MetaMerger {
 				for (Map.Entry<Integer, Endpoint> partitionEntry : topicEntry.getValue().entrySet()) {
 					Endpoint endpoint = partitionEntry.getValue();
 					if (endpoint != null) {
-						newMeta.addEndpoint(endpoint);
+						Endpoint existingEndpoint = newMeta.findEndpoint(endpoint.getId());
+						if (existingEndpoint == null) {
+							newMeta.addEndpoint(endpoint);
+						} else {
+							if (Constants.ENDPOINT_GROUP_ASSIGNMENT_CHANGING.equals(existingEndpoint.getGroup())
+							      && !Constants.ENDPOINT_GROUP_ASSIGNMENT_CHANGING.equals(endpoint.getGroup())) {
+								newMeta.addEndpoint(endpoint);
+							}
+						}
 					}
 
 					int partitionId = partitionEntry.getKey();
