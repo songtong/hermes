@@ -20,12 +20,14 @@ import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.processor.ThreadCount;
 import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
+@ThreadCount(value = 10)
 public class AckMessageCommandProcessor implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(AckMessageCommandProcessor.class);
 

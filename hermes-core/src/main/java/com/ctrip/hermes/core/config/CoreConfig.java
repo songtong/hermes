@@ -23,7 +23,7 @@ public class CoreConfig implements Initializable {
 
 	private static final int DEFAULT_MAX_CLIENT_TIME_DIFF_MILLIS = 2000;
 
-	private static final int DEFAULT_COMMAND_PROCESSOR_THREAD_COUNT = 3;
+	private static final int DEFAULT_COMMAND_PROCESSOR_DEFAULT_THREAD_COUNT = 3;
 
 	public static final String TIME_UNSYNC_HEADER = "X-Hermes-Time-Unsync";
 
@@ -38,7 +38,7 @@ public class CoreConfig implements Initializable {
 
 	private long m_maxClientTimeDiffMillis = DEFAULT_MAX_CLIENT_TIME_DIFF_MILLIS;
 
-	private int m_commandProcessorThreadCount = DEFAULT_COMMAND_PROCESSOR_THREAD_COUNT;
+	private int m_commandProcessorDefaultThreadCount = DEFAULT_COMMAND_PROCESSOR_DEFAULT_THREAD_COUNT;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -61,14 +61,14 @@ public class CoreConfig implements Initializable {
 			m_maxClientTimeDiffMillis = Long.valueOf(maxClientTimeDiffMillis);
 		}
 		
-		String commandProcessorThreadCountStr = m_env.getGlobalConfig().getProperty("command.processor.thread.count");
-		if (StringUtils.isNumeric(commandProcessorThreadCountStr)) {
-			m_commandProcessorThreadCount = Integer.valueOf(commandProcessorThreadCountStr);
+		String commandProcessorDefaultThreadCountStr = m_env.getGlobalConfig().getProperty("command.processor.default.thread.count");
+		if (StringUtils.isNumeric(commandProcessorDefaultThreadCountStr)) {
+			m_commandProcessorDefaultThreadCount = Integer.valueOf(commandProcessorDefaultThreadCountStr);
 		}
 	}
 
-	public int getCommandProcessorThreadCount() {
-		return m_commandProcessorThreadCount;
+	public int getCommandProcessorDefaultThreadCount() {
+		return m_commandProcessorDefaultThreadCount;
 	}
 
 	public int getMetaServerIpFetchInterval() {

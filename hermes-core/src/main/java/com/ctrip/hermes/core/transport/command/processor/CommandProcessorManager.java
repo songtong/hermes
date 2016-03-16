@@ -88,14 +88,14 @@ public class CommandProcessorManager implements Initializable {
 			ExecutorService executor = null;
 			BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
 
-			if (cmdProcessor.getClass().isAnnotationPresent(SingleThreaded.class)) {
-				executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, workQueue, HermesThreadFactory.create(
-				      threadNamePrefix, false));
-			} else {
-				executor = new ThreadPoolExecutor(m_config.getCommandProcessorThreadCount(),
-				      m_config.getCommandProcessorThreadCount(), 0L, TimeUnit.MILLISECONDS, workQueue,
-				      HermesThreadFactory.create(threadNamePrefix, false));
+			int threadCount = m_config.getCommandProcessorDefaultThreadCount();
+
+			if (cmdProcessor.getClass().isAnnotationPresent(ThreadCount.class)) {
+				threadCount = cmdProcessor.getClass().getAnnotation(ThreadCount.class).value();
 			}
+
+			executor = new ThreadPoolExecutor(threadCount, threadCount, 0L, TimeUnit.MILLISECONDS, workQueue,
+			      HermesThreadFactory.create(threadNamePrefix, false));
 
 			m_executors.put(cmdProcessor, executor);
 			StatusMonitor.INSTANCE.addCommandProcessorThreadPoolGauge(threadNamePrefix, workQueue);

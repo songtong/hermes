@@ -15,6 +15,7 @@ import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.processor.ThreadCount;
 import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 
@@ -22,6 +23,7 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
+@ThreadCount(value = 10)
 public class AckMessageCommandProcessorV3 implements CommandProcessor {
 
 	@Inject
