@@ -60,7 +60,7 @@ public class DefaultLeaderMetaFetcher implements LeaderMetaFetcher {
 				String responseContent = EntityUtils.toString(response.getEntity());
 				return JSON.parseObject(responseContent, Meta.class);
 			} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
-				return null;
+				return meta;
 			}
 
 		} catch (Exception e) {

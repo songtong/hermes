@@ -209,6 +209,10 @@ public class BrokerAssignmentHolder {
 
 	public void clear() {
 		setAssignments(new HashMap<String, Assignment<Integer>>());
+		m_topicsCache.set(new HashMap<String, List<Topic>>());
+		m_mergedBrokers.set(new HashMap<String, Map<String, ClientContext>>());
+		m_configedBrokers.set(new HashMap<Pair<String, Integer>, Endpoint>());
+		m_runningBrokers.set(new HashMap<String, ClientContext>());
 	}
 
 }
