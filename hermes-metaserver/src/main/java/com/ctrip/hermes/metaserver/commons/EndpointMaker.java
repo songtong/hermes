@@ -16,15 +16,12 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventBus;
 import com.ctrip.hermes.metaserver.event.EventType;
-import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -38,9 +35,6 @@ public class EndpointMaker implements Initializable {
 
 	@Inject
 	private MetaServerConfig m_config;
-
-	@Inject
-	private MetaHolder m_metaHolder;
 
 	private ScheduledExecutorService m_scheduledExecutor;
 
@@ -69,22 +63,15 @@ public class EndpointMaker implements Initializable {
 			String topicName = topicAssignment.getKey();
 			Map<Integer, Map<String, ClientContext>> assignment = topicAssignment.getValue().getAssignments();
 
-			Meta meta = m_metaHolder.getMeta();
+			if (assignment != null && !assignment.isEmpty()) {
 
-			if (meta != null && assignment != null && !assignment.isEmpty()) {
+				topicPartition2Endpoints.put(topicName, new HashMap<Integer, Endpoint>());
 
-				Topic topic = meta.findTopic(topicName);
+				for (Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment : assignment.entrySet()) {
+					topicPartition2Endpoints.get(topicName).putAll(
+					      makePartition2Endpoints(eventBus, version, stateHolder, topicName, partitionAssignment,
+					            delayRebalanceTimespan));
 
-				if (topic != null) {
-
-					topicPartition2Endpoints.put(topicName, new HashMap<Integer, Endpoint>());
-
-					for (Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment : assignment.entrySet()) {
-						topicPartition2Endpoints.get(topicName).putAll(
-						      makePartition2Endpoints(eventBus, version, stateHolder, topicName, topic.getBrokerGroup(),
-						            partitionAssignment, delayRebalanceTimespan));
-
-					}
 				}
 
 			}
@@ -99,7 +86,7 @@ public class EndpointMaker implements Initializable {
 	}
 
 	private Map<Integer, Endpoint> makePartition2Endpoints(EventBus eventBus, long version,
-	      ClusterStateHolder stateHolder, String topic, String group,
+	      ClusterStateHolder stateHolder, String topic,
 	      Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment, Pair<Long, Long> delayRebalanceTimespan)
 	      throws Exception {
 
@@ -111,7 +98,6 @@ public class EndpointMaker implements Initializable {
 		if (assignedBrokers != null && !assignedBrokers.isEmpty()) {
 			Endpoint endpoint = new Endpoint();
 			endpoint.setType(Endpoint.BROKER);
-			endpoint.setGroup(group);
 
 			Map<String, ClientLeaseInfo> brokerLease = m_brokerLeaseHolder.getAllValidLeases().get(
 			      new Pair<String, Integer>(topic, partition));
@@ -121,6 +107,7 @@ public class EndpointMaker implements Initializable {
 				endpoint.setHost(assignedBroker.getIp());
 				endpoint.setId(assignedBroker.getName());
 				endpoint.setPort(assignedBroker.getPort());
+				endpoint.setGroup(assignedBroker.getGroup());
 			} else {
 				Entry<String, ClientLeaseInfo> brokerLeaseEntry = brokerLease.entrySet().iterator().next();
 				String leaseHoldingBrokerName = brokerLeaseEntry.getKey();
@@ -130,11 +117,13 @@ public class EndpointMaker implements Initializable {
 					endpoint.setHost(assignedBroker.getIp());
 					endpoint.setId(assignedBroker.getName());
 					endpoint.setPort(assignedBroker.getPort());
+					endpoint.setGroup(assignedBroker.getGroup());
 				} else {
 					Lease lease = leaseHoldingBroker.getLease();
 					endpoint.setHost(leaseHoldingBroker.getIp());
 					endpoint.setId(brokerLeaseEntry.getKey());
 					endpoint.setPort(leaseHoldingBroker.getPort());
+					endpoint.setGroup(Constants.ENDPOINT_GROUP_ASSIGNMENT_CHANGING);
 
 					updateDelayRebalanceTimespan(delayRebalanceTimespan, lease);
 				}
