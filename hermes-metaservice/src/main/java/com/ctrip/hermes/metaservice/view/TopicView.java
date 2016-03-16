@@ -65,6 +65,8 @@ public class TopicView {
 
 	private int storagePartitionCount;
 
+	private String brokerGroup;
+
 	public TopicView() {
 
 	}
@@ -286,5 +288,13 @@ public class TopicView {
 
 	public void setPhone2(String phone2) {
 		this.phone2 = phone2;
+	}
+
+	public String getBrokerGroup() {
+		return brokerGroup;
+	}
+
+	public void setBrokerGroup(String brokerGroup) {
+		this.brokerGroup = brokerGroup;
 	}
 }

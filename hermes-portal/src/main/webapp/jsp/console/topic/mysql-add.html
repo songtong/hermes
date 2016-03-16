@@ -54,6 +54,13 @@
 						</div>
 					</div>
 					<div class="form-group">
+						<label for="inputCodec" class="col-md-4 control-label">broker分组</label>
+						<div class="col-md-4">
+							<select class="form-control" id="inputBrokerGroup" ng-model="new_topic.brokerGroup" ng-options="brokerGroup for brokerGroup in broker_groups">
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-4 control-label">负责人1</label>
 						<div class="col-sm-6">
 							<input class="form-control" ng-model="new_topic.owner1">

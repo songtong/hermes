@@ -365,6 +365,7 @@ public class TopicService {
 		topicModel.setDescription(topicView.getDescription());
 		topicModel.setEndpointType(topicView.getEndpointType());
 		topicModel.setStatus(topicView.getStatus());
+		topicModel.setBrokerGroup(topicView.getBrokerGroup());
 
 		List<Partition> partitions = new ArrayList<>();
 		for (Partition partition : topicView.getPartitions()) {

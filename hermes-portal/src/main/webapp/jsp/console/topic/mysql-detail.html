@@ -83,6 +83,12 @@
 						</div>
 					</div>
 					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">broker分组</label>
+						<div class="col-md-8">
+							<span ng-bind="topic.brokerGroup" onshow="load_broker_groups()" editable-select="topic.brokerGroup" e-form="topicForm" e-name="brokerGroup" e-ng-options="brokerGroup for brokerGroup in broker_groups"></span>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-4 control-label" style="padding-top: 0px">创建时间</label>
 						<div class="col-md-8">
 							<span ng-bind="topic.createTime | date : 'y/M/d, h:mm:ss a'"></span>

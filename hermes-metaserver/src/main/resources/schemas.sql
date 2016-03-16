@@ -226,3 +226,15 @@ CREATE TABLE `application` (
 COMMENT='for application'
 ENGINE=InnoDB
 ;
+
+/* Add broker group */
+ALTER TABLE `endpoint`
+	ADD COLUMN `group` VARCHAR(50) NULL DEFAULT NULL AFTER `port`;
+
+ALTER TABLE `topic`
+	ADD COLUMN `broker_group` VARCHAR(50) NULL DEFAULT NULL COMMENT 'broker分组信息' AFTER `priority_message_enabled`;
+
+/* Add .cs file for avro schema */
+ALTER TABLE `schema`
+	ADD COLUMN `cs_content` MEDIUMBLOB NULL COMMENT 'CS下载使用' AFTER `jar_properties`,
+	ADD COLUMN `cs_properties` TEXT NULL AFTER `cs_content`;

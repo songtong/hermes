@@ -18,7 +18,7 @@
 				<th st-sort="codecType" width="100px" style="text-align: center;">编码</th>
 				<th st-sort="getters.sort_partitions" width="60px" style="text-align: center;">分区</th>
 				<th ng-if="current_topic_type == 'mysql'" st-sort="consumerRetryPolicy">消费策略</th>
-				<th ng-if="current_topic_type == 'mysql'" st-sort="ackTimeoutSeconds"><a href="" tooltip="Consumer ACK 超时, 单位: 秒">超时</a></th>
+				<th ng-if="current_topic_type == 'mysql'" st-sort="brokerGroup">Broker分组</th>
 				<th ng-if="current_topic_type == 'mysql'" style="text-align: center">状态</th>
 				<th ng-if="current_topic_type == 'kafka'" st-sort="endpointType">Endpoint</th>
 				<th ng-if="current_topic_type == 'kafka'" st-sort="schemaName">Schema名称</th>
@@ -31,7 +31,7 @@
 				<th><input st-search="codecType" placeholder="Codec" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
 				<th><input st-search="partitions" placeholder="Partitions" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
 				<th ng-if="current_topic_type == 'mysql'"><input st-search="consumerRetryPolicy" placeholder="Policy" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-				<th ng-if="current_topic_type == 'mysql'"><input st-search="ackTimeoutSeconds" placeholder="ACK Timeout" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+				<th ng-if="current_topic_type == 'mysql'"><input st-search="brokerGroup" placeholder="Broker Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 				<th ng-if="current_topic_type == 'mysql'"></th>
 				<th ng-if="current_topic_type == 'kafka'"><input st-search="endpointType" placeholder="Endpoint" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 				<th ng-if="current_topic_type == 'kafka'"><input st-search="schemaName" placeholder="Name" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -46,7 +46,7 @@
 				<td align="center"><span ng-bind="row.codecType"></span></td>
 				<td align="center"><span ng-bind="row.partitions.length"></td>
 				<td ng-if="current_topic_type == 'mysql'" style="width: 20%"><a href="" ng-bind="row.consumerRetryPolicy | short:20" tooltip="{{row.consumerRetryPolicy}}"></a></td>
-				<td ng-if="current_topic_type == 'mysql'" style="width: 10%"><span ng-bind="row.ackTimeoutSeconds"></span></td>
+				<td ng-if="current_topic_type == 'mysql'" style="width: 10%"><span ng-bind="row.brokerGroup"></span></td>
 				<td ng-if="current_topic_type == 'mysql'" align="center" style="width: 5%"><span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}}" class="status-ok" ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.totalDelay&lt;delayLimit"></span> <span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}} " class="status-danger"
 					ng-if="cur_time-row.latestProduced&lt;noProduceLimit && row.totalDelay&gt;=delayLimit"></span> <span tooltip="Latest: {{row.latestProduced | date:'yyyy-MM-dd HH:mm:ss'}} Delay: {{row.totalDelay}} " class="status-warn" ng-if="cur_time-row.latestProduced&gt;noProduceLimit"></span></td>
 				<td ng-if="current_topic_type == 'kafka'"><span ng-bind="row.endpointType"></span></td>
