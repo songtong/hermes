@@ -95,6 +95,7 @@ public class DefaultApplicationService implements ApplicationService {
 	public TopicView generateTopicView(TopicApplication app) {
 		TopicView topicView = new TopicView();
 
+		topicView.setBrokerGroup("default");
 		String defaultReadDS = "ds0";
 		String defaultWriteDS = "ds0";
 		if ("mysql".equals(app.getStorageType())) {

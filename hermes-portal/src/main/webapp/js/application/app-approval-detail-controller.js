@@ -8,6 +8,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.order_opts = [ true, false ];
 	$scope.datasources = [];
 	$scope.new_comment = "";
+
 	ApplicationService.get_generated_application($routeParams['id']).then(function(result) {
 		$scope.application = result["key"];
 		$scope.view = result["value"];
@@ -48,6 +49,11 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			}
 		}
 	});
+	
+	ApplicationService.get_broker_groups().then(function(result) {
+		$scope.broker_groups = result;
+	});
+	
 	$scope.add_partition = function(view) {
 		var new_partition = {};
 		if (view.partitions.length == 0) {

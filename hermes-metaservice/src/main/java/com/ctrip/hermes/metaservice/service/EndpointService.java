@@ -16,6 +16,7 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
 import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
 import com.ctrip.hermes.metaservice.dal.CachedEndpointDao;
+import com.ctrip.hermes.metaservice.model.EndpointEntity;
 
 @Named
 public class EndpointService {
@@ -46,6 +47,12 @@ public class EndpointService {
 			entities.add(entity);
 		}
 		return entities;
+	}
+
+	public void updateEndpoint(Endpoint endpoint) throws Exception {
+		com.ctrip.hermes.metaservice.model.Endpoint proto = EntityToModelConverter.convert(endpoint);
+		m_endpointDao.updateByPK(proto, EndpointEntity.UPDATESET_FULL);
+		logger.info("Add Endpoint: {} done.", endpoint);
 	}
 
 	public Map<String, Endpoint> getEndpoints() {

@@ -5,7 +5,7 @@ topic_module.run(function(editableOptions) {
 	scope.current_topic_type = routeParams['type'];
 	scope.topic_name = routeParams['topicName'];
 
-	scope.codec_types = [ 'json', 'cmessaging' ];
+	scope.codec_types = [ 'json', 'cmessaging', 'avro' ];
 
 	scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {
 		scope.topic = result;
@@ -15,13 +15,20 @@ topic_module.run(function(editableOptions) {
 		scope.consumers = result;
 	});
 
+	scope.load_broker_groups = function() {
+		return scope.broker_groups ? scope.broker_groups : TopicService.get_broker_groups().then(function(result) {
+			scope.broker_groups = result;
+		})
+	}
+
 	scope.load_datasource_names = function() {
-		return scope.datasource_names ? null : TopicService.fetch_storages().then(function() {
+		return scope.datasource_names ? scope.datasource_names : TopicService.fetch_storages().then(function() {
 			scope.datasource_names = TopicService.get_datasource_names(scope.topic.storageType);
+			console.log(scope.datasource_names);
 		});
 	}
 	scope.load_endpoint_names = function() {
-		return scope.endpoint_names ? null : TopicService.fetch_endpoints().then(function() {
+		return scope.endpoint_names ? scope.endpoint_names : TopicService.fetch_endpoints().then(function() {
 			scope.endpoint_names = TopicService.get_endpoint_names(scope.topic.endpointType);
 		})
 	}

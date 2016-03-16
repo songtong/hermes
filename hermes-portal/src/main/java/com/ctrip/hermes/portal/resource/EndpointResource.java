@@ -3,7 +3,9 @@ package com.ctrip.hermes.portal.resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.ws.rs.DELETE;
@@ -87,5 +89,43 @@ public class EndpointResource {
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
+	}
+
+	@POST
+	@Path("update")
+	public Response updateEndpoint(String content) {
+		logger.info("Update endpoint with payload {}", content);
+
+		if (StringUtils.isEmpty(content)) {
+			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
+		}
+
+		Endpoint endpoint = null;
+		try {
+			endpoint = JSON.parseObject(content, Endpoint.class);
+		} catch (Exception e) {
+			logger.error("Parse consumer failed, content: {}", content, e);
+			throw new RestException(e, Status.BAD_REQUEST);
+		}
+
+		try {
+			endpointService.updateEndpoint(endpoint);
+			return Response.status(Status.OK).build();
+		} catch (Exception e) {
+			logger.error("Update endpoint failed.", e);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@GET
+	@Path("brokerGroups")
+	public Response getBokerGroups() {
+		List<Endpoint> endpoints = new ArrayList<Endpoint>(endpointService.getEndpoints().values());
+		Set<String> brokerGroups = new HashSet<>();
+		for (Endpoint endpoint : endpoints) {
+			brokerGroups.add(endpoint.getGroup());
+		}
+		return Response.status(Status.OK).entity(brokerGroups).build();
 	}
 }

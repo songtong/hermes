@@ -261,7 +261,14 @@
 					<div class="form-group">
 						<label for="inputStoragePartitionCount" class="col-sm-4 control-label">数据库分区数量</label>
 						<div class="col-sm-6">
-							<input class="form-control" id="inputStoragePartitionCount" placeholder="Storage Partition Count" ng-model="view.storagePartitionCount">
+							<input class="form-control"  on-show="get_broker_groups()" id="inputStoragePartitionCount" placeholder="Storage Partition Count" ng-model="view.storagePartitionCount">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputCodec" class="col-md-4 control-label">broker分组</label>
+						<div class="col-sm-4">
+							<select class="form-control" id="inputBrokerGroup" ng-model="view.brokerGroup" ng-options="brokerGroup for brokerGroup in broker_groups">
+							</select>
 						</div>
 					</div>
 					<div class="form-group">

@@ -117,7 +117,24 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 		}
 	});
 
+	var endpoint_resource = $resource('/api/endpoints', {}, {
+		get_broker_groups : {
+			method : 'GET',
+			isArray : true,
+			url : '/api/endpoints/brokerGroups'
+		}
+	});
+
 	return {
+		'get_broker_groups' : function() {
+			var d = $q.defer();
+			endpoint_resource.get_broker_groups({}, function(result) {
+				d.resolve(result);
+			}, function(result) {
+				d.reject(result.data);
+			});
+			return d.promise;
+		},
 		'add_consumer' : function(consumer) {
 			var delay = $q.defer();
 			consumer_resource.add_consumer(consumer, function(result) {

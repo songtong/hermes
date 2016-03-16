@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS `schema` (
   `schema_properties` text COMMENT 'schema properties',
   `jar_content` mediumblob COMMENT 'JAR 下载使用',
   `jar_properties` text COMMENT 'jar properties',
+  `cs_content` MEDIUMBLOB NULL COMMENT 'CS下载使用',
+  `cs_properties` text NULL COMMENT 'cs properties',
   `avroid` int(11) unsigned DEFAULT NULL COMMENT '关联到Schema-Registry',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'changed time',
   PRIMARY KEY (`id`),
@@ -105,6 +107,7 @@ CREATE TABLE `endpoint` (
          `type` VARCHAR(500) NOT NULL DEFAULT 'broker' COMMENT 'type',
          `host` VARCHAR(500) NULL DEFAULT NULL COMMENT 'host',
          `port` SMALLINT(6) NULL DEFAULT NULL COMMENT 'port',
+         `group` VARCHAR(50) NULL DEFAULT NULL COMMENT 'group',
          `DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
          PRIMARY KEY (`id`),
          INDEX `DataChange_LastTime` (`DataChange_LastTime`)
@@ -168,6 +171,7 @@ CREATE TABLE `topic` (
          `storage_partition_count` INT(10) UNSIGNED NULL DEFAULT NULL COMMENT 'storage_partition_count',
          `properties` VARCHAR(5000) NULL DEFAULT NULL COMMENT 'properties',
          `priority_message_enabled` BIT(1) NULL DEFAULT NULL COMMENT 'priority_message_enabled',
+         `broker_group` VARCHAR(50) NULL DEFAULT NULL COMMENT 'broker分组信息',
          PRIMARY KEY (`id`),
          INDEX `DataChange_LastTime` (`DataChange_LastTime`)
 )
@@ -226,3 +230,4 @@ CREATE TABLE `application` (
 COMMENT='for application'
 ENGINE=InnoDB
 ;
+

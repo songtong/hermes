@@ -8,10 +8,14 @@ topic_module.controller('mysql-add-controller', [ '$scope', '$resource', 'TopicS
 		codecType : 'json',
 		storagePartitionSize : '1000000',
 		resendPartitionSize : '5000',
-		storagePartitionCount : '10'
+		storagePartitionCount : '10',
+		brokerGroup : 'default'
 	};
-	$scope.codec_types = [ 'json', 'cmessaging' ];
+	$scope.codec_types = [ 'json', 'cmessaging', 'avro' ];
 	$scope.current_datasource_names = [];
+	TopicService.get_broker_groups().then(function(result) {
+		$scope.broker_groups = result;
+	})
 
 	var meta_resource = $resource('/api/storages', {}, {
 		'get_storage' : {

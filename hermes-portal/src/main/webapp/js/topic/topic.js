@@ -89,6 +89,14 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 		}
 	});
 
+	var endpoint_resource = $resource('/api/endpoints', {}, {
+		get_broker_groups : {
+			method : 'GET',
+			isArray : true,
+			url : '/api/endpoints/brokerGroups'
+		}
+	});
+
 	function find_datasource_names(data, type) {
 		for (var i = 0; i < data.length; i++) {
 			if (data[i].type == type) {
@@ -122,6 +130,15 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 	}
 
 	return {
+		'get_broker_groups' : function() {
+			var d = $q.defer();
+			endpoint_resource.get_broker_groups({}, function(result) {
+				d.resolve(result);
+			}, function(result) {
+				d.reject(result.data);
+			});
+			return d.promise;
+		},
 		'update_topic' : function(topic_name, content) {
 			var d = $q.defer();
 			topic_resource.update_topic({
