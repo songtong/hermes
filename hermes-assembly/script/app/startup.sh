@@ -116,6 +116,19 @@ stop(){
     	else
 			wait_or_kill        
     	fi       
+    	set +e
+    	if [ -f "${SYSOUT_LOG}" ]; then
+    		echo "Backup $SYSOUT_LOG ..."
+    		ARCH_DIR=$LOG_PATH/`date "+%Y-%m"`
+    		SUFFIX=`date "+%Y-%m-%d.%H.%M.%S"`.gz
+    		gzip -S .$SUFFIX $SYSOUT_LOG
+    		if [ ! -d "${ARCH_DIR}" ]; then
+    			mkdir "${ARCH_DIR}"
+    		fi
+    		mv $SYSOUT_LOG.$SUFFIX $ARCH_DIR
+    	fi
+    	set -e
+
         log_op "Instance Stopped"
     fi
 }
