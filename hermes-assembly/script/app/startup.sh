@@ -85,12 +85,28 @@ if [[ $1=="stop" ]]; then
 	fi
 fi
 
+backup_sysout_log(){
+	set +e
+	if [ -f "${SYSOUT_LOG}" ]; then
+		echo "Backup $SYSOUT_LOG ..."
+		ARCH_DIR=$LOG_PATH/`date "+%Y-%m"`
+		SUFFIX=`date "+%Y-%m-%d.%H.%M.%S"`.gz
+		gzip -S .$SUFFIX $SYSOUT_LOG
+		if [ ! -d "${ARCH_DIR}" ]; then
+			mkdir "${ARCH_DIR}"
+		fi
+		mv $SYSOUT_LOG.$SUFFIX $ARCH_DIR
+	fi
+	set -e
+}
+
 start() {
     ensure_not_started
 	if [ ! -d "${LOG_PATH}" ]; then
         mkdir "${LOG_PATH}"
     fi
     log_op $(pwd)
+    backup_sysout_log
     BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_RUNNER_JAR --port $port --stop-port $STOP_PORT --stop-key $STOP_KEY $CONTEXT_DIR > $SYSOUT_LOG 2>&1 &
     log_op "PID $$"
     log_op "Instance Started!"
