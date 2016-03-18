@@ -1,5 +1,9 @@
 package com.ctrip.hermes.metaserver.event.impl;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -9,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.commons.BaseEventBasedZkWatcher;
@@ -16,6 +22,7 @@ import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventBus;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
+import com.ctrip.hermes.metaserver.event.Guard;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaInfo;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
@@ -47,6 +54,8 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	@Inject
 	private LeaderMetaFetcher m_leaderMetaFetcher;
 
+	private ScheduledExecutorService m_scheduledExecutor;
+
 	public void setMetaHolder(MetaHolder metaHolder) {
 		m_metaHolder = metaHolder;
 	}
@@ -74,12 +83,15 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 	@Override
 	public void initialize() throws InitializationException {
+		m_scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory
+		      .create("FollowerRetry", true));
 	}
 
 	@Override
 	protected void processEvent(Event event) throws Exception {
 		m_brokerAssignmentHolder.clear();
-		loadAndAddLeaderMetaWatcher(new LeaderMetaChangedWatcher(event.getEventBus(), event.getVersion()));
+		loadAndAddLeaderMetaWatcher(new LeaderMetaChangedWatcher(event.getEventBus(), event.getVersion()),
+		      event.getEventBus(), event.getVersion());
 
 		loadAndAddMetaServerAssignmentWatcher(new MetaServerAssignmentChangedWatcher(event.getEventBus(),
 		      event.getVersion()));
@@ -90,15 +102,47 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		m_metaServerAssignmentHolder.reload();
 	}
 
-	private void loadAndAddLeaderMetaWatcher(Watcher watcher) throws Exception {
-		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
+	private void loadAndAddLeaderMetaWatcher(Watcher watcher, final EventBus eventBus, final long version)
+	      throws Exception {
+		byte[] data = null;
+		if (watcher == null) {
+			data = m_zkClient.get().getData().forPath(ZKPathUtils.getMetaInfoZkPath());
+		} else {
+			data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
+		}
+
 		MetaInfo metaInfo = ZKSerializeUtils.deserialize(data, MetaInfo.class);
 		Meta meta = m_leaderMetaFetcher.fetchMetaInfo(metaInfo);
-		if (meta != null) {
+
+		if (meta != null && (m_metaHolder.getMeta() == null || meta.getVersion() != m_metaHolder.getMeta().getVersion())) {
 			m_metaHolder.setMeta(meta);
 			log.info("Fetched meta from leader(endpoint={}:{},version={})", metaInfo.getHost(), metaInfo.getPort(),
 			      meta.getVersion());
+		} else if (meta == null) {
+			delayRetry(eventBus, version);
 		}
+	}
+
+	private void delayRetry(final EventBus eventBus, final long version) {
+		m_scheduledExecutor.schedule(new Runnable() {
+
+			@Override
+			public void run() {
+				if (version == PlexusComponentLocator.lookup(Guard.class).getVersion()) {
+					eventBus.getExecutor().submit(new Runnable() {
+
+						@Override
+						public void run() {
+							try {
+								loadAndAddLeaderMetaWatcher(null, eventBus, version);
+							} catch (Exception e) {
+								log.error("Exception occurred while loading meta from leader.", e);
+							}
+						}
+					});
+				}
+			}
+		}, 2, TimeUnit.SECONDS);
 	}
 
 	@Override
@@ -115,7 +159,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		@Override
 		protected void doProcess(WatchedEvent event) {
 			try {
-				loadAndAddLeaderMetaWatcher(this);
+				loadAndAddLeaderMetaWatcher(this, m_eventBus, m_version);
 			} catch (Exception e) {
 				log.error("Exception occurred while handling leader meta watcher event.", e);
 			}
