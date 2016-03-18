@@ -6,6 +6,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.meta.entity.Endpoint;
 
 public class MetaStatusStatusResponse {
 	private Boolean leader;
@@ -21,6 +22,12 @@ public class MetaStatusStatusResponse {
 	private Assignment<String> metaServerAssignments;
 
 	private Map<Pair<String, String>, Assignment<Integer>> consumerAssignments;
+
+	private Map<Pair<String, Integer>, Endpoint> configedBrokers;
+
+	private Map<String, Map<String, ClientContext>> m_effectiveBrokers;
+
+	private Map<String, ClientContext> m_runningBrokers;
 
 	public Boolean isLeader() {
 		return leader;
@@ -77,4 +84,29 @@ public class MetaStatusStatusResponse {
 	public Map<Pair<String, String>, Assignment<Integer>> getConsumerAssignments() {
 		return consumerAssignments;
 	}
+
+	public void setConfigedBrokers(Map<Pair<String, Integer>, Endpoint> configedBrokers) {
+		this.configedBrokers = configedBrokers;
+	}
+
+	public Map<Pair<String, Integer>, Endpoint> getConfigedBrokers() {
+		return configedBrokers;
+	}
+
+	public Map<String, Map<String, ClientContext>> getEffectiveBrokers() {
+		return m_effectiveBrokers;
+	}
+
+	public void setEffectiveBrokers(Map<String, Map<String, ClientContext>> effectiveBrokers) {
+		m_effectiveBrokers = effectiveBrokers;
+	}
+
+	public void setRunningBrokers(Map<String, ClientContext> runningBrokers) {
+		m_runningBrokers = runningBrokers;
+	}
+
+	public Map<String, ClientContext> getRunningBrokers() {
+		return m_runningBrokers;
+	}
+
 }
