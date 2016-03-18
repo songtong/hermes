@@ -72,6 +72,10 @@ public class MetaServerResource {
 		response.setLeader(m_clusterStatusHolder.hasLeadership());
 		response.setLeaderInfo(m_clusterStatusHolder.getLeader());
 		response.setBrokerAssignments(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getAssignments());
+		response.setConfigedBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getConfigedBrokers()
+		      .get());
+		response.setEffectiveBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getMergedBrokers().get());
+		response.setRunningBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getRunningBrokers().get());
 		response.setMetaServerAssignments(PlexusComponentLocator.lookup(MetaServerAssignmentHolder.class)
 		      .getAssignments());
 		response.setConsumerAssignments(PlexusComponentLocator.lookup(ConsumerAssignmentHolder.class).getAssignments());

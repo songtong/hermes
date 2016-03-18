@@ -116,6 +116,18 @@ public class BrokerAssignmentHolder {
 		return m_assignments.get().get(topic);
 	}
 
+	public AtomicReference<Map<String, Map<String, ClientContext>>> getMergedBrokers() {
+		return m_mergedBrokers;
+	}
+
+	public AtomicReference<Map<Pair<String, Integer>, Endpoint>> getConfigedBrokers() {
+		return m_configedBrokers;
+	}
+
+	public AtomicReference<Map<String, ClientContext>> getRunningBrokers() {
+		return m_runningBrokers;
+	}
+
 	public Map<String, Assignment<Integer>> getAssignments() {
 		return m_assignments.get();
 	}
