@@ -17,6 +17,7 @@ import org.unidal.helper.Files.IO;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -127,11 +128,11 @@ public class RemoteMetaProxy implements MetaProxy {
 		}
 	}
 
-	private String pollMetaServer(Function<String, String> fun) {
+	private Pair<Integer, String> pollMetaServer(Function<String, Pair<Integer, String>> fun) {
 		List<String> metaServerIpPorts = m_metaServerLocator.getMetaServerList();
 
 		for (String ipPort : metaServerIpPorts) {
-			String result = fun.apply(ipPort);
+			Pair<Integer, String> result = fun.apply(ipPort);
 			if (result != null) {
 				return result;
 			} else {
@@ -143,11 +144,12 @@ public class RemoteMetaProxy implements MetaProxy {
 
 	}
 
-	private String get(final String path, final Map<String, String> requestParams) {
-		return pollMetaServer(new Function<String, String>() {
+	@Override
+	public Pair<Integer, String> getRequestToMetaServer(final String path, final Map<String, String> requestParams) {
+		return pollMetaServer(new Function<String, Pair<Integer, String>>() {
 
 			@Override
-			public String apply(String ip) {
+			public Pair<Integer, String> apply(String ip) {
 				String url = String.format("http://%s%s", ip, path);
 				InputStream is = null;
 				try {
@@ -171,18 +173,15 @@ public class RemoteMetaProxy implements MetaProxy {
 
 					if (statusCode == 200) {
 						is = conn.getInputStream();
-						return IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
+						return new Pair<Integer, String>(statusCode, IO.INSTANCE.readFrom(is, Charsets.UTF_8.name()));
 					} else {
-						if (log.isDebugEnabled()) {
-							log.debug("Response error while getting meta server error({url={}, status={}}).", url, statusCode);
-						}
-						return null;
+						return new Pair<Integer, String>(statusCode, null);
 					}
 
 				} catch (Exception e) {
 					// ignore
 					if (log.isDebugEnabled()) {
-						log.debug("Get meta server error.", e);
+						log.debug("Poll meta server error.", e);
 					}
 					return null;
 				} finally {
@@ -200,10 +199,10 @@ public class RemoteMetaProxy implements MetaProxy {
 	}
 
 	private String post(final String path, final Map<String, String> requestParams, final Object payload) {
-		return pollMetaServer(new Function<String, String>() {
+		Pair<Integer, String> codeAndRes = pollMetaServer(new Function<String, Pair<Integer, String>>() {
 
 			@Override
-			public String apply(String ip) {
+			public Pair<Integer, String> apply(String ip) {
 
 				String url = String.format("http://%s%s", ip, path);
 				InputStream is = null;
@@ -238,12 +237,12 @@ public class RemoteMetaProxy implements MetaProxy {
 
 					if (statusCode == 200) {
 						is = conn.getInputStream();
-						return IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
+						return new Pair<Integer, String>(statusCode, IO.INSTANCE.readFrom(is, Charsets.UTF_8.name()));
 					} else {
 						if (log.isDebugEnabled()) {
 							log.debug("Response error while posting meta server error({url={}, status={}}).", url, statusCode);
 						}
-						return null;
+						return new Pair<Integer, String>(statusCode, null);
 					}
 
 				} catch (Exception e) {
@@ -272,6 +271,7 @@ public class RemoteMetaProxy implements MetaProxy {
 
 			}
 		});
+		return codeAndRes == null ? null : codeAndRes.getValue();
 	}
 
 	private String encodePropertiesStr(Map<String, String> properties) throws UnsupportedEncodingException {
@@ -310,7 +310,7 @@ public class RemoteMetaProxy implements MetaProxy {
 	public String getSchemaString(int schemaId) {
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("id", String.valueOf(schemaId));
-		String response = get("/schema/register", params);
+		String response = getRequestToMetaServer("/schema/register", params).getValue();
 		if (response != null) {
 			return response;
 		} else {
@@ -326,7 +326,7 @@ public class RemoteMetaProxy implements MetaProxy {
 		params.put("topic", topic);
 		params.put("partition", String.valueOf(partition));
 		params.put("time", String.valueOf(time));
-		String response = get("/message/offset", params);
+		String response = getRequestToMetaServer("/message/offset", params).getValue();
 		if (response != null) {
 			try {
 				Map<Integer, JSONObject> map = (Map<Integer, JSONObject>) JSON.parse(response);

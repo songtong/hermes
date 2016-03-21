@@ -6,6 +6,7 @@ import java.util.List;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.core.cmessaging.DefaultCMessagingConfigService;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.DefaultClientEnvironment;
 import com.ctrip.hermes.core.env.FileEnvProvider;
@@ -85,6 +86,9 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(CatFileBizLogger.class));
 
 		all.add(A(RunningStatusStatisticsService.class));
+
+		// cmessaging config service
+		all.add(A(DefaultCMessagingConfigService.class));
 
 		return all;
 	}

@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -61,7 +62,12 @@ public class LocalMetaProxy implements MetaProxy {
 	}
 
 	@Override
-   public Map<Integer, Offset> findMessageOffsetByTime(String topic, int partition, long time) {
-	   return null;
-   }
+	public Map<Integer, Offset> findMessageOffsetByTime(String topic, int partition, long time) {
+		return null;
+	}
+
+	@Override
+	public Pair<Integer, String> getRequestToMetaServer(String path, Map<String, String> requestParams) {
+		return null;
+	}
 }

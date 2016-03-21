@@ -293,5 +293,17 @@
 				</requirement>
 			</requirements>
 		</component>
+		<component>
+			<role>com.ctrip.hermes.core.cmessaging.CMessagingConfigService</role>
+			<implementation>com.ctrip.hermes.core.cmessaging.DefaultCMessagingConfigService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.internal.MetaManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.config.CoreConfig</role>
+				</requirement>
+			</requirements>
+		</component>
 	</components>
 </plexus>

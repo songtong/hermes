@@ -36,8 +36,12 @@ public class StartMetaServer extends JettyServer {
 	public void startServer() throws Exception {
 		String zkMode = System.getProperty("zkMode");
 		if (!"real".equalsIgnoreCase(zkMode)) {
-			m_zkServer = new TestingServer(2181);
-			System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
+			try {
+				m_zkServer = new TestingServer(2181);
+				System.out.println("Starting zk with fake mode, connection string is " + m_zkServer.getConnectString());
+			} catch (Exception e) {
+				System.out.println("Start zk fake server failed, may be already started.");
+			}
 		}
 		setupZKNodes();
 

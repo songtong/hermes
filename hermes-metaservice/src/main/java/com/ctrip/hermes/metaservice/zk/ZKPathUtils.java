@@ -42,6 +42,10 @@ public class ZKPathUtils {
 	public static String getCmessageExchangePath() {
 		return "/cmessage-exchange";
 	}
+	
+	public static String getCmessageConfigPath() {
+		return "/cmessage-config";
+	}
 
 	public static String getBaseMetaVersionZkPath() {
 		return "/base-meta-version";

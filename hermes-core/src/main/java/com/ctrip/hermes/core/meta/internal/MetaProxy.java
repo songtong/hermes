@@ -2,6 +2,8 @@ package com.ctrip.hermes.core.meta.internal;
 
 import java.util.Map;
 
+import org.unidal.tuple.Pair;
+
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -22,4 +24,6 @@ public interface MetaProxy {
 	String getSchemaString(int schemaId);
 
 	Map<Integer, Offset> findMessageOffsetByTime(String topic, int partition, long time);
+	
+	Pair<Integer, String> getRequestToMetaServer(String path, Map<String, String> requestParams);
 }

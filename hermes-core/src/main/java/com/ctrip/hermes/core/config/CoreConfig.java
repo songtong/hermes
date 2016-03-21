@@ -134,4 +134,8 @@ public class CoreConfig implements Initializable {
 		return m_maxClientTimeDiffMillis;
 	}
 
+	public long getCMessagingConfigUpdateInterval() {
+	   return 5000;
+   }
+
 }
