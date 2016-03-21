@@ -336,8 +336,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 		@Override
 		public void run() {
-			int checkIntervalBase = m_config.getFlushCheckerNoMessageWaitIntervalBaseMillis();
-			int checkIntervalMax = m_config.getFlushCheckerNoMessageWaitIntervalMaxMillis();
+			int checkIntervalBase = m_config.getFlushCheckerNoMessageWaitBaseMillis();
+			int checkIntervalMax = m_config.getFlushCheckerNoMessageWaitMaxMillis();
 
 			SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkIntervalBase, checkIntervalMax);
 

@@ -1,5 +1,7 @@
 package com.ctrip.hermes.broker.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -7,6 +9,8 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.StringUtils;
 
@@ -37,7 +41,21 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_SHUTDOWN_PORT = 4888;
 
+	private static final int DEFAULT_LONG_POLLING_CHECK_INTERVAL_BASE_MILLIS = 100;
+
+	private static final int DEFAULT_LONG_POLLING_CHECK_INTERVAL_MAX_MILLIS = 200;
+
+	private static final int DEFAULT_FLUSH_CHECKER_NO_MESSAGE_WAIT_BASE_MILLIS = 10;
+
+	private static final int DEFAULT_FLUSH_CHECKER_NO_MESSAGE_WAIT_MAX_MILLIS = 20;
+
 	private MySQLCacheConfig m_cacheConfig = new MySQLCacheConfig();
+
+	private Map<String, Integer[]> m_longPollingCheckIntervalMillis = new HashMap<>();
+
+	private int m_flushCheckerNoMessageWaitBaseMillis = DEFAULT_FLUSH_CHECKER_NO_MESSAGE_WAIT_BASE_MILLIS;
+
+	private int m_flushCheckerNoMessageWaitMaxMillis = DEFAULT_FLUSH_CHECKER_NO_MESSAGE_WAIT_MAX_MILLIS;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -45,14 +63,35 @@ public class BrokerConfig implements Initializable {
 		if (StringUtils.isNumeric(flushBatchSizeStr)) {
 			m_messageQueueFlushBatchSzie = Integer.valueOf(flushBatchSizeStr);
 		}
+
 		String mysqlBatchInsertSizeStr = m_env.getGlobalConfig().getProperty("broker.mysql.batch.size");
 		if (StringUtils.isNumeric(mysqlBatchInsertSizeStr)) {
 			m_mySQLBatchInsertSzie = Integer.valueOf(mysqlBatchInsertSizeStr);
 		}
+
 		String longPollingServiceThreadCount = m_env.getGlobalConfig().getProperty(
 		      "broker.long.polling.service.thread.count");
 		if (StringUtils.isNumeric(longPollingServiceThreadCount)) {
 			m_longPollingServiceThreadCount = Integer.valueOf(longPollingServiceThreadCount);
+		}
+
+		String longPollingCheckIntervalMillis = m_env.getGlobalConfig().getProperty(
+		      "broker.long.polling.check.interval.millis");
+		if (!StringUtils.isEmpty(longPollingCheckIntervalMillis)) {
+			m_longPollingCheckIntervalMillis = JSON.parseObject(longPollingCheckIntervalMillis,
+			      new TypeReference<Map<String, Integer[]>>() {
+			      });
+		}
+
+		String flushCheckerNoMessageWaitIntervalBaseMillis = m_env.getGlobalConfig().getProperty(
+		      "broker.flush.checker.no.message.wait.base.millis");
+		if (StringUtils.isNumeric(flushCheckerNoMessageWaitIntervalBaseMillis)) {
+			m_flushCheckerNoMessageWaitBaseMillis = Integer.valueOf(flushCheckerNoMessageWaitIntervalBaseMillis);
+		}
+		String flushCheckerNoMessageWaitIntervalMaxMillis = m_env.getGlobalConfig().getProperty(
+		      "broker.flush.checker.no.message.wait.max.millis");
+		if (StringUtils.isNumeric(flushCheckerNoMessageWaitIntervalMaxMillis)) {
+			m_flushCheckerNoMessageWaitMaxMillis = Integer.valueOf(flushCheckerNoMessageWaitIntervalMaxMillis);
 		}
 
 		m_cacheConfig.init(m_env.getGlobalConfig());
@@ -78,12 +117,22 @@ public class BrokerConfig implements Initializable {
 		return m_longPollingServiceThreadCount;
 	}
 
-	public int getLongPollingCheckIntervalBaseMillis() {
-		return 100;
+	public int getLongPollingCheckIntervalBaseMillis(String topic) {
+		Integer[] millis = m_longPollingCheckIntervalMillis.get(topic);
+		if (millis != null && millis.length == 2 && millis[0] != null) {
+			return millis[0];
+		} else {
+			return DEFAULT_LONG_POLLING_CHECK_INTERVAL_BASE_MILLIS;
+		}
 	}
 
-	public int getLongPollingCheckIntervalMaxMillis() {
-		return 500;
+	public int getLongPollingCheckIntervalMaxMillis(String topic) {
+		Integer[] millis = m_longPollingCheckIntervalMillis.get(topic);
+		if (millis != null && millis.length == 2 && millis[1] != null) {
+			return millis[1];
+		} else {
+			return DEFAULT_LONG_POLLING_CHECK_INTERVAL_MAX_MILLIS;
+		}
 	}
 
 	public int getMessageQueueFlushBatchSize() {
@@ -94,12 +143,12 @@ public class BrokerConfig implements Initializable {
 		return m_mySQLBatchInsertSzie;
 	}
 
-	public int getFlushCheckerNoMessageWaitIntervalBaseMillis() {
-		return 5;
+	public int getFlushCheckerNoMessageWaitBaseMillis() {
+		return m_flushCheckerNoMessageWaitBaseMillis;
 	}
 
-	public int getFlushCheckerNoMessageWaitIntervalMaxMillis() {
-		return 20;
+	public int getFlushCheckerNoMessageWaitMaxMillis() {
+		return m_flushCheckerNoMessageWaitMaxMillis;
 	}
 
 	public long getAckOpCheckIntervalMillis() {

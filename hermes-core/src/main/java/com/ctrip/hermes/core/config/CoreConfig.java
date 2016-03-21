@@ -104,11 +104,11 @@ public class CoreConfig implements Initializable {
 	}
 
 	public int getEndpointChannelWriterCheckIntervalBase() {
-		return 5;
+		return 10;
 	}
 
 	public int getEndpointChannelWriterCheckIntervalMax() {
-		return 50;
+		return 10;
 	}
 
 	public long getEndpointChannelWriteRetryDelay() {

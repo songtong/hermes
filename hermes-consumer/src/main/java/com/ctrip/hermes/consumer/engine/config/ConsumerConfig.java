@@ -32,6 +32,10 @@ public class ConsumerConfig implements Initializable {
 
 	private static final int DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS = 10000;
 
+	private static final int DEFAULT_NO_MESSAGE_WAIT_BASE_MILLIS = 10;
+
+	private static final int DEFAULT_NO_MESSAGE_WAIT_MAX_MILLIS = 10;
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -43,6 +47,10 @@ public class ConsumerConfig implements Initializable {
 	private int m_ackCheckerIoThreadCount = DEFAULT_ACK_CHECKER_IO_THREAD_COUNT;
 
 	private int m_ackCheckerIoTimeoutMillis = DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS;
+
+	private int m_noMessageWaitBaseMillis = DEFAULT_NO_MESSAGE_WAIT_BASE_MILLIS;
+
+	private int m_noMessageWaitMaxMillis = DEFAULT_NO_MESSAGE_WAIT_MAX_MILLIS;
 
 	public int getLocalCacheSize(String topic) throws IOException {
 		String localCacheSizeStr = m_env.getConsumerConfig(topic).getProperty("consumer.localcache.size");
@@ -71,11 +79,11 @@ public class ConsumerConfig implements Initializable {
 	}
 
 	public int getNoMessageWaitBaseMillis() {
-		return 50;
+		return m_noMessageWaitBaseMillis;
 	}
 
 	public int getNoMessageWaitMaxMillis() {
-		return 500;
+		return m_noMessageWaitMaxMillis;
 	}
 
 	public int getNoEndpointWaitBaseMillis() {
@@ -91,6 +99,7 @@ public class ConsumerConfig implements Initializable {
 		if (StringUtils.isNumeric(threadCountStr)) {
 			return Integer.valueOf(threadCountStr);
 		}
+
 		return DEFAULT_NOTIFIER_THREAD_COUNT;
 	}
 
@@ -122,19 +131,29 @@ public class ConsumerConfig implements Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		String ackCheckerIntervalMillis = m_env.getGlobalConfig().getProperty("ack.checker.interval.millis");
+		String ackCheckerIntervalMillis = m_env.getGlobalConfig().getProperty("consumer.ack.checker.interval.millis");
 		if (StringUtils.isNumeric(ackCheckerIntervalMillis)) {
 			m_ackCheckerIntervalMillis = Integer.valueOf(ackCheckerIntervalMillis);
 		}
 
-		String ackCheckerIoThreadCount = m_env.getGlobalConfig().getProperty("ack.checker.io.thread.count");
+		String ackCheckerIoThreadCount = m_env.getGlobalConfig().getProperty("consumer.ack.checker.io.thread.count");
 		if (StringUtils.isNumeric(ackCheckerIoThreadCount)) {
 			m_ackCheckerIoThreadCount = Integer.valueOf(ackCheckerIoThreadCount);
 		}
 
-		String ackCheckerIoTimeoutMillis = m_env.getGlobalConfig().getProperty("ack.checker.io.timeout.millis");
+		String ackCheckerIoTimeoutMillis = m_env.getGlobalConfig().getProperty("consumer.ack.checker.io.timeout.millis");
 		if (StringUtils.isNumeric(ackCheckerIoTimeoutMillis)) {
 			m_ackCheckerIoTimeoutMillis = Integer.valueOf(ackCheckerIoTimeoutMillis);
+		}
+
+		String noMessageWaitBaseMillis = m_env.getGlobalConfig().getProperty("consumer.no.message.wait.base.millis");
+		if (StringUtils.isNumeric(noMessageWaitBaseMillis)) {
+			m_noMessageWaitBaseMillis = Integer.valueOf(noMessageWaitBaseMillis);
+		}
+
+		String noMessageWaitMaxMillis = m_env.getGlobalConfig().getProperty("consumer.no.message.wait.max.millis");
+		if (StringUtils.isNumeric(noMessageWaitMaxMillis)) {
+			m_noMessageWaitMaxMillis = Integer.valueOf(noMessageWaitMaxMillis);
 		}
 	}
 
