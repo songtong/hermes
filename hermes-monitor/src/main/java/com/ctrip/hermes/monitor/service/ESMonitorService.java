@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -125,8 +126,7 @@ public class ESMonitorService {
 		ESQueryContext ctx = new ESQueryContext();
 
 		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_BROKER);
-		ctx.setIndex(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN,
-		      INDEX_DATE_FORMAT.format(new Date())));
+		ctx.setIndex(getHermesLogIndex());
 		ctx.setFrom(from);
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
@@ -136,12 +136,19 @@ public class ESMonitorService {
 		return queryCountInTimeRange(ctx);
 	}
 
+	private String getHermesLogIndex() {
+		String todayIdx = String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN,
+		      INDEX_DATE_FORMAT.format(new Date()));
+		String yesterdayIdx = String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN,
+		      INDEX_DATE_FORMAT.format(new Date(new Date().getTime() - TimeUnit.DAYS.toMillis(1))));
+		return todayIdx + "," + yesterdayIdx;
+	}
+
 	public Map<String, Long> queryMetaserverErrorCount(Date from, Date to) {
 		ESQueryContext ctx = new ESQueryContext();
 
 		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_METASERVER);
-		ctx.setIndex(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN,
-		      INDEX_DATE_FORMAT.format(new Date())));
+		ctx.setIndex(getHermesLogIndex());
 		ctx.setFrom(from);
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
@@ -166,7 +173,7 @@ public class ESMonitorService {
 		      .format("source:%s AND %s:%s", ctx.getDocumentType(), ctx.getQuerySchema(), ctx.getKeyWord());
 
 		QueryBuilder qb = QueryBuilders.queryStringQuery(query);
-		FilterBuilder fb = FilterBuilders.rangeFilter("@eventTime") //
+		FilterBuilder fb = FilterBuilders.rangeFilter("@timestamp") //
 		      .from(EVENT_TIME_FORMATTER.format(ctx.getFrom())) //
 		      .to(EVENT_TIME_FORMATTER.format(ctx.getTo()));
 		TermsBuilder tb = new TermsBuilder(QUERY_AGG_NAME).field(ctx.getGroupSchema());
@@ -179,7 +186,6 @@ public class ESMonitorService {
 		sb.addAggregation(tb);
 
 		String esQueryCondition = sb.toString();
-
 		try {
 			Map<String, Object> payload = new HashMap<>();
 			payload.put("access_token", loadElasticSearchToken());
