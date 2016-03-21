@@ -392,6 +392,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				proto.setScheduleDate(new Date(retryPolicy.nextScheduleTimeMillis(0, now)));
 				proto.setMessageIds(collectOffset(msgId2Metas));
 				proto.setRemainingRetries(retryPolicy.getRetryTimes());
+				proto.setCreationDate(proto.getCreationDate());
 
 				m_resendDao.copyFromMessageTable(proto);
 			} else {
@@ -413,6 +414,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 					int retryTimes = retryPolicy.getRetryTimes() - id2RemainingRetries.get(r.getId());
 					r.setScheduleDate(new Date(retryPolicy.nextScheduleTimeMillis(retryTimes, now)));
 					r.setRemainingRetries(r.getRemainingRetries() - 1);
+					r.setCreationDate(r.getCreationDate());
 				}
 				m_resendDao.insert(resends.toArray(new ResendGroupId[resends.size()]));
 			}
