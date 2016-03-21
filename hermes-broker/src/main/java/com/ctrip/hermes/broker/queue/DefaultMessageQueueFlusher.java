@@ -106,7 +106,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	private void purgeExpiredMsgs() {
-		long now = PlexusComponentLocator.lookup(SystemClockService.class).now();
+		long now =System.currentTimeMillis();
 
 		while (!m_pendingMessages.isEmpty()) {
 			if (m_pendingMessages.peek().getExpireTime() < now) {

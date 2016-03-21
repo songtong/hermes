@@ -77,7 +77,7 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 	}
 
 	protected boolean isTimeout(long start, int timeout) {
-		return PlexusComponentLocator.lookup(SystemClockService.class).now() > start + timeout;
+		return System.currentTimeMillis() > start + timeout;
 	}
 
 	private enum State {
