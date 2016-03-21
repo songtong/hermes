@@ -95,7 +95,11 @@ backup_sysout_log(){
 		if [ ! -d "${ARCH_DIR}" ]; then
 			mkdir "${ARCH_DIR}"
 		fi
-		mv $SYSOUT_LOG.$SUFFIX $ARCH_DIR
+		if [ $can_sudo == true ];then
+    		sudo="sudo"
+    	fi
+
+		$sudo mv $SYSOUT_LOG.$SUFFIX $ARCH_DIR
 	fi
 	set -e
 }
