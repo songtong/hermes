@@ -21,7 +21,6 @@ import com.ctrip.hermes.broker.bootstrap.BrokerBootstrap;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.MessageListenerConfig;
-import com.ctrip.hermes.consumer.api.MessageListenerConfig.StrictlyOrderingRetryPolicy;
 import com.ctrip.hermes.consumer.engine.Engine;
 import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.core.message.ConsumerMessage;
@@ -165,7 +164,7 @@ public class OneBoxTest extends ComponentTestCase {
 			Map<String, Integer> nacks = findNacks(groupId);
 			for (String id : entry.getValue()) {
 				MessageListenerConfig config = new MessageListenerConfig();
-//				config.setStrictlyOrderingRetryPolicy(StrictlyOrderingRetryPolicy.evenRetry(3000, 3));
+				// config.setStrictlyOrderingRetryPolicy(StrictlyOrderingRetryPolicy.evenRetry(3000, 3));
 				System.out.println("Starting consumer " + groupId + ":" + id);
 				Consumer.getInstance().start(topic, groupId, new MyConsumer(nacks, id), config);
 			}
@@ -256,7 +255,7 @@ public class OneBoxTest extends ComponentTestCase {
 		@Override
 		public void onMessage(ConsumerMessage<String> msg) {
 			String body = msg.getBody();
-			System.out.println(m_id + "<<< " + body);
+			System.out.println(m_id + "<<< " + body + " latency: " + (System.currentTimeMillis() - msg.getBornTime()));
 
 			// TODO
 			if (body.startsWith("NACK-")) {
