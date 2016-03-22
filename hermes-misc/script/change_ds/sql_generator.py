@@ -60,11 +60,11 @@ class SqlGenerator:
         return formatter.format(t, p, to_offset_resend_row_insert_string(row))
     
     def create_message_table(self, t, p, pr, max_id, buf, psize):
-        formatter = "CREATE TABLE `{0}_{1}_message_{2}` (`id` bigint(11) NOT NULL AUTO_INCREMENT, `producer_ip` varchar(15) NOT NULL DEFAULT '', `producer_id` int(11) NOT NULL, `ref_key` varchar(100) DEFAULT NULL, `attributes` blob, `codec_type` varchar(20) DEFAULT '', `creation_date` datetime NOT NULL, `payload` mediumblob NOT NULL, PRIMARY KEY (`id`) ) ENGINE=InnoDB AUTO_INCREMENT={3} DEFAULT CHARSET=utf8 PARTITION BY RANGE (id) (PARTITION p0 VALUES LESS THAN ({4}));"
+        formatter = "CREATE TABLE `{0}_{1}_message_{2}` (`id` bigint(11) NOT NULL AUTO_INCREMENT, `producer_ip` varchar(15) NOT NULL DEFAULT '', `producer_id` int(11) NOT NULL, `ref_key` varchar(100) DEFAULT NULL, `attributes` blob, `codec_type` varchar(20) DEFAULT '', `creation_date` datetime(3) NOT NULL, `payload` mediumblob NOT NULL, PRIMARY KEY (`id`) ) ENGINE=InnoDB AUTO_INCREMENT={3} DEFAULT CHARSET=utf8 PARTITION BY RANGE (id) (PARTITION p0 VALUES LESS THAN ({4}));"
         return formatter.format(t, p, pr, max_id + buf, max_id + buf + psize)
     
     def create_dead_letter_table(self, t, p, psize):
-        formatter = "CREATE TABLE `{0}_{1}_dead_letter` (`id` bigint(11) NOT NULL AUTO_INCREMENT, `producer_ip` varchar(15) NOT NULL DEFAULT '', `producer_id` int(11) NOT NULL, `ref_key` varchar(100) DEFAULT NULL, `attributes` blob, `codec_type` varchar(20) DEFAULT '', `creation_date` datetime NOT NULL, `payload` mediumblob NOT NULL, `dead_date` datetime NOT NULL, `group_id` int(11) DEFAULT NULL, `priority` tinyint(4) NOT NULL, `origin_id` bigint(20) NOT NULL, PRIMARY KEY (`id`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8 PARTITION BY RANGE (id) (PARTITION p0 VALUES LESS THAN ({2}));"
+        formatter = "CREATE TABLE `{0}_{1}_dead_letter` (`id` bigint(11) NOT NULL AUTO_INCREMENT, `producer_ip` varchar(15) NOT NULL DEFAULT '', `producer_id` int(11) NOT NULL, `ref_key` varchar(100) DEFAULT NULL, `attributes` blob, `codec_type` varchar(20) DEFAULT '', `creation_date` datetime(3) NOT NULL, `payload` mediumblob NOT NULL, `dead_date` datetime NOT NULL, `group_id` int(11) DEFAULT NULL, `priority` tinyint(4) NOT NULL, `origin_id` bigint(20) NOT NULL, PRIMARY KEY (`id`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8 PARTITION BY RANGE (id) (PARTITION p0 VALUES LESS THAN ({2}));"
         return formatter.format(t, p, psize)
         
     def create_offset_message(self, t, p):
@@ -76,7 +76,7 @@ class SqlGenerator:
         return formatter.format(t, p)
     
     def create_resend_table(self, t, p, g, max_id, buf, psize):
-        formatter = "CREATE TABLE `{0}_{1}_resend_{2}` (`id` bigint(11) NOT NULL AUTO_INCREMENT, `producer_ip` varchar(15) NOT NULL DEFAULT '', `producer_id` int(11) NOT NULL, `ref_key` varchar(100) DEFAULT NULL, `attributes` blob, `codec_type` varchar(20) DEFAULT '', `creation_date` datetime NOT NULL, `payload` mediumblob NOT NULL, `schedule_date` datetime NOT NULL, `remaining_retries` tinyint(11) NOT NULL, `priority` tinyint(4) NOT NULL, `origin_id` bigint(20) NOT NULL, PRIMARY KEY (`id`), KEY `schedule_date` (`schedule_date`) ) ENGINE=InnoDB AUTO_INCREMENT={3} DEFAULT CHARSET=utf8 PARTITION BY RANGE (id) (PARTITION p0 VALUES LESS THAN ({4}));"
+        formatter = "CREATE TABLE `{0}_{1}_resend_{2}` (`id` bigint(11) NOT NULL AUTO_INCREMENT, `producer_ip` varchar(15) NOT NULL DEFAULT '', `producer_id` int(11) NOT NULL, `ref_key` varchar(100) DEFAULT NULL, `attributes` blob, `codec_type` varchar(20) DEFAULT '', `creation_date` datetime(3) NOT NULL, `payload` mediumblob NOT NULL, `schedule_date` datetime NOT NULL, `remaining_retries` tinyint(11) NOT NULL, `priority` tinyint(4) NOT NULL, `origin_id` bigint(20) NOT NULL, PRIMARY KEY (`id`), KEY `schedule_date` (`schedule_date`) ) ENGINE=InnoDB AUTO_INCREMENT={3} DEFAULT CHARSET=utf8 PARTITION BY RANGE (id) (PARTITION p0 VALUES LESS THAN ({4}));"
         return formatter.format(t, p, g, max_id + buf, max_id + buf + psize)
 
 sql_generator = SqlGenerator()
