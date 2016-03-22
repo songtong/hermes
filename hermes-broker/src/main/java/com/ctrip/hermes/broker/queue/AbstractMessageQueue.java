@@ -199,8 +199,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		}
 
 		@Override
-		public Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize) {
-			return m_cursor.next(batchSize);
+		public Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize, String filter) {
+			return m_cursor.next(batchSize, filter);
 		}
 
 		@Override

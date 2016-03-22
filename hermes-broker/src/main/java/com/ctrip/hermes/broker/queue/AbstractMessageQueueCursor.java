@@ -103,22 +103,22 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	protected abstract Object loadLastResendOffset();
 
-	protected abstract FetchResult fetchPriorityMessages(int batchSize);
+	protected abstract FetchResult fetchPriorityMessages(int batchSize, String filter);
 
-	protected abstract FetchResult fetchNonPriorityMessages(int batchSize);
+	protected abstract FetchResult fetchNonPriorityMessages(int batchSize, String filter);
 
 	protected abstract FetchResult fetchResendMessages(int batchSize);
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public synchronized Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize) {
-		List<TppConsumerMessageBatch> batches = doNext(batchSize);
+	public synchronized Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize, String filter) {
+		List<TppConsumerMessageBatch> batches = doNext(batchSize, filter);
 		Offset offset = new Offset((long) m_priorityOffset, (long) m_nonPriorityOffset, (Pair<Date, Long>) m_resendOffset);
 
 		return new Pair<Offset, List<TppConsumerMessageBatch>>(batches == null ? null : offset, batches);
 	}
 
-	protected List<TppConsumerMessageBatch> doNext(int batchSize) {
+	protected List<TppConsumerMessageBatch> doNext(int batchSize, String filter) {
 		if (m_stopped.get() || m_lease.isExpired()) {
 			return null;
 		}
@@ -126,7 +126,7 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		try {
 			List<TppConsumerMessageBatch> result = new LinkedList<>();
 			int remainingSize = batchSize;
-			FetchResult pFetchResult = fetchPriorityMessages(batchSize);
+			FetchResult pFetchResult = fetchPriorityMessages(batchSize, filter);
 
 			if (pFetchResult != null) {
 				TppConsumerMessageBatch priorityMessageBatch = pFetchResult.getBatch();
@@ -151,7 +151,7 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 			}
 
 			if (remainingSize > 0) {
-				FetchResult npFetchResult = fetchNonPriorityMessages(remainingSize);
+				FetchResult npFetchResult = fetchNonPriorityMessages(remainingSize, filter);
 
 				if (npFetchResult != null) {
 					TppConsumerMessageBatch nonPriorityMessageBatch = npFetchResult.getBatch();

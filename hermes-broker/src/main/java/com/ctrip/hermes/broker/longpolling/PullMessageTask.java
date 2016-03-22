@@ -1,10 +1,10 @@
 package com.ctrip.hermes.broker.longpolling;
 
-import io.netty.channel.Channel;
-
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
+
+import io.netty.channel.Channel;
 
 public class PullMessageTask {
 	private Tpg m_tpg;
@@ -27,6 +27,8 @@ public class PullMessageTask {
 
 	private String m_clientIp;
 
+	private String m_filter;
+
 	public String getClientIp() {
 		return m_clientIp;
 	}
@@ -37,6 +39,10 @@ public class PullMessageTask {
 
 	public void setTpg(Tpg tpg) {
 		m_tpg = tpg;
+	}
+
+	public void setFilter(String filter) {
+		m_filter = filter;
 	}
 
 	public void setCorrelationId(long correlationId) {
@@ -73,6 +79,10 @@ public class PullMessageTask {
 
 	public Tpg getTpg() {
 		return m_tpg;
+	}
+
+	public String getFilter() {
+		return m_filter;
 	}
 
 	public long getCorrelationId() {
@@ -112,7 +122,7 @@ public class PullMessageTask {
 		return "PullMessageTask [m_tpg=" + m_tpg + ", m_correlationId=" + m_correlationId + ", m_pullCommandVersion="
 		      + m_pullCommandVersion + ", m_startOffset=" + m_startOffset + ", m_batchSize=" + m_batchSize
 		      + ", m_channel=" + m_channel + ", m_expireTime=" + m_expireTime + ", m_brokerLease=" + m_brokerLease
-		      + ", m_withOffset=" + m_withOffset + ", m_clientIp=" + m_clientIp + "]";
+		      + ", m_withOffset=" + m_withOffset + ", m_filter=" + m_filter + ", m_clientIp=" + m_clientIp + "]";
 	}
 
 }

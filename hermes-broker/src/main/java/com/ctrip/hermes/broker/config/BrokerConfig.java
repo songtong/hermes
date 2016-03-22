@@ -57,6 +57,18 @@ public class BrokerConfig implements Initializable {
 
 	private int m_flushCheckerNoMessageWaitMaxMillis = DEFAULT_FLUSH_CHECKER_NO_MESSAGE_WAIT_MAX_MILLIS;
 
+	private static final int DEFAULT_FILTER_PATTERN_CACHE_SIZE = 10000;
+
+	private int m_filterPatternCacheSize = DEFAULT_FILTER_PATTERN_CACHE_SIZE;
+
+	private static final int DEFAULT_FILTER_PER_TOPIC_CACHE_SIZE = 20;
+
+	private int m_filterPerTopicCacheSize = DEFAULT_FILTER_PER_TOPIC_CACHE_SIZE;
+
+	private static final int DEFAULT_FILTER_TOPIC_CACHE_SIZE = 5000;
+
+	private int m_filterTopicCacheSize = DEFAULT_FILTER_TOPIC_CACHE_SIZE;
+
 	@Override
 	public void initialize() throws InitializationException {
 		String flushBatchSizeStr = m_env.getGlobalConfig().getProperty("broker.flush.batch.size");
@@ -223,5 +235,17 @@ public class BrokerConfig implements Initializable {
 
 	public MySQLCacheConfig getMySQLCacheConfig() {
 		return m_cacheConfig;
+	}
+
+	public int getFilterPatternCacheSize() {
+		return m_filterPatternCacheSize;
+	}
+
+	public int getFilterPerTopicCacheSize() {
+		return m_filterPerTopicCacheSize;
+	}
+
+	public int getFilterTopicCacheSize() {
+		return m_filterTopicCacheSize;
 	}
 }

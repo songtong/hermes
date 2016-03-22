@@ -114,7 +114,7 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 				if (!ackWrote) {
 					m_retryPolicy.fail(true);
-				}else{
+				} else {
 					m_retryPolicy.succeess();
 				}
 			}

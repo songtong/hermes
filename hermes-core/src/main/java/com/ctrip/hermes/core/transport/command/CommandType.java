@@ -16,6 +16,8 @@ import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v4.PullMessageCommandV4;
+import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -34,6 +36,7 @@ public enum CommandType {
 	QUERY_LATEST_CONSUMER_OFFSET_V3(104, 3, QueryLatestConsumerOffsetCommandV3.class), //
 	QUERY_MESSAGE_OFFSET_BY_TIME(105, 1, QueryMessageOffsetByTimeCommand.class), //
 	MESSAGE_PULL_SPECIFIC(106, 1, PullSpecificMessageCommand.class), //
+	MESSAGE_PULL_V4(103, 4, PullMessageCommandV4.class), //
 
 	ACK_MESSAGE_SEND(201, 1, SendMessageAckCommand.class), //
 
@@ -44,6 +47,7 @@ public enum CommandType {
 	RESULT_QUERY_OFFSET(303, 1, QueryOffsetResultCommand.class), //
 	RESULT_QUERY_OFFSET_V3(303, 3, QueryOffsetResultCommandV3.class), //
 	RESULT_ACK_MESSAGE_V3(304, 3, AckMessageResultCommandV3.class), //
+	RESULT_MESSAGE_PULL_V4(302, 4, PullMessageResultCommandV4.class), //
 	;
 
 	private static Map<Pair<Integer, Integer>, CommandType> m_types = new HashMap<>();

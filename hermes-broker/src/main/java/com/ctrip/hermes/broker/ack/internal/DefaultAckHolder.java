@@ -10,9 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.CollectionUtil;
-import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public class DefaultAckHolder<T> implements AckHolder<T> {
 

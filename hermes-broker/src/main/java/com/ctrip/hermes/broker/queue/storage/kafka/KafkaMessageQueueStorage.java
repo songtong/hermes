@@ -74,7 +74,7 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 	}
 
 	@Override
-	public FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize) {
+	public FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize, String filter) {
 		return null;
 	}
 

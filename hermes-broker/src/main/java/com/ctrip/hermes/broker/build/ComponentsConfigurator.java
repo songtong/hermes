@@ -19,6 +19,7 @@ import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory;
+import com.ctrip.hermes.broker.queue.storage.filter.DefaultFilter;
 import com.ctrip.hermes.broker.queue.storage.kafka.KafkaMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
@@ -31,6 +32,7 @@ import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProc
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV3;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV3;
+import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV4;
 import com.ctrip.hermes.broker.transport.command.processor.PullSpecificMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOffsetCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOffsetCommandProcessorV3;
@@ -87,6 +89,12 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(BrokerConfig.class)//
 		      .req(MetaService.class)//
 		);
+		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL_V4.toString(), PullMessageCommandProcessorV4.class)//
+		      .req(LongPollingService.class)//
+		      .req(BrokerLeaseContainer.class)//
+		      .req(BrokerConfig.class)//
+		      .req(MetaService.class)//
+		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL_SPECIFIC.toString(),
 		      PullSpecificMessageCommandProcessor.class)//
 		      .req(BrokerLeaseContainer.class)//
@@ -133,6 +141,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultLongPollingService.class));
 		all.add(A(BrokerLeaseManager.class));
 		all.add(A(BrokerLeaseContainer.class));
+
+		all.add(A(DefaultFilter.class));
 
 		all.add(A(MessageQueuePartitionFactory.class));
 		all.add(A(DefaultMessageQueueManager.class));

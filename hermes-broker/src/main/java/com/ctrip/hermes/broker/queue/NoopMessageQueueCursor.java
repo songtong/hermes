@@ -15,7 +15,7 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 public class NoopMessageQueueCursor implements MessageQueueCursor {
 
 	@Override
-	public Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize) {
+	public Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize, String filter) {
 		return null;
 	}
 

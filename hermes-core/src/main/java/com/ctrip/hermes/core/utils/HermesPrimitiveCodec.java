@@ -1,7 +1,5 @@
 package com.ctrip.hermes.core.utils;
 
-import io.netty.buffer.ByteBuf;
-
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,9 +12,11 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.bo.Offset;
 import com.google.common.base.Charsets;
 
+import io.netty.buffer.ByteBuf;
+
 public class HermesPrimitiveCodec {
 
-	private static final byte NULL = -1;
+	public static final byte NULL = -1;
 
 	private ByteBuf m_buf;
 
@@ -53,6 +53,10 @@ public class HermesPrimitiveCodec {
 		}
 	}
 
+	public byte readByte() {
+		return m_buf.readByte();
+	}
+
 	public byte[] readBytes() {
 		byte firstByte = m_buf.readByte();
 		if (firstByte == NULL) {
@@ -69,6 +73,10 @@ public class HermesPrimitiveCodec {
 
 	private void readerIndexBack(ByteBuf buf, int i) {
 		buf.readerIndex(buf.readerIndex() - i);
+	}
+
+	public void readerIndexBack(int i) {
+		m_buf.readerIndex(m_buf.readerIndex() - i);
 	}
 
 	public void writeString(String str) {
@@ -92,6 +100,48 @@ public class HermesPrimitiveCodec {
 			m_buf.readBytes(strBytes);
 			return new String(strBytes, Charsets.UTF_8);
 		}
+	}
+
+	public void skipString() {
+		byte firstByte = m_buf.readByte();
+		if (NULL != firstByte) {
+			readerIndexBack(m_buf, 1);
+			int strLen = m_buf.readInt();
+			m_buf.skipBytes(strLen);
+		}
+	}
+
+	public String readSuffixStringWithPrefix(String prefix, boolean skipWhenNotMatch) {
+		if (StringUtils.isBlank(prefix)) {
+			return null;
+		}
+		byte firstByte = m_buf.readByte();
+		if (NULL != firstByte) {
+			readerIndexBack(m_buf, 1);
+			int readedLength = 0;
+			int strLen = m_buf.readInt();
+			readedLength += 4;
+			if (prefix.length() <= strLen) {
+				byte[] prefixBytes = new byte[prefix.length()];
+				m_buf.readBytes(prefixBytes);
+				readedLength += prefixBytes.length;
+				if (prefix.equals(new String(prefixBytes, Charsets.UTF_8))) {
+					if (strLen == prefix.length()) {
+						return "";
+					} else {
+						byte[] suffixBytes = new byte[strLen - prefix.length()];
+						m_buf.readBytes(suffixBytes);
+						return new String(suffixBytes, Charsets.UTF_8);
+					}
+				}
+			}
+			readerIndexBack(m_buf, readedLength);
+			if (skipWhenNotMatch) {
+				m_buf.skipBytes(4);
+				m_buf.skipBytes(strLen);
+			}
+		}
+		return null;
 	}
 
 	public void writeInt(int i) {

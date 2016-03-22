@@ -21,6 +21,7 @@ import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.DummyMessageMeta;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
@@ -121,7 +122,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		Pair<Offset, List<TppConsumerMessageBatch>> p = null;
 
 		try {
-			p = cursor.next(pullTask.getBatchSize());
+			p = cursor.next(pullTask.getBatchSize(), pullTask.getFilter());
 		} finally {
 			cursor.stop();
 		}
@@ -155,14 +156,16 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		BrokerStatusMonitor.INSTANCE.msgDelivered(tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), ip, metas.size());
 
 		for (MessageMeta meta : metas) {
-			BizEvent event = new BizEvent("Message.Delivered");
-			event.addData("msgId", meta.getOriginId());
-			event.addData("topic", tpg.getTopic());
-			event.addData("partition", tpg.getPartition());
-			event.addData("consumerIp", ip);
-			event.addData("groupId", tpg.getGroupId());
+			if (!(meta instanceof DummyMessageMeta)) {
+				BizEvent event = new BizEvent("Message.Delivered");
+				event.addData("msgId", meta.getOriginId());
+				event.addData("topic", tpg.getTopic());
+				event.addData("partition", tpg.getPartition());
+				event.addData("consumerIp", ip);
+				event.addData("groupId", tpg.getGroupId());
 
-			m_bizLogger.log(event);
+				m_bizLogger.log(event);
+			}
 		}
 	}
 

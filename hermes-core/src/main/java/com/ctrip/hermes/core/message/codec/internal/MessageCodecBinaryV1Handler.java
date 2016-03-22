@@ -6,12 +6,14 @@ import io.netty.buffer.Unpooled;
 import java.util.Map;
 
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
+import com.ctrip.hermes.core.message.DummyBaseConsumerMessage;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.message.codec.MessageCodecHandler;
 import com.ctrip.hermes.core.message.payload.PayloadCodec;
 import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
+import com.ctrip.hermes.core.transport.DummyMessage;
 import com.ctrip.hermes.core.transport.netty.Magic;
 import com.ctrip.hermes.core.utils.ChecksumUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
@@ -138,19 +140,22 @@ public class MessageCodecBinaryV1Handler implements MessageCodecHandler {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public BaseConsumerMessage<?> decode(String topic, ByteBuf buf, Class<?> bodyClazz) {
-		BaseConsumerMessage msg = new BaseConsumerMessage();
-
 		PartialDecodedMessage decodedMessage = decodePartial(buf);
+		Map<String, String> durableProperties = readProperties(decodedMessage.getDurableProperties());
+		Map<String, String> volatileProperties = readProperties(decodedMessage.getVolatileProperties());
+		PropertiesHolder propertiesHolder = new PropertiesHolder(durableProperties, volatileProperties);
+
+		BaseConsumerMessage msg = DummyMessage.DUMMY_HEADER_VALUE.equals(propertiesHolder.getDurableProperties().get(
+		      DummyMessage.DUMMY_HEADER_KEY)) ? new DummyBaseConsumerMessage<>() : new BaseConsumerMessage<>();
 		msg.setTopic(topic);
 		msg.setRefKey(decodedMessage.getKey());
 		msg.setBornTime(decodedMessage.getBornTime());
 		msg.setRemainingRetries(decodedMessage.getRemainingRetries());
-		Map<String, String> durableProperties = readProperties(decodedMessage.getDurableProperties());
-		Map<String, String> volatileProperties = readProperties(decodedMessage.getVolatileProperties());
-		msg.setPropertiesHolder(new PropertiesHolder(durableProperties, volatileProperties));
-		PayloadCodec bodyCodec = PayloadCodecFactory.getCodecByType(decodedMessage.getBodyCodecType());
-		msg.setBody(bodyCodec.decode(decodedMessage.readBody(), bodyClazz));
-
+		msg.setPropertiesHolder(propertiesHolder);
+		if (!(msg instanceof DummyBaseConsumerMessage)) {
+			PayloadCodec bodyCodec = PayloadCodecFactory.getCodecByType(decodedMessage.getBodyCodecType());
+			msg.setBody(bodyCodec.decode(decodedMessage.readBody(), bodyClazz));
+		}
 		return msg;
 	}
 

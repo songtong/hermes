@@ -1,7 +1,5 @@
 package com.ctrip.hermes.consumer.engine.bootstrap.strategy;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -24,6 +22,7 @@ import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.consumer.engine.FilterMessageListenerConfig;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
@@ -48,16 +47,18 @@ import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
-import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
-import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v4.PullMessageCommandV4;
+import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
+
+import io.netty.buffer.ByteBuf;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -537,13 +538,13 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 		protected void pullMessages(Endpoint endpoint, long timeout) throws InterruptedException, TimeoutException,
 		      ExecutionException {
-			final SettableFuture<PullMessageResultCommandV3> future = SettableFuture.create();
+			final SettableFuture<PullMessageResultCommandV4> future = SettableFuture.create();
 
-			PullMessageCommandV3 cmd = createPullMessageCommand(timeout);
+			PullMessageCommandV4 cmd = createPullMessageCommand(timeout);
 
 			cmd.setFuture(future);
 
-			PullMessageResultCommandV3 ack = null;
+			PullMessageResultCommandV4 ack = null;
 
 			try {
 
@@ -588,19 +589,26 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			}
 		}
 
-		protected void resultReceived(PullMessageResultCommandV3 ack) {
+		protected void resultReceived(PullMessageResultCommandV4 ack) {
 			if (ack.getOffset() != null) {
 				m_offset.set(ack.getOffset());
 			}
 		}
 
-		protected PullMessageCommandV3 createPullMessageCommand(long timeout) {
-			return new PullMessageCommandV3(m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(),
-			      m_offset.get(), m_msgs.remainingCapacity(), m_systemClockService.now() + timeout
-			            + m_config.getPullMessageBrokerExpireTimeAdjustmentMills());
+		protected PullMessageCommandV4 createPullMessageCommand(long timeout) {
+			return new PullMessageCommandV4( //
+			      m_context.getTopic().getName(), //
+			      m_partitionId, //
+			      m_context.getGroupId(), //
+			      m_offset.get(), //
+			      m_msgs.remainingCapacity(), //
+			      m_systemClockService.now() + timeout + m_config.getPullMessageBrokerExpireTimeAdjustmentMills(), //
+			      m_context.getMessageListenerConfig() instanceof FilterMessageListenerConfig ? //
+			      ((FilterMessageListenerConfig) m_context.getMessageListenerConfig()).getFilter()
+			            : null);
 		}
 
-		protected void appendToMsgQueue(PullMessageResultCommandV3 ack) {
+		protected void appendToMsgQueue(PullMessageResultCommandV4 ack) {
 			List<TppConsumerMessageBatch> batches = ack.getBatches();
 			if (batches != null && !batches.isEmpty()) {
 				ConsumerContext context = m_consumerNotifier.find(m_token);
