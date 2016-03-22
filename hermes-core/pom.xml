@@ -105,6 +105,7 @@
 						<configuration>
 							<manifest><![CDATA[
                         ${basedir}/src/main/resources/META-INF/dal/model/meta-manifest.xml,
+                        ${basedir}/src/main/resources/META-INF/dal/model/cmessaging-manifest.xml
                      ]]></manifest>
 						</configuration>
 					</execution>

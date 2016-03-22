@@ -436,6 +436,11 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		public Map<Integer, Offset> findMessageOffsetByTime(String topic, int partition, long time) {
 			return null;
 		}
+
+		@Override
+      public Pair<Integer, String> getRequestToMetaServer(String path, Map<String, String> requestParams) {
+	      return null;
+      }
 	}
 
 }
