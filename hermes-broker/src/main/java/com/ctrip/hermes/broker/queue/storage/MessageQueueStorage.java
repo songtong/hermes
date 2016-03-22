@@ -25,7 +25,7 @@ public interface MessageQueueStorage {
 
 	Object findMessageOffsetByTime(Tpp tpp, long time);
 
-	FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize);
+	FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize, String filter);
 
 	FetchResult fetchMessages(Tpp tpp, List<Object> offsets);
 

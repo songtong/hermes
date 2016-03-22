@@ -1,7 +1,5 @@
 package com.ctrip.hermes.consumer.stream;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +34,7 @@ import com.ctrip.hermes.core.transport.command.v2.AbstractPullMessageCommand;
 import com.ctrip.hermes.core.transport.command.v2.PullSpecificMessageCommand;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.CollectionUtil;
@@ -43,6 +42,8 @@ import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
+
+import io.netty.buffer.ByteBuf;
 
 public class DefaultMessageStream<T> implements MessageStream<T> {
 	private static final Logger log = LoggerFactory.getLogger(DefaultMessageStream.class);
@@ -227,7 +228,7 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 		return pullMessages(new PullMessageCommandCreator() {
 			@Override
 			public AbstractPullMessageCommand createPullCommand() {
-				SettableFuture<PullMessageResultCommandV3> future = SettableFuture.create();
+				SettableFuture<PullMessageResultCommandV4> future = SettableFuture.create();
 
 				@SuppressWarnings("unchecked")
 				List<Offset> cmdOffs = (List<Offset>) CollectionUtil.collect(offsets, new Transformer() {
@@ -256,7 +257,7 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 		return pullMessages(new PullMessageCommandCreator() {
 			@Override
 			public AbstractPullMessageCommand createPullCommand() {
-				SettableFuture<PullMessageResultCommandV3> future = SettableFuture.create();
+				SettableFuture<PullMessageResultCommandV4> future = SettableFuture.create();
 				long expireTime = m_systemClockService.now() + m_config.getPullMessageTimeoutMills();
 				Offset off = new Offset(offset.getPriorityOffset() - 1, offset.getNonPriorityOffset() - 1, null);
 				PullMessageCommandV3 cmd = new PullMessageCommandV3(m_topic, m_partitionId, m_groupId, off, size,

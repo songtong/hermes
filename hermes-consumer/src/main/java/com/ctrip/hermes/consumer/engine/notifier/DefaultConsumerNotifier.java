@@ -1,5 +1,6 @@
 package com.ctrip.hermes.consumer.engine.notifier;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -22,6 +23,7 @@ import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.message.DummyBaseConsumerMessage;
 import com.ctrip.hermes.core.pipeline.Pipeline;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -108,12 +110,18 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 			@Override
 			public void run() {
 				try {
-
-					for (ConsumerMessage<?> msg : msgs) {
+					Iterator<ConsumerMessage<?>> iter = msgs.iterator();
+					while (iter.hasNext()) {
+						ConsumerMessage<?> msg = iter.next();
 						if (msg instanceof BrokerConsumerMessage) {
 							BrokerConsumerMessage bmsg = (BrokerConsumerMessage) msg;
 							bmsg.setToken(token);
 							bmsg.setGroupId(context.getGroupId());
+
+							if (bmsg.getBaseConsumerMessage() instanceof DummyBaseConsumerMessage) {
+								msg.ack();
+								iter.remove();
+							}
 						}
 					}
 
@@ -121,9 +129,8 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 				} catch (Exception e) {
 					log.error(
-
-					"Exception occurred while calling messageReceived(token={}, topic={}, groupId={}, sessionId={})", token,
-					      context.getTopic().getName(), context.getGroupId(), context.getSessionId(), e);
+					      "Exception occurred while calling messageReceived(token={}, topic={}, groupId={}, sessionId={})",
+					      token, context.getTopic().getName(), context.getGroupId(), context.getSessionId(), e);
 				}
 			}
 		});

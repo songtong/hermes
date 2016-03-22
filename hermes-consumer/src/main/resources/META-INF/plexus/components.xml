@@ -118,7 +118,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
-			<role-hint>RESULT_MESSAGE_PULL_V3</role-hint>
+			<role-hint>RESULT_MESSAGE_PULL_V4</role-hint>
 			<implementation>com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageResultCommandProcessor</implementation>
 			<requirements>
 				<requirement>

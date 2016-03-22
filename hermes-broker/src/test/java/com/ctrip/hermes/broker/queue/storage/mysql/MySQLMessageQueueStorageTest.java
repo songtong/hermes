@@ -43,7 +43,7 @@ public class MySQLMessageQueueStorageTest extends ComponentTestCase {
 	@Test
 	public void testFetchMessages() throws Exception {
 		Tpp tpp = new Tpp("order_new", 0, true);
-		FetchResult result = s.fetchMessages(tpp, 0L, 10);
+		FetchResult result = s.fetchMessages(tpp, 0L, 10, null);
 		ByteBuf out = Unpooled.buffer();
 		result.getBatch().getTransferCallback().transfer(out);
 		assertTrue(out.readableBytes() > 0);

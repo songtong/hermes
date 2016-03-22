@@ -151,6 +151,25 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>MESSAGE_PULL_V4</role-hint>
+			<implementation>com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV4</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.longpolling.LongPollingService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
 			<role-hint>MESSAGE_PULL_SPECIFIC</role-hint>
 			<implementation>com.ctrip.hermes.broker.transport.command.processor.PullSpecificMessageCommandProcessor</implementation>
 			<requirements>
@@ -315,6 +334,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.broker.queue.storage.filter.Filter</role>
+			<implementation>com.ctrip.hermes.broker.queue.storage.filter.DefaultFilter</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory</role>
 			<implementation>com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory</implementation>
 			<requirements>
@@ -372,6 +400,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.queue.storage.filter.Filter</role>
 				</requirement>
 			</requirements>
 		</component>

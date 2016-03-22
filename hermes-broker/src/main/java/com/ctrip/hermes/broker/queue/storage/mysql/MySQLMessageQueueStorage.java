@@ -1,19 +1,19 @@
 package com.ctrip.hermes.broker.queue.storage.mysql;
 
 import static com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity.READSET_OFFSET;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.codehaus.plexus.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -39,14 +39,18 @@ import com.ctrip.hermes.broker.dal.hermes.ResendGroupIdDao;
 import com.ctrip.hermes.broker.dal.hermes.ResendGroupIdEntity;
 import com.ctrip.hermes.broker.queue.storage.FetchResult;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
+import com.ctrip.hermes.broker.queue.storage.filter.Filter;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.CachedMessagePriorityDaoInterceptor;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
+import com.ctrip.hermes.broker.transport.BrokerDummyMessagePriority;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
+import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.message.TppConsumerMessageBatch.DummyMessageMeta;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
@@ -55,8 +59,12 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.TransferCallback;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.CollectionUtil;
+import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -95,6 +103,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 	@Inject
 	private BrokerConfig m_config;
+
+	@Inject
+	private Filter m_filter;
 
 	private Map<Triple<String, Integer, Integer>, OffsetResend> m_offsetResendCache = new ConcurrentHashMap<>();
 
@@ -220,7 +231,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		List<MessagePriority> msgs = new ArrayList<MessagePriority>();
 
 		if (!hasStorageForPriority(tpp.getTopic(), tpp.getPriorityInt())) {
-			return buildFetchResult(tpp, msgs);
+			return buildFetchResult(tpp, msgs, null);
 		}
 
 		for (Long[] subOffsets : splitOffsets(offsets)) {
@@ -232,35 +243,49 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				continue;
 			}
 		}
-		return buildFetchResult(tpp, msgs);
+		return buildFetchResult(tpp, msgs, null);
 	}
 
 	@Override
-	public FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize) {
+	public FetchResult fetchMessages(Tpp tpp, Object startOffset, int batchSize, String filter) {
 		if (!hasStorageForPriority(tpp.getTopic(), tpp.getPriorityInt())) {
-			return buildFetchResult(tpp, new ArrayList<MessagePriority>());
+			return buildFetchResult(tpp, new ArrayList<MessagePriority>(), null);
 		}
 
 		try {
 			return buildFetchResult(tpp, m_msgDao.findIdAfter(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(),
-			      (Long) startOffset, batchSize, MessagePriorityEntity.READSET_FULL));
+			      (Long) startOffset, batchSize, MessagePriorityEntity.READSET_FULL), filter);
 		} catch (DalException e) {
 			log.error("Failed to fetch message({}).", tpp, e);
 			return null;
 		}
 	}
 
-	private FetchResult buildFetchResult(Tpp tpp, final List<MessagePriority> msgs) {
+	private FetchResult buildFetchResult( //
+	      final Tpp tpp, final List<MessagePriority> msgs, final String filter) {
 		if (CollectionUtil.isNotEmpty(msgs)) {
 			FetchResult result = new FetchResult();
 
 			long biggestOffset = 0L;
 			final TppConsumerMessageBatch batch = new TppConsumerMessageBatch();
-			for (MessagePriority dataObj : msgs) {
-				MessageMeta msgMeta = new MessageMeta(dataObj.getId(), 0, dataObj.getId(), tpp.getPriorityInt(), false);
+			Iterator<MessagePriority> iter = msgs.iterator();
+			while (iter.hasNext()) {
+				MessagePriority dataObj = iter.next();
 				biggestOffset = Math.max(biggestOffset, dataObj.getId());
-				batch.addMessageMeta(msgMeta);
+				if (matchesFilter(tpp.getTopic(), dataObj, filter)) {
+					MessageMeta msgMeta = new MessageMeta(dataObj.getId(), 0, dataObj.getId(), tpp.getPriorityInt(), false);
+					batch.addMessageMeta(msgMeta);
+				} else {
+					iter.remove();
+				}
 			}
+
+			if (biggestOffset > 0 && msgs.isEmpty()) {
+				BrokerDummyMessagePriority msg = new BrokerDummyMessagePriority(tpp, biggestOffset);
+				msgs.add(msg);
+				batch.addMessageMeta(new DummyMessageMeta(msg.getId(), 0, msg.getId(), msg.getPriority(), false));
+			}
+
 			final String topic = tpp.getTopic();
 			batch.setTopic(topic);
 			batch.setPartition(tpp.getPartition());
@@ -290,6 +315,42 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		}
 
 		return null;
+	}
+
+	private Map<String, String> getAppProperties(ByteBuf buf) {
+		Map<String, String> map = new HashMap<>();
+		if (buf != null) {
+			HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
+			byte firstByte = codec.readByte();
+			if (HermesPrimitiveCodec.NULL != firstByte) {
+				codec.readerIndexBack(1);
+				int length = codec.readInt();
+				if (length > 0) {
+					for (int i = 0; i < length; i++) {
+						String key = codec.readSuffixStringWithPrefix(PropertiesHolder.APP, true);
+						if (!StringUtils.isBlank(key)) {
+							map.put(key, codec.readString());
+						} else {
+							codec.skipString();
+						}
+					}
+				}
+			}
+		}
+		return map;
+	}
+
+	private boolean matchesFilter(String topic, MessagePriority dataObj, String filterString) {
+		if (StringUtils.isBlank(filterString)) {
+			return true;
+		}
+		ByteBuf byteBuf = Unpooled.wrappedBuffer(dataObj.getAttributes());
+		try {
+			return m_filter.isMatch(topic, filterString, getAppProperties(byteBuf));
+		} catch (Exception e) {
+			log.error("Can not find filter for: {}" + filterString);
+			return false;
+		}
 	}
 
 	private FetchResult buildFetchResult(Tpg tpg, final List<ResendGroupId> msgs) {

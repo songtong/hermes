@@ -1,11 +1,11 @@
 package com.ctrip.hermes.core.message;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import com.ctrip.hermes.core.transport.TransferCallback;
+
+import io.netty.buffer.ByteBuf;
 
 /**
  * mapping to one <topic, partition, priority, isResend>
@@ -93,6 +93,12 @@ public class TppConsumerMessageBatch {
 
 	public int size() {
 		return m_messageMetas.size();
+	}
+
+	public static class DummyMessageMeta extends MessageMeta {
+		public DummyMessageMeta(long id, int remainingRetries, long originId, int priority, boolean isResend) {
+			super(id, remainingRetries, originId, priority, isResend);
+		}
 	}
 
 	public static class MessageMeta {
