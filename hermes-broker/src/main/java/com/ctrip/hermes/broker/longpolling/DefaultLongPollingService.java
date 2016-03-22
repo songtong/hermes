@@ -60,8 +60,8 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				@Override
 				public void run() {
 					executeTask(task, new ExponentialSchedulePolicy(//
-					      m_config.getLongPollingCheckIntervalBaseMillis(),//
-					      m_config.getLongPollingCheckIntervalMaxMillis()));
+					      m_config.getLongPollingCheckIntervalBaseMillis(task.getTpg().getTopic()),//
+					      m_config.getLongPollingCheckIntervalMaxMillis(task.getTpg().getTopic())));
 				}
 			});
 		}

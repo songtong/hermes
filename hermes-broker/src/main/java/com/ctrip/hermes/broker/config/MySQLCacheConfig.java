@@ -78,7 +78,7 @@ public class MySQLCacheConfig {
 
 	private static final int DEFAULT_PRIORITY_MESSAGE_MAXIMUM_CAPACITY = 1024 * 1024 * 2;
 
-	private static final int DEFAULT_PRIORITY_PAGE_LOAD_INTERVAL_MILLIS = 200;
+	private static final int DEFAULT_PRIORITY_PAGE_LOAD_INTERVAL_MILLIS = 20;
 
 	private static final int DEFAULT_NONPRIORITY_PAGE_CACHE_CORE_SIZE = 1;
 
@@ -88,7 +88,7 @@ public class MySQLCacheConfig {
 
 	private static final int DEFAULT_NONPRIORITY_MESSAGE_MAXIMUM_CAPACITY = 1024 * 1024 * 4;
 
-	private static final int DEFAULT_NONPRIORITY_PAGE_LOAD_INTERVAL_MILLIS = 200;
+	private static final int DEFAULT_NONPRIORITY_PAGE_LOAD_INTERVAL_MILLIS = 20;
 
 	private static final int DEFAULT_NONPRIORITY_MESSAGE_CONCURRENCY_LEVEL = 16;
 

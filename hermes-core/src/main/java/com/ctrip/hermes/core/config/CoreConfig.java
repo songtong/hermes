@@ -27,6 +27,10 @@ public class CoreConfig implements Initializable {
 
 	public static final String TIME_UNSYNC_HEADER = "X-Hermes-Time-Unsync";
 
+	private static final int DEFAULT_ENDPOINT_CHANNEL_WRITER_CHECK_INTERVAL_BASE = 5;
+
+	private static final int DEFAULT_ENDPOINT_CHANNEL_WRITER_CHECK_INTERVAL_MAX = 10;
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -39,6 +43,10 @@ public class CoreConfig implements Initializable {
 	private long m_maxClientTimeDiffMillis = DEFAULT_MAX_CLIENT_TIME_DIFF_MILLIS;
 
 	private int m_commandProcessorDefaultThreadCount = DEFAULT_COMMAND_PROCESSOR_DEFAULT_THREAD_COUNT;
+
+	private int m_endpointChannelWriterCheckIntervalBase = DEFAULT_ENDPOINT_CHANNEL_WRITER_CHECK_INTERVAL_BASE;
+
+	private int m_endpointChannelWriterCheckIntervalMax = DEFAULT_ENDPOINT_CHANNEL_WRITER_CHECK_INTERVAL_MAX;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -60,10 +68,22 @@ public class CoreConfig implements Initializable {
 		if (StringUtils.isNumeric(maxClientTimeDiffMillis)) {
 			m_maxClientTimeDiffMillis = Long.valueOf(maxClientTimeDiffMillis);
 		}
-		
-		String commandProcessorDefaultThreadCountStr = m_env.getGlobalConfig().getProperty("command.processor.default.thread.count");
+
+		String commandProcessorDefaultThreadCountStr = m_env.getGlobalConfig().getProperty(
+		      "command.processor.default.thread.count");
 		if (StringUtils.isNumeric(commandProcessorDefaultThreadCountStr)) {
 			m_commandProcessorDefaultThreadCount = Integer.valueOf(commandProcessorDefaultThreadCountStr);
+		}
+
+		String endpointChannelWriterCheckIntervalBase = m_env.getGlobalConfig().getProperty(
+		      "endpoint.channel.writer.check.interval.base");
+		if (StringUtils.isNumeric(endpointChannelWriterCheckIntervalBase)) {
+			m_endpointChannelWriterCheckIntervalBase = Integer.valueOf(endpointChannelWriterCheckIntervalBase);
+		}
+		String endpointChannelWriterCheckIntervalMax = m_env.getGlobalConfig().getProperty(
+		      "endpoint.channel.writer.check.interval.max");
+		if (StringUtils.isNumeric(endpointChannelWriterCheckIntervalMax)) {
+			m_endpointChannelWriterCheckIntervalMax = Integer.valueOf(endpointChannelWriterCheckIntervalMax);
 		}
 	}
 
@@ -104,11 +124,11 @@ public class CoreConfig implements Initializable {
 	}
 
 	public int getEndpointChannelWriterCheckIntervalBase() {
-		return 5;
+		return m_endpointChannelWriterCheckIntervalBase;
 	}
 
 	public int getEndpointChannelWriterCheckIntervalMax() {
-		return 50;
+		return m_endpointChannelWriterCheckIntervalMax;
 	}
 
 	public long getEndpointChannelWriteRetryDelay() {

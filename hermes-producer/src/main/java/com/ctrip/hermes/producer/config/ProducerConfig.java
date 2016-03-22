@@ -25,11 +25,11 @@ public class ProducerConfig implements Initializable {
 
 	public static final int DEFAULT_BROKER_SENDER_BATCH_SIZE = 500;
 
-	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_BASE_MILLIS = 5;
+	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_BASE_MILLIS = 10;
 
-	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_MAX_MILLIS = 50;
+	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_MAX_MILLIS = 10;
 
-	public static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 50;
+	public static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 20;
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
