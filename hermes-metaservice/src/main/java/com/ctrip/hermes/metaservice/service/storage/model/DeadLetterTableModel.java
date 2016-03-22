@@ -8,7 +8,7 @@ public final class DeadLetterTableModel extends TableModel{
 		MetaModel ref_key = new MetaModel("ref_key", "VARCHAR(100)", "NULL DEFAULT NULL");
 		MetaModel attributes = new MetaModel("attributes", "BLOB", "NULL");
 		MetaModel codec_type = new MetaModel("codec_type", "VARCHAR(20)", "NULL DEFAULT ''");
-		MetaModel creation_date = new MetaModel("creation_date", "DATETIME", "NOT NULL");
+		MetaModel creation_date = new MetaModel("creation_date", "DATETIME(3)", "NOT NULL");
 		MetaModel payload = new MetaModel("payload", "MEDIUMBLOB", "NOT NULL");
 		MetaModel dead_date = new MetaModel("dead_date", "DATETIME", "NOT NULL");
 		MetaModel group_id = new MetaModel("group_id", "INT(11)", "NULL DEFAULT NULL");

@@ -11,7 +11,7 @@ public final class MessageTableModel extends TableModel{
 		MetaModel attributes = new MetaModel("attributes", "BLOB", "NULL");
 		MetaModel codec_type = new MetaModel("codec_type", "VARCHAR(20)", "NULL DEFAULT ''");
 
-		MetaModel creation_date = new MetaModel("creation_date", "DATETIME", "NOT NULL");
+		MetaModel creation_date = new MetaModel("creation_date", "DATETIME(3)", "NOT NULL");
 		MetaModel payload = new MetaModel("payload", "MEDIUMBLOB", "NOT NULL");
 
 		setMetaModels(id, producer_ip, producer_id, ref_key, attributes, codec_type, creation_date, payload);
