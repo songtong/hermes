@@ -1,5 +1,7 @@
 package com.ctrip.hermes.broker.transport.command.processor;
 
+import io.netty.channel.Channel;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,8 +22,6 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext
 import com.ctrip.hermes.core.transport.command.v4.PullMessageCommandV4;
 import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
 import com.dianping.cat.Cat;
-
-import io.netty.channel.Channel;
 
 public class PullMessageCommandProcessorV4 implements CommandProcessor {
 
@@ -94,7 +94,7 @@ public class PullMessageCommandProcessorV4 implements CommandProcessor {
 		task.setBrokerLease(brokerLease);
 		task.setChannel(channel);
 		task.setCorrelationId(cmd.getHeader().getCorrelationId());
-		task.setExpireTime(cmd.getExpireTime());
+		task.setExpireTime(cmd.getExpireTime() + System.currentTimeMillis());
 		task.setPullCommandVersion(4);
 		task.setWithOffset(true);
 		task.setStartOffset(cmd.getOffset());

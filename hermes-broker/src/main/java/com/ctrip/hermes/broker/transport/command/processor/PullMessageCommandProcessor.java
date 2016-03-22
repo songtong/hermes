@@ -22,6 +22,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.dianping.cat.Cat;
 
 public class PullMessageCommandProcessor implements CommandProcessor {
@@ -123,7 +124,12 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 		task.setBatchSize(cmd.getSize());
 		task.setChannel(ctx.getChannel());
 		task.setCorrelationId(cmd.getHeader().getCorrelationId());
-		task.setExpireTime(cmd.getExpireTime());
+		String timeRel = cmd.getHeader().getProperties().get("timeout-rel");
+		if (StringUtils.isBlank(timeRel) || !"true".equals(timeRel)) {
+			task.setExpireTime(cmd.getExpireTime());
+		} else {
+			task.setExpireTime(cmd.getExpireTime() + System.currentTimeMillis());
+		}
 		task.setTpg(new Tpg(cmd.getTopic(), cmd.getPartition(), cmd.getGroupId()));
 		task.setClientIp(ctx.getRemoteIp());
 

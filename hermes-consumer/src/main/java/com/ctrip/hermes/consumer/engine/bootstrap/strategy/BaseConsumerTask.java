@@ -1,5 +1,7 @@
 package com.ctrip.hermes.consumer.engine.bootstrap.strategy;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -57,8 +59,6 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
-
-import io.netty.buffer.ByteBuf;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -602,7 +602,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			      m_context.getGroupId(), //
 			      m_offset.get(), //
 			      m_msgs.remainingCapacity(), //
-			      m_systemClockService.now() + timeout + m_config.getPullMessageBrokerExpireTimeAdjustmentMills(), //
+			      timeout, //
 			      m_context.getMessageListenerConfig() instanceof FilterMessageListenerConfig ? //
 			      ((FilterMessageListenerConfig) m_context.getMessageListenerConfig()).getFilter()
 			            : null);

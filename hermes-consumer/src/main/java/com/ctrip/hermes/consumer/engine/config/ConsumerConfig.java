@@ -103,10 +103,6 @@ public class ConsumerConfig implements Initializable {
 		return DEFAULT_NOTIFIER_THREAD_COUNT;
 	}
 
-	public long getPullMessageBrokerExpireTimeAdjustmentMills() {
-		return -500L;
-	}
-
 	public long getQueryOffsetTimeoutMillis() {
 		return 3000;
 	}
