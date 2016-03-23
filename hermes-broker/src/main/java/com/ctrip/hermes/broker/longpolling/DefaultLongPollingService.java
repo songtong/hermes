@@ -167,7 +167,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				event.addData("pullCmdReceiveTime", pullCmdReceiveTime);
 				event.addData("isResend", meta.isResend());
 				if (meta.isResend()) {
-					event.addData("ResendId", meta.getId());
+					event.addData("resendId", meta.getId());
 				}
 
 				m_bizLogger.log(event);
