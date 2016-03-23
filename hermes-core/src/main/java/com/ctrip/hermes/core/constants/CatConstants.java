@@ -16,6 +16,8 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_CONSUME_LATENCY = "Message.Consume.Latency";
 
+	public static final String TYPE_MESSAGE_CONSUME_RESEND_LATENCY = "Message.Consume.Resend.Latency";
+
 	public static final String TYPE_MESSAGE_CONSUMED = "Message.Consumed";
 
 	public static final String TYPE_MESSAGE_PRODUCE_ERROR = "Message.Produce.Error";
