@@ -165,6 +165,10 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				event.addData("consumerIp", ip);
 				event.addData("groupId", tpg.getGroupId());
 				event.addData("pullCmdReceiveTime", pullCmdReceiveTime);
+				event.addData("isResend", meta.isResend());
+				if (meta.isResend()) {
+					event.addData("resendId", meta.getId());
+				}
 
 				m_bizLogger.log(event);
 			}
