@@ -1,5 +1,6 @@
 package com.ctrip.hermes.broker.longpolling;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -138,7 +139,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 					boolean needServerSideAckHolder = pullTask.getPullMessageCommandVersion() < 3 ? true : false;
 					m_queueManager.delivered(batch, tpg.getGroupId(), pullTask.isWithOffset(), needServerSideAckHolder);
 
-					bizLogDelivered(pullTask.getClientIp(), batch.getMessageMetas(), tpg);
+					bizLogDelivered(pullTask.getClientIp(), batch.getMessageMetas(), tpg, pullTask.getReceiveTime());
 				}
 
 				response(pullTask, batches, currentOffset);
@@ -152,7 +153,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		}
 	}
 
-	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg) {
+	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg, Date pullCmdReceiveTime) {
 		BrokerStatusMonitor.INSTANCE.msgDelivered(tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), ip, metas.size());
 
 		for (MessageMeta meta : metas) {
@@ -163,6 +164,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				event.addData("partition", tpg.getPartition());
 				event.addData("consumerIp", ip);
 				event.addData("groupId", tpg.getGroupId());
+				event.addData("pullCmdReceiveTime", pullCmdReceiveTime);
 
 				m_bizLogger.log(event);
 			}
