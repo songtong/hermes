@@ -12,8 +12,8 @@
 		<div class="row">
 			<div class="col-sm-3 col-md-2 sidebar">
 				<ul class="nav nav-sidebar" role="tablist">
-					<li ng-click="set_selected(type)" ng-repeat="type in storage_types" role="presentation" ng-class="$first ? 'active' : ''"><a href="#content" role="tab" data-toggle="tab"
-						aria-controls="content"> <span ng-bind="type" style="text-transform: capitalize;"></span>
+					<li ng-click="selectStorage(ds.type)" ng-repeat="ds in __datasources" role="presentation" ng-class="$first ? 'active' : ''"><a href="#content" role="tab" data-toggle="tab"
+						aria-controls="content"> <span ng-bind="ds.type" style="text-transform: capitalize;"></span>
 					</a></li>
 				</ul>
 			</div>
@@ -27,19 +27,20 @@
 						</div>
 					</div>
 					<div class="panel-body">
-						<div ng-repeat="ds in selected.datasources">
+						<div class="alert alert-success" ng-include="'template/storage/templates/' + storageType +'.html'"></div>
+						<div ng-repeat="ds in datasources">
+						<!-- 
+							<div class="alert alert-success" ng-include="'template/storage/templates/' + storageType +'.html'"></div>
+
 							<div class="panel panel-info">
 								<div class="storage-heading">
-
 									<div style="font-size: 20px; height: 34px">
 										<span>ID: {{ds.id}}</span>
 										<span ng-if="is_mysql(selected.type)">Size: {{ds.storage_size}}</span>
 										<div style="float: right">
-											<!-- <button type="button" class="btn btn-default" ng-if="is_mysql(selected.type)" ng-click="isShowAll()">显示所有表</button> -->
 											<button class="btn btn-danger btn-sm" ng-click="del_datasource(ds)">删除</button>
 										</div>
 									</div>
-									<!-- <storage id="ds.id" type="selected.type" ng-if="is_mysql(selected.type)"> </storage> -->
 								</div>
 								<table class="table table-condensed table-responsive table-bordered">
 									<thead>
@@ -69,42 +70,26 @@
 									</tbody>
 								</table>
 							</div>
+ -->
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
+		
 		<%--add-datasource-modal--%>
-		<div class="modal fade" id="add-datasource-modal" tabindex="-1" role="dialog" aria-labelledby="add-consumer-label" aria-hidden="true">
+		<div class="modal fade" id="datasource-modal" tabindex="-1" role="dialog" aria-labelledby="datasource-label" aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h4 class="modal-title" id="add-consumer-label">新增 DataSource On {{selected.type.toUpperCase() }}</h4>
+						<h4 class="modal-title" id="datasource-label">DataSource On {{selected.type.toUpperCase() }}</h4>
 					</div>
-					<div class="modal-body">
-						<form class="form-horizontal">
-							<div class="form-group">
-								<div class="col-sm-8" style="width: 30%; font-size: 14px; padding-left: 20px">KEY</div>
-								<div class="col-sm-8" style="width: 60%; font-size: 14px; padding-left: 20px">Value</div>
-								<button class="btn btn-success btn-sm" ng-click="add_kv($index)" style="width: 8%; font-size: 10px">增加</button>
-							</div>
-							<div class="form-group" ng-repeat="form in forms">
-
-								<div class="col-sm-8" style="width: 30%">
-									<input type="text" class="form-control" data-provide="typeahead" ng-model="form.key">
-								</div>
-								<div class="col-sm-8" style="width: 60%">
-									<input type="text" class="form-control" data-provide="typeahead" placeholder="{{form.placeholder}}" ng-model="form.value">
-								</div>
-								<button class="btn btn-danger btn-sm" ng-click="del_kv($index)" style="width: 8%; font-size: 10px">删除</button>
-
-							</div>
-						</form>
+					<div class="modal-body" ng-include="'template/storage/templates/' + storageType +'-form.html'">
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-sm btn-warning" ng-click="reset()">重置</button>
-						<button type="button" class="btn btn-sm btn-success" data-dismiss="modal" ng-click="add_datasource()">保存</button>
+						<button type="button" class="btn btn-sm btn-warning" ng-click="reset($event)">重置</button>
+						<button type="button" class="btn btn-sm btn-success" data-dismiss="modal" ng-click="save()">保存</button>
 					</div>
 				</div>
 			</div>
@@ -114,9 +99,11 @@
 
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.tpl.min.js"></script>
-	
 	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
-
+	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/global.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/utils.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/components.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/storage/storage.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/storage/service.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/storage/controller.js"></script>
