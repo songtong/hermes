@@ -1,0 +1,11 @@
+{
+	"debug": true,
+	"env": "dev",
+	"domains": {
+		"prod": "localhost:7678",
+		"uat": "localhost:7678",
+		"fws": "localhost:7678",
+		"tools": "localhost:7678",
+		"dev": "localhost:7678"
+	}
+}

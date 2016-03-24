@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <file path="user-codegen.xml" />
+  <file path="user-dal.xml" />
+  <file path="role-codegen.xml" />
+  <file path="role-dal.xml" />
+  <file path="permission-codegen.xml" />
+  <file path="permission-dal.xml" />
+</manifest>
+

@@ -1,0 +1,78 @@
+			<div class="row">
+				<div class="col-md-6">
+					<label class="label label-info">基本信息</label>
+					<div class="form-horizontal">
+						<div class="form-group">
+							<label class="col-md-4 control-label">Topic名称</label>
+							<div class="col-md-8">
+								<input class="form-control" ng-model="view.topicName">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-4 control-label">Consumer名称</label>
+							<div class="col-md-8">
+								<input class="form-control" ng-model="view.name">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-4 control-label">应用名称</label>
+							<div class="col-md-8">
+								<input class="form-control" ng-model="view.appIds">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-4 control-label">保证有序消费</label>
+							<div class="col-md-8">
+								<select class="form-control" ng-model="view.orderedConsume" ng-options="order for order in order_opts">
+								</select>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-4 control-label">重试策略</label>
+							<div class="col-md-8">
+								<input class="form-control" ng-model="view.retryPolicy">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-4 control-label">ACK超时</label>
+							<div class="col-md-8">
+								<input class="form-control" ng-model="view.ackTimeoutSeconds">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<label class="label">&nbsp;</label>
+					<div class="form-horizontal">
+						<div class="form-group">
+							<label for="inputOwner1" class="col-sm-4 control-label">负责人1</label>
+							<div class="col-sm-6">
+								<input class="form-control" id="inputOwner1" placeholder="Topic Creator 1" ng-model="view.owner1">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="inputPhone1" class="col-sm-4 control-label">手机1</label>
+							<div class="col-sm-6">
+								<input class="form-control" id="inputPhone1" placeholder="Topic Creator 1's Phone Number" ng-model="view.phone1">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="inputOwner2" class="col-sm-4 control-label">负责人2</label>
+							<div class="col-sm-6">
+								<input class="form-control" id="inputOwner2" placeholder="Topic Creator 2" ng-model="view.owner2">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="inputPhone2" class="col-sm-4 control-label">手机2</label>
+							<div class="col-sm-6">
+								<input class="form-control" id="inputPhone2" placeholder="Topic Creator 2's Phone Number" ng-model="view.phone2">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-offset-4 col-sm-6">
+								<button type="button" class="btn btn-primary pull-right" ng-click="createTopic()">同步</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
