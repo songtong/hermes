@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.hermes.metaservice.model" gen="true" >
+  <entity name="datasource-tag" table="datasource_tag" alias="dt">
+    <query-defs>
+      <query name="find-by-datasource" type="SELECT" multiple="true">
+        <param name="key-datasource-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='datasource-id'/> = ${key-datasource-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+</entities>
+
