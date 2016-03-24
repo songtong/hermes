@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaservice.queue;
 
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import com.ctrip.hermes.core.utils.StringUtils;
 
 public class PartitionInfo {
 	public static final String SQL_PARTITION = //
-	"SELECT TABLE_NAME, PARTITION_NAME, PARTITION_ORDINAL_POSITION, PARTITION_DESCRIPTION, TABLE_ROWS FROM PARTITIONS ";
+	"SELECT TABLE_NAME, PARTITION_NAME, PARTITION_ORDINAL_POSITION, PARTITION_DESCRIPTION, TABLE_ROWS, CREATE_TIME FROM PARTITIONS ";
 
 	private String m_table;
 
@@ -22,6 +23,8 @@ public class PartitionInfo {
 	private long m_upperbound;
 
 	private long m_rows;
+	
+	private Date m_createdTime;
 
 	public String getTable() {
 		return m_table;
@@ -61,6 +64,14 @@ public class PartitionInfo {
 
 	public void setRows(long rows) {
 		m_rows = rows;
+	}
+
+	public Date getCreatedTime() {
+		return m_createdTime;
+	}
+
+	public void setCreatedTime(Date createdTime) {
+		m_createdTime = createdTime;
 	}
 
 	@Override
@@ -121,6 +132,7 @@ public class PartitionInfo {
 				p.setOrdinal(rs.getInt(3));
 				p.setUpperbound(getBorder(rs.getString(4)));
 				p.setRows(rs.getLong(5));
+				p.setCreatedTime(rs.getDate(6));
 				partitions.add(p);
 			}
 		}

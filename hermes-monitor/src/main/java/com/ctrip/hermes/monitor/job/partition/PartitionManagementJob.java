@@ -2,11 +2,13 @@ package com.ctrip.hermes.monitor.job.partition;
 
 import io.netty.util.internal.ConcurrentSet;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -90,7 +92,7 @@ public class PartitionManagementJob {
 			Meta meta = fetchMeta();
 			Map<String, Integer> limits = parseLimits(meta);
 			Map<String, Pair<Datasource, List<PartitionInfo>>> table2PartitionInfos = getPartitionInfosFromMeta(meta);
-			sortPartitionsInOrdinal(table2PartitionInfos);
+			//sortPartitionsInOrdinal(table2PartitionInfos);
 			List<TableContext> tableContexts = createTableContexts(meta, table2PartitionInfos, limits);
 			ConcurrentHashMap<String, List<PartitionInfo>> wastes = new ConcurrentHashMap<String, List<PartitionInfo>>();
 			partitionCheckerResult.setPartitionChangeListResult(doExecuteManagementJob(tableContexts, wastes));
@@ -158,7 +160,28 @@ public class PartitionManagementJob {
 		for (Datasource ds : meta.getStorages().get(Storage.MYSQL).getDatasources()) {
 			if (!checkedDatasource.contains(ds.getProperties().get("url").getValue())) {
 				checkedDatasource.add(ds.getProperties().get("url").getValue());
-				table2PartitionInfos.putAll(m_partitionService.queryDatasourcePartitions(ds));
+				Map<String, Pair<Datasource, List<PartitionInfo>>> tablePartitions = m_partitionService.queryDatasourcePartitions(ds);
+				// Sort the partitions in order.
+				sortPartitionsInOrdinal(tablePartitions);
+				Iterator<Map.Entry<String, Pair<Datasource, List<PartitionInfo>>>> iterator = tablePartitions.entrySet().iterator();
+				while (iterator.hasNext()) {
+					Map.Entry<String, Pair<Datasource, List<PartitionInfo>>> entry = iterator.next();
+					if (!table2PartitionInfos.containsKey(entry.getKey())) {
+						continue;
+					}
+					
+					// Only handle duplicate partition table here.
+					// Start
+					List<PartitionInfo> existedPartitions = table2PartitionInfos.get(entry.getKey()).getValue();
+					List<PartitionInfo> partitions = entry.getValue().getValue();
+					if (partitions.get(partitions.size() - 1).getCreatedTime().getTime() < existedPartitions.get(existedPartitions.size() - 1).getCreatedTime().getTime()) {
+						iterator.remove();
+					} else {
+						table2PartitionInfos.remove(entry.getKey());
+					}
+					// End
+				}
+				table2PartitionInfos.putAll(tablePartitions);
 			} else {
 				log.info("Already checked datasource:{}", ds.getProperties());
 			}
