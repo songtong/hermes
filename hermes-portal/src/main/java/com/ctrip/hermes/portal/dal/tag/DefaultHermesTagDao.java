@@ -11,7 +11,6 @@ import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.metaservice.dal.CachedDao;
 import com.ctrip.hermes.metaservice.model.Topic;
-import com.ctrip.hermes.metaservice.model.TopicEntity;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
@@ -44,7 +43,7 @@ public class DefaultHermesTagDao extends TagDao implements CachedDao<Long, Tag> 
 	@Override
 	public Collection<Tag> list(boolean fromDB) throws DalException {
 		if (isNeedReload || fromDB) {
-			List<Topic> models = list(TopicEntity.READSET_FULL);
+			List<Tag> models = list(TagEntity.READSET_FULL);
 			if (models.size() > maxSize) {
 				maxSize = models.size() * 2;
 				cache = CacheBuilder.newBuilder().maximumSize(maxSize).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)

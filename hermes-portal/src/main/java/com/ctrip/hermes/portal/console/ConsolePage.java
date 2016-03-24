@@ -25,7 +25,9 @@ public enum ConsolePage implements Page {
 
    APPLICATION("application", "application", "Application", "Application", true),
 
-   META("meta", "meta", "Meta", "Meta", true);
+   META("meta", "meta", "Meta", "Meta", true),
+   
+   TEMPLATE("template", "template", "Template", "Template", true);;
 
    private String m_name;
 
