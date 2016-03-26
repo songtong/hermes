@@ -1,26 +1,65 @@
-var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage']);
+var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage', 'smart-table', 'components' ]);
 hermes_storage.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
 }).controller('storage-controller', [ '$scope', '$resource', 'StorageService', function(scope, resource, StorageService) {
+	// Define resource.
 	var meta_resource = resource('/api/storages', {}, {
 		'get_storages' : {
 			method : 'GET',
-			isArray : true,
-			url : ''
+			isArray : true
 		}
 	});
+	
+	// All datasources.
+	scope.__datasources = null;
+	// Selected datasources.
+	scope.datasources = null;
+	
+	scope.currentDatasource = null;
+	
+	//
+	scope.storageType = 'kafka';
 
-	scope.src_storages = [];
-	scope.selected = {};
-
-    function getDatasources() {
+	// Init.
+    (function() {
         meta_resource.get_storages({}, function (data) {
-            scope.src_storages = data;
-            scope.storage_types = collect_schemas(scope.src_storages, 'type', false);
-            scope.selected = scope.src_storages[0];
+            scope.__datasources = data;
+            scope.datasources = data[0];
+            scope.selectStorage(scope.storageType);
         });
+    })();
+    
+    scope.selectStorage = function(type) {
+    	scope.storageType = type;
+    	if (type == 'mysql') {
+    		scope.datasources = scope.__datasources[1].datasources;
+    	} else {
+    		scope.datasources = scope.__datasources[0].datasources;
+    	}
     }
-    getDatasources();
+    
+    scope.edit = function(index) {
+    	scope.currentDatasource = scope.datasources[index];
+    	$('#datasource-modal').modal();
+    };
+    
+    scope.reset = function($event) {
+    	$($event.currentTarget).parents('.modal-footer').siblings('.modal-body').find('form input').val('');
+    }
+    
+    scope.add = function() {
+    	scope.currentDatasource = {};
+    }
+    
+    scope.remove = function(context) {
+    	scope.datasources.splice(context.index, 1);
+    	// Angular bug: can not handle collection changes when using ng-repeat in template.
+    	$(context.target).parents('tr').remove();
+    }
+    
+    scope.confirm = function($index, $event) {
+    	scope.$broadcast('confirm', 'confirmDialog', {index: $index, target: $event.currentTarget});
+    };
 
     scope.set_selected = function set_selected(type) {
 		for (var idx = 0; idx < scope.src_storages.length; idx++) {
@@ -56,11 +95,11 @@ hermes_storage.run(function(editableOptions) {
         return type == 'mysql';
     }
 
-    scope.$watch(function() {return scope.selected.type}, function() {
-        if (scope.selected.type != undefined) {
-            scope.forms = buildForms(scope.selected.type);
-        }
-    })
+//    scope.$watch(function() {return scope.selected.type}, function() {
+//        if (scope.selected.type != undefined) {
+//            scope.forms = buildForms(scope.selected.type);
+//        }
+//    })
 
     scope.add_kv = function() {
         scope.forms.push(buildForm("", "", ""))
@@ -68,10 +107,6 @@ hermes_storage.run(function(editableOptions) {
 
     scope.del_kv = function(index) {
         scope.forms.splice(index, 1);
-    }
-
-    scope.reset = function() {
-        scope.forms = buildForms(scope.selected.type);
     }
 
     scope.add_datasource = function() {

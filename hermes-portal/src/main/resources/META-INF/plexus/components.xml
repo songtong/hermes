@@ -375,6 +375,24 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.portal.console.template.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.template.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.template.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.template.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.template.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>application</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
@@ -386,6 +404,114 @@
 		<component>
 			<role>com.ctrip.hermes.portal.dal.application.ApplicationDao</role>
 			<implementation>com.ctrip.hermes.portal.dal.application.ApplicationDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>users</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>users</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.dal.user.UsersDao</role>
+			<implementation>com.ctrip.hermes.portal.dal.user.UsersDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>datasource</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>datasource</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>user-roles</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>user_roles</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.dal.role.DatasourceDao</role>
+			<implementation>com.ctrip.hermes.portal.dal.role.DatasourceDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.dal.role.UserRolesDao</role>
+			<implementation>com.ctrip.hermes.portal.dal.role.UserRolesDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>roles-permissions</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>roles_permissions</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.dal.permission.RolesPermissionsDao</role>
+			<implementation>com.ctrip.hermes.portal.dal.permission.RolesPermissionsDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>tag</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>tag</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.dal.tag.TagDao</role>
+			<implementation>com.ctrip.hermes.portal.dal.tag.TagDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>datasource-tag</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>datasource_tag</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagDao</role>
+			<implementation>com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

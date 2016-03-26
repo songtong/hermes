@@ -15,8 +15,10 @@ public interface ApplicationService {
 	public ConsumerApplication saveConsumerApplication(ConsumerApplication consumerApplication);
 
 	public HermesApplication getApplicationById(long id);
-
-	public List<HermesApplication> getApplicationsByStatus(int Status);
+	
+	public List<HermesApplication> getApplicationsByOwnerStatus(String owner, int status, int offset, int size);
+	
+	public int countApplicationsByOwnerStatus(String owner, int status);
 
 	public TopicView generateTopicView(TopicApplication app);
 
@@ -24,6 +26,6 @@ public interface ApplicationService {
 
 	public HermesApplication updateApplication(HermesApplication app);
 
-	public HermesApplication updateStatus(long id, int status, String comment, String approver);
+	public HermesApplication updateStatus(long id, int status, String comment, String approver, String polishedContent);
 
 }

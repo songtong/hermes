@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.hermes.portal.dal.datasourcetag" gen="true" >
   <entity name="datasource-tag" table="datasource_tag" alias="dt">
-  	<member name="count" value-type="int" select-expr="COUNT(*)" all="false" />
     <readsets>
       <readset name="COUNT">
       	<member name="count"/>

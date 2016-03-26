@@ -88,7 +88,7 @@ module.service('TopicSync', ['$resource', '$q', 'config', function($resource, $q
 			} else {
 				params[0]['data'] = arguments[1];
 			}
-		
+			console.log(params);
 			params.push(function(result) {
 				deferred.resolve(result);
 			});

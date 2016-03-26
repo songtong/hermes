@@ -2,7 +2,7 @@
 <wizard package="com.ctrip.hermes.portal">
    <webapp package="com.ctrip.hermes.portal" name="portal" module="false" webres="false" cat="true" plugin-management="false" jstl="true" layout="bootstrap">
       <module name="console" path="console" default="true">
-         <page name="topic" title="Topic" default="true" path="topic" template="default">
+         <page name="topic" title="Topic" path="topic" template="default">
             <description>Topic</description>
          </page>
          <page name="consumer" title="Consumer" path="consumer" template="default">
@@ -26,7 +26,7 @@
          <page name="resender" title="Resender" path="resender" template="default">
             <description>Resender</description>
          </page>
-         <page name="home" title="Home" path="home" template="default">
+         <page name="home" title="Home" path="home" default="true" template="default">
             <description>Home</description>
          </page>
          <page name="application" title="Application" path="application" template="default">

@@ -2,7 +2,7 @@
 <entities do-package="com.ctrip.hermes.portal.dal.role" gen="true">
 	<entity name="user-roles" table="user_roles" alias="ur">
 		<query-defs>
-	     <query name="find-by-username" type="SELECT">
+	     <query name="find-by-username" type="SELECT" multiple="true">
 	       <param name="key-username" />
 	       <statement><![CDATA[SELECT <FIELDS/>
 	       FROM <TABLE/>

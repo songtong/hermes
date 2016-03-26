@@ -74,5 +74,9 @@ public class ResponseUtils {
 	public static Object wrapPaginationResponse(Status status, String message, Object[] data, int count) {
 		return new PaginationResponseWrapper(status, message, data, count);
 	}
+	
+	public static Object wrapPaginationResponse(Status status, Object[] data, int count) {
+		return new PaginationResponseWrapper(status, null, data, count);
+	}
 
 }

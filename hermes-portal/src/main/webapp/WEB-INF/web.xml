@@ -4,6 +4,7 @@
 	version="2.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns="http://java.sun.com/xml/ns/javaee">
 
+	<!-- sso related -->
 	<context-param>
 		<param-name>credisServiceUrl</param-name>
 		<param-value>http://ws.config.framework.uat.qa.nt.ctripcorp.com/configws/</param-value>
@@ -15,19 +16,77 @@
 	<listener>
 		<listener-class>org.jasig.cas.client.session.SingleSignOutHttpSessionListener</listener-class>
 	</listener>
+	<listener>
+		<listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
+	</listener>
+	
+	<!-- filter to disable sso when it's a eligible api call.  -->
+	<filter>
+		<filter-name>apisso-filter</filter-name>
+		<filter-class>com.ctrip.hermes.portal.web.SsoApiFilter</filter-class>
+	</filter>
+	
+	<!--  sso authentication filter to verify whether it requires forwarding. -->
+	<filter>
+		<filter-name>CASFilter</filter-name>
+		<filter-class>org.jasig.cas.client.authentication.AuthenticationFilter</filter-class>
+		<init-param>
+			<param-name>casServerLoginUrl</param-name>
+			<param-value>https://cas.uat.qa.nt.ctripcorp.com/caso/login</param-value>
+		</init-param>
+		<init-param>
+			<param-name>serverName</param-name>
+			<param-value>http://10.32.21.135:7678</param-value>
+		</init-param>
+		<init-param>
+			<param-name>redisClusterName</param-name>
+			<param-value>casClientPrincipal</param-value>
+		</init-param>
+	</filter>
+	
+	<!--  sso ticket validation filter to verify ticket is valid and fetch assertion -->
+	<filter>
+		<filter-name>CAS Validation Filter</filter-name>
+		<filter-class>
+			org.jasig.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter</filter-class>
+		<init-param>
+			<param-name>casServerUrlPrefix</param-name>
+			<param-value>https://cas.uat.qa.nt.ctripcorp.com/caso</param-value>
+		</init-param>
+		<init-param>
+			<param-name>serverName</param-name>
+			<param-value>http://10.32.21.135:7678</param-value>
+		</init-param>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>useRedis</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>redisClusterName</param-name>
+			<param-value>casClientPrincipal</param-value>
+		</init-param>
+	</filter>
+	
+	<!-- assertion holder per thread. -->
+	<filter>
+		<filter-name>CAS Assertion Thread Local Filter</filter-name>
+		<filter-class>org.jasig.cas.client.util.AssertionThreadLocalFilter</filter-class>
+	</filter>
+	
+	<filter>
+		<filter-name>validation-filter</filter-name>
+		<filter-class>com.ctrip.hermes.portal.web.HermesValidationFilter</filter-class>
+	</filter>
 
 	<filter>
 		<filter-name>cat-filter</filter-name>
 		<filter-class>com.dianping.cat.servlet.CatFilter</filter-class>
 	</filter>
-	<filter>
-		<filter-name>validation-filter</filter-name>
-		<filter-class>com.ctrip.hermes.portal.web.HermesValidationFilter</filter-class>
-	</filter>
-	<filter>
-		<filter-name>CAS Assertion Thread Local Filter</filter-name>
-		<filter-class>org.jasig.cas.client.util.AssertionThreadLocalFilter</filter-class>
-	</filter>
+
 	<filter>
 		<filter-name>mvc-filter</filter-name>
 		<filter-class>org.unidal.web.MVCFilter</filter-class>
@@ -44,54 +103,6 @@
 			<param-value>/css/*,/img/*,/js/*,/fonts/*,/api/*, /favicon.ico</param-value>
 		</init-param>
 	</filter>
-	<!-- 该过滤器负责用户的认证工作，必须启用它 -->
-	<filter>
-		<filter-name>CASFilter</filter-name>
-		<filter-class>org.jasig.cas.client.authentication.AuthenticationFilter</filter-class>
-		<init-param>
-			<param-name>casServerLoginUrl</param-name>
-			<param-value>https://cas.uat.qa.nt.ctripcorp.com/caso/login</param-value>
-		</init-param>
-		<init-param>
-			<param-name>serverName</param-name>
-			<param-value>http://localhost:7678</param-value>
-		</init-param>
-		<init-param>
-			<param-name>redisClusterName</param-name>
-			<param-value>casClientPrincipal</param-value>
-		</init-param>
-	</filter>
-	<!-- 该过滤器负责对Ticket的校验工作，必须启用它 -->
-	<filter>
-		<filter-name>CAS Validation Filter</filter-name>
-		<filter-class>
-			org.jasig.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter</filter-class>
-		<init-param>
-			<param-name>casServerUrlPrefix</param-name>
-			<param-value>https://cas.uat.qa.nt.ctripcorp.com/caso</param-value>
-		</init-param>
-		<init-param>
-			<param-name>serverName</param-name>
-			<param-value>http://localhost:7678</param-value>
-		</init-param>
-		<init-param>
-			<param-name>encoding</param-name>
-			<param-value>UTF-8</param-value>
-		</init-param>
-		<init-param>
-			<param-name>useRedis</param-name>
-			<param-value>true</param-value>
-		</init-param>
-		<init-param>
-			<param-name>redisClusterName</param-name>
-			<param-value>casClientPrincipal</param-value>
-		</init-param>
-	</filter>
-	<filter>
-		<filter-name>apisso-filter</filter-name>
-		<filter-class>com.ctrip.hermes.portal.web.SsoApiFilter</filter-class>
-	</filter>
-
 
 	<filter-mapping>
 		<filter-name>apisso-filter</filter-name>

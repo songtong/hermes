@@ -71,11 +71,11 @@ public class DefaultApplicationService implements ApplicationService {
 	}
 
 	@Override
-	public List<HermesApplication> getApplicationsByStatus(int status) {
+	public List<HermesApplication> getApplicationsByOwnerStatus(String owner, int status, int offset, int size) {
 		List<HermesApplication> applications = new ArrayList<HermesApplication>();
 		List<Application> dbApps = null;
 		try {
-			dbApps = m_dao.getApplicationsByStatus(status);
+			dbApps = m_dao.getApplicationsByOwnerStatus(owner, status, offset, size);
 			for (Application dbApp : dbApps) {
 				applications.add(HermesApplication.parse(dbApp));
 			}
@@ -90,7 +90,6 @@ public class DefaultApplicationService implements ApplicationService {
 	public TopicView generateTopicView(TopicApplication app) {
 		TopicView topicView = new TopicView();
 
-		topicView.setBrokerGroup("default");
 		String defaultReadDS = "ds0";
 		String defaultWriteDS = "ds0";
 		if ("mysql".equals(app.getStorageType())) {
@@ -159,7 +158,6 @@ public class DefaultApplicationService implements ApplicationService {
 	public HermesApplication updateApplication(HermesApplication app) {
 		Application dbApp = null;
 		try {
-			app.setStatus(PortalConstants.APP_STATUS_PROCESSING);
 			dbApp = HermesApplication.toDBEntity(app);
 			dbApp = m_dao.updateApplication(dbApp);
 			app = HermesApplication.parse(dbApp);
@@ -173,10 +171,11 @@ public class DefaultApplicationService implements ApplicationService {
 	}
 
 	@Override
-	public HermesApplication updateStatus(long id, int status, String comment, String approver) {
+	public HermesApplication updateStatus(long id, int status, String comment, String approver, String polishedContent) {
 		Application dbApp = null;
 		try {
 			dbApp = m_dao.getAppById(id);
+			dbApp.setPolished(polishedContent);
 			dbApp.setStatus(status);
 			dbApp.setComment(comment);
 			dbApp.setApprover(approver);
@@ -224,5 +223,18 @@ public class DefaultApplicationService implements ApplicationService {
 		}
 
 		return consumerView;
+	}
+
+	@Override
+	public int countApplicationsByOwnerStatus(String owner, int status) {
+		try {
+			if (owner == null) {
+				return m_dao.countApplicationsByStatus(status); 
+			}
+			return m_dao.countApplicationsByOwnerStatus(owner, status);
+		} catch (DalException e) {
+			log.error("Count application:owner={}, status={} from db failed.", owner, status, e);
+		}
+		return -1;
 	}
 }

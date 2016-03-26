@@ -436,8 +436,48 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 
 			if (!$scope.pagination) {
 				ctrl.slice(0, $scope.pageSize);
-				console.log($scope.pageSize);
 			}
 		}
 	}
-});
+}).directive('confirmDialogX', [function() {
+	return {
+		restrict: 'E',
+		scope: {
+			id: '@id',
+			title: '@title',
+			content: '@content',
+			action: '=action'
+		},
+		template: '<div class="modal fade" tabindex="-1" role="dialog">'
+			+ '  <div class="modal-dialog">'
+			+ '    <div class="modal-content">'
+			+ '      <div class="modal-header">'
+			+ '        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>'
+			+ '        <h4 class="modal-title">{{title}}</h4>'
+			+ '      </div>'
+			+ '      <div class="modal-body">'
+			+ '        <div class="alert alert-danger alert-dismissible fade in" role="alert">'
+			+ '            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>'
+			+ '            <p style="text-align: left;">{{content}}</p>'
+			+ '        </div>'
+			+ '      </div>'
+			+ '      <div class="modal-footer">'
+			+ '        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>'
+			+ '        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="action(context)">确认</button>'
+			+ '      </div>'
+			+ '    </div>'
+			+ '  </div>'
+			+ '</div>',
+		link: function($scope, $element, attrs) {
+			$scope.$on('confirm', function(){
+				if (arguments.length > 1 && arguments[1] == attrs['id']) {
+					$element.find('.modal').modal();
+					
+					if (arguments.length > 2) {
+						$scope.context = arguments[2];
+					}
+				}
+			});
+		}
+	};
+}]);

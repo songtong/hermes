@@ -46,7 +46,7 @@
 <jsp:invoke fragment="head" />
 </head>
 
-<body data-spy="scroll" data-target=".subnav" data-offset="50">
+<body data-spy="scroll" data-target=".subnav" data-offset="50" debug="true">
 
 
 	<div class="container-fluid" style="min-height: 524px;">
@@ -169,6 +169,7 @@
 	<script type="text/javascript">
 		var ssoUser = '<%=ssoUser%>';
 		var ssoMail = '<%=ssoMail%>';
+		var isAdmin = <%=session.getAttribute("admin")%>;
 	</script>
 </body>
 </html>

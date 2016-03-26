@@ -130,6 +130,16 @@
 			<artifactId>mockito-core</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-core</artifactId>
+			<version>1.2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-web</artifactId>
+			<version>1.2.4</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -146,7 +156,10 @@
 						</goals>
 						<configuration>
 							<manifest>
-								${basedir}/src/main/resources/META-INF/dal/jdbc/application-manifest.xml
+								${basedir}/src/main/resources/META-INF/dal/jdbc/application-manifest.xml,
+								${basedir}/src/main/resources/META-INF/dal/jdbc/user-manifest.xml,
+								${basedir}/src/main/resources/META-INF/dal/jdbc/role-manifest.xml,
+								${basedir}/src/main/resources/META-INF/dal/jdbc/permission-manifest.xml
 							</manifest>
 						</configuration>
 					</execution>
@@ -159,6 +172,7 @@
 				<executions>
 					<execution>
 						<id>generate plexus component descriptor</id>
+						<phase>process-classes</phase>
 						<goals>
 							<goal>plexus</goal>
 						</goals>

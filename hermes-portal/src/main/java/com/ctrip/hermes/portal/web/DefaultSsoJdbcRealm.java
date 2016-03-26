@@ -1,6 +1,5 @@
 package com.ctrip.hermes.portal.web;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,7 +13,6 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.shiro.util.CollectionUtils;
 import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -71,19 +69,4 @@ public class DefaultSsoJdbcRealm extends JdbcRealm {
         authorizationInfo.setStringPermissions(permissions);
         return authorizationInfo;
 	}
-	
-    protected Object getAvailablePrincipal(PrincipalCollection principals) {
-        Object primary = null;
-        if (!CollectionUtils.isEmpty(principals)) {
-            Collection thisPrincipals = principals.fromRealm(getName());
-            if (!CollectionUtils.isEmpty(thisPrincipals)) {
-                primary = thisPrincipals.iterator().next();
-            } else {
-                //no principals attributed to this particular realm.  Fall back to the 'master' primary:
-                primary = principals.getPrimaryPrincipal();
-            }
-        }
-
-        return primary;
-    }
 }

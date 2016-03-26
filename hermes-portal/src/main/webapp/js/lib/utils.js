@@ -31,7 +31,7 @@ module.provider('_context', [function() {
  * dependency: []
  */
 module.service('clone', function() {
-	return function(obj, deep) {
+	this.copy = function(obj, deep) {
 		if (typeof(obj) == 'obj') {
 			if (obj instanceof Array) {
 				var tmp = [];

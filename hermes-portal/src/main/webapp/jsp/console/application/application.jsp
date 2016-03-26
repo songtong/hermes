@@ -6,12 +6,16 @@
 
 <a:layout>
 	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
-	<div class="container fluid" ng-app="application">
+	<div class="container fluid" ng-app="application" style="width: 90%;">
 		<div ng-view class="main"></div>
 	</div>
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-route.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/global.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/utils.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/topic-sync.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/components.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/application/application.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/application/app-topic-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/application/app-review-controller.js"></script>
