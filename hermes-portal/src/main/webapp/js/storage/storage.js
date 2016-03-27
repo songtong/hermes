@@ -51,10 +51,19 @@ hermes_storage.run(function(editableOptions) {
     	scope.currentDatasource = {};
     }
     
+    scope.save = function() {
+    	StorageService.add_datasource(scope.currentDatasource, scope.storageType, function(data){
+    		scope.currentDatasource = data;
+    		scope.datasources.push(scope.currentDatasource);
+    	});
+    }
+    
     scope.remove = function(context) {
-    	scope.datasources.splice(context.index, 1);
-    	// Angular bug: can not handle collection changes when using ng-repeat in template.
-    	$(context.target).parents('tr').remove();
+    	StorageService.delete_datasource(scope.datasources[context.index].id, scope.storageType, function(){
+        	scope.datasources.splice(context.index, 1);
+        	// Angular bug: can not handle collection changes when using ng-repeat in template.
+        	$(context.target).parents('tr').remove();
+    	});
     }
     
     scope.confirm = function($index, $event) {

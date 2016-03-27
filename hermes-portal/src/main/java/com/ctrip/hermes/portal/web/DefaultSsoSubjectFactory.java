@@ -39,7 +39,7 @@ public class DefaultSsoSubjectFactory extends DefaultSubjectFactory {
         		userDao.insert(user);
         	}
         } catch (DalException e) {
-        	LOGGER.error("Failed to verify user {} info from db!", username, e);
+        	LOGGER.error("Failed to verify/insert user {} info from db!", username, e);
         }
         
         SimplePrincipalCollection principals = new SimplePrincipalCollection();

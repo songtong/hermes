@@ -5,7 +5,6 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.languageTypes = [ 'java', '.net' ];
 	$scope.views = {};
 	
-	$scope.order_opts = [ true, false ];
 	$scope.datasources = {};
 	$scope.comment = "";
 
@@ -15,7 +14,6 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		args: [$routeParams['id']],
 		success: function(result) {
 			$scope.application = result;
-			updatePageType($scope.application["type"]);
 			if ($scope.application.type == 0 || $scope.application.type == 2) {
 				$scope.type = 'topic';
 			} else {
@@ -32,48 +30,29 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		}
 	}).finish();
 
-	$scope.add_partition = function() {
-		var new_partition = {};
+	$scope.addPartition = function() {
+		var partition = {};
 		if ($scope.view.partitions.length == 0) {
-			new_partition.readDatasource = $scope.defaultReadDS;
-			new_partition.writeDatasource = $scope.defaultWriteDS;
+			partition.readDatasource = $scope.datasources[$scope.env][0];
+			partition.writeDatasource = $scope.datasources[$scope.env][0];
 		} else {
-			new_partition.readDatasource = $scope.view.partitions[$scope.view.partitions.length - 1].readDatasource;
-			new_partition.writeDatasource = $scope.view.partitions[$scope.view.partitions.length - 1].writeDatasource;
+			partition.readDatasource = $scope.view.partitions[$scope.view.partitions.length - 1].readDatasource;
+			partition.writeDatasource = $scope.view.partitions[$scope.view.partitions.length - 1].writeDatasource;
 		}
-		$scope.view.partitions.push(new_partition);
+		$scope.view.partitions.push(partition);
 	};
 
-	$scope.delete_partition = function(index) {
+	$scope.deletePartition = function(index) {
 		$scope.view.partitions.splice(index, 1);
 	};
 
-	$scope.add_property = function(view) {
+	$scope.addProperty = function() {
 		$scope.view.properties.push({});
 	};
 
-	$scope.delete_property = function(view, index) {
+	$scope.deleteProperty = function(index) {
 		$scope.view.properties.splice(index, 1);
 	};
-
-	function updatePageType(typeCode) {
-		switch (typeCode) {
-		case 0:
-			$scope.currentPageType = "Topic创建";
-			break;
-		case 1:
-			$scope.currentPageType = "Consumer创建";
-			break;
-		case 2:
-			$scope.currentPageType = "Topic修改";
-			break;
-		case 3:
-			$scope.currentPageType = "Consumer修改";
-			break;
-		default:
-			console.log("default");
-		}
-	}
 	
 	function handleError(result) {
 		$scope.$broadcast('progress-done', 'syncProgressBar', function(){
@@ -111,10 +90,10 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 					delete $scope.application.polished;
 					ApplicationService.update_application_status($scope.application.id, 3, $scope.comment, ssoUser, $scope.application).then(function(result) {
 						$scope.application = result;
-						//handleSuccess('Done initializing topic on env: ' + env);
+						handleSuccess('Done initializing topic on env: ' + env);
 					}, handleError);
 				} else {
-					//handleSuccess('Done initializing topic on env: ' + env);
+					handleSuccess('Done initializing topic on env: ' + env);
 				}
 			}]
 		});
@@ -200,7 +179,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.passApplication = function passApplication() {
 		// Delete node 'polished'
 		delete $scope.application.polished;
-		ApplicationService.pass_application($scope.application.id, $scope.comment, "Hermes", $scope.application).then(function(result) {
+		ApplicationService.pass_application($scope.application.id, $scope.comment, ssoUser, $scope.application).then(function(result) {
 			$scope.application = result;
 			
 			// When the application is passed, invoke api to get dynamic view.
@@ -317,7 +296,6 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 						finishWatcher.step();
 					}
 				}).finish();
-				
 			}
 		}
 		checkOnEnv('fws');

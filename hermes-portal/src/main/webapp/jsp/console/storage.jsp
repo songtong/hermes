@@ -24,32 +24,31 @@
 							<button type="button" data-toggle="modal" data-target="#datasource-modal" class="btn btn-sm btn-success" style="text-align: center; font-size: 12px" ng-click="add()">新增</button>
 						</div>
 					</div>
-					<div class="panel-body">
-						<div class="alert alert-success" ng-if="datasources" ng-include="'template/storage/templates/' + storageType +'.html'"></div>
+					<div class="panel-body" ng-if="datasources" ng-include="'template/storage/templates/' + storageType +'.html'">
 					</div>
 				</div>
 			</div>
-	</div>
-		
-	<%--add-datasource-modal--%>
-	<div class="modal fade" id="datasource-modal" tabindex="-1" role="dialog" aria-labelledby="datasource-label" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="datasource-label" ng-if="currentDatasource">DataSource [{{currentDatasource.id | uppercase}}]</h4>
-				</div>
-				<div class="modal-body" ng-include="'template/storage/templates/' + storageType +'-form.html'">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-sm btn-warning" ng-click="reset($event)">重置</button>
-					<button type="button" class="btn btn-sm btn-success" data-dismiss="modal" ng-click="save()">保存</button>
+			
+			<%--add-datasource-modal--%>
+			<div class="modal fade" id="datasource-modal" tabindex="-1" role="dialog" aria-labelledby="datasource-label" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title" id="datasource-label" ng-if="currentDatasource">DataSource [{{currentDatasource.id | uppercase}}]</h4>
+						</div>
+						<div class="modal-body" ng-include="'template/storage/templates/' + storageType +'-form.html'">
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-sm btn-warning" ng-click="reset($event)">重置</button>
+							<button type="button" class="btn btn-sm btn-success" data-dismiss="modal" ng-click="save()">保存</button>
+						</div>
+					</div>
 				</div>
 			</div>
-		</div>
+			<confirm-dialog-x id="confirmDialog" title="确认" content="确认要删除此数据源？" action="remove"/>
 	</div>
-	<confirm-dialog-x id="confirmDialog" title="确认" content="确认要删除此数据源？" action="remove"/>
-
+		
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.tpl.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>

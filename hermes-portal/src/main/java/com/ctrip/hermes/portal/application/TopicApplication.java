@@ -16,6 +16,8 @@ public class TopicApplication extends HermesApplication {
 	private int m_retentionDays;
 
 	private int m_size;
+	
+	private String m_onlineEnv;
 
 	private String m_ownerName1;
 
@@ -91,6 +93,14 @@ public class TopicApplication extends HermesApplication {
 
 	public void setSize(int size) {
 		this.m_size = size;
+	}
+
+	public String getOnlineEnv() {
+		return m_onlineEnv;
+	}
+
+	public void setOnlineEnv(String onlineEnv) {
+		m_onlineEnv = onlineEnv;
 	}
 
 	public String getDescription() {

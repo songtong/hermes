@@ -161,9 +161,8 @@ Storage.service("StorageService", ["$resource", function ($resource) {
                 show_op_info.show("删除Partition失败", false);
             })
         },
-        add_datasource: function(forms, type, callback) {
-            var datasource = buildDatasource(forms);
-            storage_resource.add_datasource({"type": type}, datasource, function(d){
+        add_datasource: function(datasource, type, callback) {
+            storage_resource.add_datasource({"type": type}, JSON.stringify(datasource), function(d){
                 callback(d);
                 show_op_info.show("增加Datasource成功", true);
             }, function(error) {

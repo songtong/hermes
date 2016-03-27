@@ -11,6 +11,8 @@ public class ConsumerApplication extends HermesApplication {
 	private String m_project;
 
 	private String m_appName;
+	
+	private String m_onlineEnv;
 
 	private String m_ownerName1;
 
@@ -66,6 +68,14 @@ public class ConsumerApplication extends HermesApplication {
 
 	public void setAppName(String appName) {
 		this.m_appName = appName;
+	}
+	
+	public String getOnlineEnv() {
+		return m_onlineEnv;
+	}
+
+	public void setOnlineEnv(String onlineEnv) {
+		m_onlineEnv = onlineEnv;
 	}
 
 	public int getAckTimeoutSeconds() {

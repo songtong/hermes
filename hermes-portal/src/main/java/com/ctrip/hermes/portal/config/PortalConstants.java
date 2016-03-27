@@ -27,9 +27,9 @@ public class PortalConstants {
 	
 	public static final int APP_STATUS_ROLLOUT = 4;
 	
-	public static final int APP_STATUS_ROLLOUT_SUCCESS = 4;
+	public static final int APP_STATUS_ROLLOUT_SUCCESS = 5;
 	
-	public static final int APP_STATUS_ONLINE = 5;
+	public static final int APP_STATUS_ONLINE = 6;
 
 	public static final int CONSUMER_BACKLOG_EXPIRED_TIME_MIllIS = 5000;
 
