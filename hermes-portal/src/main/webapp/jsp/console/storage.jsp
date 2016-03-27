@@ -47,6 +47,7 @@
 				</div>
 			</div>
 			<confirm-dialog-x id="confirmDialog" title="确认" content="确认要删除此数据源？" action="remove"/>
+			<progressbar-x id="progressbar"></progressbar-x>
 	</div>
 		
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.min.js"></script>

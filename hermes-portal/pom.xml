@@ -159,7 +159,9 @@
 								${basedir}/src/main/resources/META-INF/dal/jdbc/application-manifest.xml,
 								${basedir}/src/main/resources/META-INF/dal/jdbc/user-manifest.xml,
 								${basedir}/src/main/resources/META-INF/dal/jdbc/role-manifest.xml,
-								${basedir}/src/main/resources/META-INF/dal/jdbc/permission-manifest.xml
+								${basedir}/src/main/resources/META-INF/dal/jdbc/permission-manifest.xml,
+								${basedir}/src/main/resources/META-INF/dal/jdbc/tag-manifest.xml,
+								${basedir}/src/main/resources/META-INF/dal/jdbc/datasource_tag-manifest.xml,
 							</manifest>
 						</configuration>
 					</execution>

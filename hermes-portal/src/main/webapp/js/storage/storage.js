@@ -1,7 +1,7 @@
-var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage', 'smart-table', 'components' ]);
+var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage', 'smart-table', 'components', 'utils']);
 hermes_storage.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
-}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', function(scope, resource, StorageService) {
+}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', 'promiseChain', function(scope, resource, StorageService) {
 	// Define resource.
 	var meta_resource = resource('/api/storages', {}, {
 		'get_storages' : {
@@ -52,10 +52,23 @@ hermes_storage.run(function(editableOptions) {
     }
     
     scope.save = function() {
-    	StorageService.add_datasource(scope.currentDatasource, scope.storageType, function(data){
-    		scope.currentDatasource = data;
-    		scope.datasources.push(scope.currentDatasource);
-    	});
+    	//scope.$broadcast('progress-random');
+    	promiseChain.add({
+    		func: StorageService.add_datasource,
+    		args: [scope.currentDatasource, scope.storageType],
+    		success: function() {
+    			scope.currentDatasource = data;
+        		scope.datasources.push(scope.currentDatasource);
+    		}
+    	}).add({
+    		func: meta_resource.get_storages,
+    		args: {},
+    		success: function() {
+    			 scope.__datasources = data;
+    	         //scope.datasources = data[0];
+    	         scope.selectStorage(scope.storageType); 
+    		}
+    	}).finish();
     }
     
     scope.remove = function(context) {
@@ -64,10 +77,14 @@ hermes_storage.run(function(editableOptions) {
         	// Angular bug: can not handle collection changes when using ng-repeat in template.
         	$(context.target).parents('tr').remove();
     	});
-    }
+    };
     
     scope.confirm = function($index, $event) {
     	scope.$broadcast('confirm', 'confirmDialog', {index: $index, target: $event.currentTarget});
+    };
+    
+    scope.update = function() {
+		StorageService.update_datasource(scope.storageType, scope.currentDatasource.id, scope.currentDatasource);
     };
 
     scope.set_selected = function set_selected(type) {
