@@ -41,12 +41,12 @@ import com.zabbix4j.item.ItemObject;
 @Scope("singleton")
 public class ZabbixApiGateway {
 
-	private ZabbixApi zabbixApi;
+	protected ZabbixApi zabbixApi;
 
 	@Autowired
-	private MonitorConfig config;
+	protected MonitorConfig config;
 
-	private LoadingCache<String, Map<Integer, HostObject>> hostNameCache;
+	protected LoadingCache<String, Map<Integer, HostObject>> hostNameCache;
 
 	@PostConstruct
 	private void postConstruct() {
@@ -199,7 +199,7 @@ public class ZabbixApiGateway {
 		}
 	}
 
-	private Map<Integer, HostObject> populateHostsByName(String hostName) throws ZabbixApiException {
+	protected Map<Integer, HostObject> populateHostsByName(String hostName) throws ZabbixApiException {
 		Map<Integer, HostObject> result = new HashMap<Integer, HostObject>();
 
 		HostGetRequest request = new HostGetRequest();
