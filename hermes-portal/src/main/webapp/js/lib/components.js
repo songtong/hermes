@@ -280,7 +280,7 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			}).trigger('resize');
 
 			$scope.$on('initialized', function(e){
-				$element.hide();
+				$element.delay(250).hide();
 			});
 		}
 	};
@@ -469,6 +469,7 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			+ '  </div>'
 			+ '</div>',
 		link: function($scope, $element, attrs) {
+			console.log('dd');
 			$scope.$on('confirm', function(){
 				if (arguments.length > 1 && arguments[1] == attrs['id']) {
 					$element.find('.modal').modal();
@@ -531,4 +532,20 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			});
 		}
 	};
-});
+}).directive('refreshX', ['$compile', '$templateCache', function($compile, $templateCache) {
+	return {
+		restrict: 'A',
+		scope: {
+			ngInclude: '=ngInclude',
+			ngIf: "=ngIf"
+		},
+		link: function($scope, $element, attrs) {
+			console.log($templateCache.get($scope.ngInclude));
+			console.log($scope);
+			$scope.$on('refresh', function(){
+				$element.html($templateCache.get($scope.ngInclude));
+				$compile($element.contents())($scope.ngIf);
+			});
+		}
+	};
+}]);

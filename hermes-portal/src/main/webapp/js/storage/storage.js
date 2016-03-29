@@ -1,7 +1,7 @@
 var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage', 'smart-table', 'components', 'utils', 'bootstrap-tagsinput']);
 hermes_storage.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
-}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', 'promiseChain', function(scope, resource, StorageService, promiseChain) {
+}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', 'promiseChain', 'watcher', function(scope, resource, StorageService, promiseChain, watcher) {
 	// Define resource.
 	var meta_resource = resource('/api/storages', {}, {
 		'get_storages' : {
@@ -10,17 +10,22 @@ hermes_storage.run(function(editableOptions) {
 		}
 	});
 	
+	// Define tag resource.
 	var tagResource = resource('/api/tags', {}, {
 		'getTags': {
 			url: '/api/tags',
 			method: 'GET'
 		},
-		'getDatasourceTags': {
-			url: '/datasources/:id',
+		'getDatasourcesTags': {
+			url: '/api/tags/datasources',
 			method: 'GET'
 		},
-		'addDatasourceTags': {
-			url: '/datasources/:id',
+		'getDatasourceTags': {
+			url: '/api/tags/datasources/:id',
+			method: 'GET'
+		},
+		'addDatasourceTag': {
+			url: '/api/tags/datasources/:id',
 			method: 'POST'
 		}
 	}); 
@@ -32,7 +37,7 @@ hermes_storage.run(function(editableOptions) {
 	
 	scope.currentDatasource = null;
 	
-	scope.tags = [];
+	scope.datasourceTags = null;
 	
 	//
 	scope.storageType = 'kafka';
@@ -41,19 +46,32 @@ hermes_storage.run(function(editableOptions) {
 
 	// Init.
     (function() {
+    	var w = watcher.register({
+    		context: {
+    			count: 0
+    		},
+    		step: function() {
+    			if (++this.count == 2) {
+    				return true;
+    			}
+    			return false;
+    		},
+    		handlers: [function() {
+    			scope.$emit('initialized');
+    		}]
+    	});
+    	
         meta_resource.get_storages({}, function (data) {
             scope.__datasources = data;
             scope.datasources = data[0];
             scope.selectStorage(scope.storageType);
+            w.step();
         });
         
-//        tagResource.getTags(function(result){
-//        	var tmp = [];
-//        	$.each(result.data['0'], function(group, tags) {
-//        		tmp = tmp.concat(tags);
-//        		scope.tags = tmp;
-//        	});
-//        });
+        tagResource.getDatasourcesTags(function(result){
+        	scope.datasourcesTags = result.data[0];
+        	w.step();
+        });
     })();
     
     scope.selectStorage = function(type) {
@@ -82,9 +100,29 @@ hermes_storage.run(function(editableOptions) {
     	if (scope.currentDatasource.created) {
         	StorageService.add_datasource(scope.currentDatasource, scope.storageType, function(){
     			scope.datasources.push(scope.currentDatasource);
-    			tagResource.addDatasourceTags({id: scope.currentDatasource.id, tagId: '' }, function(){
-    				
+    			var currentType = scope.type;
+    			scope.type = null;
+    			scope.type = currentType;
+    			
+    			var w = watcher.register({
+    				context: {count: 0},
+    				step: function() {
+    					if (++this.count == scope.selectedTags.length) {
+    						return true;
+    					}
+    					return false;
+    				},
+    				handlers: [function() {
+    					show_op_info.show("Tag同步成功！", true);
+    				}]
     			});
+    			
+    			for (var index in scope.selectedTags) {
+    				console.log(scope.selectedTags[index]);
+    				tagResource.addDatasourceTag({id: scope.currentDatasource.id}, {tagId: scope.selectedTags[index].id}, function(data){
+        				w.step();
+        			});
+    			}
     			
 //    			$('<tr>').append($('<td>').text($scope.currentDatasource.id))
 //        			.append($('<td>').text($scope.currentDatasource.properties['user']))

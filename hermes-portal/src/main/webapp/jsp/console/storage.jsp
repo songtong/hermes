@@ -8,6 +8,7 @@
 	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
 	<link href="${model.webapp}/css/dashboard.css" type="text/css" rel="stylesheet">
 	<link href="${model.webapp}/css/select2.min.css" type="text/css" rel="stylesheet">
+	<link href="${model.webapp}/css/font-awesome.min.css" type="text/css" rel="stylesheet">
 
 	<div class="main fluid" ng-app="hermes-storage" ng-controller="storage-controller">
 			<div class="col-sm-3 col-md-2 sidebar">
@@ -21,19 +22,15 @@
 				<div class="panel panel-primary">
 					<div class="panel-heading">
 						<label><span style="text-transform: capitalize;"></span> DataSource 列表</label>
-						<bootstrapTagsinput> </bootstrapTagsinput>
 						<div style="float: right">
 							<button type="button" data-toggle="modal" data-target="#datasource-modal" class="btn btn-sm btn-success" style="text-align: center; font-size: 12px" ng-click="add()">新增</button>
 						</div>
 					</div>
-					<div class="panel-body" ng-if="datasources" ng-include="'template/storage/templates/' + storageType +'.html'">
+					<div class="panel-body" refresh-x ng-if="datasources" ng-include="'template/storage/templates/' + storageType +'.html'">
 					</div>
 				</div>
 			</div>
-			<div>
-				
-			</div>
-			
+
 			<%--add-datasource-modal--%>
 			<div class="modal fade" id="datasource-modal" tabindex="-1" role="dialog" aria-labelledby="datasource-label" aria-hidden="true">
 				<div class="modal-dialog">
@@ -51,10 +48,12 @@
 					</div>
 				</div>
 			</div>
-			<confirm-dialog-x id="confirmDialog" title="确认" content="确认要删除此数据源？" action="remove"/>
-			<progressbar-x id="progressbar"></progressbar-x>
+			<loading-x></loading-x>
+			
+			<confirm-dialog-x id="confirmDialog" title="确认" content="确认要删除此数据源？" action="remove"></confirm-dialog-x>
+			
+			<progressbar-x id="progressBar"/></progressbar-x>
 	</div>
-		
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.tpl.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
