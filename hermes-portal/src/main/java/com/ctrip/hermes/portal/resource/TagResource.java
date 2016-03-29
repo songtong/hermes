@@ -26,6 +26,7 @@ import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTag;
 import com.ctrip.hermes.portal.dal.tag.Tag;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.tag.DefaultTagService;
+import com.ctrip.hermes.protal.util.ResponseUtils;
 
 @Path("/tags")
 @Singleton
@@ -43,7 +44,7 @@ public class TagResource {
 		if (datasourcesTags == null) {
 			throw new RestException("Failed to load datasources tags!", Status.INTERNAL_SERVER_ERROR);
 		}
-		return Response.status(Status.OK).entity(datasourcesTags).build();
+		return Response.status(Status.OK).entity(ResponseUtils.wrapResponse(Status.OK, datasourcesTags)).build();
 	}
 	
 	@GET
@@ -56,7 +57,7 @@ public class TagResource {
 				throw new RestException("Failed to load datasources tags!", Status.INTERNAL_SERVER_ERROR);
 			}
 			
-			return Response.status(Status.OK).entity(datasourceTags).build();
+			return Response.status(Status.OK).entity(ResponseUtils.wrapResponse(Status.OK, datasourceTags)).build();
 		} catch (DalException e) {
 			throw new RestException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
 		}
@@ -84,7 +85,7 @@ public class TagResource {
 			} else {
 				datasourceTag = tagService.addDatasourceTag(datasourceId, tagId);
 			}
-			return Response.status(Status.OK).entity(datasourceTag).build();
+			return Response.status(Status.OK).entity(ResponseUtils.wrapResponse(Status.OK, datasourceTag)).build();
 		} catch (DalException e) {
 			throw new RestException(e.getMessage(), Status.INTERNAL_SERVER_ERROR); 
 		}
@@ -99,7 +100,7 @@ public class TagResource {
 				if (datasourceTag == null) {
 					throw new RestException("Failed to remove datasource tag mapping!", Status.INTERNAL_SERVER_ERROR);
 				}
-				return Response.status(Status.OK).entity(datasourceTag).build();
+				return Response.status(Status.OK).entity(ResponseUtils.wrapResponse(Status.OK, datasourceTag)).build();
 			} else {
 				throw new RestException(String.format("Ensure the existence of datasource & tag: %s, %d!", datasourceId, tagId), Status.BAD_REQUEST);
 			}
@@ -115,6 +116,6 @@ public class TagResource {
 		if (tags == null) {
 			throw new RestException("Failed to load tags!", Status.INTERNAL_SERVER_ERROR);
 		}
-		return Response.status(Status.OK).entity(tags).build();
+		return Response.status(Status.OK).entity(ResponseUtils.wrapResponse(Status.OK, tags)).build();
 	}
 }

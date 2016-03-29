@@ -480,4 +480,55 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			});
 		}
 	};
-}]);
+}]).directive('selectX', function() {
+	return {
+		restrict: 'E',
+		scope: {
+			url: '@url',
+			selected: '=selected'
+		},
+		template: '<select class="form-control" multiple="multiple" style="width: 100%"></select>',
+		link: function($scope, $element, attrs) {
+			var __tags = [];
+			var __selected = [];
+			
+			$element.find('select').select2({
+				ajax: {
+				    url: $scope.url,
+				    dataType: 'json',
+				    delay: 250,
+				    data: {},
+				    processResults: function (result, params) {
+				      $.each(result.data[0], function(group, tags){
+				    	  $.each(tags, function(index, tag){
+				    		  console.log(tag);
+				    		  var filtered = __tags.filter(function(t, i){
+				    			  return tag.id == t.id;
+				    		  });
+				    		  if (filtered.length == 0) {
+				    			  tag.text = tag.name;
+				    			  __tags.push(tag);
+				    		  }
+				    	  });
+				      });
+	
+				      return {
+				        results: __tags
+				      };
+				    },
+				    cache: false
+				}
+			});
+			
+			$element.on('select2:select', function(event) {
+				__selected.push(event.params.data);
+				$scope.selected.call(this, __selected);
+			}).on('select2:unselect', function(event) {
+				__selected = __selected.filter(function(elem, index){
+					return elem.id != event.params.data.id;
+				});
+				$scope.selected.call(this, __selected);
+			});
+		}
+	};
+});

@@ -153,6 +153,28 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.portal.dal.tag.CachedTagDao</role>
+			<implementation>com.ctrip.hermes.portal.dal.tag.CachedTagDao</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.service.tag.DefaultTagService</role>
+			<implementation>com.ctrip.hermes.portal.service.tag.DefaultTagService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.dal.tag.CachedTagDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.dal.CachedDatasourceDao</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagDao</role>
+				</requirement>
+				<requirement>
+					<role>org.unidal.dal.jdbc.transaction.TransactionManager</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>org.unidal.web.mvc.model.ModuleRegistry</role>
 			<implementation>org.unidal.web.mvc.model.ModuleRegistry</implementation>
 			<configuration>

@@ -1,7 +1,7 @@
-var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage', 'smart-table', 'components', 'utils']);
+var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage', 'smart-table', 'components', 'utils', 'bootstrap-tagsinput']);
 hermes_storage.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
-}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', 'promiseChain', function(scope, resource, StorageService) {
+}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', 'promiseChain', function(scope, resource, StorageService, promiseChain) {
 	// Define resource.
 	var meta_resource = resource('/api/storages', {}, {
 		'get_storages' : {
@@ -10,6 +10,21 @@ hermes_storage.run(function(editableOptions) {
 		}
 	});
 	
+	var tagResource = resource('/api/tags', {}, {
+		'getTags': {
+			url: '/api/tags',
+			method: 'GET'
+		},
+		'getDatasourceTags': {
+			url: '/datasources/:id',
+			method: 'GET'
+		},
+		'addDatasourceTags': {
+			url: '/datasources/:id',
+			method: 'POST'
+		}
+	}); 
+	
 	// All datasources.
 	scope.__datasources = null;
 	// Selected datasources.
@@ -17,8 +32,12 @@ hermes_storage.run(function(editableOptions) {
 	
 	scope.currentDatasource = null;
 	
+	scope.tags = [];
+	
 	//
 	scope.storageType = 'kafka';
+	
+	scope.selectedTags = null;
 
 	// Init.
     (function() {
@@ -27,6 +46,14 @@ hermes_storage.run(function(editableOptions) {
             scope.datasources = data[0];
             scope.selectStorage(scope.storageType);
         });
+        
+//        tagResource.getTags(function(result){
+//        	var tmp = [];
+//        	$.each(result.data['0'], function(group, tags) {
+//        		tmp = tmp.concat(tags);
+//        		scope.tags = tmp;
+//        	});
+//        });
     })();
     
     scope.selectStorage = function(type) {
@@ -45,31 +72,33 @@ hermes_storage.run(function(editableOptions) {
     
     scope.reset = function($event) {
     	$($event.currentTarget).parents('.modal-footer').siblings('.modal-body').find('form input').val('');
-    }
+    };
     
     scope.add = function() {
-    	scope.currentDatasource = {};
-    }
+    	scope.currentDatasource = {created: true};
+    };
     
     scope.save = function() {
-    	//scope.$broadcast('progress-random');
-    	promiseChain.add({
-    		func: StorageService.add_datasource,
-    		args: [scope.currentDatasource, scope.storageType],
-    		success: function() {
-    			scope.currentDatasource = data;
-        		scope.datasources.push(scope.currentDatasource);
-    		}
-    	}).add({
-    		func: meta_resource.get_storages,
-    		args: {},
-    		success: function() {
-    			 scope.__datasources = data;
-    	         //scope.datasources = data[0];
-    	         scope.selectStorage(scope.storageType); 
-    		}
-    	}).finish();
-    }
+    	if (scope.currentDatasource.created) {
+        	StorageService.add_datasource(scope.currentDatasource, scope.storageType, function(){
+    			scope.datasources.push(scope.currentDatasource);
+    			tagResource.addDatasourceTags({id: scope.currentDatasource.id, tagId: '' }, function(){
+    				
+    			});
+    			
+//    			$('<tr>').append($('<td>').text($scope.currentDatasource.id))
+//        			.append($('<td>').text($scope.currentDatasource.properties['user']))
+//        			.append($('<td>').text($scope.currentDatasource.properties['password']))
+//        			.append($('<td>').text($scope.currentDatasource.properties['url']))
+//        			.append($('<td>').text($scope.currentDatasource.properties['minimumSize']))
+//        			.append($('<td>').text($scope.currentDatasource.properties['maximumSize']))
+//        			.append($('<td>').text($scope.currentDatasource.id));
+        	});
+    	} else {
+    		StorageService.update_datasource(scope.storageType, scope.currentDatasource.id, scope.currentDatasource);
+    	}
+
+    };
     
     scope.remove = function(context) {
     	StorageService.delete_datasource(scope.datasources[context.index].id, scope.storageType, function(){
@@ -83,97 +112,22 @@ hermes_storage.run(function(editableOptions) {
     	scope.$broadcast('confirm', 'confirmDialog', {index: $index, target: $event.currentTarget});
     };
     
-    scope.update = function() {
-		StorageService.update_datasource(scope.storageType, scope.currentDatasource.id, scope.currentDatasource);
-    };
-
-    scope.set_selected = function set_selected(type) {
-		for (var idx = 0; idx < scope.src_storages.length; idx++) {
-			if (scope.src_storages[idx].type == type) {
-				scope.selected = scope.src_storages[idx];
-				break;
-			}
-		}
-	}
-
-	scope.update_datasource = function update_datasource(ds) {
-		StorageService.update_datasource(scope.selected.type, ds.id,ds);
-	}
-
-	scope.add_row = function add_row(ds) {
-		scope.inserted = {
-			name : undefined,
-			value : undefined
-		};
-		ds.properties['_hermes_new_row'] = scope.inserted;
-	}
-
-	scope.del_row = function del_row(ds, name) {
-		bootbox.confirm("确认删除属性: " + ds.id + "(" + name + ")?", function(result) {
-			if (result) {
-				StorageService.delete_property(scope.selected.type,ds.id,name);
-				delete ds.properties[name];
-			}
-		});
-	}
-
-    scope.is_mysql = function (type) {
-        return type == 'mysql';
+//    scope.tagClass = function (item) {
+//    	var classes = ['label-success', 'label-info', 'label-danger', 'label-warning'];
+//    	var $this = $(this);
+//    	if ($this.data('item') == undefined) {
+//    		$this.data('item', 0);
+//    	} else {
+//    		$this.data('item', ($this.data('item') + 1) % classes.length);
+//    	}
+//    	return 'label ' + classes[$this.data('item')];
+//    } 
+    
+    scope.selected = function(data) {
+    	scope.selectedTags = data;
     }
-
-//    scope.$watch(function() {return scope.selected.type}, function() {
-//        if (scope.selected.type != undefined) {
-//            scope.forms = buildForms(scope.selected.type);
-//        }
-//    })
-
-    scope.add_kv = function() {
-        scope.forms.push(buildForm("", "", ""))
-    }
-
-    scope.del_kv = function(index) {
-        scope.forms.splice(index, 1);
-    }
-
-    scope.add_datasource = function() {
-        StorageService.add_datasource(scope.forms, scope.selected.type, getDatasources);
-    }
-
-    scope.del_datasource = function(ds) {
-        bootbox.confirm("确认删除该Datasource? ", function(result) {
-            if (result) {
-                StorageService.delete_datasource(ds.id, scope.selected.type, getDatasources)
-            }
-        })
-    }
-    scope.isShowAllTables = false;
-    scope.isShowAll= function() {
-        scope.isShowAllTables = !scope.isShowAllTables;
-    };
+    
 } ]);
 
-function buildForms(dsType) {
-    var forms = [];
-        if (dsType.toLowerCase() == "kafka") {
-            forms.push(buildForm("id", "", "id"))
-            forms.push(buildForm("bootstrap.servers", "", "xxxx:9092"))
-            forms.push(buildForm("offsets.storage", "kafka", ""))
-            forms.push(buildForm("zookeeper.connect", "", "xxxx:2181"))
-        } else {
-            forms.push(buildForm("id", "", "id"))
-            forms.push(buildForm("url", "", "jdbc:mysql://..."))
-            forms.push(buildForm("user", "", "user"))
-            forms.push(buildForm("password", "", "password"))
-        }
-        return forms
-}
-
-function buildForm(key, value, placeholder) {
-    var form = {};
-    form.key = key;
-    form.value = value;
-    form.placeholder = placeholder;
-    return form;
-}
 
 

@@ -78,9 +78,9 @@ public class DefaultTagService {
 	public Map<String, List<Tag>> listTags() {
 		try {
 			Map<String, List<Tag>> groupTags = new HashMap<String, List<Tag>>();
-			Collection<Tag> tags = m_tagDao.list(false);
+			Collection<Tag> tags = m_tagDao.list(true);
 			for (Tag t : tags) {
-				if (groupTags.get(t.getGroup()) != null) {
+				if (groupTags.get(t.getGroup()) == null) {
 					groupTags.put(t.getGroup(), new ArrayList<Tag>());
 				}
 				groupTags.get(t.getGroup()).add(t);

@@ -13,11 +13,13 @@ import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.dal.application.DefaultHermesApplicationDao;
+import com.ctrip.hermes.portal.dal.tag.CachedTagDao;
 import com.ctrip.hermes.portal.service.SyncService;
 import com.ctrip.hermes.portal.service.application.DefaultApplicationService;
 import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService;
 import com.ctrip.hermes.portal.service.elastic.DefaultPortalElasticClient;
 import com.ctrip.hermes.portal.service.mail.DefaultPortalMailService;
+import com.ctrip.hermes.portal.service.tag.DefaultTagService;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -46,6 +48,10 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(FileMailAccountProvider.class));
 		
 		all.add(A(SyncService.class));
+		
+		all.add(A(CachedTagDao.class));
+		
+		all.add(A(DefaultTagService.class));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

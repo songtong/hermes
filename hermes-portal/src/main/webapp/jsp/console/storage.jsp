@@ -7,6 +7,7 @@
 <a:layout>
 	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
 	<link href="${model.webapp}/css/dashboard.css" type="text/css" rel="stylesheet">
+	<link href="${model.webapp}/css/select2.min.css" type="text/css" rel="stylesheet">
 
 	<div class="main fluid" ng-app="hermes-storage" ng-controller="storage-controller">
 			<div class="col-sm-3 col-md-2 sidebar">
@@ -20,6 +21,7 @@
 				<div class="panel panel-primary">
 					<div class="panel-heading">
 						<label><span style="text-transform: capitalize;"></span> DataSource 列表</label>
+						<bootstrapTagsinput> </bootstrapTagsinput>
 						<div style="float: right">
 							<button type="button" data-toggle="modal" data-target="#datasource-modal" class="btn btn-sm btn-success" style="text-align: center; font-size: 12px" ng-click="add()">新增</button>
 						</div>
@@ -27,6 +29,9 @@
 					<div class="panel-body" ng-if="datasources" ng-include="'template/storage/templates/' + storageType +'.html'">
 					</div>
 				</div>
+			</div>
+			<div>
+				
 			</div>
 			
 			<%--add-datasource-modal--%>
@@ -54,6 +59,9 @@
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.tpl.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/select2.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/bootstrap-tagsinput.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/bootstrap-tagsinput-angular.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/global.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/utils.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/components.js"></script>

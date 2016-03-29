@@ -225,7 +225,7 @@ module.provider('logger', ['_contextProvider', function(_contextProvider){
 	};
 }]);
 
-module.service('promiseChain', ['logger', function(logger) {
+module.service('promiseChain', ['logger', '$q', function(logger, $q) {
 	var logger = logger('promiseChain');
 	
 	function promise(id, func, args, success, error) {
@@ -354,16 +354,35 @@ module.service('promiseChain', ['logger', function(logger) {
 			return true;
 		};
 		
+		this.__wrap = function(func) {
+			return function () {
+				var args = Array.prototype.slice(arguments);
+				var deferred = $q.defer();
+				args.push(function(result){
+					deferred.resolve(result);
+				});
+				args.push(function(result){
+					deferred.reject(result);
+				});
+				
+				func.apply(this, args);
+				return deferred.promise;
+			};
+		};
+		
 		var callback = function() {
 			logger.log('=> finish chain calling: ' + JSON.stringify(this));
 		}.bind(this);
 		
-		this.add = function(def) {
+		this.add = function(def, isResource) {
 			var node = null;
 			if (def instanceof Array) {
 				node = new promises();
 				for (var index in def) {
 					if (this.__validate(def[index])) {
+						if (isResource) {
+							def[index]['func'] = this.__wrap(def[index]['func']);
+						}
 						node.add(
 							new promise(def[index]['id'], def[index]['func'], def[index]['args'], def[index]['success'], def[index]['error'])
 						);
@@ -371,6 +390,9 @@ module.service('promiseChain', ['logger', function(logger) {
 				}
 			} else {
 				if (this.__validate(def)) {
+					if (isResource) {
+						def['func'] = this.__wrap(def['func']);
+					}
 					node = new promise(def['id'], def['func'], def['args'], def['success'], def['error']);
 				}
 			}
