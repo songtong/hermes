@@ -74,14 +74,14 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
 	@Override
-	public void writeCommand(Endpoint endpoint, Command cmd) {
-		writeCommand(endpoint, cmd, m_config.getEndpointChannelDefaultWrtieTimeout(), TimeUnit.MILLISECONDS);
+	public boolean writeCommand(Endpoint endpoint, Command cmd) {
+		return writeCommand(endpoint, cmd, m_config.getEndpointChannelDefaultWrtieTimeout(), TimeUnit.MILLISECONDS);
 	}
 
 	@Override
-	public void writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
+	public boolean writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
 		if (m_closed.get()) {
-			return;
+			return false;
 		}
 
 		if (m_writerStarted.compareAndSet(false, true)) {
@@ -93,7 +93,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 			Cat.logEvent("Hermes.Command.Version", type + "-SEND");
 		}
 
-		getChannel(endpoint).write(cmd, timeout, timeUnit);
+		return getChannel(endpoint).write(cmd, timeout, timeUnit);
 	}
 
 	private EndpointChannel getChannel(Endpoint endpoint) {
@@ -116,15 +116,17 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 		}
 	}
 
-	void removeChannel(Endpoint endpoint, EndpointChannel endpointChannel) {
+	void removeChannel(Endpoint endpoint, EndpointChannel endpointChannel, boolean sinceIdle) {
 		EndpointChannel removedChannel = null;
 		if (Endpoint.BROKER.equals(endpoint.getType()) && m_channels.containsKey(endpoint)) {
 			synchronized (m_channels) {
 				if (m_channels.containsKey(endpoint)) {
 					EndpointChannel tmp = m_channels.get(endpoint);
 					if (tmp == endpointChannel) {
-						m_channels.remove(endpoint);
-						removedChannel = endpointChannel;
+						if (!sinceIdle || !endpointChannel.hasUnflushOps()) {
+							m_channels.remove(endpoint);
+							removedChannel = endpointChannel;
+						}
 					}
 				}
 			}
@@ -168,7 +170,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 								}
 							}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
 						} else {
-							removeChannel(endpoint, endpointChannel);
+							removeChannel(endpoint, endpointChannel, false);
 						}
 					} else {
 						endpointChannel.setChannelFuture(future);
@@ -197,7 +199,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 		if (m_closed.compareAndSet(false, true)) {
 			synchronized (m_channels) {
 				for (Map.Entry<Endpoint, EndpointChannel> entry : m_channels.entrySet()) {
-					removeChannel(entry.getKey(), entry.getValue());
+					removeChannel(entry.getKey(), entry.getValue(), false);
 				}
 			}
 
@@ -374,7 +376,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 			}
 		}
 
-		public void write(Command cmd, long timeout, TimeUnit timeUnit) {
+		public boolean write(Command cmd, long timeout, TimeUnit timeUnit) {
 			if (!isClosed()) {
 				if (!m_opQueue.offer(new WriteOp(cmd, timeout, timeUnit))) {
 					ChannelFuture channelFuture = m_channelFuture.get();
@@ -384,8 +386,12 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 					}
 					log.warn("Send buffer of endpoint channel {} is full",
 					      channel == null ? "null" : NettyUtils.parseChannelRemoteAddr(channel));
+				} else {
+					return true;
 				}
 			}
+
+			return false;
 		}
 
 		private class WriteOp {

@@ -170,25 +170,28 @@ public class DefaultAckManager implements AckManager {
 			Transaction tx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_ACK_TRANSPORT,
 			      String.format("%s:%s", topic, groupId));
 			try {
-				m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
-				ConsumerStatusMonitor.INSTANCE.ackMessageCmdSent(topic, partition, groupId);
+				if (m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS)) {
+					ConsumerStatusMonitor.INSTANCE.ackMessageCmdSent(topic, partition, groupId);
 
-				try {
-					acked = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
+					try {
+						acked = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
 
-					if (acked) {
-						ConsumerStatusMonitor.INSTANCE.brokerAcked(topic, partition, groupId);
-					} else {
+						if (acked) {
+							ConsumerStatusMonitor.INSTANCE.brokerAcked(topic, partition, groupId);
+						} else {
+							ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+						}
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						m_resultMonitor.cancel(correlationId);
+					} catch (TimeoutException e) {
+						ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(topic, partition, groupId);
+						m_resultMonitor.cancel(correlationId);
+					} catch (Exception e) {
 						ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+						m_resultMonitor.cancel(correlationId);
 					}
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					m_resultMonitor.cancel(correlationId);
-				} catch (TimeoutException e) {
-					ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(topic, partition, groupId);
-					m_resultMonitor.cancel(correlationId);
-				} catch (Exception e) {
-					ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+				} else {
 					m_resultMonitor.cancel(correlationId);
 				}
 				tx.setStatus(acked ? Transaction.SUCCESS : "ACK_CMD_FAILED");

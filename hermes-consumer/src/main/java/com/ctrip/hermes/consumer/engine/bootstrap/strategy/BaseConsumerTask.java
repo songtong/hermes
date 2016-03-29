@@ -298,23 +298,26 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				      .lookup(QueryOffsetResultMonitor.class);
 
 				queryOffsetResultMonitor.monitor(cmd);
-				PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, timeout,
-				      TimeUnit.MILLISECONDS);
+				if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, timeout,
+				      TimeUnit.MILLISECONDS)) {
 
-				ConsumerStatusMonitor.INSTANCE.queryOffsetCmdSent(m_context.getTopic().getName(), m_partitionId,
-				      m_context.getGroupId());
-
-				try {
-					offsetRes = future.get(timeout, TimeUnit.MILLISECONDS);
-				} catch (TimeoutException e) {
-					ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReadTimeout(m_context.getTopic().getName(),
-					      m_partitionId, m_context.getGroupId());
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				} catch (ExecutionException e) {
-					ConsumerStatusMonitor.INSTANCE.queryOffsetCmdError(m_context.getTopic().getName(), m_partitionId,
+					ConsumerStatusMonitor.INSTANCE.queryOffsetCmdSent(m_context.getTopic().getName(), m_partitionId,
 					      m_context.getGroupId());
-				} finally {
+
+					try {
+						offsetRes = future.get(timeout, TimeUnit.MILLISECONDS);
+					} catch (TimeoutException e) {
+						ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReadTimeout(m_context.getTopic().getName(),
+						      m_partitionId, m_context.getGroupId());
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					} catch (ExecutionException e) {
+						ConsumerStatusMonitor.INSTANCE.queryOffsetCmdError(m_context.getTopic().getName(), m_partitionId,
+						      m_context.getGroupId());
+					} finally {
+						queryOffsetResultMonitor.remove(cmd);
+					}
+				}else{
 					queryOffsetResultMonitor.remove(cmd);
 				}
 
@@ -557,29 +560,32 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				      .lookup(PullMessageResultMonitor.class);
 
 				pullMessageResultMonitor.monitor(cmd);
-				PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, timeout,
-				      TimeUnit.MILLISECONDS);
+				if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, timeout,
+				      TimeUnit.MILLISECONDS)) {
 
-				ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_context.getTopic().getName(), m_partitionId,
-				      m_context.getGroupId());
+					ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_context.getTopic().getName(), m_partitionId,
+					      m_context.getGroupId());
 
-				try {
-					ack = future.get(timeout, TimeUnit.MILLISECONDS);
-				} catch (TimeoutException e) {
-					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
-					      m_partitionId, m_context.getGroupId());
-				} finally {
+					try {
+						ack = future.get(timeout, TimeUnit.MILLISECONDS);
+					} catch (TimeoutException e) {
+						ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
+						      m_partitionId, m_context.getGroupId());
+					} finally {
+						pullMessageResultMonitor.remove(cmd);
+					}
+
+					context.stop();
+
+					if (ack != null) {
+						ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReceived(m_context.getTopic().getName(),
+						      m_partitionId, m_context.getGroupId());
+						appendToMsgQueue(ack);
+
+						resultReceived(ack);
+					}
+				} else {
 					pullMessageResultMonitor.remove(cmd);
-				}
-
-				context.stop();
-
-				if (ack != null) {
-					ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReceived(m_context.getTopic().getName(),
-					      m_partitionId, m_context.getGroupId());
-					appendToMsgQueue(ack);
-
-					resultReceived(ack);
 				}
 
 			} finally {

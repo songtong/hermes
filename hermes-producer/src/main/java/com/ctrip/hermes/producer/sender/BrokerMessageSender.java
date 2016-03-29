@@ -217,30 +217,35 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 					long timeout = m_config.getBrokerSenderSendTimeoutMillis();
 
-					Context acceptTimer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(), cmd.getPartition(),
-					      "broker-accept-duration").time();
+					if (m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS)) {
+						Context acceptTimer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(), cmd.getPartition(),
+						      "broker-accept-duration").time();
 
-					m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
-					ProducerStatusMonitor.INSTANCE.wroteToBroker(m_topic, m_partition, cmd.getMessageCount());
+						ProducerStatusMonitor.INSTANCE.wroteToBroker(m_topic, m_partition, cmd.getMessageCount());
 
-					Boolean brokerAccepted = null;
-					try {
-						brokerAccepted = acceptFuture.get(timeout, TimeUnit.MILLISECONDS);
-					} catch (TimeoutException e) {
-						ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(m_topic, m_partition,
-						      cmd.getMessageCount());
+						Boolean brokerAccepted = null;
+						try {
+							brokerAccepted = acceptFuture.get(timeout, TimeUnit.MILLISECONDS);
+						} catch (TimeoutException e) {
+							ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(m_topic, m_partition,
+							      cmd.getMessageCount());
+							m_messageAcceptanceMonitor.cancel(correlationId);
+							m_messageResultMonitor.cancel(cmd);
+						}
+
+						acceptTimer.stop();
+
+						if (brokerAccepted != null && brokerAccepted) {
+							ProducerStatusMonitor.INSTANCE.brokerAccepted(m_topic, m_partition, cmd.getMessageCount());
+
+							return waitForBrokerResult(cmd, resultFuture);
+						} else {
+							ProducerStatusMonitor.INSTANCE.brokerRejected(m_topic, m_partition, cmd.getMessageCount());
+							return false;
+						}
+					} else {
 						m_messageAcceptanceMonitor.cancel(correlationId);
 						m_messageResultMonitor.cancel(cmd);
-					}
-
-					acceptTimer.stop();
-
-					if (brokerAccepted != null && brokerAccepted) {
-						ProducerStatusMonitor.INSTANCE.brokerAccepted(m_topic, m_partition, cmd.getMessageCount());
-
-						return waitForBrokerResult(cmd, resultFuture);
-					} else {
-						ProducerStatusMonitor.INSTANCE.brokerRejected(m_topic, m_partition, cmd.getMessageCount());
 						return false;
 					}
 				} else {

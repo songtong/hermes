@@ -72,7 +72,7 @@ public class DefaultClientChannelInboundHandler extends AbstractNettyChannelInbo
 			case ALL_IDLE:
 			case READER_IDLE:
 			case WRITER_IDLE:
-				m_endpointClient.removeChannel(m_endpoint, m_endpointChannel);
+				m_endpointClient.removeChannel(m_endpoint, m_endpointChannel, true);
 				break;
 			}
 		}

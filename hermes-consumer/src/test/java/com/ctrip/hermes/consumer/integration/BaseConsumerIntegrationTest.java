@@ -108,13 +108,13 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 		}
 
 		@Override
-		public void writeCommand(Endpoint endpoint, Command cmd) {
-			m_delegate.writeCommand(endpoint, cmd);
+		public boolean writeCommand(Endpoint endpoint, Command cmd) {
+			return m_delegate.writeCommand(endpoint, cmd);
 		}
 
 		@Override
-		public void writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
-			m_delegate.writeCommand(endpoint, cmd, timeout, timeUnit);
+		public boolean writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
+			return m_delegate.writeCommand(endpoint, cmd, timeout, timeUnit);
 		}
 
 		@Override
