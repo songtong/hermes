@@ -24,6 +24,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -73,15 +74,17 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
+	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
 	@Override
-	public void writeCommand(Endpoint endpoint, Command cmd) {
-		writeCommand(endpoint, cmd, m_config.getEndpointChannelDefaultWrtieTimeout(), TimeUnit.MILLISECONDS);
+	public boolean writeCommand(Endpoint endpoint, Command cmd) {
+		return writeCommand(endpoint, cmd, m_config.getEndpointChannelDefaultWrtieTimeout(), TimeUnit.MILLISECONDS);
 	}
 
 	@Override
-	public void writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
+	public boolean writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
 		if (m_closed.get()) {
-			return;
+			return false;
 		}
 
 		if (m_writerStarted.compareAndSet(false, true)) {
@@ -93,7 +96,12 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 			Cat.logEvent("Hermes.Command.Version", type + "-SEND");
 		}
 
-		getChannel(endpoint).write(cmd, timeout, timeUnit);
+		lock.readLock().lock();
+		try {
+			return getChannel(endpoint).write(cmd, timeout, timeUnit);
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	private EndpointChannel getChannel(Endpoint endpoint) {
@@ -116,24 +124,29 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 		}
 	}
 
-	void removeChannel(Endpoint endpoint, EndpointChannel endpointChannel) {
-		EndpointChannel removedChannel = null;
-		if (Endpoint.BROKER.equals(endpoint.getType()) && m_channels.containsKey(endpoint)) {
-			synchronized (m_channels) {
+	void removeChannel(Endpoint endpoint, EndpointChannel endpointChannel, boolean sinceIdle) {
+		lock.writeLock().lock();
+		try {
+			EndpointChannel removedChannel = null;
+			if (Endpoint.BROKER.equals(endpoint.getType()) && m_channels.containsKey(endpoint)) {
 				if (m_channels.containsKey(endpoint)) {
 					EndpointChannel tmp = m_channels.get(endpoint);
 					if (tmp == endpointChannel) {
-						m_channels.remove(endpoint);
-						removedChannel = endpointChannel;
+						if (!sinceIdle || !endpointChannel.hasUnflushOps()) {
+							m_channels.remove(endpoint);
+							removedChannel = endpointChannel;
+						}
 					}
 				}
 			}
-		}
 
-		if (removedChannel != null) {
-			log.info("Closing idle connection to broker({}:{}, endpointId={})", endpoint.getHost(), endpoint.getPort(),
-			      endpoint.getId());
-			removedChannel.close();
+			if (removedChannel != null) {
+				log.info("Closing idle connection to broker({}:{}, endpointId={})", endpoint.getHost(), endpoint.getPort(),
+				      endpoint.getId());
+				removedChannel.close();
+			}
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -168,7 +181,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 								}
 							}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
 						} else {
-							removeChannel(endpoint, endpointChannel);
+							removeChannel(endpoint, endpointChannel, false);
 						}
 					} else {
 						endpointChannel.setChannelFuture(future);
@@ -195,10 +208,13 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 	@Override
 	public void close() {
 		if (m_closed.compareAndSet(false, true)) {
-			synchronized (m_channels) {
+			lock.writeLock().lock();
+			try {
 				for (Map.Entry<Endpoint, EndpointChannel> entry : m_channels.entrySet()) {
-					removeChannel(entry.getKey(), entry.getValue());
+					removeChannel(entry.getKey(), entry.getValue(), false);
 				}
+			} finally {
+				lock.writeLock().unlock();
 			}
 
 			m_writerThreadPool.shutdown();
@@ -374,7 +390,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 			}
 		}
 
-		public void write(Command cmd, long timeout, TimeUnit timeUnit) {
+		public boolean write(Command cmd, long timeout, TimeUnit timeUnit) {
 			if (!isClosed()) {
 				if (!m_opQueue.offer(new WriteOp(cmd, timeout, timeUnit))) {
 					ChannelFuture channelFuture = m_channelFuture.get();
@@ -384,8 +400,12 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 					}
 					log.warn("Send buffer of endpoint channel {} is full",
 					      channel == null ? "null" : NettyUtils.parseChannelRemoteAddr(channel));
+				} else {
+					return true;
 				}
 			}
+
+			return false;
 		}
 
 		private class WriteOp {

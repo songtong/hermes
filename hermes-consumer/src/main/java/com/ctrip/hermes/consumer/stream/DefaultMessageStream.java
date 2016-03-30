@@ -1,5 +1,7 @@
 package com.ctrip.hermes.consumer.stream;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -42,8 +44,6 @@ import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
-
-import io.netty.buffer.ByteBuf;
 
 public class DefaultMessageStream<T> implements MessageStream<T> {
 	private static final Logger log = LoggerFactory.getLogger(DefaultMessageStream.class);
@@ -170,13 +170,28 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 	}
 
 	private Command executePullMessageCommand(Endpoint endpoint, AbstractPullMessageCommand cmd, long timeout) {
+		long expireTime = System.currentTimeMillis() + timeout;
+		m_pullMonitor.monitor(cmd);
 		try {
-			m_pullMonitor.monitor(cmd);
-			m_endpointClient.writeCommand(endpoint, cmd);
-			ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_topic, m_partitionId, m_groupId);
-			return cmd.getFuture().get(timeout, TimeUnit.MILLISECONDS);
+			boolean cmdWrote = false;
+			while (expireTime > System.currentTimeMillis()) {
+				if (m_endpointClient.writeCommand(endpoint, cmd)) {
+					cmdWrote = true;
+					break;
+				} else {
+					TimeUnit.MILLISECONDS.sleep(5);
+				}
+			}
+			if (cmdWrote) {
+				ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_topic, m_partitionId, m_groupId);
+				return cmd.getFuture().get(Math.max(System.currentTimeMillis() - expireTime, 100), TimeUnit.MILLISECONDS);
+			} else {
+				return null;
+			}
 		} catch (Exception e) {
 			throw new RuntimeException("Pull specific message failed.", e);
+		} finally {
+			m_pullMonitor.remove(cmd);
 		}
 	}
 
@@ -204,7 +219,6 @@ public class DefaultMessageStream<T> implements MessageStream<T> {
 				context.stop();
 
 				if (ack == null) {
-					log.warn("Wrong command result when fetch messages. {} {} {}", m_topic, m_partitionId, m_groupId);
 					return new ArrayList<ConsumerMessage<T>>();
 				}
 

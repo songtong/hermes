@@ -168,17 +168,20 @@ public class MessageAssistResource {
 			cmd.setFuture(future);
 
 			m_monitor.monitor(cmd);
-			m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS);
-			QueryOffsetResultCommand resultCmd = null;
-			try {
-				resultCmd = future.get(timeout, TimeUnit.MILLISECONDS);
-				if (resultCmd != null && resultCmd.getOffset() != null) {
-					return resultCmd.getOffset();
-				} else {
-					log.debug("Find offset[topic:{}({})] from broker[{}] failed, will retry!", topic, partition, endpoint);
-					backoff.fail(true);
+			if (m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS)) {
+				QueryOffsetResultCommand resultCmd = null;
+				try {
+					resultCmd = future.get(timeout, TimeUnit.MILLISECONDS);
+					if (resultCmd != null && resultCmd.getOffset() != null) {
+						return resultCmd.getOffset();
+					} else {
+						log.debug("Find offset[topic:{}({})] from broker[{}] failed, will retry!", topic, partition, endpoint);
+						backoff.fail(true);
+					}
+				} finally {
+					m_monitor.remove(cmd);
 				}
-			} finally {
+			} else {
 				m_monitor.remove(cmd);
 			}
 		}

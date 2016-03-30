@@ -10,9 +10,9 @@ import com.ctrip.hermes.meta.entity.Endpoint;
  *
  */
 public interface EndpointClient {
-	public void writeCommand(Endpoint endpoint, Command cmd);
+	public boolean writeCommand(Endpoint endpoint, Command cmd);
 
-	public void writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit);
+	public boolean writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit);
 
 	public void close();
 

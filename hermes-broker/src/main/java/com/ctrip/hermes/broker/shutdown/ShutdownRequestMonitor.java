@@ -27,6 +27,7 @@ import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.transport.NettyServer;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
+import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.google.common.base.Charsets;
@@ -55,6 +56,9 @@ public class ShutdownRequestMonitor {
 
 	@Inject
 	private BrokerConfig m_config;
+
+	@Inject
+	private EndpointClient m_endpointClient;
 
 	private EventLoopGroup m_bossGroup = new NioEventLoopGroup(0, HermesThreadFactory.create("ShutdownMonitor-boss",
 	      false));
@@ -99,6 +103,7 @@ public class ShutdownRequestMonitor {
 		m_commandProcessor.stop();
 		m_longPollingService.stop();
 		m_messageQueueManager.stop();
+		m_endpointClient.close();
 		m_nettyServer.stop();
 		m_bossGroup.shutdownGracefully();
 		m_workerGroup.shutdownGracefully();

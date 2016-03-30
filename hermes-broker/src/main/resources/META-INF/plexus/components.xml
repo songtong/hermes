@@ -59,6 +59,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.transport.endpoint.EndpointClient</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
