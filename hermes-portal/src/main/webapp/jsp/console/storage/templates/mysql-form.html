@@ -38,7 +38,19 @@
 				<div class="form-group">
 					<label class="col-md-4 control-label">Tags</label>
 					<div class="col-md-6">
-						<select-x url="/api/tags" selected="selected"></select-x>
+						<select-x url="/api/tags" on-change="onChange" on-select="onSelect" on-unselect="onUnselect"></select-x>
+					</div>
+					<div class="col-md-2">
+						<button class="btn btn-warning btn-sm" ng-click="edit($index)"><span class="glyphicon glyphicon-plus-sign"></span>添加</button>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">&nbsp;</label>
+					<div class="col-md-6 alert alert-info" style="margin-bottom: 0px;">
+						<label class="col-md-2 control-label">Tag</label>
+						<div class="col-md-4"><input class="form-control col-md-4" placeholder="Tag" ng-model="newTag"/></div>
+						<label class="col-md-2 control-label">Group</label>
+						<div class="col-md-4"><select class="form-control col-md-4" placeholder="Tag Group" ng-if="groupTags" ng-options="tags for (group, tags) in $parent.groupTags"></select></div>
 					</div>
 				</div>
 			</form>

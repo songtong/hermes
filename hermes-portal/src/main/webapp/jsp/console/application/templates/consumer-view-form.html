@@ -70,7 +70,8 @@
 						</div>
 						<div class="form-group">
 							<div class="col-sm-offset-4 col-sm-6">
-								<button type="button" class="btn btn-primary pull-right" ng-click="createTopic()">同步</button>
+								<button type="button" class="btn btn-primary pull-right" ng-click="createConsumer()" ng-if="!$parent.view.id">同步</button>
+								<button type="button" class="btn btn-primary pull-right disabled" ng-click="createConsumer()" ng-if="view.id">同步</button>
 							</div>
 						</div>
 					</div>

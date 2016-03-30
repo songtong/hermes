@@ -26,7 +26,7 @@
 							<button type="button" data-toggle="modal" data-target="#datasource-modal" class="btn btn-sm btn-success" style="text-align: center; font-size: 12px" ng-click="add()">新增</button>
 						</div>
 					</div>
-					<div class="panel-body" refresh-x ng-if="datasources" ng-include="'template/storage/templates/' + storageType +'.html'">
+					<div class="panel-body" ng-if="datasources" ng-include="'template/storage/templates/' + storageType +'.html'">
 					</div>
 				</div>
 			</div>

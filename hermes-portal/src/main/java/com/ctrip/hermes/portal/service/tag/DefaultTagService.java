@@ -43,7 +43,7 @@ public class DefaultTagService {
 			Map<String, List<Tag>> datasourcesTags = new HashMap<String, List<Tag>>();
 			List<DatasourceTag> mapping = m_datasourceTagDao.findAll(DatasourceTagEntity.READSET_FULL);
 			for (DatasourceTag dt : mapping) {
-				if (datasourcesTags.get(dt.getDatasourceId()) != null) {
+				if (datasourcesTags.get(dt.getDatasourceId()) == null) {
 					datasourcesTags.put(dt.getDatasourceId(), new ArrayList<Tag>());
 				}
 				datasourcesTags.get(dt.getDatasourceId()).add(m_tagDao.findByPK(dt.getTagId()));

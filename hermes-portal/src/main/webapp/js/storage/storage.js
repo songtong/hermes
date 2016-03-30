@@ -27,6 +27,10 @@ hermes_storage.run(function(editableOptions) {
 		'addDatasourceTag': {
 			url: '/api/tags/datasources/:id',
 			method: 'POST'
+		},
+		'removeDatasourceTag': {
+			url: '/api/tags/datasources/:id',
+			method: 'DELETE'
 		}
 	}); 
 	
@@ -37,41 +41,48 @@ hermes_storage.run(function(editableOptions) {
 	
 	scope.currentDatasource = null;
 	
-	scope.datasourceTags = null;
+	scope.datasourcesTags = {};
+	
+	scope.groupTags = null;
 	
 	//
 	scope.storageType = 'kafka';
 	
-	scope.selectedTags = null;
+	scope.tagGroups = [];
+	
+	scope.newTag = null;
+	
+	scope.newTagGroup = null;
+	
+	scope.addedTags = [];
+	scope.removedTags = [];
 
 	// Init.
     (function() {
-    	var w = watcher.register({
-    		context: {
-    			count: 0
-    		},
-    		step: function() {
-    			if (++this.count == 2) {
-    				return true;
-    			}
-    			return false;
-    		},
-    		handlers: [function() {
+    	promiseChain.add({
+    		func: meta_resource.get_storages,
+    		args: {},
+    		success: function(data){
+              scope.__datasources = data;
+              scope.datasources = data[0];
+              scope.selectStorage(scope.storageType);
+    		}
+    	}, true).add({
+    		func: tagResource.getDatasourcesTags,
+    		args: {},
+    		success: function(result) {
+    			scope.datasourcesTags = result.data[0];
+    		}
+    	}, true).add({
+    		func: tagResource.getTags,
+    		args: {},
+    		success: function(result) {
+    			scope.groupTags = result.data[0];
+    			console.log(scope.groupTags);
+    			scope.tagGroups = Object.keys(scope.groupTags);
     			scope.$emit('initialized');
-    		}]
-    	});
-    	
-        meta_resource.get_storages({}, function (data) {
-            scope.__datasources = data;
-            scope.datasources = data[0];
-            scope.selectStorage(scope.storageType);
-            w.step();
-        });
-        
-        tagResource.getDatasourcesTags(function(result){
-        	scope.datasourcesTags = result.data[0];
-        	w.step();
-        });
+    		}
+    	}, true).finish();
     })();
     
     scope.selectStorage = function(type) {
@@ -85,44 +96,68 @@ hermes_storage.run(function(editableOptions) {
     
     scope.edit = function(index) {
     	scope.currentDatasource = scope.datasources[index];
+    	
+    	// Clear tags.
+    	scope.$broadcast('select2:clear');
+    	
+    	// Init tags control.
+    	if (scope.datasourcesTags[scope.currentDatasource['id']]) {
+    		scope.$broadcast('select2:init', scope.datasourcesTags[scope.currentDatasource['id']].map(function(elem, index){
+    			return elem.id;
+    		}));
+    	}
+    	
+    	// Show modal. 
     	$('#datasource-modal').modal();
     };
     
+    // Reset all form contents & tags.
     scope.reset = function($event) {
+    	// Reset all form controls.
     	$($event.currentTarget).parents('.modal-footer').siblings('.modal-body').find('form input').val('');
+    	
+    	// Clear Tags.
+    	scope.$broadcast('select2:clear');
     };
     
     scope.add = function() {
     	scope.currentDatasource = {created: true};
+
+    	// Clear Tags.
+    	scope.$broadcast('select2:clear');
     };
     
     scope.save = function() {
+    	var tagOps = [];
+    	
+    	for (var index in scope.addedTags) {
+    		tagOps.push({
+    			func: tagResource.addDatasourceTag,
+    			args: [{id: scope.currentDatasource.id, tagId: scope.addedTags[index]}, null]
+    		});
+    	}
+    	
+    	for (var index in scope.removedTags) {
+    		tagOps.push({
+    			func: tagResource.removeDatasourceTag,
+    			args: [{id: scope.currentDatasource.id, tagId: scope.removedTags[index]}, null]
+    		});
+		}
+    	
     	if (scope.currentDatasource.created) {
         	StorageService.add_datasource(scope.currentDatasource, scope.storageType, function(){
     			scope.datasources.push(scope.currentDatasource);
-    			var currentType = scope.type;
-    			scope.type = null;
-    			scope.type = currentType;
     			
-    			var w = watcher.register({
-    				context: {count: 0},
-    				step: function() {
-    					if (++this.count == scope.selectedTags.length) {
-    						return true;
-    					}
-    					return false;
-    				},
-    				handlers: [function() {
-    					show_op_info.show("Tag同步成功！", true);
-    				}]
-    			});
-    			
-    			for (var index in scope.selectedTags) {
-    				console.log(scope.selectedTags[index]);
-    				tagResource.addDatasourceTag({id: scope.currentDatasource.id}, {tagId: scope.selectedTags[index].id}, function(data){
-        				w.step();
-        			});
-    			}
+    			// Leverage promise chain to finish adding tags.
+    			promiseChain.newBorn()
+    				.add(tagOps, true)
+    				.add({
+    		    		func: tagResource.getDatasourcesTags,
+    		    		args: [],
+    		    		success: function(result) {
+    		    			scope.datasourcesTags = result.data[0];
+    		    		}
+    		    	}, true).finish();
     			
 //    			$('<tr>').append($('<td>').text($scope.currentDatasource.id))
 //        			.append($('<td>').text($scope.currentDatasource.properties['user']))
@@ -133,38 +168,139 @@ hermes_storage.run(function(editableOptions) {
 //        			.append($('<td>').text($scope.currentDatasource.id));
         	});
     	} else {
-    		StorageService.update_datasource(scope.storageType, scope.currentDatasource.id, scope.currentDatasource);
+    		StorageService.update_datasource(scope.storageType, scope.currentDatasource.id, scope.currentDatasource, function() {
+    			promiseChain.newBorn()
+				.add(tagOps, true)
+				.add({
+		    		func: tagResource.getDatasourcesTags,
+		    		args: [],
+		    		success: function(result) {
+		    			scope.datasourcesTags = result.data[0];
+		    		}
+		    	}, true).finish();
+    		});
     	}
 
     };
     
+    // Datasource removal.
     scope.remove = function(context) {
-    	StorageService.delete_datasource(scope.datasources[context.index].id, scope.storageType, function(){
-        	scope.datasources.splice(context.index, 1);
-        	// Angular bug: can not handle collection changes when using ng-repeat in template.
-        	$(context.target).parents('tr').remove();
-    	});
+    	scope.currentDatasource = scope.datasources[context.index];
+    	var tags = scope.datasourcesTags[scope.currentDatasource.id];
+
+    	// If having tags attached to this ds, delete first.
+    	if (tags) {
+    		var tagRemovals = [];
+    		var w = watcher.register({
+    			context: {count: 0},
+    			step: function() {
+    				if (++this.count == tags.length) {
+    					return true;
+    				}
+    				return false;
+    			},
+    			handlers: [function() {
+    				doRemove();
+    			}]
+    		});
+    		for (var index in tags) {
+        		tagRemovals.push({
+        			func: tagResource.removeDatasourceTag,
+        			args: [{id: scope.currentDatasource.id, tagId: tags[index].id}, null],
+        			success: function() {
+        				w.step();
+        			}
+        		});
+    		}
+    		promiseChain.newBorn().add(tagRemovals, true).finish();
+    	} else {
+    		doRemove();
+    	}
+    	
+    	function doRemove() {
+    		StorageService.delete_datasource(scope.currentDatasource.id, scope.storageType, function(){
+	        	scope.datasources.splice(context.index, 1);
+	        	// Angular bug: can not handle collection changes when using ng-repeat in template.
+	        	//$(context.target).parents('tr').remove();
+	    		promiseChain.newBorn()
+	    			.add({
+			    		func: tagResource.getDatasourcesTags,
+			    		args: [],
+			    		success: function(result) {
+			    			scope.datasourcesTags = result.data[0];
+			    		}
+			    	}, true).finish();
+
+	    	});
+    	}
     };
     
+    // Raise confirm dialog.
     scope.confirm = function($index, $event) {
     	scope.$broadcast('confirm', 'confirmDialog', {index: $index, target: $event.currentTarget});
     };
     
-//    scope.tagClass = function (item) {
-//    	var classes = ['label-success', 'label-info', 'label-danger', 'label-warning'];
-//    	var $this = $(this);
-//    	if ($this.data('item') == undefined) {
-//    		$this.data('item', 0);
+    // Tags change event handler.
+    scope.onChange = function(data) {
+    	scope.addedTags = [];
+		scope.removedTags = [];
+		if (!data) {
+			data = [];
+		}
+		
+		var tags = scope.datasourcesTags[scope.currentDatasource.id];
+		if (tags) {
+			$.each(tags, function(index, tag) {
+				var filtered = data.filter(function(t) {
+					return t == String(tag.id);
+				});
+				if (filtered.length == 0) {
+					scope.removedTags.push(tag.id);
+				}
+			});
+			
+			$.each(data, function(index, t) {
+				var filtered = tags.filter(function(tag) {
+					return t == String(tag.id);
+				});
+				
+				if (filtered.length == 0) {
+					scope.addedTags.push(t);
+				}
+			})
+			
+		} else {
+			scope.addedTags = data;
+		}
+    	
+    	console.log(scope.addedTags, scope.removedTags);
+    };
+    
+//    scope.onSelect = function(tag) {
+//    	var tags = scope.datasourcesTags[scope.currentDatasource.id];
+//    	if (tags) {
+//    		var filtered = tags.filter(function(t, i){
+//    			return t.id == tag.id;
+//    		});
+//    		if (filtered.length == 0) {
+//    			scope.tagsAdded.push(tag);
+//    		}
 //    	} else {
-//    		$this.data('item', ($this.data('item') + 1) % classes.length);
+//    		scope.tagsAdded.push(tag);
 //    	}
-//    	return 'label ' + classes[$this.data('item')];
-//    } 
-    
-    scope.selected = function(data) {
-    	scope.selectedTags = data;
-    }
-    
+//    };
+//    
+//    scope.onUnselect = function(tag) {
+//    	var tags = scope.datasourcesTags[scope.currentDatasource.id];
+//    	if (tags) {
+//    		var filtered = tags.filter(function(t, i){
+//    			return t.id == tag.id;
+//    		});
+//    		if (filtered.length == 0) {
+//    			scope.tagsRemoved.push(tag);
+//    		}
+//    	}
+//    };
 } ]);
 
 

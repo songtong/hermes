@@ -18,10 +18,10 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.lookup.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTag;
 import com.ctrip.hermes.portal.dal.tag.Tag;
 import com.ctrip.hermes.portal.resource.assists.RestException;
@@ -66,14 +66,14 @@ public class TagResource {
 	@POST
 	@Path("datasources/{id}")
 	public Response addDatasourceTag(@PathParam("id") String datasourceId, @QueryParam("tagId") long tagId, String content) {
-		if (tagId == 0 && content == null) {
+		if (tagId == 0 && StringUtils.isEmpty(content)) {
 			throw new RestException(String.format("Either paramater need to be offered: tagId, tagContent!"), Status.BAD_REQUEST);
 		}
 		
 		try {
 			DatasourceTag datasourceTag = null;
 			
-			if (content != null) {
+			if (!StringUtils.isEmpty(content)) {
 				Tag tag = null;
 				try {
 					tag = JSON.parseObject(content, Tag.class);

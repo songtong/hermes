@@ -102,11 +102,12 @@ Storage.service("StorageService", ["$resource", function ($resource) {
 
     return {
         value: service_value,
-        update_datasource : function(type,id,ds) {
+        update_datasource : function(type, id, ds, callback) {
      		storage_resource.update_datasource({
 				'type' : type,
 				'id' : id
 				}, ds, function(result) {
+					callback && callback.apply(this, result);
 					show_op_info.show("更新Datasource：" + ds.id + " 成功！",true);
 			});
 		},

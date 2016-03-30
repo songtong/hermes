@@ -481,58 +481,72 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			});
 		}
 	};
-}]).directive('selectX', function() {
+}]).directive('selectX', ['$resource', function($resource) {
 	return {
 		restrict: 'E',
 		scope: {
 			url: '@url',
-			selected: '=selected'
+			onChange: '=onChange',
+			onSelect: '=onSelect',
+			onUnselect: '=onUnselect'
 		},
 		template: '<select class="form-control" multiple="multiple" style="width: 100%"></select>',
 		link: function($scope, $element, attrs) {
 			var __tags = [];
-			var __selected = [];
+			var __data = [];
 			
-			$element.find('select').select2({
-				ajax: {
-				    url: $scope.url,
-				    dataType: 'json',
-				    delay: 250,
-				    data: {},
-				    processResults: function (result, params) {
-				      $.each(result.data[0], function(group, tags){
-				    	  $.each(tags, function(index, tag){
-				    		  console.log(tag);
-				    		  var filtered = __tags.filter(function(t, i){
-				    			  return tag.id == t.id;
-				    		  });
-				    		  if (filtered.length == 0) {
-				    			  tag.text = tag.name;
-				    			  __tags.push(tag);
-				    		  }
-				    	  });
-				      });
-	
-				      return {
-				        results: __tags
-				      };
-				    },
-				    cache: false
+			var dataResource = $resource($scope.url, {}, {
+				fetch: {
+					url: $scope.url,
+					isArray: false,
+					method: 'GET'
 				}
 			});
 			
-			$element.on('select2:select', function(event) {
-				__selected.push(event.params.data);
-				$scope.selected.call(this, __selected);
-			}).on('select2:unselect', function(event) {
-				__selected = __selected.filter(function(elem, index){
-					return elem.id != event.params.data.id;
+			dataResource.fetch(function(result){
+	    		$.each(result.data[0], function(group, tags){
+	    			$.each(tags, function(index, tag){
+	    				tag.text = tag.name;
+	    			})
+	    			__data = __data.concat(tags);
+	    		});
+	    		init();
+	    	});
+			
+			function init() { 
+				$element.find('select').select2({
+					tags: true,
+					multiple: true,
+					allowClear: true,
+					data: __data
 				});
-				$scope.selected.call(this, __selected);
-			});
+				
+				$element.find('select').on('change', function(event) {
+					$scope.onChange && $scope.onChange.call(this, $(event.target).val());
+				}).on('select2:select', function(e){
+					$scope.onSelect && $scope.onSelect.call(this, e.params.data);
+				}).on('select2:unselect', function(e){
+					$scope.onUnselect && $scope.onUnselect.call(this, e.params.data);
+				});
+				
+				// reset select2 control.
+				$scope.$on('select2:clear', function(){
+					$element.find('select').val('').trigger('change');
+				});
+				
+				$scope.$on('select2:init', function(e, data){
+					if (data && data instanceof Array) {
+						$element.find('select').val(data).trigger('change');;
+					} 
+				});
+				
+				$scope.$on('select2:data', function() {
+					
+				});
+			}
 		}
 	};
-}).directive('refreshX', ['$compile', '$templateCache', function($compile, $templateCache) {
+}]).directive('refreshX', ['$compile', '$templateCache', function($compile, $templateCache) {
 	return {
 		restrict: 'A',
 		scope: {

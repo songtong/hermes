@@ -5,6 +5,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.languageTypes = [ 'java', '.net' ];
 	$scope.views = {};
 	
+	$scope.order_opts = [ true, false ];
 	$scope.datasources = {};
 	$scope.comment = "";
 
@@ -27,6 +28,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 				$scope.endpoint_types = [ 'kafka', 'broker' ];
 				$scope.codec_types = [ 'avro', 'json' ];
 			}
+			$scope.$broadcast('initialized');
 		}
 	}).finish();
 
@@ -167,6 +169,9 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 				func: TopicSync.addConsumer,
 				args: [env, view],
 				success: function(result) {
+					$scope.views[env] = result;
+					$scope.view = $scope.views[env];
+					
 					finishWatcher.step();
 				},
 				error: handleError

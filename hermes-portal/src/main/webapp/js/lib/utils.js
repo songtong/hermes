@@ -32,7 +32,7 @@ module.provider('_context', [function() {
  */
 module.service('clone', function() {
 	this.copy = function(obj, deep) {
-		if (typeof(obj) == 'obj') {
+		if (typeof(obj) == 'object') {
 			if (obj instanceof Array) {
 				var tmp = [];
 				for (var i in obj) {
@@ -47,8 +47,8 @@ module.service('clone', function() {
 				return tmp;
 			}
 		}
-		return obj;
 	}.bind(this);
+	return this.copy;
  });
 
 /*
@@ -256,6 +256,7 @@ module.service('promiseChain', ['logger', '$q', function(logger, $q) {
 						args.push(arguments[index]);
 					}
 				}
+				logger.log('promise invocation args: ' + JSON.stringify(args));
 				return args;
 			}
 			
@@ -294,7 +295,7 @@ module.service('promiseChain', ['logger', '$q', function(logger, $q) {
 			$(this).trigger('step');
 			if (this.__next && !this.__abort) {
 				this.__next.call.call(this.__next, this.__context);
-			} else {
+			} else if (this.__callback) {
 				this.__callback.apply(this);
 			}
 		};
@@ -356,7 +357,7 @@ module.service('promiseChain', ['logger', '$q', function(logger, $q) {
 		
 		this.__wrap = function(func) {
 			return function () {
-				var args = Array.prototype.slice(arguments);
+				var args = Array.prototype.slice.call(arguments);
 				var deferred = $q.defer();
 				args.push(function(result){
 					deferred.resolve(result);
@@ -364,7 +365,7 @@ module.service('promiseChain', ['logger', '$q', function(logger, $q) {
 				args.push(function(result){
 					deferred.reject(result);
 				});
-				
+
 				func.apply(this, args);
 				return deferred.promise;
 			};

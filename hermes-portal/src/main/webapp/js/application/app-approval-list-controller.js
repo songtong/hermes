@@ -14,7 +14,7 @@ application_module.controller('app-approval-list-controller', [ '$scope', 'Appli
 		var start = pagination.start || 0;
 		var size = pagination.number || 10;
 		
-		ApplicationService.get_applications($scope.status, isAdmin? null: ssoUser, start, size).then(function(result) {
+		ApplicationService.get_applications($scope.status, isAdmin? null: ssoMail, start, size).then(function(result) {
 			$scope.applications = result['data'];
 		    pagination.numberOfPages = Math.ceil(result.count / size);
 			$scope.$emit('initialized');
