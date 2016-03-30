@@ -134,16 +134,20 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 			if (batches != null && !batches.isEmpty()) {
 
+				int count = 0;
+
 				for (TppConsumerMessageBatch batch : batches) {
 					// TODO remove legacy code
 					boolean needServerSideAckHolder = pullTask.getPullMessageCommandVersion() < 3 ? true : false;
 					m_queueManager.delivered(batch, tpg.getGroupId(), pullTask.isWithOffset(), needServerSideAckHolder);
 
 					bizLogDelivered(pullTask.getClientIp(), batch.getMessageMetas(), tpg, pullTask.getReceiveTime());
+
+					count += batch.size();
 				}
 
 				response(pullTask, batches, currentOffset);
-				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime);
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime, count);
 				return true;
 			} else {
 				return false;

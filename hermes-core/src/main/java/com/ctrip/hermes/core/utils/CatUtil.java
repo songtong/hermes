@@ -6,15 +6,18 @@ import com.dianping.cat.message.internal.DefaultTransaction;
 
 public class CatUtil {
 
-	public static void logElapse(String type, String name, long startTimestamp) {
+	public static void logElapse(String type, String name, long startTimestamp, int count) {
+		if(count > 0){
 		Transaction latencyT = Cat.newTransaction(type, name);
 		long delta = System.currentTimeMillis() - startTimestamp;
 
 		if (latencyT instanceof DefaultTransaction) {
 			((DefaultTransaction) latencyT).setDurationStart(System.nanoTime() - delta * 1000000L);
 		}
+		latencyT.addData("*count", count);
 		latencyT.setStatus(Transaction.SUCCESS);
 		latencyT.complete();
+		}
 	}
 
 }

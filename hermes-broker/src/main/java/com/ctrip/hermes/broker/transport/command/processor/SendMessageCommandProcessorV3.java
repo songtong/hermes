@@ -197,7 +197,7 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 			      + m_partition);
 			if (elapseT instanceof DefaultTransaction) {
 				((DefaultTransaction) elapseT).setDurationStart(m_start);
-				elapseT.addData("command.message.count", m_result.getSuccesses().size());
+				elapseT.addData("*count", m_result.getSuccesses().size());
 			}
 			elapseT.setStatus(Transaction.SUCCESS);
 			elapseT.complete();
