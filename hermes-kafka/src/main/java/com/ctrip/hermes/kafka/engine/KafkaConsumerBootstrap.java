@@ -123,6 +123,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 				m_logger.info("Current assignment: " + assignment);
 				while (!closed.get()) {
 					ConsumerRecords<String, byte[]> records = consumer.poll(5000);
+					List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 					for (ConsumerRecord<String, byte[]> consumerRecord : records) {
 						long offset = -1;
 						try {
@@ -134,9 +135,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 							@SuppressWarnings("rawtypes")
 							ConsumerMessage kafkaMsg = new KafkaConsumerMessage(baseMsg, consumerRecord.partition(),
 							      consumerRecord.offset());
-							List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>(1);
 							msgs.add(kafkaMsg);
-							m_consumerNotifier.messageReceived(token, msgs);
 						} catch (Exception e) {
 							m_logger.warn(
 							      "Kafka consumer failed Topic:{} Partition:{} Offset:{} Group:{} SesssionId:{} Exception:{}",
@@ -144,19 +143,24 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 							      consumerContext.getSessionId(), e.getMessage());
 						}
 					}
+					m_consumerNotifier.messageReceived(token, msgs);
 				}
 			} catch (WakeupException e) {
 				if (!closed.get())
 					throw e;
 			} finally {
+				Set<TopicPartition> assignment = consumer.assignment();
 				consumer.commitSync();
 				consumer.close();
+				m_logger.info("Close assignment: " + assignment);		
 			}
 		}
 
 		public void shutdown() {
+			Set<TopicPartition> assignment = consumer.assignment();
 			closed.set(true);
 			consumer.wakeup();
+			m_logger.info("Shutting down assignment: " + assignment);			
 		}
 	}
 

@@ -20,7 +20,7 @@ import com.ctrip.hermes.monitor.Bootstrap;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
 import com.ctrip.hermes.monitor.stat.StatResult;
-import com.ctrip.hermes.monitor.zabbix.ZabbixApiGateway;
+import com.ctrip.hermes.monitor.zabbix.ZabbixApiGateway1;
 import com.ctrip.hermes.monitor.zabbix.ZabbixConst;
 import com.zabbix4j.ZabbixApiException;
 import com.zabbix4j.history.HistoryObject.HISOTRY_OBJECT_TYPE;
@@ -45,7 +45,7 @@ public class ZKZabbixMonitor implements IZabbixMonitor {
 	private ESMonitorService service;
 
 	@Autowired
-	private ZabbixApiGateway zabbixApi;
+	private ZabbixApiGateway1 zabbixApi;
 
 	@Autowired
 	private MonitorConfig config;

@@ -79,6 +79,9 @@ public class MonitorConfig {
 
 	@Value("${zabbix.url}")
 	private String zabbixUrl;
+	
+	@Value("${zabbix1.url")
+	private String zabbixUrl1;
 
 	@Value("${zabbix.username:guest}")
 	private String zabbixUsername;
@@ -678,4 +681,12 @@ public class MonitorConfig {
 	public void setHermesMetaserverCatDomain(String hermesMetaserverCatDomain) {
 		this.hermesMetaserverCatDomain = hermesMetaserverCatDomain;
 	}
+
+	public String getZabbixUrl1() {
+	   return zabbixUrl1;
+   }
+
+	public void setZabbixUrl1(String zabbixUrl1) {
+	   this.zabbixUrl1 = zabbixUrl1;
+   }
 }
