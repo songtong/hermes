@@ -24,6 +24,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -73,6 +74,8 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
+	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
 	@Override
 	public boolean writeCommand(Endpoint endpoint, Command cmd) {
 		return writeCommand(endpoint, cmd, m_config.getEndpointChannelDefaultWrtieTimeout(), TimeUnit.MILLISECONDS);
@@ -93,7 +96,12 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 			Cat.logEvent("Hermes.Command.Version", type + "-SEND");
 		}
 
-		return getChannel(endpoint).write(cmd, timeout, timeUnit);
+		lock.readLock().lock();
+		try {
+			return getChannel(endpoint).write(cmd, timeout, timeUnit);
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	private EndpointChannel getChannel(Endpoint endpoint) {
@@ -117,9 +125,10 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 	}
 
 	void removeChannel(Endpoint endpoint, EndpointChannel endpointChannel, boolean sinceIdle) {
-		EndpointChannel removedChannel = null;
-		if (Endpoint.BROKER.equals(endpoint.getType()) && m_channels.containsKey(endpoint)) {
-			synchronized (m_channels) {
+		lock.writeLock().lock();
+		try {
+			EndpointChannel removedChannel = null;
+			if (Endpoint.BROKER.equals(endpoint.getType()) && m_channels.containsKey(endpoint)) {
 				if (m_channels.containsKey(endpoint)) {
 					EndpointChannel tmp = m_channels.get(endpoint);
 					if (tmp == endpointChannel) {
@@ -130,12 +139,14 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 					}
 				}
 			}
-		}
 
-		if (removedChannel != null) {
-			log.info("Closing idle connection to broker({}:{}, endpointId={})", endpoint.getHost(), endpoint.getPort(),
-			      endpoint.getId());
-			removedChannel.close();
+			if (removedChannel != null) {
+				log.info("Closing idle connection to broker({}:{}, endpointId={})", endpoint.getHost(), endpoint.getPort(),
+				      endpoint.getId());
+				removedChannel.close();
+			}
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -197,10 +208,13 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 	@Override
 	public void close() {
 		if (m_closed.compareAndSet(false, true)) {
-			synchronized (m_channels) {
+			lock.writeLock().lock();
+			try {
 				for (Map.Entry<Endpoint, EndpointChannel> entry : m_channels.entrySet()) {
 					removeChannel(entry.getKey(), entry.getValue(), false);
 				}
+			} finally {
+				lock.writeLock().unlock();
 			}
 
 			m_writerThreadPool.shutdown();
