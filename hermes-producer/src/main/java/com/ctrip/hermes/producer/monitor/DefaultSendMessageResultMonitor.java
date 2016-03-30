@@ -99,9 +99,9 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	private void tracking(SendMessageCommandV3 sendMessageCommand, boolean success) {
 		if (!success || m_config.isCatEnabled()) {
 			String status = success ? Transaction.SUCCESS : "Timeout";
+			Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_ACKED, sendMessageCommand.getTopic());
 			for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
 				for (ProducerMessage<?> msg : msgs) {
-					Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_ACKED, msg.getTopic());
 					MessageTree tree = Cat.getManager().getThreadLocalMessageTree();
 
 					String msgId = msg.getDurableSysProperty(CatConstants.SERVER_MESSAGE_ID);
@@ -120,10 +120,11 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 					elapseT.setStatus(status);
 					elapseT.complete();
 
-					t.setStatus(status);
-					t.complete();
 				}
 			}
+			t.addData("*count", sendMessageCommand.getMessageCount());
+			t.setStatus(status);
+			t.complete();
 		}
 	}
 
