@@ -192,16 +192,12 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 
 		private void tracking(SendMessageCommandV3 sendMessageCommand, boolean success) {
-			String status = success ? Transaction.SUCCESS : "FAILED";
-
 			if (!success || m_config.isCatEnabled()) {
-				for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
-					for (ProducerMessage<?> msg : msgs) {
-						Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_TRANSPORT, msg.getTopic());
-						t.setStatus(status);
-						t.complete();
-					}
-				}
+				Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_TRANSPORT,
+				      sendMessageCommand.getTopic());
+				t.addData("*count", sendMessageCommand.getMessageCount());
+				t.setStatus(success ? Transaction.SUCCESS : "FAILED");
+				t.complete();
 			}
 
 		}
