@@ -205,6 +205,15 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>kv</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>kv</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>meta</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -285,15 +294,6 @@
 			</configuration>
 		</component>
 		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>kv</role-hint>
-			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
-			<configuration>
-				<physical-table-name>kv</physical-table-name>
-				<data-source-name>fxhermesmetadb</data-source-name>
-			</configuration>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.metaservice.model.AppDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.AppDao</implementation>
 			<requirements>
@@ -332,6 +332,15 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.model.EndpointDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.EndpointDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.model.KvDao</role>
+			<implementation>com.ctrip.hermes.metaservice.model.KvDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
@@ -413,15 +422,6 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.model.TopicDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.TopicDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaservice.model.KvDao</role>
-			<implementation>com.ctrip.hermes.metaservice.model.KvDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

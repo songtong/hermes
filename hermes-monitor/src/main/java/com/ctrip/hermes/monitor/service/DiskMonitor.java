@@ -11,6 +11,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -46,6 +47,7 @@ public class DiskMonitor implements IZabbixMonitor {
 	private ESMonitorService service;
 
 	@Autowired
+	@Qualifier("zabbixApiGateway")
 	private ZabbixApiGateway zabbixApi;
 
 	@Autowired
