@@ -115,7 +115,7 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 					Transaction elapseT = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE, msg.getTopic());
 					if (elapseT instanceof DefaultTransaction) {
 						((DefaultTransaction) elapseT).setDurationStart(msg.getBornTimeNano());
-						elapseT.addData("command.message.count", sendMessageCommand.getMessageCount());
+						elapseT.addData("key", msg.getKey());
 					}
 					elapseT.setStatus(status);
 					elapseT.complete();
