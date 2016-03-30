@@ -663,7 +663,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		MessagePriority latestMsg = findLatestMessageOffset(tpp);
 
 		if (oldestMsg == null || latestMsg == null) {
-			log.error("No message found in {}.", tpp);
+			log.debug("No message found in {}.", tpp);
 			return 0L;
 		}
 
