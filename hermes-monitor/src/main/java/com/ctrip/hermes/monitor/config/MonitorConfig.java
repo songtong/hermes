@@ -80,7 +80,7 @@ public class MonitorConfig {
 	@Value("${zabbix.url}")
 	private String zabbixUrl;
 	
-	@Value("${zabbix1.url")
+	@Value("${zabbix1.url:${zabbix.url}}")
 	private String zabbixUrl1;
 
 	@Value("${zabbix.username:guest}")
