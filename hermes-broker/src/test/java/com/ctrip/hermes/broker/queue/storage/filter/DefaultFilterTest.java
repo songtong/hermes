@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import org.codehaus.plexus.util.StringUtils;
@@ -58,30 +59,54 @@ public class DefaultFilterTest extends ComponentTestCase {
 		return tags;
 	}
 
-//	private Pair<String, Map<String, String>> generateSource(boolean isMatch, Map<String, List<String>> patterns) {
-//		
-//	}
+	private Pair<String, Map<String, String>> generateSource(boolean isMatch, Map<String, List<String>> patterns) {
+		StringBuilder filter = new StringBuilder();
+		Map<String, String> sources = new HashMap<>();
+		int idx = 0;
+		for (Entry<String, List<String>> entry : patterns.entrySet()) {
+			if (m_rand.nextBoolean() && idx < tagKeys.length - 1) {
+				String key = tagKeys[idx++];
+				String pattern = entry.getKey();
+				List<String> tags = entry.getValue();
+				filter.append(key + "~" + pattern + ",");
+				sources.put(key, tags.get(m_rand.nextInt(tags.size())));
+			}
+		}
+		if (!isMatch) {
+			filter.append(tagKeys[tagKeys.length - 1] + "~" + m_patterns[tagKeys.length - 1]);
+		}
+		return new Pair<String, Map<String, String>>(filter.toString(), sources);
+	}
 
-	private String[] patterns = new String[] { //
+	private String[] tagKeys = new String[] { "tag.a", "tag.b", "tag.c", "tag.d", "tag.e", "tag.f" };
+
+	private String[] m_patterns = new String[] { //
 	"abc.*.ddss.#", "*.hello.world", "hello.world.*", "diors.#", "#.diors", "a.*.b.#.c" };
 
 	@Test
 	public void testFilter() {
 		int topicCount = 5000;
-		int loopCount = 100000, loop = 100;
+		int loopCount = 1000000, loop = 500;
 		int maxTagCount = 20000;
 		List<String> topics = randomStrings(topicCount, 256);
 		Filter filter = lookup(Filter.class);
 		Map<String, List<String>> pattern2Tags = new HashMap<>();
-		for (String pattern : patterns) {
+		for (String pattern : m_patterns) {
 			pattern2Tags.put(pattern, generateTags(pattern, m_rand.nextBoolean() ? //
-			m_rand.nextBoolean() ? m_rand.nextInt(maxTagCount) : m_rand.nextInt(500)
+			m_rand.nextBoolean() ? //
+			m_rand.nextInt(maxTagCount)
+			      : m_rand.nextInt(500)
 			      : 1));
+		}
+		List<Pair<String, Map<String, String>>> list = new ArrayList<>();
+		for (int i = 0; i < loopCount; i++) {
+			list.add(generateSource(m_rand.nextInt(10) < 7, pattern2Tags));
 		}
 		for (int i = 0; i < loop; i++) {
 			long begin = System.currentTimeMillis();
 			for (int j = 0; j < loopCount; j++) {
-//				 filter.isMatch(topics.get(m_rand.nextInt(topicCount)), filter, )
+				Pair<String, Map<String, String>> seed = list.get(m_rand.nextInt(list.size()));
+				filter.isMatch(topics.get(m_rand.nextInt(topicCount)), seed.getKey(), seed.getValue());
 			}
 			System.out.println("cost: " + (System.currentTimeMillis() - begin));
 		}
