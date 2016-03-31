@@ -12,6 +12,10 @@ hermes_storage.run(function(editableOptions) {
 	
 	// Define tag resource.
 	var tagResource = resource('/api/tags', {}, {
+		'addTag': {
+			url: '/api/tags',
+			method: 'POST'
+		},
 		'getTags': {
 			url: '/api/tags',
 			method: 'GET'
@@ -43,12 +47,9 @@ hermes_storage.run(function(editableOptions) {
 	
 	scope.datasourcesTags = {};
 	
-	scope.groupTags = null;
-	
+	scope.groupTags = {'test': [{id:2, name: 'd'}]};
 	//
 	scope.storageType = 'kafka';
-	
-	scope.tagGroups = [];
 	
 	scope.newTag = null;
 	
@@ -78,8 +79,6 @@ hermes_storage.run(function(editableOptions) {
     		args: {},
     		success: function(result) {
     			scope.groupTags = result.data[0];
-    			console.log(scope.groupTags);
-    			scope.tagGroups = Object.keys(scope.groupTags);
     			scope.$emit('initialized');
     		}
     	}, true).finish();
@@ -98,11 +97,11 @@ hermes_storage.run(function(editableOptions) {
     	scope.currentDatasource = scope.datasources[index];
     	
     	// Clear tags.
-    	scope.$broadcast('select2:clear');
+    	scope.$broadcast('select2:clear', 'tags');
     	
     	// Init tags control.
     	if (scope.datasourcesTags[scope.currentDatasource['id']]) {
-    		scope.$broadcast('select2:init', scope.datasourcesTags[scope.currentDatasource['id']].map(function(elem, index){
+    		scope.$broadcast('select2:init', 'tags', scope.datasourcesTags[scope.currentDatasource['id']].map(function(elem, index){
     			return elem.id;
     		}));
     	}
@@ -117,14 +116,15 @@ hermes_storage.run(function(editableOptions) {
     	$($event.currentTarget).parents('.modal-footer').siblings('.modal-body').find('form input').val('');
     	
     	// Clear Tags.
-    	scope.$broadcast('select2:clear');
+    	scope.$broadcast('select2:clear', 'tags');
+    	scope.$broadcast('select2:clear', 'groups');
     };
     
     scope.add = function() {
-    	scope.currentDatasource = {created: true};
+    	scope.currentDatasource = {onCreate: true};
 
     	// Clear Tags.
-    	scope.$broadcast('select2:clear');
+    	scope.$broadcast('select2:clear', 'tags');
     };
     
     scope.save = function() {
@@ -144,8 +144,11 @@ hermes_storage.run(function(editableOptions) {
     		});
 		}
     	
-    	if (scope.currentDatasource.created) {
+    	if (scope.currentDatasource.onCreate) {
         	StorageService.add_datasource(scope.currentDatasource, scope.storageType, function(){
+        		// Remove flag for on creating datasource.
+        		delete scope.currentDatasource.onCreate;
+        		
     			scope.datasources.push(scope.currentDatasource);
     			
     			// Leverage promise chain to finish adding tags.
@@ -272,9 +275,53 @@ hermes_storage.run(function(editableOptions) {
 		} else {
 			scope.addedTags = data;
 		}
-    	
-    	console.log(scope.addedTags, scope.removedTags);
     };
+    
+    scope.dataHandler = function(result) {
+    	var data = [];
+		$.each(result.data[0], function(group, tags){
+			$.each(tags, function(index, tag){
+				tag.text = tag.name;
+				data.push(tag);
+			});
+		});
+		return data;
+    };
+    
+    scope.groupHandler = function(result) {
+		return Object.keys(result.data[0]);
+    };
+    
+    scope.selectGroup = function(data) {
+    	if (data) {
+    		scope.newTagGroup = data;
+    	}
+    };
+    
+    scope.onValidate = function(newSelected, selected) {
+    	
+    };
+    
+    scope.addTag = function() {
+    	var chain = promiseChain.newBorn().add({
+    		func: tagResource.addTag,
+    		args: [{
+    			name: scope.newTag,
+    			group: scope.newTagGroup
+    		}],
+    		success: function() {
+    			scope.newTag = null;
+    			scope.newTagGroup = null;
+    		}
+    	}, true).add({
+    		func: tagResource.getTags,
+    		success: function(result) {
+    			scope.groupTags = result.data[0];
+    			scope.$broadcast('select2:data', 'tags');
+    			scope.$broadcast('select2:clear', 'groups');
+    		}
+    	}, true).finish();
+    }
     
 //    scope.onSelect = function(tag) {
 //    	var tags = scope.datasourcesTags[scope.currentDatasource.id];

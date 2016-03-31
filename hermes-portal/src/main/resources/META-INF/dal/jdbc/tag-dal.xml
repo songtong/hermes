@@ -6,6 +6,22 @@
         <statement><![CDATA[SELECT <FIELDS/>
         FROM <TABLE/>]]></statement>
       </query>
+      <query name="find-by-name" type="SELECT">
+        <param name="name" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/> WHERE <FIELD name='name'/> = ${name}]]></statement>
+      </query>
+      <query name="find-by-group" type="SELECT" multiple="true">
+        <param name="group" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/> WHERE <FIELD name='group'/> = ${group}]]></statement>
+      </query>
+      <query name="find-by-name-group" type="SELECT">
+        <param name="name" />
+        <param name="group" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/> WHERE <FIELD name='name'/> = ${name} AND <FIELD name='group'/> = ${group}]]></statement>
+      </query>
     </query-defs>
   </entity>
 </entities>

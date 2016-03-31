@@ -16,6 +16,8 @@ import com.ctrip.hermes.portal.dal.application.DefaultHermesApplicationDao;
 import com.ctrip.hermes.portal.dal.tag.CachedTagDao;
 import com.ctrip.hermes.portal.service.SyncService;
 import com.ctrip.hermes.portal.service.application.DefaultApplicationService;
+import com.ctrip.hermes.portal.service.application.KafkaPartitionStrategy;
+import com.ctrip.hermes.portal.service.application.MysqlPartitionStrategy;
 import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService;
 import com.ctrip.hermes.portal.service.elastic.DefaultPortalElasticClient;
 import com.ctrip.hermes.portal.service.mail.DefaultPortalMailService;
@@ -52,6 +54,10 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(CachedTagDao.class));
 		
 		all.add(A(DefaultTagService.class));
+		
+		all.add(A(MysqlPartitionStrategy.class));
+		
+		all.add(A(KafkaPartitionStrategy.class));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

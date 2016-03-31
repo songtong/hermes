@@ -14,6 +14,12 @@
         FROM <TABLE/>
         WHERE <FIELD name='datasource-id'/> = ${key-datasource-id}]]></statement>
       </query>
+      <query name="find-by-tag" type="SELECT" multiple="true">
+        <param name="key-tag-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='tag-id'/> = ${key-tag-id}]]></statement>
+      </query>
       <query name="count-by-tag" type="SELECT">
         <param name="key-tag-id" />
         <statement><![CDATA[SELECT <FIELDS/>

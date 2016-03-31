@@ -118,4 +118,21 @@ public class TagResource {
 		}
 		return Response.status(Status.OK).entity(ResponseUtils.wrapResponse(Status.OK, tags)).build();
 	}
+	
+	@POST
+	public Response addTag(String content) {
+		Tag tag = null;
+		try {
+			tag = JSON.parseObject(content, Tag.class);
+		} catch (Exception e) {
+			throw new RestException(String.format("Invalid content for tag: %s", content), Status.BAD_REQUEST);
+		}
+		
+		tag = tagService.addTag(tag);
+		if (tag == null) {
+			throw new RestException(String.format("Failed to add tag!", Status.INTERNAL_SERVER_ERROR));
+		}
+		
+		return Response.status(Status.OK).entity(tag).build();
+	}
 }

@@ -37,6 +37,16 @@ public class DefaultTagService {
 	@Inject
 	private TransactionManager m_transactionManager;
 	
+	public Tag addTag(Tag tag) {
+		try {
+			m_tagDao.insert(tag);
+			return tag;
+		} catch (DalException e) {
+			log.error("Failed to add tag into db!", e);
+			return null;
+		}
+	}
+	
 	// List all tags grouped by datasource.
 	public Map<String, List<Tag>> listDatasourcesTags() {
 		try {

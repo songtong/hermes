@@ -88,70 +88,7 @@ public class DefaultApplicationService implements ApplicationService {
 
 	@Override
 	public TopicView generateTopicView(TopicApplication app) {
-		TopicView topicView = new TopicView();
-
-		String defaultReadDS = "ds0";
-		String defaultWriteDS = "ds0";
-		if ("mysql".equals(app.getStorageType())) {
-			topicView.setEndpointType("broker");
-			switch (app.getProductLine()) {
-			case "flight":
-				defaultReadDS = "ds2";
-				defaultWriteDS = "ds2";
-				break;
-			case "hotel":
-				defaultReadDS = "ds1";
-				defaultWriteDS = "ds1";
-				break;
-			}
-		} else if ("kafka".equals(app.getStorageType())) {
-			List<Property> kafkaProperties = new ArrayList<>();
-			kafkaProperties.add(new Property("partitions").setValue("3"));
-			kafkaProperties.add(new Property("replication-factor").setValue("2"));
-			kafkaProperties.add(new Property("retention.ms")
-					.setValue(String.valueOf(TimeUnit.DAYS.toMillis(app.getRetentionDays()))));
-			topicView.setProperties(kafkaProperties);
-			defaultReadDS = "kafka-consumer";
-			defaultWriteDS = "kafka-producer";
-			if ("java".equals(app.getLanguageType())) {
-				topicView.setEndpointType("kafka");
-			} else if (".net".equals(app.getLanguageType())) {
-				topicView.setEndpointType("broker");
-			}
-
-		}
-		int partitionCount = 1;
-		if (app.getMaxMsgNumPerDay() >= 20000000) {
-			partitionCount = 20;
-		} else if (app.getMaxMsgNumPerDay() >= 10000000) {
-			partitionCount = 10;
-		} else {
-			partitionCount = 5;
-		}
-		List<Partition> topicPartition = new ArrayList<Partition>();
-		for (int i = 0; i < partitionCount; i++) {
-			Partition p = new Partition();
-			p.setReadDatasource(defaultReadDS);
-			p.setWriteDatasource(defaultWriteDS);
-			topicPartition.add(p);
-		}
-
-		topicView.setStoragePartitionSize(5000000);
-		topicView.setOwner1(app.getOwnerName1() + "/" + app.getOwnerEmail1());
-		topicView.setOwner2(app.getOwnerName2() + "/" + app.getOwnerEmail2());
-		topicView.setPhone1(app.getOwnerPhone1());
-		topicView.setPhone2(app.getOwnerPhone2());
-		topicView.setPartitions(topicPartition);
-		topicView.setName(app.getProductLine() + "." + app.getEntity() + "." + app.getEvent());
-		topicView.setStorageType(app.getStorageType());
-		topicView.setCodecType(app.getCodecType());
-		topicView.setConsumerRetryPolicy("3:[3,3000]");
-		topicView.setAckTimeoutSeconds(5);
-		topicView.setStoragePartitionCount(3);
-		topicView.setResendPartitionSize(topicView.getStoragePartitionSize() / 10);
-		topicView.setDescription(app.getDescription());
-
-		return topicView;
+		return PartitionStrategy.getStategy(app.getStorageType()).apply(app);
 	}
 
 	@Override

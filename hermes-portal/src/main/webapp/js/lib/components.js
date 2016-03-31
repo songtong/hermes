@@ -469,7 +469,6 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			+ '  </div>'
 			+ '</div>',
 		link: function($scope, $element, attrs) {
-			console.log('dd');
 			$scope.$on('confirm', function(){
 				if (arguments.length > 1 && arguments[1] == attrs['id']) {
 					$element.find('.modal').modal();
@@ -485,63 +484,105 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 	return {
 		restrict: 'E',
 		scope: {
+			id: '@id',
 			url: '@url',
 			onChange: '=onChange',
 			onSelect: '=onSelect',
-			onUnselect: '=onUnselect'
+			onUnselect: '=onUnselect',
+			onValidate: '=onValidate',
+			multiple: '@multiple',
+			data: '=data',
+			tags: '@tags',
+			urlHandler: '=urlHandler'
 		},
-		template: '<select class="form-control" multiple="multiple" style="width: 100%"></select>',
+		template: '<select class="form-control" style="width: 100%"></select>',
 		link: function($scope, $element, attrs) {
-			var __tags = [];
-			var __data = [];
+			var __data = null;
+			var __dataResource = null;
 			
-			var dataResource = $resource($scope.url, {}, {
-				fetch: {
-					url: $scope.url,
-					isArray: false,
-					method: 'GET'
-				}
-			});
-			
-			dataResource.fetch(function(result){
-	    		$.each(result.data[0], function(group, tags){
-	    			$.each(tags, function(index, tag){
-	    				tag.text = tag.name;
-	    			})
-	    			__data = __data.concat(tags);
-	    		});
-	    		init();
-	    	});
+			if ($scope.url) {
+				var dataResource = $resource($scope.url, {}, {
+					fetch: {
+						url: $scope.url,
+						isArray: false,
+						method: 'GET'
+					}
+				});
+				
+				dataResource.fetch(function(result){
+					__data = $scope.urlHandler.call(this, result);
+		    		init();
+		    	});
+			} else {
+				__data = $scope.data;
+			}
 			
 			function init() { 
+				if (!$scope.multiple && $scope.tags) {
+					$scope.multiple = true;
+					$scope.singleTagMode = true;
+				}
+				
 				$element.find('select').select2({
-					tags: true,
-					multiple: true,
+					tags: $scope.tags,
+					multiple: $scope.multiple,
 					allowClear: true,
 					data: __data
 				});
 				
-				$element.find('select').on('change', function(event) {
-					$scope.onChange && $scope.onChange.call(this, $(event.target).val());
+				$element.find('select').on('change', function(e) {
+					$scope.onChange && $scope.onChange.call(this, $(e.target).val());
 				}).on('select2:select', function(e){
-					$scope.onSelect && $scope.onSelect.call(this, e.params.data);
+					// Single tags support.
+					if ($scope.singleTagMode) {
+						var selected = null;
+						if ((selected = $(e.target).val()) && selected.length > 1) {
+							$element.find('select').val(e.params.data.id).change();
+						}
+					}
+					
+					$scope.onSelect && $scope.onSelect.call(this, e.params.data.id);
+					$scope.onValidate && $scope.onValidate.call(this, e.params.data.id, $element.find('select').val());
 				}).on('select2:unselect', function(e){
-					$scope.onUnselect && $scope.onUnselect.call(this, e.params.data);
+					$scope.onUnselect && $scope.onUnselect.call(this, e.params.data.id);
 				});
 				
 				// reset select2 control.
-				$scope.$on('select2:clear', function(){
+				$scope.$on('select2:clear', function(e, id){
+					if (id != $scope.id) {
+						return;
+					}
 					$element.find('select').val('').trigger('change');
 				});
 				
-				$scope.$on('select2:init', function(e, data){
+				$scope.$on('select2:init', function(e, id, data){
+					if (id != $scope.id) {
+						return;
+					}
+
 					if (data && data instanceof Array) {
 						$element.find('select').val(data).trigger('change');;
 					} 
 				});
 				
-				$scope.$on('select2:data', function() {
+				$scope.$on('select2:data', function(e, id) {
+					if (id != $scope.id) {
+						return;
+					}
 					
+					if ($scope.url) {
+						dataResource.fetch(function(result){
+							__data = $scope.urlHandler.call(this, result);
+							// rebuild select control.
+							$element.find('select').select2('destroy');
+							$element.find('select').select2({
+								tags: $scope.tags,
+								multiple: $scope.multiple,
+								allowClear: true,
+								data: __data
+							});
+				    	});
+					}
 				});
 			}
 		}
@@ -554,8 +595,6 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			ngIf: "=ngIf"
 		},
 		link: function($scope, $element, attrs) {
-			console.log($templateCache.get($scope.ngInclude));
-			console.log($scope);
 			$scope.$on('refresh', function(){
 				$element.html($templateCache.get($scope.ngInclude));
 				$compile($element.contents())($scope.ngIf);
