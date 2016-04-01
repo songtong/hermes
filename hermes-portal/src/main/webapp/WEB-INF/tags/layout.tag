@@ -112,12 +112,18 @@
 							String ssoTip = "";
 							String ssoUser = "";
 							String ssoMail = "";
+							String userInfo = null;
 							try {
 								java.util.Map ssoInfo = (java.util.Map) org.jasig.cas.client.util.AssertionHolder.getAssertion()
 										.getPrincipal().getAttributes();
 								ssoUser = (String) ssoInfo.get("sn");
 								ssoMail = (String) ssoInfo.get("mail");
 								ssoTip = String.format("%s(%s)", ssoUser, ssoMail);
+								
+								if (ssoInfo != null) {
+									org.codehaus.jackson.map.ObjectMapper mapper = new org.codehaus.jackson.map.ObjectMapper();
+									userInfo = mapper.writeValueAsString(ssoInfo);
+								}
 							} catch (Exception e) {
 							}
 						%>
@@ -170,6 +176,8 @@
 		var ssoUser = '<%=ssoUser%>';
 		var ssoMail = '<%=ssoMail%>';
 		var isAdmin = <%=session.getAttribute("admin")%>;
+		
+		angular.module('user', []).constant('user', <%=userInfo%>);
 	</script>
 </body>
 </html>
