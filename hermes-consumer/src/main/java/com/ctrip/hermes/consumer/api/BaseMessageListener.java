@@ -101,10 +101,13 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 				latencyT = Cat.newTransaction( //
 				      CatConstants.TYPE_MESSAGE_CONSUME_RESEND_LATENCY, msg.getTopic() + ":" + m_groupId);
 			}
-			latencyT.addData("key", msg.getRefKey());
+			long delta = System.currentTimeMillis() - baseMsg.getBornTime();
+
 			if (latencyT instanceof DefaultTransaction) {
-				((DefaultTransaction) latencyT).setDurationStart(baseMsg.getBornTime() * 1000000);
+				((DefaultTransaction) latencyT).setDurationStart(System.nanoTime() - delta * 1000000L);
 			}
+
+			latencyT.addData("key", msg.getRefKey());
 			latencyT.setStatus(Transaction.SUCCESS);
 			latencyT.complete();
 		}
