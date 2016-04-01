@@ -165,7 +165,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	      long endTime) {
 		for (MessagePriority msg : msgs) {
 			BizEvent event = new BizEvent("RefKey.Transformed");
-			event.addData("topic", topic);
+			event.addData("topic", m_metaService.findTopicByName(topic).getId());
 			event.addData("partition", partition);
 			event.addData("priority", priority ? 0 : 1);
 			event.addData("refKey", msg.getRefKey());

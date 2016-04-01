@@ -24,6 +24,7 @@ import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.DummyMessageMeta;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.utils.CatUtil;
@@ -38,6 +39,9 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 	@Inject
 	private FileBizLogger m_bizLogger;
+
+	@Inject
+	private MetaService m_metaService;
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultLongPollingService.class);
 
@@ -160,10 +164,10 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 			if (!(meta instanceof DummyMessageMeta)) {
 				BizEvent event = new BizEvent("Message.Delivered");
 				event.addData("msgId", meta.getOriginId());
-				event.addData("topic", tpg.getTopic());
+				event.addData("topic", m_metaService.findTopicByName(tpg.getTopic()).getId());
 				event.addData("partition", tpg.getPartition());
 				event.addData("consumerIp", ip);
-				event.addData("groupId", tpg.getGroupId());
+				event.addData("groupId", m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId()));
 				event.addData("pullCmdReceiveTime", pullCmdReceiveTime);
 				event.addData("isResend", meta.isResend());
 				if (meta.isResend()) {

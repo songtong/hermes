@@ -105,7 +105,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	private void purgeExpiredMsgs() {
-		long now =System.currentTimeMillis();
+		long now = System.currentTimeMillis();
 
 		while (!m_pendingMessages.isEmpty()) {
 			if (m_pendingMessages.peek().getExpireTime() < now) {
@@ -225,7 +225,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		if (!Storage.KAFKA.equals(m_metaService.findTopicByName(batch.getTopic()).getStorageType())) {
 			for (PartialDecodedMessage msg : batch.getMessages()) {
 				BizEvent event = new BizEvent("Message.Saved");
-				event.addData("topic", batch.getTopic());
+				event.addData("topic", m_metaService.findTopicByName(batch.getTopic()).getId());
 				event.addData("partition", m_partition);
 				event.addData("priority", isPriority ? 0 : 1);
 				event.addData("refKey", msg.getKey());

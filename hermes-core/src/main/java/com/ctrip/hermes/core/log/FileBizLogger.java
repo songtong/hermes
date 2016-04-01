@@ -23,7 +23,6 @@ public class FileBizLogger implements BizLogger {
 
 	@Override
 	public void log(BizEvent event) {
-		event.addData("brokerIp", m_localhost);
 		Map<String, Object> datas = event.getDatas();
 		datas.put("host", m_localhost);
 		datas.put("eventType", event.getEventType());

@@ -12,6 +12,7 @@ import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
@@ -31,6 +32,9 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 
 	@Inject
 	private MessageQueueManager m_messageQueueManager;
+
+	@Inject
+	private MetaService m_metaService;
 
 	@Override
 	public List<CommandType> commandTypes() {
@@ -92,7 +96,8 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 	      boolean ack) {
 		if (CollectionUtil.isNotEmpty(ackContexts)) {
 			for (AckContext ctx : ackContexts) {
-				BizEvent bizStartEvent = new BizEvent("Message.BizProcessStart", new Date(ctx.getOnMessageStartTimeMillis()));
+				BizEvent bizStartEvent = new BizEvent("Message.BizProcessStart",
+				      new Date(ctx.getOnMessageStartTimeMillis()));
 				addBizData(bizStartEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
 				m_bizLogger.log(bizStartEvent);
 
@@ -114,12 +119,12 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 
 	private void addBizData(BizEvent event, Tpp tpp, String consumerIp, String groupId, AckContext ctx,
 	      boolean isResend, boolean ack) {
-		event.addData("topic", tpp.getTopic());
+		event.addData("topic", m_metaService.findTopicByName(tpp.getTopic()).getId());
 		event.addData("partition", tpp.getPartition());
 		event.addData("priority", tpp.getPriorityInt());
 		event.addData("msgId", ctx.getMsgSeq());
 		event.addData("consumerIp", consumerIp);
-		event.addData("groupId", groupId);
+		event.addData("groupId", m_metaService.translateToIntGroupId(tpp.getTopic(), groupId));
 		event.addData("isResend", isResend);
 		event.addData("ack", ack);
 		if (isResend) {

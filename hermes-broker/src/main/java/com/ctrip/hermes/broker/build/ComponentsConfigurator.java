@@ -104,10 +104,12 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class)//
 		      .req(FileBizLogger.class) //
+		      .req(MetaService.class) //
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK_V3.toString(), AckMessageCommandProcessorV3.class)//
 		      .req(MessageQueueManager.class)//
 		      .req(FileBizLogger.class) //
+		      .req(MetaService.class) //
 		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET.toString(),
 		      QueryLatestConsumerOffsetCommandProcessor.class)//

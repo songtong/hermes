@@ -29,6 +29,7 @@ import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.metaservice.view.SubscriptionView;
 import com.ctrip.hermes.rest.status.SubscriptionPushStatusMonitor;
 import com.ctrip.hermes.rest.status.Tge;
@@ -43,6 +44,9 @@ public class HttpPushService implements Initializable, Disposable {
 
 	@Inject
 	private ClientEnvironment m_env;
+
+	@Inject
+	private MetaService m_metaService;
 
 	private CloseableHttpClient m_httpClient;
 
@@ -88,8 +92,9 @@ public class HttpPushService implements Initializable, Disposable {
 						      Timer.Context timerGlobal = SubscriptionPushStatusMonitor.INSTANCE.getPushTimerGlobal().time();
 						      Timer.Context timer = SubscriptionPushStatusMonitor.INSTANCE.getPushTimer(tge).time();
 						      try {
-							      pushEvent.addData("topic", sub.getTopic());
-							      pushEvent.addData("group", sub.getGroup());
+							      pushEvent.addData("topic", m_metaService.findTopicByName(sub.getTopic()).getId());
+							      pushEvent.addData("groupId",
+							            m_metaService.translateToIntGroupId(sub.getTopic(), sub.getGroup()));
 							      pushEvent.addData("refKey", msg.getRefKey());
 							      pushEvent.addData("endpoint", url);
 
@@ -97,8 +102,7 @@ public class HttpPushService implements Initializable, Disposable {
 							      SubscriptionPushStatusMonitor.INSTANCE.updateRequestSizeHistogram(tge, msg.getBody()
 							            .getEncodedMessage().length);
 
-							      HttpPushCommand command = new HttpPushCommand(m_httpClient, m_requestConfig,
-							            msg, url);
+							      HttpPushCommand command = new HttpPushCommand(m_httpClient, m_requestConfig, msg, url);
 							      HttpResponse pushResponse = command.execute();
 
 							      pushEvent.addData("restResult", pushResponse.getStatusLine().getStatusCode());
