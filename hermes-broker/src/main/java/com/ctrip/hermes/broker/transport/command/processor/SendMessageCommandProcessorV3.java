@@ -138,7 +138,7 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 				      .readableBytes(), msgs.size());
 				for (PartialDecodedMessage msg : msgs) {
 					BizEvent event = new BizEvent("Message.Received");
-					event.addData("topic", batch.getTopic());
+					event.addData("topic", m_metaService.findTopicByName(batch.getTopic()).getId());
 					event.addData("partition", partition);
 					event.addData("priority", entry.getKey());
 					event.addData("producerIp", ctx.getRemoteIp());

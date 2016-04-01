@@ -34,6 +34,7 @@ import com.ctrip.hermes.Hermes.Env;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -148,7 +149,8 @@ public class TopicsResource {
 		Map<String, String> params = extractHeaderParams(headers);
 
 		BizEvent receiveEvent = new BizEvent("Rest.received");
-		receiveEvent.addData("topic", topicName);
+		receiveEvent
+		      .addData("topic", PlexusComponentLocator.lookup(MetaService.class).findTopicByName(topicName).getId());
 		receiveEvent.addData("refKey", params.get("refKey"));
 		receiveEvent.addData("remoteHost", request.getRemoteHost());
 		bizLogger.log(receiveEvent);
