@@ -108,8 +108,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 		private long token;
 
-		public KafkaConsumerThread(KafkaConsumer<String, byte[]> consumer, ConsumerContext consumerContext,
-		      long token) {
+		public KafkaConsumerThread(KafkaConsumer<String, byte[]> consumer, ConsumerContext consumerContext, long token) {
 			this.consumer = consumer;
 			this.consumerContext = consumerContext;
 			this.token = token;
@@ -121,6 +120,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 				consumer.subscribe(Arrays.asList(consumerContext.getTopic().getName()));
 				Set<TopicPartition> assignment = consumer.assignment();
 				m_logger.info("Current assignment: " + assignment);
+				m_logger.info("Starting kafka consumer with token: " + token);
 				while (!closed.get()) {
 					ConsumerRecords<String, byte[]> records = consumer.poll(5000);
 					List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
@@ -143,16 +143,18 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 							      consumerContext.getSessionId(), e.getMessage());
 						}
 					}
-					m_consumerNotifier.messageReceived(token, msgs);
+					if (msgs.size() > 0)
+						m_consumerNotifier.messageReceived(token, msgs);
 				}
 			} catch (WakeupException e) {
 				if (!closed.get())
 					throw e;
 			} finally {
+				m_logger.info("Closing kafka consumer with token: " + token);
 				Set<TopicPartition> assignment = consumer.assignment();
 				consumer.commitSync();
 				consumer.close();
-				m_logger.info("Close assignment: " + assignment);		
+				m_logger.info("Closed assignment: " + assignment);
 			}
 		}
 
@@ -160,7 +162,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			Set<TopicPartition> assignment = consumer.assignment();
 			closed.set(true);
 			consumer.wakeup();
-			m_logger.info("Shutting down assignment: " + assignment);			
+			m_logger.info("Shutting down assignment: " + assignment);
 		}
 	}
 
