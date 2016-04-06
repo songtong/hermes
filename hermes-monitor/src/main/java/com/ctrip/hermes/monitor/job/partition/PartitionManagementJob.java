@@ -184,7 +184,7 @@ public class PartitionManagementJob {
 				// Start
 				List<PartitionInfo> existedPartitions = table2PartitionInfos.get(entry.getKey()).getValue();
 				List<PartitionInfo> partitions = entry.getValue().getValue();
-				if (partitions.get(partitions.size() - 1).getCreatedTime().getTime() < existedPartitions.get(existedPartitions.size() - 1).getCreatedTime().getTime()) {
+				if (partitions.get(0).getCreatedTime().getTime() < existedPartitions.get(0).getCreatedTime().getTime()) {
 					iterator.remove();
 				} else {
 					table2PartitionInfos.remove(entry.getKey());
