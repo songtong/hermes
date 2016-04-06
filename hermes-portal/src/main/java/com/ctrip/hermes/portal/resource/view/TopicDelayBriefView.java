@@ -18,11 +18,14 @@ public class TopicDelayBriefView {
 
 	private String storageType;
 
+	private long id;
+
 	public TopicDelayBriefView() {
 
 	}
 
-	public TopicDelayBriefView(String topic, Date date, long delay, String storageType) {
+	public TopicDelayBriefView(long id, String topic, Date date, long delay, String storageType) {
+		this.id = id;
 		this.topic = topic;
 		this.latestProduced = date;
 		this.totalDelay = delay;
@@ -99,5 +102,13 @@ public class TopicDelayBriefView {
 
 	public void setStorageType(String storageType) {
 		this.storageType = storageType;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
 	}
 }

@@ -66,8 +66,8 @@ public class DashboardResource {
 		List<TopicDelayBriefView> list = new ArrayList<TopicDelayBriefView>();
 		for (Entry<String, TopicView> entry : m_topicService.getTopicViews().entrySet()) {
 			TopicView t = entry.getValue();
-			list.add(new TopicDelayBriefView(t.getName(), m_monitorService.getLatestProduced(t.getName()), 0, t
-			      .getStorageType()));
+			list.add(new TopicDelayBriefView(t.getId(), t.getName(), m_monitorService.getLatestProduced(t.getName()),
+					0, t.getStorageType()));
 		}
 
 		Collections.sort(list, new Comparator<TopicDelayBriefView>() {

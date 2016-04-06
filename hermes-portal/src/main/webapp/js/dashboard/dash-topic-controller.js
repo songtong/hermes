@@ -31,7 +31,7 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 			$scope.trifecta_urls = DashboardTopicService.get_trifecta_urls();
 		} else if ($scope.topic.storageType = 'mysql') {
 			// ************** kibana urls **************** //
-			$scope.k_topic_produce_history = k_topic_produce_history($scope.current_topic, $sce);
+			$scope.k_topic_produce_history = k_topic_produce_history($scope.topic.id, $sce);
 			$scope.k_consume_history = k_consumer_consume_history($scope.current_topic, $scope.current_consumer, $sce);
 			$scope.k_consume_process_history = k_consumer_process_history($scope.current_topic, $scope.current_consumer, $sce);
 			$scope.k_top_producer_current = k_top_producer_current($scope.current_topic, $sce);
