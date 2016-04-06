@@ -163,30 +163,35 @@ public class PartitionManagementJob {
 				Map<String, Pair<Datasource, List<PartitionInfo>>> tablePartitions = m_partitionService.queryDatasourcePartitions(ds);
 				// Sort the partitions in order.
 				sortPartitionsInOrdinal(tablePartitions);
-				Iterator<Map.Entry<String, Pair<Datasource, List<PartitionInfo>>>> iterator = tablePartitions.entrySet().iterator();
-				while (iterator.hasNext()) {
-					Map.Entry<String, Pair<Datasource, List<PartitionInfo>>> entry = iterator.next();
-					if (!table2PartitionInfos.containsKey(entry.getKey())) {
-						continue;
-					}
-					
-					// Only handle duplicate partition table here.
-					// Start
-					List<PartitionInfo> existedPartitions = table2PartitionInfos.get(entry.getKey()).getValue();
-					List<PartitionInfo> partitions = entry.getValue().getValue();
-					if (partitions.get(partitions.size() - 1).getCreatedTime().getTime() < existedPartitions.get(existedPartitions.size() - 1).getCreatedTime().getTime()) {
-						iterator.remove();
-					} else {
-						table2PartitionInfos.remove(entry.getKey());
-					}
-					// End
-				}
+				
+				// Process duplicates
+				processDuplicates(table2PartitionInfos, tablePartitions);
+				
 				table2PartitionInfos.putAll(tablePartitions);
 			} else {
 				log.info("Already checked datasource:{}", ds.getProperties());
 			}
 		}
 		return table2PartitionInfos;
+	}
+	
+	private void processDuplicates(Map<String, Pair<Datasource, List<PartitionInfo>>> table2PartitionInfos, Map<String, Pair<Datasource, List<PartitionInfo>>> tablePartitions) {
+		Iterator<Map.Entry<String, Pair<Datasource, List<PartitionInfo>>>> iterator = tablePartitions.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Map.Entry<String, Pair<Datasource, List<PartitionInfo>>> entry = iterator.next();
+			if (table2PartitionInfos.containsKey(entry.getKey())) {
+				// Only handle duplicate partition table here.
+				// Start
+				List<PartitionInfo> existedPartitions = table2PartitionInfos.get(entry.getKey()).getValue();
+				List<PartitionInfo> partitions = entry.getValue().getValue();
+				if (partitions.get(partitions.size() - 1).getCreatedTime().getTime() < existedPartitions.get(existedPartitions.size() - 1).getCreatedTime().getTime()) {
+					iterator.remove();
+				} else {
+					table2PartitionInfos.remove(entry.getKey());
+				}
+				// End
+			}
+		}
 	}
 
 	private Map<String, Integer> parseLimits(Meta meta) {
