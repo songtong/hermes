@@ -12,7 +12,7 @@
 </script>
 	<link href="${model.webapp}/css/bootstrap-treeview.min.css" type="text/css" rel="stylesheet">
 	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
-	<div class="container fluid" ng-app="topic" ng-init="delayLimit=300;noProduceLimit=432000000;current_topic_type='mysql'">
+	<div ng-app="topic" ng-init="delayLimit=300;noProduceLimit=432000000;current_topic_type='mysql'">
 		<div class="row">
 			<div class="col-md-2 sidebar" ng-controller="list-controller">
 				<ul class="nav nav-sidebar">

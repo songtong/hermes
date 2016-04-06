@@ -52,6 +52,16 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 				name : '@name',
 				force_schema : '@force_schema'
 			}
+		},
+		sync_schema : {
+			method : 'POST',
+			isArray : false,
+			url : '/api/topics/:name/syncSchema',
+			params : {
+				name : '@name',
+				userName : '@userName',
+				userEmail : '@userEmail'
+			}
 		}
 	});
 
@@ -65,6 +75,13 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 				artifactId : '@artifactId',
 				version : '@version',
 				repositoryId : '@repositoryId'
+			}
+		},
+		delete_schema : {
+			method : 'DELETE',
+			url : '/api/schemas/:id',
+			params : {
+				id : '@id'
 			}
 		}
 	})
@@ -261,6 +278,17 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 				show_op_info.show("同步失败: " + error_resp.data, false);
 			});
 		},
+		'sync_schema' : function(topic_name, ssoUser, ssoMail) {
+			topic_resource.sync_schema({
+				name : topic_name,
+				userName : ssoUser,
+				userEmail : ssoMail
+			}, function(success_resp) {
+				show_op_info.show("同步schema成功!", true);
+			}, function(error_resp) {
+				show_op_info.show("同步失败: " + error_resp.data, false);
+			});
+		},
 		'deploy_schema_to_maven' : function(schemaId, groupId, artifactId, version, repositoryId) {
 			var d = $q.defer();
 			schema_resource.deploy_schema_to_maven({
@@ -269,6 +297,17 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 				artifactId : artifactId,
 				version : version,
 				repositoryId : repositoryId
+			}, function(result) {
+				d.resolve(result);
+			}, function(result) {
+				d.reject(result);
+			});
+			return d.promise;
+		},
+		'delete_schema' : function(schemaId) {
+			var d = $q.defer();
+			schema_resource.delete_schema({
+				id : schemaId
 			}, function(result) {
 				d.resolve(result);
 			}, function(result) {

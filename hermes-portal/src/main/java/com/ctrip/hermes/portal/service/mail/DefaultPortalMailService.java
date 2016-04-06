@@ -15,11 +15,14 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.mail.HermesMail;
 import com.ctrip.hermes.mail.MailService;
+import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
+import com.ctrip.hermes.metaservice.view.SchemaView;
 import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
@@ -47,6 +50,9 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 
 	@Inject
 	private PortalConfig m_config;
+
+	@Inject
+	private ClientEnvironment m_env;
 
 	private Configuration m_templateConfig;
 
@@ -243,4 +249,22 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		return statusString;
 	}
 
+	@Override
+	public void sendUploadSchemaMail(SchemaView schema, String mailAddress, String userName) {
+		Topic topic = m_topicService.findTopicEntityById(schema.getTopicId());
+		String environment = m_env.getEnv().name();
+
+		String title = String.format("[Hermes new schema]名称：%s, 版本：%s, 环境：%s", schema.getName(), schema.getVersion(),
+				environment);
+		String address = m_config.getHermesEmailGroupAddress();
+
+		Map<String, Object> contentMap = new HashMap<>();
+		contentMap.put("schema", schema);
+		contentMap.put("topic", topic);
+		contentMap.put("environment", environment);
+		contentMap.put("userName", userName);
+
+		sendEmail(title, address, PortalConstants.UPLOAD_SCHEMA_EMAIL_TEMPLATE, contentMap);
+
+	}
 }

@@ -24,10 +24,31 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 		});
 	};
 
+	$scope.delete_schema = function(row) {
+		console.log(row)
+		bootbox.confirm({
+			title : "请确认",
+			message : "确认要删除 Schema: <label class='label label-danger'>" + row.schema.name + "</label> 吗？",
+			locale : "zh_CN",
+			callback : function(result) {
+				if (result) {
+					TopicService.delete_schema(row.schemaId).then(function(result) {
+						show_op_info.show("删除schema成功!", true);
+						TopicService.fetch_topics($scope.current_topic_type);
+					}, function(result) {
+						show_op_info.show("删除schema失败:" + result.data, false);
+					});
+				}
+			}
+		});
+	};
+
 	$scope.set_selected = function(row) {
 		$scope.schema_data = {
 			topicId : row.id,
-			schema : "{name : '" + row.name + "',type:'avro',compatibility:'FORWARD'}"
+			schema : "{name : '" + row.name + "',type:'avro',compatibility:'FORWARD'}",
+			userName : ssoUser,
+			userMail : ssoMail
 		};
 	};
 
@@ -74,7 +95,7 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
-					TopicService.sync_topic(row.name, true);
+					TopicService.sync_schema(row.name, ssoUser, ssoMail);
 				}
 			}
 		});

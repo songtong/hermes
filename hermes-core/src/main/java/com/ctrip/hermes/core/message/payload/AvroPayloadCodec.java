@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka.codec;
+package com.ctrip.hermes.core.message.payload;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 
@@ -7,16 +7,19 @@ import java.util.Map;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.message.payload.AbstractPayloadCodec;
 import com.ctrip.hermes.core.message.payload.PayloadCodec;
-import com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroDeserializer;
-import com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroSerializer;
+import com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroDeserializer;
+import com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroSerializer;
 
 @Named(type = PayloadCodec.class, value = com.ctrip.hermes.meta.entity.Codec.AVRO)
 public class AvroPayloadCodec extends AbstractPayloadCodec implements Initializable {
+	private static final Logger log = LoggerFactory.getLogger(AvroPayloadCodec.class);
 
 	static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
 
@@ -34,7 +37,12 @@ public class AvroPayloadCodec extends AbstractPayloadCodec implements Initializa
 
 	@Override
 	public byte[] doEncode(String topic, Object obj) {
-		return avroSerializer.serialize(topic, obj);
+		try {
+			return avroSerializer.serialize(topic, obj);
+		} catch (Exception e) {
+			log.error("Serialize avro object failed!", e);
+			throw e;
+		}
 	}
 
 	@Override

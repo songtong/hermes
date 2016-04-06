@@ -55,11 +55,6 @@ public class DefaultApplicationService implements ApplicationService {
 			return null;
 		}
 
-		try {
-			m_mailService.sendApplicationMail(dbApp);
-		} catch (Exception e) {
-			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
-		}
 		return (TopicApplication) HermesApplication.parse(dbApp);
 	}
 
@@ -172,11 +167,7 @@ public class DefaultApplicationService implements ApplicationService {
 			log.error("Update application:id={} failed!", app.getId(), e);
 			return null;
 		}
-		try {
-			m_mailService.sendApplicationMail(dbApp);
-		} catch (Exception e) {
-			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
-		}
+		
 		return app;
 
 	}
@@ -194,11 +185,7 @@ public class DefaultApplicationService implements ApplicationService {
 			log.error("Update status of apllication: id={} failed.", id, e);
 			return null;
 		}
-		try {
-			m_mailService.sendApplicationMail(dbApp);
-		} catch (Exception e) {
-			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
-		}
+		
 		return HermesApplication.parse(dbApp);
 	}
 
@@ -213,11 +200,7 @@ public class DefaultApplicationService implements ApplicationService {
 					consumerApplication.getProduct(), consumerApplication.getProject(), e);
 			return null;
 		}
-		try {
-			m_mailService.sendApplicationMail(dbApp);
-		} catch (Exception e) {
-			log.error("Send email of hermes application id={} failed.", dbApp.getId(), e);
-		}
+		
 		return (ConsumerApplication) HermesApplication.parse(dbApp);
 	}
 

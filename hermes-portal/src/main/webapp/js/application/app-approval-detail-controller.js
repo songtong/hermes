@@ -238,7 +238,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	function passApplication() {
 		var delay = $q.defer();
 		$scope.topicDetailForm.setProgressStatus("正在更新表单...", 0.3, 7);
-		ApplicationService.pass_application($scope.application.id, $scope.new_comment, "Hermes").then(function(result) {
+		ApplicationService.pass_application($scope.application.id, $scope.new_comment, ssoUser).then(function(result) {
 			$scope.topicDetailForm.setProgressStatus("表单更新成功", 1, 7);
 			delay.resolve();
 			// $window["location"].replace("/console/topic#detail/mysql/mysql/"

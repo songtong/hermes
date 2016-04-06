@@ -1,10 +1,7 @@
 package com.ctrip.hermes.metaservice.service;
 
-import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
-import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
-import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
-
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +30,14 @@ import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.model.SchemaEntity;
 import com.ctrip.hermes.metaservice.model.TopicEntity;
 import com.ctrip.hermes.metaservice.view.SchemaView;
+
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.util.Zip4jConstants;
 
 @Named
 public class SchemaService {
@@ -100,8 +105,8 @@ public class SchemaService {
 	 * @throws IOException
 	 * @throws DalException
 	 */
-	public void compileAvro(Schema metaSchema, org.apache.avro.compiler.idl.Idl idl) throws ParseException, IOException,
-	      DalException {
+	public void compileAvro(Schema metaSchema, org.apache.avro.compiler.idl.Idl idl) throws ParseException,
+			IOException, DalException {
 		final Path destDir = Files.createTempDirectory("avroschema");
 		Protocol compilationUnit = idl.CompilationUnit();
 		for (org.apache.avro.Schema schema : compilationUnit.getTypes()) {
@@ -120,9 +125,9 @@ public class SchemaService {
 		byte[] jarContent = Files.readAllBytes(jarFile);
 		metaSchema.setJarContent(jarContent);
 		FormDataContentDisposition disposition = FormDataContentDisposition.name(metaSchema.getName())
-		      .creationDate(new Date(System.currentTimeMillis()))
-		      .fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar").size(jarFile.toFile().length())
-		      .build();
+				.creationDate(new Date(System.currentTimeMillis()))
+				.fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar")
+				.size(jarFile.toFile().length()).build();
 		metaSchema.setJarProperties(disposition.toString());
 		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
 		Files.delete(jarFile);
@@ -136,7 +141,7 @@ public class SchemaService {
 	 * @throws IOException
 	 * @throws DalException
 	 */
-	public void compileAvro(Schema metaSchema, org.apache.avro.Schema avroSchema) throws IOException, DalException {
+	public void compileAvroToJar(Schema metaSchema, org.apache.avro.Schema avroSchema) throws IOException, DalException {
 		m_logger.info(String.format("Compile %s by %s", metaSchema.getName(), avroSchema.getName()));
 		final Path destDir = Files.createTempDirectory("avroschema");
 		SpecificCompiler compiler = new SpecificCompiler(avroSchema);
@@ -149,13 +154,38 @@ public class SchemaService {
 		byte[] jarContent = Files.readAllBytes(jarFile);
 		metaSchema.setJarContent(jarContent);
 		FormDataContentDisposition disposition = FormDataContentDisposition.name(metaSchema.getName())
-		      .creationDate(new Date(System.currentTimeMillis()))
-		      .fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar").size(jarFile.toFile().length())
-		      .build();
+				.creationDate(new Date(System.currentTimeMillis()))
+				.fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".jar")
+				.size(jarFile.toFile().length()).build();
 		metaSchema.setJarProperties(disposition.toString());
 		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
 		Files.delete(jarFile);
 		m_compileService.delete(destDir);
+	}
+
+	public void compileAvroToCs(Schema metaSchema, byte[] schemaContent) throws Exception {
+		m_logger.info("Compile {} to .cs file", metaSchema.getName());
+		final Path csDir = Files.createTempDirectory("avroschema");
+		Path schemaFile = Files.createTempFile(metaSchema.getName(), ".avsc");
+
+		FileWriter fw = new FileWriter(schemaFile.toFile());
+		fw.write(new String(schemaContent));
+		fw.close();
+
+		m_compileService.compileSchemaToCs(schemaFile.toFile(), csDir);
+
+		File zipFile = new File(Files.createTempDirectory("jarFile") + File.separator + "schema.zip");
+		zip(csDir, zipFile);
+		byte[] zipContent = Files.readAllBytes(zipFile.toPath());
+		metaSchema.setCsContent(zipContent);
+		FormDataContentDisposition disposition = FormDataContentDisposition.name(metaSchema.getName())
+				.creationDate(new Date(System.currentTimeMillis()))
+				.fileName(metaSchema.getName() + "_" + metaSchema.getVersion() + ".zip").size(zipFile.length()).build();
+		metaSchema.setCsProperties(disposition.toString());
+		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
+		Files.delete(zipFile.toPath());
+		m_compileService.delete(csDir);
+
 	}
 
 	/**
@@ -165,9 +195,8 @@ public class SchemaService {
 	 * @return
 	 * @throws Exception
 	 */
-	public SchemaView createSchema(SchemaView schemaView, Topic topic) throws Exception {
-		m_logger.info("Creating schema for topic: {}, schema: {}", topic.getName(), schemaView);
-		Schema schema = toSchema(schemaView);
+	public SchemaView createSchema(Schema schema, Topic topic) throws Exception {
+		m_logger.info("Creating schema for topic: {}, schema: {}", topic.getName(), schema);
 		try {
 			tm.startTransaction("fxhermesmetadb");
 			Date now = new Date(System.currentTimeMillis());
@@ -176,7 +205,8 @@ public class SchemaService {
 			schema.setName(topic.getName() + "-value");
 			schema.setTopicId(topic.getId());
 			try {
-				Schema maxVersionSchemaMeta = m_schemaDao.getMaxVersionByTopic(topic.getId(), SchemaEntity.READSET_FULL);
+				Schema maxVersionSchemaMeta = m_schemaDao
+						.getMaxVersionByTopic(topic.getId(), SchemaEntity.READSET_FULL);
 				schema.setVersion(maxVersionSchemaMeta.getVersion() + 1);
 			} catch (Exception e) {
 				schema.setVersion(1);
@@ -264,9 +294,9 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public void deployToMaven(Schema metaSchema, String groupId, String artifactId, String version, String repositoryId)
-	      throws NumberFormatException, IOException, java.text.ParseException, DalException {
+			throws NumberFormatException, IOException, java.text.ParseException, DalException, Exception {
 		m_logger.info("Deploying to maven, {}, groupId {}, artifactId {}, version {}, repositoryId {}", metaSchema,
-		      groupId, artifactId, version, repositoryId);
+				groupId, artifactId, version, repositoryId);
 		Path jarPath = Files.createTempFile(metaSchema.getName(), ".jar");
 		com.google.common.io.Files.write(metaSchema.getJarContent(), jarPath.toFile());
 		try {
@@ -282,7 +312,7 @@ public class SchemaService {
 		metaSchema.setDependencyString(getDependencyString(groupId, artifactId, version, repositoryId));
 		m_schemaDao.updateByPK(metaSchema, SchemaEntity.UPDATESET_FULL);
 		m_logger.info("Deployed groupId {}, artifactId {}, version {}, repositoryId {}", groupId, artifactId, version,
-		      repositoryId);
+				repositoryId);
 	}
 
 	private String getDependencyString(String groupId, String artifactId, String version, String repositoryId) {
@@ -417,12 +447,10 @@ public class SchemaService {
 	 * @param fileContent
 	 * @param fileHeader
 	 * @return
-	 * @throws IOException
-	 * @throws DalException
-	 * @throws RestClientException
+	 * @throws Exception
 	 */
 	public SchemaView updateSchemaFile(SchemaView schemaView, byte[] fileContent, FormDataContentDisposition fileHeader)
-	      throws IOException, DalException, RestClientException {
+			throws Exception {
 		m_logger.info("update schema {} by file {}", schemaView, fileHeader.getFileName());
 		SchemaView result = null;
 		if (schemaView.getType().equals("json")) {
@@ -440,13 +468,11 @@ public class SchemaService {
 	 * @param schemaHeader
 	 * @param jarContent
 	 * @param jarHeader
-	 * @throws IOException
-	 * @throws DalException
-	 * @throws RestClientException
+	 * @throws Exception
 	 */
 	public SchemaView uploadAvroSchema(SchemaView schemaView, byte[] schemaContent,
-	      FormDataContentDisposition schemaHeader, byte[] jarContent, FormDataContentDisposition jarHeader)
-	      throws IOException, DalException, RestClientException {
+			FormDataContentDisposition schemaHeader, byte[] jarContent, FormDataContentDisposition jarHeader)
+			throws Exception {
 		if (schemaContent == null) {
 			return schemaView;
 		}
@@ -463,7 +489,9 @@ public class SchemaService {
 				int avroid = getAvroSchemaRegistry().register(metaSchema.getName(), avroSchema);
 				metaSchema.setAvroid(avroid);
 
-				compileAvro(metaSchema, avroSchema);
+				compileAvroToJar(metaSchema, avroSchema);
+				compileAvroToCs(metaSchema, schemaContent);
+
 			}
 			isUpdated = true;
 		}
@@ -492,8 +520,8 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public SchemaView uploadJsonSchema(SchemaView schemaView, byte[] schemaContent,
-	      FormDataContentDisposition schemaHeader, byte[] jarContent, FormDataContentDisposition jarHeader)
-	      throws IOException, DalException {
+			FormDataContentDisposition schemaHeader, byte[] jarContent, FormDataContentDisposition jarHeader)
+			throws IOException, DalException {
 		if (schemaContent == null) {
 			return schemaView;
 		}
@@ -586,5 +614,24 @@ public class SchemaService {
 			view.setSchemaPreview(new String(schema.getSchemaContent()));
 		}
 		return view;
+	}
+
+	private void zip(Path src, File destZipFile) throws Exception {
+		m_logger.debug("zip destDir {}, zipFile {}", src.getFileName(), destZipFile);
+		try {
+			ZipFile zipFile = new ZipFile(destZipFile);
+
+			ZipParameters parameters = new ZipParameters();
+			parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+			parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+
+			if (src.toFile().isDirectory())
+				zipFile.addFolder(src.toFile(), parameters);
+			if (src.toFile().isFile())
+				zipFile.addFile(src.toFile(), parameters);
+		} catch (ZipException e) {
+			e.printStackTrace();
+		}
+
 	}
 }

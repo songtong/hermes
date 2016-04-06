@@ -1,4 +1,4 @@
-package com.ctrip.hermes.kafka.codec.assist;
+package com.ctrip.hermes.core.message.payload.assist;
 
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaString;
