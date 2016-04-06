@@ -1,4 +1,4 @@
-application_module.controller('app-approval-detail-controller', [ '$scope', '$routeParams', '$resource', 'ApplicationService', '$location', '$window', '$q', 'watcher', 'TopicSync', 'clone', 'cache', 'promiseChain', function($scope, $routeParams, $resource, ApplicationService, $location, $window, $q, watcher, TopicSync, clone, cache, promiseChain) {
+application_module.controller('app-approval-detail-controller', [ '$scope', '$routeParams', '$resource', 'ApplicationService', '$location', '$window', '$q', '$filter', 'watcher', 'TopicSync', 'clone', 'cache', 'promiseChain', 'user', function($scope, $routeParams, $resource, ApplicationService, $location, $window, $q, $filter, watcher, TopicSync, clone, cache, promiseChain, user) {
 	// Default options.
 	$scope.env = 'fws';
 	$scope.storageTypes = [ 'mysql', 'kafka' ];
@@ -8,6 +8,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.order_opts = [ true, false ];
 	$scope.datasources = {};
 	$scope.comment = "";
+	$scope.envInvolved = [];
 
 	// Use promise chain to fetch application.
 	promiseChain.add({
@@ -15,6 +16,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		args: [$routeParams['id']],
 		success: function(result) {
 			$scope.application = result;
+			decodeComment();
 			if ($scope.application.type == 0 || $scope.application.type == 2) {
 				$scope.type = 'topic';
 			} else {
@@ -67,6 +69,40 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			$scope.$broadcast('alert-success', 'syncAlert', msg, 'Success');
 		});
 	}
+	
+	function encodeComment() {
+		if ($scope.application) {
+			$scope.application.comment.push({
+				createdTime: $filter('date')(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+				author: user.sn,
+				comment: $scope.comment
+			});
+		}
+		return JSON.stringify($scope.application.comment);
+	}
+	
+	function decodeComment() {
+		if ($scope.application.comment) {
+			try {
+				$scope.application.comment = JSON.parse($scope.application.comment);
+			} catch (e) {
+				// ignore for the case comment is old-style.
+			}
+			
+			// Compatible with the old-style comment.
+			if (!($scope.application.comment instanceof Array)) {
+				$scope.application.comment = [{
+					createdTime: $filter('date')(new Date($scope.application.lastModifiedTime), 'yyyy-MM-dd HH:mm:ss'),
+					author: $scope.application.approver,
+					comment: $scope.application.comment
+				}];
+			}
+		} else {
+			$scope.application.comment = [];
+		}
+		
+		console.log($scope.application.comment);
+	}
 
 	$scope.createTopic = function() {
 		// Records the env in case it changes.
@@ -90,13 +126,15 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			handlers: [function() {
 				if ($scope.application.status == 2) {
 					delete $scope.application.polished;
-					ApplicationService.update_application_status($scope.application.id, 3, $scope.comment, ssoUser, $scope.application).then(function(result) {
+					ApplicationService.update_application_status($scope.application.id, 3, $scope.application.comment, ssoUser, $scope.application).then(function(result) {
 						$scope.application = result;
 						handleSuccess('Done initializing topic on env: ' + env);
 					}, handleError);
 				} else {
 					handleSuccess('Done initializing topic on env: ' + env);
 				}
+			}, function() {
+				$scope.envInvolved.push(env);
 			}]
 		});
 		
@@ -184,9 +222,10 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.passApplication = function passApplication() {
 		// Delete node 'polished'
 		delete $scope.application.polished;
-		ApplicationService.pass_application($scope.application.id, $scope.comment, ssoUser, $scope.application).then(function(result) {
+		
+		ApplicationService.pass_application($scope.application.id, encodeComment(), ssoUser, $scope.application).then(function(result) {
 			$scope.application = result;
-			
+			decodeComment();
 			// When the application is passed, invoke api to get dynamic view.
 			$scope.openSyncModal();
 		}, function(result) {
@@ -206,7 +245,11 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			},
 			handlers: [function() {
 				$scope.$broadcast('progress-done', 'modalProgressBar', function(){
-					$('#topicInfoModal').modal();
+					$('#topicInfoModal').one('hidden.bs.modal', function(){
+						if ($scope.envInvolved.length > 0) {
+							$scope.$broadcast('alert-success', 'metaWarning');
+						}
+					}).modal();
 				});
 			}]
 		});
@@ -321,8 +364,9 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	// Reject
 	$scope.reject_application = function() {
 		$scope.$broadcast('progress-random', 'modalProgressBar');
-		ApplicationService.reject_application($scope.application.id, $scope.comment, "Hermes").then(function(result) {
+		ApplicationService.reject_application($scope.application.id, encodeComment(), user.sn).then(function(result) {
 			$scope.application = result;
+			decodeComment();
 			$scope.$broadcast('progress-done', 'modalProgressBar');
 		}, function(result) {
 			$scope.$broadcast('progress-done', 'modalProgressBar');
@@ -343,10 +387,4 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.ignore = function($event) {
 		$event.preventDefault();
 	}
-}]).directive('test', function() {
-	return {
-		link: function(){
-			
-		}
-	};
-});
+}]);

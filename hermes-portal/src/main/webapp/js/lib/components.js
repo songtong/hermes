@@ -23,7 +23,7 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			var $container;
 			if (__embedded) {
 				embed($element);
-				$container = $element.find('.progress')
+				$container = $element.find('.progress').css({width: '100%', marginLeft: 0});
 			} else {
 				$container = $element.find('.modal-backdrop');
 			}
@@ -179,19 +179,28 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 	function embed($element) {
 		$element.find('.alert').remove().appendTo($element).end().end().find('.modal').remove();
 	}
+	
 	return {
 		restrict: 'E',
+		transclude: true,
+		scope: {
+			title: '@title',
+			content: '@content',
+			context: '='
+		},
 		template: '<div class="modal fade" tabindex="-1" role="dialog">'
 				+ '  <div class="modal-dialog">'
 				+ '    <div class="modal-content">'
 				+ '      <div class="modal-header">'
 				+ '        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>'
-				+ '        <h4 class="modal-title">Alert</h4>'
+				+ '        <h4 class="modal-title">{{title}}</h4>'
 				+ '      </div>'
 				+ '      <div class="modal-body">'
-				+ '        <div class="alert alert-danger alert-dismissible fade in" role="alert" style="display: none;">'
+				+ '        <div class="alert alert-danger alert-dismissible fade in" role="alert" style="margin-bottom: 0px; display: block;">'
 				+ '            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>'
 				+ '            <p style="text-align: left;"><strong class="alert-title">Alert!</strong> <span class="alert-content"></span></p>'
+				+ '            <ng-transclude>'
+				+ '            </ng-transclude>'
 				+ '        </div>'
 				+ '      </div>'
 				+ '      <div class="modal-footer">'
@@ -200,8 +209,8 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 				+ '    </div>'
 				+ '  </div>'
 				+ '</div>',
-		link: function($scope, $element, attrs){
-			var __id = attrs['id'];
+				
+		link: function($scope, $element, attrs, ctrl, transclude){
 			var __embedded = attrs['embed'];
 			var container;
 			
@@ -211,16 +220,32 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			} else {
 				$container = $element.find('.modal');
 			}
-			$element = $element.find('.alert');
 			
 			if ($container) {
 				$container.hide();
 			}
 			
+			transclude($scope, function(clone, $scope) {
+				if (clone.length > 0) {
+					$element.find('ng-transclude').siblings('p').remove().end().empty().append(clone);
+				}
+			});
+			
 			function alert(id, isError, content, title) {
-				if (id && id !=  __id) {
+				if (id && id !=  attrs['id']) {
 					return;
 				}
+				
+				var __embedded = attrs['embed'];
+				var container;
+				
+				if (__embedded) {
+					$container = $element.find('.alert');
+				} else {
+					$container = $element.find('.modal');
+				}
+				
+				$elem = $element.find('.alert');
 				
 				if ($container.is(':hidden')) {
 					if (__embedded) {
@@ -230,13 +255,13 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 					}
 				}
 				
-				var $tmp = $element.clone(false);
-				$tmp.appendTo($element.hide().parent());
+				var $tmp = $elem.clone(false);
+				$tmp.appendTo($elem.hide().parent());
 				if (!isError) {
 					$tmp.removeClass('alert-danger').addClass('alert-success');
 				}
 				
-				if(title) {
+				if (title) {
 					$tmp.find('.alert-title').text(title);
 				}
 				
@@ -270,6 +295,9 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 }]).directive('loadingX', function() {
 	return {
 		restrict: 'E',
+		scope: {
+			delay: '='
+		},
 		template: '<div class="modal-backdrop in" style="display: block;" >' 
 			+ '<i class="fa fa-spinner fa-pulse" style="color: white; font-size: 60px; margin-left: 48%; "></i>'
 			+ '</div>',
@@ -280,7 +308,7 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			}).trigger('resize');
 
 			$scope.$on('initialized', function(e){
-				$element.delay(250).hide();
+				$element.delay($scope.delay? $scope.delay: 250).hide();
 			});
 		}
 	};
@@ -420,13 +448,6 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 				}
 			});
 			
-			$scope.$watch(function(){
-				return ctrl.tableState().paginaton;
-			}, function(){
-				$scope.pagination = ctrl.tableState().pagination;
-				$scope.currentPage = $scope.pagination.start / $scope.pagination.number + 1;
-			}, true);
-			
 			$scope.selectPage = function (page) {
 				if (page > 0 && page <= $scope.pagination.numberOfPages && page != $scope.currentPage) {
 					$scope.currentPage = page;
@@ -437,6 +458,24 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			if (!$scope.pagination) {
 				ctrl.slice(0, $scope.pageSize);
 			}
+			
+			$scope.$watch(function(){
+				return ctrl.tableState().pagination;
+			}, function(){
+				$scope.pagination = ctrl.tableState().pagination;
+				if ($scope.pagination.numOfPages == 0) {
+					$scope.currentPage = 0;
+				} else {
+					$scope.currentPage = $scope.pagination.start / $scope.pagination.number + 1;
+				}
+				
+				$scope.$watch('pagination.start', function(newValue, oldValue) {
+					console.log($scope.pagination.numberOfPages);
+					if (newValue == 0 && $scope.pagination.numberOfPages == 0) {
+						$scope.currentPage = 0;
+					}
+				});
+			});
 		}
 	}
 }).directive('confirmDialogX', [function() {
@@ -598,6 +637,42 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			$scope.$on('refresh', function(){
 				$element.html($templateCache.get($scope.ngInclude));
 				$compile($element.contents())($scope.ngIf);
+			});
+		}
+	};
+}]).directive('popoverX', ['$compile', function($compile) {
+	return {
+		restrict: 'E',
+		transclude: true,
+		scope: {
+			context: '=?',
+			content: '@',
+			title: '@',
+			target: '@',
+			placement: '@'
+		},
+		template: '<ng-transclude class="hide"></ng-transclude>',
+		link: function($scope, $element, attrs, ctrl, $transclude) {
+			var templateOffered = false;
+			$element.find('ng-transclude').append($transclude($scope, function(clone, $scope) {
+				if (clone.length > 0) {
+					templateOffered = true;
+				} 
+			}));
+			
+			$($scope.target).on('click', function(e){
+				var $target = $(e.target);
+				if (!$target.data('created')) {
+					e.stopPropagation();
+					$target.popover({
+						title: $scope.title,
+						content: templateOffered? $element.find('ng-transclude').html(): $scope.content,
+						html: templateOffered,
+						placement: $scope.placement? $scope.placement: 'right'
+					}).popover('show');
+					
+					$target.data('created', true);
+				}
 			});
 		}
 	};

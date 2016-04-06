@@ -25,7 +25,11 @@ public class DefaultSsoSubjectFactory extends DefaultSubjectFactory {
 	@Override
 	public Subject createSubject(SubjectContext context) {
 		if (userDao == null) {
-	        userDao = PlexusComponentLocator.lookup(UsersDao.class);
+			synchronized(DefaultSsoSubjectFactory.class) {
+				if (userDao == null) {
+					userDao = PlexusComponentLocator.lookup(UsersDao.class);
+				}
+			}
         }
 		
         SecurityManager securityManager = context.resolveSecurityManager();

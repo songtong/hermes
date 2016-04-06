@@ -15,13 +15,14 @@
 			<div class="form-group">
 				<label class="col-md-2 control-label">审批状态</label>
 				<div class="col-md-4">
-					<div ng-if="application.status==0" class="form-control-static text-info">审核中（创建）</div>
-					<div ng-if="application.status==1" class="form-control-static text-danger">拒绝</div>
-					<div ng-if="application.status==2" class="form-control-static text-success">申请成功(创建)</div>
-					<div ng-if="application.status==3" class="form-control-static text-success">同步</div>
-					<div ng-if="application.status==4" class="form-control-static text-info">审核中（上线）</div>
-					<div ng-if="application.status==5" class="form-control-static text-info">申请成功（上线）</div>
-					<div ng-if="application.status==6" class="form-control-static text-info">上线</div>
+					<div ng-if="application.status==0" class="form-control-static text-info"><span class="label label-info">审核中（创建）</span></div>
+					<div ng-if="application.status==1" class="form-control-static text-danger"><span class="label label-danger">拒绝（创建）</span></div>
+					<div ng-if="application.status==2" class="form-control-static text-success"><span class="label label-success">申请成功(创建)</span></div>
+					<div ng-if="application.status==3" class="form-control-static text-success"><span class="label label-primary">同步</span></div>
+					<div ng-if="application.status==4" class="form-control-static text-info"><span class="label label-info">审核中（上线）</span></div>
+					<div ng-if="application.status==5" class="form-control-static text-info"><span class="label label-danger">拒绝（上线）</span></div>
+					<div ng-if="application.status==6" class="form-control-static text-info"><span class="label label-success">申请成功（上线）</span></div>
+					<div ng-if="application.status==7" class="form-control-static text-info"><span class="label label-primary">上线</span></div>
 				</div>
 				<label class="col-md-2 control-label">上次审批人</label>
 				<div class="col-md-4 form-control-static">{{application.approver || "N/A"}}</div>
@@ -29,10 +30,24 @@
 			</div>
 			<div class="form-group">
 				<label class="col-md-2 control-label">上次处理时间</label>
-				<div class="col-md-4 form-control-static" ng-if="application.status== 0">N/A</div>
-				<div class="col-md-4 form-control-static" ng-if="application.status!= 0">{{application.lastModifiedTime | date:"yyyy-MM-dd HH:mm:ss"}}</div>
+				<div class="col-md-4 form-control-static" ng-if="application.status == 0">N/A</div>
+				<div class="col-md-4 form-control-static" ng-if="application.status != 0">{{application.lastModifiedTime | date:"yyyy-MM-dd HH:mm:ss"}}</div>
 				<label class="col-md-2 control-label">审批意见</label>
-				<div class="col-md-4 form-control-static">{{application.comment || "N/A"}}</div>
+				<div class="col-md-4 form-control-static" ng-if="application.comment.length == 0">N/A</div>
+				<div class="col-md-4 form-control-static" ng-if="application.comment.length > 0">
+					<span class="label label-danger">{{application.comment[application.comment.length - 1].comment || 'N/A'}}</span>
+					<button type="button" class="btn btn-primary btn-xs" ng-if="application.comment.length > 0" id="commentHistory">History
+					</button>
+					<popover-x title="comments" context="application" target="#commentHistory" placement="right" ng-if="application.comment.length && application.comment.length > 0">
+						<ul ng-repeat="c in context.comment track by c.createdTime">	
+							<li>
+								<span class="label label-danger"><span class="badge">comment</span>{{c.comment || 'N/A'}}</span> 
+								<span class="label label-info"><span class="badge">by</span> {{c.author}}</span>
+								<span class="label label-warning"><span class="badge">@</span> {{c.createdTime}}</span>
+							</li> 
+						</ul>
+					</popover-x>
+				</div>
 			</div>
 		</form>
 
@@ -92,6 +107,9 @@
 					<span ng-if="type == 'topic'">Topic[{{application.productLine}}.{{application.entity}}.{{application.event}}]信息</span>
 					<span ng-if="type == 'consumer'">Consumer[{{application.productLine}}.{{application.product}}.{{application.project}}]信息</span>
 				</h4>
+				<progressbar-x embed="true" id="syncProgressBar"></progressbar-x>
+
+				<alert-x embed="true" id="syncAlert"></alert-x>
 			</div>
 			<div class="modal-body">
 				<!-- nav tabs -->
@@ -115,8 +133,6 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<progressbar-x embed="true" class="col-md-10" id="syncProgressBar"></progressbar-x>
-				<alert-x embed="true" class="col-md-10" id="syncAlert"></alert-x>
 				<button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
 			</div>
 		</div>
@@ -124,3 +140,14 @@
 </div>
 <progressbar-x id="modalProgressBar"></progressbar-x>
 <loading-x></loading-x>
+<alert-x id="metaWarning" title="提醒" context="envInvolved">
+	<p>您刚刚在下面的环境做了SYNC操作， 需要进行META的REBUILD.</p>
+	<ul ng-repeat="env in context">
+		<li><strong>{{env | uppercase}}</strong> 
+			<a href="http://hermes.fws.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='fws'">http://hermes.fws.qa.nt.ctripcorp.com/console/meta</a>
+			<a href="http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='uat'">http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta</a>
+			<a href="http://hermes.fx.ctripcorp.com/console/console/meta" target="_blank" ng-if="env=='prod'">http://hermes.fx.ctripcorp.com/console/console/meta</a>
+			<a href="http://hermes.fx.tools.ctripcorp.com/console/meta" target="_blank" ng-if="env=='tools'">http://hermes.fx.tools.ctripcorp.com/console/meta</a>
+		</li>
+	</ul>
+</alert-x>

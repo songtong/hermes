@@ -14,21 +14,15 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 <meta name="description" content="Portal">
 <link href="${model.webapp}/css/bootstrap.min.css" type="text/css" rel="stylesheet">
-
 <link href="${model.webapp}/css/jquery-ui.min.css" type="text/css" rel="stylesheet">
 <link href="${model.webapp}/css/bootstrap-tokenfield.min.css" type="text/css" rel="stylesheet">
 <link href="${model.webapp}/css/typeahead.css" type="text/css" rel="stylesheet">
-
-
 <link href="${model.webapp}/css/portal-common.css" type="text/css" rel="stylesheet">
 <link href="${model.webapp}/css/btnUpload.min.css" type="text/css" rel="stylesheet">
-
 <script src="${model.webapp}/js/jquery-2.1.4.min.js" type="text/javascript"></script>
-
 <script src="${model.webapp}/js/jquery-ui.min.js" type="text/javascript"></script>
 <script src="${model.webapp}/js/bootstrap-tokenfield.min.js" type="text/javascript"></script>
 <script src="${model.webapp}/js/typeahead.bundle.min.js" type="text/javascript"></script>
-
 <script src="${model.webapp}/js/bootstrap.min.js" type="text/javascript"></script>
 <script src="${model.webapp}/js/portal-common.js" type="text/javascript"></script>
 
@@ -37,7 +31,25 @@
 <script type="text/javascript" src="${model.webapp}/js/angular/angular-cookies.min.js"></script>
 <script type="text/javascript" src="${model.webapp}/js/angular/ui-bootstrap-tpls-0.13.0.min.js"></script>
 <script type="text/javascript" src="${model.webapp}/js/angular/bootbox.min.js"></script>
-
+<%
+	String ssoTip = "";
+	String ssoUser = "";
+	String ssoMail = "";
+	String userInfo = null;
+	try {
+		java.util.Map ssoInfo = (java.util.Map) org.jasig.cas.client.util.AssertionHolder.getAssertion()
+				.getPrincipal().getAttributes();
+		ssoUser = (String) ssoInfo.get("sn");
+		ssoMail = (String) ssoInfo.get("mail");
+		ssoTip = String.format("%s(%s)", ssoUser, ssoMail);
+		
+		if (ssoInfo != null) {
+			org.codehaus.jackson.map.ObjectMapper mapper = new org.codehaus.jackson.map.ObjectMapper();
+			userInfo = mapper.writeValueAsString(ssoInfo);
+		}
+	} catch (Exception e) {
+	}
+%>
 <script type="text/javascript">
 	var contextpath = "${model.webapp}";
 	var environment = "${navBar.environment}";
@@ -47,8 +59,6 @@
 </head>
 
 <body data-spy="scroll" data-target=".subnav" data-offset="50" debug="true">
-
-
 	<div class="container-fluid" style="min-height: 524px;">
 		<div class="row-fluid">
 			<div class="span12">
@@ -59,7 +69,6 @@
 			</div>
 		</div>
 
-		<br />
 		<div class="container">
 			<footer>
 				<center>&copy;2015 Hermes Team</center>
@@ -107,38 +116,17 @@
 							</c:if>
 						</c:forEach>
 					</ul>
+					
 					<ul class="nav navbar-nav navbar-right">
-						<%
-							String ssoTip = "";
-							String ssoUser = "";
-							String ssoMail = "";
-							String userInfo = null;
-							try {
-								java.util.Map ssoInfo = (java.util.Map) org.jasig.cas.client.util.AssertionHolder.getAssertion()
-										.getPrincipal().getAttributes();
-								ssoUser = (String) ssoInfo.get("sn");
-								ssoMail = (String) ssoInfo.get("mail");
-								ssoTip = String.format("%s(%s)", ssoUser, ssoMail);
-								
-								if (ssoInfo != null) {
-									org.codehaus.jackson.map.ObjectMapper mapper = new org.codehaus.jackson.map.ObjectMapper();
-									userInfo = mapper.writeValueAsString(ssoInfo);
-								}
-							} catch (Exception e) {
-							}
-						%>
-						<c:if test="${requestScope.logined}">
-							<li><a class="btn btn-link" ng-click="logout()">Sign out <%=ssoTip%></a></li>
-						</c:if>
-						<c:if test="${!requestScope.logined}">
-							<li><a class="btn btn-link" data-toggle="modal" data-target="#sign_in_modal">Sign in <%=ssoTip%></a></li>
-						</c:if>
+						<li><a class="btn btn-link"><%=ssoTip%></a></li>
 					</ul>
 				</div>
 				<!--/.nav-collapse -->
 			</div>
 
 		</div>
+		
+		<!-- 
 		<div id="sign_in_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
@@ -169,6 +157,8 @@
 				</div>
 			</div>
 		</div>
+		 -->
+		 
 	</div>
 	<!--/.fluid-container-->
 	<script type="text/javascript" src="${model.webapp}/js/login/login.js"></script>

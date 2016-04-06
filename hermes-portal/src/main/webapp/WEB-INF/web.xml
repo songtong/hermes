@@ -36,7 +36,7 @@
 		</init-param>
 		<init-param>
 			<param-name>serverName</param-name>
-			<param-value>http://localhost:7678</param-value>
+			<param-value>http://10.32.21.135:7678</param-value>
 		</init-param>
 		<init-param>
 			<param-name>redisClusterName</param-name>
@@ -55,7 +55,7 @@
 		</init-param>
 		<init-param>
 			<param-name>serverName</param-name>
-			<param-value>http://localhost:7678</param-value>
+			<param-value>http://10.32.21.135:7678</param-value>
 		</init-param>
 		<init-param>
 			<param-name>encoding</param-name>
@@ -109,6 +109,7 @@
 		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
+
 	<filter-mapping>
 		<filter-name>CASFilter</filter-name>
 		<url-pattern>/*</url-pattern>
@@ -124,18 +125,21 @@
 		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
+
 	<filter-mapping>
 		<filter-name>cat-filter</filter-name>
 		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 		<dispatcher>FORWARD</dispatcher>
 	</filter-mapping>
+
 	<filter-mapping>
 		<filter-name>validation-filter</filter-name>
 		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 		<dispatcher>FORWARD</dispatcher>
 	</filter-mapping>
+
 	<filter-mapping>
 		<filter-name>mvc-filter</filter-name>
 		<url-pattern>/*</url-pattern>

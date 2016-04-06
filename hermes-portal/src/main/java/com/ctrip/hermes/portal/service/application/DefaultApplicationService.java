@@ -112,7 +112,12 @@ public class DefaultApplicationService implements ApplicationService {
 		Application dbApp = null;
 		try {
 			dbApp = m_dao.getAppById(id);
-			dbApp.setPolished(polishedContent);
+			
+			// Only can polish the application when approve the application on creation.
+			if (status == PortalConstants.APP_STATUS_SUCCESS && polishedContent != null) {
+				dbApp.setPolished(polishedContent);
+			}
+			
 			dbApp.setStatus(status);
 			dbApp.setComment(comment);
 			dbApp.setApprover(approver);

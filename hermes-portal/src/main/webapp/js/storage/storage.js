@@ -1,7 +1,7 @@
 var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage', 'smart-table', 'components', 'utils', 'bootstrap-tagsinput']);
 hermes_storage.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
-}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', 'promiseChain', 'watcher', function(scope, resource, StorageService, promiseChain, watcher) {
+}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', 'promiseChain', 'watcher', 'clone', function(scope, resource, StorageService, promiseChain, watcher, clone) {
 	// Define resource.
 	var meta_resource = resource('/api/storages', {}, {
 		'get_storages' : {
@@ -49,7 +49,7 @@ hermes_storage.run(function(editableOptions) {
 	
 	scope.groupTags = {'test': [{id:2, name: 'd'}]};
 	//
-	scope.storageType = 'kafka';
+	scope.storageType = 'mysql';
 	
 	scope.newTag = null;
 	
@@ -79,7 +79,7 @@ hermes_storage.run(function(editableOptions) {
     		args: {},
     		success: function(result) {
     			scope.groupTags = result.data[0];
-    			scope.$emit('initialized');
+    			scope.$broadcast('initialized');
     		}
     	}, true).finish();
     })();
@@ -126,6 +126,14 @@ hermes_storage.run(function(editableOptions) {
     	// Clear Tags.
     	scope.$broadcast('select2:clear', 'tags');
     };
+    
+//    function transform() {
+//    	var cloned = clone(scope.currentDatasource);
+//    	$.each(cloned.properties, function(prop, value) {
+//    		cloned.properties[prop] = value.value;
+//    	});
+//    	return cloned;
+//    }
     
     scope.save = function() {
     	var tagOps = [];

@@ -13,7 +13,7 @@
 	<div class="main fluid" ng-app="hermes-storage" ng-controller="storage-controller">
 			<div class="col-sm-3 col-md-2 sidebar">
 				<ul class="nav nav-sidebar" role="tablist">
-					<li ng-click="selectStorage(ds.type)" ng-repeat="ds in __datasources" role="presentation" ng-class="$first ? 'active' : ''"><a href="#content" role="tab" data-toggle="tab"
+					<li ng-click="selectStorage(ds.type)" ng-repeat="ds in __datasources" role="presentation" ng-class="storageType==ds.type? 'active' : ''"><a href="#content" role="tab" data-toggle="tab"
 						aria-controls="content"> <span ng-bind="ds.type" style="text-transform: capitalize;"></span>
 					</a></li>
 				</ul>
@@ -49,9 +49,7 @@
 				</div>
 			</div>
 			<loading-x></loading-x>
-			
 			<confirm-dialog-x id="confirmDialog" title="确认" content="确认要删除此数据源？" action="remove"></confirm-dialog-x>
-			
 			<progressbar-x id="progressBar"/></progressbar-x>
 	</div>
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-strap.min.js"></script>

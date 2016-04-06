@@ -14,6 +14,7 @@
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/global.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/utils.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/user.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/topic-sync.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/components.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/application/application.js"></script>
