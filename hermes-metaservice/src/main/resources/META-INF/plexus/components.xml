@@ -533,6 +533,11 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.CompileService</role>
 			<implementation>com.ctrip.hermes.metaservice.service.CompileService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>

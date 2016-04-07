@@ -1,19 +1,18 @@
-package com.ctrip.hermes.kafka.codec.assist;
-
-import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
-import io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer;
-import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+package com.ctrip.hermes.core.message.payload.assist;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.kafka.common.config.ConfigException;
-import org.apache.kafka.common.serialization.Deserializer;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.message.payload.assist.kafka.avro.AbstractKafkaAvroDeserializer;
+
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+
 @Named(type = HermesKafkaAvroDeserializer.class)
-public class HermesKafkaAvroDeserializer extends AbstractKafkaAvroDeserializer implements Deserializer<Object> {
+public class HermesKafkaAvroDeserializer extends AbstractKafkaAvroDeserializer {
 	@Inject
 	private SchemaRegisterRestClient m_schemaRestService;
 
@@ -21,11 +20,11 @@ public class HermesKafkaAvroDeserializer extends AbstractKafkaAvroDeserializer i
 		m_schemaRestService = restService;
 	}
 
-	@Override
 	@SuppressWarnings("unchecked")
 	public void configure(Map<String, ?> configs, boolean isKey) {
 		Map<String, String> m = new HashMap<String, String>();
-		m.put("schema.registry.url", "http://xxx.xxx.xxx.xxx"); // faked, KafkaAvroDeserializerConfig need this property
+		// faked, KafkaAvroDeserializerConfig need this property
+		m.put("schema.registry.url", "http://xxx.xxx.xxx.xxx");
 		m.putAll((Map<? extends String, ? extends String>) configs);
 
 		KafkaAvroDeserializerConfig config = new KafkaAvroDeserializerConfig(m);
@@ -34,16 +33,11 @@ public class HermesKafkaAvroDeserializer extends AbstractKafkaAvroDeserializer i
 			schemaRegistry = new CachedSchemaRegistryClient(m_schemaRestService, maxSchemaObject);
 			configureNonClientProperties(config);
 		} catch (io.confluent.common.config.ConfigException e) {
-			throw new ConfigException(e.getMessage());
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 
-	@Override
 	public Object deserialize(String s, byte[] bytes) {
 		return deserialize(bytes);
-	}
-
-	@Override
-	public void close() {
 	}
 }

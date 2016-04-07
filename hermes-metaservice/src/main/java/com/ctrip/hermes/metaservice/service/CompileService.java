@@ -1,18 +1,19 @@
 package com.ctrip.hermes.metaservice.service;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -27,10 +28,19 @@ import javax.tools.ToolProvider;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.reflect.AvroDefault;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.exec.Executor;
+import org.apache.commons.exec.PumpStreamHandler;
 import org.codehaus.jackson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
+
+import com.ctrip.hermes.core.env.ClientEnvironment;
 
 @Named
 public class CompileService {
@@ -42,6 +52,9 @@ public class CompileService {
 	private static final String RELEASE_REPO = "http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/fxrelease";
 
 	private static final String SNAPSHORT_REPO = "http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/fxsnapshot";
+
+	@Inject
+	private ClientEnvironment m_env;
 
 	/**
 	 * 
@@ -80,8 +93,8 @@ public class CompileService {
 		compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits).call();
 		for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
 			logger.warn(String.format("%s on line %d in %s: %s%n", diagnostic.getKind().toString(),
-			      diagnostic.getLineNumber(), diagnostic.getSource() != null ? diagnostic.getSource().toUri() : "",
-			      diagnostic.getMessage(null)));
+					diagnostic.getLineNumber(), diagnostic.getSource() != null ? diagnostic.getSource().toUri() : "",
+					diagnostic.getMessage(null)));
 		fileManager.close();
 	}
 
@@ -110,9 +123,10 @@ public class CompileService {
 	}
 
 	public void deployToMaven(Path jarPath, String groupId, String artifactId, String version, String repositoryId)
-	      throws IOException {
+			throws Exception {
+		String cmd = "mvn";
 		StringBuilder sb = new StringBuilder();
-		sb.append("mvn deploy:deploy-file ").append("-DgroupId=").append(groupId).append(" ");
+		sb.append("deploy:deploy-file ").append("-DgroupId=").append(groupId).append(" ");
 		sb.append("-DartifactId=").append(artifactId).append(" ");
 		sb.append("-Dfile=").append(jarPath.toAbsolutePath().toString()).append(" ");
 		if ("snapshots".equals(repositoryId)) {
@@ -129,44 +143,84 @@ public class CompileService {
 
 		String command = sb.toString();
 		logger.debug("deploy to maven {}", command);
-		executeConsoleCommand(command);
+		Pair<Boolean, Pair<String, String>> result = executeCommand(cmd, sb.toString().split(" "), null);
+		if (!result.getKey()) {
+			throw new RuntimeException("Compile schema to .cs file failed: " + result.getValue().getValue());
+		}
 	}
 
-	private void executeConsoleCommand(String command) throws IOException {
-		String osName = System.getProperty("os.name").toLowerCase(Locale.US);
-		if (osName.contains("windows")) {
-			command = "cmd /c " + command;
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void compileSchemaToCs(File schemaFile, Path destDir) throws Exception {
+		String cmd = "mono";
+		String[] arguments = "${avrogen} -s ${schemaFile} ${destDir}".split(" ");
+		Map substitutionMap = new HashMap<>();
+		substitutionMap.put("avrogen", new File(m_env.getGlobalConfig().getProperty("portal.avrogen.path")));
+		substitutionMap.put("schemaFile", schemaFile);
+		substitutionMap.put("destDir", destDir);
+		Pair<Boolean, Pair<String, String>> result = executeCommand(cmd, arguments, substitutionMap);
+		if (!result.getKey()) {
+			throw new RuntimeException("Compile schema to .cs file failed: " + result.getValue().getValue());
 		}
-		boolean done = false;
-		boolean hasErr = false;
-		ProcessBuilder pb = new ProcessBuilder(command.split(" "));
-		Process process = null;
-		StringBuilder errorMsg = new StringBuilder();
-		try {
-			process = pb.start();
-			String s;
-			BufferedReader errors = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-			while ((s = errors.readLine()) != null) {
-				logger.error(s);
-				errorMsg.append(s).append("\n");
-				hasErr = true;
-			}
-			done = true;
-		} finally {
-			if (!done) {
-				logger.error(pb.environment().toString());
-			}
-			if (process != null) {
-				process.destroy();
-			}
-			if (hasErr) {
-				throw new RuntimeException(errorMsg.toString());
-			}
-			if(process!=null&&process.exitValue()!=0){
-				throw new RuntimeException("Deploy maven failed! Maybe this dependency already exist on maven.");
-			}
+		if (destDir.toFile().list().length == 0) {
+			throw new RuntimeException("Compile schema to .cs file failed: " + result.getValue().getKey());
 		}
 	}
+
+	/**
+	 * 
+	 * @param cmd
+	 * @param arguments
+	 *            If the argument doesn't include spaces or quotes, return it as
+	 *            is. If it contains double quotes, use single quotes - else
+	 *            surround the argument by double quotes.
+	 * @param substitutionMap
+	 * @return Return.key indicates whether the process success or not.
+	 *         Return.value stores the normal output and err output msgs.
+	 * @throws Exception
+	 */
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private Pair<Boolean, Pair<String, String>> executeCommand(String cmd, String[] arguments, Map substitutionMap)
+			throws Exception {
+		String osName = System.getProperty("os.name").toLowerCase(Locale.US);
+		String[] windowsArguments = null;
+		if (osName.contains("windows")) {
+			windowsArguments = new String[] { "/c", cmd };
+			cmd = "cmd";
+		}
+		CommandLine cmdLine = new CommandLine(cmd);
+
+		if (windowsArguments != null && windowsArguments.length != 0) {
+			for (String argument : windowsArguments) {
+				cmdLine.addArgument(argument);
+			}
+		}
+
+		if (arguments != null && arguments.length != 0) {
+			for (String argument : arguments) {
+				cmdLine.addArgument(argument);
+			}
+		}
+		if (substitutionMap != null && !substitutionMap.isEmpty())
+			cmdLine.setSubstitutionMap(substitutionMap);
+
+		ExecuteWatchdog watchdog = new ExecuteWatchdog(60 * 1000);
+		Executor executor = new DefaultExecutor();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ByteArrayOutputStream err = new ByteArrayOutputStream();
+
+		executor.setStreamHandler(new PumpStreamHandler(out, err));
+		executor.setWatchdog(watchdog);
+
+		int exitValue = 0;
+		exitValue = executor.execute(cmdLine);
+		if (watchdog.killedProcess()) {
+			throw new RuntimeException("Command:" + cmdLine + "exeute timeout!");
+		}
+		return new Pair<Boolean, Pair<String, String>>(!executor.isFailure(exitValue),
+				new Pair<>(new String(out.toByteArray()), new String(err.toByteArray())));
+	}
+
 
 	/**
 	 * 
@@ -224,4 +278,7 @@ public class CompileService {
 		});
 		target.close();
 	}
+
+	
+
 }

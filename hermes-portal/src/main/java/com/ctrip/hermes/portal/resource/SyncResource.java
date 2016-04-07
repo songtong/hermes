@@ -17,12 +17,15 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.metaservice.model.Schema;
+import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.config.PortalConfig;
@@ -40,12 +43,14 @@ public class SyncResource {
 
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
+	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
+
 	private PortalConfig config = PlexusComponentLocator.lookup(PortalConfig.class);
 
 	@POST
 	@Path("{topic}/sync")
 	public Response syncTopic(@PathParam("topic") String topicName,
-	      @QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
+			@QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
 		TopicView topic = topicService.findTopicViewByName(topicName);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
@@ -56,15 +61,18 @@ public class SyncResource {
 			exist = syncService.isTopicExistOnTarget(topicName, target);
 		} catch (Exception e) {
 			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
-			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
-		if (exist && !forceSchema) {
+		if (exist) {
 			throw new RestException(String.format("Topic %s is already exists.", topicName), Status.CONFLICT);
 		}
 
 		Set<String> missedDatasources = syncService.getMissedDatasourceOnTarget(topic, target);
+		long toicId = topic.getId();
+		Long schemaId = topic.getSchemaId();
+		topic.setId(null);
+		topic.setSchemaId(null);
 		if (missedDatasources.size() == 0) {
-			topic.setId(null);
 			switch (topic.getStorageType()) {
 			case Storage.MYSQL:
 				syncService.syncMysqlTopic(topic, target);
@@ -72,6 +80,15 @@ public class SyncResource {
 			case Storage.KAFKA:
 				syncService.syncKafkaTopic(topic, target, exist, forceSchema);
 				break;
+			}
+			topic.setId(toicId);
+
+			if (schemaId != null) {
+				try {
+					syncService.syncSchema(schemaService.getSchemaMeta(schemaId), topicName, target);
+				} catch (Exception e) {
+					log.warn("Sync schema failed for topic {}", topic.getName(), e);
+				}
 			}
 			syncService.syncConsumers(topic, target);
 		} else {
@@ -83,7 +100,7 @@ public class SyncResource {
 	@POST
 	@Path("sync")
 	public Response syncTopic(@QueryParam("environment") String environment,
-	      @QueryParam("forceSchema") @DefaultValue("false") boolean forceSchema, String content) {
+			@QueryParam("forceSchema") @DefaultValue("false") boolean forceSchema, String content) {
 		log.info("Sync topic with payload {}.", content);
 		if (StringUtils.isEmpty(content)) {
 			log.error("Payload content is empty, sync topic failed.");
@@ -116,9 +133,9 @@ public class SyncResource {
 			exist = syncService.isTopicExistOnTarget(topicView.getName(), target);
 		} catch (Exception e) {
 			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicView.getName(),
-			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
-		if (exist && !forceSchema) {
+		if (exist) {
 			throw new RestException(String.format("Topic %s is already exists.", topicView.getName()), Status.CONFLICT);
 		}
 
@@ -132,10 +149,41 @@ public class SyncResource {
 				syncService.syncKafkaTopic(topicView, target, exist, forceSchema);
 				break;
 			}
-			//syncService.syncConsumers(topicView, target);
+			// syncService.syncConsumers(topicView, target);
 		} else {
 			throw new RestException("Target has missed datasources, pls init them: " + missedDatasources);
 		}
+		return Response.status(Status.OK).build();
+	}
+
+	@POST
+	@Path("{topic}/syncSchema")
+	public Response syncSchema(@PathParam("topic") String topicName, @PathParam("userName") String userName,
+			@PathParam("userEmail") String userEmail) {
+		TopicView topic = topicService.findTopicViewByName(topicName);
+		if (topic == null) {
+			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
+		}
+		WebTarget target = ClientBuilder.newClient().target("http://" + config.getSyncHost());
+		boolean exist = false;
+		try {
+			exist = syncService.isTopicExistOnTarget(topicName, target);
+		} catch (Exception e) {
+			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
+					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+		}
+		if (!exist) {
+			throw new RestException(String.format("Topic %s not exists in target environment.", topicName),
+					Status.NOT_FOUND);
+		}
+		Schema schema;
+		try {
+			schema = schemaService.getSchemaMeta(topic.getSchemaId());
+		} catch (DalException e) {
+			throw new RestException(String.format("Schema %s not found.", topic.getSchema().getName()),
+					Status.NOT_FOUND);
+		}
+		syncService.syncSchema(schema, topicName, target);
 		return Response.status(Status.OK).build();
 	}
 

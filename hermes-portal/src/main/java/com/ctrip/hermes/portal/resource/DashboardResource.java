@@ -88,7 +88,7 @@ public class DashboardResource {
 	}
 
 	@GET
-	@Path("/{topic}/{consumer}/delay")
+	@Path("{topic}/{consumer}/delay")
 	public Response getConsumerDelay(@PathParam("topic") String topicName, @PathParam("consumer") String consumerName) {
 		Topic topic = m_topicService.findTopicEntityByName(topicName);
 		List<DelayDetail> consumerDelay = new ArrayList<>();

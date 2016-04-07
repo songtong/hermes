@@ -34,6 +34,7 @@ import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.application.ApplicationService;
+import com.ctrip.hermes.portal.service.mail.PortalMailService;
 
 @Path("/applications/")
 @Singleton
@@ -44,6 +45,8 @@ public class ApplicationResource {
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
 	private ApplicationService appService = PlexusComponentLocator.lookup(ApplicationService.class);
+
+	private PortalMailService m_mailService = PlexusComponentLocator.lookup(PortalMailService.class);
 
 	@POST
 	@Path("topic/create")
@@ -69,8 +72,8 @@ public class ApplicationResource {
 		}
 
 		// 检验重复
-		String topicName = topicApplication.getProductLine() + topicApplication.getEntity()
-				+ topicApplication.getEvent();
+		String topicName = String.format("%s.%s.%s", topicApplication.getProductLine(), topicApplication.getEntity(),
+				topicApplication.getEvent());
 		if (topicService.findTopicEntityByName(topicName) != null) {
 			throw new RestException("Topic already exists.", Status.CONFLICT);
 		}
@@ -84,6 +87,12 @@ public class ApplicationResource {
 		topicApplication = appService.saveTopicApplication(topicApplication);
 		if (topicApplication == null) {
 			throw new RestException("Save topic application failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		try {
+			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(topicApplication));
+		} catch (Exception e) {
+			log.error("Send email of hermes application id={} failed.", topicApplication.getId(), e);
 		}
 
 		// 返回
@@ -118,6 +127,12 @@ public class ApplicationResource {
 		app = appService.saveConsumerApplication(app);
 		if (app == null) {
 			throw new RestException("Save consumer application failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+		
+		try {
+			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(app));
+		} catch (Exception e) {
+			log.error("Send email of hermes application id={} failed.", app.getId(), e);
 		}
 
 		return Response.status(Status.OK).entity(app).build();
@@ -290,6 +305,12 @@ public class ApplicationResource {
 		if (app == null) {
 			throw new RestException("Update application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
+		
+		try {
+			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(app));
+		} catch (Exception e) {
+			log.error("Send email of hermes application id={} failed.", app.getId(), e);
+		}
 		return Response.status(Status.OK).entity(app).build();
 	}
 
@@ -303,6 +324,12 @@ public class ApplicationResource {
 		HermesApplication app = appService.updateStatus(id, PortalConstants.APP_STATUS_REJECTED, comment, approver);
 		if (app == null) {
 			throw new RestException("Reject application failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+		
+		try {
+			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(app));
+		} catch (Exception e) {
+			log.error("Send email of hermes application id={} failed.", app.getId(), e);
 		}
 
 		return Response.status(Status.OK).entity(app).build();
@@ -318,6 +345,12 @@ public class ApplicationResource {
 		HermesApplication app = appService.updateStatus(id, PortalConstants.APP_STATUS_SUCCESS, comment, approver);
 		if (app == null) {
 			throw new RestException("Pass application failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+		
+		try {
+			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(app));
+		} catch (Exception e) {
+			log.error("Send email of hermes application id={} failed.", app.getId(), e);
 		}
 
 		return Response.status(Status.OK).entity(app).build();

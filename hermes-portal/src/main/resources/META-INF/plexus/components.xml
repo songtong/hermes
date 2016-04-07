@@ -134,6 +134,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.portal.config.PortalConfig</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>

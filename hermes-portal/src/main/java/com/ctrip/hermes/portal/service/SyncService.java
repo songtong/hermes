@@ -1,9 +1,5 @@
 package com.ctrip.hermes.portal.service;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,26 +8,21 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.converter.EntityToViewConverter;
+import com.ctrip.hermes.metaservice.model.Schema;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
+import com.ctrip.hermes.metaservice.view.SchemaView;
 import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
@@ -45,114 +36,81 @@ public class SyncService {
 
 	public void syncConsumers(TopicView topic, WebTarget target) {
 		try {
-			for (ConsumerGroup consumer : consumerService.findConsumerGroupEntities(topic.getId())) {
+			for (ConsumerGroupView consumerView : consumerService.findConsumerViews(topic.getId())) {
 				Builder request = target.path("/api/consumers/").request();
-				ConsumerGroupView consumerView = EntityToViewConverter.convert(consumer);
-				consumerView.setTopicName(topic.getName());
+				consumerView.setId(null);
 				Response response = request.post(Entity.json(consumerView));
 				if (!(Status.CREATED.getStatusCode() == response.getStatus()//
-				|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
-					throw new RestException(String.format("Add consumer %s failed.", consumer.getName()),
-					      Status.INTERNAL_SERVER_ERROR);
+						|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
+					throw new RestException(String.format("Add consumer %s failed.", consumerView.getName()),
+							Status.INTERNAL_SERVER_ERROR);
 				}
 			}
 		} catch (Exception e) {
 			log.warn("Sync Consumers failed.", e);
 			throw new RestException(String.format("Sync consumers: %s failed: %s", topic.getName(), e.getMessage()),
-			      Status.NOT_ACCEPTABLE);
+					Status.NOT_ACCEPTABLE);
 		}
 	}
 
 	public void syncMysqlTopic(TopicView topic, WebTarget target) {
+		createTopicOnTarget(topic, target);
+	}
+
+	public void syncKafkaTopic(TopicView topic, WebTarget target, boolean alreadyExist, boolean forceSchema) {
+		try {
+			// create topic
+			Builder request;
+			createTopicOnTarget(topic, target);
+
+			// deploy topic
+			request = target.path(String.format("/api/topics/%s/deploy", topic.getName())).request();
+			Response response = request.post(null);
+			if (response.getStatus() != Status.OK.getStatusCode()) {
+				String info = response.readEntity(String.class);
+				log.warn("Deploy topic {} failed [{}]. Clean it from remote meta.", topic.getName(), info);
+				deleteTopicMetaOnTarget(topic, target);
+				throw new RestException("Deploy kafka topic failed: " + info, Status.INTERNAL_SERVER_ERROR);
+			}
+
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			log.warn("Sync kafka topic failed.", e);
+			throw new RestException(String.format("Sync kafka topic: %s failed: %s", topic.getName(), e.getMessage()),
+					Status.NOT_ACCEPTABLE);
+		}
+	}
+
+	private TopicView createTopicOnTarget(TopicView topic, WebTarget target) {
 		Builder request = target.path("/api/topics").request();
 		TopicView view = null;
 		try {
 			view = request.post(Entity.json(topic), TopicView.class);
 		} catch (Exception e) {
 			throw new RestException(String.format("Sync mysql topic: %s failed: %s", topic.getName(), e.getMessage()),
-			      Status.NOT_ACCEPTABLE);
+					Status.NOT_ACCEPTABLE);
 		}
-		if (view == null || !view.getName().equals(topic.getName())) {
-			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	public void syncKafkaTopic(TopicView topic, WebTarget target, boolean alreadyExist, boolean forceSchema) {
-		topic.setSchemaId(null);
-		try {
-			long targetTopicId = -1;
-			if (!alreadyExist) {
-				// create topic
-				Builder request;
-				TopicView view = createTopicOnTarget(topic, target);
-				targetTopicId = view.getId();
-
-				// deploy topic
-				request = target.path(String.format("/api/topics/%s/deploy", topic.getName())).request();
-				Response response = request.post(null);
-				if (response.getStatus() != Status.OK.getStatusCode()) {
-					String info = response.readEntity(String.class);
-					log.warn("Deploy topic {} failed [{}]. Clean it from remote meta.", topic.getName(), info);
-					deleteTopicMetaOnTarget(topic, target);
-					throw new RestException("Deploy kafka topic failed: " + info, Status.INTERNAL_SERVER_ERROR);
-				}
-			} else if (forceSchema) {
-				targetTopicId = getTopicOnTarget(topic.getName(), target).getId();
-			}
-
-			if (forceSchema && targetTopicId > -1) {
-				// handle schemas
-				syncSchema(topic, targetTopicId, target);
-			}
-		} catch (RestException e) {
-			throw e;
-		} catch (Exception e) {
-			log.warn("Sync kafka topic failed.", e);
-			throw new RestException(String.format("Sync kafka topic: %s failed: %s", topic.getName(), e.getMessage()),
-			      Status.NOT_ACCEPTABLE);
-		}
-	}
-
-	private TopicView createTopicOnTarget(TopicView topic, WebTarget target) {
-		Builder request = target.path("/api/topics").request();
-		TopicView view = request.post(Entity.json(topic), TopicView.class);
 		if (view == null || !view.getName().equals(topic.getName())) {
 			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
 		}
 		return view;
 	}
 
-	private void syncSchema(TopicView topic, long targetTopicId, WebTarget target) {
-		Builder request;
-		Response response;
-		File tmp = writeTempPreview(topic);
-		if (tmp == null) {
-			throw new RestException("Deploy schema failed, can not write tmp file.", Status.INTERNAL_SERVER_ERROR);
-		}
-		target.register(MultiPartFeature.class);
-		request = target.path("/api/schemas").request();
-		FormDataMultiPart form = new FormDataMultiPart();
-		form.bodyPart(new FileDataBodyPart("file", tmp, MediaType.MULTIPART_FORM_DATA_TYPE));
-		form.field("schema", JSON.toJSONString(topic.getSchema()));
-		form.field("topicId", String.valueOf(targetTopicId));
-		response = request.post(Entity.entity(form, MediaType.MULTIPART_FORM_DATA_TYPE));
-		if (response.getStatus() != Status.CREATED.getStatusCode()) {
-			log.warn("Deploy schema response: " + response);
-			throw new RestException("Deploy schema failed.");
-		}
-	}
-
-	private File writeTempPreview(TopicView topic) {
+	public void syncSchema(Schema schema, String topicName, WebTarget target) {
+		schema.setName(null);
+		schema.setTopicId(0);
+		schema.setId(0);
+		schema.setAvroid(null);
+		Builder request = target.path("/api/schemas/" + topicName).request();
+		SchemaView schemaView = null;
 		try {
-			File f = new File("/tmp", topic.getSchema().getName() + ".avsc");
-			BufferedWriter bw = new BufferedWriter(new FileWriter(f));
-			bw.write(topic.getSchema().getSchemaPreview());
-			bw.flush();
-			bw.close();
-			return f;
-		} catch (IOException e) {
-			log.warn("Write tmp schema preview failed.", e);
-			return null;
+			schemaView = request.post(Entity.json(schema), SchemaView.class);
+		} catch (Exception e) {
+			throw new RestException(String.format("sync schema failed: %s", e.getMessage()), Status.NOT_ACCEPTABLE);
+		}
+		if (schemaView == null ) {
+			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -184,8 +142,8 @@ public class SyncService {
 			}
 		} catch (Exception e) {
 			throw new RestException(
-			      "Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
-			      Status.INTERNAL_SERVER_ERROR);
+					"Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
+					Status.INTERNAL_SERVER_ERROR);
 		}
 		Set<String> ret = new HashSet<String>();
 		for (String ds : iDses) {

@@ -1,6 +1,6 @@
 <div class="row">
 	<!-- basic information -->
-	<div class="col-md-6">
+	<div class="col-md-5 col-md-offset-1">
 		<div class="panel panel-info">
 			<div class="panel-heading clearfix">
 				<label class="label label-info pull-left">基本信息</label>
@@ -136,7 +136,7 @@
 	</div>
 
 	<!-- partition information -->
-	<div class="col-md-6">
+	<div class="col-md-4">
 		<div class="panel panel-info">
 			<div class="panel-heading">
 				<label class="label label-info">Partition 信息</label>
@@ -161,7 +161,7 @@
 							<td ng-bind="partition.writeDatasource" onshow="load_datasource_names()" editable-select="partition.writeDatasource" e-form="topicForm" e-name="partition.writeDatasource" e-ng-options="ds for ds in datasource_names"></td>
 						</tr>
 						<tr ng-repeat="partition in new_partitions" ng-show="topicForm.$visible">
-							<td style="width: 5%;"><label ng-bind="$index + 1 + {{partitionCount}}"></td>
+							<td style="width: 5%;"><label ng-bind="$index  + {{partitionCount}}"></td>
 							<td><select ng-model="partition.readDatasource" onshow="load_datasource_names()" ng-options="ds for ds in datasource_names" class="form-control"></select></td>
 							<td><select ng-model="partition.writeDatasource" ng-options="ds for ds in datasource_names" class="form-control"></select></td>
 							<td width="150px">

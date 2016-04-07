@@ -13,6 +13,9 @@ import org.mockito.Mockito;
 import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.core.message.payload.PayloadCodec;
+import com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroDeserializer;
+import com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroSerializer;
+import com.ctrip.hermes.core.message.payload.assist.SchemaRegisterRestClient;
 import com.ctrip.hermes.kafka.avro.AvroVisitEvent;
 import com.ctrip.hermes.meta.entity.Codec;
 

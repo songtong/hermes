@@ -1,17 +1,17 @@
-package com.ctrip.hermes.kafka.codec.assist;
-
-import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerializer;
+package com.ctrip.hermes.core.message.payload.assist;
 
 import java.util.Map;
 
-import org.apache.kafka.common.serialization.Serializer;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.message.payload.assist.kafka.avro.AbstractKafkaAvroSerializer;
+
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
+
 @Named(type = HermesKafkaAvroSerializer.class)
-public class HermesKafkaAvroSerializer extends AbstractKafkaAvroSerializer implements Serializer<Object> {
+public class HermesKafkaAvroSerializer extends AbstractKafkaAvroSerializer {
 	private boolean isKey;
 
 	@Inject
@@ -21,7 +21,6 @@ public class HermesKafkaAvroSerializer extends AbstractKafkaAvroSerializer imple
 		m_schemaRestService = restService;
 	}
 
-	@Override
 	public void configure(Map<String, ?> configs, boolean isKey) {
 		this.isKey = isKey;
 		Object maxSchema = configs.get(AbstractKafkaAvroSerDeConfig.MAX_SCHEMAS_PER_SUBJECT_CONFIG);
@@ -29,7 +28,6 @@ public class HermesKafkaAvroSerializer extends AbstractKafkaAvroSerializer imple
 		schemaRegistry = new CachedSchemaRegistryClient(m_schemaRestService, (Integer) maxSchema);
 	}
 
-	@Override
 	public byte[] serialize(String topic, Object record) {
 		String subject;
 		if (isKey) {
@@ -38,9 +36,5 @@ public class HermesKafkaAvroSerializer extends AbstractKafkaAvroSerializer imple
 			subject = topic + "-value";
 		}
 		return serializeImpl(subject, record);
-	}
-
-	@Override
-	public void close() {
 	}
 }

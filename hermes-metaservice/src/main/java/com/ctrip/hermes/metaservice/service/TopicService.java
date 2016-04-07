@@ -94,20 +94,26 @@ public class TopicService {
 			}
 		}
 
-		com.ctrip.hermes.metaservice.model.Topic topicModel = EntityToModelConverter.convert(topic);
+		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByName(topicName);
 
 		for (Partition partition : partitions) {
 			com.ctrip.hermes.metaservice.model.Partition partitionModel = EntityToModelConverter.convert(partition);
 			if (partition.getId() < 0) {
-				partition.setId(partitionId++);
+				partition.setId(partitionId);
 				partitionModel.setTopicId(topic.getId());
+				partitionModel.setTId(topic.getId());
+				partitionModel.setPId(partition.getId());
+				partitionModel.setId(partitionId);
 				m_partitionDao.insert(partitionModel);
+
+				partitionId++;
 
 				if (Storage.MYSQL.equals(topic.getStorageType())) {
 					Collection<com.ctrip.hermes.metaservice.model.ConsumerGroup> consumerGroupModels = m_consumerGroupDao
-					      .findByTopic(topic.getId(), false);
+							.findByTopic(topic.getId(), false);
 					if (!m_topicStorageService.addPartitionForTopic(topicModel, partitionModel, consumerGroupModels)) {
 						partitionId--;
+						m_partitionDao.deleteByTopicId(partitionModel);
 						m_logger.error("Add new topic partition failed, please try later.");
 						throw new RuntimeException("Add new topic partition failed, please try later.");
 					}
@@ -380,7 +386,7 @@ public class TopicService {
 			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 		}
 
-		return ModelToViewConverter.convert(topicModel);
+		return findTopicViewByName(topicModel.getName());
 	}
 
 	public List<TopicView> findTopicViews(boolean isFillDetail) throws DalException, IOException, RestClientException {

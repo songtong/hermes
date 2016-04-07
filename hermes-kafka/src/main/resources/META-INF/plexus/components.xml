@@ -56,47 +56,6 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient</role>
-			<implementation>com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient</implementation>
-			<instantiation-strategy>per-lookup</instantiation-strategy>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.meta.internal.MetaManager</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroSerializer</role>
-			<implementation>com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroSerializer</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroDeserializer</role>
-			<implementation>com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroDeserializer</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.kafka.codec.assist.SchemaRegisterRestClient</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.core.message.payload.PayloadCodec</role>
-			<role-hint>avro</role-hint>
-			<implementation>com.ctrip.hermes.kafka.codec.AvroPayloadCodec</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroSerializer</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.kafka.codec.assist.HermesKafkaAvroDeserializer</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.kafka.service.KafkaService</role>
 			<implementation>com.ctrip.hermes.kafka.service.KafkaService</implementation>
 			<requirements>
