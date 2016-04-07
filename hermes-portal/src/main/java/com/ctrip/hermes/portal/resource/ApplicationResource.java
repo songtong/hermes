@@ -348,7 +348,18 @@ public class ApplicationResource {
 		if (id < 0) {
 			throw new RestException("Application id unavailable");
 		}
-		HermesApplication app = appService.updateStatus(id, PortalConstants.APP_STATUS_REJECTED, comment, approver, null);
+		
+		HermesApplication app = appService.getApplicationById(id);
+		if (app == null) {
+			throw new RestException("Failed to find application!", Status.BAD_REQUEST);
+		}
+		
+		int status = PortalConstants.APP_STATUS_REJECTED;
+		if (app.getStatus() == PortalConstants.APP_STATUS_ROLLOUT) {
+			status = PortalConstants.APP_STATUS_ROLLOUT_REJECTED;
+		}
+		
+		app = appService.updateStatus(id, status, comment, approver, null);
 		if (app == null) {
 			throw new RestException("Reject application failed!", Status.INTERNAL_SERVER_ERROR);
 		}

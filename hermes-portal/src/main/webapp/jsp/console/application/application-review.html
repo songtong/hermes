@@ -195,13 +195,13 @@
 				</div>
 			</div>
 			<div class="panel-footer clearfix">
-				<form editable-form name="applicationForm" onaftersave="updateApplication(0)" ng-show="applicationForm.$visible">
+				<form editable-form name="applicationForm" onaftersave="updateApplication()" ng-show="applicationForm.$visible">
 					<button type="submit" class="btn btn-success btn-xs pull-right" aria-hidden="true" ng-disabled="applicationForm.$waiting">
 						<span class="glyphicon glyphicon-saved"></span>保存
 					</button>
 					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="applicationForm.$waiting" ng-click="applicationForm.$cancel()">取消</button>
 				</form>
-				<button class="btn btn-success btn-xs pull-right" aria-hidden="true" ng-click="applicationForm.$show()" ng-show="!applicationForm.$visible && application.status==1">
+				<button class="btn btn-success btn-xs pull-right" aria-hidden="true" ng-click="applicationForm.$show()" ng-show="!applicationForm.$visible && (application.status == 1 || application.status == 5)">
 					<span class="glyphicon glyphicon-pencil"></span>修改
 				</button>
 			</div>
@@ -217,7 +217,7 @@
 					<li><strong>申请（创建）/ 拒绝 </strong>：默认提交为申请（创建）状态， 拒绝之后按照意见进行修改后，保存提交，状态重新设置为申请（创建）状态。</li>
 					<li><strong>通过（创建） </strong>： 通过申请审核。</li>
 					<li><strong>同步 </strong>： 按照申请创建Topic，并且同步到FWS/UAT至少一个系统，定义为同步状态。</li>
-					<li><strong>申请（上线） / 拒绝（上线） </strong>：保证进行到同步状态之后才可以操作， 提交请求将topic同步到线上系统PROD/TOOLS； 上线请求拒绝，请在问题解决后，重新提交 请求！</li>
+					<li><strong><span class="label label-danger">申请（上线） / 拒绝（上线）</span></strong>：保证进行到<strong><span class="label label-warning">同步</span></strong>状态之后才可以操作(也就是至少在FWS或者UAT环境发布评估过)， 提交请求将topic同步到线上系统PROD/TOOLS； 上线请求拒绝，请在问题解决后，重新提交请求审核！</li>
 					<li><strong>通过（上线）</strong>： 上线请求通过。</li>
 					<li><strong>上线</strong>： Topic同步到线上完毕！</li>
 					</ul>
@@ -271,8 +271,8 @@
 			</div>
 		</div>
 		
-		<label class="label label-danger" ng-if="application.status == 3">申请上线</label>
-		<div class="panel panel-danger" ng-if="application.status == 3">
+		<label class="label label-danger">申请上线</label>
+		<div class="panel panel-danger">
 			<div class="panel panel-body">
 				<div class="form-horizontal">
 					<div class="form-group">
@@ -288,7 +288,7 @@
 							</div>
 						</div>
 						<div class="col-md-3">
-							<button type="button" class="btn btn-primary btn-sm" ng-click="updateApplication(4)">提交</button>
+							<button type="button" ng-class="['btn btn-primary btn-sm', {disabled: application.status != 3}]" ng-click="updateApplication()">提交</button>
 						</div>
 					</div>
 				</div>
@@ -300,4 +300,4 @@
 	<div class="tooltip-arrow"></div>
 	<div class="tooltip-inner">Some tooltip text!</div>
 </div>
-<alert-x id="alert"></alert-x>
+<alert-x id="alert" title="确认"></alert-x>

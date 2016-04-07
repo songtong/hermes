@@ -76,7 +76,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	}
 	
 	function encodeComment() {
-		if ($scope.application) {
+		if ($scope.application && $scope.comment) {
 			$scope.application.comment.push({
 				createdTime: $filter('date')(new Date(), 'yyyy-MM-dd HH:mm:ss'),
 				author: user.sn,
@@ -169,8 +169,9 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			handlers: [function() {
 				if ($scope.application.status == 2) {
 					delete $scope.application.polished;
-					ApplicationService.update_application_status($scope.application.id, 3, $scope.application.comment, ssoUser, $scope.application).then(function(result) {
+					ApplicationService.update_application_status($scope.application.id, 3, encodeComment(), user.sn, $scope.application).then(function(result) {
 						$scope.application = result;
+						decodeComment();
 						handleSuccess('Done initializing topic on env: ' + env);
 					}, handleError);
 				} else {
@@ -232,8 +233,9 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			},
 			handlers: [function() {
 				if ($scope.application.status == 2) {
-					ApplicationService.update_application_status($scope.application.id, 3, $scope.comment, "Hermes").then(function(result) {
+					ApplicationService.update_application_status($scope.application.id, 3, encodeComment(), user.sn).then(function(result) {
 						$scope.application = result;
+						decodeComment();
 						handleSuccess('Done initializing consumer on env: ' + env);
 					}, handleError);
 				} else {
@@ -266,7 +268,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		// Delete node 'polished'
 		delete $scope.application.polished;
 		
-		ApplicationService.pass_application($scope.application.id, encodeComment(), ssoUser, $scope.application).then(function(result) {
+		ApplicationService.pass_application($scope.application.id, encodeComment(), user.sn, $scope.application).then(function(result) {
 			$scope.application = result;
 			decodeComment();
 			// When the application is passed, invoke api to get dynamic view.

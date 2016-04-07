@@ -52,19 +52,19 @@
 		</form>
 
 		<div class="row">
-			<button type="button" class="btn btn-primary btn-sm pull-right" style="margin-top: 5px; margin-right: 15px;" ng-if="application.status == 0 || application.status == 1 || application.status == 4" ng-click="passApplication()">
+			<button type="button" class="btn btn-primary btn-sm pull-right" style="margin-top: 5px; margin-right: 15px;" ng-if="application.status == 0 || application.status == 4" ng-click="passApplication()">
 				<span class="glyphicon glyphicon-ok"></span> 申请通过
 			</button>
-			<button type="button" class="btn btn-primary btn-sm pull-right" style="margin-top: 5px; margin-right: 15px;" ng-if="application.status >= 2 && application.status != 4"  ng-click="openSyncModal()">
+			<button type="button" class="btn btn-primary btn-sm pull-right" style="margin-top: 5px; margin-right: 15px;" ng-if="application.status >= 2 && application.status != 4 && application.status != 5"  ng-click="openSyncModal()">
 				<span class="glyphicon glyphicon-transfer"></span> 数据同步
 			</button>
 		</div>
 		 
-		<label class="label label-info" ng-if="application.status == 0">添加新的意见</label>
-		<form class="form-horizontal" style="border-radius: 4px; border: 1px solid #e3e3e3" ng-if="application.status == 0">
+		<label class="label label-info" ng-if="application.status == 0 || application.status == 4">添加新的意见</label>
+		<form class="form-horizontal" style="border-radius: 4px; border: 1px solid #e3e3e3" ng-if="application.status == 0 || application.status == 4">
 			<textarea class="form-control" rows="5" ng-model="$parent.comment"></textarea>
 		</form>
-		<div class="row" ng-if="application.status == 0">
+		<div class="row" ng-if="application.status == 0 || application.status == 4">
 			<button type="button" class="btn btn-danger btn-sm pull-right" style="margin-top: 5px; margin-right: 15px;" ng-click="confirm()">
 				<span class="glyphicon glyphicon-remove"></span> 拒绝申请
 			</button>

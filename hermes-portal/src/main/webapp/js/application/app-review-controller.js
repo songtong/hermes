@@ -40,17 +40,23 @@ application_module.controller('app-review-controller', [ '$scope', '$routeParams
 		}
 	})
 	
-	$scope.updateApplication = function(status) {
+	$scope.updateApplication = function() {
 		if ($scope.application.status == 3 && !$scope.application.onlineEnv) {
 			$scope.$broadcast('alert-error', 'alert', '必须选择一个上线环境！');
 			return;
 		}
-
-		$scope.application.status = status;
+		
+		if ($scope.application.status == 1) {
+			$scope.application.status = 0;
+		} else {
+			$scope.application.status = 4;
+		}
+		
 		ApplicationService.update_application($scope.application).then(function(result) {
 			$scope.application = result;
 			decodeComment();
 			//$scope.application.needRetry = $scope.application.needRetry.toString();
+			$scope.$broadcast('alert-success', 'alert', $scope.application.status == 0? '创建请求已重新提交': '上线请求已经提交');
 		}, function(result) {
 			show_op_info.show("Update application failed, please try later.", false);
 		})
