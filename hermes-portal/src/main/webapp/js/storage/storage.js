@@ -65,7 +65,7 @@ hermes_storage.run(function(editableOptions) {
     		args: {},
     		success: function(data){
               scope.__datasources = data;
-              scope.datasources = data[0];
+              //scope.datasources = data[0];
               scope.selectStorage(scope.storageType);
     		}
     	}, true).add({
@@ -94,7 +94,7 @@ hermes_storage.run(function(editableOptions) {
     }
     
     scope.edit = function(index) {
-    	scope.currentDatasource = scope.datasources[index];
+    	scope.currentDatasource = attachDefault(scope.datasources[index]);
     	
     	// Clear tags.
     	scope.$broadcast('select2:clear', 'tags');
@@ -127,13 +127,23 @@ hermes_storage.run(function(editableOptions) {
     	scope.$broadcast('select2:clear', 'tags');
     };
     
-//    function transform() {
-//    	var cloned = clone(scope.currentDatasource);
-//    	$.each(cloned.properties, function(prop, value) {
-//    		cloned.properties[prop] = value.value;
-//    	});
-//    	return cloned;
-//    }
+    function attachDefault(datasource) {
+    	if (!datasource.properties['maximumSize']) {
+    		datasource.properties['maximumSize'] = {value: 10};
+    	}
+    	
+    	if (!datasource.properties['minimumSize']) {
+    		datasource.properties['minimumSize'] = {value: 10};
+    	}
+    	return datasource;
+    }
+
+    function transform(datasource) {
+    	for (var prop in datasource.properties) {
+    		datasource.properties[prop]['name'] = prop;
+    	}
+    	return datasource;
+    }
     
     scope.save = function() {
     	var tagOps = [];
@@ -153,7 +163,7 @@ hermes_storage.run(function(editableOptions) {
 		}
     	
     	if (scope.currentDatasource.onCreate) {
-        	StorageService.add_datasource(scope.currentDatasource, scope.storageType, function(){
+        	StorageService.add_datasource(transform(scope.currentDatasource), scope.storageType, function(){
         		// Remove flag for on creating datasource.
         		delete scope.currentDatasource.onCreate;
         		
@@ -179,7 +189,7 @@ hermes_storage.run(function(editableOptions) {
 //        			.append($('<td>').text($scope.currentDatasource.id));
         	});
     	} else {
-    		StorageService.update_datasource(scope.storageType, scope.currentDatasource.id, scope.currentDatasource, function() {
+    		StorageService.update_datasource(scope.storageType, scope.currentDatasource.id, transform(scope.currentDatasource), function() {
     			promiseChain.newBorn()
 				.add(tagOps, true)
 				.add({

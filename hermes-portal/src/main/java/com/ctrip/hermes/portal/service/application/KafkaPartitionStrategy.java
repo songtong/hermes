@@ -8,8 +8,8 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.meta.entity.Property;
-import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.application.TopicApplication;
+import com.ctrip.hermes.portal.topic.TopicView;
 
 @Named(type=PartitionStrategy.class, value="kafka")
 public class KafkaPartitionStrategy extends PartitionStrategy {
@@ -35,8 +35,8 @@ public class KafkaPartitionStrategy extends PartitionStrategy {
 	}
 
 	@Override
-	protected Pair<String, String> getDefaultDatasource(TopicApplication application) {
-		return Pair.from(DEFAULT_READ_DATASOURCE, DEFAULT_WRITE_DATASOURCE);
+	protected StrategyDatasource getDefaultDatasource(TopicApplication application) {
+		return StrategyDatasource.newInstance(Pair.from(DEFAULT_READ_DATASOURCE, DEFAULT_WRITE_DATASOURCE));
 	}
 
 }

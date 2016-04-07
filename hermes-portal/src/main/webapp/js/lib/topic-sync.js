@@ -72,23 +72,38 @@ module.service('TopicSync', ['$resource', '$q', 'config', function($resource, $q
 		}
 	});
 	
+	// Define tag resource.
+	var tagResource = $resource('/api/tags', {}, {
+		'getTags': {
+			url: 'http://:domain/api/tags',
+			method: 'GET'
+		},
+		'getDatasourcesTags': {
+			url: 'http://:domain/api/tags/datasources',
+			method: 'GET'
+		}
+	}); 
+	
 	var wrapFunc = function(func, isGet) {
 		return function() {
 			var deferred = $q.defer();
-			if (arguments.length < 2) {
-				throw new Error('Variables [env, data] are required!');
+			if (arguments.length < 1) {
+				throw new Error('Variables [env] is required!');
 			}
 
 			var domains = config.getConfig('domains');
 			var params = [{
 				domain: domains[arguments[0]]
 			}];
-			if (isGet) {
-				$.extend(params[0], arguments[1]);
-			} else {
-				params[0]['data'] = arguments[1];
+			
+			if (arguments[1]) {
+				if (isGet) {
+					$.extend(params[0], arguments[1]);
+				} else {
+					params[0]['data'] = arguments[1];
+				}
 			}
-			console.log(params);
+
 			params.push(function(result) {
 				deferred.resolve(result);
 			});
@@ -108,4 +123,6 @@ module.service('TopicSync', ['$resource', '$q', 'config', function($resource, $q
 	this.getStorage = wrapFunc(storageResource.getStorage, true);
 	this.addConsumer = wrapFunc(syncResource.addConsumer);
 	this.getConsumers = wrapFunc(syncResource.getConsumers, true);
+	this.getTags = wrapFunc(tagResource.getTags, true);
+	this.getDatasourcesTags = wrapFunc(tagResource.getDatasourcesTags, true);
 }]);

@@ -12,8 +12,9 @@ import org.unidal.lookup.ContainerLoader;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.application.TopicApplication;
+import com.ctrip.hermes.portal.dal.tag.Tag;
+import com.ctrip.hermes.portal.topic.TopicView;
 
 public abstract class PartitionStrategy {
 	private static final Logger log = LoggerFactory.getLogger(PartitionStrategy.class);
@@ -36,6 +37,49 @@ public abstract class PartitionStrategy {
 		 return strategies.get(storageType);
 	}
 	
+	static class StrategyDatasource {
+		private Pair<String, String> datasource;
+		private List<Tag> tags = null;
+		
+		public static StrategyDatasource newInstance(Pair<String, String> datasource) {
+			StrategyDatasource strategyDatasource = new StrategyDatasource();
+			strategyDatasource.setDatasource(datasource);
+			return strategyDatasource;
+		}
+		
+		public static StrategyDatasource newInstance(Pair<String, String> datasource, List<Tag> tags) {
+			StrategyDatasource strategyDatasource = StrategyDatasource.newInstance(datasource);
+			strategyDatasource.setTags(tags);
+			return strategyDatasource;
+		}
+		
+		private StrategyDatasource() {}
+		
+		public Pair<String, String> getDatasource() {
+			return datasource;
+		}
+		
+		public void setDatasource(Pair<String, String> datasource) {
+			this.datasource = datasource;
+		}
+		
+		public List<Tag> getTags() {
+			return tags;
+		}
+		
+		public void setTags(List<Tag> tags) {
+			this.tags = tags;
+		}
+		
+		public void addTag(Tag tag) {
+			if (this.tags == null) {
+				this.tags = new ArrayList<Tag>();
+			}
+			
+			this.tags.add(tag);
+		}
+	}
+	
 	public TopicView apply(TopicApplication application) {
 		TopicView topicView = new TopicView();
 		applyStrategy(application, topicView);
@@ -43,7 +87,7 @@ public abstract class PartitionStrategy {
 		return topicView;
 	}
 	
-	protected abstract Pair<String, String> getDefaultDatasource(TopicApplication application) throws DalException;
+	protected abstract StrategyDatasource getDefaultDatasource(TopicApplication application) throws DalException;
 	
 	protected void applyStrategy(TopicApplication application, TopicView topicView) {
 		int partitionCount = 1;
@@ -55,18 +99,21 @@ public abstract class PartitionStrategy {
 			partitionCount = 5;
 		}
 		
-		Pair<String, String> defaultDatasources;
+		StrategyDatasource strategyDatasource;
 		try {
-			defaultDatasources = getDefaultDatasource(application);
+			strategyDatasource = getDefaultDatasource(application);
 		} catch (DalException e) {
 			log.error("Exception encountered when retrieving default datasource", e);
 			throw new RuntimeException(e);
 		}
+		
+		topicView.setTags(strategyDatasource.getTags());
+		
 		List<Partition> topicPartitions = new ArrayList<Partition>();
 		for (int i = 0; i < partitionCount; i++) {
 			Partition p = new Partition();
-			p.setReadDatasource(defaultDatasources.getKey());
-			p.setWriteDatasource(defaultDatasources.getValue());
+			p.setReadDatasource(strategyDatasource.getDatasource().getKey());
+			p.setWriteDatasource(strategyDatasource.getDatasource().getValue());
 			topicPartitions.add(p);
 		}
 		topicView.setPartitions(topicPartitions);

@@ -140,7 +140,7 @@ application_module.config(function($routeProvider) {
 		}
 	});
 	
-	consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
+	var consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
 		add_consumer : {
 			method : 'POST',
 			url : '/api/consumers/'

@@ -1,4 +1,4 @@
-application_module.controller('app-approval-detail-controller', [ '$scope', '$routeParams', '$resource', 'ApplicationService', '$location', '$window', '$q', '$filter', 'watcher', 'TopicSync', 'clone', 'cache', 'promiseChain', 'user', function($scope, $routeParams, $resource, ApplicationService, $location, $window, $q, $filter, watcher, TopicSync, clone, cache, promiseChain, user) {
+application_module.controller('app-approval-detail-controller', [ '$scope', '$routeParams', '$resource', 'ApplicationService', '$location', '$window', '$q', '$filter', '$resource', 'watcher', 'TopicSync', 'clone', 'cache', 'promiseChain', 'user', function($scope, $routeParams, $resource, ApplicationService, $location, $window, $q, $filter, $resource, watcher, TopicSync, clone, cache, promiseChain, user) {
 	// Default options.
 	$scope.env = 'fws';
 	$scope.storageTypes = [ 'mysql', 'kafka' ];
@@ -9,6 +9,11 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.datasources = {};
 	$scope.comment = "";
 	$scope.envInvolved = [];
+	
+	$scope.tags = {};
+	$scope.datasourcesTags = {};
+	$scope.selectedTags = {};
+	$scope.datasourceCandidate = {};
 
 	// Use promise chain to fetch application.
 	promiseChain.add({
@@ -103,6 +108,44 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 		
 		console.log($scope.application.comment);
 	}
+	
+	$scope.updateSelection = function() {
+		var selectionResult = {};
+		var selectedTags = $scope.selectedTags[$scope.env];
+		var datasourcesTags = $scope.datasourcesTags[$scope.env];
+		
+		for (var group in selectedTags) {
+			// Ignore the case the selection is useless.
+			if (!selectedTags[group]) {
+				return;
+			}
+			
+			// Selected tag on one tag group.
+			var tagId = selectedTags[group].id;
+
+			// Check whether having datasource attached to this tag.
+			for (var ds in datasourcesTags) {
+				datasourcesTags[ds].forEach(function(tag, index){
+					if (tag.id == tagId) {
+						if (!selectionResult[ds]) {
+							selectionResult[ds] = 0;
+						}
+						selectionResult[ds]++;
+					}
+				});
+			}
+		}
+		
+		var max = 0;
+		var datasource = null;
+		for (var ds in selectionResult) {
+			if (selectionResult[ds] > max) {
+				datasource = ds;
+			}
+		}
+		
+		$scope.datasourceCandidate[$scope.env] = datasource? datasource: 'No Eligible';
+	};
 
 	$scope.createTopic = function() {
 		// Records the env in case it changes.
@@ -244,6 +287,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 				}
 			},
 			handlers: [function() {
+				console.log($scope.tags);
 				$scope.$broadcast('progress-done', 'modalProgressBar', function(){
 					$('#topicInfoModal').one('hidden.bs.modal', function(){
 						if ($scope.envInvolved.length > 0) {
@@ -302,6 +346,15 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 					success: function(result){
 						$scope.views[env] = result['value'];
 						
+						for (var index in result['value'].tags) {
+							var tag = result['value']['tags'][index];
+							$scope.selectedTags[env] = {};
+							$scope.selectedTags[env][tag.group] = tag;
+						}
+
+						// Set candicate datasource for specific env.
+						$scope.datasourceCandidate[env] = result['value'].partitions[0].readDatasource;
+						
 						// Same as above.
 						if (env == $scope.env) {
 							$scope.view = $scope.views[env];
@@ -309,7 +362,24 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 						$scope.$broadcast('progress', 'modalProgressBar', 'Fetched generated view on env: ' + env);
 						finishWatcher.step();
 					}
+				}).add({
+					func: TopicSync.getTags,
+					args: [env],
+					success: function(result) {
+						$scope.tags[env] = result.data[0];
+						console.log($scope.tags);
+						// Keep one selection position for each tag group.
+						//$scope.selectedTags = new Array(Object.keys($scope.tags).length);
+					}
+				}).add({
+					func: TopicSync.getDatasourcesTags,
+					args: [env],
+					success: function(result) {
+						$scope.datasourcesTags[env] = result.data[0];
+						
+					}
 				}).finish();
+				
 			} else {
 				var consumerName = $scope.application.productLine + '.' + $scope.application.product + '.' + $scope.application.project;
 				var topicNames = $scope.application.topicName.split(',');

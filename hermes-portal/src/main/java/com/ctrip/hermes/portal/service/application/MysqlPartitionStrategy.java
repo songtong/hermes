@@ -1,5 +1,6 @@
 package com.ctrip.hermes.portal.service.application;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -14,7 +15,6 @@ import com.ctrip.hermes.metaservice.dal.CachedDatasourceDao;
 import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
 import com.ctrip.hermes.metaservice.model.Partition;
 import com.ctrip.hermes.metaservice.model.PartitionEntity;
-import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTag;
 import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagDao;
@@ -22,6 +22,7 @@ import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagEntity;
 import com.ctrip.hermes.portal.dal.tag.CachedTagDao;
 import com.ctrip.hermes.portal.dal.tag.Tag;
 import com.ctrip.hermes.portal.dal.tag.TagEntity;
+import com.ctrip.hermes.portal.topic.TopicView;
 
 @Named(type=PartitionStrategy.class, value="mysql")
 public class MysqlPartitionStrategy extends PartitionStrategy {
@@ -49,8 +50,10 @@ public class MysqlPartitionStrategy extends PartitionStrategy {
 	}
 
 	@Override
-	protected Pair<String, String> getDefaultDatasource(TopicApplication application) throws DalException {
+	protected StrategyDatasource getDefaultDatasource(TopicApplication application) throws DalException {
 		Tag tag = null;
+		List<Tag> tags = new ArrayList<Tag>();
+		
 		try {
 			tag = m_tagDao.findByNameGroup(application.getProductLine(), DEFAULT_TAG_GROUP, TagEntity.READSET_FULL);
 		} catch (DalNotFoundException e) {
@@ -75,7 +78,8 @@ public class MysqlPartitionStrategy extends PartitionStrategy {
 		
 		if (datasourcesTags == null || datasourcesTags.size() == 0) {
 			if (tag != defaultTag) {
-				datasourcesTags = m_datasourceTagDao.findByTag(defaultTag.getId(), DatasourceTagEntity.READSET_FULL);
+				tag = defaultTag;
+				datasourcesTags = m_datasourceTagDao.findByTag(tag.getId(), DatasourceTagEntity.READSET_FULL);
 				
 				if (datasourcesTags == null || datasourcesTags.size() == 0) {
 					throw new RuntimeException(String.format("Default tag on group %s can NOT find any mapping datasource!", DEFAULT_TAG_GROUP));
@@ -83,21 +87,26 @@ public class MysqlPartitionStrategy extends PartitionStrategy {
 			}
 		}
 		
+		// Add the tag used for strategy.
+		tags.add(tag);
+		
 		if (datasourcesTags.size() == 1) {
-			return Pair.from(datasourcesTags.get(0).getDatasourceId(), datasourcesTags.get(0).getDatasourceId());
+			return StrategyDatasource.newInstance(Pair.from(datasourcesTags.get(0).getDatasourceId(), datasourcesTags.get(0).getDatasourceId()), tags);
 		}
 		
-		int partitionsCount = -1;
+		int partitionsCount = Integer.MAX_VALUE;
 		String datasource = null;
+		
+		// Select datasource that having less partitions count.
 		for (DatasourceTag datasourceTag : datasourcesTags) {
 			Partition p = m_partitionDao.countByDatasource(datasourceTag.getDatasourceId(), PartitionEntity.READSET_COUNT);
-			if (p.getCount() > partitionsCount) {
+			if (p.getCount() < partitionsCount) {
 				partitionsCount = p.getCount();
 				datasource = datasourceTag.getDatasourceId();
 			}
 		}
 		
-		return Pair.from(datasource, datasource);
+		return StrategyDatasource.newInstance(Pair.from(datasource, datasource), tags);
 	}
 
 }

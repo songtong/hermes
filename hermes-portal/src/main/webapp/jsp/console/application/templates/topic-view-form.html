@@ -111,7 +111,27 @@
 									</div>
 								</div>
 								<div>
-									<label class="label label-default">Partition 信息</label>
+									<label class="label label-warning" ng-if="!view.id && view.storageType=='mysql'">当前策略</label>
+									<div class="well form-horizontal" style="padding-left: 5px; padding-right: 5px;" ng-if="!view.id && view.storageType=='mysql'">
+										<div class="form-group" ng-if="tags[env]" ng-repeat="(group, groupTags) in tags[env]">
+											<label class="col-md-4 control-label">{{group}}</label>
+											<div class="col-md-6">
+												<select class="form-control" ng-model="selectedTags[env][group]" ng-options="tag.name for tag in groupTags track by tag.id" ng-change="updateSelection()">
+													<option value="">  ----  </option>
+												</select>
+											</div>
+										</div>
+										<div class="form-group" style="margin-bottom: 0px;">
+											<label class="col-md-2 control-label">&nbsp;</label>
+											<div class="col-md-8">
+												<div class="alert alert-info" style="margin-bottom: 0px;">
+												<span class="label label-primary">Candicate: <span class="badge">{{datasourceCandidate[env]}}</span></span>
+												</div>
+											</div>
+										</div>
+									</div>
+									
+									<label class="label label-success">Partition 信息</label>
 									<button ng-click="addPartition()" class="btn btn-xs btn-success" style="float: right;">
 										<span class="glyphicon glyphicon-plus"></span> 增加 Partition
 									</button>
