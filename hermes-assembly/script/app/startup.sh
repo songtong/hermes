@@ -7,6 +7,7 @@ cd `dirname $0`
 BIN_DIR=`pwd`
 APP_DIR=`dirname $BIN_DIR`
 CONTEXT_DIR=$APP_DIR/context
+TOMCAT_DIR=$BIN_DIR/../tomcat
 
 
 if [ $# -lt 1 ];then
@@ -22,8 +23,6 @@ JAVA_OPTS=""
 . "./common.sh"
 
 SERVER_HOME=..
-JETTY_RUNNER_JAR=$(ls ../jetty/jetty-runner*.jar)
-JETTY_START_JAR=$(ls ../jetty/jetty-start*.jar)
 WAR=$(ls ../*.war)
 STOP_KEY=hermes4EVER
 DEBUG_OPT="-Xdebug -agentlib:jdwp=transport=dt_socket,address=8787,server=y,suspend=n"
@@ -69,7 +68,7 @@ if [[ $1=="start" ]]; then
 		fi
 		if [ $port -lt 1024 ];then
 			if [ $can_sudo == false ];then
-				log_op "[ERROR] Attemp to start jetty at port $port but without passwordless sudo"
+				log_op "[ERROR] Attemp to start tomcat at port $port but without passwordless sudo"
 				exit 1
 			fi
 			sudo="sudo"
@@ -95,11 +94,12 @@ backup_sysout_log(){
 		if [ ! -d "${ARCH_DIR}" ]; then
 			mkdir "${ARCH_DIR}"
 		fi
+		thissudo=""
 		if [ $can_sudo == true ];then
-    		sudo="sudo"
+    		thissudo="sudo"
     	fi
 
-		$sudo mv $SYSOUT_LOG.$SUFFIX $ARCH_DIR
+		$thissudo mv $SYSOUT_LOG.$SUFFIX $ARCH_DIR
 	fi
 	set -e
 }
@@ -111,7 +111,7 @@ start() {
     fi
     log_op $(pwd)
     backup_sysout_log
-    BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -jar $JETTY_RUNNER_JAR --port $port --stop-port $STOP_PORT --stop-key $STOP_KEY $CONTEXT_DIR > $SYSOUT_LOG 2>&1 &
+    BUILD_ID=jenkinsDontKillMe $sudo nohup $JAVA_CMD ${JAVA_OPTS} -DshutdownPort=$STOP_PORT -DshutdownString=$STOP_KEY -classpath "$TOMCAT_DIR/*" com.ctrip.hermes.tomcat.HermesTomcat $CONTEXT_DIR $port > $SYSOUT_LOG 2>&1 &
     log_op "PID $$"
     log_op "Instance Started!"
 }
@@ -127,7 +127,7 @@ stop(){
     	fi
     	echo "Stop port is $STOP_PORT"
     	set +e
-    	$sudo $JAVA_CMD -DSTOP.PORT=$STOP_PORT -DSTOP.KEY=$STOP_KEY -jar $JETTY_START_JAR --stop
+    	$sudo echo $STOP_KEY | nc 127.0.0.1 $STOP_PORT
     	stop_success=$?
     	set -e
     	if [[ ! $stop_success == 0 ]]; then
@@ -178,7 +178,7 @@ ensure_not_started() {
 }
 
 find_pid() {
-	echo $(ps ax | grep java | awk -v war=$CONTEXT_DIR '$NF==war{print $1}' | head -n1)
+	echo $(ps ax | grep java | awk -v war=$CONTEXT_DIR '$(NF-1)==war{print $1}' | head -n1)
 }
 
 
