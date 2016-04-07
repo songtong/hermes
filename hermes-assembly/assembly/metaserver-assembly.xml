@@ -34,12 +34,21 @@
 			</includes>
 			<fileMode>0444</fileMode>
 		</fileSet>
-		<!--jetty runner-->
+		<!--tomcat-->
 		<fileSet>
-			<directory>${project.basedir}/target/jetty</directory>
-			<outputDirectory>/jetty</outputDirectory>
+			<directory>${project.basedir}/target/tomcat</directory>
+			<outputDirectory>/tomcat</outputDirectory>
 			<includes>
 				<include>*</include>
+			</includes>
+			<fileMode>0444</fileMode>
+		</fileSet>
+		<!--Hermes Tomcat Starter-->
+		<fileSet>
+			<directory>${project.basedir}/target</directory>
+			<outputDirectory>/tomcat</outputDirectory>
+			<includes>
+				<include>hermes-assembly-*.jar</include>
 			</includes>
 			<fileMode>0444</fileMode>
 		</fileSet>
