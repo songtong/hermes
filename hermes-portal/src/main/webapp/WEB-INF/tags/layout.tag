@@ -39,9 +39,12 @@
 	try {
 		java.util.Map ssoInfo = (java.util.Map) org.jasig.cas.client.util.AssertionHolder.getAssertion()
 				.getPrincipal().getAttributes();
+		
 		ssoUser = (String) ssoInfo.get("sn");
 		ssoMail = (String) ssoInfo.get("mail");
 		ssoTip = String.format("%s(%s)", ssoUser, ssoMail);
+		
+		request.setAttribute("isAdmin", ssoInfo.get("admin"));
 		
 		if (ssoInfo != null) {
 			org.codehaus.jackson.map.ObjectMapper mapper = new org.codehaus.jackson.map.ObjectMapper();
@@ -50,6 +53,7 @@
 	} catch (Exception e) {
 	}
 %>
+
 <script type="text/javascript">
 	var contextpath = "${model.webapp}";
 	var environment = "${navBar.environment}";
@@ -85,9 +89,9 @@
 
 				<div class="collapse navbar-collapse">
 					<ul class="nav navbar-nav">
-						<c:forEach var="page" items="${requestScope.logined ? navBar.allPages : navBar.basePages}">
+						<c:forEach var="page" items="${requestScope.isAdmin? navBar.allPages : navBar.basePages}">
 							<c:if test="${page.name == 'topic' }">
-								<li ${model.page.name == page.name ? 'class="active"' : ''}><a href="${model.webapp}/${page.moduleName}/${page.path}#/list/mysql">${page.title}</a></li>
+								<li ${model.page.name == page.name ? 'class="active"' : ''}><a href="${model.webapp}/${page.moduleName}/${page.path}#/list/mysql">${page.title}${ssoUser}</a></li>
 							</c:if>
 							<c:if test="${page.name == 'dashboard' }">
 								<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">${page.title} <span class="caret"></span></a>
@@ -103,7 +107,7 @@
 									<ul class="dropdown-menu">
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/topic">Topic</a></li>
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/consumer">ConsumerGroup</a></li>
-										<c:if test="${requestScope.logined}">
+										<c:if test="${requestScope.isAdmin}">
 											<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/approval/list">Examination & Approval</a></li>
 										</c:if>
 									</ul></li>
@@ -165,7 +169,7 @@
 	<script type="text/javascript">
 		var ssoUser = '<%=ssoUser%>';
 		var ssoMail = '<%=ssoMail%>';
-		var isAdmin = <%=session.getAttribute("admin")%>;
+		var isAdmin = <%=request.getAttribute("isAdmin")%>;
 		
 		angular.module('user', []).constant('user', <%=userInfo%>);
 	</script>

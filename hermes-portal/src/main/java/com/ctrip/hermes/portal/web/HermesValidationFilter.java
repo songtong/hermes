@@ -53,6 +53,7 @@ public class HermesValidationFilter implements Filter {
 				subject = SecurityUtils.getSubject();
 			}
 			isAdmin = subject.hasRole("admin");
+			AssertionHolder.getAssertion().getPrincipal().getAttributes().put("admin", isAdmin);
 			Cat.logEvent("Hermes.Portal.User", user);
 		}
 		
