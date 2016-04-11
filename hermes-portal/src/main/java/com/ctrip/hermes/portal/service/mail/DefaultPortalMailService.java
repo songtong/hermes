@@ -266,4 +266,18 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		sendEmail(title, address, PortalConstants.UPLOAD_SCHEMA_EMAIL_TEMPLATE, contentMap);
 
 	}
+	
+	@Override
+	public void sendCreateTopicFromCatMail(com.ctrip.hermes.metaservice.model.Topic topic) {
+		String environment = m_env.getEnv().name();
+		String title = String.format("[Hermes new topic]名称：%s, 环境：%s", topic.getName(), environment);
+		String address = m_config.getHermesEmailGroupAddress();
+
+		Map<String, Object> contentMap = new HashMap<>();
+		contentMap.put("topic", topic);
+		contentMap.put("environment", environment);
+
+		sendEmail(title, address, PortalConstants.CREATE_TOPIC_FROM_CAT_EMAIL_TEMPLATE, contentMap);
+
+	}
 }

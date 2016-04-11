@@ -1,0 +1,48 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+	<table border="0" cellpadding="0" cellspacing="0" width="100%">
+		<tr>
+			<td><table align="center" cellpadding="0" cellspacing="0" width="650" style="border: 1px solid #cccccc; border-collapse: collapse;">
+					<#if topic??>
+					<tr>
+						<td style="padding: 0px 30px 10px 30px;">
+							<table cellpadding="0" cellspacing="0">
+								<thead>
+									<tr>
+										<td style="padding: 10px 0px 10px 0px; color: #153643; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px;"><b>Topic信息：</b></td>
+									</tr>
+								</thead>
+								<tbody style="color: #153643; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px;">
+									<tr>
+										<td>Topic名称：</td>
+										<td>${topic.name}</td>
+									</tr>
+									<tr>
+										<td>存储类型：</td>
+										<td>${topic.storageType}</td>
+									</tr>
+									<tr>
+										<td>编码类型：</td>
+										<td>${topic.codecType}</td>
+									</tr>
+									<tr>
+										<td>Endpoint：</td>
+										<td>${topic.endpointType}</td>
+									</tr>
+									<tr>
+										<td>环境：</td>
+										<td>${environment}</td>
+									</tr>
+								</tbody>
+							</table>
+						</td>
+					</tr>
+					</#if>
+				</table></td>
+		</tr>
+	</table>
+</body>
+</html>
