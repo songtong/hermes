@@ -29,7 +29,6 @@ import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.config.PortalConstants;
-import com.ctrip.hermes.portal.dal.application.Application;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -89,15 +88,15 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 	}
 
 	@Override
-	public void sendApplicationMail(Application app) {
+	public void sendApplicationMail(HermesApplication app) {
 		switch (app.getType()) {
 		case PortalConstants.APP_TYPE_CREATE_TOPIC:
-			TopicApplication topicApp = (TopicApplication) HermesApplication.parse(app);
+			TopicApplication topicApp = (TopicApplication) app;
 			sendCreateTopicMailToProposer(topicApp);
 			sendCreateTopicMailToAdmin(topicApp);
 			break;
 		case PortalConstants.APP_TYPE_CREATE_CONSUMER:
-			ConsumerApplication consumerApp = (ConsumerApplication) HermesApplication.parse(app);
+			ConsumerApplication consumerApp = (ConsumerApplication) app;
 			sendCreateConsumerMailToProposer(consumerApp);
 			sendCreateConsumerMailToAdmin(consumerApp);
 			break;

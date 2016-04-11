@@ -251,7 +251,7 @@ public class TopicService {
 			Topic entity = ModelToEntityConverter.convert(model);
 			return fillTopicEntity(entity);
 		} catch (DalException e) {
-			m_logger.warn("findTopicById failed", e);
+			m_logger.debug("findTopicById failed", e);
 		}
 		return null;
 	}
@@ -262,7 +262,7 @@ public class TopicService {
 			Topic topicEntity = ModelToEntityConverter.convert(model);
 			return fillTopicEntity(topicEntity);
 		} catch (DalException e) {
-			m_logger.warn("findTopicByName failed, name: " + topic, e);
+			m_logger.debug("findTopicByName failed, name: " + topic, e);
 		}
 		return null;
 	}
@@ -273,7 +273,7 @@ public class TopicService {
 			TopicView topicView = ModelToViewConverter.convert(topicModel);
 			return fillTopicView(topicView);
 		} catch (Exception e) {
-			m_logger.warn("findTopicViewByName failed, name: " + topicName, e);
+			m_logger.debug("findTopicViewByName failed, name: " + topicName, e);
 		}
 		return null;
 	}
