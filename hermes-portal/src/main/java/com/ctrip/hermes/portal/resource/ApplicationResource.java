@@ -90,7 +90,7 @@ public class ApplicationResource {
 		}
 
 		try {
-			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(topicApplication));
+			m_mailService.sendApplicationMail(topicApplication);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", topicApplication.getId(), e);
 		}
@@ -130,7 +130,7 @@ public class ApplicationResource {
 		}
 		
 		try {
-			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(app));
+			m_mailService.sendApplicationMail(app);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", app.getId(), e);
 		}
@@ -307,7 +307,7 @@ public class ApplicationResource {
 		}
 		
 		try {
-			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(app));
+			m_mailService.sendApplicationMail(app);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", app.getId(), e);
 		}
@@ -327,7 +327,7 @@ public class ApplicationResource {
 		}
 		
 		try {
-			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(app));
+			m_mailService.sendApplicationMail(app);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", app.getId(), e);
 		}
@@ -348,7 +348,7 @@ public class ApplicationResource {
 		}
 		
 		try {
-			m_mailService.sendApplicationMail(HermesApplication.toDBEntity(app));
+			m_mailService.sendApplicationMail(app);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", app.getId(), e);
 		}
