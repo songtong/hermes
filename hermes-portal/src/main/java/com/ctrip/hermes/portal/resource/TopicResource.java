@@ -119,14 +119,15 @@ public class TopicResource {
 			log.error("Create topic failed: {}.", content, e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
-		
-		if (topicView.getName().startsWith("fx.cat.log"))
+
+		if (topicView.getName().startsWith("fx.cat.log")) {
 			try {
 				m_mailService.sendCreateTopicFromCatMail(ViewToModelConverter.convert(topicView));
 			} catch (Exception e) {
 				log.warn("Send email of create topic({}) from cat failed.", topicView.getName(), e);
 			}
-		
+		}
+
 		return Response.status(Status.CREATED).entity(topicView).build();
 	}
 
