@@ -34,5 +34,7 @@ public class PortalConstants {
 	public static final String APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_ADMIN = "createConsumerApplicationMailTemplateForAdmin.html";
 	
 	public static final String UPLOAD_SCHEMA_EMAIL_TEMPLATE = "uploadSchemaMailTemplate.html";
+	
+	public static final String CREATE_TOPIC_FROM_CAT_EMAIL_TEMPLATE = "createTopicFromCatMailTemplate.html";
 
 }

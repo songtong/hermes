@@ -30,12 +30,14 @@ import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.metaservice.converter.ViewToModelConverter;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.view.SchemaView;
 import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.dashboard.DashboardService;
+import com.ctrip.hermes.portal.service.mail.PortalMailService;
 import com.ctrip.hermes.producer.api.Producer;
 
 @Path("/topics/")
@@ -49,6 +51,8 @@ public class TopicResource {
 	private SchemaService schemaService = PlexusComponentLocator.lookup(SchemaService.class);
 
 	private DashboardService monitorService = PlexusComponentLocator.lookup(DashboardService.class);
+
+	private PortalMailService m_mailService = PlexusComponentLocator.lookup(PortalMailService.class);
 
 	static Pair<Boolean, ?> validateTopicView(TopicView topic) {
 		boolean passed = true;
@@ -115,6 +119,15 @@ public class TopicResource {
 			log.error("Create topic failed: {}.", content, e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
+
+		if (topicView.getName().startsWith("fx.cat.log")) {
+			try {
+				m_mailService.sendCreateTopicFromCatMail(ViewToModelConverter.convert(topicView));
+			} catch (Exception e) {
+				log.warn("Send email of create topic({}) from cat failed.", topicView.getName(), e);
+			}
+		}
+
 		return Response.status(Status.CREATED).entity(topicView).build();
 	}
 
