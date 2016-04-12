@@ -118,7 +118,7 @@ public class ConsumerService {
 		return entities;
 	}
 
-	public ConsumerGroupView findConsumerView(Long topicId, String consumer) throws DalException {
+	public ConsumerGroupView findConsumerView(Long topicId, String consumer) {
 		try {
 			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroup = m_consumerGroupDao
 					.findByTopicIdAndName(topicId, consumer, ConsumerGroupEntity.READSET_FULL);

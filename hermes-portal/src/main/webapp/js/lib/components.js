@@ -462,6 +462,7 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 			$scope.$watch(function(){
 				return ctrl.tableState().pagination;
 			}, function(){
+				console.log('watched');
 				$scope.pagination = ctrl.tableState().pagination;
 				if ($scope.pagination.numOfPages == 0) {
 					$scope.currentPage = 0;
@@ -470,9 +471,14 @@ module.directive('progressbarX', ['$interval', 'logger', function($interval, log
 				}
 				
 				$scope.$watch('pagination.start', function(newValue, oldValue) {
-					console.log($scope.pagination.numberOfPages);
-					if (newValue == 0 && $scope.pagination.numberOfPages == 0) {
-						$scope.currentPage = 0;
+					console.log('pagination' + newValue);
+					console.log($scope.pagination);
+					if (newValue == 0) {
+						if ($scope.pagination.numberOfPages == 0) {
+							$scope.currentPage = 0;
+						} else {
+							$scope.currentPage = 1;
+						}
 					}
 				});
 			});

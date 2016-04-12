@@ -1,6 +1,9 @@
 package com.ctrip.hermes.portal.web;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -13,14 +16,22 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.config.IniSecurityManagerFactory;
+import org.apache.shiro.mgt.RealmSecurityManager;
+import org.apache.shiro.realm.Realm;
+import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.session.ExpiredSessionException;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.Factory;
 import org.apache.shiro.util.ThreadContext;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jasig.cas.client.util.AssertionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.datasource.DataSource;
+import org.unidal.dal.jdbc.datasource.DataSourceManager;
+import org.unidal.dal.jdbc.datasource.JdbcDataSource;
+import org.unidal.lookup.ContainerLoader;
 
 import com.dianping.cat.Cat;
 
@@ -34,7 +45,23 @@ public class HermesValidationFilter implements Filter {
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 		Factory<org.apache.shiro.mgt.SecurityManager> factory = new IniSecurityManagerFactory("classpath:shiro.ini");
-		SecurityUtils.setSecurityManager(factory.getInstance());
+		RealmSecurityManager manager = (RealmSecurityManager)factory.getInstance();
+		
+		JdbcRealm realm = new JdbcRealm();
+		DataSourceManager dsManager;
+		try {
+			dsManager = ContainerLoader.getDefaultContainer().lookup(DataSourceManager.class);
+			DataSource datasource = dsManager.getDataSource("fxhermesmetadb");
+			Field field = JdbcDataSource.class.getDeclaredField("m_cpds");
+			field.setAccessible(true);
+			realm.setDataSource((javax.sql.DataSource)field.get(datasource));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		manager.setRealm(realm);
+		
+		SecurityUtils.setSecurityManager(manager);
 	}
 
 	@Override
