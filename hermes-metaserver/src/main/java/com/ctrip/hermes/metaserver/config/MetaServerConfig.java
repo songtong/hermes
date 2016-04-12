@@ -82,7 +82,7 @@ public class MetaServerConfig {
 	}
 
 	public int getProxyPassReadTimeout() {
-		return 5000;
+		return 3000;
 	}
 
 	public String getBrokerRegistryBasePath() {
