@@ -36,6 +36,8 @@ public class ConsumerConfig implements Initializable {
 
 	private static final int DEFAULT_NO_MESSAGE_WAIT_MAX_MILLIS = 10;
 
+	private static final int DEFAULT_ACK_COMMAND_MAX_SIZE = 5000;
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -51,6 +53,8 @@ public class ConsumerConfig implements Initializable {
 	private int m_noMessageWaitBaseMillis = DEFAULT_NO_MESSAGE_WAIT_BASE_MILLIS;
 
 	private int m_noMessageWaitMaxMillis = DEFAULT_NO_MESSAGE_WAIT_MAX_MILLIS;
+
+	private int m_ackCommandMaxSize = DEFAULT_ACK_COMMAND_MAX_SIZE;
 
 	public int getLocalCacheSize(String topic) throws IOException {
 		String localCacheSizeStr = m_env.getConsumerConfig(topic).getProperty("consumer.localcache.size");
@@ -151,6 +155,11 @@ public class ConsumerConfig implements Initializable {
 		if (StringUtils.isNumeric(noMessageWaitMaxMillis)) {
 			m_noMessageWaitMaxMillis = Integer.valueOf(noMessageWaitMaxMillis);
 		}
+		
+		String maxAckCmdSize = m_env.getGlobalConfig().getProperty("consumer.ack.max.cmd.size");
+		if (StringUtils.isNumeric(maxAckCmdSize)) {
+			m_ackCommandMaxSize = Integer.valueOf(maxAckCmdSize);
+		}
 	}
 
 	public int getAckCheckerIntervalMillis() {
@@ -171,6 +180,10 @@ public class ConsumerConfig implements Initializable {
 			return Integer.valueOf(workQueueSizeStr);
 		}
 		return DEFAULT_NOTIFIER_WORK_QUEUE_SIZE;
+	}
+
+	public int getAckCommandMaxSize() {
+		return m_ackCommandMaxSize;
 	}
 
 }

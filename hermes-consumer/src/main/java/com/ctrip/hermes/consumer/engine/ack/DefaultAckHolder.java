@@ -66,9 +66,10 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 	}
 
 	@Override
-	public synchronized AckHolderScanningResult<T> scan() {
+	public synchronized AckHolderScanningResult<T> scan(int maxSize) {
 		AckHolderScanningResult<T> res = new AckHolderScanningResult<T>();
 
+		int count = 0;
 		while (!m_items.isEmpty()) {
 			Item<T> item = m_items.getFirst();
 			boolean addedToRes = false;
@@ -92,8 +93,13 @@ public class DefaultAckHolder<T> implements AckHolder<T> {
 			}
 
 			if (addedToRes) {
+				count++;
 				m_itemIndex.remove(item.getId());
 				m_items.removeFirst();
+			}
+
+			if (count >= maxSize) {
+				break;
 			}
 		}
 

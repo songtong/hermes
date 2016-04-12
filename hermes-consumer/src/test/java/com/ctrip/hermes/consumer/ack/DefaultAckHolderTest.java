@@ -39,7 +39,7 @@ public class DefaultAckHolderTest {
 			}
 		}
 
-		AckHolderScanningResult<String> res = ackHolder.scan();
+		AckHolderScanningResult<String> res = ackHolder.scan(10000);
 
 		List<String> acked = res.getAcked();
 		List<String> nacked = res.getNacked();
@@ -71,7 +71,7 @@ public class DefaultAckHolderTest {
 		ackHolder.nack(4, null);
 		ackHolder.nack(7, null);
 
-		AckHolderScanningResult<String> res = ackHolder.scan();
+		AckHolderScanningResult<String> res = ackHolder.scan(10000);
 		List<String> acked = res.getAcked();
 		List<String> nacked = res.getNacked();
 
@@ -102,7 +102,7 @@ public class DefaultAckHolderTest {
 		ackHolder.nack(4, null);
 		ackHolder.nack(7, null);
 
-		AckHolderScanningResult<String> res = ackHolder.scan();
+		AckHolderScanningResult<String> res = ackHolder.scan(10000);
 		List<String> acked = res.getAcked();
 		List<String> nacked = res.getNacked();
 

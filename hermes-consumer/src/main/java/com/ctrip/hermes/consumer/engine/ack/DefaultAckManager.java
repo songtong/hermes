@@ -330,9 +330,9 @@ public class DefaultAckManager implements AckManager {
 		private AckMessageCommandV3 scan() {
 			AckMessageCommandV3 cmd = null;
 
-			AckHolderScanningResult<AckContext> priorityScanningRes = m_priorityAckHolder.scan();
-			AckHolderScanningResult<AckContext> nonpriorityScanningRes = m_nonpriorityAckHolder.scan();
-			AckHolderScanningResult<AckContext> resendScanningRes = m_resendAckHolder.scan();
+			AckHolderScanningResult<AckContext> priorityScanningRes = m_priorityAckHolder.scan(m_config.getAckCommandMaxSize());
+			AckHolderScanningResult<AckContext> nonpriorityScanningRes = m_nonpriorityAckHolder.scan(m_config.getAckCommandMaxSize());
+			AckHolderScanningResult<AckContext> resendScanningRes = m_resendAckHolder.scan(m_config.getAckCommandMaxSize());
 
 			if (!priorityScanningRes.getAcked().isEmpty() //
 			      || !priorityScanningRes.getNacked().isEmpty() //
