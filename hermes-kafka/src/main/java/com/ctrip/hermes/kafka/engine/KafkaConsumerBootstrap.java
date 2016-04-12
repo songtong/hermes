@@ -152,17 +152,14 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			} finally {
 				m_logger.info("Closing kafka consumer with token: " + token);
 				Set<TopicPartition> assignment = consumer.assignment();
-				consumer.commitSync();
 				consumer.close();
 				m_logger.info("Closed assignment: " + assignment);
 			}
 		}
 
 		public void shutdown() {
-			Set<TopicPartition> assignment = consumer.assignment();
 			closed.set(true);
 			consumer.wakeup();
-			m_logger.info("Shutting down assignment: " + assignment);
 		}
 	}
 
