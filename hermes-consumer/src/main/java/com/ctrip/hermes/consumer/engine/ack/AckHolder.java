@@ -12,7 +12,7 @@ public interface AckHolder<T> {
 
 	public void nack(long id, NackCallback<T> callback);
 
-	public AckHolderScanningResult<T> scan();
+	public AckHolderScanningResult<T> scan(int maxSize);
 
 	public static interface NackCallback<T> {
 		public void doBeforeNack(T item);
