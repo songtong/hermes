@@ -48,6 +48,10 @@ import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 @Produces(MediaType.APPLICATION_JSON)
 public class LeaseResource {
 
+	private static final String HEADER_PROXY_KEY = "hmProxy";
+
+	private static final String HEADER_PROXY_VALUE = "true";
+
 	private static final Logger log = LoggerFactory.getLogger(LeaseResource.class);
 
 	private static final long NO_STRATEGY_DELAY_TIME_MILLIS = 20 * 1000L;
@@ -93,7 +97,7 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("host", getRemoteAddr(host, req));
 		try {
-			LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(tpg.getTopic(),
+			LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
 			      "/consumer/acquire", params, tpg);
 
 			if (leaseAcquireResponse == null) {
@@ -128,7 +132,7 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(tpg.getTopic(),
+			LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
 			      "/consumer/renew", params, tpg);
 			if (leaseAcquireResponse == null) {
 				ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
@@ -164,7 +168,8 @@ public class LeaseResource {
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
 		try {
-			LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary("/broker/acquire", params, null);
+			LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/acquire", params,
+			      null);
 
 			if (leaseAcquireResponse == null) {
 				return m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId, getRemoteAddr(host, req), port);
@@ -197,7 +202,8 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary("/broker/renew", params, null);
+			LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/renew", params,
+			      null);
 
 			if (leaseAcquireResponse == null) {
 				return m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId, getRemoteAddr(host, req),
@@ -210,17 +216,21 @@ public class LeaseResource {
 		}
 	}
 
-	private LeaseAcquireResponse proxyBrokerLeaseRequestIfNecessary(String uri, Map<String, String> params,
-	      Object payload) {
+	private LeaseAcquireResponse proxyBrokerLeaseRequestIfNecessary(HttpServletRequest req, String uri,
+	      Map<String, String> params, Object payload) {
 		if (m_clusterStateHolder.hasLeadership()) {
 			return null;
 		} else {
-			HostPort leader = m_clusterStateHolder.getLeader();
-			return proxyPass(leader.getHost(), leader.getPort(), uri, params, payload);
+			if (!isFromAnotherMetaServer(req)) {
+				HostPort leader = m_clusterStateHolder.getLeader();
+				return proxyPass(leader.getHost(), leader.getPort(), uri, params, payload);
+			} else {
+				return new LeaseAcquireResponse(false, null, m_systemClockService.now() + PROXY_PASS_FAIL_DELAY_TIME_MILLIS);
+			}
 		}
 	}
 
-	private LeaseAcquireResponse proxyConsumerLeaseRequestIfNecessary(String topic, String uri,
+	private LeaseAcquireResponse proxyConsumerLeaseRequestIfNecessary(HttpServletRequest req, String topic, String uri,
 	      Map<String, String> params, Object payload) {
 
 		Map<String, ClientContext> responsors = m_metaServerAssignmentHolder.getAssignment(topic);
@@ -232,12 +242,22 @@ public class LeaseResource {
 				      && m_config.getMetaServerPort() == responsor.getPort()) {
 					return null;
 				} else {
-					return proxyPass(responsor.getIp(), responsor.getPort(), uri, params, payload);
+					if (!isFromAnotherMetaServer(req)) {
+						return proxyPass(responsor.getIp(), responsor.getPort(), uri, params, payload);
+					} else {
+						return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+						      + PROXY_PASS_FAIL_DELAY_TIME_MILLIS);
+					}
 				}
 			}
 		}
 		return new LeaseAcquireResponse(false, null, m_systemClockService.now() + NO_ASSIGNMENT_DELAY_TIME_MILLIS);
 
+	}
+
+	private boolean isFromAnotherMetaServer(HttpServletRequest req) {
+		String proxyHeader = req.getHeader(HEADER_PROXY_KEY);
+		return StringUtils.equals(proxyHeader, HEADER_PROXY_VALUE);
 	}
 
 	private LeaseAcquireResponse proxyPass(String host, int port, String uri, Map<String, String> params, Object payload) {
@@ -262,6 +282,7 @@ public class LeaseResource {
 			HttpResponse response = null;
 			if (payload != null) {
 				response = Request.Post(uriBuilder.build())//
+				      .addHeader(HEADER_PROXY_KEY, HEADER_PROXY_VALUE)//
 				      .connectTimeout(m_config.getProxyPassConnectTimeout())//
 				      .socketTimeout(m_config.getProxyPassReadTimeout())//
 				      .bodyString(JSON.toJSONString(payload), ContentType.APPLICATION_JSON)//
@@ -269,6 +290,7 @@ public class LeaseResource {
 				      .returnResponse();
 			} else {
 				response = Request.Post(uriBuilder.build())//
+				      .addHeader(HEADER_PROXY_KEY, HEADER_PROXY_VALUE)//
 				      .connectTimeout(m_config.getProxyPassConnectTimeout())//
 				      .socketTimeout(m_config.getProxyPassReadTimeout())//
 				      .execute()//
