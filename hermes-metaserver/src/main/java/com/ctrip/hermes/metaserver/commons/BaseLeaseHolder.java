@@ -188,11 +188,13 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 
 	@Override
 	public void initialize() throws InitializationException {
+		log.info("Start to init {}", this.getClass().getSimpleName());
 		try {
 			doInitialize();
 			startHouseKeeper();
 			loadAndWatchContexts();
 			m_inited.set(true);
+			log.info("{} inited", this.getClass().getSimpleName());
 		} catch (Exception e) {
 			log.error("Failed to init LeaseHolder", e);
 			throw new InitializationException("Failed to init LeaseHolder", e);
