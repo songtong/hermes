@@ -15,7 +15,7 @@ public class HermesTomcat extends Tomcat {
 
 	private StandardThreadExecutor executor;
 
-	private int maxThreads = 250;
+	private int maxThreads = 500;
 
 	// max client socket connection count < min(maxQueueSize, maxConnections) 
 	private int maxQueueSize = 5000;
