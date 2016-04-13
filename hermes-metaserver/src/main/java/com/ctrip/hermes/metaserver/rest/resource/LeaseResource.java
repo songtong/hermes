@@ -35,11 +35,13 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseAllocator;
+import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocatorLocator;
+import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 
 /**
@@ -65,6 +67,10 @@ public class LeaseResource {
 	private static final long PROXY_PASS_FAIL_DELAY_TIME_MILLIS = 5 * 1000L;
 
 	private static final long EXCEPTION_CAUGHT_DELAY_TIME_MILLIS = 5 * 1000L;
+
+	private static final long CONSUMER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS = 5 * 1000L;
+
+	private static final long BROKER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS = 5 * 1000L;
 
 	private ConsumerLeaseAllocatorLocator m_consumerLeaseAllocatorLocator;
 
@@ -100,6 +106,12 @@ public class LeaseResource {
 		Map<String, String> params = new HashMap<>();
 		params.put("sessionId", sessionId);
 		params.put("host", getRemoteAddr(host, req));
+
+		if (!PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).inited()) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+			      + CONSUMER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
+		}
+
 		try {
 			LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
 			      "/consumer/acquire", params, tpg);
@@ -134,6 +146,11 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("leaseId", Long.toString(leaseId));
 		params.put("host", getRemoteAddr(host, req));
+
+		if (!PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).inited()) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+			      + CONSUMER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
+		}
 
 		try {
 			LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
@@ -171,6 +188,12 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
+
+		if (!PlexusComponentLocator.lookup(BrokerLeaseHolder.class).inited()) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+			      + BROKER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
+		}
+
 		try {
 			LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/acquire", params,
 			      null);
@@ -204,6 +227,11 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
+
+		if (!PlexusComponentLocator.lookup(BrokerLeaseHolder.class).inited()) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+			      + BROKER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
+		}
 
 		try {
 			LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/renew", params,
