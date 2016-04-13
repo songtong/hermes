@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -47,6 +48,8 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	private Map<Key, LeaseContext> m_LeaseContexts = new HashMap<>();
 
 	private ReentrantReadWriteLock m_LeaseContextsLock = new ReentrantReadWriteLock();
+
+	protected AtomicBoolean m_inited = new AtomicBoolean(false);
 
 	@Override
 	public Map<Key, Map<String, ClientLeaseInfo>> getAllValidLeases() throws Exception {
@@ -179,11 +182,17 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	}
 
 	@Override
+	public boolean inited() {
+		return m_inited.get();
+	}
+
+	@Override
 	public void initialize() throws InitializationException {
 		try {
 			doInitialize();
 			startHouseKeeper();
 			loadAndWatchContexts();
+			m_inited.set(true);
 		} catch (Exception e) {
 			log.error("Failed to init LeaseHolder", e);
 			throw new InitializationException("Failed to init LeaseHolder", e);
