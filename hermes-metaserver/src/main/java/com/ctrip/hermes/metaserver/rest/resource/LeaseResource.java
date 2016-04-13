@@ -1,5 +1,9 @@
 package com.ctrip.hermes.metaserver.rest.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,14 +18,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.helper.Files.IO;
+
+import sun.net.www.protocol.http.HttpURLConnection;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
@@ -279,26 +283,10 @@ public class LeaseResource {
 				}
 			}
 
-			HttpResponse response = null;
-			if (payload != null) {
-				response = Request.Post(uriBuilder.build())//
-				      .addHeader(HEADER_PROXY_KEY, HEADER_PROXY_VALUE)//
-				      .connectTimeout(m_config.getProxyPassConnectTimeout())//
-				      .socketTimeout(m_config.getProxyPassReadTimeout())//
-				      .bodyString(JSON.toJSONString(payload), ContentType.APPLICATION_JSON)//
-				      .execute()//
-				      .returnResponse();
-			} else {
-				response = Request.Post(uriBuilder.build())//
-				      .addHeader(HEADER_PROXY_KEY, HEADER_PROXY_VALUE)//
-				      .connectTimeout(m_config.getProxyPassConnectTimeout())//
-				      .socketTimeout(m_config.getProxyPassReadTimeout())//
-				      .execute()//
-				      .returnResponse();
-			}
+			HttpResponse response = post(uriBuilder.build().toURL(), payload);
 
-			if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-				String responseContent = EntityUtils.toString(response.getEntity());
+			if (response.getStatsCode() == HttpStatus.SC_OK && response.hasResponseContent()) {
+				String responseContent = new String(response.getRespContent(), "UTF-8");
 				if (!StringUtils.isBlank(responseContent)) {
 					return JSON.parseObject(responseContent, LeaseAcquireResponse.class);
 				} else {
@@ -308,7 +296,7 @@ public class LeaseResource {
 			} else {
 				if (log.isDebugEnabled()) {
 					log.debug("Response error while proxy passing to http://{}:{}{}.(status={}}).", host, port, uri,
-					      response.getStatusLine().getStatusCode());
+					      response.getStatsCode());
 				}
 				return new LeaseAcquireResponse(false, null, m_systemClockService.now() + PROXY_PASS_FAIL_DELAY_TIME_MILLIS);
 			}
@@ -319,6 +307,97 @@ public class LeaseResource {
 				log.debug("Failed to proxy pass to http://{}:{}{}.", host, port, uri, e);
 			}
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now() + PROXY_PASS_FAIL_DELAY_TIME_MILLIS);
+		}
+
+	}
+
+	private HttpResponse post(URL url, Object payload) throws IOException {
+		HttpResponse response = new HttpResponse();
+		HttpURLConnection conn = null;
+		try {
+			conn = (HttpURLConnection) url.openConnection();
+			conn.setRequestMethod("POST");
+			conn.addRequestProperty(HEADER_PROXY_KEY, HEADER_PROXY_VALUE);
+			conn.addRequestProperty("Content-type", ContentType.APPLICATION_JSON.toString());
+			conn.setConnectTimeout(m_config.getProxyPassConnectTimeout());
+			conn.setReadTimeout(m_config.getProxyPassReadTimeout());
+			if (payload != null) {
+				conn.setDoOutput(true);
+			}
+			conn.connect();
+
+			if (payload != null) {
+				OutputStream out = null;
+
+				try {
+					out = conn.getOutputStream();
+					out.write(JSON.toJSONString(payload).getBytes());
+					out.flush();
+
+				} finally {
+					if (out != null) {
+						try {
+							out.close();
+						} catch (Exception e) {
+							// ignore;
+						}
+					}
+				}
+			}
+
+			InputStream is = null;
+
+			try {
+				is = conn.getInputStream();
+				response.setRespContent(IO.INSTANCE.readFrom(is));
+			} finally {
+				if (is != null) {
+					try {
+						is.close();
+					} catch (Exception e) {
+						// ignore;
+					}
+				}
+			}
+
+			response.setStatsCode(conn.getResponseCode());
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.disconnect();
+				} catch (Exception e) {
+					// ignore;
+				}
+			}
+		}
+
+		return response;
+	}
+
+	private static class HttpResponse {
+		private int statsCode = -1;
+
+		private byte[] respContent;
+
+		public int getStatsCode() {
+			return statsCode;
+		}
+
+		public void setStatsCode(int statsCode) {
+			this.statsCode = statsCode;
+		}
+
+		public boolean hasResponseContent() {
+			return respContent != null && respContent.length > 0;
+		}
+
+		public byte[] getRespContent() {
+			return respContent;
+		}
+
+		public void setRespContent(byte[] respContent) {
+			this.respContent = respContent;
 		}
 
 	}
