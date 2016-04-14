@@ -90,10 +90,12 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 	@Override
 	protected void doStop(ConsumerContext consumerContext) {
 		KafkaConsumerThread consumerThread = consumers.remove(consumerContext);
-		consumerThread.shutdown();
+		if (consumerThread != null)
+			consumerThread.shutdown();
 
 		Long token = tokens.remove(consumerContext);
-		m_consumerNotifier.deregister(token);
+		if (token != null)
+			m_consumerNotifier.deregister(token);
 
 		super.doStop(consumerContext);
 	}
