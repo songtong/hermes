@@ -23,4 +23,5 @@ public interface LeaseHolder<Key> {
 
 	public void updateContexts(Map<String, Map<String, ClientLeaseInfo>> path2ExistingLeases) throws Exception;
 
+	public boolean inited();
 }

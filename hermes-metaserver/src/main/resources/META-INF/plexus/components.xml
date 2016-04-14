@@ -139,6 +139,12 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.event.EventBus</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>

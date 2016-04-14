@@ -2,9 +2,13 @@ package com.ctrip.hermes.metaserver.consumer;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -16,9 +20,15 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder;
 import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
+import com.ctrip.hermes.metaserver.commons.CompositeException;
 import com.ctrip.hermes.metaserver.consumer.watcher.ConsumerLeaseAddedWatcher;
 import com.ctrip.hermes.metaserver.consumer.watcher.ConsumerLeaseChangedWatcher;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -54,21 +64,64 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 	protected Map<String, Map<String, ClientLeaseInfo>> loadExistingLeases() throws Exception {
 		CuratorFramework client = m_zkClient.get();
 
-		Map<String, Map<String, ClientLeaseInfo>> existingLeases = new HashMap<>();
+		final Map<String, Map<String, ClientLeaseInfo>> existingLeases = new ConcurrentHashMap<>();
 
 		List<String> topics = client.getChildren()//
 		      .usingWatcher(m_consumerLeaseAddedWatcher)//
 		      .forPath(ZKPathUtils.getConsumerLeaseRootZkPath());
 		m_consumerLeaseAddedWatcher.addWatchedPath(ZKPathUtils.getConsumerLeaseRootZkPath());
 
-		if (topics != null && !topics.isEmpty()) {
-			for (String topic : topics) {
-				Map<String, Map<String, ClientLeaseInfo>> topicExistingLeases = loadAndWatchTopicExistingLeases(topic);
-				existingLeases.putAll(topicExistingLeases);
-			}
-		}
+		loadLeasesConcurrently(existingLeases, topics);
 
 		return existingLeases;
+	}
+
+	private void loadLeasesConcurrently(final Map<String, Map<String, ClientLeaseInfo>> existingLeases,
+	      List<String> topics) throws InterruptedException {
+		if (topics != null && !topics.isEmpty()) {
+			ListeningExecutorService leaseLoadingThreadPool = MoreExecutors.listeningDecorator(Executors
+			      .newFixedThreadPool(5, HermesThreadFactory.create("BrokerLeaseHolder-Init-Temp", true)));
+
+			final List<Throwable> innerThrowables = new LinkedList<>();
+			final Object syncObj = new Object();
+			final CountDownLatch latch = new CountDownLatch(topics.size());
+
+			for (final String topic : topics) {
+				ListenableFuture<Map<String, Map<String, ClientLeaseInfo>>> future = leaseLoadingThreadPool
+				      .submit(new Callable<Map<String, Map<String, ClientLeaseInfo>>>() {
+
+					      @Override
+					      public Map<String, Map<String, ClientLeaseInfo>> call() throws Exception {
+						      return loadAndWatchTopicExistingLeases(topic);
+					      }
+				      });
+
+				Futures.addCallback(future, new FutureCallback<Map<String, Map<String, ClientLeaseInfo>>>() {
+
+					@Override
+					public void onSuccess(Map<String, Map<String, ClientLeaseInfo>> result) {
+						existingLeases.putAll(result);
+						latch.countDown();
+					}
+
+					@Override
+					public void onFailure(Throwable t) {
+						synchronized (syncObj) {
+							innerThrowables.add(t);
+						}
+						latch.countDown();
+					}
+				}, leaseLoadingThreadPool);
+			}
+
+			latch.await();
+
+			leaseLoadingThreadPool.shutdown();
+
+			if (!innerThrowables.isEmpty()) {
+				throw new CompositeException(innerThrowables);
+			}
+		}
 	}
 
 	public Map<String, Map<String, ClientLeaseInfo>> loadAndWatchTopicExistingLeases(String topic) throws Exception {

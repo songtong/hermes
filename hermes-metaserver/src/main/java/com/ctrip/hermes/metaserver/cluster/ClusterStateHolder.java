@@ -19,8 +19,10 @@ import org.unidal.net.Networks;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
+import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
 import com.ctrip.hermes.metaserver.event.EventBus;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 
@@ -45,11 +47,19 @@ public class ClusterStateHolder implements Initializable {
 	@Inject
 	private EventBus m_eventBus;
 
-	private LeaderLatch m_leaderLatch;
-
 	private AtomicBoolean m_hasLeadership = new AtomicBoolean(false);
 
 	private AtomicReference<HostPort> m_leader = new AtomicReference<>(null);
+
+	private LeaderLatch m_leaderLatch;
+
+	private AtomicBoolean m_closed = new AtomicBoolean(false);
+
+	@Inject
+	private ConsumerLeaseHolder m_consumerLeaseHolder;
+
+	@Inject
+	private BrokerLeaseHolder m_brokerLeaseHolder;
 
 	public void setHasLeadership(boolean hasLeadership) {
 		m_hasLeadership.set(hasLeadership);
@@ -90,11 +100,41 @@ public class ClusterStateHolder implements Initializable {
 			}
 		});
 
-		m_leaderLatch.start();
+		delayStartLeaderLatch();
+	}
+
+	private void delayStartLeaderLatch() {
+		Thread t = HermesThreadFactory.create("LeaderLatchDelayStarter", true).newThread(new Runnable() {
+
+			@Override
+			public void run() {
+				while (!Thread.interrupted() && !m_closed.get()) {
+					if (m_consumerLeaseHolder.inited() && m_brokerLeaseHolder.inited()) {
+						try {
+							m_leaderLatch.start();
+							log.info("LeaderLatch started");
+							break;
+						} catch (Exception e) {
+							log.error("Failed to start LeaderLatch!!", e);
+						}
+					} else {
+						try {
+							TimeUnit.SECONDS.sleep(1);
+						} catch (InterruptedException e) {
+							log.error("Failed to start LeaderLatch!!", e);
+							Thread.currentThread().interrupt();
+						}
+					}
+				}
+			}
+		});
+		t.start();
 	}
 
 	public void close() throws Exception {
-		m_leaderLatch.close();
+		if (m_closed.compareAndSet(false, true)) {
+			m_leaderLatch.close();
+		}
 	}
 
 	public HostPort getLeader() {
