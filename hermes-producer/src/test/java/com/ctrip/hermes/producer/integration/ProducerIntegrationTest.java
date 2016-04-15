@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -61,7 +61,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertNull(msgs.get(0));
 		// non-priority
@@ -87,7 +87,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertEquals(1, msgs.get(0).size());
 		// non-priority
@@ -110,7 +110,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertNull(msgs.get(0));
 		// non-priority
@@ -133,7 +133,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertEquals(1, msgs.get(0).size());
 		// non-priority
@@ -156,7 +156,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertEquals(1, msgs.get(0).size());
 		// non-priority
@@ -179,7 +179,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertEquals(1, msgs.get(0).size());
 		// non-priority
@@ -202,7 +202,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertEquals(1, msgs.get(0).size());
 		// non-priority
@@ -225,7 +225,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertEquals(1, msgs.get(0).size());
 		// non-priority
@@ -248,7 +248,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertEquals(1, msgs.get(0).size());
 		// non-priority
@@ -271,7 +271,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertEquals(1, msgs.get(0).size());
 		// non-priority
@@ -316,7 +316,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		assertEquals(1, brokerReceivedCmds.size());
 
 		SendMessageCommandV3 sendCmd = (SendMessageCommandV3) brokerReceivedCmds.get(0);
-		ConcurrentMap<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
+		Map<Integer, List<ProducerMessage<?>>> msgs = sendCmd.getMsgs();
 		// priority
 		assertEquals(1, msgs.get(0).size());
 		// non-priority

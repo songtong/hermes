@@ -77,8 +77,10 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 				}
 			}
 
-			m_consumerContexs.putIfAbsent(token, new Triple<ConsumerContext, NotifyStrategy, ExecutorService>(context,
-			      notifyStrategy, createNotifierExecutor(context, threadCount, notifierWorkQueueSize, token)));
+			if (!m_consumerContexs.containsKey(token)) {
+				m_consumerContexs.putIfAbsent(token, new Triple<ConsumerContext, NotifyStrategy, ExecutorService>(context,
+				      notifyStrategy, createNotifierExecutor(context, threadCount, notifierWorkQueueSize, token)));
+			}
 		} catch (Exception e) {
 			throw new RuntimeException("Register consumer notifier failed", e);
 		}

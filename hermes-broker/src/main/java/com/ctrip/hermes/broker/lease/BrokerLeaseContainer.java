@@ -63,7 +63,9 @@ public class BrokerLeaseContainer implements Initializable {
 	}
 
 	private void scheduleLeaseAcquireTask(final BrokerLeaseKey key) {
-		m_leaseAcquireTaskRunnings.putIfAbsent(key, new AtomicBoolean(false));
+		if (!m_leaseAcquireTaskRunnings.containsKey(key)) {
+			m_leaseAcquireTaskRunnings.putIfAbsent(key, new AtomicBoolean(false));
+		}
 
 		final AtomicBoolean acquireTaskRunning = m_leaseAcquireTaskRunnings.get(key);
 		if (acquireTaskRunning.compareAndSet(false, true)) {

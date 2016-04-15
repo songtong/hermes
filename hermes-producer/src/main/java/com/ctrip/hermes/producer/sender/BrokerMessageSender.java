@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -11,7 +12,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,7 +33,6 @@ import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
-import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -57,9 +56,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 	@Inject
 	private ProducerConfig m_config;
 
-	@Inject
-	private SystemClockService m_systemClockService;
-
 	private ConcurrentMap<Pair<String, Integer>, TaskQueue> m_taskQueues = new ConcurrentHashMap<Pair<String, Integer>, TaskQueue>();
 
 	private ExecutorService m_callbackExecutor;
@@ -69,14 +65,24 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 	@Override
 	public Future<SendResult> doSend(ProducerMessage<?> msg) {
 		if (m_started.compareAndSet(false, true)) {
+			int callbackThreadCount = m_config.getProducerCallbackThreadCount();
+
+			m_callbackExecutor = Executors.newFixedThreadPool(callbackThreadCount,
+			      HermesThreadFactory.create("ProducerCallback", false));
+
 			startEndpointSender();
 		}
 
 		Pair<String, Integer> tp = new Pair<String, Integer>(msg.getTopic(), msg.getPartition());
-		m_taskQueues.putIfAbsent(tp,
-		      new TaskQueue(msg.getTopic(), msg.getPartition(), m_config.getBrokerSenderTaskQueueSize()));
 
-		return m_taskQueues.get(tp).submit(msg);
+		TaskQueue taskQueue = m_taskQueues.get(tp);
+		if (taskQueue == null) {
+			m_taskQueues.putIfAbsent(tp,
+			      new TaskQueue(msg.getTopic(), msg.getPartition(), m_config.getBrokerSenderTaskQueueSize()));
+			taskQueue = m_taskQueues.get(tp);
+		}
+
+		return taskQueue.submit(msg);
 	}
 
 	private void startEndpointSender() {
@@ -138,15 +144,19 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 
 		private boolean scheduleTaskExecution(Pair<String, Integer> tp, TaskQueue queue) {
-			m_runnings.putIfAbsent(tp, new AtomicBoolean(false));
 
-			if (m_runnings.get(tp).compareAndSet(false, true)) {
-				m_taskExecThreadPool.submit(new SendTask(tp.getKey(), tp.getValue(), queue, m_runnings.get(tp)));
+			AtomicBoolean tpRunning = m_runnings.get(tp);
+			if (tpRunning == null) {
+				m_runnings.putIfAbsent(tp, new AtomicBoolean(false));
+				tpRunning = m_runnings.get(tp);
+			}
+
+			if (tpRunning.compareAndSet(false, true)) {
+				m_taskExecThreadPool.submit(new SendTask(tp.getKey(), tp.getValue(), queue, tpRunning));
 				return true;
 			}
 			return false;
 		}
-
 	}
 
 	private class SendTask implements Runnable {
@@ -283,7 +293,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		public TaskQueue(String topic, int partition, int queueSize) {
 			m_topic = topic;
 			m_partition = partition;
-			m_queue = new LinkedBlockingQueue<ProducerWorkerContext>(queueSize);
+			m_queue = new ArrayBlockingQueue<ProducerWorkerContext>(queueSize);
 
 			ProducerStatusMonitor.INSTANCE.addTaskQueueGauge(m_topic, m_partition, m_queue);
 		}
@@ -361,10 +371,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 	@Override
 	public void initialize() throws InitializationException {
-		int callbackThreadCount = m_config.getProducerCallbackThreadCount();
-
-		m_callbackExecutor = Executors.newFixedThreadPool(callbackThreadCount,
-		      HermesThreadFactory.create("ProducerCallback", false));
 
 	}
 

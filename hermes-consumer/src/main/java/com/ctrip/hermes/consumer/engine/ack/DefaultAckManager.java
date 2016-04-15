@@ -73,7 +73,9 @@ public class DefaultAckManager implements AckManager {
 			startChecker();
 		}
 
-		m_ackHolders.putIfAbsent(token, new TpgAckHolder(tpg, token, maxAckHolderSize));
+		if (!m_ackHolders.containsKey(token)) {
+			m_ackHolders.putIfAbsent(token, new TpgAckHolder(tpg, token, maxAckHolderSize));
+		}
 	}
 
 	@Override
@@ -330,9 +332,12 @@ public class DefaultAckManager implements AckManager {
 		private AckMessageCommandV3 scan() {
 			AckMessageCommandV3 cmd = null;
 
-			AckHolderScanningResult<AckContext> priorityScanningRes = m_priorityAckHolder.scan(m_config.getAckCommandMaxSize());
-			AckHolderScanningResult<AckContext> nonpriorityScanningRes = m_nonpriorityAckHolder.scan(m_config.getAckCommandMaxSize());
-			AckHolderScanningResult<AckContext> resendScanningRes = m_resendAckHolder.scan(m_config.getAckCommandMaxSize());
+			AckHolderScanningResult<AckContext> priorityScanningRes = m_priorityAckHolder.scan(m_config
+			      .getAckCommandMaxSize());
+			AckHolderScanningResult<AckContext> nonpriorityScanningRes = m_nonpriorityAckHolder.scan(m_config
+			      .getAckCommandMaxSize());
+			AckHolderScanningResult<AckContext> resendScanningRes = m_resendAckHolder
+			      .scan(m_config.getAckCommandMaxSize());
 
 			if (!priorityScanningRes.getAcked().isEmpty() //
 			      || !priorityScanningRes.getNacked().isEmpty() //
