@@ -73,10 +73,14 @@ public class SendMessageCommand extends AbstractCommand {
 		msg.setMsgSeqNo(msgSeqNo);
 
 		if (msg.isPriority()) {
-			m_msgs.putIfAbsent(0, new LinkedList<ProducerMessage<?>>());
+			if (!m_msgs.containsKey(0)) {
+				m_msgs.putIfAbsent(0, new LinkedList<ProducerMessage<?>>());
+			}
 			m_msgs.get(0).add(msg);
 		} else {
-			m_msgs.putIfAbsent(1, new LinkedList<ProducerMessage<?>>());
+			if (!m_msgs.containsKey(1)) {
+				m_msgs.putIfAbsent(1, new LinkedList<ProducerMessage<?>>());
+			}
 			m_msgs.get(1).add(msg);
 		}
 

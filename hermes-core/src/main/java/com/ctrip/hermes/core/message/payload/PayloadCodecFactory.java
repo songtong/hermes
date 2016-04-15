@@ -36,24 +36,30 @@ public class PayloadCodecFactory {
 			if (cached != null) {
 				return cached;
 			} else {
-				PayloadCodecCompositor compositor = new PayloadCodecCompositor(codecString);
-				compositor.addPayloadCodec(PlexusComponentLocator.lookup(PayloadCodec.class, codecDesc.getCodec()));
+				synchronized (PayloadCodecFactory.class) {
+					cached = compositorCache.get(codecString);
+					if (cached == null) {
+						cached = new PayloadCodecCompositor(codecString);
+						cached.addPayloadCodec(PlexusComponentLocator.lookup(PayloadCodec.class, codecDesc.getCodec()));
 
-				if (Codec.GZIP.equals(codecDesc.getCompressionAlgo())) {
-					compositor.addPayloadCodec(PlexusComponentLocator.lookup(PayloadCodec.class, Codec.GZIP));
-				} else if (Codec.DEFLATER.equals(codecDesc.getCompressionAlgo())) {
+						if (Codec.GZIP.equals(codecDesc.getCompressionAlgo())) {
+							cached.addPayloadCodec(PlexusComponentLocator.lookup(PayloadCodec.class, Codec.GZIP));
+						} else if (Codec.DEFLATER.equals(codecDesc.getCompressionAlgo())) {
 
-					int compressionLevel = 5;
+							int compressionLevel = 5;
 
-					if (codecDesc.getLevel() != -1) {
-						compressionLevel = codecDesc.getLevel();
+							if (codecDesc.getLevel() != -1) {
+								compressionLevel = codecDesc.getLevel();
+							}
+							cached.addPayloadCodec(PlexusComponentLocator.lookup(PayloadCodec.class, Codec.DEFLATER + "-"
+							      + compressionLevel));
+						}
+
+						compositorCache.put(codecString, cached);
 					}
-					compositor.addPayloadCodec(PlexusComponentLocator.lookup(PayloadCodec.class, Codec.DEFLATER + "-"
-					      + compressionLevel));
 				}
 
-				compositorCache.putIfAbsent(codecString, compositor);
-				return compositorCache.get(codecString);
+				return cached;
 			}
 		}
 
