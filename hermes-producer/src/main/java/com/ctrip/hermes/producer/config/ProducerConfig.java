@@ -17,9 +17,9 @@ public class ProducerConfig implements Initializable {
 
 	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_THREAD_COUNT = 10;
 
-	public static final long DEFAULT_BROKER_SENDER_SEND_TIMEOUT = 10 * 1000L;
+	public static final long DEFAULT_BROKER_SENDER_SEND_TIMEOUT = 4 * 1000L;
 
-	public static final long DEFAULT_BROKER_SENDER_READ_TIMEOUT = 10 * 1000L;
+	public static final long DEFAULT_BROKER_SENDER_READ_TIMEOUT = 4 * 1000L;
 
 	public static final int DEFAULT_BROKER_SENDER_TASK_QUEUE_SIZE = 500000;
 
