@@ -1,0 +1,58 @@
+			<form class="form-horizontal">
+				<div class="form-group">
+					<label class="col-md-4 control-label">ID </label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="ID" ng-model="currentDatasource.id">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">User </label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="User" ng-model="currentDatasource.properties.user.value">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">Password </label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="Password" ng-model="currentDatasource.properties.password.value">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">Connection Url</label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="Jdbc Connection String" ng-model="currentDatasource.properties.url.value">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">Maximum Size</label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="Connection Pool Maximum Size" ng-model="currentDatasource.properties.maximumSize.value">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">Minimum Size</label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="Connection Pool Minimum Size" ng-model="currentDatasource.properties.minimumSize.value">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">Tags</label>
+					<div class="col-md-6">
+						<select-x id="tags" url="/api/tags" multiple="true" on-change="onChange" on-select="onSelect" on-unselect="onUnselect" url-handler="dataHandler" on-validate="onValidate"></select-x>
+					</div>
+					<div class="col-md-2">
+						<button class="btn btn-warning btn-sm" type="button" data-toggle="collapse" data-target="#tagAddPanel"><span class="glyphicon glyphicon-plus-sign"></span></button>
+					</div>
+				</div>
+				<div class="form-group collapse" id="tagAddPanel">
+					<div class="col-md-12 alert alert-success" style="margin-bottom: 0px;">
+						<label class="col-md-1 control-label">Tag</label>
+						<div class="col-md-4"><input class="form-control col-md-4" placeholder="Tag" ng-model="$parent.newTag"/></div>
+						<label class="col-md-1 control-label">Group</label>
+						<div class="col-md-5">
+						<select-x id="groups" url="/api/tags" on-select="selectGroup" tags="true" url-handler="groupHandler"></select-x>
+						</div>
+						<button class="btn btn-warning btn-sm" type="button" ng-click="addTag()">添加</button>
+					</div>
+				</div>
+			</form>

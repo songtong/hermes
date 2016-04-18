@@ -15,6 +15,8 @@ public abstract class HermesApplication {
 	private int m_status;
 
 	private String m_content;
+	
+	private String m_polished;
 
 	private String m_approver;
 
@@ -64,6 +66,14 @@ public abstract class HermesApplication {
 
 	public void setContent(String content) {
 		this.m_content = content;
+	}
+	
+	public String getPolished() {
+		return m_polished;
+	}
+
+	public void setPolished(String polished) {
+		m_polished = polished;
 	}
 
 	public String getApprover() {
@@ -123,13 +133,14 @@ public abstract class HermesApplication {
 	public static HermesApplication parse(Application dbApp) {
 		// except for content value
 		HermesApplicationType type = HermesApplicationType.findByTypeCode(dbApp.getType());
-		HermesApplication app = JSON.parseObject(dbApp.getContent(), type.getClazz());
+		HermesApplication app = JSON.parseObject(dbApp.getPolished() != null? dbApp.getPolished(): dbApp.getContent(), type.getClazz());
 		app.setType(dbApp.getType());
 		app.setId(dbApp.getId());
 		app.setApprover(dbApp.getApprover());
 		app.setComment(dbApp.getComment());
 		app.setCreateTime(dbApp.getCreateTime());
 		app.setStatus(dbApp.getStatus());
+		app.setLastModifiedTime(dbApp.getDataChangeLastTime());
 		return app;
 
 	}

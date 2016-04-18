@@ -18,6 +18,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -61,7 +62,27 @@ public class ConsumerResource {
 		});
 		return consumers;
 	}
-
+	
+	@POST
+	@Path("{topic}/{consumer}/offset/{strategy}")
+	public Response resetOffset(@PathParam("topic") String topicName, @PathParam("consumer") String consumerGroupName, @PathParam("strategy") String strategy, String content) {
+		TopicView topic = topicService.findTopicViewByName(topicName);
+		
+		if (topic == null) {
+			throw new RestException("Topic NOT found!", Status.NOT_FOUND);
+		}
+		
+		ConsumerGroupView consumerGroupView = consumerService.findConsumerView(topic.getId(), consumerGroupName);
+		
+		if (consumerGroupView == null) {
+			throw new RestException("Consumer group NOT found!", Status.NOT_FOUND);
+		}
+		
+		System.out.println(content);
+		
+		return Response.status(Status.OK).build();
+	}
+	
 	@GET
 	@Path("{topic}")
 	public List<ConsumerGroupView> getConsumers(@PathParam("topic") String topicName) {

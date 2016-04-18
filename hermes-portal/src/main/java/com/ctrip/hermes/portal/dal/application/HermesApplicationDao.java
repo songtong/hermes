@@ -11,8 +11,12 @@ public interface HermesApplicationDao {
 	public Application getAppById(long id) throws DalException;
 
 	public long saveApplication(Application application) throws DalException;
-
-	public List<Application> getApplicationsByStatus(int status) throws DalException;
+	
+	public List<Application> getApplicationsByOwnerStatus(String owner, int status, int offset, int size) throws DalException;
+	
+	public int countApplicationsByOwnerStatus(String owner, int status) throws DalException;
+	
+	public int countApplicationsByStatus(int status) throws DalException;
 	
 	public Application updateApplication(Application application) throws DalException;
 }

@@ -1,0 +1,37 @@
+			<table st-safe-src="datasources" st-table="_datasources" class="table table-condensed table-responsive">
+				<thead>
+					<tr>
+						<th style="width: 5%">#</th>
+						<th>ID</th>
+						<th>User</th>
+						<th>Password</th>
+						<th>Connection Url</th>
+						<th>minimumSize</th>
+						<th>maximumSize</th>
+						<th width="100px">操作</th>
+					</tr>
+				</thead>
+				<tbody ng-repeat="ds in _datasources">
+					<tr>
+						<td ng-bind="$index+1"></td>
+						<td>{{ds.id}}</td>
+						<td>{{ds.properties.user.value}}</td>
+						<td>{{ds.properties.password.value || 'N/A'}}</td>
+						<td>{{ds.properties.url.value}}</td>
+						<td>{{ds.properties.minimumSize.value || 10}}</td>
+						<td>{{ds.properties.maximumSize.value || 10}}</td>
+						<td>
+							<div class="buttons">
+							<button class="btn btn-warning btn-xs" ng-click="edit($index)"><span class="glyphicon glyphicon-edit"></span> 修改</button>
+							<button class="btn btn-danger btn-xs" ng-click="confirm($index, $event)"><span class="glyphicon glyphicon-remove"></span> 删除</button>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+				<tfoot>
+					<tr>
+						<td class="text-center" colspan="7" pagination-x page-size="10">
+						</td>
+					</tr>
+				</tfoot>
+			</table>

@@ -1,6 +1,9 @@
 <div class="row">
 	<div class="col-md-6">
-		<label class="label label-info">{{currentPageType}}申请内容</label>
+		<label class="label label-info">
+			<span ng-if="application.type==0">Topic创建-申请内容</span>
+			<span ng-if="application.type==1">Consumer创建-申请内容</span>
+		</label>
 		<div class="panel panel-info">
 			<div class="panel panel-body">
 				<div class="form-horizontal" ng-if="application.type==0">
@@ -137,7 +140,7 @@
 						<div class="form-group">
 							<label class="col-md-3 control-label">需要重发？</label>
 							<div class="col-md-6">
-								<div editable-radiolist="application.needRetry" e-name="needRetry" e-form="applicationForm" ng-bind="application.needRetry" e-ng-options="s.value as s.text for s in needRetryList"></div>
+								<div editable-radiolist="application.needRetry" e-name="needRetry" e-form="applicationForm" ng-bind="application.needRetry" e-ng-options="s.value as s.text for s in needRetryList" class="form-control-static"></div>
 							</div>
 						</div>
 						<div class="form-group" ng-if="(application.needRetry=='true' && !applicationForm.$visible)||(applicationForm['$data']['needRetry']=='true' && applicationForm.$visible)">
@@ -192,41 +195,100 @@
 				</div>
 			</div>
 			<div class="panel-footer clearfix">
-				<form editable-form name="applicationForm" onaftersave="update_application($data)" ng-show="applicationForm.$visible">
+				<form editable-form name="applicationForm" onaftersave="updateApplication()" ng-show="applicationForm.$visible">
 					<button type="submit" class="btn btn-success btn-xs pull-right" aria-hidden="true" ng-disabled="applicationForm.$waiting">
 						<span class="glyphicon glyphicon-saved"></span>保存
 					</button>
 					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="applicationForm.$waiting" ng-click="applicationForm.$cancel()">取消</button>
 				</form>
-				<button class="btn btn-success btn-xs pull-right" aria-hidden="true" ng-click="applicationForm.$show()" ng-show="!applicationForm.$visible && application.status==1">
+				<button class="btn btn-success btn-xs pull-right" aria-hidden="true" ng-click="applicationForm.$show()" ng-show="!applicationForm.$visible && (application.status == 1 || application.status == 5)">
 					<span class="glyphicon glyphicon-pencil"></span>修改
 				</button>
 			</div>
 		</div>
 	</div>
 	<div class="col-md-6">
-		<label class="label label-info">申请反馈</label>
-		<div class="panel panel-info">
+		<label class="label label-success">上线流程说明</label>
+		<div class="panel panel-success">
+			<div class="panel panel-body" style="margin-bottom: 0px;">
+				<div class="alert alert-success" style="margin-bottom: 0px;">
+					上线流程要经过几个步骤，反映在审批状态上是：
+					<ul>
+					<li><strong>申请（创建）/ 拒绝 </strong>：默认提交为申请（创建）状态， 拒绝之后按照意见进行修改后，保存提交，状态重新设置为申请（创建）状态。</li>
+					<li><strong>通过（创建） </strong>： 通过申请审核。</li>
+					<li><strong>同步 </strong>： 按照申请创建Topic，并且同步到FWS/UAT至少一个系统，定义为同步状态。</li>
+					<li><strong><span class="label label-danger">申请（上线） / 拒绝（上线）</span></strong>：保证进行到<strong><span class="label label-warning">同步</span></strong>状态之后才可以操作(也就是至少在FWS或者UAT环境发布评估过)， 提交请求将topic同步到线上系统PROD/TOOLS； 上线请求拒绝，请在问题解决后，重新提交请求审核！</li>
+					<li><strong>通过（上线）</strong>： 上线请求通过。</li>
+					<li><strong>上线</strong>： Topic同步到线上完毕！</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<label class="label label-warning">申请反馈</label>
+		<div class="panel panel-warning">
 			<div class="panel panel-body">
 				<div class="form-horizontal">
 					<div class="form-group">
 						<label class="col-md-3 control-label">审批状态</label>
 						<div class="col-md-6">
-							<div ng-if="application.status==0" class="form-control-static text-info">审核中</div>
+							<div ng-if="application.status==0" class="form-control-static text-info">审核中(创建)</div>
 							<div ng-if="application.status==1" class="form-control-static text-danger">拒绝</div>
-							<div ng-if="application.status==2" class="form-control-static text-success">申请成功</div>
+							<div ng-if="application.status==2" class="form-control-static text-success">申请通过(创建)</div>
+							<div ng-if="application.status==3" class="form-control-static text-success">同步</div>
+							<div ng-if="application.status==4" class="form-control-static text-info">审核中(上线)</div>
+							<div ng-if="application.status==5" class="form-control-static text-info">拒绝(上线)</div>
+							<div ng-if="application.status==6" class="form-control-static text-success">申请通过(上线)</div>
+							<div ng-if="application.status==7" class="form-control-static text-success">上线</div>
 						</div>
 					</div>
 					<div class="form-group">
 						<label class="col-md-3 control-label">审核人</label>
 						<div class="col-md-6">
-							<div class="form-control-static">{{ application.approver ||"无" }}</div>
+							<div class="form-control-static">{{ application.approver || "N/A" }}</div>
 						</div>
 					</div>
 					<div class="form-group">
 						<label class="col-md-3 control-label">修改意见</label>
 						<div class="col-md-6">
-							<div class="form-control-static">{{ application.comment ||"无" }}</div>
+							<div class="form-control-static">
+							<span ng-if="application.comment.length == 0">N/A</span>
+							<span class="label label-danger" ng-if="application.comment.length > 0">{{application.comment[application.comment.length - 1].comment || 'N/A'}}</span>
+							<button type="button" class="btn btn-primary btn-xs" ng-if="application.comment.length > 0" id="commentHistory">History
+							</button>
+							<popover-x title="comments" context="application" target="#commentHistory" ng-if="application.comment.length && application.comment.length > 0">
+								<ul ng-repeat="c in context.comment track by c.createdTime">	
+									<li>
+										<span class="label label-danger"><span class="badge">comment</span>{{c.comment || 'N/A'}}</span> 
+										<span class="label label-info"><span class="badge">by</span> {{c.author}}</span>
+										<span class="label label-warning"><span class="badge">@</span> {{c.createdTime}}</span>
+									</li> 
+								</ul>
+							</popover-x>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<label class="label label-danger">申请上线</label>
+		<div class="panel panel-danger">
+			<div class="panel panel-body">
+				<div class="form-horizontal">
+					<div class="form-group">
+						<label class="col-md-3 control-label">环境</label>
+						<div class="col-md-6">
+							<div class="btn-group" data-toggle="buttons">
+							  <label class="btn btn-primary btn-sm" ng-click="application.onlineEnv='prod'">
+							    <input type="radio" name="options" id="option1" autocomplete="off" value="prod"> Prod
+							  </label>
+							  <label class="btn btn-primary btn-sm" ng-click="application.onlineEnv='tools'">
+							    <input type="radio" name="options" id="option2" autocomplete="off" value="tools"> Tools
+							  </label>
+							</div>
+						</div>
+						<div class="col-md-3">
+							<button type="button" ng-class="['btn btn-primary btn-sm', {disabled: application.status != 3}]" ng-click="updateApplication()">提交</button>
 						</div>
 					</div>
 				</div>
@@ -238,3 +300,4 @@
 	<div class="tooltip-arrow"></div>
 	<div class="tooltip-inner">Some tooltip text!</div>
 </div>
+<alert-x id="alert" title="确认"></alert-x>

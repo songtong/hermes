@@ -227,6 +227,12 @@
 	<entity name="partition">
 		<var name="tId" value-type="long" />
 		<var name="pId" value-type="int" />
+		<member name="count" value-type="int" select-expr="COUNT(*)" all="false" />
+	    <readsets>
+	      <readset name="COUNT">
+	      	<member name="count"/>
+	      </readset>
+	    </readsets>
 		<query-defs>
 			<query name="list" type="SELECT" multiple="true">
 				<statement><![CDATA[SELECT <FIELDS/>
@@ -251,6 +257,11 @@
         SET <FIELDS/>
         WHERE <FIELD name='topic-id'/> = ${tId}
         AND <FIELD name='id'/> = ${pId}]]></statement>
+			</query>
+			<query name="count-by-datasource" type="SELECT">
+				<param name="read-datasource" />
+				<statement><![CDATA[SELECT <FIELDS/>
+		FROM <TABLE/> WHERE <FIELD name='read-datasource'/> = ${read-datasource}]]></statement>
 			</query>
 		</query-defs>
 	</entity>

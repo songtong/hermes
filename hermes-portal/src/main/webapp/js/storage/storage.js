@@ -1,118 +1,372 @@
-var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage']);
+var hermes_storage = angular.module('hermes-storage', [ 'ngResource', 'xeditable', 'mgcrea.ngStrap','Storage', 'smart-table', 'components', 'utils', 'bootstrap-tagsinput']);
 hermes_storage.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
-}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', function(scope, resource, StorageService) {
+}).controller('storage-controller', [ '$scope', '$resource', 'StorageService', 'promiseChain', 'watcher', 'clone', function(scope, resource, StorageService, promiseChain, watcher, clone) {
+	// Define resource.
 	var meta_resource = resource('/api/storages', {}, {
 		'get_storages' : {
 			method : 'GET',
-			isArray : true,
-			url : ''
+			isArray : true
 		}
 	});
-
-	scope.src_storages = [];
-	scope.selected = {};
-
-    function getDatasources() {
-        meta_resource.get_storages({}, function (data) {
-            scope.src_storages = data;
-            scope.storage_types = collect_schemas(scope.src_storages, 'type', false);
-            scope.selected = scope.src_storages[0];
-        });
-    }
-    getDatasources();
-
-    scope.set_selected = function set_selected(type) {
-		for (var idx = 0; idx < scope.src_storages.length; idx++) {
-			if (scope.src_storages[idx].type == type) {
-				scope.selected = scope.src_storages[idx];
-				break;
-			}
+	
+	// Define tag resource.
+	var tagResource = resource('/api/tags', {}, {
+		'addTag': {
+			url: '/api/tags',
+			method: 'POST'
+		},
+		'getTags': {
+			url: '/api/tags',
+			method: 'GET'
+		},
+		'getDatasourcesTags': {
+			url: '/api/tags/datasources',
+			method: 'GET'
+		},
+		'getDatasourceTags': {
+			url: '/api/tags/datasources/:id',
+			method: 'GET'
+		},
+		'addDatasourceTag': {
+			url: '/api/tags/datasources/:id',
+			method: 'POST'
+		},
+		'removeDatasourceTag': {
+			url: '/api/tags/datasources/:id',
+			method: 'DELETE'
 		}
-	}
+	}); 
+	
+	// All datasources.
+	scope.__datasources = null;
+	// Selected datasources.
+	scope.datasources = null;
+	
+	scope.currentDatasource = null;
+	
+	scope.datasourcesTags = {};
+	
+	scope.groupTags = {'test': [{id:2, name: 'd'}]};
+	//
+	scope.storageType = 'mysql';
+	
+	scope.newTag = null;
+	
+	scope.newTagGroup = null;
+	
+	scope.addedTags = [];
+	scope.removedTags = [];
 
-	scope.update_datasource = function update_datasource(ds) {
-		StorageService.update_datasource(scope.selected.type, ds.id,ds);
-	}
-
-	scope.add_row = function add_row(ds) {
-		scope.inserted = {
-			name : undefined,
-			value : undefined
-		};
-		ds.properties['_hermes_new_row'] = scope.inserted;
-	}
-
-	scope.del_row = function del_row(ds, name) {
-		bootbox.confirm("确认删除属性: " + ds.id + "(" + name + ")?", function(result) {
-			if (result) {
-				StorageService.delete_property(scope.selected.type,ds.id,name);
-				delete ds.properties[name];
-			}
-		});
-	}
-
-    scope.is_mysql = function (type) {
-        return type == 'mysql';
+	// Init.
+    (function() {
+    	promiseChain.add({
+    		func: meta_resource.get_storages,
+    		args: {},
+    		success: function(data){
+              scope.__datasources = data;
+              //scope.datasources = data[0];
+              scope.selectStorage(scope.storageType);
+    		}
+    	}, true).add({
+    		func: tagResource.getDatasourcesTags,
+    		args: {},
+    		success: function(result) {
+    			scope.datasourcesTags = result.data[0];
+    		}
+    	}, true).add({
+    		func: tagResource.getTags,
+    		args: {},
+    		success: function(result) {
+    			scope.groupTags = result.data[0];
+    			scope.$broadcast('initialized');
+    		}
+    	}, true).finish();
+    })();
+    
+    scope.selectStorage = function(type) {
+    	scope.storageType = type;
+    	if (type == 'mysql') {
+    		scope.datasources = scope.__datasources[1].datasources;
+    	} else {
+    		scope.datasources = scope.__datasources[0].datasources;
+    	}
     }
-
-    scope.$watch(function() {return scope.selected.type}, function() {
-        if (scope.selected.type != undefined) {
-            scope.forms = buildForms(scope.selected.type);
-        }
-    })
-
-    scope.add_kv = function() {
-        scope.forms.push(buildForm("", "", ""))
-    }
-
-    scope.del_kv = function(index) {
-        scope.forms.splice(index, 1);
-    }
-
-    scope.reset = function() {
-        scope.forms = buildForms(scope.selected.type);
-    }
-
-    scope.add_datasource = function() {
-        StorageService.add_datasource(scope.forms, scope.selected.type, getDatasources);
-    }
-
-    scope.del_datasource = function(ds) {
-        bootbox.confirm("确认删除该Datasource? ", function(result) {
-            if (result) {
-                StorageService.delete_datasource(ds.id, scope.selected.type, getDatasources)
-            }
-        })
-    }
-    scope.isShowAllTables = false;
-    scope.isShowAll= function() {
-        scope.isShowAllTables = !scope.isShowAllTables;
+    
+    scope.edit = function(index) {
+    	scope.currentDatasource = attachDefault(scope.datasources[index]);
+    	
+    	// Clear tags.
+    	scope.$broadcast('select2:clear', 'tags');
+    	
+    	// Init tags control.
+    	if (scope.datasourcesTags[scope.currentDatasource['id']]) {
+    		scope.$broadcast('select2:init', 'tags', scope.datasourcesTags[scope.currentDatasource['id']].map(function(elem, index){
+    			return elem.id;
+    		}));
+    	}
+    	
+    	// Show modal. 
+    	$('#datasource-modal').modal();
     };
+    
+    // Reset all form contents & tags.
+    scope.reset = function($event) {
+    	// Reset all form controls.
+    	$($event.currentTarget).parents('.modal-footer').siblings('.modal-body').find('form input').val('');
+    	
+    	// Clear Tags.
+    	scope.$broadcast('select2:clear', 'tags');
+    	scope.$broadcast('select2:clear', 'groups');
+    };
+    
+    scope.add = function() {
+    	scope.currentDatasource = {onCreate: true};
+
+    	// Clear Tags.
+    	scope.$broadcast('select2:clear', 'tags');
+    };
+    
+    function attachDefault(datasource) {
+    	if (!datasource.properties['maximumSize']) {
+    		datasource.properties['maximumSize'] = {value: 10};
+    	}
+    	
+    	if (!datasource.properties['minimumSize']) {
+    		datasource.properties['minimumSize'] = {value: 10};
+    	}
+    	return datasource;
+    }
+
+    function transform(datasource) {
+    	for (var prop in datasource.properties) {
+    		datasource.properties[prop]['name'] = prop;
+    	}
+    	return datasource;
+    }
+    
+    scope.save = function() {
+    	var tagOps = [];
+    	
+    	for (var index in scope.addedTags) {
+    		tagOps.push({
+    			func: tagResource.addDatasourceTag,
+    			args: [{id: scope.currentDatasource.id, tagId: scope.addedTags[index]}, null]
+    		});
+    	}
+    	
+    	for (var index in scope.removedTags) {
+    		tagOps.push({
+    			func: tagResource.removeDatasourceTag,
+    			args: [{id: scope.currentDatasource.id, tagId: scope.removedTags[index]}, null]
+    		});
+		}
+    	
+    	if (scope.currentDatasource.onCreate) {
+        	StorageService.add_datasource(transform(scope.currentDatasource), scope.storageType, function(){
+        		// Remove flag for on creating datasource.
+        		delete scope.currentDatasource.onCreate;
+        		
+    			scope.datasources.push(scope.currentDatasource);
+    			
+    			// Leverage promise chain to finish adding tags.
+    			promiseChain.newBorn()
+    				.add(tagOps, true)
+    				.add({
+    		    		func: tagResource.getDatasourcesTags,
+    		    		args: [],
+    		    		success: function(result) {
+    		    			scope.datasourcesTags = result.data[0];
+    		    		}
+    		    	}, true).finish();
+    			
+//    			$('<tr>').append($('<td>').text($scope.currentDatasource.id))
+//        			.append($('<td>').text($scope.currentDatasource.properties['user']))
+//        			.append($('<td>').text($scope.currentDatasource.properties['password']))
+//        			.append($('<td>').text($scope.currentDatasource.properties['url']))
+//        			.append($('<td>').text($scope.currentDatasource.properties['minimumSize']))
+//        			.append($('<td>').text($scope.currentDatasource.properties['maximumSize']))
+//        			.append($('<td>').text($scope.currentDatasource.id));
+        	});
+    	} else {
+    		StorageService.update_datasource(scope.storageType, scope.currentDatasource.id, transform(scope.currentDatasource), function() {
+    			promiseChain.newBorn()
+				.add(tagOps, true)
+				.add({
+		    		func: tagResource.getDatasourcesTags,
+		    		args: [],
+		    		success: function(result) {
+		    			scope.datasourcesTags = result.data[0];
+		    		}
+		    	}, true).finish();
+    		});
+    	}
+
+    };
+    
+    // Datasource removal.
+    scope.remove = function(context) {
+    	scope.currentDatasource = scope.datasources[context.index];
+    	var tags = scope.datasourcesTags[scope.currentDatasource.id];
+
+    	// If having tags attached to this ds, delete first.
+    	if (tags) {
+    		var tagRemovals = [];
+    		var w = watcher.register({
+    			context: {count: 0},
+    			step: function() {
+    				if (++this.count == tags.length) {
+    					return true;
+    				}
+    				return false;
+    			},
+    			handlers: [function() {
+    				doRemove();
+    			}]
+    		});
+    		for (var index in tags) {
+        		tagRemovals.push({
+        			func: tagResource.removeDatasourceTag,
+        			args: [{id: scope.currentDatasource.id, tagId: tags[index].id}, null],
+        			success: function() {
+        				w.step();
+        			}
+        		});
+    		}
+    		promiseChain.newBorn().add(tagRemovals, true).finish();
+    	} else {
+    		doRemove();
+    	}
+    	
+    	function doRemove() {
+    		StorageService.delete_datasource(scope.currentDatasource.id, scope.storageType, function(){
+	        	scope.datasources.splice(context.index, 1);
+	        	// Angular bug: can not handle collection changes when using ng-repeat in template.
+	        	//$(context.target).parents('tr').remove();
+	    		promiseChain.newBorn()
+	    			.add({
+			    		func: tagResource.getDatasourcesTags,
+			    		args: [],
+			    		success: function(result) {
+			    			scope.datasourcesTags = result.data[0];
+			    		}
+			    	}, true).finish();
+
+	    	});
+    	}
+    };
+    
+    // Raise confirm dialog.
+    scope.confirm = function($index, $event) {
+    	scope.$broadcast('confirm', 'confirmDialog', {index: $index, target: $event.currentTarget});
+    };
+    
+    // Tags change event handler.
+    scope.onChange = function(data) {
+    	scope.addedTags = [];
+		scope.removedTags = [];
+		if (!data) {
+			data = [];
+		}
+		
+		var tags = scope.datasourcesTags[scope.currentDatasource.id];
+		if (tags) {
+			$.each(tags, function(index, tag) {
+				var filtered = data.filter(function(t) {
+					return t == String(tag.id);
+				});
+				if (filtered.length == 0) {
+					scope.removedTags.push(tag.id);
+				}
+			});
+			
+			$.each(data, function(index, t) {
+				var filtered = tags.filter(function(tag) {
+					return t == String(tag.id);
+				});
+				
+				if (filtered.length == 0) {
+					scope.addedTags.push(t);
+				}
+			})
+			
+		} else {
+			scope.addedTags = data;
+		}
+    };
+    
+    scope.dataHandler = function(result) {
+    	var data = [];
+		$.each(result.data[0], function(group, tags){
+			$.each(tags, function(index, tag){
+				tag.text = tag.name;
+				data.push(tag);
+			});
+		});
+		return data;
+    };
+    
+    scope.groupHandler = function(result) {
+		return Object.keys(result.data[0]);
+    };
+    
+    scope.selectGroup = function(data) {
+    	if (data) {
+    		scope.newTagGroup = data;
+    	}
+    };
+    
+    scope.onValidate = function(newSelected, selected) {
+    	
+    };
+    
+    scope.addTag = function() {
+    	var chain = promiseChain.newBorn().add({
+    		func: tagResource.addTag,
+    		args: [{
+    			name: scope.newTag,
+    			group: scope.newTagGroup
+    		}],
+    		success: function() {
+    			scope.newTag = null;
+    			scope.newTagGroup = null;
+    		}
+    	}, true).add({
+    		func: tagResource.getTags,
+    		success: function(result) {
+    			scope.groupTags = result.data[0];
+    			scope.$broadcast('select2:data', 'tags');
+    			scope.$broadcast('select2:clear', 'groups');
+    		}
+    	}, true).finish();
+    }
+    
+//    scope.onSelect = function(tag) {
+//    	var tags = scope.datasourcesTags[scope.currentDatasource.id];
+//    	if (tags) {
+//    		var filtered = tags.filter(function(t, i){
+//    			return t.id == tag.id;
+//    		});
+//    		if (filtered.length == 0) {
+//    			scope.tagsAdded.push(tag);
+//    		}
+//    	} else {
+//    		scope.tagsAdded.push(tag);
+//    	}
+//    };
+//    
+//    scope.onUnselect = function(tag) {
+//    	var tags = scope.datasourcesTags[scope.currentDatasource.id];
+//    	if (tags) {
+//    		var filtered = tags.filter(function(t, i){
+//    			return t.id == tag.id;
+//    		});
+//    		if (filtered.length == 0) {
+//    			scope.tagsRemoved.push(tag);
+//    		}
+//    	}
+//    };
 } ]);
 
-function buildForms(dsType) {
-    var forms = [];
-        if (dsType.toLowerCase() == "kafka") {
-            forms.push(buildForm("id", "", "id"))
-            forms.push(buildForm("bootstrap.servers", "", "xxxx:9092"))
-            forms.push(buildForm("offsets.storage", "kafka", ""))
-            forms.push(buildForm("zookeeper.connect", "", "xxxx:2181"))
-        } else {
-            forms.push(buildForm("id", "", "id"))
-            forms.push(buildForm("url", "", "jdbc:mysql://..."))
-            forms.push(buildForm("user", "", "user"))
-            forms.push(buildForm("password", "", "password"))
-        }
-        return forms
-}
-
-function buildForm(key, value, placeholder) {
-    var form = {};
-    form.key = key;
-    form.value = value;
-    form.placeholder = placeholder;
-    return form;
-}
 
 

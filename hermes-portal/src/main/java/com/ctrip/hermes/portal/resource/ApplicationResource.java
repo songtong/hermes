@@ -35,6 +35,8 @@ import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.application.ApplicationService;
 import com.ctrip.hermes.portal.service.mail.PortalMailService;
+import com.ctrip.hermes.protal.util.ResponseUtils;
+
 
 @Path("/applications/")
 @Singleton
@@ -265,9 +267,10 @@ public class ApplicationResource {
 
 	@GET
 	@Path("{status}")
-	public Response getApplicationsByStatus(@PathParam("status") int status) {
-		List<HermesApplication> apps = appService.getApplicationsByStatus(status);
-		return Response.status(Status.OK).entity(apps).build();
+	public Response getApplicationsByStatus(@PathParam("status") int status, @QueryParam("owner") String owner, @QueryParam("offset") int offset, @QueryParam("size") int size) {
+		List<HermesApplication> apps = appService.getApplicationsByOwnerStatus(owner, status, offset, size);
+		int count = appService.countApplicationsByOwnerStatus(owner, status);
+		return Response.status(Status.OK).entity(ResponseUtils.wrapPaginationResponse(Status.OK, apps.toArray(), count)).build();
 	}
 
 	@GET
@@ -277,6 +280,30 @@ public class ApplicationResource {
 			throw new RestException("Application id not available", Status.BAD_REQUEST);
 		}
 		HermesApplication app = appService.getApplicationById(id);
+		switch (HermesApplicationType.findByTypeCode(app.getType())) {
+		case CREATE_TOPIC:
+			TopicView topicView = appService.generateTopicView((TopicApplication) app);
+			return Response.status(Status.OK).entity(new Pair<HermesApplication, TopicView>(app, topicView)).build();
+		case CREATE_CONSUMER:
+			ConsumerGroupView consumerView = appService.generateConsumerView((ConsumerApplication) app);
+			return Response.status(Status.OK).entity(new Pair<HermesApplication, ConsumerGroupView>(app, consumerView))
+					.build();
+		default:
+			throw new RestException("Generate view failed.");
+		}
+	}
+	
+	@POST
+	@Path("generatedByType/{type}")
+	public Response getGeneratedApplication(@PathParam("type") int type, String content) {
+		HermesApplication app = null;
+		try {
+			app = JSON.parseObject(content, HermesApplicationType.findByTypeCode(type).getClazz());
+		} catch (Exception e) {
+			log.error("Can not parse payload : {}, submit topic application failed.", content);
+			throw new RestException(e, Status.BAD_REQUEST);
+		}
+		
 		switch (HermesApplicationType.findByTypeCode(app.getType())) {
 		case CREATE_TOPIC:
 			TopicView topicView = appService.generateTopicView((TopicApplication) app);
@@ -321,7 +348,18 @@ public class ApplicationResource {
 		if (id < 0) {
 			throw new RestException("Application id unavailable");
 		}
-		HermesApplication app = appService.updateStatus(id, PortalConstants.APP_STATUS_REJECTED, comment, approver);
+		
+		HermesApplication app = appService.getApplicationById(id);
+		if (app == null) {
+			throw new RestException("Failed to find application!", Status.BAD_REQUEST);
+		}
+		
+		int status = PortalConstants.APP_STATUS_REJECTED;
+		if (app.getStatus() == PortalConstants.APP_STATUS_ROLLOUT) {
+			status = PortalConstants.APP_STATUS_ROLLOUT_REJECTED;
+		}
+		
+		app = appService.updateStatus(id, status, comment, approver, null);
 		if (app == null) {
 			throw new RestException("Reject application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
@@ -338,11 +376,19 @@ public class ApplicationResource {
 	@PUT
 	@Path("pass/{id}")
 	public Response passApplication(@PathParam("id") long id, @QueryParam("comment") String comment,
-			@QueryParam("approver") String approver) {
+			@QueryParam("approver") String approver, String polishedContent) {
 		if (id < 0) {
 			throw new RestException("Application id unavailable");
 		}
-		HermesApplication app = appService.updateStatus(id, PortalConstants.APP_STATUS_SUCCESS, comment, approver);
+		HermesApplication app = appService.getApplicationById(id);
+		if (app == null) {
+			throw new RestException("Application not available");
+		}
+		int status = PortalConstants.APP_STATUS_SUCCESS;
+		if (app.getStatus() == PortalConstants.APP_STATUS_ROLLOUT) {
+			status = PortalConstants.APP_STATUS_ROLLOUT_SUCCESS;
+		}
+		app = appService.updateStatus(id, status, comment, approver, polishedContent);
 		if (app == null) {
 			throw new RestException("Pass application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
@@ -351,6 +397,21 @@ public class ApplicationResource {
 			m_mailService.sendApplicationMail(app);
 		} catch (Exception e) {
 			log.error("Send email of hermes application id={} failed.", app.getId(), e);
+		}
+
+		return Response.status(Status.OK).entity(app).build();
+	}
+	
+	@PUT
+	@Path("status/{id}")
+	public Response updateApplicationStatus(@PathParam("id") long id, @QueryParam("status") int status,
+			@QueryParam("comment") String comment, @QueryParam("approver") String approver, String polishedContent) {
+		if (id < 0) {
+			throw new RestException("Application id unavailable");
+		}
+		HermesApplication app = appService.updateStatus(id, status, comment, approver, polishedContent);
+		if (app == null) {
+			throw new RestException("Update application status failed!", Status.INTERNAL_SERVER_ERROR);
 		}
 
 		return Response.status(Status.OK).entity(app).build();

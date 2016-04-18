@@ -1,327 +1,462 @@
-application_module.controller('app-approval-detail-controller', [ '$scope', '$routeParams', '$resource', 'ApplicationService', '$location', '$window', '$q', function($scope, $routeParams, $resource, ApplicationService, $location, $window, $q) {
-	var storage_resource = $resource('/api/storages', {}, {
-		'get_storage' : {
-			method : 'GET',
-			isArray : true,
-		}
-	});
+application_module.controller('app-approval-detail-controller', [ '$scope', '$routeParams', '$resource', 'ApplicationService', '$location', '$window', '$q', '$filter', '$resource', 'watcher', 'TopicSync', 'clone', 'cache', 'promiseChain', 'user', function($scope, $routeParams, $resource, ApplicationService, $location, $window, $q, $filter, $resource, watcher, TopicSync, clone, cache, promiseChain, user) {
+	// Default options.
+	$scope.env = 'fws';
+	$scope.storageTypes = [ 'mysql', 'kafka' ];
+	$scope.languageTypes = [ 'java', '.net' ];
+	$scope.views = {};
+	
 	$scope.order_opts = [ true, false ];
-	$scope.datasources = [];
-	$scope.new_comment = "";
+	$scope.datasources = {};
+	$scope.comment = "";
+	$scope.envInvolved = [];
+	
+	$scope.tags = {};
+	$scope.datasourcesTags = {};
+	$scope.selectedTags = {};
+	$scope.datasourceCandidate = {};
 
-	ApplicationService.get_generated_application($routeParams['id']).then(function(result) {
-		$scope.application = result["key"];
-		$scope.view = result["value"];
-		updatePageType($scope.application["type"]);
-		if ($scope.application["type"] == 0 || $scope.application["type"] == 2) {// create
-			$scope.defaultReadDS = $scope.view.partitions[0].readDatasource;
-			$scope.defaultWriteDS = $scope.view.partitions[0].writeDatasource;
-			if ($scope.view["storageType"] == "mysql") {
-				storage_resource.get_storage({
-					'type' : 'mysql'
-				}, function(data) {
-					for (var i = 0; i < data[0].datasources.length; i++) {
-						$scope.datasources.push(data[0].datasources[i].id);
-					}
-					for (var i = 0; i < $scope.view.partitions.length; i++) {
-						$scope.view.partitions[i].readDatasource = $scope.defaultReadDS;
-						$scope.view.partitions[i].writeDatasource = $scope.defaultWriteDS;
-					}
-				});
+	// Use promise chain to fetch application.
+	promiseChain.add({
+		func: ApplicationService.get_application,
+		args: [$routeParams['id']],
+		success: function(result) {
+			$scope.application = result;
+			decodeComment();
+			if ($scope.application.type == 0 || $scope.application.type == 2) {
+				$scope.type = 'topic';
+			} else {
+				$scope.type = 'consumer';
+			}
+			if ($scope.application.storageType == 'mysql') {
 				$scope.codec_types = [ 'json', 'cmessaging' ];
 				$scope.endpoint_types = [ 'broker' ];
-
 			} else {
-				storage_resource.get_storage({
-					'type' : 'kafka'
-				}, function(data) {
-					for (var i = 0; i < data[0].datasources.length; i++) {
-						$scope.datasources.push(data[0].datasources[i].id);
-					}
-					for (var i = 0; i < $scope.view.partitions.length; i++) {
-						$scope.view.partitions[i].readDatasource = $scope.defaultReadDS;
-						$scope.view.partitions[i].writeDatasource = $scope.defaultWriteDS;
-					}
-				});
-				$scope.properties = [ 'partitions', 'replication-factor', 'retention.bytes', 'retention.ms' ]
+				$scope.properties = [ 'partitions', 'replication-factor', 'retention.bytes', 'retention.ms' ];
 				$scope.endpoint_types = [ 'kafka', 'broker' ];
 				$scope.codec_types = [ 'avro', 'json' ];
 			}
+			$scope.$broadcast('initialized');
 		}
-	});
-	
-	ApplicationService.get_broker_groups().then(function(result) {
-		$scope.broker_groups = result;
-	});
-	
-	$scope.add_partition = function(view) {
-		var new_partition = {};
-		if (view.partitions.length == 0) {
-			new_partition.readDatasource = $scope.defaultReadDS;
-			new_partition.writeDatasource = $scope.defaultWriteDS;
+	}).finish();
+
+	$scope.addPartition = function() {
+		var partition = {};
+		if ($scope.view.partitions.length == 0) {
+			partition.readDatasource = $scope.datasources[$scope.env][0];
+			partition.writeDatasource = $scope.datasources[$scope.env][0];
 		} else {
-			new_partition.readDatasource = view.partitions[view.partitions.length - 1].readDatasource;
-			new_partition.writeDatasource = view.partitions[view.partitions.length - 1].writeDatasource;
+			partition.readDatasource = $scope.view.partitions[$scope.view.partitions.length - 1].readDatasource;
+			partition.writeDatasource = $scope.view.partitions[$scope.view.partitions.length - 1].writeDatasource;
 		}
-		view.partitions.push(new_partition);
+		$scope.view.partitions.push(partition);
 	};
 
-	$scope.delete_partition = function(view, index) {
-		view.partitions.splice(index, 1);
+	$scope.deletePartition = function(index) {
+		$scope.view.partitions.splice(index, 1);
 	};
 
-	$scope.add_property = function(view) {
-		var new_property = {};
-		view.properties.push(new_property);
+	$scope.addProperty = function() {
+		$scope.view.properties.push({});
 	};
 
-	$scope.delete_property = function(view, index) {
-		view.properties.splice(index, 1);
+	$scope.deleteProperty = function(index) {
+		$scope.view.properties.splice(index, 1);
 	};
-
-	function updatePageType(typeCode) {
-		switch (typeCode) {
-		case 0:
-			$scope.currentPageType = "Topic创建";
-			break;
-		case 1:
-			$scope.currentPageType = "Consumer创建";
-			break;
-		case 2:
-			$scope.currentPageType = "Topic修改";
-			break;
-		case 3:
-			$scope.currentPageType = "Consumer修改";
-			break;
-		default:
-			console.log("default");
+	
+	function handleError(result) {
+		$scope.$broadcast('progress-done', 'syncProgressBar', function(){
+			$scope.$broadcast('alert-error', 'syncAlert', result.data);
+		});
+	}
+	
+	function handleSuccess(msg) {
+		$scope.$broadcast('progress-done', 'syncProgressBar', function(){
+			$scope.$broadcast('alert-success', 'syncAlert', msg, 'Success');
+		});
+	}
+	
+	function encodeComment() {
+		if ($scope.application && $scope.comment) {
+			$scope.application.comment.push({
+				createdTime: $filter('date')(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+				author: user.sn,
+				comment: $scope.comment
+			});
 		}
+		return JSON.stringify($scope.application.comment);
 	}
-
-	function get_new_consuemr(view, topics, i) {
-		var consumer = {};
-		consumer.topicName = topics[i];
-		consumer.orderedConsume = view.orderedConsume;
-		consumer.appIds = view.appIds;
-		consumer.name = view.name;
-		consumer.retryPolicy = view.retryPolicy;
-		consumer.ackTimeoutSeconds = view.ackTimeoutSeconds;
-		consumer.owner1 = view.owner1;
-		consumer.owner2 = view.owner2;
-		consumer.phone1 = view.phone1;
-		consumer.phone2 = view.phone2;
-		return consumer;
-	}
-
-	$scope.topicDetailForm = {
-		createTopicOnFws : true,
-		createTopicOnUat : true,
-		createTopicOnProd : true,
-		buildMetaOnFws : true,
-		buildMetaOnUat : true,
-		buildMetaOnProd : true,
-		progressInfo : "",
-		totalTaskCount : 7,
-		terminated : false,
-		setProgreaaBarValue : function(value) {
-			document.getElementById("progressbar").style.width = value;
-		},
-		disablePermitTopicButton : function() {
-			document.getElementById("permitTopicButton").disabled = true;
-		},
-		enablePermitTopicButton : function() {
-			document.getElementById("permitTopicButton").disabled = false;
-		},
-		showProgressBar : function() {
-			$("#progressBarprompt").show();
-		},
-		hideProgressBar : function() {
-			$("#progressBarprompt").hide();
-		},
-		disactiveProgressBar : function() {
-			$("#progressbar").removeClass("active");
-		},
-		activeProgressBar : function() {
-			$("#progressbar").addClass("active");
-		},
-		setProgressStatus : function(progressInfo, value, taskCount) {
-			var currentValue = (value + taskCount - 1) / this.totalTaskCount * 100 + "%";
-			this.progressInfo = progressInfo;
-			this.setProgreaaBarValue(currentValue);
-			if (currentValue == "100%") {
-				this.disactiveProgressBar();
+	
+	function decodeComment() {
+		if ($scope.application.comment) {
+			try {
+				$scope.application.comment = JSON.parse($scope.application.comment);
+			} catch (e) {
+				// ignore for the case comment is old-style.
 			}
-		},
-		initProgressBar : function() {
-			this.showProgressBar();
-			this.activeProgressBar();
-			this.setProgreaaBarValue("0%");
-			this.progressInfo = "";
-			this.disablePermitTopicButton();
-		}
-	}
-
-	function syncTopicToUat() {
-		var delay = $q.defer();
-		if (!$scope.topicDetailForm.createTopicOnUat) {
-			$scope.topicDetailForm.setProgressStatus("同步topic至Uat环境:略过。", 1, 2);
-			delay.resolve();
+			
+			// Compatible with the old-style comment.
+			if (!($scope.application.comment instanceof Array)) {
+				$scope.application.comment = [{
+					createdTime: $filter('date')(new Date($scope.application.lastModifiedTime), 'yyyy-MM-dd HH:mm:ss'),
+					author: $scope.application.approver,
+					comment: $scope.application.comment
+				}];
+			}
 		} else {
-			$scope.topicDetailForm.setProgressStatus("正在同步topic至Uat环境", 0.3, 2);
-			ApplicationService.sync_topic($scope.uatTopicView, 'uat', false).then(function(result) {
-				$scope.topicDetailForm.setProgressStatus("同步至Uat环境成功。", 1, 2);
-				delay.resolve();
-			}, function(result) {
-				$scope.topicDetailForm.setProgressStatus("同步至Uat环境失败: " + result.data, 1, 2);
-				delay.reject();
-			})
+			$scope.application.comment = [];
 		}
-		return delay.promise;
-	}
-
-	function syncTopicToProd() {
-		var delay = $q.defer();
-		if (!$scope.topicDetailForm.createTopicOnProd) {
-			$scope.topicDetailForm.setProgressStatus("同步topic至Prod环境:略过。", 1, 3);
-			delay.resolve();
-		} else {
-			$scope.topicDetailForm.setProgressStatus("正在同步topic至Prod环境", 0.3, 3);
-			ApplicationService.sync_topic($scope.prodTopicView, 'prod', false).then(function(result) {
-				$scope.topicDetailForm.setProgressStatus("同步至Prod环境成功。", 1, 3);
-				delay.resolve();
-			}, function(result) {
-				$scope.topicDetailForm.setProgressStatus("同步至Prod环境失败: " + result.data, 1, 3);
-				delay.reject();
-			})
-		}
-		return delay.promise;
-	}
-
-	function createTopic() {
-		var delay = $q.defer();
-		if (!$scope.topicDetailForm.createTopicOnFws) {
-			$scope.topicDetailForm.setProgressStatus("创建topic至Fws环境:略过。", 1, 1);
-			delay.resolve();
-		} else {
-			$scope.topicDetailForm.setProgressStatus("正在Fws环境创建Topic...", 0.3, 1);
-			ApplicationService.create_topic($scope.fwsTopicView).then(function(save_result) {
-				if ($scope.view.storageType == 'kafka') {
-					$scope.topicDetailForm.setProgressStatus("正在发布Topic至Kafka...", 0.6, 1);
-					ApplicationService.deploy_topic($scope.view.name).then(function(response) {
-						$scope.topicDetailForm.setProgressStatus("Topic创建成功！", 1, 1);
-						delay.resolve();
-					}, function(response) {
-						$scope.topicDetailForm.setProgressStatus("发布Topic到Kafka失败!正在删除Topic...！", 0.8, 1);
-						ApplicationService.remove_topic($scope.view.name).then(function(success_resp) {
-							$scope.topicDetailForm.setProgressStatus("发布Topic到Kafka失败, 删除脏数据成功！", 1, 1);
-							$scope.topicDetailForm.enablePermitTopicButton();
-							delay.reject();
-						}, function(error_resp) {
-							$scope.topicDetailForm.setProgressStatus("发布Topic到Kafka失败, 删除脏数据失败！", 1, 1);
-							$scope.topicDetailForm.enablePermitTopicButton();
-							delay.reject();
-						});
-					});
-				} else {
-					$scope.topicDetailForm.setProgressStatus("Topic创建成功！", 1, 1);
-					delay.resolve();
-				}
-			}, function(error_result) {
-				$scope.topicDetailForm.setProgressStatus("创建topic失败：" + error_result.data, 1, 1);
-				$scope.topicDetailForm.enablePermitTopicButton();
-				delay.reject();
-			});
-		}
-		return delay.promise;
-	}
-
-	function passApplication() {
-		var delay = $q.defer();
-		$scope.topicDetailForm.setProgressStatus("正在更新表单...", 0.3, 7);
-		ApplicationService.pass_application($scope.application.id, $scope.new_comment, ssoUser).then(function(result) {
-			$scope.topicDetailForm.setProgressStatus("表单更新成功", 1, 7);
-			delay.resolve();
-			// $window["location"].replace("/console/topic#detail/mysql/mysql/"
-			// + $scope.view.name);
-		}, function(result) {
-			$scope.topicDetailForm.setProgressStatus("表单更新失败", 1, 7);
-			delay.reject(result);
-		});
-		return delay.promise;
-
-	}
-	// $scope.topicDetailForm.showProgressBar();
-	$scope.permit_topic_application = function() {
-		$scope.topicDetailForm.initProgressBar();
-		// 在fws创建topic
-		createTopic().then(function(result) {
-			console.log("create success.")
-			syncTopicToUat().then(function(result) {
-				console.log("sync to uat success.")
-				syncTopicToProd().then(function() {
-					console.log("sync to prod success.")
-					// build meta
-					passApplication();
-
-				})
-			})
-		});
-
-	}
-	function clone(myObj) {
-		if (typeof (myObj) != 'object' || myObj == null)
-			return myObj;
-		var newObj = new Object();
-		if (myObj instanceof Array) {
-			newObj = new Array();
-		}
-		for ( var i in myObj) {
-			newObj[i] = clone(myObj[i]);
-		}
-		return newObj;
-	}
-
-	$scope.initTopicInfo = function() {
-		$scope.fwsTopicView = $scope.view;
-		$scope.uatTopicView = clone($scope.view);
-		$scope.prodTopicView = clone($scope.view);
-		console.log($scope.fwsTopicView);
-		console.log($scope.uatTopicView);
-		console.log($scope.prodTopicView);
-	}
-
-	$scope.permit_consumer_application = function() {
-		var topics = $scope.view.topicName.split(",");
-		console.log(topics);
-		show_op_info.show("正在创建Consumer...", true);
-		var consumers = [];
-		for (var i = 0; i < topics.length; i++) {
-			consumers.push(get_new_consuemr($scope.view, topics, i));
-		}
-		ApplicationService.add_consumers(consumers).then(function(result1) {
-			ApplicationService.pass_application($scope.application.id, $scope.new_comment, ssoUser).then(function(result) {
-				$scope.application = result;
-				show_op_info.show("为Topic：" + result1.success_topics + "创建Consumer成功！(共" + result1.success_topics.length + "个成功，" + (topics.length - result1.success_topics.length) + "个失败)，表单状态修改成功", true);
-			}, function(result) {
-				show_op_info.show("为Topic：" + result1.success_topics + "创建Consumer成功！(共" + result1.success_topics.length + "个成功，" + (topics.length - result1.success_topics.length) + "个失败)，表单状态修改失败", false);
-			});
-
-		}, function(result) {
-			show_op_info.show("新增 consumer失败! " + error_result.data, false);
-			document.getElementById("permitConsumerButton").disabled = false;
-		});
-	}
-
-	$scope.reject_application = function() {
-		document.getElementById("rejectButton").disabled = "disabled";
+		
 		console.log($scope.application.comment);
-		ApplicationService.reject_application($scope.application.id, $scope.new_comment, ssoUser).then(function(result) {
-			show_op_info.show("拒绝申请成功", true);
-			document.getElementById("rejectButton").disabled = false;
+	}
+	
+	$scope.updateSelection = function() {
+		var selectionResult = {};
+		var selectedTags = $scope.selectedTags[$scope.env];
+		var datasourcesTags = $scope.datasourcesTags[$scope.env];
+		
+		for (var group in selectedTags) {
+			// Ignore the case the selection is useless.
+			if (!selectedTags[group]) {
+				return;
+			}
+			
+			// Selected tag on one tag group.
+			var tagId = selectedTags[group].id;
+
+			// Check whether having datasource attached to this tag.
+			for (var ds in datasourcesTags) {
+				datasourcesTags[ds].forEach(function(tag, index){
+					if (tag.id == tagId) {
+						if (!selectionResult[ds]) {
+							selectionResult[ds] = 0;
+						}
+						selectionResult[ds]++;
+					}
+				});
+			}
+		}
+		
+		var max = 0;
+		var datasource = null;
+		for (var ds in selectionResult) {
+			if (selectionResult[ds] > max) {
+				datasource = ds;
+			}
+		}
+		
+		$scope.datasourceCandidate[$scope.env] = datasource? datasource: 'No Eligible';
+	};
+
+	$scope.createTopic = function() {
+		// Records the env in case it changes.
+		var env = $scope.env;
+	
+		// Set timeout to 10 seconds, and set maximum to 80 if it's a mysql topic, otherwise 30.
+		$scope.$broadcast('progress-random', 'syncProgressBar', 
+				$scope.view.storageType == 'kafka'? 3000: 10000, $scope.view.storageType == 'kafka'? 30: 80);
+		
+		// Register a watcher to sync two promise-chains.
+		var finishWatcher = watcher.register({
+			context: {count: 0},
+			step: function(){
+				if ($scope.view.storageType == 'mysql') {
+					return true;
+				} else if (++this.count == 2) {
+					return true;
+				}
+				return false;
+			},
+			handlers: [function() {
+				if ($scope.application.status == 2) {
+					delete $scope.application.polished;
+					ApplicationService.update_application_status($scope.application.id, 3, encodeComment(), user.sn, $scope.application).then(function(result) {
+						$scope.application = result;
+						decodeComment();
+						handleSuccess('Done initializing topic on env: ' + env);
+					}, handleError);
+				} else {
+					handleSuccess('Done initializing topic on env: ' + env);
+				}
+			}, function() {
+				$scope.envInvolved.push(env);
+			}]
+		});
+		
+		var topicChain = promiseChain.newBorn();
+		topicChain.add({
+			func:TopicSync.createTopic,
+			args: [env, $scope.view],
+			success: function(result) {
+				$scope.views[env] = result;
+				$scope.view = $scope.views[env];
+				
+				if($scope.view.storageType == 'mysql') {
+					$scope.$broadcast('progress', 'syncProgressBar', {percentage: 90, msg: 'Topic created on env: ' + $scope.env});
+				} else {
+					$scope.$broadcast('progress', 'syncProgressBar', {percentage: 50, msg: 'Topic created on env: ' + $scope.env});
+				}
+				finishWatcher.step();
+			},
+			error: handleError
+		});
+		
+		if ($scope.view.storageType == 'kafka') {
+			topicChain.add({
+				func:TopicSync.deployKafkaTopic,
+				args: [env, {name: $scope.view.name}],
+				success: function(result) {
+					$scope.$broadcast('progress', 'syncProgressBar', {percentage: 90, msg: 'Topic deployed on env: ' + $scope.env});
+					finishWatcher.step();
+				},
+				error: handleError
+			});
+		}
+		
+		topicChain.finish();
+	};
+	
+	$scope.createConsumer = function() {
+		// Records the env in case it changes.
+		var env = $scope.env;
+		
+		$scope.$broadcast('progress-random', 'syncProgressBar', 5000);
+		var topicNames = $scope.application.topicName.split(',');
+		
+		// Register a watcher to sync two promise-chains.
+		var finishWatcher = watcher.register({
+			context: {count: 0},
+			step: function(){
+				if (++this.count == topicNames.length) {
+					return true;
+				}
+				$scope.$broadcast('progress-step', 'syncProgressBar', 100 / topicNames.length * this.count);
+			},
+			handlers: [function() {
+				if ($scope.application.status == 2) {
+					ApplicationService.update_application_status($scope.application.id, 3, encodeComment(), user.sn).then(function(result) {
+						$scope.application = result;
+						decodeComment();
+						handleSuccess('Done initializing consumer on env: ' + env);
+					}, handleError);
+				} else {
+					handleSuccess('Done initializing consumer on env: ' + env);
+				}
+			}]
+		});
+
+		var promises = [];
+		for (var index in topicNames) {
+			var view = clone($scope.view);
+			view['topicName'] = topicNames[index];
+			promises.push({
+				func: TopicSync.addConsumer,
+				args: [env, view],
+				success: function(result) {
+					$scope.views[env] = result;
+					$scope.view = $scope.views[env];
+					
+					finishWatcher.step();
+				},
+				error: handleError
+			});
+		}
+		
+		promiseChain.newBorn().add(promises).finish();
+	};
+	
+	$scope.passApplication = function passApplication() {
+		// Delete node 'polished'
+		delete $scope.application.polished;
+		
+		ApplicationService.pass_application($scope.application.id, encodeComment(), user.sn, $scope.application).then(function(result) {
 			$scope.application = result;
+			decodeComment();
+			// When the application is passed, invoke api to get dynamic view.
+			$scope.openSyncModal();
 		}, function(result) {
-			document.getElementById("rejectButton").disabled = false;
-			show_op_info.show("拒绝申请失败", false);
+		});
+	};
+	
+	$scope.openSyncModal = function() {
+		$scope.$broadcast('progress-random', 'modalProgressBar', 5000);
+		
+		// Register a watcher to sync two promise-chains.
+		var finishWatcher = watcher.register({
+			context: {count: 0},
+			step: function(){
+				if (++this.count == 2) {
+					return true;
+				}
+			},
+			handlers: [function() {
+				console.log($scope.tags);
+				$scope.$broadcast('progress-done', 'modalProgressBar', function(){
+					$('#topicInfoModal').one('hidden.bs.modal', function(){
+						if ($scope.envInvolved.length > 0) {
+							$scope.$broadcast('alert-success', 'metaWarning');
+						}
+					}).modal();
+				});
+			}]
+		});
+		
+		// Check whether topic exists on certain env.
+		function checkOnEnv(env) {
+			var remoteChain = promiseChain.newBorn();
+			if ($scope.application["type"] == 0) {
+				// Compose topic name.
+				var topicName = $scope.application.productLine + '.' + $scope.application.entity + '.' + $scope.application.event;
+				
+				// For creation requests, call storage api to get list serving config modal view. 
+				remoteChain.add({
+					func: TopicSync.getStorage,
+					args: [env, {type: $scope.application.storageType}],
+					success: function(data) {
+						var datasources = []
+						for (var i = 0; i < data[0].datasources.length; i++) {
+							datasources.push(data[0].datasources[i].id);
+						}
+						$scope.datasources[env] = datasources;
+						
+						$scope.$broadcast('progress', 'modalProgressBar', 'Fetched storages on env: ' + env);
+					}
+				}).add({
+					func: TopicSync.getTopic,
+					args: [env, {name: topicName}],
+					success: function(result){
+						$scope.views[env] = result;
+						
+						// If this is the view of wanted env, set current view to default one.
+						if (env == $scope.env) {
+							$scope.view = $scope.views[env];
+						}
+						
+						// Trigger watcher to notify the end of one chain invocation.
+						finishWatcher.step();
+						
+						// Abort this call chain.
+						this.abort();
+						$scope.$broadcast('progress', 'modalProgressBar', 'Found topic on env: ' + env);
+					},
+					error: function() {
+						this.resume();
+						$scope.$broadcast('progress', 'modalProgressBar', 'Verified topic on env: ' + env);
+					}
+				}).add({
+					func: TopicSync.getGeneratedApplicationByType,
+					args: [env, $scope.application],
+					success: function(result){
+						$scope.views[env] = result['value'];
+						
+						for (var index in result['value'].tags) {
+							var tag = result['value']['tags'][index];
+							$scope.selectedTags[env] = {};
+							$scope.selectedTags[env][tag.group] = tag;
+						}
+
+						// Set candicate datasource for specific env.
+						$scope.datasourceCandidate[env] = result['value'].partitions[0].readDatasource;
+						
+						// Same as above.
+						if (env == $scope.env) {
+							$scope.view = $scope.views[env];
+						}
+						$scope.$broadcast('progress', 'modalProgressBar', 'Fetched generated view on env: ' + env);
+						finishWatcher.step();
+					}
+				}).add({
+					func: TopicSync.getTags,
+					args: [env],
+					success: function(result) {
+						$scope.tags[env] = result.data[0];
+						console.log($scope.tags);
+						// Keep one selection position for each tag group.
+						//$scope.selectedTags = new Array(Object.keys($scope.tags).length);
+					}
+				}).add({
+					func: TopicSync.getDatasourcesTags,
+					args: [env],
+					success: function(result) {
+						$scope.datasourcesTags[env] = result.data[0];
+						
+					}
+				}).finish();
+				
+			} else {
+				var consumerName = $scope.application.productLine + '.' + $scope.application.product + '.' + $scope.application.project;
+				var topicNames = $scope.application.topicName.split(',');
+				remoteChain.add({
+					func: TopicSync.getConsumers,
+					args: [env, {topic: topicNames[0]}],
+					success: function(result) {
+						// Check whether specified consumer is already existed.
+						var consumers = result.filter(function(elem){
+							return elem['name'] == consumerName;
+						});
+						
+						// If it's already created, abort the call chain.
+						if (consumers.length > 0) {
+							$scope.views[env] = result[0];
+							if (env == $scope.env) {
+								$scope.view = $scope.views[env];
+							}
+							this.abort();
+							finishWatcher.step();
+						}
+					}
+				}).add({
+					func: TopicSync.getGeneratedApplicationByType,
+					args: [env, $scope.application],
+					success: function(result){
+						$scope.views[env] = result['value'];
+						if (env == $scope.env) {
+							$scope.view = $scope.views[env];
+						}
+						$scope.$broadcast('progress', 'modalProgressBar', 'Fetched generated view on env: ' + env);
+						finishWatcher.step();
+					}
+				}).finish();
+			}
+		}
+		checkOnEnv('fws');
+		checkOnEnv('uat');
+		if ($scope.application.status > 4) {
+			checkOnEnv('tools');
+			checkOnEnv('prod');
+		}
+	};
+
+	$scope.switchView = function($event) {
+		$event.preventDefault();
+		$scope.env = $($event.target).attr('href').substr(1);
+		$scope.view = $scope.views[$scope.env];
+		//$scope.$digest();
+	};
+
+	// Reject
+	$scope.reject_application = function() {
+		$scope.$broadcast('progress-random', 'modalProgressBar');
+		ApplicationService.reject_application($scope.application.id, encodeComment(), user.sn).then(function(result) {
+			$scope.application = result;
+			decodeComment();
+			$scope.$broadcast('progress-done', 'modalProgressBar');
+		}, function(result) {
+			$scope.$broadcast('progress-done', 'modalProgressBar');
 		});
 	}
-} ])
+	
+	// Confirm user ops.
+	$scope.confirm = function() {
+		$('#confirmModal').modal();
+	};
+	
+	// Ignore event trigger.
+	$scope.switchView = function($event) {
+		$scope.env = $($event.currentTarget).find('a').attr('href').substr(1);
+		$scope.view = $scope.views[$scope.env];
+	};
+	
+	$scope.ignore = function($event) {
+		$event.preventDefault();
+	}
+}]);

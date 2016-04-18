@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.hermes.portal.dal.datasourcetag" gen="true" >
+  <entity name="datasource-tag" table="datasource_tag" alias="dt">
+  	<member name="count" value-type="int" select-expr="COUNT(*)" all="false" />
+    <readsets>
+      <readset name="COUNT">
+      	<member name="count"/>
+      </readset>
+    </readsets>
+    <query-defs>
+      <query name="find-by-datasource" type="SELECT" multiple="true">
+        <param name="key-datasource-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='datasource-id'/> = ${key-datasource-id}]]></statement>
+      </query>
+      <query name="find-by-tag" type="SELECT" multiple="true">
+        <param name="key-tag-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='tag-id'/> = ${key-tag-id}]]></statement>
+      </query>
+      <query name="count-by-tag" type="SELECT">
+        <param name="key-tag-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='tag-id'/> = ${key-tag-id}]]></statement>
+      </query>
+      <query name="find-all" type="SELECT" multiple="true">
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        ORDER BY <FIELD name='datasource-id'/>]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+</entities>
+

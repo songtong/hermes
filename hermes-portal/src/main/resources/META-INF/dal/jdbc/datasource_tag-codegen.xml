@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities>
+  <entity name="datasource-tag" table="datasource_tag" alias="dt">
+    <member name="datasource-id" field="datasource_id" value-type="String" length="200" nullable="false" key="true" />
+    <member name="tag-id" field="tag_id" value-type="long" length="20" nullable="false" key="true" />
+    <var name="key-datasource-id" value-type="String" key-member="datasource-id" />
+    <var name="key-tag-id" value-type="long" key-member="tag-id" />
+    <primary-key name="PRIMARY" members="datasource_id, tag_id" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-datasource-id" />
+        <param name="key-tag-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='datasource-id'/> = ${key-datasource-id} AND <FIELD name='tag-id'/> = ${key-tag-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-datasource-id" />
+        <param name="key-tag-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='datasource-id'/> = ${key-datasource-id} AND <FIELD name='tag-id'/> = ${key-tag-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-datasource-id" />
+        <param name="key-tag-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='datasource-id'/> = ${key-datasource-id} AND <FIELD name='tag-id'/> = ${key-tag-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+</entities>
+

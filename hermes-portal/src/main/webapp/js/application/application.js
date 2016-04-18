@@ -1,4 +1,4 @@
-var application_module = angular.module('application', [ 'ngResource', 'ngRoute', 'xeditable', 'smart-table', 'ui.bootstrap' ]);
+var application_module = angular.module('application', [ 'ngResource', 'ngRoute', 'xeditable', 'smart-table', 'ui.bootstrap', 'components', 'utils', 'TopicSync', 'user']);
 
 application_module.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
@@ -20,10 +20,8 @@ application_module.config(function($routeProvider) {
 	}).when('/approval/:id', {
 		templateUrl : '/jsp/console/application/application-approval-detail.html',
 		controller : 'app-approval-detail-controller'
-	})
-});
-
-application_module.filter('short', function() {
+	});
+}).filter('short', function() { // define global short filter.
 	return function(input, length) {
 		input = input || '';
 		length = length || 30;
@@ -34,10 +32,8 @@ application_module.filter('short', function() {
 		out = input.substring(0, length / 2) + " ... " + input.substring(input.length - length / 2);
 		return out;
 	}
-});
-
-application_module.service('ApplicationService', [ '$resource', '$q', function($resource, $q) {
-
+}).service('ApplicationService', [ '$resource', '$q', function($resource, $q) { // define application service.
+	
 	var application_resource = $resource("/api/applications/", {}, {
 		create_topic_application : {
 			method : 'POST',
@@ -54,17 +50,34 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 
 		get_applications : {
 			method : 'GET',
-			url : '/api/applications/:status',
-			isArray : true
+			url : '/api/applications/:status'
 		},
 
 		get_generated_application : {
 			method : 'GET',
 			url : '/api/applications/generated/:id'
 		},
+		
+		get_generated_application_by_type : {
+			method : 'POST',
+			url : '/api/applications/generatedByType/:type',
+			params : {
+				type : '@type'
+			},
+			transformRequest: function(data, headers) {
+				return JSON.stringify(data);
+			}
+		},
+		
 		update_application : {
 			method : 'PUT',
-			url : '/api/applications/update/:type'
+			url : '/api/applications/update/:type',
+			params : {
+				type : '@type'
+			},
+			transformRequest: function(data, headers) {
+				return JSON.stringify(data);
+			}
 		},
 		reject_application : {
 			method : 'PUT',
@@ -82,11 +95,27 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 				id : '@id',
 				comment : '@comment',
 				approver : '@approver'
+			},
+			transformRequest: function(data, headers) {
+				return JSON.stringify(data.polished);
+			}
+		},
+		update_application_status : {
+			method : 'PUT',
+			url : '/api/applications/status/:id',
+			params : {
+				id : '@id',
+				status: '@status',
+				comment : '@comment',
+				approver : '@approver'
+			},
+			transformRequest: function(data, headers) {
+				return JSON.stringify(data.polished);
 			}
 		}
 	});
 
-	topic_resource = $resource('/api/topics/:name', {}, {
+	var topic_resource = $resource('/api/topics/:name', {}, {
 		get_topic_names : {
 			method : 'GET',
 			isArray : true,
@@ -110,31 +139,15 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			}
 		}
 	});
-	consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
+	
+	var consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
 		add_consumer : {
 			method : 'POST',
 			url : '/api/consumers/'
 		}
 	});
 
-	var endpoint_resource = $resource('/api/endpoints', {}, {
-		get_broker_groups : {
-			method : 'GET',
-			isArray : true,
-			url : '/api/endpoints/brokerGroups'
-		}
-	});
-
 	return {
-		'get_broker_groups' : function() {
-			var d = $q.defer();
-			endpoint_resource.get_broker_groups({}, function(result) {
-				d.resolve(result);
-			}, function(result) {
-				d.reject(result.data);
-			});
-			return d.promise;
-		},
 		'add_consumer' : function(consumer) {
 			var delay = $q.defer();
 			consumer_resource.add_consumer(consumer, function(result) {
@@ -207,12 +220,14 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			});
 			return delay.promise;
 		},
-		'get_applications' : function(app_status) {
+		'get_applications' : function(status, owner, offset, size) {
 			var delay = $q.defer();
 			application_resource.get_applications({
-				status : app_status
+				status : status,
+				owner: owner,
+				offset: offset,
+				size: size
 			}, function(result) {
-				console.log(result);
 				delay.resolve(result);
 			}, function(result) {
 				delay.reject(result);
@@ -230,11 +245,9 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			})
 			return delay.promise;
 		},
-		'update_application' : function(app, app_type) {
+		'update_application' : function(app) {
 			var delay = $q.defer();
-			application_resource.update_application({
-				type : app_type
-			}, app, function(result) {
+			application_resource.update_application( app, function(result) {
 				console.log("application_resource.update_application success");
 				delay.resolve(result);
 			}, function(result) {
@@ -260,12 +273,28 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 			});
 			return delay.promise;
 		},
-		'pass_application' : function(app_id, app_comment, app_approver) {
+		'pass_application' : function(app_id, app_comment, app_approver, polished_content) {
 			var delay = $q.defer();
 			application_resource.pass_application({
 				id : app_id,
 				comment : app_comment,
-				approver : app_approver
+				approver : app_approver,
+				polished: polished_content
+			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'update_application_status': function(app_id, app_status, app_comment, app_approver, polished_content) {
+			var delay = $q.defer();
+			application_resource.update_application_status({
+				id : app_id,
+				status: app_status,
+				comment : app_comment,
+				approver : app_approver,
+				polished: polished_content
 			}, function(result) {
 				delay.resolve(result);
 			}, function(result) {
@@ -323,6 +352,15 @@ application_module.service('ApplicationService', [ '$resource', '$q', function($
 		'create_topic' : function(topic) {
 			var delay = $q.defer();
 			topic_resource.save(topic, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+		},
+		'get_generated_application_by_type': function(application) {
+			var delay = $q.defer();
+			application_resource.get_generated_application_by_type(application, function(result) {
 				delay.resolve(result);
 			}, function(result) {
 				delay.reject(result);

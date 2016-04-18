@@ -1,0 +1,26 @@
+			<form class="form-horizontal">
+				<div class="form-group">
+					<label class="col-md-4 control-label">ID</label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="ID" ng-model="currentDatasource.id">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-4 control-label">bootstrap.servers</label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="User" ng-model="currentDatasource.properties['bootstrap.servers']['value']">
+					</div>
+				</div>
+				<div class="form-group" ng-if="currentDatasource.id=='kafka-consumer'">
+					<label class="col-md-4 control-label">zookeeper.connect </label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="Password" ng-model="currentDatasource.properties['zookeeper.connect']['value']">
+					</div>
+				</div>
+				<div class="form-group" ng-if="currentDatasource.id=='kafka-consumer'">
+					<label class="col-md-4 control-label">offsets.storage</label>
+					<div class="col-md-6">
+						<input class="form-control" placeholder="Connection Pool Maximum Size" ng-model="currentDatasource.properties['offsets.storage']['value']">
+					</div>
+				</div>
+			</form>

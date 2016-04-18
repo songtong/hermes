@@ -47,4 +47,4 @@ log_in_module.controller('log-in-controller', [
 				show_op_info.show("Logout success!", true);
 			}
 		} ]);
-angular.bootstrap($("#login-app"), [ "log-in-app" ]);
+//angular.bootstrap($("#login-app"), [ "log-in-app" ]);

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.hermes.portal.dal.user" gen="true" >
+ 	<entity name="users">
+ 		<member name="count" value-type="int" select-expr="COUNT(*)" all="false" />
+ 	    <readsets>
+	      <readset name="COUNT" >
+	      	<member name="count" />
+	      </readset>
+	    </readsets>
+	    <query-defs>
+	      <query name="count-by-PK" type="SELECT">
+	        <param name="key-username" />
+	        <statement><![CDATA[SELECT <FIELDS/>
+	        FROM <TABLE/>
+	        WHERE <FIELD name='username'/> = ${key-username}]]></statement>
+	      </query>
+	    </query-defs>
+    </entity>
+</entities>
+

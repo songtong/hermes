@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.hermes.portal.dal.permission" gen="true" >
+<entity name="roles-permissions" table="roles_permissions" alias="rp">
+    <query-defs>
+      <query name="find-by-rolename" type="SELECT" multiple="true">
+        <param name="key-role-name" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='role-name'/> = ${key-role-name}]]></statement>
+      </query>
+	</query-defs>
+</entity>
+</entities>
+

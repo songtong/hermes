@@ -180,17 +180,17 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		contentMap.put("status", status);
 		contentMap.put("topicNames", topicNames);
 		contentMap.put("topicCount", topicNames.length);
-		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus())
+		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus()) {
 			contentMap.put("rejectReason", app.getComment());
-		if (PortalConstants.APP_STATUS_SUCCESS == app.getStatus()) {
+		} else if (PortalConstants.APP_STATUS_SUCCESS == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicNames[0]);
-			ConsumerGroupView consumer;
-			try {
-				consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
-				contentMap.put("consumer", consumer);
-			} catch (DalException e) {
-				log.error("Find consumer failed: consumerName=%s, topic=%s.", consumerName, app.getTopicName(), e);
+			ConsumerGroupView consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
+			
+			if (consumer == null) {
+				log.error("Find consumer failed: consumerName=%s, topic=%s.", consumerName, app.getTopicName());
 			}
+			
+			contentMap.put("consumer", consumer);
 		}
 
 		sendEmail(title, address, PortalConstants.APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_PROPOSER, contentMap);
@@ -217,13 +217,11 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 			contentMap.put("rejectReason", app.getComment());
 		if (PortalConstants.APP_STATUS_SUCCESS == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicNames[0]);
-			ConsumerGroupView consumer;
-			try {
-				consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
-				contentMap.put("consumer", consumer);
-			} catch (DalException e) {
-				log.error("Find consumer failed: consumerName=%s, topic=%s.", consumerName, app.getTopicName(), e);
+			ConsumerGroupView consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
+			if (consumer == null) {
+				log.error("Find consumer failed: consumerName=%s, topic=%s.", consumerName, app.getTopicName());
 			}
+			contentMap.put("consumer", consumer);
 		}
 
 		sendEmail(title, address, PortalConstants.APP_EMAIL_TEMPLATE_CREATE_CONSUMER_FOR_ADMIN, contentMap);

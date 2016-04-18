@@ -31,14 +31,28 @@ public class DefaultHermesApplicationDao implements HermesApplicationDao {
 	}
 
 	@Override
-	public List<Application> getApplicationsByStatus(int status) throws DalException {
-		return m_appDao.findByStatus(status, ApplicationEntity.READSET_FULL);
-	}
-
-	@Override
 	public Application updateApplication(Application application) throws DalException {
 		m_appDao.updateByPK(application, ApplicationEntity.UPDATESET_FULL);
 		return application;
 	}
 
+	@Override
+	public List<Application> getApplicationsByOwnerStatus(String owner, int status, int offset, int size)
+			throws DalException {
+		if (owner == null) {
+			return m_appDao.findByStatus(status, offset, size, ApplicationEntity.READSET_FULL);
+		}
+		return m_appDao.findByOwnerStatus(owner, status, offset, size, ApplicationEntity.READSET_FULL);
+	}
+
+	@Override
+	public int countApplicationsByOwnerStatus(String owner, int status)
+			throws DalException {
+		return m_appDao.countByOwnerStatus(owner, status, ApplicationEntity.READSET_COUNT).getCount();
+	}
+
+	@Override
+	public int countApplicationsByStatus(int status) throws DalException {
+		return m_appDao.countByStatus(status, ApplicationEntity.READSET_COUNT).getCount();
+	}
 }

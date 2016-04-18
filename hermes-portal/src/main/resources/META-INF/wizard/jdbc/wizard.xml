@@ -11,5 +11,21 @@
       <group name="application" package="com.ctrip.hermes.portal.dal.application">
          <table name="application"/>
       </group>
+      <group name="user" package="com.ctrip.hermes.portal.dal.user">
+         <table name="users"/>
+      </group>
+      <group name="role" package="com.ctrip.hermes.portal.dal.role">
+         <table name="user_roles"/>
+         <table name="datasource"/>
+      </group>
+      <group name="permission" package="com.ctrip.hermes.portal.dal.permission">
+         <table name="roles_permissions"/>
+      </group>
+      <group name="tag" package="com.ctrip.hermes.portal.dal.tag">
+         <table name="tag"/>
+      </group>
+      <group name="datasource_tag" package="com.ctrip.hermes.portal.dal.datasourcetag">
+         <table name="datasource_tag"/>
+      </group>
    </jdbc>
 </wizard>
