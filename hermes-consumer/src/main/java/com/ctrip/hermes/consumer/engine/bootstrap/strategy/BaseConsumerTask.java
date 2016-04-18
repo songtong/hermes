@@ -317,7 +317,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					} finally {
 						queryOffsetResultMonitor.remove(cmd);
 					}
-				}else{
+				} else {
 					queryOffsetResultMonitor.remove(cmd);
 				}
 
@@ -455,35 +455,40 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	@SuppressWarnings("rawtypes")
 	protected List<ConsumerMessage<?>> decodeBatches(List<TppConsumerMessageBatch> batches, Class bodyClazz) {
-		List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
-		for (TppConsumerMessageBatch batch : batches) {
-			List<MessageMeta> msgMetas = batch.getMessageMetas();
-			ByteBuf batchData = batch.getData();
+		try {
+			List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
+			for (TppConsumerMessageBatch batch : batches) {
+				List<MessageMeta> msgMetas = batch.getMessageMetas();
+				ByteBuf batchData = batch.getData();
 
-			int partition = batch.getPartition();
+				int partition = batch.getPartition();
 
-			for (int j = 0; j < msgMetas.size(); j++) {
-				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
-				      m_context.getGroupId(), "decode-duration");
-				Context context = timer.time();
+				for (int j = 0; j < msgMetas.size(); j++) {
+					Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
+					      m_context.getGroupId(), "decode-duration");
+					Context context = timer.time();
 
-				BaseConsumerMessage baseMsg = PlexusComponentLocator.lookup(MessageCodec.class).decode(batch.getTopic(),
-				      batchData, bodyClazz);
-				BrokerConsumerMessage brokerMsg = new BrokerConsumerMessage(baseMsg);
-				MessageMeta messageMeta = msgMetas.get(j);
-				brokerMsg.setPartition(partition);
-				brokerMsg.setPriority(messageMeta.getPriority() == 0 ? true : false);
-				brokerMsg.setResend(messageMeta.isResend());
-				brokerMsg.setRetryTimesOfRetryPolicy(m_retryPolicy.getRetryTimes());
-				brokerMsg.setMsgSeq(messageMeta.getId());
+					BaseConsumerMessage baseMsg = PlexusComponentLocator.lookup(MessageCodec.class).decode(batch.getTopic(),
+					      batchData, bodyClazz);
+					BrokerConsumerMessage brokerMsg = new BrokerConsumerMessage(baseMsg);
+					MessageMeta messageMeta = msgMetas.get(j);
+					brokerMsg.setPartition(partition);
+					brokerMsg.setPriority(messageMeta.getPriority() == 0 ? true : false);
+					brokerMsg.setResend(messageMeta.isResend());
+					brokerMsg.setRetryTimesOfRetryPolicy(m_retryPolicy.getRetryTimes());
+					brokerMsg.setMsgSeq(messageMeta.getId());
 
-				context.stop();
+					context.stop();
 
-				msgs.add(decorateBrokerMessage(brokerMsg));
+					msgs.add(decorateBrokerMessage(brokerMsg));
+				}
 			}
-		}
 
-		return msgs;
+			return msgs;
+		} catch (Exception e) {
+			log.error("Failed to deserialize msg, because type mismatch between producer and consumer.", e);
+			throw e;
+		}
 	}
 
 	protected BrokerConsumerMessage<?> decorateBrokerMessage(BrokerConsumerMessage<?> brokerMsg) {
