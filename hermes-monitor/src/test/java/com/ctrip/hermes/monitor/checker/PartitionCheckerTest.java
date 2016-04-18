@@ -16,6 +16,7 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.monitor.job.partition.PartitionManagementJob;
+import com.ctrip.hermes.monitor.job.partition.PartitionManagementJob.PartitionCheckerResult;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = BaseCheckerTest.class)
@@ -40,14 +41,17 @@ public class PartitionCheckerTest extends BaseCheckerTest {
 
 	@Test
 	public void testChecker() {
-		CheckerResult result = m_job.check().getPartitionChangeListResult();
-		List<MonitorEvent> events = result.getMonitorEvents();
-		for (MonitorEvent event : events) {
-			System.out.println(event);
-		}
-		Exception e = result.getException();
-		if (e != null) {
-			e.printStackTrace();
+		List<PartitionCheckerResult> results = m_job.check();
+		for (PartitionCheckerResult result : results) {
+			CheckerResult r = result.getPartitionChangeListResult();
+			List<MonitorEvent> events = r.getMonitorEvents();
+			for (MonitorEvent event : events) {
+				System.out.println(event);
+			}
+			Exception e = r.getException();
+			if (e != null) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

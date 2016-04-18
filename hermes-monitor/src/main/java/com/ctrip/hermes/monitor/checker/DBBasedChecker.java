@@ -15,7 +15,8 @@ public abstract class DBBasedChecker implements Checker {
 
 	protected Meta fetchMeta() {
 		try {
-			return JSON.parseObject(MonitorUtils.curl(m_config.getMetaRestUrl(), 3000, 1000), Meta.class);
+			return MonitorUtils.fetchMeta();
+			//return JSON.parseObject(MonitorUtils.curl(m_config.getMetaRestUrl(), 3000, 1000), Meta.class);
 		} catch (Exception e) {
 			throw new RuntimeException("Fetch meta failed.", e);
 		}

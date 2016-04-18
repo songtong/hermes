@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,19 +30,21 @@ public class PartitionManagementScheduler {
 	PartitionManagementJob m_job;
 
 	private MonitorEventDao m_monitorEventDao = PlexusComponentLocator.lookup(MonitorEventDao.class);
-
+	
 	@Scheduled(initialDelay = 0L, fixedDelay = 900000L)
 	public void execute() {
 		printStartInfo();
-		PartitionCheckerResult result = null;
+		List<PartitionCheckerResult> results = null;
 		try {
-			result = m_job.check();
-			saveMonitorEvents(result.getPartitionChangeListResult());
-			saveMonitorEvents(result.getPartitionInfo());
+			results = m_job.check();
+			for (PartitionCheckerResult result : results) {
+				saveMonitorEvents(result.getPartitionChangeListResult());
+				saveMonitorEvents(result.getPartitionInfo());
+				printEndInfo(result.getPartitionChangeListResult());
+			}
 		} catch (Exception e) {
 			log.error("Exception occurred while runing partition management job. ", e);
 		}
-		printEndInfo(result.getPartitionChangeListResult());
 	}
 
 	private String formatExceptionDetail(String errorMessage, Exception exception) {
