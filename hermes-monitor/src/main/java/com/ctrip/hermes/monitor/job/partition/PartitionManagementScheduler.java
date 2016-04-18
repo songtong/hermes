@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.MonitorEventDao;
 import com.ctrip.hermes.metaservice.monitor.event.CheckerExceptionEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
@@ -29,7 +30,7 @@ public class PartitionManagementScheduler {
 	PartitionManagementJob m_job;
 
 	private MonitorEventDao m_monitorEventDao = PlexusComponentLocator.lookup(MonitorEventDao.class);
-
+	
 	@Scheduled(initialDelay = 0L, fixedDelay = 900000L)
 	public void execute() {
 		printStartInfo();

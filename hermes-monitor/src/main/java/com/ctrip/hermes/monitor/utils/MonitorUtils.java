@@ -10,7 +10,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.http.client.fluent.Request;
+import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
+import com.ctrip.hermes.metaservice.model.MetaDao;
+import com.ctrip.hermes.metaservice.model.MetaEntity;
 import com.ctrip.hermes.metaservice.queue.CreationStamp;
 
 public class MonitorUtils {
@@ -64,6 +70,12 @@ public class MonitorUtils {
 		} catch (IOException e) {
 			throw new IOException(String.format("Failed to fetch data from url %s", url), e);
 		}
+	}
+	
+	public static Meta fetchMeta() throws DalException {
+		MetaDao metaDao = PlexusComponentLocator.lookup(MetaDao.class);
+		Meta meta = ModelToEntityConverter.convert(metaDao.findLatest(MetaEntity.READSET_FULL));
+		return meta;
 	}
 
 	public static CreationStamp latestStamp(CreationStamp c1, CreationStamp c2) {
