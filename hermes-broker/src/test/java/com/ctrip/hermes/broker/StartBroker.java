@@ -43,6 +43,7 @@ public class StartBroker extends JettyServer {
 		if (m_zkServer != null) {
 			m_zkServer.close();
 		}
+		super.stopServer();
 	}
 
 	@Test

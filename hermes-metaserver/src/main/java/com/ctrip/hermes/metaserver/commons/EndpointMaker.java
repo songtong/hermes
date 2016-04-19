@@ -95,40 +95,47 @@ public class EndpointMaker implements Initializable {
 		int partition = partitionAssignment.getKey();
 		Map<String, ClientContext> assignedBrokers = partitionAssignment.getValue();
 
-		if (assignedBrokers != null && !assignedBrokers.isEmpty()) {
-			Endpoint endpoint = new Endpoint();
+		Endpoint endpoint = null;
+
+		Map<String, ClientLeaseInfo> brokerLease = m_brokerLeaseHolder.getAllValidLeases().get(
+		      new Pair<String, Integer>(topic, partition));
+		ClientContext assignedBroker = assignedBrokers != null && !assignedBrokers.isEmpty() ? assignedBrokers.entrySet()
+		      .iterator().next().getValue() : null;
+
+		if (brokerLease == null || brokerLease.isEmpty()) {
+			if (assignedBroker != null) {
+				endpoint = new Endpoint();
+				endpoint.setType(Endpoint.BROKER);
+				endpoint.setHost(assignedBroker.getIp());
+				endpoint.setId(assignedBroker.getName());
+				endpoint.setPort(assignedBroker.getPort());
+				endpoint.setGroup(assignedBroker.getGroup());
+			}
+		} else {
+			endpoint = new Endpoint();
 			endpoint.setType(Endpoint.BROKER);
 
-			Map<String, ClientLeaseInfo> brokerLease = m_brokerLeaseHolder.getAllValidLeases().get(
-			      new Pair<String, Integer>(topic, partition));
-			ClientContext assignedBroker = assignedBrokers.entrySet().iterator().next().getValue();
+			Entry<String, ClientLeaseInfo> brokerLeaseEntry = brokerLease.entrySet().iterator().next();
+			String leaseHoldingBrokerName = brokerLeaseEntry.getKey();
+			ClientLeaseInfo leaseHoldingBroker = brokerLeaseEntry.getValue();
 
-			if (brokerLease == null || brokerLease.isEmpty()) {
+			if (assignedBroker != null && leaseHoldingBrokerName.equals(assignedBroker.getName())) {
 				endpoint.setHost(assignedBroker.getIp());
 				endpoint.setId(assignedBroker.getName());
 				endpoint.setPort(assignedBroker.getPort());
 				endpoint.setGroup(assignedBroker.getGroup());
 			} else {
-				Entry<String, ClientLeaseInfo> brokerLeaseEntry = brokerLease.entrySet().iterator().next();
-				String leaseHoldingBrokerName = brokerLeaseEntry.getKey();
-				ClientLeaseInfo leaseHoldingBroker = brokerLeaseEntry.getValue();
+				Lease lease = leaseHoldingBroker.getLease();
+				endpoint.setHost(leaseHoldingBroker.getIp());
+				endpoint.setId(brokerLeaseEntry.getKey());
+				endpoint.setPort(leaseHoldingBroker.getPort());
+				endpoint.setGroup(Constants.ENDPOINT_GROUP_ASSIGNMENT_CHANGING);
 
-				if (leaseHoldingBrokerName.equals(assignedBroker.getName())) {
-					endpoint.setHost(assignedBroker.getIp());
-					endpoint.setId(assignedBroker.getName());
-					endpoint.setPort(assignedBroker.getPort());
-					endpoint.setGroup(assignedBroker.getGroup());
-				} else {
-					Lease lease = leaseHoldingBroker.getLease();
-					endpoint.setHost(leaseHoldingBroker.getIp());
-					endpoint.setId(brokerLeaseEntry.getKey());
-					endpoint.setPort(leaseHoldingBroker.getPort());
-					endpoint.setGroup(Constants.ENDPOINT_GROUP_ASSIGNMENT_CHANGING);
-
-					updateDelayRebalanceTimespan(delayRebalanceTimespan, lease);
-				}
+				updateDelayRebalanceTimespan(delayRebalanceTimespan, lease);
 			}
+		}
 
+		if (endpoint != null) {
 			partition2Endpoints.put(partition, endpoint);
 		}
 

@@ -25,29 +25,30 @@ public class DefaultBrokerPartitionAssigningStrategy implements BrokerPartitionA
 	public Map<String, Assignment<Integer>> assign(Map<String, ClientContext> brokers, List<Topic> topics,
 	      Map<String, Assignment<Integer>> originAssignment) {
 		Map<String, Assignment<Integer>> newAssignments = new HashMap<>();
-		if (brokers != null && !brokers.isEmpty()) {
-			if (topics != null && !topics.isEmpty()) {
-				List<Entry<String, ClientContext>> brokerEntries = new ArrayList<>(brokers.entrySet());
+		if (topics != null && !topics.isEmpty()) {
+			List<Entry<String, ClientContext>> brokerEntries = brokers != null && !brokers.isEmpty() ? new ArrayList<>(
+			      brokers.entrySet()) : new ArrayList<Entry<String, ClientContext>>();
 
-				int brokerPos = 0;
-				int brokerCount = brokers.size();
-				for (Topic topic : topics) {
-					if (Endpoint.BROKER.equals(topic.getEndpointType())) {
-						List<Partition> partitions = topic.getPartitions();
-						if (partitions != null && !partitions.isEmpty()) {
+			int brokerPos = 0;
+			int brokerCount = brokerEntries.size();
+			for (Topic topic : topics) {
+				if (Endpoint.BROKER.equals(topic.getEndpointType())) {
+					List<Partition> partitions = topic.getPartitions();
+					if (partitions != null && !partitions.isEmpty()) {
 
-							Assignment<Integer> assignment = new Assignment<>();
-							newAssignments.put(topic.getName(), assignment);
+						Assignment<Integer> assignment = new Assignment<>();
+						newAssignments.put(topic.getName(), assignment);
 
-							for (Partition partition : partitions) {
+						for (Partition partition : partitions) {
+							Map<String, ClientContext> broker = new HashMap<>();
+							if (brokerCount > 0) {
 								Entry<String, ClientContext> brokerEntry = brokerEntries.get(brokerPos);
 								brokerPos = (brokerPos + 1) % brokerCount;
-								Map<String, ClientContext> broker = new HashMap<>();
 								broker.put(brokerEntry.getKey(), brokerEntry.getValue());
-								assignment.addAssignment(partition.getId(), broker);
 							}
-
+							assignment.addAssignment(partition.getId(), broker);
 						}
+
 					}
 				}
 			}

@@ -185,7 +185,7 @@ public class BrokerAssignmentHolder {
 				List<Topic> groupTopics = entry.getValue();
 				Map<String, ClientContext> groupBrokers = getBrokers(brokerGroup);
 
-				if (groupBrokers != null && !groupBrokers.isEmpty() && groupTopics != null && !groupTopics.isEmpty()) {
+				if (groupTopics != null && !groupTopics.isEmpty()) {
 					Map<String, Assignment<Integer>> groupAssignments = m_brokerAssigningStrategy.assign(groupBrokers,
 					      groupTopics, getAssignments());
 					newAssignments.putAll(groupAssignments);

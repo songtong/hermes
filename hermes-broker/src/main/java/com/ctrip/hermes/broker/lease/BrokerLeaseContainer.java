@@ -180,4 +180,13 @@ public class BrokerLeaseContainer implements Initializable {
 		m_scheduledExecutorService = Executors.newScheduledThreadPool(m_config.getLeaseContainerThreadCount(),
 		      HermesThreadFactory.create("BrokerLeaseContainer", true));
 	}
+
+	public boolean isAllLeaseExpired() {
+		for (Lease existingLease : m_existingLeases.values()) {
+			if (!existingLease.isExpired()) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

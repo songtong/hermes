@@ -25,6 +25,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.broker.shutdown.ShutdownRequestMonitor</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.lease.BrokerLeaseContainer</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
