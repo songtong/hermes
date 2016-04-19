@@ -3,6 +3,8 @@ package com.ctrip.hermes.broker.bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.ContainerHolder;
@@ -10,6 +12,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
+import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.registry.BrokerRegistry;
 import com.ctrip.hermes.broker.shutdown.ShutdownRequestMonitor;
 import com.ctrip.hermes.broker.transport.NettyServer;
@@ -35,8 +38,12 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 	@Inject
 	private ShutdownRequestMonitor m_shutdownReqMonitor;
 
+	@Inject
+	private BrokerLeaseContainer m_leaseContainer;
+
 	@Override
 	public void start() throws Exception {
+		log.info("Starting broker...");
 		// TODO should move to start script -D cause ByteBufUtil will read in static initialization
 		System.setProperty("io.netty.allocator.type", "pooled");
 		ChannelFuture future = m_nettyServer.start(m_config.getListeningPort());
@@ -55,15 +62,31 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 
 			}
 		});
+	}
 
-		future.channel().closeFuture().addListener(new ChannelFutureListener() {
+	@Override
+	public void stop() throws Exception {
+		m_registry.stop();
 
-			@Override
-			public void operationComplete(ChannelFuture future) throws Exception {
-				log.info("Broker stopped...");
-				m_registry.stop();
+		int allLeaseExpiredCount = 0;
+
+		long timeout = System.currentTimeMillis() + 30 * 1000L;
+
+		while (!Thread.interrupted() && System.currentTimeMillis() <= timeout) {
+			if (m_leaseContainer.isAllLeaseExpired()) {
+				allLeaseExpiredCount++;
+				if (allLeaseExpiredCount >= 3) {
+					break;
+				}
+			} else {
+				allLeaseExpiredCount = 0;
 			}
-		});
+
+			TimeUnit.SECONDS.sleep(1);
+		}
+
+		m_shutdownReqMonitor.stopBroker();
+		log.info("Broker stopped...");
 	}
 
 }
