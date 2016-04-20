@@ -7,9 +7,6 @@
 <jsp:useBean id="model" type="com.ctrip.hermes.portal.console.topic.Model" scope="request" />
 
 <a:layout>
-<script>
- var logined = ${requestScope.logined};
-</script>
 	<link href="${model.webapp}/css/bootstrap-treeview.min.css" type="text/css" rel="stylesheet">
 	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
 	<div ng-app="topic" ng-init="delayLimit=300;noProduceLimit=432000000;current_topic_type='mysql'">
@@ -32,6 +29,8 @@
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-upload.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/topic/topic.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/topic/topic.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/topic.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/topic-list-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/mysql-add-controller.js"></script>

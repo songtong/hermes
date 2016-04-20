@@ -1,4 +1,4 @@
-var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-table', 'ui.bootstrap', 'lr.upload', 'xeditable' ]).config(function($routeProvider) {
+var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-table', 'ui.bootstrap', 'lr.upload', 'xeditable', 'user']).config(function($routeProvider) {
 	$routeProvider.when('/list/:type', {
 		templateUrl : '/jsp/console/topic/topic-list.html',
 		controller : 'list-controller'

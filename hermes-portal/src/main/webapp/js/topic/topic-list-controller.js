@@ -1,5 +1,5 @@
-topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParams', 'TopicService', 'upload', function($scope, $resource, $routeParams, TopicService, upload) {
-	$scope.logined = logined;
+topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParams', 'TopicService', 'upload', 'user', function($scope, $resource, $routeParams, TopicService, upload, user) {
+	$scope.logined = user.admin;
 	$scope.environment = environment;
 	$scope.routeParams = $routeParams;
 	$scope.cur_time = new Date();
