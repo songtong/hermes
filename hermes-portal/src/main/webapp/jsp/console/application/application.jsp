@@ -6,6 +6,8 @@
 
 <a:layout>
 	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
+	<link href="${model.webapp}/css/font-awesome.min.css" type="text/css" rel="stylesheet">
+	
 	<div class="container fluid" ng-app="application" style="width: 90%;">
 		<div ng-view class="main"></div>
 	</div>
