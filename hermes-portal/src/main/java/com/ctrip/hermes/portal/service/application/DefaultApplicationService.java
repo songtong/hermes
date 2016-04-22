@@ -108,15 +108,10 @@ public class DefaultApplicationService implements ApplicationService {
 	}
 
 	@Override
-	public HermesApplication updateStatus(long id, int status, String comment, String approver, String polishedContent) {
+	public HermesApplication updateStatus(long id, int status, String comment, String approver) {
 		Application dbApp = null;
 		try {
 			dbApp = m_dao.getAppById(id);
-			
-			// Only can polish the application when approve the application on creation.
-			if (status == PortalConstants.APP_STATUS_SUCCESS && polishedContent != null) {
-				dbApp.setPolished(polishedContent);
-			}
 			
 			dbApp.setStatus(status);
 			dbApp.setComment(comment);

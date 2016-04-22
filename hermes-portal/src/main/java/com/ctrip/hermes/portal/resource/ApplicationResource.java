@@ -359,7 +359,7 @@ public class ApplicationResource {
 			status = PortalConstants.APP_STATUS_ROLLOUT_REJECTED;
 		}
 		
-		app = appService.updateStatus(id, status, comment, approver, null);
+		app = appService.updateStatus(id, status, comment, approver);
 		if (app == null) {
 			throw new RestException("Reject application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
@@ -376,7 +376,7 @@ public class ApplicationResource {
 	@PUT
 	@Path("pass/{id}")
 	public Response passApplication(@PathParam("id") long id, @QueryParam("comment") String comment,
-			@QueryParam("approver") String approver, String polishedContent) {
+			@QueryParam("approver") String approver) {
 		if (id < 0) {
 			throw new RestException("Application id unavailable");
 		}
@@ -388,7 +388,7 @@ public class ApplicationResource {
 		if (app.getStatus() == PortalConstants.APP_STATUS_ROLLOUT) {
 			status = PortalConstants.APP_STATUS_ROLLOUT_SUCCESS;
 		}
-		app = appService.updateStatus(id, status, comment, approver, polishedContent);
+		app = appService.updateStatus(id, status, comment, approver);
 		if (app == null) {
 			throw new RestException("Pass application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
@@ -409,7 +409,7 @@ public class ApplicationResource {
 		if (id < 0) {
 			throw new RestException("Application id unavailable");
 		}
-		HermesApplication app = appService.updateStatus(id, status, comment, approver, polishedContent);
+		HermesApplication app = appService.updateStatus(id, status, comment, approver);
 		if (app == null) {
 			throw new RestException("Update application status failed!", Status.INTERNAL_SERVER_ERROR);
 		}
