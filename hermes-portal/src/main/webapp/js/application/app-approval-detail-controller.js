@@ -168,7 +168,6 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			},
 			handlers: [function() {
 				if ($scope.application.status == 2) {
-					delete $scope.application.polished;
 					ApplicationService.update_application_status($scope.application.id, 3, encodeComment(), user.sn, $scope.application).then(function(result) {
 						$scope.application = result;
 						decodeComment();
@@ -265,8 +264,6 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	};
 	
 	$scope.passApplication = function passApplication() {
-		// Delete node 'polished'
-		delete $scope.application.polished;
 		
 		ApplicationService.pass_application($scope.application.id, encodeComment(), user.sn, $scope.application).then(function(result) {
 			$scope.application = result;

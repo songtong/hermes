@@ -26,6 +26,6 @@ public interface ApplicationService {
 
 	public HermesApplication updateApplication(HermesApplication app);
 
-	public HermesApplication updateStatus(long id, int status, String comment, String approver, String polishedContent);
+	public HermesApplication updateStatus(long id, int status, String comment, String approver);
 
 }

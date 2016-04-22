@@ -95,9 +95,6 @@ application_module.config(function($routeProvider) {
 				id : '@id',
 				comment : '@comment',
 				approver : '@approver'
-			},
-			transformRequest: function(data, headers) {
-				return JSON.stringify(data.polished);
 			}
 		},
 		update_application_status : {
@@ -108,9 +105,6 @@ application_module.config(function($routeProvider) {
 				status: '@status',
 				comment : '@comment',
 				approver : '@approver'
-			},
-			transformRequest: function(data, headers) {
-				return JSON.stringify(data.polished);
 			}
 		}
 	});
@@ -273,13 +267,12 @@ application_module.config(function($routeProvider) {
 			});
 			return delay.promise;
 		},
-		'pass_application' : function(app_id, app_comment, app_approver, polished_content) {
+		'pass_application' : function(app_id, app_comment, app_approver) {
 			var delay = $q.defer();
 			application_resource.pass_application({
 				id : app_id,
 				comment : app_comment,
-				approver : app_approver,
-				polished: polished_content
+				approver : app_approver
 			}, function(result) {
 				delay.resolve(result);
 			}, function(result) {
@@ -287,14 +280,13 @@ application_module.config(function($routeProvider) {
 			});
 			return delay.promise;
 		},
-		'update_application_status': function(app_id, app_status, app_comment, app_approver, polished_content) {
+		'update_application_status': function(app_id, app_status, app_comment, app_approver) {
 			var delay = $q.defer();
 			application_resource.update_application_status({
 				id : app_id,
 				status: app_status,
 				comment : app_comment,
-				approver : app_approver,
-				polished: polished_content
+				approver : app_approver
 			}, function(result) {
 				delay.resolve(result);
 			}, function(result) {
