@@ -9,7 +9,6 @@
     <member name="comment" field="comment" value-type="String" length="1024" />
     <member name="owner-1" field="owner_1" value-type="String" length="128" />
     <member name="owner-2" field="owner_2" value-type="String" length="128" />
-    <member name="owner" field="owner" value-type="String" length="128" />
     <member name="approver" field="approver" value-type="String" length="128" />
     <member name="create-time" field="create_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />

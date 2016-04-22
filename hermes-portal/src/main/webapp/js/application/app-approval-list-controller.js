@@ -22,6 +22,7 @@ application_module.controller('app-approval-list-controller', [ '$scope', 'Appli
 				$scope.$emit('progress-done', 'progress');
 			}
 			$scope.initialized = true;
+			$scope.$broadcast('initialized');
 		});
 	};
 	
