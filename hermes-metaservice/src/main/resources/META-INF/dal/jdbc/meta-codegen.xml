@@ -203,11 +203,52 @@
     <member name="k" field="k" value-type="String" length="255" nullable="false" />
     <member name="v" field="v" value-type="String" length="65535" />
     <member name="tag" field="tag" value-type="String" length="64" />
-    <member name="creation-date" field="creation_date" value-type="Date" />
-    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" />
+    <member name="creation-date" field="creation_date" value-type="Date" nullable="false" insert-expr="NOW()" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="KEY" members="k ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="notification" table="notification" alias="n">
+    <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
+    <member name="notification-type" field="notification_type" value-type="String" length="50" nullable="false" />
+    <member name="create-time" field="create_time" value-type="Date" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <member name="content" field="content" value-type="String" length="16777215" />
+    <member name="notify-time" field="notify_time" value-type="Date" />
+    <member name="receivers" field="receivers" value-type="String" length="65535" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

@@ -146,15 +146,15 @@
 			<implementation>com.ctrip.hermes.metaservice.queue.ds.MessageQueueDatasourceProvider</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.mail.MailAccountProvider</role>
-			<implementation>com.ctrip.hermes.mail.FileMailAccountProvider</implementation>
+			<role>com.ctrip.hermes.metaservice.service.mail.MailAccountProvider</role>
+			<implementation>com.ctrip.hermes.metaservice.service.mail.FileMailAccountProvider</implementation>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.mail.MailService</role>
-			<implementation>com.ctrip.hermes.mail.DefaultMailService</implementation>
+			<role>com.ctrip.hermes.metaservice.service.mail.MailService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.mail.DefaultMailService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.mail.MailAccountProvider</role>
+					<role>com.ctrip.hermes.metaservice.service.mail.MailAccountProvider</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -227,6 +227,15 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<physical-table-name>monitor_event</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>notification</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>notification</physical-table-name>
 				<data-source-name>fxhermesmetadb</data-source-name>
 			</configuration>
 		</component>
@@ -359,6 +368,15 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.model.MonitorEventDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.MonitorEventDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.model.NotificationDao</role>
+			<implementation>com.ctrip.hermes.metaservice.model.NotificationDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
@@ -846,6 +864,10 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.dal.CachedProducerDao</role>
 			<implementation>com.ctrip.hermes.metaservice.dal.CachedProducerDao</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.template.TemplateService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.template.DefaultTemplateService</implementation>
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>

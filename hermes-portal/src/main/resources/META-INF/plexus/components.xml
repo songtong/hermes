@@ -110,11 +110,11 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.mail.MailService</role>
-			<implementation>com.ctrip.hermes.mail.DefaultMailService</implementation>
+			<role>com.ctrip.hermes.metaservice.service.mail.MailService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.mail.DefaultMailService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.mail.MailAccountProvider</role>
+					<role>com.ctrip.hermes.metaservice.service.mail.MailAccountProvider</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -123,7 +123,7 @@
 			<implementation>com.ctrip.hermes.portal.service.mail.DefaultPortalMailService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.mail.MailService</role>
+					<role>com.ctrip.hermes.metaservice.service.mail.MailService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
@@ -140,8 +140,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.mail.MailAccountProvider</role>
-			<implementation>com.ctrip.hermes.mail.FileMailAccountProvider</implementation>
+			<role>com.ctrip.hermes.metaservice.service.mail.MailAccountProvider</role>
+			<implementation>com.ctrip.hermes.metaservice.service.mail.FileMailAccountProvider</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.SyncService</role>

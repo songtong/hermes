@@ -1,5 +1,6 @@
-package com.ctrip.hermes.mail;
+package com.ctrip.hermes.metaservice.service.mail;
 
+import java.util.List;
 import java.util.Properties;
 
 import javax.mail.Address;
@@ -19,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.utils.StringUtils;
+
 @Named(type = MailService.class)
 public class DefaultMailService implements MailService {
 
@@ -32,6 +35,14 @@ public class DefaultMailService implements MailService {
 		if (m_account.getUser() == null) {
 			log.warn("Mail accout is not set up correctly, will skip");
 			return;
+		}
+
+		if (StringUtils.isBlank(mail.getSubject())) {
+			throw new IllegalArgumentException("Mail subject can not be blank!");
+		}
+
+		if (mail.getReceivers() == null || mail.getReceivers().size() == 0) {
+			throw new IllegalArgumentException("Mail receivers can not be empty!");
 		}
 
 		Properties properties = new Properties();
@@ -50,10 +61,10 @@ public class DefaultMailService implements MailService {
 		bodyMultipart.addBodyPart(htmlPart);
 		msg.saveChanges();
 
-		String[] receivers = mail.getReceivers().split(",");
-		Address[] tos = new InternetAddress[receivers.length];
-		for (int i = 0, j = receivers.length; i < j; i++) {
-			tos[i] = new InternetAddress(receivers[i]);
+		List<String> receivers = mail.getReceivers();
+		Address[] tos = new InternetAddress[receivers.size()];
+		for (int i = 0, j = receivers.size(); i < j; i++) {
+			tos[i] = new InternetAddress(receivers.get(i));
 		}
 		msg.setRecipients(Message.RecipientType.TO, tos);
 

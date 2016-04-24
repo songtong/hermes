@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaservice.service;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class DefaultKVService implements KVService {
 		List<Kv> kvs = m_kvDao.findByKey(key, KvEntity.READSET_FULL);
 		Kv kv = kvs.size() > 0 ? kvs.get(0) : null;
 		if (kv == null) {
-			m_kvDao.insert(new Kv().setK(key).setV(value).setTag(tag.name()));
+			m_kvDao.insert(new Kv().setK(key).setV(value).setTag(tag.name()).setCreationDate(new Date()));
 		} else {
 			kv.setV(value);
 			m_kvDao.updateByPK(kv, KvEntity.UPDATESET_FULL);

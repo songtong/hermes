@@ -11,16 +11,15 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.mail.HermesMail;
-import com.ctrip.hermes.mail.MailService;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
+import com.ctrip.hermes.metaservice.service.mail.HermesMail;
+import com.ctrip.hermes.metaservice.service.mail.MailService;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
 import com.ctrip.hermes.metaservice.view.SchemaView;
 import com.ctrip.hermes.metaservice.view.TopicView;

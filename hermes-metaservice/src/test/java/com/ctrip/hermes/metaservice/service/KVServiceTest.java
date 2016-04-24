@@ -12,10 +12,10 @@ public class KVServiceTest extends ComponentTestCase {
 		String key = "hermes_key";
 		KVService kvService = lookup(KVService.class);
 		kvService.setKeyValue(key, "value");
-		kvService.setKeyValue(key, "tag-value", Tag.ALARM);
+		kvService.setKeyValue(key, "tag-value", Tag.CHECKER);
 		System.out.println(kvService.getValue(key));
-		System.out.println(kvService.getValue(key, Tag.ALARM));
+		System.out.println(kvService.getValue(key, Tag.CHECKER));
 		System.out.println(kvService.list());
-		System.out.println(kvService.list(Tag.ALARM));
+		System.out.println(kvService.list(Tag.CHECKER));
 	}
 }
