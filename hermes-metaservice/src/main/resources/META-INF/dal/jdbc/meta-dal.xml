@@ -111,6 +111,82 @@
 			</query>
 		</query-defs>
 	</entity>
+	<entity name="notification" table="notification" alias="n">
+		<var name="type" value-type="String" />
+		<var name="count" value-type="int" />
+		<var name="start" value-type="long" />
+		<var name="end" value-type="long" />
+		<var name="page-count" value-type="int" />
+		<var name="id-offset" value-type="long" />
+		<var name="include-days" value-type="int" />
+		<member name="total" value-type="long" select-expr="COUNT(*)" all="false" />
+
+		<readsets>
+			<readset name="COUNT">
+				<member name="total" />
+			</readset>
+		</readsets>
+
+		<query-defs>
+			<query name="total-count" type="SELECT" multiple="false">
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+				]]></statement>
+			</query>
+			<query name="find-notification-batch" type="SELECT" multiple="true">
+				<param name="page-count" />
+				<param name="id-offset" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        ORDER BY <FIELD name='id'/> DESC
+		        LIMIT ${id-offset},${page-count}]]></statement>
+			</query>
+			<query name="update-notified-status" type="UPDATE" batch='true'>
+				<statement>
+				<![CDATA[
+				UPDATE <TABLE/>
+		        SET <FIELD name='notify-time'/> = NOW()
+		        WHERE <FIELD name='id'/> = ${id}
+		        ]]>
+				</statement>
+			</query>
+			<query name="find-unnotified-notifications" type="SELECT" multiple="true">
+				<param name="type" />
+				<param name="include-days" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        WHERE <FIELD name='notify-time'/> IS NULL
+		        AND <FIELD name='notification-type'/> = ${type}
+		        AND <FIELD name='create-time' /> >= (CURDATE() - INTERVAL ${include-days} DAY)
+		        ORDER BY <FIELD name='id'/> DESC]]></statement>
+			</query>
+			<query name="find-by-type-within-time-range" type="SELECT" multiple="true">
+				<param name="type" />
+				<param name="start" />
+				<param name="end" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        WHERE <FIELD name='notification-type'/> = ${type} 
+		        AND <FIELD name='create-time'/> >= ${start} 
+		        AND <FIELD name='create-time'/> <= ${end} 
+		        ORDER BY <FIELD name='id'/> DESC]]></statement>
+			</query>
+			<query name="find-by-time-range" type="SELECT" multiple="true">
+				<param name="start" />
+				<param name="end" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        WHERE <FIELD name='create-time'/> >= ${start} 
+		        AND <FIELD name='create-time'/> <= ${end} 
+		        ORDER BY <FIELD name='id'/> DESC]]></statement>
+			</query>
+		</query-defs>
+	</entity>
 	<entity name="schema">
 		<member name="avroid" value-type="Integer" />
 		<var name="tId" value-type="long" />
@@ -228,11 +304,11 @@
 		<var name="tId" value-type="long" />
 		<var name="pId" value-type="int" />
 		<member name="count" value-type="int" select-expr="COUNT(*)" all="false" />
-	    <readsets>
-	      <readset name="COUNT">
-	      	<member name="count"/>
-	      </readset>
-	    </readsets>
+		<readsets>
+			<readset name="COUNT">
+				<member name="count" />
+			</readset>
+		</readsets>
 		<query-defs>
 			<query name="list" type="SELECT" multiple="true">
 				<statement><![CDATA[SELECT <FIELDS/>
