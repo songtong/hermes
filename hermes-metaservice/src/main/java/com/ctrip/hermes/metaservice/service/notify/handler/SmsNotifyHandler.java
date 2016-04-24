@@ -13,14 +13,16 @@ public class SmsNotifyHandler extends AbstractNotifyHandler {
 	public static final String ID = "SmsNotifyHandler";
 
 	@Override
-	public void handle(HermesNotification notification) {
+	public boolean handle(HermesNotification notification) {
 		if (notification != null) {
 			try {
 				persistNotification(notification);
+				return true;
 			} catch (Exception e) {
 				log.error("Persist sms notification failed, {}", notification, e);
 			}
 		}
+		return false;
 	}
 
 }

@@ -25,21 +25,24 @@ public class EmailNotifyHandler extends AbstractNotifyHandler {
 	private MailService m_mailService;
 
 	@Override
-	public void handle(HermesNotification notification) {
+	public boolean handle(HermesNotification notification) {
 		if (notification != null) {
 			try {
 				persistNotification(notification);
 			} catch (Exception e) {
 				log.error("Persist email notification failed, {}", notification, e);
 			}
-			HermesMailContext ctx = HermesMailUtil.getHermesMailContext(notification.getContent());
-			String mailContent = m_templateService.render(ctx.getHermesTemplate(), ctx.getContentMap());
-			HermesMail mail = new HermesMail(ctx.getTitle(), mailContent, notification.getReceivers());
+
+			HermesMailContext mailCtx = HermesMailUtil.getHermesMailContext(notification.getContent());
+			String content = m_templateService.render(mailCtx.getHermesTemplate(), mailCtx.getContentMap());
+			HermesMail mail = new HermesMail(mailCtx.getTitle(), content, notification.getReceivers());
 			try {
 				m_mailService.sendEmail(mail);
+				return true;
 			} catch (Exception e) {
 				log.error("Send Hermes mail failed: {}", mail, e);
 			}
 		}
+		return false;
 	}
 }

@@ -15,7 +15,7 @@ public enum NotificationType {
 		m_handlerId = handlerId;
 	}
 
-	public String handler() {
+	public String handlerID() {
 		return m_handlerId;
 	}
 }
