@@ -22,7 +22,7 @@ import com.google.common.cache.LoadingCache;
 @Named
 public class CachedEndpointDao extends EndpointDao implements CachedDao<String, Endpoint> {
 
-	private int max_size = 10;
+	private int max_size = 100;
 
 	private LoadingCache<String, Endpoint> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Endpoint>() {
