@@ -37,6 +37,12 @@ public class DefaultServerChannelInboundHandler extends AbstractNettyChannelInbo
 		super.channelInactive(ctx);
 	}
 
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		log.warn("Exception caught in inbound, client ip {}", NettyUtils.parseChannelRemoteAddr(ctx.channel()), cause);
+
+		ctx.channel().close();
+	}
+
 	@Override
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if (evt instanceof IdleStateEvent) {

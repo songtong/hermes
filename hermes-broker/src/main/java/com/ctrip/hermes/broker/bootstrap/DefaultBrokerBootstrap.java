@@ -44,8 +44,6 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 	@Override
 	public void start() throws Exception {
 		log.info("Starting broker...");
-		// TODO should move to start script -D cause ByteBufUtil will read in static initialization
-		System.setProperty("io.netty.allocator.type", "pooled");
 		ChannelFuture future = m_nettyServer.start(m_config.getListeningPort());
 
 		future.addListener(new ChannelFutureListener() {

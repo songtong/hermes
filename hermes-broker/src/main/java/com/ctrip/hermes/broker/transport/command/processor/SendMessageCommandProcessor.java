@@ -22,6 +22,7 @@ import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
@@ -224,7 +225,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		ack.correlate(req);
 		ack.setSuccess(success);
 		ack.getHeader().addProperty("createTime", Long.toString(System.currentTimeMillis()));
-		ctx.getChannel().writeAndFlush(ack);
+		ChannelUtils.writeAndFlush(ctx.getChannel(), ack);
 	}
 
 }

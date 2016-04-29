@@ -19,10 +19,6 @@ public class CommandProcessorContext {
 		m_remoteIp = NettyUtils.parseChannelRemoteAddr(channel, false);
 	}
 
-	public void write(Command cmd) {
-		m_channel.writeAndFlush(cmd);
-	}
-
 	public Command getCommand() {
 		return m_command;
 	}
