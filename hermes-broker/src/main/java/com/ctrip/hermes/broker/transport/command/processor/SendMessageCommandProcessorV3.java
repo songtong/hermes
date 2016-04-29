@@ -183,7 +183,7 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 					if (m_written.compareAndSet(false, true)) {
 						logToCatIfHasError(m_result);
 						m_result.getHeader().addProperty("createTime", Long.toString(System.currentTimeMillis()));
-						m_ctx.write(m_result);
+						ChannelUtils.writeAndFlush(m_ctx.getChannel(), m_result);
 
 						logElapse();
 					}
