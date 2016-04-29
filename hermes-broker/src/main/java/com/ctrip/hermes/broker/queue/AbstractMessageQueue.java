@@ -35,6 +35,7 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.v3.AckMessageResultCommandV3;
 import com.ctrip.hermes.core.utils.CollectionUtil;
@@ -363,7 +364,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 				AckMessageResultCommandV3 resCmd = new AckMessageResultCommandV3();
 				resCmd.getHeader().setCorrelationId(task.getCorrelationId());
 				resCmd.setSuccess(success);
-				task.getChannel().writeAndFlush(resCmd);
+				ChannelUtils.writeAndFlush(task.getChannel(), resCmd);
 			}
 		}
 

@@ -10,6 +10,7 @@ import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.PullMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
@@ -69,7 +70,7 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 		}
 		cmd.getHeader().setCorrelationId(pullTask.getCorrelationId());
 
-		pullTask.getChannel().writeAndFlush(cmd);
+		ChannelUtils.writeAndFlush(pullTask.getChannel(), cmd);
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
@@ -80,7 +81,7 @@ public class QueryLatestConsumerOffsetCommandProcessorV3 extends ContainerHolder
 	private void response(Channel channel, long correlationId, Offset offset) {
 		QueryOffsetResultCommandV3 cmd = new QueryOffsetResultCommandV3(offset);
 		cmd.getHeader().setCorrelationId(correlationId);
-		channel.writeAndFlush(cmd);
+		ChannelUtils.writeAndFlush(channel, cmd);
 	}
 
 }

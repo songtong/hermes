@@ -14,6 +14,7 @@ import com.ctrip.hermes.broker.longpolling.PullMessageTask;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.PullMessageCommand;
@@ -96,7 +97,7 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 			break;
 		}
 		cmd.getHeader().setCorrelationId(task.getCorrelationId());
-		task.getChannel().writeAndFlush(cmd);
+		ChannelUtils.writeAndFlush(task.getChannel(), cmd);
 	}
 
 	private PullMessageTask preparePullMessageTask(CommandProcessorContext ctx) {

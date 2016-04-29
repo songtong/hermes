@@ -13,6 +13,7 @@ import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
@@ -54,7 +55,7 @@ public class PullSpecificMessageCommandProcessor implements CommandProcessor {
 					cmd.setBrokerAccepted(true);
 					cmd.addBatches(batches);
 					cmd.getHeader().setCorrelationId(correlationId);
-					ctx.getChannel().writeAndFlush(cmd);
+					ChannelUtils.writeAndFlush(ctx.getChannel(), cmd);
 					return;
 				}
 			} else {
@@ -66,6 +67,6 @@ public class PullSpecificMessageCommandProcessor implements CommandProcessor {
 		PullMessageResultCommandV3 cmd = new PullMessageResultCommandV3();
 		cmd.setBrokerAccepted(false);
 		cmd.getHeader().setCorrelationId(correlationId);
-		ctx.getChannel().writeAndFlush(cmd);
+		ChannelUtils.writeAndFlush(ctx.getChannel(), cmd);
 	}
 }
