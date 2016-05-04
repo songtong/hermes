@@ -19,6 +19,8 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Xloggc:$LOG_PATH/gc.log \
             -XX:-OmitStackTraceInFastThrow \
             -XX:SurvivorRatio=7 \
+            -XX:+UnlockCommercialFeatures \
+            -XX:+FlightRecorder \
             -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$LOG_PATH
             "
 export JAVA_OPTS=${JAVA_OPTS}
