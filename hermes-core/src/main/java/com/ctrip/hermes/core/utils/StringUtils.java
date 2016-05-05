@@ -1,7 +1,10 @@
 package com.ctrip.hermes.core.utils;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * copy some method from apache commons-lang
@@ -13,6 +16,8 @@ import java.util.Iterator;
 public class StringUtils {
 
 	public static final String EMPTY = "";
+
+	public static final Set<Character> DEFAULT_REMOVABLE = new HashSet<>(Arrays.asList('\n'));
 
 	/**
 	 * <p>
@@ -376,5 +381,23 @@ public class StringUtils {
 		}
 
 		return buf.toString();
+	}
+
+	public static String clean(String source) {
+		return clean(source, DEFAULT_REMOVABLE);
+	}
+
+	public static String clean(String source, Collection<Character> removable) {
+		if (isBlank(source)) {
+			throw new IllegalArgumentException("Source string can not be blank!");
+		}
+		StringBuilder sb = new StringBuilder(source.length());
+		for (int i = 0; i < source.length(); i++) {
+			char c = source.charAt(i);
+			if (!removable.contains(c)) {
+				sb.append(c);
+			}
+		}
+		return sb.toString();
 	}
 }

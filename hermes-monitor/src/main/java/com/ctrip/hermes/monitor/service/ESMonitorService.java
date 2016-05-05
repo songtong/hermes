@@ -211,7 +211,7 @@ public class ESMonitorService {
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
 		ctx.addQuery("message", "ERROR");
-		for (String message : toList(config.getEsIgnoreKafkaBrokerMessages())) {
+		for (String message : toList(config.getEsIgnoreMetaserverMessages())) {
 			ctx.addQuery("-message", message);
 		}
 
@@ -232,7 +232,7 @@ public class ESMonitorService {
 		return StringUtils.join(querys, " AND ", new StringFormatter<Pair<String, String>>() {
 			@Override
 			public String format(Pair<String, String> obj) {
-				return obj.getKey() + ":'" + obj.getValue() + "'";
+				return obj.getKey() + ":\"" + obj.getValue() + "\"";
 			}
 		});
 	}
@@ -253,7 +253,7 @@ public class ESMonitorService {
 		sb.setQuery(QueryBuilders.filteredQuery(qb, fb));
 		sb.addAggregation(tb);
 
-		String esQueryCondition = sb.toString();
+		String esQueryCondition = StringUtils.clean(sb.toString());
 		try {
 			Map<String, Object> payload = new HashMap<>();
 			payload.put("access_token", loadElasticSearchToken());
