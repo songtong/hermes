@@ -211,6 +211,9 @@ public class ESMonitorService {
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
 		ctx.addQuery("message", "ERROR");
+		for (String message : toList(config.getEsIgnoreKafkaBrokerMessages())) {
+			ctx.addQuery("-message", message);
+		}
 
 		return queryCountInTimeRange(ctx);
 	}
