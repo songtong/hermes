@@ -1,6 +1,10 @@
 package com.ctrip.hermes.monitor.service;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import org.unidal.tuple.Pair;
 
 public class ESQueryContext {
 
@@ -8,11 +12,9 @@ public class ESQueryContext {
 
 	private String m_documentType;
 
-	private String m_keyWord;
-
-	private String m_querySchema;
-
 	private String m_groupSchema;
+
+	private List<Pair<String, String>> m_querys = new ArrayList<>();
 
 	private Date m_from;
 
@@ -32,22 +34,6 @@ public class ESQueryContext {
 
 	public void setDocumentType(String docType) {
 		this.m_documentType = docType;
-	}
-
-	public String getKeyWord() {
-		return m_keyWord;
-	}
-
-	public void setKeyWord(String keyWord) {
-		this.m_keyWord = keyWord;
-	}
-
-	public String getQuerySchema() {
-		return m_querySchema;
-	}
-
-	public void setQuerySchema(String querySchema) {
-		this.m_querySchema = querySchema;
 	}
 
 	public String getGroupSchema() {
@@ -74,10 +60,15 @@ public class ESQueryContext {
 		this.m_to = to;
 	}
 
-	@Override
-	public String toString() {
-		return "ESQueryContext [index=" + m_index + ", documentType=" + m_documentType + ", keyWord=" + m_keyWord
-		      + ", querySchema=" + m_querySchema + ", groupSchema=" + m_groupSchema + ", from=" + m_from + ", to=" + m_to
-		      + "]";
+	public List<Pair<String, String>> getQuerys() {
+		return m_querys;
+	}
+
+	public void setQuerys(List<Pair<String, String>> querys) {
+		m_querys = querys;
+	}
+
+	public void addQuery(String key, String value) {
+		m_querys.add(new Pair<String, String>(key, value));
 	}
 }

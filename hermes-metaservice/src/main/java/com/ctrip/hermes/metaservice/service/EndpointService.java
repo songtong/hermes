@@ -49,6 +49,11 @@ public class EndpointService {
 		return entities;
 	}
 
+	public com.ctrip.hermes.meta.entity.Endpoint findEndpoint(String endpointId) throws DalException {
+		com.ctrip.hermes.metaservice.model.Endpoint model = m_endpointDao.findByPK(endpointId);
+		return model != null ? ModelToEntityConverter.convert(model) : null;
+	}
+
 	public void updateEndpoint(Endpoint endpoint) throws Exception {
 		com.ctrip.hermes.metaservice.model.Endpoint proto = EntityToModelConverter.convert(endpoint);
 		m_endpointDao.updateByPK(proto, EndpointEntity.UPDATESET_FULL);

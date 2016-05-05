@@ -79,7 +79,7 @@ public class MonitorConfig {
 
 	@Value("${zabbix.url}")
 	private String zabbixUrl;
-	
+
 	@Value("${zabbix1.url:${zabbix.url}}")
 	private String zabbixUrl1;
 
@@ -211,6 +211,15 @@ public class MonitorConfig {
 
 	@Value("${hermes.metaserver.cat.domain:hermes-metaserver}")
 	private String hermesMetaserverCatDomain;
+
+	@Value("${es.ignore.mysql.broker.messages:[]}")
+	private String esIgnoreMysqlBrokerMessages;
+
+	@Value("${es.ignore.kafka.broker.messages:[\"NOT_LEADER_FOR_PARTITION\",\"Failed to append messages\"]}")
+	private String esIgnoreKafkaBrokerMessages;
+
+	@Value("${es.ignore.metaserver.messages:[\"SEVERE: An I/O error has occurred while writing a response message entity to the container output stream\"]}")
+	private String esIgnoreMetaserverMessages;
 
 	public String getEsClusterName() {
 		return esClusterName;
@@ -683,10 +692,35 @@ public class MonitorConfig {
 	}
 
 	public String getZabbixUrl1() {
-	   return zabbixUrl1;
-   }
+		return zabbixUrl1;
+	}
 
 	public void setZabbixUrl1(String zabbixUrl1) {
-	   this.zabbixUrl1 = zabbixUrl1;
-   }
+		this.zabbixUrl1 = zabbixUrl1;
+	}
+
+	public String getEsIgnoreMysqlBrokerMessages() {
+		return esIgnoreMysqlBrokerMessages;
+	}
+
+	public void setEsIgnoreMysqlBrokerMessages(String esIgnoreMysqlBrokerMessages) {
+		this.esIgnoreMysqlBrokerMessages = esIgnoreMysqlBrokerMessages;
+	}
+
+	public String getEsIgnoreKafkaBrokerMessages() {
+		return esIgnoreKafkaBrokerMessages;
+	}
+
+	public void setEsIgnoreKafkaBrokerMessages(String esIgnoreKafkaBrokerMessages) {
+		this.esIgnoreKafkaBrokerMessages = esIgnoreKafkaBrokerMessages;
+	}
+
+	public String getEsIgnoreMetaserverMessages() {
+		return esIgnoreMetaserverMessages;
+	}
+
+	public void setEsIgnoreMetaserverMessages(String esIgnoreMetaserverMessages) {
+		this.esIgnoreMetaserverMessages = esIgnoreMetaserverMessages;
+	}
+
 }

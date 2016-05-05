@@ -9,9 +9,13 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -38,13 +42,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.helper.Files.IO;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.core.utils.StringUtils.StringFormatter;
+import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.metaservice.service.EndpointService;
 import com.ctrip.hermes.monitor.checker.server.ServerCheckerConstans;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.dashboard.DashboardItem;
@@ -68,17 +79,22 @@ public class ESMonitorService {
 
 	private static final int ES_QUERY_TIMEOUT_IN_MILLIS = 30000;
 
+	private static final String DEFAULT_KAFKA_BROKER_GROUP = "kafka-default";
+
 	static {
 		JSON.DEFFAULT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 	}
 
 	private TransportClient client;
 
+	private EndpointService endpointService;
+
 	@Autowired
 	private MonitorConfig config;
 
 	@PostConstruct
 	private void postConstruct() {
+		endpointService = PlexusComponentLocator.lookup(EndpointService.class);
 		Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", config.getEsClusterName()).build();
 		client = new TransportClient(settings);
 		String[] esTransportAddress = config.getEsTransportAddress();
@@ -122,38 +138,79 @@ public class ESMonitorService {
 
 	// *********************** FOR ES QUERY *********************** //
 
+	private List<String> toList(String jsonString) {
+		return JSON.parseObject(jsonString, new TypeReference<List<String>>() {
+		});
+	}
+
+	private boolean isBrokerBelongKafka(String hostname) {
+		try {
+			Endpoint endpoint = endpointService.findEndpoint(hostname);
+			return endpoint != null && DEFAULT_KAFKA_BROKER_GROUP.equals(endpoint.getGroup());
+		} catch (DalException e) {
+			log.warn("Can not find broker with hostname:{}, {}", hostname, e.getMessage());
+			return false;
+		}
+	}
+
 	public Map<String, Long> queryBrokerErrorCount(Date from, Date to) {
+		Map<String, Long> mysql = doQueryBrokerErrorCount(from, to, toList(config.getEsIgnoreMysqlBrokerMessages()));
+		Map<String, Long> kafka = doQueryBrokerErrorCount(from, to, toList(config.getEsIgnoreKafkaBrokerMessages()));
+
+		Map<String, Long> result = new HashMap<>();
+		for (Entry<String, Long> entry : mysql.entrySet()) {
+			if (!isBrokerBelongKafka(entry.getKey())) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+		for (Entry<String, Long> entry : kafka.entrySet()) {
+			if (isBrokerBelongKafka(entry.getKey())) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return result;
+	}
+
+	private Map<String, Long> doQueryBrokerErrorCount(Date from, Date to, List<String> excludeMessages) {
 		ESQueryContext ctx = new ESQueryContext();
 
 		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_BROKER);
-		ctx.setIndex(getHermesLogIndex());
+		ctx.setIndex(getHermesLogIndex(from, to));
 		ctx.setFrom(from);
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
-		ctx.setKeyWord("ERROR");
-		ctx.setQuerySchema("message");
+		ctx.addQuery("message", "ERROR");
+		for (String msg : excludeMessages) {
+			ctx.addQuery("-message", msg);
+		}
 
 		return queryCountInTimeRange(ctx);
 	}
 
-	private String getHermesLogIndex() {
-		String todayIdx = String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN,
-		      INDEX_DATE_FORMAT.format(new Date()));
-		String yesterdayIdx = String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN,
-		      INDEX_DATE_FORMAT.format(new Date(new Date().getTime() - TimeUnit.DAYS.toMillis(1))));
-		return todayIdx + "," + yesterdayIdx;
+	private String getHermesLogIndex(Date from, Date to) {
+		List<String> idxs = new ArrayList<>();
+		Date curDate = new Date(to.getTime());
+		while (curDate.after(from)) {
+			idxs.add(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN, INDEX_DATE_FORMAT.format(curDate)));
+			curDate.setTime(curDate.getTime() - TimeUnit.DAYS.toMillis(1));
+		}
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(from);
+		if (cal.get(Calendar.HOUR_OF_DAY) < 8) {
+			idxs.add(String.format(ServerCheckerConstans.ES_HERMES_LOG_INDEX_PATTERN, INDEX_DATE_FORMAT.format(curDate)));
+		}
+		return StringUtils.join(idxs, ",");
 	}
 
 	public Map<String, Long> queryMetaserverErrorCount(Date from, Date to) {
 		ESQueryContext ctx = new ESQueryContext();
 
 		ctx.setDocumentType(ServerCheckerConstans.ES_DOC_TYPE_METASERVER);
-		ctx.setIndex(getHermesLogIndex());
+		ctx.setIndex(getHermesLogIndex(from, to));
 		ctx.setFrom(from);
 		ctx.setTo(to);
 		ctx.setGroupSchema("hostname");
-		ctx.setKeyWord("ERROR");
-		ctx.setQuerySchema("message");
+		ctx.addQuery("message", "ERROR");
 
 		return queryCountInTimeRange(ctx);
 	}
@@ -168,9 +225,17 @@ public class ESMonitorService {
 		throw new RuntimeException("Load elastic search token failed.");
 	}
 
+	private String joinQuerys(List<Pair<String, String>> querys) {
+		return StringUtils.join(querys, " AND ", new StringFormatter<Pair<String, String>>() {
+			@Override
+			public String format(Pair<String, String> obj) {
+				return obj.getKey() + ":'" + obj.getValue() + "'";
+			}
+		});
+	}
+
 	private Map<String, Long> queryCountInTimeRange(ESQueryContext ctx) {
-		String query = String
-		      .format("source:%s AND %s:%s", ctx.getDocumentType(), ctx.getQuerySchema(), ctx.getKeyWord());
+		String query = String.format("source:%s AND %s", ctx.getDocumentType(), joinQuerys(ctx.getQuerys()));
 
 		QueryBuilder qb = QueryBuilders.queryStringQuery(query);
 		FilterBuilder fb = FilterBuilders.rangeFilter("@timestamp") //
