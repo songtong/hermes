@@ -23,6 +23,8 @@ public class AckMessagesTask {
 
 	private Channel m_channel;
 
+	private long m_expireTime;
+
 	private List<AckContext> m_ackedContexts = new ArrayList<>();
 
 	private List<AckContext> m_ackedPriorityContexts = new ArrayList<>();
@@ -35,12 +37,22 @@ public class AckMessagesTask {
 
 	private List<AckContext> m_nackedResendContexts = new ArrayList<>();
 
-	public AckMessagesTask(String topic, int partition, String groupId, long correlationId, Channel channel) {
+	public AckMessagesTask(String topic, int partition, String groupId, long correlationId, Channel channel,
+	      long expireTime) {
 		m_topic = topic;
 		m_partition = partition;
 		m_groupId = groupId;
 		m_channel = channel;
 		m_correlationId = correlationId;
+		m_expireTime = expireTime;
+	}
+
+	public long getExpireTime() {
+		return m_expireTime;
+	}
+
+	public void setExpireTime(long expireTime) {
+		m_expireTime = expireTime;
 	}
 
 	public long getCorrelationId() {

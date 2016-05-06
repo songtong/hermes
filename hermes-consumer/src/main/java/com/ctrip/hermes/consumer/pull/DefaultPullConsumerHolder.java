@@ -20,6 +20,7 @@ import com.ctrip.hermes.consumer.api.PullConsumerConfig;
 import com.ctrip.hermes.consumer.api.PullConsumerHolder;
 import com.ctrip.hermes.consumer.api.PulledBatch;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
+import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
@@ -54,7 +55,7 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 	private ExecutorService m_callbackExecutor;
 
 	public DefaultPullConsumerHolder(String topic, String groupId, int partitionCount, PullConsumerConfig config,
-	      AckManager ackManager) {
+	      AckManager ackManager, ConsumerConfig consumerConfig) {
 		m_topic = topic;
 		m_config = config;
 		m_partitionCount = partitionCount;
@@ -65,7 +66,7 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 			      .add(new ArrayBlockingQueue<PullBrokerConsumerMessage<T>>(config.getPartitionMessageCacheSize()));
 		}
 
-		m_committer = new DefaultCommitter<>(topic, groupId, partitionCount, config, ackManager);
+		m_committer = new DefaultCommitter<>(topic, groupId, partitionCount, config, ackManager, consumerConfig);
 
 		String callbackName = "PullConsumerCallback-" + topic + "-" + groupId;
 		m_callbackExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create(callbackName, true));

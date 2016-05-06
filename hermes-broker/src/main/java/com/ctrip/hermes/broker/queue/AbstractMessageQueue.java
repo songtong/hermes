@@ -35,6 +35,7 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.v3.AckMessageResultCommandV3;
@@ -86,6 +87,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private MessageQueueFlusher m_flusher;
 
+	private SystemClockService m_systemClockService;
+
 	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage,
 	      ScheduledExecutorService ackOpExecutor, ScheduledExecutorService ackMessagesTaskExecutor) {
 		m_topic = topic;
@@ -99,6 +102,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		m_config = PlexusComponentLocator.lookup(BrokerConfig.class);
 		m_metaService = PlexusComponentLocator.lookup(MetaService.class);
 		m_flusher = new DefaultMessageQueueFlusher(m_topic, m_partition, m_storage, m_metaService);
+		m_systemClockService = PlexusComponentLocator.lookup(SystemClockService.class);
 
 		init();
 	}
@@ -337,10 +341,12 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 				m_ackMessageTaskQueue.drainTo(todos);
 
 				for (AckMessagesTask todo : todos) {
-					try {
-						executeTask(todo);
-					} catch (Exception e) {
-						log.error("Exception occurred while executing ack message task.", e);
+					if (todo.getExpireTime() >= m_systemClockService.now()) {
+						try {
+							executeTask(todo);
+						} catch (Exception e) {
+							log.error("Exception occurred while executing ack message task.", e);
+						}
 					}
 				}
 

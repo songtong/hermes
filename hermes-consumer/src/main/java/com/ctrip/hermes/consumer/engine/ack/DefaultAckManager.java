@@ -32,7 +32,7 @@ import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.ConsumerMessage;
-import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -152,7 +152,7 @@ public class DefaultAckManager implements AckManager {
 	}
 
 	@Override
-	public boolean writeAckToBroker(AckMessageCommandV3 cmd) {
+	public boolean writeAckToBroker(AckMessageCommandV4 cmd) {
 		String topic = cmd.getTopic();
 		int partition = cmd.getPartition();
 		String groupId = cmd.getGroup();
@@ -244,7 +244,7 @@ public class DefaultAckManager implements AckManager {
 			@Override
 			public void run() {
 				Tpg tpg = m_holder.getTpg();
-				AckMessageCommandV3 cmd = m_holder.pop();
+				AckMessageCommandV4 cmd = m_holder.pop();
 				try {
 					if (cmd != null) {
 						boolean success = writeAckToBroker(cmd);
@@ -287,7 +287,7 @@ public class DefaultAckManager implements AckManager {
 
 		private AtomicBoolean m_stopped = new AtomicBoolean(false);
 
-		private AtomicReference<AckMessageCommandV3> m_cmd = new AtomicReference<>(null);
+		private AtomicReference<AckMessageCommandV4> m_cmd = new AtomicReference<>(null);
 
 		private AtomicBoolean m_flushing = new AtomicBoolean(false);
 
@@ -314,14 +314,14 @@ public class DefaultAckManager implements AckManager {
 			m_stopped.set(true);
 		}
 
-		public AckMessageCommandV3 pop() {
+		public AckMessageCommandV4 pop() {
 			if (m_cmd.get() == null) {
 				return scan();
 			}
 			return m_cmd.getAndSet(null);
 		}
 
-		public void push(AckMessageCommandV3 cmd) {
+		public void push(AckMessageCommandV4 cmd) {
 			m_cmd.set(cmd);
 		}
 
@@ -329,8 +329,8 @@ public class DefaultAckManager implements AckManager {
 			return m_tpg;
 		}
 
-		private AckMessageCommandV3 scan() {
-			AckMessageCommandV3 cmd = null;
+		private AckMessageCommandV4 scan() {
+			AckMessageCommandV4 cmd = null;
 
 			AckHolderScanningResult<AckContext> priorityScanningRes = m_priorityAckHolder.scan(m_config
 			      .getAckCommandMaxSize());
@@ -346,7 +346,8 @@ public class DefaultAckManager implements AckManager {
 			      || !resendScanningRes.getAcked().isEmpty() //
 			      || !resendScanningRes.getNacked().isEmpty()) {
 
-				cmd = new AckMessageCommandV3(m_tpg.getTopic(), m_tpg.getPartition(), m_tpg.getGroupId());
+				cmd = new AckMessageCommandV4(m_tpg.getTopic(), m_tpg.getPartition(), m_tpg.getGroupId(),
+				      m_config.getAckCheckerIoTimeoutMillis());
 
 				// priority
 				for (AckContext ctx : priorityScanningRes.getAcked()) {
