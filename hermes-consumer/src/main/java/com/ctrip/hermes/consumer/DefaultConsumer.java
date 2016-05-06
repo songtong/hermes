@@ -198,7 +198,7 @@ public class DefaultConsumer extends Consumer {
 		Topic topic = validateTopicAndConsumerGroup(topicName, groupId);
 
 		DefaultPullConsumerHolder<T> holder = new DefaultPullConsumerHolder<T>(topicName, groupId, topic.getPartitions()
-		      .size(), config, PlexusComponentLocator.lookup(AckManager.class));
+		      .size(), config, PlexusComponentLocator.lookup(AckManager.class), m_config);
 
 		MessageListenerConfig listenerConfig = new MessageListenerConfig();
 		ConsumerHolder consumerHolder = start(topicName, groupId, holder, listenerConfig, ConsumerType.PULL, null,

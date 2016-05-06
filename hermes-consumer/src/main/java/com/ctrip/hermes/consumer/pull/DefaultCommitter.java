@@ -18,9 +18,10 @@ import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.consumer.api.PullConsumerConfig;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
+import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
-import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 public class DefaultCommitter<T> implements Committer<T> {
@@ -41,12 +42,15 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 	private AckManager m_ackManager;
 
+	private ConsumerConfig m_consumerConfig;
+
 	public DefaultCommitter(String topic, String groupId, int partitionCount, PullConsumerConfig config,
-	      AckManager ackManager) {
+	      AckManager ackManager, ConsumerConfig consumerConfig) {
 		m_topic = topic;
 		m_groupId = groupId;
 		m_config = config;
 		m_ackManager = ackManager;
+		m_consumerConfig = consumerConfig;
 
 		String manualName = "PullConsumerManualOffsetCommit-" + topic + "-" + groupId;
 		ThreadFactory factory = HermesThreadFactory.create(manualName, true);
@@ -57,7 +61,8 @@ public class DefaultCommitter<T> implements Committer<T> {
 		boolean success = true;
 
 		if (partitionRecords != null && !partitionRecords.isEmpty()) {
-			AckMessageCommandV3 cmd = new AckMessageCommandV3(m_topic, partition, m_groupId);
+			AckMessageCommandV4 cmd = new AckMessageCommandV4(m_topic, partition, m_groupId,
+			      m_consumerConfig.getAckCheckerIoTimeoutMillis());
 
 			for (OffsetRecord rec : partitionRecords) {
 				if (rec.isNack()) {

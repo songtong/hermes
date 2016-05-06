@@ -30,6 +30,7 @@ import com.ctrip.hermes.broker.transport.NettyServer;
 import com.ctrip.hermes.broker.transport.NettyServerConfig;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV3;
+import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV4;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV3;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV4;
@@ -110,6 +111,13 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MessageQueueManager.class)//
 		      .req(FileBizLogger.class) //
 		      .req(MetaService.class) //
+		      .req(SystemClockService.class) //
+		);
+		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK_V4.toString(), AckMessageCommandProcessorV4.class)//
+		      .req(MessageQueueManager.class)//
+		      .req(FileBizLogger.class) //
+		      .req(MetaService.class) //
+		      .req(SystemClockService.class) //
 		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET.toString(),
 		      QueryLatestConsumerOffsetCommandProcessor.class)//

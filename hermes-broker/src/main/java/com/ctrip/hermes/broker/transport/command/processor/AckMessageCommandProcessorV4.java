@@ -18,7 +18,7 @@ import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.processor.ThreadCount;
-import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 
 /**
@@ -26,7 +26,7 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
  *
  */
 @ThreadCount(value = 10)
-public class AckMessageCommandProcessorV3 implements CommandProcessor {
+public class AckMessageCommandProcessorV4 implements CommandProcessor {
 
 	@Inject
 	private FileBizLogger m_bizLogger;
@@ -42,12 +42,12 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.MESSAGE_ACK_V3);
+		return Arrays.asList(CommandType.MESSAGE_ACK_V4);
 	}
 
 	@Override
 	public void process(CommandProcessorContext ctx) {
-		AckMessageCommandV3 reqCmd = (AckMessageCommandV3) ctx.getCommand();
+		AckMessageCommandV4 reqCmd = (AckMessageCommandV4) ctx.getCommand();
 
 		String topic = reqCmd.getTopic();
 		int partition = reqCmd.getPartition();
@@ -66,7 +66,7 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 		      nackedResendContexts);
 
 		AckMessagesTask task = new AckMessagesTask(topic, partition, groupId, reqCmd.getHeader().getCorrelationId(),
-		      ctx.getChannel(), m_systemClockService.now() + 10 * 1000L);
+		      ctx.getChannel(), m_systemClockService.now() + reqCmd.getTimeout());
 		task.setAckedContexts(ackedContexts);
 		task.setAckedPriorityContexts(ackedPriorityContexts);
 		task.setAckedResendContexts(ackedResendContexts);

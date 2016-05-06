@@ -4,7 +4,7 @@ import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.message.ConsumerMessage;
-import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
 
 public class PullConsumingStrategyConsumerTask extends BaseConsumerTask {
 
@@ -41,7 +41,7 @@ public class PullConsumingStrategyConsumerTask extends BaseConsumerTask {
 		}
 
 		@Override
-		public boolean writeAckToBroker(AckMessageCommandV3 cmd) {
+		public boolean writeAckToBroker(AckMessageCommandV4 cmd) {
 			return true;
 		}
 

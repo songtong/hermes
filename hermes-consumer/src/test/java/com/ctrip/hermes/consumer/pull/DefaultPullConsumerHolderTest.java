@@ -31,11 +31,13 @@ import com.ctrip.hermes.consumer.api.PullConsumerConfig;
 import com.ctrip.hermes.consumer.api.PulledBatch;
 import com.ctrip.hermes.consumer.api.TopicPartition;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
+import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
-import com.ctrip.hermes.core.transport.command.v3.AckMessageCommandV3;
+import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public class DefaultPullConsumerHolderTest {
 
@@ -57,7 +59,8 @@ public class DefaultPullConsumerHolderTest {
 		config.setManualCommitInterval(50);
 		ackManager = mock(AckManager.class);
 
-		holder = new DefaultPullConsumerHolder<>(topic, groupId, partitionCount, config, ackManager);
+		holder = new DefaultPullConsumerHolder<>(topic, groupId, partitionCount, config, ackManager,
+		      PlexusComponentLocator.lookup(ConsumerConfig.class));
 	}
 
 	@Test
@@ -138,7 +141,7 @@ public class DefaultPullConsumerHolderTest {
 		holder.onMessage(makeMessages(0, false, "a", 1));
 
 		final CountDownLatch latch = new CountDownLatch(1);
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).then(new Answer<Object>() {
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).then(new Answer<Object>() {
 
 			@Override
 			public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -156,7 +159,7 @@ public class DefaultPullConsumerHolderTest {
 		holder.onMessage(makeMessages(0, false, "a", 1));
 
 		final CountDownLatch latch = new CountDownLatch(1);
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).then(new Answer<Boolean>() {
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).then(new Answer<Boolean>() {
 
 			@Override
 			public Boolean answer(InvocationOnMock invocation) throws Throwable {
@@ -173,7 +176,7 @@ public class DefaultPullConsumerHolderTest {
 
 	@Test
 	public void testCommitTwice1() throws InterruptedException {
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenReturn(true);
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenReturn(true);
 		holder.onMessage(makeMessages(1, false, "a", 1));
 
 		PulledBatch<String> batch = holder.poll(1, 10);
@@ -183,7 +186,7 @@ public class DefaultPullConsumerHolderTest {
 		batch.commitSync();
 
 		final AtomicBoolean ackCmdIssued = new AtomicBoolean(false);
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenAnswer(new Answer<Boolean>() {
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenAnswer(new Answer<Boolean>() {
 
 			@Override
 			public Boolean answer(InvocationOnMock invocation) throws Throwable {
@@ -215,7 +218,7 @@ public class DefaultPullConsumerHolderTest {
 		msgs.get(0).nack();
 
 		final CountDownLatch latch = new CountDownLatch(1);
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenAnswer(new Answer<Boolean>() {
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenAnswer(new Answer<Boolean>() {
 
 			@Override
 			public Boolean answer(InvocationOnMock invocation) throws Throwable {
@@ -226,13 +229,13 @@ public class DefaultPullConsumerHolderTest {
 		batch2.commitAsync();
 		assertFalse(latch.await(config.getManualCommitInterval() * 3, TimeUnit.MILLISECONDS));
 
-		final List<AckMessageCommandV3> cmds = new LinkedList<>();
+		final List<AckMessageCommandV4> cmds = new LinkedList<>();
 		final CountDownLatch latch2 = new CountDownLatch(2);
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenAnswer(new Answer<Boolean>() {
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenAnswer(new Answer<Boolean>() {
 
 			@Override
 			public Boolean answer(InvocationOnMock invocation) throws Throwable {
-				cmds.add(invocation.getArgumentAt(0, AckMessageCommandV3.class));
+				cmds.add(invocation.getArgumentAt(0, AckMessageCommandV4.class));
 				latch2.countDown();
 				return true;
 			}
@@ -241,19 +244,19 @@ public class DefaultPullConsumerHolderTest {
 		assertTrue(latch2.await(config.getManualCommitInterval() * 3, TimeUnit.MILLISECONDS));
 
 		assertEquals(2, cmds.size());
-		HashMap<Integer, AckMessageCommandV3> cmdMap = new HashMap<>();
-		for (AckMessageCommandV3 cmd : cmds) {
+		HashMap<Integer, AckMessageCommandV4> cmdMap = new HashMap<>();
+		for (AckMessageCommandV4 cmd : cmds) {
 			cmdMap.put(cmd.getPartition(), cmd);
 		}
 
 		int priority = 1;
-		AckMessageCommandV3 cmd1 = cmdMap.get(1);
+		AckMessageCommandV4 cmd1 = cmdMap.get(1);
 		assertEquals(1, cmd1.getAckedMsgs().get(priority).size());
 		assertEquals(10, cmd1.getAckedMsgs().get(priority).get(0).getMsgSeq());
 		assertEquals(1, cmd1.getNackedMsgs().get(priority).size());
 		assertEquals(10, cmd1.getNackedMsgs().get(priority).get(0).getMsgSeq());
 
-		AckMessageCommandV3 cmd2 = cmdMap.get(2);
+		AckMessageCommandV4 cmd2 = cmdMap.get(2);
 		assertEquals(1, cmd2.getAckedMsgs().get(priority).size());
 		assertEquals(20, cmd2.getAckedMsgs().get(priority).get(0).getMsgSeq());
 		assertEquals(1, cmd2.getNackedMsgs().get(priority).size());
@@ -262,7 +265,7 @@ public class DefaultPullConsumerHolderTest {
 
 	@Test
 	public void testCommitCallback() throws Exception {
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenReturn(true);
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenReturn(true);
 
 		int partition = 0;
 
@@ -307,7 +310,7 @@ public class DefaultPullConsumerHolderTest {
 	public void testCommitSync() throws Exception {
 		final CountDownLatch latch = new CountDownLatch(1);
 		final long ackDelay = 200;
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenAnswer(new Answer<Boolean>() {
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenAnswer(new Answer<Boolean>() {
 
 			@Override
 			public Boolean answer(InvocationOnMock invocation) throws Throwable {
@@ -329,7 +332,7 @@ public class DefaultPullConsumerHolderTest {
 
 	@Test
 	public void testCommitManyMessages() throws Exception {
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenReturn(true);
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenReturn(true);
 
 		int msgPerPartitionPriority = 5;
 		for (int i = 0; i < partitionCount; i++) {
@@ -375,11 +378,11 @@ public class DefaultPullConsumerHolderTest {
 		holder.onMessage(makeMessages(0, false, "a", 1));
 
 		final CountDownLatch latch = new CountDownLatch(1);
-		final AtomicReference<AckMessageCommandV3> cmd = new AtomicReference<>();
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenAnswer(new Answer<Boolean>() {
+		final AtomicReference<AckMessageCommandV4> cmd = new AtomicReference<>();
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenAnswer(new Answer<Boolean>() {
 			@Override
 			public Boolean answer(InvocationOnMock invocation) throws Throwable {
-				cmd.set(invocation.getArgumentAt(0, AckMessageCommandV3.class));
+				cmd.set(invocation.getArgumentAt(0, AckMessageCommandV4.class));
 				latch.countDown();
 				return true;
 			}
@@ -446,13 +449,13 @@ public class DefaultPullConsumerHolderTest {
 			msgs.get(i).nack();
 		}
 
-		final List<AckMessageCommandV3> cmds = new LinkedList<>();
+		final List<AckMessageCommandV4> cmds = new LinkedList<>();
 		final CountDownLatch latch = new CountDownLatch(2);
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenAnswer(new Answer<Boolean>() {
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenAnswer(new Answer<Boolean>() {
 
 			@Override
 			public Boolean answer(InvocationOnMock invocation) throws Throwable {
-				cmds.add(invocation.getArgumentAt(0, AckMessageCommandV3.class));
+				cmds.add(invocation.getArgumentAt(0, AckMessageCommandV4.class));
 				latch.countDown();
 				return true;
 			}
@@ -462,15 +465,15 @@ public class DefaultPullConsumerHolderTest {
 		assertTrue(latch.await(config.getManualCommitInterval() * 3, TimeUnit.MILLISECONDS));
 
 		assertEquals(2, cmds.size());
-		HashMap<Integer, AckMessageCommandV3> cmdMap = new HashMap<>();
-		for (AckMessageCommandV3 cmd : cmds) {
+		HashMap<Integer, AckMessageCommandV4> cmdMap = new HashMap<>();
+		for (AckMessageCommandV4 cmd : cmds) {
 			cmdMap.put(cmd.getPartition(), cmd);
 		}
 
 		@SuppressWarnings("rawtypes")
 		Set nackSet = new HashSet<>(toNack);
 
-		AckMessageCommandV3 cmd = cmdMap.get(1);
+		AckMessageCommandV4 cmd = cmdMap.get(1);
 
 		assertEquals(1, cmd.getAckedMsgs().get(1).size());
 		assertEquals(10, cmd.getAckedMsgs().get(1).get(0).getMsgSeq());
@@ -538,13 +541,13 @@ public class DefaultPullConsumerHolderTest {
 			msgs.get(0).nack();
 		}
 
-		final List<AckMessageCommandV3> cmds = new LinkedList<>();
+		final List<AckMessageCommandV4> cmds = new LinkedList<>();
 		final CountDownLatch latch = new CountDownLatch(1);
-		when(ackManager.writeAckToBroker(any(AckMessageCommandV3.class))).thenAnswer(new Answer<Boolean>() {
+		when(ackManager.writeAckToBroker(any(AckMessageCommandV4.class))).thenAnswer(new Answer<Boolean>() {
 
 			@Override
 			public Boolean answer(InvocationOnMock invocation) throws Throwable {
-				cmds.add(invocation.getArgumentAt(0, AckMessageCommandV3.class));
+				cmds.add(invocation.getArgumentAt(0, AckMessageCommandV4.class));
 				latch.countDown();
 				return true;
 			}
@@ -554,13 +557,13 @@ public class DefaultPullConsumerHolderTest {
 		assertTrue(latch.await(config.getManualCommitInterval() * 3, TimeUnit.MILLISECONDS));
 
 		assertEquals(1, cmds.size());
-		HashMap<Integer, AckMessageCommandV3> cmdMap = new HashMap<>();
-		for (AckMessageCommandV3 cmd : cmds) {
+		HashMap<Integer, AckMessageCommandV4> cmdMap = new HashMap<>();
+		for (AckMessageCommandV4 cmd : cmds) {
 			cmdMap.put(cmd.getPartition(), cmd);
 		}
 
 		int intPriority = priority ? 0 : 1;
-		AckMessageCommandV3 cmd1 = cmdMap.get(partition);
+		AckMessageCommandV4 cmd1 = cmdMap.get(partition);
 
 		Map<Integer, List<AckContext>> ackedToCheck;
 		Map<Integer, List<AckContext>> nackedToCheck;
