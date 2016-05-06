@@ -53,8 +53,6 @@ public abstract class BaseMessageListener<T> implements MessageListener<T> {
 					t.addData("topic", topic);
 					t.addData("key", msg.getRefKey());
 					t.addData("groupId", m_groupId);
-					// TODO
-					t.addData("appId", "demo-app");
 
 					setOnMessageStartTime(msg);
 					onMessage(msg);

@@ -24,6 +24,8 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_PRODUCE_ELAPSE = "Message.Produce.Elapse";
 
+	public static final String TYPE_MESSAGE_PRODUCE_ELAPSE_LARGE = "Message.Produce.Elapse.Large";
+
 	public static final String TYPE_MESSAGE_PRODUCE_TRANSPORT = "Message.Produce.Transport";
 
 	public static final String TYPE_MESSAGE_PRODUCE_ACKED = "Message.Produce.Acked";

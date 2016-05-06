@@ -1,5 +1,6 @@
 package com.ctrip.hermes.producer.monitor;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,11 +17,11 @@ import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
-import com.dianping.cat.message.internal.DefaultTransaction;
 import com.dianping.cat.message.spi.MessageTree;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -112,14 +113,11 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 					tree.setParentMessageId(parentMsgId);
 					tree.setRootMessageId(rootMsgId);
 
-					Transaction elapseT = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE, msg.getTopic());
-					if (elapseT instanceof DefaultTransaction) {
-						((DefaultTransaction) elapseT).setDurationStart(msg.getBornTimeNano());
-						elapseT.addData("key", msg.getKey());
-					}
-					elapseT.setStatus(status);
-					elapseT.complete();
-
+					long durtion = System.currentTimeMillis() - msg.getBornTime();
+					String type = durtion > 2000L ? CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE_LARGE
+					      : CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE;
+					CatUtil.logElapse(type, msg.getTopic(), msg.getBornTime(), 1,
+					      Arrays.asList(new Pair<String, String>("key", msg.getKey())), status);
 				}
 			}
 			t.addData("*count", sendMessageCommand.getMessageCount());
