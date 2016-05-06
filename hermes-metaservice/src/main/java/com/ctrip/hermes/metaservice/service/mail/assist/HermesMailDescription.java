@@ -1,4 +1,4 @@
-package com.ctrip.hermes.metaservice.assist;
+package com.ctrip.hermes.metaservice.service.mail.assist;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -17,15 +17,15 @@ public @interface HermesMailDescription {
 	@Target(ElementType.FIELD)
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	public static @interface MailContentField {
+	public static @interface ContentField {
 		public String name() default "";
 	}
 
 	@Target(ElementType.FIELD)
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	public static @interface MailTitle {
-		public String title() default "";
+	public static @interface Subject {
+		public String subject() default "";
 	}
 
 }

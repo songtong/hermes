@@ -10,15 +10,15 @@ public class DefaultNotifyService implements NotifyService {
 	private static final Logger log = LoggerFactory.getLogger(DefaultNotifyService.class);
 
 	@Override
-	public boolean notify(HermesNotification notification) {
-		if (notification != null && notification.getType() != null) {
-			NotifyHandler handler = PlexusComponentLocator.lookup(NotifyHandler.class, notification.getType().handlerID());
+	public boolean notify(HermesNotice notice) {
+		if (notice != null && notice.getType() != null) {
+			NotifyHandler handler = PlexusComponentLocator.lookup(NotifyHandler.class, notice.getType().handlerID());
 			try {
 				if (handler != null) {
-					return handler.handle(notification);
+					return handler.handle(notice);
 				}
 			} catch (Exception e) {
-				log.error("Handle hermes notification failed! {}", notification, e);
+				log.error("Handle hermes notification failed! {}", notice, e);
 			}
 		}
 		return false;

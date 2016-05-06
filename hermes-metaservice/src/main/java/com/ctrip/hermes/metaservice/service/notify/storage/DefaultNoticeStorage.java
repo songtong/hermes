@@ -14,12 +14,13 @@ import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.metaservice.model.Notification;
 import com.ctrip.hermes.metaservice.model.NotificationDao;
 import com.ctrip.hermes.metaservice.model.NotificationEntity;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotification;
-import com.ctrip.hermes.metaservice.service.notify.NotificationType;
+import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
+import com.ctrip.hermes.metaservice.service.notify.NoticeType;
+import com.ctrip.hermes.metaservice.service.notify.SmsNoticeContent;
 
 @Named
-public class DefaultNotificationStorage implements NotificationStorage {
-	private static final Logger log = LoggerFactory.getLogger(DefaultNotificationStorage.class);
+public class DefaultNoticeStorage implements NoticeStorage {
+	private static final Logger log = LoggerFactory.getLogger(DefaultNoticeStorage.class);
 
 	@Inject
 	private NotificationDao m_dao;
@@ -32,30 +33,30 @@ public class DefaultNotificationStorage implements NotificationStorage {
 	private static final String DS_NAME = "fxhermesmetadb";
 
 	@Override
-	public List<HermesNotification> findSmsNotifications(boolean queryOnly) {
-		List<Notification> ns = queryOnly ? findUnnotifiedNotifications() : findAndUpdateUnnotifiedNotifications();
-		List<HermesNotification> list = new ArrayList<>();
+	public List<HermesNotice> findSmsNotices(boolean queryOnly) {
+		List<Notification> ns = queryOnly ? findUnnotifiedNotices() : findAndUpdateUnnotifiedNotices();
+		List<HermesNotice> list = new ArrayList<>();
 		if (ns != null && ns.size() > 0) {
 			for (Notification notification : ns) {
 				List<String> receivers = JSON.parseObject(notification.getReceivers(), new TypeReference<List<String>>() {
 				});
-				list.add(new HermesNotification(NotificationType.SMS, receivers, notification.getContent()));
+				list.add(new HermesNotice(receivers, new SmsNoticeContent(notification.getContent())));
 			}
 		}
 		return list;
 	}
 
-	private List<Notification> findAndUpdateUnnotifiedNotifications() {
+	private List<Notification> findAndUpdateUnnotifiedNotices() {
 		boolean isSuccess = false;
 		try {
 			m_transactionManager.startTransaction(DS_NAME);
-			List<Notification> unnotifiedNotifications = //
-			m_dao.findUnnotifiedNotifications(NotificationType.SMS.name(), DEFAULT_NOTIFICATION_TIMEOUT_DAYS,
+			List<Notification> unnotifiedNotices = //
+			m_dao.findUnnotifiedNotifications(NoticeType.SMS.name(), DEFAULT_NOTIFICATION_TIMEOUT_DAYS,
 			      NotificationEntity.READSET_FULL);
-			m_dao.updateNotifiedStatus(unnotifiedNotifications.toArray(new Notification[unnotifiedNotifications.size()]),
+			m_dao.updateNotifiedStatus(unnotifiedNotices.toArray(new Notification[unnotifiedNotices.size()]),
 			      NotificationEntity.UPDATESET_FULL);
 			isSuccess = true;
-			return unnotifiedNotifications;
+			return unnotifiedNotices;
 		} catch (Exception e) {
 			log.error("Find and Update sms notifications failed.", e);
 			return null;
@@ -68,9 +69,9 @@ public class DefaultNotificationStorage implements NotificationStorage {
 		}
 	}
 
-	private List<Notification> findUnnotifiedNotifications() {
+	private List<Notification> findUnnotifiedNotices() {
 		try {
-			return m_dao.findUnnotifiedNotifications(NotificationType.SMS.name(), DEFAULT_NOTIFICATION_TIMEOUT_DAYS,
+			return m_dao.findUnnotifiedNotifications(NoticeType.SMS.name(), DEFAULT_NOTIFICATION_TIMEOUT_DAYS,
 			      NotificationEntity.READSET_FULL);
 		} catch (Exception e) {
 			log.error("Find unnotified monitor event failed.", e);

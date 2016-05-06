@@ -1,4 +1,4 @@
-package com.ctrip.hermes.metaservice.assist;
+package com.ctrip.hermes.metaservice.service.mail.assist;
 
 import java.util.Map;
 
