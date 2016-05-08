@@ -36,7 +36,5 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE = "Message.Broker.Produce.Elapse";
 
-	public static final String TYPE_MESSAGE_BROKER_KAFAK_FORWARDED = "Message.Broker.Kafka.Forwarded";
-
 	public static final String TYPE_MESSAGE_CONSUME_ACK_TRANSPORT = "Message.Consume.Ack.Transport";
 }

@@ -30,11 +30,11 @@ import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
 import com.dianping.cat.message.Transaction;
-import com.dianping.cat.message.internal.DefaultTransaction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -171,7 +171,7 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 			m_ctx = ctx;
 			m_topic = topic;
 			m_partition = partition;
-			m_start = System.nanoTime();
+			m_start = System.currentTimeMillis();
 		}
 
 		@Override
@@ -194,14 +194,8 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 		}
 
 		private void logElapse() {
-			Transaction elapseT = Cat.newTransaction(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE, m_topic + "-"
-			      + m_partition);
-			if (elapseT instanceof DefaultTransaction) {
-				((DefaultTransaction) elapseT).setDurationStart(m_start);
-				elapseT.addData("*count", m_result.getSuccesses().size());
-			}
-			elapseT.setStatus(Transaction.SUCCESS);
-			elapseT.complete();
+			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE, m_topic + "-" + m_partition, m_start,
+			      m_result.getSuccesses().size(), null, Transaction.SUCCESS);
 		}
 
 		private void logToCatIfHasError(SendMessageResultCommand resultCmd) {
