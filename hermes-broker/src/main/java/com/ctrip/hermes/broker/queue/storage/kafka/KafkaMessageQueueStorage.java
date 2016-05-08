@@ -17,13 +17,16 @@ import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.dianping.cat.message.Transaction;
 
 @Named(type = MessageQueueStorage.class, value = Storage.KAFKA)
 public class KafkaMessageQueueStorage implements MessageQueueStorage {
@@ -42,6 +45,8 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 	      throws Exception {
 		ByteBuf bodyBuf = Unpooled.buffer();
 		KafkaMessageBrokerSender sender = getSender(topic);
+		long start = System.currentTimeMillis();
+		int count = 0;
 		try {
 			for (MessageBatchWithRawData batch : batches) {
 				List<PartialDecodedMessage> pdmsgs = batch.getMessages();
@@ -55,11 +60,16 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 					HermesPrimitiveCodec codec = new HermesPrimitiveCodec(propertiesBuf);
 					Map<String, String> propertiesMap = codec.readStringStringMap();
 					sender.send(topic, propertiesMap.get("pK"), bytes);
+					count++;
 					BrokerStatusMonitor.INSTANCE.kafkaSend(topic);
 				}
 			}
 		} finally {
 			bodyBuf.release();
+			if (count > 0) {
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_KAFAK_FORWARDED, topic + "-" + partition, start, count,
+				      null, Transaction.SUCCESS);
+			}
 		}
 	}
 

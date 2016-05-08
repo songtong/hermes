@@ -24,6 +24,8 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_PRODUCE_ELAPSE = "Message.Produce.Elapse";
 
+	public static final String TYPE_MESSAGE_PRODUCE_ELAPSE_LARGE = "Message.Produce.Elapse.Large";
+
 	public static final String TYPE_MESSAGE_PRODUCE_TRANSPORT = "Message.Produce.Transport";
 
 	public static final String TYPE_MESSAGE_PRODUCE_ACKED = "Message.Produce.Acked";
@@ -33,6 +35,8 @@ public interface CatConstants {
 	public static final String TYPE_MESSAGE_BROKER_FLUSH = "Message.Broker.Flush";
 
 	public static final String TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE = "Message.Broker.Produce.Elapse";
+
+	public static final String TYPE_MESSAGE_BROKER_KAFAK_FORWARDED = "Message.Broker.Kafka.Forwarded";
 
 	public static final String TYPE_MESSAGE_CONSUME_ACK_TRANSPORT = "Message.Consume.Ack.Transport";
 }

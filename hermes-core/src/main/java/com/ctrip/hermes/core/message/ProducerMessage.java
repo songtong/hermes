@@ -26,8 +26,6 @@ public class ProducerMessage<T> {
 
 	private CompletionCallback<SendResult> m_callback;
 
-	private long m_bornTimeNano;
-
 	public ProducerMessage() {
 
 	}
@@ -99,7 +97,6 @@ public class ProducerMessage<T> {
 	}
 
 	public void setBornTime(long bornTime) {
-		m_bornTimeNano = System.nanoTime();
 		m_bornTime = bornTime;
 	}
 
@@ -149,10 +146,6 @@ public class ProducerMessage<T> {
 
 	public void setWithCatTrace(boolean withHeader) {
 		this.m_withCatTrace = withHeader;
-	}
-
-	public long getBornTimeNano() {
-		return m_bornTimeNano;
 	}
 
 }

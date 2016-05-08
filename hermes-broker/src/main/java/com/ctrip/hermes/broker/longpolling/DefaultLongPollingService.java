@@ -29,6 +29,7 @@ import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.dianping.cat.message.Transaction;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -151,7 +152,8 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				}
 
 				response(pullTask, batches, currentOffset);
-				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime, count);
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime, count, null,
+				      Transaction.SUCCESS);
 				return true;
 			} else {
 				return false;
