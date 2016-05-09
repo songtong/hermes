@@ -15,6 +15,12 @@ topic_module.run(function(editableOptions) {
 	scope.consumers = TopicService.fetch_consumers_for_topic(scope.topic_name).then(function(result) {
 		scope.consumers = result;
 	});
+	
+	scope.load_broker_groups = function() {
+		return scope.broker_groups ? scope.broker_groups : TopicService.get_broker_groups().then(function(result) {
+			scope.broker_groups = result;
+		})
+	};
 
 	scope.load_datasource_names = function() {
 		return scope.datasource_names ? null : TopicService.fetch_storages().then(function() {

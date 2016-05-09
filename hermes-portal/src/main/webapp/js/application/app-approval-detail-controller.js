@@ -14,6 +14,7 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 	$scope.datasourcesTags = {};
 	$scope.selectedTags = {};
 	$scope.datasourceCandidate = {};
+	$scope.brokerGroups = {};
 
 	// Use promise chain to fetch application.
 	promiseChain.add({
@@ -316,6 +317,15 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 						$scope.datasources[env] = datasources;
 						
 						$scope.$broadcast('progress', 'modalProgressBar', 'Fetched storages on env: ' + env);
+					}
+				}).add({
+					func: TopicSync.getEndpoints,
+					args: [env],
+					success: function(data) {
+						$scope.brokerGroups[env] = $.unique($.map(data, function(broker, index){
+							return broker['group'];
+						}));
+						console.log($scope.brokerGroups);
 					}
 				}).add({
 					func: TopicSync.getTopic,

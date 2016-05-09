@@ -77,6 +77,16 @@
 		<filter-class>org.jasig.cas.client.util.AssertionThreadLocalFilter</filter-class>
 	</filter>
 	
+	<!-- shiro filter must be put in front of validation-filter -->
+	<filter>
+		<filter-name>shiroFilter</filter-name>
+		<filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
+		<init-param>
+			<param-name>staticSecurityManagerEnabled</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	
 	<filter>
 		<filter-name>validation-filter</filter-name>
 		<filter-class>com.ctrip.hermes.portal.web.HermesValidationFilter</filter-class>
@@ -125,14 +135,16 @@
 		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
-
 	<filter-mapping>
 		<filter-name>cat-filter</filter-name>
 		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 		<dispatcher>FORWARD</dispatcher>
 	</filter-mapping>
-
+	<filter-mapping>
+		<filter-name>shiroFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
 	<filter-mapping>
 		<filter-name>validation-filter</filter-name>
 		<url-pattern>/*</url-pattern>
