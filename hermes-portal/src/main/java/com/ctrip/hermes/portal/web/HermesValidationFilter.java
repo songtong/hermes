@@ -73,13 +73,9 @@ public class HermesValidationFilter implements Filter {
 		
 		if (AssertionHolder.getAssertion() != null) {
 			Subject subject = SecurityUtils.getSubject();
-			try {
-				user = (String) subject.getPrincipal();
-			} catch (ExpiredSessionException | UnknownSessionException e ) {
-				ThreadContext.unbindSubject();
-				subject = SecurityUtils.getSubject();
-			}
+			user = (String) subject.getPrincipal();
 			isAdmin = subject.hasRole("admin");
+            ThreadContext.bind(subject);
 			AssertionHolder.getAssertion().getPrincipal().getAttributes().put("admin", isAdmin);
 			Cat.logEvent("Hermes.Portal.User", user);
 		}

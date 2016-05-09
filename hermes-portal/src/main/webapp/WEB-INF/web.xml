@@ -19,6 +19,9 @@
 	<listener>
 		<listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
 	</listener>
+	<listener>
+		<listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
+	</listener>
 	
 	<!-- filter to disable sso when it's a eligible api call.  -->
 	<filter>
@@ -103,6 +106,11 @@
 			<param-value>/css/*,/img/*,/js/*,/fonts/*,/api/*, /favicon.ico</param-value>
 		</init-param>
 	</filter>
+	
+	<filter>
+		<filter-name>shiroFilter</filter-name>
+		<filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
+	</filter>
 
 	<filter-mapping>
 		<filter-name>apisso-filter</filter-name>
@@ -125,14 +133,16 @@
 		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
-
 	<filter-mapping>
 		<filter-name>cat-filter</filter-name>
 		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 		<dispatcher>FORWARD</dispatcher>
 	</filter-mapping>
-
+	<filter-mapping>
+		<filter-name>shiroFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
 	<filter-mapping>
 		<filter-name>validation-filter</filter-name>
 		<url-pattern>/*</url-pattern>
