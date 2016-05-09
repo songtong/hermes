@@ -19,9 +19,6 @@
 	<listener>
 		<listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
 	</listener>
-	<listener>
-		<listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
-	</listener>
 	
 	<!-- filter to disable sso when it's a eligible api call.  -->
 	<filter>
@@ -80,6 +77,16 @@
 		<filter-class>org.jasig.cas.client.util.AssertionThreadLocalFilter</filter-class>
 	</filter>
 	
+	<!-- shiro filter must be put in front of validation-filter -->
+	<filter>
+		<filter-name>shiroFilter</filter-name>
+		<filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
+		<init-param>
+			<param-name>staticSecurityManagerEnabled</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	
 	<filter>
 		<filter-name>validation-filter</filter-name>
 		<filter-class>com.ctrip.hermes.portal.web.HermesValidationFilter</filter-class>
@@ -105,11 +112,6 @@
 			<param-name>excludes</param-name>
 			<param-value>/css/*,/img/*,/js/*,/fonts/*,/api/*, /favicon.ico</param-value>
 		</init-param>
-	</filter>
-	
-	<filter>
-		<filter-name>shiroFilter</filter-name>
-		<filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
 	</filter>
 
 	<filter-mapping>

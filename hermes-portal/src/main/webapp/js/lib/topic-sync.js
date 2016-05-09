@@ -72,6 +72,14 @@ module.service('TopicSync', ['$resource', '$q', 'config', function($resource, $q
 		}
 	});
 	
+	var endpointResource = $resource('', {}, {
+		'getEndpoints': {
+			method: 'GET',
+			url: 'http://:domain/api/endpoints',
+			isArray: true
+		}
+	});
+	
 	// Define tag resource.
 	var tagResource = $resource('/api/tags', {}, {
 		'getTags': {
@@ -125,4 +133,6 @@ module.service('TopicSync', ['$resource', '$q', 'config', function($resource, $q
 	this.getConsumers = wrapFunc(syncResource.getConsumers, true);
 	this.getTags = wrapFunc(tagResource.getTags, true);
 	this.getDatasourcesTags = wrapFunc(tagResource.getDatasourcesTags, true);
+	this.getEndpoints = wrapFunc(endpointResource.getEndpoints, true);
+
 }]);
