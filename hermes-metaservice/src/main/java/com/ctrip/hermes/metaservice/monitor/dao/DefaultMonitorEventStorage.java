@@ -25,10 +25,10 @@ public class DefaultMonitorEventStorage implements MonitorEventStorage {
 	private static final String MONITOR_EVENT_DS_NAME = "fxhermesmetadb";
 
 	@Inject
-	MonitorEventDao m_dao;
+	private MonitorEventDao m_dao;
 
 	@Inject
-	TransactionManager m_transactionManager;
+	private TransactionManager m_transactionManager;
 
 	@Override
 	public void addMonitorEvent(MonitorEvent event) throws Exception {

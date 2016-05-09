@@ -1,4 +1,4 @@
-package com.ctrip.hermes.mail;
+package com.ctrip.hermes.metaservice.service.mail;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -231,3 +231,33 @@ COMMENT='for application'
 ENGINE=InnoDB
 ;
 
+CREATE TABLE `kv` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `k` varchar(255) NOT NULL DEFAULT '' COMMENT 'key',
+  `v` text COMMENT 'value',
+  `tag` varchar(64) DEFAULT NULL COMMENT 'kv tag',
+  `creation_date` datetime NOT NULL COMMENT 'create time',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
+  PRIMARY KEY (`id`),
+  KEY `KEY` (`k`)
+)
+COMMENT='hermes kv storage'
+ENGINE=InnoDB 
+;
+
+CREATE TABLE `notification` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `ref_key` varchar(100) NOT NULL DEFAULT '' COMMENT 'reference key of notification',
+  `notification_type` varchar(50) NOT NULL COMMENT 'notification type: email, sms ...',
+  `create_time` datetime DEFAULT NULL COMMENT 'create time',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
+  `content` mediumtext COMMENT 'notification content',
+  `notify_time` datetime DEFAULT NULL COMMENT 'notify time',
+  `receivers` text COMMENT 'notification receivers',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `ref_key` (`ref_key`)
+) 
+COMMENT='hermes notification storage'
+ENGINE=InnoDB
+;

@@ -7,8 +7,6 @@ import org.unidal.dal.jdbc.configuration.AbstractJdbcResourceConfigurator;
 import org.unidal.dal.jdbc.mapping.TableProvider;
 import org.unidal.lookup.configuration.Component;
 
-import com.ctrip.hermes.mail.DefaultMailService;
-import com.ctrip.hermes.mail.FileMailAccountProvider;
 import com.ctrip.hermes.metaservice.dal.CachedAppDao;
 import com.ctrip.hermes.metaservice.dal.CachedCodecDao;
 import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
@@ -29,23 +27,30 @@ import com.ctrip.hermes.metaservice.service.CodecService;
 import com.ctrip.hermes.metaservice.service.CompileService;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.DefaultKVService;
-import com.ctrip.hermes.metaservice.service.KafkaService;
-import com.ctrip.hermes.metaservice.service.StorageService;
 import com.ctrip.hermes.metaservice.service.DefaultMetaService;
 import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.DefaultZookeeperService;
 import com.ctrip.hermes.metaservice.service.EndpointService;
+import com.ctrip.hermes.metaservice.service.KafkaService;
 import com.ctrip.hermes.metaservice.service.MetaRefactor;
 import com.ctrip.hermes.metaservice.service.PartitionService;
 import com.ctrip.hermes.metaservice.service.SchemaRegistryService;
 import com.ctrip.hermes.metaservice.service.SchemaService;
 import com.ctrip.hermes.metaservice.service.ServerService;
+import com.ctrip.hermes.metaservice.service.StorageService;
 import com.ctrip.hermes.metaservice.service.SubscriptionService;
 import com.ctrip.hermes.metaservice.service.TopicDeployService;
 import com.ctrip.hermes.metaservice.service.TopicService;
+import com.ctrip.hermes.metaservice.service.mail.DefaultMailService;
+import com.ctrip.hermes.metaservice.service.mail.FileMailAccountProvider;
+import com.ctrip.hermes.metaservice.service.notify.DefaultNotifyService;
+import com.ctrip.hermes.metaservice.service.notify.handler.EmailNotifyHandler;
+import com.ctrip.hermes.metaservice.service.notify.handler.SmsNotifyHandler;
+import com.ctrip.hermes.metaservice.service.notify.storage.DefaultNoticeStorage;
 import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.StorageDataSourceProvider;
 import com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler;
+import com.ctrip.hermes.metaservice.service.template.DefaultTemplateService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKConfig;
 
@@ -102,6 +107,10 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(TopicDeployService.class));
 		all.add(A(KafkaService.class));
 		all.add(A(DefaultKVService.class));
+		all.add(A(DefaultNoticeStorage.class));
+		all.add(A(DefaultNotifyService.class));
+		all.add(A(EmailNotifyHandler.class));
+		all.add(A(SmsNotifyHandler.class));
 
 		all.add(A(MetaRefactor.class));
 		all.add(A(CachedAppDao.class));
@@ -115,6 +124,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(CachedSchemaDao.class));
 		all.add(A(CachedPartitionDao.class));
 		all.add(A(CachedProducerDao.class));
+
+		all.add(A(DefaultTemplateService.class));
 
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/ctrip/data/hermes/datasources.xml"));
 

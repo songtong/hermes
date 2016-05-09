@@ -24,6 +24,7 @@
          <table name="storage"/>
          <table name="topic"/>
          <table name="kv"/>
+         <table name="notification"/>
       </group>
    </jdbc>
 </wizard>
