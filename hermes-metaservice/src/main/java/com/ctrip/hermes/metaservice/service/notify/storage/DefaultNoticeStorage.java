@@ -1,7 +1,9 @@
 package com.ctrip.hermes.metaservice.service.notify.storage;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +20,7 @@ import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
 import com.ctrip.hermes.metaservice.service.notify.NoticeType;
 import com.ctrip.hermes.metaservice.service.notify.SmsNoticeContent;
 
-@Named
+@Named(type = NoticeStorage.class)
 public class DefaultNoticeStorage implements NoticeStorage {
 	private static final Logger log = LoggerFactory.getLogger(DefaultNoticeStorage.class);
 
@@ -78,4 +80,22 @@ public class DefaultNoticeStorage implements NoticeStorage {
 		}
 		return null;
 	}
+
+	@Override
+	public String addNotice(HermesNotice notice) throws Exception {
+		Notification notification = notice.toNotification();
+		notification.setCreateTime(new Date());
+		notification.setRefKey(UUID.randomUUID().toString());
+		m_dao.insert(notification);
+		return notification.getRefKey();
+	}
+
+	@Override
+	public void updateNotifyTime(String refKey, Date date) throws Exception {
+		Notification n = new Notification();
+		n.setRefKey(refKey);
+		n.setNotifyTime(date);
+		m_dao.updateNotifiedStatusByRefKey(n, NotificationEntity.UPDATESET_NOTIFY_TIME);
+	}
+
 }

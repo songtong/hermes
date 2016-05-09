@@ -126,7 +126,11 @@
 				<member name="total" />
 			</readset>
 		</readsets>
-
+	    <updatesets>
+			<updateset name="NOTIFY_TIME">
+	      		<member name="notify-time"/>
+			</updateset>
+	    </updatesets>
 		<query-defs>
 			<query name="total-count" type="SELECT" multiple="false">
 				<statement><![CDATA[
@@ -149,6 +153,15 @@
 				UPDATE <TABLE/>
 		        SET <FIELD name='notify-time'/> = NOW()
 		        WHERE <FIELD name='id'/> = ${id}
+		        ]]>
+				</statement>
+			</query>
+			<query name="update-notified-status-by-ref-key" type="UPDATE" batch='true'>
+				<statement>
+				<![CDATA[
+				UPDATE <TABLE/>
+		        SET <FIELD name='notify-time'/> = NOW()
+		        WHERE <FIELD name='ref-key'/> = ${ref-key}
 		        ]]>
 				</statement>
 			</query>

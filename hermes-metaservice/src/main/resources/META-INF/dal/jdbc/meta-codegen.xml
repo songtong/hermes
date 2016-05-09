@@ -240,6 +240,7 @@
   </entity>
   <entity name="notification" table="notification" alias="n">
     <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
+    <member name="ref-key" field="ref_key" value-type="String" length="100" nullable="false" />
     <member name="notification-type" field="notification_type" value-type="String" length="50" nullable="false" />
     <member name="create-time" field="create_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
@@ -249,6 +250,7 @@
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="ref_key" members="ref_key ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

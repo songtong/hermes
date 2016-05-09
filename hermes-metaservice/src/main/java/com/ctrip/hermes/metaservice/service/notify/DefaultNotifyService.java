@@ -2,10 +2,12 @@ package com.ctrip.hermes.metaservice.service.notify;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.service.notify.handler.NotifyHandler;
 
+@Named(type = NotifyService.class)
 public class DefaultNotifyService implements NotifyService {
 	private static final Logger log = LoggerFactory.getLogger(DefaultNotifyService.class);
 

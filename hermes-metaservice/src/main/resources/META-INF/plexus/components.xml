@@ -214,6 +214,15 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>notification</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>notification</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>meta</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -227,15 +236,6 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<physical-table-name>monitor_event</physical-table-name>
-				<data-source-name>fxhermesmetadb</data-source-name>
-			</configuration>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>notification</role-hint>
-			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
-			<configuration>
-				<physical-table-name>notification</physical-table-name>
 				<data-source-name>fxhermesmetadb</data-source-name>
 			</configuration>
 		</component>
@@ -357,6 +357,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.metaservice.model.NotificationDao</role>
+			<implementation>com.ctrip.hermes.metaservice.model.NotificationDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.MetaDao</implementation>
 			<requirements>
@@ -368,15 +377,6 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.model.MonitorEventDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.MonitorEventDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaservice.model.NotificationDao</role>
-			<implementation>com.ctrip.hermes.metaservice.model.NotificationDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
@@ -776,6 +776,48 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.KvDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage</role>
+			<implementation>com.ctrip.hermes.metaservice.service.notify.storage.DefaultNoticeStorage</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.NotificationDao</role>
+				</requirement>
+				<requirement>
+					<role>org.unidal.dal.jdbc.transaction.TransactionManager</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.notify.NotifyService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.notify.DefaultNotifyService</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.notify.handler.NotifyHandler</role>
+			<role-hint>EmailNotifyHandler</role-hint>
+			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.EmailNotifyHandler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.template.TemplateService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.mail.MailService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.notify.handler.NotifyHandler</role>
+			<role-hint>SmsNotifyHandler</role-hint>
+			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.SmsNotifyHandler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage</role>
 				</requirement>
 			</requirements>
 		</component>

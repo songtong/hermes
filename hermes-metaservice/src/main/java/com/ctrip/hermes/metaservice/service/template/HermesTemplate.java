@@ -1,6 +1,8 @@
 package com.ctrip.hermes.metaservice.service.template;
 
 public enum HermesTemplate {
+	TEST("test_template.ftl"), //
+
 	LONG_TIME_NO_PRODUCE("alarm_long_time_no_produce.ftl"), //
 
 	LONG_TIME_NO_CONSUME("alarm_long_time_no_consume.ftl"), //
