@@ -27,6 +27,14 @@ public class HermesNotice {
 		return m_content;
 	}
 
+	public void setReceivers(List<String> receivers) {
+		m_receivers = receivers;
+	}
+
+	public void setContent(NoticeContent content) {
+		m_content = content;
+	}
+
 	public Notification toNotification() {
 		Notification notification = new Notification();
 		notification.setContent(JSON.toJSONString(m_content));

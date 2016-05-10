@@ -17,6 +17,8 @@ import com.ctrip.hermes.metaservice.service.template.TemplateService;
 public class EmailNotifyHandler extends AbstractNotifyHandler {
 	private static final Logger log = LoggerFactory.getLogger(EmailNotifyHandler.class);
 
+	private static final int DEFAULT_NOTIFY_INTERVAL = 15;
+
 	public static final String ID = "EmailNotifyHandler";
 
 	@Inject
@@ -37,5 +39,10 @@ public class EmailNotifyHandler extends AbstractNotifyHandler {
 			log.error("Send Hermes mail failed: {}", mail, e);
 		}
 		return false;
+	}
+
+	@Override
+	protected int getNotifyIntervalMinute() {
+		return DEFAULT_NOTIFY_INTERVAL;
 	}
 }
