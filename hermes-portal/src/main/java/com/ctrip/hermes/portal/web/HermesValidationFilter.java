@@ -17,7 +17,8 @@ import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.subject.Subject;
-import org.apache.shiro.util.ThreadContext;
+import org.apache.shiro.web.env.WebEnvironment;
+import org.apache.shiro.web.util.WebUtils;
 import org.jasig.cas.client.util.AssertionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,15 @@ public class HermesValidationFilter implements Filter {
 			LOGGER.error("Failed to get JDBC datasource for jdbc realm!", e);
 		}
 		
-		RealmSecurityManager manager = (RealmSecurityManager)SecurityUtils.getSecurityManager();
+		RealmSecurityManager manager = null;
+        try {
+        	manager = (RealmSecurityManager)SecurityUtils.getSecurityManager();
+        } catch (Exception e) {
+            WebEnvironment env = WebUtils.getRequiredWebEnvironment(filterConfig.getServletContext());
+            SecurityUtils.setSecurityManager(env.getWebSecurityManager());
+        	manager = (RealmSecurityManager)SecurityUtils.getSecurityManager();
+        }	
+        
 		for (Realm realm: manager.getRealms()) {
 			if (realm instanceof JdbcRealm) {
 				((JdbcRealm)realm).setDataSource(ds);
