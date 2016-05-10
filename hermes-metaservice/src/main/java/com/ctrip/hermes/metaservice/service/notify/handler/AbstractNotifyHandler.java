@@ -3,7 +3,6 @@ package com.ctrip.hermes.metaservice.service.notify.handler;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -45,11 +44,6 @@ public abstract class AbstractNotifyHandler implements NotifyHandler, Initializa
 	}
 
 	private void filterHermesNoticeReceivers(HermesNotice notice) {
-		List<String> receivers = notice.getReceivers();
-		if (!(receivers instanceof ArrayList)) {
-			receivers = new ArrayList<String>(receivers);
-			notice.setReceivers(receivers);
-		}
 		Iterator<String> iter = notice.getReceivers().iterator();
 		while (iter.hasNext()) {
 			String receiver = iter.next();
