@@ -10,6 +10,8 @@ public class PullConsumerConfig {
 
 	private int m_manualCommitInterval = 50;
 
+	private int m_committerThreadCount = -1;
+
 	public int getPartitionMessageCacheSize() {
 		return m_partitionMessageCacheSize;
 	}
@@ -40,6 +42,14 @@ public class PullConsumerConfig {
 
 	public void setScanIntervalMax(int scanIntervalMax) {
 		m_scanIntervalMax = scanIntervalMax;
+	}
+
+	public int getCommitterThreadCount() {
+		return m_committerThreadCount;
+	}
+
+	public void setCommitterThreadCount(int committerThreadCount) {
+		m_committerThreadCount = committerThreadCount;
 	}
 
 }

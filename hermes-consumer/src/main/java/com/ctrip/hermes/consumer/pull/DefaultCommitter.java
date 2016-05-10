@@ -1,5 +1,6 @@
 package com.ctrip.hermes.consumer.pull;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,13 +37,13 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 	private AtomicBoolean m_stopped = new AtomicBoolean(false);
 
-	private ConcurrentMap<Integer, BlockingDeque<PartitionOperation<T>>> m_partitionOperations = new ConcurrentHashMap<>();
-
 	private BlockingQueue<RetriveSnapshot<T>> m_snapshots = new LinkedBlockingQueue<>();
 
 	private AckManager m_ackManager;
 
 	private ConsumerConfig m_consumerConfig;
+
+	private List<ManualCommitTask> m_manualCommitTasks = new ArrayList<>();
 
 	public DefaultCommitter(String topic, String groupId, int partitionCount, PullConsumerConfig config,
 	      AckManager ackManager, ConsumerConfig consumerConfig) {
@@ -52,9 +53,19 @@ public class DefaultCommitter<T> implements Committer<T> {
 		m_ackManager = ackManager;
 		m_consumerConfig = consumerConfig;
 
-		String manualName = "PullConsumerManualOffsetCommit-" + topic + "-" + groupId;
-		ThreadFactory factory = HermesThreadFactory.create(manualName, true);
-		factory.newThread(new ManualCommitTask()).start();
+		int committerThreadCount = m_config.getCommitterThreadCount() <= 0 ? Math.min(10, partitionCount) : m_config
+		      .getCommitterThreadCount();
+		startCommiterThreads(topic, groupId, committerThreadCount);
+	}
+
+	private void startCommiterThreads(String topic, String groupId, int threadCount) {
+		for (int i = 0; i < threadCount; i++) {
+			ManualCommitTask manualCommitTask = new ManualCommitTask();
+			m_manualCommitTasks.add(manualCommitTask);
+			ThreadFactory factory = HermesThreadFactory.create("PullConsumerManualOffsetCommit-" + topic + "-" + groupId
+			      + "-" + i, true);
+			factory.newThread(manualCommitTask).start();
+		}
 	}
 
 	private boolean writeAckToBroker(int partition, List<OffsetRecord> partitionRecords) {
@@ -79,6 +90,19 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 	private class ManualCommitTask implements Runnable {
 		private ExponentialSchedulePolicy m_retryPolicy;
+
+		private ConcurrentMap<Integer, BlockingDeque<PartitionOperation<T>>> m_partitionOperations = new ConcurrentHashMap<>();
+
+		public void submit(PartitionOperation<T> op) {
+			int partition = op.getPartition();
+			BlockingDeque<PartitionOperation<T>> opQueue = m_partitionOperations.get(partition);
+			if (opQueue == null) {
+				m_partitionOperations.putIfAbsent(partition, new LinkedBlockingDeque<PartitionOperation<T>>());
+				opQueue = m_partitionOperations.get(partition);
+			}
+
+			opQueue.add(op);
+		}
 
 		@Override
 		public void run() {
@@ -148,13 +172,8 @@ public class DefaultCommitter<T> implements Committer<T> {
 		} else {
 			for (Entry<Integer, List<OffsetRecord>> entry : snapshot.getOffsetRecords().entrySet()) {
 				Integer partition = entry.getKey();
-				BlockingDeque<PartitionOperation<T>> opQueue = m_partitionOperations.get(partition);
-				if (opQueue == null) {
-					m_partitionOperations.putIfAbsent(partition, new LinkedBlockingDeque<PartitionOperation<T>>());
-					opQueue = m_partitionOperations.get(partition);
-				}
-
-				opQueue.add(new PartitionOperation<T>(partition, entry.getValue(), snapshot));
+				PartitionOperation<T> operation = new PartitionOperation<T>(partition, entry.getValue(), snapshot);
+				m_manualCommitTasks.get(partition % m_manualCommitTasks.size()).submit(operation);
 			}
 		}
 	}
