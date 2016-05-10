@@ -17,7 +17,7 @@ public class DbDatasource extends Datasource {
 	public static final String MESSAGE = "message";
 	private DataSourceManager datasourceManager = PlexusComponentLocator.lookup(DataSourceManager.class);
 	private DatasourceDao datasourceDao = PlexusComponentLocator.lookup(DatasourceDao.class);
-	public DbDatasource (DatasourceType type) {
+	public DbDatasource () {
 		super(DbDatasourceType.MYSQL);
 	}
 	

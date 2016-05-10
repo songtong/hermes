@@ -4,7 +4,7 @@ public class HttpDatasource extends Datasource {
 	private String m_api;
 	
 	public HttpDatasource(DatasourceType type) {
-		super(HttpDatasourceType.ES);
+		super(type);
 	}
 
 	public String getApi() {

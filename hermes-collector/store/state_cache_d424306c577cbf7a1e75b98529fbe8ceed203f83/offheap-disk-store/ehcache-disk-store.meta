@@ -1,4 +1,0 @@
-#Key and value types
-#Mon Apr 25 16:07:22 CST 2016
-keyType=java.lang.String
-valueType=com.ctrip.hermes.collector.state.State

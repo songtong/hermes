@@ -17,6 +17,9 @@ public class Pipes<T> extends Pipe<T> {
 	@Override
 	public void doProcess(PipeContext context, T obj) {
 		for (Pipe<T> p : m_pipes) {
+			if (context.isResetEveryPipe()) {
+				context.reset();
+			}
 			p.process(context, obj);
 		}
 	}

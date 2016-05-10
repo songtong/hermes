@@ -1,5 +1,9 @@
 package com.ctrip.hermes.admin.core.monitor.event;
 
+import java.util.List;
+
+import org.unidal.tuple.Pair;
+
 import com.ctrip.hermes.admin.core.model.MonitorEvent;
 import com.ctrip.hermes.admin.core.monitor.MonitorEventType;
 
@@ -7,7 +11,9 @@ public abstract class ServerErrorEvent extends BaseMonitorEvent {
 	private String m_host;
 
 	private long m_errorCount;
-
+	
+	private List<Pair<Long, String>> m_errors;
+		
 	public ServerErrorEvent(MonitorEventType type, String host, long errorCount) {
 		super(type);
 		m_host = host;
@@ -35,6 +41,14 @@ public abstract class ServerErrorEvent extends BaseMonitorEvent {
 
 	public void setHost(String host) {
 		m_host = host;
+	}
+	
+	public List<Pair<Long, String>> getErrors() {
+		return m_errors;
+	}
+
+	public void setErrors(List<Pair<Long, String>> errors) {
+		m_errors = errors;
 	}
 
 	public long getErrorCount() {

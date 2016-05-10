@@ -34,14 +34,24 @@ public class DatasourceManager {
 		ds.setTokenFile(m_conf.getEsTokenFile());
 		ds.resolveDependency();
 		
-		Map<String, Datasource> datasources = new HashMap<String, Datasource>();
-		datasources.put(ds.getName(), ds);
+		addDatasource(ds);
 		
-		m_datasources.put(ds.getType(), datasources);
+		CatDatasource cds = new CatDatasource();
+		cds.setName("Cat");
+		cds.setApi(m_conf.getCatBaseApi());
+
+		addDatasource(cds);
 	}
 	
 	private void initDbDatasource() {
 		
+	}
+	
+	public void addDatasource(Datasource ds) {
+		if (!m_datasources.containsKey(ds.getType())) {
+			m_datasources.put(ds.getType(), new HashMap<String, Datasource>());
+		}
+		m_datasources.get(ds.getType()).put(ds.getName(), ds);
 	}
 	
 	public Datasource getDefaultDatasource(DatasourceType type) {

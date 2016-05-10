@@ -6,10 +6,18 @@ import com.ctrip.hermes.admin.core.model.MonitorEvent;
 public class ProduceLatencyTooLargeEvent extends BaseMonitorEvent {
 
 	private String m_topic;
+	
+	private String m_brokerGroup;
 
 	private String m_date;
 
 	private double m_latency;
+	
+	private long m_count;
+	
+	private long m_countAll;
+	
+	private double m_ratio;
 
 	public ProduceLatencyTooLargeEvent() {
 		this(null, null, 0d);
@@ -45,6 +53,38 @@ public class ProduceLatencyTooLargeEvent extends BaseMonitorEvent {
 	public void setLatency(double latency) {
 		m_latency = latency;
 	}
+	
+	public long getCount() {
+		return m_count;
+	}
+
+	public void setCount(long count) {
+		m_count = count;
+	}
+
+	public long getCountAll() {
+		return m_countAll;
+	}
+
+	public void setCountAll(long countAll) {
+		m_countAll = countAll;
+	}
+	
+	public String getBrokerGroup() {
+		return m_brokerGroup;
+	}
+
+	public void setBrokerGroup(String brokerGroup) {
+		m_brokerGroup = brokerGroup;
+	}
+
+	public double getRatio() {
+		return m_ratio;
+	}
+
+	public void setRatio(double ratio) {
+		m_ratio = ratio;
+	}
 
 	@Override
 	protected void parse0(MonitorEvent dbEntity) {
@@ -58,7 +98,7 @@ public class ProduceLatencyTooLargeEvent extends BaseMonitorEvent {
 		e.setKey1(m_topic);
 		e.setKey2(m_date);
 		e.setKey3(Double.toString(m_latency));
-		e.setMessage(String.format("[%s]Topic %s produce's latency too large(latency=%sms).", m_date, m_topic, m_latency));
+		e.setMessage(String.format("*[%s]Topic %s produce's latency too large(latency=%sms).", m_date, m_topic, m_latency));
 	}
 
 	@Override

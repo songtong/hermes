@@ -12,33 +12,28 @@ import com.ctrip.hermes.collector.record.RecordType;
  * @author tenglinxiao
  *
  */
-@Component
-public class DbCollector implements Collector {
 
-	@Override
-	public <T> Record<T> collect(CollectorContext context) {
-		return null;
-	}
+public abstract class DbCollector implements Collector {
 
 	@Override
 	public boolean retry(CollectorContext context, Record<?> record) {
-		// TODO Auto-generated method stub
+		// NO retry policy for db ops.
 		return false;
 	}
 	
 	protected static class DbCollectorContext extends CollectorContext {
-		private DataSource datasource;
+		private DataSource m_datasource;
 
 		public DbCollectorContext(RecordType type) {
 			super(type);
 		}
 
 		public DataSource getDatasource() {
-			return datasource;
+			return m_datasource;
 		}
 
 		public void setDatasource(DataSource datasource) {
-			this.datasource = datasource;
+			this.m_datasource = datasource;
 		}
 	}
 

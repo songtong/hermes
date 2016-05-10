@@ -19,6 +19,6 @@ public class BrokerErrorEvent extends ServerErrorEvent {
 
 	@Override
 	String getMessageFormat() {
-		return "[%s] Broker %s has got %s times error.";
+		return "*[%s] Broker %s has got %s times error.";
 	}
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wizard package="com.ctrip.hermes.portal">
+   <jdbc package="com.ctrip.hermes.portal.dal" name="fxhermesmetadb">
+      <datasource>
+         <driver>com.mysql.jdbc.Driver</driver>
+         <url>jdbc:mysql://localhost:3306/fxhermesmetadb</url>
+         <user>root</user>
+         <password>angelfish</password>
+         <properties>useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</properties>
+      </datasource>
+      <group name="report" package="com.ctrip.hermes.collector.dal">
+         <table name="report"/>
+      </group>
+      <group name="job" package="com.ctrip.hermes.collector.dal">
+         <table name="job_status"/>
+         <table name="job_history"/>
+      </group>
+   </jdbc>
+</wizard>

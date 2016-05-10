@@ -28,6 +28,7 @@ public class DefaultTemplateService implements TemplateService, Initializable {
 			if (template != null) {
 				Writer writer = new StringWriter();
 				template.process(contentMap, writer);
+				System.out.println(writer.toString());
 				return writer.toString();
 			} else {
 				log.error("Can not find template {}", hermesTemplate.getName());

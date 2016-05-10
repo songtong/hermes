@@ -1,21 +1,31 @@
 package com.ctrip.hermes.collector.collector;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.LockSupport;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 
+import com.ctrip.hermes.collector.collector.EsHttpCollector.EsHttpCollectorContext;
 import com.ctrip.hermes.collector.datasource.HttpDatasource;
 import com.ctrip.hermes.collector.record.Record;
 import com.ctrip.hermes.collector.record.RecordType;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Message;
+import com.dianping.cat.message.Transaction;
 
 
 /**
@@ -23,48 +33,77 @@ import com.ctrip.hermes.collector.record.RecordType;
  *
  */
 public abstract class HttpCollector implements Collector{
-
+	
 	public <T> Record<T> collect(CollectorContext context) throws Exception {
 		final HttpCollectorContext ctx = (HttpCollectorContext) context;
 		
-		Response response = null;
-		switch(ctx.getMethod()) {
-		case GET: 
-			response = get(ctx);
-			break;
-		case POST: 
-			response = post(ctx);
-			break;
-		default: throw new UnsupportedOperationException(String.format("Http request with method [%s] is not allowed!", ctx.getMethod()));
+		if (context.isRetryMode()) {
+			LockSupport.parkNanos(ctx.getRetryIntervalMillis() * 1000000);
 		}
 		
-		return response.handleResponse(new ResponseHandler<Record<T>>() {
-
-			@Override
-			public Record<T> handleResponse(HttpResponse response)
-					throws ClientProtocolException, IOException {
-				ctx.setStatus(HttpStatus.valueOf(response.getStatusLine().getStatusCode()));
-				return HttpCollector.this.handleResponse(ctx, response);
+		InputStream input = null;
+		Transaction requestTransaction = null;
+		try {
+			requestTransaction = Cat.newTransaction("HttpCollect", context instanceof EsHttpCollectorContext? "EsHttpCollect": "CatHttpCollect");
+			switch(ctx.getMethod()) {
+			case GET: 
+				input = get(ctx);
+				break;
+			case POST: 
+				input = post(ctx);
+				break;
+			default: throw new UnsupportedOperationException(String.format("Http request with method [%s] is not allowed!", ctx.getMethod()));
 			}
-		});
+			requestTransaction.setStatus(Message.SUCCESS);
+		} finally {
+			requestTransaction.complete();
+		}
+		
+		if (input == null) {
+			return null;
+		}
+		
+		return this.handleResponse(context, input);
 	}
 	
-	public abstract <T> Record<T> handleResponse(CollectorContext context, HttpResponse response);
-	
-	private Response get(HttpCollectorContext context) throws ClientProtocolException, IOException {
-		return Request.Get(context.getFullApi())
-				.connectTimeout(context.getConnectTimeout())
-			    .socketTimeout(context.getReadTimeOut())
-			    .execute();
+	public boolean retry(CollectorContext context, Record<?> record) {
+		EsHttpCollectorContext ctx = (EsHttpCollectorContext)context;
+		if (ctx.getStatus().is2xxSuccessful()) {
+			return false;
+		}
+
+		ctx.setRetryMode(true);
+		return ctx.retry();
 	}
 	
-	private Response post(HttpCollectorContext context) throws ClientProtocolException, IOException {
-		return Request.Post(context.getFullApi())
-				.setHeaders(context.getHeaders())
-				.body(context.getData())
-				.connectTimeout(context.getConnectTimeout())
-			    .socketTimeout(context.getReadTimeOut())
-				.execute();
+	public abstract <T> Record<T> handleResponse(CollectorContext context, InputStream input);
+	
+	private InputStream get(HttpCollectorContext context) throws ClientProtocolException, IOException, URISyntaxException {
+		HttpURLConnection connection = (HttpURLConnection)new URL(context.getFullApiWithParameters()).openConnection();
+		connection.setConnectTimeout(context.getConnectTimeout());
+		connection.setReadTimeout(context.getReadTimeOut());
+		connection.connect();
+		context.setStatus(HttpStatus.valueOf(connection.getResponseCode()));
+		return connection.getInputStream();
+	}
+	
+	private InputStream post(HttpCollectorContext context) throws ClientProtocolException, IOException, URISyntaxException {
+		HttpURLConnection connection = (HttpURLConnection)new URL(context.getFullApiWithParameters()).openConnection();
+		connection.setDoOutput(true);
+		connection.setConnectTimeout(context.getConnectTimeout());
+		connection.setReadTimeout(context.getReadTimeOut());
+		ByteArrayOutputStream out = new ByteArrayOutputStream((int)context.getData().getContentLength());  
+		InputStream input = context.getData().getContent();
+		byte[] bytes = new byte[1024];
+		int length = -1;
+		while ((length = input.read(bytes)) != -1) {
+			out.write(bytes, 0, length);
+		}
+		input.close();
+		connection.getOutputStream().write(out.toByteArray());
+		connection.connect();
+		context.setStatus(HttpStatus.valueOf(connection.getResponseCode()));
+		return connection.getInputStream();
 	}
 	
 	protected static class HttpCollectorContext extends CollectorContext{
@@ -73,8 +112,9 @@ public abstract class HttpCollector implements Collector{
 		private Header[] headers; 
 		private HttpMethod m_method;
 		private HttpEntity m_data;
-		private int m_connectTimeout;
-		private int m_readTimeOut;
+		private List<NameValuePair> m_parameters;
+		private int m_connectTimeout = 10000;
+		private int m_readTimeOut = 10000;
 		private HttpStatus m_status;
 		
 		public HttpCollectorContext(HttpDatasource datasource, RecordType type) {
@@ -111,7 +151,6 @@ public abstract class HttpCollector implements Collector{
 			m_method = method;
 		}
 
-		@JsonIgnore
 		public HttpEntity getData() {
 			return m_data;
 		}
@@ -151,6 +190,21 @@ public abstract class HttpCollector implements Collector{
 		public void setStatus(HttpStatus status) {
 			m_status = status;
 		}
+		
+		public List<NameValuePair> getParameters() {
+			return m_parameters;
+		}
+
+		public void setParameters(List<NameValuePair> parameters) {
+			m_parameters = parameters;
+		}
+		
+		public void addParameter(String name, String value) {
+			if (m_parameters == null) {
+				m_parameters = new ArrayList<NameValuePair>();
+			}
+			m_parameters.add(new BasicNameValuePair(name, value));
+		}
 
 		public String getFullApi() {
 			String api = this.getDatasource().getApi();
@@ -159,6 +213,16 @@ public abstract class HttpCollector implements Collector{
 			} else {
 				return url.startsWith("/")? api + url: api + "/" + url;
 			}
+		}
+		
+		public String getFullApiWithParameters() throws URISyntaxException {
+			String api = this.getFullApi();
+			if (this.getParameters() != null) {
+				URIBuilder builder = new URIBuilder(api);
+				builder.addParameters(this.getParameters());
+				api = builder.build().toString();
+			}
+			return api;
 		}
 	}	
 }

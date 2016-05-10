@@ -1,5 +1,6 @@
 package com.ctrip.hermes.collector.command;
 
-public class HttpCollectorTest {
 
+public class HttpCollectorTest {
+	
 }

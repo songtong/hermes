@@ -21,6 +21,8 @@ import com.ctrip.hermes.admin.core.monitor.event.lease.BrokerLeaseTimeoutMonitor
 import com.ctrip.hermes.admin.core.monitor.event.lease.ConsumerLeaseErrorMonitorEvent;
 import com.ctrip.hermes.admin.core.monitor.event.lease.ConsumerLeaseTimeoutMonitorEvent;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.metaservice.monitor.event.BrokerCommandDropEvent;
+import com.ctrip.hermes.metaservice.monitor.event.ConsumerDeadLetterEvent;
 
 public enum MonitorEventType {
 	BROKER_ERROR(1, "broker_error", BrokerErrorEvent.class, true), //
@@ -44,6 +46,8 @@ public enum MonitorEventType {
 	META_REQUEST_ERROR(17, "meta_request_error", MetaRequestErrorEvent.class, true), //
 	CONSUMER_ACK_CMD_ERROR(18, "consumer_ack_cmd_error", ConsumerAckErrorEvent.class, true), //
 	LONG_TIME_NO_CONSUME(19, "long_time_no_consume", LongTimeNoConsumeEvent.class, true), //
+	CONSUMER_DEAD_LETTER(20, "consumer_dead_letter", ConsumerDeadLetterEvent.class, true), //
+	BROKER_COMMAND_DROP(21, "broker_command_drop", BrokerCommandDropEvent.class, true), 
 
 	ES_DATASOURCE_ERROR(40, null, null, true), //
 	CAT_DATASOURCE_ERROR(41, null, null, true), //

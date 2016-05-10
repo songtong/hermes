@@ -29,11 +29,11 @@ public final class TimeMomentRecord<T> extends Record<T> implements TimeMoment{
 		return this.m_moment.getTime();
 	}
 	
-	public static <T> TimeMomentRecord<T> newTimeMomentCommand(RecordType type, Date moment) {
+	public static <T> TimeMomentRecord<T> newTimeMomentRecord(RecordType type, Date moment) {
 		return new TimeMomentRecord<T>(type, moment);
 	}
 	
-	public static <T> TimeMomentRecord<T> newTimeMomentCommand(RecordType type) {
+	public static <T> TimeMomentRecord<T> newTimeMomentRecord(RecordType type) {
 		return new TimeMomentRecord<T>(type, null);
 	}
 

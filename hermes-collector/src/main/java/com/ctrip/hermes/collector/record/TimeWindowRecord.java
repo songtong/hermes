@@ -31,7 +31,7 @@ public final class TimeWindowRecord<T> extends Record<T> implements TimeWindow {
 
 	@Override
 	public long getTimestamp() {
-		return m_startDate.getTime();
+		return m_endDate.getTime();
 	}
 	
 	@Override
@@ -39,11 +39,11 @@ public final class TimeWindowRecord<T> extends Record<T> implements TimeWindow {
 		this.m_endDate = endDate;
 	}
 	
-	public static <T> TimeWindowRecord<T> newTimeWindowCommand(RecordType type, Date startDate, Date endDate) {
+	public static <T> TimeWindowRecord<T> newTimeWindowRecord(RecordType type, Date startDate, Date endDate) {
 		return new TimeWindowRecord<T>(type, startDate, endDate);
 	}
 	
-	public static <T> TimeWindowRecord<T> newTimeWindowCommand(RecordType type) {
+	public static <T> TimeWindowRecord<T> newTimeWindowRecord(RecordType type) {
 		return new TimeWindowRecord<T>(type, null, null);
 	}
 

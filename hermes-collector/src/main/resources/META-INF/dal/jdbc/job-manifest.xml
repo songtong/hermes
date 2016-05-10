@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <file path="job-codegen.xml" />
+  <file path="job-dal.xml" />
+</manifest>
+

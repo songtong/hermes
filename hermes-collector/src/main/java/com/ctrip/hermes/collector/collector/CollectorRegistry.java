@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
-import com.ctrip.hermes.collector.collector.CatHttpCollector.CatHttpContext;
+import com.ctrip.hermes.collector.collector.CatHttpCollector.CatHttpCollectorContext;
 import com.ctrip.hermes.collector.collector.Collector.CollectorContext;
 import com.ctrip.hermes.collector.collector.EsHttpCollector.EsHttpCollectorContext;
 import com.ctrip.hermes.collector.collector.MysqlDbCollector.MysqlDbContext;
@@ -36,7 +36,7 @@ public class CollectorRegistry implements ApplicationContextAware {
 	public Collector find(CollectorContext context) {
 		if (context instanceof EsHttpCollectorContext) {
 			return m_collectors.get(EsHttpCollector.class);
-		} else if (context instanceof CatHttpContext) {
+		} else if (context instanceof CatHttpCollectorContext) {
 			return m_collectors.get(CatHttpCollector.class);
 		} else if (context instanceof MysqlDbContext) {
 			return m_collectors.get(MysqlDbCollector.class);

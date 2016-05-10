@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class EsDatasource extends HttpDatasource {
-	private static Logger logger = LoggerFactory.getLogger(EsDatasource.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(EsDatasource.class);
 	private String m_token = null;
 	private String m_tokenFile = null;
 
@@ -46,7 +46,7 @@ public class EsDatasource extends HttpDatasource {
 				reader.close();
 				m_token = builder.toString();
 			} catch (Exception e) {
-				logger.error(String.format("Failed to load es token file: %s", m_tokenFile), e);
+				LOGGER.error("Failed to load es token file: {}", m_tokenFile, e);
 			} finally {
 				if (reader != null) {
 					try {

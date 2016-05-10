@@ -1,8 +1,6 @@
 package com.ctrip.hermes.collector.state;
 
 import java.util.Observable;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -13,147 +11,150 @@ import com.ctrip.hermes.collector.exception.SerializationException.SerializeExce
 import com.ctrip.hermes.collector.record.Serializable;
 import com.ctrip.hermes.collector.utils.JsonSerializer;
 
-public abstract class State extends Observable implements Serializable<JsonNode> {
-	private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
-	
+public abstract class State extends Observable implements Stateful,
+		Serializable<JsonNode> {
+
 	// Es relatives.
 	private String m_index;
-	private String m_type = "data";
-	private Long m_timestamp;
+	private String m_type = "logs";
+	private long m_timestamp;
 	private Object m_id;
-	
-	// 
-	private TimeUnit m_timeUnit;
-	private int m_interval;
-	private int m_retainedInterval;
+
+	//
 	private State m_nextState;
 	private State m_prevState;
-	private State m_lastState;
-	private int m_size;
+	private long m_expiredTime;
+	private boolean m_sync;
+	
 	public State() {
-		this(ID_GENERATOR.incrementAndGet());
 	}
+
 	public State(Object id) {
 		this.m_id = id;
 	}
+
 	@JsonIgnore
 	public Object getId() {
+		if (this.m_id == null) {
+			return generateId();
+		}
 		return m_id;
 	}
+
 	public void setId(Object id) {
 		m_id = id;
 	}
-	@JsonIgnore
+
 	public String getIndex() {
 		return m_index;
 	}
+
 	public void setIndex(String index) {
 		m_index = index;
 	}
+
 	@JsonIgnore
 	public String getType() {
 		return m_type;
 	}
+
 	public void setType(String type) {
 		m_type = type;
 	}
+
 	@JsonProperty("@timestamp")
-	public Long getTimestamp() {
+	public long getTimestamp() {
 		return m_timestamp;
 	}
-	public void setTimestamp(Long timestamp) {
+
+	public void setTimestamp(long timestamp) {
 		m_timestamp = timestamp;
 	}
+
 	@JsonIgnore
 	public State getNextState() {
 		return m_nextState;
 	}
+
 	public void setNextState(State nextState) {
 		m_nextState = nextState;
 	}
+
 	@JsonIgnore
 	public State getPrevState() {
 		return m_prevState;
 	}
+
 	public void setPrevState(State prevState) {
 		m_prevState = prevState;
 	}
+
+	public boolean expired() {
+		return m_expiredTime > 0 && m_expiredTime < System.currentTimeMillis();
+	}
+
 	@JsonIgnore
-	public TimeUnit getTimeUnit() {
-		return m_timeUnit;
+	public long getExpiredTime() {
+		return m_expiredTime;
 	}
-	public void setTimeUnit(TimeUnit timeUnit) {
-		m_timeUnit = timeUnit;
-	}
+	
 	@JsonIgnore
-	public int getInterval() {
-		return m_interval;
+	public boolean isSync() {
+		return m_sync;
 	}
-	public void setInterval(int interval) {
-		m_interval = interval;
+
+	public void setSync(boolean sync) {
+		m_sync = sync;
 	}
-	@JsonIgnore
-	public int getRetainedInterval() {
-		return m_retainedInterval;
+
+	public void setExpiredTime(long expiredTime) {
+		m_expiredTime = expiredTime;
 	}
-	public void setRetainedInterval(int retainedInterval) {
-		m_retainedInterval = retainedInterval;
-	}
-	protected void addState(State state) {
-		// Add new state to the bi-directional list.
-		if (this.m_nextState == null) {
-			this.m_nextState = state;
-			this.m_lastState = state;
-		} else {
-			this.m_lastState.setNextState(state);
-			state.setPrevState(this.m_lastState);
-			this.m_lastState = state;
-		}
-		
-		// If Already up to the retained size, remove the last state.
-		if (m_size == m_retainedInterval) {
-			State removed = m_lastState;
-			m_lastState = m_lastState.getPrevState();
-			m_lastState.setNextState(null);
-			removed.setPrevState(null);
-		}
-	}
-	public int size() {
-		return m_size;
-	}
-	protected boolean expired(State state) {
-		return state != null && state.getTimestamp() <= m_timestamp;
-	}
-	public void update(final State state) {
-		if (state == null) {
+
+	public void update(final Stateful s) {
+		if (s == null) {
 			return;
 		}
 
-		// If it's a new state, 
+		State state = (State) s;
+
+		// Update the state based on the current one if it's a new state.
 		if (!this.equals(state)) {
-			addState(state);
-			// Update state based on their old states.
+			doUpdate(state);
+
+			// Update next state if has.
 			if (m_nextState != null) {
 				m_nextState.update(state);
 			}
+			
+			notifyObservers();
 		}
-		
-		notifyObservers(this);
 	}
+	
+	public void notifyObservers() {
+		setChanged();
+		super.notifyObservers(this);
+	}
+
 	protected abstract void doUpdate(State state);
+	
+	protected abstract Object generateId();
+
 	@Override
 	public JsonNode serialize() throws SerializeException {
 		return JsonSerializer.getInstance().serialize(this, true);
 	}
+
 	@Override
 	public void deserialize(JsonNode json) throws DeserializeException {
 		JsonSerializer.getInstance().deserialize(json, this);
 	}
-	
+
 	public boolean equals(Object obj) {
-		return obj.getClass() == this.getClass() && ((State)obj).getId() == this.getId();
+		return obj.getClass() == this.getClass()
+				&& ((State) obj).getId() == this.getId();
 	}
-	
+
 	public String toString() {
 		try {
 			return this.serialize().toString();
@@ -162,5 +163,5 @@ public abstract class State extends Observable implements Serializable<JsonNode>
 			return null;
 		}
 	}
-	
+
 }

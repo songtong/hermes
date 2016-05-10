@@ -14,9 +14,9 @@ import com.ctrip.hermes.collector.exception.SerializationException.SerializeExce
 /**
  * @author tenglinxiao
  *
- */
+ */ 
 public class JsonSerializer {
-	private static final String TYPE = "__serialize_type__";
+	public static final String TYPE = "__serialize_type__";
 	private static JsonSerializer m_serializer = null;
 	private ObjectMapper m_mapper = new ObjectMapper();
 	

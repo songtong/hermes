@@ -72,4 +72,12 @@ public interface CatConstants {
 	public static final String TYPE_HERMES_CMD_VERSION = "Hermes.Command.Version";
 
 	public static final String TYPE_CMD_DROP = "Hermes.Command.Drop";
+
+	public static final String TYPE_HERMES_BILL = "Hermes.Bill";
+
+	public static final String NAME_HERMES_BILL_MYSQL = "Hermes.Bill.MySQL";
+
+	public static final String NAME_HERMES_BILL_KAFKA = "Hermes.Bill.Kafka";
+
+	public static final String TYPE_HERMES_BILL_UNKNOWN = "Hermes.Bill.Unknown";
 }

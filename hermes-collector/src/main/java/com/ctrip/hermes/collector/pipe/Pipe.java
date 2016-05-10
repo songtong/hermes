@@ -9,12 +9,12 @@ import org.slf4j.LoggerFactory;
  * @author tenglinxiao
  * @mail lxteng@ctrip.com
  */
-public abstract class Pipe<T> {
+public abstract class Pipe<T> implements Processor<T>{
 	// Default settings for features.
-	private static final int DEFAULT_FEATURES = Feature.and(Feature.ABORT_ON_CONTEXT, Feature.ABORT_ON_ERROR);
+	protected static final int DEFAULT_FEATURES = Feature.and(Feature.ABORT_ON_CONTEXT, Feature.ABORT_ON_ERROR);
 	private static final Logger LOGGER = LoggerFactory.getLogger(Pipe.class);
 	private Pipe<T> m_next;
-	private int m_features;
+	protected int m_features;
 	private Class<?> m_clzz;
 	
 	public Pipe(Class<?> clzz) {
@@ -28,7 +28,9 @@ public abstract class Pipe<T> {
 	// Test whether it's valid for this pipe.
 	public abstract boolean validate(T obj);
 	
-	public final void process(PipeContext context, T obj) {
+	public final void process(ProcessContext ctx, T obj) {
+		PipeContext context = (PipeContext)ctx; 
+		
 		// If fail the validation, abort the process.
 		if (!validate(obj)) {
 			context.abort();
@@ -77,7 +79,7 @@ public abstract class Pipe<T> {
 	public void setFeatures(int features) {
 		this.m_features = features;
 	}
-	
+		
 	// Test whether it has next pipeline.
 	public boolean hasNext() {
 		return m_next != null;
@@ -94,11 +96,11 @@ public abstract class Pipe<T> {
 			this.m_code = code;
 		} 
 		
-		private int getCode() {
+		protected int getCode() {
 			return m_code;
 		}
 		
-		private boolean enabled(int features) {
+		protected boolean enabled(int features) {
 			return (this.m_code & features) > 0;
 		}
 		

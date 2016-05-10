@@ -22,7 +22,7 @@ import com.ctrip.hermes.collector.pipeline.annotation.Pipeline;
 import com.ctrip.hermes.collector.pipeline.annotation.Pipelines;
 import com.ctrip.hermes.collector.rule.RulesEngine;
 
-@Component
+//@Component
 public class PipelineRegistry implements ApplicationContextAware {
 	private ApplicationContext m_applicationContext;
 	private Map<Class<?>, Map<String, Pipes<?>>> m_pipelines = new HashMap<Class<?>, Map<String, Pipes<?>>>();
@@ -38,9 +38,9 @@ public class PipelineRegistry implements ApplicationContextAware {
 		String pipeName = null;
 		for (Map.Entry<String, Pipe> entry : pipeBeans.entrySet()) {
 			Pipe pipe = entry.getValue();
-			if (pipe.getClass() == DataHub.class || pipe.getClass() == StateHub.class || pipe.getClass() == RulesEngine.class) {
-				continue;
-			}
+//			if (pipe.getClass() == DataHub.class || pipe.getClass() == StateHub.class || pipe.getClass() == RulesEngine.class) {
+//				continue;
+//			}
 						
 			if (!typedPipes.containsKey(pipe.getTypeClass())) {
 				typedPipes.put(pipe.getTypeClass(), new ArrayList<Triple<String, Integer, String>>());
@@ -99,7 +99,6 @@ public class PipelineRegistry implements ApplicationContextAware {
 			// Load pipes into separate pipeline.
 			for (Triple<String, Integer, String> pipe : entry.getValue()) {				
 				Pipe<?> pipeBean = pipeBeans.get(pipe.getLast());
-				System.out.println(pipeBean);
 				if (pipeline == null) {
 					pipeline = new Pipes(pipeBean.getTypeClass());
 					pipeline = new Pipes(pipe.getClass());
@@ -108,7 +107,7 @@ public class PipelineRegistry implements ApplicationContextAware {
 					if (pipe.getFirst() == null || (lastPipe.getFirst() != null && lastPipe.getFirst().equals(pipe.getFirst()))) {
 						pipeline.addPipe(pipeBean);
 					} else {
-						pipeline.addPipe(m_applicationContext.getBean(StateHub.class));
+						//pipeline.addPipe(m_applicationContext.getBean(StateHub.class));
 						pipelines.put(lastPipe.getFirst() == null? "default": lastPipe.getFirst(), pipeline);
 						pipeline = new Pipes(pipe.getClass());
 						pipeline.addPipe(pipeBean);
@@ -117,10 +116,22 @@ public class PipelineRegistry implements ApplicationContextAware {
 				lastPipe = pipe;
 			}
 
-			pipeline.addPipe(m_applicationContext.getBean(StateHub.class));
+			//pipeline.addPipe(m_applicationContext.getBean(StateHub.class));
 			pipelines.put(lastPipe.getFirst() == null? "default": lastPipe.getFirst(), pipeline);
 			m_pipelines.put(entry.getKey(), pipelines);
 		}
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void registerPipe(Pipe<?> pipe) {
+		Map<String, Pipes<?>> pipelines = m_pipelines.get(pipe.getTypeClass());
+		if (pipelines == null) {
+			pipelines = new HashMap<String, Pipes<?>>();
+			m_pipelines.put(pipe.getTypeClass(), pipelines);
+		}
+		Pipes pipes = new Pipes(pipe.getTypeClass());
+		pipes.addPipe(pipe);
+		pipelines.put(pipe.getClass().getSimpleName(), pipes);
 	}
 	
 	public Map<Type, Map<String, Pipes<?>>> findAll() {
@@ -129,9 +140,6 @@ public class PipelineRegistry implements ApplicationContextAware {
 	}
 	
 	public Map<String, Pipes<?>> findPipesByType(Class<?> type) {
-		for (Type t : m_pipelines.keySet()) {
-			System.out.println(type);
-		}
 		return m_pipelines.get(type);
 	}
 	

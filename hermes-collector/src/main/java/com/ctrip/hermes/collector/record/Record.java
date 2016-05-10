@@ -11,9 +11,9 @@ import com.ctrip.hermes.collector.utils.JsonSerializer;
  *
  */
 public abstract class Record<T> {
-	public static final String CATEGORY = "category";
-	public static final String TYPE = "type";
-	public static final String DATA = "data";
+//	public static final String CATEGORY = "category";
+//	public static final String TYPE = "type";
+//	public static final String DATA = "data";
 	
 	private String m_id;
 	
