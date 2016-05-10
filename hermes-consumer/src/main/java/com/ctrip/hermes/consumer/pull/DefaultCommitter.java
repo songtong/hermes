@@ -94,12 +94,12 @@ public class DefaultCommitter<T> implements Committer<T> {
 				for (Entry<Integer, BlockingDeque<PartitionOperation<T>>> entry : entryList) {
 					int partition = entry.getKey();
 					BlockingDeque<PartitionOperation<T>> opQueue = entry.getValue();
-
 					PartitionOperation<T> op = null;
 					try {
+
 						op = opQueue.poll();
 						if (op != null) {
-							op = mergeMoreOperation(op, opQueue, 500);
+							op = mergeMoreOperation(op, opQueue, 5000);
 
 							if (writeAckToBroker(partition, op.getRecords())) {
 								ackWrote = true;
@@ -128,13 +128,13 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 	private PartitionOperation<T> mergeMoreOperation(PartitionOperation<T> op,
 	      BlockingDeque<PartitionOperation<T>> opQueue, int maxRecords) {
-		int mergeCount = maxRecords - op.getRecords().size();
-		if (mergeCount > 0) {
-			List<PartitionOperation<T>> moreOps = new LinkedList<>();
-			opQueue.drainTo(moreOps, mergeCount);
 
-			for (PartitionOperation<T> moreOp : moreOps) {
+		while (!opQueue.isEmpty() && op.getRecords().size() < maxRecords) {
+			if (op.getRecords().size() + opQueue.peek().getRecords().size() <= maxRecords) {
+				PartitionOperation<T> moreOp = opQueue.poll();
 				op.merge(moreOp);
+			} else {
+				break;
 			}
 		}
 
