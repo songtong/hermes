@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.ContentField;
+import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.Subject;
 import com.ctrip.hermes.metaservice.service.notify.MailNoticeContent;
 import com.ctrip.hermes.metaservice.service.template.HermesTemplate;
 
@@ -28,15 +29,18 @@ public class HermesMailUtil {
 		HermesTemplate template = annotation.template();
 
 		if (template == null) {
-			throw new IllegalArgumentException("Hermes mail notice content must specific HermesTemplate");
+			throw new IllegalArgumentException("Hermes mail notice content must specific HermesTemplate.");
 		}
 
-		String subject = StringUtils.isBlank(content.getSubject()) ? DEFAULT_HERMES_MAIL_SUBJECT : content.getSubject();
+		String subject = null;
 
 		Map<String, Object> contentMap = new HashMap<>();
 		for (Field field : clazz.getDeclaredFields()) {
+			subject = getSubject4MailIfPossible(field, content);
 			addContent4MailIfPossible(field, content, contentMap);
 		}
+
+		subject = StringUtils.isBlank(subject) ? DEFAULT_HERMES_MAIL_SUBJECT : subject;
 
 		return new HermesMailContext(subject, template, contentMap);
 	}
@@ -52,5 +56,20 @@ public class HermesMailUtil {
 				log.error("Get hermes mail template information failed: {} {}", obj.getClass(), mailField, e);
 			}
 		}
+	}
+
+	private static String getSubject4MailIfPossible(Field field, Object obj) {
+		String subject = null;
+		Subject mailField = field.getAnnotation(Subject.class);
+		if (mailField != null) {
+			try {
+				field.setAccessible(true);
+				subject = (String) field.get(obj);
+				field.setAccessible(false);
+			} catch (Exception e) {
+				log.error("Get hermes mail template information failed: {} {}", obj.getClass(), mailField, e);
+			}
+		}
+		return subject;
 	}
 }

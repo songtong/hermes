@@ -25,7 +25,6 @@ public @interface HermesMailDescription {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	public static @interface Subject {
-		public String subject() default "";
 	}
 
 }

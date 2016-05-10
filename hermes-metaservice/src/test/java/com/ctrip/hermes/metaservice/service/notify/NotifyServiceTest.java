@@ -7,6 +7,7 @@ import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription;
 import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.ContentField;
+import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.Subject;
 import com.ctrip.hermes.metaservice.service.template.HermesTemplate;
 
 public class NotifyServiceTest extends ComponentTestCase {
@@ -19,6 +20,7 @@ public class NotifyServiceTest extends ComponentTestCase {
 		@ContentField(name = "age")
 		private int m_age;
 
+		@Subject
 		private String m_subject;
 
 		public MMail(String sub, String name, int age) {
@@ -27,7 +29,6 @@ public class NotifyServiceTest extends ComponentTestCase {
 			m_age = age;
 		}
 
-		@Override
 		public String getSubject() {
 			return m_subject;
 		}
