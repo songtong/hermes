@@ -43,7 +43,7 @@ public class NotifyServiceTest extends ComponentTestCase {
 	}
 
 	@Test
-	public void testNotifyInMail() {
+	public void testNotifyInMail() throws Exception {
 		HermesNotice n = new HermesNotice(Arrays.asList("xxx@xxx.xx"), new MMail("Hello Song", "song", 28));
 		NotifyService s = lookup(NotifyService.class);
 		s.notify(n);
