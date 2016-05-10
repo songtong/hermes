@@ -63,7 +63,7 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 	private void startCommitter(String topic, String groupId, int threadCount) {
 		m_committerIoThreadPool = Executors.newFixedThreadPool(threadCount,
-		      HermesThreadFactory.create("PullConsumerManualOffsetCommitIO", true));
+		      HermesThreadFactory.create("PullConsumerManualOffsetCommitIO-" + topic + "-" + groupId, true));
 
 		ManualCommitChecker manualCommitChecker = new ManualCommitChecker();
 		ThreadFactory factory = HermesThreadFactory.create("PullConsumerManualOffsetCommitChecker-" + topic + "-"
