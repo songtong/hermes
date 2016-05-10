@@ -7,6 +7,4 @@ public abstract class MailNoticeContent implements NoticeContent {
 		return NoticeType.EMAIL;
 	}
 
-	public abstract String getSubject();
-
 }
