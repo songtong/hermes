@@ -1,6 +1,5 @@
 package com.ctrip.hermes.consumer.pull;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,9 +8,12 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -21,7 +23,6 @@ import com.ctrip.hermes.consumer.api.PullConsumerConfig;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.core.message.ConsumerMessage;
-import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
@@ -39,11 +40,13 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 	private BlockingQueue<RetriveSnapshot<T>> m_snapshots = new LinkedBlockingQueue<>();
 
+	private ConcurrentMap<Integer, PartitionOperationHolder> m_partitionOperationHolders = new ConcurrentHashMap<>();
+
 	private AckManager m_ackManager;
 
 	private ConsumerConfig m_consumerConfig;
 
-	private List<ManualCommitTask> m_manualCommitTasks = new ArrayList<>();
+	private ExecutorService m_committerIoThreadPool;
 
 	public DefaultCommitter(String topic, String groupId, int partitionCount, PullConsumerConfig config,
 	      AckManager ackManager, ConsumerConfig consumerConfig) {
@@ -55,17 +58,17 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 		int committerThreadCount = m_config.getCommitterThreadCount() <= 0 ? Math.min(10, partitionCount) : m_config
 		      .getCommitterThreadCount();
-		startCommiterThreads(topic, groupId, committerThreadCount);
+		startCommitter(topic, groupId, committerThreadCount);
 	}
 
-	private void startCommiterThreads(String topic, String groupId, int threadCount) {
-		for (int i = 0; i < threadCount; i++) {
-			ManualCommitTask manualCommitTask = new ManualCommitTask();
-			m_manualCommitTasks.add(manualCommitTask);
-			ThreadFactory factory = HermesThreadFactory.create("PullConsumerManualOffsetCommit-" + topic + "-" + groupId
-			      + "-" + i, true);
-			factory.newThread(manualCommitTask).start();
-		}
+	private void startCommitter(String topic, String groupId, int threadCount) {
+		m_committerIoThreadPool = Executors.newFixedThreadPool(threadCount,
+		      HermesThreadFactory.create("PullConsumerManualOffsetCommitIO-" + topic + "-" + groupId, true));
+
+		ManualCommitChecker manualCommitChecker = new ManualCommitChecker();
+		ThreadFactory factory = HermesThreadFactory.create("PullConsumerManualOffsetCommitChecker-" + topic + "-"
+		      + groupId, true);
+		factory.newThread(manualCommitChecker).start();
 	}
 
 	private boolean writeAckToBroker(int partition, List<OffsetRecord> partitionRecords) {
@@ -88,63 +91,85 @@ public class DefaultCommitter<T> implements Committer<T> {
 		return success;
 	}
 
-	private class ManualCommitTask implements Runnable {
-		private ExponentialSchedulePolicy m_retryPolicy;
+	private class PartitionOperationHolder {
+		private BlockingDeque<PartitionOperation<T>> m_operations = new LinkedBlockingDeque<PartitionOperation<T>>();
 
-		private ConcurrentMap<Integer, BlockingDeque<PartitionOperation<T>>> m_partitionOperations = new ConcurrentHashMap<>();
+		private AtomicBoolean m_flushing = new AtomicBoolean(false);
 
-		public void submit(PartitionOperation<T> op) {
-			int partition = op.getPartition();
-			BlockingDeque<PartitionOperation<T>> opQueue = m_partitionOperations.get(partition);
-			if (opQueue == null) {
-				m_partitionOperations.putIfAbsent(partition, new LinkedBlockingDeque<PartitionOperation<T>>());
-				opQueue = m_partitionOperations.get(partition);
-			}
+		private int m_partition;
 
-			opQueue.add(op);
+		public PartitionOperationHolder(int partition) {
+			m_partition = partition;
 		}
 
-		@Override
-		public void run() {
-			int interval = m_config.getManualCommitInterval();
-			m_retryPolicy = new ExponentialSchedulePolicy(interval, interval);
+		public void submit(PartitionOperation<T> operation) {
+			m_operations.offer(operation);
+		}
 
-			while (!m_stopped.get()) {
-				List<Entry<Integer, BlockingDeque<PartitionOperation<T>>>> entryList = new LinkedList<>(
-				      m_partitionOperations.entrySet());
-				Collections.shuffle(entryList);
+		public void flush(ExecutorService threadPool) {
+			threadPool.submit(new Runnable() {
 
-				boolean ackWrote = false;
-				for (Entry<Integer, BlockingDeque<PartitionOperation<T>>> entry : entryList) {
-					int partition = entry.getKey();
-					BlockingDeque<PartitionOperation<T>> opQueue = entry.getValue();
+				@Override
+				public void run() {
 					PartitionOperation<T> op = null;
 					try {
-
-						op = opQueue.poll();
+						op = m_operations.poll();
 						if (op != null) {
-							op = mergeMoreOperation(op, opQueue, 5000);
+							op = mergeMoreOperation(op, m_operations, 5000);
 
-							if (writeAckToBroker(partition, op.getRecords())) {
-								ackWrote = true;
+							if (writeAckToBroker(m_partition, op.getRecords())) {
 								op.done();
 								op = null;
 							}
 						}
 					} catch (Exception e) {
-						log.warn("Unexpected exception when commit consumer offet to broker, topic: {}, groupId: {}",
-						      m_topic, m_groupId, e);
+						log.warn(
+						      "Unexpected exception when commit consumer offet to broker, topic: {}, groupId: {}, partition: {}",
+						      m_topic, m_groupId, m_partition, e);
 					} finally {
-						if (op != null) {
-							opQueue.addFirst(op);
+						try {
+							if (op != null) {
+								m_operations.addFirst(op);
+							}
+						} catch (Exception e) {
+							log.warn(
+							      "Unexpected exception when push back operation to PartitionHolder, topic: {}, groupId: {}, partition: {}",
+							      m_topic, m_groupId, m_partition, e);
+						} finally {
+							m_flushing.set(false);
 						}
 					}
 				}
+			});
+		}
 
-				if (!ackWrote) {
-					m_retryPolicy.fail(true);
-				} else {
-					m_retryPolicy.succeess();
+		public boolean startFlushing() {
+			return m_flushing.compareAndSet(false, true);
+		}
+
+	}
+
+	private class ManualCommitChecker implements Runnable {
+		@Override
+		public void run() {
+
+			while (!m_stopped.get()) {
+				List<Entry<Integer, PartitionOperationHolder>> entryList = new LinkedList<>(
+				      m_partitionOperationHolders.entrySet());
+				Collections.shuffle(entryList);
+
+				for (Entry<Integer, PartitionOperationHolder> entry : entryList) {
+					final PartitionOperationHolder holder = entry.getValue();
+
+					if (!holder.startFlushing()) {
+						holder.flush(m_committerIoThreadPool);
+					}
+				}
+
+				try {
+					TimeUnit.MILLISECONDS.sleep(m_config.getManualCommitInterval());
+				} catch (InterruptedException e) {
+					// ignore
 				}
 			}
 		}
@@ -172,8 +197,14 @@ public class DefaultCommitter<T> implements Committer<T> {
 		} else {
 			for (Entry<Integer, List<OffsetRecord>> entry : snapshot.getOffsetRecords().entrySet()) {
 				Integer partition = entry.getKey();
-				PartitionOperation<T> operation = new PartitionOperation<T>(partition, entry.getValue(), snapshot);
-				m_manualCommitTasks.get(partition % m_manualCommitTasks.size()).submit(operation);
+
+				PartitionOperationHolder holder = m_partitionOperationHolders.get(partition);
+				if (holder == null) {
+					m_partitionOperationHolders.putIfAbsent(partition, new PartitionOperationHolder(partition));
+					holder = m_partitionOperationHolders.get(partition);
+				}
+
+				holder.submit(new PartitionOperation<T>(partition, entry.getValue(), snapshot));
 			}
 		}
 	}
