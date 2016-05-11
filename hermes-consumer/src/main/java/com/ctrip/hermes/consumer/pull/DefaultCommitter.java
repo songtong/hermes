@@ -212,6 +212,7 @@ public class DefaultCommitter<T> implements Committer<T> {
 	@Override
 	public void close() {
 		m_stopped.compareAndSet(false, true);
+		m_committerIoThreadPool.shutdown();
 	}
 
 	@Override
