@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
@@ -102,6 +103,8 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	protected int m_maxAckHolderSize;
 
+	protected AtomicLong m_token = new AtomicLong(-1L);
+
 	public BaseConsumerTask(ConsumerContext context, int partitionId, int localCacheSize, AckManager ackManager) {
 		this(context, partitionId, localCacheSize, 0, ackManager);
 	}
@@ -158,19 +161,21 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 				if (!isClosed() && m_lease.get() != null && !m_lease.get().isExpired()) {
 
-					long token = CorrelationIdGenerator.generateCorrelationId();
+					m_token.set(CorrelationIdGenerator.generateCorrelationId());
 
 					log.info(
 					      "Consumer continue consuming(mode={}, topic={}, partition={}, groupId={}, token={}, sessionId={}), since lease acquired",
 					      m_context.getConsumerType(), m_context.getTopic().getName(), m_partitionId,
-					      m_context.getGroupId(), token, m_context.getSessionId());
+					      m_context.getGroupId(), m_token.get(), m_context.getSessionId());
 
-					startConsuming(key, token);
+					startConsuming(key, m_token.get());
+					
+					m_token.set(-1L);
 
 					log.info(
 					      "Consumer pause consuming(mode={}, topic={}, partition={}, groupId={}, token={}, sessionId={}), since lease expired",
 					      m_context.getConsumerType(), m_context.getTopic().getName(), m_partitionId,
-					      m_context.getGroupId(), token, m_context.getSessionId());
+					      m_context.getGroupId(), m_token.get(), m_context.getSessionId());
 				}
 			} catch (Exception e) {
 				log.error("Exception occurred in consumer's run method(topic={}, partition={}, groupId={}, sessionId={})",
@@ -236,7 +241,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			}
 		}
 
-		m_consumerNotifier.deregister(token);
+		m_consumerNotifier.deregister(token, false);
 		m_ackManager.deregister(token);
 		m_lease.set(null);
 		doAfterConsuming(key);
@@ -497,6 +502,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	public void close() {
 		m_closed.set(true);
+		m_consumerNotifier.deregister(m_token.get(), true);
 	}
 
 	protected class BasePullMessagesTask implements Runnable {
