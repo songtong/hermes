@@ -169,6 +169,8 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					      m_context.getGroupId(), m_token.get(), m_context.getSessionId());
 
 					startConsuming(key, m_token.get());
+					
+					m_token.set(-1L);
 
 					log.info(
 					      "Consumer pause consuming(mode={}, topic={}, partition={}, groupId={}, token={}, sessionId={}), since lease expired",
