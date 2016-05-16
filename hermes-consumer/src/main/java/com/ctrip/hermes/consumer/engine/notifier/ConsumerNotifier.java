@@ -13,7 +13,7 @@ public interface ConsumerNotifier {
 
 	void register(long token, ConsumerContext consumerContext);
 
-	void deregister(long token);
+	void deregister(long token, boolean force);
 
 	void messageReceived(long token, List<ConsumerMessage<?>> msgs);
 

@@ -87,16 +87,22 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 	}
 
 	@Override
-	public void deregister(long token) {
-
-		Triple<ConsumerContext, NotifyStrategy, ExecutorService> triple = m_consumerContexs.remove(token);
-		ConsumerContext context = triple.getFirst();
-		if (log.isDebugEnabled()) {
-			log.debug("Deregistered(token={}, topic={}, groupId={}, sessionId={})", token, context.getTopic().getName(),
-			      context.getGroupId(), context.getSessionId());
+	public void deregister(long token, boolean force) {
+		if (token > 0) {
+			Triple<ConsumerContext, NotifyStrategy, ExecutorService> triple = m_consumerContexs.remove(token);
+			if (triple != null) {
+				ConsumerContext context = triple.getFirst();
+				if (log.isDebugEnabled()) {
+					log.debug("Deregistered(token={}, topic={}, groupId={}, sessionId={})", token, context.getTopic()
+					      .getName(), context.getGroupId(), context.getSessionId());
+				}
+				if (!force) {
+					triple.getLast().shutdown();
+				} else {
+					triple.getLast().shutdownNow();
+				}
+			}
 		}
-		triple.getLast().shutdown();
-		return;
 	}
 
 	@Override

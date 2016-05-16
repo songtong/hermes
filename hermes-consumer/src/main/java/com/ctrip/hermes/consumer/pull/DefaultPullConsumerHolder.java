@@ -84,6 +84,7 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 				m_partitionMsgs.get(msg.getPartition() % m_partitionCount).put((PullBrokerConsumerMessage<T>) msg);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
+				break;
 			}
 		}
 	}

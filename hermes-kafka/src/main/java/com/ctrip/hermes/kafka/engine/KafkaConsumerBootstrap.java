@@ -95,7 +95,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 		Long token = tokens.remove(consumerContext);
 		if (token != null)
-			m_consumerNotifier.deregister(token);
+			m_consumerNotifier.deregister(token, false);
 
 		super.doStop(consumerContext);
 	}
