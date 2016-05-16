@@ -70,7 +70,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 		KafkaConsumer<String, byte[]> consumer = new KafkaConsumer<String, byte[]>(prop);
 
-		long token = CorrelationIdGenerator.generateCorrelationId();
+		final long token = CorrelationIdGenerator.generateCorrelationId();
 		m_consumerNotifier.register(token, consumerContext);
 		KafkaConsumerThread consumerThread = new KafkaConsumerThread(consumer, consumerContext, token);
 		m_executor.submit(consumerThread);
@@ -82,6 +82,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 			@Override
 			public void close() {
+				m_logger.info("Stopping kafka consumer with token: " + token);
 				doStop(consumerContext);
 			}
 		};
