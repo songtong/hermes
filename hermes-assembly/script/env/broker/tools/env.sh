@@ -7,7 +7,6 @@ STOP_TIMEOUT=30
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
-            -Dio.netty.allocator.type=pooled \
             -Xms12g \
             -Xmx12g \
             -Xmn4g \
