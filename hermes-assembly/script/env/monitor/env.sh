@@ -8,7 +8,6 @@ HTTP_PORT=8090
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
-            -Dio.netty.allocator.type=pooled \
             -Xms2g \
             -Xmx2g \
             -XX:PermSize=128m \
