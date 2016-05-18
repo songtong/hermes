@@ -26,17 +26,14 @@
 				<div class="form-group">
 					<label>产品线</label> <input class="form-control" autocomplete="off" ng-model="new_application.productLine" typeahead="productLine for productLine in getFilteredProductLine($viewValue)" typeahead-loading="loadingProductlines" placeholder="项目所处的产品线, 例如: flight, hotel, fx ..." /> <i ng-show="loadingProductlines" class="glyphicon glyphicon-refresh"></i>
 				</div>
-				<div class="form-group" style="margin-bottom: 0px;">
-					<label>Product</label> <input class="form-control" ng-model="new_application.product" type="text"></input>
-				</div>
-				<span class="help-block"><small>产品名称，可使用小写字母、数字。</small></span>
-				<div class="form-group" style="margin-bottom: 0px;">
-					<label>[Project [ .Sub-Project ] ] .Function</label> <input class="form-control" ng-model="new_application.project" type="text"></input>
-				</div>
-				<span class="help-block"><small>项目名称以及消费者收到消息之后所扮演的角色，可使用小写字母、数字。可多段，使用 ' . ' 分隔。<br>举例：存入数据库：saver，对其他项目进行通知：notifier，一般性处理：processor。
-				</small></span>
 				<div class="form-group">
-					<label>应用名称</label> <input class="form-control" ng-model="new_application.appName" type="text"></input>
+					<label>Product(Project)</label> <input class="form-control" ng-model="new_application.product" placeholder="产品名称，可使用小写字母、数字。可多段，使用 ' . ' 分隔。" type="text"></input>
+				</div>
+				<div class="form-group">
+					<label>Role(Function)</label> <input class="form-control" ng-model="new_application.project" placeholder="消费者收到消息之后所扮演的角色，可使用小写字母、数字。例：saver，notifier，processor。" type="text"></input>
+				</div>
+				<div class="form-group">
+					<label>AppId</label> <input class="form-control" ng-model="new_application.appName" placeholder="如果没有appid可以填写项目名称" type="text"></input>
 				</div>
 			</div>
 		</div>
@@ -47,10 +44,6 @@
 				<span class="help-block"><small>仅mysql存储类型的Topic需要填写该栏，kafka存储类型请略过。</small></span>
 			</div>
 			<div class="col-md-7">
-				<div class="form-group" style="margin-bottom: 0px;">
-					<label>超时时间（秒）</label> <input class="form-control" ng-model="new_application.ackTimeoutSeconds" type="number"></input>
-				</div>
-				<span class="help-block"><small>当消息超过这个时间没有收到ACK或NACK，进行重发。一般是正常处理消息时间的两倍。</small></span>
 				<div class="form-group">
 					<label>需要重发？</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needRetry" value=true> 是
 					</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needRetry" value=false> 否
