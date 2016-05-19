@@ -71,7 +71,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td style="padding: 20px 30px 10px 30px; font-family: Arial, sans-serif; font-size: 14px;">查看各个环境Topic信息： <a href="${fwsTopicUrl}">Fws</a> <a style="padding: 0px 5px 0px 5px;" href="${uatTopicUrl}">Uat</a> <a href="${prodTopicUrl}">Prod</a></td>
+						<td style="padding: 20px 30px 10px 30px; font-family: Arial, sans-serif; font-size: 14px;">查看各个环境Topic信息：<#if fwsTopicUrl??> <a href="${fwsTopicUrl}">Fws</a> </#if><#if uatTopicUrl??><a style="padding: 0px 5px 0px 5px;" href="${uatTopicUrl}">Uat</a></#if><#if prodTopicUrl??> <a href="${prodTopicUrl}">Prod</a></#if></td>
 					</tr>
 					</#if>
 					<tr>

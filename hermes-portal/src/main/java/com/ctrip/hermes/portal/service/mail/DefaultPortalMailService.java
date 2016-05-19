@@ -60,8 +60,8 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 	public void initialize() throws InitializationException {
 		try {
 			m_templateConfig = new Configuration(Configuration.VERSION_2_3_22);
-			m_templateConfig.setDirectoryForTemplateLoading(
-					new File(getClass().getResource(m_config.getEmailTemplateDir()).toURI()));
+			m_templateConfig.setDirectoryForTemplateLoading(new File(getClass().getResource(
+					m_config.getEmailTemplateDir()).toURI()));
 			m_templateConfig.setDefaultEncoding("UTF-8");
 			m_templateConfig.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
 		} catch (Exception e) {
@@ -113,21 +113,33 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 
 		Map<String, Object> contentMap = new HashMap<>();
 		contentMap.put("createTime", m_dateFormatter.format(app.getCreateTime()));
-		contentMap.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsHost(),
-				"console/application#/review", app.getId()));
+		contentMap.put(
+				"url",
+				String.format("http://%s/%s/%d", m_config.getPortalFwsHost(), "console/application#/review",
+						app.getId()));
 		contentMap.put("app", app);
 		contentMap.put("status", status);
-		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus())
+		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus()
+				|| PortalConstants.APP_STATUS_ROLLOUT_REJECTED == app.getStatus())
 			contentMap.put("rejectReason", app.getComment());
-		if (PortalConstants.APP_STATUS_SUCCESS == app.getStatus()) {
+		if (PortalConstants.APP_STATUS_SYNCED == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicName);
 			contentMap.put("topic", topic);
-			contentMap.put("fwsTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalFwsHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-			contentMap.put("uatTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalUatHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-			contentMap.put("prodTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalProdHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
+			contentMap.put(
+					"fwsTopicUrl",
+					String.format("http://%s/%s/%s/%s/%s", m_config.getPortalFwsHost(), "console/topic#/detail",
+							topic.getStorageType(), topic.getStorageType(), topic.getName()));
+			contentMap.put(
+					"uatTopicUrl",
+					String.format("http://%s/%s/%s/%s/%s", m_config.getPortalUatHost(), "console/topic#/detail",
+							topic.getStorageType(), topic.getStorageType(), topic.getName()));
+		} else if (PortalConstants.APP_STATUS_ROLLOUT_SUCCESS == app.getStatus()) {
+			TopicView topic = m_topicService.findTopicViewByName(topicName);
+			contentMap.put("topic", topic);
+			contentMap.put(
+					"prodTopicUrl",
+					String.format("http://%s/%s/%s/%s/%s", m_config.getPortalProdHost(), "console/topic#/detail",
+							topic.getStorageType(), topic.getStorageType(), topic.getName()));
 		}
 
 		sendEmail(title, address, PortalConstants.APP_EMAIL_TEMPLATE_CREATE_TOPIC_FOR_PROPOSER, contentMap);
@@ -142,21 +154,34 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 
 		Map<String, Object> contentMap = new HashMap<>();
 		contentMap.put("createTime", m_dateFormatter.format(app.getCreateTime()));
-		contentMap.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsHost(),
-				"console/application#/approval", app.getId()));
+		contentMap.put(
+				"url",
+				String.format("http://%s/%s/%d", m_config.getPortalFwsHost(), "console/application#/approval",
+						app.getId()));
 		contentMap.put("app", app);
 		contentMap.put("status", status);
-		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus())
+		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus()
+				|| PortalConstants.APP_STATUS_ROLLOUT_REJECTED == app.getStatus())
 			contentMap.put("rejectReason", app.getComment());
-		if (PortalConstants.APP_STATUS_SUCCESS == app.getStatus()) {
+		if (PortalConstants.APP_STATUS_SYNCED == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicName);
 			contentMap.put("topic", topic);
-			contentMap.put("fwsTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalFwsHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-			contentMap.put("uatTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalUatHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
-			contentMap.put("prodTopicUrl", String.format("http://%s/%s/%s/%s/%s", m_config.getPortalProdHost(),
-					"console/topic#/detail", topic.getStorageType(), topic.getStorageType(), topic.getName()));
+			contentMap.put(
+					"fwsTopicUrl",
+					String.format("http://%s/%s/%s/%s/%s", m_config.getPortalFwsHost(), "console/topic#/detail",
+							topic.getStorageType(), topic.getStorageType(), topic.getName()));
+			contentMap.put(
+					"uatTopicUrl",
+					String.format("http://%s/%s/%s/%s/%s", m_config.getPortalUatHost(), "console/topic#/detail",
+							topic.getStorageType(), topic.getStorageType(), topic.getName()));
+
+		} else if (PortalConstants.APP_STATUS_ROLLOUT_SUCCESS == app.getStatus()) {
+			TopicView topic = m_topicService.findTopicViewByName(topicName);
+			contentMap.put("topic", topic);
+			contentMap.put(
+					"prodTopicUrl",
+					String.format("http://%s/%s/%s/%s/%s", m_config.getPortalProdHost(), "console/topic#/detail",
+							topic.getStorageType(), topic.getStorageType(), topic.getName()));
 		}
 
 		sendEmail(title, address, PortalConstants.APP_EMAIL_TEMPLATE_CREATE_TOPIC_FOR_ADMIN, contentMap);
@@ -173,22 +198,26 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 
 		Map<String, Object> contentMap = new HashMap<>();
 		contentMap.put("createTime", m_dateFormatter.format(app.getCreateTime()));
-		contentMap.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsHost(),
-				"console/application#/review", app.getId()));
+		contentMap.put(
+				"url",
+				String.format("http://%s/%s/%d", m_config.getPortalFwsHost(), "console/application#/review",
+						app.getId()));
 		contentMap.put("app", app);
 		contentMap.put("status", status);
 		contentMap.put("topicNames", topicNames);
 		contentMap.put("topicCount", topicNames.length);
-		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus()) {
+		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus()
+				|| PortalConstants.APP_STATUS_ROLLOUT_REJECTED == app.getStatus()) {
 			contentMap.put("rejectReason", app.getComment());
-		} else if (PortalConstants.APP_STATUS_SUCCESS == app.getStatus()) {
+		} else if (PortalConstants.APP_STATUS_SYNCED == app.getStatus()
+				|| PortalConstants.APP_STATUS_ROLLOUT_SUCCESS == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicNames[0]);
 			ConsumerGroupView consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
-			
+
 			if (consumer == null) {
 				log.error("Find consumer failed: consumerName=%s, topic=%s.", consumerName, app.getTopicName());
 			}
-			
+
 			contentMap.put("consumer", consumer);
 		}
 
@@ -206,15 +235,19 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 
 		Map<String, Object> contentMap = new HashMap<>();
 		contentMap.put("createTime", m_dateFormatter.format(app.getCreateTime()));
-		contentMap.put("url", String.format("http://%s/%s/%d", m_config.getPortalFwsHost(),
-				"console/application#/approval", app.getId()));
+		contentMap.put(
+				"url",
+				String.format("http://%s/%s/%d", m_config.getPortalFwsHost(), "console/application#/approval",
+						app.getId()));
 		contentMap.put("app", app);
 		contentMap.put("status", status);
 		contentMap.put("topicNames", topicNames);
 		contentMap.put("topicCount", topicNames.length);
-		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus())
+		if (PortalConstants.APP_STATUS_REJECTED == app.getStatus()
+				|| PortalConstants.APP_STATUS_ROLLOUT_REJECTED == app.getStatus()) {
 			contentMap.put("rejectReason", app.getComment());
-		if (PortalConstants.APP_STATUS_SUCCESS == app.getStatus()) {
+		} else if (PortalConstants.APP_STATUS_SYNCED == app.getStatus()
+				|| PortalConstants.APP_STATUS_ROLLOUT_SUCCESS == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicNames[0]);
 			ConsumerGroupView consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
 			if (consumer == null) {
@@ -232,10 +265,16 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		case PortalConstants.APP_STATUS_PROCESSING:
 			statusString = "处理中";
 			break;
-		case PortalConstants.APP_STATUS_SUCCESS:
+		case PortalConstants.APP_STATUS_SYNCED:
+			statusString = "生效";
+			break;
+		case PortalConstants.APP_STATUS_ONLINE:
 			statusString = "生效";
 			break;
 		case PortalConstants.APP_STATUS_REJECTED:
+			statusString = "被拒绝";
+			break;
+		case PortalConstants.APP_STATUS_ROLLOUT_REJECTED:
 			statusString = "被拒绝";
 			break;
 		default:
@@ -263,7 +302,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		sendEmail(title, address, PortalConstants.UPLOAD_SCHEMA_EMAIL_TEMPLATE, contentMap);
 
 	}
-	
+
 	@Override
 	public void sendCreateTopicFromCatMail(com.ctrip.hermes.metaservice.model.Topic topic) {
 		String environment = m_env.getEnv().name();
