@@ -1,25 +1,18 @@
 package com.ctrip.hermes.consumer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.api.MessageListenerConfig;
-import com.ctrip.hermes.consumer.api.MessageStream;
-import com.ctrip.hermes.consumer.api.MessageStreamOffset;
 import com.ctrip.hermes.consumer.api.OffsetStorage;
-import com.ctrip.hermes.consumer.api.PartitionMetaListener;
 import com.ctrip.hermes.consumer.api.PullConsumerConfig;
 import com.ctrip.hermes.consumer.api.PullConsumerHolder;
 import com.ctrip.hermes.consumer.engine.CompositeSubscribeHandle;
@@ -29,19 +22,13 @@ import com.ctrip.hermes.consumer.engine.Subscriber;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.pull.DefaultPullConsumerHolder;
-import com.ctrip.hermes.consumer.stream.DefaultMessageStream;
-import com.ctrip.hermes.consumer.stream.DefaultMessageStreamHolder;
 import com.ctrip.hermes.core.bo.Offset;
-import com.ctrip.hermes.core.bo.Tpg;
-import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 
 @Named(type = com.ctrip.hermes.consumer.api.Consumer.class)
 public class DefaultConsumer extends Consumer {
-	private static final Logger log = LoggerFactory.getLogger(DefaultConsumer.class);
 
 	private static final MessageListenerConfig DEFAULT_MESSAGE_LISTENER_CONFIG = new MessageListenerConfig();
 
@@ -110,54 +97,23 @@ public class DefaultConsumer extends Consumer {
 	}
 
 	@Override
-	public MessageStreamOffset getOffsetByTime(String topicName, int id, long time) {
+	public Offset getOffsetByTime(String topicName, int partition, long time) {
 		Topic topic = m_metaService.findTopicByName(topicName);
-		if (topic == null || topic.findPartition(id) == null) {
-			throw new IllegalArgumentException(String.format("Topic [%s] or partition [%s] not found.", topicName, id));
+		if (topic == null || topic.findPartition(partition) == null) {
+			throw new IllegalArgumentException(String.format("Topic [%s] or partition [%s] not found.", topicName,
+			      partition));
 		}
-		return new MessageStreamOffset(m_metaService.findMessageOffsetByTime(topicName, id, time));
+		return m_metaService.findMessageOffsetByTime(topicName, partition, time);
 	}
 
 	@Override
-	public Map<Integer, MessageStreamOffset> getOffsetByTime(String topicName, long time) {
+	public Map<Integer, Offset> getOffsetByTime(String topicName, long time) {
 		Topic topic = m_metaService.findTopicByName(topicName);
 		if (topic == null) {
 			throw new IllegalArgumentException(String.format("Topic [%s] not found.", topicName));
 		}
 
-		Map<Integer, MessageStreamOffset> offsets = new HashMap<>();
-		Map<Integer, Offset> map = m_metaService.findMessageOffsetByTime(topicName, time);
-		if (map != null) {
-			for (Entry<Integer, Offset> entry : map.entrySet()) {
-				offsets.put(entry.getKey(), new MessageStreamOffset(entry.getValue()));
-			}
-		}
-		return offsets;
-	}
-
-	@Override
-	public <T> MessageStreamHolder<T> openMessageStreams(String topicName, String groupId, Class<T> messageClass,
-	      OffsetStorage offsetStorage, PartitionMetaListener partitionListener) {
-		Topic topic = validateTopicAndConsumerGroup(topicName, groupId);
-
-		StreamMessageListener<T> listener = new StreamMessageListener<T>();
-		List<MessageStream<T>> streams = new ArrayList<>();
-		for (Partition p : topic.getPartitions()) {
-			DefaultMessageStream<T> stream = new DefaultMessageStream<T>(new Tpg(topicName, p.getId(), groupId),
-			      messageClass);
-			streams.add(stream);
-			listener.registerMessageStream(stream);
-		}
-
-		ConsumerHolder consumerHolder = start(topicName, groupId, listener, DEFAULT_MESSAGE_LISTENER_CONFIG,
-		      ConsumerType.MESSAGE_STREAM, offsetStorage, messageClass);
-
-		DefaultMessageStreamHolder<T> streamHolder = new DefaultMessageStreamHolder<T>( //
-		      topicName, groupId, consumerHolder, streams);
-
-		streamHolder.startPartitionWatchdog(partitionListener, m_config.getPartitionWatchdogIntervalSeconds());
-
-		return streamHolder;
+		return m_metaService.findMessageOffsetByTime(topicName, time);
 	}
 
 	private Topic validateTopicAndConsumerGroup(String topicName, String groupId) {
@@ -172,37 +128,64 @@ public class DefaultConsumer extends Consumer {
 		return topic;
 	}
 
-	private static class StreamMessageListener<T> extends BaseMessageListener<T> {
-		private Map<Integer, BlockingQueue<ConsumerMessage<T>>> m_queues = new HashMap<>();
-
-		public void registerMessageStream(DefaultMessageStream<T> stream) {
-			m_queues.put(stream.getParatitionId(), stream.getQueue());
-		}
-
-		@Override
-		protected void onMessage(ConsumerMessage<T> msg) {
-			try {
-				int partitionId = msg.getPartition();
-				m_queues.get(partitionId).put(msg);
-			} catch (InterruptedException e) {
-				log.error("Put message to stream cache failed.", e);
-			}
-		}
-	}
-
 	@Override
 	public <T> PullConsumerHolder<T> openPullConsumer(String topicName, String groupId, Class<T> messageClass,
 	      PullConsumerConfig config) {
+		return openPullConsumer(topicName, groupId, -1L, messageClass, config);
+	}
+
+	@Override
+	public <T> PullConsumerHolder<T> openPullConsumer(String topicName, String groupId, final long startTimeMillis,
+	      Class<T> messageClass, PullConsumerConfig config) {
+
 		ensureSingleTopic(topicName);
 
 		Topic topic = validateTopicAndConsumerGroup(topicName, groupId);
 
+		OffsetStorage offsetStorage = null;
+
+		if (startTimeMillis > 0) {
+			offsetStorage = new OffsetStorage() {
+				ConcurrentMap<Pair<String, Integer>, Offset> m_offsets = new ConcurrentHashMap<>();
+
+				@Override
+				public Offset queryLatestOffset(String topic, int partition) {
+					Pair<String, Integer> key = new Pair<String, Integer>(topic, partition);
+					Offset offset = m_offsets.get(key);
+					if (offset != null) {
+						return offset;
+					} else {
+						return getOffsetByTime(topic, partition, startTimeMillis);
+					}
+				}
+
+				@Override
+				public void updatePulledOffset(String topic, int partition, Offset offset) {
+					Pair<String, Integer> key = new Pair<String, Integer>(topic, partition);
+					Offset existingOffset = m_offsets.get(key);
+					if (existingOffset == null) {
+						m_offsets.putIfAbsent(key, new Offset(0L, 0L, null));
+						existingOffset = m_offsets.get(key);
+					}
+					synchronized (this) {
+						if (existingOffset.getPriorityOffset() < offset.getPriorityOffset()) {
+							existingOffset.setPriorityOffset(offset.getPriorityOffset());
+						}
+						if (existingOffset.getNonPriorityOffset() < offset.getNonPriorityOffset()) {
+							existingOffset.setNonPriorityOffset(offset.getNonPriorityOffset());
+						}
+					}
+				}
+			};
+		}
+
 		DefaultPullConsumerHolder<T> holder = new DefaultPullConsumerHolder<T>(topicName, groupId, topic.getPartitions()
-		      .size(), config, PlexusComponentLocator.lookup(AckManager.class), m_config);
+		      .size(), config, PlexusComponentLocator.lookup(AckManager.class), offsetStorage, m_config);
 
 		MessageListenerConfig listenerConfig = new MessageListenerConfig();
-		ConsumerHolder consumerHolder = start(topicName, groupId, holder, listenerConfig, ConsumerType.PULL, null,
-		      messageClass);
+
+		ConsumerHolder consumerHolder = start(topicName, groupId, holder, listenerConfig, ConsumerType.PULL,
+		      offsetStorage, messageClass);
 		holder.setConsumerHolder(consumerHolder);
 
 		return holder;

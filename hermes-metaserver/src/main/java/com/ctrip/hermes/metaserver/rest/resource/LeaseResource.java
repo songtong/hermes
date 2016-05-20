@@ -313,7 +313,7 @@ public class LeaseResource {
 
 			HttpResponse response = post(uriBuilder.build().toURL(), payload);
 
-			if (response.getStatsCode() == HttpStatus.SC_OK && response.hasResponseContent()) {
+			if (response.getStatusCode() == HttpStatus.SC_OK && response.hasResponseContent()) {
 				String responseContent = new String(response.getRespContent(), "UTF-8");
 				if (!StringUtils.isBlank(responseContent)) {
 					return JSON.parseObject(responseContent, LeaseAcquireResponse.class);
@@ -324,7 +324,7 @@ public class LeaseResource {
 			} else {
 				if (log.isDebugEnabled()) {
 					log.debug("Response error while proxy passing to http://{}:{}{}.(status={}}).", host, port, uri,
-					      response.getStatsCode());
+					      response.getStatusCode());
 				}
 				return new LeaseAcquireResponse(false, null, m_systemClockService.now() + PROXY_PASS_FAIL_DELAY_TIME_MILLIS);
 			}
@@ -388,7 +388,7 @@ public class LeaseResource {
 				}
 			}
 
-			response.setStatsCode(conn.getResponseCode());
+			response.setStatusCode(conn.getResponseCode());
 
 		} finally {
 			if (conn != null) {
@@ -404,16 +404,16 @@ public class LeaseResource {
 	}
 
 	private static class HttpResponse {
-		private int statsCode = -1;
+		private int statusCode = -1;
 
 		private byte[] respContent;
 
-		public int getStatsCode() {
-			return statsCode;
+		public int getStatusCode() {
+			return statusCode;
 		}
 
-		public void setStatsCode(int statsCode) {
-			this.statsCode = statsCode;
+		public void setStatusCode(int statusCode) {
+			this.statusCode = statusCode;
 		}
 
 		public boolean hasResponseContent() {

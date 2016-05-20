@@ -59,7 +59,7 @@ public class DefaultPullConsumerHolderTest {
 		config.setManualCommitInterval(50);
 		ackManager = mock(AckManager.class);
 
-		holder = new DefaultPullConsumerHolder<>(topic, groupId, partitionCount, config, ackManager,
+		holder = new DefaultPullConsumerHolder<>(topic, groupId, partitionCount, config, ackManager, null,
 		      PlexusComponentLocator.lookup(ConsumerConfig.class));
 	}
 
