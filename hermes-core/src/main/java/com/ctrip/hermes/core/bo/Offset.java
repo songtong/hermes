@@ -5,14 +5,14 @@ import java.util.Date;
 import org.unidal.tuple.Pair;
 
 public class Offset {
-	private long m_priorityOffset;
+	private long m_priorityOffset = 0L;
 
-	private long m_nonPriorityOffset;
+	private long m_nonPriorityOffset = 0L;
 
 	private Pair<Date, Long> m_resendOffset;
 
 	public Offset() {
-		this(-1, -1, null);
+		this(0L, 0L, null);
 	}
 
 	public Offset(long pOffset, long npOffset, Pair<Date, Long> rOffset) {

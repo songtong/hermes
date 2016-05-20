@@ -1,6 +1,11 @@
 package com.ctrip.hermes.metaserver.rest.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -9,22 +14,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.util.EntityUtils;
+import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.helper.Files.IO;
+
+import sun.net.www.protocol.http.HttpURLConnection;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
@@ -55,6 +63,10 @@ import com.google.common.util.concurrent.SettableFuture;
 public class MessageAssistResource {
 	private static final Logger log = LoggerFactory.getLogger(MessageAssistResource.class);
 
+	private static final String HEADER_PROXY_KEY = "hmProxy";
+
+	private static final String HEADER_PROXY_VALUE = "true";
+
 	private BrokerAssignmentHolder m_brokerAssignments = PlexusComponentLocator.lookup(BrokerAssignmentHolder.class);
 
 	private MetaHolder m_metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
@@ -74,13 +86,14 @@ public class MessageAssistResource {
 	public Response queryMessageIdByTime( //
 	      @QueryParam("topic") String topic, //
 	      @QueryParam("partition") @DefaultValue("-1") int partition, //
-	      @QueryParam("time") @DefaultValue("-1") long time) {
+	      @QueryParam("time") @DefaultValue("-1") long time,//
+	      @Context HttpServletRequest req) {
 		time = -1 == time ? Long.MAX_VALUE : -2 == time ? Long.MIN_VALUE : time;
 
-		Map<Integer, Offset> result;
+		Map<Integer, Offset> result = null;
 		if (m_clusterStateHolder.hasLeadership()) {
 			result = findOffsetFromBroker(topic, partition, time);
-		} else {
+		} else if (!isFromAnotherMetaServer(req)) {
 			Map<String, String> params = new HashMap<String, String>();
 			params.put("topic", topic);
 			params.put("partition", String.valueOf(partition));
@@ -98,6 +111,11 @@ public class MessageAssistResource {
 		return Response.status(Status.OK).entity(result).build();
 	}
 
+	private boolean isFromAnotherMetaServer(HttpServletRequest req) {
+		String proxyHeader = req.getHeader(HEADER_PROXY_KEY);
+		return StringUtils.equals(proxyHeader, HEADER_PROXY_VALUE);
+	}
+
 	private Map<Integer, Offset> findOffsetFromBroker(final String topicName, final int partition, final long time) {
 		final Map<Integer, Offset> result = new ConcurrentHashMap<Integer, Offset>();
 		Topic topic = m_metaHolder.getMeta().findTopic(topicName);
@@ -109,16 +127,20 @@ public class MessageAssistResource {
 					return null;
 				}
 
+				List<Integer> partitions = new ArrayList<>(topic.getPartitions().size());
+
 				if (partition >= 0 && topic.findPartition(partition) != null) {
-					Map<String, ClientContext> partitionAssignment = assignment.getAssignment(partition);
-					if (partitionAssignment != null && partitionAssignment.size() > 0) {
-						ClientContext context = partitionAssignment.entrySet().iterator().next().getValue();
-						result.put(partition, findOffsetByTime(topicName, partition, time, getBrokerEndpoint(context)));
-					}
+					partitions.add(partition);
 				} else if (partition == -1) {
-					final CountDownLatch latch = new CountDownLatch(topic.getPartitions().size());
 					for (Partition p : topic.getPartitions()) {
-						final int id = p.getId();
+						partitions.add(p.getId());
+					}
+				}
+
+				if (!partitions.isEmpty()) {
+					final CountDownLatch latch = new CountDownLatch(partitions.size());
+					for (Integer partitionId : partitions) {
+						final int id = partitionId;
 						m_offsetQueryExecutor.execute(new Runnable() {
 							@Override
 							public void run() {
@@ -137,8 +159,10 @@ public class MessageAssistResource {
 							}
 						});
 					}
+
 					latch.await(m_config.getQueryMessageOffsetTimeoutMillis(), TimeUnit.MILLISECONDS);
 				}
+
 				return result;
 			} catch (Exception e) {
 				log.error("Query message offset failed: {}:{} {}", topicName, partition, time, e);
@@ -159,7 +183,7 @@ public class MessageAssistResource {
 
 	private Offset findOffsetByTime(String topic, int partition, long time, Endpoint endpoint) throws Exception {
 		long timeout = m_config.getQueryMessageOffsetTimeoutMillis();
-		ExponentialSchedulePolicy backoff = new ExponentialSchedulePolicy(500, (int) timeout);
+		ExponentialSchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(500, (int) timeout);
 
 		long expire = System.currentTimeMillis() + timeout;
 		while (!Thread.interrupted() && System.currentTimeMillis() < expire) {
@@ -175,14 +199,14 @@ public class MessageAssistResource {
 					if (resultCmd != null && resultCmd.getOffset() != null) {
 						return resultCmd.getOffset();
 					} else {
-						log.debug("Find offset[topic:{}({})] from broker[{}] failed, will retry!", topic, partition, endpoint);
-						backoff.fail(true);
+						schedulePolicy.fail(true);
 					}
 				} finally {
 					m_monitor.remove(cmd);
 				}
 			} else {
 				m_monitor.remove(cmd);
+				schedulePolicy.fail(true);
 			}
 		}
 		return null;
@@ -206,21 +230,17 @@ public class MessageAssistResource {
 				}
 			}
 
-			HttpResponse response = Request.Get(uriBuilder.build())//
-			      .connectTimeout(m_config.getProxyPassConnectTimeout())//
-			      .socketTimeout(m_config.getProxyPassReadTimeout())//
-			      .execute()//
-			      .returnResponse();
+			HttpResponse response = get(uriBuilder.build().toURL());
 
-			if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-				String responseContent = EntityUtils.toString(response.getEntity());
+			if (response != null && response.getStatusCode() == HttpStatus.SC_OK && response.hasResponseContent()) {
+				String responseContent = new String(response.getRespContent(), "UTF-8");
 				if (!StringUtils.isBlank(responseContent)) {
 					return (Map<Integer, Offset>) JSON.parse(responseContent);
 				}
 			} else {
 				if (log.isDebugEnabled()) {
-					log.debug("Response error while proxy passing to {}:{}(status={}}).", host, port, response
-					      .getStatusLine().getStatusCode());
+					log.debug("Response error while proxy passing to {}:{}(status={}}).", host, port,
+					      response.getStatusCode());
 				}
 			}
 		} catch (Exception e) {
@@ -229,5 +249,75 @@ public class MessageAssistResource {
 			}
 		}
 		return null;
+	}
+
+	private HttpResponse get(URL url) throws IOException {
+		HttpResponse response = new HttpResponse();
+		HttpURLConnection conn = null;
+		try {
+			conn = (HttpURLConnection) url.openConnection();
+			conn.setRequestMethod("GET");
+			conn.addRequestProperty(HEADER_PROXY_KEY, HEADER_PROXY_VALUE);
+			conn.addRequestProperty("Content-type", ContentType.APPLICATION_JSON.toString());
+			conn.setConnectTimeout(m_config.getProxyPassConnectTimeout());
+			conn.setReadTimeout(m_config.getProxyPassReadTimeout());
+
+			conn.connect();
+
+			InputStream is = null;
+
+			try {
+				is = conn.getInputStream();
+				response.setRespContent(IO.INSTANCE.readFrom(is));
+			} finally {
+				if (is != null) {
+					try {
+						is.close();
+					} catch (Exception e) {
+						// ignore;
+					}
+				}
+			}
+
+			response.setStatsCode(conn.getResponseCode());
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.disconnect();
+				} catch (Exception e) {
+					// ignore;
+				}
+			}
+		}
+
+		return response;
+	}
+
+	private static class HttpResponse {
+		private int statsCode = -1;
+
+		private byte[] respContent;
+
+		public int getStatusCode() {
+			return statsCode;
+		}
+
+		public void setStatsCode(int statsCode) {
+			this.statsCode = statsCode;
+		}
+
+		public boolean hasResponseContent() {
+			return respContent != null && respContent.length > 0;
+		}
+
+		public byte[] getRespContent() {
+			return respContent;
+		}
+
+		public void setRespContent(byte[] respContent) {
+			this.respContent = respContent;
+		}
+
 	}
 }

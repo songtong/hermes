@@ -1,6 +1,8 @@
 package com.ctrip.hermes.broker.queue.storage.mysql;
 
 import static com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity.READSET_OFFSET;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,9 +64,6 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -666,9 +665,11 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 			return 0L;
 		}
 
-		return Long.MIN_VALUE == time ? oldestMsg.getId() //
+		long offset = Long.MIN_VALUE == time ? oldestMsg.getId() //
 		      : Long.MAX_VALUE == time ? latestMsg.getId() //
 		            : findMessageOffsetByTimeInRange(tpp, oldestMsg, latestMsg, time);
+
+		return offset <= 0 ? 0L : offset - 1L;
 	}
 
 	private MessagePriority findOldestMessageOffset(Tpp tpp) {
@@ -694,6 +695,10 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	private long findMessageOffsetByTimeInRange(Tpp tpp, MessagePriority left, MessagePriority right, long time) {
 		long precisionMillis = m_config.getMessageOffsetQueryPrecisionMillis();
 
+		if (left.getId() == right.getId()) {
+			return compareWithPrecision(left.getCreationDate().getTime(), time, precisionMillis) == 0 ? left.getId() : 0L;
+		}
+
 		if (compareWithPrecision(left.getCreationDate().getTime(), time, precisionMillis) >= 0) {
 			return left.getId();
 		}
@@ -707,25 +712,30 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 			long rightId = right.getId();
 			while (leftId <= rightId) {
 				long midId = leftId + (rightId - leftId) / 2L;
-				MessagePriority mid = m_msgDao.findOffsetById( //
-				      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), midId, READSET_OFFSET);
-				switch (compareWithPrecision(mid.getCreationDate().getTime(), time, precisionMillis)) {
-				case 0:
-					return mid.getId();
-				case 1:
-					rightId = mid.getId() - 1;
-					break;
-				case -1:
-					leftId = mid.getId() + 1;
-					break;
-				default:
-					throw new RuntimeException("Impossible compare status!");
+
+				MessagePriority smallestIdGEMidId = m_msgDao.findOffsetGreaterOrEqual(tpp.getTopic(), tpp.getPartition(),
+				      tpp.getPriorityInt(), midId, READSET_OFFSET);
+
+				MessagePriority largestIdLEMidId = m_msgDao.findOffsetLessOrEqual(tpp.getTopic(), tpp.getPartition(),
+				      tpp.getPriorityInt(), midId, READSET_OFFSET);
+
+				if (compareWithPrecision(smallestIdGEMidId.getCreationDate().getTime(), time, precisionMillis) < 0) {
+					leftId = smallestIdGEMidId.getId() + 1;
+				} else if (compareWithPrecision(largestIdLEMidId.getCreationDate().getTime(), time, precisionMillis) > 0) {
+					rightId = largestIdLEMidId.getId() - 1;
+				} else if (compareWithPrecision(largestIdLEMidId.getCreationDate().getTime(), time, precisionMillis) == 0) {
+					return largestIdLEMidId.getId();
+				} else if (compareWithPrecision(smallestIdGEMidId.getCreationDate().getTime(), time, precisionMillis) == 0) {
+					return smallestIdGEMidId.getId();
+				} else {
+					return largestIdLEMidId.getId();
 				}
 			}
-			MessagePriority msg = m_msgDao.findOffsetById( //
-			      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), rightId, READSET_OFFSET);
+
+			MessagePriority msg = m_msgDao.findOffsetGreaterOrEqual(tpp.getTopic(), tpp.getPartition(),
+			      tpp.getPriorityInt(), rightId, READSET_OFFSET);
 			return msg.getId();
-		} catch (DalException e) {
+		} catch (Exception e) {
 			if (log.isDebugEnabled()) {
 				log.debug("Find message by offset failed. {}", tpp, e);
 			}
@@ -734,7 +744,12 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	}
 
 	private int compareWithPrecision(long src, long dst, long precisionMillis) {
-		return src < dst - precisionMillis ? -1 : src > dst + precisionMillis ? 1 : 0;
+		long diff = src - dst;
+		if (Math.abs(diff) <= precisionMillis) {
+			return 0;
+		} else {
+			return diff > 0L ? 1 : -1;
+		}
 	}
 
 	private boolean hasStorageForPriority(String topicName, int priority) {

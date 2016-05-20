@@ -16,15 +16,21 @@ import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.consumer.api.MessageListener;
+import com.ctrip.hermes.consumer.api.OffsetStorage;
 import com.ctrip.hermes.consumer.api.PullConsumerConfig;
 import com.ctrip.hermes.consumer.api.PullConsumerHolder;
 import com.ctrip.hermes.consumer.api.PulledBatch;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
+import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Transaction;
 
 public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, MessageListener<T> {
 
@@ -54,11 +60,14 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 
 	private ExecutorService m_callbackExecutor;
 
+	private OffsetStorage m_offsetStorage;
+
 	public DefaultPullConsumerHolder(String topic, String groupId, int partitionCount, PullConsumerConfig config,
-	      AckManager ackManager, ConsumerConfig consumerConfig) {
+	      AckManager ackManager, OffsetStorage offsetStorage, ConsumerConfig consumerConfig) {
 		m_topic = topic;
 		m_config = config;
 		m_partitionCount = partitionCount;
+		m_offsetStorage = offsetStorage;
 
 		m_partitionMsgs = new ArrayList<>(partitionCount);
 		for (int i = 0; i < partitionCount; i++) {
@@ -82,6 +91,13 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 				}
 
 				m_partitionMsgs.get(msg.getPartition() % m_partitionCount).put((PullBrokerConsumerMessage<T>) msg);
+				if (m_offsetStorage != null) {
+					m_offsetStorage.updatePulledOffset(//
+					      msg.getTopic(), //
+					      msg.getPartition(), //
+					      msg.isPriority() ? new Offset(msg.getOffset(), 0L, null) : new Offset(0L, msg.getOffset(), null)//
+					      );
+				}
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				break;
@@ -91,12 +107,36 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 
 	@Override
 	public PulledBatch<T> poll(int maxMessageCount, int timeout) {
-		return retrive(maxMessageCount, timeout, RetrivePolicy.FAVOUR_FAST_RETURN);
+		long startTime = System.currentTimeMillis();
+		Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_POLL_TRIED, m_topic);
+		try {
+			PulledBatch<T> batch = retrive(maxMessageCount, timeout, RetrivePolicy.FAVOUR_FAST_RETURN);
+			if (batch.getMessages() != null && !batch.getMessages().isEmpty()) {
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_CONSUME_POLL_ELAPSE, m_topic, startTime, batch.getMessages()
+				      .size(), null, Transaction.SUCCESS);
+			}
+			return batch;
+		} finally {
+			t.setStatus(Transaction.SUCCESS);
+			t.complete();
+		}
 	}
 
 	@Override
 	public PulledBatch<T> collect(int maxMessageCount, int timeout) {
-		return retrive(maxMessageCount, timeout, RetrivePolicy.FAVOUR_MORE_MESSAGE);
+		long startTime = System.currentTimeMillis();
+		Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_COLLECT_TRIED, m_topic);
+		try {
+			PulledBatch<T> batch = retrive(maxMessageCount, timeout, RetrivePolicy.FAVOUR_MORE_MESSAGE);
+			if (batch.getMessages() != null && !batch.getMessages().isEmpty()) {
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_CONSUME_COLLECT_ELAPSE, m_topic, startTime, batch.getMessages()
+				      .size(), null, Transaction.SUCCESS);
+			}
+			return batch;
+		} finally {
+			t.setStatus(Transaction.SUCCESS);
+			t.complete();
+		}
 	}
 
 	@SuppressWarnings("unchecked")

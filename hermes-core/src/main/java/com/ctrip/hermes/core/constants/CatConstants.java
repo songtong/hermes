@@ -24,6 +24,14 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_PRODUCE_ELAPSE = "Message.Produce.Elapse";
 
+	public static final String TYPE_MESSAGE_CONSUME_POLL_ELAPSE = "Message.Consume.Poll.Elapse";
+
+	public static final String TYPE_MESSAGE_CONSUME_POLL_TRIED = "Message.Consume.Poll.Tried";
+
+	public static final String TYPE_MESSAGE_CONSUME_COLLECT_ELAPSE = "Message.Consume.Collect.Elapse";
+
+	public static final String TYPE_MESSAGE_CONSUME_COLLECT_TRIED = "Message.Consume.Collect.Tried";
+
 	public static final String TYPE_MESSAGE_PRODUCE_ELAPSE_LARGE = "Message.Produce.Elapse.Large";
 
 	public static final String TYPE_MESSAGE_PRODUCE_TRANSPORT = "Message.Produce.Transport";

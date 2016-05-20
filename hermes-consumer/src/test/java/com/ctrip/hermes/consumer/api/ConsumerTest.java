@@ -1,11 +1,9 @@
 package com.ctrip.hermes.consumer.api;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.junit.Test;
 
-import com.ctrip.hermes.consumer.api.Consumer.MessageStreamHolder;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 
 public class ConsumerTest {
@@ -21,23 +19,6 @@ public class ConsumerTest {
 		});
 
 		System.in.read();
-	}
-
-	@Test
-	public void testCreateMessageStreams() {
-		MessageStreamHolder<String> holder = Consumer.getInstance().openMessageStreams("order_new", "group1",
-		      String.class, null, null);
-		for (MessageStream<String> s : holder.getStreams()) {
-			processStream(s);
-		}
-	}
-
-	private void processStream(MessageStream<String> s) {
-		@SuppressWarnings("unused")
-		Map<Integer, MessageStreamOffset> curOffset = Consumer.getInstance().getOffsetByTime("order_new", Long.MAX_VALUE);
-		for (ConsumerMessage<String> msg : s) {
-			System.out.println(msg.getBody());
-		}
 	}
 
 }

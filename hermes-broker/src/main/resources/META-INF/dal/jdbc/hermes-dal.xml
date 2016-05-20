@@ -79,15 +79,31 @@
         		]]>
 				</statement>
 			</query>
-			<query name="find-offset-by-id" type="SELECT" multiple="false">
+			<query name="find-offset-greater-or-equal" type="SELECT" multiple="false">
 				<param name="topic" />
 				<param name="partition" />
 				<param name="priority" />
-				<param name="key-id" />
+				<param name="id" />
 				<statement><![CDATA[
 				SELECT <FIELDS/>
         		FROM <TABLE/>
-        		WHERE <FIELD name='id'/> = ${key-id}
+        		WHERE <FIELD name='id'/> >= ${id}
+        		ORDER BY <FIELD name='id'/> ASC
+        		LIMIT 1
+        		]]>
+				</statement>
+			</query>
+			<query name="find-offset-less-or-equal" type="SELECT" multiple="false">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<param name="id" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='id'/> <= ${id}
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT 1
         		]]>
 				</statement>
 			</query>

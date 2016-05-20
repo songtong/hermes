@@ -17,7 +17,6 @@ import com.ctrip.hermes.consumer.engine.bootstrap.strategy.ConsumingStrategy;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultConsumingRegistry;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.DefaultConsumingStrategy;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.PullConsumingStrategy;
-import com.ctrip.hermes.consumer.engine.bootstrap.strategy.StreamConsumingStrategy;
 import com.ctrip.hermes.consumer.engine.bootstrap.strategy.StrictlyOrderedConsumingStrategy;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve;
@@ -64,8 +63,6 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      StrictlyOrderedConsumingStrategy.class)//
 		      .req(ConsumerConfig.class)//
 		);
-		all.add(C(ConsumingStrategy.class, ConsumerType.MESSAGE_STREAM.toString(), StreamConsumingStrategy.class)//
-		      .req(ConsumerConfig.class));
 		all.add(C(ConsumingStrategy.class, ConsumerType.PULL.toString(), PullConsumingStrategy.class)//
 		      .req(ConsumerConfig.class));
 
