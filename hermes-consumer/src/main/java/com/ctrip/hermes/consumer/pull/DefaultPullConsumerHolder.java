@@ -95,7 +95,7 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 					m_offsetStorage.updatePulledOffset(//
 					      msg.getTopic(), //
 					      msg.getPartition(), //
-					      msg.isPriority() ? new Offset(msg.getOffset(), -1L, null) : new Offset(-1L, msg.getOffset(), null)//
+					      msg.isPriority() ? new Offset(msg.getOffset(), 0L, null) : new Offset(0L, msg.getOffset(), null)//
 					      );
 				}
 			} catch (InterruptedException e) {

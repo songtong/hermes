@@ -134,7 +134,6 @@ public class DefaultConsumer extends Consumer {
 		return openPullConsumer(topicName, groupId, -1L, messageClass, config);
 	}
 
-	@Override
 	public <T> PullConsumerHolder<T> openPullConsumer(String topicName, String groupId, final long startTimeMillis,
 	      Class<T> messageClass, PullConsumerConfig config) {
 
