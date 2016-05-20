@@ -409,7 +409,7 @@ public class ApplicationResource {
 			throw new RestException("Update application status failed!", Status.INTERNAL_SERVER_ERROR);
 		}
 
-		if (status == PortalConstants.APP_STATUS_SYNCED || status == PortalConstants.APP_STATUS_ROLLOUT_SUCCESS) {
+		if (status == PortalConstants.APP_STATUS_SYNCED || status == PortalConstants.APP_STATUS_ONLINE) {
 			try {
 				m_mailService.sendApplicationMail(app);
 			} catch (Exception e) {
