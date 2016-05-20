@@ -2,7 +2,6 @@ package com.ctrip.hermes.portal.service.application;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +9,6 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
@@ -20,7 +17,6 @@ import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.config.PortalConfig;
-import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.dal.application.Application;
 import com.ctrip.hermes.portal.dal.application.HermesApplicationDao;
 import com.ctrip.hermes.portal.service.mail.PortalMailService;
