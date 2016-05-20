@@ -15,9 +15,6 @@ public abstract class Consumer {
 	public abstract <T> PullConsumerHolder<T> openPullConsumer(String topic, String groupId, Class<T> messageClass,
 	      PullConsumerConfig config);
 
-	public abstract <T> PullConsumerHolder<T> openPullConsumer(String topic, String groupId, long startTime,
-	      Class<T> messageClass, PullConsumerConfig config);
-
 	public abstract Map<Integer, Offset> getOffsetByTime(String topic, long time);
 
 	public abstract Offset getOffsetByTime(String topic, int partitionId, long time);
