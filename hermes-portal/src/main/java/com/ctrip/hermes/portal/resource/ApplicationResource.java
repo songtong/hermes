@@ -37,7 +37,6 @@ import com.ctrip.hermes.portal.service.application.ApplicationService;
 import com.ctrip.hermes.portal.service.mail.PortalMailService;
 import com.ctrip.hermes.protal.util.ResponseUtils;
 
-
 @Path("/applications/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
@@ -130,7 +129,7 @@ public class ApplicationResource {
 		if (app == null) {
 			throw new RestException("Save consumer application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
-		
+
 		try {
 			m_mailService.sendApplicationMail(app);
 		} catch (Exception e) {
@@ -267,10 +266,12 @@ public class ApplicationResource {
 
 	@GET
 	@Path("{status}")
-	public Response getApplicationsByStatus(@PathParam("status") int status, @QueryParam("owner") String owner, @QueryParam("offset") int offset, @QueryParam("size") int size) {
+	public Response getApplicationsByStatus(@PathParam("status") int status, @QueryParam("owner") String owner,
+			@QueryParam("offset") int offset, @QueryParam("size") int size) {
 		List<HermesApplication> apps = appService.getApplicationsByOwnerStatus(owner, status, offset, size);
 		int count = appService.countApplicationsByOwnerStatus(owner, status);
-		return Response.status(Status.OK).entity(ResponseUtils.wrapPaginationResponse(Status.OK, apps.toArray(), count)).build();
+		return Response.status(Status.OK)
+				.entity(ResponseUtils.wrapPaginationResponse(Status.OK, apps.toArray(), count)).build();
 	}
 
 	@GET
@@ -292,7 +293,7 @@ public class ApplicationResource {
 			throw new RestException("Generate view failed.");
 		}
 	}
-	
+
 	@POST
 	@Path("generatedByType/{type}")
 	public Response getGeneratedApplication(@PathParam("type") int type, String content) {
@@ -303,7 +304,7 @@ public class ApplicationResource {
 			log.error("Can not parse payload : {}, submit topic application failed.", content);
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
-		
+
 		switch (HermesApplicationType.findByTypeCode(app.getType())) {
 		case CREATE_TOPIC:
 			TopicView topicView = appService.generateTopicView((TopicApplication) app);
@@ -332,7 +333,7 @@ public class ApplicationResource {
 		if (app == null) {
 			throw new RestException("Update application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
-		
+
 		try {
 			m_mailService.sendApplicationMail(app);
 		} catch (Exception e) {
@@ -348,22 +349,22 @@ public class ApplicationResource {
 		if (id < 0) {
 			throw new RestException("Application id unavailable");
 		}
-		
+
 		HermesApplication app = appService.getApplicationById(id);
 		if (app == null) {
 			throw new RestException("Failed to find application!", Status.BAD_REQUEST);
 		}
-		
+
 		int status = PortalConstants.APP_STATUS_REJECTED;
 		if (app.getStatus() == PortalConstants.APP_STATUS_ROLLOUT) {
 			status = PortalConstants.APP_STATUS_ROLLOUT_REJECTED;
 		}
-		
+
 		app = appService.updateStatus(id, status, comment, approver);
 		if (app == null) {
 			throw new RestException("Reject application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
-		
+
 		try {
 			m_mailService.sendApplicationMail(app);
 		} catch (Exception e) {
@@ -392,16 +393,10 @@ public class ApplicationResource {
 		if (app == null) {
 			throw new RestException("Pass application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
-		
-		try {
-			m_mailService.sendApplicationMail(app);
-		} catch (Exception e) {
-			log.error("Send email of hermes application id={} failed.", app.getId(), e);
-		}
 
 		return Response.status(Status.OK).entity(app).build();
 	}
-	
+
 	@PUT
 	@Path("status/{id}")
 	public Response updateApplicationStatus(@PathParam("id") long id, @QueryParam("status") int status,
@@ -412,6 +407,15 @@ public class ApplicationResource {
 		HermesApplication app = appService.updateStatus(id, status, comment, approver);
 		if (app == null) {
 			throw new RestException("Update application status failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		if (status == PortalConstants.APP_STATUS_SYNCED || status == PortalConstants.APP_STATUS_ROLLOUT_SUCCESS) {
+			try {
+				m_mailService.sendApplicationMail(app);
+			} catch (Exception e) {
+				log.error("Send email of hermes application id={} failed.", app.getId(), e);
+			}
+
 		}
 
 		return Response.status(Status.OK).entity(app).build();
