@@ -174,7 +174,16 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 						decodeComment();
 						handleSuccess('Done initializing topic on env: ' + env);
 					}, handleError);
-				} else {
+					
+				} else if($scope.application.status == 6){
+					ApplicationService.update_application_status($scope.application.id, 7, encodeComment(), user.sn, $scope.application).then(function(result) {
+						$scope.application = result;
+						decodeComment();
+						handleSuccess('Done initializing topic on env: ' + env);
+					}, handleError);
+					
+				}
+				else {
 					handleSuccess('Done initializing topic on env: ' + env);
 				}
 			}, function() {
@@ -238,7 +247,14 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 						decodeComment();
 						handleSuccess('Done initializing consumer on env: ' + env);
 					}, handleError);
-				} else {
+				} else if($scope.application.status == 6){
+					ApplicationService.update_application_status($scope.application.id, 7, encodeComment(), user.sn, $scope.application).then(function(result) {
+						$scope.application = result;
+						decodeComment();
+						handleSuccess('Done initializing topic on env: ' + env);
+					}, handleError);
+					
+				}else {
 					handleSuccess('Done initializing consumer on env: ' + env);
 				}
 			}]
