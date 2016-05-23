@@ -133,7 +133,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 					"uatTopicUrl",
 					String.format("http://%s/%s/%s/%s/%s", m_config.getPortalUatHost(), "console/topic#/detail",
 							topic.getStorageType(), topic.getStorageType(), topic.getName()));
-		} else if (PortalConstants.APP_STATUS_ROLLOUT_SUCCESS == app.getStatus()) {
+		} else if (PortalConstants.APP_STATUS_ONLINE == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicName);
 			contentMap.put("topic", topic);
 			contentMap.put(
@@ -175,7 +175,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 					String.format("http://%s/%s/%s/%s/%s", m_config.getPortalUatHost(), "console/topic#/detail",
 							topic.getStorageType(), topic.getStorageType(), topic.getName()));
 
-		} else if (PortalConstants.APP_STATUS_ROLLOUT_SUCCESS == app.getStatus()) {
+		} else if (PortalConstants.APP_STATUS_ONLINE == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicName);
 			contentMap.put("topic", topic);
 			contentMap.put(
@@ -210,7 +210,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 				|| PortalConstants.APP_STATUS_ROLLOUT_REJECTED == app.getStatus()) {
 			contentMap.put("rejectReason", app.getComment());
 		} else if (PortalConstants.APP_STATUS_SYNCED == app.getStatus()
-				|| PortalConstants.APP_STATUS_ROLLOUT_SUCCESS == app.getStatus()) {
+				|| PortalConstants.APP_STATUS_ONLINE == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicNames[0]);
 			ConsumerGroupView consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
 
@@ -247,7 +247,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 				|| PortalConstants.APP_STATUS_ROLLOUT_REJECTED == app.getStatus()) {
 			contentMap.put("rejectReason", app.getComment());
 		} else if (PortalConstants.APP_STATUS_SYNCED == app.getStatus()
-				|| PortalConstants.APP_STATUS_ROLLOUT_SUCCESS == app.getStatus()) {
+				|| PortalConstants.APP_STATUS_ONLINE == app.getStatus()) {
 			TopicView topic = m_topicService.findTopicViewByName(topicNames[0]);
 			ConsumerGroupView consumer = m_consumerService.findConsumerView(topic.getId(), consumerName);
 			if (consumer == null) {
