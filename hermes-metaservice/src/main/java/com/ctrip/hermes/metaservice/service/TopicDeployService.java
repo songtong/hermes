@@ -28,6 +28,9 @@ public class TopicDeployService {
 	public static final int DEFAULT_KAFKA_PARTITIONS = 3;
 
 	public static final int DEFAULT_KAFKA_REPLICATION_FACTOR = 2;
+	
+	// 1 hour
+	public static final int DEFAULT_KAFKA_SEGMENT_MS = 3600000;
 
 	private List<String> validKafkaConfigKeys = new ArrayList<String>();
 
@@ -82,6 +85,7 @@ public class TopicDeployService {
 		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
 		int replication = DEFAULT_KAFKA_REPLICATION_FACTOR;
 		Properties topicProp = new Properties();
+		topicProp.put("segment.ms", DEFAULT_KAFKA_SEGMENT_MS);
 		for (Property prop : topic.getProperties()) {
 			if ("replication-factor".equals(prop.getName())) {
 				replication = Integer.parseInt(prop.getValue());
