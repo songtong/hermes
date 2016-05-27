@@ -167,7 +167,7 @@ public class MessageAssistResource {
 										}
 									}
 								} catch (Exception e) {
-									log.error("Query message offset failed: {}:{} {}", topicName, partition, time, e);
+									log.warn("Query message offset failed: {}:{} {}", topicName, partition, time, e);
 								} finally {
 									latch.countDown();
 								}
@@ -179,12 +179,9 @@ public class MessageAssistResource {
 
 				if (result.size() == partitions.size()) {
 					return result;
-				} else {
-					log.error("Query message offset failed: {}:{} {}, reason: query result is not completely", //
-					      topicName, partition, time);
 				}
 			} catch (Exception e) {
-				log.error("Query message offset failed: {}:{} {}", topicName, partition, time, e);
+				log.warn("Query message offset failed: {}:{} {}", topicName, partition, time, e);
 			}
 			throw new RestException("Query message offset failed.", Status.INTERNAL_SERVER_ERROR);
 		} else {
