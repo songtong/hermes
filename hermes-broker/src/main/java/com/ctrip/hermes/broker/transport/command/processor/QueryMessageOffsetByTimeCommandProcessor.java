@@ -60,7 +60,7 @@ public class QueryMessageOffsetByTimeCommandProcessor extends ContainerHolder im
 				logDebug(reqCmd, "No broker lease to handle client request.");
 			}
 		} catch (Exception e) {
-			logError(reqCmd, "Find message offset failed.", e);
+			logDebugWithError(reqCmd, "Find message offset failed.", e);
 		}
 		response(ctx.getChannel(), correlationId, null);
 	}
@@ -78,8 +78,8 @@ public class QueryMessageOffsetByTimeCommandProcessor extends ContainerHolder im
 		}
 	}
 
-	private void logError(QueryMessageOffsetByTimeCommand cmd, String errorInfo, Exception e) {
-		log.error(errorInfo + " (correlationId={}, topic={}, partition={}, time={})", cmd.getHeader().getCorrelationId(),
+	private void logDebugWithError(QueryMessageOffsetByTimeCommand cmd, String errorInfo, Exception e) {
+		log.debug(errorInfo + " (correlationId={}, topic={}, partition={}, time={})", cmd.getHeader().getCorrelationId(),
 		      cmd.getTopic(), cmd.getPartition(), cmd.getTime(), e);
 	}
 

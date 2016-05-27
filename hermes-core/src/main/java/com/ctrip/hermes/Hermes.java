@@ -2,7 +2,7 @@ package com.ctrip.hermes;
 
 public class Hermes {
 
-	public final static String VERSION = "java-0.7.2.2";
+	public final static String VERSION = "java-0.7.2.3";
 
 	private static Env m_env;
 
