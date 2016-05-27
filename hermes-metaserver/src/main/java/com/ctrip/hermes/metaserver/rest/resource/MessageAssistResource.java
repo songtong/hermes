@@ -7,10 +7,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -31,8 +34,6 @@ import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.helper.Files.IO;
-
-import sun.net.www.protocol.http.HttpURLConnection;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
@@ -56,6 +57,8 @@ import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.metaserver.rest.commons.RestException;
 import com.google.common.util.concurrent.SettableFuture;
+
+import sun.net.www.protocol.http.HttpURLConnection;
 
 @Path("/message/")
 @Singleton
@@ -148,26 +151,29 @@ public class MessageAssistResource {
 									Map<String, ClientContext> partitionAssignment = assignment.getAssignment(id);
 									if (partitionAssignment != null && partitionAssignment.size() > 0) {
 										ClientContext client = partitionAssignment.entrySet().iterator().next().getValue();
-										result.put(id, findOffsetByTime(topicName, id, time, getBrokerEndpoint(client)));
+										Offset offset = findOffsetByTime(topicName, id, time, getBrokerEndpoint(client));
+										if (offset != null) {
+											result.put(id, offset);
+										}
 									}
 								} catch (Exception e) {
 									log.error("Query message offset failed: {}:{} {}", topicName, partition, time, e);
-									result.put(id, null);
 								} finally {
 									latch.countDown();
 								}
 							}
 						});
 					}
-
 					latch.await(m_config.getQueryMessageOffsetTimeoutMillis(), TimeUnit.MILLISECONDS);
 				}
 
-				return result;
+				if (result.size() == partitions.size()) {
+					return result;
+				}
 			} catch (Exception e) {
 				log.error("Query message offset failed: {}:{} {}", topicName, partition, time, e);
-				throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 			}
+			throw new RestException("Query message offset failed.", Status.INTERNAL_SERVER_ERROR);
 		} else {
 			throw new RestException(String.format("Topic %s not found.", topicName), Status.NOT_FOUND);
 		}
@@ -209,7 +215,7 @@ public class MessageAssistResource {
 				schedulePolicy.fail(true);
 			}
 		}
-		return null;
+		throw new RuntimeException("Find offset by time failed [Query Time Expired].");
 	}
 
 	@SuppressWarnings("unchecked")
@@ -318,6 +324,5 @@ public class MessageAssistResource {
 		public void setRespContent(byte[] respContent) {
 			this.respContent = respContent;
 		}
-
 	}
 }
