@@ -95,7 +95,7 @@ public class MessageAssistResource {
 	      @Context HttpServletRequest req) {
 		try {
 			if (m_singals.decrementAndGet() < 0) {
-				return Response.status(Status.NOT_ACCEPTABLE).entity("Too many concurrent requests.").build();
+				return Response.status(509).entity("Too many concurrent requests.").build();
 			}
 
 			time = -1 == time ? Long.MAX_VALUE : -2 == time ? Long.MIN_VALUE : time;

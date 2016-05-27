@@ -39,6 +39,7 @@ public class PullConsumingStrategyConsumerTask extends BaseConsumerTask {
 					return;
 				} catch (Exception e) {
 					log.error("Query latest offset failed: {}:{}", m_context.getTopic().getName(), m_partitionId, e);
+					queryOffsetSchedulePolicy.fail(true);
 				}
 			}
 		} else {
