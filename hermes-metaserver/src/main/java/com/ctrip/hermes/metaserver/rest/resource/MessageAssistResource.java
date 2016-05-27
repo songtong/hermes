@@ -7,14 +7,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
@@ -70,6 +68,10 @@ public class MessageAssistResource {
 
 	private static final String HEADER_PROXY_VALUE = "true";
 
+	private static final int DEFAULT_CONCURRENT_LEVEL = 10;
+
+	private static final AtomicInteger m_singals = new AtomicInteger(DEFAULT_CONCURRENT_LEVEL);
+
 	private BrokerAssignmentHolder m_brokerAssignments = PlexusComponentLocator.lookup(BrokerAssignmentHolder.class);
 
 	private MetaHolder m_metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
@@ -91,27 +93,35 @@ public class MessageAssistResource {
 	      @QueryParam("partition") @DefaultValue("-1") int partition, //
 	      @QueryParam("time") @DefaultValue("-1") long time,//
 	      @Context HttpServletRequest req) {
-		time = -1 == time ? Long.MAX_VALUE : -2 == time ? Long.MIN_VALUE : time;
+		try {
+			if (m_singals.decrementAndGet() < 0) {
+				return Response.status(Status.NOT_ACCEPTABLE).entity("Too many concurrent requests.").build();
+			}
 
-		Map<Integer, Offset> result = null;
-		if (m_clusterStateHolder.hasLeadership()) {
-			result = findOffsetFromBroker(topic, partition, time);
-		} else if (!isFromAnotherMetaServer(req)) {
-			Map<String, String> params = new HashMap<String, String>();
-			params.put("topic", topic);
-			params.put("partition", String.valueOf(partition));
-			params.put("time", String.valueOf(time));
+			time = -1 == time ? Long.MAX_VALUE : -2 == time ? Long.MIN_VALUE : time;
 
-			HostPort leader = m_clusterStateHolder.getLeader();
-			result = findOffsetFromMetaLeader(leader.getHost(), leader.getPort(), params);
+			Map<Integer, Offset> result = null;
+			if (m_clusterStateHolder.hasLeadership()) {
+				result = findOffsetFromBroker(topic, partition, time);
+			} else if (!isFromAnotherMetaServer(req)) {
+				Map<String, String> params = new HashMap<String, String>();
+				params.put("topic", topic);
+				params.put("partition", String.valueOf(partition));
+				params.put("time", String.valueOf(time));
+
+				HostPort leader = m_clusterStateHolder.getLeader();
+				result = findOffsetFromMetaLeader(leader.getHost(), leader.getPort(), params);
+			}
+
+			if (result == null || result.size() == 0) {
+				return Response.status(Status.NOT_FOUND)
+				      .entity(String.format("No offset found for [%s, %s, %s]", topic, partition, time)).build();
+			}
+
+			return Response.status(Status.OK).entity(result).build();
+		} finally {
+			m_singals.incrementAndGet();
 		}
-
-		if (result == null || result.size() == 0) {
-			return Response.status(Status.NOT_FOUND)
-			      .entity(String.format("No offset found for [%s, %s, %s]", topic, partition, time)).build();
-		}
-
-		return Response.status(Status.OK).entity(result).build();
 	}
 
 	private boolean isFromAnotherMetaServer(HttpServletRequest req) {
@@ -169,6 +179,9 @@ public class MessageAssistResource {
 
 				if (result.size() == partitions.size()) {
 					return result;
+				} else {
+					log.error("Query message offset failed: {}:{} {}, reason: query result is not completely", //
+					      topicName, partition, time);
 				}
 			} catch (Exception e) {
 				log.error("Query message offset failed: {}:{} {}", topicName, partition, time, e);
