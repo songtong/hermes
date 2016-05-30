@@ -7,6 +7,7 @@ STOP_PORT=9304
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
+            -DmaxThreads=1500 \
             -Xms4g \
             -Xmx4g \
             -XX:PermSize=256m \
