@@ -1,5 +1,7 @@
 package com.ctrip.hermes.broker.queue;
 
+import java.lang.reflect.InvocationTargetException;
+import java.sql.BatchUpdateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
@@ -29,6 +32,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.mysql.jdbc.PacketTooBigException;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -37,6 +41,8 @@ import com.google.common.util.concurrent.SettableFuture;
 public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueueFlusher.class);
+
+	private static final Logger skipLog = LoggerFactory.getLogger("MessageSkip");
 
 	private static FutureBatchResultWrapperTransformer m_futureBatchResultWrapperTransformer = new FutureBatchResultWrapperTransformer();
 
@@ -200,16 +206,42 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 	protected void doAppendMessageSync(boolean isPriority,
 	      Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos) {
-
+		Collection<MessageBatchWithRawData> batches = null;
 		try {
-			m_storage.appendMessages(m_topic, m_partition, isPriority,
-			      Collections2.transform(todos, m_messageBatchAndResultTransformer));
+			batches = Collections2.transform(todos, m_messageBatchAndResultTransformer);
+			m_storage.appendMessages(m_topic, m_partition, isPriority, batches);
 
 			setBatchesResult(isPriority, todos, true);
 		} catch (Exception e) {
-			setBatchesResult(isPriority, todos, false);
-			log.error("Failed to append messages.", e);
+			if (shoudlSkip(e)) {
+				setBatchesResult(isPriority, todos, true);
+				for (MessageBatchWithRawData batch : batches) {
+					for (PartialDecodedMessage msg : batch.getMessages()) {
+						skipLog.info("Message too large: {} {}\n{}", m_topic, m_partition, Arrays.toString(msg.readBody()));
+					}
+				}
+			} else {
+				setBatchesResult(isPriority, todos, false);
+				log.error("Failed to append messages.", e);
+			}
 		}
+	}
+
+	private boolean shoudlSkip(Exception e) {
+		if (e instanceof InvocationTargetException) {
+			InvocationTargetException ite = (InvocationTargetException) e;
+			if (ite.getTargetException() instanceof DalException) {
+				DalException de = (DalException) ite.getTargetException();
+				if (de.getCause() instanceof BatchUpdateException) {
+					BatchUpdateException bue = (BatchUpdateException) de.getCause();
+					if (bue.getCause() instanceof PacketTooBigException) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 
 	private void setBatchesResult(boolean isPriority,

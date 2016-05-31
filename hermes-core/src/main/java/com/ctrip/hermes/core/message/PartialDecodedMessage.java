@@ -18,6 +18,8 @@ public class PartialDecodedMessage {
 
 	private ByteBuf m_volatileProperties;
 
+	private byte[] m_bodyBytes;
+
 	public String getBodyCodecType() {
 		return m_bodyCodecType;
 	}
@@ -59,7 +61,15 @@ public class PartialDecodedMessage {
 	}
 
 	public byte[] readBody() {
-		return readByteBuf(m_body);
+		if (m_bodyBytes == null) {
+			synchronized (this) {
+				if (m_bodyBytes == null) {
+					m_bodyBytes = readByteBuf(m_body);
+				}
+			}
+		}
+
+		return m_bodyBytes;
 	}
 
 	public String getKey() {
