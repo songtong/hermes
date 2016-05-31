@@ -215,9 +215,12 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		} catch (Exception e) {
 			if (shoudlSkip(e)) {
 				setBatchesResult(isPriority, todos, true);
-				for (MessageBatchWithRawData batch : batches) {
-					for (PartialDecodedMessage msg : batch.getMessages()) {
-						skipLog.info("Message too large: {} {}\n{}", m_topic, m_partition, Arrays.toString(msg.readBody()));
+				if (batches != null) {
+					for (MessageBatchWithRawData batch : batches) {
+						for (PartialDecodedMessage msg : batch.getMessages()) {
+							skipLog
+							      .info("Message too large: {} {}\n{}", m_topic, m_partition, Arrays.toString(msg.readBody()));
+						}
 					}
 				}
 			} else {
