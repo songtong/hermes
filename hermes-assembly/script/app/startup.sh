@@ -155,15 +155,15 @@ wait_or_kill() {
 
 	if [[ $i -le 0 ]]; then
 		printf "\nWait for gracefully shutdown failed. Will kill the process.\n"
-		if [ $can_sudo == true ];then
-    		sudo="sudo"
-    	fi
-    	pid=$(find_pid)
-    	$sudo kill -9 $pid
+		kill_all
     	echo "Process $pid is shutdown."
     else
     	echo "Gracefully shutdown success!"
 	fi
+}
+
+kill_all(){
+	ps ax | grep java | awk -v war=$CONTEXT_DIR '$(NF-1)==war{print $1}' | xargs $sudo kill -9
 }
 
 
