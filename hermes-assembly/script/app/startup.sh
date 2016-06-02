@@ -132,7 +132,7 @@ stop(){
     	set -e
     	if [[ ! $stop_success == 0 ]]; then
     		echo "Shutdown with stop port failed, try to kill it... "
-    		$sudo kill -9 $(find_pid)
+    		kill_all
     	else
 			wait_or_kill        
     	fi       
