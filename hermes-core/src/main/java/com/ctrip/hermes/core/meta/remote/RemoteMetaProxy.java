@@ -326,7 +326,8 @@ public class RemoteMetaProxy implements MetaProxy {
 		params.put("topic", topic);
 		params.put("partition", String.valueOf(partition));
 		params.put("time", String.valueOf(time));
-		String response = getRequestToMetaServer("/message/offset", params).getValue();
+		Pair<Integer, String> responsePair = getRequestToMetaServer("/message/offset", params);
+		String response = responsePair == null ? null : responsePair.getValue();
 		if (response != null) {
 			try {
 				Map<Integer, JSONObject> map = (Map<Integer, JSONObject>) JSON.parse(response);

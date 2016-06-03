@@ -39,13 +39,13 @@
 	try {
 		java.util.Map ssoInfo = (java.util.Map) org.jasig.cas.client.util.AssertionHolder.getAssertion()
 				.getPrincipal().getAttributes();
-		
+
 		ssoUser = (String) ssoInfo.get("sn");
 		ssoMail = (String) ssoInfo.get("mail");
 		ssoTip = String.format("%s(%s)", ssoUser, ssoMail);
-		
+
 		request.setAttribute("isAdmin", ssoInfo.get("admin"));
-		
+
 		if (ssoInfo != null) {
 			org.codehaus.jackson.map.ObjectMapper mapper = new org.codehaus.jackson.map.ObjectMapper();
 			userInfo = mapper.writeValueAsString(ssoInfo);
@@ -93,6 +93,9 @@
 							<c:if test="${page.name == 'topic' }">
 								<li ${model.page.name == page.name ? 'class="active"' : ''}><a href="${model.webapp}/${page.moduleName}/${page.path}#/list/mysql">${page.title}${ssoUser}</a></li>
 							</c:if>
+							<c:if test="${page.name == 'consumer' }">
+								<li ${model.page.name == page.name ? 'class="active"' : ''}><a href="${model.webapp}/${page.moduleName}/${page.path}#/list">${page.title}${ssoUser}</a></li>
+							</c:if>
 							<c:if test="${page.name == 'dashboard' }">
 								<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">${page.title} <span class="caret"></span></a>
 									<ul class="dropdown-menu">
@@ -112,7 +115,7 @@
 										</c:if>
 									</ul></li>
 							</c:if>
-							<c:if test="${page.standalone and page.name != 'dashboard' and page.name != 'topic' and page.name != 'application'}">
+							<c:if test="${page.standalone and page.name != 'dashboard' and page.name != 'topic' and page.name != 'application' and page.name != 'consumer'}">
 								<li ${model.page.name == page.name ? 'class="active"' : ''}><a href="${model.webapp}/${page.moduleName}/${page.path}">${page.title}</a></li>
 							</c:if>
 							<c:if test="${not page.standalone and model.page.name == page.name and page.name != 'dashboard'}">
@@ -120,7 +123,7 @@
 							</c:if>
 						</c:forEach>
 					</ul>
-					
+
 					<ul class="nav navbar-nav navbar-right">
 						<li><a class="btn btn-link"><%=ssoTip%></a></li>
 					</ul>
@@ -129,7 +132,7 @@
 			</div>
 
 		</div>
-		
+
 		<!-- 
 		<div id="sign_in_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog" role="document">
@@ -162,7 +165,7 @@
 			</div>
 		</div>
 		 -->
-		 
+
 	</div>
 	<!--/.fluid-container-->
 	<script type="text/javascript" src="${model.webapp}/js/login/login.js"></script>
@@ -170,7 +173,7 @@
 		var ssoUser = '<%=ssoUser%>';
 		var ssoMail = '<%=ssoMail%>';
 		var isAdmin = <%=request.getAttribute("isAdmin")%>;
-		
+
 		angular.module('user', []).constant('user', <%=userInfo%>);
 	</script>
 </body>
