@@ -36,7 +36,7 @@ public class HermesMailUtil {
 
 		Map<String, Object> contentMap = new HashMap<>();
 		for (Field field : clazz.getDeclaredFields()) {
-			subject = getSubject4MailIfPossible(field, content);
+			subject = getSubject4MailIfPossible(field, content, subject);
 			addContent4MailIfPossible(field, content, contentMap);
 		}
 
@@ -58,8 +58,8 @@ public class HermesMailUtil {
 		}
 	}
 
-	private static String getSubject4MailIfPossible(Field field, Object obj) {
-		String subject = null;
+	private static String getSubject4MailIfPossible(Field field, Object obj, String oldValue) {
+		String subject = oldValue;
 		Subject mailField = field.getAnnotation(Subject.class);
 		if (mailField != null) {
 			try {
