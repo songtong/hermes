@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -255,8 +256,7 @@ public class ConsumerService {
 			throw new RuntimeException("Can not set offset timeStamp to: " + timestamp);
 		}
 
-		Map<Integer, Offset> messageOffsets = null;
-		messageOffsets = findMessageOffsetByTime(topicName, timestamp);
+		Map<Integer, Offset> messageOffsets = findMessageOffsetByTime(topicName, timestamp);
 
 		for (Entry<Integer, Offset> messageOffset : messageOffsets.entrySet()) {
 			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY_TRUE,
@@ -268,15 +268,18 @@ public class ConsumerService {
 	}
 
 	public Map<Integer, Offset> findMessageOffsetByTime(String topicName, long timestamp) {
-		Map<Integer, Offset> messageOffsets = null;
 		int retryTimes = 2;
 		Exception exception = null;
 		for (int i = 0; i < retryTimes; i++) {
 			try {
-				messageOffsets = m_metaService.findMessageOffsetByTime(topicName, timestamp);
-				return messageOffsets;
+				return m_metaService.findMessageOffsetByTime(topicName, timestamp);
 			} catch (Exception e) {
 				exception = e;
+			}
+			try {
+				TimeUnit.SECONDS.sleep(1);
+			} catch (InterruptedException e) {
+				// ignore it
 			}
 		}
 		throw new RuntimeException("Find offset from metaserver failed: " + exception.getMessage());
@@ -293,7 +296,7 @@ public class ConsumerService {
 			offset.setGroupId(consumerId);
 			offset.setOffset(messageOffset);
 			offset.setPartition(partition);
-			offset.setPriority(MessageQueueConstants.PRIORITY_TRUE);
+			offset.setPriority(priority);
 			offset.setTopic(topicName);
 			m_offsetDao.insert(offset);
 		} else {
