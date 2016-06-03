@@ -282,7 +282,7 @@ public class ConsumerService {
 				// ignore it
 			}
 		}
-		throw new RuntimeException("Find offset from metaserver failed: " + exception.getMessage());
+		throw new RuntimeException("Find offset from metaserver failed: ", exception);
 
 	}
 
