@@ -3,6 +3,7 @@ package com.ctrip.hermes.monitor.dashboard;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
@@ -86,7 +88,7 @@ public class RoomStatusConsumeBacklogEmittor {
 			m_msgDao.topK(topic, partition, priority, 1, MessagePriorityEntity.READSET_ID).iterator();
 			long latestMsgId = latestIter.hasNext() ? latestIter.next().getId() : -1;
 
-			OffsetMessage offset = null;
+			List<OffsetMessage> offset = null;
 			try {
 				offset = m_offsetDao.find(topic, partition, priority, group, OffsetMessageEntity.READSET_FULL);
 			} catch (DalException e) {
@@ -94,8 +96,10 @@ public class RoomStatusConsumeBacklogEmittor {
 					log.debug("Find offset message failed.{} {} {} {}", topic, partition, priority, group, e);
 				}
 			}
-			long consumeOffset = offset == null ? 0 : offset.getOffset();
-
+			long consumeOffset = 0;
+			if (!CollectionUtil.isNullOrEmpty(offset)) {
+				consumeOffset = offset.get(0) == null ? 0 : offset.get(0).getOffset();
+			}
 			return Math.max(latestMsgId - consumeOffset, 0);
 		} catch (Exception e) {
 			if (log.isDebugEnabled()) {

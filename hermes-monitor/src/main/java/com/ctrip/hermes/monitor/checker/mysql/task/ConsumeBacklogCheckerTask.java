@@ -1,9 +1,8 @@
 package com.ctrip.hermes.monitor.checker.mysql.task;
 
-import io.netty.util.internal.ConcurrentSet;
-
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -24,6 +24,8 @@ import com.ctrip.hermes.metaservice.queue.OffsetMessage;
 import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
 import com.ctrip.hermes.metaservice.queue.OffsetMessageEntity;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+
+import io.netty.util.internal.ConcurrentSet;
 
 public class ConsumeBacklogCheckerTask implements Runnable {
 	private static final Logger log = LoggerFactory.getLogger(ConsumeBacklogCheckerTask.class);
@@ -68,13 +70,16 @@ public class ConsumeBacklogCheckerTask implements Runnable {
 			m_msgDao.latest(topic, partition, priority, MessagePriorityEntity.READSET_ID).iterator();
 			long latestMsgId = latestIter.hasNext() ? latestIter.next().getId() : -1;
 
-			OffsetMessage offset = null;
+			List<OffsetMessage> offset = null;
 			try {
 				offset = m_offsetDao.find(topic, partition, priority, group, OffsetMessageEntity.READSET_FULL);
 			} catch (DalException e) {
 				log.debug("Find offset message failed.{} {} {} {}", topic, partition, priority, group, e);
 			}
-			return offset == null ? 0 : Math.max(latestMsgId - offset.getOffset(), 0);
+			if (!CollectionUtil.isNullOrEmpty(offset)) {
+				return offset.get(0) == null ? 0L : Math.max(latestMsgId - offset.get(0).getOffset(), 0);
+			}
+			return 0L;
 		} catch (Exception e) {
 			log.debug("Query latest consume backlog failed: {} {} {} {}", topic, partition, priority, group, e);
 			m_exceptions.add(e);

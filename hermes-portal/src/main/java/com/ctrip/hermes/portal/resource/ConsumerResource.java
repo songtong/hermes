@@ -12,6 +12,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -22,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
@@ -61,27 +64,36 @@ public class ConsumerResource {
 		});
 		return consumers;
 	}
-	
+
 	@POST
-	@Path("{topic}/{consumer}/offset/{strategy}")
-	public Response resetOffset(@PathParam("topic") String topicName, @PathParam("consumer") String consumerGroupName, @PathParam("strategy") String strategy, String content) {
-		TopicView topic = topicService.findTopicViewByName(topicName);
-		
+	@Path("{topic}/{consumer}/offset")
+	public Response resetOffset(@PathParam("topic") String topicName, @PathParam("consumer") String consumerGroupName,
+	      @QueryParam("timestamp") long timestamp) {
+		Topic topic = topicService.findTopicEntityByName(topicName);
+
 		if (topic == null) {
 			throw new RestException("Topic NOT found!", Status.NOT_FOUND);
 		}
-		
-		ConsumerGroupView consumerGroupView = consumerService.findConsumerView(topic.getId(), consumerGroupName);
-		
-		if (consumerGroupView == null) {
+
+		ConsumerGroup consumerGroup = consumerService.findConsumerGroupEntity(topic.getId(), consumerGroupName);
+
+		if (consumerGroup == null) {
 			throw new RestException("Consumer group NOT found!", Status.NOT_FOUND);
 		}
-		
-		System.out.println(content);
-		
+
+		if (consumerService.isConsumerAlive(topic, consumerGroup)) {
+			throw new RestException("Please Stop Consumer!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		try {
+			consumerService.resetOffset(topicName, consumerGroup, timestamp);
+		} catch (Exception e) {
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+
 		return Response.status(Status.OK).build();
 	}
-	
+
 	@GET
 	@Path("{topic}")
 	public List<ConsumerGroupView> getConsumers(@PathParam("topic") String topicName) {
@@ -162,4 +174,5 @@ public class ConsumerResource {
 		}
 		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
+
 }

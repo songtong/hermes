@@ -99,7 +99,7 @@
 			</updateset>
 		</updatesets>
 		<query-defs>
-			<query name="find" type="SELECT" multiple="false">
+			<query name="find" type="SELECT" multiple="true">
 				<param name="topic" />
 				<param name="partition" />
 				<param name="priority" />

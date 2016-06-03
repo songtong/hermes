@@ -1,0 +1,135 @@
+<div class="row">
+	<!-- basic information -->
+	<div class="col-md-5 col-md-offset-1">
+		<div class="panel panel-info">
+			<div class="panel-heading clearfix">
+				<label class="label label-info pull-left">基本信息</label>
+				<form editable-form name="consumerDetailForm" onaftersave="update_consumer(currentConsumer,currentConsumer.topicName,currentConsumer.name)" ng-show="consumerDetailForm.$visible">
+					<button type="submit" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-disabled="consumerDetailForm.$waiting">
+						<span class="glyphicon glyphicon-saved"></span>保存
+					</button>
+					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="consumerDetailForm.$waiting" ng-click="consumerDetailForm.$cancel()">取消</button>
+				</form>
+				<button id="updateButton" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="consumerDetailForm.$show()" ng-show="!consumerDetailForm.$visible">
+					<span class="glyphicon glyphicon-pencil"></span> 修改
+				</button>
+			</div>
+			<div class="panel-body">
+				<div class="form-horizontal">
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">Consumer ID</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.id"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">名称</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.name"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">Topic名称</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.topicName"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label " style="padding-top: 0px">AppId</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.appIds" e-form="consumerDetailForm" editable-text="currentConsumer.appIds" e-name="appIds"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">消费策略</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.retryPolicy" e-form="consumerDetailForm" editable-text="currentConsumer.retryPolicy" e-name="retryPolicy"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">是否有序</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.orderedConsume" e-form="consumerDetailForm" editable-select="currentConsumer.orderedConsume" e-name="orderedConsume" e-ng-options="order for order in order_opts"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">负责人1</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.owner1" editable-text="currentConsumer.owner1" e-form="consumerDetailForm" e-name="owner1"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">电话1</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.phone1" editable-text="currentConsumer.phone1" e-form="consumerDetailForm" e-name="phone1"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">负责人2</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.owner2" editable-text="currentConsumer.owner2" e-form="consumerDetailForm" e-name="owner2"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">电话2</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.phone2" editable-text="currentConsumer.phone2" e-form="consumerDetailForm" e-name="phone2"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- partition information -->
+	<div class="col-md-4">
+		<div class="panel panel-info">
+			<div class="panel-heading clearfix">
+				<label class="label label-info">重置Offset</label><span class="col-md-offset-1 text-danger">需要先停止consumer。</span>
+			</div>
+			<div class="panel-body">
+				<div class="form-horizontal col-sm-offset-2">
+					<div class="form-group">
+						<div class="col-sm-8">
+							<label class="radio-inline" ng-click="expandCollapse()"> <input type="radio" ng-model="currentConsumer.resetOption" " value="latest">最新
+							</label> <label class="radio-inline" ng-click="expandCollapse()"> <input type="radio" ng-model="currentConsumer.resetOption" value="earliest">最早
+							</label> <label class="radio-inline" ng-click="expandCollapse()"> <input type="radio" ng-model="currentConsumer.resetOption" value="timepoint">时间点
+							</label>
+						</div>
+						<div class="col-sm-4">
+							<button class="btn btn-xs btn-primary" ng-click="submitReset()">提交</button>
+						</div>
+					</div>
+					<div class="form-group collapse" id="timepoint">
+						<div class="col-sm-8">
+							<input type="datetime-local" ng-model="currentTimestamp" placeholder="yyyy-MM-ddTHH:mm:ss" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--<div class="panel panel-info">
+			<div class="panel-heading">
+				<label class="label label-info">Consumer 信息</label>
+			</div>
+			<div class="panel-body">
+				<table class="table table-condensed table-responsive">
+					<thead>
+						<th class="col-md-1">ID</th>
+						<th class="col-md-5">消费集群</th>
+						<th class="col-md-5">应用</th>
+					</thead>
+					<tbody>
+						<tr ng-repeat="consumer in consumers">
+							<td>{{consumer.id}}</td>
+							<td>{{consumer.name}}</td>
+							<td>{{consumer.appIds}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>-->
+	</div>
+</div>
+<loading-x></loading-x>
+<alert-x id="alert" title="确认"></alert-x>

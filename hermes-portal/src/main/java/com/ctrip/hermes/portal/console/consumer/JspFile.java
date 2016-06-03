@@ -1,7 +1,7 @@
 package com.ctrip.hermes.portal.console.consumer;
 
 public enum JspFile {
-	VIEW("/jsp/console/consumer.jsp"),
+	VIEW("/jsp/console/consumer/consumer.jsp"),
 
 	;
 
