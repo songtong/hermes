@@ -3,6 +3,7 @@ package com.ctrip.hermes.metaservice.service.notify.handler;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -31,7 +32,7 @@ public abstract class AbstractNotifyHandler implements NotifyHandler, Initializa
 	public boolean handle(HermesNotice notice) {
 		String noticeRefKey = persistNotice(notice);
 
-		HermesNotice copy = new HermesNotice(new ArrayList<String>(notice.getReceivers()), notice.getContent());
+		HermesNotice copy = new HermesNotice(cleanBadReceivers(notice.getReceivers()), notice.getContent());
 
 		filterHermesNoticeReceivers(copy);
 
@@ -41,6 +42,16 @@ public abstract class AbstractNotifyHandler implements NotifyHandler, Initializa
 			return handleResult;
 		}
 		return true;
+	}
+
+	private List<String> cleanBadReceivers(List<String> receivers) {
+		List<String> newReceivers = new ArrayList<>();
+		for (String receiver : receivers) {
+			if (!StringUtils.isBlank(receiver)) {
+				newReceivers.add(receiver);
+			}
+		}
+		return newReceivers;
 	}
 
 	private void filterHermesNoticeReceivers(HermesNotice notice) {
@@ -60,7 +71,7 @@ public abstract class AbstractNotifyHandler implements NotifyHandler, Initializa
 		} catch (Exception e) {
 			log.warn("Persist notice failed: {}", notice, e);
 		}
-		return null;
+		return "";
 	}
 
 	private void updateNoticeStatus(HermesNotice notice, boolean handleResult, String noticeRefKey) {

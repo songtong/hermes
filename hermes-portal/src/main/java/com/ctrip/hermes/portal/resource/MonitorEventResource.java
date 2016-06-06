@@ -14,6 +14,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.hamcrest.core.IsInstanceOf;
+
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
@@ -42,8 +44,10 @@ public class MonitorEventResource {
 				m.put(e.getDisplayName(), 0);
 			}
 			for (MonitorEvent event : events) {
-				Integer count = m.get(event.getType().getDisplayName());
-				m.put(event.getType().getDisplayName(), count + 1);
+				if (!MonitorEventType.CONSUME_LARGE_BACKLOG.equals(event.getType())) {
+					Integer count = m.get(event.getType().getDisplayName());
+					m.put(event.getType().getDisplayName(), count + 1);
+				}
 			}
 		} else {
 			m.put("FETCH_EVENT_ERROR", 1);

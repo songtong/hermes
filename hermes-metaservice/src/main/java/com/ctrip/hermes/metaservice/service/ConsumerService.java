@@ -160,6 +160,19 @@ public class ConsumerService {
 		return entities;
 	}
 
+	public ConsumerGroupView findConsumerView(String topicName, String consumer) {
+		com.ctrip.hermes.metaservice.model.Topic topicModel;
+		try {
+			topicModel = m_topicDao.findByName(topicName);
+			if (topicModel != null) {
+				return findConsumerView(topicModel.getId(), consumer);
+			}
+		} catch (DalException e) {
+			logger.warn("findConsumerView by topicName & consumer failed.", e);
+		}
+		return null;
+	}
+
 	public ConsumerGroupView findConsumerView(Long topicId, String consumer) {
 		try {
 			com.ctrip.hermes.metaservice.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
