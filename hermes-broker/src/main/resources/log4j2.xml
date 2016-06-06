@@ -25,7 +25,6 @@
 				<TimeBasedTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="500 MB" />
 			</Policies>
-			<DefaultRolloverStrategy max="10" />
 		</RollingFile>
 
 		<RollingFile name="BIZ" fileName="/opt/logs/hermes-broker/biz.log" filePattern="/opt/logs/hermes-broker/biz-%i.log.gz">
