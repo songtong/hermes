@@ -30,7 +30,7 @@ public class TopicDeployService {
 	public static final int DEFAULT_KAFKA_REPLICATION_FACTOR = 2;
 	
 	// 1 hour
-	public static final int DEFAULT_KAFKA_SEGMENT_MS = 3600000;
+	public static final String DEFAULT_KAFKA_SEGMENT_MS = "3600000";
 
 	private List<String> validKafkaConfigKeys = new ArrayList<String>();
 
