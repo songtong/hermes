@@ -48,4 +48,11 @@ public class NotifyServiceTest extends ComponentTestCase {
 		NotifyService s = lookup(NotifyService.class);
 		s.notify(n);
 	}
+
+	@Test
+	public void testNotifyInSms() throws Exception {
+		HermesNotice n = new HermesNotice(Arrays.asList("10101010101"), new SmsNoticeContent("Hello world"));
+		NotifyService s = lookup(NotifyService.class);
+		s.notify(n);
+	}
 }

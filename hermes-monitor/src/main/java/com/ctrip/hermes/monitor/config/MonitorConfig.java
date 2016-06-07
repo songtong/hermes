@@ -221,6 +221,18 @@ public class MonitorConfig {
 	@Value("${es.ignore.metaserver.messages:[\"SEVERE: An I/O error has occurred while writing a response message entity to the container output stream\"]}")
 	private String esIgnoreMetaserverMessages;
 
+	@Value("${consume.large.backlog.sms.to.owner:false}")
+	private boolean consumeLargeBacklogSmsToOwner;
+
+	@Value("${kpi.tts.error.limit.minute:3}")
+	private int kpiTtsErrorLimitMinute;
+
+	@Value("${kpi.tts.start.hour:22}")
+	private int kpiTtsStartHour;
+
+	@Value("${kpi.tts.last.hours:10}")
+	private int kpiTtsLastHours;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -723,4 +735,35 @@ public class MonitorConfig {
 		this.esIgnoreMetaserverMessages = esIgnoreMetaserverMessages;
 	}
 
+	public boolean isConsumeLargeBacklogSmsToOwner() {
+		return consumeLargeBacklogSmsToOwner;
+	}
+
+	public void setConsumeLargeBacklogSmsToOwner(boolean consumeLargeBacklogSmsToOwner) {
+		this.consumeLargeBacklogSmsToOwner = consumeLargeBacklogSmsToOwner;
+	}
+
+	public int getKpiTtsStartHour() {
+		return kpiTtsStartHour;
+	}
+
+	public void setKpiTtsStartHour(int kpiTtsStartHour) {
+		this.kpiTtsStartHour = kpiTtsStartHour;
+	}
+
+	public int getKpiTtsLastHours() {
+		return kpiTtsLastHours;
+	}
+
+	public void setKpiTtsLastHours(int kpiTtsLastHours) {
+		this.kpiTtsLastHours = kpiTtsLastHours;
+	}
+
+	public int getKpiTtsErrorLimitMinute() {
+		return kpiTtsErrorLimitMinute;
+	}
+
+	public void setKpiTtsErrorLimitMinute(int kpiTtsErrorLimitMinute) {
+		this.kpiTtsErrorLimitMinute = kpiTtsErrorLimitMinute;
+	}
 }

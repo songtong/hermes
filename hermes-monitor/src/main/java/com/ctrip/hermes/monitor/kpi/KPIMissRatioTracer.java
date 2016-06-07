@@ -6,18 +6,30 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
+import com.ctrip.hermes.metaservice.service.notify.NoticeContent;
+import com.ctrip.hermes.metaservice.service.notify.NotifyService;
+import com.ctrip.hermes.metaservice.service.notify.TtsNoticeContent;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.producer.api.Producer;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
@@ -25,6 +37,17 @@ import com.dianping.cat.message.Transaction;
 @Component
 public class KPIMissRatioTracer {
 	private static final Logger log = LoggerFactory.getLogger(KPIMissRatioTracer.class);
+
+	private static final String DEFAULT_ON_CALL_MOBILE = "13310027139";
+
+	@Autowired
+	protected MonitorConfig m_config;
+
+	private NotifyService m_notifyService = PlexusComponentLocator.lookup(NotifyService.class);
+
+	private Set<Integer> m_ttsHours;
+
+	private static Date m_latestConsume = new Date(0);
 
 	private static class KPIMessage {
 		private long m_idx;
@@ -57,6 +80,7 @@ public class KPIMissRatioTracer {
 		@Override
 		protected void onMessage(ConsumerMessage<KPIMessage> hermesMsg) {
 			KPIMessage msg = hermesMsg.getBody();
+			m_latestConsume = new Date();
 			try {
 				if (m_idx >= 0 && msg.getIndex() > m_idx) {
 					if (msg.getIndex() - m_idx == 1) {
@@ -84,6 +108,12 @@ public class KPIMissRatioTracer {
 			tx.setStatus(success ? Transaction.SUCCESS : "MISSED");
 			tx.complete();
 		}
+	}
+
+	private boolean shouldTts() {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new Date());
+		return m_ttsHours.contains(cal.get(Calendar.HOUR_OF_DAY));
 	}
 
 	private static class KPITracerTask implements Runnable {
@@ -115,7 +145,7 @@ public class KPIMissRatioTracer {
 					log.error("Producer KPIMessage for kpi-tracer failed, idx: " + producerMsgIdx);
 				} finally {
 					try {
-						TimeUnit.SECONDS.sleep(1);
+						TimeUnit.SECONDS.sleep(10);
 					} catch (InterruptedException e) {
 						// ignore
 					}
@@ -159,8 +189,44 @@ public class KPIMissRatioTracer {
 
 	@PostConstruct
 	public void startTraceMissRatio() throws Exception {
+		m_ttsHours = new HashSet<>();
+		int startHour = m_config.getKpiTtsStartHour();
+		if (startHour >= 24) {
+			throw new RuntimeException("TTS start hour is too large(more than 24)");
+		}
+		for (int i = 0; i < m_config.getKpiTtsLastHours() % 24; i++) {
+			m_ttsHours.add((startHour + i) % 24);
+		}
 		Thread t = new Thread(new KPITracerTask(), "HERMES_KPI_TRACER");
 		t.setDaemon(true);
 		t.start();
+
+		Executors.newSingleThreadExecutor().execute(new Runnable() {
+			@Override
+			public void run() {
+				while (!Thread.interrupted()) {
+					Date now = new Date();
+					try {
+						long freezeMins = m_latestConsume.getTime() != 0 ? TimeUnit.MILLISECONDS.toMinutes(now.getTime()
+						      - m_latestConsume.getTime()) : -1;
+						if (freezeMins > 0 && freezeMins > m_config.getKpiTtsErrorLimitMinute()) {
+							if (shouldTts()) {
+								NoticeContent content = new TtsNoticeContent(String.format("紧急情况, Hermes监控超过%s分钟没有消费",
+								      freezeMins));
+								m_notifyService.notify(new HermesNotice(DEFAULT_ON_CALL_MOBILE, content));
+							}
+							log.warn("*** *** KPI tracer's consumption stopped for {} minutes...", freezeMins);
+						}
+					} catch (Exception e) {
+						log.error("TTS watch dog failed.", e);
+					}
+					try {
+						TimeUnit.SECONDS.sleep(30);
+					} catch (InterruptedException e) {
+						Thread.interrupted();
+					}
+				}
+			}
+		});
 	}
 }

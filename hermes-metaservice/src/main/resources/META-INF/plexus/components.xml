@@ -832,6 +832,22 @@
 			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.SmsNotifyHandler</implementation>
 			<requirements>
 				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.notify.handler.NotifyHandler</role>
+			<role-hint>TtsNotifyHandler</role-hint>
+			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.TtsNotifyHandler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage</role>
 				</requirement>
 			</requirements>
