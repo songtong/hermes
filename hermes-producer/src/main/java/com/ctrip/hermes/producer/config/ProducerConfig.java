@@ -21,7 +21,7 @@ public class ProducerConfig implements Initializable {
 
 	public static final long DEFAULT_BROKER_SENDER_READ_TIMEOUT = 4 * 1000L;
 
-	public static final int DEFAULT_BROKER_SENDER_TASK_QUEUE_SIZE = 500000;
+	public static final int DEFAULT_BROKER_SENDER_TASK_QUEUE_SIZE = 200000;
 
 	public static final int DEFAULT_BROKER_SENDER_BATCH_SIZE = 500;
 
@@ -29,7 +29,9 @@ public class ProducerConfig implements Initializable {
 
 	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_MAX_MILLIS = 10;
 
-	public static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 20;
+	public static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 10;
+
+	private static final int DEFAULT_BROKER_SENDER_CONCURRENT_LEVEL = 4;
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
@@ -53,6 +55,8 @@ public class ProducerConfig implements Initializable {
 	private boolean m_logEnrichInfoEnabled = false;
 
 	private boolean m_catEnabled = true;
+
+	private int m_brokerSenderConcurrentLevel = DEFAULT_BROKER_SENDER_CONCURRENT_LEVEL;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -103,6 +107,11 @@ public class ProducerConfig implements Initializable {
 			m_catEnabled = !"false".equalsIgnoreCase(catEnabled);
 		}
 
+		String senderConcurrentLevelStr = m_clientEnv.getGlobalConfig().getProperty("producer.concurrent.level");
+		if (StringUtils.isNumeric(senderConcurrentLevelStr)) {
+			m_brokerSenderConcurrentLevel = Integer.valueOf(senderConcurrentLevelStr);
+		}
+
 		// FIXME log config loading details.
 	}
 
@@ -144,6 +153,10 @@ public class ProducerConfig implements Initializable {
 
 	public boolean isLogEnrichInfoEnabled() {
 		return m_logEnrichInfoEnabled;
+	}
+
+	public int getBrokerSenderConcurrentLevel() {
+		return m_brokerSenderConcurrentLevel;
 	}
 
 }

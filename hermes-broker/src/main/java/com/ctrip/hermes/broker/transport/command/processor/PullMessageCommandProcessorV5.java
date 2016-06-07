@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
@@ -22,14 +23,15 @@ import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.v4.PullMessageCommandV4;
-import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageResultCommandV5;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
 
-public class PullMessageCommandProcessorV4 implements CommandProcessor {
+public class PullMessageCommandProcessorV5 implements CommandProcessor {
 
-	private static final Logger log = LoggerFactory.getLogger(PullMessageCommandProcessorV4.class);
+	private static final Logger log = LoggerFactory.getLogger(PullMessageCommandProcessorV5.class);
 
 	@Inject
 	private LongPollingService m_longPollingService;
@@ -47,66 +49,70 @@ public class PullMessageCommandProcessorV4 implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.MESSAGE_PULL_V4);
+		return Arrays.asList(CommandType.MESSAGE_PULL_V5);
 	}
 
 	@Override
 	public void process(CommandProcessorContext ctx) {
 
-		PullMessageCommandV4 reqCmd = (PullMessageCommandV4) ctx.getCommand();
+		PullMessageCommandV5 reqCmd = (PullMessageCommandV5) ctx.getCommand();
 
 		long correlationId = reqCmd.getHeader().getCorrelationId();
 
 		String topic = reqCmd.getTopic();
 		int partition = reqCmd.getPartition();
+		String groupId = reqCmd.getGroupId();
 		try {
-			if (m_metaService.containsConsumerGroup(topic, reqCmd.getGroupId())) {
+			if (m_metaService.containsConsumerGroup(topic, groupId)) {
 				logReqToCat(reqCmd);
 
-				Lease lease = m_leaseContainer.acquireLease(topic, partition,
-				      m_config.getSessionId());
+				Lease lease = m_leaseContainer.acquireLease(topic, partition, m_config.getSessionId());
 				if (lease != null) {
-
 					PullMessageTask task = createPullMessageTask(reqCmd, lease, ctx.getChannel(), ctx.getRemoteIp());
 					m_longPollingService.schedulePush(task);
 					return;
 				} else {
 					log.debug(
 					      "No broker lease to handle client pull message reqeust(correlationId={}, topic={}, partition={}, groupId={})",
-					      correlationId, topic, partition, reqCmd.getGroupId());
+					      correlationId, topic, partition, groupId);
 				}
 			} else {
 				log.debug("Consumer group not found for topic (correlationId={}, topic={}, partition={}, groupId={})",
-				      correlationId, topic, partition, reqCmd.getGroupId());
+				      correlationId, topic, partition, groupId);
 			}
 		} catch (Exception e) {
 			log.debug(
 			      "Exception occurred while handling client pull message reqeust(correlationId={}, topic={}, partition={}, groupId={})",
-			      correlationId, topic, partition, reqCmd.getGroupId(), e);
+			      correlationId, topic, partition, groupId, e);
 		}
 
 		// can not acquire lease, response with empty result
-		PullMessageResultCommandV4 cmd = new PullMessageResultCommandV4();
-		cmd.getHeader().setCorrelationId(reqCmd.getHeader().getCorrelationId());
+		PullMessageResultCommandV5 cmd = new PullMessageResultCommandV5();
+		cmd.correlate(reqCmd);
 		cmd.setBrokerAccepted(false);
+		if (m_metaService.containsConsumerGroup(topic, groupId)) {
+			Pair<Endpoint, Long> endpointEntry = m_metaService.findEndpointByTopicAndPartition(topic, partition);
+			if (endpointEntry != null) {
+				cmd.setNewEndpoint(endpointEntry.getKey());
+			}
+		}
 
 		ChannelUtils.writeAndFlush(ctx.getChannel(), cmd);
 
 	}
 
-	private void logReqToCat(PullMessageCommandV4 reqCmd) {
-	   long now = System.currentTimeMillis();
-	   if (now - m_lastLogPullReqToCatTime.get() > 60 * 1000L) {
-	   	Transaction tx = Cat.newTransaction(CatConstants.TYPE_PULL_CMD
-	   	      + reqCmd.getHeader().getType().getVersion(), reqCmd.getTopic() + "-" + reqCmd.getPartition() + "-"
-	   	      + reqCmd.getGroupId());
+	private void logReqToCat(PullMessageCommandV5 reqCmd) {
+		long now = System.currentTimeMillis();
+		if (now - m_lastLogPullReqToCatTime.get() > 60 * 1000L) {
+			Transaction tx = Cat.newTransaction(CatConstants.TYPE_PULL_CMD + reqCmd.getHeader().getType().getVersion(),
+			      reqCmd.getTopic() + "-" + reqCmd.getPartition() + "-" + reqCmd.getGroupId());
 
-	   	tx.complete();
-	   	m_lastLogPullReqToCatTime.set(now);
-	   }
-   }
+			tx.complete();
+			m_lastLogPullReqToCatTime.set(now);
+		}
+	}
 
-	private PullMessageTask createPullMessageTask(PullMessageCommandV4 cmd, Lease brokerLease, Channel channel,
+	private PullMessageTask createPullMessageTask(PullMessageCommandV5 cmd, Lease brokerLease, Channel channel,
 	      String clientIp) {
 		PullMessageTask task = new PullMessageTask();
 
@@ -115,7 +121,7 @@ public class PullMessageCommandProcessorV4 implements CommandProcessor {
 		task.setChannel(channel);
 		task.setCorrelationId(cmd.getHeader().getCorrelationId());
 		task.setExpireTime(cmd.getExpireTime() + System.currentTimeMillis());
-		task.setPullCommandVersion(4);
+		task.setPullCommandVersion(5);
 		task.setWithOffset(true);
 		task.setStartOffset(cmd.getOffset());
 		task.setTpg(new Tpg(cmd.getTopic(), cmd.getPartition(), cmd.getGroupId()));

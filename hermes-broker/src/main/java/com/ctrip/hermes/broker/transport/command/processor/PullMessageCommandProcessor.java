@@ -2,6 +2,7 @@ package com.ctrip.hermes.broker.transport.command.processor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.longpolling.PullMessageTask;
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.ChannelUtils;
@@ -25,6 +27,7 @@ import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.dianping.cat.Cat;
+import com.dianping.cat.message.Transaction;
 
 public class PullMessageCommandProcessor implements CommandProcessor {
 
@@ -42,6 +45,8 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 	@Inject
 	private MetaService m_metaService;
 
+	private AtomicLong m_lastLogPullReqToCatTime = new AtomicLong(0);
+
 	@Override
 	public List<CommandType> commandTypes() {
 		return Arrays.asList(CommandType.MESSAGE_PULL, CommandType.MESSAGE_PULL_V2);
@@ -54,10 +59,12 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 		Tpg tpg = task.getTpg();
 
 		try {
-			if (m_metaService.containsConsumerGroup(tpg.getTopic(), tpg.getGroupId())) {
-				Cat.logEvent("Hermes.PullMessage.Request",
-				      tpg.getTopic() + "-" + tpg.getPartition() + "-" + tpg.getGroupId());
-				Lease lease = m_leaseContainer.acquireLease(tpg.getTopic(), tpg.getPartition(), m_config.getSessionId());
+			String topic = tpg.getTopic();
+			int partition = tpg.getPartition();
+			if (m_metaService.containsConsumerGroup(topic, tpg.getGroupId())) {
+				logReqToCat(ctx, tpg);
+
+				Lease lease = m_leaseContainer.acquireLease(topic, partition, m_config.getSessionId());
 				if (lease != null) {
 					task.setBrokerLease(lease);
 					m_longPollingService.schedulePush(task);
@@ -73,6 +80,18 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 		}
 		// can not acquire lease, response with empty result
 		responseError(task);
+	}
+
+	private void logReqToCat(CommandProcessorContext ctx, Tpg tpg) {
+		long now = System.currentTimeMillis();
+		if (now - m_lastLogPullReqToCatTime.get() > 60 * 1000L) {
+			Transaction tx = Cat.newTransaction(CatConstants.TYPE_PULL_CMD
+			      + ctx.getCommand().getHeader().getType().getVersion(), tpg.getTopic() + "-" + tpg.getPartition() + "-"
+			      + tpg.getGroupId());
+
+			tx.complete();
+			m_lastLogPullReqToCatTime.set(now);
+		}
 	}
 
 	private void logDebug(String debugInfo, long correlationId, Tpg tpg, Exception e) {

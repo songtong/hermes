@@ -17,4 +17,6 @@ public interface Command extends Serializable {
 
 	public void release();
 
+	public long getReceiveTime();
+
 }

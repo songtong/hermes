@@ -277,13 +277,13 @@ public class DefaultMetaServiceTest extends ComponentTestCase {
 
 	@Test
 	public void testFindEndpointByTopicAndPartition() throws Exception {
-		Endpoint endpoint = m_metaService.findEndpointByTopicAndPartition("test_broker", 0);
+		Endpoint endpoint = m_metaService.findEndpointByTopicAndPartition("test_broker", 0).getKey();
 		assertEquals("br0", endpoint.getId());
-		endpoint = m_metaService.findEndpointByTopicAndPartition("test_broker", 1);
+		endpoint = m_metaService.findEndpointByTopicAndPartition("test_broker", 1).getKey();
 		assertEquals("br1", endpoint.getId());
 
 		try {
-			m_metaService.findEndpointByTopicAndPartition("topic_not_found", 0);
+			m_metaService.findEndpointByTopicAndPartition("topic_not_found", 0).getKey();
 			fail();
 		} catch (RuntimeException e) {
 			// do nothing

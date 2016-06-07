@@ -68,13 +68,13 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(DefaultConsumerPipelineSink.class));
 
-		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V4.toString(),
+		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V5.toString(),
 		      PullMessageResultCommandProcessor.class)//
 		      .req(PullMessageResultMonitor.class));
-		all.add(C(CommandProcessor.class, CommandType.RESULT_QUERY_OFFSET_V3.toString(),
+		all.add(C(CommandProcessor.class, CommandType.RESULT_QUERY_OFFSET_V5.toString(),
 		      QueryOffsetResultCommandProcessor.class)//
 		      .req(QueryOffsetResultMonitor.class));
-		all.add(C(CommandProcessor.class, CommandType.RESULT_ACK_MESSAGE_V3.toString(),
+		all.add(C(CommandProcessor.class, CommandType.RESULT_ACK_MESSAGE_V5.toString(),
 		      AckMessageResultCommandProcessor.class)//
 		      .req(AckMessageResultMonitor.class));
 

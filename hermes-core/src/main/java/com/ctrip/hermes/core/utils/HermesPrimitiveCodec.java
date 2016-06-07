@@ -1,5 +1,7 @@
 package com.ctrip.hermes.core.utils;
 
+import io.netty.buffer.ByteBuf;
+
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Date;
@@ -10,9 +12,8 @@ import java.util.Map;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.base.Charsets;
-
-import io.netty.buffer.ByteBuf;
 
 public class HermesPrimitiveCodec {
 
@@ -225,6 +226,34 @@ public class HermesPrimitiveCodec {
 			for (Offset offset : offsets) {
 				writeOffset(offset);
 			}
+		}
+	}
+
+	public void writeEndpoint(Endpoint endpoint) {
+		if (endpoint == null) {
+			writeNull();
+		} else {
+			writeString(endpoint.getId());
+			writeString(endpoint.getHost());
+			writeInt(endpoint.getPort());
+			writeString(endpoint.getGroup());
+			writeString(endpoint.getType());
+		}
+	}
+
+	public Endpoint readEndpoint() {
+		byte firstByte = m_buf.readByte();
+		if (NULL == firstByte) {
+			return null;
+		} else {
+			readerIndexBack(m_buf, 1);
+			Endpoint endpoint = new Endpoint();
+			endpoint.setId(readString());
+			endpoint.setHost(readString());
+			endpoint.setPort(readInt());
+			endpoint.setGroup(readString());
+			endpoint.setType(readString());
+			return endpoint;
 		}
 	}
 

@@ -9,7 +9,7 @@ import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageResultCommandV5;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -22,12 +22,12 @@ public class PullMessageResultCommandProcessor implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.RESULT_MESSAGE_PULL_V4);
+		return Arrays.asList(CommandType.RESULT_MESSAGE_PULL_V5);
 	}
 
 	@Override
 	public void process(CommandProcessorContext ctx) {
-		PullMessageResultCommandV4 cmd = (PullMessageResultCommandV4) ctx.getCommand();
+		PullMessageResultCommandV5 cmd = (PullMessageResultCommandV5) ctx.getCommand();
 		m_messageResultMonitor.resultReceived(cmd);
 	}
 

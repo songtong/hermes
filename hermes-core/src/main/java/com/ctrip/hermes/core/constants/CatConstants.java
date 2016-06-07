@@ -45,4 +45,10 @@ public interface CatConstants {
 	public static final String TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE = "Message.Broker.Produce.Elapse";
 
 	public static final String TYPE_MESSAGE_CONSUME_ACK_TRANSPORT = "Message.Consume.Ack.Transport";
+
+	public static final String TYPE_SEND_CMD = "Send.Cmd.V";
+
+	public static final String TYPE_PULL_CMD = "Pull.Cmd.V";
+
+	public static final String TYPE_HERMES_CMD_VERSION = "Hermes.Command.Version";
 }

@@ -103,6 +103,12 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.internal.MetaManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.config.CoreConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -110,7 +116,7 @@
 			<implementation>com.ctrip.hermes.core.transport.endpoint.DefaultEndpointClient</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.meta.MetaService</role>
+					<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.config.CoreConfig</role>

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.core.config.CoreConfig;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -93,7 +94,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 		CommandType type = cmd.getHeader().getType();
 		if (type != null) {
-			Cat.logEvent("Hermes.Command.Version", type + "-SEND");
+			Cat.logEvent(CatConstants.TYPE_HERMES_CMD_VERSION, type + "-SEND");
 		}
 
 		lock.readLock().lock();

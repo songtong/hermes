@@ -62,6 +62,12 @@ public class CommandProcessorManager implements Initializable {
 
 					@Override
 					public void run() {
+						if (ctx.getCommand().getReceiveTime() > 0
+						      && (System.currentTimeMillis() - ctx.getCommand().getReceiveTime()) > m_config
+						            .getCommandProcessorCmdExpireMillis()) {
+							return;
+						}
+
 						Timer timer = StatusMonitor.INSTANCE.getProcessCommandTimer(type, processor);
 						Context context = timer.time();
 						try {

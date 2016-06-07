@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.consumer.engine.ack.AckHolder.AckCallback;
@@ -32,7 +33,7 @@ import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.ConsumerMessage;
-import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageCommandV5;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -155,7 +156,7 @@ public class DefaultAckManager implements AckManager {
 	}
 
 	@Override
-	public boolean writeAckToBroker(AckMessageCommandV4 cmd) {
+	public boolean writeAckToBroker(AckMessageCommandV5 cmd) {
 		String topic = cmd.getTopic();
 		int partition = cmd.getPartition();
 		String groupId = cmd.getGroup();
@@ -165,7 +166,7 @@ public class DefaultAckManager implements AckManager {
 		boolean acked = false;
 		if (endpoint != null) {
 			long correlationId = cmd.getHeader().getCorrelationId();
-			Future<Boolean> resultFuture = m_resultMonitor.monitor(correlationId);
+			Future<Pair<Boolean, Endpoint>> resultFuture = m_resultMonitor.monitor(correlationId);
 
 			int timeout = m_config.getAckCheckerIoTimeoutMillis();
 
@@ -177,25 +178,7 @@ public class DefaultAckManager implements AckManager {
 			try {
 				if (m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS)) {
 					ConsumerStatusMonitor.INSTANCE.ackMessageCmdSent(topic, partition, groupId);
-
-					try {
-						acked = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
-
-						if (acked) {
-							ConsumerStatusMonitor.INSTANCE.brokerAcked(topic, partition, groupId);
-						} else {
-							ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
-						}
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						m_resultMonitor.cancel(correlationId);
-					} catch (TimeoutException e) {
-						ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(topic, partition, groupId);
-						m_resultMonitor.cancel(correlationId);
-					} catch (Exception e) {
-						ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
-						m_resultMonitor.cancel(correlationId);
-					}
+					acked = waitForBrokerResult(topic, partition, groupId, correlationId, resultFuture, timeout);
 				} else {
 					m_resultMonitor.cancel(correlationId);
 				}
@@ -207,11 +190,46 @@ public class DefaultAckManager implements AckManager {
 			}
 
 			ackedTimer.stop();
-
 		} else {
 			log.debug("No endpoint found, ignore it");
+			m_endpointManager.refreshEndpoint(topic, partition);
 		}
 		return acked;
+	}
+
+	private boolean waitForBrokerResult(String topic, int partition, String groupId, long correlationId,
+	      Future<Pair<Boolean, Endpoint>> resultFuture, int timeout) {
+		try {
+			Pair<Boolean, Endpoint> result = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
+
+			if (result != null) {
+				Boolean brokerAcked = result.getKey();
+				if (brokerAcked != null && brokerAcked) {
+					ConsumerStatusMonitor.INSTANCE.brokerAcked(topic, partition, groupId);
+					return true;
+				} else {
+					ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+					Endpoint newEndpoint = result.getValue();
+					if (newEndpoint != null) {
+						m_endpointManager.updateEndpoint(topic, partition, newEndpoint);
+					}
+					return false;
+				}
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			m_resultMonitor.cancel(correlationId);
+		} catch (TimeoutException e) {
+			ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(topic, partition, groupId);
+			m_resultMonitor.cancel(correlationId);
+		} catch (Exception e) {
+			ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+			m_resultMonitor.cancel(correlationId);
+		}
+
+		m_endpointManager.refreshEndpoint(topic, partition);
+
+		return false;
 	}
 
 	private class AckHolderChecker implements Runnable {
@@ -247,7 +265,7 @@ public class DefaultAckManager implements AckManager {
 			@Override
 			public void run() {
 				Tpg tpg = m_holder.getTpg();
-				AckMessageCommandV4 cmd = m_holder.pop();
+				AckMessageCommandV5 cmd = m_holder.pop();
 				try {
 					if (cmd != null) {
 						boolean success = writeAckToBroker(cmd);
@@ -290,7 +308,7 @@ public class DefaultAckManager implements AckManager {
 
 		private AtomicBoolean m_stopped = new AtomicBoolean(false);
 
-		private AtomicReference<AckMessageCommandV4> m_cmd = new AtomicReference<>(null);
+		private AtomicReference<AckMessageCommandV5> m_cmd = new AtomicReference<>(null);
 
 		private AtomicBoolean m_flushing = new AtomicBoolean(false);
 
@@ -317,14 +335,14 @@ public class DefaultAckManager implements AckManager {
 			m_stopped.set(true);
 		}
 
-		public AckMessageCommandV4 pop() {
+		public AckMessageCommandV5 pop() {
 			if (m_cmd.get() == null) {
 				return scan();
 			}
 			return m_cmd.getAndSet(null);
 		}
 
-		public void push(AckMessageCommandV4 cmd) {
+		public void push(AckMessageCommandV5 cmd) {
 			m_cmd.set(cmd);
 		}
 
@@ -332,8 +350,8 @@ public class DefaultAckManager implements AckManager {
 			return m_tpg;
 		}
 
-		private AckMessageCommandV4 scan() {
-			AckMessageCommandV4 cmd = null;
+		private AckMessageCommandV5 scan() {
+			AckMessageCommandV5 cmd = null;
 
 			AckHolderScanningResult<AckContext> priorityScanningRes = m_priorityAckHolder.scan(m_config
 			      .getAckCommandMaxSize());
@@ -349,7 +367,7 @@ public class DefaultAckManager implements AckManager {
 			      || !resendScanningRes.getAcked().isEmpty() //
 			      || !resendScanningRes.getNacked().isEmpty()) {
 
-				cmd = new AckMessageCommandV4(m_tpg.getTopic(), m_tpg.getPartition(), m_tpg.getGroupId(),
+				cmd = new AckMessageCommandV5(m_tpg.getTopic(), m_tpg.getPartition(), m_tpg.getGroupId(),
 				      m_config.getAckCheckerIoTimeoutMillis());
 
 				// priority

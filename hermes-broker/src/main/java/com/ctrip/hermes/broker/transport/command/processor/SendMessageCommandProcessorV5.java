@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
@@ -26,12 +27,13 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
-import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.SendMessageCommandV5;
 import com.ctrip.hermes.core.utils.CatUtil;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
@@ -45,8 +47,8 @@ import com.google.common.util.concurrent.ListenableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class SendMessageCommandProcessor implements CommandProcessor {
-	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessor.class);
+public class SendMessageCommandProcessorV5 implements CommandProcessor {
+	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessorV5.class);
 
 	@Inject
 	private FileBizLogger m_bizLogger;
@@ -70,12 +72,12 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.MESSAGE_SEND);
+		return Arrays.asList(CommandType.MESSAGE_SEND_V5);
 	}
 
 	@Override
 	public void process(final CommandProcessorContext ctx) {
-		SendMessageCommand reqCmd = (SendMessageCommand) ctx.getCommand();
+		SendMessageCommandV5 reqCmd = (SendMessageCommandV5) ctx.getCommand();
 		String topic = reqCmd.getTopic();
 		int partition = reqCmd.getPartition();
 
@@ -85,13 +87,8 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 		if (m_metaService.findTopicByName(topic) != null) {
 			if (lease != null) {
-				if (log.isDebugEnabled()) {
-					log.debug("Send message reqeust arrived(topic={}, partition={}, msgCount={})", topic, partition,
-					      reqCmd.getMessageCount());
-				}
-
 				// FIXME if dumper's queue is full, reject it.
-				writeAck(ctx, true);
+				writeAck(ctx, topic, partition, true);
 
 				Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
 
@@ -107,7 +104,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 					MessageBatchWithRawData batch = entry.getValue();
 					try {
 						ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(topic, partition,
-						      entry.getKey() == 0 ? true : false, batch, m_systemClockService.now() + 10 * 1000L);
+						      entry.getKey() == 0 ? true : false, batch, m_systemClockService.now() + reqCmd.getTimeout());
 
 						if (future != null) {
 							Futures.addCallback(future, completionCallback);
@@ -131,11 +128,11 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 			}
 		}
 
-		writeAck(ctx, false);
+		writeAck(ctx, topic, partition, false);
 		reqCmd.release();
 	}
 
-	private void logReqToCat(SendMessageCommand reqCmd) {
+	private void logReqToCat(SendMessageCommandV5 reqCmd) {
 		long now = m_systemClockService.now();
 		if (now - m_lastLogSendReqToCatTime.get() > 60 * 1000L) {
 			Transaction tx = Cat.newTransaction(CatConstants.TYPE_SEND_CMD + reqCmd.getHeader().getType().getVersion(),
@@ -228,13 +225,18 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		}
 	}
 
-	private void writeAck(CommandProcessorContext ctx, boolean success) {
-		SendMessageCommand req = (SendMessageCommand) ctx.getCommand();
+	private void writeAck(CommandProcessorContext ctx, String topic, int partition, boolean success) {
+		SendMessageCommandV5 req = (SendMessageCommandV5) ctx.getCommand();
 
-		SendMessageAckCommand ack = new SendMessageAckCommand();
+		SendMessageAckCommandV5 ack = new SendMessageAckCommandV5();
 		ack.correlate(req);
 		ack.setSuccess(success);
-		ack.getHeader().addProperty("createTime", Long.toString(System.currentTimeMillis()));
+		if (!success && m_metaService.findTopicByName(topic) != null) {
+			Pair<Endpoint, Long> endpointEntry = m_metaService.findEndpointByTopicAndPartition(topic, partition);
+			if (endpointEntry != null) {
+				ack.setNewEndpoint(endpointEntry.getKey());
+			}
+		}
 		ChannelUtils.writeAndFlush(ctx.getChannel(), ack);
 	}
 

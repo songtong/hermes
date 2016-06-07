@@ -1,6 +1,7 @@
 package com.ctrip.hermes.producer.pipeline;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.unidal.lookup.annotation.Inject;
 
@@ -20,6 +21,8 @@ public class DefaultProducerPipelineSink implements PipelineSink<Future<SendResu
 	@Inject
 	private ProducerConfig m_config;
 
+	private AtomicLong m_lastLogVersionTime = new AtomicLong(0);
+
 	@Override
 	public Future<SendResult> handle(PipelineContext<Future<SendResult>> ctx, Object input) {
 		logVersionToCat();
@@ -28,7 +31,11 @@ public class DefaultProducerPipelineSink implements PipelineSink<Future<SendResu
 
 	private void logVersionToCat() {
 		if (m_config.isCatEnabled()) {
-			Cat.logEvent("Hermes.Client.Version", Hermes.VERSION);
+			long now = System.currentTimeMillis();
+			if (now - m_lastLogVersionTime.get() > 60000) {
+				Cat.logEvent("Hermes.Client.Version", Hermes.VERSION);
+				m_lastLogVersionTime.set(now);
+			}
 		}
 	}
 }

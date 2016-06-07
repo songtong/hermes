@@ -24,7 +24,6 @@ import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.DummyMessageMeta;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
-import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.utils.CatUtil;
@@ -40,9 +39,6 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 	@Inject
 	private FileBizLogger m_bizLogger;
-
-	@Inject
-	private MetaService m_metaService;
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultLongPollingService.class);
 
@@ -61,7 +57,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		}
 
 		if (m_stopped.get() || (task.isWithOffset() && task.getStartOffset() == null)) {
-			response(task, null, null);
+			response(task, null, null, true);
 		} else {
 			m_scheduledThreadPool.submit(new Runnable() {
 				@Override
@@ -108,7 +104,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 					            .getPartition(), pullMessageTask.getTpg().getGroupId());
 				}
 				// no lease, return empty cmd
-				response(pullMessageTask, null, null);
+				response(pullMessageTask, null, null, false);
 			}
 		} catch (Exception e) {
 			log.error("Exception occurred while executing pull message task", e);
@@ -151,7 +147,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 					count += batch.size();
 				}
 
-				response(pullTask, batches, currentOffset);
+				response(pullTask, batches, currentOffset, true);
 				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime, count, null,
 				      Transaction.SUCCESS);
 				return true;

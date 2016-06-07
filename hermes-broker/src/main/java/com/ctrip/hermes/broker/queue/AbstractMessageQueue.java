@@ -38,7 +38,7 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
-import com.ctrip.hermes.core.transport.command.v3.AckMessageResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.dianping.cat.Cat;
@@ -367,7 +367,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 				doNackAndAck(task.getGroupId(), false, true, task.getAckedResendContexts(), task.getNackedResendContexts());
 				success = true;
 			} finally {
-				AckMessageResultCommandV3 resCmd = new AckMessageResultCommandV3();
+				AckMessageResultCommandV5 resCmd = new AckMessageResultCommandV5();
 				resCmd.getHeader().setCorrelationId(task.getCorrelationId());
 				resCmd.setSuccess(success);
 				ChannelUtils.writeAndFlush(task.getChannel(), resCmd);

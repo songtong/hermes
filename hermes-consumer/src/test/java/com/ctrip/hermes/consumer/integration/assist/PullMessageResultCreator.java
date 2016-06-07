@@ -17,7 +17,7 @@ import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
 import com.ctrip.hermes.core.transport.TransferCallback;
 import com.ctrip.hermes.core.transport.command.Header;
-import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageResultCommandV5;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Codec;
@@ -92,12 +92,12 @@ public class PullMessageResultCreator {
 		return pair;
 	}
 
-	public static <T> PullMessageResultCommandV3 createPullMessageResultCommand(String topic,
+	public static <T> PullMessageResultCommandV5 createPullMessageResultCommand(String topic,
 	      List<Pair<String, String>> attributes, int remainingRetries, int priority, boolean isResend, String keyPrefix,
 	      List<List<T>> batchedMessages) {
 		long bornTime = System.currentTimeMillis();
 
-		PullMessageResultCommandV3 cmd = new PullMessageResultCommandV3();
+		PullMessageResultCommandV5 cmd = new PullMessageResultCommandV5();
 		List<TppConsumerMessageBatch> batches = new ArrayList<TppConsumerMessageBatch>();
 		long id = 0;
 		for (List<?> rawMsgs : batchedMessages) {
@@ -114,7 +114,7 @@ public class PullMessageResultCreator {
 		ByteBuf buf = Unpooled.buffer();
 		cmd.toBytes(buf);
 
-		PullMessageResultCommandV3 decodedCmd = new PullMessageResultCommandV3();
+		PullMessageResultCommandV5 decodedCmd = new PullMessageResultCommandV5();
 		Header header = new Header();
 		header.parse(buf);
 		decodedCmd.parse(buf, header);

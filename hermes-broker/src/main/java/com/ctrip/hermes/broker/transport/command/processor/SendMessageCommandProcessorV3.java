@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,8 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 	@Inject
 	private SystemClockService m_systemClockService;
 
+	private AtomicLong m_lastLogSendReqToCatTime = new AtomicLong(0);
+
 	@Override
 	public List<CommandType> commandTypes() {
 		return Arrays.asList(CommandType.MESSAGE_SEND_V3);
@@ -73,15 +76,18 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 	@Override
 	public void process(final CommandProcessorContext ctx) {
 		SendMessageCommandV3 reqCmd = (SendMessageCommandV3) ctx.getCommand();
+		String topic = reqCmd.getTopic();
+		int partition = reqCmd.getPartition();
 
-		Cat.logEvent("Hermes.SendMessage.Request", reqCmd.getTopic() + "-" + reqCmd.getPartition());
-		Lease lease = m_leaseContainer.acquireLease(reqCmd.getTopic(), reqCmd.getPartition(), m_config.getSessionId());
+		logReqToCat(reqCmd);
 
-		if (m_metaService.findTopicByName(reqCmd.getTopic()) != null) {
+		Lease lease = m_leaseContainer.acquireLease(topic, partition, m_config.getSessionId());
+
+		if (m_metaService.findTopicByName(topic) != null) {
 			if (lease != null) {
 				if (log.isDebugEnabled()) {
-					log.debug("Send message reqeust arrived(topic={}, partition={}, msgCount={})", reqCmd.getTopic(),
-					      reqCmd.getPartition(), reqCmd.getMessageCount());
+					log.debug("Send message reqeust arrived(topic={}, partition={}, msgCount={})", topic, partition,
+					      reqCmd.getMessageCount());
 				}
 
 				// FIXME if dumper's queue is full, reject it.
@@ -89,20 +95,19 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 
 				Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
 
-				bizLog(ctx, rawBatches, reqCmd.getPartition());
+				bizLog(ctx, rawBatches, partition);
 
 				final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
 				result.correlate(reqCmd);
 
 				FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx,
-				      reqCmd.getTopic(), reqCmd.getPartition());
+				      topic, partition);
 
 				for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
 					MessageBatchWithRawData batch = entry.getValue();
 					try {
-						ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(reqCmd.getTopic(),
-						      reqCmd.getPartition(), entry.getKey() == 0 ? true : false, batch, m_systemClockService.now()
-						            + reqCmd.getTimeout());
+						ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(topic, partition,
+						      entry.getKey() == 0 ? true : false, batch, m_systemClockService.now() + reqCmd.getTimeout());
 
 						if (future != null) {
 							Futures.addCallback(future, completionCallback);
@@ -116,18 +121,29 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 
 			} else {
 				if (log.isDebugEnabled()) {
-					log.debug("No broker lease to handle client send message reqeust(topic={}, partition={})",
-					      reqCmd.getTopic(), reqCmd.getPartition());
+					log.debug("No broker lease to handle client send message reqeust(topic={}, partition={})", topic,
+					      partition);
 				}
 			}
 		} else {
 			if (log.isDebugEnabled()) {
-				log.debug("Topic {} not found", reqCmd.getTopic());
+				log.debug("Topic {} not found", topic);
 			}
 		}
 
 		writeAck(ctx, false);
 		reqCmd.release();
+	}
+
+	private void logReqToCat(SendMessageCommandV3 reqCmd) {
+		long now = m_systemClockService.now();
+		if (now - m_lastLogSendReqToCatTime.get() > 60 * 1000L) {
+			Transaction tx = Cat.newTransaction(CatConstants.TYPE_SEND_CMD + reqCmd.getHeader().getType().getVersion(),
+			      reqCmd.getTopic() + "-" + reqCmd.getPartition());
+
+			tx.complete();
+			m_lastLogSendReqToCatTime.set(now);
+		}
 	}
 
 	private void bizLog(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches, int partition) {

@@ -50,10 +50,10 @@ import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
-import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
-import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
-import com.ctrip.hermes.core.transport.command.v4.PullMessageCommandV4;
-import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageResultCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.QueryLatestConsumerOffsetCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.QueryOffsetResultCommandV5;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -169,7 +169,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					      m_context.getGroupId(), m_token.get(), m_context.getSessionId());
 
 					startConsuming(key, m_token.get());
-					
+
 					m_token.set(-1L);
 
 					log.info(
@@ -274,23 +274,23 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(m_config.getNoEndpointWaitBaseMillis(),
 		      m_config.getNoEndpointWaitMaxMillis());
 
+		EndpointManager endpointManager = PlexusComponentLocator.lookup(EndpointManager.class);
 		while (!isClosed() && !Thread.currentThread().isInterrupted() && !m_lease.get().isExpired()) {
-
-			Endpoint endpoint = PlexusComponentLocator.lookup(EndpointManager.class).getEndpoint(
-			      m_context.getTopic().getName(), m_partitionId);
+			Endpoint endpoint = endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
 			if (endpoint == null) {
 				log.warn("No endpoint found for topic {} partition {}, will retry later", m_context.getTopic().getName(),
 				      m_partitionId);
+				endpointManager.refreshEndpoint(m_context.getTopic().getName(), m_partitionId);
 				schedulePolicy.fail(true);
 			} else {
-				final SettableFuture<QueryOffsetResultCommandV3> future = SettableFuture.create();
+				final SettableFuture<QueryOffsetResultCommandV5> future = SettableFuture.create();
 
-				QueryLatestConsumerOffsetCommandV3 cmd = new QueryLatestConsumerOffsetCommandV3(m_context.getTopic()
+				QueryLatestConsumerOffsetCommandV5 cmd = new QueryLatestConsumerOffsetCommandV5(m_context.getTopic()
 				      .getName(), m_partitionId, m_context.getGroupId());
 
 				cmd.setFuture(future);
 
-				QueryOffsetResultCommandV3 offsetRes = null;
+				QueryOffsetResultCommandV5 offsetRes = null;
 
 				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
 				      m_context.getGroupId(), "query-offset-cmd-duration");
@@ -322,20 +322,32 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					} finally {
 						queryOffsetResultMonitor.remove(cmd);
 					}
+
+					if (offsetRes != null) {
+						if (offsetRes.getOffset() != null) {
+							ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReceived(m_context.getTopic().getName(),
+							      m_partitionId, m_context.getGroupId());
+							m_offset.set(offsetRes.getOffset());
+							return;
+						} else {
+							if (offsetRes.getNewEndpoint() != null) {
+								endpointManager.updateEndpoint(m_context.getTopic().getName(), m_partitionId,
+								      offsetRes.getNewEndpoint());
+							}
+							schedulePolicy.fail(true);
+						}
+					} else {
+						endpointManager.refreshEndpoint(m_context.getTopic().getName(), m_partitionId);
+						schedulePolicy.fail(true);
+					}
+
 				} else {
 					queryOffsetResultMonitor.remove(cmd);
+					schedulePolicy.fail(true);
 				}
 
 				context.stop();
 
-				if (offsetRes != null && offsetRes.getOffset() != null) {
-					ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReceived(m_context.getTopic().getName(),
-					      m_partitionId, m_context.getGroupId());
-					m_offset.set(offsetRes.getOffset());
-					return;
-				} else {
-					schedulePolicy.fail(true);
-				}
 			}
 		}
 	}
@@ -522,12 +534,13 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					return;
 				}
 
-				Endpoint endpoint = PlexusComponentLocator.lookup(EndpointManager.class).getEndpoint(
-				      m_context.getTopic().getName(), m_partitionId);
+				EndpointManager endpointManager = PlexusComponentLocator.lookup(EndpointManager.class);
+				Endpoint endpoint = endpointManager.getEndpoint(m_context.getTopic().getName(), m_partitionId);
 
 				if (endpoint == null) {
 					log.warn("No endpoint found for topic {} partition {}, will retry later",
 					      m_context.getTopic().getName(), m_partitionId);
+					endpointManager.refreshEndpoint(m_context.getTopic().getName(), m_partitionId);
 					m_noEndpointSchedulePolicy.fail(true);
 					return;
 				} else {
@@ -552,13 +565,13 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 		protected void pullMessages(Endpoint endpoint, long timeout) throws InterruptedException, TimeoutException,
 		      ExecutionException {
-			final SettableFuture<PullMessageResultCommandV4> future = SettableFuture.create();
+			final SettableFuture<PullMessageResultCommandV5> future = SettableFuture.create();
 
-			PullMessageCommandV4 cmd = createPullMessageCommand(timeout);
+			PullMessageCommandV5 cmd = createPullMessageCommand(timeout);
 
 			cmd.setFuture(future);
 
-			PullMessageResultCommandV4 ack = null;
+			PullMessageResultCommandV5 ack = null;
 
 			try {
 
@@ -591,9 +604,18 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					if (ack != null) {
 						ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReceived(m_context.getTopic().getName(),
 						      m_partitionId, m_context.getGroupId());
-						appendToMsgQueue(ack);
-
-						resultReceived(ack);
+						if (ack.isBrokerAccepted()) {
+							appendToMsgQueue(ack);
+							resultReceived(ack);
+						} else {
+							if (ack.getNewEndpoint() != null) {
+								PlexusComponentLocator.lookup(EndpointManager.class).updateEndpoint(
+								      m_context.getTopic().getName(), m_partitionId, ack.getNewEndpoint());
+							}
+						}
+					} else {
+						PlexusComponentLocator.lookup(EndpointManager.class).refreshEndpoint(m_context.getTopic().getName(),
+						      m_partitionId);
 					}
 				} else {
 					pullMessageResultMonitor.remove(cmd);
@@ -606,14 +628,14 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			}
 		}
 
-		protected void resultReceived(PullMessageResultCommandV4 ack) {
+		protected void resultReceived(PullMessageResultCommandV5 ack) {
 			if (ack.getOffset() != null) {
 				m_offset.set(ack.getOffset());
 			}
 		}
 
-		protected PullMessageCommandV4 createPullMessageCommand(long timeout) {
-			return new PullMessageCommandV4( //
+		protected PullMessageCommandV5 createPullMessageCommand(long timeout) {
+			return new PullMessageCommandV5( //
 			      m_context.getTopic().getName(), //
 			      m_partitionId, //
 			      m_context.getGroupId(), //
@@ -625,7 +647,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			            : null);
 		}
 
-		protected void appendToMsgQueue(PullMessageResultCommandV4 ack) {
+		protected void appendToMsgQueue(PullMessageResultCommandV5 ack) {
 			List<TppConsumerMessageBatch> batches = ack.getBatches();
 			if (batches != null && !batches.isEmpty()) {
 				ConsumerContext context = m_consumerNotifier.find(m_token);

@@ -5,7 +5,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
@@ -15,21 +18,21 @@ import com.google.common.util.concurrent.SettableFuture;
 @Named(type = AckMessageResultMonitor.class)
 public class DefaultAckMessageResultMonitor implements AckMessageResultMonitor {
 
-	private Map<Long, SettableFuture<Boolean>> m_futures = new ConcurrentHashMap<Long, SettableFuture<Boolean>>();
+	private Map<Long, SettableFuture<Pair<Boolean, Endpoint>>> m_futures = new ConcurrentHashMap<Long, SettableFuture<Pair<Boolean, Endpoint>>>();
 
 	@Override
-	public Future<Boolean> monitor(long correlationId) {
-		SettableFuture<Boolean> future = SettableFuture.create();
+	public Future<Pair<Boolean, Endpoint>> monitor(long correlationId) {
+		SettableFuture<Pair<Boolean, Endpoint>> future = SettableFuture.create();
 		m_futures.put(correlationId, future);
 		return future;
 	}
 
 	@Override
-	public void received(long correlationId, boolean success) {
+	public void received(AckMessageResultCommandV5 cmd) {
 
-		SettableFuture<Boolean> future = m_futures.remove(correlationId);
+		SettableFuture<Pair<Boolean, Endpoint>> future = m_futures.remove(cmd.getHeader().getCorrelationId());
 		if (future != null) {
-			future.set(success);
+			future.set(new Pair<Boolean, Endpoint>(cmd.isSuccess(), cmd.getNewEndpoint()));
 		}
 	}
 
