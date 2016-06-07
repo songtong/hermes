@@ -132,7 +132,10 @@ public class DefaultAckManager implements AckManager {
 		if (holder != null) {
 			holder.stop();
 
-			while (!Thread.interrupted() && holder.hasUnhandleOperation()) {
+			long expireTime = System.currentTimeMillis() + 5000;
+
+			while (!Thread.interrupted() && System.currentTimeMillis() < expireTime && holder.hasUnhandleOperation()
+			      && m_ackHolders.containsKey(token)) {
 				try {
 					TimeUnit.MILLISECONDS.sleep(50);
 				} catch (InterruptedException e) {
