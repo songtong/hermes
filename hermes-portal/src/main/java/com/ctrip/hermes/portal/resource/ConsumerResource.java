@@ -82,7 +82,7 @@ public class ConsumerResource {
 		}
 
 		if (consumerService.isConsumerAlive(topic, consumerGroup)) {
-			throw new RestException("Please Stop Consumer!", Status.INTERNAL_SERVER_ERROR);
+			throw new RestException("请先停止Consumer！如果已经停止，请10秒之后重试。", Status.INTERNAL_SERVER_ERROR);
 		}
 
 		try {
