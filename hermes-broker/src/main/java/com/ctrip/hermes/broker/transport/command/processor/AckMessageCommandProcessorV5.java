@@ -1,5 +1,7 @@
 package com.ctrip.hermes.broker.transport.command.processor;
 
+import io.netty.channel.Channel;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -23,8 +25,8 @@ import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.processor.ThreadCount;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageAckCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.AckMessageCommandV5;
-import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.meta.entity.Endpoint;
 
@@ -69,6 +71,8 @@ public class AckMessageCommandProcessorV5 implements CommandProcessor {
 		Lease lease = m_leaseContainer.acquireLease(topic, partition, m_config.getSessionId());
 
 		if (lease != null) {
+			responseAck(ctx.getChannel(), reqCmd, true);
+
 			List<AckContext> ackedPriorityContexts = reqCmd.getAckedMsgs().get(0);
 			List<AckContext> ackedContexts = reqCmd.getAckedMsgs().get(1);
 			List<AckContext> ackedResendContexts = reqCmd.getAckedResendMsgs().get(1);
@@ -92,18 +96,23 @@ public class AckMessageCommandProcessorV5 implements CommandProcessor {
 			task.setNackedResendContexts(nackedResendContexts);
 			m_messageQueueManager.submitAckMessagesTask(task);
 		} else {
-			AckMessageResultCommandV5 resCmd = new AckMessageResultCommandV5();
-			resCmd.correlate(reqCmd);
-			resCmd.setSuccess(false);
-			if (m_metaService.findTopicByName(topic) != null) {
-				Pair<Endpoint, Long> endpointEntry = m_metaService.findEndpointByTopicAndPartition(topic, partition);
-				if (endpointEntry != null) {
-					resCmd.setNewEndpoint(endpointEntry.getKey());
-				}
-			}
-
-			ChannelUtils.writeAndFlush(ctx.getChannel(), resCmd);
+			responseAck(ctx.getChannel(), reqCmd, false);
 		}
+	}
+
+	private void responseAck(Channel channel, AckMessageCommandV5 reqCmd, boolean success) {
+		AckMessageAckCommandV5 ack = new AckMessageAckCommandV5();
+		ack.correlate(reqCmd);
+		ack.setSuccess(success);
+		if (!success && m_metaService.findTopicByName(reqCmd.getTopic()) != null) {
+			Pair<Endpoint, Long> endpointEntry = m_metaService.findEndpointByTopicAndPartition(reqCmd.getTopic(),
+			      reqCmd.getPartition());
+			if (endpointEntry != null) {
+				ack.setNewEndpoint(endpointEntry.getKey());
+			}
+		}
+
+		ChannelUtils.writeAndFlush(channel, ack);
 	}
 
 	private void logNacked(String consumerIp, String topic, int partition, String groupId,

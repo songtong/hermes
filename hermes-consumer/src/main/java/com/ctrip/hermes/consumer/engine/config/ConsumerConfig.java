@@ -30,7 +30,9 @@ public class ConsumerConfig implements Initializable {
 
 	private static final int DEFAULT_ACK_CHECKER_IO_THREAD_COUNT = 3;
 
-	private static final int DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS = 10000;
+	private static final int DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS = 4000;
+
+	private static final int DEFAULT_ACK_CHECKER_ACCEPT_TIMEOUT_MILLIS = 4000;
 
 	private static final int DEFAULT_NO_MESSAGE_WAIT_BASE_MILLIS = 10;
 
@@ -49,6 +51,8 @@ public class ConsumerConfig implements Initializable {
 	private int m_ackCheckerIoThreadCount = DEFAULT_ACK_CHECKER_IO_THREAD_COUNT;
 
 	private int m_ackCheckerIoTimeoutMillis = DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS;
+
+	private int m_ackCheckerAcceptTimeoutMillis = DEFAULT_ACK_CHECKER_ACCEPT_TIMEOUT_MILLIS;
 
 	private int m_noMessageWaitBaseMillis = DEFAULT_NO_MESSAGE_WAIT_BASE_MILLIS;
 
@@ -155,7 +159,7 @@ public class ConsumerConfig implements Initializable {
 		if (StringUtils.isNumeric(noMessageWaitMaxMillis)) {
 			m_noMessageWaitMaxMillis = Integer.valueOf(noMessageWaitMaxMillis);
 		}
-		
+
 		String maxAckCmdSize = m_env.getGlobalConfig().getProperty("consumer.ack.max.cmd.size");
 		if (StringUtils.isNumeric(maxAckCmdSize)) {
 			m_ackCommandMaxSize = Integer.valueOf(maxAckCmdSize);
@@ -172,6 +176,10 @@ public class ConsumerConfig implements Initializable {
 
 	public int getAckCheckerIoTimeoutMillis() {
 		return m_ackCheckerIoTimeoutMillis;
+	}
+
+	public int getAckCheckerAcceptTimeoutMillis() {
+		return m_ackCheckerAcceptTimeoutMillis;
 	}
 
 	public int getNotifierWorkQueueSize(String topic) throws IOException {

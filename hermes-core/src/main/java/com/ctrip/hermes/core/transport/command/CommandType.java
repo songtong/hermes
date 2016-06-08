@@ -19,6 +19,7 @@ import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
 import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
 import com.ctrip.hermes.core.transport.command.v4.PullMessageCommandV4;
 import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageAckCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.AckMessageCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.PullMessageCommandV5;
@@ -59,6 +60,7 @@ public enum CommandType {
 
 	ACK_MESSAGE_SEND(201, 1, SendMessageAckCommand.class), //
 	ACK_MESSAGE_SEND_V5(201, 5, SendMessageAckCommandV5.class), //
+	ACK_MESSAGE_ACK_V5(202, 5, AckMessageAckCommandV5.class), //
 
 	RESULT_MESSAGE_SEND(301, 1, SendMessageResultCommand.class), //
 
