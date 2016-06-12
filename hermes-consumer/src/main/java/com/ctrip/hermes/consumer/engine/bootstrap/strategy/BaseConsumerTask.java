@@ -9,6 +9,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +21,7 @@ import java.util.concurrent.locks.LockSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.tuple.Pair;
 
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
@@ -29,6 +31,7 @@ import com.ctrip.hermes.consumer.engine.FilterMessageListenerConfig;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
+import com.ctrip.hermes.consumer.engine.monitor.PullMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
@@ -565,13 +568,13 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 		protected void pullMessages(Endpoint endpoint, long timeout) throws InterruptedException, TimeoutException,
 		      ExecutionException {
-			final SettableFuture<PullMessageResultCommandV5> future = SettableFuture.create();
+			final SettableFuture<PullMessageResultCommandV5> resultFuture = SettableFuture.create();
 
 			PullMessageCommandV5 cmd = createPullMessageCommand(timeout);
 
-			cmd.setFuture(future);
+			cmd.setFuture(resultFuture);
 
-			PullMessageResultCommandV5 ack = null;
+			PullMessageResultCommandV5 result = null;
 
 			try {
 
@@ -582,50 +585,99 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 				PullMessageResultMonitor pullMessageResultMonitor = PlexusComponentLocator
 				      .lookup(PullMessageResultMonitor.class);
+				PullMessageAcceptanceMonitor pullMessageAcceptMonitor = PlexusComponentLocator
+				      .lookup(PullMessageAcceptanceMonitor.class);
 
 				pullMessageResultMonitor.monitor(cmd);
+				Future<Pair<Boolean, Endpoint>> acceptFuture = pullMessageAcceptMonitor.monitor(cmd.getHeader()
+				      .getCorrelationId());
+
+				long start = System.currentTimeMillis();
+				long acceptTimeout = m_config.getPullMessageAcceptTimeoutMillis() > timeout ? timeout : m_config
+				      .getPullMessageAcceptTimeoutMillis();
+
 				if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, timeout,
 				      TimeUnit.MILLISECONDS)) {
 
 					ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_context.getTopic().getName(), m_partitionId,
 					      m_context.getGroupId());
 
-					try {
-						ack = future.get(timeout, TimeUnit.MILLISECONDS);
-					} catch (TimeoutException e) {
-						ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
-						      m_partitionId, m_context.getGroupId());
-					} finally {
+					Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(acceptFuture, acceptTimeout);
+
+					if (acceptResult != null) {
+						result = waitForBrokerResultIfNecessary(cmd, resultFuture, acceptResult,
+						      (long) timeout - (System.currentTimeMillis() - start));
+					} else {
+						PlexusComponentLocator.lookup(EndpointManager.class).refreshEndpoint(cmd.getTopic(),
+						      cmd.getPartition());
+						pullMessageAcceptMonitor.cancel(cmd.getHeader().getCorrelationId());
 						pullMessageResultMonitor.remove(cmd);
 					}
 
 					context.stop();
 
-					if (ack != null) {
+					if (result != null) {
 						ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReceived(m_context.getTopic().getName(),
 						      m_partitionId, m_context.getGroupId());
-						if (ack.isBrokerAccepted()) {
-							appendToMsgQueue(ack);
-							resultReceived(ack);
-						} else {
-							if (ack.getNewEndpoint() != null) {
-								PlexusComponentLocator.lookup(EndpointManager.class).updateEndpoint(
-								      m_context.getTopic().getName(), m_partitionId, ack.getNewEndpoint());
-							}
-						}
-					} else {
-						PlexusComponentLocator.lookup(EndpointManager.class).refreshEndpoint(m_context.getTopic().getName(),
-						      m_partitionId);
+						appendToMsgQueue(result);
+						resultReceived(result);
 					}
 				} else {
 					pullMessageResultMonitor.remove(cmd);
+					pullMessageAcceptMonitor.cancel(cmd.getHeader().getCorrelationId());
 				}
 
 			} finally {
-				if (ack != null) {
-					ack.release();
+				if (result != null) {
+					result.release();
 				}
 			}
+		}
+
+		private Pair<Boolean, Endpoint> waitForBrokerAcceptance(Future<Pair<Boolean, Endpoint>> acceptFuture, long timeout)
+		      throws InterruptedException, ExecutionException {
+			Pair<Boolean, Endpoint> acceptResult = null;
+			try {
+				acceptResult = acceptFuture.get(timeout, TimeUnit.MILLISECONDS);
+			} catch (Exception e) {
+				// ignore
+			}
+			return acceptResult;
+		}
+
+		private PullMessageResultCommandV5 waitForBrokerResultIfNecessary(PullMessageCommandV5 cmd,
+		      SettableFuture<PullMessageResultCommandV5> resultFuture, Pair<Boolean, Endpoint> acceptResult, long timeout)
+		      throws InterruptedException, ExecutionException {
+			Boolean brokerAccept = acceptResult.getKey();
+			String topic = cmd.getTopic();
+			int partition = cmd.getPartition();
+			if (brokerAccept != null && brokerAccept) {
+				return waitForBrokerResult(cmd, resultFuture, timeout);
+			} else {
+				Endpoint newEndpoint = acceptResult.getValue();
+				if (newEndpoint != null) {
+					PlexusComponentLocator.lookup(EndpointManager.class).updateEndpoint(topic, partition, newEndpoint);
+				}
+				return null;
+			}
+		}
+
+		private PullMessageResultCommandV5 waitForBrokerResult(PullMessageCommandV5 cmd,
+		      Future<PullMessageResultCommandV5> resultFuture, long timeout) throws InterruptedException,
+		      ExecutionException {
+			PullMessageResultCommandV5 result = null;
+			try {
+				result = resultFuture.get(timeout > 0 ? timeout : 1, TimeUnit.MILLISECONDS);
+			} catch (TimeoutException e) {
+				ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
+				      m_partitionId, m_context.getGroupId());
+			} finally {
+				PlexusComponentLocator.lookup(PullMessageResultMonitor.class).remove(cmd);
+				PlexusComponentLocator.lookup(PullMessageAcceptanceMonitor.class)
+				      .cancel(cmd.getHeader().getCorrelationId());
+			}
+
+			return result;
 		}
 
 		protected void resultReceived(PullMessageResultCommandV5 ack) {

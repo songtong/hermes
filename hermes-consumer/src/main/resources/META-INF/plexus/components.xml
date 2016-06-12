@@ -155,6 +155,10 @@
 			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor</implementation>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.consumer.engine.monitor.PullMessageAcceptanceMonitor</role>
+			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageAcceptanceMonitor</implementation>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier</role>
 			<implementation>com.ctrip.hermes.consumer.engine.notifier.DefaultConsumerNotifier</implementation>
 			<requirements>

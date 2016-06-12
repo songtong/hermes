@@ -12,7 +12,6 @@ import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.transport.command.AbstractCommand;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
-import com.ctrip.hermes.meta.entity.Endpoint;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -23,13 +22,9 @@ public class PullMessageResultCommandV5 extends AbstractCommand {
 
 	private static final long serialVersionUID = 1408373158921773649L;
 
-	private static final String BROKER_NOT_ACCEPT_KEY = "BROKER_NOT_ACCEPTED";
-
 	private List<TppConsumerMessageBatch> m_batches = new ArrayList<TppConsumerMessageBatch>();
 
 	private Offset m_offset;
-
-	private Endpoint m_newEndpoint;
 
 	public PullMessageResultCommandV5() {
 		super(CommandType.RESULT_MESSAGE_PULL_V5, 5);
@@ -37,15 +32,6 @@ public class PullMessageResultCommandV5 extends AbstractCommand {
 
 	public List<TppConsumerMessageBatch> getBatches() {
 		return m_batches;
-	}
-
-	public void setBrokerAccepted(boolean accepted) {
-		getHeader().addProperty(BROKER_NOT_ACCEPT_KEY, Boolean.toString(!accepted));
-	}
-
-	public boolean isBrokerAccepted() {
-		String value = getHeader().getProperties().get(BROKER_NOT_ACCEPT_KEY);
-		return value == null || Boolean.toString(false).equals(value);
 	}
 
 	public void setOffset(Offset offset) {
@@ -62,14 +48,6 @@ public class PullMessageResultCommandV5 extends AbstractCommand {
 		}
 	}
 
-	public Endpoint getNewEndpoint() {
-		return m_newEndpoint;
-	}
-
-	public void setNewEndpoint(Endpoint newEndpoint) {
-		m_newEndpoint = newEndpoint;
-	}
-
 	@Override
 	public void parse0(ByteBuf buf) {
 		HermesPrimitiveCodec codec = new HermesPrimitiveCodec(buf);
@@ -83,7 +61,6 @@ public class PullMessageResultCommandV5 extends AbstractCommand {
 
 		m_offset = codec.readOffset();
 
-		m_newEndpoint = codec.readEndpoint();
 	}
 
 	@Override
@@ -92,7 +69,6 @@ public class PullMessageResultCommandV5 extends AbstractCommand {
 		writeBatchMetas(buf, codec, m_batches);
 		writeBatchDatas(buf, codec, m_batches);
 		codec.writeOffset(m_offset);
-		codec.writeEndpoint(m_newEndpoint);
 	}
 
 	private void writeBatchDatas(ByteBuf buf, HermesPrimitiveCodec codec, List<TppConsumerMessageBatch> batches) {

@@ -23,8 +23,8 @@ import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageAckCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.PullMessageCommandV5;
-import com.ctrip.hermes.core.transport.command.v5.PullMessageResultCommandV5;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
@@ -70,6 +70,7 @@ public class PullMessageCommandProcessorV5 implements CommandProcessor {
 				if (lease != null) {
 					PullMessageTask task = createPullMessageTask(reqCmd, lease, ctx.getChannel(), ctx.getRemoteIp());
 					m_longPollingService.schedulePush(task);
+					responseAck(ctx.getChannel(), reqCmd, true);
 					return;
 				} else {
 					log.debug(
@@ -86,19 +87,26 @@ public class PullMessageCommandProcessorV5 implements CommandProcessor {
 			      correlationId, topic, partition, groupId, e);
 		}
 
-		// can not acquire lease, response with empty result
-		PullMessageResultCommandV5 cmd = new PullMessageResultCommandV5();
-		cmd.correlate(reqCmd);
-		cmd.setBrokerAccepted(false);
-		if (m_metaService.containsConsumerGroup(topic, groupId)) {
+		responseAck(ctx.getChannel(), reqCmd, false);
+	}
+
+	private void responseAck(Channel channel, PullMessageCommandV5 reqCmd, boolean success) {
+		PullMessageAckCommandV5 ack = new PullMessageAckCommandV5();
+		ack.correlate(reqCmd);
+		ack.setSuccess(success);
+
+		String topic = reqCmd.getTopic();
+		int partition = reqCmd.getPartition();
+		String groupId = reqCmd.getGroupId();
+
+		if (!success && m_metaService.containsConsumerGroup(topic, groupId)) {
 			Pair<Endpoint, Long> endpointEntry = m_metaService.findEndpointByTopicAndPartition(topic, partition);
 			if (endpointEntry != null) {
-				cmd.setNewEndpoint(endpointEntry.getKey());
+				ack.setNewEndpoint(endpointEntry.getKey());
 			}
 		}
 
-		ChannelUtils.writeAndFlush(ctx.getChannel(), cmd);
-
+		ChannelUtils.writeAndFlush(channel, ack);
 	}
 
 	private void logReqToCat(PullMessageCommandV5 reqCmd) {

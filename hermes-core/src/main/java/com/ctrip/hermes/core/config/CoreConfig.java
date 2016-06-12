@@ -33,11 +33,11 @@ public class CoreConfig implements Initializable {
 
 	private static final long DEFAULT_META_CACHE_REFRESH_INTERVAL_SECOND = 60 * 2;
 
-	private static final long DEFAULT_COMMAND_PROCESSOR_CMD_EXPIRE_MILLIS = 3 * 60 * 1000;
+	private static final long DEFAULT_COMMAND_PROCESSOR_CMD_EXPIRE_MILLIS = 60 * 1000;
 
 	private static final long DEFAULT_ENDPOINT_REFRESH_MIN_INTERVAL_MILLIS = 10 * 1000;
 
-	private static final long DEFAULT_ENDPOINT_CACHE_MILLIS = 60 * 1000;
+	private static final long DEFAULT_ENDPOINT_CACHE_MILLIS = 2 * 60 * 1000;
 
 	@Inject
 	private ClientEnvironment m_env;

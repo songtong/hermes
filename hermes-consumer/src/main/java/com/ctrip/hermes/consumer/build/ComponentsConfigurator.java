@@ -25,6 +25,7 @@ import com.ctrip.hermes.consumer.engine.monitor.AckMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.AckMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultAckMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultAckMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultQueryOffsetResultMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
@@ -85,6 +86,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(DefaultQueryOffsetResultMonitor.class));
 		all.add(A(DefaultPullMessageResultMonitor.class));
+		all.add(A(DefaultPullMessageAcceptanceMonitor.class));
 
 		// notifier
 		all.add(A(DefaultConsumerNotifier.class));

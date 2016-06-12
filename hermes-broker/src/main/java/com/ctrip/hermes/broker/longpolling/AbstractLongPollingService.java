@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.lookup.annotation.Inject;
-import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
@@ -19,7 +18,6 @@ import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
 import com.ctrip.hermes.core.transport.command.v5.PullMessageResultCommandV5;
-import com.ctrip.hermes.meta.entity.Endpoint;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -41,7 +39,7 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 	protected AtomicBoolean m_stopped = new AtomicBoolean(false);
 
 	protected void response(PullMessageTask pullTask, List<TppConsumerMessageBatch> batches, Offset offset,
-	      boolean accepted) {
+	      boolean success) {
 		Command cmd = null;
 		switch (pullTask.getPullMessageCommandVersion()) {
 		case 1:
@@ -56,7 +54,7 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 				((PullMessageResultCommandV2) cmd).addBatches(batches);
 			}
 			((PullMessageResultCommandV2) cmd).setOffset(offset);
-			((PullMessageResultCommandV2) cmd).setBrokerAccepted(accepted);
+			((PullMessageResultCommandV2) cmd).setBrokerAccepted(success);
 			break;
 		case 3:
 			cmd = new PullMessageResultCommandV3();
@@ -64,7 +62,7 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 				((PullMessageResultCommandV3) cmd).addBatches(batches);
 			}
 			((PullMessageResultCommandV3) cmd).setOffset(offset);
-			((PullMessageResultCommandV3) cmd).setBrokerAccepted(accepted);
+			((PullMessageResultCommandV3) cmd).setBrokerAccepted(success);
 			break;
 		case 4:
 			cmd = new PullMessageResultCommandV4();
@@ -72,7 +70,7 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 				((PullMessageResultCommandV4) cmd).addBatches(batches);
 			}
 			((PullMessageResultCommandV4) cmd).setOffset(offset);
-			((PullMessageResultCommandV4) cmd).setBrokerAccepted(accepted);
+			((PullMessageResultCommandV4) cmd).setBrokerAccepted(success);
 			break;
 		case 5:
 		default:
@@ -81,14 +79,6 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 				((PullMessageResultCommandV5) cmd).addBatches(batches);
 			}
 			((PullMessageResultCommandV5) cmd).setOffset(offset);
-			((PullMessageResultCommandV5) cmd).setBrokerAccepted(accepted);
-			if (!accepted) {
-				Pair<Endpoint, Long> endpointEntry = m_metaService.findEndpointByTopicAndPartition(pullTask.getTpg()
-				      .getTopic(), pullTask.getTpg().getPartition());
-				if (endpointEntry != null) {
-					((PullMessageResultCommandV5) cmd).setNewEndpoint(endpointEntry.getKey());
-				}
-			}
 			break;
 		}
 		cmd.getHeader().setCorrelationId(pullTask.getCorrelationId());

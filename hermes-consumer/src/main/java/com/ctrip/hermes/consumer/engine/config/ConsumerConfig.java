@@ -34,6 +34,8 @@ public class ConsumerConfig implements Initializable {
 
 	private static final int DEFAULT_ACK_CHECKER_ACCEPT_TIMEOUT_MILLIS = 4000;
 
+	private static final int DEFAULT_PULL_MESSAGE_ACCEPT_TIMEOUT_MILLIS = 4000;
+
 	private static final int DEFAULT_NO_MESSAGE_WAIT_BASE_MILLIS = 10;
 
 	private static final int DEFAULT_NO_MESSAGE_WAIT_MAX_MILLIS = 10;
@@ -59,6 +61,8 @@ public class ConsumerConfig implements Initializable {
 	private int m_noMessageWaitMaxMillis = DEFAULT_NO_MESSAGE_WAIT_MAX_MILLIS;
 
 	private int m_ackCommandMaxSize = DEFAULT_ACK_COMMAND_MAX_SIZE;
+
+	private int m_pullMessageAcceptTimeoutMillis = DEFAULT_PULL_MESSAGE_ACCEPT_TIMEOUT_MILLIS;
 
 	public int getLocalCacheSize(String topic) throws IOException {
 		String localCacheSizeStr = m_env.getConsumerConfig(topic).getProperty("consumer.localcache.size");
@@ -115,8 +119,8 @@ public class ConsumerConfig implements Initializable {
 		return 3000;
 	}
 
-	public long getPullMessageTimeoutMills() {
-		return 30000;
+	public int getPullMessageAcceptTimeoutMillis() {
+		return m_pullMessageAcceptTimeoutMillis;
 	}
 
 	public long getPartitionWatchdogIntervalSeconds() {
@@ -163,6 +167,15 @@ public class ConsumerConfig implements Initializable {
 		String maxAckCmdSize = m_env.getGlobalConfig().getProperty("consumer.ack.max.cmd.size");
 		if (StringUtils.isNumeric(maxAckCmdSize)) {
 			m_ackCommandMaxSize = Integer.valueOf(maxAckCmdSize);
+		}
+		String ackAcceptTimeoutMillis = m_env.getGlobalConfig().getProperty("consumer.ack.accept.timeout.millis");
+		if (StringUtils.isNumeric(ackAcceptTimeoutMillis)) {
+			m_ackCheckerAcceptTimeoutMillis = Integer.valueOf(ackAcceptTimeoutMillis);
+		}
+		String pullMessageAcceptTimeoutMillis = m_env.getGlobalConfig().getProperty(
+		      "consumer.pull.message.accept.timeout.millis");
+		if (StringUtils.isNumeric(pullMessageAcceptTimeoutMillis)) {
+			m_pullMessageAcceptTimeoutMillis = Integer.valueOf(pullMessageAcceptTimeoutMillis);
 		}
 	}
 
