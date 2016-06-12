@@ -51,4 +51,6 @@ public interface CatConstants {
 	public static final String TYPE_PULL_CMD = "Pull.Cmd.V";
 
 	public static final String TYPE_HERMES_CMD_VERSION = "Hermes.Command.Version";
+
+	public static final String TYPE_CMD_DROP = "Hermes.Command.Drop";
 }
