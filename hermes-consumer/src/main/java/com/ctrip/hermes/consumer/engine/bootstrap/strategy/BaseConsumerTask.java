@@ -33,6 +33,7 @@ import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseKey;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.status.ConsumerStatusMonitor;
@@ -286,73 +287,107 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				endpointManager.refreshEndpoint(m_context.getTopic().getName(), m_partitionId);
 				schedulePolicy.fail(true);
 			} else {
-				final SettableFuture<QueryOffsetResultCommandV5> future = SettableFuture.create();
+				final SettableFuture<QueryOffsetResultCommandV5> resultFuture = SettableFuture.create();
 
 				QueryLatestConsumerOffsetCommandV5 cmd = new QueryLatestConsumerOffsetCommandV5(m_context.getTopic()
 				      .getName(), m_partitionId, m_context.getGroupId());
 
-				cmd.setFuture(future);
+				cmd.setFuture(resultFuture);
 
 				QueryOffsetResultCommandV5 offsetRes = null;
 
-				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
-				      m_context.getGroupId(), "query-offset-cmd-duration");
-
-				Context context = timer.time();
-
-				long timeout = m_config.getQueryOffsetTimeoutMillis();
-
 				QueryOffsetResultMonitor queryOffsetResultMonitor = PlexusComponentLocator
 				      .lookup(QueryOffsetResultMonitor.class);
+				QueryOffsetAcceptanceMonitor queryOffsetAcceptMonitor = PlexusComponentLocator
+				      .lookup(QueryOffsetAcceptanceMonitor.class);
 
-				queryOffsetResultMonitor.monitor(cmd);
-				if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, timeout,
-				      TimeUnit.MILLISECONDS)) {
+				long acceptTimeout = m_config.getQueryOffsetAcceptTimeoutMillis();
 
-					ConsumerStatusMonitor.INSTANCE.queryOffsetCmdSent(m_context.getTopic().getName(), m_partitionId,
-					      m_context.getGroupId());
+				try {
+					queryOffsetResultMonitor.monitor(cmd);
+					SettableFuture<Pair<Boolean, Endpoint>> acceptFuture = queryOffsetAcceptMonitor.monitor(cmd.getHeader()
+					      .getCorrelationId());
+					if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, acceptTimeout,
+					      TimeUnit.MILLISECONDS)) {
 
-					try {
-						offsetRes = future.get(timeout, TimeUnit.MILLISECONDS);
-					} catch (TimeoutException e) {
-						ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReadTimeout(m_context.getTopic().getName(),
-						      m_partitionId, m_context.getGroupId());
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-					} catch (ExecutionException e) {
-						ConsumerStatusMonitor.INSTANCE.queryOffsetCmdError(m_context.getTopic().getName(), m_partitionId,
+						ConsumerStatusMonitor.INSTANCE.queryOffsetCmdSent(m_context.getTopic().getName(), m_partitionId,
 						      m_context.getGroupId());
-					} finally {
-						queryOffsetResultMonitor.remove(cmd);
-					}
 
-					if (offsetRes != null) {
-						if (offsetRes.getOffset() != null) {
+						Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(acceptFuture, acceptTimeout);
+
+						if (acceptResult != null) {
+							offsetRes = waitForBrokerResultIfNecessary(cmd, resultFuture, acceptResult,
+							      m_config.getQueryOffsetTimeoutMillis());
+						} else {
+							endpointManager.refreshEndpoint(cmd.getTopic(), cmd.getPartition());
+						}
+
+						if (offsetRes != null && offsetRes.getOffset() != null) {
 							ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReceived(m_context.getTopic().getName(),
 							      m_partitionId, m_context.getGroupId());
 							m_offset.set(offsetRes.getOffset());
 							return;
 						} else {
-							if (offsetRes.getNewEndpoint() != null) {
-								endpointManager.updateEndpoint(m_context.getTopic().getName(), m_partitionId,
-								      offsetRes.getNewEndpoint());
-							}
 							schedulePolicy.fail(true);
 						}
+
 					} else {
-						endpointManager.refreshEndpoint(m_context.getTopic().getName(), m_partitionId);
 						schedulePolicy.fail(true);
 					}
 
-				} else {
+				} catch (Exception e) {
+					// ignore
+				} finally {
 					queryOffsetResultMonitor.remove(cmd);
-					schedulePolicy.fail(true);
+					queryOffsetAcceptMonitor.cancel(cmd.getHeader().getCorrelationId());
 				}
-
-				context.stop();
 
 			}
 		}
+	}
+
+	private Pair<Boolean, Endpoint> waitForBrokerAcceptance(Future<Pair<Boolean, Endpoint>> acceptFuture, long timeout)
+	      throws InterruptedException, ExecutionException {
+		Pair<Boolean, Endpoint> acceptResult = null;
+		try {
+			acceptResult = acceptFuture.get(timeout, TimeUnit.MILLISECONDS);
+		} catch (Exception e) {
+			// ignore
+		}
+		return acceptResult;
+	}
+
+	private QueryOffsetResultCommandV5 waitForBrokerResultIfNecessary(QueryLatestConsumerOffsetCommandV5 cmd,
+	      SettableFuture<QueryOffsetResultCommandV5> resultFuture, Pair<Boolean, Endpoint> acceptResult, long timeout)
+	      throws InterruptedException, ExecutionException {
+		Boolean brokerAccept = acceptResult.getKey();
+		String topic = cmd.getTopic();
+		int partition = cmd.getPartition();
+		if (brokerAccept != null && brokerAccept) {
+			return waitForBrokerResult(resultFuture, timeout);
+		} else {
+			Endpoint newEndpoint = acceptResult.getValue();
+			if (newEndpoint != null) {
+				PlexusComponentLocator.lookup(EndpointManager.class).updateEndpoint(topic, partition, newEndpoint);
+			}
+			return null;
+		}
+	}
+
+	private QueryOffsetResultCommandV5 waitForBrokerResult(Future<QueryOffsetResultCommandV5> resultFuture, long timeout)
+	      throws InterruptedException, ExecutionException {
+		QueryOffsetResultCommandV5 result = null;
+		try {
+			result = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
+		} catch (TimeoutException e) {
+			ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReadTimeout(m_context.getTopic().getName(), m_partitionId,
+			      m_context.getGroupId());
+		} catch (ExecutionException e) {
+			ConsumerStatusMonitor.INSTANCE.queryOffsetCmdError(m_context.getTopic().getName(), m_partitionId,
+			      m_context.getGroupId());
+		}
+
+		return result;
 	}
 
 	protected void doAfterConsuming(ConsumerLeaseKey key) {

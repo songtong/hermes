@@ -27,8 +27,11 @@ import com.ctrip.hermes.consumer.engine.monitor.DefaultAckMessageAcceptanceMonit
 import com.ctrip.hermes.consumer.engine.monitor.DefaultAckMessageResultMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.DefaultQueryOffsetAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultQueryOffsetResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.PullMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.DefaultConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.pipeline.ConsumerPipeline;
@@ -36,7 +39,9 @@ import com.ctrip.hermes.consumer.engine.pipeline.ConsumerValveRegistry;
 import com.ctrip.hermes.consumer.engine.pipeline.DefaultConsumerPipelineSink;
 import com.ctrip.hermes.consumer.engine.transport.command.processor.AckMessageAckCommandProcessor;
 import com.ctrip.hermes.consumer.engine.transport.command.processor.AckMessageResultCommandProcessor;
+import com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageAckCommandProcessor;
 import com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageResultCommandProcessor;
+import com.ctrip.hermes.consumer.engine.transport.command.processor.QueryOffsetAckCommandProcessor;
 import com.ctrip.hermes.consumer.engine.transport.command.processor.QueryOffsetResultCommandProcessor;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
@@ -83,8 +88,15 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(AckMessageResultMonitor.class));
 		all.add(C(CommandProcessor.class, CommandType.ACK_MESSAGE_ACK_V5.toString(), AckMessageAckCommandProcessor.class)//
 		      .req(AckMessageAcceptanceMonitor.class));
+		all.add(C(CommandProcessor.class, CommandType.ACK_MESSAGE_PULL_V5.toString(),
+		      PullMessageAckCommandProcessor.class)//
+		      .req(PullMessageAcceptanceMonitor.class));
+		all.add(C(CommandProcessor.class, CommandType.ACK_QUERY_LATEST_CONSUMER_OFFSET_V5.toString(),
+		      QueryOffsetAckCommandProcessor.class)//
+		      .req(QueryOffsetAcceptanceMonitor.class));
 
 		all.add(A(DefaultQueryOffsetResultMonitor.class));
+		all.add(A(DefaultQueryOffsetAcceptanceMonitor.class));
 		all.add(A(DefaultPullMessageResultMonitor.class));
 		all.add(A(DefaultPullMessageAcceptanceMonitor.class));
 
