@@ -17,9 +17,9 @@ public class ProducerConfig implements Initializable {
 
 	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_THREAD_COUNT = 10;
 
-	public static final long DEFAULT_BROKER_SENDER_SEND_TIMEOUT = 4 * 1000L;
+	public static final long DEFAULT_BROKER_SENDER_ACCEPT_TIMEOUT = 4 * 1000L;
 
-	public static final long DEFAULT_BROKER_SENDER_READ_TIMEOUT = 4 * 1000L;
+	public static final long DEFAULT_BROKER_SENDER_RESULT_TIMEOUT = 4 * 1000L;
 
 	public static final int DEFAULT_BROKER_SENDER_TASK_QUEUE_SIZE = 200000;
 
@@ -38,9 +38,9 @@ public class ProducerConfig implements Initializable {
 
 	private int m_brokerSenderNetworkIoThreadCount = DEFAULT_BROKER_SENDER_NETWORK_IO_THREAD_COUNT;
 
-	private long m_brokerSenderSendTimeout = DEFAULT_BROKER_SENDER_SEND_TIMEOUT;
+	private long m_brokerSenderAcceptTimeout = DEFAULT_BROKER_SENDER_ACCEPT_TIMEOUT;
 
-	private long m_brokerSenderReadTimeout = DEFAULT_BROKER_SENDER_READ_TIMEOUT;
+	private long m_brokerSenderResultTimeout = DEFAULT_BROKER_SENDER_RESULT_TIMEOUT;
 
 	private int m_ProducerCallbackThreadCount = DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT;
 
@@ -135,8 +135,8 @@ public class ProducerConfig implements Initializable {
 		return m_brokerSenderBatchSize;
 	}
 
-	public long getBrokerSenderSendTimeoutMillis() {
-		return m_brokerSenderSendTimeout;
+	public long getBrokerSenderAcceptTimeoutMillis() {
+		return m_brokerSenderAcceptTimeout;
 	}
 
 	public int getBrokerSenderTaskQueueSize() {
@@ -147,8 +147,8 @@ public class ProducerConfig implements Initializable {
 		return m_ProducerCallbackThreadCount;
 	}
 
-	public long getSendMessageReadResultTimeoutMillis() {
-		return m_brokerSenderReadTimeout;
+	public long getBrokerSenderResultTimeoutMillis() {
+		return m_brokerSenderResultTimeout;
 	}
 
 	public boolean isLogEnrichInfoEnabled() {

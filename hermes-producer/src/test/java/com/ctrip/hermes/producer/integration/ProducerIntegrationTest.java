@@ -334,7 +334,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
 
 		try {
-			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
+			future.get(lookup(ProducerConfig.class).getBrokerSenderAcceptTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
 			fail();
 		} catch (TimeoutException e) {
 			// do nothing
@@ -366,7 +366,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
 
 		try {
-			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
+			future.get(lookup(ProducerConfig.class).getBrokerSenderAcceptTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
 			fail();
 		} catch (TimeoutException e) {
 			// do nothing
@@ -399,7 +399,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
 
 		try {
-			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
+			future.get(lookup(ProducerConfig.class).getBrokerSenderAcceptTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
 			fail();
 		} catch (TimeoutException e) {
 			// do nothing
@@ -520,7 +520,7 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		Future<SendResult> future = sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null);
 
 		try {
-			future.get(lookup(ProducerConfig.class).getBrokerSenderSendTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
+			future.get(lookup(ProducerConfig.class).getBrokerSenderAcceptTimeoutMillis() + 200L, TimeUnit.MILLISECONDS);
 			fail();
 		} catch (TimeoutException e) {
 			// do nothing

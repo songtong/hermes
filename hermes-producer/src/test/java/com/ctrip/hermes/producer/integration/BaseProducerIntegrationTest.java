@@ -328,12 +328,12 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		}
 
 		@Override
-		public long getSendMessageReadResultTimeoutMillis() {
+		public long getBrokerSenderResultTimeoutMillis() {
 			return 100L;
 		}
 
 		@Override
-		public long getBrokerSenderSendTimeoutMillis() {
+		public long getBrokerSenderAcceptTimeoutMillis() {
 			return 100L;
 		}
 

@@ -76,7 +76,7 @@ public class DefaultCommitter<T> implements Committer<T> {
 
 		if (partitionRecords != null && !partitionRecords.isEmpty()) {
 			AckMessageCommandV5 cmd = new AckMessageCommandV5(m_topic, partition, m_groupId,
-			      m_consumerConfig.getAckCheckerIoTimeoutMillis());
+			      m_consumerConfig.getAckCheckerResultTimeoutMillis());
 
 			for (OffsetRecord rec : partitionRecords) {
 				if (rec.isNack()) {

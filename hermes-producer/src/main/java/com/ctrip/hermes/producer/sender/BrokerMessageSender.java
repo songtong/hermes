@@ -220,35 +220,33 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		private boolean sendMessagesToBroker(SendMessageCommandV5 cmd) {
 			String topic = cmd.getTopic();
 			int partition = cmd.getPartition();
+			long correlationId = cmd.getHeader().getCorrelationId();
 			try {
 				Endpoint endpoint = m_endpointManager.getEndpoint(topic, partition);
 				if (endpoint != null) {
-					long correlationId = cmd.getHeader().getCorrelationId();
-
 					Future<Pair<Boolean, Endpoint>> acceptFuture = m_messageAcceptanceMonitor.monitor(correlationId);
 					Future<Boolean> resultFuture = m_messageResultMonitor.monitor(cmd);
 
-					long timeout = m_config.getBrokerSenderSendTimeoutMillis();
+					long acceptTimeout = m_config.getBrokerSenderAcceptTimeoutMillis();
+					long resultTimeout = cmd.getTimeout();
 
-					if (m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS)) {
+					if (m_endpointClient.writeCommand(endpoint, cmd, acceptTimeout, TimeUnit.MILLISECONDS)) {
 						Context acceptTimer = ProducerStatusMonitor.INSTANCE.getTimer(topic, partition,
 						      "broker-accept-duration").time();
 
 						ProducerStatusMonitor.INSTANCE.wroteToBroker(topic, partition, cmd.getMessageCount());
 
-						Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(cmd, acceptFuture, timeout);
+						Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(cmd, acceptFuture, acceptTimeout);
 
 						acceptTimer.stop();
 
 						if (acceptResult != null) {
-							return waitForBrokerResultIfNecessary(cmd, resultFuture, acceptResult);
+							return waitForBrokerResultIfNecessary(cmd, resultFuture, acceptResult, resultTimeout);
 						} else {
 							m_endpointManager.refreshEndpoint(topic, partition);
 							return false;
 						}
 					} else {
-						m_messageAcceptanceMonitor.cancel(correlationId);
-						m_messageResultMonitor.cancel(cmd);
 						return false;
 					}
 				} else {
@@ -263,6 +261,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				ProducerStatusMonitor.INSTANCE.sendFailed(topic, partition, cmd.getMessageCount());
 				log.warn("Exception occurred while sending message to broker, will retry it");
 				return false;
+			} finally {
+				m_messageAcceptanceMonitor.cancel(correlationId);
+				m_messageResultMonitor.cancel(cmd);
 			}
 		}
 
@@ -274,21 +275,19 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			} catch (TimeoutException e) {
 				ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(cmd.getTopic(), cmd.getPartition(),
 				      cmd.getMessageCount());
-				m_messageAcceptanceMonitor.cancel(cmd.getHeader().getCorrelationId());
-				m_messageResultMonitor.cancel(cmd);
 			}
 			return acceptResult;
 		}
 
 		private boolean waitForBrokerResultIfNecessary(SendMessageCommandV5 cmd, Future<Boolean> resultFuture,
-		      Pair<Boolean, Endpoint> acceptResult) throws InterruptedException, ExecutionException {
+		      Pair<Boolean, Endpoint> acceptResult, long timeout) throws InterruptedException, ExecutionException {
 			Boolean brokerAccept = acceptResult.getKey();
 			String topic = cmd.getTopic();
 			int partition = cmd.getPartition();
 			if (brokerAccept != null && brokerAccept) {
 				ProducerStatusMonitor.INSTANCE.brokerAccepted(topic, partition, cmd.getMessageCount());
 
-				return waitForBrokerResult(cmd, resultFuture);
+				return waitForBrokerResult(cmd, resultFuture, timeout);
 			} else {
 				ProducerStatusMonitor.INSTANCE.brokerRejected(topic, partition, cmd.getMessageCount());
 				Endpoint newEndpoint = acceptResult.getValue();
@@ -299,13 +298,13 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			}
 		}
 
-		private boolean waitForBrokerResult(SendMessageCommandV5 cmd, Future<Boolean> resultFuture)
+		private boolean waitForBrokerResult(SendMessageCommandV5 cmd, Future<Boolean> resultFuture, long timeout)
 		      throws InterruptedException, ExecutionException {
 			try {
-				Boolean result = resultFuture.get(m_config.getSendMessageReadResultTimeoutMillis(), TimeUnit.MILLISECONDS);
+				Boolean result = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
 				return result != null && result.booleanValue();
 			} catch (TimeoutException e) {
-				m_messageResultMonitor.cancel(cmd);
+				// ignore
 			}
 
 			return false;
@@ -345,7 +344,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			List<ProducerWorkerContext> contexts = new ArrayList<ProducerWorkerContext>(size);
 			m_queue.drainTo(contexts, size);
 			if (!contexts.isEmpty()) {
-				cmd = new SendMessageCommandV5(m_topic, m_partition, m_config.getSendMessageReadResultTimeoutMillis());
+				cmd = new SendMessageCommandV5(m_topic, m_partition, m_config.getBrokerSenderResultTimeoutMillis());
 				for (ProducerWorkerContext context : contexts) {
 					cmd.addMessage(context.m_msg, context.m_future);
 				}

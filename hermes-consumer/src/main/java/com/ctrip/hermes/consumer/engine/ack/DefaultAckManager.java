@@ -169,12 +169,9 @@ public class DefaultAckManager implements AckManager {
 		Endpoint endpoint = m_endpointManager.getEndpoint(topic, partition);
 
 		boolean acked = false;
+		long correlationId = cmd.getHeader().getCorrelationId();
 		if (endpoint != null) {
-			long correlationId = cmd.getHeader().getCorrelationId();
-			Future<Pair<Boolean, Endpoint>> acceptFuture = m_acceptMonitor.monitor(correlationId);
-			Future<Boolean> resultFuture = m_resultMonitor.monitor(correlationId);
-
-			int ioTimeout = m_config.getAckCheckerIoTimeoutMillis();
+			long resultTimeout = cmd.getTimeout();
 			int acceptTimeout = m_config.getAckCheckerAcceptTimeoutMillis();
 
 			Context ackedTimer = ConsumerStatusMonitor.INSTANCE
@@ -183,27 +180,26 @@ public class DefaultAckManager implements AckManager {
 			Transaction tx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_ACK_TRANSPORT,
 			      String.format("%s:%s", topic, groupId));
 			try {
-				if (m_endpointClient.writeCommand(endpoint, cmd, ioTimeout, TimeUnit.MILLISECONDS)) {
+				Future<Pair<Boolean, Endpoint>> acceptFuture = m_acceptMonitor.monitor(correlationId);
+				Future<Boolean> resultFuture = m_resultMonitor.monitor(correlationId);
+				if (m_endpointClient.writeCommand(endpoint, cmd, acceptTimeout, TimeUnit.MILLISECONDS)) {
 					ConsumerStatusMonitor.INSTANCE.ackMessageCmdSent(topic, partition, groupId);
 
 					Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(cmd, acceptFuture, acceptTimeout);
 
 					if (acceptResult != null) {
-						acked = waitForBrokerResultIfNecessary(cmd, resultFuture, acceptResult, ioTimeout);
+						acked = waitForBrokerResultIfNecessary(cmd, resultFuture, acceptResult, resultTimeout);
 					} else {
 						m_endpointManager.refreshEndpoint(topic, partition);
 					}
-
-				} else {
-					m_acceptMonitor.cancel(cmd.getHeader().getCorrelationId());
-					m_resultMonitor.cancel(correlationId);
 				}
+
 				tx.setStatus(acked ? Transaction.SUCCESS : "ACK_CMD_FAILED");
 			} catch (Exception e) {
-				m_acceptMonitor.cancel(cmd.getHeader().getCorrelationId());
-				m_resultMonitor.cancel(correlationId);
 				tx.setStatus(e);
 			} finally {
+				m_acceptMonitor.cancel(correlationId);
+				m_resultMonitor.cancel(correlationId);
 				tx.complete();
 			}
 
@@ -221,20 +217,19 @@ public class DefaultAckManager implements AckManager {
 		try {
 			acceptResult = acceptFuture.get(timeout, TimeUnit.MILLISECONDS);
 		} catch (TimeoutException e) {
-			m_acceptMonitor.cancel(cmd.getHeader().getCorrelationId());
-			m_resultMonitor.cancel(cmd.getHeader().getCorrelationId());
+			// ignore
 		}
 		return acceptResult;
 	}
 
 	private boolean waitForBrokerResultIfNecessary(AckMessageCommandV5 cmd, Future<Boolean> resultFuture,
-	      Pair<Boolean, Endpoint> acceptResult, int ioTimeout) throws InterruptedException, ExecutionException {
+	      Pair<Boolean, Endpoint> acceptResult, long resultTimeout) throws InterruptedException, ExecutionException {
 		Boolean brokerAccept = acceptResult.getKey();
 		String topic = cmd.getTopic();
 		int partition = cmd.getPartition();
 		if (brokerAccept != null && brokerAccept) {
 			return waitForBrokerResult(topic, partition, cmd.getGroup(), cmd.getHeader().getCorrelationId(), resultFuture,
-			      ioTimeout);
+			      resultTimeout);
 		} else {
 			Endpoint newEndpoint = acceptResult.getValue();
 			if (newEndpoint != null) {
@@ -245,7 +240,7 @@ public class DefaultAckManager implements AckManager {
 	}
 
 	private boolean waitForBrokerResult(String topic, int partition, String groupId, long correlationId,
-	      Future<Boolean> resultFuture, int timeout) {
+	      Future<Boolean> resultFuture, long timeout) {
 		try {
 			Boolean acked = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
 
@@ -258,16 +253,10 @@ public class DefaultAckManager implements AckManager {
 			}
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			m_resultMonitor.cancel(correlationId);
-			m_acceptMonitor.cancel(correlationId);
 		} catch (TimeoutException e) {
 			ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(topic, partition, groupId);
-			m_resultMonitor.cancel(correlationId);
-			m_acceptMonitor.cancel(correlationId);
 		} catch (Exception e) {
 			ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
-			m_resultMonitor.cancel(correlationId);
-			m_acceptMonitor.cancel(correlationId);
 		}
 
 		return false;
@@ -409,7 +398,7 @@ public class DefaultAckManager implements AckManager {
 			      || !resendScanningRes.getNacked().isEmpty()) {
 
 				cmd = new AckMessageCommandV5(m_tpg.getTopic(), m_tpg.getPartition(), m_tpg.getGroupId(),
-				      m_config.getAckCheckerIoTimeoutMillis());
+				      m_config.getAckCheckerResultTimeoutMillis());
 
 				// priority
 				for (AckContext ctx : priorityScanningRes.getAcked()) {

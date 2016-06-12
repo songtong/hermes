@@ -576,6 +576,11 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 			PullMessageResultCommandV5 result = null;
 
+			PullMessageResultMonitor pullMessageResultMonitor = PlexusComponentLocator
+			      .lookup(PullMessageResultMonitor.class);
+			PullMessageAcceptanceMonitor pullMessageAcceptMonitor = PlexusComponentLocator
+			      .lookup(PullMessageAcceptanceMonitor.class);
+
 			try {
 
 				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
@@ -583,20 +588,14 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 				Context context = timer.time();
 
-				PullMessageResultMonitor pullMessageResultMonitor = PlexusComponentLocator
-				      .lookup(PullMessageResultMonitor.class);
-				PullMessageAcceptanceMonitor pullMessageAcceptMonitor = PlexusComponentLocator
-				      .lookup(PullMessageAcceptanceMonitor.class);
-
 				pullMessageResultMonitor.monitor(cmd);
 				Future<Pair<Boolean, Endpoint>> acceptFuture = pullMessageAcceptMonitor.monitor(cmd.getHeader()
 				      .getCorrelationId());
 
-				long start = System.currentTimeMillis();
 				long acceptTimeout = m_config.getPullMessageAcceptTimeoutMillis() > timeout ? timeout : m_config
 				      .getPullMessageAcceptTimeoutMillis();
 
-				if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, timeout,
+				if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, acceptTimeout,
 				      TimeUnit.MILLISECONDS)) {
 
 					ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_context.getTopic().getName(), m_partitionId,
@@ -605,13 +604,10 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(acceptFuture, acceptTimeout);
 
 					if (acceptResult != null) {
-						result = waitForBrokerResultIfNecessary(cmd, resultFuture, acceptResult,
-						      (long) timeout - (System.currentTimeMillis() - start));
+						result = waitForBrokerResultIfNecessary(cmd, resultFuture, acceptResult, timeout);
 					} else {
 						PlexusComponentLocator.lookup(EndpointManager.class).refreshEndpoint(cmd.getTopic(),
 						      cmd.getPartition());
-						pullMessageAcceptMonitor.cancel(cmd.getHeader().getCorrelationId());
-						pullMessageResultMonitor.remove(cmd);
 					}
 
 					context.stop();
@@ -622,12 +618,10 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 						appendToMsgQueue(result);
 						resultReceived(result);
 					}
-				} else {
-					pullMessageResultMonitor.remove(cmd);
-					pullMessageAcceptMonitor.cancel(cmd.getHeader().getCorrelationId());
 				}
-
 			} finally {
+				pullMessageResultMonitor.remove(cmd);
+				pullMessageAcceptMonitor.cancel(cmd.getHeader().getCorrelationId());
 				if (result != null) {
 					result.release();
 				}
@@ -652,7 +646,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			String topic = cmd.getTopic();
 			int partition = cmd.getPartition();
 			if (brokerAccept != null && brokerAccept) {
-				return waitForBrokerResult(cmd, resultFuture, timeout);
+				return waitForBrokerResult(resultFuture, timeout);
 			} else {
 				Endpoint newEndpoint = acceptResult.getValue();
 				if (newEndpoint != null) {
@@ -662,19 +656,14 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			}
 		}
 
-		private PullMessageResultCommandV5 waitForBrokerResult(PullMessageCommandV5 cmd,
-		      Future<PullMessageResultCommandV5> resultFuture, long timeout) throws InterruptedException,
-		      ExecutionException {
+		private PullMessageResultCommandV5 waitForBrokerResult(Future<PullMessageResultCommandV5> resultFuture,
+		      long timeout) throws InterruptedException, ExecutionException {
 			PullMessageResultCommandV5 result = null;
 			try {
-				result = resultFuture.get(timeout > 0 ? timeout : 1, TimeUnit.MILLISECONDS);
+				result = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
 			} catch (TimeoutException e) {
 				ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
 				      m_partitionId, m_context.getGroupId());
-			} finally {
-				PlexusComponentLocator.lookup(PullMessageResultMonitor.class).remove(cmd);
-				PlexusComponentLocator.lookup(PullMessageAcceptanceMonitor.class)
-				      .cancel(cmd.getHeader().getCorrelationId());
 			}
 
 			return result;

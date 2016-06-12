@@ -30,7 +30,7 @@ public class ConsumerConfig implements Initializable {
 
 	private static final int DEFAULT_ACK_CHECKER_IO_THREAD_COUNT = 3;
 
-	private static final int DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS = 4000;
+	private static final int DEFAULT_ACK_CHECKER_RESULT_TIMEOUT_MILLIS = 4000;
 
 	private static final int DEFAULT_ACK_CHECKER_ACCEPT_TIMEOUT_MILLIS = 4000;
 
@@ -52,7 +52,7 @@ public class ConsumerConfig implements Initializable {
 
 	private int m_ackCheckerIoThreadCount = DEFAULT_ACK_CHECKER_IO_THREAD_COUNT;
 
-	private int m_ackCheckerIoTimeoutMillis = DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS;
+	private int m_ackCheckerResultTimeoutMillis = DEFAULT_ACK_CHECKER_RESULT_TIMEOUT_MILLIS;
 
 	private int m_ackCheckerAcceptTimeoutMillis = DEFAULT_ACK_CHECKER_ACCEPT_TIMEOUT_MILLIS;
 
@@ -149,9 +149,9 @@ public class ConsumerConfig implements Initializable {
 			m_ackCheckerIoThreadCount = Integer.valueOf(ackCheckerIoThreadCount);
 		}
 
-		String ackCheckerIoTimeoutMillis = m_env.getGlobalConfig().getProperty("consumer.ack.checker.io.timeout.millis");
-		if (StringUtils.isNumeric(ackCheckerIoTimeoutMillis)) {
-			m_ackCheckerIoTimeoutMillis = Integer.valueOf(ackCheckerIoTimeoutMillis);
+		String ackCheckerResultTimeoutMillis = m_env.getGlobalConfig().getProperty("consumer.ack.checker.result.timeout.millis");
+		if (StringUtils.isNumeric(ackCheckerResultTimeoutMillis)) {
+			m_ackCheckerResultTimeoutMillis = Integer.valueOf(ackCheckerResultTimeoutMillis);
 		}
 
 		String noMessageWaitBaseMillis = m_env.getGlobalConfig().getProperty("consumer.no.message.wait.base.millis");
@@ -187,8 +187,8 @@ public class ConsumerConfig implements Initializable {
 		return m_ackCheckerIoThreadCount;
 	}
 
-	public int getAckCheckerIoTimeoutMillis() {
-		return m_ackCheckerIoTimeoutMillis;
+	public int getAckCheckerResultTimeoutMillis() {
+		return m_ackCheckerResultTimeoutMillis;
 	}
 
 	public int getAckCheckerAcceptTimeoutMillis() {
