@@ -20,7 +20,7 @@ public class QueryLatestConsumerOffsetAckCommandV5 extends AbstractCommand {
 	private Endpoint m_newEndpoint;
 
 	public QueryLatestConsumerOffsetAckCommandV5() {
-		super(CommandType.ACK_MESSAGE_PULL_V5, 5);
+		super(CommandType.ACK_QUERY_LATEST_CONSUMER_OFFSET_V5, 5);
 	}
 
 	public void setSuccess(boolean success) {
