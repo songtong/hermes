@@ -17,11 +17,11 @@ public class ProducerConfig implements Initializable {
 
 	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_THREAD_COUNT = 10;
 
-	public static final long DEFAULT_BROKER_SENDER_SEND_TIMEOUT = 4 * 1000L;
+	public static final long DEFAULT_BROKER_SENDER_ACCEPT_TIMEOUT = 4 * 1000L;
 
-	public static final long DEFAULT_BROKER_SENDER_READ_TIMEOUT = 4 * 1000L;
+	public static final long DEFAULT_BROKER_SENDER_RESULT_TIMEOUT = 4 * 1000L;
 
-	public static final int DEFAULT_BROKER_SENDER_TASK_QUEUE_SIZE = 500000;
+	public static final int DEFAULT_BROKER_SENDER_TASK_QUEUE_SIZE = 200000;
 
 	public static final int DEFAULT_BROKER_SENDER_BATCH_SIZE = 500;
 
@@ -29,16 +29,18 @@ public class ProducerConfig implements Initializable {
 
 	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_MAX_MILLIS = 10;
 
-	public static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 20;
+	public static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 10;
+
+	private static final int DEFAULT_BROKER_SENDER_CONCURRENT_LEVEL = 2;
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
 
 	private int m_brokerSenderNetworkIoThreadCount = DEFAULT_BROKER_SENDER_NETWORK_IO_THREAD_COUNT;
 
-	private long m_brokerSenderSendTimeout = DEFAULT_BROKER_SENDER_SEND_TIMEOUT;
+	private long m_brokerSenderAcceptTimeout = DEFAULT_BROKER_SENDER_ACCEPT_TIMEOUT;
 
-	private long m_brokerSenderReadTimeout = DEFAULT_BROKER_SENDER_READ_TIMEOUT;
+	private long m_brokerSenderResultTimeout = DEFAULT_BROKER_SENDER_RESULT_TIMEOUT;
 
 	private int m_ProducerCallbackThreadCount = DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT;
 
@@ -53,6 +55,8 @@ public class ProducerConfig implements Initializable {
 	private boolean m_logEnrichInfoEnabled = false;
 
 	private boolean m_catEnabled = true;
+
+	private int m_brokerSenderConcurrentLevel = DEFAULT_BROKER_SENDER_CONCURRENT_LEVEL;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -103,6 +107,11 @@ public class ProducerConfig implements Initializable {
 			m_catEnabled = !"false".equalsIgnoreCase(catEnabled);
 		}
 
+		String senderConcurrentLevelStr = m_clientEnv.getGlobalConfig().getProperty("producer.concurrent.level");
+		if (StringUtils.isNumeric(senderConcurrentLevelStr)) {
+			m_brokerSenderConcurrentLevel = Integer.valueOf(senderConcurrentLevelStr);
+		}
+
 		// FIXME log config loading details.
 	}
 
@@ -126,8 +135,8 @@ public class ProducerConfig implements Initializable {
 		return m_brokerSenderBatchSize;
 	}
 
-	public long getBrokerSenderSendTimeoutMillis() {
-		return m_brokerSenderSendTimeout;
+	public long getBrokerSenderAcceptTimeoutMillis() {
+		return m_brokerSenderAcceptTimeout;
 	}
 
 	public int getBrokerSenderTaskQueueSize() {
@@ -138,12 +147,16 @@ public class ProducerConfig implements Initializable {
 		return m_ProducerCallbackThreadCount;
 	}
 
-	public long getSendMessageReadResultTimeoutMillis() {
-		return m_brokerSenderReadTimeout;
+	public long getBrokerSenderResultTimeoutMillis() {
+		return m_brokerSenderResultTimeout;
 	}
 
 	public boolean isLogEnrichInfoEnabled() {
 		return m_logEnrichInfoEnabled;
+	}
+
+	public int getBrokerSenderConcurrentLevel() {
+		return m_brokerSenderConcurrentLevel;
 	}
 
 }

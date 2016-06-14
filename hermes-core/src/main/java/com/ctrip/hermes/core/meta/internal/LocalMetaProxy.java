@@ -1,6 +1,7 @@
 package com.ctrip.hermes.core.meta.internal;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.unidal.lookup.annotation.Named;
@@ -10,6 +11,7 @@ import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
+import com.ctrip.hermes.meta.entity.Meta;
 
 /**
  * for test only
@@ -68,6 +70,11 @@ public class LocalMetaProxy implements MetaProxy {
 
 	@Override
 	public Pair<Integer, String> getRequestToMetaServer(String path, Map<String, String> requestParams) {
+		return null;
+	}
+
+	@Override
+	public Meta getTopicsMeta(Set<String> topics) {
 		return null;
 	}
 }

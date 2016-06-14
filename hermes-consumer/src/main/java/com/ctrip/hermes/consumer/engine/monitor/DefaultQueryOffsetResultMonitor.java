@@ -7,8 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
-import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v5.QueryLatestConsumerOffsetCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.QueryOffsetResultCommandV5;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -18,19 +18,19 @@ import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
 public class DefaultQueryOffsetResultMonitor implements QueryOffsetResultMonitor {
 	private static final Logger log = LoggerFactory.getLogger(DefaultQueryOffsetResultMonitor.class);
 
-	private Map<Long, QueryLatestConsumerOffsetCommandV3> m_cmds = new ConcurrentHashMap<Long, QueryLatestConsumerOffsetCommandV3>();
+	private Map<Long, QueryLatestConsumerOffsetCommandV5> m_cmds = new ConcurrentHashMap<Long, QueryLatestConsumerOffsetCommandV5>();
 
 	@Override
-	public void monitor(QueryLatestConsumerOffsetCommandV3 cmd) {
+	public void monitor(QueryLatestConsumerOffsetCommandV5 cmd) {
 		if (cmd != null) {
 			m_cmds.put(cmd.getHeader().getCorrelationId(), cmd);
 		}
 	}
 
 	@Override
-	public void resultReceived(QueryOffsetResultCommandV3 result) {
+	public void resultReceived(QueryOffsetResultCommandV5 result) {
 		if (result != null) {
-			QueryLatestConsumerOffsetCommandV3 queryOffsetCommand = null;
+			QueryLatestConsumerOffsetCommandV5 queryOffsetCommand = null;
 			queryOffsetCommand = m_cmds.remove(result.getHeader().getCorrelationId());
 
 			if (queryOffsetCommand != null) {
@@ -44,7 +44,7 @@ public class DefaultQueryOffsetResultMonitor implements QueryOffsetResultMonitor
 	}
 
 	@Override
-	public void remove(QueryLatestConsumerOffsetCommandV3 cmd) {
+	public void remove(QueryLatestConsumerOffsetCommandV5 cmd) {
 		if (cmd != null) {
 			m_cmds.remove(cmd.getHeader().getCorrelationId());
 		}

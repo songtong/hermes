@@ -9,7 +9,7 @@ import com.ctrip.hermes.consumer.engine.monitor.AckMessageResultMonitor;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.v3.AckMessageResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -22,13 +22,13 @@ public class AckMessageResultCommandProcessor implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.RESULT_ACK_MESSAGE_V3);
+		return Arrays.asList(CommandType.RESULT_ACK_MESSAGE_V5);
 	}
 
 	@Override
 	public void process(CommandProcessorContext ctx) {
-		AckMessageResultCommandV3 cmd = (AckMessageResultCommandV3) ctx.getCommand();
-		m_resultMonitor.received(cmd.getHeader().getCorrelationId(), cmd.isSuccess());
+		AckMessageResultCommandV5 cmd = (AckMessageResultCommandV5) ctx.getCommand();
+		m_resultMonitor.received(cmd);
 	}
 
 }

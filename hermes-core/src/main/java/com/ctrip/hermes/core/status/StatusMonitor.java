@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.metrics.HermesMetricsRegistry;
@@ -38,7 +39,7 @@ public enum StatusMonitor {
 		HermesMetricsRegistry.getMetricRegistry()
 		      .meter(MetricRegistry.name("commandProcessor", "commandReceived", clientIp)).mark();
 		if (type != null) {
-			Cat.logEvent("Hermes.Command.Version", type.toString() + "-RCV");
+			Cat.logEvent(CatConstants.TYPE_HERMES_CMD_VERSION, type.toString() + "-RCV");
 		}
 	}
 

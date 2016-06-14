@@ -20,10 +20,13 @@ import org.unidal.lookup.annotation.Named;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.core.config.CoreConfig;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.status.StatusMonitor;
+import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.dianping.cat.Cat;
 
 @Named(type = CommandProcessorManager.class)
 public class CommandProcessorManager implements Initializable {
@@ -62,6 +65,19 @@ public class CommandProcessorManager implements Initializable {
 
 					@Override
 					public void run() {
+						Command cmd = ctx.getCommand();
+						if (cmd.getReceiveTime() > 0
+						      && (System.currentTimeMillis() - cmd.getReceiveTime()) > m_config
+						            .getCommandProcessorCmdExpireMillis()) {
+							Cat.logEvent(CatConstants.TYPE_CMD_DROP, cmd.getHeader().getType().toString());
+
+							if (cmd.getClass().isAnnotationPresent(ManualRelease.class)) {
+								cmd.release();
+							}
+
+							return;
+						}
+
 						Timer timer = StatusMonitor.INSTANCE.getProcessCommandTimer(type, processor);
 						Context context = timer.time();
 						try {

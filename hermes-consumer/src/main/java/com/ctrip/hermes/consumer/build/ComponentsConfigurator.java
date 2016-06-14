@@ -21,18 +21,27 @@ import com.ctrip.hermes.consumer.engine.bootstrap.strategy.StrictlyOrderedConsum
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.engine.consumer.pipeline.internal.ConsumerTracingValve;
 import com.ctrip.hermes.consumer.engine.lease.ConsumerLeaseManager;
+import com.ctrip.hermes.consumer.engine.monitor.AckMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.AckMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.DefaultAckMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultAckMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.DefaultQueryOffsetAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.DefaultQueryOffsetResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.PullMessageAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor;
+import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetAcceptanceMonitor;
 import com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.consumer.engine.notifier.DefaultConsumerNotifier;
 import com.ctrip.hermes.consumer.engine.pipeline.ConsumerPipeline;
 import com.ctrip.hermes.consumer.engine.pipeline.ConsumerValveRegistry;
 import com.ctrip.hermes.consumer.engine.pipeline.DefaultConsumerPipelineSink;
+import com.ctrip.hermes.consumer.engine.transport.command.processor.AckMessageAckCommandProcessor;
 import com.ctrip.hermes.consumer.engine.transport.command.processor.AckMessageResultCommandProcessor;
+import com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageAckCommandProcessor;
 import com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageResultCommandProcessor;
+import com.ctrip.hermes.consumer.engine.transport.command.processor.QueryOffsetAckCommandProcessor;
 import com.ctrip.hermes.consumer.engine.transport.command.processor.QueryOffsetResultCommandProcessor;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
@@ -68,18 +77,28 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(DefaultConsumerPipelineSink.class));
 
-		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V4.toString(),
+		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V5.toString(),
 		      PullMessageResultCommandProcessor.class)//
 		      .req(PullMessageResultMonitor.class));
-		all.add(C(CommandProcessor.class, CommandType.RESULT_QUERY_OFFSET_V3.toString(),
+		all.add(C(CommandProcessor.class, CommandType.RESULT_QUERY_OFFSET_V5.toString(),
 		      QueryOffsetResultCommandProcessor.class)//
 		      .req(QueryOffsetResultMonitor.class));
-		all.add(C(CommandProcessor.class, CommandType.RESULT_ACK_MESSAGE_V3.toString(),
+		all.add(C(CommandProcessor.class, CommandType.RESULT_ACK_MESSAGE_V5.toString(),
 		      AckMessageResultCommandProcessor.class)//
 		      .req(AckMessageResultMonitor.class));
+		all.add(C(CommandProcessor.class, CommandType.ACK_MESSAGE_ACK_V5.toString(), AckMessageAckCommandProcessor.class)//
+		      .req(AckMessageAcceptanceMonitor.class));
+		all.add(C(CommandProcessor.class, CommandType.ACK_MESSAGE_PULL_V5.toString(),
+		      PullMessageAckCommandProcessor.class)//
+		      .req(PullMessageAcceptanceMonitor.class));
+		all.add(C(CommandProcessor.class, CommandType.ACK_QUERY_LATEST_CONSUMER_OFFSET_V5.toString(),
+		      QueryOffsetAckCommandProcessor.class)//
+		      .req(QueryOffsetAcceptanceMonitor.class));
 
 		all.add(A(DefaultQueryOffsetResultMonitor.class));
+		all.add(A(DefaultQueryOffsetAcceptanceMonitor.class));
 		all.add(A(DefaultPullMessageResultMonitor.class));
+		all.add(A(DefaultPullMessageAcceptanceMonitor.class));
 
 		// notifier
 		all.add(A(DefaultConsumerNotifier.class));
@@ -95,6 +114,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		// ack
 		all.add(A(DefaultAckManager.class));
+		all.add(A(DefaultAckMessageAcceptanceMonitor.class));
 		all.add(A(DefaultAckMessageResultMonitor.class));
 
 		return all;

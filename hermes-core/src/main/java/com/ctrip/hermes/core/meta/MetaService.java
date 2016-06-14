@@ -3,6 +3,8 @@ package com.ctrip.hermes.core.meta;
 import java.util.List;
 import java.util.Map;
 
+import org.unidal.tuple.Pair;
+
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.Lease;
@@ -21,7 +23,7 @@ import com.ctrip.hermes.meta.entity.Topic;
  */
 public interface MetaService {
 
-	Endpoint findEndpointByTopicAndPartition(String topic, int partition);
+	Pair<Endpoint, Long> findEndpointByTopicAndPartition(String topic, int partition);
 
 	String findEndpointTypeByTopic(String topic);
 

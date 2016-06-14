@@ -2,12 +2,12 @@ package com.ctrip.hermes.producer.monitor;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
@@ -16,26 +16,21 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 @Named(type = SendMessageAcceptanceMonitor.class)
 public class DefaultSendMessageAcceptanceMonitor implements SendMessageAcceptanceMonitor {
-	private static final Logger log = LoggerFactory.getLogger(DefaultSendMessageAcceptanceMonitor.class);
 
-	private Map<Long, SettableFuture<Boolean>> m_futures = new ConcurrentHashMap<Long, SettableFuture<Boolean>>();
+	private Map<Long, SettableFuture<Pair<Boolean, Endpoint>>> m_futures = new ConcurrentHashMap<>();
 
 	@Override
-	public Future<Boolean> monitor(long correlationId) {
-		SettableFuture<Boolean> future = SettableFuture.create();
+	public SettableFuture<Pair<Boolean, Endpoint>> monitor(long correlationId) {
+		SettableFuture<Pair<Boolean, Endpoint>> future = SettableFuture.create();
 		m_futures.put(correlationId, future);
 		return future;
 	}
 
 	@Override
-	public void received(long correlationId, boolean success) {
-		if (log.isDebugEnabled()) {
-			log.debug("Broker acceptance result is {} for correlationId {}", success, correlationId);
-		}
-
-		SettableFuture<Boolean> future = m_futures.remove(correlationId);
+	public void received(SendMessageAckCommandV5 cmd) {
+		SettableFuture<Pair<Boolean, Endpoint>> future = m_futures.remove(cmd.getHeader().getCorrelationId());
 		if (future != null) {
-			future.set(success);
+			future.set(new Pair<Boolean, Endpoint>(cmd.isSuccess(), cmd.getNewEndpoint()));
 		}
 	}
 

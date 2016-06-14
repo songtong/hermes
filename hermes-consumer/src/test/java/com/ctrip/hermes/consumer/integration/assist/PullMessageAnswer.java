@@ -17,9 +17,9 @@ import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageCommandV3;
-import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
-import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
-import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageResultCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.QueryLatestConsumerOffsetCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.QueryOffsetResultCommandV5;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public enum PullMessageAnswer implements Answer<Void> {
@@ -37,16 +37,16 @@ public enum PullMessageAnswer implements Answer<Void> {
 				m_answeredCount.incrementAndGet();
 				PullMessageCommandV3 pullMessageCmd = (PullMessageCommandV3) cmd;
 				if (pullMessageCmd != null && m_msgCreator != null) {
-					PullMessageResultCommandV3 resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
+					PullMessageResultCommandV5 resultCmd = PullMessageResultCreator.createPullMessageResultCommand(
 					      pullMessageCmd.getTopic(), Arrays.asList(new Pair<String, String>("hello", "hermes")), 0, 0,
 					      false, "hermes-key", m_msgCreator.createRawMessages());
 					resultCmd.correlate(pullMessageCmd);
 
-					PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V3.toString())
+					PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_MESSAGE_PULL_V5.toString())
 					      .process(new CommandProcessorContext(resultCmd, m_channel));
 				}
-			} else if (cmd instanceof QueryLatestConsumerOffsetCommandV3) {
-				QueryOffsetResultCommandV3 resultCmd = new QueryOffsetResultCommandV3(new Offset(0L, 0L, new Pair<>(
+			} else if (cmd instanceof QueryLatestConsumerOffsetCommandV5) {
+				QueryOffsetResultCommandV5 resultCmd = new QueryOffsetResultCommandV5(new Offset(0L, 0L, new Pair<>(
 				      new Date(), 0L)));
 				resultCmd.correlate(cmd);
 				PlexusComponentLocator.lookup(CommandProcessor.class, CommandType.RESULT_QUERY_OFFSET_V3.toString())

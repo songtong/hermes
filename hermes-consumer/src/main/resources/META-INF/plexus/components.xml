@@ -108,7 +108,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
-			<role-hint>RESULT_MESSAGE_PULL_V4</role-hint>
+			<role-hint>RESULT_MESSAGE_PULL_V5</role-hint>
 			<implementation>com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageResultCommandProcessor</implementation>
 			<requirements>
 				<requirement>
@@ -118,7 +118,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
-			<role-hint>RESULT_QUERY_OFFSET_V3</role-hint>
+			<role-hint>RESULT_QUERY_OFFSET_V5</role-hint>
 			<implementation>com.ctrip.hermes.consumer.engine.transport.command.processor.QueryOffsetResultCommandProcessor</implementation>
 			<requirements>
 				<requirement>
@@ -128,7 +128,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
-			<role-hint>RESULT_ACK_MESSAGE_V3</role-hint>
+			<role-hint>RESULT_ACK_MESSAGE_V5</role-hint>
 			<implementation>com.ctrip.hermes.consumer.engine.transport.command.processor.AckMessageResultCommandProcessor</implementation>
 			<requirements>
 				<requirement>
@@ -137,12 +137,50 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>ACK_MESSAGE_ACK_V5</role-hint>
+			<implementation>com.ctrip.hermes.consumer.engine.transport.command.processor.AckMessageAckCommandProcessor</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.monitor.AckMessageAcceptanceMonitor</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>ACK_MESSAGE_PULL_V5</role-hint>
+			<implementation>com.ctrip.hermes.consumer.engine.transport.command.processor.PullMessageAckCommandProcessor</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.monitor.PullMessageAcceptanceMonitor</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>ACK_QUERY_LATEST_CONSUMER_OFFSET_V5</role-hint>
+			<implementation>com.ctrip.hermes.consumer.engine.transport.command.processor.QueryOffsetAckCommandProcessor</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.monitor.QueryOffsetAcceptanceMonitor</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.consumer.engine.monitor.QueryOffsetResultMonitor</role>
 			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultQueryOffsetResultMonitor</implementation>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.consumer.engine.monitor.QueryOffsetAcceptanceMonitor</role>
+			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultQueryOffsetAcceptanceMonitor</implementation>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.consumer.engine.monitor.PullMessageResultMonitor</role>
 			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageResultMonitor</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.consumer.engine.monitor.PullMessageAcceptanceMonitor</role>
+			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultPullMessageAcceptanceMonitor</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.consumer.engine.notifier.ConsumerNotifier</role>
@@ -223,7 +261,14 @@
 				<requirement>
 					<role>com.ctrip.hermes.consumer.engine.monitor.AckMessageResultMonitor</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.consumer.engine.monitor.AckMessageAcceptanceMonitor</role>
+				</requirement>
 			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.consumer.engine.monitor.AckMessageAcceptanceMonitor</role>
+			<implementation>com.ctrip.hermes.consumer.engine.monitor.DefaultAckMessageAcceptanceMonitor</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.consumer.engine.monitor.AckMessageResultMonitor</role>

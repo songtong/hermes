@@ -19,6 +19,17 @@ import com.ctrip.hermes.core.transport.command.v3.SendMessageCommandV3;
 import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
 import com.ctrip.hermes.core.transport.command.v4.PullMessageCommandV4;
 import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageAckCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageAckCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.PullMessageResultCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.QueryLatestConsumerOffsetAckCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.QueryLatestConsumerOffsetCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.QueryOffsetResultCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.SendMessageCommandV5;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -27,29 +38,51 @@ import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
 public enum CommandType {
 	MESSAGE_SEND(101, 1, SendMessageCommand.class), //
 	MESSAGE_SEND_V3(101, 3, SendMessageCommandV3.class), //
+	MESSAGE_SEND_V5(101, 5, SendMessageCommandV5.class), //
+
 	MESSAGE_ACK(102, 1, AckMessageCommand.class), //
 	MESSAGE_ACK_V2(102, 2, AckMessageCommandV2.class), //
 	MESSAGE_ACK_V3(102, 3, AckMessageCommandV3.class), //
 	MESSAGE_ACK_V4(102, 4, AckMessageCommandV4.class), //
+	MESSAGE_ACK_V5(102, 5, AckMessageCommandV5.class), //
+
 	MESSAGE_PULL(103, 1, PullMessageCommand.class), //
 	MESSAGE_PULL_V2(103, 2, PullMessageCommandV2.class), //
 	MESSAGE_PULL_V3(103, 3, PullMessageCommandV3.class), //
+	MESSAGE_PULL_V4(103, 4, PullMessageCommandV4.class), //
+	MESSAGE_PULL_V5(103, 5, PullMessageCommandV5.class), //
+
 	QUERY_LATEST_CONSUMER_OFFSET(104, 1, QueryLatestConsumerOffsetCommand.class), //
 	QUERY_LATEST_CONSUMER_OFFSET_V3(104, 3, QueryLatestConsumerOffsetCommandV3.class), //
+	QUERY_LATEST_CONSUMER_OFFSET_V5(104, 5, QueryLatestConsumerOffsetCommandV5.class), //
+
 	QUERY_MESSAGE_OFFSET_BY_TIME(105, 1, QueryMessageOffsetByTimeCommand.class), //
+
 	MESSAGE_PULL_SPECIFIC(106, 1, PullSpecificMessageCommand.class), //
-	MESSAGE_PULL_V4(103, 4, PullMessageCommandV4.class), //
 
 	ACK_MESSAGE_SEND(201, 1, SendMessageAckCommand.class), //
+	ACK_MESSAGE_SEND_V5(201, 5, SendMessageAckCommandV5.class), //
+
+	ACK_MESSAGE_ACK_V5(202, 5, AckMessageAckCommandV5.class), //
+
+	ACK_MESSAGE_PULL_V5(203, 5, PullMessageAckCommandV5.class), //
+
+	ACK_QUERY_LATEST_CONSUMER_OFFSET_V5(204, 5, QueryLatestConsumerOffsetAckCommandV5.class), //
 
 	RESULT_MESSAGE_SEND(301, 1, SendMessageResultCommand.class), //
+
 	RESULT_MESSAGE_PULL(302, 1, PullMessageResultCommand.class), //
 	RESULT_MESSAGE_PULL_V2(302, 2, PullMessageResultCommandV2.class), //
 	RESULT_MESSAGE_PULL_V3(302, 3, PullMessageResultCommandV3.class), //
+	RESULT_MESSAGE_PULL_V4(302, 4, PullMessageResultCommandV4.class), //
+	RESULT_MESSAGE_PULL_V5(302, 5, PullMessageResultCommandV5.class), //
+
 	RESULT_QUERY_OFFSET(303, 1, QueryOffsetResultCommand.class), //
 	RESULT_QUERY_OFFSET_V3(303, 3, QueryOffsetResultCommandV3.class), //
+	RESULT_QUERY_OFFSET_V5(303, 5, QueryOffsetResultCommandV5.class), //
+
 	RESULT_ACK_MESSAGE_V3(304, 3, AckMessageResultCommandV3.class), //
-	RESULT_MESSAGE_PULL_V4(302, 4, PullMessageResultCommandV4.class), //
+	RESULT_ACK_MESSAGE_V5(304, 5, AckMessageResultCommandV5.class), //
 	;
 
 	private static Map<Pair<Integer, Integer>, CommandType> m_types = new HashMap<>();

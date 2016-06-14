@@ -31,15 +31,19 @@ import com.ctrip.hermes.broker.transport.NettyServerConfig;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV3;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV4;
+import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV5;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV3;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV4;
+import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV5;
 import com.ctrip.hermes.broker.transport.command.processor.PullSpecificMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOffsetCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOffsetCommandProcessorV3;
+import com.ctrip.hermes.broker.transport.command.processor.QueryLatestConsumerOffsetCommandProcessorV5;
 import com.ctrip.hermes.broker.transport.command.processor.QueryMessageOffsetByTimeCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessorV3;
+import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessorV5;
 import com.ctrip.hermes.broker.zk.ZKClient;
 import com.ctrip.hermes.broker.zk.ZKConfig;
 import com.ctrip.hermes.core.log.FileBizLogger;
@@ -78,6 +82,14 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
 		);
+		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND_V5.toString(), SendMessageCommandProcessorV5.class)//
+		      .req(MessageQueueManager.class)//
+		      .req(BrokerLeaseContainer.class)//
+		      .req(BrokerConfig.class)//
+		      .req(FileBizLogger.class)//
+		      .req(MetaService.class)//
+		      .req(SystemClockService.class)//
+		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL.toString(), PullMessageCommandProcessor.class)//
 		      .req(LongPollingService.class)//
 		      .req(BrokerLeaseContainer.class)//
@@ -91,6 +103,12 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MetaService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL_V4.toString(), PullMessageCommandProcessorV4.class)//
+		      .req(LongPollingService.class)//
+		      .req(BrokerLeaseContainer.class)//
+		      .req(BrokerConfig.class)//
+		      .req(MetaService.class)//
+		);
+		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL_V5.toString(), PullMessageCommandProcessorV5.class)//
 		      .req(LongPollingService.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//
@@ -119,6 +137,14 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MetaService.class) //
 		      .req(SystemClockService.class) //
 		);
+		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK_V5.toString(), AckMessageCommandProcessorV5.class)//
+		      .req(MessageQueueManager.class)//
+		      .req(FileBizLogger.class) //
+		      .req(BrokerLeaseContainer.class)//
+		      .req(MetaService.class) //
+		      .req(BrokerConfig.class)//
+		      .req(SystemClockService.class) //
+		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET.toString(),
 		      QueryLatestConsumerOffsetCommandProcessor.class)//
 		      .req(BrokerLeaseContainer.class)//
@@ -128,6 +154,13 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET_V3.toString(),
 		      QueryLatestConsumerOffsetCommandProcessorV3.class)//
+		      .req(BrokerLeaseContainer.class)//
+		      .req(BrokerConfig.class)//
+		      .req(MetaService.class)//
+		      .req(MessageQueueManager.class)//
+		);
+		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET_V5.toString(),
+		      QueryLatestConsumerOffsetCommandProcessorV5.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//
 		      .req(MetaService.class)//

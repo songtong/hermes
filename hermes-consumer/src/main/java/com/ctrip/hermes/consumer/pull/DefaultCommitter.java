@@ -23,7 +23,7 @@ import com.ctrip.hermes.consumer.api.PullConsumerConfig;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.core.message.ConsumerMessage;
-import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageCommandV5;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 
 public class DefaultCommitter<T> implements Committer<T> {
@@ -75,8 +75,8 @@ public class DefaultCommitter<T> implements Committer<T> {
 		boolean success = true;
 
 		if (partitionRecords != null && !partitionRecords.isEmpty()) {
-			AckMessageCommandV4 cmd = new AckMessageCommandV4(m_topic, partition, m_groupId,
-			      m_consumerConfig.getAckCheckerIoTimeoutMillis());
+			AckMessageCommandV5 cmd = new AckMessageCommandV5(m_topic, partition, m_groupId,
+			      m_consumerConfig.getAckCheckerResultTimeoutMillis());
 
 			for (OffsetRecord rec : partitionRecords) {
 				if (rec.isNack()) {

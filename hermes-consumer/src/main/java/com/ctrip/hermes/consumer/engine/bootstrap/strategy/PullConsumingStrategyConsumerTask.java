@@ -11,7 +11,7 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
 import com.ctrip.hermes.core.schedule.SchedulePolicy;
-import com.ctrip.hermes.core.transport.command.v4.AckMessageCommandV4;
+import com.ctrip.hermes.core.transport.command.v5.AckMessageCommandV5;
 
 public class PullConsumingStrategyConsumerTask extends BaseConsumerTask {
 	private static final Logger log = LoggerFactory.getLogger(PullConsumingStrategyConsumerTask.class);
@@ -75,7 +75,7 @@ public class PullConsumingStrategyConsumerTask extends BaseConsumerTask {
 		}
 
 		@Override
-		public boolean writeAckToBroker(AckMessageCommandV4 cmd) {
+		public boolean writeAckToBroker(AckMessageCommandV5 cmd) {
 			return true;
 		}
 

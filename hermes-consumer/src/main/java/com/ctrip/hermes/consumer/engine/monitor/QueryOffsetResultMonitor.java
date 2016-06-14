@@ -1,16 +1,16 @@
 package com.ctrip.hermes.consumer.engine.monitor;
 
-import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
-import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
+import com.ctrip.hermes.core.transport.command.v5.QueryLatestConsumerOffsetCommandV5;
+import com.ctrip.hermes.core.transport.command.v5.QueryOffsetResultCommandV5;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
 public interface QueryOffsetResultMonitor {
-	void monitor(QueryLatestConsumerOffsetCommandV3 cmd);
+	void monitor(QueryLatestConsumerOffsetCommandV5 cmd);
 
-	void resultReceived(QueryOffsetResultCommandV3 ack);
+	void resultReceived(QueryOffsetResultCommandV5 ack);
 
-	void remove(QueryLatestConsumerOffsetCommandV3 cmd);
+	void remove(QueryLatestConsumerOffsetCommandV5 cmd);
 }

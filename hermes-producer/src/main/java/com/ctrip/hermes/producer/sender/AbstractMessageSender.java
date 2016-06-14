@@ -19,6 +19,8 @@ import com.ctrip.hermes.producer.monitor.SendMessageResultMonitor;
  */
 public abstract class AbstractMessageSender implements MessageSender {
 
+	private static final String PK = "pK";
+
 	@Inject
 	protected EndpointManager m_endpointManager;
 
@@ -52,10 +54,14 @@ public abstract class AbstractMessageSender implements MessageSender {
 
 	protected void preSend(ProducerMessage<?> msg) {
 		if (msg.getPartitionKey() != null) {
-			msg.addDurableSysProperty("pK", String.valueOf(msg.getPartitionKey().hashCode()));
+			msg.addDurableSysProperty(PK, String.valueOf(msg.getPartitionKey().hashCode()));
 		}
 		int partitionNo = m_partitioningAlgo.computePartitionNo(msg.getPartitionKey(), m_metaService
 		      .listPartitionsByTopic(msg.getTopic()).size());
 		msg.setPartition(partitionNo);
+	}
+
+	protected int getPartitionKeyHashCode(ProducerMessage<?> msg) {
+		return Integer.parseInt(msg.getDurableSysProperty(PK));
 	}
 }

@@ -6,6 +6,7 @@ import java.util.concurrent.Future;
 
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
@@ -25,11 +26,11 @@ public class DefaultAckMessageResultMonitor implements AckMessageResultMonitor {
 	}
 
 	@Override
-	public void received(long correlationId, boolean success) {
+	public void received(AckMessageResultCommandV5 cmd) {
 
-		SettableFuture<Boolean> future = m_futures.remove(correlationId);
+		SettableFuture<Boolean> future = m_futures.remove(cmd.getHeader().getCorrelationId());
 		if (future != null) {
-			future.set(success);
+			future.set(cmd.isSuccess());
 		}
 	}
 

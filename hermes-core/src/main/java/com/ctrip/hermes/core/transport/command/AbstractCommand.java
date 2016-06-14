@@ -13,6 +13,8 @@ public abstract class AbstractCommand implements Command {
 
 	protected ByteBuf m_rawBuf;
 
+	private long m_receiveTime;
+
 	public AbstractCommand(CommandType commandType, int version) {
 		m_header.setVersion(version);
 		m_header.setType(commandType);
@@ -26,10 +28,15 @@ public abstract class AbstractCommand implements Command {
 		m_header = header;
 	}
 
+	public long getReceiveTime() {
+		return m_receiveTime;
+	}
+
 	@Override
 	public void parse(ByteBuf buf, Header header) {
 		m_header = header;
 		m_rawBuf = buf;
+		m_receiveTime = System.currentTimeMillis();
 		parse0(buf);
 	}
 

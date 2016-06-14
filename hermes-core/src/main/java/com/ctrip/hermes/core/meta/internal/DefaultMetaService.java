@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
@@ -54,6 +55,8 @@ public class DefaultMetaService implements MetaService, Initializable {
 	private CoreConfig m_config;
 
 	private AtomicReference<Meta> m_metaCache = new AtomicReference<Meta>();
+
+	private long m_lastLoadedTime = 0;
 
 	protected Meta getMeta() {
 		return m_metaCache.get();
@@ -207,7 +210,10 @@ public class DefaultMetaService implements MetaService, Initializable {
 			try {
 				Meta meta = m_manager.loadMeta();
 				if (meta != null) {
-					m_metaCache.set(meta);
+					synchronized (this) {
+						m_metaCache.set(meta);
+						m_lastLoadedTime = System.currentTimeMillis();
+					}
 					return;
 				}
 			} catch (RuntimeException e) {
@@ -276,12 +282,11 @@ public class DefaultMetaService implements MetaService, Initializable {
 				      try {
 					      refreshMeta();
 				      } catch (Exception e) {
-					      log.warn("Failed to refresh meta", e);
+					      log.warn("Failed to refresh meta");
 				      }
 			      }
 
-		      }, m_config.getMetaCacheRefreshIntervalSeconds(), m_config.getMetaCacheRefreshIntervalSeconds(),
-		            TimeUnit.SECONDS);
+		      }, 5, m_config.getMetaCacheRefreshIntervalSecond(), TimeUnit.SECONDS);
 	}
 
 	@Override
@@ -291,8 +296,9 @@ public class DefaultMetaService implements MetaService, Initializable {
 	}
 
 	@Override
-	public Endpoint findEndpointByTopicAndPartition(String topic, int partition) {
-		return getMeta().findEndpoint(findTopic(topic, getMeta()).findPartition(partition).getEndpoint());
+	public synchronized Pair<Endpoint, Long> findEndpointByTopicAndPartition(String topic, int partition) {
+		return new Pair<Endpoint, Long>(getMeta().findEndpoint(
+		      findTopic(topic, getMeta()).findPartition(partition).getEndpoint()), m_lastLoadedTime);
 	}
 
 	@Override

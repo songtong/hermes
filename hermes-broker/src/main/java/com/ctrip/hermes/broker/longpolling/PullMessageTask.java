@@ -33,8 +33,8 @@ public class PullMessageTask {
 
 	private Date m_receiveTime;
 
-	public PullMessageTask() {
-		m_receiveTime = new Date();
+	public PullMessageTask(Date receiveTime) {
+		m_receiveTime = receiveTime;
 	}
 
 	public String getClientIp() {

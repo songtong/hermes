@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.meta.internal.MetaProxy;
+import com.ctrip.hermes.meta.entity.Meta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 
@@ -351,5 +353,18 @@ public class RemoteMetaProxy implements MetaProxy {
 			result.put(partitionId, new Offset(pOffset, npOffset, null));
 		}
 		return result;
+	}
+
+	@Override
+	public Meta getTopicsMeta(Set<String> topics) {
+		String response = post("/meta/topics", null, topics);
+		if (response != null) {
+			return JSON.parseObject(response, Meta.class);
+		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("No response while posting meta server[getTopicsMeta]");
+			}
+			return null;
+		}
 	}
 }

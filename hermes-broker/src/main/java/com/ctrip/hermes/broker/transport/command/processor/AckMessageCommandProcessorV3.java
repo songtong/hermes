@@ -65,7 +65,7 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 		logNacked(ctx.getRemoteIp(), topic, partition, groupId, nackedPriorityContexts, nackedContexts,
 		      nackedResendContexts);
 
-		AckMessagesTask task = new AckMessagesTask(topic, partition, groupId, reqCmd.getHeader().getCorrelationId(),
+		AckMessagesTask task = new AckMessagesTask(topic, partition, 3, groupId, reqCmd.getHeader().getCorrelationId(),
 		      ctx.getChannel(), m_systemClockService.now() + 10 * 1000L);
 		task.setAckedContexts(ackedContexts);
 		task.setAckedPriorityContexts(ackedPriorityContexts);

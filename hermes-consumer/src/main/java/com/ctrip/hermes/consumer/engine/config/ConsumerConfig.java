@@ -30,7 +30,13 @@ public class ConsumerConfig implements Initializable {
 
 	private static final int DEFAULT_ACK_CHECKER_IO_THREAD_COUNT = 3;
 
-	private static final int DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS = 10000;
+	private static final int DEFAULT_ACK_CHECKER_RESULT_TIMEOUT_MILLIS = 4000;
+
+	private static final int DEFAULT_ACK_CHECKER_ACCEPT_TIMEOUT_MILLIS = 4000;
+
+	private static final int DEFAULT_PULL_MESSAGE_ACCEPT_TIMEOUT_MILLIS = 4000;
+
+	private static final int DEFAULT_QUERY_OFFSET_ACCEPT_TIMEOUT_MILLIS = 2000;
 
 	private static final int DEFAULT_NO_MESSAGE_WAIT_BASE_MILLIS = 10;
 
@@ -48,13 +54,19 @@ public class ConsumerConfig implements Initializable {
 
 	private int m_ackCheckerIoThreadCount = DEFAULT_ACK_CHECKER_IO_THREAD_COUNT;
 
-	private int m_ackCheckerIoTimeoutMillis = DEFAULT_ACK_CHECKER_IO_TIMEOUT_MILLIS;
+	private int m_ackCheckerResultTimeoutMillis = DEFAULT_ACK_CHECKER_RESULT_TIMEOUT_MILLIS;
+
+	private int m_ackCheckerAcceptTimeoutMillis = DEFAULT_ACK_CHECKER_ACCEPT_TIMEOUT_MILLIS;
 
 	private int m_noMessageWaitBaseMillis = DEFAULT_NO_MESSAGE_WAIT_BASE_MILLIS;
 
 	private int m_noMessageWaitMaxMillis = DEFAULT_NO_MESSAGE_WAIT_MAX_MILLIS;
 
 	private int m_ackCommandMaxSize = DEFAULT_ACK_COMMAND_MAX_SIZE;
+
+	private int m_pullMessageAcceptTimeoutMillis = DEFAULT_PULL_MESSAGE_ACCEPT_TIMEOUT_MILLIS;
+
+	private int m_queryOffsetAcceptTimeoutMillis = DEFAULT_QUERY_OFFSET_ACCEPT_TIMEOUT_MILLIS;
 
 	public int getLocalCacheSize(String topic) throws IOException {
 		String localCacheSizeStr = m_env.getConsumerConfig(topic).getProperty("consumer.localcache.size");
@@ -111,12 +123,12 @@ public class ConsumerConfig implements Initializable {
 		return 3000;
 	}
 
-	public long getPullMessageTimeoutMills() {
-		return 30000;
+	public int getPullMessageAcceptTimeoutMillis() {
+		return m_pullMessageAcceptTimeoutMillis;
 	}
 
-	public long getPartitionWatchdogIntervalSeconds() {
-		return 30;
+	public int getQueryOffsetAcceptTimeoutMillis() {
+		return m_queryOffsetAcceptTimeoutMillis;
 	}
 
 	public int getMaxAckHolderSize(String topicName) throws IOException {
@@ -141,9 +153,10 @@ public class ConsumerConfig implements Initializable {
 			m_ackCheckerIoThreadCount = Integer.valueOf(ackCheckerIoThreadCount);
 		}
 
-		String ackCheckerIoTimeoutMillis = m_env.getGlobalConfig().getProperty("consumer.ack.checker.io.timeout.millis");
-		if (StringUtils.isNumeric(ackCheckerIoTimeoutMillis)) {
-			m_ackCheckerIoTimeoutMillis = Integer.valueOf(ackCheckerIoTimeoutMillis);
+		String ackCheckerResultTimeoutMillis = m_env.getGlobalConfig().getProperty(
+		      "consumer.ack.checker.result.timeout.millis");
+		if (StringUtils.isNumeric(ackCheckerResultTimeoutMillis)) {
+			m_ackCheckerResultTimeoutMillis = Integer.valueOf(ackCheckerResultTimeoutMillis);
 		}
 
 		String noMessageWaitBaseMillis = m_env.getGlobalConfig().getProperty("consumer.no.message.wait.base.millis");
@@ -155,10 +168,24 @@ public class ConsumerConfig implements Initializable {
 		if (StringUtils.isNumeric(noMessageWaitMaxMillis)) {
 			m_noMessageWaitMaxMillis = Integer.valueOf(noMessageWaitMaxMillis);
 		}
-		
+
 		String maxAckCmdSize = m_env.getGlobalConfig().getProperty("consumer.ack.max.cmd.size");
 		if (StringUtils.isNumeric(maxAckCmdSize)) {
 			m_ackCommandMaxSize = Integer.valueOf(maxAckCmdSize);
+		}
+		String ackAcceptTimeoutMillis = m_env.getGlobalConfig().getProperty("consumer.ack.accept.timeout.millis");
+		if (StringUtils.isNumeric(ackAcceptTimeoutMillis)) {
+			m_ackCheckerAcceptTimeoutMillis = Integer.valueOf(ackAcceptTimeoutMillis);
+		}
+		String pullMessageAcceptTimeoutMillis = m_env.getGlobalConfig().getProperty(
+		      "consumer.pull.message.accept.timeout.millis");
+		if (StringUtils.isNumeric(pullMessageAcceptTimeoutMillis)) {
+			m_pullMessageAcceptTimeoutMillis = Integer.valueOf(pullMessageAcceptTimeoutMillis);
+		}
+		String queryOffsetAcceptTimeoutMillis = m_env.getGlobalConfig().getProperty(
+		      "consumer.query.offset.accept.timeout.millis");
+		if (StringUtils.isNumeric(queryOffsetAcceptTimeoutMillis)) {
+			m_queryOffsetAcceptTimeoutMillis = Integer.valueOf(queryOffsetAcceptTimeoutMillis);
 		}
 	}
 
@@ -170,8 +197,12 @@ public class ConsumerConfig implements Initializable {
 		return m_ackCheckerIoThreadCount;
 	}
 
-	public int getAckCheckerIoTimeoutMillis() {
-		return m_ackCheckerIoTimeoutMillis;
+	public int getAckCheckerResultTimeoutMillis() {
+		return m_ackCheckerResultTimeoutMillis;
+	}
+
+	public int getAckCheckerAcceptTimeoutMillis() {
+		return m_ackCheckerAcceptTimeoutMillis;
 	}
 
 	public int getNotifierWorkQueueSize(String topic) throws IOException {
