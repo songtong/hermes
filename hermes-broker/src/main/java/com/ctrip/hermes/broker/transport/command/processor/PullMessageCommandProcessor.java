@@ -1,6 +1,7 @@
 package com.ctrip.hermes.broker.transport.command.processor;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -27,7 +28,6 @@ import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.dianping.cat.Cat;
-import com.dianping.cat.message.Transaction;
 
 public class PullMessageCommandProcessor implements CommandProcessor {
 
@@ -85,11 +85,9 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 	private void logReqToCat(CommandProcessorContext ctx, Tpg tpg) {
 		long now = System.currentTimeMillis();
 		if (now - m_lastLogPullReqToCatTime.get() > 60 * 1000L) {
-			Transaction tx = Cat.newTransaction(CatConstants.TYPE_PULL_CMD
-			      + ctx.getCommand().getHeader().getType().getVersion(), tpg.getTopic() + "-" + tpg.getPartition() + "-"
-			      + tpg.getGroupId());
+			Cat.logEvent(CatConstants.TYPE_PULL_CMD + ctx.getCommand().getHeader().getType().getVersion(), tpg.getTopic()
+			      + "-" + tpg.getPartition() + "-" + tpg.getGroupId());
 
-			tx.complete();
 			m_lastLogPullReqToCatTime.set(now);
 		}
 	}
@@ -121,7 +119,7 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 
 	private PullMessageTask preparePullMessageTask(CommandProcessorContext ctx) {
 		PullMessageCommand cmd = (PullMessageCommand) ctx.getCommand();
-		PullMessageTask task = new PullMessageTask();
+		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()));
 
 		task.setPullCommandVersion(1);
 
@@ -137,7 +135,7 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 
 	private PullMessageTask preparePullMessageTaskV2(CommandProcessorContext ctx) {
 		PullMessageCommandV2 cmd = (PullMessageCommandV2) ctx.getCommand();
-		PullMessageTask task = new PullMessageTask();
+		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()));
 
 		task.setPullCommandVersion(2);
 

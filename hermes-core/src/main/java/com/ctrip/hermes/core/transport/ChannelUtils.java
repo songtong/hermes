@@ -18,7 +18,8 @@ public class ChannelUtils {
 		if (channel.isActive() && channel.isWritable()) {
 			channel.writeAndFlush(msg);
 		} else {
-			log.warn("WriteAndFlush failed to {}", NettyUtils.parseChannelRemoteAddr(channel));
+			log.warn("WriteAndFlush failed to {}(active:{}, writable:{})", NettyUtils.parseChannelRemoteAddr(channel),
+			      channel.isActive(), channel.isWritable());
 		}
 	}
 }

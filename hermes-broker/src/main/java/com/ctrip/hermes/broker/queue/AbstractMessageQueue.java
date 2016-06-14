@@ -37,7 +37,9 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ChannelUtils;
+import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
+import com.ctrip.hermes.core.transport.command.v3.AckMessageResultCommandV3;
 import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -367,9 +369,21 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 				doNackAndAck(task.getGroupId(), false, true, task.getAckedResendContexts(), task.getNackedResendContexts());
 				success = true;
 			} finally {
-				AckMessageResultCommandV5 resCmd = new AckMessageResultCommandV5();
+				Command resCmd = null;
+
+				switch (task.getCmdVersion()) {
+				case 5:
+					resCmd = new AckMessageResultCommandV5();
+					((AckMessageResultCommandV5) resCmd).setSuccess(success);
+					break;
+				case 3:
+				case 4:
+				default:
+					resCmd = new AckMessageResultCommandV3();
+					((AckMessageResultCommandV3) resCmd).setSuccess(success);
+					break;
+				}
 				resCmd.getHeader().setCorrelationId(task.getCorrelationId());
-				resCmd.setSuccess(success);
 				ChannelUtils.writeAndFlush(task.getChannel(), resCmd);
 			}
 		}

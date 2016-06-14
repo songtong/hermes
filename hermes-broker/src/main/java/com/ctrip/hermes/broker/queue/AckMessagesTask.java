@@ -25,6 +25,8 @@ public class AckMessagesTask {
 
 	private long m_expireTime;
 
+	private int m_cmdVersion;
+
 	private List<AckContext> m_ackedContexts = new ArrayList<>();
 
 	private List<AckContext> m_ackedPriorityContexts = new ArrayList<>();
@@ -37,14 +39,23 @@ public class AckMessagesTask {
 
 	private List<AckContext> m_nackedResendContexts = new ArrayList<>();
 
-	public AckMessagesTask(String topic, int partition, String groupId, long correlationId, Channel channel,
-	      long expireTime) {
+	public AckMessagesTask(String topic, int partition, int cmdVersion, String groupId, long correlationId,
+	      Channel channel, long expireTime) {
 		m_topic = topic;
 		m_partition = partition;
+		m_cmdVersion = cmdVersion;
 		m_groupId = groupId;
 		m_channel = channel;
 		m_correlationId = correlationId;
 		m_expireTime = expireTime;
+	}
+
+	public int getCmdVersion() {
+		return m_cmdVersion;
+	}
+
+	public void setCmdVersion(int cmdVersion) {
+		m_cmdVersion = cmdVersion;
 	}
 
 	public long getExpireTime() {

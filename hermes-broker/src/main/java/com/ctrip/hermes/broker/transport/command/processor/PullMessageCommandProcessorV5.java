@@ -3,6 +3,7 @@ package com.ctrip.hermes.broker.transport.command.processor;
 import io.netty.channel.Channel;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -27,7 +28,6 @@ import com.ctrip.hermes.core.transport.command.v5.PullMessageAckCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.PullMessageCommandV5;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.dianping.cat.Cat;
-import com.dianping.cat.message.Transaction;
 
 public class PullMessageCommandProcessorV5 implements CommandProcessor {
 
@@ -68,9 +68,9 @@ public class PullMessageCommandProcessorV5 implements CommandProcessor {
 
 				Lease lease = m_leaseContainer.acquireLease(topic, partition, m_config.getSessionId());
 				if (lease != null) {
+					responseAck(ctx.getChannel(), reqCmd, true);
 					PullMessageTask task = createPullMessageTask(reqCmd, lease, ctx.getChannel(), ctx.getRemoteIp());
 					m_longPollingService.schedulePush(task);
-					responseAck(ctx.getChannel(), reqCmd, true);
 					return;
 				} else {
 					log.debug(
@@ -112,17 +112,16 @@ public class PullMessageCommandProcessorV5 implements CommandProcessor {
 	private void logReqToCat(PullMessageCommandV5 reqCmd) {
 		long now = System.currentTimeMillis();
 		if (now - m_lastLogPullReqToCatTime.get() > 60 * 1000L) {
-			Transaction tx = Cat.newTransaction(CatConstants.TYPE_PULL_CMD + reqCmd.getHeader().getType().getVersion(),
-			      reqCmd.getTopic() + "-" + reqCmd.getPartition() + "-" + reqCmd.getGroupId());
+			Cat.logEvent(CatConstants.TYPE_PULL_CMD + reqCmd.getHeader().getType().getVersion(), reqCmd.getTopic() + "-"
+			      + reqCmd.getPartition() + "-" + reqCmd.getGroupId());
 
-			tx.complete();
 			m_lastLogPullReqToCatTime.set(now);
 		}
 	}
 
 	private PullMessageTask createPullMessageTask(PullMessageCommandV5 cmd, Lease brokerLease, Channel channel,
 	      String clientIp) {
-		PullMessageTask task = new PullMessageTask();
+		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()));
 
 		task.setBatchSize(cmd.getSize());
 		task.setBrokerLease(brokerLease);

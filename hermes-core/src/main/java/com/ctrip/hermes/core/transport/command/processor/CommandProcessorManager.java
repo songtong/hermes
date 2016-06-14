@@ -22,6 +22,7 @@ import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.status.StatusMonitor;
+import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -64,10 +65,16 @@ public class CommandProcessorManager implements Initializable {
 
 					@Override
 					public void run() {
-						if (ctx.getCommand().getReceiveTime() > 0
-						      && (System.currentTimeMillis() - ctx.getCommand().getReceiveTime()) > m_config
+						Command cmd = ctx.getCommand();
+						if (cmd.getReceiveTime() > 0
+						      && (System.currentTimeMillis() - cmd.getReceiveTime()) > m_config
 						            .getCommandProcessorCmdExpireMillis()) {
-							Cat.logEvent(CatConstants.TYPE_CMD_DROP, ctx.getCommand().getHeader().getType().toString());
+							Cat.logEvent(CatConstants.TYPE_CMD_DROP, cmd.getHeader().getType().toString());
+
+							if (cmd.getClass().isAnnotationPresent(ManualRelease.class)) {
+								cmd.release();
+							}
+
 							return;
 						}
 

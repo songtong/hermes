@@ -138,10 +138,9 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 	private void logReqToCat(SendMessageCommandV3 reqCmd) {
 		long now = m_systemClockService.now();
 		if (now - m_lastLogSendReqToCatTime.get() > 60 * 1000L) {
-			Transaction tx = Cat.newTransaction(CatConstants.TYPE_SEND_CMD + reqCmd.getHeader().getType().getVersion(),
-			      reqCmd.getTopic() + "-" + reqCmd.getPartition());
+			Cat.logEvent(CatConstants.TYPE_SEND_CMD + reqCmd.getHeader().getType().getVersion(), reqCmd.getTopic() + "-"
+			      + reqCmd.getPartition());
 
-			tx.complete();
 			m_lastLogSendReqToCatTime.set(now);
 		}
 	}

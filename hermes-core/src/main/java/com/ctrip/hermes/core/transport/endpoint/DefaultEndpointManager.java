@@ -8,7 +8,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -46,8 +45,7 @@ public class DefaultEndpointManager implements EndpointManager, Initializable {
 	@Inject
 	private CoreConfig m_config;
 
-	private AtomicReference<ConcurrentHashMap<Pair<String, Integer>, EndpointCacheValue>> m_tpEndpointCache = new AtomicReference<>(
-	      new ConcurrentHashMap<Pair<String, Integer>, EndpointCacheValue>());
+	private ConcurrentHashMap<Pair<String, Integer>, EndpointCacheValue> m_tpEndpointCache = new ConcurrentHashMap<Pair<String, Integer>, EndpointCacheValue>();
 
 	private AtomicLong m_lastRefreshTime = new AtomicLong(0);
 
@@ -58,18 +56,17 @@ public class DefaultEndpointManager implements EndpointManager, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("EndpointCacheCleaner", true))
+		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("EndpointCacheHouseKeeper", true))
 		      .scheduleWithFixedDelay(new Runnable() {
 
 			      @Override
 			      public void run() {
 				      try {
-					      ConcurrentHashMap<Pair<String, Integer>, EndpointCacheValue> cache = m_tpEndpointCache.get();
 					      long now = System.currentTimeMillis();
-					      if (!cache.isEmpty()) {
-						      for (Map.Entry<Pair<String, Integer>, EndpointCacheValue> entry : cache.entrySet()) {
+					      if (!m_tpEndpointCache.isEmpty()) {
+						      for (Map.Entry<Pair<String, Integer>, EndpointCacheValue> entry : m_tpEndpointCache.entrySet()) {
 							      if (now - entry.getValue().getAccessTime() > m_config.getEndpointCacheMillis()) {
-								      cache.remove(entry.getKey());
+								      m_tpEndpointCache.remove(entry.getKey());
 							      }
 						      }
 					      }
@@ -84,7 +81,7 @@ public class DefaultEndpointManager implements EndpointManager, Initializable {
 	public Endpoint getEndpoint(String topic, int partition) {
 		Pair<String, Integer> tp = new Pair<String, Integer>(topic, partition);
 		Pair<Endpoint, Long> endpointEntryFromMeta = m_metaService.findEndpointByTopicAndPartition(topic, partition);
-		EndpointCacheValue endpointEntryFromCache = m_tpEndpointCache.get().get(tp);
+		EndpointCacheValue endpointEntryFromCache = m_tpEndpointCache.get(tp);
 
 		Endpoint endpoint = null;
 
@@ -107,10 +104,10 @@ public class DefaultEndpointManager implements EndpointManager, Initializable {
 
 	private void updateEndpoint(String topic, int partition, Endpoint newEndpoint, long refreshTime) {
 		Pair<String, Integer> tp = new Pair<String, Integer>(topic, partition);
-		EndpointCacheValue cacheValue = m_tpEndpointCache.get().get(tp);
+		EndpointCacheValue cacheValue = m_tpEndpointCache.get(tp);
 		if (cacheValue == null) {
-			EndpointCacheValue oldValue = m_tpEndpointCache.get().putIfAbsent(tp,
-			      new EndpointCacheValue(newEndpoint, refreshTime));
+			EndpointCacheValue oldValue = m_tpEndpointCache.putIfAbsent(tp, new EndpointCacheValue(newEndpoint,
+			      refreshTime));
 			if (oldValue != null) {
 				oldValue.setEndpoint(newEndpoint, refreshTime);
 			}
@@ -131,10 +128,8 @@ public class DefaultEndpointManager implements EndpointManager, Initializable {
 			if (m_refreshing.compareAndSet(false, true)) {
 				final Set<String> topics = new HashSet<>();
 				topics.add(topic);
-				for (Map.Entry<Pair<String, Integer>, EndpointCacheValue> entry : m_tpEndpointCache.get().entrySet()) {
-					if (now - entry.getValue().getAccessTime() < m_config.getEndpointCacheMillis()) {
-						topics.add(entry.getKey().getKey());
-					}
+				for (Map.Entry<Pair<String, Integer>, EndpointCacheValue> entry : m_tpEndpointCache.entrySet()) {
+					topics.add(entry.getKey().getKey());
 				}
 
 				refreshTopics(topics);
@@ -172,28 +167,25 @@ public class DefaultEndpointManager implements EndpointManager, Initializable {
 
 		private void updateEndpoints(Meta topicsMeta) {
 			long now = System.currentTimeMillis();
-			ConcurrentHashMap<Pair<String, Integer>, EndpointCacheValue> newEndpointCache = new ConcurrentHashMap<>();
 			for (Topic topic : topicsMeta.getTopics().values()) {
 				if (topic.getPartitions() != null) {
 					for (Partition partition : topic.getPartitions()) {
 						if (partition.getEndpoint() != null) {
 							Endpoint endpoint = topicsMeta.getEndpoints().get(partition.getEndpoint());
 							if (endpoint != null) {
-								newEndpointCache.put(new Pair<String, Integer>(topic.getName(), partition.getId()),
+								m_tpEndpointCache.put(new Pair<String, Integer>(topic.getName(), partition.getId()),
 								      new EndpointCacheValue(endpoint, now));
 							}
 						}
 					}
 				}
 			}
-			m_tpEndpointCache.set(newEndpointCache);
 		}
 	}
 
 	@Override
 	public boolean containsEndpoint(Endpoint endpoint) {
-		ConcurrentHashMap<Pair<String, Integer>, EndpointCacheValue> endpointCache = m_tpEndpointCache.get();
-		for (EndpointCacheValue endpointCacheValue : endpointCache.values()) {
+		for (EndpointCacheValue endpointCacheValue : m_tpEndpointCache.values()) {
 			if (endpointCacheValue.getEndpoint() != null && endpointCacheValue.getEndpoint().getId() == endpoint.getId()) {
 				return true;
 			}

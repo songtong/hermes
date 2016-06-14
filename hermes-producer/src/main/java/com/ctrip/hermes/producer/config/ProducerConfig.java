@@ -31,7 +31,7 @@ public class ProducerConfig implements Initializable {
 
 	public static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 10;
 
-	private static final int DEFAULT_BROKER_SENDER_CONCURRENT_LEVEL = 4;
+	private static final int DEFAULT_BROKER_SENDER_CONCURRENT_LEVEL = 2;
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
