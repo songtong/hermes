@@ -144,7 +144,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 					m_queueManager.delivered(batch, tpg.getGroupId(), pullTask.isWithOffset(), needServerSideAckHolder);
 
 					bizLogDelivered(pullTask.getClientIp(), batch.getMessageMetas(), tpg, pullTask.getReceiveTime(),
-					      responseOk);
+					      pullTask.getPullTime(), responseOk);
 
 					count += batch.size();
 				}
@@ -160,7 +160,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		}
 	}
 
-	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg, Date pullCmdReceiveTime,
+	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg, Date pullCmdReceiveTime, Date pullTime,
 	      boolean networkWritten) {
 		BrokerStatusMonitor.INSTANCE.msgDelivered(tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), ip, metas.size());
 
@@ -175,6 +175,9 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				event.addData("pullCmdReceiveTime", pullCmdReceiveTime);
 				event.addData("networkWritten", networkWritten);
 				event.addData("isResend", meta.isResend());
+				if (pullTime != null) {
+					event.addData("pullTime", pullTime);
+				}
 				if (meta.isResend()) {
 					event.addData("resendId", meta.getId());
 				}

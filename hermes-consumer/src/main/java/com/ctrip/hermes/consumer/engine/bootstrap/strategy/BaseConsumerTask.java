@@ -218,13 +218,10 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			try {
 				// if leaseRemainingTime < stopConsumerTimeMillsBeforLeaseExpired, stop
 				if (m_lease.get().getRemainingTime() <= m_config.getStopConsumerTimeMillsBeforLeaseExpired()) {
-
-					if (log.isDebugEnabled()) {
-						log.debug(
-						      "Consumer pre-pause(topic={}, partition={}, groupId={}, token={}, sessionId={}), since lease will be expired soon",
-						      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), token,
-						      m_context.getSessionId());
-					}
+					log.info(
+					      "Consumer pre-pause(topic={}, partition={}, groupId={}, token={}, sessionId={}), since lease will be expired soon",
+					      m_context.getTopic().getName(), m_partitionId, m_context.getGroupId(), token,
+					      m_context.getSessionId());
 					break;
 				}
 
@@ -711,7 +708,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		}
 
 		protected PullMessageCommandV5 createPullMessageCommand(long timeout) {
-			return new PullMessageCommandV5( //
+			PullMessageCommandV5 cmd = new PullMessageCommandV5( //
 			      m_context.getTopic().getName(), //
 			      m_partitionId, //
 			      m_context.getGroupId(), //
@@ -721,6 +718,10 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			      m_context.getMessageListenerConfig() instanceof FilterMessageListenerConfig ? //
 			      ((FilterMessageListenerConfig) m_context.getMessageListenerConfig()).getFilter()
 			            : null);
+
+			cmd.getHeader().addProperty("pullTime", String.valueOf(m_systemClockService.now()));
+
+			return cmd;
 		}
 
 		protected void appendToMsgQueue(PullMessageResultCommandV5 ack) {
