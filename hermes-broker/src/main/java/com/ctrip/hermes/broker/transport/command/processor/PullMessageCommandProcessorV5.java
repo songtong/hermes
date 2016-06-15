@@ -127,7 +127,7 @@ public class PullMessageCommandProcessorV5 implements CommandProcessor {
 		task.setBrokerLease(brokerLease);
 		task.setChannel(channel);
 		task.setCorrelationId(cmd.getHeader().getCorrelationId());
-		task.setExpireTime(cmd.getExpireTime() + System.currentTimeMillis());
+		task.setExpireTime(cmd.getExpireTime() + System.currentTimeMillis() - 20L);
 		task.setPullCommandVersion(5);
 		task.setWithOffset(true);
 		task.setStartOffset(cmd.getOffset());

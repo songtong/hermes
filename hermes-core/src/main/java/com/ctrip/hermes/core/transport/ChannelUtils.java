@@ -14,12 +14,14 @@ import com.ctrip.hermes.core.transport.netty.NettyUtils;
 public class ChannelUtils {
 	private static final Logger log = LoggerFactory.getLogger(ChannelUtils.class);
 
-	public static void writeAndFlush(Channel channel, Object msg) {
+	public static boolean writeAndFlush(Channel channel, Object msg) {
 		if (channel.isActive() && channel.isWritable()) {
 			channel.writeAndFlush(msg);
+			return true;
 		} else {
 			log.warn("WriteAndFlush failed to {}(active:{}, writable:{})", NettyUtils.parseChannelRemoteAddr(channel),
 			      channel.isActive(), channel.isWritable());
+			return false;
 		}
 	}
 }

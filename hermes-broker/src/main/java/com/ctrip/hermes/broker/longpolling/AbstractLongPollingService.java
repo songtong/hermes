@@ -38,7 +38,7 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 
 	protected AtomicBoolean m_stopped = new AtomicBoolean(false);
 
-	protected void response(PullMessageTask pullTask, List<TppConsumerMessageBatch> batches, Offset offset,
+	protected boolean response(PullMessageTask pullTask, List<TppConsumerMessageBatch> batches, Offset offset,
 	      boolean success) {
 		Command cmd = null;
 		switch (pullTask.getPullMessageCommandVersion()) {
@@ -83,7 +83,7 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 		}
 		cmd.getHeader().setCorrelationId(pullTask.getCorrelationId());
 
-		ChannelUtils.writeAndFlush(pullTask.getChannel(), cmd);
+		return ChannelUtils.writeAndFlush(pullTask.getChannel(), cmd);
 	}
 
 	@Override

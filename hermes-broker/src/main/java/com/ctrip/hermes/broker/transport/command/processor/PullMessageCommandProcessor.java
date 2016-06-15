@@ -146,7 +146,7 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 		if (StringUtils.isBlank(timeRel) || !"true".equals(timeRel)) {
 			task.setExpireTime(cmd.getExpireTime());
 		} else {
-			task.setExpireTime(cmd.getExpireTime() + System.currentTimeMillis());
+			task.setExpireTime(cmd.getExpireTime() + System.currentTimeMillis() - 20L);
 		}
 		task.setTpg(new Tpg(cmd.getTopic(), cmd.getPartition(), cmd.getGroupId()));
 		task.setClientIp(ctx.getRemoteIp());
