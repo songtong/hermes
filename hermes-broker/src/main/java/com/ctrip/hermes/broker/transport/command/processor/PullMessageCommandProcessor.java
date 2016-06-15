@@ -119,7 +119,7 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 
 	private PullMessageTask preparePullMessageTask(CommandProcessorContext ctx) {
 		PullMessageCommand cmd = (PullMessageCommand) ctx.getCommand();
-		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()));
+		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()), null);
 
 		task.setPullCommandVersion(1);
 
@@ -135,7 +135,7 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 
 	private PullMessageTask preparePullMessageTaskV2(CommandProcessorContext ctx) {
 		PullMessageCommandV2 cmd = (PullMessageCommandV2) ctx.getCommand();
-		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()));
+		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()), null);
 
 		task.setPullCommandVersion(2);
 

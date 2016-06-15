@@ -44,6 +44,10 @@ public class ConsumerConfig implements Initializable {
 
 	private static final int DEFAULT_ACK_COMMAND_MAX_SIZE = 5000;
 
+	private static final long DEFAULT_RENEW_LEASE_TIME_MILLIS_BEFORE_EXPIRED = 5000L;
+
+	private static final long DEFAULT_STOP_CONSUMER_TIME_MILLIS_BEFORE_LEASE_EXPIRED = 1000L;
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -68,6 +72,10 @@ public class ConsumerConfig implements Initializable {
 
 	private int m_queryOffsetAcceptTimeoutMillis = DEFAULT_QUERY_OFFSET_ACCEPT_TIMEOUT_MILLIS;
 
+	private long m_renewLeaseTimeMillisBeforeExpired = DEFAULT_RENEW_LEASE_TIME_MILLIS_BEFORE_EXPIRED;
+
+	private long m_stopConsumerTimeMillisBeforeLeaseExpired = DEFAULT_STOP_CONSUMER_TIME_MILLIS_BEFORE_LEASE_EXPIRED;
+
 	public int getLocalCacheSize(String topic) throws IOException {
 		String localCacheSizeStr = m_env.getConsumerConfig(topic).getProperty("consumer.localcache.size");
 
@@ -79,11 +87,11 @@ public class ConsumerConfig implements Initializable {
 	}
 
 	public long getRenewLeaseTimeMillisBeforeExpired() {
-		return 5 * 1000L;
+		return m_renewLeaseTimeMillisBeforeExpired;
 	}
 
 	public long getStopConsumerTimeMillsBeforLeaseExpired() {
-		return getRenewLeaseTimeMillisBeforeExpired() - 3 * 1000L;
+		return m_stopConsumerTimeMillisBeforeLeaseExpired;
 	}
 
 	public long getDefaultLeaseAcquireDelayMillis() {
@@ -186,6 +194,16 @@ public class ConsumerConfig implements Initializable {
 		      "consumer.query.offset.accept.timeout.millis");
 		if (StringUtils.isNumeric(queryOffsetAcceptTimeoutMillis)) {
 			m_queryOffsetAcceptTimeoutMillis = Integer.valueOf(queryOffsetAcceptTimeoutMillis);
+		}
+		String renewLeaseTimeMillisBeforeExpired = m_env.getGlobalConfig().getProperty(
+		      "consumer.renew.lease.time.before.expired.millis");
+		if (StringUtils.isNumeric(renewLeaseTimeMillisBeforeExpired)) {
+			m_renewLeaseTimeMillisBeforeExpired = Integer.valueOf(renewLeaseTimeMillisBeforeExpired);
+		}
+		String stopConsumerTimeMillisBeforeLeaseExpired = m_env.getGlobalConfig().getProperty(
+		      "consumer.stop.consumer.before.lease.expired.millis");
+		if (StringUtils.isNumeric(stopConsumerTimeMillisBeforeLeaseExpired)) {
+			m_stopConsumerTimeMillisBeforeLeaseExpired = Integer.valueOf(stopConsumerTimeMillisBeforeLeaseExpired);
 		}
 	}
 

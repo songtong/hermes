@@ -15,11 +15,11 @@ import com.ctrip.hermes.core.utils.StringUtils;
 @Named(type = CoreConfig.class)
 public class CoreConfig implements Initializable {
 
-	private static final int DEFAULT_CHANNEL_READ_IDLE_TIME_SECONDS = 30;
+	private static final int DEFAULT_CHANNEL_READ_IDLE_TIME_SECONDS = 60;
 
-	private static final int DEFAULT_CHANNEL_WRITE_IDLE_TIME_SECONDS = 30;
+	private static final int DEFAULT_CHANNEL_WRITE_IDLE_TIME_SECONDS = 60;
 
-	private static final int DEFAULT_CHANNEL_ALL_IDLE_TIME_SECONDS = 60;
+	private static final int DEFAULT_CHANNEL_ALL_IDLE_TIME_SECONDS = 2 * 60;
 
 	private static final int DEFAULT_MAX_CLIENT_TIME_DIFF_MILLIS = 2000;
 
@@ -38,6 +38,8 @@ public class CoreConfig implements Initializable {
 	private static final long DEFAULT_ENDPOINT_REFRESH_MIN_INTERVAL_MILLIS = 10 * 1000;
 
 	private static final long DEFAULT_ENDPOINT_CACHE_MILLIS = 2 * 60 * 1000;
+
+	private static final long DEFAULT_ENDPOINT_CHANNEL_WRITE_RETRY_DELAY_MILLIS = 10;
 
 	@Inject
 	private ClientEnvironment m_env;
@@ -63,6 +65,8 @@ public class CoreConfig implements Initializable {
 	private long m_endpointRefreshMinIntervalMillis = DEFAULT_ENDPOINT_REFRESH_MIN_INTERVAL_MILLIS;
 
 	private long m_endpointCacheMillis = DEFAULT_ENDPOINT_CACHE_MILLIS;
+
+	private long m_endpointChannelWriteRetryDelayMillis = DEFAULT_ENDPOINT_CHANNEL_WRITE_RETRY_DELAY_MILLIS;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -93,6 +97,10 @@ public class CoreConfig implements Initializable {
 		String allIdleStr = m_env.getGlobalConfig().getProperty("channel.all.idle.seconds");
 		if (StringUtils.isNumeric(allIdleStr)) {
 			m_channelAllIdle = Integer.valueOf(allIdleStr);
+		}
+		String endpointChannelWriteRetryDelayMillis = m_env.getGlobalConfig().getProperty("channel.retry.delay.millis");
+		if (StringUtils.isNumeric(endpointChannelWriteRetryDelayMillis)) {
+			m_endpointChannelWriteRetryDelayMillis = Long.valueOf(endpointChannelWriteRetryDelayMillis);
 		}
 
 		String maxClientTimeDiffMillis = m_env.getGlobalConfig().getProperty("max.client.time.diff.millis");
@@ -167,8 +175,8 @@ public class CoreConfig implements Initializable {
 		return m_endpointChannelWriterCheckIntervalMax;
 	}
 
-	public long getEndpointChannelWriteRetryDelay() {
-		return 20;
+	public long getEndpointChannelWriteRetryDelayMillis() {
+		return m_endpointChannelWriteRetryDelayMillis;
 	}
 
 	public long getEndpointChannelAutoReconnectDelay() {

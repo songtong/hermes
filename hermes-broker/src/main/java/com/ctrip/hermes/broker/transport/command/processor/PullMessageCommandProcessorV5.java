@@ -26,6 +26,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v5.PullMessageAckCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.PullMessageCommandV5;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.dianping.cat.Cat;
 
@@ -121,7 +122,10 @@ public class PullMessageCommandProcessorV5 implements CommandProcessor {
 
 	private PullMessageTask createPullMessageTask(PullMessageCommandV5 cmd, Lease brokerLease, Channel channel,
 	      String clientIp) {
-		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()));
+		String pullTimeStr = cmd.getHeader().getProperties().get("pullTime");
+
+		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()),
+		      StringUtils.isNumeric(pullTimeStr) ? new Date(Long.parseLong(pullTimeStr)) : null);
 
 		task.setBatchSize(cmd.getSize());
 		task.setBrokerLease(brokerLease);

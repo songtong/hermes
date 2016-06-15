@@ -359,7 +359,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 		private void doFlush(Channel channel, final WriteOp op) {
 
-			if (op != null && !op.isExpired()) {
+			if (op != null && !op.isExpired() && channel.isActive() && channel.isWritable()) {
 
 				ChannelFuture future = channel.writeAndFlush(op.getCmd());
 
@@ -379,7 +379,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 									public void run() {
 										doFlush(future.channel(), op);
 									}
-								}, m_config.getEndpointChannelWriteRetryDelay(), TimeUnit.MILLISECONDS);
+								}, m_config.getEndpointChannelWriteRetryDelayMillis(), TimeUnit.MILLISECONDS);
 							}
 						}
 

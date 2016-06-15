@@ -104,7 +104,7 @@ public class PullMessageCommandProcessorV3 implements CommandProcessor {
 
 	private PullMessageTask createPullMessageTask(PullMessageCommandV3 cmd, Lease brokerLease, Channel channel,
 	      String clientIp) {
-		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()));
+		PullMessageTask task = new PullMessageTask(new Date(cmd.getReceiveTime()), null);
 
 		task.setBatchSize(cmd.getSize());
 		task.setBrokerLease(brokerLease);
