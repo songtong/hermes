@@ -135,19 +135,20 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 			if (batches != null && !batches.isEmpty()) {
 
-				int count = 0;
+				boolean responseOk = response(pullTask, batches, currentOffset, true);
 
+				int count = 0;
 				for (TppConsumerMessageBatch batch : batches) {
 					// TODO remove legacy code
 					boolean needServerSideAckHolder = pullTask.getPullMessageCommandVersion() < 3 ? true : false;
 					m_queueManager.delivered(batch, tpg.getGroupId(), pullTask.isWithOffset(), needServerSideAckHolder);
 
-					bizLogDelivered(pullTask.getClientIp(), batch.getMessageMetas(), tpg, pullTask.getReceiveTime());
+					bizLogDelivered(pullTask.getClientIp(), batch.getMessageMetas(), tpg, pullTask.getReceiveTime(),
+					      responseOk);
 
 					count += batch.size();
 				}
 
-				response(pullTask, batches, currentOffset, true);
 				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime, count, null,
 				      Transaction.SUCCESS);
 				return true;
@@ -159,7 +160,8 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		}
 	}
 
-	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg, Date pullCmdReceiveTime) {
+	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg, Date pullCmdReceiveTime,
+	      boolean networkWritten) {
 		BrokerStatusMonitor.INSTANCE.msgDelivered(tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), ip, metas.size());
 
 		for (MessageMeta meta : metas) {
@@ -171,6 +173,7 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				event.addData("consumerIp", ip);
 				event.addData("groupId", m_metaService.translateToIntGroupId(tpg.getTopic(), tpg.getGroupId()));
 				event.addData("pullCmdReceiveTime", pullCmdReceiveTime);
+				event.addData("networkWritten", networkWritten);
 				event.addData("isResend", meta.isResend());
 				if (meta.isResend()) {
 					event.addData("resendId", meta.getId());
