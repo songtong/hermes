@@ -19,7 +19,7 @@ public class CoreConfig implements Initializable {
 
 	private static final int DEFAULT_CHANNEL_WRITE_IDLE_TIME_SECONDS = 60;
 
-	private static final int DEFAULT_CHANNEL_ALL_IDLE_TIME_SECONDS = 2 * 60;
+	private static final int DEFAULT_CHANNEL_ALL_IDLE_TIME_SECONDS = 60;
 
 	private static final int DEFAULT_MAX_CLIENT_TIME_DIFF_MILLIS = 2000;
 
