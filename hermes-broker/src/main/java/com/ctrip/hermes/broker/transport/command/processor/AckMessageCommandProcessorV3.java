@@ -100,18 +100,11 @@ public class AckMessageCommandProcessorV3 implements CommandProcessor {
 	      boolean ack) {
 		if (CollectionUtil.isNotEmpty(ackContexts)) {
 			for (AckContext ctx : ackContexts) {
-				BizEvent bizStartEvent = new BizEvent("Message.BizProcessStart",
-				      new Date(ctx.getOnMessageStartTimeMillis()));
-				addBizData(bizStartEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
-				m_bizLogger.log(bizStartEvent);
-
-				BizEvent bizEndEvent = new BizEvent("Message.BizProcessEnd", new Date(ctx.getOnMessageEndTimeMillis()));
-				addBizData(bizEndEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
-				m_bizLogger.log(bizEndEvent);
-
 				BizEvent ackEvent = new BizEvent("Message.Acked");
 				addBizData(ackEvent, tpp, consumerIp, groupId, ctx, isResend, ack);
 				addConsumerProcessTime(ackEvent, ctx.getOnMessageEndTimeMillis() - ctx.getOnMessageStartTimeMillis());
+				ackEvent.addData("BizStart", new Date(ctx.getOnMessageStartTimeMillis()));
+				ackEvent.addData("BizEnd", new Date(ctx.getOnMessageEndTimeMillis()));
 				m_bizLogger.log(ackEvent);
 			}
 		}
