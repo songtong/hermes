@@ -34,7 +34,7 @@ import com.ctrip.hermes.meta.entity.Endpoint;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@ThreadCount(value = 10)
+@ThreadCount(value = 20)
 public class AckMessageCommandProcessorV5 implements CommandProcessor {
 
 	@Inject

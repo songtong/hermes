@@ -25,7 +25,7 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@ThreadCount(value = 10)
+@ThreadCount(value = 20)
 public class AckMessageCommandProcessorV4 implements CommandProcessor {
 
 	@Inject
