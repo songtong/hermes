@@ -44,6 +44,7 @@ import com.ctrip.hermes.broker.transport.command.processor.QueryMessageOffsetByT
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessorV3;
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessorV5;
+import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessorV6;
 import com.ctrip.hermes.broker.zk.ZKClient;
 import com.ctrip.hermes.broker.zk.ZKConfig;
 import com.ctrip.hermes.core.log.FileBizLogger;
@@ -83,6 +84,14 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(SystemClockService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND_V5.toString(), SendMessageCommandProcessorV5.class)//
+		      .req(MessageQueueManager.class)//
+		      .req(BrokerLeaseContainer.class)//
+		      .req(BrokerConfig.class)//
+		      .req(FileBizLogger.class)//
+		      .req(MetaService.class)//
+		      .req(SystemClockService.class)//
+		);
+		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND_V6.toString(), SendMessageCommandProcessorV6.class)//
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfig.class)//

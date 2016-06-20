@@ -18,6 +18,7 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
@@ -125,7 +126,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	private void purgeExpiredMsg() {
 		PendingMessageWrapper messageWrapper = m_pendingMessages.poll();
 		if (messageWrapper != null && messageWrapper.getBatch() != null) {
-			Map<Integer, Boolean> result = new HashMap<>();
+			Map<Integer, SendMessageResult> result = new HashMap<>();
 			addResults(result, messageWrapper.getBatch().getMsgSeqs(), false);
 			messageWrapper.getFuture().set(result);
 		}
@@ -137,10 +138,10 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	private static class FutureBatchResultWrapperTransformer implements
-	      Function<FutureBatchResultWrapper, Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> {
+	      Function<FutureBatchResultWrapper, Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>>> {
 		@Override
-		public Pair<MessageBatchWithRawData, Map<Integer, Boolean>> apply(FutureBatchResultWrapper input) {
-			return new Pair<MessageBatchWithRawData, Map<Integer, Boolean>>(input.getBatch(), input.getResult());
+		public Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>> apply(FutureBatchResultWrapper input) {
+			return new Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>>(input.getBatch(), input.getResult());
 		}
 	}
 
@@ -150,7 +151,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		List<FutureBatchResultWrapper> nonPriorityTodos = new ArrayList<>(todos.size());
 
 		for (PendingMessageWrapper todo : todos) {
-			Map<Integer, Boolean> result = new HashMap<>();
+			Map<Integer, SendMessageResult> result = new HashMap<>();
 			addResults(result, todo.getBatch().getMsgSeqs(), false);
 
 			if (todo.isPriority()) {
@@ -166,30 +167,31 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 		for (List<FutureBatchResultWrapper> todo : Arrays.asList(priorityTodos, nonPriorityTodos)) {
 			for (FutureBatchResultWrapper fbw : todo) {
-				SettableFuture<Map<Integer, Boolean>> future = fbw.getFuture();
-				Map<Integer, Boolean> result = fbw.getResult();
+				SettableFuture<Map<Integer, SendMessageResult>> future = fbw.getFuture();
+				Map<Integer, SendMessageResult> result = fbw.getResult();
 				future.set(result);
 			}
 		}
 
 	}
 
-	protected void addResults(Map<Integer, Boolean> result, List<Integer> seqs, boolean success) {
+	protected void addResults(Map<Integer, SendMessageResult> result, List<Integer> seqs, boolean success) {
 		for (Integer seq : seqs) {
-			result.put(seq, success);
+			result.put(seq, new SendMessageResult(success, false, null));
 		}
 	}
 
-	protected void addResults(Map<Integer, Boolean> result, boolean success) {
+	protected void addResults(Map<Integer, SendMessageResult> result, boolean success, boolean shouldSkip,
+	      String errorMessage) {
 		for (Integer key : result.keySet()) {
-			result.put(key, success);
+			result.put(key, new SendMessageResult(success, shouldSkip, errorMessage));
 		}
 	}
 
 	@Override
-	public ListenableFuture<Map<Integer, Boolean>> append(boolean isPriority, MessageBatchWithRawData batch,
+	public ListenableFuture<Map<Integer, SendMessageResult>> append(boolean isPriority, MessageBatchWithRawData batch,
 	      long expireTime) {
-		SettableFuture<Map<Integer, Boolean>> future = SettableFuture.create();
+		SettableFuture<Map<Integer, SendMessageResult>> future = SettableFuture.create();
 
 		m_pendingMessages.offer(new PendingMessageWrapper(future, batch, isPriority, expireTime));
 
@@ -197,24 +199,24 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	private static class MessageBatchAndResultTransformer implements
-	      Function<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>, MessageBatchWithRawData> {
+	      Function<Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>>, MessageBatchWithRawData> {
 		@Override
-		public MessageBatchWithRawData apply(Pair<MessageBatchWithRawData, Map<Integer, Boolean>> input) {
+		public MessageBatchWithRawData apply(Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>> input) {
 			return input.getKey();
 		}
 	}
 
 	protected void doAppendMessageSync(boolean isPriority,
-	      Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos) {
+	      Collection<Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>>> todos) {
 		Collection<MessageBatchWithRawData> batches = null;
 		try {
 			batches = Collections2.transform(todos, m_messageBatchAndResultTransformer);
 			m_storage.appendMessages(m_topic, m_partition, isPriority, batches);
 
-			setBatchesResult(isPriority, todos, true);
+			setBatchesResult(isPriority, todos, true, false, null);
 		} catch (Exception e) {
 			if (shoudlSkip(e)) {
-				setBatchesResult(isPriority, todos, true);
+				setBatchesResult(isPriority, todos, false, true, "Message too large.");
 				if (batches != null) {
 					for (MessageBatchWithRawData batch : batches) {
 						for (PartialDecodedMessage msg : batch.getMessages()) {
@@ -224,7 +226,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 					}
 				}
 			} else {
-				setBatchesResult(isPriority, todos, false);
+				setBatchesResult(isPriority, todos, false, false, null);
 				log.error("Failed to append messages.", e);
 			}
 		}
@@ -248,11 +250,12 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	private void setBatchesResult(boolean isPriority,
-	      Collection<Pair<MessageBatchWithRawData, Map<Integer, Boolean>>> todos, boolean success) {
-		for (Pair<MessageBatchWithRawData, Map<Integer, Boolean>> todo : todos) {
+	      Collection<Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>>> todos, boolean success,
+	      boolean shouldSkip, String errorMessage) {
+		for (Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>> todo : todos) {
 			bizLog(isPriority, todo.getKey(), success);
-			Map<Integer, Boolean> result = todo.getValue();
-			addResults(result, success);
+			Map<Integer, SendMessageResult> result = todo.getValue();
+			addResults(result, success, shouldSkip, errorMessage);
 		}
 	}
 
@@ -272,20 +275,20 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	private static class FutureBatchResultWrapper {
-		private SettableFuture<Map<Integer, Boolean>> m_future;
+		private SettableFuture<Map<Integer, SendMessageResult>> m_future;
 
 		private MessageBatchWithRawData m_batch;
 
-		private Map<Integer, Boolean> m_result;
+		private Map<Integer, SendMessageResult> m_result;
 
-		public FutureBatchResultWrapper(SettableFuture<Map<Integer, Boolean>> future, MessageBatchWithRawData batch,
-		      Map<Integer, Boolean> result) {
+		public FutureBatchResultWrapper(SettableFuture<Map<Integer, SendMessageResult>> future,
+		      MessageBatchWithRawData batch, Map<Integer, SendMessageResult> result) {
 			m_future = future;
 			m_batch = batch;
 			m_result = result;
 		}
 
-		public SettableFuture<Map<Integer, Boolean>> getFuture() {
+		public SettableFuture<Map<Integer, SendMessageResult>> getFuture() {
 			return m_future;
 		}
 
@@ -293,14 +296,14 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 			return m_batch;
 		}
 
-		public Map<Integer, Boolean> getResult() {
+		public Map<Integer, SendMessageResult> getResult() {
 			return m_result;
 		}
 
 	}
 
 	private static class PendingMessageWrapper {
-		private SettableFuture<Map<Integer, Boolean>> m_future;
+		private SettableFuture<Map<Integer, SendMessageResult>> m_future;
 
 		private MessageBatchWithRawData m_batch;
 
@@ -308,15 +311,15 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 		private long m_expireTime;
 
-		public PendingMessageWrapper(SettableFuture<Map<Integer, Boolean>> future, MessageBatchWithRawData batch,
-		      boolean isPriority, long expireTime) {
+		public PendingMessageWrapper(SettableFuture<Map<Integer, SendMessageResult>> future,
+		      MessageBatchWithRawData batch, boolean isPriority, long expireTime) {
 			m_future = future;
 			m_batch = batch;
 			m_isPriority = isPriority;
 			m_expireTime = expireTime;
 		}
 
-		public SettableFuture<Map<Integer, Boolean>> getFuture() {
+		public SettableFuture<Map<Integer, SendMessageResult>> getFuture() {
 			return m_future;
 		}
 

@@ -2,7 +2,7 @@ package com.ctrip.hermes.producer.monitor;
 
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageAckCommandV6;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -16,6 +16,6 @@ public interface SendMessageAcceptanceMonitor {
 
 	public void cancel(long correlationId);
 
-	public void received(SendMessageAckCommandV5 cmd);
+	public void received(SendMessageAckCommandV6 cmd);
 
 }

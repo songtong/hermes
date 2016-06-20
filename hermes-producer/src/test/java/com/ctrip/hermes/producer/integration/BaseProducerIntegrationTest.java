@@ -29,6 +29,7 @@ import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.exception.MessageSendException;
@@ -45,11 +46,11 @@ import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
-import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
-import com.ctrip.hermes.core.transport.command.v5.SendMessageCommandV5;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageAckCommandV6;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageCommandV6;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageResultCommandV6;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -170,7 +171,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		doAnswer(new CompositeAnswer(answers))//
 		      .when(m_endpointClient)//
 		      .writeCommand(any(Endpoint.class), //
-		            any(SendMessageCommandV5.class), //
+		            any(SendMessageCommandV6.class), //
 		            anyLong(), //
 		            any(TimeUnit.class));
 	}
@@ -241,11 +242,11 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		NotAccept() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
-				SendMessageCommandV5 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV5.class);
+				SendMessageCommandV6 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV6.class);
 				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
 				      CommandType.ACK_MESSAGE_SEND.toString());
 
-				SendMessageAckCommandV5 acceptCmd = new SendMessageAckCommandV5();
+				SendMessageAckCommandV6 acceptCmd = new SendMessageAckCommandV6();
 				acceptCmd.setSuccess(false);
 				acceptCmd.correlate(sendMessageCmd);
 
@@ -258,11 +259,11 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		Accept() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
-				SendMessageCommandV5 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV5.class);
+				SendMessageCommandV6 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV6.class);
 				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
 				      CommandType.ACK_MESSAGE_SEND.toString());
 
-				SendMessageAckCommandV5 acceptCmd = new SendMessageAckCommandV5();
+				SendMessageAckCommandV6 acceptCmd = new SendMessageAckCommandV6();
 				acceptCmd.setSuccess(true);
 				acceptCmd.correlate(sendMessageCmd);
 
@@ -275,17 +276,17 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		ResponseSucessResult() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
-				SendMessageCommandV5 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV5.class);
+				SendMessageCommandV6 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV6.class);
 				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
 				      CommandType.RESULT_MESSAGE_SEND.toString());
 
-				SendMessageResultCommand resultCmd = new SendMessageResultCommand(sendMessageCmd.getMessageCount());
+				SendMessageResultCommandV6 resultCmd = new SendMessageResultCommandV6(sendMessageCmd.getMessageCount());
 				resultCmd.correlate(sendMessageCmd);
 
-				Map<Integer, Boolean> results = new HashMap<Integer, Boolean>();
+				Map<Integer, SendMessageResult> results = new HashMap<>();
 				for (List<ProducerMessage<?>> pmsgList : sendMessageCmd.getProducerMessages()) {
 					for (ProducerMessage<?> pmsg : pmsgList) {
-						results.put(pmsg.getMsgSeqNo(), true);
+						results.put(pmsg.getMsgSeqNo(), new SendMessageResult(true, false, null));
 					}
 				}
 				resultCmd.addResults(results);
@@ -299,17 +300,17 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		ResponseFailResult() {
 			@Override
 			public Void answer(InvocationOnMock invocation) throws Throwable {
-				SendMessageCommandV5 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV5.class);
+				SendMessageCommandV6 sendMessageCmd = invocation.getArgumentAt(1, SendMessageCommandV6.class);
 				CommandProcessor commandProcessor = PlexusComponentLocator.lookup(CommandProcessor.class,
 				      CommandType.RESULT_MESSAGE_SEND.toString());
 
-				SendMessageResultCommand resultCmd = new SendMessageResultCommand(sendMessageCmd.getMessageCount());
+				SendMessageResultCommandV6 resultCmd = new SendMessageResultCommandV6(sendMessageCmd.getMessageCount());
 				resultCmd.correlate(sendMessageCmd);
 
-				Map<Integer, Boolean> results = new HashMap<Integer, Boolean>();
+				Map<Integer, SendMessageResult> results = new HashMap<>();
 				for (List<ProducerMessage<?>> pmsgList : sendMessageCmd.getProducerMessages()) {
 					for (ProducerMessage<?> pmsg : pmsgList) {
-						results.put(pmsg.getMsgSeqNo(), false);
+						results.put(pmsg.getMsgSeqNo(), new SendMessageResult(false, false, null));
 					}
 				}
 				resultCmd.addResults(results);

@@ -13,10 +13,11 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ProducerMessage;
-import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
-import com.ctrip.hermes.core.transport.command.v5.SendMessageCommandV5;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageCommandV6;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageResultCommandV6;
 import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
@@ -33,7 +34,7 @@ import com.google.common.util.concurrent.SettableFuture;
 public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor {
 	private static final Logger log = LoggerFactory.getLogger(DefaultSendMessageResultMonitor.class);
 
-	private Map<Long, Pair<SendMessageCommandV5, SettableFuture<Boolean>>> m_cmds = new ConcurrentHashMap<>();
+	private Map<Long, Pair<SendMessageCommandV6, SettableFuture<SendMessageResult>>> m_cmds = new ConcurrentHashMap<>();
 
 	private ReentrantLock m_lock = new ReentrantLock();
 
@@ -41,12 +42,12 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	private ProducerConfig m_config;
 
 	@Override
-	public Future<Boolean> monitor(SendMessageCommandV5 cmd) {
+	public Future<SendMessageResult> monitor(SendMessageCommandV6 cmd) {
 		m_lock.lock();
 		try {
-			SettableFuture<Boolean> future = SettableFuture.create();
-			m_cmds.put(cmd.getHeader().getCorrelationId(), new Pair<SendMessageCommandV5, SettableFuture<Boolean>>(cmd,
-			      future));
+			SettableFuture<SendMessageResult> future = SettableFuture.create();
+			m_cmds.put(cmd.getHeader().getCorrelationId(),
+			      new Pair<SendMessageCommandV6, SettableFuture<SendMessageResult>>(cmd, future));
 			return future;
 		} finally {
 			m_lock.unlock();
@@ -54,30 +55,36 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	}
 
 	@Override
-	public void resultReceived(SendMessageResultCommand result) {
-		if (result != null) {
-			Pair<SendMessageCommandV5, SettableFuture<Boolean>> pair = null;
+	public void resultReceived(SendMessageResultCommandV6 resultCmd) {
+		if (resultCmd != null) {
+			Pair<SendMessageCommandV6, SettableFuture<SendMessageResult>> pair = null;
 			m_lock.lock();
 			try {
-				pair = m_cmds.remove(result.getHeader().getCorrelationId());
+				pair = m_cmds.remove(resultCmd.getHeader().getCorrelationId());
 			} finally {
 				m_lock.unlock();
 			}
 			if (pair != null) {
 				try {
-					SendMessageCommandV5 sendMessageCommand = pair.getKey();
-					SettableFuture<Boolean> future = pair.getValue();
+					SendMessageCommandV6 sendMessageCommand = pair.getKey();
+					SettableFuture<SendMessageResult> future = pair.getValue();
 
 					ProducerStatusMonitor.INSTANCE.brokerResultReceived(sendMessageCommand.getTopic(),
 					      sendMessageCommand.getPartition(), sendMessageCommand.getMessageCount());
 
-					if (isResultSuccess(result)) {
-						future.set(true);
-						sendMessageCommand.onResultReceived(result);
+					SendMessageResult sendMessageResult = convertToSingleSendMessageResult(resultCmd);
+
+					if (sendMessageResult.isSuccess()) {
+						future.set(sendMessageResult);
+						sendMessageCommand.onResultReceived(resultCmd);
+						tracking(sendMessageCommand);
 					} else {
-						future.set(false);
+						if (sendMessageResult.isShouldSkip()) {
+							sendMessageCommand.onResultReceived(resultCmd);
+						}
+						future.set(sendMessageResult);
 					}
-					tracking(sendMessageCommand, true);
+
 				} catch (Exception e) {
 					log.warn("Exception occurred while calling resultReceived", e);
 				}
@@ -86,20 +93,20 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 		}
 	}
 
-	private boolean isResultSuccess(SendMessageResultCommand result) {
-		Map<Integer, Boolean> successes = result.getSuccesses();
-		for (Boolean success : successes.values()) {
-			if (!success) {
-				return false;
+	private SendMessageResult convertToSingleSendMessageResult(SendMessageResultCommandV6 cmd) {
+
+		Map<Integer, SendMessageResult> results = cmd.getResults();
+		for (SendMessageResult res : results.values()) {
+			if (!res.isSuccess()) {
+				return new SendMessageResult(false, res.isShouldSkip(), res.getErrorMessage());
 			}
 		}
 
-		return true;
+		return new SendMessageResult(true, false, null);
 	}
 
-	private void tracking(SendMessageCommandV5 sendMessageCommand, boolean success) {
-		if (!success || m_config.isCatEnabled()) {
-			String status = success ? Transaction.SUCCESS : "Timeout";
+	private void tracking(SendMessageCommandV6 sendMessageCommand) {
+		if (m_config.isCatEnabled()) {
 			Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_ACKED, sendMessageCommand.getTopic());
 			for (List<ProducerMessage<?>> msgs : sendMessageCommand.getProducerMessages()) {
 				for (ProducerMessage<?> msg : msgs) {
@@ -117,17 +124,17 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 					String type = durtion > 2000L ? CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE_LARGE
 					      : CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE;
 					CatUtil.logElapse(type, msg.getTopic(), msg.getBornTime(), 1,
-					      Arrays.asList(new Pair<String, String>("key", msg.getKey())), status);
+					      Arrays.asList(new Pair<String, String>("key", msg.getKey())), Transaction.SUCCESS);
 				}
 			}
 			t.addData("*count", sendMessageCommand.getMessageCount());
-			t.setStatus(status);
+			t.setStatus(Transaction.SUCCESS);
 			t.complete();
 		}
 	}
 
 	@Override
-	public void cancel(SendMessageCommandV5 cmd) {
+	public void cancel(SendMessageCommandV6 cmd) {
 		m_lock.lock();
 		try {
 			m_cmds.remove(cmd.getHeader().getCorrelationId());

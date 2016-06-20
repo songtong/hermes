@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageAckCommandV6;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -27,7 +27,7 @@ public class DefaultSendMessageAcceptanceMonitor implements SendMessageAcceptanc
 	}
 
 	@Override
-	public void received(SendMessageAckCommandV5 cmd) {
+	public void received(SendMessageAckCommandV6 cmd) {
 		SettableFuture<Pair<Boolean, Endpoint>> future = m_futures.remove(cmd.getHeader().getCorrelationId());
 		if (future != null) {
 			future.set(new Pair<Boolean, Endpoint>(cmd.isSuccess(), cmd.getNewEndpoint()));

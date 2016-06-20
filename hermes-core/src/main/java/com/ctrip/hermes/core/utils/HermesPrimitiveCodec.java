@@ -12,6 +12,7 @@ import java.util.Map;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.google.common.base.Charsets;
 
@@ -218,6 +219,26 @@ public class HermesPrimitiveCodec {
 		}
 	}
 
+	public SendMessageResult readSendMessageResult() {
+		byte firstByte = m_buf.readByte();
+		if (NULL == firstByte) {
+			return null;
+		} else {
+			readerIndexBack(m_buf, 1);
+			return new SendMessageResult(readBoolean(), readBoolean(), readString());
+		}
+	}
+
+	public void writeSendMessageResult(SendMessageResult result) {
+		if (result == null) {
+			writeNull();
+		} else {
+			writeBoolean(result.isSuccess());
+			writeBoolean(result.isShouldSkip());
+			writeString(result.getErrorMessage());
+		}
+	}
+
 	public void writeOffsets(List<Offset> offsets) {
 		if (offsets == null) {
 			writeNull();
@@ -302,6 +323,21 @@ public class HermesPrimitiveCodec {
 		}
 	}
 
+	public void writeIntSendMessageResultMap(Map<Integer, SendMessageResult> map) {
+		if (null == map) {
+			writeNull();
+		} else {
+			m_buf.writeInt(map.size());
+
+			if (map.size() > 0) {
+				for (Map.Entry<Integer, SendMessageResult> entry : map.entrySet()) {
+					writeInt(entry.getKey());
+					writeSendMessageResult(entry.getValue());
+				}
+			}
+		}
+	}
+
 	public Map<String, String> readStringStringMap() {
 		byte firstByte = m_buf.readByte();
 		if (NULL == firstByte) {
@@ -347,6 +383,23 @@ public class HermesPrimitiveCodec {
 			if (length > 0) {
 				for (int i = 0; i < length; i++) {
 					result.put(readInt(), readBoolean());
+				}
+			}
+			return result;
+		}
+	}
+
+	public Map<Integer, SendMessageResult> readIntSendMessageResultMap() {
+		byte firstByte = m_buf.readByte();
+		if (NULL == firstByte) {
+			return null;
+		} else {
+			readerIndexBack(m_buf, 1);
+			int length = m_buf.readInt();
+			Map<Integer, SendMessageResult> result = new HashMap<Integer, SendMessageResult>();
+			if (length > 0) {
+				for (int i = 0; i < length; i++) {
+					result.put(readInt(), readSendMessageResult());
 				}
 			}
 			return result;

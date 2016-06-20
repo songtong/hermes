@@ -2,6 +2,7 @@ package com.ctrip.hermes.broker.transport.command.processor;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +17,7 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
@@ -100,14 +102,15 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 				final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
 				result.correlate(reqCmd);
 
-				FutureCallback<Map<Integer, Boolean>> completionCallback = new AppendMessageCompletionCallback(result, ctx,
-				      topic, partition);
+				FutureCallback<Map<Integer, SendMessageResult>> completionCallback = new AppendMessageCompletionCallback(
+				      result, ctx, topic, partition);
 
 				for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
 					MessageBatchWithRawData batch = entry.getValue();
 					try {
-						ListenableFuture<Map<Integer, Boolean>> future = m_queueManager.appendMessageAsync(topic, partition,
-						      entry.getKey() == 0 ? true : false, batch, m_systemClockService.now() + reqCmd.getTimeout());
+						ListenableFuture<Map<Integer, SendMessageResult>> future = m_queueManager.appendMessageAsync(topic,
+						      partition, entry.getKey() == 0 ? true : false, batch,
+						      m_systemClockService.now() + reqCmd.getTimeout());
 
 						if (future != null) {
 							Futures.addCallback(future, completionCallback);
@@ -167,7 +170,7 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 		}
 	}
 
-	private static class AppendMessageCompletionCallback implements FutureCallback<Map<Integer, Boolean>> {
+	private static class AppendMessageCompletionCallback implements FutureCallback<Map<Integer, SendMessageResult>> {
 		private SendMessageResultCommand m_result;
 
 		private CommandProcessorContext m_ctx;
@@ -190,14 +193,13 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 		}
 
 		@Override
-		public void onSuccess(Map<Integer, Boolean> results) {
-			m_result.addResults(results);
+		public void onSuccess(Map<Integer, SendMessageResult> results) {
+			m_result.addResults(convertResults(results));
 
 			if (m_result.isAllResultsSet()) {
 				try {
 					if (m_written.compareAndSet(false, true)) {
 						logToCatIfHasError(m_result);
-						m_result.getHeader().addProperty("createTime", Long.toString(System.currentTimeMillis()));
 						ChannelUtils.writeAndFlush(m_ctx.getChannel(), m_result);
 
 						logElapse();
@@ -206,6 +208,16 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 					m_ctx.getCommand().release();
 				}
 			}
+		}
+
+		private Map<Integer, Boolean> convertResults(Map<Integer, SendMessageResult> results) {
+			Map<Integer, Boolean> newResults = new HashMap<>();
+
+			for (Map.Entry<Integer, SendMessageResult> entry : results.entrySet()) {
+				newResults.put(entry.getKey(), entry.getValue().isSuccess());
+			}
+
+			return newResults;
 		}
 
 		private void logElapse() {
@@ -233,7 +245,6 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 		SendMessageAckCommand ack = new SendMessageAckCommand();
 		ack.correlate(req);
 		ack.setSuccess(success);
-		ack.getHeader().addProperty("createTime", Long.toString(System.currentTimeMillis()));
 		ChannelUtils.writeAndFlush(ctx.getChannel(), ack);
 	}
 

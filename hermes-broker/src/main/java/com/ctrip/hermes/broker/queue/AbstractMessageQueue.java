@@ -30,6 +30,7 @@ import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
@@ -129,8 +130,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	}
 
 	@Override
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch,
-	      long expireTime) {
+	public ListenableFuture<Map<Integer, SendMessageResult>> appendMessageAsync(boolean isPriority,
+	      MessageBatchWithRawData batch, long expireTime) {
 		if (m_stopped.get()) {
 			return null;
 		}

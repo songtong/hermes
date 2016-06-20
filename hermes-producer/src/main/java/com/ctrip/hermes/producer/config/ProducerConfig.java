@@ -159,4 +159,21 @@ public class ProducerConfig implements Initializable {
 		return m_brokerSenderConcurrentLevel;
 	}
 
+	public int getProduceTimeoutSeconds(String topic) {
+		try {
+			String produceTimeout = m_clientEnv.getProducerConfig(topic).getProperty("produce.timeout.seconds");
+			if (StringUtils.isNumeric(produceTimeout)) {
+				return Integer.valueOf(produceTimeout);
+			} else {
+				produceTimeout = m_clientEnv.getGlobalConfig().getProperty("produce.timeout.seconds");
+				if (StringUtils.isNumeric(produceTimeout)) {
+					return Integer.valueOf(produceTimeout);
+				}
+			}
+		} catch (Exception e) {
+			// ignore
+		}
+		return -1;
+	}
+
 }

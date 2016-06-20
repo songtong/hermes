@@ -2,7 +2,6 @@ package com.ctrip.hermes.broker.transport.command.processor;
 
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,6 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
@@ -28,12 +28,13 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
-import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
-import com.ctrip.hermes.core.transport.command.SendMessageCommand;
-import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageAckCommandV6;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageCommandV6;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageResultCommandV6;
 import com.ctrip.hermes.core.utils.CatUtil;
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
@@ -47,8 +48,8 @@ import com.google.common.util.concurrent.ListenableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class SendMessageCommandProcessor implements CommandProcessor {
-	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessor.class);
+public class SendMessageCommandProcessorV6 implements CommandProcessor {
+	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessorV6.class);
 
 	@Inject
 	private FileBizLogger m_bizLogger;
@@ -72,12 +73,12 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.MESSAGE_SEND);
+		return Arrays.asList(CommandType.MESSAGE_SEND_V6);
 	}
 
 	@Override
 	public void process(final CommandProcessorContext ctx) {
-		SendMessageCommand reqCmd = (SendMessageCommand) ctx.getCommand();
+		SendMessageCommandV6 reqCmd = (SendMessageCommandV6) ctx.getCommand();
 		String topic = reqCmd.getTopic();
 		int partition = reqCmd.getPartition();
 
@@ -87,19 +88,14 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 		if (m_metaService.findTopicByName(topic) != null) {
 			if (lease != null) {
-				if (log.isDebugEnabled()) {
-					log.debug("Send message reqeust arrived(topic={}, partition={}, msgCount={})", topic, partition,
-					      reqCmd.getMessageCount());
-				}
-
 				// FIXME if dumper's queue is full, reject it.
-				writeAck(ctx, true);
+				writeAck(ctx, topic, partition, true);
 
 				Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
 
 				bizLog(ctx, rawBatches, partition);
 
-				final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
+				final SendMessageResultCommandV6 result = new SendMessageResultCommandV6(reqCmd.getMessageCount());
 				result.correlate(reqCmd);
 
 				FutureCallback<Map<Integer, SendMessageResult>> completionCallback = new AppendMessageCompletionCallback(
@@ -109,7 +105,8 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 					MessageBatchWithRawData batch = entry.getValue();
 					try {
 						ListenableFuture<Map<Integer, SendMessageResult>> future = m_queueManager.appendMessageAsync(topic,
-						      partition, entry.getKey() == 0 ? true : false, batch, m_systemClockService.now() + 10 * 1000L);
+						      partition, entry.getKey() == 0 ? true : false, batch,
+						      m_systemClockService.now() + reqCmd.getTimeout());
 
 						if (future != null) {
 							Futures.addCallback(future, completionCallback);
@@ -133,11 +130,11 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 			}
 		}
 
-		writeAck(ctx, false);
+		writeAck(ctx, topic, partition, false);
 		reqCmd.release();
 	}
 
-	private void logReqToCat(SendMessageCommand reqCmd) {
+	private void logReqToCat(SendMessageCommandV6 reqCmd) {
 		long now = m_systemClockService.now();
 		if (now - m_lastLogSendReqToCatTime.get() > 60 * 1000L) {
 			Cat.logEvent(CatConstants.TYPE_SEND_CMD + reqCmd.getHeader().getType().getVersion(), reqCmd.getTopic() + "-"
@@ -170,7 +167,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	}
 
 	private static class AppendMessageCompletionCallback implements FutureCallback<Map<Integer, SendMessageResult>> {
-		private SendMessageResultCommand m_result;
+		private SendMessageResultCommandV6 m_result;
 
 		private CommandProcessorContext m_ctx;
 
@@ -182,7 +179,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 		private long m_start;
 
-		public AppendMessageCompletionCallback(SendMessageResultCommand result, CommandProcessorContext ctx,
+		public AppendMessageCompletionCallback(SendMessageResultCommandV6 result, CommandProcessorContext ctx,
 		      String topic, int partition) {
 			m_result = result;
 			m_ctx = ctx;
@@ -193,7 +190,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 		@Override
 		public void onSuccess(Map<Integer, SendMessageResult> results) {
-			m_result.addResults(convertResults(results));
+			m_result.addResults(results);
 
 			if (m_result.isAllResultsSet()) {
 				try {
@@ -209,24 +206,14 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 			}
 		}
 
-		private Map<Integer, Boolean> convertResults(Map<Integer, SendMessageResult> results) {
-			Map<Integer, Boolean> newResults = new HashMap<>();
-
-			for (Map.Entry<Integer, SendMessageResult> entry : results.entrySet()) {
-				newResults.put(entry.getKey(), entry.getValue().isSuccess());
-			}
-
-			return newResults;
-		}
-
 		private void logElapse() {
 			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE, m_topic + "-" + m_partition, m_start,
-			      m_result.getSuccesses().size(), null, Transaction.SUCCESS);
+			      m_result.getResults().size(), null, Transaction.SUCCESS);
 		}
 
-		private void logToCatIfHasError(SendMessageResultCommand resultCmd) {
-			for (Boolean sendSuccess : resultCmd.getSuccesses().values()) {
-				if (!sendSuccess) {
+		private void logToCatIfHasError(SendMessageResultCommandV6 resultCmd) {
+			for (SendMessageResult result : resultCmd.getResults().values()) {
+				if (!result.isSuccess()) {
 					Cat.logEvent(CatConstants.TYPE_MESSAGE_PRODUCE_ERROR, m_topic, Event.SUCCESS, "");
 				}
 			}
@@ -238,12 +225,18 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		}
 	}
 
-	private void writeAck(CommandProcessorContext ctx, boolean success) {
-		SendMessageCommand req = (SendMessageCommand) ctx.getCommand();
+	private void writeAck(CommandProcessorContext ctx, String topic, int partition, boolean success) {
+		SendMessageCommandV6 req = (SendMessageCommandV6) ctx.getCommand();
 
-		SendMessageAckCommand ack = new SendMessageAckCommand();
+		SendMessageAckCommandV6 ack = new SendMessageAckCommandV6();
 		ack.correlate(req);
 		ack.setSuccess(success);
+		if (!success && m_metaService.findTopicByName(topic) != null) {
+			Pair<Endpoint, Long> endpointEntry = m_metaService.findEndpointByTopicAndPartition(topic, partition);
+			if (endpointEntry != null) {
+				ack.setNewEndpoint(endpointEntry.getKey());
+			}
+		}
 		ChannelUtils.writeAndFlush(ctx.getChannel(), ack);
 	}
 

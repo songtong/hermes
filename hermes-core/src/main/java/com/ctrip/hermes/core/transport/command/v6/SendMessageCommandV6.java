@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.transport.command.v3;
+package com.ctrip.hermes.core.transport.command.v6;
 
 import io.netty.buffer.ByteBuf;
 
@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
@@ -22,7 +23,6 @@ import com.ctrip.hermes.core.transport.ManualRelease;
 import com.ctrip.hermes.core.transport.command.AbstractCommand;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
-import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.google.common.util.concurrent.SettableFuture;
@@ -32,7 +32,7 @@ import com.google.common.util.concurrent.SettableFuture;
  *
  */
 @ManualRelease
-public class SendMessageCommandV3 extends AbstractCommand {
+public class SendMessageCommandV6 extends AbstractCommand {
 
 	private static final long serialVersionUID = 8443575812437722822L;
 
@@ -44,21 +44,31 @@ public class SendMessageCommandV3 extends AbstractCommand {
 
 	private long m_timeout;
 
-	private ConcurrentMap<Integer, List<ProducerMessage<?>>> m_msgs = new ConcurrentHashMap<Integer, List<ProducerMessage<?>>>();
+	private ConcurrentMap<Integer, List<ProducerMessage<?>>> m_msgs = new ConcurrentHashMap<>();
 
-	private transient Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<Integer, MessageBatchWithRawData>();
+	private transient Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<>();
 
-	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<Integer, SettableFuture<SendResult>>();
+	private transient Map<Integer, Pair<SettableFuture<SendResult>, ProducerMessage<?>>> m_futures = new HashMap<>();
 
-	public SendMessageCommandV3() {
+	private transient long m_bornTime = System.currentTimeMillis();
+
+	public SendMessageCommandV6() {
 		this(null, -1, -1L);
 	}
 
-	public SendMessageCommandV3(String topic, int partition, long timeout) {
-		super(CommandType.MESSAGE_SEND_V3, 3);
+	public SendMessageCommandV6(String topic, int partition, long timeout) {
+		super(CommandType.MESSAGE_SEND_V6, 6);
 		m_topic = topic;
 		m_partition = partition;
 		m_timeout = timeout;
+	}
+
+	public Collection<Pair<SettableFuture<SendResult>, ProducerMessage<?>>> getFutureAndMessagePair() {
+		return m_futures.values();
+	}
+
+	public long getBornTime() {
+		return m_bornTime;
 	}
 
 	public ConcurrentMap<Integer, List<ProducerMessage<?>>> getMsgs() {
@@ -95,13 +105,13 @@ public class SendMessageCommandV3 extends AbstractCommand {
 			m_msgs.get(1).add(msg);
 		}
 
-		m_futures.put(msgSeqNo, future);
+		m_futures.put(msgSeqNo, new Pair<SettableFuture<SendResult>, ProducerMessage<?>>(future, msg));
 	}
 
 	private void validate(ProducerMessage<?> msg) {
 		if (!m_topic.equals(msg.getTopic()) || m_partition != msg.getPartition()) {
 			throw new IllegalArgumentException(String.format(
-			      "Illegal message[topic=%s, partition=%s] try to add to SendMessageCommandV3[topic=%s, partition=%s]",
+			      "Illegal message[topic=%s, partition=%s] try to add to SendMessageCommandV5[topic=%s, partition=%s]",
 			      msg.getTopic(), msg.getPartition(), m_topic, m_partition));
 		}
 	}
@@ -114,13 +124,16 @@ public class SendMessageCommandV3 extends AbstractCommand {
 		return m_msgCounter.get();
 	}
 
-	public void onResultReceived(SendMessageResultCommand result) {
-		for (Map.Entry<Integer, SettableFuture<SendResult>> entry : m_futures.entrySet()) {
-			// FIXME add more details into result or exception, no matter success or not(offset, id, etc.)
-			if (result.isSuccess(entry.getKey())) {
-				entry.getValue().set(new SendResult());
+	public void onResultReceived(SendMessageResultCommandV6 result) {
+		for (Map.Entry<Integer, Pair<SettableFuture<SendResult>, ProducerMessage<?>>> entry : m_futures.entrySet()) {
+			SendMessageResult sendResult = result.getSendResult(entry.getKey());
+			if (sendResult.isSuccess()) {
+				entry.getValue().getKey().set(new SendResult(entry.getValue().getValue()));
 			} else {
-				entry.getValue().setException(new MessageSendException("Send failed", null));
+				MessageSendException sendException = new MessageSendException(
+				      sendResult.getErrorMessage() == null ? "Send failed" : sendResult.getErrorMessage(), entry.getValue()
+				            .getValue());
+				entry.getValue().getKey().setException(sendException);
 			}
 		}
 	}
@@ -222,25 +235,6 @@ public class SendMessageCommandV3 extends AbstractCommand {
 
 	public Collection<List<ProducerMessage<?>>> getProducerMessages() {
 		return m_msgs.values();
-	}
-
-	public List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> getProducerMessageFuturePairs() {
-		List<Pair<ProducerMessage<?>, SettableFuture<SendResult>>> pairs = new LinkedList<Pair<ProducerMessage<?>, SettableFuture<SendResult>>>();
-		Collection<List<ProducerMessage<?>>> msgsList = getProducerMessages();
-		for (List<ProducerMessage<?>> msgs : msgsList) {
-			for (ProducerMessage<?> msg : msgs) {
-				SettableFuture<SendResult> future = m_futures.get(msg.getMsgSeqNo());
-				if (future != null) {
-					pairs.add(new Pair<ProducerMessage<?>, SettableFuture<SendResult>>(msg, future));
-				}
-			}
-		}
-
-		return pairs;
-	}
-
-	public Map<Integer, SettableFuture<SendResult>> getFutures() {
-		return m_futures;
 	}
 
 }
