@@ -211,7 +211,7 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 			Map<Integer, Boolean> newResults = new HashMap<>();
 
 			for (Map.Entry<Integer, SendMessageResult> entry : results.entrySet()) {
-				newResults.put(entry.getKey(), entry.getValue().isSuccess());
+				newResults.put(entry.getKey(), entry.getValue().isSuccess() ? true : entry.getValue().isShouldSkip());
 			}
 
 			return newResults;

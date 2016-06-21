@@ -164,11 +164,6 @@ public class ProducerConfig implements Initializable {
 			String produceTimeout = m_clientEnv.getProducerConfig(topic).getProperty("produce.timeout.seconds");
 			if (StringUtils.isNumeric(produceTimeout)) {
 				return Integer.valueOf(produceTimeout);
-			} else {
-				produceTimeout = m_clientEnv.getGlobalConfig().getProperty("produce.timeout.seconds");
-				if (StringUtils.isNumeric(produceTimeout)) {
-					return Integer.valueOf(produceTimeout);
-				}
 			}
 		} catch (Exception e) {
 			// ignore
