@@ -96,13 +96,26 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 	private SendMessageResult convertToSingleSendMessageResult(SendMessageResultCommandV6 cmd) {
 
 		Map<Integer, SendMessageResult> results = cmd.getResults();
+		boolean success = true;
+		boolean shouldSkip = false;
+		String errorMsg = null;
 		for (SendMessageResult res : results.values()) {
 			if (!res.isSuccess()) {
-				return new SendMessageResult(false, res.isShouldSkip(), res.getErrorMessage());
+				success = false;
+				if (errorMsg == null && res.getErrorMessage() != null) {
+					errorMsg = res.getErrorMessage();
+				}
+
+				if (res.isShouldSkip()) {
+					shouldSkip = true;
+					if (res.getErrorMessage() != null) {
+						errorMsg = res.getErrorMessage();
+					}
+				}
 			}
 		}
 
-		return new SendMessageResult(true, false, null);
+		return new SendMessageResult(success, shouldSkip, errorMsg);
 	}
 
 	private void tracking(SendMessageCommandV6 sendMessageCommand) {
