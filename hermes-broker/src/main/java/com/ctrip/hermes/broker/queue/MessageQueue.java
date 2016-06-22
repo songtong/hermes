@@ -8,6 +8,7 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation;
 import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
@@ -24,8 +25,8 @@ public interface MessageQueue {
 
 	int getPartition();
 
-	ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(boolean isPriority, MessageBatchWithRawData batch,
-	      long expireTime);
+	ListenableFuture<Map<Integer, SendMessageResult>> appendMessageAsync(boolean isPriority,
+	      MessageBatchWithRawData batch, long expireTime);
 
 	MessageQueueCursor getCursor(String groupId, Lease lease, Offset offset);
 

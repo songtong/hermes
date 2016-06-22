@@ -36,6 +36,10 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_PRODUCE_TRANSPORT = "Message.Produce.Transport";
 
+	public static final String TYPE_MESSAGE_PRODUCE_TIMEOUT = "Message.Produce.Timeout";
+
+	public static final String TYPE_MESSAGE_PRODUCE_TRANSPORT_SKIP = "Message.Produce.Transport.Skip";
+
 	public static final String TYPE_MESSAGE_PRODUCE_ACKED = "Message.Produce.Acked";
 
 	public static final String TYPE_MESSAGE_PRODUCE_TRIED = "Message.Produce.Tried";

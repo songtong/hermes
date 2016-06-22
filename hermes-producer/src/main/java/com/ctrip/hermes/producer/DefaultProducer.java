@@ -101,9 +101,9 @@ public class DefaultProducer extends Producer {
 			try {
 				return send().get();
 			} catch (ExecutionException e) {
-				throw new MessageSendException(e);
+				throw new MessageSendException(e, m_msg);
 			} catch (InterruptedException e) {
-				throw new MessageSendException(e);
+				throw new MessageSendException(e, m_msg);
 			}
 		}
 

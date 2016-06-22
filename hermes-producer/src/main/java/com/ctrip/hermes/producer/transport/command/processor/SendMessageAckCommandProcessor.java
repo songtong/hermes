@@ -8,7 +8,7 @@ import org.unidal.lookup.annotation.Inject;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageAckCommandV6;
 import com.ctrip.hermes.producer.monitor.SendMessageAcceptanceMonitor;
 
 /**
@@ -22,12 +22,12 @@ public class SendMessageAckCommandProcessor implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.ACK_MESSAGE_SEND_V5);
+		return Arrays.asList(CommandType.ACK_MESSAGE_SEND_V6);
 	}
 
 	@Override
 	public void process(CommandProcessorContext ctx) {
-		SendMessageAckCommandV5 cmd = (SendMessageAckCommandV5) ctx.getCommand();
+		SendMessageAckCommandV6 cmd = (SendMessageAckCommandV6) ctx.getCommand();
 		m_messageAcceptanceMonitor.received(cmd);
 	}
 

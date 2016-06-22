@@ -22,12 +22,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.SendMessageAckCommand;
 import com.ctrip.hermes.core.transport.command.SendMessageCommand;
-import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageResultCommandV6;
 
 public class ProduceTest extends BaseBrokerTest {
 
@@ -99,14 +100,14 @@ public class ProduceTest extends BaseBrokerTest {
 
 	private void testSendMessage(List<ProducerMessage<String>> pmsgs, Integer... failIndexes) throws Exception {
 		Set<Integer> failMsgs = new HashSet<>(Arrays.asList(failIndexes));
-		boolean willReceiveSendMessageResultCommand = failIndexes.length < pmsgs.size();
+		boolean willReceiveSendMessageResultCommandV6 = failIndexes.length < pmsgs.size();
 
 		final AtomicReference<SendMessageCommand> sendCmdRef = new AtomicReference<>();
 		final AtomicReference<SendMessageAckCommand> sendAckCmdRef = new AtomicReference<>();
-		final AtomicReference<SendMessageResultCommand> sendResultCmdRef = new AtomicReference<>();
+		final AtomicReference<SendMessageResultCommandV6> sendResultCmdRef = new AtomicReference<>();
 
 		int resultCmdCount = 2;
-		if (!willReceiveSendMessageResultCommand) {
+		if (!willReceiveSendMessageResultCommandV6) {
 			resultCmdCount = 1;
 		}
 		final CountDownLatch latch = new CountDownLatch(resultCmdCount);
@@ -116,8 +117,8 @@ public class ProduceTest extends BaseBrokerTest {
 			public void handle(Command arg) {
 				if (arg instanceof SendMessageAckCommand) {
 					sendAckCmdRef.set((SendMessageAckCommand) arg);
-				} else if (arg instanceof SendMessageResultCommand) {
-					sendResultCmdRef.set((SendMessageResultCommand) arg);
+				} else if (arg instanceof SendMessageResultCommandV6) {
+					sendResultCmdRef.set((SendMessageResultCommandV6) arg);
 				}
 				latch.countDown();
 			}
@@ -127,9 +128,9 @@ public class ProduceTest extends BaseBrokerTest {
 
 		assertTrue(latch.await(3, TimeUnit.SECONDS));
 
-		if (willReceiveSendMessageResultCommand) {
+		if (willReceiveSendMessageResultCommandV6) {
 			SendMessageCommand sendCmd = sendCmdRef.get();
-			SendMessageResultCommand resultCmd = sendResultCmdRef.get();
+			SendMessageResultCommandV6 resultCmd = sendResultCmdRef.get();
 
 			// verify ack
 			assertTrue(sendAckCmdRef.get().isSuccess());
@@ -138,9 +139,9 @@ public class ProduceTest extends BaseBrokerTest {
 			assertEquals(sendCmd.getHeader().getCorrelationId(), resultCmd.getHeader().getCorrelationId());
 
 			// verify all futures are back
-			assertEquals(sendCmd.getFutures().size(), resultCmd.getSuccesses().size());
-			for (Entry<Integer, Boolean> entry : resultCmd.getSuccesses().entrySet()) {
-				assertEquals(!failMsgs.contains(entry.getKey()), resultCmd.getSuccesses().get(entry.getKey()));
+			assertEquals(sendCmd.getFutures().size(), resultCmd.getResults().size());
+			for (Entry<Integer, SendMessageResult> entry : resultCmd.getResults().entrySet()) {
+				assertEquals(!failMsgs.contains(entry.getKey()), resultCmd.getResults().get(entry.getKey()));
 			}
 
 			// verify messages are all saved to db

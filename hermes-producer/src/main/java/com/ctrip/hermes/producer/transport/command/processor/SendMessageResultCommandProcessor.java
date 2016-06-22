@@ -6,9 +6,9 @@ import java.util.List;
 import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.core.transport.command.CommandType;
-import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageResultCommandV6;
 import com.ctrip.hermes.producer.monitor.SendMessageResultMonitor;
 
 /**
@@ -22,12 +22,12 @@ public class SendMessageResultCommandProcessor implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.RESULT_MESSAGE_SEND);
+		return Arrays.asList(CommandType.RESULT_MESSAGE_SEND_V6);
 	}
 
 	@Override
 	public void process(CommandProcessorContext ctx) {
-		SendMessageResultCommand cmd = (SendMessageResultCommand) ctx.getCommand();
+		SendMessageResultCommandV6 cmd = (SendMessageResultCommandV6) ctx.getCommand();
 		m_messageResultMonitor.resultReceived(cmd);
 	}
 

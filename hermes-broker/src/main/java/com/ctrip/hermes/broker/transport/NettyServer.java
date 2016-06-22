@@ -56,7 +56,10 @@ public class NettyServer extends ContainerHolder {
 		      }).option(ChannelOption.SO_BACKLOG, 128) // TODO set tcp options
 		      .childOption(ChannelOption.SO_KEEPALIVE, true)//
 		      .childOption(ChannelOption.SO_REUSEADDR, true)//
-		      .childOption(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT);
+		      .childOption(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT)//
+		      .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 2 * 1024 * 1024)//
+		      .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 1024 * 1024)//
+		;
 
 		// Bind and start to accept incoming connections.
 		ChannelFuture f = b.bind(port);

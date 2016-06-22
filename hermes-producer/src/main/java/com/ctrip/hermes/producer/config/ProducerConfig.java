@@ -111,6 +111,16 @@ public class ProducerConfig implements Initializable {
 		if (StringUtils.isNumeric(senderConcurrentLevelStr)) {
 			m_brokerSenderConcurrentLevel = Integer.valueOf(senderConcurrentLevelStr);
 		}
+		String brokerSenderAcceptTimeout = m_clientEnv.getGlobalConfig().getProperty(
+		      "producer.sender.accept.timeout.millis");
+		if (StringUtils.isNumeric(brokerSenderAcceptTimeout)) {
+			m_brokerSenderAcceptTimeout = Integer.valueOf(brokerSenderAcceptTimeout);
+		}
+		String brokerSenderResultTimeout = m_clientEnv.getGlobalConfig().getProperty(
+		      "producer.sender.result.timeout.millis");
+		if (StringUtils.isNumeric(brokerSenderResultTimeout)) {
+			m_brokerSenderResultTimeout = Integer.valueOf(brokerSenderResultTimeout);
+		}
 
 		// FIXME log config loading details.
 	}
@@ -157,6 +167,18 @@ public class ProducerConfig implements Initializable {
 
 	public int getBrokerSenderConcurrentLevel() {
 		return m_brokerSenderConcurrentLevel;
+	}
+
+	public int getProduceTimeoutSeconds(String topic) {
+		try {
+			String produceTimeout = m_clientEnv.getProducerConfig(topic).getProperty("produce.timeout.seconds");
+			if (StringUtils.isNumeric(produceTimeout)) {
+				return Integer.valueOf(produceTimeout);
+			}
+		} catch (Exception e) {
+			// ignore
+		}
+		return -1;
 	}
 
 }

@@ -24,6 +24,7 @@ import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation.OperationType;
 import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Offset;
+import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
@@ -67,8 +68,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	private FlusherScheduleTask m_flushCheckerTask;
 
 	@Override
-	public ListenableFuture<Map<Integer, Boolean>> appendMessageAsync(String topic, int partition, boolean priority,
-	      MessageBatchWithRawData data, long expireTime) {
+	public ListenableFuture<Map<Integer, SendMessageResult>> appendMessageAsync(String topic, int partition,
+	      boolean priority, MessageBatchWithRawData data, long expireTime) {
 		if (!m_stopped.get()) {
 			return getMessageQueue(topic, partition).appendMessageAsync(priority, data, expireTime);
 		} else {

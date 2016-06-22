@@ -2,7 +2,6 @@ package com.ctrip.hermes.broker.transport.command.processor;
 
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,11 +28,11 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ChannelUtils;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
-import com.ctrip.hermes.core.transport.command.SendMessageResultCommand;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
-import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
-import com.ctrip.hermes.core.transport.command.v5.SendMessageCommandV5;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageAckCommandV6;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageCommandV6;
+import com.ctrip.hermes.core.transport.command.v6.SendMessageResultCommandV6;
 import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -49,8 +48,8 @@ import com.google.common.util.concurrent.ListenableFuture;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class SendMessageCommandProcessorV5 implements CommandProcessor {
-	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessorV5.class);
+public class SendMessageCommandProcessorV6 implements CommandProcessor {
+	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessorV6.class);
 
 	@Inject
 	private FileBizLogger m_bizLogger;
@@ -74,12 +73,12 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 
 	@Override
 	public List<CommandType> commandTypes() {
-		return Arrays.asList(CommandType.MESSAGE_SEND_V5);
+		return Arrays.asList(CommandType.MESSAGE_SEND_V6);
 	}
 
 	@Override
 	public void process(final CommandProcessorContext ctx) {
-		SendMessageCommandV5 reqCmd = (SendMessageCommandV5) ctx.getCommand();
+		SendMessageCommandV6 reqCmd = (SendMessageCommandV6) ctx.getCommand();
 		String topic = reqCmd.getTopic();
 		int partition = reqCmd.getPartition();
 
@@ -96,7 +95,7 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 
 				bizLog(ctx, rawBatches, partition);
 
-				final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
+				final SendMessageResultCommandV6 result = new SendMessageResultCommandV6(reqCmd.getMessageCount());
 				result.correlate(reqCmd);
 
 				FutureCallback<Map<Integer, SendMessageResult>> completionCallback = new AppendMessageCompletionCallback(
@@ -135,7 +134,7 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 		reqCmd.release();
 	}
 
-	private void logReqToCat(SendMessageCommandV5 reqCmd) {
+	private void logReqToCat(SendMessageCommandV6 reqCmd) {
 		long now = m_systemClockService.now();
 		if (now - m_lastLogSendReqToCatTime.get() > 60 * 1000L) {
 			Cat.logEvent(CatConstants.TYPE_SEND_CMD + reqCmd.getHeader().getType().getVersion(), reqCmd.getTopic() + "-"
@@ -168,7 +167,7 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 	}
 
 	private static class AppendMessageCompletionCallback implements FutureCallback<Map<Integer, SendMessageResult>> {
-		private SendMessageResultCommand m_result;
+		private SendMessageResultCommandV6 m_result;
 
 		private CommandProcessorContext m_ctx;
 
@@ -180,7 +179,7 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 
 		private long m_start;
 
-		public AppendMessageCompletionCallback(SendMessageResultCommand result, CommandProcessorContext ctx,
+		public AppendMessageCompletionCallback(SendMessageResultCommandV6 result, CommandProcessorContext ctx,
 		      String topic, int partition) {
 			m_result = result;
 			m_ctx = ctx;
@@ -191,7 +190,7 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 
 		@Override
 		public void onSuccess(Map<Integer, SendMessageResult> results) {
-			m_result.addResults(convertResults(results));
+			m_result.addResults(results);
 
 			if (m_result.isAllResultsSet()) {
 				try {
@@ -207,24 +206,14 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 			}
 		}
 
-		private Map<Integer, Boolean> convertResults(Map<Integer, SendMessageResult> results) {
-			Map<Integer, Boolean> newResults = new HashMap<>();
-
-			for (Map.Entry<Integer, SendMessageResult> entry : results.entrySet()) {
-				newResults.put(entry.getKey(), entry.getValue().isSuccess() ? true : entry.getValue().isShouldSkip());
-			}
-
-			return newResults;
-		}
-
 		private void logElapse() {
 			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE, m_topic + "-" + m_partition, m_start,
-			      m_result.getSuccesses().size(), null, Transaction.SUCCESS);
+			      m_result.getResults().size(), null, Transaction.SUCCESS);
 		}
 
-		private void logToCatIfHasError(SendMessageResultCommand resultCmd) {
-			for (Boolean sendSuccess : resultCmd.getSuccesses().values()) {
-				if (!sendSuccess) {
+		private void logToCatIfHasError(SendMessageResultCommandV6 resultCmd) {
+			for (SendMessageResult result : resultCmd.getResults().values()) {
+				if (!result.isSuccess()) {
 					Cat.logEvent(CatConstants.TYPE_MESSAGE_PRODUCE_ERROR, m_topic, Event.SUCCESS, "");
 				}
 			}
@@ -237,9 +226,9 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 	}
 
 	private void writeAck(CommandProcessorContext ctx, String topic, int partition, boolean success) {
-		SendMessageCommandV5 req = (SendMessageCommandV5) ctx.getCommand();
+		SendMessageCommandV6 req = (SendMessageCommandV6) ctx.getCommand();
 
-		SendMessageAckCommandV5 ack = new SendMessageAckCommandV5();
+		SendMessageAckCommandV6 ack = new SendMessageAckCommandV6();
 		ack.correlate(req);
 		ack.setSuccess(success);
 		if (!success && m_metaService.findTopicByName(topic) != null) {

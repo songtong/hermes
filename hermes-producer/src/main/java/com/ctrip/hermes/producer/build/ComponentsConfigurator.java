@@ -67,9 +67,10 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		);
 
 		// command processors
-		all.add(C(CommandProcessor.class, CommandType.ACK_MESSAGE_SEND_V5.toString(), SendMessageAckCommandProcessor.class)//
+		all.add(C(CommandProcessor.class, CommandType.ACK_MESSAGE_SEND_V6.toString(),
+		      SendMessageAckCommandProcessor.class)//
 		      .req(SendMessageAcceptanceMonitor.class));
-		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_SEND.toString(),
+		all.add(C(CommandProcessor.class, CommandType.RESULT_MESSAGE_SEND_V6.toString(),
 		      SendMessageResultCommandProcessor.class)//
 		      .req(SendMessageResultMonitor.class));
 

@@ -120,7 +120,7 @@ public class SendMessageCommandV5 extends AbstractCommand {
 			if (result.isSuccess(entry.getKey())) {
 				entry.getValue().set(new SendResult());
 			} else {
-				entry.getValue().setException(new MessageSendException("Send failed"));
+				entry.getValue().setException(new MessageSendException("Send failed", null));
 			}
 		}
 	}

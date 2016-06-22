@@ -12,7 +12,7 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Xmn9g \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
-            -XX:MaxDirectMemorySize=4g \
+            -XX:MaxDirectMemorySize=5g \
             -XX:+PrintGC \
             -XX:+PrintGCDetails \
             -XX:+PrintGCDateStamps \
