@@ -33,7 +33,7 @@ public class HermesValidationFilter implements Filter {
 	private final static Logger LOGGER = LoggerFactory.getLogger(HermesValidationFilter.class);
 	private final static String API_PREFIX = "/api/";
 
-	private String[] m_protectedPages = { "/console/consumer", "/console/subscription", "/console/storage", "/console/endpoint",
+	private String[] m_protectedPages = { "/console/subscription", "/console/storage", "/console/endpoint",
 	      "/console/resender" };
 
 	public void init(FilterConfig filterConfig) {

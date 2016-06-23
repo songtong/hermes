@@ -1,32 +1,44 @@
 <div class="row">
 	<!-- fetch the template only when the type is defined. -->
 	<div class="col-md-6" ng-if="type">
-		<label class="label label-success">
-			<span ng-if="application.type == 0">Topic申请内容</span>
-			<span ng-if="application.type == 1">Consumer申请内容</span>
+		<label class="label label-success"> <span ng-if="application.type == 0">Topic申请内容</span> <span ng-if="application.type == 1">Consumer申请内容</span>
 		</label>
-		<div class="well" ng-include="'template/application/templates/application-' + type + '-form.html'"> 
-		</div>	
-	</div>	
+		<div class="well" ng-include="'template/application/templates/application-' + type + '-form.html'"></div>
+	</div>
 
 	<div class="col-md-6">
-		<label class="label label-warning">审批状态</label>
 		<form class="form-horizontal" style="border-radius: 4px; border: 1px solid #e3e3e3">
 			<div class="form-group">
 				<label class="col-md-2 control-label">审批状态</label>
 				<div class="col-md-4">
-					<div ng-if="application.status==0" class="form-control-static text-info"><span class="label label-info">审核中（创建）</span></div>
-					<div ng-if="application.status==1" class="form-control-static text-danger"><span class="label label-danger">拒绝（创建）</span></div>
-					<div ng-if="application.status==2" class="form-control-static text-success"><span class="label label-success">申请成功(创建)</span></div>
-					<div ng-if="application.status==3" class="form-control-static text-success"><span class="label label-primary">同步</span></div>
-					<div ng-if="application.status==4" class="form-control-static text-info"><span class="label label-info">审核中（上线）</span></div>
-					<div ng-if="application.status==5" class="form-control-static text-info"><span class="label label-danger">拒绝（上线）</span></div>
-					<div ng-if="application.status==6" class="form-control-static text-info"><span class="label label-success">申请成功（上线）</span></div>
-					<div ng-if="application.status==7" class="form-control-static text-info"><span class="label label-primary">上线</span></div>
+					<div ng-if="application.status==0" class="form-control-static text-info">
+						<span class="label label-info">审核中（创建）</span>
+					</div>
+					<div ng-if="application.status==1" class="form-control-static text-danger">
+						<span class="label label-danger">拒绝（创建）</span>
+					</div>
+					<div ng-if="application.status==2" class="form-control-static text-success">
+						<span class="label label-success">申请成功(创建)</span>
+					</div>
+					<div ng-if="application.status==3" class="form-control-static text-success">
+						<span class="label label-primary">同步</span>
+					</div>
+					<div ng-if="application.status==4" class="form-control-static text-info">
+						<span class="label label-info">审核中（上线）</span>
+					</div>
+					<div ng-if="application.status==5" class="form-control-static text-info">
+						<span class="label label-danger">拒绝（上线）</span>
+					</div>
+					<div ng-if="application.status==6" class="form-control-static text-info">
+						<span class="label label-success">申请成功（上线）</span>
+					</div>
+					<div ng-if="application.status==7" class="form-control-static text-info">
+						<span class="label label-primary">上线</span>
+					</div>
 				</div>
 				<label class="col-md-2 control-label">上次审批人</label>
 				<div class="col-md-4 form-control-static">{{application.approver || "N/A"}}</div>
-				
+
 			</div>
 			<div class="form-group">
 				<label class="col-md-2 control-label">上次处理时间</label>
@@ -36,16 +48,11 @@
 				<div class="col-md-4 form-control-static" ng-if="application.comment.length == 0">N/A</div>
 				<div class="col-md-4 form-control-static" ng-if="application.comment.length > 0">
 					<span class="label label-danger">{{application.comment[application.comment.length - 1].comment || 'N/A'}}</span>
-					<button type="button" class="btn btn-primary btn-xs" ng-if="application.comment.length > 0" id="commentHistory">History
-					</button>
+					<button type="button" class="btn btn-primary btn-xs" ng-if="application.comment.length > 0" id="commentHistory">History</button>
 					<popover-x title="comments" context="application" target="#commentHistory" placement="right" ng-if="application.comment.length && application.comment.length > 0">
-						<ul ng-repeat="c in context.comment track by c.createdTime">	
-							<li>
-								<span class="label label-danger"><span class="badge">comment</span>{{c.comment || 'N/A'}}</span> 
-								<span class="label label-info"><span class="badge">by</span> {{c.author}}</span>
-								<span class="label label-warning"><span class="badge">@</span> {{c.createdTime}}</span>
-							</li> 
-						</ul>
+					<ul ng-repeat="c in context.comment track by c.createdTime">
+						<li><span class="label label-danger"><span class="badge">comment</span>{{c.comment || 'N/A'}}</span> <span class="label label-info"><span class="badge">by</span> {{c.author}}</span> <span class="label label-warning"><span class="badge">@</span> {{c.createdTime}}</span></li>
+					</ul>
 					</popover-x>
 				</div>
 			</div>
@@ -55,11 +62,11 @@
 			<button type="button" class="btn btn-primary btn-sm pull-right" style="margin-top: 5px; margin-right: 15px;" ng-if="application.status == 0 || application.status == 4" ng-click="passApplication()">
 				<span class="glyphicon glyphicon-ok"></span> 申请通过
 			</button>
-			<button type="button" class="btn btn-primary btn-sm pull-right" style="margin-top: 5px; margin-right: 15px;" ng-if="application.status >= 2 && application.status != 4 && application.status != 5"  ng-click="openSyncModal()">
+			<button type="button" class="btn btn-primary btn-sm pull-right" style="margin-top: 5px; margin-right: 15px;" ng-if="application.status >= 2 && application.status != 4 && application.status != 5" ng-click="openSyncModal()">
 				<span class="glyphicon glyphicon-transfer"></span> 数据同步
 			</button>
 		</div>
-		 
+
 		<label class="label label-info" ng-if="application.status == 0 || application.status == 4">添加新的意见</label>
 		<form class="form-horizontal" style="border-radius: 4px; border: 1px solid #e3e3e3" ng-if="application.status == 0 || application.status == 4">
 			<textarea class="form-control" rows="5" ng-model="$parent.comment"></textarea>
@@ -72,7 +79,7 @@
 	</div>
 </div>
 
- <!-- modal to confirm user op -->
+<!-- modal to confirm user op -->
 <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="topicDetail">
 	<div class="modal-dialog" role="document">
 		<div class="modal-content">
@@ -83,9 +90,7 @@
 				<h4 class="modal-title">确认</h4>
 			</div>
 			<div class="modal-body">
-				<div class="alert alert-info">
-					确定拒绝此申请？
-				</div>
+				<div class="alert alert-info">确定拒绝此申请？</div>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
@@ -96,7 +101,7 @@
 </div>
 
 <!-- modal for params adjustment & topic sync -->
-<div class="modal" id="topicInfoModal" tabindex="-1" role="dialog" aria-labelledby="topicInfoModal" style="display:none;" ng-if="type">
+<div class="modal" id="topicInfoModal" tabindex="-1" role="dialog" aria-labelledby="topicInfoModal" style="display: none;" ng-if="type">
 	<div class="modal-dialog modal-lg" role="document">
 		<div class="modal-content">
 			<div class="modal-header">
@@ -104,8 +109,7 @@
 					<span aria-hidden="true">&times;</span>
 				</button>
 				<h4 class="modal-title" id="myModalLabel">
-					<span ng-if="type == 'topic'">Topic[{{application.productLine}}.{{application.entity}}.{{application.event}}]信息</span>
-					<span ng-if="type == 'consumer'">Consumer[{{application.productLine}}.{{application.product}}.{{application.project}}]信息</span>
+					<span ng-if="type == 'topic'">Topic[{{application.productLine}}.{{application.entity}}.{{application.event}}]信息</span> <span ng-if="type == 'consumer'">Consumer[{{application.productLine}}.{{application.product}}.{{application.project}}]信息</span>
 				</h4>
 				<progressbar-x embed="true" id="syncProgressBar"></progressbar-x>
 
@@ -114,24 +118,21 @@
 			<div class="modal-body">
 				<!-- nav tabs -->
 				<ul class="nav nav-tabs" role="tablist">
-				    <li role="presentation" class="active" ng-click="switchView($event)"><a href="#fws" aria-controls="fws" role="tab" data-toggle="tab" ng-click="ignore($event)">FWS <span ng-show="views['fws'].id" class="glyphicon glyphicon-ok-sign" style="color: green;" aria-hidden="true"></span></a></li>
-				    <li role="presentation" ng-click="switchView($event)"><a href="#uat" aria-controls="uat" role="tab" data-toggle="tab" ng-click="ignore($event)">UAT<span ng-show="views['uat'].id" class="glyphicon glyphicon-ok-sign" style="color: green;" aria-hidden="true"></span></a></li>
-				    <li role="presentation" ng-click="switchView($event)" ng-if="application.status >= 4 && application.onlineEnv=='tools'"><a href="#tools" aria-controls="tools" role="tab" data-toggle="tab" ng-click="ignore($event)">TOOLS<span ng-show="views['tools'].id" class="glyphicon glyphicon-ok-sign" style="color: green;" aria-hidden="true"></span></a></li>
-				    <li role="presentation" ng-click="switchView($event)" ng-if="application.status >= 4 && application.onlineEnv=='prod'"><a href="#prod" aria-controls="prod" role="tab" data-toggle="tab" ng-click="ignore($event)">PROD<span ng-show="views['prod'].id" class="glyphicon glyphicon-ok-sign" style="color: green;" aria-hidden="true"></span></a></li>
+					<li role="presentation" class="active" ng-click="switchView($event)"><a href="#fws" aria-controls="fws" role="tab" data-toggle="tab" ng-click="ignore($event)">FWS <span ng-show="views['fws'].id" class="glyphicon glyphicon-ok-sign" style="color: green;" aria-hidden="true"></span></a></li>
+					<li role="presentation" ng-click="switchView($event)"><a href="#uat" aria-controls="uat" role="tab" data-toggle="tab" ng-click="ignore($event)">UAT<span ng-show="views['uat'].id" class="glyphicon glyphicon-ok-sign" style="color: green;" aria-hidden="true"></span></a></li>
+					<li role="presentation" ng-click="switchView($event)" ng-if="application.status >= 4 && application.onlineEnv=='tools'"><a href="#tools" aria-controls="tools" role="tab" data-toggle="tab" ng-click="ignore($event)">TOOLS<span ng-show="views['tools'].id" class="glyphicon glyphicon-ok-sign" style="color: green;" aria-hidden="true"></span></a></li>
+					<li role="presentation" ng-click="switchView($event)" ng-if="application.status >= 4 && application.onlineEnv=='prod'"><a href="#prod" aria-controls="prod" role="tab" data-toggle="tab" ng-click="ignore($event)">PROD<span ng-show="views['prod'].id" class="glyphicon glyphicon-ok-sign" style="color: green;" aria-hidden="true"></span></a></li>
 				</ul>
-				
+
 				<!-- Tab panes -->
 				<div class="tab-content">
-				    <div role="tabpanel" class="tab-pane active" id="fws" ng-if="type" ng-include="'template/application/templates/' + type + '-view-form.html'">
-					</div>
-					<div role="tabpanel" class="tab-pane" id="uat" ng-if="type" ng-include="'template/application/templates/' + type + '-view-form.html'">
-				    </div>
-				    <div role="tabpanel" class="tab-pane" id="tools" ng-if="application.status>=4 && application.onlineEnv=='tools' && type" ng-include="'template/application/templates/' + type + '-view-form.html'">
-				    </div>
-				    <div role="tabpanel" class="tab-pane" id="prod" ng-if="application.status>=4 && application.onlineEnv=='prod' && type" ng-include="'template/application/templates/' + type + '-view-form.html'">
-				    </div>
+					<div role="tabpanel" class="tab-pane active" id="fws" ng-if="type" ng-include="'template/application/templates/' + type + '-view-form.html'"></div>
+					<div role="tabpanel" class="tab-pane" id="uat" ng-if="type" ng-include="'template/application/templates/' + type + '-view-form.html'"></div>
+					<div role="tabpanel" class="tab-pane" id="tools" ng-if="application.status>=4 && application.onlineEnv=='tools' && type" ng-include="'template/application/templates/' + type + '-view-form.html'"></div>
+					<div role="tabpanel" class="tab-pane" id="prod" ng-if="application.status>=4 && application.onlineEnv=='prod' && type" ng-include="'template/application/templates/' + type + '-view-form.html'"></div>
 				</div>
 			</div>
+
 			<div class="modal-footer">
 				<button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
 			</div>
@@ -141,13 +142,9 @@
 <progressbar-x id="modalProgressBar"></progressbar-x>
 <loading-x></loading-x>
 <alert-x id="metaWarning" title="提醒" context="envInvolved">
-	<p>您刚刚在下面的环境做了SYNC操作， 需要进行META的REBUILD.</p>
-	<ul ng-repeat="env in context">
-		<li><strong>{{env | uppercase}}</strong> 
-			<a href="http://hermes.fws.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='fws'">http://hermes.fws.qa.nt.ctripcorp.com/console/meta</a>
-			<a href="http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='uat'">http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta</a>
-			<a href="http://hermes.fx.ctripcorp.com/console/console/meta" target="_blank" ng-if="env=='prod'">http://hermes.fx.ctripcorp.com/console/console/meta</a>
-			<a href="http://hermes.fx.tools.ctripcorp.com/console/meta" target="_blank" ng-if="env=='tools'">http://hermes.fx.tools.ctripcorp.com/console/meta</a>
-		</li>
-	</ul>
+<p>您刚刚在下面的环境做了SYNC操作， 需要进行META的REBUILD.</p>
+<ul ng-repeat="env in context">
+	<li><strong>{{env | uppercase}}</strong> <a href="http://hermes.fws.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='fws'">http://hermes.fws.qa.nt.ctripcorp.com/console/meta</a> <a href="http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='uat'">http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta</a> <a href="http://hermes.fx.ctripcorp.com/console/console/meta" target="_blank" ng-if="env=='prod'">http://hermes.fx.ctripcorp.com/console/console/meta</a>
+		<a href="http://hermes.fx.tools.ctripcorp.com/console/meta" target="_blank" ng-if="env=='tools'">http://hermes.fx.tools.ctripcorp.com/console/meta</a></li>
+</ul>
 </alert-x>

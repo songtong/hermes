@@ -1,4 +1,4 @@
-var application_module = angular.module('application', [ 'ngResource', 'ngRoute', 'xeditable', 'smart-table', 'ui.bootstrap', 'components', 'utils', 'TopicSync', 'user']);
+var application_module = angular.module('application', [ 'ngResource', 'ngRoute', 'xeditable', 'smart-table', 'ui.bootstrap', 'components', 'utils', 'TopicSync', 'user', 'ui.bootstrap-slider' ]);
 
 application_module.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
@@ -32,8 +32,10 @@ application_module.config(function($routeProvider) {
 		out = input.substring(0, length / 2) + " ... " + input.substring(input.length - length / 2);
 		return out;
 	}
-}).service('ApplicationService', [ '$resource', '$q', function($resource, $q) { // define application service.
-	
+}).service('ApplicationService', [ '$resource', '$q', function($resource, $q) { // define
+																				// application
+																				// service.
+
 	var application_resource = $resource("/api/applications/", {}, {
 		create_topic_application : {
 			method : 'POST',
@@ -57,25 +59,25 @@ application_module.config(function($routeProvider) {
 			method : 'GET',
 			url : '/api/applications/generated/:id'
 		},
-		
+
 		get_generated_application_by_type : {
 			method : 'POST',
 			url : '/api/applications/generatedByType/:type',
 			params : {
 				type : '@type'
 			},
-			transformRequest: function(data, headers) {
+			transformRequest : function(data, headers) {
 				return JSON.stringify(data);
 			}
 		},
-		
+
 		update_application : {
 			method : 'PUT',
 			url : '/api/applications/update/:type',
 			params : {
 				type : '@type'
 			},
-			transformRequest: function(data, headers) {
+			transformRequest : function(data, headers) {
 				return JSON.stringify(data);
 			}
 		},
@@ -102,7 +104,7 @@ application_module.config(function($routeProvider) {
 			url : '/api/applications/status/:id',
 			params : {
 				id : '@id',
-				status: '@status',
+				status : '@status',
 				comment : '@comment',
 				approver : '@approver'
 			}
@@ -133,7 +135,7 @@ application_module.config(function($routeProvider) {
 			}
 		}
 	});
-	
+
 	var consumer_resource = $resource('/api/consumers/:topic/:consumer', {}, {
 		add_consumer : {
 			method : 'POST',
@@ -218,9 +220,9 @@ application_module.config(function($routeProvider) {
 			var delay = $q.defer();
 			application_resource.get_applications({
 				status : status,
-				owner: owner,
-				offset: offset,
-				size: size
+				owner : owner,
+				offset : offset,
+				size : size
 			}, function(result) {
 				delay.resolve(result);
 			}, function(result) {
@@ -241,7 +243,7 @@ application_module.config(function($routeProvider) {
 		},
 		'update_application' : function(app) {
 			var delay = $q.defer();
-			application_resource.update_application( app, function(result) {
+			application_resource.update_application(app, function(result) {
 				console.log("application_resource.update_application success");
 				delay.resolve(result);
 			}, function(result) {
@@ -280,11 +282,11 @@ application_module.config(function($routeProvider) {
 			});
 			return delay.promise;
 		},
-		'update_application_status': function(app_id, app_status, app_comment, app_approver) {
+		'update_application_status' : function(app_id, app_status, app_comment, app_approver) {
 			var delay = $q.defer();
 			application_resource.update_application_status({
 				id : app_id,
-				status: app_status,
+				status : app_status,
 				comment : app_comment,
 				approver : app_approver
 			}, function(result) {
@@ -350,7 +352,7 @@ application_module.config(function($routeProvider) {
 			});
 			return delay.promise;
 		},
-		'get_generated_application_by_type': function(application) {
+		'get_generated_application_by_type' : function(application) {
 			var delay = $q.defer();
 			application_resource.get_generated_application_by_type(application, function(result) {
 				delay.resolve(result);

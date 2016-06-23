@@ -152,6 +152,11 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			} catch (WakeupException e) {
 				if (!closed.get())
 					throw e;
+			} catch (Exception e) {
+				if (!closed.get()) {
+					m_logger.warn("Start consumer failed", e);
+					throw e;
+				}
 			} finally {
 				m_logger.info("Closing kafka consumer with token: " + token);
 				Set<TopicPartition> assignment = consumer.assignment();

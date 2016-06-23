@@ -16,7 +16,7 @@ public class TopicApplication extends HermesApplication {
 	private int m_retentionDays;
 
 	private int m_size;
-	
+
 	private String m_onlineEnv;
 
 	private String m_ownerName1;
@@ -30,6 +30,14 @@ public class TopicApplication extends HermesApplication {
 	private String m_description;
 
 	private String m_languageType;
+
+	private boolean m_needCompress;
+
+	private String m_compressionType;
+
+	private int m_compressionLevel;
+
+	private String m_baseCodecType;
 
 	public String getProductLine() {
 		return m_productLine;
@@ -149,6 +157,38 @@ public class TopicApplication extends HermesApplication {
 
 	public void setOwnerPhone2(String ownerPhone2) {
 		this.m_ownerPhone2 = ownerPhone2;
+	}
+
+	public String getBaseCodecType() {
+		return m_baseCodecType;
+	}
+
+	public void setBaseCodecType(String baseCodecType) {
+		this.m_baseCodecType = baseCodecType;
+	}
+
+	public int getCompressionLevel() {
+		return m_compressionLevel;
+	}
+
+	public void setCompressionLevel(int compressionLevel) {
+		this.m_compressionLevel = compressionLevel;
+	}
+
+	public boolean isNeedCompress() {
+		return m_needCompress;
+	}
+
+	public void setNeedCompress(boolean needCompress) {
+		this.m_needCompress = needCompress;
+	}
+
+	public String getCompressionType() {
+		return m_compressionType;
+	}
+
+	public void setCompressionType(String compressionType) {
+		this.m_compressionType = compressionType;
 	}
 
 }

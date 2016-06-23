@@ -44,8 +44,21 @@
 					<label>语言环境</label> <select class="form-control" ng-model="new_application.languageType" ng-options="languageType for languageType in languageTypes"></select>
 				</div>
 				<div class="form-group">
-					<label>编码类型</label> <select class="form-control" ng-model="new_application.codecType" ng-options="codecType for codecType in codecTypes"></select>
+					<label>编码类型</label> <select class="form-control" ng-model="new_application.baseCodecType" ng-options="codecType for codecType in codecTypes"></select>
 				</div>
+				<div class="form-group" style="margin-bottom: 0px;">
+					<label>消息是否需要压缩？</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needCompress" value=true> 是
+					</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needCompress" value=false> 否
+					</label>
+				</div>
+				<span class=" help-block"><small>消息经过压缩之后能节省存储空间和传输流量，对应地会增加cpu功耗。</small></span>
+				<div ng-show="new_application.needCompress=='true'" class="form-group">
+					<label>压缩方式</label> <select class="form-control" ng-model="new_application.compressionType" ng-options="compressionType for compressionType in compressionTypes"></select>
+				</div>
+				<div ng-show="new_application.needCompress=='true'&&new_application.compressionType=='deflater'" class="form-group">
+					<label>压缩程度</label> <select class="form-control" ng-model="new_application.compressionLevel" ng-options="compressionLevel.value as compressionLevel.key for compressionLevel in compressionLevels"></select>
+				</div>
+
 				<div class="form-group">
 					<label>消息预估上限（条/天）</label> <input class="form-control" ng-model="new_application.maxMsgNumPerDay" type="number"></input>
 				</div>

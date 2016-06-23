@@ -26,7 +26,7 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
+import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
@@ -66,8 +66,8 @@ public class DashboardResource {
 		List<TopicDelayBriefView> list = new ArrayList<TopicDelayBriefView>();
 		for (Entry<String, TopicView> entry : m_topicService.getTopicViews().entrySet()) {
 			TopicView t = entry.getValue();
-			list.add(new TopicDelayBriefView(t.getId(), t.getName(), m_monitorService.getLatestProduced(t.getName()),
-					0, t.getStorageType()));
+			list.add(new TopicDelayBriefView(t.getId(), t.getName(), m_monitorService.getLatestProduced(t.getName()), 0, t
+			      .getStorageType()));
 		}
 
 		Collections.sort(list, new Comparator<TopicDelayBriefView>() {
@@ -142,8 +142,10 @@ public class DashboardResource {
 			m_rawMessage = msg;
 			HermesPrimitiveCodec codec = new HermesPrimitiveCodec(Unpooled.wrappedBuffer(msg.getAttributes()));
 			m_attributesString = JSON.toJSONString(codec.readStringStringMap());
-			if (Codec.JSON.equals(msg.getCodecType())) {
-				m_payloadString = JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(), Object.class));
+			if (Codec.JSON.equals(msg.getCodecType().split(",")[0])) {
+				// m_payloadString = JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(), Object.class));
+				m_payloadString = JSON.toJSONString(PayloadCodecFactory.getCodecByType(msg.getCodecType()).decode(
+				      msg.getPayload(), Object.class));
 			}
 		}
 

@@ -4,10 +4,13 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 	console.log(ssoMail);
 	$scope.new_application = {
 		storageType : 'mysql',
-		codecType : 'json',
+		baseCodecType : 'json',
 		languageType : 'java',
 		ownerName1 : ssoUser,
-		ownerEmail1Prefix : ssoMail.split('@')[0]
+		ownerEmail1Prefix : ssoMail.split('@')[0],
+		needCompress : 'true',
+		compressionType : 'gzip',
+		compressionLevel : 1
 	};
 	$scope.productLines = ApplicationService.get_productLines();
 	$scope.getFilteredProductLine = function(val) {
@@ -22,6 +25,18 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 	$scope.storageTypes = [ 'mysql', 'kafka' ];
 	$scope.codecTypes = [ 'json', 'avro' ];
 	$scope.languageTypes = [ 'java', '.net' ];
+	$scope.compressionTypes = [ 'gzip', 'deflater' ];
+	$scope.compressionLevels = [ {
+		key : '低',
+		value : 1
+	}, {
+		key : '中',
+		value : 5
+	}, {
+		key : '高',
+		value : 9
+	} ];
+
 	$scope.create_topic_application = function(new_app) {
 		bootbox.confirm({
 			title : "请确认",
@@ -30,11 +45,20 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 			callback : function(result) {
 				if (result) {
 					if (new_app.ownerEmail1Prefix)
-						new_app.ownerEmail1Prefix = new_app.ownerEmail1Prefix.split("@")[0];
+						while (new_app.ownerEmail1Prefix.indexOf('@') != -1)
+							new_app.ownerEmail1Prefix = new_app.ownerEmail1Prefix.split("@")[0];
 					if (new_app.ownerEmail2Prefix)
-						new_app.ownerEmail2Prefix = new_app.ownerEmail2Prefix.split("@")[0];
+						while (new_app.ownerEmail2Prefix.indexOf('@') != -1)
+							new_app.ownerEmail2Prefix = new_app.ownerEmail2Prefix.split("@")[0];
 					new_app.ownerEmail1 = new_app.ownerEmail1Prefix + "@Ctrip.com";
 					new_app.ownerEmail2 = new_app.ownerEmail2Prefix + "@Ctrip.com";
+					new_app.codecType = new_app.baseCodecType;
+					if (new_app.needCompress == 'true') {
+						new_app.codecType = new_app.codecType + ',' + new_app.compressionType;
+						if (new_app.compressionType == 'deflater') {
+							new_app.codecType = new_app.codecType + '(' + new_app.compressionLevel + ')';
+						}
+					}
 					console.log(new_app);
 					ApplicationService.create_topic_application(new_app).then(function(result) {
 						show_op_info.show("申请添加Topic: <" + result.productLine + "." + result.entity + "." + result.event + "> 成功！", true);
