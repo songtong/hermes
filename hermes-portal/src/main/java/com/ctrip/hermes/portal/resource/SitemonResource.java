@@ -13,27 +13,28 @@ import javax.ws.rs.core.Response.Status;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService;
+import com.ctrip.hermes.portal.service.dashboard.DashboardService;
 
-@Path("/offset")
+@Path("/sitemon")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class SitemonResource {
-	private DefaultDashboardService m_service = PlexusComponentLocator.lookup(DefaultDashboardService.class);
+	private DashboardService m_service = PlexusComponentLocator.lookup(DashboardService.class);
 
 	@GET
-	@Path("/lag")
+	@Path("/offset/lag")
 	public Response getTopicsTag(@QueryParam("storageType") String storageType) {
+		Map<String, Long> offsets = null;
 		if (storageType != null) {
 			if (storageType.equals(Storage.MYSQL)) {
 				
 			} else {
-				Map<String, Long> offsets = m_service.findKafkaTopicsOffset();
+				offsets = m_service.findKafkaOffsetLags();
 			}
 		} else {
 			
 		}
 		
-		return Response.status(Status.OK).build();
+		return Response.status(Status.OK).entity(offsets).build();
 	}
 }
