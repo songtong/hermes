@@ -101,7 +101,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	protected AtomicReference<Runnable> m_pullMessagesTask = new AtomicReference<>(null);
 
-	protected AtomicReference<Offset> m_offset = new AtomicReference<>(null);
+	protected AtomicReference<AtomicReference<Offset>> m_offset = new AtomicReference<>();
 
 	protected AckManager m_ackManager;
 
@@ -258,8 +258,9 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		return m_pullMessagesTask.get();
 	}
 
-	protected Runnable createPullMessageTask(long token, SchedulePolicy noEndpointSchedulePolicy) {
-		return new BasePullMessagesTask(token, noEndpointSchedulePolicy);
+	protected Runnable createPullMessageTask( //
+	      long token, AtomicReference<Offset> baseOffset, SchedulePolicy noEndpointSchedulePolicy) {
+		return new BasePullMessagesTask(token, baseOffset, noEndpointSchedulePolicy);
 	}
 
 	protected void doBeforeConsuming(ConsumerLeaseKey key, long token) {
@@ -267,7 +268,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 		SchedulePolicy noEndpointSchedulePolicy = new ExponentialSchedulePolicy(m_config.getNoEndpointWaitBaseMillis(),
 		      m_config.getNoEndpointWaitMaxMillis());
-		m_pullMessagesTask.set(createPullMessageTask(token, noEndpointSchedulePolicy));
+		m_pullMessagesTask.set(createPullMessageTask(token, m_offset.get(), noEndpointSchedulePolicy));
 	}
 
 	protected void queryLatestOffset(ConsumerLeaseKey key) {
@@ -322,7 +323,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 						if (offsetRes != null && offsetRes.getOffset() != null) {
 							ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReceived(m_context.getTopic().getName(),
 							      m_partitionId, m_context.getGroupId());
-							m_offset.set(offsetRes.getOffset());
+							m_offset.set(new AtomicReference<Offset>(offsetRes.getOffset()));
 							return;
 						} else {
 							schedulePolicy.fail(true);
@@ -555,10 +556,13 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 	protected class BasePullMessagesTask implements Runnable {
 		protected long m_token;
 
+		protected AtomicReference<Offset> m_baseOffset;
+
 		protected SchedulePolicy m_noEndpointSchedulePolicy;
 
-		public BasePullMessagesTask(long token, SchedulePolicy noEndpointSchedulePolicy) {
+		public BasePullMessagesTask(long token, AtomicReference<Offset> offset, SchedulePolicy noEndpointSchedulePolicy) {
 			m_token = token;
+			m_baseOffset = offset;
 			m_noEndpointSchedulePolicy = noEndpointSchedulePolicy;
 		}
 
@@ -703,7 +707,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 		protected void resultReceived(PullMessageResultCommandV5 ack) {
 			if (ack.getOffset() != null) {
-				m_offset.set(ack.getOffset());
+				m_baseOffset.set(ack.getOffset());
 			}
 		}
 
@@ -712,7 +716,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			      m_context.getTopic().getName(), //
 			      m_partitionId, //
 			      m_context.getGroupId(), //
-			      m_offset.get(), //
+			      m_baseOffset.get(), //
 			      m_msgs.remainingCapacity(), //
 			      timeout, //
 			      m_context.getMessageListenerConfig() instanceof FilterMessageListenerConfig ? //

@@ -1,5 +1,7 @@
 package com.ctrip.hermes.consumer.engine.bootstrap.strategy;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +37,8 @@ public class PullConsumingStrategyConsumerTask extends BaseConsumerTask {
 						queryOffsetSchedulePolicy.fail(true);
 						continue;
 					}
-					m_offset.set(new Offset(offset.getPriorityOffset(), offset.getNonPriorityOffset(), null));
+					m_offset.set(new AtomicReference<Offset>(new Offset(offset.getPriorityOffset(), offset
+					      .getNonPriorityOffset(), null)));
 					return;
 				} catch (Exception e) {
 					log.error("Query latest offset failed: {}:{}", m_context.getTopic().getName(), m_partitionId, e);
