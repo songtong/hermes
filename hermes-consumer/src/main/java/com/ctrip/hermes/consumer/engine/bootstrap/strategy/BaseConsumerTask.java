@@ -101,8 +101,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 	protected AtomicReference<Runnable> m_pullMessagesTask = new AtomicReference<>(null);
 
-	protected AtomicReference<AtomicReference<Offset>> m_offset = new AtomicReference<>(
-	      new AtomicReference<Offset>(null));
+	protected AtomicReference<AtomicReference<Offset>> m_offset = new AtomicReference<>();
 
 	protected AckManager m_ackManager;
 
