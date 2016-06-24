@@ -39,6 +39,6 @@ public interface DashboardService {
 
 	public BrokerQPSDetailView getBrokerDeliveredDetailQPS(String brokerIp);
 	
-	public Map<String, Long> findKafkaOffsetLags();
+	public Map<String, Map<String, Long>> getTopicOffsetLags();
 
 }

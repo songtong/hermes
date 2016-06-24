@@ -1,7 +1,5 @@
 package com.ctrip.hermes.portal.resource;
 
-import java.util.Map;
-
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -13,6 +11,7 @@ import javax.ws.rs.core.Response.Status;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.dashboard.DashboardService;
 
 @Path("/sitemon")
@@ -24,17 +23,15 @@ public class SitemonResource {
 	@GET
 	@Path("/offset/lag")
 	public Response getTopicsTag(@QueryParam("storageType") String storageType) {
-		Map<String, Long> offsets = null;
-		if (storageType != null) {
-			if (storageType.equals(Storage.MYSQL)) {
-				
-			} else {
-				offsets = m_service.findKafkaOffsetLags();
-			}
-		} else {
-			
+		if (storageType == null) {
+			return Response.status(Status.OK).entity(m_service.getTopicOffsetLags()).build(); 
 		}
 		
-		return Response.status(Status.OK).entity(offsets).build();
+		if (storageType.equals(Storage.KAFKA) || storageType.equals(Storage.MYSQL)) {
+			return Response.status(Status.OK).entity(m_service.getTopicOffsetLags().get(storageType)).build();  
+		}
+		
+		throw new RestException("Invalid parameter value for storage-type.", Status.BAD_REQUEST);
+		
 	}
 }

@@ -27,6 +27,7 @@ import kafka.javaapi.TopicMetadata;
 import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.consumer.SimpleConsumer;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
@@ -56,6 +57,7 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
+import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.PartitionService;
 import com.ctrip.hermes.metaservice.service.TopicService;
@@ -76,8 +78,6 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private static final int CONSUMER_BACKLOG_CALCULATE_AWAITTIME_MINUTE = 1;
 	
-	private static final int MAX_REQUEST_TOPIC_SIZE = 10;
-
 	@Inject
 	private MessageQueueDao m_dao;
 
@@ -86,7 +86,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	@Inject
 	private TopicService m_topicService;
-
+	
 	@Inject
 	private PartitionService m_partitionService;
 
@@ -120,7 +120,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private Map<Pair<String, Integer>, String> m_brokerLeases = new HashMap<>();
 	
-	private Map<String, Long> m_topicOffsetLags = new HashMap<String, Long>();
+	private Map<String, Map<String, Long>> m_topicOffsetLags = new HashMap<String, Map<String, Long>>();
 
 	private ExecutorService m_es = Executors.newFixedThreadPool(CONSUMER_BACKLOG_CALCULATE_THREAD_COUNT);
 
@@ -239,12 +239,20 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		String kafkaTopics = m_env.getGlobalConfig().get("sitemon.kafka.topics").toString();
 		String mysqlTopics = m_env.getGlobalConfig().get("sitemon.mysql.topics").toString();
 		
+		Map<String, Long> offsetLags = new HashMap<String, Long>(); 
 		List<String> topics = Arrays.asList(kafkaTopics.split(","));
 		Map<String, Long> offsets = findKafkaTopicsOffsets(topics);
 		Map<String, Long> readOffsets = findKafkaTopicsConsumerOffsets(topics);
 		for (Map.Entry<String, Long> readOffset : readOffsets.entrySet()) {
-			m_topicOffsetLags.put(readOffset.getKey(), offsets.get(readOffset.getKey()) - readOffset.getValue());
+			offsetLags.put(readOffset.getKey(), offsets.get(readOffset.getKey()) - readOffset.getValue());
 		}
+		m_topicOffsetLags.put(Storage.KAFKA, offsetLags);
+		
+		offsetLags = new HashMap<String, Long>();
+		for (String topic : mysqlTopics.split(",")) {
+			offsetLags.put(topic, getDelayForTopicConsumers(topic));
+		}
+		m_topicOffsetLags.put(Storage.MYSQL, offsetLags);
 	}
 
 	private void updateLatestBroker() {
@@ -306,6 +314,18 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		});
 		cachedConsumerBacklogs.put(new Pair<String, String>(topic, consumer), consumerDelays);
 		return consumerDelays;
+	}
+	
+	public long getDelayForTopicConsumers(String topic) {
+		Topic topicEntity = m_topicService.findTopicEntityByName(topic);
+		long sum = 0;
+		for (ConsumerGroup consumerGroup : topicEntity.getConsumerGroups()) {
+			List<DelayDetail> delays = getDelayDetailForConsumer(topic, consumerGroup.getName());
+			for (DelayDetail delay : delays) {
+				sum += delay.getNonPriorityDelay() + delay.getPriorityDelay() + delay.getResendDelay();
+			}
+		}
+		return sum;
 	}
 
 	private void updateLatestProduced() {
@@ -401,12 +421,12 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		m_latestClients = set;
 	}
 	
-	public Map<String, Long> findKafkaOffsetLags() {
+	public Map<String, Map<String, Long>> getTopicOffsetLags() {
 		return m_topicOffsetLags;
 	}
 	
 	public Map<String, Long> findKafkaTopicsOffsets(List<String> topics) {
-		List<String> seeds = Arrays.asList(m_env.getGlobalConfig().get("kafka.bootstrap.servers").toString().split(","));
+		List<String> seeds = Arrays.asList(m_env.getGlobalConfig().getProperty("kafka.bootstrap.servers").split(","));
 		int port = Integer.parseInt(m_env.getGlobalConfig().getProperty("kafka.servers.port"));
 		
 		Map<String, Long> topic2Offset = new HashMap<String, Long>();
@@ -434,7 +454,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		return topic2Offset; 
 	}
 	
-	private static long getLastOffset(SimpleConsumer consumer, String topic,  
+	private long getLastOffset(SimpleConsumer consumer, String topic,  
             int partition, long whichTime, String clientName) {  
         TopicAndPartition topicAndPartition = new TopicAndPartition(topic,  
                 partition);  
@@ -491,7 +511,11 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private Map<String, Long> findKafkaTopicsConsumerOffsets(List<String> topics) {
 		Properties properties = m_env.getGlobalConfig();
 		Properties props = new Properties();
-		props.put("bootstrap.servers", properties.get("kafka.bootstrap.servers"));
+		List<String> servers = Arrays.asList(properties.getProperty("kafka.bootstrap.servers").split(","));
+		for (int index = 0; index < servers.size(); index++) {
+			servers.set(index, servers.get(index).concat(":" + properties.getProperty("kafka.servers.port")));
+		}
+		props.put("bootstrap.servers", StringUtils.join(servers, ","));
 		props.put("auto.commit.interval.ms", "1000");
 		props.put("session.timeout.ms", "30000");
 		props.put("key.deserializer",
@@ -499,28 +523,39 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		props.put("value.deserializer",
 				"org.apache.kafka.common.serialization.StringDeserializer");
 
-		KafkaConsumer<String, byte[]> consumer = new KafkaConsumer<String, byte[]>(props);
 		Map<String, Long> offsets = new HashMap<String, Long>();
 
-		try {
-			for (String topic : topics) { 
-				List<PartitionInfo> partitions = consumer.partitionsFor(topic);
-				List<TopicPartition> tps = new ArrayList<TopicPartition>();
-				for (PartitionInfo partition : partitions) {
-					tps.add(new TopicPartition(topic, partition.partition()));
+		for (String topic : topics) { 
+			try {
+				Topic topicEntity = m_topicService.findTopicEntityByName(topic);
+				List<ConsumerGroup> consumerGroups = topicEntity.getConsumerGroups();
+				for (ConsumerGroup consumerGroup : consumerGroups) {
+					props.put("group.id", consumerGroup.getName());
+					KafkaConsumer<String, byte[]> consumer = null;
+					try {
+						consumer = new KafkaConsumer<String, byte[]>(props);
+						List<PartitionInfo> partitions = consumer.partitionsFor(topic);
+						List<TopicPartition> tps = new ArrayList<TopicPartition>();
+						for (PartitionInfo partition : partitions) {
+							tps.add(new TopicPartition(topic, partition.partition()));
+						}
+						consumer.assign(tps);
+						long sum = 0;
+						for (TopicPartition tp : consumer.assignment()) {
+							sum += consumer.position(tp);
+						}
+						offsets.put(topic, sum);
+					} finally {
+						if (consumer != null) {
+							consumer.close();
+						}
+					}
 				}
-				consumer.assign(tps);
-				long sum = 0;
-				for (TopicPartition tp : consumer.assignment()) {
-					sum += consumer.position(tp);
-				}
-				offsets.put(topic, sum);
-			}
-		} finally {
-			if (consumer != null) {
-				consumer.close();
+			} catch (Exception e) {
+				log.error("Failed to find consumer offset due to exception: ", e);
 			}
 		}
+		
 		return offsets;
 	}
 
@@ -565,7 +600,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				      log.error("Update elastic monitor information failed.", e);
 			      }
 		      }
-	      }, 0, 1, TimeUnit.MINUTES);
+	      }, 0, 10, TimeUnit.MINUTES);
 		
 	}
 
