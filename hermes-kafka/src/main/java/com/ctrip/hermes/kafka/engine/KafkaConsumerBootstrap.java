@@ -125,7 +125,13 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 				m_logger.info("Current assignment: " + assignment);
 				m_logger.info("Starting kafka consumer with token: " + token);
 				while (!closed.get()) {
-					ConsumerRecords<String, byte[]> records = consumer.poll(5000);
+					ConsumerRecords<String, byte[]> records = ConsumerRecords.empty();
+					try {
+						records = consumer.poll(5000);
+					} catch (Exception e) {
+						m_logger.warn("Pull messages failed!", e);
+						continue;
+					}
 					List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 					for (ConsumerRecord<String, byte[]> consumerRecord : records) {
 						long offset = -1;
@@ -154,7 +160,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 					throw e;
 			} catch (Exception e) {
 				if (!closed.get()) {
-					m_logger.warn("Start consumer failed", e);
+					m_logger.error("Consumer exited abnormally.", e);
 					throw e;
 				}
 			} finally {
