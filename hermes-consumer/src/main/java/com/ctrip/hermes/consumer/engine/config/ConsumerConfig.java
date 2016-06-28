@@ -76,9 +76,9 @@ public class ConsumerConfig implements Initializable {
 
 	private long m_stopConsumerTimeMillisBeforeLeaseExpired = DEFAULT_STOP_CONSUMER_TIME_MILLIS_BEFORE_LEASE_EXPIRED;
 
-	private int m_pullIntervalBase = 500;
+	private int m_kafkaPollFailWaitBase = 500;
 
-	private int m_pullIntervalMax = 5000;
+	private int m_kafkaPollFailWaitMax = 5000;
 
 	public int getLocalCacheSize(String topic) throws IOException {
 		String localCacheSizeStr = m_env.getConsumerConfig(topic).getProperty("consumer.localcache.size");
@@ -239,20 +239,20 @@ public class ConsumerConfig implements Initializable {
 		return m_ackCommandMaxSize;
 	}
 
-	public int getPullIntervalBase() {
-	   return m_pullIntervalBase;
+	public int getKafkaPollFailWaitBase() {
+	   return m_kafkaPollFailWaitBase;
    }
 
-	public void setPullIntervalBase(int pullIntervalBase) {
-	   this.m_pullIntervalBase = pullIntervalBase;
+	public void setKafkaPollFailWaitBase(int kafkaPollFailWaitBase) {
+	   this.m_kafkaPollFailWaitBase = kafkaPollFailWaitBase;
    }
 
-	public int getPullIntervalMax() {
-	   return m_pullIntervalMax;
+	public int getKafkaPollFailWaitMax() {
+	   return m_kafkaPollFailWaitMax;
    }
 
-	public void setPullIntervalMax(int pullIntervalMax) {
-	   this.m_pullIntervalMax = pullIntervalMax;
+	public void setKafkaPollFailWaitMax(int kafkaPollFailWaitMax) {
+	   this.m_kafkaPollFailWaitMax = kafkaPollFailWaitMax;
    }
 
 }

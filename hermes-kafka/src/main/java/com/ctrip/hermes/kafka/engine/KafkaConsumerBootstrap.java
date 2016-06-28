@@ -130,18 +130,18 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 				Set<TopicPartition> assignment = consumer.assignment();
 				m_logger.info("Current assignment: " + assignment);
 				m_logger.info("Starting kafka consumer with token: " + token);
-				SchedulePolicy retryPolicy = new ExponentialSchedulePolicy(m_consumerConfig.getPullIntervalBase(),
-				      m_consumerConfig.getPullIntervalMax());
+				SchedulePolicy retryPolicy = new ExponentialSchedulePolicy(m_consumerConfig.getKafkaPollFailWaitBase(),
+				      m_consumerConfig.getKafkaPollFailWaitMax());
 				while (!closed.get()) {
 					ConsumerRecords<String, byte[]> records = ConsumerRecords.empty();
 					try {
 						records = consumer.poll(5000);
+						retryPolicy.succeess();
 					} catch (Exception e) {
 						m_logger.warn("Pull messages failed!", e);
 						retryPolicy.fail(true);
 						continue;
 					}
-					retryPolicy.succeess();
 					List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 					for (ConsumerRecord<String, byte[]> consumerRecord : records) {
 						long offset = -1;
