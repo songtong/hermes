@@ -29,10 +29,13 @@ import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.bootstrap.BaseConsumerBootstrap;
 import com.ctrip.hermes.consumer.engine.bootstrap.ConsumerBootstrap;
+import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
+import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
+import com.ctrip.hermes.core.schedule.SchedulePolicy;
 import com.ctrip.hermes.core.transport.command.CorrelationIdGenerator;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.kafka.message.KafkaConsumerMessage;
@@ -57,6 +60,9 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 	@Inject
 	private MessageCodec m_messageCodec;
+
+	@Inject
+	private ConsumerConfig m_consumerConfig;
 
 	private Map<ConsumerContext, KafkaConsumerThread> consumers = new HashMap<ConsumerContext, KafkaConsumerThread>();
 
@@ -124,14 +130,18 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 				Set<TopicPartition> assignment = consumer.assignment();
 				m_logger.info("Current assignment: " + assignment);
 				m_logger.info("Starting kafka consumer with token: " + token);
+				SchedulePolicy retryPolicy = new ExponentialSchedulePolicy(m_consumerConfig.getPullIntervalBase(),
+				      m_consumerConfig.getPullIntervalMax());
 				while (!closed.get()) {
 					ConsumerRecords<String, byte[]> records = ConsumerRecords.empty();
 					try {
 						records = consumer.poll(5000);
 					} catch (Exception e) {
 						m_logger.warn("Pull messages failed!", e);
+						retryPolicy.fail(true);
 						continue;
 					}
+					retryPolicy.succeess();
 					List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 					for (ConsumerRecord<String, byte[]> consumerRecord : records) {
 						long offset = -1;

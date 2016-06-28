@@ -76,6 +76,10 @@ public class ConsumerConfig implements Initializable {
 
 	private long m_stopConsumerTimeMillisBeforeLeaseExpired = DEFAULT_STOP_CONSUMER_TIME_MILLIS_BEFORE_LEASE_EXPIRED;
 
+	private int m_pullIntervalBase = 500;
+
+	private int m_pullIntervalMax = 5000;
+
 	public int getLocalCacheSize(String topic) throws IOException {
 		String localCacheSizeStr = m_env.getConsumerConfig(topic).getProperty("consumer.localcache.size");
 
@@ -234,5 +238,21 @@ public class ConsumerConfig implements Initializable {
 	public int getAckCommandMaxSize() {
 		return m_ackCommandMaxSize;
 	}
+
+	public int getPullIntervalBase() {
+	   return m_pullIntervalBase;
+   }
+
+	public void setPullIntervalBase(int pullIntervalBase) {
+	   this.m_pullIntervalBase = pullIntervalBase;
+   }
+
+	public int getPullIntervalMax() {
+	   return m_pullIntervalMax;
+   }
+
+	public void setPullIntervalMax(int pullIntervalMax) {
+	   this.m_pullIntervalMax = pullIntervalMax;
+   }
 
 }
