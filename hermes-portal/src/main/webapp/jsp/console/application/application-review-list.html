@@ -1,0 +1,68 @@
+<form class="form form-horizontal">
+	<div class="form-group">
+		<label class="control-label col-md-1">申请状态</label>
+		<div class="col-md-4">
+			<select class="form-control status" ng-model="status" ng-change="selectPage(1)">
+				<option value="0">申请中(创建)</option>
+				<option value="1">拒绝(创建)</option>
+				<option value="2">通过(创建)</option>
+				<option value="3">同步</option>
+				<option value="4">申请中(上线)</option>
+				<option value="5">拒绝(上线)</option>
+				<option value="6">通过(上线)</option>
+				<option value="7">上线</option>
+			</select>
+		</div>
+	</div>
+</form>
+
+<table st-table="applications" st-pipe="paginate" class="table table-striped">
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>申请类型</th>
+			<th>Topic名字</th>
+			<th>申请人</th>
+			<th>申请状态</th>
+			<th>申请时间</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-if="applications.length > 0" ng-repeat="application in applications">
+			<td><label ng-bind="$index + 1"></label></td>
+			<td><div ng-if="application.type==0">创建Topic</div>
+				<div ng-if="application.type==1">创建Consumer</div>
+			</td>
+			<td><div text-x ng-if="application.type==0" >{{application.productLine}}.{{application.entity}}.{{application.event}}</div>
+				<div text-x ng-if="application.type==1">{{application.topicName}}</div>
+			</td>
+			<td>{{application.ownerName1}}</td>
+			<td><div ng-if="application.status==0" class="text-info">审核中(创建)</div>
+				<div ng-if="application.status==1" class="text-danger">拒绝(创建)</div>
+				<div ng-if="application.status==2" class="text-success">申请通过(创建)</div>
+				<div ng-if="application.status==3" class="text-success">同步</div>
+				<div ng-if="application.status==4" class="text-info">审核中(上线)</div>
+				<div ng-if="application.status==5" class="text-success">拒绝(上线)</div>
+				<div ng-if="application.status==6" class="text-success">通过(上线)</div>
+				<div ng-if="application.status==7" class="text-success">上线</div>
+			</td>
+			<td>{{application.createTime|date:"yyyy-MM-dd HH:mm:ss"}}</td>
+			<td><a href="/console/application#review/{{application.id}}">查看详情</a></td>
+		</tr>
+		<tr ng-if="applications.length == 0"> 
+			<td colspan="7" style="text-align: center;">
+				<i class="fa fa-exclamation-triangle"></i> No Applications Found!
+			</td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<td class="text-center" colspan="7" pagination-x page-size="10" paginate="paginate">
+			</td>
+		</tr>
+	</tfoot>
+</table>
+
+<loading-x></loading-x>
+<progressbar-x id="progress"></progressbar-x>

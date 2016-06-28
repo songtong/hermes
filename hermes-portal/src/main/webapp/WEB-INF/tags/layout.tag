@@ -110,6 +110,7 @@
 									<ul class="dropdown-menu">
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/topic">Topic</a></li>
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/consumer">ConsumerGroup</a></li>
+										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/review/list">My applications</a></li>
 										<c:if test="${requestScope.isAdmin}">
 											<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/approval/list">Examination & Approval</a></li>
 										</c:if>
