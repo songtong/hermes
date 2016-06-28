@@ -5,13 +5,17 @@ topic_module.controller('kafka-add-controller', [ '$scope', '$resource', 'TopicS
 		ackTimeoutSeconds : 5,
 		endpointType : 'kafka',
 		storageType : 'kafka',
-		codecType : 'avro',
+		baseCodecType : 'avro',
+		needCompress : 'true',
+		compressionType : 'deflater',
+		compressionLevel : 1,
 		properties : []
 	};
 	$scope.current_datasource_names = [];
 	$scope.kafka_property_names = [ 'partitions', 'replication-factor', 'retention.bytes', 'retention.ms' ]
 	$scope.endpoint_types = [ 'kafka', 'broker' ];
-	$scope.codec_types = [ 'avro', 'json' ];
+	$scope.codecTypes = [ 'avro', 'json' ];
+	$scope.compressionTypes = [ 'gzip', 'deflater' ];
 
 	var meta_resource = $resource('/api/storages', {}, {
 		'get_storage' : {
@@ -64,6 +68,7 @@ topic_module.controller('kafka-add-controller', [ '$scope', '$resource', 'TopicS
 				locale : "zh_CN",
 				callback : function(result) {
 					if (result) {
+						encodeCodec($scope.new_topic);
 						TopicService.save_topic($scope.new_topic, '/kafka');
 					}
 				}

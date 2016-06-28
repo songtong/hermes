@@ -19,9 +19,30 @@
 					<div class="form-group">
 						<label for="inputCodec" class="col-md-4 control-label">编码类型</label>
 						<div class="col-md-4">
-							<select class="form-control" id="inputCodec" ng-model="new_topic.codecType" ng-options="codec for codec in codec_types">
+							<select class="form-control" id="inputCodec" ng-model="new_topic.baseCodecType" ng-options="codec for codec in codecTypes">
 							</select>
 						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">消息是否需要压缩？</label>
+						<div class="col-md-8">
+							<label class="radio-inline"> <input type="radio" ng-model="new_topic.needCompress" value=true> 是
+							</label> <label class="radio-inline"> <input type="radio" ng-model="new_topic.needCompress" value=false> 否
+							</label>
+						</div>
+					</div>
+					<div ng-show="new_topic.needCompress=='true'" class="form-group">
+						<label class="col-md-4 control-label">压缩方式</label>
+						<div class="col-md-8">
+							<select class="form-control" ng-model="new_topic.compressionType" ng-options="compressionType for compressionType in compressionTypes"></select>
+						</div>
+					</div>
+					<div ng-show="new_topic.needCompress=='true'&&new_topic.compressionType=='deflater'" class="form-group">
+						<label class="col-md-4 control-label">压缩程度</label>
+						<div class="col-md-7">
+							<slider ng-model="new_topic.compressionLevel" min="1" step="1" max="9" value="new_topic.compressionLevel"></slider>
+						</div>
+						<div class="col-md-1">{{new_topic.compressionLevel}}</div>
 					</div>
 					<div class="form-group">
 						<label for="inputConsumeRetryPolicy" class="col-sm-4 control-label">消费重试策略</label>

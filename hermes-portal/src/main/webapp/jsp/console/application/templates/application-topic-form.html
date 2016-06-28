@@ -1,95 +1,121 @@
-			<form class="form-horizontal">
-				<div class="form-group">
-					<label for="inputTopicName" class="col-md-4 control-label">名称</label>
-					<div class="col-md-6">
-						<input class="form-control" placeholder="Topic" value="{{application.productLine}}.{{application.entity}}.{{application.event}}" readOnly="readonly">
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="inputDescription" class="col-sm-4 control-label">描述</label>
-					<div class="col-sm-6">
-						<textarea class="form-control" placeholder="Topic Description" ng-model="application.description"></textarea>
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">存储类型</label>
-					<div class="col-md-6">
-						<select class="form-control" ng-model="application.storageType" ng-options="storageType for storageType in storageTypes">
-						</select>
-					</div>
-				</div>
-				<div ng-if="application.storageType=='kafka'" class="form-group">
-					<label class="col-md-4 control-label">语言类型</label>
-					<div class="col-md-6">
-						<select class="form-control" ng-model="application.languageType" ng-options="languageType for languageType in languageTypes">
-						</select>
-					</div>
-				</div>
-				<div ng-if="application.storageType=='kafka'" class="form-group">
-					<label class="col-md-4 control-label">编码类型</label>
-					<div class="col-md-6">
-						<select class="form-control" ng-model="application.codecType" ng-options="codecType for codecType in codec_types">
-						</select>
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">消息上限（条/天）</label>
-					<div class="col-md-6">
-						<input class="form-control" placeholder="Max Msg No Per Day" ng-model="application.maxMsgNumPerDay">
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">消息保留时间（天）</label>
-					<div class="col-md-6">
-						<input type="number" class="form-control" placeholder="Retention Days" ng-model="application.retentionDays">
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">消息大小（Kb）</label>
-					<div class="col-md-6">
-						<input type="number" class="form-control" placeholder="Msg Size" ng-model="application.size">
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">负责人姓名1</label>
-					<div class="col-md-6">
-						<input class="form-control" placeholder="Topic Creator1" ng-model="application.ownerName1">
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">负责人邮箱1</label>
-					<div class="col-md-6">
-						<input class="form-control" placeholder="Email Address of Topic Creator1" ng-model="application.ownerEmail1">
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">负责人手机1</label>
-					<div class="col-md-6">
-						<input class="form-control" placeholder="Phone No of Topic Creator1" ng-model="application.ownerPhone1">
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">负责人姓名2</label>
-					<div class="col-md-6">
-						<input class="form-control" placeholder="Topic Creator2" ng-model="application.ownerName2">
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">负责人邮箱2</label>
-					<div class="col-md-6">
-						<input class="form-control" placeholder="Email Address of Topic Creator2" ng-model="application.ownerEmail2">
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">负责人手机2</label>
-					<div class="col-md-6">
-						<input class="form-control" placeholder="Phone No of Topic Creator2" ng-model="application.ownerPhone2">
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-4 control-label">申请时间</label>
-					<div class="col-md-6">
-						<input class="form-control" placeholder="Topic Description" value="{{application.lastModifiedTime | date:'yyyy-MM-dd HH:mm:ss'}}">
-					</div>
-				</div>
-			</form>
+
+<form class="form-horizontal">
+	<div class="form-group">
+		<label for="inputTopicName" class="col-md-4 control-label">名称11</label>
+		<div class="col-md-6">
+			<input class="form-control" placeholder="Topic" value="{{application.productLine}}.{{application.entity}}.{{application.event}}" readOnly="readonly">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="inputDescription" class="col-sm-4 control-label">描述</label>
+		<div class="col-sm-6">
+			<textarea class="form-control" placeholder="Topic Description" ng-model="application.description"></textarea>
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">存储类型</label>
+		<div class="col-md-6">
+			<select class="form-control" ng-model="application.storageType" ng-options="storageType for storageType in storageTypes">
+			</select>
+		</div>
+	</div>
+	<div ng-if="application.storageType=='kafka'" class="form-group">
+		<label class="col-md-4 control-label">语言类型</label>
+		<div class="col-md-6">
+			<select class="form-control" ng-model="application.languageType" ng-options="languageType for languageType in languageTypes">
+			</select>
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">编码类型</label>
+		<div class="col-md-6">
+			<select class="form-control" ng-model="application.baseCodecType" ng-options="codecType for codecType in codec_types">
+			</select>
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">需要压缩？</label>
+		<div class="col-md-6">
+			<div class="btn-group">
+				<label class="btn"> <input type="radio" name="retryStrategy" ng-value="true" ng-model="application.needCompress"> 是
+				</label> <label class="btn"> <input type="radio" name="retryStrategy" ng-value="false" ng-model="application.needCompress"> 否
+				</label>
+			</div>
+		</div>
+	</div>
+	<div ng-if="application.needCompress==true" class="form-group">
+		<label class="col-md-4 control-label">压缩方式</label>
+		<div class="col-md-6">
+			<select class="form-control" ng-model="application.compressionType" ng-options="compressionType for compressionType in compressionTypes">
+			</select>
+		</div>
+	</div>
+	<div ng-if="application.needCompress==true && application.compressionType=='deflater'" class="form-group">
+		<label class="col-md-4 control-label">压缩程度</label>
+		<div class="col-md-5">
+			<slider ng-model="application.compressionLevel" min="1" step="1" max="9" value="application.compressionLevel"></slider>
+		</div>
+		<div class="col-md-1">{{application.compressionLevel}}</div>
+	</div>
+	
+	<div class="form-group">
+		<label class="col-md-4 control-label">消息上限（条/天）</label>
+		<div class="col-md-6">
+			<input class="form-control" placeholder="Max Msg No Per Day" ng-model="application.maxMsgNumPerDay">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">消息保留时间（天）</label>
+		<div class="col-md-6">
+			<input type="number" class="form-control" placeholder="Retention Days" ng-model="application.retentionDays">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">消息大小（Kb）</label>
+		<div class="col-md-6">
+			<input type="number" class="form-control" placeholder="Msg Size" ng-model="application.size">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">负责人姓名1</label>
+		<div class="col-md-6">
+			<input class="form-control" placeholder="Topic Creator1" ng-model="application.ownerName1">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">负责人邮箱1</label>
+		<div class="col-md-6">
+			<input class="form-control" placeholder="Email Address of Topic Creator1" ng-model="application.ownerEmail1">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">负责人手机1</label>
+		<div class="col-md-6">
+			<input class="form-control" placeholder="Phone No of Topic Creator1" ng-model="application.ownerPhone1">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">负责人姓名2</label>
+		<div class="col-md-6">
+			<input class="form-control" placeholder="Topic Creator2" ng-model="application.ownerName2">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">负责人邮箱2</label>
+		<div class="col-md-6">
+			<input class="form-control" placeholder="Email Address of Topic Creator2" ng-model="application.ownerEmail2">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">负责人手机2</label>
+		<div class="col-md-6">
+			<input class="form-control" placeholder="Phone No of Topic Creator2" ng-model="application.ownerPhone2">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-md-4 control-label">申请时间</label>
+		<div class="col-md-6">
+			<input class="form-control" placeholder="Topic Description" value="{{application.lastModifiedTime | date:'yyyy-MM-dd HH:mm:ss'}}">
+		</div>
+	</div>
+</form>

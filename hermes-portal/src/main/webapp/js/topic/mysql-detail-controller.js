@@ -6,9 +6,12 @@ topic_module.run(function(editableOptions) {
 	scope.topic_name = routeParams['topicName'];
 
 	scope.codec_types = [ 'json', 'cmessaging', 'avro' ];
+	scope.needCompressOps = [ true, false ];
+	scope.compressionTypes = [ 'gzip', 'deflater' ];
 
 	scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {
 		scope.topic = result;
+		decodeCodec(scope.topic);
 		scope.partitionCount = scope.topic.partitions.length;
 	});
 	scope.consumers = TopicService.fetch_consumers_for_topic(scope.topic_name).then(function(result) {
@@ -45,13 +48,15 @@ topic_module.run(function(editableOptions) {
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
+					encodeCodec(scope.topic);
+					console.log(scope.topic);
 					document.getElementById("updateButton").disabled = "disabled";
 					show_op_info.show("更新中，请稍候......", true);
-					console.log(scope.topic.partitions);
 					TopicService.update_topic(scope.topic_name, scope.topic).then(function(result) {
 						document.getElementById("updateButton").disabled = false;
 						show_op_info.show("修改topic ( " + scope.topic_name + ") 成功!", true);
 						scope.topic = result;
+						decodeCodec(scope.topic);
 						scope.new_partitions = [];
 						scope.partitionCount = scope.topic.partitions.length;
 					}, function(data) {
@@ -60,6 +65,7 @@ topic_module.run(function(editableOptions) {
 					});
 				} else {
 					scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {
+						decodeCodec(scope.topic);
 						scope.topic = result;
 					});
 				}

@@ -5,13 +5,18 @@ topic_module.controller('mysql-add-controller', [ '$scope', '$resource', 'TopicS
 		ackTimeoutSeconds : 30,
 		endpointType : 'broker',
 		storageType : 'mysql',
-		codecType : 'json',
+		baseCodecType : 'json',
+		needCompress : 'true',
+		compressionType : 'deflater',
+		compressionLevel : 1,
 		storagePartitionSize : '1000000',
 		resendPartitionSize : '5000',
 		storagePartitionCount : '10',
 		brokerGroup : 'default'
 	};
-	$scope.codec_types = [ 'json', 'cmessaging', 'avro' ];
+	$scope.codecTypes = [ 'json', 'cmessaging', 'avro' ];
+	$scope.compressionTypes = [ 'gzip', 'deflater' ];
+	
 	$scope.current_datasource_names = [];
 	TopicService.get_broker_groups().then(function(result) {
 		$scope.broker_groups = result;
@@ -57,6 +62,7 @@ topic_module.controller('mysql-add-controller', [ '$scope', '$resource', 'TopicS
 				locale : "zh_CN",
 				callback : function(result) {
 					if (result) {
+						encodeCodec($scope.new_topic);
 						TopicService.save_topic($scope.new_topic, '/mysql');
 					}
 				}

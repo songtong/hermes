@@ -1,8 +1,6 @@
 <div class="row">
 	<div class="col-md-6">
-		<label class="label label-info">
-			<span ng-if="application.type==0">Topic创建-申请内容</span>
-			<span ng-if="application.type==1">Consumer创建-申请内容</span>
+		<label class="label label-info"> <span ng-if="application.type==0">Topic创建-申请内容</span> <span ng-if="application.type==1">Consumer创建-申请内容</span>
 		</label>
 		<div class="panel panel-info">
 			<div class="panel panel-body">
@@ -37,10 +35,28 @@
 							<div class="form-control-static" editable-select="application.languageType" e-name="languageType" e-form="applicationForm" e-ng-options="languageType for languageType in languageTypes" ng-bind="application.languageType"></div>
 						</div>
 					</div>
-					<div ng-if="(application.storageType=='kafka' && !applicationForm.$visible)||(applicationForm['$data']['storageType']=='kafka' && applicationForm.$visible)" class="form-group">
+					<div  class="form-group">
 						<label class="col-md-3 control-label">编码类型</label>
 						<div class="col-md-6">
-							<div class="form-control-static" editable-select="application.codecType" e-name="codecType" e-form="applicationForm" e-ng-options="codecType for codecType in codecTypes" ng-bind="application.codecType"></div>
+							<div class="form-control-static" editable-select="application.baseCodecType" e-name="baseCodecType" e-form="applicationForm" e-ng-options="codecType for codecType in codecTypes" ng-bind="application.baseCodecType"></div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 control-label">需要压缩？</label>
+						<div class="col-md-6">
+							<div class="form-control-static" ng-bind="application.needCompress" e-form="applicationForm" editable-select="application.needCompress" e-name="needCompress" e-ng-options="ops for ops in needCompressOps"></div>
+						</div>
+					</div>
+					<div ng-show="(application.needCompress && !applicationForm.$visible)||(applicationForm['$data']['needCompress'] && applicationForm.$visible)" class="form-group">
+						<label class="col-md-3 control-label ">压缩类型</label>
+						<div class="col-md-6">
+							<div class="form-control-static" ng-bind="application.compressionType" e-form="applicationForm" editable-select="application.compressionType" e-name="compressionType" e-ng-options="compressionType for compressionType in compressionTypes"></div>
+						</div>
+					</div>
+					<div ng-show="(application.needCompress && application.compressionType=='deflater' && !applicationForm.$visible)||(applicationForm['$data']['needCompress'] && applicationForm['$data']['compressionType']=='deflater' && applicationForm.$visible)" class="form-group">
+						<label class="col-md-3 control-label">压缩程度</label>
+						<div class="col-md-6">
+							<div class="form-control-static" ng-bind="application.compressionLevel" editable-range="application.compressionLevel" e-form="applicationForm" e-name="compressionLevel" e-step="1" e-min="1" e-max="9"></div>
 						</div>
 					</div>
 					<div class="form-group">
@@ -156,41 +172,41 @@
 							</div>
 						</div>
 						<div class="form-group">
-						<label class="col-md-3 control-label">负责人姓名1</label>
-						<div class="col-md-6">
-							<div class="form-control-static" editable-text="application.ownerName1" e-name="ownerName1" e-form="applicationForm" ng-bind="application.ownerName1"></div>
+							<label class="col-md-3 control-label">负责人姓名1</label>
+							<div class="col-md-6">
+								<div class="form-control-static" editable-text="application.ownerName1" e-name="ownerName1" e-form="applicationForm" ng-bind="application.ownerName1"></div>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">负责人邮箱1</label>
-						<div class="col-md-6">
-							<div class="form-control-static" editable-text="application.ownerEmail1" e-name="ownerEmail1" e-form="applicationForm" ng-bind="application.ownerEmail1"></div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">负责人邮箱1</label>
+							<div class="col-md-6">
+								<div class="form-control-static" editable-text="application.ownerEmail1" e-name="ownerEmail1" e-form="applicationForm" ng-bind="application.ownerEmail1"></div>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">负责人手机1</label>
-						<div class="col-md-6">
-							<div class="form-control-static" editable-text="application.ownerPhone1" e-name="ownerPhone1" e-form="applicationForm" ng-bind="application.ownerPhone1"></div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">负责人手机1</label>
+							<div class="col-md-6">
+								<div class="form-control-static" editable-text="application.ownerPhone1" e-name="ownerPhone1" e-form="applicationForm" ng-bind="application.ownerPhone1"></div>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">负责人姓名2</label>
-						<div class="col-md-6">
-							<div class="form-control-static" editable-text="application.ownerName2" e-name="ownerName2" e-form="applicationForm" ng-bind="application.ownerName2"></div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">负责人姓名2</label>
+							<div class="col-md-6">
+								<div class="form-control-static" editable-text="application.ownerName2" e-name="ownerName2" e-form="applicationForm" ng-bind="application.ownerName2"></div>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">负责人邮箱2</label>
-						<div class="col-md-6">
-							<div class="form-control-static" editable-text="application.ownerEmail2" e-name="ownerEmail2" e-form="applicationForm" ng-bind="application.ownerEmail2"></div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">负责人邮箱2</label>
+							<div class="col-md-6">
+								<div class="form-control-static" editable-text="application.ownerEmail2" e-name="ownerEmail2" e-form="applicationForm" ng-bind="application.ownerEmail2"></div>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-3 control-label">负责人手机2</label>
-						<div class="col-md-6">
-							<div class="form-control-static" editable-text="application.ownerPhone2" e-name="ownerPhone2" e-form="applicationForm" ng-bind="application.ownerPhone2"></div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">负责人手机2</label>
+							<div class="col-md-6">
+								<div class="form-control-static" editable-text="application.ownerPhone2" e-name="ownerPhone2" e-form="applicationForm" ng-bind="application.ownerPhone2"></div>
+							</div>
 						</div>
-					</div>
 					</div>
 				</div>
 			</div>
@@ -214,12 +230,12 @@
 				<div class="alert alert-success" style="margin-bottom: 0px;">
 					上线流程要经过几个步骤，反映在审批状态上是：
 					<ul>
-					<li><strong>申请（创建）/ 拒绝 </strong>：默认提交为申请（创建）状态， 拒绝之后按照意见进行修改后，保存提交，状态重新设置为申请（创建）状态。</li>
-					<li><strong>通过（创建） </strong>： 通过申请审核。</li>
-					<li><strong>同步 </strong>： 按照申请创建Topic，并且同步到FWS/UAT至少一个系统，定义为同步状态。</li>
-					<li><strong><span class="label label-danger">申请（上线） / 拒绝（上线）</span></strong>：保证进行到<strong><span class="label label-warning">同步</span></strong>状态之后才可以操作(也就是至少在FWS或者UAT环境发布评估过)， 提交请求将topic同步到线上系统PROD/TOOLS； 上线请求拒绝，请在问题解决后，重新提交请求审核！</li>
-					<li><strong>通过（上线）</strong>： 上线请求通过。</li>
-					<li><strong>上线</strong>： Topic同步到线上完毕！</li>
+						<li><strong>申请（创建）/ 拒绝 </strong>：默认提交为申请（创建）状态， 拒绝之后按照意见进行修改后，保存提交，状态重新设置为申请（创建）状态。</li>
+						<li><strong>通过（创建） </strong>： 通过申请审核。</li>
+						<li><strong>同步 </strong>： 按照申请创建Topic，并且同步到FWS/UAT至少一个系统，定义为同步状态。</li>
+						<li><strong><span class="label label-danger">申请（上线） / 拒绝（上线）</span></strong>：保证进行到<strong><span class="label label-warning">同步</span></strong>状态之后才可以操作(也就是至少在FWS或者UAT环境发布评估过)， 提交请求将topic同步到线上系统PROD/TOOLS； 上线请求拒绝，请在问题解决后，重新提交请求审核！</li>
+						<li><strong>通过（上线）</strong>： 上线请求通过。</li>
+						<li><strong>上线</strong>： Topic同步到线上完毕！</li>
 					</ul>
 				</div>
 			</div>
@@ -251,26 +267,20 @@
 						<label class="col-md-3 control-label">修改意见</label>
 						<div class="col-md-6">
 							<div class="form-control-static">
-							<span ng-if="application.comment.length == 0">N/A</span>
-							<span class="label label-danger" ng-if="application.comment.length > 0">{{application.comment[application.comment.length - 1].comment || 'N/A'}}</span>
-							<button type="button" class="btn btn-primary btn-xs" ng-if="application.comment.length > 0" id="commentHistory">History
-							</button>
-							<popover-x title="comments" context="application" target="#commentHistory" ng-if="application.comment.length && application.comment.length > 0">
-								<ul ng-repeat="c in context.comment track by c.createdTime">	
-									<li>
-										<span class="label label-danger"><span class="badge">comment</span>{{c.comment || 'N/A'}}</span> 
-										<span class="label label-info"><span class="badge">by</span> {{c.author}}</span>
-										<span class="label label-warning"><span class="badge">@</span> {{c.createdTime}}</span>
-									</li> 
+								<span ng-if="application.comment.length == 0">N/A</span> <span class="label label-danger" ng-if="application.comment.length > 0">{{application.comment[application.comment.length - 1].comment || 'N/A'}}</span>
+								<button type="button" class="btn btn-primary btn-xs" ng-if="application.comment.length > 0" id="commentHistory">History</button>
+								<popover-x title="comments" context="application" target="#commentHistory" ng-if="application.comment.length && application.comment.length > 0">
+								<ul ng-repeat="c in context.comment track by c.createdTime">
+									<li><span class="label label-danger"><span class="badge">comment</span>{{c.comment || 'N/A'}}</span> <span class="label label-info"><span class="badge">by</span> {{c.author}}</span> <span class="label label-warning"><span class="badge">@</span> {{c.createdTime}}</span></li>
 								</ul>
-							</popover-x>
+								</popover-x>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		
+
 		<label class="label label-danger">申请上线</label>
 		<div class="panel panel-danger">
 			<div class="panel panel-body">
@@ -279,12 +289,9 @@
 						<label class="col-md-3 control-label">环境</label>
 						<div class="col-md-6">
 							<div class="btn-group" data-toggle="buttons">
-							  <label class="btn btn-primary btn-sm" ng-click="application.onlineEnv='prod'">
-							    <input type="radio" name="options" id="option1" autocomplete="off" value="prod"> Prod
-							  </label>
-							  <label class="btn btn-primary btn-sm" ng-click="application.onlineEnv='tools'">
-							    <input type="radio" name="options" id="option2" autocomplete="off" value="tools"> Tools
-							  </label>
+								<label class="btn btn-primary btn-sm" ng-click="application.onlineEnv='prod'"> <input type="radio" name="options" id="option1" autocomplete="off" value="prod"> Prod
+								</label> <label class="btn btn-primary btn-sm" ng-click="application.onlineEnv='tools'"> <input type="radio" name="options" id="option2" autocomplete="off" value="tools"> Tools
+								</label>
 							</div>
 						</div>
 						<div class="col-md-3">

@@ -4,7 +4,9 @@
 		<div class="panel panel-info row">
 			<div class="panel-heading">
 				<label class="label label-info">基本信息</label>
-				<button class="btn btn-xs btn-success" style="float: right;" aria-hidden="true" ng-click="save_topic()"><span class="glyphicon glyphicon-saved"></span> 提交</button>
+				<button class="btn btn-xs btn-success" style="float: right;" aria-hidden="true" ng-click="save_topic()">
+					<span class="glyphicon glyphicon-saved"></span> 提交
+				</button>
 			</div>
 			<div class="panel-body">
 				<div class="form-horizontal">
@@ -15,11 +17,32 @@
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="inputCodecType" class="col-md-4 control-label">编码类型</label>
-						<div class="col-md-8">
-							<select class="form-control" id="inputCodecType" ng-model="new_topic.codecType" ng-options="codec for codec in codec_types">
+						<label for="inputCodec" class="col-md-4 control-label">编码类型</label>
+						<div class="col-md-4">
+							<select class="form-control" id="inputCodec" ng-model="new_topic.baseCodecType" ng-options="codec for codec in codecTypes">
 							</select>
 						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">消息是否需要压缩？</label>
+						<div class="col-md-8">
+							<label class="radio-inline"> <input type="radio" ng-model="new_topic.needCompress" value=true> 是
+							</label> <label class="radio-inline"> <input type="radio" ng-model="new_topic.needCompress" value=false> 否
+							</label>
+						</div>
+					</div>
+					<div ng-show="new_topic.needCompress=='true'" class="form-group">
+						<label class="col-md-4 control-label">压缩方式</label>
+						<div class="col-md-8">
+							<select class="form-control" ng-model="new_topic.compressionType" ng-options="compressionType for compressionType in compressionTypes"></select>
+						</div>
+					</div>
+					<div ng-show="new_topic.needCompress=='true'&&new_topic.compressionType=='deflater'" class="form-group">
+						<label class="col-md-4 control-label">压缩程度</label>
+						<div class="col-md-7">
+							<slider ng-model="new_topic.compressionLevel" min="1" step="1" max="9" value="new_topic.compressionLevel"></slider>
+						</div>
+						<div class="col-md-1">{{new_topic.compressionLevel}}</div>
 					</div>
 					<div class="form-group">
 						<label for="inputEndpointType" class="col-md-4 control-label">Endpoint 类型</label>
@@ -40,7 +63,9 @@
 		<div class="panel panel-info row">
 			<div class="panel-heading">
 				<label class="label label-info">Kafka 属性</label>
-				<button class="btn btn-xs btn-success" style="float: right;" aria-hidden="true" ng-click="add_property()"><span class="glyphicon glyphicon-plus"></span> 增加属性</button>
+				<button class="btn btn-xs btn-success" style="float: right;" aria-hidden="true" ng-click="add_property()">
+					<span class="glyphicon glyphicon-plus"></span> 增加属性
+				</button>
 			</div>
 			<div class="panel-body">
 				<h2 ng-if="new_topic.properties.length == 0" style="text-align: center;">
@@ -52,7 +77,9 @@
 						</select></td>
 						<td class="col-md-8" style="padding: 5px"><input class="form-control col-md-8" placeholder="Property Value" ng-model="property.value"></td>
 						<td>
-							<button class="btn btn-danger btn-xs" ng-click="delete_property($index)"><span class="glyphicon glyphicon-remove"></span> 删除</button>
+							<button class="btn btn-danger btn-xs" ng-click="delete_property($index)">
+								<span class="glyphicon glyphicon-remove"></span> 删除
+							</button>
 						</td>
 				</table>
 			</div>
@@ -64,7 +91,9 @@
 		<div class="panel panel-info">
 			<div class="panel-heading">
 				<label class="label label-info">Partition 信息</label>
-				<button ng-click="add_partition()" class="btn btn-xs btn-success" style="float: right;"><span class="glyphicon glyphicon-plus"></span> 增加 Partition</button>
+				<button ng-click="add_partition()" class="btn btn-xs btn-success" style="float: right;">
+					<span class="glyphicon glyphicon-plus"></span> 增加 Partition
+				</button>
 			</div>
 			<div class="panel-body" style="margin-bottom: 3px">
 				<table class="table table-condensed table-responsive">
@@ -81,7 +110,9 @@
 							<td style="border: none; width: 5%;"><label style="line-height: 2.2" ng-bind="$index + 1"></label></td>
 							<td style="border: none;"><select ng-model="partition.readDatasource" ng-options="ds for ds in current_datasource_names" class="form-control"></select></td>
 							<td style="border: none;"><select ng-model="partition.writeDatasource" ng-options="ds for ds in current_datasource_names" class="form-control"></select></td>
-							<td style="border: none; line-height: 2.2"><button ng-click="delete_partition($index)" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove"></span> 删除</button></td>
+							<td style="border: none; line-height: 2.2"><button ng-click="delete_partition($index)" class="btn btn-xs btn-danger">
+									<span class="glyphicon glyphicon-remove"></span> 删除
+								</button></td>
 						</tr>
 					</tbody>
 				</table>

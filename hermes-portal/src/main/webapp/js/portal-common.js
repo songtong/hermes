@@ -85,6 +85,37 @@ function strToDivDom(str) {
 	return obj;
 }
 
+function decodeCodec(theObject) {
+	if (theObject.codecType) {
+		var splitComma = theObject.codecType.split(',');
+		theObject.baseCodecType = splitComma[0];
+		if (splitComma.length > 1) {
+			theObject.needCompress = true;
+			var splitLeftBracket = splitComma[1].split('(');
+			theObject.compressionType = splitLeftBracket[0];
+			if (theObject.compressionType == 'deflater') {
+				theObject.compressionLevel = splitLeftBracket[1].split(')')[0];
+			} else {
+				theObject.compressionLevel = 1
+			}
+		} else {
+			theObject.needCompress = false;
+			theObject.compressionType = 'deflater';
+			theObject.compressionLevel = 1;
+		}
+	}
+}
+
+function encodeCodec(theObject) {
+	theObject.codecType = theObject.baseCodecType;
+	if (theObject.needCompress || theObject.needCompress == 'true') {
+		theObject.codecType = theObject.codecType + ',' + theObject.compressionType;
+		if (theObject.compressionType == 'deflater') {
+			theObject.codecType = theObject.codecType + '(' + theObject.compressionLevel + ')';
+		}
+	}
+}
+
 $(function() {
 	show_op_info.init({
 		"selector" : ".op-alert"

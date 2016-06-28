@@ -7,6 +7,7 @@
 <a:layout>
 	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
 	<link href="${model.webapp}/css/font-awesome.min.css" type="text/css" rel="stylesheet">
+	<link href="${model.webapp}/css/bootstrap-slider.min.css" type="text/css" rel="stylesheet">
 	
 	<div class="container fluid" ng-app="application" style="width: 90%;">
 		<div ng-view class="main"></div>
@@ -14,6 +15,8 @@
 	<script type="text/javascript" src="${model.webapp}/js/angular/angular-route.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/bootstrap-slider.min.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/slider.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/global.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/utils.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/lib/user.js"></script>

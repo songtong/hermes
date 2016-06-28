@@ -76,6 +76,10 @@ public class ConsumerConfig implements Initializable {
 
 	private long m_stopConsumerTimeMillisBeforeLeaseExpired = DEFAULT_STOP_CONSUMER_TIME_MILLIS_BEFORE_LEASE_EXPIRED;
 
+	private int m_kafkaPollFailWaitBase = 500;
+
+	private int m_kafkaPollFailWaitMax = 5000;
+
 	public int getLocalCacheSize(String topic) throws IOException {
 		String localCacheSizeStr = m_env.getConsumerConfig(topic).getProperty("consumer.localcache.size");
 
@@ -234,5 +238,21 @@ public class ConsumerConfig implements Initializable {
 	public int getAckCommandMaxSize() {
 		return m_ackCommandMaxSize;
 	}
+
+	public int getKafkaPollFailWaitBase() {
+	   return m_kafkaPollFailWaitBase;
+   }
+
+	public void setKafkaPollFailWaitBase(int kafkaPollFailWaitBase) {
+	   this.m_kafkaPollFailWaitBase = kafkaPollFailWaitBase;
+   }
+
+	public int getKafkaPollFailWaitMax() {
+	   return m_kafkaPollFailWaitMax;
+   }
+
+	public void setKafkaPollFailWaitMax(int kafkaPollFailWaitMax) {
+	   this.m_kafkaPollFailWaitMax = kafkaPollFailWaitMax;
+   }
 
 }

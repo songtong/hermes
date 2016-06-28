@@ -31,13 +31,25 @@
 					<div class="form-group">
 						<label class="col-md-4 control-label" style="padding-top: 0px">编码类型</label>
 						<div class="col-md-8">
-							<span ng-bind="topic.codecType" editable-select="topic.codecType" e-form="topicForm" e-name="codecType" e-ng-options="codec for codec in codec_types"></span>
+							<span ng-bind="topic.baseCodecType" editable-select="topic.baseCodecType" e-form="topicForm" e-name="baseCodecType" e-ng-options="codec for codec in codec_types"></span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label class="col-md-4 control-label " style="padding-top: 0px">存储类型</label>
+						<label class="col-md-4 control-label " style="padding-top: 0px">需要压缩？</label>
 						<div class="col-md-8">
-							<span ng-bind="topic.storageType"></span>
+							<span ng-bind="topic.needCompress" e-form="topicForm" editable-select="topic.needCompress" e-name="needCompress" e-ng-options="ops for ops in needCompressOps"></span>
+						</div>
+					</div>
+					<div ng-show="(topic.needCompress && !topicForm.$visible)||(topicForm['$data']['needCompress'] && topicForm.$visible)" class="form-group">
+						<label class="col-md-4 control-label " style="padding-top: 0px">压缩类型</label>
+						<div class="col-md-8">
+							<span ng-bind="topic.compressionType" e-form="topicForm" editable-select="topic.compressionType" e-name="compressionType" e-ng-options="compressionType for compressionType in compressionTypes"></span>
+						</div>
+					</div>
+					<div ng-show="(topic.needCompress && topic.compressionType=='deflater' && !topicForm.$visible)||(topicForm['$data']['needCompress'] && topicForm['$data']['compressionType']=='deflater' && topicForm.$visible)" class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">压缩程度</label>
+						<div class="col-md-8">
+							<span ng-bind="topic.compressionLevel" editable-range="topic.compressionLevel" e-form="topicForm" e-name="compressionLevel" e-step="1" e-min="1" e-max="9"></span>
 						</div>
 					</div>
 					<div class="form-group">
