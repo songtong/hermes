@@ -11,6 +11,9 @@ application_module.config(function($routeProvider) {
 	}).when('/consumer', {
 		templateUrl : '/jsp/console/application/application-consumer.html',
 		controller : 'app-consumer-controller'
+	}).when('/review/list', {
+		templateUrl : '/jsp/console/application/application-review-list.html',
+		controller : 'app-review-list-controller'
 	}).when('/review/:id', {
 		templateUrl : '/jsp/console/application/application-review.html',
 		controller : 'app-review-controller'

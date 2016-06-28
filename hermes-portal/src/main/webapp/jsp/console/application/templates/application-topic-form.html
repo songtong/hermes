@@ -1,7 +1,12 @@
-
 <form class="form-horizontal">
+	<div ng-if="application.onlineEnv" class="form-group">
+		<label class="col-sm-4 control-label">申请环境</label>
+		<div class="col-sm-6">
+			<input class="form-control" placeholder="Topic Environment" ng-model="application.onlineEnv"></input>
+		</div>
+	</div>
 	<div class="form-group">
-		<label for="inputTopicName" class="col-md-4 control-label">名称11</label>
+		<label for="inputTopicName" class="col-md-4 control-label">名称</label>
 		<div class="col-md-6">
 			<input class="form-control" placeholder="Topic" value="{{application.productLine}}.{{application.entity}}.{{application.event}}" readOnly="readonly">
 		</div>
@@ -57,7 +62,7 @@
 		</div>
 		<div class="col-md-1">{{application.compressionLevel}}</div>
 	</div>
-	
+
 	<div class="form-group">
 		<label class="col-md-4 control-label">消息上限（条/天）</label>
 		<div class="col-md-6">

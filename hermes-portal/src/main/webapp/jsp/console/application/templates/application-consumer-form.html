@@ -1,4 +1,10 @@
 			<form class="form-horizontal" name="consumerApplicationForm" ng-if="application.type==1">
+				<div ng-if="application.onlineEnv" class="form-group">
+					<label class="col-sm-4 control-label">申请环境</label>
+					<div class="col-sm-6">
+						<input class="form-control" placeholder="Topic Environment" ng-model="application.onlineEnv"></input>
+					</div>
+				</div>
 				<div class="form-group">
 					<label class="col-md-4 control-label">Topic名称 </label>
 					<div class="col-md-6">

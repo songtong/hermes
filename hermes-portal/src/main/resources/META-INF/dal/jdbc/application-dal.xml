@@ -2,10 +2,10 @@
 <entities do-package="com.ctrip.hermes.portal.dal.application" gen="true">
 	<entity name="application">
 		<member name="count" value-type="int" select-expr="COUNT(*)" all="false" />
-		<var name="offset" value-type="int"/>
-    	<var name="size" value-type="int"/>
-    	<readsets>
-	    	<readset name="COUNT">
+		<var name="offset" value-type="int" />
+		<var name="size" value-type="int" />
+		<readsets>
+			<readset name="COUNT">
 				<member name="count" />
 			</readset>
 		</readsets>
@@ -18,30 +18,30 @@
 			</query>
 			<query name="find-by-owner-status" type="SELECT" multiple="true">
 				<param name="owner-1" />
-		      	<param name="status" />
+				<param name="status" />
 				<param name="offset" />
 				<param name="size" />
 				<statement><![CDATA[
 				SELECT <FIELDS/>
         		FROM <TABLE/>
-        		WHERE <FIELD name='owner-1'/> = ${owner-1} AND <FIELD name='status'/> = ${status}
+        		WHERE (<FIELD name='owner-1'/> = ${owner-1} OR <FIELD name='owner-2'/> = ${owner-1}) AND <FIELD name='status'/> = ${status}
         		LIMIT ${size} OFFSET ${offset}
         		]]>
 				</statement>
 			</query>
 			<query name="count-by-owner-status" type="SELECT">
 				<param name="owner-1" />
-		      	<param name="status" />
+				<param name="status" />
 				<statement><![CDATA[
 				SELECT <FIELDS/>
         		FROM <TABLE/>
-        		WHERE <FIELD name='owner-1'/> = ${owner-1} AND <FIELD name='status'/> = ${status}]]>
+        		WHERE (<FIELD name='owner-1'/> = ${owner-1} OR <FIELD name='owner-2'/> = ${owner-1}) AND <FIELD name='status'/> = ${status}]]>
 				</statement>
 			</query>
 			<query name="find-by-status" type="SELECT" multiple="true">
 				<param name="status" />
-				<param name="offset"/>
-				<param name="size"/>
+				<param name="offset" />
+				<param name="size" />
 				<statement><![CDATA[
 				SELECT <FIELDS/>
         		FROM <TABLE/>
@@ -51,7 +51,7 @@
 				</statement>
 			</query>
 			<query name="count-by-status" type="SELECT">
-		      	<param name="status" />
+				<param name="status" />
 				<statement><![CDATA[
 				SELECT <FIELDS/>
         		FROM <TABLE/>
