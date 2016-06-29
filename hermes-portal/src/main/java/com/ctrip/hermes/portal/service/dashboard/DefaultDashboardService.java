@@ -496,6 +496,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
                     } 
                     map.put(item.topic(), partitions);
                 }  
+                break;
             } catch (Exception e) {  
                 log.error("Error communicating with Broker {} to find Leader, Reason: ", seed, e);  
             } finally {  
