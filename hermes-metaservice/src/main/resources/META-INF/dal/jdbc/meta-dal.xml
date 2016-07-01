@@ -126,11 +126,11 @@
 				<member name="total" />
 			</readset>
 		</readsets>
-	    <updatesets>
+		<updatesets>
 			<updateset name="NOTIFY_TIME">
-	      		<member name="notify-time"/>
+				<member name="notify-time" />
 			</updateset>
-	    </updatesets>
+		</updatesets>
 		<query-defs>
 			<query name="total-count" type="SELECT" multiple="false">
 				<statement><![CDATA[
@@ -401,6 +401,57 @@
 		FROM <TABLE/>
 		WHERE <FIELD name='name'/> = ${tName} ]]>
 				</statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="producer-monitor-config">
+		<query-defs>
+			<query name="find-by-topic" type="SELECT" multiple="true">
+				<param name="topic" />
+				<statement>
+				<![CDATA[
+					SELECT <FIELDS/>
+        			FROM <TABLE/>
+        			WHERE <FIELD name='topic'/> = ${topic} 
+        		]]></statement>
+			</query>
+			<query name="list" type="SELECT" multiple="true">
+				<statement>
+				<![CDATA[
+					SELECT <FIELDS/>
+        			FROM <TABLE/>
+        		]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="consumer-monitor-config">
+		<query-defs>
+			<query name="find-by-topic" type="SELECT" multiple="true">
+				<param name="topic" />
+				<statement>
+				<![CDATA[
+					SELECT <FIELDS/>
+        			FROM <TABLE/>
+        			WHERE <FIELD name='topic'/> = ${topic} 
+        		]]></statement>
+			</query>
+			<query name="find-by-topic-consumer" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="consumer" />
+				<statement>
+				<![CDATA[
+					SELECT <FIELDS/>
+        			FROM <TABLE/>
+        			WHERE <FIELD name='topic'/> = ${topic} 
+        			AND <FIELD name='consumer'/> = ${consumer} 
+        		]]></statement>
+			</query>
+			<query name="list" type="SELECT" multiple="true">
+				<statement>
+				<![CDATA[
+					SELECT <FIELDS/>
+        			FROM <TABLE/>
+        		]]></statement>
 			</query>
 		</query-defs>
 	</entity>
