@@ -29,8 +29,8 @@ if [[ -e $DATA_DIR ]]; then
 fi
 
 # Distribute list of config files.
-mv $SCRIPT_DIR/../tars/$ENV/datasources.xml $DATA_DIR/datasources.xml
-mv $SCRIPT_DIR/../tars/mail.properties $DATA_DIR/mail.properties
+cp $SCRIPT_DIR/../tars/$ENV/datasources.xml $DATA_DIR/datasources.xml
+cp $SCRIPT_DIR/../tars/mail.properties $DATA_DIR/mail.properties
 
 
 
