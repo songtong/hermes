@@ -345,8 +345,31 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 		}
 		List<Owner> owners = new ArrayList<>();
 		ConsumerGroupView consumer = m_consumerService.findConsumerView(topic, group);
-		if (!addOwner(owners, consumer)) {
+
+		List<Owner> configedOwners = getConfigedOwners(consumer);
+		owners.addAll(configedOwners);
+
+		if (!addOwner(owners, consumer) && configedOwners.size() == 0) {
 			owners.addAll(m_hermesAdmins);
+		}
+		return owners;
+	}
+
+	private List<Owner> getConfigedOwners(ConsumerGroupView consumer) {
+		List<Owner> owners = new ArrayList<>();
+		try {
+			ConsumerMonitorConfig cfg = //
+			m_monitorConfigService.getConsumerMonitorConfig(consumer.getTopicName(), consumer.getName());
+			if (!StringUtils.isBlank(cfg.getAlarmReceivers())) {
+				for (Owner owner : JSON.parseObject(cfg.getAlarmReceivers(), new TypeReference<List<Owner>>() {
+				})) {
+					if (!StringUtils.isBlank(owner.getEmail()) || StringUtils.isBlank(owner.getPhone())) {
+						owners.add(owner);
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.warn("Load configed consumer owner failed: {}", consumer);
 		}
 		return owners;
 	}
