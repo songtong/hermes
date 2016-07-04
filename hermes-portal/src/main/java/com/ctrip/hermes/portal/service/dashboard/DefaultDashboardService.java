@@ -2,24 +2,43 @@ package com.ctrip.hermes.portal.service.dashboard;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import kafka.api.OffsetRequest;
+import kafka.api.PartitionOffsetRequestInfo;
+import kafka.common.OffsetMetadataAndError;
+import kafka.common.TopicAndPartition;
+import kafka.javaapi.OffsetFetchRequest;
+import kafka.javaapi.OffsetFetchResponse;
+import kafka.javaapi.OffsetResponse;
+import kafka.javaapi.PartitionMetadata;
+import kafka.javaapi.TopicMetadata;
+import kafka.javaapi.TopicMetadataRequest;
+import kafka.javaapi.consumer.SimpleConsumer;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.util.EntityUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -61,7 +80,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private static final int CONSUMER_BACKLOG_CALCULATE_THREAD_COUNT = 10;
 
 	private static final int CONSUMER_BACKLOG_CALCULATE_AWAITTIME_MINUTE = 1;
-
+	
 	@Inject
 	private MessageQueueDao m_dao;
 
@@ -70,7 +89,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	@Inject
 	private TopicService m_topicService;
-
+	
 	@Inject
 	private PartitionService m_partitionService;
 
@@ -103,6 +122,8 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private Map<Tpg, String> m_consumerLeases = new HashMap<>();
 
 	private Map<Pair<String, Integer>, String> m_brokerLeases = new HashMap<>();
+	
+	private Map<String, Map<String, Map<String, Long>>> m_topicOffsetLags = new HashMap<String, Map<String, Map<String, Long>>>();
 
 	private ExecutorService m_es = Executors.newFixedThreadPool(CONSUMER_BACKLOG_CALCULATE_THREAD_COUNT);
 
@@ -214,7 +235,51 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			temp_brokerLeases.put(new Pair<String, Integer>(topic, partition), ip);
 		}
 		m_brokerLeases = temp_brokerLeases;
+	}
+	
+	public void updateTopicLags() {
+		List<String> brokers = Arrays.asList(m_env.getGlobalConfig().getProperty("kafka.bootstrap.servers").split(","));
+		int port = Integer.parseInt(m_env.getGlobalConfig().getProperty("kafka.servers.port"));
+		Map<String, Set<String>> topicConsumersIncluded = parseForTopicConsumerSettings(m_env.getGlobalConfig().getProperty("sitemon.kafka.topics"));
 
+		if (topicConsumersIncluded != null) {
+			Map<String, Map<String, Long>> offsetLags = getKafkaTopicsConsumersLags(brokers, port, topicConsumersIncluded);
+			m_topicOffsetLags.put(Storage.KAFKA, offsetLags);
+		}
+		
+		topicConsumersIncluded = parseForTopicConsumerSettings(m_env.getGlobalConfig().getProperty("sitemon.mysql.topics"));
+		
+		if (topicConsumersIncluded != null) {
+			Map<String, Map<String, Long>> offsetLags = new HashMap<String, Map<String, Long>>();
+			for (Map.Entry<String, Set<String>> topicConsumers : topicConsumersIncluded.entrySet()) {
+				offsetLags.put(topicConsumers.getKey(), getDelayForTopicConsumers(topicConsumers.getKey(), topicConsumers.getValue()));
+			}
+			m_topicOffsetLags.put(Storage.MYSQL, offsetLags);
+		}
+	}
+	
+	private Map<String, Set<String>> parseForTopicConsumerSettings(String settings) {
+		Map<String, Set<String>> topicConsumers = new HashMap<String, Set<String>>();
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode jsonSettings;
+		try {
+			jsonSettings = mapper.readTree(settings);
+		} catch (Exception e) {
+			log.error("Failed to parse topic consumer settings in json format: {}", settings);
+			return null;
+		}
+		
+		Iterator<Map.Entry<String, JsonNode>> settingsIter = jsonSettings.getFields();
+		while (settingsIter.hasNext()) {
+			Map.Entry<String, JsonNode> setting = settingsIter.next();
+			ArrayNode consumers = (ArrayNode)setting.getValue();
+			Set<String> consumersSet = new HashSet<String>();
+			for (JsonNode consumer : consumers) {
+				consumersSet.add(consumer.asText());
+			}
+			topicConsumers.put(setting.getKey(), consumersSet);
+		}
+		return topicConsumers;
 	}
 
 	private void updateLatestBroker() {
@@ -276,6 +341,24 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		});
 		cachedConsumerBacklogs.put(new Pair<String, String>(topic, consumer), consumerDelays);
 		return consumerDelays;
+	}
+	
+	public Map<String, Long> getDelayForTopicConsumers(String topic, Set<String> consumersIncluded) {
+		Map<String, Long> consumerLags = new HashMap<String, Long>();
+		Topic topicEntity = m_topicService.findTopicEntityByName(topic);
+		for (ConsumerGroup consumerGroup : topicEntity.getConsumerGroups()) {
+			if (!consumersIncluded.contains("*") && !consumersIncluded.contains(consumerGroup.getName())) {
+				continue;
+			}
+			
+			long sum = 0;
+			List<DelayDetail> delays = getDelayDetailForConsumer(topic, consumerGroup.getName());
+			for (DelayDetail delay : delays) {
+				sum += delay.getNonPriorityDelay() + delay.getPriorityDelay() + delay.getResendDelay();
+			}
+			consumerLags.put(consumerGroup.getName(), sum);
+		}
+		return consumerLags;
 	}
 
 	private void updateLatestProduced() {
@@ -370,7 +453,154 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		set.addAll(m_producer2topics.keySet());
 		m_latestClients = set;
 	}
-
+	
+	public Map<String, Map<String, Map<String, Long>>> getTopicOffsetLags() {
+		return m_topicOffsetLags;
+	}
+	
+	public Map<String, Map<String, Long>> getKafkaTopicsConsumersLags(List<String> brokers, int port, Map<String, Set<String>> topicConsumersIncluded) {
+		Map<String, Map<String, Long>> topicsOffsets = new HashMap<String, Map<String, Long>>();
+		
+		List<String> topics = new ArrayList<String>(topicConsumersIncluded.keySet());
+		Map<String, Map<Integer, Long>> topicsPartitionsOffsets = getKafkaTopicsOffsets(brokers, port, topics);
+		for (Map.Entry<String, Map<Integer, Long>> topicPartitionsOffsets : topicsPartitionsOffsets.entrySet()) {
+			List<TopicAndPartition> tps = new ArrayList<TopicAndPartition>();
+			for (Map.Entry<Integer, Long> offset : topicPartitionsOffsets.getValue().entrySet()) {
+				tps.add(new TopicAndPartition(topicPartitionsOffsets.getKey(), offset.getKey()));
+			}
+			
+			Topic topic = m_topicService.findTopicEntityByName(topicPartitionsOffsets.getKey());
+			
+			Map<String, Long> consumerGroupLags = new HashMap<String, Long>();
+			for (ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
+				Set<String> consumersIncluded = topicConsumersIncluded.get(topic.getName());
+				if (!consumersIncluded.contains("*") && !consumersIncluded.contains(consumerGroup.getName())) {
+					continue;
+				}
+				
+				Map<String, Map<Integer, Long>> consumerOffsetsOnTopics = getConsumerOffsets(brokers, port, tps, "consumerOffsetLookup", consumerGroup.getName());
+				Map<Integer, Long> consumerOffsets = consumerOffsetsOnTopics.get(topicPartitionsOffsets.getKey());
+				if (consumerOffsets == null) {
+					continue;
+				}
+				long lag = 0;
+				for (Map.Entry<Integer, Long> partitionOffset : topicPartitionsOffsets.getValue().entrySet()) {
+					if (consumerOffsets.containsKey(partitionOffset.getKey())) {
+						lag += partitionOffset.getValue() - consumerOffsets.get(partitionOffset.getKey());
+					}
+				}
+				consumerGroupLags.put(consumerGroup.getName(), lag);
+			}
+			topicsOffsets.put(topicPartitionsOffsets.getKey(), consumerGroupLags);
+		}
+		return topicsOffsets;
+	}
+	
+	private Map<String, Map<Integer, Long>> getKafkaTopicsOffsets(List<String> brokers, int port, List<String> topics) {	
+		Map<String, Map<Integer, Long>> topicsPartitionsOffsets = new HashMap<String, Map<Integer, Long>>();
+		Map<String, TreeMap<Integer,PartitionMetadata>> metadatas = findLeader(brokers, port, topics);  
+        	
+		for (Entry<String, TreeMap<Integer, PartitionMetadata>> metadata : metadatas.entrySet()) {
+			Map<Integer, Long> partition2Offsets = new HashMap<Integer, Long>();
+	        for (Entry<Integer,PartitionMetadata> entry : metadata.getValue().entrySet()) {  
+	            int partition = entry.getKey();  
+	            String leadBroker = entry.getValue().leader().host(); 
+	            String clientName = "Client_" + metadata.getKey();  
+	            SimpleConsumer consumer = new SimpleConsumer(leadBroker, port, 100000, 64 * 1024, clientName);  
+	            long readOffset = getLastOffset(consumer, metadata.getKey(), partition,  
+	                    kafka.api.OffsetRequest.LatestTime(), clientName); 
+	            
+	            partition2Offsets.put(partition, readOffset);
+	            if (consumer != null) {
+	            	consumer.close();  
+	            }
+	        } 
+	        
+	        topicsPartitionsOffsets.put(metadata.getKey(), partition2Offsets);
+		}
+		
+		return topicsPartitionsOffsets; 
+	}
+	
+	private Map<String, Map<Integer, Long>> getConsumerOffsets(List<String> brokers, int port, List<TopicAndPartition> topicAndPartitions, String clientName, String groupId) {
+		Map<String, Map<Integer, Long>> topicsPartitionsOffsets = new HashMap<String, Map<Integer, Long>>();
+		for (String broker : brokers) {
+            SimpleConsumer consumer = new SimpleConsumer(broker, port, 100000, 1024 * 1024, clientName); 
+            OffsetFetchRequest request = new OffsetFetchRequest(groupId, topicAndPartitions, OffsetRequest.CurrentVersion(), 1, clientName);
+            OffsetFetchResponse response = consumer.fetchOffsets(request);
+            Map<TopicAndPartition, OffsetMetadataAndError> offsets = response.offsets();
+            for (Map.Entry<TopicAndPartition, OffsetMetadataAndError> offset : offsets.entrySet()) {
+            	if (offset.getValue().error() == 0) {
+            		if (!topicsPartitionsOffsets.containsKey(offset.getKey().topic())) {
+            			topicsPartitionsOffsets.put(offset.getKey().topic(), new HashMap<Integer, Long>());
+            		}
+            		topicsPartitionsOffsets.get(offset.getKey().topic()).put(offset.getKey().partition(), offset.getValue().offset());
+            	}
+            }
+            
+            if (consumer != null) {
+            	consumer.close();
+            }
+		}
+		return topicsPartitionsOffsets;
+	}
+	
+	private long getLastOffset(SimpleConsumer consumer, String topic,  
+            int partition, long whichTime, String clientName) {  
+        TopicAndPartition topicAndPartition = new TopicAndPartition(topic,  
+                partition);  
+        Map<TopicAndPartition, PartitionOffsetRequestInfo> requestInfo = new HashMap<TopicAndPartition, PartitionOffsetRequestInfo>();  
+        requestInfo.put(topicAndPartition, new PartitionOffsetRequestInfo(  
+                whichTime, 1));  
+        kafka.javaapi.OffsetRequest request = new kafka.javaapi.OffsetRequest(  
+                requestInfo, kafka.api.OffsetRequest.CurrentVersion(),  
+                clientName);  
+        OffsetResponse response = consumer.getOffsetsBefore(request);  
+  
+        if (response.hasError()) {  
+            log.error("Error fetching data Offset Data the Broker. Reason: {}", response.errorCode(topic, partition));  
+            return 0;  
+        }  
+        
+        long[] offsets = response.offsets(topic, partition);  
+        return offsets[0];  
+    }  
+	
+	private Map<String, TreeMap<Integer,PartitionMetadata>> findLeader(List<String> seedBrokers,  
+            int port, List<String> topics) { 
+		
+        Map<String, TreeMap<Integer, PartitionMetadata>> map = new HashMap<String, TreeMap<Integer, PartitionMetadata>>();  
+        for (String seed : seedBrokers) {  
+            SimpleConsumer consumer = null;  
+            try {  
+                consumer = new SimpleConsumer(seed, port, 100000, 2 * 1024 * 1024,  
+                        "leaderLookup");  
+                TopicMetadataRequest req = new TopicMetadataRequest(topics);  
+                kafka.javaapi.TopicMetadataResponse resp = consumer.send(req);  
+  
+                List<TopicMetadata> metaData = resp.topicsMetadata(); 
+          
+                for (TopicMetadata item : metaData) {  
+                	TreeMap<Integer, PartitionMetadata> partitions = new TreeMap<Integer, PartitionMetadata>();
+                    for (PartitionMetadata part : item.partitionsMetadata()) {  
+                    	partitions.put(part.partitionId(), part);  
+                    } 
+                    map.put(item.topic(), partitions);
+                }
+                
+                break;
+            } catch (Exception e) {  
+                log.error("Error communicating with Broker {} to find Leader, Reason: ", seed, e);  
+            } finally {  
+                if (consumer != null) {
+                    consumer.close();  
+                }
+            }
+        } 
+        
+        return map;  
+    }  
+  
 	@Override
 	public void initialize() throws InitializationException {
 		updateLatestBroker();
@@ -401,6 +631,19 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				      }
 			      }
 		      }, 0, 30, TimeUnit.MINUTES);
+		
+		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_KAFKA_OFFSET_TASK", true))
+	      .scheduleWithFixedDelay(new Runnable() {
+		      @Override
+		      public void run() {
+			      try {
+			    	  updateTopicLags();
+			      } catch (Throwable e) {
+				      log.error("Update elastic monitor information failed.", e);
+			      }
+		      }
+	      }, 0, 5, TimeUnit.MINUTES);
+		
 	}
 
 	@Override
