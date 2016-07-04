@@ -29,14 +29,7 @@ if [[ -e $DATA_DIR ]]; then
 fi
 
 # Replace web.xml
-cp $SCRIPT_DIR/../tars/web.xml $SCRIPT_DIR/../web.xml
-
-# Replace parameters into web.xml
-. $SCRIPT_DIR/../tars/$ENV/sso.properties
-sed -i "s/credisServiceUrl/$credisServiceUrl/g" $SCRIPT_DIR/../web.xml
-sed -i "s/casServerLoginUrl/$casServerLoginUrl/g" $SCRIPT_DIR/../web.xml
-sed -i "s/casServerUrlPrefix/$casServerUrlPrefix/g" $SCRIPT_DIR/../web.xml
-sed -i "s/serverName/$serverName/g" $SCRIPT_DIR/../web.xml
+cp $SCRIPT_DIR/../tars/$ENV/web.xml $SCRIPT_DIR/../web.xml
 
 # Replace hermes.properties file.
 cp $SCRIPT_DIR/../tars/$ENV/hermes.properties $SCRIPT_DIR/../classes/
