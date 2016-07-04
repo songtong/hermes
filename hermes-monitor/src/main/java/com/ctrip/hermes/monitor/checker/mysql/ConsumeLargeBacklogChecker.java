@@ -401,17 +401,21 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 	}
 
 	private String cleanPhoneNumber(String phone) {
-		java.util.regex.Matcher matcher = PHONE_PATTERN.matcher(phone);
-		if (matcher.find()) {
-			return matcher.group();
+		if (!StringUtils.isBlank(phone)) {
+			java.util.regex.Matcher matcher = PHONE_PATTERN.matcher(phone);
+			if (matcher.find()) {
+				return matcher.group();
+			}
 		}
 		return null;
 	}
 
 	private String cleanEmailAddress(String email) {
-		java.util.regex.Matcher matcher = EMAIL_PATTERN.matcher(email);
-		if (matcher.find()) {
-			return matcher.group();
+		if (!StringUtils.isBlank(email)) {
+			java.util.regex.Matcher matcher = EMAIL_PATTERN.matcher(email);
+			if (matcher.find()) {
+				return matcher.group();
+			}
 		}
 		return null;
 	}
