@@ -12,6 +12,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -34,6 +36,7 @@ import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
 import com.ctrip.hermes.metaservice.service.notify.NoticeContent;
+import com.ctrip.hermes.metaservice.service.notify.NoticeType;
 import com.ctrip.hermes.metaservice.service.notify.NotifyService;
 import com.ctrip.hermes.metaservice.service.notify.SmsNoticeContent;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
@@ -49,7 +52,7 @@ import io.netty.util.internal.ConcurrentSet;
 import scala.collection.mutable.StringBuilder;
 
 @Component(value = ConsumeLargeBacklogChecker.ID)
-public class ConsumeLargeBacklogChecker extends DBBasedChecker {
+public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initializable {
 
 	private static final Logger log = LoggerFactory.getLogger(ConsumeLargeBacklogChecker.class);
 
@@ -73,6 +76,8 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 	private MonitorConfigService m_monitorConfigService = PlexusComponentLocator.lookup(MonitorConfigService.class);
 
 	private static List<Owner> m_hermesAdmins;
+
+	private static Owner m_rdHermes = new Owner("", "Rdkjmes@Ctrip.com");
 
 	static {
 		m_hermesAdmins = new ArrayList<>();
@@ -352,6 +357,8 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 		if (!addOwner(owners, consumer) && configedOwners.size() == 0) {
 			owners.addAll(m_hermesAdmins);
 		}
+
+		owners.add(m_rdHermes);
 		return owners;
 	}
 
@@ -407,5 +414,10 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 			return matcher.group();
 		}
 		return null;
+	}
+
+	@Override
+	public void initialize() throws InitializationException {
+		m_notifyService.setThrottle(m_rdHermes.getEmail(), NoticeType.EMAIL, 1000, 600000);
 	}
 }

@@ -11,11 +11,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.env.ClientEnvironment;
@@ -29,10 +31,12 @@ import com.ctriposs.baiji.rpc.client.ServiceClientBase;
 import com.ctriposs.baiji.rpc.client.ServiceClientConfig;
 
 @Named(type = NotifyHandler.class, value = SmsNotifyHandler.ID)
-public class SmsNotifyHandler extends AbstractNotifyHandler {
+public class SmsNotifyHandler extends AbstractNotifyHandler implements Initializable {
 	private static final Logger log = LoggerFactory.getLogger(SmsNotifyHandler.class);
 
-	private static final int DEFAULT_NOTIFY_INTERVAL = 30;
+	private static final long DFT_SMS_LIMIT = 1;
+
+	private static final long DFT_SMS_INTERVAL = 1800000;
 
 	private static final int DEFAULT_SMS_THREAD_COUNT = 1;
 
@@ -132,13 +136,7 @@ public class SmsNotifyHandler extends AbstractNotifyHandler {
 	}
 
 	@Override
-	protected int getNotifyIntervalMinute() {
-		return DEFAULT_NOTIFY_INTERVAL;
-	}
-
-	@Override
 	public void initialize() throws InitializationException {
-		super.initialize();
 		m_msgCode = Integer.valueOf(m_env.getGlobalConfig().getProperty("notify.handler.sms.msg.code",
 		      String.valueOf(DEFAULT_SMS_MESSAGE_CODE)));
 		ServiceClientConfig config = new ServiceClientConfig();
@@ -164,5 +162,10 @@ public class SmsNotifyHandler extends AbstractNotifyHandler {
 		default:
 			return TEST_FX_CFG_URL;
 		}
+	}
+
+	@Override
+	protected Pair<Long, Long> getThrottleLimit() {
+		return new Pair<Long, Long>(DFT_SMS_LIMIT, DFT_SMS_INTERVAL);
 	}
 }

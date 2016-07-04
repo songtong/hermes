@@ -18,12 +18,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.helper.Files.IO;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.env.ClientEnvironment;
@@ -33,12 +35,14 @@ import com.ctrip.hermes.metaservice.service.notify.ShortNoticeContent;
 import com.google.common.base.Charsets;
 
 @Named(type = NotifyHandler.class, value = TtsNotifyHandler.ID)
-public class TtsNotifyHandler extends AbstractNotifyHandler {
+public class TtsNotifyHandler extends AbstractNotifyHandler implements Initializable {
 	private static final Logger log = LoggerFactory.getLogger(TtsNotifyHandler.class);
 
-	private static final String TTS_PDID = "1006";
+	private static final long DFT_TTS_LIMIT = 1;
 
-	private static final int DEFAULT_TTS_INTERVAL = 60;
+	private static final long DFT_TTS_INTERVAL = 3600000;
+
+	private static final String TTS_PDID = "1006";
 
 	private static final int TTS_SEND_TIMEOUT_MILLIS = 30000;
 
@@ -182,13 +186,12 @@ public class TtsNotifyHandler extends AbstractNotifyHandler {
 	}
 
 	@Override
-	protected int getNotifyIntervalMinute() {
-		return DEFAULT_TTS_INTERVAL;
+	public void initialize() throws InitializationException {
+		m_ttsUrl = m_env.getGlobalConfig().getProperty("notify.handler.tts.url", DEFAULT_TTS_URL);
 	}
 
 	@Override
-	public void initialize() throws InitializationException {
-		super.initialize();
-		m_ttsUrl = m_env.getGlobalConfig().getProperty("notify.handler.tts.url", DEFAULT_TTS_URL);
+	protected Pair<Long, Long> getThrottleLimit() {
+		return new Pair<Long, Long>(DFT_TTS_LIMIT, DFT_TTS_INTERVAL);
 	}
 }

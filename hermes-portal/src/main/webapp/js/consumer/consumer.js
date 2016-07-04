@@ -55,6 +55,14 @@ consumer_module.run(function(editableOptions) {
 		}
 	});
 
+	function post_get_consumer_configs(config_result) {
+		scope.currentConsumerMonitorConfig = config_result;
+		scope.currentConsumerMonitorReceivers = [];
+		if (scope.currentConsumerMonitorConfig.alarmReceivers != undefined && scope.currentConsumerMonitorConfig.alarmReceivers.length > 0) {
+			scope.currentConsumerMonitorReceivers = $.parseJSON(scope.currentConsumerMonitorConfig.alarmReceivers);
+		}
+	}
+
 	consumer_resource.query().$promise.then(function(result) {
 		scope.consumers = result;
 		scope.$broadcast('initialized');
@@ -67,8 +75,7 @@ consumer_module.run(function(editableOptions) {
 				topic : $routeParams['topic'],
 				consumer : $routeParams['consumer']
 			}).$promise.then(function(config_result) {
-				scope.currentConsumerMonitorConfig = config_result;
-				scope.currentConsumerMonitorReceivers = $.parseJSON(scope.currentConsumerMonitorConfig.alarmReceivers);
+				post_get_consumer_configs(config_result);
 			});
 		}
 	});
@@ -227,9 +234,16 @@ consumer_module.run(function(editableOptions) {
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
+					cleanedReceivers = [];
 					data.topic = topic;
 					data.consumer = consumer;
-					data.alarmReceivers = angular.toJson(receivers);
+					for (var idx = 0; idx < receivers.length; idx++) {
+						var receiver = receivers[idx];
+						if (receiver['email'].trim().length > 0 || receiver['phone'].trim().length > 0) {
+							cleanedReceivers.push(receiver);
+						}
+					}
+					data.alarmReceivers = angular.toJson(cleanedReceivers);
 					consumer_monitor_config_resource.set_consumer_monitor_config({
 						topic : topic,
 						consumer : consumer,
@@ -245,7 +259,7 @@ consumer_module.run(function(editableOptions) {
 						topic : topic,
 						consumer : consumer
 					}, function(query_result) {
-						scope.currentConsumerMonitorConfig = query_result;
+						post_get_consumer_configs(query_result);
 					});
 				}
 			}
