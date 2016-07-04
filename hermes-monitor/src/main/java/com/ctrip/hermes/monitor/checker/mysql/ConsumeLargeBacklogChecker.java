@@ -355,6 +355,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		owners.addAll(configedOwners);
 
 		if (!addOwner(owners, consumer) && configedOwners.size() == 0) {
+			log.warn("Can not found owner for consumer: {}[{}], please config it.", topic, group);
 			owners.addAll(m_hermesAdmins);
 		}
 
@@ -367,7 +368,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		try {
 			ConsumerMonitorConfig cfg = //
 			m_monitorConfigService.getConsumerMonitorConfig(consumer.getTopicName(), consumer.getName());
-			if (!StringUtils.isBlank(cfg.getAlarmReceivers())) {
+			if (cfg != null && !StringUtils.isBlank(cfg.getAlarmReceivers())) {
 				for (Owner owner : JSON.parseObject(cfg.getAlarmReceivers(), new TypeReference<List<Owner>>() {
 				})) {
 					if (!StringUtils.isBlank(owner.getEmail()) || StringUtils.isBlank(owner.getPhone())) {
