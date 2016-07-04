@@ -11,9 +11,10 @@
 </div>
 <div ng-if="topic.storageType=='mysql'">
 	<div class="row" style="height: 40%">
-		<div class="col-md-12" >
+		<div class="col-md-12">
 			<div class="panel panel-success">
-				<div class="panel-heading">生产速度
+				<div class="panel-heading">
+					生产速度
 					<!-- <a href="#top/produce/{{current_topic}}" class="btn btn-xs btn-success" style="text-align: center;"> <span class="glyphicon glyphicon-th-list"></span> 生产速度排行
 					</a> <a href="#top/consume/{{current_topic}}" class="btn btn-xs btn-warning" style="text-align: center;"> <span class="glyphicon glyphicon-th-list"></span> 消费速度排行
 					</a> <a href="#top/process/{{current_topic}}" class="btn btn-xs btn-primary" style="text-align: center;"> <span class="glyphicon glyphicon-time"></span> 消费耗时排行
@@ -53,11 +54,14 @@
 									<tr>
 										<th>Partition ID</th>
 										<th>最新优先消息ID</th>
-										<th>消费至/积压</th>
+										<th>消费至/积压(<span class="text-danger">{{consumer_delay.totalPriorityDelay}}</span>)
+										</th>
 										<th>最新非优先消息ID</th>
-										<th>消费至/积压</th>
+										<th>消费至/积压(<span class="text-danger">{{consumer_delay.totalNonPriorityDelay}}</span>)
+										</th>
 										<th>最新重发消息</th>
-										<th>消费至/积压</th>
+										<th>消费至/积压(<span class="text-danger">{{consumer_delay.totalResendDelay}}</span>)
+										</th>
 										<th>Consumer Ip</th>
 										<th>Broker Ip</th>
 									</tr>
@@ -66,11 +70,11 @@
 									<tr ng-click="" ng-repeat="delaydetail in consumer_delay">
 										<td><span ng-bind="delaydetail.partitionId"></span></td>
 										<td><span ng-bind="delaydetail.priorityMsgId"></span></td>
-										<td><span>{{delaydetail.priorityMsgOffset || '-'}} / {{delaydetail.priorityDelay || '-'}}</span></td>
+										<td><span>{{delaydetail.priorityMsgOffset || '-'}} / <span class="text-danger"><strong>{{delaydetail.priorityDelay || '-'}}</strong></span></span></td>
 										<td><span>{{delaydetail.nonPriorityMsgId}}</span></td>
-										<td><span>{{delaydetail.nonPriorityMsgOffset || '-'}} / {{delaydetail.nonPriorityDelay || '-'}}</span></td>
+										<td><span>{{delaydetail.nonPriorityMsgOffset || '-'}} / <span class="text-danger"><strong>{{delaydetail.nonPriorityDelay || '-'}}</strong></span></span></td>
 										<td><span>{{delaydetail.maxResendId}}</span></td>
-										<td><span>{{delaydetail.resendOffset || '-'}} / {{delaydetail.resendDelay || '-'}}</span></td>
+										<td><span>{{delaydetail.resendOffset || '-'}} / <span class="text-danger"><strong>{{delaydetail.resendDelay || '-'}}</strong></span></span></td>
 										<td><span ng-bind="delaydetail.currentConsumerIp"></span></td>
 										<td><span ng-bind="delaydetail.currentBrokerIp"></span></td>
 									</tr>
