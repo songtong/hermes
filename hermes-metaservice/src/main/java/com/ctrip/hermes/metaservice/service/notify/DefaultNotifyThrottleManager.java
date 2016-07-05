@@ -37,6 +37,7 @@ public class DefaultNotifyThrottleManager implements NotifyThrottleManager, Init
 
 	@Override
 	public synchronized NotifyThrottle createThrottle(String key, long limit, long intervalMillis, int segmentCount) {
+		log.info("Creating throttle: {} {} {}.", key, limit, intervalMillis);
 		if (!m_throttles.containsKey(key)) {
 			DefaultNotifyThrottle throttle = new DefaultNotifyThrottle(limit, intervalMillis, segmentCount);
 			m_throttles.put(key, throttle);

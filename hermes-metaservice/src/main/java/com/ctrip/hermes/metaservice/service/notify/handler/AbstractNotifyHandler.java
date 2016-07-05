@@ -41,6 +41,7 @@ public abstract class AbstractNotifyHandler implements NotifyHandler {
 	protected NotifyThrottle getThrottle(String receiver) {
 		NotifyThrottle throttle = m_throttles.get(receiver);
 		if (throttle == null) {
+			log.info("Throttle {} is not exist, create a default one.", receiver);
 			Pair<Long, Long> throttleLimit = getThrottleLimit();
 			throttle = setThrottle(receiver, throttleLimit.getKey(), throttleLimit.getValue());
 		}

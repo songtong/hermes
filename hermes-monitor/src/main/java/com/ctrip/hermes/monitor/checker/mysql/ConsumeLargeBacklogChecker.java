@@ -12,10 +12,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 
@@ -52,7 +51,7 @@ import io.netty.util.internal.ConcurrentSet;
 import scala.collection.mutable.StringBuilder;
 
 @Component(value = ConsumeLargeBacklogChecker.ID)
-public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initializable {
+public class ConsumeLargeBacklogChecker extends DBBasedChecker implements InitializingBean {
 
 	private static final Logger log = LoggerFactory.getLogger(ConsumeLargeBacklogChecker.class);
 
@@ -422,7 +421,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 	}
 
 	@Override
-	public void initialize() throws InitializationException {
+	public void afterPropertiesSet() throws Exception {
 		m_notifyService.setThrottle(m_rdHermes.getEmail(), NoticeType.EMAIL, 1000, 600000);
 	}
 }
