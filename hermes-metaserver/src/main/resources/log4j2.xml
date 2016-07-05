@@ -37,7 +37,7 @@
 			<DefaultRolloverStrategy>
 				<Delete basePath="${baseDir}" maxDepth="2">
 					<IfFileName glob="*/hermes-metaserver-trace.*.log.gz" />
-					<IfLastModified age="30d" />
+					<IfLastModified age="5d" />
 				</Delete>
 			</DefaultRolloverStrategy>
 		</RollingFile>
