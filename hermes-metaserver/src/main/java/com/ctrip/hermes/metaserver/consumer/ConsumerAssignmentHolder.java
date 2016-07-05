@@ -15,6 +15,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
@@ -22,6 +23,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
+import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
 /**
@@ -32,6 +34,8 @@ import com.ctrip.hermes.metaserver.meta.MetaHolder;
 public class ConsumerAssignmentHolder implements Initializable {
 
 	private static final Logger log = LoggerFactory.getLogger(ConsumerAssignmentHolder.class);
+
+	private static final Logger traceLog = LoggerFactory.getLogger(LoggerConstants.TRACE);
 
 	@Inject
 	private MetaServerConfig m_config;
@@ -106,18 +110,10 @@ public class ConsumerAssignmentHolder implements Initializable {
 
 				m_assignments.set(newAssignments);
 
-				if (log.isDebugEnabled()) {
-					StringBuilder sb = new StringBuilder();
-
-					sb.append("[");
-					for (Map.Entry<Pair<String, String>, Assignment<Integer>> entry : newAssignments.entrySet()) {
-						sb.append("TopicGroup=").append(entry.getKey()).append(",");
-						sb.append("assignment=").append(entry.getValue());
-					}
-					sb.append("]");
-
-					log.debug("Consumer assignment changed.(new assignment={})", sb.toString());
+				if (traceLog.isInfoEnabled()) {
+					traceLog.info("Consumer assignment changed.\n{}", JSON.toJSONString(newAssignments));
 				}
+
 			}
 		} catch (Exception e) {
 			log.warn("Error occurred while doing assignment check in ConsumerRebalanceChecker", e);

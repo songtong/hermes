@@ -80,7 +80,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 	      List<String> topics) throws InterruptedException {
 		if (topics != null && !topics.isEmpty()) {
 			ListeningExecutorService leaseLoadingThreadPool = MoreExecutors.listeningDecorator(Executors
-			      .newFixedThreadPool(5, HermesThreadFactory.create("BrokerLeaseHolder-Init-Temp", true)));
+			      .newFixedThreadPool(5, HermesThreadFactory.create("ConsumerLeaseHolder-Init-Temp", true)));
 
 			final List<Throwable> innerThrowables = new LinkedList<>();
 			final Object syncObj = new Object();
@@ -175,5 +175,10 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 
 	public synchronized void removeWatchedTopic(String topic) {
 		m_watchedTopics.remove(topic);
+	}
+
+	@Override
+	protected String getName() {
+		return "ConsumerLeaseHolder";
 	}
 }

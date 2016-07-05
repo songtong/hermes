@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Configuration>
+	<Properties>
+		<Property name="baseDir">/opt/logs/hermes-broker</Property>
+	</Properties>
 	<Appenders>
 		<Async name="ASYNC">
 			<AppenderRef ref="FILE" />
@@ -9,25 +12,38 @@
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 		</Console>
 
-		<RollingFile name="FILE" fileName="/opt/logs/hermes-broker/hermes-broker.log" filePattern="/opt/logs/hermes-broker/$${date:yyyy-MM}/hermes-broker.%d{yyyy-MM-dd}-%i.log.gz">
+		<RollingFile name="FILE" fileName="${baseDir}/hermes-broker.log" filePattern="${baseDir}/$${date:yyyy-MM}/hermes-broker.%d{yyyy-MM-dd}-%i.log.gz">
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
 				<TimeBasedTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
+			<DefaultRolloverStrategy>
+				<Delete basePath="${baseDir}" maxDepth="2">
+					<IfFileName glob="*/hermes-broker.*.log.gz" />
+					<IfLastModified age="30d" />
+				</Delete>
+			</DefaultRolloverStrategy>
 		</RollingFile>
 
-		<RollingFile name="SKIPPED" fileName="/opt/logs/hermes-broker/hermes-skipped-msgs.log" filePattern="/opt/logs/hermes-broker/$${date:yyyy-MM}/hermes-skipped-msgs.%d{yyyy-MM-dd}-%i.log.gz">
+		<RollingFile name="SKIPPED" fileName="${baseDir}/hermes-skipped-msgs.log"
+			filePattern="${baseDir}/$${date:yyyy-MM}/hermes-skipped-msgs.%d{yyyy-MM-dd}-%i.log.gz">
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
 				<TimeBasedTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="500 MB" />
 			</Policies>
+			<DefaultRolloverStrategy>
+				<Delete basePath="${baseDir}" maxDepth="2">
+					<IfFileName glob="*/hermes-skipped-msgs.*.log.gz" />
+					<IfLastModified age="30d" />
+				</Delete>
+			</DefaultRolloverStrategy>
 		</RollingFile>
 
-		<RollingFile name="BIZ" fileName="/opt/logs/hermes-broker/biz.log" filePattern="/opt/logs/hermes-broker/biz-%i.log.gz">
+		<RollingFile name="BIZ" fileName="${baseDir}/biz.log" filePattern="${baseDir}/biz-%i.log.gz">
 			<PatternLayout pattern="%m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
@@ -54,7 +70,8 @@
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler" level="ERROR" additivity="false">
+		<Logger name="com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler" level="ERROR"
+			additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 		<Logger name="org.apache.kafka.common.utils.AppInfoParser" level="ERROR" additivity="false">
