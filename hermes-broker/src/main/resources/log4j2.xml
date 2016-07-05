@@ -8,6 +8,10 @@
 			<AppenderRef ref="FILE" />
 			<!-- <AppenderRef ref="CONSOLE" /> -->
 		</Async>
+		<Async name="ASYNC_BIZ">
+			<AppenderRef ref="BIZ" />
+			<!-- <AppenderRef ref="CONSOLE" /> -->
+		</Async>
 		<Console name="CONSOLE" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 		</Console>
@@ -55,7 +59,7 @@
 
 	<Loggers>
 		<Logger name="biz" level="INFO" additivity="false">
-			<Appender-ref ref="BIZ" />
+			<Appender-ref ref="ASYNC_BIZ" />
 		</Logger>
 
 		<Logger name="com.mchange.v2" level="INFO" additivity="false">
