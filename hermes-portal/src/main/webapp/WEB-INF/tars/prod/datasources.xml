@@ -9,8 +9,7 @@
 			<driver>com.mysql.jdbc.Driver</driver>
 			<url><![CDATA[jdbc:mysql://FxHermesMeta.mysql.db.ctripcorp.com:55944/fxhermesmetadb]]></url>
 			<user>uapp_hermeta</user>
-			<password>~{c39a9c04f40ab4461abeb6dc863ed4f43454c6c6ac50930fe1e9609090144cf49a6ef}
-			</password>
+			<password>~{c39a9c04f40ab4461abeb6dc863ed4f43454c6c6ac50930fe1e9609090144cf49a6ef}</password>
 			<connectionProperties><![CDATA[useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true]]></connectionProperties>
 		</properties>
 	</data-source>
