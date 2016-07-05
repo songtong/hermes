@@ -19,6 +19,7 @@ import com.ctrip.hermes.metaservice.dal.CachedServerDao;
 import com.ctrip.hermes.metaservice.dal.CachedStorageDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.monitor.dao.DefaultMonitorEventStorage;
+import com.ctrip.hermes.metaservice.monitor.service.DefaultMonitorConfigService;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueDatasourceProvider;
 import com.ctrip.hermes.metaservice.queue.ds.MessageQueueTableProvider;
 import com.ctrip.hermes.metaservice.service.AppService;
@@ -44,6 +45,7 @@ import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.service.mail.DefaultMailService;
 import com.ctrip.hermes.metaservice.service.mail.FileMailAccountProvider;
 import com.ctrip.hermes.metaservice.service.notify.DefaultNotifyService;
+import com.ctrip.hermes.metaservice.service.notify.DefaultNotifyThrottleManager;
 import com.ctrip.hermes.metaservice.service.notify.handler.EmailNotifyHandler;
 import com.ctrip.hermes.metaservice.service.notify.handler.SmsNotifyHandler;
 import com.ctrip.hermes.metaservice.service.notify.handler.TtsNotifyHandler;
@@ -129,6 +131,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(CachedProducerDao.class));
 
 		all.add(A(DefaultTemplateService.class));
+		all.add(A(DefaultMonitorConfigService.class));
+		all.add(A(DefaultNotifyThrottleManager.class));
 
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/ctrip/data/hermes/datasources.xml"));
 

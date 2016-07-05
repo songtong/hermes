@@ -31,6 +31,22 @@ consumer_module.run(function(editableOptions) {
 		}
 	});
 
+	consumer_monitor_config_resource = resource('/api/monitor/config/consumer/:topic/:consumer', {}, {
+		'set_consumer_monitor_config' : {
+			method : 'POST',
+			params : {
+				topic : '@topic',
+				consumer : '@consumer',
+				ssoUser : '@ssoUser',
+				ssoMail : '@ssoMail'
+			}
+		},
+		'query' : {
+			method : 'GET',
+			isArray : false
+		}
+	});
+
 	meta_resource = resource('/api/', {}, {
 		'get_topic_names' : {
 			method : 'GET',
@@ -39,6 +55,14 @@ consumer_module.run(function(editableOptions) {
 		}
 	});
 
+	function post_get_consumer_configs(config_result) {
+		scope.currentConsumerMonitorConfig = config_result;
+		scope.currentConsumerMonitorReceivers = [];
+		if (scope.currentConsumerMonitorConfig.alarmReceivers != undefined && scope.currentConsumerMonitorConfig.alarmReceivers.length > 0) {
+			scope.currentConsumerMonitorReceivers = $.parseJSON(scope.currentConsumerMonitorConfig.alarmReceivers);
+		}
+	}
+
 	consumer_resource.query().$promise.then(function(result) {
 		scope.consumers = result;
 		scope.$broadcast('initialized');
@@ -46,8 +70,26 @@ consumer_module.run(function(editableOptions) {
 			scope.currentConsumer = scope.findConsumer($routeParams['topic'], $routeParams['consumer'], scope.consumers);
 			scope.currentConsumer.resetOption = 'latest';
 			console.log(scope.currentConsumer);
+
+			consumer_monitor_config_resource.query({
+				topic : $routeParams['topic'],
+				consumer : $routeParams['consumer']
+			}).$promise.then(function(config_result) {
+				post_get_consumer_configs(config_result);
+			});
 		}
 	});
+
+	scope.add_receiver = function() {
+		scope.currentConsumerMonitorReceivers.push({
+			"phone" : "",
+			"email" : ""
+		});
+	};
+
+	scope.remove_receiver = function(index) {
+		scope.currentConsumerMonitorReceivers.splice(index, 1);
+	};
 
 	scope.findConsumer = function(topic, consumer, consumers) {
 		for (var i = 0; i < consumers.length; i++) {
@@ -176,6 +218,53 @@ consumer_module.run(function(editableOptions) {
 		});
 
 	};
+
+	scope.switch_statuses = [ {
+		value : true,
+		text : 'true'
+	}, {
+		value : false,
+		text : 'false'
+	} ];
+
+	scope.update_consumer_monitor_config = function update_consumer_monitor_config(data, receivers, topic, consumer) {
+		bootbox.confirm({
+			title : "请确认",
+			message : "确认要修改 " + consumer + " 的告警配置吗？",
+			locale : "zh_CN",
+			callback : function(result) {
+				if (result) {
+					cleanedReceivers = [];
+					data.topic = topic;
+					data.consumer = consumer;
+					for (var idx = 0; idx < receivers.length; idx++) {
+						var receiver = receivers[idx];
+						if (receiver['email'].trim().length > 0 || receiver['phone'].trim().length > 0) {
+							cleanedReceivers.push(receiver);
+						}
+					}
+					data.alarmReceivers = angular.toJson(cleanedReceivers);
+					consumer_monitor_config_resource.set_consumer_monitor_config({
+						topic : topic,
+						consumer : consumer,
+						ssoUser : ssoUser,
+						ssoMail : ssoMail
+					}, data, function(save_result) {
+						show_op_info.show("修改 consumer " + data.consumer + " 监控配置成功!", true);
+					}, function(result) {
+						show_op_info.show("修改 consumer " + data.consumer + " 监控配置失败! " + result.data, false);
+					});
+				} else {
+					consumer_monitor_config_resource.query({
+						topic : topic,
+						consumer : consumer
+					}, function(query_result) {
+						post_get_consumer_configs(query_result);
+					});
+				}
+			}
+		});
+	}
 
 	scope.confirmDeletion = function(topicName, name) {
 		scope.consumerName = name;

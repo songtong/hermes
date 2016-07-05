@@ -1,18 +1,14 @@
 <div class="row">
 	<!-- basic information -->
-	<div class="col-md-5 col-md-offset-1">
+	<div class="col-md-7">
 		<div class="panel panel-info">
 			<div class="panel-heading clearfix">
 				<label class="label label-info pull-left">基本信息</label>
 				<form editable-form name="consumerDetailForm" onaftersave="update_consumer(currentConsumer,currentConsumer.topicName,currentConsumer.name)" ng-show="consumerDetailForm.$visible">
-					<button type="submit" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-disabled="consumerDetailForm.$waiting">
-						<span class="glyphicon glyphicon-saved"></span>保存
-					</button>
+					<button type="submit" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-disabled="consumerDetailForm.$waiting"><span class="glyphicon glyphicon-saved"></span>保存</button>
 					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="consumerDetailForm.$waiting" ng-click="consumerDetailForm.$cancel()">取消</button>
 				</form>
-				<button id="updateButton" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="consumerDetailForm.$show()" ng-show="!consumerDetailForm.$visible">
-					<span class="glyphicon glyphicon-pencil"></span> 修改
-				</button>
+				<button id="updateButton" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="consumerDetailForm.$show()" ng-show="!consumerDetailForm.$visible"><span class="glyphicon glyphicon-pencil"></span> 修改</button>
 			</div>
 			<div class="panel-body">
 				<div class="form-horizontal">
@@ -82,10 +78,11 @@
 	</div>
 
 	<!-- partition information -->
-	<div class="col-md-4">
+	<div class="col-md-5">
 		<div class="panel panel-info">
 			<div class="panel-heading clearfix">
-				<label class="label label-info">重置Offset</label><span class="col-md-offset-1 text-danger">需要先停止consumer。</span>
+				<label class="label label-info">重置Offset</label>
+				<span class="col-md-offset-1 text-danger">需要先停止consumer。</span>
 			</div>
 			<div class="panel-body">
 				<div class="form-horizontal col-sm-offset-2">
@@ -108,27 +105,58 @@
 				</div>
 			</div>
 		</div>
-		<!--<div class="panel panel-info">
-			<div class="panel-heading">
-				<label class="label label-info">Consumer 信息</label>
+		<div class="panel panel-info">
+			<div class="panel-heading clearfix">
+				<label class="label label-info pull-left">报警配置</label>
+				<form editable-form name="consumerMonitorConfigForm" onaftersave="update_consumer_monitor_config(currentConsumerMonitorConfig, currentConsumerMonitorReceivers, currentConsumerMonitorConfig.topic,currentConsumerMonitorConfig.consumer)"
+					ng-show="consumerMonitorConfigForm.$visible">
+					<button type="submit" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-disabled="consumerMonitorConfigForm.$waiting"><span class="glyphicon glyphicon-saved"></span>保存</button>
+					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="consumerMonitorConfigForm.$waiting" ng-click="consumerMonitorConfigForm.$cancel()">取消</button>
+				</form>
+				<button id="updateConfigButton" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="consumerMonitorConfigForm.$show()" ng-show="!consumerMonitorConfigForm.$visible"><span class="glyphicon glyphicon-pencil"></span> 修改</button>
 			</div>
 			<div class="panel-body">
-				<table class="table table-condensed table-responsive">
-					<thead>
-						<th class="col-md-1">ID</th>
-						<th class="col-md-5">消费集群</th>
-						<th class="col-md-5">应用</th>
-					</thead>
-					<tbody>
-						<tr ng-repeat="consumer in consumers">
-							<td>{{consumer.id}}</td>
-							<td>{{consumer.name}}</td>
-							<td>{{consumer.appIds}}</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="form-horizontal">
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">积压告警开关</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumerMonitorConfig.largeBacklogEnable" editable-select="currentConsumerMonitorConfig.largeBacklogEnable" e-ng-options="s.value as s.text for s in switch_statuses" e-form="consumerMonitorConfigForm"
+								e-name="largeBacklogEnable"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">积压告警阈值</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumerMonitorConfig.largeBacklogLimit" editable-text="currentConsumerMonitorConfig.largeBacklogLimit" e-form="consumerMonitorConfigForm" e-name="largeBacklogLimit"></span>
+						</div>
+					</div>
+					<hr>
+					<div>
+						<table class="table table-responsive">
+							<thead>
+								<tr>
+									<th class="col-sm-5">邮箱</th>
+									<th class="col-sm-4">手机</th>
+									<th class="col-sm-3">
+										<button ng-click="add_receiver()" class="btn btn-xs btn-info pull-right" ng-show="consumerMonitorConfigForm.$visible" ng-disabled="consumerMonitorConfigForm.$waiting"><span class="glyphicon glyphicon-plus"></span> 增加联系人</button>
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr ng-repeat="receiver in currentConsumerMonitorReceivers">
+									<td class="col-sm-5"><span ng-bind="receiver.email" editable-text="receiver.email" e-form="consumerMonitorConfigForm" e-name="receiver.email"></span></td>
+									<td class="col-sm-4"><span ng-bind="receiver.phone" editable-text="receiver.phone" e-form="consumerMonitorConfigForm" e-name="receiver.phone"></span></td>
+									<td class="col-sm-3" style="vertical-align: middle;">
+										<button ng-show="consumerMonitorConfigForm.$visible" ng-click="remove_receiver($index)" class="btn btn-danger btn-xs pull-right"><span class="glyphicon glyphicon-remove-circle"></span>删除</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+				</div>
 			</div>
-		</div>-->
+		</div>
 	</div>
 </div>
 <loading-x></loading-x>

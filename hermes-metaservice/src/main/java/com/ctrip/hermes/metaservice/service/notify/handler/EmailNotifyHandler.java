@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.metaservice.service.mail.HermesMail;
 import com.ctrip.hermes.metaservice.service.mail.MailService;
@@ -17,7 +18,9 @@ import com.ctrip.hermes.metaservice.service.template.TemplateService;
 public class EmailNotifyHandler extends AbstractNotifyHandler {
 	private static final Logger log = LoggerFactory.getLogger(EmailNotifyHandler.class);
 
-	private static final int DEFAULT_NOTIFY_INTERVAL = 15;
+	private static final long DFT_EMAIL_LIMIT = 1;
+
+	private static final long DFT_EMAIL_INTERVAL = 900000;
 
 	public static final String ID = "EmailNotifyHandler";
 
@@ -42,7 +45,7 @@ public class EmailNotifyHandler extends AbstractNotifyHandler {
 	}
 
 	@Override
-	protected int getNotifyIntervalMinute() {
-		return DEFAULT_NOTIFY_INTERVAL;
+	protected Pair<Long, Long> getThrottleLimit() {
+		return new Pair<Long, Long>(DFT_EMAIL_LIMIT, DFT_EMAIL_INTERVAL);
 	}
 }

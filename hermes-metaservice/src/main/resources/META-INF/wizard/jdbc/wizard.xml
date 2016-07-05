@@ -25,6 +25,8 @@
          <table name="topic"/>
          <table name="kv"/>
          <table name="notification"/>
+         <table name="consumer_monitor_config"/>
+         <table name="producer_monitor_config"/>
       </group>
    </jdbc>
 </wizard>

@@ -668,5 +668,93 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="consumer-monitor-config" table="consumer_monitor_config" alias="cmc">
+    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="topic" field="topic" value-type="String" length="500" nullable="false" />
+    <member name="consumer" field="consumer" value-type="String" length="500" nullable="false" />
+    <member name="large-backlog-enable" field="large_backlog_enable" value-type="boolean" nullable="false" />
+    <member name="large-backlog-limit" field="large_backlog_limit" value-type="int" length="10" />
+    <member name="large-deadletter-enable" field="large_deadletter_enable" value-type="boolean" nullable="false" />
+    <member name="large-deadletter-limit" field="large_deadletter_limit" value-type="int" length="10" />
+    <member name="large-delay-enable" field="large_delay_enable" value-type="boolean" nullable="false" />
+    <member name="large-delay-limit" field="large_delay_limit" value-type="int" length="10" />
+    <member name="long-time-no-consume-enable" field="long_time_no_consume_enable" value-type="boolean" nullable="false" />
+    <member name="long-time-no-consume-limit" field="long_time_no_consume_limit" value-type="int" length="10" />
+    <member name="alarm-receivers" field="alarm_receivers" value-type="String" length="4096" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" />
+    <member name="create-time" field="create_time" value-type="Date" />
+    <var name="key-id" value-type="int" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="producer-monitor-config" table="producer_monitor_config" alias="pmc">
+    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="topic" field="topic" value-type="String" length="500" nullable="false" />
+    <member name="long-time-no-produce-enable" field="long_time_no_produce_enable" value-type="boolean" nullable="false" />
+    <member name="long-time-no-produce-limit" field="long_time_no_produce_limit" value-type="int" length="10" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <member name="create-time" field="create_time" value-type="Date" />
+    <var name="key-id" value-type="int" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
 </entities>
 

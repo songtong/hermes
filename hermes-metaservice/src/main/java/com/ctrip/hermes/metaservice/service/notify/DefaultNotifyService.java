@@ -25,4 +25,9 @@ public class DefaultNotifyService implements NotifyService {
 		}
 		return false;
 	}
+
+	@Override
+	public synchronized void setThrottle(String receiver, NoticeType type, long limit, long intervalMillis) {
+		PlexusComponentLocator.lookup(NotifyHandler.class, type.handlerID()).setThrottle(receiver, limit, intervalMillis);
+	}
 }

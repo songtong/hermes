@@ -33,7 +33,8 @@ public class DefaultTemplateService implements TemplateService, Initializable {
 				log.error("Can not find template {}", hermesTemplate.getName());
 			}
 		} catch (Exception e) {
-			log.error("Process template failed, template name:[{}], content map:{}", hermesTemplate.getName(), contentMap);
+			log.error("Process template failed, template name:[{}], content map:{}", hermesTemplate.getName(), contentMap,
+			      e);
 		}
 		return "";
 	}

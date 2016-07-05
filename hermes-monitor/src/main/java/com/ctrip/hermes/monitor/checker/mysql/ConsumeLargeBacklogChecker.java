@@ -12,25 +12,30 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.ctrip.hermes.core.utils.CollectionUtil;
-import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.model.ConsumerMonitorConfig;
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
+import com.ctrip.hermes.metaservice.monitor.service.MonitorConfigService;
 import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
 import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
+import com.ctrip.hermes.metaservice.service.notify.NoticeContent;
+import com.ctrip.hermes.metaservice.service.notify.NoticeType;
 import com.ctrip.hermes.metaservice.service.notify.NotifyService;
 import com.ctrip.hermes.metaservice.service.notify.SmsNoticeContent;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
@@ -38,20 +43,23 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.DBBasedChecker;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.checker.mysql.task.ConsumeBacklogCheckerTask;
+import com.ctrip.hermes.monitor.checker.notification.LargeBacklogMailContent;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
 import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
 
 import io.netty.util.internal.ConcurrentSet;
+import scala.collection.mutable.StringBuilder;
 
 @Component(value = ConsumeLargeBacklogChecker.ID)
-public class ConsumeLargeBacklogChecker extends DBBasedChecker {
+public class ConsumeLargeBacklogChecker extends DBBasedChecker implements InitializingBean {
+
+	private static final Logger log = LoggerFactory.getLogger(ConsumeLargeBacklogChecker.class);
+
 	public static final String ID = "ConsumeLargeBacklogChecker";
 
 	private static final int CONSUME_BACKLOG_CHECKER_TIMEOUT_MINUTE = 5;
 
-	private static final String SMS_FORMAT = "消费积压%s, T[%s], C[%s]";
-
-	private static final Pattern SMS_PATTERN = Pattern.compile("\\d{11}", Pattern.CASE_INSENSITIVE);
+	private static final Pattern PHONE_PATTERN = Pattern.compile("\\d{11}", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern EMAIL_PATTERN = //
 	Pattern.compile("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}", Pattern.CASE_INSENSITIVE);
@@ -64,7 +72,11 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 
 	private ConsumerService m_consumerService = PlexusComponentLocator.lookup(ConsumerService.class);
 
+	private MonitorConfigService m_monitorConfigService = PlexusComponentLocator.lookup(MonitorConfigService.class);
+
 	private static List<Owner> m_hermesAdmins;
+
+	private static Owner m_rdHermes = new Owner("", "Rdkjmes@Ctrip.com");
 
 	static {
 		m_hermesAdmins = new ArrayList<>();
@@ -174,13 +186,27 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 		}
 	}
 
+	Map<Pair<Topic, ConsumerGroup>, Long> enrichLimits(Meta meta, Map<Pair<Topic, ConsumerGroup>, Long> limits) {
+		for (ConsumerMonitorConfig cfg : m_monitorConfigService.listConsumerMonitorConfig()) {
+			if (cfg.isLargeBacklogEnable() && cfg.getLargeBacklogLimit() > 0) {
+				Topic t = meta.findTopic(cfg.getTopic());
+				ConsumerGroup c = t.findConsumerGroup(cfg.getConsumer());
+				limits.put(new Pair<Topic, ConsumerGroup>(t, c), Long.valueOf(cfg.getLargeBacklogLimit()));
+			}
+		}
+		return limits;
+	}
+
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
 		final CheckerResult result = new CheckerResult();
 		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
 		try {
-			Map<Pair<Topic, ConsumerGroup>, Long> limits = parseLimits(fetchMeta(), //
-			      m_config.getConsumeBacklogCheckerIncludeTopics(), m_config.getConsumeBacklogCheckerExcludeTopics());
+			Meta meta = fetchMeta();
+			Map<Pair<Topic, ConsumerGroup>, Long> limits = enrichLimits(
+			      meta, //
+			      parseLimits(meta, //
+			            m_config.getConsumeBacklogCheckerIncludeTopics(), m_config.getConsumeBacklogCheckerExcludeTopics()));
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			List<Map<Pair<Topic, ConsumerGroup>, Long>> splited = MonitorUtils.splitMap(limits, DB_CHECKER_THREAD_COUNT);
 			final CountDownLatch latch = new CountDownLatch(splited.size());
@@ -212,19 +238,54 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 	}
 
 	private void notifyOwnersIfNecessary(CheckerResult result) {
+		Map<Owner, List<MonitorEvent>> aggregatedEvents = new HashMap<>();
 		for (MonitorEvent event : result.getMonitorEvents()) {
 			ConsumeLargeBacklogEvent e = (ConsumeLargeBacklogEvent) event;
-			List<Owner> owners = getOwnersByGroup(e.getTopic(), e.getGroup());
-			@SuppressWarnings("unchecked")
-			List<String> receivers = (List<String>) CollectionUtil.collect(owners, new Transformer() {
-				@Override
-				public Object transform(Object input) {
-					return ((Owner) input).getPhone();
+			for (Owner owner : getOwnersByGroup(e.getTopic(), e.getGroup())) {
+				List<MonitorEvent> list = aggregatedEvents.get(owner);
+				if (list == null) {
+					list = new ArrayList<MonitorEvent>();
+					aggregatedEvents.put(owner, list);
 				}
-			});
-			m_notifyService.notify(new HermesNotice(receivers, //
-			      new SmsNoticeContent(String.format(SMS_FORMAT, e.getTotalBacklog(), e.getTopic(), e.getGroup()))));
+				list.add(e);
+			}
 		}
+
+		for (Entry<Owner, List<MonitorEvent>> entry : aggregatedEvents.entrySet()) {
+			doNotifyWithSms(entry.getKey(), entry.getValue());
+			doNotifyWithEmail(entry.getKey(), entry.getValue());
+		}
+	}
+
+	private void doNotifyWithSms(Owner owner, List<MonitorEvent> events) {
+		String phoneNumber = cleanPhoneNumber(owner.getPhone());
+		if (phoneNumber != null) {
+			m_notifyService.notify(new HermesNotice(phoneNumber, generateSmsContent(events)));
+		} else {
+			log.warn("Can not find phone number of owner: {}", owner);
+		}
+	}
+
+	private void doNotifyWithEmail(Owner owner, List<MonitorEvent> events) {
+		String emailAddress = cleanEmailAddress(owner.getEmail());
+		if (emailAddress != null) {
+			m_notifyService.notify(new HermesNotice(emailAddress, generateEmailContent(events)));
+		} else {
+			log.warn("Can not find email address of owner: {}", owner);
+		}
+	}
+
+	private NoticeContent generateSmsContent(List<MonitorEvent> events) {
+		StringBuilder sb = new StringBuilder("消费积压: ");
+		for (MonitorEvent event : events) {
+			ConsumeLargeBacklogEvent e = (ConsumeLargeBacklogEvent) event;
+			sb.append(String.format("T[%s], C[%s]: [%s] \n", e.getTopic(), e.getGroup(), e.getTotalBacklog()));
+		}
+		return new SmsNoticeContent(sb.toString());
+	}
+
+	private NoticeContent generateEmailContent(List<MonitorEvent> events) {
+		return new LargeBacklogMailContent(events);
 	}
 
 	private static class Owner {
@@ -241,9 +302,44 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 			return m_phone;
 		}
 
-		@SuppressWarnings("unused")
 		public String getEmail() {
 			return m_email;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((m_email == null) ? 0 : m_email.hashCode());
+			result = prime * result + ((m_phone == null) ? 0 : m_phone.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Owner other = (Owner) obj;
+			if (m_email == null) {
+				if (other.m_email != null)
+					return false;
+			} else if (!m_email.equals(other.m_email))
+				return false;
+			if (m_phone == null) {
+				if (other.m_phone != null)
+					return false;
+			} else if (!m_phone.equals(other.m_phone))
+				return false;
+			return true;
+		}
+
+		@Override
+		public String toString() {
+			return "Owner [m_phone=" + m_phone + ", m_email=" + m_email + "]";
 		}
 	}
 
@@ -253,24 +349,79 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker {
 		}
 		List<Owner> owners = new ArrayList<>();
 		ConsumerGroupView consumer = m_consumerService.findConsumerView(topic, group);
-		owners.add(new Owner(cleanPhone(consumer.getPhone1()), cleanEmail(consumer.getOwner1())));
-		owners.add(new Owner(cleanPhone(consumer.getPhone2()), cleanEmail(consumer.getOwner2())));
+
+		List<Owner> configedOwners = getConfigedOwners(consumer);
+		owners.addAll(configedOwners);
+
+		if (!addOwner(owners, consumer) && configedOwners.size() == 0) {
+			log.warn("Can not found owner for consumer: {}[{}], please config it.", topic, group);
+			owners.addAll(m_hermesAdmins);
+		}
+
+		owners.add(m_rdHermes);
 		return owners;
 	}
 
-	private String cleanPhone(String phone) {
-		java.util.regex.Matcher matcher = SMS_PATTERN.matcher(phone);
-		if (matcher.find()) {
-			return matcher.group();
+	private List<Owner> getConfigedOwners(ConsumerGroupView consumer) {
+		List<Owner> owners = new ArrayList<>();
+		try {
+			ConsumerMonitorConfig cfg = //
+			m_monitorConfigService.getConsumerMonitorConfig(consumer.getTopicName(), consumer.getName());
+			if (cfg != null && !StringUtils.isBlank(cfg.getAlarmReceivers())) {
+				for (Owner owner : JSON.parseObject(cfg.getAlarmReceivers(), new TypeReference<List<Owner>>() {
+				})) {
+					if (!StringUtils.isBlank(owner.getEmail()) || StringUtils.isBlank(owner.getPhone())) {
+						owners.add(owner);
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.warn("Load configed consumer owner failed: {}", consumer);
+		}
+		return owners;
+	}
+
+	private boolean addOwner(List<Owner> owners, ConsumerGroupView consumer) {
+		boolean hasOwner = false;
+
+		consumer.setPhone1(cleanPhoneNumber(consumer.getPhone1()));
+		consumer.setPhone2(cleanPhoneNumber(consumer.getPhone2()));
+		consumer.setOwner1(cleanEmailAddress(consumer.getOwner1()));
+		consumer.setOwner2(cleanEmailAddress(consumer.getOwner2()));
+
+		if (!StringUtils.isBlank(consumer.getPhone1()) || !StringUtils.isBlank(consumer.getOwner1())) {
+			hasOwner |= owners.add(new Owner(consumer.getPhone1(), consumer.getOwner1()));
+		}
+
+		if (!StringUtils.isBlank(consumer.getPhone2()) || !StringUtils.isBlank(consumer.getOwner2())) {
+			hasOwner |= owners.add(new Owner(consumer.getPhone2(), consumer.getOwner2()));
+		}
+
+		return hasOwner;
+	}
+
+	private String cleanPhoneNumber(String phone) {
+		if (!StringUtils.isBlank(phone)) {
+			java.util.regex.Matcher matcher = PHONE_PATTERN.matcher(phone);
+			if (matcher.find()) {
+				return matcher.group();
+			}
 		}
 		return null;
 	}
 
-	private String cleanEmail(String email) {
-		java.util.regex.Matcher matcher = EMAIL_PATTERN.matcher(email);
-		if (matcher.find()) {
-			return matcher.group();
+	private String cleanEmailAddress(String email) {
+		if (!StringUtils.isBlank(email)) {
+			java.util.regex.Matcher matcher = EMAIL_PATTERN.matcher(email);
+			if (matcher.find()) {
+				return matcher.group();
+			}
 		}
 		return null;
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		m_notifyService.setThrottle(m_rdHermes.getEmail(), NoticeType.EMAIL, 1000, 600000);
 	}
 }

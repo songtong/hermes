@@ -14,7 +14,7 @@ public abstract class ShortNoticeContent implements NoticeContent {
 
 	public ShortNoticeContent(String content) {
 		if (content.length() > MAX_CONTENT_LEN) {
-			log.warn("Notice content \\{{}\\} too long!", content);
+			log.warn("Notice content {{}} too long!", content);
 		}
 		m_content = toShort(content, MAX_CONTENT_LEN);
 	}
