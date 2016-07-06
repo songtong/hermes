@@ -17,11 +17,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
@@ -33,6 +35,8 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder<Key> {
 
 	private static final Logger log = LoggerFactory.getLogger(BaseLeaseHolder.class);
+
+	private static final Logger traceLog = LoggerFactory.getLogger(LoggerConstants.TRACE);
 
 	@Inject
 	protected SystemClockService m_systemClockService;
@@ -250,13 +254,29 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 		}
 	}
 
+	protected abstract String getName();
+
 	protected void startHouseKeeper() {
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("LeaseHolder-HouseKeeper", true))
 		      .scheduleWithFixedDelay(new Runnable() {
 
+			      private volatile long m_lastLoggedTime = 0;
+
 			      @Override
 			      public void run() {
 				      clearExpiredLeases();
+				      long now = System.currentTimeMillis();
+				      if (now - m_lastLoggedTime >= 60000) {
+					      try {
+						      Map<Key, Map<String, ClientLeaseInfo>> allValidLeases = getAllValidLeases();
+						      if (traceLog.isInfoEnabled()) {
+							      traceLog.info(getName() + "\n" + JSON.toJSONString(allValidLeases));
+						      }
+					      } catch (Exception e) {
+						      // ignore
+					      }
+					      m_lastLoggedTime = now;
+				      }
 			      }
 
 		      }, 0, 5, TimeUnit.SECONDS);
