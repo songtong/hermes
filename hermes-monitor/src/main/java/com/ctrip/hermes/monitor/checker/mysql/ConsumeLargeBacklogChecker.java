@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,6 +27,7 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.model.ConsumerMonitorConfig;
 import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
@@ -113,9 +113,11 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		if (meta != null) {
 			for (Entry<String, Topic> entry : meta.getTopics().entrySet()) {
 				for (ConsumerGroup consumer : entry.getValue().getConsumerGroups()) {
-					ConsumerMonitorConfig cfg = configs.get(new Pair<String, String>(entry.getKey(), consumer.getName()));
-					if (cfg != null && cfg.isLargeBacklogEnable() && cfg.getLargeBacklogLimit() > 0) {
-						limits.put(new Pair<>(entry.getValue(), consumer), (long) cfg.getLargeBacklogLimit());
+					if (Storage.MYSQL.equals(entry.getValue().getStorageType())) {
+						ConsumerMonitorConfig cfg = configs.get(new Pair<String, String>(entry.getKey(), consumer.getName()));
+						if (cfg != null && cfg.isLargeBacklogEnable() && cfg.getLargeBacklogLimit() > 0) {
+							limits.put(new Pair<>(entry.getValue(), consumer), (long) cfg.getLargeBacklogLimit());
+						}
 					}
 				}
 			}
@@ -171,13 +173,14 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		if (now - m_lastReportTime >= TimeUnit.MINUTES.toMillis(m_config.getConsumeLargeBacklogReportIntervalMin())) {
 			LargeBacklogReportMailContent report = m_report.get();
 			if (report.getReports().size() > 0) {
-				m_lastReportTime = now;
 				try {
 					m_notifyService.notify(new HermesNotice(getEmails(m_hermesAdmins), m_report.get()));
 				} catch (Exception e) {
 					log.error("Send large backlog report failed.", e);
 				}
 			}
+			m_report.set(new LargeBacklogReportMailContent());
+			m_lastReportTime = now;
 		}
 	}
 
@@ -206,18 +209,22 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 				Pair<String, String> consumer = new Pair<String, String>(entry.getKey(), c.getName());
 				consumers.add(consumer);
 				if (!cfgs.containsKey(consumer)) {
+					log.info("Can not find {} in consumer monitor configs, add it.", consumer);
 					m_monitorConfigService.setConsumerMonitorConfig(//
 					      m_monitorConfigService.newDefaultConsumerMonitorConfig(consumer.getKey(), consumer.getValue()));
 				}
 			}
 		}
-		Iterator<Entry<Pair<String, String>, ConsumerMonitorConfig>> iter = cfgs.entrySet().iterator();
-		while (iter.hasNext()) {
-			Entry<Pair<String, String>, ConsumerMonitorConfig> entry = iter.next();
-			if (!consumers.contains(cfgs.get(entry.getKey()))) {
-				m_monitorConfigService.deleteConsumerMonitorConfig(entry.getKey().getKey(), entry.getKey().getValue());
-				iter.remove();
+		Set<Pair<String, String>> removed = new HashSet<>();
+		for (Entry<Pair<String, String>, ConsumerMonitorConfig> entry : cfgs.entrySet()) {
+			if (!consumers.contains(entry.getKey())) {
+				removed.add(entry.getKey());
 			}
+		}
+		for (Pair<String, String> key : removed) {
+			cfgs.remove(key);
+			m_monitorConfigService.deleteConsumerMonitorConfig(key.getKey(), key.getValue());
+			log.info("Outdated consumer monitor config: {}, delete it.", key);
 		}
 		return cfgs;
 	}
