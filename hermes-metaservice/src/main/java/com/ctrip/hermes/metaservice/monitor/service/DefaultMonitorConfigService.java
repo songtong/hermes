@@ -1,6 +1,7 @@
 package com.ctrip.hermes.metaservice.monitor.service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,17 @@ import com.ctrip.hermes.metaservice.model.ProducerMonitorConfigEntity;
 public class DefaultMonitorConfigService implements MonitorConfigService, Initializable {
 	private static final Logger log = LoggerFactory.getLogger(DefaultMonitorConfigService.class);
 
-	private static final int CONFIG_CACHE_REFRESH_INTERVAL_MIN = 10;
+	private static final int CONFIG_CACHE_REFRESH_INTERVAL_MIN = 5;
+
+	private static boolean DFT_MONITOR_SWITCH = true;
+
+	private static int DFT_MONITOR_LIMIT = -1;
+
+	private static int DFT_BACKLOG_LIMIT = 10000;
+
+	private static int DFT_DEAD_LETTER_LIMIT = 1;
+
+	private static int DFT_LONG_TIME_NO_CONSUME = 10;
 
 	@Inject
 	private ProducerMonitorConfigDao m_producerMonitorConfigDao;
@@ -58,28 +69,32 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 		return false;
 	}
 
-	private void doRefreshProducerMonitorConfigCache() {
+	private boolean doRefreshProducerMonitorConfigCache() {
 		try {
 			Map<String, ProducerMonitorConfig> newCache = new HashMap<>();
 			for (ProducerMonitorConfig cfg : m_producerMonitorConfigDao.list(ProducerMonitorConfigEntity.READSET_FULL)) {
 				newCache.put(cfg.getTopic(), cfg);
 			}
 			m_producerMonitorConfigCache.set(newCache);
+			return true;
 		} catch (Exception e) {
 			log.error("Refresh producer monitor config failed.", e);
 		}
+		return false;
 	}
 
-	private void doRefreshConsumerMonitorConfigCache() {
+	private boolean doRefreshConsumerMonitorConfigCache() {
 		try {
 			Map<Pair<String, String>, ConsumerMonitorConfig> newCache = new HashMap<>();
 			for (ConsumerMonitorConfig cfg : m_consumerMonitorConfigDao.list(ConsumerMonitorConfigEntity.READSET_FULL)) {
 				newCache.put(new Pair<String, String>(cfg.getTopic(), cfg.getConsumer()), cfg);
 			}
 			m_consumerMonitorConfigCache.set(newCache);
+			return true;
 		} catch (Exception e) {
 			log.error("Refresh consumer monitor config failed.", e);
 		}
+		return false;
 	}
 
 	private void refreshProducerMonitorConfigCacheIfNeeded() {
@@ -137,6 +152,8 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 		}
 
 		synchronized (m_updateProducerMonitorConfigLock) {
+			config.setDataChangeLastTime(new Date());
+
 			ProducerMonitorConfig old = m_producerMonitorConfigCache.get().get(config.getTopic());
 			if (old != null) {
 				config.setId(old.getId());
@@ -147,6 +164,7 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 				}
 			} else {
 				try {
+					config.setCreateTime(config.getDataChangeLastTime());
 					m_producerMonitorConfigDao.insert(config);
 				} catch (Exception e) {
 					log.error("Add producer monitor config failed: {}", config, e);
@@ -164,6 +182,8 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 		}
 
 		synchronized (m_updateConsumerMonitorConfigLock) {
+			config.setDataChangeLastTime(new Date());
+
 			Pair<String, String> key = new Pair<String, String>(config.getTopic(), config.getConsumer());
 			ConsumerMonitorConfig old = m_consumerMonitorConfigCache.get().get(key);
 
@@ -176,6 +196,7 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 				}
 			} else {
 				try {
+					config.setCreateTime(config.getDataChangeLastTime());
 					m_consumerMonitorConfigDao.insert(config);
 				} catch (Exception e) {
 					log.error("Add consumer monitor config failed: {}", config, e);
@@ -221,7 +242,39 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 
 	@Override
 	public void initialize() throws InitializationException {
-		doRefreshProducerMonitorConfigCache();
-		doRefreshConsumerMonitorConfigCache();
+		if (!doRefreshProducerMonitorConfigCache() || !doRefreshConsumerMonitorConfigCache()) {
+			throw new InitializationException("Monitor config cache initialize failed.");
+		}
+	}
+
+	@Override
+	public ProducerMonitorConfig newDefaultProducerMonitorConfig(String topic) {
+		Date now = new Date();
+		ProducerMonitorConfig cfg = new ProducerMonitorConfig();
+		cfg.setTopic(topic);
+		cfg.setCreateTime(now);
+		cfg.setDataChangeLastTime(now);
+		cfg.setLongTimeNoProduceEnable(DFT_MONITOR_SWITCH);
+		cfg.setLongTimeNoProduceLimit(DFT_MONITOR_LIMIT);
+		return cfg;
+	}
+
+	@Override
+	public ConsumerMonitorConfig newDefaultConsumerMonitorConfig(String topic, String consumer) {
+		Date now = new Date();
+		ConsumerMonitorConfig cfg = new ConsumerMonitorConfig();
+		cfg.setTopic(topic);
+		cfg.setConsumer(consumer);
+		cfg.setCreateTime(now);
+		cfg.setDataChangeLastTime(now);
+		cfg.setLargeBacklogEnable(DFT_MONITOR_SWITCH);
+		cfg.setLargeBacklogLimit(DFT_BACKLOG_LIMIT);
+		cfg.setLargeDeadletterEnable(DFT_MONITOR_SWITCH);
+		cfg.setLargeDeadletterLimit(DFT_DEAD_LETTER_LIMIT);
+		cfg.setLargeDelayEnable(DFT_MONITOR_SWITCH);
+		cfg.setLargeDelayLimit(DFT_MONITOR_LIMIT);
+		cfg.setLongTimeNoConsumeEnable(DFT_MONITOR_SWITCH);
+		cfg.setLongTimeNoConsumeLimit(DFT_LONG_TIME_NO_CONSUME);
+		return cfg;
 	}
 }

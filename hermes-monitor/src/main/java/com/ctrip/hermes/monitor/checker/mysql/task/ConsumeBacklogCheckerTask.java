@@ -1,5 +1,6 @@
 package com.ctrip.hermes.monitor.checker.mysql.task;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -103,7 +104,9 @@ public class ConsumeBacklogCheckerTask implements Runnable {
 				}
 
 				if (totalBacklog >= limit) {
-					m_result.addMonitorEvent(new ConsumeLargeBacklogEvent(topic.getName(), group.getName(), backlogs));
+					ConsumeLargeBacklogEvent e = new ConsumeLargeBacklogEvent(topic.getName(), group.getName(), backlogs);
+					e.setCreateTime(new Date());
+					m_result.addMonitorEvent(e);
 				}
 			}
 		} catch (Exception e) {
