@@ -23,4 +23,8 @@ public interface MonitorConfigService {
 	public void deleteProducerMonitorConfig(String topic);
 
 	public void deleteConsumerMonitorConfig(String topic, String consumer);
+
+	public ProducerMonitorConfig newDefaultProducerMonitorConfig(String topic);
+
+	public ConsumerMonitorConfig newDefaultConsumerMonitorConfig(String topic, String consumer);
 }

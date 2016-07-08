@@ -233,6 +233,9 @@ public class MonitorConfig {
 	@Value("${kpi.tts.last.hours:10}")
 	private int kpiTtsLastHours;
 
+	@Value("${consume.large.backlog.report.interval.min:30}")
+	private int consumeLargeBacklogReportIntervalMin;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -765,5 +768,13 @@ public class MonitorConfig {
 
 	public void setKpiTtsErrorLimitMinute(int kpiTtsErrorLimitMinute) {
 		this.kpiTtsErrorLimitMinute = kpiTtsErrorLimitMinute;
+	}
+
+	public int getConsumeLargeBacklogReportIntervalMin() {
+		return consumeLargeBacklogReportIntervalMin;
+	}
+
+	public void setConsumeLargeBacklogReportIntervalMin(int consumeLargeBacklogReportIntervalMin) {
+		this.consumeLargeBacklogReportIntervalMin = consumeLargeBacklogReportIntervalMin;
 	}
 }

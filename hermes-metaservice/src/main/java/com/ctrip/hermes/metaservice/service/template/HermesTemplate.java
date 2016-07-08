@@ -11,6 +11,8 @@ public enum HermesTemplate {
 
 	CONSUME_LARGE_BACKLOG("alarm_consume_large_backlog.ftl"), //
 
+	CONSUME_LARGE_BACKLOG_REPORT("report_consume_large_backlog.ftl"), //
+
 	CONSUME_LARGE_DELAY("alarm_consume_large_delay.ftl");
 
 	private String m_templateName;

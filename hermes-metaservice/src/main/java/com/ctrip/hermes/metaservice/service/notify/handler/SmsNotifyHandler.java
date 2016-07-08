@@ -127,6 +127,7 @@ public class SmsNotifyHandler extends AbstractNotifyHandler implements Initializ
 			if (resp == null || !resp.getResponseStatus().getAck().equals(AckCodeType.SUCCESS)) {
 				log.error("Send sms failed: {}", content);
 			} else {
+				log.info("Sent sms to: {}, content: {}", receiver, content);
 				return true;
 			}
 		} catch (Exception e) {

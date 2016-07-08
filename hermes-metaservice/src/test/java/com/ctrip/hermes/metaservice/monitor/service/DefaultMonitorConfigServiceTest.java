@@ -12,9 +12,12 @@ public class DefaultMonitorConfigServiceTest extends ComponentTestCase {
 		MonitorConfigService configService = lookup(MonitorConfigService.class);
 		ProducerMonitorConfig producerMonitorConfig = configService.getProducerMonitorConfig("song.test");
 		System.out.println(producerMonitorConfig);
-		producerMonitorConfig.setLongTimeNoProduceEnable(false);
+		if (producerMonitorConfig == null) {
+			producerMonitorConfig = configService.newDefaultProducerMonitorConfig("song.test");
+		}
 		configService.setProducerMonitorConfig(producerMonitorConfig);
 		System.out.println(configService.getProducerMonitorConfig("song.test"));
+		configService.deleteProducerMonitorConfig("song.test");
 	}
 
 }

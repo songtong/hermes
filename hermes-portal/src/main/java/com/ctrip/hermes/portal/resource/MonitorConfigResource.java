@@ -54,7 +54,7 @@ public class MonitorConfigResource {
 			throw new RestException("Find consumer monitor config failed.", e);
 		}
 
-		c = c == null ? new ConsumerMonitorConfig().setTopic(topic).setConsumer(consumer).setCreateTime(new Date()) : c;
+		c = c == null ? m_mcService.newDefaultConsumerMonitorConfig(topic, consumer) : c;
 		return Response.status(Status.OK).entity(c).build();
 	}
 

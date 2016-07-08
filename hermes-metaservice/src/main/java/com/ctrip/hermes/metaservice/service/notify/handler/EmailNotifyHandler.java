@@ -37,6 +37,7 @@ public class EmailNotifyHandler extends AbstractNotifyHandler {
 		HermesMail mail = new HermesMail(mailCtx.getTitle(), content, notice.getReceivers());
 		try {
 			m_mailService.sendEmail(mail);
+			log.info("Sent Email to: {}, Subject: {}", mail.getReceivers(), mail.getSubject());
 			return true;
 		} catch (Exception e) {
 			log.error("Send Hermes mail failed: {}", mail, e);

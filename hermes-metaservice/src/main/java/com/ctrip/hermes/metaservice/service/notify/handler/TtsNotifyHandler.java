@@ -124,6 +124,7 @@ public class TtsNotifyHandler extends AbstractNotifyHandler implements Initializ
 			String response = IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
 
 			if (statusCode == 200) {
+				log.info("Sent tts to: {}, content: {}", receiver, content);
 				return true;
 			}
 			log.error("Send tts failed.(url={}, status={}, response={}).", m_ttsUrl, statusCode, response);

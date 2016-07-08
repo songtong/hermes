@@ -3,13 +3,16 @@ package com.ctrip.hermes.monitor.checker.mysql;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -44,11 +47,10 @@ import com.ctrip.hermes.monitor.checker.DBBasedChecker;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.checker.mysql.task.ConsumeBacklogCheckerTask;
 import com.ctrip.hermes.monitor.checker.notification.LargeBacklogMailContent;
+import com.ctrip.hermes.monitor.checker.notification.LargeBacklogReportMailContent;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
-import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
 
 import io.netty.util.internal.ConcurrentSet;
-import scala.collection.mutable.StringBuilder;
 
 @Component(value = ConsumeLargeBacklogChecker.ID)
 public class ConsumeLargeBacklogChecker extends DBBasedChecker implements InitializingBean {
@@ -78,6 +80,11 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 
 	private static Owner m_rdHermes = new Owner("", "Rdkjmes@Ctrip.com");
 
+	private long m_lastReportTime = new Date().getTime();
+
+	private AtomicReference<LargeBacklogReportMailContent> m_report = //
+	new AtomicReference<>(new LargeBacklogReportMailContent());
+
 	static {
 		m_hermesAdmins = new ArrayList<>();
 		m_hermesAdmins.add(new Owner("18721960052", "song_t@ctrip.com"));
@@ -100,98 +107,19 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		m_offsetDao = dao;
 	}
 
-	protected Map<Pair<Topic, ConsumerGroup>, Long> parseLimits(Meta meta, String includeString, String excludeString) {
-		if (meta == null || StringUtils.isBlank(includeString) || StringUtils.isBlank(excludeString)) {
-			return null;
-		}
+	protected Map<Pair<Topic, ConsumerGroup>, Long> parseLimits( //
+	      Meta meta, Map<Pair<String, String>, ConsumerMonitorConfig> configs) {
 		Map<Pair<Topic, ConsumerGroup>, Long> limits = new HashMap<>();
-		Map<String, Map<String, Integer>> includes = JSON.parseObject(includeString,
-		      new TypeReference<Map<String, Map<String, Integer>>>() {
-		      });
-		Map<String, Integer> all = includes.get(".*");
-		if (all != null) {
-			for (Entry<String, Integer> entry : all.entrySet()) {
-				limits.putAll(parseIncludes(meta, ".*", entry.getKey(), entry.getValue()));
-			}
-		}
-		for (Entry<String, Map<String, Integer>> item : includes.entrySet()) {
-			if (!item.getKey().equals(".*")) {
-				for (Entry<String, Integer> entry : item.getValue().entrySet()) {
-					limits.putAll(parseIncludes(meta, item.getKey(), entry.getKey(), entry.getValue()));
+		if (meta != null) {
+			for (Entry<String, Topic> entry : meta.getTopics().entrySet()) {
+				for (ConsumerGroup consumer : entry.getValue().getConsumerGroups()) {
+					if (Storage.MYSQL.equals(entry.getValue().getStorageType())) {
+						ConsumerMonitorConfig cfg = configs.get(new Pair<String, String>(entry.getKey(), consumer.getName()));
+						if (cfg != null && cfg.isLargeBacklogEnable() && cfg.getLargeBacklogLimit() > 0) {
+							limits.put(new Pair<>(entry.getValue(), consumer), (long) cfg.getLargeBacklogLimit());
+						}
+					}
 				}
-			}
-		}
-
-		Map<String, List<String>> excludes = JSON.parseObject(excludeString,
-		      new TypeReference<Map<String, List<String>>>() {
-		      });
-		for (Entry<String, List<String>> item : excludes.entrySet()) {
-			for (String consumer : item.getValue()) {
-				removeExcludes(limits, meta, item.getKey(), consumer);
-			}
-		}
-
-		return limits;
-	}
-
-	private Map<Pair<Topic, ConsumerGroup>, Long> parseIncludes( //
-	      Meta meta, final String topicPattern, final String groupPattern, long limit) {
-		Map<Pair<Topic, ConsumerGroup>, Long> limits = new HashMap<Pair<Topic, ConsumerGroup>, Long>();
-		List<Entry<String, Topic>> includeTopics = MonitorUtils.findMatched(meta.getTopics().entrySet(),
-		      new Matcher<Entry<String, Topic>>() {
-			      @Override
-			      public boolean match(Entry<String, Topic> obj) {
-				      return Pattern.matches(topicPattern.trim(), obj.getKey());
-			      }
-		      });
-		for (Entry<String, Topic> entry : includeTopics) {
-			Topic topic = entry.getValue();
-			if (Storage.MYSQL.equals(topic.getStorageType())) {
-				List<ConsumerGroup> includeGroups = MonitorUtils.findMatched(topic.getConsumerGroups(),
-				      new Matcher<ConsumerGroup>() {
-					      @Override
-					      public boolean match(ConsumerGroup obj) {
-						      return Pattern.matches(groupPattern, obj.getName());
-					      }
-				      });
-				for (ConsumerGroup group : includeGroups) {
-					limits.put(new Pair<Topic, ConsumerGroup>(topic, group), limit);
-				}
-			}
-		}
-		return limits;
-	}
-
-	private void removeExcludes(Map<Pair<Topic, ConsumerGroup>, Long> limits, //
-	      Meta meta, final String topicPattern, final String groupPattern) {
-		List<Entry<String, Topic>> excludeTopics = MonitorUtils.findMatched(meta.getTopics().entrySet(),
-		      new Matcher<Entry<String, Topic>>() {
-			      @Override
-			      public boolean match(Entry<String, Topic> obj) {
-				      return Pattern.matches(topicPattern.trim(), obj.getKey());
-			      }
-		      });
-		for (Entry<String, Topic> entry : excludeTopics) {
-			Topic topic = entry.getValue();
-			List<ConsumerGroup> excludeGroups = MonitorUtils.findMatched(topic.getConsumerGroups(),
-			      new Matcher<ConsumerGroup>() {
-				      @Override
-				      public boolean match(ConsumerGroup obj) {
-					      return Pattern.matches(groupPattern, obj.getName());
-				      }
-			      });
-			for (ConsumerGroup group : excludeGroups) {
-				limits.remove(new Pair<Topic, ConsumerGroup>(topic, group));
-			}
-		}
-	}
-
-	Map<Pair<Topic, ConsumerGroup>, Long> enrichLimits(Meta meta, Map<Pair<Topic, ConsumerGroup>, Long> limits) {
-		for (ConsumerMonitorConfig cfg : m_monitorConfigService.listConsumerMonitorConfig()) {
-			if (cfg.isLargeBacklogEnable() && cfg.getLargeBacklogLimit() > 0) {
-				Topic t = meta.findTopic(cfg.getTopic());
-				ConsumerGroup c = t.findConsumerGroup(cfg.getConsumer());
-				limits.put(new Pair<Topic, ConsumerGroup>(t, c), Long.valueOf(cfg.getLargeBacklogLimit()));
 			}
 		}
 		return limits;
@@ -203,10 +131,8 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
 		try {
 			Meta meta = fetchMeta();
-			Map<Pair<Topic, ConsumerGroup>, Long> limits = enrichLimits(
-			      meta, //
-			      parseLimits(meta, //
-			            m_config.getConsumeBacklogCheckerIncludeTopics(), m_config.getConsumeBacklogCheckerExcludeTopics()));
+			Map<Pair<String, String>, ConsumerMonitorConfig> cfgs = verifyConsumerMonitorConfigs(meta);
+			Map<Pair<Topic, ConsumerGroup>, Long> limits = parseLimits(meta, cfgs);
 			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
 			List<Map<Pair<Topic, ConsumerGroup>, Long>> splited = MonitorUtils.splitMap(limits, DB_CHECKER_THREAD_COUNT);
 			final CountDownLatch latch = new CountDownLatch(splited.size());
@@ -233,8 +159,85 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		}
 
 		notifyOwnersIfNecessary(result);
+		notifyLargeBacklogReportIfNecessary(result);
 
 		return result;
+	}
+
+	private void notifyLargeBacklogReportIfNecessary(CheckerResult result) {
+		long now = System.currentTimeMillis();
+		for (MonitorEvent event : result.getMonitorEvents()) {
+			ConsumeLargeBacklogEvent e = (ConsumeLargeBacklogEvent) event;
+			m_report.get().addMonitorEvent(e, m_consumerService.findConsumerView(e.getTopic(), e.getGroup()));
+		}
+		if (now - m_lastReportTime >= TimeUnit.MINUTES.toMillis(m_config.getConsumeLargeBacklogReportIntervalMin())) {
+			LargeBacklogReportMailContent report = m_report.get();
+			if (report.getReports().size() > 0) {
+				try {
+					m_notifyService.notify(new HermesNotice(getEmails(m_hermesAdmins), m_report.get()));
+				} catch (Exception e) {
+					log.error("Send large backlog report failed.", e);
+				}
+			}
+			m_report.set(new LargeBacklogReportMailContent());
+			m_lastReportTime = now;
+		}
+	}
+
+	private List<String> getEmails(List<Owner> owners) {
+		List<String> list = new ArrayList<String>();
+		for (Owner owner : owners) {
+			if (!StringUtils.isBlank(owner.getEmail())) {
+				list.add(owner.getEmail());
+			}
+		}
+		return list;
+	}
+
+	private Map<Pair<String, String>, ConsumerMonitorConfig> verifyConsumerMonitorConfigs(Meta meta) {
+		Map<Pair<String, String>, ConsumerMonitorConfig> cfgs = listToMap(
+		      m_monitorConfigService.listConsumerMonitorConfig(),
+		      new KeyHolder<Pair<String, String>, ConsumerMonitorConfig>() {
+			      @Override
+			      public Pair<String, String> getKey(ConsumerMonitorConfig item) {
+				      return new Pair<String, String>(item.getTopic(), item.getConsumer());
+			      }
+		      });
+		Set<Pair<String, String>> consumers = new HashSet<>();
+		for (Entry<String, Topic> entry : meta.getTopics().entrySet()) {
+			for (ConsumerGroup c : entry.getValue().getConsumerGroups()) {
+				Pair<String, String> consumer = new Pair<String, String>(entry.getKey(), c.getName());
+				consumers.add(consumer);
+				if (!cfgs.containsKey(consumer)) {
+					log.info("Can not find {} in consumer monitor configs, add it.", consumer);
+					m_monitorConfigService.setConsumerMonitorConfig(//
+					      m_monitorConfigService.newDefaultConsumerMonitorConfig(consumer.getKey(), consumer.getValue()));
+				}
+			}
+		}
+		Set<Pair<String, String>> removed = new HashSet<>();
+		for (Entry<Pair<String, String>, ConsumerMonitorConfig> entry : cfgs.entrySet()) {
+			if (!consumers.contains(entry.getKey())) {
+				removed.add(entry.getKey());
+			}
+		}
+		for (Pair<String, String> key : removed) {
+			cfgs.remove(key);
+			m_monitorConfigService.deleteConsumerMonitorConfig(key.getKey(), key.getValue());
+			log.info("Outdated consumer monitor config: {}, delete it.", key);
+		}
+		return cfgs;
+	}
+
+	private static interface KeyHolder<K, T> {
+		public K getKey(T item);
+	}
+
+	private <T, K> Map<K, T> listToMap(List<T> list, KeyHolder<K, T> keyHolder) {
+		Map<K, T> map = new HashMap<>();
+		for (T t : list)
+			map.put(keyHolder.getKey(t), t);
+		return map;
 	}
 
 	private void notifyOwnersIfNecessary(CheckerResult result) {
@@ -358,7 +361,6 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 			owners.addAll(m_hermesAdmins);
 		}
 
-		owners.add(m_rdHermes);
 		return owners;
 	}
 

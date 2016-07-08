@@ -29,6 +29,10 @@ public abstract class BaseMonitorEvent implements MonitorEvent {
 	public Date getCreateTime() {
 		return m_createTime;
 	}
+	
+	public void setCreateTime(Date date) {
+		m_createTime = date;
+	}
 
 	public long getId() {
 		return m_id;
