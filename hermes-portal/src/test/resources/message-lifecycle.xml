@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<message-lifecycle refKey="abcdefg" msgId='123456' topicId="123456" topicName="abcd" partition='5' priority="true">
+	<produce producerIp="1.1.1.1" born="2016-1-1 00:00:00.000">
+		<!-- receive按照brokerIp,success和队列顺序来匹配save -->
+		<try-produce times="1" brokerIp="1.1.1.1">
+			<receive eventTime="2016-1-1 00:00:00.000" />
+		</try-produce>
+		<try-produce times="2" brokerIp="1.1.1.1">
+			<receive eventTime="2016-1-1 00:00:00.000" />
+			<save eventTime="2016-1-1 00:00:00.000" success='true' />
+		</try-produce>
+	</produce>
+	<consume>
+		<group id="123" name="abcd">
+			<!-- ack按照isResend和eventTime匹配deliver -->
+			<try-consume times="1" brokerIp="1.1.1.1" consumerIp="1.1.1.1" isResend="false">
+				<deliver eventTime="2016-1-1 00:00:00.000" />
+			</try-consume>
+			<try-consume times="2" brokerIp="1.1.1.1" consumerIp="1.1.1.1" isResend="true" resendId="123456">
+				<deliver eventTime="2016-1-1 00:00:00.000" />
+				<ack eventTime="2016-1-1 00:00:00.000" bizProcessStartTime="2016-1-1 00:00:00.000" bizProcessEndTime="2016-1-1 00:00:00.000" success="false" />
+			</try-consume>
+			<try-consume times="3" brokerIp="1.1.1.1" consumerIp="1.1.1.1" isResend="true" resendId="123456">
+				<deliver eventTime="2016-1-1 00:00:00.000" />
+				<ack eventTime="2016-1-1 00:00:00.000" bizProcessStartTime="2016-1-1 00:00:00.000" bizProcessEndTime="2016-1-1 00:00:00.000" success="true" />
+				<ack eventTime="2016-1-1 00:00:00.000" bizProcessStartTime="2016-1-1 00:00:00.000" bizProcessEndTime="2016-1-1 00:00:00.000" success="true" />
+				<ack eventTime="2016-1-1 00:00:00.000" bizProcessStartTime="2016-1-1 00:00:00.000" bizProcessEndTime="2016-1-1 00:00:00.000" success="true" />
+			</try-consume>
+		</group>
+		<group id="456" />
+	</consume>
+</message-lifecycle>

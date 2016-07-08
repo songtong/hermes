@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model>
+  <entity name="message-lifecycle" root="true">
+    <attribute name="refKey" value-type="String" />
+    <attribute name="msgId" value-type="int" />
+    <attribute name="topicId" value-type="int" />
+    <attribute name="topicName" value-type="String" />
+    <attribute name="partition" value-type="int" />
+    <attribute name="priority" value-type="boolean" />
+    <entity-ref name="produce" />
+    <entity-ref name="group" type="list" names="consume" xml-indent="true" />
+  </entity>
+  <entity name="produce">
+    <attribute name="producerIp" value-type="String" />
+    <attribute name="born" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+    <entity-ref name="try-produce" type="list" names="try-produces" />
+  </entity>
+  <entity name="try-produce">
+    <attribute name="times" value-type="int" />
+    <attribute name="brokerIp" value-type="String" />
+    <entity-ref name="receive" />
+    <entity-ref name="save" />
+  </entity>
+  <entity name="receive">
+    <attribute name="eventTime" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+  </entity>
+  <entity name="save">
+    <attribute name="eventTime" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+    <attribute name="success" value-type="boolean" />
+  </entity>
+  <entity name="group">
+    <attribute name="id" value-type="int" />
+    <attribute name="name" value-type="String" />
+    <entity-ref name="try-consume" type="list" names="try-consumes" />
+  </entity>
+  <entity name="try-consume">
+    <attribute name="times" value-type="int" />
+    <attribute name="brokerIp" value-type="String" />
+    <attribute name="consumerIp" value-type="String" />
+    <attribute name="isResend" value-type="boolean" />
+    <attribute name="resendId" value-type="int" />
+    <entity-ref name="deliver" />
+    <entity-ref name="ack" type="list" names="acks" />
+  </entity>
+  <entity name="deliver">
+    <attribute name="eventTime" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+  </entity>
+  <entity name="ack">
+    <attribute name="eventTime" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+    <attribute name="bizProcessStartTime" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+    <attribute name="bizProcessEndTime" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+    <attribute name="success" value-type="boolean" />
+  </entity>
+</model>
+
