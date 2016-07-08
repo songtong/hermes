@@ -80,7 +80,7 @@
 			<dependency>
 				<groupId>com.dianping.cat</groupId>
 				<artifactId>cat-client</artifactId>
-				<version>1.4.1</version>
+				<version>1.5.1</version>
 			</dependency>
 			<!--javax -->
 			<dependency>
@@ -491,6 +491,16 @@
 				<groupId>com.ctrip.hermes</groupId>
 				<artifactId>sms-client</artifactId>
 				<version>0.0.1</version>
+			</dependency>
+			<dependency>
+ 				<groupId>com.ctrip.framework.apollo</groupId>
+ 				<artifactId>apollo-client</artifactId>
+ 				<version>0.0.4</version>
+ 			</dependency>
+			<dependency>
+				<groupId>com.ctrip.framework</groupId>
+				<artifactId>framework-foundation</artifactId>
+				<version>1.1.6</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
