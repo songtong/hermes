@@ -15,6 +15,8 @@ import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.dal.application.DefaultHermesApplicationDao;
 import com.ctrip.hermes.portal.dal.tag.CachedTagDao;
 import com.ctrip.hermes.portal.service.SyncService;
+import com.ctrip.hermes.portal.service.TracerEsQueryService;
+import com.ctrip.hermes.portal.service.TracerService;
 import com.ctrip.hermes.portal.service.application.DefaultApplicationService;
 import com.ctrip.hermes.portal.service.application.KafkaPartitionStrategy;
 import com.ctrip.hermes.portal.service.application.MysqlPartitionStrategy;
@@ -50,6 +52,10 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(FileMailAccountProvider.class));
 		
 		all.add(A(SyncService.class));
+		
+		all.add(A(TracerEsQueryService.class));
+		
+		all.add(A(TracerService.class));
 		
 		all.add(A(CachedTagDao.class));
 		

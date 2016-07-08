@@ -94,6 +94,10 @@ public class PortalConfig implements Initializable {
 	public String getEmailTemplateDir() {
 		return m_env.getGlobalConfig().getProperty("hermes.emailtemplates.dir", "/templates");
 	}
+	
+	public String getEsQueryUrl(){
+		return m_env.getGlobalConfig().getProperty("es.query.url");
+	}
 
 	public List<Pair<String, Integer>> getElasticClusterNodes() {
 		String defaultHost = "localhost";

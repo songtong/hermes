@@ -8,10 +8,11 @@ import com.ctrip.hermes.portal.console.ConsolePage;
 
 public class NavigationBar {
 	private Page[] BASE_PAGES = new Page[] { ConsolePage.DASHBOARD, ConsolePage.TRACER, ConsolePage.TOPIC,
-			ConsolePage.APPLICATION };
+	      ConsolePage.CONSUMER, ConsolePage.APPLICATION };
+
 	private Page[] ALL_PAGES = new Page[] { ConsolePage.DASHBOARD, ConsolePage.TOPIC, ConsolePage.CONSUMER,
-			ConsolePage.SUBSCRIPTION, ConsolePage.STORAGE, ConsolePage.ENDPOINT, ConsolePage.TRACER,
-			ConsolePage.RESENDER, ConsolePage.APPLICATION,ConsolePage.META };
+	      ConsolePage.SUBSCRIPTION, ConsolePage.STORAGE, ConsolePage.ENDPOINT, ConsolePage.TRACER, ConsolePage.RESENDER,
+	      ConsolePage.APPLICATION, ConsolePage.META };
 
 	public Page[] getBasePages() {
 		return BASE_PAGES;

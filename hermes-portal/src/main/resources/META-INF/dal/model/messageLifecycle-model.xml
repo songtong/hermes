@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model model-package="com.ctrip.hermes.portal.messageLifecycle" enable-base-visitor2='true' enable-sax-parser="true">
+	<entity name="message-lifecycle" root="true">
+		<attribute name="msgId" value-type="long" />
+		<attribute name="topicId" value-type="long" />
+	</entity>
+	<entity name="try-consume">
+		<attribute name="resendId" value-type="long" />
+	</entity>
+</model>

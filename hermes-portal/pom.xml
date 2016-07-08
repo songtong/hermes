@@ -24,7 +24,6 @@
 			<groupId>org.unidal.framework</groupId>
 			<artifactId>dal-jdbc</artifactId>
 		</dependency>
-
 		<!-- thirdparty dependencies -->
 		<dependency>
 			<groupId>org.freemarker</groupId>
@@ -161,6 +160,18 @@
 								${basedir}/src/main/resources/META-INF/dal/jdbc/tag-manifest.xml,
 								${basedir}/src/main/resources/META-INF/dal/jdbc/datasource_tag-manifest.xml,
 							</manifest>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate dal model files</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>dal-model</goal>
+						</goals>
+						<configuration>
+							<manifest><![CDATA[
+                        ${basedir}/src/main/resources/META-INF/dal/model/messageLifecycle-manifest.xml,
+                     ]]></manifest>
 						</configuration>
 					</execution>
 				</executions>

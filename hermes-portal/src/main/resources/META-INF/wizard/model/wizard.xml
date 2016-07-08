@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wizard package="com.ctrip.hermes.portal">
+   <model package="com.ctrip.hermes.portal.messageLifecycle" name="messageLifecycle">
+      <sample-model>src\test\resources\message-lifecycle.xml</sample-model>
+   </model>
+</wizard>

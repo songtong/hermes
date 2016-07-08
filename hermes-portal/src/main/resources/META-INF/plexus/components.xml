@@ -153,6 +153,27 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.portal.service.TracerEsQueryService</role>
+			<implementation>com.ctrip.hermes.portal.service.TracerEsQueryService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.config.PortalConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.service.TracerService</role>
+			<implementation>com.ctrip.hermes.portal.service.TracerService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.service.TracerEsQueryService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.portal.dal.tag.CachedTagDao</role>
 			<implementation>com.ctrip.hermes.portal.dal.tag.CachedTagDao</implementation>
 		</component>
