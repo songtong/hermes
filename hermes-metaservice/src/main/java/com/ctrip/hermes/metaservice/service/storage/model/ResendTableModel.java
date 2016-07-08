@@ -13,7 +13,7 @@ public class ResendTableModel extends TableModel {
 		MetaModel payload = new MetaModel("payload", "MEDIUMBLOB", "NOT NULL");
 		MetaModel creation_date = new MetaModel("creation_date", "DATETIME(3)", "NOT NULL");
 		MetaModel schedule_date = new MetaModel("schedule_date", "DATETIME", "NOT NULL");
-		MetaModel remaining_retries = new MetaModel("remaining_retries", "TINYINT(11)", "NOT NULL");
+		MetaModel remaining_retries = new MetaModel("remaining_retries", "INT(11)", "NOT NULL");
 		MetaModel priority = new MetaModel("priority", "TINYINT(4)", "NOT NULL");
 		MetaModel origin_id = new MetaModel("origin_id", "BIGINT(20)", "NOT NULL");
 
