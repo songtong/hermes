@@ -110,7 +110,7 @@
 		</init-param>
 		<init-param>
 			<param-name>excludes</param-name>
-			<param-value>/css/*,/img/*,/js/*,/fonts/*,/api/*, /favicon.ico</param-value>
+			<param-value>/css/*,/img/*,/js/*,/fonts/*,/api/*,/favicon.ico,/slbhealthcheck.html</param-value>
 		</init-param>
 	</filter>
 
