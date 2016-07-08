@@ -6,14 +6,13 @@
 	<#list reports as entry> <#assign pair=entry.getKey()> <#assign report=entry.getValue()> <#assign topic=pair.key> <#assign consumer=pair.value>
 	<div>
 		<p>
-		<h3>
 			Topic: <b style="color: blue"><a href="http://hermes.fx.ctripcorp.com/console/topic#/detail/mysql/mysql/${topic}">${topic}</a></b> ,&emsp;Consumer: <b style="color: blue;"><a
 					href="http://hermes.fx.ctripcorp.com/console/dashboard#/detail/${topic}/${consumer}">${consumer}</a></b> ,&emsp;
 			<a href="http://hermes.fx.ctripcorp.com/console/consumer#/detail/${topic}/${consumer}">修改阈值</a>
-		</h3>
 		</p>
 		<p>
-			Email: <b style="color: blue">${report.o1Email}</b>,&emsp;Phone:&emsp;<b style="color: blue">${report.o1Phone}</b> <br />Email:&emsp;<b style="color: blue">${report.o2Email}</b>,&emsp;Phone:&emsp;<b style="color: blue">${report.o2Phone}</b>
+			Email:&emsp;<b style="color: blue">${report.o1Email!'NOT SET'}</b>,&emsp;Phone:&emsp;<b style="color: blue">${report.o1Phone!'NOT SET'}</b><br />Email:&emsp;<b style="color: blue">${report.o2Email!'NOT SET'}</b>,&emsp;Phone:&emsp;<b style="color: blue">${report.o2Phone!'NOT
+				SET'}</b>
 		</p>
 		<table border="1" cellpadding="0" cellspacing="0" width="100%" style="font-size: 12px">
 			<thead>
