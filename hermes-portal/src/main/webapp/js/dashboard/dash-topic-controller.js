@@ -55,15 +55,15 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 
 			$scope.get_consumer_delay_for_topic = function(topic_name, consumer_name) {
 				DashboardTopicService.get_consumer_delay_for_topic(topic_name, consumer_name).then(function(result) {
-					$scope.consumer_delay = result;
-					$scope.consumer_delay.totalPriorityDelay = 0;
-					$scope.consumer_delay.totalNonPriorityDelay = 0;
-					$scope.consumer_delay.totalResendDelay = 0;
-					for (var i = 0; i < $scope.consumer_delay.length; i++) {
-						$scope.consumer_delay.totalPriorityDelay = $scope.consumer_delay.totalPriorityDelay + $scope.consumer_delay[i].priorityDelay;
-						$scope.consumer_delay.totalNonPriorityDelay = $scope.consumer_delay.totalNonPriorityDelay + $scope.consumer_delay[i].nonPriorityDelay;
-						$scope.consumer_delay.totalResendDelay = $scope.consumer_delay.totalResendDelay + $scope.consumer_delay[i].resendDelay;
+					result.totalPriorityDelay = 0;
+					result.totalNonPriorityDelay = 0;
+					result.totalResendDelay = 0;
+					for (var i = 0; i < result.length; i++) {
+						result.totalPriorityDelay = result.totalPriorityDelay + result[i].priorityDelay;
+						result.totalNonPriorityDelay = result.totalNonPriorityDelay + result[i].nonPriorityDelay;
+						result.totalResendDelay = result.totalResendDelay + result[i].resendDelay;
 					}
+					$scope.consumer_delay = result;
 				});
 			}
 			if ($scope.current_consumer != null) {
