@@ -37,7 +37,7 @@ cp $SCRIPT_DIR/../tars/$ENV/hermes.properties $SCRIPT_DIR/../classes/
 # Distribute list of config files.
 cp $SCRIPT_DIR/../tars/$ENV/datasources.xml $DATA_DIR/datasources.xml
 cp $SCRIPT_DIR/../tars/mail.properties $DATA_DIR/mail.properties
-
+cp $SCRIPT_DIR/../tars/hermes-es.token $DATA_DIR/hermes-es.token
 
 
 
