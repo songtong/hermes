@@ -50,7 +50,7 @@ public class TtsNotifyHandler extends AbstractNotifyHandler implements Initializ
 
 	private static final String DEFAULT_TTS_URL = "http://osg.uat.ops.qa.nt.ctripcorp.com/api/TTSOBS";
 
-	private static final String DEFAULT_TTS_TOKEN_PATH = "/opt/ctrip/data/hermes/TTS.TOKEN";
+	private static final String DEFAULT_TTS_TOKEN_PATH = "/opt/data/hermes/TTS.TOKEN";
 
 	public static final String ID = "TtsNotifyHandler";
 

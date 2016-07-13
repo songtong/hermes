@@ -303,24 +303,6 @@
 			</configuration>
 		</component>
 		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>consumer-monitor-config</role-hint>
-			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
-			<configuration>
-				<physical-table-name>consumer_monitor_config</physical-table-name>
-				<data-source-name>fxhermesmetadb</data-source-name>
-			</configuration>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>producer-monitor-config</role-hint>
-			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
-			<configuration>
-				<physical-table-name>producer_monitor_config</physical-table-name>
-				<data-source-name>fxhermesmetadb</data-source-name>
-			</configuration>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.metaservice.model.AppDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.AppDao</implementation>
 			<requirements>
@@ -458,24 +440,6 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.model.TopicDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.TopicDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaservice.model.ConsumerMonitorConfigDao</role>
-			<implementation>com.ctrip.hermes.metaservice.model.ConsumerMonitorConfigDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaservice.model.ProducerMonitorConfigDao</role>
-			<implementation>com.ctrip.hermes.metaservice.model.ProducerMonitorConfigDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
@@ -1007,7 +971,7 @@
 			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>
 			<implementation>org.unidal.dal.jdbc.datasource.DefaultDataSourceProvider</implementation>
 			<configuration>
-				<datasourceFile>/opt/data/100003806/datasources.xml</datasourceFile>
+				<datasourceFile>/opt/data/hermes/datasources.xml</datasourceFile>
 			</configuration>
 		</component>
 	</components>

@@ -170,7 +170,7 @@ public class MonitorConfig {
 	@Value("${elastic.search.query.host:osg.ops.ctripcorp.com}")
 	private String elasticSearchQueryHost;
 
-	@Value("${elastic.search.token.path:/opt/ctrip/data/hermes/hermes-es.token}")
+	@Value("${elastic.search.token.path:/opt/data/hermes/hermes-es.token}")
 	private String elasticSearchTokenPath;
 
 	@Value("${lease.checker.exclude.topics:[]}")

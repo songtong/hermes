@@ -134,7 +134,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultMonitorConfigService.class));
 		all.add(A(DefaultNotifyThrottleManager.class));
 
-		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/data/100003806/datasources.xml"));
+		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/data/hermes/datasources.xml"));
 
 		return all;
 	}
