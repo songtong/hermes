@@ -27,12 +27,12 @@ if [[ $ENV = 'pro' ]]; then
 fi
 
 # Create dir if not exists.
-if [[ -e $DATA_DIR ]]; then
+if [[ ! -e $DATA_DIR ]]; then
 	mkdir -p $DATA_DIR
 fi
 
 # Create dir if not exists.
-if [[ -e $CONFIG_DIR ]]; then
+if [[ ! -e $CONFIG_DIR ]]; then
 	mkdir -p $CONFIG_DIR
 fi
 
@@ -43,7 +43,7 @@ cp $SCRIPT_DIR/../tars/$ENV/hermes.properties $SCRIPT_DIR/../classes/
 cp $SCRIPT_DIR/../tars/$ENV/datasources.xml $CONFIG_DIR/datasources.xml
 cp $SCRIPT_DIR/../tars/mail.properties $CONFIG_DIR/mail.properties
 cp $SCRIPT_DIR/../tars/hermes-es.token $CONFIG_DIR/hermes-es.token
-cp $SCRIPT_DIR/../tars/TTS.token $CONFIG_DIR/TTS.token
+cp $SCRIPT_DIR/../tars/TTS.TOKEN $CONFIG_DIR/TTS.TOKEN
 
 
 
