@@ -11,7 +11,7 @@ import org.unidal.lookup.annotation.Named;
 @Named(type = MailAccountProvider.class)
 public class FileMailAccountProvider implements MailAccountProvider, Initializable {
 
-	private static final String FILE = "/opt/ctrip/data/hermes/mail.properties";
+	private static final String FILE = "/opt/data/hermes/mail.properties";
 
 	private String m_user;
 

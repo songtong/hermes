@@ -44,7 +44,7 @@ public class TracerEsQueryService {
 
 	private String m_token;
 
-	private static final String m_tokenFile = "/opt/ctrip/data/hermes/hermes-es.token";
+	private static final String m_tokenFile = "/opt/data/hermes/hermes-es.token";
 
 	private void resolveDependency() {
 		if (m_token == null) {
