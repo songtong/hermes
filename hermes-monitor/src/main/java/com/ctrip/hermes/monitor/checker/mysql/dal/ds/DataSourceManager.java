@@ -32,7 +32,14 @@ public class DataSourceManager {
 		if (!m_datasources.contains(df.getUrl())) {
 			DataSource ds = PlexusComponentLocator.lookup(DataSource.class, "jdbc");
 			ds.initialize(DSD_BUILDER.buildDescriptor(new DataSourceDef("PARTITION_CHECKER").setProperties(df)));
-			m_datasources.putIfAbsent(df.getUrl(), new Pair<DataSource, Connection>(ds, ds.getConnection()));
+			Connection conn = ds.getConnection();
+			if (m_datasources.putIfAbsent(df.getUrl(), new Pair<>(ds, conn)) != null) {
+				conn.close();
+			}
+		}
+		Pair<DataSource, Connection> pair = m_datasources.get(df.getUrl());
+		if (pair.getValue().isClosed()) {
+			pair.setValue(pair.getKey().getConnection());
 		}
 		return m_datasources.get(df.getUrl()).getValue();
 	}
@@ -43,7 +50,7 @@ public class DataSourceManager {
 			try {
 				Connection c = entry.getValue().getValue();
 				if (!c.isClosed()) {
-					entry.getValue().getValue().close();
+					c.close();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -81,11 +81,9 @@ public class PartitionService {
 	}
 
 	public boolean executeSQL(Datasource ds, String sql) throws Exception {
-		Connection conn = null;
 		Statement stat = null;
 		try {
-			conn = getConnection(ds, false);
-			stat = conn.createStatement();
+			stat = getConnection(ds, false).createStatement();
 			return stat.execute(sql);
 		} finally {
 			if (stat != null) {
@@ -95,24 +93,16 @@ public class PartitionService {
 					log.error("Close statement failed: {}", sql, e);
 				}
 			}
-			if (conn != null) {
-				try {
-					conn.close();
-				} catch (Exception e) {
-					log.error("Close connection failed: {}", ds.getProperties().get("url"), e);
-				}
-			}
 		}
 	}
 
 	public Map<String, Pair<Datasource, List<PartitionInfo>>> queryDatasourcePartitions(Datasource ds) throws Exception {
 		Transaction t = Cat.newTransaction("Partition.Query", getDbName(ds));
 		t.addData("SQL", PartitionInfo.SQL_PARTITION);
-		Connection conn = getConnection(ds, true);
 		Statement stat = null;
 		ResultSet rs = null;
 		try {
-			stat = conn.createStatement();
+			stat = getConnection(ds, true).createStatement();
 			rs = stat.executeQuery(PartitionInfo.SQL_PARTITION);
 			t.setStatus(Message.SUCCESS);
 			return formatPartitionMap(PartitionInfo.parseResultSet(rs), ds);
@@ -133,13 +123,6 @@ public class PartitionService {
 					stat.close();
 				} catch (Exception e) {
 					log.error("Close statement failed.", e);
-				}
-			}
-			if (conn != null) {
-				try {
-					conn.close();
-				} catch (Exception e) {
-					log.error("Close connection failed.", e);
 				}
 			}
 		}
