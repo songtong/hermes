@@ -41,7 +41,10 @@ public class DataSourceManager {
 	public void destroy() {
 		for (Entry<String, Pair<DataSource, Connection>> entry : m_datasources.entrySet()) {
 			try {
-				entry.getValue().getValue().close();
+				Connection c = entry.getValue().getValue();
+				if (!c.isClosed()) {
+					entry.getValue().getValue().close();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
