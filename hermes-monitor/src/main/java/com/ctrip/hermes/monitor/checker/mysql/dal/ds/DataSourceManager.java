@@ -6,6 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PreDestroy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.datasource.DataSource;
 import org.unidal.dal.jdbc.datasource.JdbcDataSourceDescriptor;
@@ -18,7 +20,9 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 @Component(value = "DataSourceManager")
 public class DataSourceManager {
-	ConcurrentHashMap<String, Pair<DataSource, Connection>> m_datasources = new ConcurrentHashMap<>();
+	private static final Logger log = LoggerFactory.getLogger(DataSourceManager.class);
+
+	private ConcurrentHashMap<String, Pair<DataSource, Connection>> m_datasources = new ConcurrentHashMap<>();
 
 	private static final HermesDSDManager DSD_BUILDER = new HermesDSDManager();
 
@@ -32,6 +36,7 @@ public class DataSourceManager {
 		if (!m_datasources.contains(df.getUrl())) {
 			DataSource ds = PlexusComponentLocator.lookup(DataSource.class, "jdbc");
 			ds.initialize(DSD_BUILDER.buildDescriptor(new DataSourceDef("PARTITION_CHECKER").setProperties(df)));
+			log.info("Init datasource for: {}", df.getUrl());
 			Connection conn = ds.getConnection();
 			if (m_datasources.putIfAbsent(df.getUrl(), new Pair<>(ds, conn)) != null) {
 				conn.close();
@@ -39,6 +44,7 @@ public class DataSourceManager {
 		}
 		Pair<DataSource, Connection> pair = m_datasources.get(df.getUrl());
 		if (pair.getValue().isClosed()) {
+			log.info("Connection for {} is closed, open connection again.", df.getUrl());
 			pair.setValue(pair.getKey().getConnection());
 		}
 		return m_datasources.get(df.getUrl()).getValue();
@@ -46,6 +52,7 @@ public class DataSourceManager {
 
 	@PreDestroy
 	public void destroy() {
+		log.info("DataSourceManager is destoried.");
 		for (Entry<String, Pair<DataSource, Connection>> entry : m_datasources.entrySet()) {
 			try {
 				Connection c = entry.getValue().getValue();
