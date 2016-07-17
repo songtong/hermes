@@ -246,8 +246,7 @@ public class ESMonitorService {
 		      .to(EVENT_TIME_FORMATTER.format(ctx.getTo()));
 		TermsBuilder tb = new TermsBuilder(QUERY_AGG_NAME).field(ctx.getGroupSchema());
 
-		@SuppressWarnings("resource")
-		SearchRequestBuilder sb = new TransportClient().prepareSearch(ctx.getIndex());
+		SearchRequestBuilder sb = client.prepareSearch(ctx.getIndex());
 		sb.setTypes(ctx.getDocumentType());
 		sb.setSearchType(SearchType.COUNT);
 		sb.setQuery(QueryBuilders.filteredQuery(qb, fb));
