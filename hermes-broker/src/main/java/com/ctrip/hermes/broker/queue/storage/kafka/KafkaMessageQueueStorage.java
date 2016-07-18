@@ -18,6 +18,7 @@ import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
+import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
@@ -54,7 +55,7 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 					ByteBuf propertiesBuf = pdmsg.getDurableProperties();
 					HermesPrimitiveCodec codec = new HermesPrimitiveCodec(propertiesBuf);
 					Map<String, String> propertiesMap = codec.readStringStringMap();
-					sender.send(topic, propertiesMap.get("pK"), bytes);
+					sender.send(topic, propertiesMap.get(PropertiesHolder.SYS + "pK"), bytes);
 					BrokerStatusMonitor.INSTANCE.kafkaSend(topic);
 				}
 			}
