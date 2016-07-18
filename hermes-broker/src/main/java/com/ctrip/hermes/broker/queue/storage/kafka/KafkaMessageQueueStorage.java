@@ -51,10 +51,7 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 					bodyBuf.readBytes(bytes);
 					bodyBuf.clear();
 
-					ByteBuf propertiesBuf = pdmsg.getDurableProperties();
-					HermesPrimitiveCodec codec = new HermesPrimitiveCodec(propertiesBuf);
-					Map<String, String> propertiesMap = codec.readStringStringMap();
-					sender.send(topic, propertiesMap.get("pK"), bytes);
+					sender.send(topic, String.valueOf(partition), bytes);
 					BrokerStatusMonitor.INSTANCE.kafkaSend(topic);
 				}
 			}
