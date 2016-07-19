@@ -11,7 +11,7 @@
 
 	<div class="container" ng-app="hermes-tracer" ng-controller="tracer-controller" style="margin-top: 20px">
 		<div class="form-group form-inline" align="center" style="margin-buttom:10px">
-			<label>TopicName</label> <input type="text" class="form-control" style="width: 200px" ng-model="topicName" /> <label>RefKey</label> <input type="text" class="form-control" style="width: 300px" ng-model="refKey" /> <input id="msgDate" type="date" class="form-control" ng-model="msgDate" placeholder="yyyy-MM-dd" />
+			<label>TopicName</label> <input id="topicNames" type="text" class="form-control" style="width: 200px; display:table;" ng-model="topicName" /> <label>RefKey</label> <input type="text" class="form-control" style="width: 300px" ng-model="refKey" /> <input id="msgDate" type="date" class="form-control" ng-model="msgDate" placeholder="yyyy-MM-dd" />
 			<button class="btn btn-success" ng-click="trace(topicName,refKey,msgDate)">
 				<span class="glyphicon glyphicon-arrow-up"></span> 提交
 			</button>
