@@ -85,12 +85,17 @@ public class SchemaResource {
 		if (topic == null) {
 			throw new RestException("Topic not found: " + topicId, Status.NOT_FOUND);
 		}
-
-		if (Codec.JSON.equals(topic.getCodecType())) {
+		
+		if(topic.getCodecType().isEmpty()){
+			throw new RestException("Topic codec type can not be null",Status.BAD_REQUEST);
+		}
+		
+		String rawCodecType = topic.getCodecType().split(",")[0];
+		if (Codec.JSON.equals(rawCodecType)) {
 			throw new RestException("Json编码格式Topic暂不支持上传schema！ ");
 		}
 
-		if (Codec.AVRO.equals(topic.getCodecType()) && !fileHeader.getFileName().endsWith(".avsc")) {
+		if (Codec.AVRO.equals(rawCodecType) && !fileHeader.getFileName().endsWith(".avsc")) {
 			throw new RestException("Schema file name must end with .avsc", Status.BAD_REQUEST);
 		}
 
@@ -155,8 +160,14 @@ public class SchemaResource {
 		if (topic == null) {
 			throw new RestException("Topic not found: " + topicName, Status.NOT_FOUND);
 		}
-		if (!Codec.AVRO.equals(topic.getCodecType())) {
-			throw new RestException("Topic " + topicName + " codec type is not avro!", Status.NOT_FOUND);
+		
+		if(topic.getCodecType().isEmpty()){
+			throw new RestException("Topic codec type is null!",Status.BAD_REQUEST);
+		}
+		
+		String rawCodec = topic.getCodecType().split(",")[0];
+		if (!Codec.AVRO.equals(rawCodec)) {
+			throw new RestException("Topic " + topicName + " codec type is not avro!", Status.BAD_REQUEST);
 		}
 
 		SchemaView schemaView = null;
