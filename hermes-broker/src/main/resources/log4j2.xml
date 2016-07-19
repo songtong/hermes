@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Configuration>
 	<Properties>
-		<Property name="baseDir">/opt/logs/hermes-broker</Property>
+		<Property name="baseDir">/opt/logs/100003804</Property>
 	</Properties>
 	<Appenders>
 		<Async name="ASYNC">
@@ -16,7 +16,7 @@
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 		</Console>
 
-		<RollingFile name="FILE" fileName="${baseDir}/hermes-broker.log" filePattern="${baseDir}/$${date:yyyy-MM}/hermes-broker.%d{yyyy-MM-dd}-%i.log.gz">
+		<RollingFile name="FILE" fileName="${baseDir}/100003804.log" filePattern="${baseDir}/$${date:yyyy-MM}/100003804.%d{yyyy-MM-dd}-%i.log.gz">
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
@@ -25,7 +25,7 @@
 			</Policies>
 			<DefaultRolloverStrategy max="10">
 				<Delete basePath="${baseDir}" maxDepth="2">
-					<IfFileName glob="*/hermes-broker*.log.gz" />
+					<IfFileName glob="*/100003804*.log.gz" />
 					<IfLastModified age="30d" />
 				</Delete>
 			</DefaultRolloverStrategy>

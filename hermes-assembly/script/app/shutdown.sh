@@ -7,6 +7,4 @@ SCRIPT_PATH=$(readlink -f $0)
 SCRIPT_DIR=$(dirname $SCRIPT_PATH)
 
 chmod +x $SCRIPT_DIR/__startup.sh
-chmod +x $SCRIPT_DIR/before_start.sh
-$SCRIPT_DIR/before_start.sh
-$SCRIPT_DIR/__startup.sh start
+$SCRIPT_DIR/__startup.sh stop

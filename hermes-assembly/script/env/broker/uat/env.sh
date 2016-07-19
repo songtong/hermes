@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_PATH=/opt/logs/hermes-broker/
+LOG_PATH=/opt/logs/100003804/
 JMX_PORT=8301
 STOP_PORT=9301
 STOP_TIMEOUT=30
