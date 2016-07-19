@@ -30,7 +30,7 @@ if [[ ! -e $DATA_DIR ]]; then
 fi
 
 if [[ ! -e $DATA_DIR/hermes-config ]]; then
-	git clone http://git.dev.sh.ctripcorp.com/hermes/hermes-config.git ${DATA_DIR}/hermes-config
+	cd ${DATA_DIR} && git clone http://git.dev.sh.ctripcorp.com/hermes/hermes-config.git ${DATA_DIR}/hermes-config
 fi
 
 cd ${DATA_DIR}/hermes-config && git pull
