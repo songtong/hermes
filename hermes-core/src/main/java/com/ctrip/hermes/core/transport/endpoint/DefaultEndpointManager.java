@@ -90,10 +90,10 @@ public class DefaultEndpointManager implements EndpointManager, Initializable {
 				endpoint = endpointEntryFromMeta.getKey();
 				updateEndpoint(topic, partition, endpoint, endpointEntryFromMeta.getValue());
 			} else {
-				endpoint = endpointEntryFromCache.getEndpoint();
+				endpoint = endpointEntryFromCache.getEndpoint(true);
 			}
 		} else if (endpointEntryFromCache != null) {
-			endpoint = endpointEntryFromCache.getEndpoint();
+			endpoint = endpointEntryFromCache.getEndpoint(true);
 		} else {
 			endpoint = endpointEntryFromMeta.getKey();
 			updateEndpoint(topic, partition, endpoint, endpointEntryFromMeta.getValue());
@@ -186,7 +186,8 @@ public class DefaultEndpointManager implements EndpointManager, Initializable {
 	@Override
 	public boolean containsEndpoint(Endpoint endpoint) {
 		for (EndpointCacheValue endpointCacheValue : m_tpEndpointCache.values()) {
-			if (endpointCacheValue.getEndpoint() != null && endpointCacheValue.getEndpoint().getId() == endpoint.getId()) {
+			Endpoint existingEndpoint = endpointCacheValue.getEndpoint(false);
+			if (existingEndpoint != null && existingEndpoint.getId() == endpoint.getId()) {
 				return true;
 			}
 		}
@@ -206,8 +207,10 @@ public class DefaultEndpointManager implements EndpointManager, Initializable {
 			m_accessTime = System.currentTimeMillis();
 		}
 
-		public synchronized Endpoint getEndpoint() {
-			touch();
+		public synchronized Endpoint getEndpoint(boolean shouldTouch) {
+			if (shouldTouch) {
+				touch();
+			}
 			return m_endpoint;
 		}
 
