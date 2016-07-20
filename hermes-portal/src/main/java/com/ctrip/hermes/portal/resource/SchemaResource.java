@@ -92,6 +92,7 @@ public class SchemaResource {
 
 		String rawCodecType = topic.getCodecType().split(",")[0];
 		if (Codec.JSON.equals(rawCodecType)) {
+			throw new RestException("Do not support uploading schema for json codec type topics!", Status.BAD_REQUEST);
 		}
 
 		if (Codec.AVRO.equals(rawCodecType) && !fileHeader.getFileName().endsWith(".avsc")) {
