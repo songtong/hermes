@@ -66,9 +66,9 @@ public class SchemaResource {
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response createSchema(@FormDataParam("file") InputStream fileInputStream,
-			@FormDataParam("file") FormDataContentDisposition fileHeader, @FormDataParam("schema") String content,
-			@FormDataParam("topicId") long topicId, @FormDataParam("userName") String userName,
-			@FormDataParam("userMail") String userMail) {
+	      @FormDataParam("file") FormDataContentDisposition fileHeader, @FormDataParam("schema") String content,
+	      @FormDataParam("topicId") long topicId, @FormDataParam("userName") String userName,
+	      @FormDataParam("userMail") String userMail) {
 		logger.debug("create schema, topicId {}, content {}, fileHeader {}", topicId, content, fileHeader);
 		if (StringUtils.isEmpty(content)) {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
@@ -86,11 +86,16 @@ public class SchemaResource {
 			throw new RestException("Topic not found: " + topicId, Status.NOT_FOUND);
 		}
 
-		if (Codec.JSON.equals(topic.getCodecType())) {
-			throw new RestException("Json编码格式Topic暂不支持上传schema！ ");
+		if (topic.getCodecType().isEmpty()) {
+			throw new RestException("Topic codec type can not be null", Status.BAD_REQUEST);
 		}
 
-		if (Codec.AVRO.equals(topic.getCodecType()) && !fileHeader.getFileName().endsWith(".avsc")) {
+		String rawCodecType = topic.getCodecType().split(",")[0];
+		if (Codec.JSON.equals(rawCodecType)) {
+			throw new RestException("Do not support uploading schema for json codec type topics!", Status.BAD_REQUEST);
+		}
+
+		if (Codec.AVRO.equals(rawCodecType) && !fileHeader.getFileName().endsWith(".avsc")) {
 			throw new RestException("Schema file name must end with .avsc", Status.BAD_REQUEST);
 		}
 
@@ -155,8 +160,14 @@ public class SchemaResource {
 		if (topic == null) {
 			throw new RestException("Topic not found: " + topicName, Status.NOT_FOUND);
 		}
-		if (!Codec.AVRO.equals(topic.getCodecType())) {
-			throw new RestException("Topic " + topicName + " codec type is not avro!", Status.NOT_FOUND);
+
+		if (topic.getCodecType().isEmpty()) {
+			throw new RestException("Topic codec type is null!", Status.BAD_REQUEST);
+		}
+
+		String rawCodec = topic.getCodecType().split(",")[0];
+		if (!Codec.AVRO.equals(rawCodec)) {
+			throw new RestException("Topic " + topicName + " codec type is not avro!", Status.BAD_REQUEST);
 		}
 
 		SchemaView schemaView = null;
@@ -170,7 +181,7 @@ public class SchemaResource {
 			}
 			schema.setAvroid(avroid);
 			schemaView = schemaService.createSchema(schema, topic);
-		}  catch (Exception e) {
+		} catch (Exception e) {
 			logger.warn("Create schema failed", e);
 			throw new RestException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
 		}
@@ -223,8 +234,8 @@ public class SchemaResource {
 			throw new RestException("Schema file not found: " + schemaId, Status.NOT_FOUND);
 		}
 
-		return Response.status(Status.OK).header("content-disposition", fileProperties)
-				.entity(schema.getSchemaContent()).build();
+		return Response.status(Status.OK).header("content-disposition", fileProperties).entity(schema.getSchemaContent())
+		      .build();
 	}
 
 	/**
@@ -253,7 +264,7 @@ public class SchemaResource {
 		}
 
 		return Response.status(Status.OK).header("content-disposition", fileProperties).entity(schema.getJarContent())
-				.build();
+		      .build();
 	}
 
 	@GET
@@ -277,14 +288,14 @@ public class SchemaResource {
 		}
 
 		return Response.status(Status.OK).header("content-disposition", fileProperties).entity(schema.getCsContent())
-				.build();
+		      .build();
 	}
 
 	@POST
 	@Path("{id}/deploy")
 	public Response deployMaven(@PathParam("id") long schemaId, @QueryParam("groupId") String groupId,
-			@QueryParam("artifactId") String artifactId, @QueryParam("version") String version,
-			@QueryParam("repositoryId") @DefaultValue("snapshots") String repositoryId) {
+	      @QueryParam("artifactId") String artifactId, @QueryParam("version") String version,
+	      @QueryParam("repositoryId") @DefaultValue("snapshots") String repositoryId) {
 		logger.debug("deploy maven {} {} {} {} {}", schemaId, groupId, artifactId, version, repositoryId);
 		Schema schema = null;
 		try {
@@ -346,7 +357,7 @@ public class SchemaResource {
 	@Path("{id}/compatibility")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response compatibility(@PathParam("id") Long schemaId, @FormDataParam("file") InputStream fileInputStream,
-			@FormDataParam("file") FormDataContentDisposition fileHeader) {
+	      @FormDataParam("file") FormDataContentDisposition fileHeader) {
 		logger.debug("test compatilibity schemaId {} fileHeader {}", schemaId, fileHeader);
 		Schema schema = null;
 		try {

@@ -1,13 +1,31 @@
 angular.module('hermes-tracer', [ 'ngResource', 'ui.bootstrap', 'global', 'utils', 'components' ]).controller('tracer-controller', [ '$scope', '$resource', function($scope, $resource) {
 	var tracerResource = $resource("/api/tracer", {}, {})
+	var topicResource = $resource('/api/topics/names', {}, {})
 	$scope.msgDate = new Date();
 
 	$scope.mlcs = [];
 	$scope.unUsedEvents = [];
 	$scope.hintWord = "";
+	$scope.topicNames = [];
 
-	console.log("done");
+	topicResource.query(function(result) {
+		result = new Bloodhound({
+			  datumTokenizer: Bloodhound.tokenizers.whitespace,
+			  queryTokenizer: Bloodhound.tokenizers.whitespace,
+			  local: result
+			});
 
+			$('#topicNames').typeahead({
+			  hint: true,
+			  highlight: true,
+			  minLength: 1
+			},
+			{
+			  name: 'result',
+			  source: result
+			});
+	})
+	
 	$scope.trace = function trace(topicName, refKey, msgDate) {
 		if (msgDate.getTime() > new Date()) {
 			$scope.$broadcast('alert-error', 'alert', '无效的时间！');

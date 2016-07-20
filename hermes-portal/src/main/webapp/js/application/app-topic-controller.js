@@ -9,7 +9,7 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 		ownerName1 : ssoUser,
 		ownerEmail1Prefix : ssoMail.split('@')[0],
 		needCompress : 'true',
-		compressionType : 'gzip',
+		compressionType : 'deflater',
 		compressionLevel : 1
 	};
 	$scope.productLines = ApplicationService.get_productLines();
