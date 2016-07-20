@@ -127,7 +127,11 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 					      }
 
 				      });
+			}else{
+				cache.invalidateAll();
+				topicCache.invalidateAll();
 			}
+			
 			for (ConsumerGroup model : models) {
 				cache.put(model.getKeyId(), model);
 				Map<Integer, ConsumerGroup> cgs = topicCache.getIfPresent(model.getTopicId());

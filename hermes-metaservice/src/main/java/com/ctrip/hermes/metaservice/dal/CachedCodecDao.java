@@ -72,6 +72,7 @@ public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec>
 	public Collection<Codec> list(boolean fromDB) throws DalException {
 		if (isNeedReload || fromDB) {
 			List<Codec> models = list(CodecEntity.READSET_FULL);
+			cache.invalidateAll();
 			for (Codec model : models) {
 				cache.put(model.getKeyType(), model);
 			}

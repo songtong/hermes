@@ -100,7 +100,11 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 					      }
 
 				      });
+			}else{
+				cache.invalidateAll();
+				nameCache.invalidateAll();
 			}
+			
 			for (Topic model : models) {
 				cache.put(model.getKeyId(), model);
 				nameCache.put(model.getName(), model);

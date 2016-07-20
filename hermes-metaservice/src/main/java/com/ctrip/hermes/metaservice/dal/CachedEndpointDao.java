@@ -72,6 +72,7 @@ public class CachedEndpointDao extends EndpointDao implements CachedDao<String, 
 	public Collection<Endpoint> list(boolean fromDB) throws DalException {
 		if (isNeedReload || fromDB) {
 			List<Endpoint> models = list(EndpointEntity.READSET_FULL);
+			cache.invalidateAll();
 			for (Endpoint model : models) {
 				cache.put(model.getKeyId(), model);
 			}

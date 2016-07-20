@@ -72,6 +72,7 @@ public class CachedAppDao extends AppDao implements CachedDao<Long, App> {
 	public Collection<App> list(boolean fromDB) throws DalException {
 		if (isNeedReload || fromDB) {
 			List<App> models = list(AppEntity.READSET_FULL);
+			cache.invalidateAll();
 			for (App model : models) {
 				cache.put(model.getKeyId(), model);
 			}

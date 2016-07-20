@@ -60,6 +60,7 @@ public class CachedStorageDao extends StorageDao implements CachedDao<String, St
 	public Collection<Storage> list(boolean fromDB) throws DalException {
 		if (isNeedReload || fromDB) {
 			List<Storage> models = list(StorageEntity.READSET_FULL);
+			cache.invalidateAll();
 			for (Storage model : models) {
 				cache.put(model.getKeyType(), model);
 			}

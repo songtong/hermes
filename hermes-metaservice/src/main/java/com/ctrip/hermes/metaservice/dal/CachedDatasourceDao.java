@@ -71,6 +71,7 @@ public class CachedDatasourceDao extends DatasourceDao implements CachedDao<Stri
 	public Collection<Datasource> list(boolean fromDB) throws DalException {
 		if (isNeedReload || fromDB) {
 			List<Datasource> models = list(DatasourceEntity.READSET_FULL);
+			cache.invalidateAll();
 			for (Datasource model : models) {
 				cache.put(model.getKeyId(), model);
 			}
