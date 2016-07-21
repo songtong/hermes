@@ -24,7 +24,7 @@ public class CachedAppDao extends AppDao implements CachedDao<Long, App> {
 
 	private int max_size = 10;
 
-	private LoadingCache<Long, App> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<Long, App> cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, App>() {
 
 		      @Override

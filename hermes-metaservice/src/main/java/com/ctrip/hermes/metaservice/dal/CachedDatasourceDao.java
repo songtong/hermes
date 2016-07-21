@@ -23,7 +23,7 @@ public class CachedDatasourceDao extends DatasourceDao implements CachedDao<Stri
 
 	private int max_size = 100;
 
-	private LoadingCache<String, Datasource> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<String, Datasource> cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Datasource>() {
 
 		      @Override

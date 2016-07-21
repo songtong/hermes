@@ -24,7 +24,7 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 
 	private int max_size = 1000;
 
-	private LoadingCache<Integer, ConsumerGroup> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<Integer, ConsumerGroup> cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Integer, ConsumerGroup>() {
 
 		      @Override
@@ -34,7 +34,7 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 
 	      });
 
-	private LoadingCache<Long, Map<Integer, ConsumerGroup>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size)
+	private LoadingCache<Long, Map<Integer, ConsumerGroup>> topicCache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size)
 	      .recordStats().refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Map<Integer, ConsumerGroup>>() {
 
 		      @Override
@@ -104,7 +104,7 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 			List<ConsumerGroup> models = list(ConsumerGroupEntity.READSET_FULL);
 			if (models.size() > max_size) {
 				max_size = models.size() * 2;
-				cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
+				cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
 				      .build(new CacheLoader<Integer, ConsumerGroup>() {
 
 					      @Override
@@ -113,7 +113,7 @@ public class CachedConsumerGroupDao extends ConsumerGroupDao implements CachedDa
 					      }
 
 				      });
-				topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
+				topicCache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
 				      .build(new CacheLoader<Long, Map<Integer, ConsumerGroup>>() {
 
 					      @Override

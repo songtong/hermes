@@ -24,7 +24,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
 	private int max_size = 1000;
 
-	private LoadingCache<Long, Topic> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<Long, Topic> cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, Topic>() {
 
 		      @Override
@@ -34,7 +34,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 
 	      });
 
-	private LoadingCache<String, Topic> nameCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<String, Topic> nameCache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Topic>() {
 
 		      @Override
@@ -82,7 +82,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 			List<Topic> models = list(TopicEntity.READSET_FULL);
 			if (models.size() > max_size) {
 				max_size = models.size() * 2;
-				cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
+				cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
 				      .build(new CacheLoader<Long, Topic>() {
 
 					      @Override
@@ -91,7 +91,7 @@ public class CachedTopicDao extends TopicDao implements CachedDao<Long, Topic> {
 					      }
 
 				      });
-				nameCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
+				nameCache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats().refreshAfterWrite(10, TimeUnit.MINUTES)
 				      .build(new CacheLoader<String, Topic>() {
 
 					      @Override

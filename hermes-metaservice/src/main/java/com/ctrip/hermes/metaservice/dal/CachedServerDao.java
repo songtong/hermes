@@ -24,7 +24,7 @@ public class CachedServerDao extends ServerDao implements CachedDao<String, Serv
 
 	private int max_size = 10;
 
-	private LoadingCache<String, Server> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<String, Server> cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Server>() {
 
 		      @Override
