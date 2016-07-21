@@ -24,7 +24,7 @@ public class CachedCodecDao extends CodecDao implements CachedDao<String, Codec>
 
 	private int max_size = 5;
 
-	private LoadingCache<String, Codec> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<String, Codec> cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Codec>() {
 
 		      @Override

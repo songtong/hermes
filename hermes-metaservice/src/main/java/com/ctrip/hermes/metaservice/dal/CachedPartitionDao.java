@@ -23,7 +23,7 @@ public class CachedPartitionDao extends PartitionDao implements CachedDao<Long, 
 
 	private int max_size = 1000;
 
-	private LoadingCache<Long, List<Partition>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<Long, List<Partition>> topicCache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<Partition>>() {
 
 		      @Override

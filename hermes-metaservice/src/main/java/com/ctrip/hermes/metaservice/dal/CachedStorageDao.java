@@ -24,7 +24,7 @@ public class CachedStorageDao extends StorageDao implements CachedDao<String, St
 
 	private int max_size = 10;
 
-	private LoadingCache<String, Storage> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<String, Storage> cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Storage>() {
 
 		      @Override

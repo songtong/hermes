@@ -24,7 +24,7 @@ public class CachedProducerDao extends ProducerDao implements CachedDao<Long, Pr
 
 	private int max_size = 5;
 	
-	private LoadingCache<Long, List<Producer>> topicCache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
+	private LoadingCache<Long, List<Producer>> topicCache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<Producer>>() {
 
 		      @Override
