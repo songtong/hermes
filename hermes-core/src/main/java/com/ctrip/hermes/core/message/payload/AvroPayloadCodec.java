@@ -5,6 +5,7 @@ import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.avro.generic.GenericRecord;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -26,13 +27,16 @@ public class AvroPayloadCodec extends AbstractPayloadCodec implements Initializa
 	@Inject
 	private HermesKafkaAvroSerializer avroSerializer;
 
-	@Inject
-	private HermesKafkaAvroDeserializer avroDeserializer;
+	@Inject(value = "SPECIFIC")
+	private HermesKafkaAvroDeserializer specificDeserializer;
+
+	@Inject(value = "GENERIC")
+	private HermesKafkaAvroDeserializer genericDeserializer;
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T doDecode(byte[] raw, Class<T> clazz) {
-		return (T) avroDeserializer.deserialize(null, raw);
+		return (T) (clazz == GenericRecord.class ? genericDeserializer : specificDeserializer).deserialize(null, raw);
 	}
 
 	@Override
@@ -57,6 +61,9 @@ public class AvroPayloadCodec extends AbstractPayloadCodec implements Initializa
 		avroSerializer.configure(configs, false);
 
 		configs.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, Boolean.TRUE.toString());
-		avroDeserializer.configure(configs, false);
+		specificDeserializer.configure(configs, false);
+
+		configs.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, Boolean.FALSE.toString());
+		genericDeserializer.configure(configs, false);
 	}
 }
