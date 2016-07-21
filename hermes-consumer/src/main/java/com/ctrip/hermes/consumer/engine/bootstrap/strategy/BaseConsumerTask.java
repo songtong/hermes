@@ -330,6 +330,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 						}
 
 					} else {
+						endpointManager.refreshEndpoint(cmd.getTopic(), cmd.getPartition());
 						schedulePolicy.fail(true);
 					}
 
@@ -654,6 +655,8 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 						appendToMsgQueue(result);
 						resultReceived(result);
 					}
+				} else {
+					PlexusComponentLocator.lookup(EndpointManager.class).refreshEndpoint(cmd.getTopic(), cmd.getPartition());
 				}
 			} finally {
 				pullMessageResultMonitor.remove(cmd);

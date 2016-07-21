@@ -280,6 +280,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 							return new SendMessageResult(false, false, null);
 						}
 					} else {
+						m_endpointManager.refreshEndpoint(topic, partition);
 						return new SendMessageResult(false, false, null);
 					}
 				} else {
