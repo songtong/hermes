@@ -60,6 +60,7 @@ public class CachedSchemaDao extends SchemaDao implements CachedDao<Long, Schema
 	public Collection<Schema> list(boolean fromDB) throws DalException {
 		if (isNeedReload || fromDB) {
 			List<Schema> models = list(SchemaEntity.READSET_FULL);
+			cache.invalidateAll();
 			for (Schema model : models) {
 				cache.put(model.getKeyId(), model);
 			}

@@ -60,6 +60,7 @@ public class CachedServerDao extends ServerDao implements CachedDao<String, Serv
 	public Collection<Server> list(boolean fromDB) throws DalException {
 		if (isNeedReload || fromDB) {
 			List<Server> models = list(ServerEntity.READSET_FULL);
+			cache.invalidateAll();
 			for (Server model : models) {
 				cache.put(model.getKeyId(), model);
 			}
