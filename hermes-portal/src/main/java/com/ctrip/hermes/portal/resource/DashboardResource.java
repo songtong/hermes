@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -146,6 +147,9 @@ public class DashboardResource {
 				// m_payloadString = JSON.toJSONString(new JsonPayloadCodec().decode(msg.getPayload(), Object.class));
 				m_payloadString = JSON.toJSONString(PayloadCodecFactory.getCodecByType(msg.getCodecType()).decode(
 				      msg.getPayload(), Object.class));
+			} else if (Codec.AVRO.equals(msg.getCodecType().split(",")[0])) {
+				m_payloadString = JSON.toJSONString(PayloadCodecFactory.getCodecByType(msg.getCodecType())
+				      .decode(msg.getPayload(), GenericRecord.class).toString());
 			}
 		}
 
