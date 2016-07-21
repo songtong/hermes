@@ -72,9 +72,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(JsonPayloadCodec.class));
 		all.add(A(SchemaRegisterRestClient.class).is(PER_LOOKUP));
 		all.add(A(HermesKafkaAvroSerializer.class));
+		all.add(A(HermesKafkaAvroDeserializer.class));
 		all.add(C(HermesKafkaAvroDeserializer.class, "GENERIC", HermesKafkaAvroDeserializer.class) //
-		      .req(SchemaRegisterRestClient.class));
-		all.add(C(HermesKafkaAvroDeserializer.class, "SPECIFIC", HermesKafkaAvroDeserializer.class) //
 		      .req(SchemaRegisterRestClient.class));
 		all.add(A(AvroPayloadCodec.class));
 		all.add(A(GZipPayloadCodec.class));

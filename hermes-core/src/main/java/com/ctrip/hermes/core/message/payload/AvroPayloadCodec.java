@@ -27,7 +27,7 @@ public class AvroPayloadCodec extends AbstractPayloadCodec implements Initializa
 	@Inject
 	private HermesKafkaAvroSerializer avroSerializer;
 
-	@Inject(value = "SPECIFIC")
+	@Inject
 	private HermesKafkaAvroDeserializer specificDeserializer;
 
 	@Inject(value = "GENERIC")

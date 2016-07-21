@@ -175,7 +175,6 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroDeserializer</role>
-			<role-hint>GENERIC</role-hint>
 			<implementation>com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroDeserializer</implementation>
 			<requirements>
 				<requirement>
@@ -185,7 +184,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroDeserializer</role>
-			<role-hint>SPECIFIC</role-hint>
+			<role-hint>GENERIC</role-hint>
 			<implementation>com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroDeserializer</implementation>
 			<requirements>
 				<requirement>
@@ -203,7 +202,6 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroDeserializer</role>
-					<role-hint>SPECIFIC</role-hint>
 					<field-name>specificDeserializer</field-name>
 				</requirement>
 				<requirement>
