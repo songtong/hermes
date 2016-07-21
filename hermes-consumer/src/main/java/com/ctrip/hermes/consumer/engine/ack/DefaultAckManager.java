@@ -192,6 +192,8 @@ public class DefaultAckManager implements AckManager {
 					} else {
 						m_endpointManager.refreshEndpoint(topic, partition);
 					}
+				} else {
+					m_endpointManager.refreshEndpoint(topic, partition);
 				}
 
 				tx.setStatus(acked ? Transaction.SUCCESS : "ACK_CMD_FAILED");
