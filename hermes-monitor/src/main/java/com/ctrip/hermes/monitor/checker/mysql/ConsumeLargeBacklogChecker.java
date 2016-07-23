@@ -412,7 +412,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		return null;
 	}
 
-	private String cleanEmailAddress(String email) {
+	public static String cleanEmailAddress(String email) {
 		if (!StringUtils.isBlank(email)) {
 			java.util.regex.Matcher matcher = EMAIL_PATTERN.matcher(email);
 			if (matcher.find()) {
@@ -426,4 +426,8 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 	public void afterPropertiesSet() throws Exception {
 		m_notifyService.setThrottle(m_rdHermes.getEmail(), NoticeType.EMAIL, 1000, 600000);
 	}
+	
+	public static void main(String[] args) {
+	   System.out.println(cleanEmailAddress("	qingyang@Ctrip.com.com"));
+   }
 }
