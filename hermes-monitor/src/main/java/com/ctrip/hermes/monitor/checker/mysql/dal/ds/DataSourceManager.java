@@ -32,19 +32,24 @@ public class DataSourceManager {
 		}
 	}
 
-	public Connection getConnection(PropertiesDef df) throws Exception {
-		if (!m_datasources.contains(df.getUrl())) {
+	public Connection getConnection(PropertiesDef df, boolean forceNew) throws Exception {
+		if (!m_datasources.containsKey(df.getUrl())) {
 			DataSource ds = PlexusComponentLocator.lookup(DataSource.class, "jdbc");
 			ds.initialize(DSD_BUILDER.buildDescriptor(new DataSourceDef("PARTITION_CHECKER").setProperties(df)));
 			log.info("Init datasource for: {}", df.getUrl());
 			Connection conn = ds.getConnection();
 			if (m_datasources.putIfAbsent(df.getUrl(), new Pair<>(ds, conn)) != null) {
+				log.warn("Already cached connection for ds: {}", df.getUrl());
 				conn.close();
 			}
 		}
 		Pair<DataSource, Connection> pair = m_datasources.get(df.getUrl());
-		if (pair.getValue().isClosed()) {
-			log.info("Connection for {} is closed, open connection again.", df.getUrl());
+		Connection conn = pair.getValue();
+		if (!conn.isValid(0) || forceNew) {
+			if (!conn.isClosed()) {
+				conn.close();
+			}
+			log.info("Connection for {} is closed (force new= {}), open connection again.", df.getUrl(), forceNew);
 			pair.setValue(pair.getKey().getConnection());
 		}
 		return m_datasources.get(df.getUrl()).getValue();
