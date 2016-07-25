@@ -56,7 +56,7 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 		sync_schema : {
 			method : 'POST',
 			isArray : false,
-			url : '/api/topics/:name/syncSchema/:userName/:userEmail',
+			url : '/api/topics/:name/syncSchema',
 			params : {
 				name : '@name',
 				userName : '@userName',

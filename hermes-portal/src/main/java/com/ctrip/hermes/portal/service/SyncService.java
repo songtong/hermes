@@ -102,7 +102,8 @@ public class SyncService {
 		schema.setTopicId(0);
 		schema.setId(0);
 		schema.setAvroid(null);
-		Builder request = target.path(String.format("/api/schemas/%s/%s/%s", topicName, userName, userMail)).request();
+		Builder request = target.path(String.format("/api/schemas/%s", topicName)).queryParam("userName", userName)
+		      .queryParam("userMail", userMail).request();
 		SchemaView schemaView = null;
 		try {
 			schemaView = request.post(Entity.json(schema), SchemaView.class);

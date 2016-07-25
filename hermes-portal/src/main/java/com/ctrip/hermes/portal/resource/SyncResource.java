@@ -157,9 +157,9 @@ public class SyncResource {
 	}
 
 	@POST
-	@Path("{topic}/syncSchema/{userName}/{userEmail}")
-	public Response syncSchema(@PathParam("topic") String topicName, @PathParam("userName") String userName,
-	      @PathParam("userEmail") String userEmail) {
+	@Path("{topic}/syncSchema")
+	public Response syncSchema(@PathParam("topic") String topicName, @QueryParam("userName") String userName,
+			@QueryParam("userEmail") String userEmail) {
 		TopicView topic = topicService.findTopicViewByName(topicName);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
