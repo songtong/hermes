@@ -142,7 +142,8 @@ public class SchemaResource {
 
 	@POST
 	@Path("{topicName}")
-	public Response createSchemaByEntity(@PathParam("topicName") String topicName, String schemaContent) {
+	public Response createSchemaByEntity(@PathParam("topicName") String topicName,
+	      @QueryParam("userName") String userName, @QueryParam("userMail") String userMail, String schemaContent) {
 		logger.debug("create schema with content", schemaContent);
 		if (StringUtils.isEmpty(schemaContent)) {
 			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
@@ -184,6 +185,9 @@ public class SchemaResource {
 		} catch (Exception e) {
 			logger.warn("Create schema failed", e);
 			throw new RestException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
+		}
+		if (userName != null && userMail != null) {
+			mailService.sendUploadSchemaMail(schemaView, userMail, userName);
 		}
 		return Response.status(Status.CREATED).entity(schemaView).build();
 

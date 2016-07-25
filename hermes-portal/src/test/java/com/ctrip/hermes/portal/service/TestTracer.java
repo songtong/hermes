@@ -11,7 +11,6 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
 import org.junit.Before;
 import org.junit.Test;
 import org.unidal.helper.Reflects;
-import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.env.DefaultClientEnvironment;
@@ -21,7 +20,7 @@ import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.messageLifecycle.entity.MessageLifecycle;
 
-public class TestTracer extends ComponentTestCase {
+public class TestTracer  {
 	private TracerService tracerService;
 
 	@Before

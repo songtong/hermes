@@ -94,8 +94,8 @@ public class PortalConfig implements Initializable {
 	public String getEmailTemplateDir() {
 		return m_env.getGlobalConfig().getProperty("hermes.emailtemplates.dir", "/templates");
 	}
-	
-	public String getEsQueryUrl(){
+
+	public String getEsQueryUrl() {
 		return m_env.getGlobalConfig().getProperty("es.query.url");
 	}
 
@@ -144,5 +144,9 @@ public class PortalConfig implements Initializable {
 		m_esClusterName = //
 		getConfigFromApollo(ES_NAME_KEY, m_env.getGlobalConfig().getProperty(ES_NAME_KEY, "elasticsearch"));
 		m_esClusterString = getConfigFromApollo(ES_CLUSTER_KEY, m_env.getGlobalConfig().getProperty(ES_CLUSTER_KEY));
+	}
+
+	public String getCurrentPortalHost() {
+		return m_env.getGlobalConfig().getProperty("current.portal.host", "127.0.0.1");
 	}
 }

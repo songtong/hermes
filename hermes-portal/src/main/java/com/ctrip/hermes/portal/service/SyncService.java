@@ -41,15 +41,15 @@ public class SyncService {
 				consumerView.setId(null);
 				Response response = request.post(Entity.json(consumerView));
 				if (!(Status.CREATED.getStatusCode() == response.getStatus()//
-						|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
+				|| Status.CONFLICT.getStatusCode() == response.getStatus())) {
 					throw new RestException(String.format("Add consumer %s failed.", consumerView.getName()),
-							Status.INTERNAL_SERVER_ERROR);
+					      Status.INTERNAL_SERVER_ERROR);
 				}
 			}
 		} catch (Exception e) {
 			log.warn("Sync Consumers failed.", e);
 			throw new RestException(String.format("Sync consumers: %s failed: %s", topic.getName(), e.getMessage()),
-					Status.NOT_ACCEPTABLE);
+			      Status.NOT_ACCEPTABLE);
 		}
 	}
 
@@ -78,7 +78,7 @@ public class SyncService {
 		} catch (Exception e) {
 			log.warn("Sync kafka topic failed.", e);
 			throw new RestException(String.format("Sync kafka topic: %s failed: %s", topic.getName(), e.getMessage()),
-					Status.NOT_ACCEPTABLE);
+			      Status.NOT_ACCEPTABLE);
 		}
 	}
 
@@ -89,7 +89,7 @@ public class SyncService {
 			view = request.post(Entity.json(topic), TopicView.class);
 		} catch (Exception e) {
 			throw new RestException(String.format("Sync mysql topic: %s failed: %s", topic.getName(), e.getMessage()),
-					Status.NOT_ACCEPTABLE);
+			      Status.NOT_ACCEPTABLE);
 		}
 		if (view == null || !view.getName().equals(topic.getName())) {
 			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
@@ -97,19 +97,20 @@ public class SyncService {
 		return view;
 	}
 
-	public void syncSchema(Schema schema, String topicName, WebTarget target) {
+	public void syncSchema(Schema schema, String topicName, String userName, String userMail, WebTarget target) {
 		schema.setName(null);
 		schema.setTopicId(0);
 		schema.setId(0);
 		schema.setAvroid(null);
-		Builder request = target.path("/api/schemas/" + topicName).request();
+		Builder request = target.path(String.format("/api/schemas/%s", topicName)).queryParam("userName", userName)
+		      .queryParam("userMail", userMail).request();
 		SchemaView schemaView = null;
 		try {
 			schemaView = request.post(Entity.json(schema), SchemaView.class);
 		} catch (Exception e) {
 			throw new RestException(String.format("sync schema failed: %s", e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
-		if (schemaView == null ) {
+		if (schemaView == null) {
 			throw new RestException("Sync validation failed.", Status.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -142,8 +143,8 @@ public class SyncService {
 			}
 		} catch (Exception e) {
 			throw new RestException(
-					"Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
-					Status.INTERNAL_SERVER_ERROR);
+			      "Can not fetch remote datasource info, maybe api is not compatible: " + e.getMessage(),
+			      Status.INTERNAL_SERVER_ERROR);
 		}
 		Set<String> ret = new HashSet<String>();
 		for (String ds : iDses) {
