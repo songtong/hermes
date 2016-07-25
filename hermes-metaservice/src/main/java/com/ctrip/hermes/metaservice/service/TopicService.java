@@ -277,17 +277,6 @@ public class TopicService {
 		}
 		return null;
 	}
-	
-	public TopicView findTopicViewById(long id) {
-		try {
-			com.ctrip.hermes.metaservice.model.Topic topicModel = this.m_topicDao.findByPK(id);
-			TopicView topicView = ModelToViewConverter.convert(topicModel);
-			return fillTopicView(topicView);
-		} catch (Exception e) {
-			m_logger.debug("findTopicViewByName failed, id: " + id, e);
-		}
-		return null;
-	}
 
 	public List<TopicView> findTopicViews(String pattern) {
 		List<TopicView> filtered = new ArrayList<TopicView>();

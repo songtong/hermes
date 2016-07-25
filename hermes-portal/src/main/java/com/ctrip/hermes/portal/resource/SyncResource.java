@@ -50,7 +50,7 @@ public class SyncResource {
 	@POST
 	@Path("{topic}/sync")
 	public Response syncTopic(@PathParam("topic") String topicName,
-			@QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
+	      @QueryParam("force_schema") @DefaultValue("false") boolean forceSchema) {
 		TopicView topic = topicService.findTopicViewByName(topicName);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
@@ -61,7 +61,7 @@ public class SyncResource {
 			exist = syncService.isTopicExistOnTarget(topicName, target);
 		} catch (Exception e) {
 			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
-					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
 		if (exist) {
 			throw new RestException(String.format("Topic %s is already exists.", topicName), Status.CONFLICT);
@@ -85,7 +85,7 @@ public class SyncResource {
 
 			if (schemaId != null) {
 				try {
-					syncService.syncSchema(schemaService.getSchemaMeta(schemaId), topicName, target);
+					syncService.syncSchema(schemaService.getSchemaMeta(schemaId), topicName, null, null, target);
 				} catch (Exception e) {
 					log.warn("Sync schema failed for topic {}", topic.getName(), e);
 				}
@@ -100,7 +100,7 @@ public class SyncResource {
 	@POST
 	@Path("sync")
 	public Response syncTopic(@QueryParam("environment") String environment,
-			@QueryParam("forceSchema") @DefaultValue("false") boolean forceSchema, String content) {
+	      @QueryParam("forceSchema") @DefaultValue("false") boolean forceSchema, String content) {
 		log.info("Sync topic with payload {}.", content);
 		if (StringUtils.isEmpty(content)) {
 			log.error("Payload content is empty, sync topic failed.");
@@ -133,7 +133,7 @@ public class SyncResource {
 			exist = syncService.isTopicExistOnTarget(topicView.getName(), target);
 		} catch (Exception e) {
 			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicView.getName(),
-					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
 		if (exist) {
 			throw new RestException(String.format("Topic %s is already exists.", topicView.getName()), Status.CONFLICT);
@@ -157,9 +157,9 @@ public class SyncResource {
 	}
 
 	@POST
-	@Path("{topic}/syncSchema")
+	@Path("{topic}/syncSchema/{userName}/{userEmail}")
 	public Response syncSchema(@PathParam("topic") String topicName, @PathParam("userName") String userName,
-			@PathParam("userEmail") String userEmail) {
+	      @PathParam("userEmail") String userEmail) {
 		TopicView topic = topicService.findTopicViewByName(topicName);
 		if (topic == null) {
 			throw new RestException(String.format("Topic %s is not found.", topicName), Status.NOT_FOUND);
@@ -170,20 +170,19 @@ public class SyncResource {
 			exist = syncService.isTopicExistOnTarget(topicName, target);
 		} catch (Exception e) {
 			throw new RestException(String.format("Can not decide topic status: %s [ %s ] [ %s ]", topicName,
-					target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
+			      target.getUri(), e.getMessage()), Status.NOT_ACCEPTABLE);
 		}
 		if (!exist) {
 			throw new RestException(String.format("Topic %s not exists in target environment.", topicName),
-					Status.NOT_FOUND);
+			      Status.NOT_FOUND);
 		}
 		Schema schema;
 		try {
 			schema = schemaService.getSchemaMeta(topic.getSchemaId());
 		} catch (DalException e) {
-			throw new RestException(String.format("Schema %s not found.", topic.getSchema().getName()),
-					Status.NOT_FOUND);
+			throw new RestException(String.format("Schema %s not found.", topic.getSchema().getName()), Status.NOT_FOUND);
 		}
-		syncService.syncSchema(schema, topicName, target);
+		syncService.syncSchema(schema, topicName, userName, userEmail, target);
 		return Response.status(Status.OK).build();
 	}
 

@@ -412,7 +412,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		return null;
 	}
 
-	public static String cleanEmailAddress(String email) {
+	private String cleanEmailAddress(String email) {
 		if (!StringUtils.isBlank(email)) {
 			java.util.regex.Matcher matcher = EMAIL_PATTERN.matcher(email);
 			if (matcher.find()) {

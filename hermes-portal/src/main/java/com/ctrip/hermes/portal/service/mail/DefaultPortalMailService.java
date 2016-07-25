@@ -60,9 +60,9 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 	private Configuration m_templateConfig;
 
 	private final SimpleDateFormat m_dateFormatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-	
+
 	private static final Pattern EMAIL_PATTERN = //
-			Pattern.compile("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}", Pattern.CASE_INSENSITIVE);
+	Pattern.compile("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}", Pattern.CASE_INSENSITIVE);
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -296,26 +296,20 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 			consumers = m_consumerService.findConsumerViews(schema.getTopicId());
 		} catch (DalException e) {
 			log.error("Failed to get consumers for topic:{}!", topic.getName(), e);
-			e.printStackTrace();
 		}
 		String environment = m_env.getEnv().name();
 		String host = m_config.getCurrentPortalHost();
-		String jarPath = String.format("/api/schemas/%s/jar", schema.getId());
-		String csPath = String.format("/api/schemas/%s/cs", schema.getId());
-		String schemaPath = String.format("/api/schemas/%s/schema", schema.getId());
+		String jarUrl = String.format("%s/api/schemas/%s/jar", host, schema.getId());
+		String csUrl = String.format("%s/api/schemas/%s/cs", host, schema.getId());
+		String schemaUrl = String.format("%s/api/schemas/%s/schema", host, schema.getId());
 
-		String title = String.format("[Hermes new schema]名称：%s, 版本：%s, 环境：%s", schema.getName(), schema.getVersion(),
-		      environment);
+		String title = String.format("[Hermes schema变更]环境：%s, Topic： %s", environment, topic.getName());
 		String address = m_config.getHermesEmailGroupAddress();
 		for (ConsumerGroupView c : consumers) {
 			String mail1 = getValidMailAddressFromOwner(c.getOwner1());
 			String mail2 = getValidMailAddressFromOwner(c.getOwner2());
-			if (mail1 != null) {
-				address = addAddress(address, mail1);
-			}
-			if (mail2 != null) {
-				address = addAddress(address, mail2);
-			}
+			address = addAddress(address, mail1);
+			address = addAddress(address, mail2);
 		}
 
 		Map<String, Object> contentMap = new HashMap<>();
@@ -324,19 +318,19 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		contentMap.put("environment", environment);
 		contentMap.put("userName", userName);
 		contentMap.put("userMail", mailAddress);
-		contentMap.put("jarUrl", host + jarPath);
-		contentMap.put("csUrl", host + csPath);
-		contentMap.put("schemaUrl", host + schemaPath);
+		contentMap.put("jarUrl", jarUrl);
+		contentMap.put("csUrl", csUrl);
+		contentMap.put("schemaUrl", schemaUrl);
 
 		sendEmail(title, address, PortalConstants.UPLOAD_SCHEMA_EMAIL_TEMPLATE, contentMap);
 
 	}
 
-	private String addAddress(String address, String mail1) {
+	private String addAddress(String address, String mail) {
 		if (address == null || address.isEmpty()) {
-			return mail1;
+			return mail;
 		}
-		return address + "," + mail1;
+		return address + "," + mail;
 	}
 
 	public static String getValidMailAddressFromOwner(String email) {
