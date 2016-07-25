@@ -2,6 +2,7 @@ package com.ctrip.hermes.monitor.service;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ import com.ctrip.hermes.monitor.checker.mysql.dal.ds.DataSourceManager;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Message;
 import com.dianping.cat.message.Transaction;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLNonTransientConnectionException;
 
 @Service
 public class PartitionService {
@@ -80,19 +82,28 @@ public class PartitionService {
 		return sb.toString().substring(0, sb.length() - 2) + ";";
 	}
 
+	private void closeStatement(String sql, Statement stat) {
+		try {
+			if (stat != null && !stat.isClosed()) {
+				stat.close();
+			}
+		} catch (SQLException e) {
+			log.error("Close statement failed: {}", sql, e);
+		}
+	}
+
 	public boolean executeSQL(Datasource ds, String sql) throws Exception {
 		Statement stat = null;
 		try {
-			stat = getConnection(ds, false).createStatement();
+			stat = getConnection(ds, false, false).createStatement();
+			return stat.execute(sql);
+		} catch (MySQLNonTransientConnectionException e) {
+			log.warn("Connection for {} got some errors, rebuild connection and re-execute sql again.", ds);
+			closeStatement(sql, stat);
+			stat = getConnection(ds, false, true).createStatement();
 			return stat.execute(sql);
 		} finally {
-			if (stat != null) {
-				try {
-					stat.close();
-				} catch (Exception e) {
-					log.error("Close statement failed: {}", sql, e);
-				}
-			}
+			closeStatement(sql, stat);
 		}
 	}
 
@@ -102,8 +113,15 @@ public class PartitionService {
 		Statement stat = null;
 		ResultSet rs = null;
 		try {
-			stat = getConnection(ds, true).createStatement();
-			rs = stat.executeQuery(PartitionInfo.SQL_PARTITION);
+			try {
+				stat = getConnection(ds, true, false).createStatement();
+				rs = stat.executeQuery(PartitionInfo.SQL_PARTITION);
+			} catch (MySQLNonTransientConnectionException e) {
+				log.warn("Connection for {} got some errors, rebuild connection and re-execute sql again.", ds);
+				closeStatement(PartitionInfo.SQL_PARTITION, stat);
+				stat = getConnection(ds, true, true).createStatement();
+				rs = stat.executeQuery(PartitionInfo.SQL_PARTITION);
+			}
 			t.setStatus(Message.SUCCESS);
 			return formatPartitionMap(PartitionInfo.parseResultSet(rs), ds);
 		} catch (Exception e) {
@@ -118,13 +136,7 @@ public class PartitionService {
 					log.error("Close result set failed.", e);
 				}
 			}
-			if (stat != null) {
-				try {
-					stat.close();
-				} catch (Exception e) {
-					log.error("Close statement failed.", e);
-				}
-			}
+			closeStatement(PartitionInfo.SQL_PARTITION, stat);
 		}
 	}
 
@@ -145,7 +157,7 @@ public class PartitionService {
 		return map;
 	}
 
-	private Connection getConnection(Datasource ds, boolean forSchemaInfo) throws Exception {
+	private Connection getConnection(Datasource ds, boolean forSchemaInfo, boolean forceNew) throws Exception {
 		PropertiesDef def = new PropertiesDef();
 		String url = ds.getProperties().get("url").getValue();
 
@@ -154,7 +166,7 @@ public class PartitionService {
 		def.setUser(ds.getProperties().get("user").getValue());
 		def.setPassword(ds.getProperties().get("password").getValue());
 
-		return m_dsManager.getConnection(def);
+		return m_dsManager.getConnection(def, forceNew);
 	}
 
 	private String wrapperJdbcUrl(String source) {
