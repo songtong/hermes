@@ -426,8 +426,4 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 	public void afterPropertiesSet() throws Exception {
 		m_notifyService.setThrottle(m_rdHermes.getEmail(), NoticeType.EMAIL, 1000, 600000);
 	}
-	
-	public static void main(String[] args) {
-	   System.out.println(cleanEmailAddress("	qingyang@Ctrip.com.com"));
-   }
 }
