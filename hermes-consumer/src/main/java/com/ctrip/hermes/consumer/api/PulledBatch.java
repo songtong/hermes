@@ -20,4 +20,6 @@ public interface PulledBatch<T> {
 	 */
 	void commitSync();
 
+	long getBornTime();
+
 }

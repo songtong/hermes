@@ -62,12 +62,15 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 
 	private OffsetStorage m_offsetStorage;
 
+	private String m_group;
+
 	public DefaultPullConsumerHolder(String topic, String groupId, int partitionCount, PullConsumerConfig config,
 	      AckManager ackManager, OffsetStorage offsetStorage, ConsumerConfig consumerConfig) {
 		m_topic = topic;
 		m_config = config;
 		m_partitionCount = partitionCount;
 		m_offsetStorage = offsetStorage;
+		m_group = groupId;
 
 		m_partitionMsgs = new ArrayList<>(partitionCount);
 		for (int i = 0; i < partitionCount; i++) {
@@ -108,12 +111,12 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 	@Override
 	public PulledBatch<T> poll(int maxMessageCount, int timeout) {
 		long startTime = System.currentTimeMillis();
-		Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_POLL_TRIED, m_topic);
+		Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_POLL_TRIED, m_topic + ":" + m_group);
 		try {
 			PulledBatch<T> batch = retrive(maxMessageCount, timeout, RetrivePolicy.FAVOUR_FAST_RETURN);
 			if (batch.getMessages() != null && !batch.getMessages().isEmpty()) {
-				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_CONSUME_POLL_ELAPSE, m_topic, startTime, batch.getMessages()
-				      .size(), null, Transaction.SUCCESS);
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_CONSUME_POLL_ELAPSE, m_topic + ":" + m_group, startTime, batch
+				      .getMessages().size(), null, Transaction.SUCCESS);
 			}
 			return batch;
 		} finally {
@@ -125,12 +128,12 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 	@Override
 	public PulledBatch<T> collect(int maxMessageCount, int timeout) {
 		long startTime = System.currentTimeMillis();
-		Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_COLLECT_TRIED, m_topic);
+		Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_COLLECT_TRIED, m_topic + ":" + m_group);
 		try {
 			PulledBatch<T> batch = retrive(maxMessageCount, timeout, RetrivePolicy.FAVOUR_MORE_MESSAGE);
 			if (batch.getMessages() != null && !batch.getMessages().isEmpty()) {
-				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_CONSUME_COLLECT_ELAPSE, m_topic, startTime, batch.getMessages()
-				      .size(), null, Transaction.SUCCESS);
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_CONSUME_COLLECT_ELAPSE, m_topic + ":" + m_group, startTime,
+				      batch.getMessages().size(), null, Transaction.SUCCESS);
 			}
 			return batch;
 		} finally {
@@ -177,7 +180,8 @@ public class DefaultPullConsumerHolder<T> implements PullConsumerHolder<T>, Mess
 				if (msgs.isEmpty()) {
 					result = DummyPulledBatch.INSTANCE;
 				} else {
-					result = new DefaultPulledBatch<T>(msgs, m_committer.delivered(msgs), m_callbackExecutor);
+					result = new DefaultPulledBatch<T>(m_topic, m_group, msgs, m_committer.delivered(msgs),
+					      m_callbackExecutor);
 				}
 				m_retriveLock.unlock();
 			}

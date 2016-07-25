@@ -7,7 +7,10 @@ import java.util.concurrent.ExecutorService;
 
 import com.ctrip.hermes.consumer.api.OffsetCommitCallback;
 import com.ctrip.hermes.consumer.api.PulledBatch;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.utils.CatUtil;
+import com.dianping.cat.message.Transaction;
 import com.google.common.util.concurrent.SettableFuture;
 
 public class DefaultPulledBatch<T> implements PulledBatch<T> {
@@ -18,11 +21,20 @@ public class DefaultPulledBatch<T> implements PulledBatch<T> {
 
 	private ExecutorService m_callbackExecutor;
 
-	public DefaultPulledBatch(List<ConsumerMessage<T>> msgs, RetriveSnapshot<T> snapshot,
+	private String m_topic;
+
+	private String m_group;
+
+	private long m_bornTime;
+
+	public DefaultPulledBatch(String topic, String group, List<ConsumerMessage<T>> msgs, RetriveSnapshot<T> snapshot,
 	      ExecutorService callbackExecutor) {
+		m_topic = topic;
+		m_group = group;
 		m_messages = msgs;
 		m_snapshot = snapshot;
 		m_callbackExecutor = callbackExecutor;
+		m_bornTime = System.currentTimeMillis();
 	}
 
 	@Override
@@ -37,7 +49,13 @@ public class DefaultPulledBatch<T> implements PulledBatch<T> {
 			callback.onComplete(Collections.EMPTY_MAP, null);
 		} else {
 			m_snapshot.commitAsync(callback, m_callbackExecutor);
+			logProcessTime();
 		}
+	}
+
+	private void logProcessTime() {
+		CatUtil.logElapse(CatConstants.TYPE_MESSAGE_CONSUMED, m_topic + ":" + m_group, m_bornTime, m_messages.size(),
+		      null, Transaction.SUCCESS);
 	}
 
 	@Override
@@ -49,6 +67,7 @@ public class DefaultPulledBatch<T> implements PulledBatch<T> {
 	public synchronized void commitSync() {
 		if (!m_snapshot.isDone()) {
 			SettableFuture<Boolean> future = m_snapshot.commitAsync(null, m_callbackExecutor);
+			logProcessTime();
 			try {
 				future.get();
 			} catch (InterruptedException e) {
@@ -58,6 +77,11 @@ public class DefaultPulledBatch<T> implements PulledBatch<T> {
 				throw new RuntimeException(e);
 			}
 		}
+	}
+
+	@Override
+	public long getBornTime() {
+		return m_bornTime;
 	}
 
 }
