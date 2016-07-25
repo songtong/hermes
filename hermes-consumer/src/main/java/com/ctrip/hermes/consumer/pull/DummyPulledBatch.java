@@ -30,4 +30,9 @@ public enum DummyPulledBatch implements PulledBatch {
 	public void commitSync() {
 	}
 
+	@Override
+	public long getBornTime() {
+		return -1L;
+	}
+
 }
