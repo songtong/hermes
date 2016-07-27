@@ -243,7 +243,9 @@ public abstract class CatBasedChecker implements Checker {
 		try {
 			Timespan timespan = calTimespan(toDate, minutesBefore);
 
-			doCheck(timespan, result);
+			if (m_config.isMonitorCheckerEnable()) {
+				doCheck(timespan, result);
+			}
 		} catch (Exception e) {
 			result.setRunSuccess(false);
 			result.setErrorMessage(e.getMessage());

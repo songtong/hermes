@@ -1,5 +1,7 @@
 package com.ctrip.hermes.monitor.job.partition.context;
 
+import java.util.regex.Pattern;
+
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -9,6 +11,8 @@ import com.ctrip.hermes.meta.entity.Topic;
  *
  */
 public class MessageTableContext extends BaseTableContext {
+	public static final Pattern MESSAGE_TABLE_PATTERN = Pattern.compile("\\d+_\\d+_message_\\d?");
+
 	private int m_priority;
 
 	public MessageTableContext( //
@@ -17,6 +21,10 @@ public class MessageTableContext extends BaseTableContext {
 		m_priority = priority;
 
 		setTableName(String.format("%s_%s_message_%s", topic.getId(), partition.getId(), priority));
+	}
+
+	public static boolean isMessageTable(String tableName) {
+		return MESSAGE_TABLE_PATTERN.matcher(tableName).matches();
 	}
 
 	@Override

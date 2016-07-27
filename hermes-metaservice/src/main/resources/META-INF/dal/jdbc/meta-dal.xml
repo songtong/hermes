@@ -85,6 +85,8 @@
 				SELECT <FIELDS/>
 		        FROM <TABLE/>
 		        WHERE <FIELD name='notify-time'/> IS NULL 
+		        AND 
+		        (<FIELD name='should-notify'> IS NULL OR <FIELD name='should-notify'> = 1) 
 		        ORDER BY <FIELD name='id'/> DESC]]></statement>
 			</query>
 			<query name="find-by-type-within-time-range" type="SELECT" multiple="true">

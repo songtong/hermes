@@ -26,6 +26,6 @@ public interface TableContext {
 	public int getIncrementInDay();
 
 	public static enum TableType {
-		MESSAGE, RESEND, DEAD_LETTER;
+		MESSAGE, RESEND, DEAD_LETTER, ABANDONED;
 	}
 }

@@ -18,8 +18,18 @@ public abstract class BaseMonitorEvent implements MonitorEvent {
 
 	private Date m_notifyTime;
 
+	private boolean m_shouldNotify = true;
+
 	public BaseMonitorEvent(MonitorEventType type) {
 		m_type = type;
+	}
+
+	public void setShouldNotify(boolean shouldNotify) {
+		m_shouldNotify = shouldNotify;
+	}
+
+	public boolean isShouldNotify() {
+		return m_shouldNotify;
 	}
 
 	public MonitorEventType getType() {
@@ -29,7 +39,7 @@ public abstract class BaseMonitorEvent implements MonitorEvent {
 	public Date getCreateTime() {
 		return m_createTime;
 	}
-	
+
 	public void setCreateTime(Date date) {
 		m_createTime = date;
 	}
@@ -55,6 +65,7 @@ public abstract class BaseMonitorEvent implements MonitorEvent {
 		com.ctrip.hermes.metaservice.model.MonitorEvent e = new com.ctrip.hermes.metaservice.model.MonitorEvent();
 		e.setEventType(getType().getCode());
 		e.setCreateTime(new Date());
+		e.setShouldNotify(m_shouldNotify);
 
 		toDBEntity0(e);
 		return e;
@@ -66,6 +77,7 @@ public abstract class BaseMonitorEvent implements MonitorEvent {
 		m_id = dbEntity.getId();
 		m_message = dbEntity.getMessage();
 		m_notifyTime = dbEntity.getNotifyTime();
+		m_shouldNotify = dbEntity.isShouldNotify();
 
 		parse0(dbEntity);
 	}

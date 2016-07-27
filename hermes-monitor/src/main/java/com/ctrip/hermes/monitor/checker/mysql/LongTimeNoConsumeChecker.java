@@ -53,19 +53,21 @@ public class LongTimeNoConsumeChecker extends DBBasedChecker {
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
 		CheckerResult result = new CheckerResult();
-		Meta meta = fetchMeta();
-		Map<String, Map<String, Integer>> limits = parseLimits(meta,
-		      m_config.getLongTimeNoConsumeCheckerIncludeConsumers(),
-		      m_config.getLongTimeNoConsumeCheckerExcludeConsumers());
-		for (Entry<String, Map<String, Integer>> topicEntry : limits.entrySet()) {
-			Topic topic = meta.findTopic(topicEntry.getKey());
-			if (Storage.MYSQL.equals(topic.getStorageType())) {
-				Map<String, Integer> consumerLimits = topicEntry.getValue();
-				for (Entry<String, Integer> consumerEntry : consumerLimits.entrySet()) {
-					ConsumerGroup consumer = topic.findConsumerGroup(consumerEntry.getKey());
-					Map<Integer, CreationStamp> stamps = findPartitionConsumeStamps(topic, consumer);
-					if (isStampsOutdate(stamps, consumerEntry.getValue())) {
-						result.addMonitorEvent(new LongTimeNoConsumeEvent(topic.getName(), consumer.getName(), stamps));
+		if (m_config.isMonitorCheckerEnable()) {
+			Meta meta = fetchMeta();
+			Map<String, Map<String, Integer>> limits = parseLimits(meta,
+			      m_config.getLongTimeNoConsumeCheckerIncludeConsumers(),
+			      m_config.getLongTimeNoConsumeCheckerExcludeConsumers());
+			for (Entry<String, Map<String, Integer>> topicEntry : limits.entrySet()) {
+				Topic topic = meta.findTopic(topicEntry.getKey());
+				if (Storage.MYSQL.equals(topic.getStorageType())) {
+					Map<String, Integer> consumerLimits = topicEntry.getValue();
+					for (Entry<String, Integer> consumerEntry : consumerLimits.entrySet()) {
+						ConsumerGroup consumer = topic.findConsumerGroup(consumerEntry.getKey());
+						Map<Integer, CreationStamp> stamps = findPartitionConsumeStamps(topic, consumer);
+						if (isStampsOutdate(stamps, consumerEntry.getValue())) {
+							result.addMonitorEvent(new LongTimeNoConsumeEvent(topic.getName(), consumer.getName(), stamps));
+						}
 					}
 				}
 			}

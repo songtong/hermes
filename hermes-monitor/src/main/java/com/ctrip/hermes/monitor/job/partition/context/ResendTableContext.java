@@ -1,10 +1,14 @@
 package com.ctrip.hermes.monitor.job.partition.context;
 
+import java.util.regex.Pattern;
+
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
 
 public class ResendTableContext extends BaseTableContext {
+	public static final Pattern RESEND_TABLE_PATTERN = Pattern.compile("\\d+_\\d+_resend_\\d+");
+
 	private ConsumerGroup m_consumer;
 
 	public ResendTableContext( //
@@ -13,6 +17,10 @@ public class ResendTableContext extends BaseTableContext {
 		m_consumer = consumer;
 
 		setTableName(String.format("%s_%s_resend_%s", topic.getId(), partition.getId(), consumer.getId()));
+	}
+
+	public static boolean isResendTable(String tableName) {
+		return RESEND_TABLE_PATTERN.matcher(tableName).matches();
 	}
 
 	public ConsumerGroup getConsumer() {

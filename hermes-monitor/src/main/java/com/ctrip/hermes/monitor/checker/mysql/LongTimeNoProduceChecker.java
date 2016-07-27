@@ -47,36 +47,40 @@ public class LongTimeNoProduceChecker extends DBBasedChecker {
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
-		Meta meta = fetchMeta();
 		final CheckerResult result = new CheckerResult();
-		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
+		if (m_config.isMonitorCheckerEnable()) {
+			Meta meta = fetchMeta();
+			ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
 
-		try {
-			Map<Topic, Map<Integer, Integer>> limits = parseLimits(meta, //
-			      m_config.getLongTimeNoProduceCheckerIncludeTopics(), m_config.getLongTimeNoProduceCheckerExcludeTopics());
-			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
-			final CountDownLatch latch = new CountDownLatch(limits.size());
-			for (final Entry<Topic, Map<Integer, Integer>> limit : limits.entrySet()) {
-				es.execute(//
-				new LongTimeNoProduceCheckerTask(limit.getKey(), limit.getValue(), m_msgDao, result, latch, exceptions));
-			}
-			if (latch.await(LONG_TIME_NO_PRODUCE_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
-				result.setRunSuccess(true);
-			} else {
+			try {
+				Map<Topic, Map<Integer, Integer>> limits = parseLimits(
+				      meta, //
+				      m_config.getLongTimeNoProduceCheckerIncludeTopics(),
+				      m_config.getLongTimeNoProduceCheckerExcludeTopics());
+				ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
+				final CountDownLatch latch = new CountDownLatch(limits.size());
+				for (final Entry<Topic, Map<Integer, Integer>> limit : limits.entrySet()) {
+					es.execute(//
+					new LongTimeNoProduceCheckerTask(limit.getKey(), limit.getValue(), m_msgDao, result, latch, exceptions));
+				}
+				if (latch.await(LONG_TIME_NO_PRODUCE_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
+					result.setRunSuccess(true);
+				} else {
+					result.setRunSuccess(false);
+					result.setErrorMessage("Check long time no produce timeout, check result is not completely.");
+				}
+				if (exceptions.size() > 0) {
+					result.setRunSuccess(false);
+					result.setErrorMessage("Long time no produce checker task has exceptions!");
+					result.setException(new CompositeException(exceptions));
+				}
+			} catch (Exception e) {
+				result.setErrorMessage("Query consume backlog db failed.");
+				result.setException(e);
 				result.setRunSuccess(false);
-				result.setErrorMessage("Check long time no produce timeout, check result is not completely.");
+			} finally {
+				es.shutdownNow();
 			}
-			if (exceptions.size() > 0) {
-				result.setRunSuccess(false);
-				result.setErrorMessage("Long time no produce checker task has exceptions!");
-				result.setException(new CompositeException(exceptions));
-			}
-		} catch (Exception e) {
-			result.setErrorMessage("Query consume backlog db failed.");
-			result.setException(e);
-			result.setRunSuccess(false);
-		} finally {
-			es.shutdownNow();
 		}
 		return result;
 	}

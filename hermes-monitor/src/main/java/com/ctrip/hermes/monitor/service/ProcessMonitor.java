@@ -127,7 +127,9 @@ public class ProcessMonitor implements IZabbixMonitor {
 
 	@Scheduled(cron = "0 8 * * * *")
 	public void scheduled() throws Throwable {
-		monitorHourly();
+		if (config.isMonitorCheckerEnable()) {
+			monitorHourly();
+		}
 	}
 
 	private Map<Integer, StatResult> statProcessNumber(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)

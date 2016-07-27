@@ -128,39 +128,41 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
 		final CheckerResult result = new CheckerResult();
-		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
-		try {
-			Meta meta = fetchMeta();
-			Map<Pair<String, String>, ConsumerMonitorConfig> cfgs = verifyConsumerMonitorConfigs(meta);
-			Map<Pair<Topic, ConsumerGroup>, Long> limits = parseLimits(meta, cfgs);
-			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
-			List<Map<Pair<Topic, ConsumerGroup>, Long>> splited = MonitorUtils.splitMap(limits, DB_CHECKER_THREAD_COUNT);
-			final CountDownLatch latch = new CountDownLatch(splited.size());
-			for (final Map<Pair<Topic, ConsumerGroup>, Long> batchLimits : splited) {
-				es.execute(new ConsumeBacklogCheckerTask(batchLimits, m_msgDao, m_offsetDao, result, latch, exceptions));
-			}
-			if (latch.await(CONSUME_BACKLOG_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
-				result.setRunSuccess(true);
-			} else {
+		if (m_config.isMonitorCheckerEnable()) {
+			ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
+			try {
+				Meta meta = fetchMeta();
+				Map<Pair<String, String>, ConsumerMonitorConfig> cfgs = verifyConsumerMonitorConfigs(meta);
+				Map<Pair<Topic, ConsumerGroup>, Long> limits = parseLimits(meta, cfgs);
+				ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
+				List<Map<Pair<Topic, ConsumerGroup>, Long>> splited = MonitorUtils
+				      .splitMap(limits, DB_CHECKER_THREAD_COUNT);
+				final CountDownLatch latch = new CountDownLatch(splited.size());
+				for (final Map<Pair<Topic, ConsumerGroup>, Long> batchLimits : splited) {
+					es.execute(new ConsumeBacklogCheckerTask(batchLimits, m_msgDao, m_offsetDao, result, latch, exceptions));
+				}
+				if (latch.await(CONSUME_BACKLOG_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
+					result.setRunSuccess(true);
+				} else {
+					result.setRunSuccess(false);
+					result.setErrorMessage("Query consume backlog db timeout, check result is not completely.");
+				}
+				if (exceptions.size() > 0) {
+					result.setRunSuccess(false);
+					result.setErrorMessage("Consumer large backlog checker task has exceptions!");
+					result.setException(new CompositeException(exceptions));
+				}
+			} catch (Exception e) {
+				result.setErrorMessage("Query consume backlog db failed.");
+				result.setException(e);
 				result.setRunSuccess(false);
-				result.setErrorMessage("Query consume backlog db timeout, check result is not completely.");
+			} finally {
+				es.shutdownNow();
 			}
-			if (exceptions.size() > 0) {
-				result.setRunSuccess(false);
-				result.setErrorMessage("Consumer large backlog checker task has exceptions!");
-				result.setException(new CompositeException(exceptions));
-			}
-		} catch (Exception e) {
-			result.setErrorMessage("Query consume backlog db failed.");
-			result.setException(e);
-			result.setRunSuccess(false);
-		} finally {
-			es.shutdownNow();
+
+			notifyOwnersIfNecessary(result);
+			notifyLargeBacklogReportIfNecessary(result);
 		}
-
-		notifyOwnersIfNecessary(result);
-		notifyLargeBacklogReportIfNecessary(result);
-
 		return result;
 	}
 

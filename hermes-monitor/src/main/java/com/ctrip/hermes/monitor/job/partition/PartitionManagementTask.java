@@ -14,6 +14,7 @@ import com.ctrip.hermes.metaservice.monitor.event.PartitionModificationEvent.Par
 import com.ctrip.hermes.metaservice.queue.PartitionInfo;
 import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+import com.ctrip.hermes.monitor.job.partition.context.AbandonedTableContext;
 import com.ctrip.hermes.monitor.job.partition.strategy.DeadLetterPartitionCheckerStrategy;
 import com.ctrip.hermes.monitor.job.partition.strategy.MessagePartitionCheckerStrategy;
 import com.ctrip.hermes.monitor.job.partition.strategy.PartitionCheckerStrategy;
@@ -51,31 +52,39 @@ public class PartitionManagementTask implements Runnable {
 	@Override
 	public void run() {
 		try {
-			AnalysisResult analysisResult = null;
-			try {
-				analysisResult = findStrategy(m_task).analysisTable(m_task);
-				m_wastePartitionInfos.putIfAbsent(m_task.getTableName(), analysisResult.getWasteList());
-			} catch (Exception e) {
-				log.debug("Analysis table failed: {}", m_task, e);
-			}
-			if (analysisResult != null) {
+			if (m_task instanceof AbandonedTableContext) {
 				try {
-					List<PartitionInfo> dropList = analysisResult.getDropList();
-					if (dropList.size() > 0) {
-						String sql = m_service.dropPartitions(m_task, dropList);
-						m_result.addMonitorEvent(generateEvent(m_task, PartitionOperation.DROP, sql));
-					}
+					m_service.dropWholeTable(m_task);
 				} catch (Exception e) {
 					m_exceptions.add(e);
 				}
+			} else {
+				AnalysisResult analysisResult = null;
 				try {
-					List<PartitionInfo> addList = analysisResult.getAddList();
-					if (addList.size() > 0) {
-						String sql = m_service.addPartitions(m_task, addList);
-						m_result.addMonitorEvent(generateEvent(m_task, PartitionOperation.ADD, sql));
-					}
+					analysisResult = findStrategy(m_task).analysisTable(m_task);
+					m_wastePartitionInfos.putIfAbsent(m_task.getTableName(), analysisResult.getWasteList());
 				} catch (Exception e) {
-					m_exceptions.add(e);
+					log.debug("Analysis table failed: {}", m_task, e);
+				}
+				if (analysisResult != null) {
+					try {
+						List<PartitionInfo> dropList = analysisResult.getDropList();
+						if (dropList.size() > 0) {
+							String sql = m_service.dropPartitions(m_task, dropList);
+							m_result.addMonitorEvent(generateEvent(m_task, PartitionOperation.DROP, sql));
+						}
+					} catch (Exception e) {
+						m_exceptions.add(e);
+					}
+					try {
+						List<PartitionInfo> addList = analysisResult.getAddList();
+						if (addList.size() > 0) {
+							String sql = m_service.addPartitions(m_task, addList);
+							m_result.addMonitorEvent(generateEvent(m_task, PartitionOperation.ADD, sql));
+						}
+					} catch (Exception e) {
+						m_exceptions.add(e);
+					}
 				}
 			}
 		} finally {

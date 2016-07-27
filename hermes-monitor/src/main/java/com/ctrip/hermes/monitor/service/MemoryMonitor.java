@@ -136,7 +136,9 @@ public class MemoryMonitor implements IZabbixMonitor {
 
 	@Scheduled(cron = "0 6 * * * *")
 	public void scheduled() throws Throwable {
-		monitorHourly();
+		if (config.isMonitorCheckerEnable()) {
+			monitorHourly();
+		}
 	}
 
 	private Map<Integer, StatResult> statMemoryAvailable(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)

@@ -197,7 +197,9 @@ public class NetworkMonitor implements IZabbixMonitor {
 
 	@Scheduled(cron = "0 7 * * * *")
 	public void scheduled() throws Throwable {
-		monitorHourly();
+		if (config.isMonitorCheckerEnable()) {
+			monitorHourly();
+		}
 	}
 
 	private Map<Integer, StatResult> statNetworkEstablished(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)

@@ -57,7 +57,10 @@ public class ConsumeBacklogCheckerTask implements Runnable {
 		Map<Integer, Long> backlogs = new HashMap<Integer, Long>();
 
 		for (Partition partition : topic.getPartitions()) {
-			long pBacklog = doCalculateBacklog(topic.getName(), partition.getId(), 0, group.getId());
+			long pBacklog = 0;
+			if (topic.isPriorityMessageEnabled()) {
+				pBacklog = doCalculateBacklog(topic.getName(), partition.getId(), 0, group.getId());
+			}
 			long npBacklog = doCalculateBacklog(topic.getName(), partition.getId(), 1, group.getId());
 			backlogs.put(partition.getId(), pBacklog + npBacklog);
 		}
