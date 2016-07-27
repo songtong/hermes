@@ -215,7 +215,9 @@ public class DiskMonitor implements IZabbixMonitor {
 
 	@Scheduled(cron = "0 4 * * * *")
 	public void scheduled() throws Throwable {
-		monitorHourly();
+		if (config.isMonitorCheckerEnable()) {
+			monitorHourly();
+		}
 	}
 
 	private Map<Integer, StatResult> statDiskReadOps(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)

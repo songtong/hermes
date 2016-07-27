@@ -330,6 +330,7 @@
     <member name="key4" field="key4" value-type="String" length="4096" />
     <member name="message" field="message" value-type="String" length="2147483647" />
     <member name="notify-time" field="notify_time" value-type="Date" />
+    <member name="should-notify" field="should_notify" value-type="boolean" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />

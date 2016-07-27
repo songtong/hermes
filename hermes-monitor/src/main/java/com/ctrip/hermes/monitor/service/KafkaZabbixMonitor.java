@@ -53,10 +53,12 @@ public class KafkaZabbixMonitor implements IZabbixMonitor {
 	private MonitorConfig config;
 
 	@Scheduled(cron = "0 5 * * * *")
-	public void scheduled() throws Throwable{
-		monitorHourly();
+	public void scheduled() throws Throwable {
+		if (config.isMonitorCheckerEnable()) {
+			monitorHourly();
+		}
 	}
-	
+
 	public String monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
@@ -140,7 +142,7 @@ public class KafkaZabbixMonitor implements IZabbixMonitor {
 				firstTimeFrom = timeFrom;
 			}
 			lastTimeTill = timeTill;
-			
+
 			monitorKafka(timeFrom, timeTill);
 
 			try {

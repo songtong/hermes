@@ -21,10 +21,14 @@ import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.metaservice.queue.PartitionInfo;
 import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.mysql.dal.ds.DataSourceManager;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.job.partition.context.AbandonedTableContext;
+import com.ctrip.hermes.monitor.job.partition.context.DeadLetterTableContext;
+import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
+import com.ctrip.hermes.monitor.job.partition.context.ResendTableContext;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Message;
 import com.dianping.cat.message.Transaction;
-import com.mysql.jdbc.exceptions.jdbc4.MySQLNonTransientConnectionException;
 
 @Service
 public class PartitionService {
@@ -36,6 +40,27 @@ public class PartitionService {
 
 	@Autowired
 	private DataSourceManager m_dsManager;
+
+	@Autowired
+	private MonitorConfig m_config;
+
+	public boolean isHermesTable(String tableName) {
+		return MessageTableContext.isMessageTable(tableName) //
+		      || ResendTableContext.isResendTable(tableName) //
+		      || DeadLetterTableContext.isDeadTable(tableName);
+	}
+
+	public void dropWholeTable(TableContext ctx) throws Exception {
+		if (ctx instanceof AbandonedTableContext && isHermesTable(ctx.getTableName())) {
+			log.warn("Hermes table [{}] of datasource [{}] is abandoned, ready to drop it.",//
+			      ctx.getTableName(), ctx.getDatasource().getProperties().get("url").getValue());
+			if (m_config.isPartitionServiceDropTableEnable()) {
+				String sql = String.format("drop table %s;", ctx.getTableName());
+				log.warn("Drop table sql: {}", sql);
+				executeSQL(ctx.getDatasource(), sql);
+			}
+		}
+	}
 
 	public String addPartitions(TableContext ctx, List<PartitionInfo> list) throws Exception {
 		String sql = getAddPartitionSQL(ctx, list);
@@ -92,36 +117,49 @@ public class PartitionService {
 		}
 	}
 
+	private void closeConnection(Connection conn) {
+		try {
+			if (conn != null && !conn.isClosed()) {
+				conn.close();
+			}
+		} catch (SQLException e) {
+			log.error("Close connection failed: {}", conn);
+		}
+	}
+
+	private void closeResultSet(ResultSet rs) {
+		try {
+			if (rs != null && !rs.isClosed()) {
+				rs.close();
+			}
+		} catch (SQLException e) {
+			log.error("Close result-set failed: {}", rs);
+		}
+	}
+
 	public boolean executeSQL(Datasource ds, String sql) throws Exception {
 		Statement stat = null;
+		Connection conn = null;
 		try {
-			stat = getConnection(ds, false, false).createStatement();
-			return stat.execute(sql);
-		} catch (MySQLNonTransientConnectionException e) {
-			log.warn("Connection for {} got some errors, rebuild connection and re-execute sql again.", ds);
-			closeStatement(sql, stat);
-			stat = getConnection(ds, false, true).createStatement();
+			conn = getConnection(ds, false);
+			stat = conn.createStatement();
 			return stat.execute(sql);
 		} finally {
 			closeStatement(sql, stat);
+			closeConnection(conn);
 		}
 	}
 
 	public Map<String, Pair<Datasource, List<PartitionInfo>>> queryDatasourcePartitions(Datasource ds) throws Exception {
 		Transaction t = Cat.newTransaction("Partition.Query", getDbName(ds));
 		t.addData("SQL", PartitionInfo.SQL_PARTITION);
+		Connection conn = null;
 		Statement stat = null;
 		ResultSet rs = null;
 		try {
-			try {
-				stat = getConnection(ds, true, false).createStatement();
-				rs = stat.executeQuery(PartitionInfo.SQL_PARTITION);
-			} catch (MySQLNonTransientConnectionException e) {
-				log.warn("Connection for {} got some errors, rebuild connection and re-execute sql again.", ds);
-				closeStatement(PartitionInfo.SQL_PARTITION, stat);
-				stat = getConnection(ds, true, true).createStatement();
-				rs = stat.executeQuery(PartitionInfo.SQL_PARTITION);
-			}
+			conn = getConnection(ds, true);
+			stat = conn.createStatement();
+			rs = stat.executeQuery(PartitionInfo.SQL_PARTITION);
 			t.setStatus(Message.SUCCESS);
 			return formatPartitionMap(PartitionInfo.parseResultSet(rs), ds);
 		} catch (Exception e) {
@@ -129,14 +167,9 @@ public class PartitionService {
 			throw e;
 		} finally {
 			t.complete();
-			if (rs != null) {
-				try {
-					rs.close();
-				} catch (Exception e) {
-					log.error("Close result set failed.", e);
-				}
-			}
+			closeResultSet(rs);
 			closeStatement(PartitionInfo.SQL_PARTITION, stat);
+			closeConnection(conn);
 		}
 	}
 
@@ -157,7 +190,7 @@ public class PartitionService {
 		return map;
 	}
 
-	private Connection getConnection(Datasource ds, boolean forSchemaInfo, boolean forceNew) throws Exception {
+	private Connection getConnection(Datasource ds, boolean forSchemaInfo) throws Exception {
 		PropertiesDef def = new PropertiesDef();
 		String url = ds.getProperties().get("url").getValue();
 
@@ -166,7 +199,7 @@ public class PartitionService {
 		def.setUser(ds.getProperties().get("user").getValue());
 		def.setPassword(ds.getProperties().get("password").getValue());
 
-		return m_dsManager.getConnection(def, forceNew);
+		return m_dsManager.getConnection(def);
 	}
 
 	private String wrapperJdbcUrl(String source) {

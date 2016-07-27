@@ -31,22 +31,23 @@ public class BrokerLogErrorChecker implements Checker {
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
-		long from = toDate.getTime() - TimeUnit.MINUTES.toMillis(minutesBefore);
-
 		CheckerResult r = new CheckerResult();
+		if (m_config.isMonitorCheckerEnable()) {
+			long from = toDate.getTime() - TimeUnit.MINUTES.toMillis(minutesBefore);
 
-		try {
-			Map<String, Long> map = m_es.queryBrokerErrorCount(new Date(from), toDate);
-			for (Entry<String, Long> entry : map.entrySet()) {
-				if (entry.getValue() >= m_config.getBrokerErrorThreshold()) {
-					r.addMonitorEvent(new BrokerErrorEvent(entry.getKey(), entry.getValue()));
+			try {
+				Map<String, Long> map = m_es.queryBrokerErrorCount(new Date(from), toDate);
+				for (Entry<String, Long> entry : map.entrySet()) {
+					if (entry.getValue() >= m_config.getBrokerErrorThreshold()) {
+						r.addMonitorEvent(new BrokerErrorEvent(entry.getKey(), entry.getValue()));
+					}
 				}
+				r.setRunSuccess(true);
+			} catch (Exception e) {
+				r.setErrorMessage("Query broker log error failed.");
+				r.setRunSuccess(false);
+				r.setException(e);
 			}
-			r.setRunSuccess(true);
-		} catch (Exception e) {
-			r.setErrorMessage("Query broker log error failed.");
-			r.setRunSuccess(false);
-			r.setException(e);
 		}
 		return r;
 	}

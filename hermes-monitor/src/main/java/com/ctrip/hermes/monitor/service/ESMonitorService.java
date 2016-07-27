@@ -58,7 +58,6 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.metaservice.service.EndpointService;
 import com.ctrip.hermes.monitor.checker.server.ServerCheckerConstans;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
-import com.ctrip.hermes.monitor.dashboard.DashboardItem;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
 import com.google.common.base.Charsets;
 
@@ -94,21 +93,16 @@ public class ESMonitorService {
 
 	@PostConstruct
 	private void postConstruct() {
-		endpointService = PlexusComponentLocator.lookup(EndpointService.class);
-		Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", config.getEsClusterName()).build();
-		client = new TransportClient(settings);
-		String[] esTransportAddress = config.getEsTransportAddress();
-		for (int i = 0; i < esTransportAddress.length; i++) {
-			String[] split = esTransportAddress[i].split(":");
-			client.addTransportAddress(new InetSocketTransportAddress(split[0], Integer.parseInt(split[1])));
+		if (config.isMonitorCheckerEnable()) {
+			endpointService = PlexusComponentLocator.lookup(EndpointService.class);
+			Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", config.getEsClusterName()).build();
+			client = new TransportClient(settings);
+			String[] esTransportAddress = config.getEsTransportAddress();
+			for (int i = 0; i < esTransportAddress.length; i++) {
+				String[] split = esTransportAddress[i].split(":");
+				client.addTransportAddress(new InetSocketTransportAddress(split[0], Integer.parseInt(split[1])));
+			}
 		}
-	}
-
-	public IndexResponse prepareIndex(DashboardItem item) throws IOException {
-		IndexRequestBuilder builder = client.prepareIndex(item.getIndex(), item.getCategory());
-		String source = JSON.toJSONString(item, SerializerFeature.WriteDateUseDateFormat);
-		IndexResponse response = builder.setSource(source).execute().actionGet();
-		return response;
 	}
 
 	public IndexResponse prepareIndex(MonitorItem item) throws IOException {
@@ -126,7 +120,9 @@ public class ESMonitorService {
 
 	@PreDestroy
 	private void preDestory() {
-		client.close();
+		if (client != null) {
+			client.close();
+		}
 	}
 
 	private String generateId(MonitorItem item) {

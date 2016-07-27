@@ -1,8 +1,7 @@
 package com.ctrip.hermes.monitor.job.partition;
 
-import io.netty.util.internal.ConcurrentSet;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -12,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,12 +38,15 @@ import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.job.partition.context.AbandonedTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.DeadLetterTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.ResendTableContext;
 import com.ctrip.hermes.monitor.service.PartitionService;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
 import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
+
+import io.netty.util.internal.ConcurrentSet;
 
 @Component(value = PartitionManagementJob.ID)
 public class PartitionManagementJob {
@@ -85,24 +88,61 @@ public class PartitionManagementJob {
 	}
 
 	public List<PartitionCheckerResult> check() {
-		List<PartitionCheckerResult> partitionCheckerResults = new ArrayList<PartitionCheckerResult>();
+		ConcurrentLinkedQueue<PartitionCheckerResult> partitionCheckerResults = new ConcurrentLinkedQueue<PartitionCheckerResult>();
+		ExecutorService executor = null;
 		try {
 			Meta meta = fetchMeta();
 			Map<String, Integer> limits = parseLimits(meta);
-			Map<Datasource, Map<String, Pair<Datasource, List<PartitionInfo>>>> table2PartitionInfos = getPartitionInfosFromMeta(meta);
-			for (Map.Entry<Datasource, Map<String, Pair<Datasource, List<PartitionInfo>>>> entry : table2PartitionInfos.entrySet()) {
-				sortPartitionsInOrdinal(entry.getValue());
-				List<TableContext> tableContexts = createTableContexts(meta, entry.getValue(), limits);
-				ConcurrentHashMap<String, List<PartitionInfo>> wastes = new ConcurrentHashMap<String, List<PartitionInfo>>();
-				PartitionCheckerResult partitionCheckerResult = new PartitionCheckerResult();
-				partitionCheckerResult.setPartitionChangeListResult(doExecuteManagementJob(tableContexts, wastes));
-				partitionCheckerResult.setPartitionInfo(generatePartitionInfoResult(tableContexts, wastes));
-				partitionCheckerResults.add(partitionCheckerResult);
+			Map<Datasource, Map<String, Pair<Datasource, List<PartitionInfo>>>> pInfos = getPartitionInfosFromMeta(meta);
+			executor = Executors.newFixedThreadPool(pInfos.size());
+			CountDownLatch latch = new CountDownLatch(pInfos.size());
+			try {
+				for (Map.Entry<Datasource, Map<String, Pair<Datasource, List<PartitionInfo>>>> entry : pInfos.entrySet()) {
+					sortPartitionsInOrdinal(entry.getValue());
+					List<TableContext> tableContexts = createTableContexts(entry.getKey(), meta, entry.getValue(), limits);
+					executor.execute(new DatasourcePartitionJob(latch, partitionCheckerResults, tableContexts));
+				}
+			} finally {
+				latch.await();
 			}
 		} catch (Exception e) {
 			log.error("Check partition status failed.", e);
+		} finally {
+			if (executor != null) {
+				executor.shutdown();
+			}
 		}
-		return partitionCheckerResults;
+		return Arrays.asList(partitionCheckerResults.toArray(new PartitionCheckerResult[partitionCheckerResults.size()]));
+	}
+
+	private class DatasourcePartitionJob implements Runnable {
+		private CountDownLatch m_latch;
+
+		private ConcurrentLinkedQueue<PartitionCheckerResult> m_results;
+
+		List<TableContext> m_ctxes;
+
+		public DatasourcePartitionJob( //
+		      CountDownLatch latch, ConcurrentLinkedQueue<PartitionCheckerResult> results, List<TableContext> ctxes) {
+			m_latch = latch;
+			m_ctxes = ctxes;
+			m_results = results;
+		}
+
+		@Override
+		public void run() {
+			try {
+				ConcurrentHashMap<String, List<PartitionInfo>> wastes = new ConcurrentHashMap<String, List<PartitionInfo>>();
+				PartitionCheckerResult partitionCheckerResult = new PartitionCheckerResult();
+				partitionCheckerResult.setPartitionChangeListResult(doExecuteManagementJob(m_ctxes, wastes));
+				partitionCheckerResult.setPartitionInfo(generatePartitionInfoResult(m_ctxes, wastes));
+				m_results.add(partitionCheckerResult);
+			} catch (Exception e) {
+				log.error("Execute datasource partition management job failed.", e);
+			} finally {
+				m_latch.countDown();
+			}
+		}
 	}
 
 	private void sortPartitionsInOrdinal(Map<String, Pair<Datasource, List<PartitionInfo>>> table2PartitionInfos) {
@@ -156,13 +196,15 @@ public class PartitionManagementJob {
 		return changeResult;
 	}
 
-	private Map<Datasource, Map<String, Pair<Datasource, List<PartitionInfo>>>> getPartitionInfosFromMeta(Meta meta) throws Exception {
+	private Map<Datasource, Map<String, Pair<Datasource, List<PartitionInfo>>>> getPartitionInfosFromMeta(Meta meta)
+	      throws Exception {
 		Map<Datasource, Map<String, Pair<Datasource, List<PartitionInfo>>>> table2PartitionInfos = new HashMap<>();
 		Set<String> checkedDatasource = new HashSet<String>();
 		for (Datasource ds : meta.getStorages().get(Storage.MYSQL).getDatasources()) {
 			if (!checkedDatasource.contains(ds.getProperties().get("url").getValue())) {
 				checkedDatasource.add(ds.getProperties().get("url").getValue());
-				Map<String, Pair<Datasource, List<PartitionInfo>>> tablePartitions = m_partitionService.queryDatasourcePartitions(ds);
+				Map<String, Pair<Datasource, List<PartitionInfo>>> tablePartitions = m_partitionService
+				      .queryDatasourcePartitions(ds);
 				table2PartitionInfos.put(ds, tablePartitions);
 			}
 		}
@@ -175,8 +217,9 @@ public class PartitionManagementJob {
 		Map<String, Integer> includes = JSON.parseObject(m_config.getPartitionRetainInHour(),
 		      new TypeReference<Map<String, Integer>>() {
 		      });
-		Set<String> excludes = JSON.parseObject(m_config.getPartitionCheckerExcludeTopics(), new TypeReference<Set<String>>() {
-		});
+		Set<String> excludes = JSON.parseObject(m_config.getPartitionCheckerExcludeTopics(),
+		      new TypeReference<Set<String>>() {
+		      });
 		log.info("***** Partition manager config, include: {}", includes);
 		log.info("***** Partition manager config, exclude: {}", excludes);
 		if (includes.containsKey(".*")) {
@@ -236,18 +279,27 @@ public class PartitionManagementJob {
 		}
 	}
 
-	private List<TableContext> createTableContexts(//
-	      Meta meta, Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, Map<String, Integer> topicRetainHours) {
+	private List<TableContext> createTableContexts(Datasource datasource, Meta meta,
+	      Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, Map<String, Integer> topicRetainHours) {
 		List<TableContext> ctxes = new ArrayList<TableContext>();
+		Map<Long, Topic> id2topics = new HashMap<>();
+		for (Topic topic : meta.getTopics().values()) {
+			id2topics.put(topic.getId(), topic);
+		}
+
+		addAbandonedHermesTables(meta, datasource, id2topics, ctxes, partitions);
+
 		for (Topic topic : meta.getTopics().values()) {
 			if (topicRetainHours.containsKey(topic.getName())) {
 				int retain = topicRetainHours.get(topic.getName());
 				for (Partition partition : topic.getPartitions()) {
-					addMessageTableContext(partitions, topic, partition, 0, retain, ctxes);
-					addMessageTableContext(partitions, topic, partition, 1, retain, ctxes);
-					addDeadLetterTableContext(partitions, topic, partition, retain * 5, ctxes);
-					for (ConsumerGroup consumer : topic.getConsumerGroups()) {
-						addResendTableContext(partitions, topic, partition, consumer, retain, ctxes);
+					if (isTopicPartitionActive(meta, datasource, id2topics, topic.getId(), partition.getId())) {
+						addMessageTableContext(partitions, topic, partition, 0, retain, ctxes);
+						addMessageTableContext(partitions, topic, partition, 1, retain, ctxes);
+						addDeadLetterTableContext(partitions, topic, partition, retain * 5, ctxes);
+						for (ConsumerGroup consumer : topic.getConsumerGroups()) {
+							addResendTableContext(partitions, topic, partition, consumer, retain, ctxes);
+						}
 					}
 				}
 			}
@@ -255,12 +307,60 @@ public class PartitionManagementJob {
 		return ctxes;
 	}
 
+	private Pair<Long, Integer> getTopicPartition(String tableName) {
+		String[] parts = tableName.split("_");
+		return new Pair<Long, Integer>(Long.valueOf(parts[0]), Integer.valueOf(parts[1]));
+	}
+
+	private String getPartitionReadDsUrl(Meta meta, Partition p) {
+		if (p != null) {
+			for (Datasource ds : meta.getStorages().get(Storage.MYSQL).getDatasources()) {
+				if (ds.getId().equals(p.getReadDatasource())) {
+					return ds.getProperties().get("url").getValue().toLowerCase();
+				}
+			}
+		}
+		return null;
+	}
+
+	private boolean isTopicPartitionActive(Meta meta, Datasource ds, Map<Long, Topic> id2topics, long topicId,
+	      int partitionId) {
+		Topic topic = id2topics.get(topicId);
+		if (topic != null) {
+			Partition p = topic.findPartition(partitionId);
+			if (ds.getProperties().get("url").getValue().toLowerCase().equals(getPartitionReadDsUrl(meta, p))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void addAbandonedHermesTables(Meta meta, Datasource datasource, Map<Long, Topic> id2topics,
+	      List<TableContext> ctxes, Map<String, Pair<Datasource, List<PartitionInfo>>> partitions) {
+		for (Entry<String, Pair<Datasource, List<PartitionInfo>>> entry : partitions.entrySet()) {
+			String tableName = entry.getKey();
+			if (MessageTableContext.isMessageTable(tableName) //
+			      || ResendTableContext.isResendTable(tableName) //
+			      || DeadLetterTableContext.isDeadTable(tableName)) {
+				Pair<Long, Integer> tp = getTopicPartition(tableName);
+				if (!isTopicPartitionActive(meta, datasource, id2topics, tp.getKey(), tp.getValue())) {
+					ctxes.add(new AbandonedTableContext(tableName).setDatasource(datasource));
+				}
+			}
+		}
+	}
+
 	protected Meta fetchMeta() {
+		Meta meta = null;
 		try {
-			return MonitorUtils.fetchMeta();
-			//return JSON.parseObject(MonitorUtils.curl(m_config.getMetaRestUrl(), 3000, 1000), Meta.class);
+			meta = MonitorUtils.fetchMeta();
+			// return JSON.parseObject(MonitorUtils.curl(m_config.getMetaRestUrl(), 3000, 1000), Meta.class);
 		} catch (Exception e) {
 			throw new RuntimeException("Fetch meta failed.", e);
 		}
+		if (meta == null || meta.getTopics().size() <= 0) {
+			throw new RuntimeException("Meta is null or topics is empty.");
+		}
+		return meta;
 	}
 }

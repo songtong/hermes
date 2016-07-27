@@ -16,25 +16,27 @@ import com.zabbix4j.host.HostObject;
 
 @Service
 @Scope("singleton")
-public class ZabbixApiGateway1 extends ZabbixApiGateway{
+public class ZabbixApiGateway1 extends ZabbixApiGateway {
 
 	@PostConstruct
 	private void postConstruct() {
-		zabbixApi = new ZabbixApi(config.getZabbixUrl1());
-		try {
-			zabbixApi.login(config.getZabbixUsername(), config.getZabbixPassword());
-		} catch (ZabbixApiException e) {
-			e.printStackTrace();
+		if (config.isMonitorCheckerEnable()) {
+			zabbixApi = new ZabbixApi(config.getZabbixUrl1());
+			try {
+				zabbixApi.login(config.getZabbixUsername(), config.getZabbixPassword());
+			} catch (ZabbixApiException e) {
+				e.printStackTrace();
+			}
+
+			hostNameCache = CacheBuilder.newBuilder().recordStats().maximumSize(50).expireAfterWrite(1, TimeUnit.HOURS)
+			      .build(new CacheLoader<String, Map<Integer, HostObject>>() {
+
+				      @Override
+				      public Map<Integer, HostObject> load(String name) throws Exception {
+					      return populateHostsByName(name);
+				      }
+
+			      });
 		}
-
-		hostNameCache = CacheBuilder.newBuilder().recordStats().maximumSize(50).expireAfterWrite(1, TimeUnit.HOURS)
-		      .build(new CacheLoader<String, Map<Integer, HostObject>>() {
-
-			      @Override
-			      public Map<Integer, HostObject> load(String name) throws Exception {
-				      return populateHostsByName(name);
-			      }
-
-		      });
 	}
 }

@@ -28,6 +28,7 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.model.MonitorEventDao;
 import com.ctrip.hermes.metaservice.monitor.event.CheckerExceptionEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -44,6 +45,9 @@ public class CheckerSuite {
 	      HermesThreadFactory.create("monitorCheckerExecutor", true));
 
 	private MonitorEventDao m_monitorEventDao = PlexusComponentLocator.lookup(MonitorEventDao.class);
+
+	@Autowired
+	private MonitorConfig m_config;
 
 	@Autowired
 	private ApplicationContext m_ctx;
@@ -94,6 +98,7 @@ public class CheckerSuite {
 					if (!result.getMonitorEvents().isEmpty()) {
 						for (MonitorEvent event : result.getMonitorEvents()) {
 							try {
+								event.setShouldNotify(m_config.isMonitorCheckerNotifyEnable());
 								m_monitorEventDao.insert(event.toDBEntity());
 							} catch (DalException e) {
 								log.error("Saven monitor event failed.", e);

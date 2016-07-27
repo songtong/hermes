@@ -53,10 +53,12 @@ public class ZKZabbixMonitor implements IZabbixMonitor {
 	private MonitorConfig config;
 
 	@Scheduled(cron = "0 7 * * * *")
-	public void scheduled() throws Throwable{
-		monitorHourly();
+	public void scheduled() throws Throwable {
+		if (config.isMonitorCheckerEnable()) {
+			monitorHourly();
+		}
 	}
-	
+
 	public String monitorHourly() throws Throwable {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.MINUTE, 0);
@@ -85,7 +87,7 @@ public class ZKZabbixMonitor implements IZabbixMonitor {
 				firstTimeFrom = timeFrom;
 			}
 			lastTimeTill = timeTill;
-			
+
 			monitorZK(timeFrom, timeTill);
 
 			try {
@@ -93,7 +95,7 @@ public class ZKZabbixMonitor implements IZabbixMonitor {
 			} catch (InterruptedException e) {
 			}
 		}
-		return String.format("%s: %s->%s","Zookeeper", firstTimeFrom, lastTimeTill);
+		return String.format("%s: %s->%s", "Zookeeper", firstTimeFrom, lastTimeTill);
 	}
 
 	private void monitorZK(Date timeFrom, Date timeTill) throws Throwable {

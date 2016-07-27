@@ -236,6 +236,15 @@ public class MonitorConfig {
 	@Value("${consume.large.backlog.report.interval.min:30}")
 	private int consumeLargeBacklogReportIntervalMin;
 
+	@Value("${monitor.checker.enable:true}")
+	private boolean monitorCheckerEnable;
+
+	@Value("${monitor.checker.notify.enable:true}")
+	private boolean monitorCheckerNotifyEnable;
+
+	@Value("${partition.service.drop.table.enable:false}")
+	private boolean partitionServiceDropTableEnable;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -776,5 +785,29 @@ public class MonitorConfig {
 
 	public void setConsumeLargeBacklogReportIntervalMin(int consumeLargeBacklogReportIntervalMin) {
 		this.consumeLargeBacklogReportIntervalMin = consumeLargeBacklogReportIntervalMin;
+	}
+
+	public boolean isMonitorCheckerEnable() {
+		return monitorCheckerEnable;
+	}
+
+	public void setMonitorCheckerEnable(boolean monitorCheckerEnable) {
+		this.monitorCheckerEnable = monitorCheckerEnable;
+	}
+
+	public boolean isMonitorCheckerNotifyEnable() {
+		return monitorCheckerNotifyEnable;
+	}
+
+	public void setMonitorCheckerNotifyEnable(boolean monitorCheckerNotifyEnable) {
+		this.monitorCheckerNotifyEnable = monitorCheckerNotifyEnable;
+	}
+
+	public boolean isPartitionServiceDropTableEnable() {
+		return partitionServiceDropTableEnable;
+	}
+
+	public void setPartitionServiceDropTableEnable(boolean partitionServiceDropTableEnable) {
+		this.partitionServiceDropTableEnable = partitionServiceDropTableEnable;
 	}
 }

@@ -89,36 +89,38 @@ public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 
 	@Override
 	public CheckerResult check(Date toDate, int minutesBefore) {
-		final Date to = new Date(toDate.getTime() - TimeUnit.MINUTES.toMillis(1));
-		final Date from = new Date(to.getTime() - TimeUnit.MINUTES.toMillis(minutesBefore));
 		final CheckerResult result = new CheckerResult();
-		ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
-		try {
-			Map<Topic, Integer> limits = parseLimits(fetchMeta(), //
-			      m_config.getDeadLetterCheckerIncludeTopics(), m_config.getDeadLetterCheckerExcludeTopics());
-			ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
-			List<Map<Topic, Integer>> splited = MonitorUtils.splitMap(limits, DB_CHECKER_THREAD_COUNT);
-			final CountDownLatch latch = new CountDownLatch(splited.size());
-			for (final Map<Topic, Integer> map : splited) {
-				es.execute(new DeadLetterCheckerTask(map, m_dao, from, to, result, latch, exceptions));
-			}
-			if (latch.await(DEADLETTER_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
-				result.setRunSuccess(true);
-			} else {
+		if (m_config.isMonitorCheckerEnable()) {
+			final Date to = new Date(toDate.getTime() - TimeUnit.MINUTES.toMillis(1));
+			final Date from = new Date(to.getTime() - TimeUnit.MINUTES.toMillis(minutesBefore));
+			ExecutorService es = Executors.newFixedThreadPool(DB_CHECKER_THREAD_COUNT);
+			try {
+				Map<Topic, Integer> limits = parseLimits(fetchMeta(), //
+				      m_config.getDeadLetterCheckerIncludeTopics(), m_config.getDeadLetterCheckerExcludeTopics());
+				ConcurrentSet<Exception> exceptions = new ConcurrentSet<Exception>();
+				List<Map<Topic, Integer>> splited = MonitorUtils.splitMap(limits, DB_CHECKER_THREAD_COUNT);
+				final CountDownLatch latch = new CountDownLatch(splited.size());
+				for (final Map<Topic, Integer> map : splited) {
+					es.execute(new DeadLetterCheckerTask(map, m_dao, from, to, result, latch, exceptions));
+				}
+				if (latch.await(DEADLETTER_CHECKER_TIMEOUT_MINUTE, TimeUnit.MINUTES)) {
+					result.setRunSuccess(true);
+				} else {
+					result.setRunSuccess(false);
+					result.setErrorMessage("Query dead letter db timeout, check result is not completely.");
+				}
+				if (exceptions.size() > 0) {
+					result.setRunSuccess(false);
+					result.setErrorMessage("Dead letter checker task has exceptions!");
+					result.setException(new CompositeException(exceptions));
+				}
+			} catch (Exception e) {
+				result.setErrorMessage("Query dead letter db failed.");
+				result.setException(e);
 				result.setRunSuccess(false);
-				result.setErrorMessage("Query dead letter db timeout, check result is not completely.");
+			} finally {
+				es.shutdownNow();
 			}
-			if (exceptions.size() > 0) {
-				result.setRunSuccess(false);
-				result.setErrorMessage("Dead letter checker task has exceptions!");
-				result.setException(new CompositeException(exceptions));
-			}
-		} catch (Exception e) {
-			result.setErrorMessage("Query dead letter db failed.");
-			result.setException(e);
-			result.setRunSuccess(false);
-		} finally {
-			es.shutdownNow();
 		}
 		return result;
 	}

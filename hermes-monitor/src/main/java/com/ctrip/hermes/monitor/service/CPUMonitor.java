@@ -135,7 +135,9 @@ public class CPUMonitor implements IZabbixMonitor {
 
 	@Scheduled(cron = "0 3 * * * *")
 	public void scheduled() throws Throwable {
-		monitorHourly();
+		if (config.isMonitorCheckerEnable()) {
+			monitorHourly();
+		}
 	}
 
 	private Map<Integer, StatResult> statCPUIdleTime(Date timeFrom, Date timeTill, Map<Integer, HostObject> hosts)

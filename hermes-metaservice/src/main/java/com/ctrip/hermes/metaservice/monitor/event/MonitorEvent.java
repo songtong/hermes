@@ -3,6 +3,9 @@ package com.ctrip.hermes.metaservice.monitor.event;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
 public interface MonitorEvent {
+	public boolean isShouldNotify();
+
+	public void setShouldNotify(boolean shouldNotify);
 
 	public MonitorEventType getType();
 
