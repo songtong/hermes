@@ -12,7 +12,6 @@ import com.ctrip.hermes.core.pipeline.spi.Valve;
 import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
-import com.dianping.cat.message.Transaction;
 import com.dianping.cat.message.spi.MessageTree;
 
 @Named(type = Valve.class, value = TracingMessageValve.ID)
@@ -33,9 +32,6 @@ public class TracingMessageValve implements Valve {
 
 			boolean connectCatTransactions = m_metaService.findTopicByName(topic).isConnectCatTransactions();
 
-			Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_TRIED, topic);
-			t.addData("key", msg.getKey());
-
 			try {
 				String ip = Networks.forIp().getLocalHostAddress();
 				Cat.logEvent("Message:" + topic, "Produced:" + ip, Event.SUCCESS, "key=" + msg.getKey());
@@ -55,13 +51,9 @@ public class TracingMessageValve implements Valve {
 				}
 				ctx.next(payload);
 
-				t.setStatus(Transaction.SUCCESS);
 			} catch (Exception e) {
 				Cat.logError(e);
-				t.setStatus(e);
 				throw new RuntimeException(e);
-			} finally {
-				t.complete();
 			}
 		} else {
 			try {
