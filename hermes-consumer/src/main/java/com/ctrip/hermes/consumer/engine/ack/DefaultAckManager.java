@@ -22,7 +22,6 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.consumer.engine.ack.AckHolder.AckCallback;
 import com.ctrip.hermes.consumer.engine.ack.AckHolder.NackCallback;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
@@ -174,16 +173,12 @@ public class DefaultAckManager implements AckManager {
 			long resultTimeout = cmd.getTimeout();
 			int acceptTimeout = m_config.getAckCheckerAcceptTimeoutMillis();
 
-			Context ackedTimer = ConsumerStatusMonitor.INSTANCE
-			      .getTimer(topic, partition, groupId, "ack-msg-cmd-duration").time();
-
 			Transaction tx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_CONSUME_ACK_TRANSPORT,
 			      String.format("%s:%s", topic, groupId));
 			try {
 				Future<Pair<Boolean, Endpoint>> acceptFuture = m_acceptMonitor.monitor(correlationId);
 				Future<Boolean> resultFuture = m_resultMonitor.monitor(correlationId);
 				if (m_endpointClient.writeCommand(endpoint, cmd, acceptTimeout, TimeUnit.MILLISECONDS)) {
-					ConsumerStatusMonitor.INSTANCE.ackMessageCmdSent(topic, partition, groupId);
 
 					Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(cmd, acceptFuture, acceptTimeout);
 
@@ -205,7 +200,6 @@ public class DefaultAckManager implements AckManager {
 				tx.complete();
 			}
 
-			ackedTimer.stop();
 		} else {
 			log.debug("No endpoint found, ignore it");
 			m_endpointManager.refreshEndpoint(topic, partition);
@@ -247,18 +241,16 @@ public class DefaultAckManager implements AckManager {
 			Boolean acked = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
 
 			if (acked != null && acked) {
-				ConsumerStatusMonitor.INSTANCE.brokerAcked(topic, partition, groupId);
 				return true;
 			} else {
-				ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
 				return false;
 			}
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		} catch (TimeoutException e) {
-			ConsumerStatusMonitor.INSTANCE.waitBrokerAckMessageTimeout(topic, partition, groupId);
+			// do nothing
 		} catch (Exception e) {
-			ConsumerStatusMonitor.INSTANCE.brokerAckFailed(topic, partition, groupId);
+			// do nothing
 		}
 
 		return false;
@@ -296,7 +288,6 @@ public class DefaultAckManager implements AckManager {
 
 			@Override
 			public void run() {
-				Tpg tpg = m_holder.getTpg();
 				AckMessageCommandV5 cmd = m_holder.pop();
 				try {
 					if (cmd != null) {
@@ -310,7 +301,6 @@ public class DefaultAckManager implements AckManager {
 						}
 					}
 				} catch (Exception e) {
-					ConsumerStatusMonitor.INSTANCE.brokerAckFailed(tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
 					log.warn("Exception occurred while flushing ack cmd to broker, will retry it", e);
 				} finally {
 					if (cmd != null) {
@@ -376,10 +366,6 @@ public class DefaultAckManager implements AckManager {
 
 		public void push(AckMessageCommandV5 cmd) {
 			m_cmd.set(cmd);
-		}
-
-		public Tpg getTpg() {
-			return m_tpg;
 		}
 
 		private AckMessageCommandV5 scan() {
@@ -460,6 +446,7 @@ public class DefaultAckManager implements AckManager {
 							DeliveredOperation dOp = (DeliveredOperation) op;
 
 							holder.delivered(dOp.getId(), new AckContext(dOp.getId(), dOp.getRemainingRetries(), -1, -1));
+							ConsumerStatusMonitor.INSTANCE.msgReceived(m_tpg);
 						} else if (op instanceof AckOperation) {
 							final AckOperation aOp = (AckOperation) op;
 							holder.ack(aOp.getId(), new AckCallback<AckContext>() {
@@ -470,6 +457,8 @@ public class DefaultAckManager implements AckManager {
 									item.setOnMessageEndTimeMillis(aOp.getOnMessageEnd());
 								}
 							});
+							ConsumerStatusMonitor.INSTANCE.msgAcked(m_tpg, aOp.getOnMessageStart(), aOp.getOnMessageEnd(),
+							      true);
 						} else if (op instanceof NackOperation) {
 							final NackOperation aOp = (NackOperation) op;
 							holder.nack(aOp.getId(), new NackCallback<AckContext>() {
@@ -480,6 +469,8 @@ public class DefaultAckManager implements AckManager {
 									item.setOnMessageEndTimeMillis(aOp.getOnMessageEnd());
 								}
 							});
+							ConsumerStatusMonitor.INSTANCE.msgAcked(m_tpg, aOp.getOnMessageStart(), aOp.getOnMessageEnd(),
+							      false);
 						}
 					} catch (AckHolderException e) {
 						log.error("Exception occurred while handling operations({}).", m_tpg, e);

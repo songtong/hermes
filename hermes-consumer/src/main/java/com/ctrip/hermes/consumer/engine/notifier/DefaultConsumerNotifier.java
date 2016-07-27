@@ -21,6 +21,7 @@ import com.ctrip.hermes.consumer.api.MessageListenerConfig;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
+import com.ctrip.hermes.consumer.engine.status.ConsumerStatusMonitor;
 import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.DummyBaseConsumerMessage;
@@ -117,6 +118,9 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 			@SuppressWarnings({ "rawtypes" })
 			@Override
 			public void run() {
+				if (msgs == null || msgs.isEmpty()) {
+					return;
+				}
 				try {
 					Iterator<ConsumerMessage<?>> iter = msgs.iterator();
 					while (iter.hasNext()) {
@@ -133,7 +137,13 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 						}
 					}
 
+					long start = System.currentTimeMillis();
 					notifyStrategy.notify(msgs, context, executorService, m_pipeline);
+
+					long avgDuration = (System.currentTimeMillis() - start) / msgs.size();
+
+					ConsumerStatusMonitor.INSTANCE.msgProcessed(context.getTopic().getName(), msgs.get(0).getPartition(),
+					      context.getGroupId(), msgs.size(), avgDuration);
 
 				} catch (Exception e) {
 					log.error(

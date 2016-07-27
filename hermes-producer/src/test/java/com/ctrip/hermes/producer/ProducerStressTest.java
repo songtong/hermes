@@ -8,7 +8,6 @@ import org.unidal.lookup.ComponentTestCase;
 
 import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
-import com.ctrip.hermes.metrics.HttpMetricsServer;
 import com.ctrip.hermes.producer.api.Producer;
 
 /**
@@ -23,9 +22,6 @@ public class ProducerStressTest extends ComponentTestCase {
 		int bodyLength = 100;
 		int paritionCount = 1;
 		int msgPerSeconds = 600;
-
-		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
-		server.start();
 
 		System.in.read();
 

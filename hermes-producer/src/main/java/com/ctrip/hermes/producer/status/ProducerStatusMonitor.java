@@ -1,15 +1,15 @@
 package com.ctrip.hermes.producer.status;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.unidal.tuple.Pair;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
-import com.ctrip.hermes.metrics.HermesMetricsRegistry;
+import com.ctrip.framework.vi.component.ComponentManager;
+import com.ctrip.framework.vi.metrics.MetricsCollector;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -18,174 +18,60 @@ import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 public enum ProducerStatusMonitor {
 	INSTANCE;
 
-	private Map<Pair<String, Integer>, ProducerStatusHolder> m_tp2StatusHolder = new ConcurrentHashMap<>();
+	private Map<Pair<String, Integer>, BlockingQueue<?>> m_taskQueues = new ConcurrentHashMap<>();
 
-	private Map<Pair<String, Integer>, Gauge<Integer>> m_tp2TaskQueueGauge = new ConcurrentHashMap<>();
-
-	public void addTaskQueueGauge(String topic, int partition, final BlockingQueue<?> taskQueue) {
-		Pair<String, Integer> topicPartition = new Pair<String, Integer>(topic, partition);
-		if (!m_tp2TaskQueueGauge.containsKey(topicPartition)) {
-			synchronized (this) {
-				if (!m_tp2TaskQueueGauge.containsKey(topicPartition)) {
-					Gauge<Integer> guage = HermesMetricsRegistry.getMetricRegistry().register(
-					      MetricRegistry.name(getMetricsPrefix(topic, partition), "sendBuffer", "size"),
-					      new Gauge<Integer>() {
-
-						      @Override
-						      public Integer getValue() {
-							      return taskQueue.size();
-						      }
-					      });
-
-					m_tp2TaskQueueGauge.put(topicPartition, guage);
-				}
-			}
-		}
+	private ProducerStatusMonitor() {
+		registerVIComponents();
 	}
 
-	public Timer getTimer(String topic, int partition, String name) {
-		return HermesMetricsRegistry.getMetricRegistry().timer(
-		      MetricRegistry.name(getMetricsPrefix(topic, partition), name));
-	}
-
-	private String getMetricsPrefix(String topic, int partition) {
-		String metricPrefix = topic + "#" + partition;
-		return metricPrefix;
-	}
-
-	public void messageSubmitted(String topic, int partition) {
-		getStatusHolder(topic, partition).messageSubmitted();
-	}
-
-	private ProducerStatusHolder getStatusHolder(String topic, int partition) {
-		Pair<String, Integer> topicPartition = new Pair<String, Integer>(topic, partition);
-		ProducerStatusHolder statusHolder = m_tp2StatusHolder.get(topicPartition);
-		if (statusHolder == null) {
-			synchronized (this) {
-				statusHolder = m_tp2StatusHolder.get(topicPartition);
-				if (statusHolder == null) {
-					statusHolder = new ProducerStatusHolder(topicPartition.getKey(), topicPartition.getValue());
-				}
-			}
-		}
-		return statusHolder;
-	}
-
-	public void messageResubmitted(String topic, int partition) {
-		getStatusHolder(topic, partition).messageResubmitted();
+	private static void registerVIComponents() {
+		ComponentManager.register(ProducerTaskQueueComponentStatus.class);
+		ComponentManager.register(ProducerConfigComponentStatus.class);
 	}
 
 	public void offerFailed(String topic, int partition) {
-		getStatusHolder(topic, partition).offerFailed();
-	}
-
-	public void brokerAccepted(String topic, int partition, int messageCount) {
-		getStatusHolder(topic, partition).brokerAccepted(messageCount);
-	}
-
-	public void wroteToBroker(String topic, int partition, int messageCount) {
-		getStatusHolder(topic, partition).wroteToBroker(messageCount);
+		MetricsCollector.getCollector().record("producer.offer.fail", createTagsMap(topic, partition));
 	}
 
 	public void brokerRejected(String topic, int partition, int messageCount) {
-		getStatusHolder(topic, partition).brokerRejected(messageCount);
+		MetricsCollector.getCollector().record("producer.broker.reject", createTagsMap(topic, partition));
 	}
 
-	public void sendFailed(String topic, int partition, int messageCount) {
-		getStatusHolder(topic, partition).sendFailed(messageCount);
+	public void brokerAcceptTimeout(String topic, int partition, int messageCount) {
+		MetricsCollector.getCollector().record("producer.broker.accept.timeout", createTagsMap(topic, partition));
 	}
 
-	public void waitBrokerResultTimeout(String topic, int partition, int messageCount) {
-		getStatusHolder(topic, partition).waitBrokerResultTimeout(messageCount);
+	public void sendFail(String topic, int partition, int messageCount) {
+		Map<String, String> tagsMap = createTagsMap(topic, partition);
+		for (int i = 0; i < messageCount; i++) {
+			MetricsCollector.getCollector().record("producer.send.fail", tagsMap);
+		}
 	}
 
-	public void waitBrokerAcceptanceTimeout(String topic, int partition, int messageCount) {
-		getStatusHolder(topic, partition).waitBrokerAcceptanceTimeout(messageCount);
+	public void sendSuccess(String topic, int partition, long duration) {
+		MetricsCollector.getCollector().record("producer.send.success", duration, createTagsMap(topic, partition));
 	}
 
-	public void brokerResultReceived(String topic, int partition, int messageCount) {
-		getStatusHolder(topic, partition).brokerResultReceived(messageCount);
+	public void sendSkip(String topic, int partition, int messageCount) {
+		Map<String, String> tagsMap = createTagsMap(topic, partition);
+		for (int i = 0; i < messageCount; i++) {
+			MetricsCollector.getCollector().record("producer.send.skip", tagsMap);
+		}
 	}
 
-	private class ProducerStatusHolder {
+	private Map<String, String> createTagsMap(String topic, int partition) {
+		Map<String, String> tags = new HashMap<>(8);
+		tags.put("topic", topic);
+		tags.put("partition", Integer.toString(partition));
 
-		private final String m_metricsPrefix;
-
-		private static final String MSGS = "messages";
-
-		private static final String CMDS = "commands";
-
-		public ProducerStatusHolder(String topic, int partition) {
-			m_metricsPrefix = getMetricsPrefix(topic, partition);
-		}
-
-		public void brokerResultReceived(int messageCount) {
-			HermesMetricsRegistry.getMetricRegistry()
-			      .meter(MetricRegistry.name(m_metricsPrefix, MSGS, "brokerResultReceived")).mark(messageCount);
-			HermesMetricsRegistry.getMetricRegistry()
-			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "brokerResultReceived")).mark();
-		}
-
-		public void waitBrokerAcceptanceTimeout(int messageCount) {
-			HermesMetricsRegistry.getMetricRegistry()
-			      .meter(MetricRegistry.name(m_metricsPrefix, MSGS, "waitBrokerAcceptanceTimeout")).mark(messageCount);
-			HermesMetricsRegistry.getMetricRegistry()
-			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "waitBrokerAcceptanceTimeout")).mark();
-		}
-
-		public void messageSubmitted() {
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "submitted"))
-			      .mark();
-		}
-
-		public void messageResubmitted() {
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "resubmitted"))
-			      .mark();
-		}
-
-		public void offerFailed() {
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "offerFailed"))
-			      .mark();
-		}
-
-		public void brokerAccepted(int messageCount) {
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "brokerAccepted"))
-			      .mark(messageCount);
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "brokerAccepted"))
-			      .mark();
-			HermesMetricsRegistry.getMetricRegistry()
-			      .histogram(MetricRegistry.name(m_metricsPrefix, MSGS, "brokerAccepted", "histogram"))
-			      .update(messageCount);
-		}
-
-		public void wroteToBroker(int messageCount) {
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "wroteToBroker"))
-			      .mark(messageCount);
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "wroteToBroker"))
-			      .mark();
-		}
-
-		public void brokerRejected(int messageCount) {
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "brokerRejected"))
-			      .mark(messageCount);
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "brokerRejected"))
-			      .mark();
-		}
-
-		public void sendFailed(int messageCount) {
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, MSGS, "sendFailed"))
-			      .mark(messageCount);
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name(m_metricsPrefix, CMDS, "sendFailed"))
-			      .mark();
-		}
-
-		public void waitBrokerResultTimeout(int messageCount) {
-			HermesMetricsRegistry.getMetricRegistry()
-			      .meter(MetricRegistry.name(m_metricsPrefix, MSGS, "waitBrokerResultTimeout")).mark(messageCount);
-			HermesMetricsRegistry.getMetricRegistry()
-			      .meter(MetricRegistry.name(m_metricsPrefix, CMDS, "waitBrokerResultTimeout")).mark();
-		}
-
+		return tags;
 	}
 
+	public void watchTaskQueue(String topic, int partition, BlockingQueue<?> queue) {
+		m_taskQueues.put(new Pair<String, Integer>(topic, partition), queue);
+	}
+
+	public Set<Map.Entry<Pair<String, Integer>, BlockingQueue<?>>> listTaskQueues() {
+		return m_taskQueues.entrySet();
+	}
 }

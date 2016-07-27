@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.codahale.metrics.Timer;
-import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.status.StatusMonitor;
@@ -78,15 +76,14 @@ public class CommandProcessorManager implements Initializable {
 							return;
 						}
 
-						Timer timer = StatusMonitor.INSTANCE.getProcessCommandTimer(type, processor);
-						Context context = timer.time();
+						long start = System.currentTimeMillis();
 						try {
 							processor.process(ctx);
 						} catch (Exception e) {
 							StatusMonitor.INSTANCE.commandProcessorException(type, processor);
 							log.error("Exception occurred while process command.", e);
 						} finally {
-							context.stop();
+							StatusMonitor.INSTANCE.commandProcessed(type, (System.currentTimeMillis() - start));
 						}
 					}
 				});
@@ -114,7 +111,7 @@ public class CommandProcessorManager implements Initializable {
 			      HermesThreadFactory.create(threadNamePrefix, false));
 
 			m_executors.put(cmdProcessor, executor);
-			StatusMonitor.INSTANCE.addCommandProcessorThreadPoolGauge(threadNamePrefix, workQueue);
+			StatusMonitor.INSTANCE.watchCommandProcessorQueue(threadNamePrefix, workQueue);
 		}
 
 	}

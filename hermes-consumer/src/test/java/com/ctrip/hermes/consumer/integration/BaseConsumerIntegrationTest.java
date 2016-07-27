@@ -17,8 +17,6 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.unidal.lookup.ComponentTestCase;
 
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricFilter;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
 import com.ctrip.hermes.consumer.integration.assist.LeaseAnswer;
 import com.ctrip.hermes.consumer.integration.assist.PullMessageAnswer;
@@ -35,7 +33,6 @@ import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
-import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 
 public class BaseConsumerIntegrationTest extends ComponentTestCase {
 
@@ -69,12 +66,6 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 	@After
 	@Override
 	public void tearDown() throws Exception {
-		HermesMetricsRegistry.getMetricRegistry().removeMatching(new MetricFilter() {
-			@Override
-			public boolean matches(String name, Metric metric) {
-				return true;
-			}
-		});
 		resetAnswers();
 		System.out.println("************** Current test case: " + m_name.getMethodName() + " stop **************\n\n");
 		super.tearDown();

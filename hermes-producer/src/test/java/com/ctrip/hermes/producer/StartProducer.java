@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
+import com.ctrip.framework.vi.VIServer;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.producer.api.Producer;
@@ -30,6 +31,9 @@ public class StartProducer extends ComponentTestCase {
 		System.out.println("Producer started...");
 
 		Cat.initializeByDomain("hermes", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
+
+		VIServer viServer = new VIServer(8080);
+		viServer.start();
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {

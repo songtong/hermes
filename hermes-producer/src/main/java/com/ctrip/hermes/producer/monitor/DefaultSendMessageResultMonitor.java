@@ -69,9 +69,6 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 					SendMessageCommandV6 sendMessageCommand = pair.getKey();
 					SettableFuture<SendMessageResult> future = pair.getValue();
 
-					ProducerStatusMonitor.INSTANCE.brokerResultReceived(sendMessageCommand.getTopic(),
-					      sendMessageCommand.getPartition(), sendMessageCommand.getMessageCount());
-
 					SendMessageResult sendMessageResult = convertToSingleSendMessageResult(resultCmd);
 
 					if (sendMessageResult.isSuccess()) {
@@ -80,7 +77,12 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 						tracking(sendMessageCommand);
 					} else {
 						if (sendMessageResult.isShouldSkip()) {
+							ProducerStatusMonitor.INSTANCE.sendSkip(sendMessageCommand.getTopic(),
+							      sendMessageCommand.getPartition(), sendMessageCommand.getMessageCount());
 							sendMessageCommand.onResultReceived(resultCmd);
+						} else {
+							ProducerStatusMonitor.INSTANCE.sendFail(sendMessageCommand.getTopic(),
+							      sendMessageCommand.getPartition(), sendMessageCommand.getMessageCount());
 						}
 						future.set(sendMessageResult);
 					}
@@ -133,11 +135,12 @@ public class DefaultSendMessageResultMonitor implements SendMessageResultMonitor
 					tree.setParentMessageId(parentMsgId);
 					tree.setRootMessageId(rootMsgId);
 
-					long durtion = System.currentTimeMillis() - msg.getBornTime();
-					String type = durtion > 2000L ? CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE_LARGE
+					long duration = System.currentTimeMillis() - msg.getBornTime();
+					String type = duration > 2000L ? CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE_LARGE
 					      : CatConstants.TYPE_MESSAGE_PRODUCE_ELAPSE;
 					CatUtil.logElapse(type, msg.getTopic(), msg.getBornTime(), 1,
 					      Arrays.asList(new Pair<String, String>("key", msg.getKey())), Transaction.SUCCESS);
+					ProducerStatusMonitor.INSTANCE.sendSuccess(msg.getTopic(), msg.getPartition(), duration);
 				}
 			}
 			t.addData("*count", sendMessageCommand.getMessageCount());

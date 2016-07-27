@@ -23,8 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
-import com.codahale.metrics.Timer;
-import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
 import com.ctrip.hermes.consumer.engine.FilterMessageListenerConfig;
@@ -141,7 +139,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		      String.format("RenewLeaseThread-%s-%s-%s", m_context.getTopic().getName(), m_partitionId,
 		            m_context.getGroupId()), false));
 
-		ConsumerStatusMonitor.INSTANCE.addMessageQueueGuage(m_context.getTopic().getName(), m_partitionId,
+		ConsumerStatusMonitor.INSTANCE.watchLocalCache(m_context.getTopic().getName(), m_partitionId,
 		      m_context.getGroupId(), m_msgs);
 	}
 
@@ -194,7 +192,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		m_pullMessageTaskExecutor.shutdown();
 		m_renewLeaseTaskExecutor.shutdown();
 
-		ConsumerStatusMonitor.INSTANCE.removeMonitor(m_context.getTopic().getName(), m_partitionId,
+		ConsumerStatusMonitor.INSTANCE.stopWatchLocalCache(m_context.getTopic().getName(), m_partitionId,
 		      m_context.getGroupId());
 
 		log.info("Consumer stopped(mode={}, topic={}, partition={}, groupId={}, sessionId={})",
@@ -308,9 +306,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, acceptTimeout,
 					      TimeUnit.MILLISECONDS)) {
 
-						ConsumerStatusMonitor.INSTANCE.queryOffsetCmdSent(m_context.getTopic().getName(), m_partitionId,
-						      m_context.getGroupId());
-
 						Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(acceptFuture, acceptTimeout);
 
 						if (acceptResult != null) {
@@ -321,8 +316,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 						}
 
 						if (offsetRes != null && offsetRes.getOffset() != null) {
-							ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReceived(m_context.getTopic().getName(),
-							      m_partitionId, m_context.getGroupId());
 							m_offset.set(new AtomicReference<Offset>(offsetRes.getOffset()));
 							return;
 						} else {
@@ -379,11 +372,9 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		try {
 			result = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
 		} catch (TimeoutException e) {
-			ConsumerStatusMonitor.INSTANCE.queryOffsetCmdResultReadTimeout(m_context.getTopic().getName(), m_partitionId,
-			      m_context.getGroupId());
+			// do nothing
 		} catch (ExecutionException e) {
-			ConsumerStatusMonitor.INSTANCE.queryOffsetCmdError(m_context.getTopic().getName(), m_partitionId,
-			      m_context.getGroupId());
+			// do nothing
 		}
 
 		return result;
@@ -503,8 +494,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 		m_msgs.drainTo(msgs);
 
 		m_consumerNotifier.messageReceived(token, msgs);
-		ConsumerStatusMonitor.INSTANCE.messageProcessed(m_context.getTopic().getName(), m_partitionId,
-		      m_context.getGroupId(), msgs.size());
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -518,10 +507,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				int partition = batch.getPartition();
 
 				for (int j = 0; j < msgMetas.size(); j++) {
-					Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
-					      m_context.getGroupId(), "decode-duration");
-					Context context = timer.time();
-
 					BaseConsumerMessage baseMsg = PlexusComponentLocator.lookup(MessageCodec.class).decode(batch.getTopic(),
 					      batchData, bodyClazz);
 					BrokerConsumerMessage brokerMsg = new BrokerConsumerMessage(baseMsg);
@@ -531,8 +516,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					brokerMsg.setResend(messageMeta.isResend());
 					brokerMsg.setRetryTimesOfRetryPolicy(m_retryPolicy.getRetryTimes());
 					brokerMsg.setMsgSeq(messageMeta.getId());
-
-					context.stop();
 
 					msgs.add(decorateBrokerMessage(brokerMsg));
 				}
@@ -620,11 +603,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 
 			try {
 
-				Timer timer = ConsumerStatusMonitor.INSTANCE.getTimer(m_context.getTopic().getName(), m_partitionId,
-				      m_context.getGroupId(), "pull-msg-cmd-duration");
-
-				Context context = timer.time();
-
 				pullMessageResultMonitor.monitor(cmd);
 				Future<Pair<Boolean, Endpoint>> acceptFuture = pullMessageAcceptMonitor.monitor(cmd.getHeader()
 				      .getCorrelationId());
@@ -635,9 +613,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, acceptTimeout,
 				      TimeUnit.MILLISECONDS)) {
 
-					ConsumerStatusMonitor.INSTANCE.pullMessageCmdSent(m_context.getTopic().getName(), m_partitionId,
-					      m_context.getGroupId());
-
 					Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(acceptFuture, acceptTimeout);
 
 					if (acceptResult != null) {
@@ -647,11 +622,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 						      cmd.getPartition());
 					}
 
-					context.stop();
-
 					if (result != null) {
-						ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReceived(m_context.getTopic().getName(),
-						      m_partitionId, m_context.getGroupId());
 						appendToMsgQueue(result);
 						resultReceived(result);
 					}
@@ -701,8 +672,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 			try {
 				result = resultFuture.get(timeout, TimeUnit.MILLISECONDS);
 			} catch (TimeoutException e) {
-				ConsumerStatusMonitor.INSTANCE.pullMessageCmdResultReadTimeout(m_context.getTopic().getName(),
-				      m_partitionId, m_context.getGroupId());
+				// do nothing
 			}
 
 			return result;
@@ -745,9 +715,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					}
 
 					m_msgs.addAll(msgs);
-
-					ConsumerStatusMonitor.INSTANCE.messageReceived(m_context.getTopic().getName(), m_partitionId,
-					      m_context.getGroupId(), msgs.size());
 
 				} else {
 					log.info(
