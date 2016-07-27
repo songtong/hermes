@@ -261,3 +261,33 @@ CREATE TABLE `notification` (
 COMMENT='hermes notification storage'
 ENGINE=InnoDB
 ;
+
+CREATE TABLE `consumer_monitor_config` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `topic` varchar(500) NOT NULL DEFAULT '' COMMENT 'topic名称',
+  `consumer` varchar(500) NOT NULL DEFAULT '' COMMENT 'consumer名称',
+  `large_backlog_enable` tinyint(1) DEFAULT '1' COMMENT '是否开启积压',
+  `large_backlog_limit` int(11) DEFAULT '-1' COMMENT '积压阈值',
+  `large_deadletter_enable` tinyint(1) DEFAULT '1' COMMENT '是否开启死信',
+  `large_deadletter_limit` int(11) DEFAULT '-1' COMMENT '死信阈值',
+  `large_delay_enable` tinyint(1) DEFAULT '1' COMMENT '是否开启延迟',
+  `large_delay_limit` int(11) DEFAULT '-1' COMMENT '延迟阈值',
+  `long_time_no_consume_enable` tinyint(1) DEFAULT '1' COMMENT '是否开启太久不消费',
+  `long_time_no_consume_limit` int(11) DEFAULT '-1' COMMENT '太久不消费阈值',
+  `alarm_receivers` varchar(4096) DEFAULT NULL COMMENT '报警接收人',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '上次修改时间',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='consumer monitor configs';
+
+CREATE TABLE `producer_monitor_config` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'item id',
+  `topic` varchar(500) NOT NULL DEFAULT '' COMMENT 'topic name',
+  `long_time_no_produce_enable` tinyint(1) DEFAULT '1' COMMENT 'enable long time no produce',
+  `long_time_no_produce_limit` int(11) DEFAULT '-1' COMMENT 'long time no produce limit',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modify time',
+  `create_time` datetime DEFAULT NULL COMMENT 'create time',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='producer monitor configs';
