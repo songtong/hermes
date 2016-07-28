@@ -35,7 +35,7 @@ public class DataSourceManager {
 			synchronized (m_datasources) {
 				if (!m_datasources.containsKey(df.getUrl())) {
 					log.info("Init datasource for: {}", df.getUrl());
-					DataSource ds = PlexusComponentLocator.lookup(DataSource.class, "jdbc");
+					DataSource ds = PlexusComponentLocator.lookupWithoutCache(DataSource.class, "jdbc");
 					ds.initialize(DSD_BUILDER.buildDescriptor(new DataSourceDef("PARTITION_CHECKER").setProperties(df)));
 					m_datasources.put(df.getUrl(), ds);
 				}

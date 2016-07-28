@@ -157,6 +157,7 @@ public class PartitionService {
 		Statement stat = null;
 		ResultSet rs = null;
 		try {
+			log.info("Querying datasource[{}] partition status.", ds.getProperties().get("url").getValue());
 			conn = getConnection(ds, true);
 			stat = conn.createStatement();
 			rs = stat.executeQuery(PartitionInfo.SQL_PARTITION);
@@ -193,9 +194,13 @@ public class PartitionService {
 	private Connection getConnection(Datasource ds, boolean forSchemaInfo) throws Exception {
 		PropertiesDef def = new PropertiesDef();
 		String url = ds.getProperties().get("url").getValue();
+		url = forSchemaInfo ? wrapperJdbcUrl(url) : url;
+		if (forSchemaInfo) {
+			log.info("Wrap ds url [{}] to [{}]", ds.getProperties().get("url").getValue(), url);
+		}
 
+		def.setUrl(url);
 		def.setDriver("com.mysql.jdbc.Driver");
-		def.setUrl(forSchemaInfo ? wrapperJdbcUrl(url) : url);
 		def.setUser(ds.getProperties().get("user").getValue());
 		def.setPassword(ds.getProperties().get("password").getValue());
 

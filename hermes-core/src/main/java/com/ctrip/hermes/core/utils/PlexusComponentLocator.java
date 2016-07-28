@@ -62,4 +62,13 @@ public class PlexusComponentLocator {
 
 		return (T) component;
 	}
+
+	public static <T> T lookupWithoutCache(Class<T> clazz, String roleHint) {
+		try {
+			return (T) ContainerLoader.getDefaultContainer().lookup(clazz, roleHint);
+		} catch (ComponentLookupException e) {
+			throw new IllegalArgumentException(String.format("Error: Unable to lookup component %s with roleHint %s!",
+			      clazz.getName(), roleHint), e);
+		}
+	}
 }
