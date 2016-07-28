@@ -115,27 +115,27 @@ public class LeaseResource {
 			if (!PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + CONSUMER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
-			}
+			} else {
+				try {
+					LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
+					      "/consumer/acquire", params, tpg);
 
-			try {
-				LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
-				      "/consumer/acquire", params, tpg);
-
-				if (leaseAcquireResponse == null) {
-					ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
-					      tpg.getGroupId());
-					if (leaseAllocator != null) {
-						response = leaseAllocator.tryAcquireLease(tpg, sessionId, getRemoteAddr(host, req));
+					if (leaseAcquireResponse == null) {
+						ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
+						      tpg.getGroupId());
+						if (leaseAllocator != null) {
+							response = leaseAllocator.tryAcquireLease(tpg, sessionId, getRemoteAddr(host, req));
+						} else {
+							response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+							      + NO_STRATEGY_DELAY_TIME_MILLIS);
+						}
 					} else {
-						response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-						      + NO_STRATEGY_DELAY_TIME_MILLIS);
+						response = leaseAcquireResponse;
 					}
-				} else {
-					response = leaseAcquireResponse;
+				} catch (Exception e) {
+					response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+					      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 				}
-			} catch (Exception e) {
-				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 			}
 		} finally {
 			if (traceLog.isInfoEnabled()) {
@@ -167,26 +167,26 @@ public class LeaseResource {
 			if (!PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + CONSUMER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
-			}
-
-			try {
-				LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
-				      "/consumer/renew", params, tpg);
-				if (leaseAcquireResponse == null) {
-					ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
-					      tpg.getGroupId());
-					if (leaseAllocator != null) {
-						response = leaseAllocator.tryRenewLease(tpg, sessionId, leaseId, getRemoteAddr(host, req));
+			} else {
+				try {
+					LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
+					      "/consumer/renew", params, tpg);
+					if (leaseAcquireResponse == null) {
+						ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
+						      tpg.getGroupId());
+						if (leaseAllocator != null) {
+							response = leaseAllocator.tryRenewLease(tpg, sessionId, leaseId, getRemoteAddr(host, req));
+						} else {
+							response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+							      + NO_STRATEGY_DELAY_TIME_MILLIS);
+						}
 					} else {
-						response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-						      + NO_STRATEGY_DELAY_TIME_MILLIS);
+						response = leaseAcquireResponse;
 					}
-				} else {
-					response = leaseAcquireResponse;
+				} catch (Exception e) {
+					response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+					      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 				}
-			} catch (Exception e) {
-				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 			}
 		} finally {
 			if (traceLog.isInfoEnabled()) {
@@ -222,21 +222,21 @@ public class LeaseResource {
 			if (!PlexusComponentLocator.lookup(BrokerLeaseHolder.class).inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + BROKER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
-			}
+			} else {
+				try {
+					LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/acquire",
+					      params, null);
 
-			try {
-				LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/acquire",
-				      params, null);
-
-				if (leaseAcquireResponse == null) {
-					response = m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId, getRemoteAddr(host, req),
-					      port);
-				} else {
-					response = leaseAcquireResponse;
+					if (leaseAcquireResponse == null) {
+						response = m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId,
+						      getRemoteAddr(host, req), port);
+					} else {
+						response = leaseAcquireResponse;
+					}
+				} catch (Exception e) {
+					response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+					      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 				}
-			} catch (Exception e) {
-				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 			}
 		} finally {
 			if (traceLog.isInfoEnabled()) {
@@ -274,21 +274,21 @@ public class LeaseResource {
 			if (!PlexusComponentLocator.lookup(BrokerLeaseHolder.class).inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + BROKER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
-			}
+			} else {
+				try {
+					LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/renew",
+					      params, null);
 
-			try {
-				LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/renew",
-				      params, null);
-
-				if (leaseAcquireResponse == null) {
-					response = m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId,
-					      getRemoteAddr(host, req), port);
-				} else {
-					response = leaseAcquireResponse;
+					if (leaseAcquireResponse == null) {
+						response = m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId,
+						      getRemoteAddr(host, req), port);
+					} else {
+						response = leaseAcquireResponse;
+					}
+				} catch (Exception e) {
+					response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+					      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 				}
-			} catch (Exception e) {
-				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
 			}
 		} finally {
 			if (traceLog.isInfoEnabled()) {
