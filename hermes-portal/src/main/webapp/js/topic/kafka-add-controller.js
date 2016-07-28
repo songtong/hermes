@@ -9,7 +9,8 @@ topic_module.controller('kafka-add-controller', [ '$scope', '$resource', 'TopicS
 		needCompress : 'true',
 		compressionType : 'deflater',
 		compressionLevel : 1,
-		properties : []
+		properties : [],
+		priorityMessageEnabled : false
 	};
 	$scope.current_datasource_names = [];
 	$scope.kafka_property_names = [ 'partitions', 'replication-factor', 'retention.bytes', 'retention.ms' ]

@@ -35,9 +35,15 @@
 						</div>
 					</div>
 					<div class="form-group">
+						<label class="col-md-4 control-label " style="padding-top: 0px">开启优先队列功能？</label>
+						<div class="col-md-8">
+							<span ng-bind="topic.priorityMessageEnabled" e-form="topicForm" editable-select="topic.priorityMessageEnabled" e-name="priorityMessageEnabled" e-ng-options="op for op in Ops"></span>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-4 control-label " style="padding-top: 0px">需要压缩？</label>
 						<div class="col-md-8">
-							<span ng-bind="topic.needCompress" e-form="topicForm" editable-select="topic.needCompress" e-name="needCompress" e-ng-options="ops for ops in needCompressOps"></span>
+							<span ng-bind="topic.needCompress" e-form="topicForm" editable-select="topic.needCompress" e-name="needCompress" e-ng-options="op for op in Ops"></span>
 						</div>
 					</div>
 					<div ng-show="(topic.needCompress && !topicForm.$visible)||(topicForm['$data']['needCompress'] && topicForm.$visible)" class="form-group">

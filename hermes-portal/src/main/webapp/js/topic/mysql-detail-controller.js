@@ -6,7 +6,7 @@ topic_module.run(function(editableOptions) {
 	scope.topic_name = routeParams['topicName'];
 
 	scope.codec_types = [ 'json', 'cmessaging', 'avro' ];
-	scope.needCompressOps = [ true, false ];
+	scope.Ops = [ true, false ];
 	scope.compressionTypes = [ 'gzip', 'deflater' ];
 
 	scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {

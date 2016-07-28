@@ -39,6 +39,8 @@ public class TopicApplication extends HermesApplication {
 
 	private String m_baseCodecType;
 
+	private boolean m_priorityMessageEnabled;
+
 	public String getProductLine() {
 		return m_productLine;
 	}
@@ -190,5 +192,13 @@ public class TopicApplication extends HermesApplication {
 	public void setCompressionType(String compressionType) {
 		this.m_compressionType = compressionType;
 	}
+
+	public boolean isPriorityMessageEnabled() {
+	   return m_priorityMessageEnabled;
+   }
+
+	public void setPriorityMessageEnabled(boolean priorityMessageEnabled) {
+	   this.m_priorityMessageEnabled = priorityMessageEnabled;
+   }
 
 }

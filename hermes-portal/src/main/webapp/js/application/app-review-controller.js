@@ -10,7 +10,7 @@ application_module.controller('app-review-controller', [ '$scope', '$routeParams
 		value : false,
 		text : "否"
 	} ];
-	$scope.needCompressOps = [ true, false ];
+	$scope.Ops = [ true, false ];
 	$scope.compressionTypes = [ 'gzip', 'deflater' ];
 
 	function decodeComment() {

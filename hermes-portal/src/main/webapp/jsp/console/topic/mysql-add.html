@@ -24,6 +24,14 @@
 						</div>
 					</div>
 					<div class="form-group">
+						<label class="col-md-4 control-label">开启优先队列功能？</label>
+						<div class="col-md-8">
+							<label class="radio-inline"> <input type="radio" ng-model="new_topic.priorityMessageEnabled" ng-value=true> 是
+							</label> <label class="radio-inline"> <input type="radio" ng-model="new_topic.priorityMessageEnabled" ng-value=false> 否
+							</label>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-4 control-label">消息是否需要压缩？</label>
 						<div class="col-md-8">
 							<label class="radio-inline"> <input type="radio" ng-model="new_topic.needCompress" value=true> 是

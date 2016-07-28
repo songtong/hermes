@@ -7,7 +7,7 @@ topic_module.run(function(editableOptions) {
 
 	scope.codec_types = [ 'avro', 'json' ];
 	scope.endpoint_types = [ 'kafka', 'broker' ];
-	scope.needCompressOps = [ true, false ];
+	scope.Ops = [ true, false ];
 	scope.compressionTypes = [ 'gzip', 'deflater' ];
 
 	scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {
