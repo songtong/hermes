@@ -68,6 +68,17 @@
 			<groupId>io.confluent</groupId>
 			<artifactId>kafka-avro-serializer</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-metrics</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.jetty</groupId>
+					<artifactId>jetty-webapp</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

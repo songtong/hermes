@@ -26,7 +26,6 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
-import com.codahale.metrics.Timer.Context;
 import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.exception.MessageSendException;
@@ -204,17 +203,12 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 						t.setStatus(Transaction.SUCCESS);
 						t.complete();
 					} else {
-						Context wholeSendProcessTimer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(),
-						      cmd.getPartition(), "send-message-duration").time();
-
 						SendMessageResult sendResult = sendMessagesToBroker(cmd);
 
 						if (!sendResult.isSuccess() && !sendResult.isShouldSkip()) {
 							m_taskQueue.push(cmd);
 						}
 						tracking(cmd, sendResult);
-
-						wholeSendProcessTimer.stop();
 					}
 				}
 			} finally {
@@ -264,14 +258,8 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					long resultTimeout = cmd.getTimeout();
 
 					if (m_endpointClient.writeCommand(endpoint, cmd, acceptTimeout, TimeUnit.MILLISECONDS)) {
-						Context acceptTimer = ProducerStatusMonitor.INSTANCE.getTimer(topic, partition,
-						      "broker-accept-duration").time();
-
-						ProducerStatusMonitor.INSTANCE.wroteToBroker(topic, partition, cmd.getMessageCount());
 
 						Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(cmd, acceptFuture, acceptTimeout);
-
-						acceptTimer.stop();
 
 						if (acceptResult != null) {
 							return waitForBrokerResultIfNecessary(cmd, resultFuture, acceptResult, resultTimeout);
@@ -292,7 +280,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					return new SendMessageResult(false, false, null);
 				}
 			} catch (Exception e) {
-				ProducerStatusMonitor.INSTANCE.sendFailed(topic, partition, cmd.getMessageCount());
 				log.warn("Exception occurred while sending message to broker, will retry it");
 				return new SendMessageResult(false, false, null);
 			} finally {
@@ -307,7 +294,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			try {
 				acceptResult = acceptFuture.get(timeout, TimeUnit.MILLISECONDS);
 			} catch (TimeoutException e) {
-				ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(cmd.getTopic(), cmd.getPartition(),
+				ProducerStatusMonitor.INSTANCE.brokerAcceptTimeout(cmd.getTopic(), cmd.getPartition(),
 				      cmd.getMessageCount());
 			}
 			return acceptResult;
@@ -320,8 +307,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			String topic = cmd.getTopic();
 			int partition = cmd.getPartition();
 			if (brokerAccept != null && brokerAccept) {
-				ProducerStatusMonitor.INSTANCE.brokerAccepted(topic, partition, cmd.getMessageCount());
-
 				return waitForBrokerResult(cmd, resultFuture, timeout);
 			} else {
 				ProducerStatusMonitor.INSTANCE.brokerRejected(topic, partition, cmd.getMessageCount());
@@ -362,8 +347,8 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			m_topic = topic;
 			m_partition = partition;
 			m_queue = new ArrayBlockingQueue<ProducerWorkerContext>(queueSize);
-
-			ProducerStatusMonitor.INSTANCE.addTaskQueueGauge(m_topic, m_partition, m_queue);
+			
+			ProducerStatusMonitor.INSTANCE.watchTaskQueue(m_topic, m_partition, m_queue);
 		}
 
 		public void push(SendMessageCommandV6 cmd) {
@@ -407,7 +392,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 
 		public Future<SendResult> submit(final ProducerMessage<?> msg) {
-			ProducerStatusMonitor.INSTANCE.messageSubmitted(m_topic, m_partition);
 			SettableFuture<SendResult> future = SettableFuture.create();
 
 			if (msg.getCallback() != null) {

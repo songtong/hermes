@@ -23,6 +23,16 @@
 			<artifactId>hermes-metaservice</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-metrics</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.jetty</groupId>
+					<artifactId>jetty-webapp</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka_2.11</artifactId>
 			<scope>test</scope>

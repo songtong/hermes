@@ -32,7 +32,7 @@ public class EnrichMessageValve implements Valve, Initializable {
 	public void handle(PipelineContext<?> ctx, Object payload) {
 		ProducerMessage<?> msg = (ProducerMessage<?>) payload;
 		String ip = Networks.forIp().getLocalHostAddress();
-		enrichPartitionKey(msg, ip);
+		enrichPartitionKey(msg);
 
 		enrichRefKey(msg);
 		enrichMessageProperties(msg, ip);
@@ -53,12 +53,12 @@ public class EnrichMessageValve implements Valve, Initializable {
 		msg.addDurableSysProperty(MessagePropertyNames.PRODUCER_IP, ip);
 	}
 
-	private void enrichPartitionKey(ProducerMessage<?> msg, String ip) {
+	private void enrichPartitionKey(ProducerMessage<?> msg) {
 		if (StringUtils.isEmpty(msg.getPartitionKey())) {
 			if (m_logEnrichInfo) {
-				log.info("Parition key not set, will set ip as partition key(topic={}, ip={})", msg.getTopic(), ip);
+				log.info("Parition key not set, will set random key as partition key(topic={})", msg.getTopic());
 			}
-			msg.setPartitionKey(ip);
+			msg.setPartitionKey(UUID.randomUUID().toString());
 		}
 	}
 

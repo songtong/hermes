@@ -15,12 +15,12 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.framework.vi.VIServer;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
 import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
-import com.ctrip.hermes.metrics.HttpMetricsServer;
 import com.dianping.cat.Cat;
 
 /**
@@ -36,10 +36,11 @@ public class StartConsumer extends ComponentTestCase {
 
 	@Test
 	public void test() throws Exception {
-		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
-		server.start();
 
 		Cat.initializeByDomain("hermes", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
+
+		VIServer viServer = new VIServer(8081);
+		viServer.start();
 
 		Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers = new HashMap<Pair<String, String>, List<Pair<String, ConsumerHolder>>>();
 

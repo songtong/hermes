@@ -1,14 +1,16 @@
 package com.ctrip.hermes.core.status;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
+import com.ctrip.framework.vi.component.ComponentManager;
+import com.ctrip.framework.vi.metrics.MetricsCollector;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
-import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 import com.dianping.cat.Cat;
 
 /**
@@ -18,38 +20,48 @@ import com.dianping.cat.Cat;
 public enum StatusMonitor {
 	INSTANCE;
 
-	private StatusMonitor() {
+	private Map<String, BlockingQueue<?>> m_commandProcessorQueues = new ConcurrentHashMap<>();
 
+	private StatusMonitor() {
+		registerVIComponents();
 	}
 
-	public void addCommandProcessorThreadPoolGauge(String threadPoolNamePrefix, final BlockingQueue<Runnable> workQueue) {
-		HermesMetricsRegistry.getMetricRegistry().register(MetricRegistry.name(threadPoolNamePrefix, "queue", "size"),
-		      new Gauge<Integer>() {
+	private static void registerVIComponents() {
+		ComponentManager.register(CommandProcessorQueueComponentStatus.class);
+	}
 
-			      @Override
-			      public Integer getValue() {
-				      return workQueue.size();
-			      }
-		      });
+	public void watchCommandProcessorQueue(String poolName, final BlockingQueue<Runnable> workQueue) {
+		m_commandProcessorQueues.put(poolName, workQueue);
 	}
 
 	public void commandReceived(CommandType type, String clientIp) {
-		HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name("commandProcessor", "commandReceived"))
-		      .mark();
-		HermesMetricsRegistry.getMetricRegistry()
-		      .meter(MetricRegistry.name("commandProcessor", "commandReceived", clientIp)).mark();
+		Map<String, String> tags = createTagsMap(type);
+		tags.put("remoteIp", clientIp);
+
+		MetricsCollector.getCollector().record("commandReceived", tags);
+
 		if (type != null) {
 			Cat.logEvent(CatConstants.TYPE_HERMES_CMD_VERSION, type.toString() + "-RCV");
 		}
 	}
 
-	public Timer getProcessCommandTimer(CommandType type, CommandProcessor processor) {
-		return HermesMetricsRegistry.getMetricRegistry().timer(
-		      MetricRegistry.name(type.name(), processor.getClass().getName(), "duration"));
+	private Map<String, String> createTagsMap(CommandType type) {
+		Map<String, String> tags = new HashMap<>(8);
+		tags.put("type", type.toString());
+
+		return tags;
 	}
 
 	public void commandProcessorException(CommandType type, CommandProcessor processor) {
-		HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name("commandProcessor", "exception")).mark();
+		MetricsCollector.getCollector().record("commandProcessor.exception", createTagsMap(type));
+	}
+
+	public void commandProcessed(CommandType type, long duration) {
+		MetricsCollector.getCollector().record("commandProcessor.processed", duration, createTagsMap(type));
+	}
+
+	public Set<Map.Entry<String, BlockingQueue<?>>> listCommandProcessorQueues() {
+		return m_commandProcessorQueues.entrySet();
 	}
 
 }

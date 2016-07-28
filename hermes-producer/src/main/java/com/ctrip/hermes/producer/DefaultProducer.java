@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.meta.MetaService;
@@ -20,6 +21,9 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.build.BuildConstants;
+import com.ctrip.hermes.producer.config.ProducerConfig;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Transaction;
 
 @Named(type = Producer.class)
 public class DefaultProducer extends Producer {
@@ -34,6 +38,9 @@ public class DefaultProducer extends Producer {
 
 	@Inject
 	private MetaService m_metaService;
+
+	@Inject
+	private ProducerConfig m_config;
 
 	@Override
 	public DefaultMessageHolder message(String topic, String partitionKey, Object body) {
@@ -53,18 +60,39 @@ public class DefaultProducer extends Producer {
 
 		@Override
 		public Future<SendResult> send() {
-			Topic topic = m_metaService.findTopicByName(m_msg.getTopic());
-
-			if (topic == null) {
-				log.error("Topic {} not found.", m_msg.getTopic());
-				throw new IllegalArgumentException(String.format("Topic %s not found.", m_msg.getTopic()));
+			Transaction t = null;
+			if (m_config.isCatEnabled()) {
+				t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_TRIED, m_msg.getTopic());
 			}
+			try {
+				Topic topic = m_metaService.findTopicByName(m_msg.getTopic());
 
-			if (Storage.KAFKA.equals(topic.getStorageType())) {
-				m_msg.setWithCatTrace(false);
+				if (topic == null) {
+					log.error("Topic {} not found.", m_msg.getTopic());
+					throw new IllegalArgumentException(String.format("Topic %s not found.", m_msg.getTopic()));
+				}
+
+				if (Storage.KAFKA.equals(topic.getStorageType())) {
+					m_msg.setWithCatTrace(false);
+				}
+				m_msg.setBornTime(m_systemClockService.now());
+				Future<SendResult> future = m_pipeline.put(m_msg);
+
+				if (t != null) {
+					t.setStatus(Transaction.SUCCESS);
+				}
+				return future;
+			} catch (Exception e) {
+				if (t != null) {
+					Cat.logError(e);
+					t.setStatus(e);
+				}
+				throw e;
+			} finally {
+				if (t != null) {
+					t.complete();
+				}
 			}
-			m_msg.setBornTime(m_systemClockService.now());
-			return m_pipeline.put(m_msg);
 		}
 
 		@Override
