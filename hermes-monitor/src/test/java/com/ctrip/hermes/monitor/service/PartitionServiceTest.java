@@ -26,15 +26,18 @@ public class PartitionServiceTest {
 
 	@Test
 	public void testModifyPartition() throws Exception {
-		int curIdx = 7;
-		long curBorder = 800;
+
+		int curIdx = 9;
+		long curBorder = 10000000;
 
 		Datasource ds = new Datasource();
 		ds.addProperty(new Property("url").setValue("jdbc:mysql://localhost:3306/fxhermesshard01db"));
 		ds.addProperty(new Property("user").setValue("root"));
 		ds.addProperty(new Property("password").setValue(""));
 
-		Topic t = new Topic().setName("song.test").setId(1L);
+		m_service.queryDatasourcePartitions(ds);
+
+		Topic t = new Topic().setName("song.test").setId(5L);
 		Partition p = new Partition(0);
 		MessageTableContext ctx = new MessageTableContext(t, p, 0, 30, 2, 5);
 		ctx.setDatasource(ds);
@@ -49,5 +52,7 @@ public class PartitionServiceTest {
 
 		m_service.addPartitions(ctx, addlist);
 		m_service.dropPartitions(ctx, addlist);
+
+		m_service.queryDatasourcePartitions(ds);
 	}
 }
