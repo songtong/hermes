@@ -447,18 +447,10 @@ public class ConsumerService {
 	private long correctOffset(long offset, long max, long min) {
 		if (max < min || min < 0) {
 			logger.warn("Invalid parameter: max={}, min={}.", max, min);
-			throw new RuntimeException("Invalid parameter!");
+			throw new IllegalArgumentException(String.format("Invalid Max value %s or Min value %s.", max, min));
 		}
 
-		if (offset > max) {
-			return max;
-		}
-
-		if (offset < min) {
-			return min;
-		}
-
-		return offset;
+		return offset > max ? max : offset < min ? min : offset;
 	}
 
 	private ConsumerGroupView fillConsumerView(Long topicId, ConsumerGroupView view) throws DalException {
