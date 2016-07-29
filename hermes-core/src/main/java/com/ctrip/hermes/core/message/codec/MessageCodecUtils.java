@@ -47,10 +47,7 @@ public class MessageCodecUtils {
 			bytes = rawBytes;
 		}
 
-		ByteBuffer result = ByteBuffer.allocate(bytes.length);
-		result.put(bytes);
-		result.rewind();
-		return result;
+		return ByteBuffer.wrap(bytes);
 	}
 
 	private static PayloadCodec getCompressionCodec(String codecType) {
