@@ -20,16 +20,29 @@ consumer_module.run(function(editableOptions) {
 			method : 'PUT',
 			url : '/api/consumers/'
 		},
-		'reset_offset' : {
+		'reset_offset_by_timestamp' : {
 			method : 'POST',
-			url : '/api/consumers/:topic/:consumer/offset',
+			url : '/api/consumers/:topic/:consumer/resetOffset/timestamp',
 			params : {
 				topic : '@topic',
 				consumer : '@consumer',
 				timestamp : '@timestamp'
 			}
+		},
+		'reset_offset_by_shift' : {
+			method : 'POST',
+			url : '/api/consumers/:topic/:consumer/resetOffset/relative',
+			params : {
+				topic : '@topic',
+				consumer : '@consumer',
+				partition : '@partition',
+				shift : '@shift',
+				queueType : '@queueType'
+			}
 		}
 	});
+
+	topic_resource = resource('/api/topics/:topic', {}, {});
 
 	consumer_monitor_config_resource = resource('/api/monitor/config/consumer/:topic/:consumer', {}, {
 		'set_consumer_monitor_config' : {
@@ -69,7 +82,15 @@ consumer_module.run(function(editableOptions) {
 		if ($routeParams['topic'] != null && $routeParams['consumer'] != null) {
 			scope.currentConsumer = scope.findConsumer($routeParams['topic'], $routeParams['consumer'], scope.consumers);
 			scope.currentConsumer.resetOption = 'latest';
-			console.log(scope.currentConsumer);
+
+			topic_resource.get({
+				topic : $routeParams['topic']
+			}, function(topic_result) {
+				console.log(topic_result);
+				for (var i = 0; i < topic_result.partitions.length; i++) {
+					scope.partitions.push(i);
+				}
+			});
 
 			consumer_monitor_config_resource.query({
 				topic : $routeParams['topic'],
@@ -109,6 +130,25 @@ consumer_module.run(function(editableOptions) {
 	scope.currentTimestamp = new Date();
 
 	scope.maxTimestamp = scope.currentTimestamp.format('%y-%M-%dT%H:%m:%s');
+
+	scope.shift = 0;
+
+	scope.partitions = [ 'all' ];
+
+	scope.partition = 'all';
+
+	scope.queueTypes = [ {
+		key : '优先队列',
+		value : 'priority'
+	}, {
+		key : '非优先队列',
+		value : 'nonPriority'
+	}, {
+		key : '重发队列',
+		value : 'resend'
+	} ];
+
+	scope.queueType = 'priority';
 
 	scope.order_opts = [ true, false ];
 
@@ -156,21 +196,42 @@ consumer_module.run(function(editableOptions) {
 		} else if (scope.currentConsumer.resetOption == "latest") {
 			scope.currentTimestamp = new Date();
 		}
+
+		var message;
+		if (scope.currentConsumer.resetOption == 'shift') {
+			message = "确认要重置offset至相对位移:" + scope.shift + " ?";
+		} else {
+			message = "确认要重置offset至 " + scope.currentConsumer.resetOption + " " + (scope.currentConsumer.resetOption == "timepoint" ? scope.currentTimestamp.format('%y-%M-%dT%H:%m:%s') : "") + "吗？";
+		}
 		bootbox.confirm({
 			title : "请确认",
-			message : "确认要重置offset至 " + scope.currentConsumer.resetOption + " " + (scope.currentConsumer.resetOption == "timepoint" ? scope.currentTimestamp.format('%y-%M-%dT%H:%m:%s') : "") + "吗？",
+			message : message,
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
-					consumer_resource.reset_offset({
-						topic : scope.currentConsumer.topicName,
-						consumer : scope.currentConsumer.name,
-						timestamp : scope.currentTimestamp.getTime()
-					}, function(result) {
-						scope.$broadcast('alert-success', 'alert', '重置Offset成功！可以启动consumer。');
-					}, function(result) {
-						scope.$broadcast('alert-error', 'alert', '重置Offset失败！' + result.data);
-					})
+					if (scope.currentConsumer.resetOption == 'shift') {
+						consumer_resource.reset_offset_by_shift({
+							topic : scope.currentConsumer.topicName,
+							consumer : scope.currentConsumer.name,
+							shift : scope.shift,
+							partition : scope.partition,
+							queueType : scope.queueType
+						}, function(result) {
+							scope.$broadcast('alert-success', 'alert', '重置Offset成功！可以启动consumer。');
+						}, function(result) {
+							scope.$broadcast('alert-error', 'alert', '重置Offset失败！' + result.data);
+						});
+					} else {
+						consumer_resource.reset_offset_by_timestamp({
+							topic : scope.currentConsumer.topicName,
+							consumer : scope.currentConsumer.name,
+							timestamp : scope.currentTimestamp.getTime()
+						}, function(result) {
+							scope.$broadcast('alert-success', 'alert', '重置Offset成功！可以启动consumer。');
+						}, function(result) {
+							scope.$broadcast('alert-error', 'alert', '重置Offset失败！' + result.data);
+						})
+					}
 				}
 			}
 		});
@@ -183,6 +244,12 @@ consumer_module.run(function(editableOptions) {
 
 		} else {
 			$('#timepoint').addClass('collapse');
+		}
+
+		if (scope.currentConsumer.resetOption == 'shift') {
+			$('#shift').removeClass('collapse');
+		} else {
+			$('#shift').addClass('collapse');
 		}
 	}
 

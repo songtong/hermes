@@ -622,6 +622,9 @@
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.metaservice.queue.MessagePriorityDao</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.metaservice.queue.OffsetMessageDao</role>
 				</requirement>
 				<requirement>

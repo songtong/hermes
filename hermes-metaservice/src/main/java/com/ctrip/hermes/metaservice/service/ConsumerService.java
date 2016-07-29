@@ -36,6 +36,9 @@ import com.ctrip.hermes.metaservice.dal.CachedConsumerGroupDao;
 import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
+import com.ctrip.hermes.metaservice.queue.MessagePriority;
+import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
+import com.ctrip.hermes.metaservice.queue.MessagePriorityEntity;
 import com.ctrip.hermes.metaservice.queue.MessageQueueConstants;
 import com.ctrip.hermes.metaservice.queue.OffsetMessage;
 import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
@@ -43,6 +46,7 @@ import com.ctrip.hermes.metaservice.queue.OffsetMessageEntity;
 import com.ctrip.hermes.metaservice.queue.OffsetResend;
 import com.ctrip.hermes.metaservice.queue.OffsetResendDao;
 import com.ctrip.hermes.metaservice.queue.OffsetResendEntity;
+import com.ctrip.hermes.metaservice.queue.QueueType;
 import com.ctrip.hermes.metaservice.queue.ResendGroupId;
 import com.ctrip.hermes.metaservice.queue.ResendGroupIdDao;
 import com.ctrip.hermes.metaservice.queue.ResendGroupIdEntity;
@@ -77,6 +81,9 @@ public class ConsumerService {
 
 	@Inject
 	private ClientEnvironment m_env;
+
+	@Inject
+	private MessagePriorityDao m_messageDao;
 
 	@Inject
 	private OffsetMessageDao m_offsetDao;
@@ -264,7 +271,7 @@ public class ConsumerService {
 		return false;
 	}
 
-	public void resetOffset(String topicName, ConsumerGroup consumer, long timestamp) throws Exception {
+	public void resetOffsetByTimestamp(String topicName, ConsumerGroup consumer, long timestamp) throws Exception {
 		if (timestamp < 0) {
 			throw new RuntimeException("Can not set offset timeStamp to: " + timestamp);
 		}
@@ -276,7 +283,33 @@ public class ConsumerService {
 			      consumer.getId(), messageOffset.getValue().getPriorityOffset());
 			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY_FALSE,
 			      consumer.getId(), messageOffset.getValue().getNonPriorityOffset());
-			doUpdateResendOffset(topicName, messageOffset.getKey(), consumer.getId());
+			doUpdateResendOffsetToLatest(topicName, messageOffset.getKey(), consumer.getId());
+		}
+	}
+
+	public void resetOffsetByShift(String topicName, ConsumerGroup consumerGroup, int partition, String queueType,
+	      long shift) throws DalException {
+		long latestMessageOffset;
+		switch (QueueType.getQueueTypeByName(queueType)) {
+		case PRIORITY_TRUE:
+			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY_TRUE);
+			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_TRUE, consumerGroup.getId(),
+			      shift, latestMessageOffset);
+			break;
+		case PRIORITY_FALSE:
+			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY_FALSE);
+			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_FALSE,
+			      consumerGroup.getId(), shift, latestMessageOffset);
+			break;
+		case RESEND:
+			latestMessageOffset = doGetLatestResendMsgId(topicName, partition, consumerGroup.getId());
+			doUpdateResendOffsetByShift(topicName, partition, consumerGroup.getId(), shift, latestMessageOffset);
+			break;
+		default:
+			logger.warn("Unknown queue type:{}, queue type should be one of:[{}, {}, {}]", queueType,
+			      QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND);
+			throw new RuntimeException(String.format("Unknown queue type:%s, queue type should be one of:[%s, %s, %s]",
+			      queueType, QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND));
 		}
 	}
 
@@ -297,6 +330,48 @@ public class ConsumerService {
 		}
 		throw new RuntimeException("Find offset from metaserver failed.", exception);
 
+	}
+
+	private long doGetLatestMsgId(String topicName, int partition, int priority) throws DalException {
+		List<MessagePriority> latest = m_messageDao.latest(topicName, partition, priority,
+		      MessagePriorityEntity.READSET_ID);
+		long max = 0;
+		if (latest != null && !latest.isEmpty()) {
+			max = latest.get(0).getId();
+		}
+		return max;
+	}
+
+	private long doGetLatestResendMsgId(String topicName, int partition, int consumerId) throws DalException {
+		List<ResendGroupId> latest = m_resendDao.latest(topicName, partition, consumerId,
+		      ResendGroupIdEntity.READSET_FULL);
+		long max = 0;
+		if (latest != null && !latest.isEmpty()) {
+			max = latest.get(0).getId();
+		}
+		return max;
+	}
+
+	private void doUpdateMessageOffsetByShift(String topicName, int partition, int priority, int consumerId, long shift,
+	      long max) throws DalException {
+		List<OffsetMessage> offsets = m_offsetDao.find(topicName, partition, priority, consumerId,
+		      OffsetMessageEntity.READSET_FULL);
+		OffsetMessage offset = null;
+		if (CollectionUtil.isNullOrEmpty(offsets)) {
+			offset = new OffsetMessage();
+			offset.setGroupId(consumerId);
+			offset.setOffset(correctOffset(max + shift, max, 0));
+			offset.setPartition(partition);
+			offset.setPriority(priority);
+			offset.setTopic(topicName);
+			m_offsetDao.insert(offset);
+		} else {
+			offset = offsets.get(0);
+			offset.setOffset(correctOffset(offset.getOffset() + shift, max, 0));
+			offset.setTopic(topicName);
+			offset.setPartition(partition);
+			m_offsetDao.updateByPK(offset, OffsetMessageEntity.UPDATESET_OFFSET);
+		}
 	}
 
 	private void doUpdateMessageOffset(String topicName, int partition, int priority, int consumerId, long messageOffset)
@@ -321,7 +396,7 @@ public class ConsumerService {
 		}
 	}
 
-	private void doUpdateResendOffset(String topicName, int partition, int consumerId) throws DalException {
+	private void doUpdateResendOffsetToLatest(String topicName, int partition, int consumerId) throws DalException {
 		List<ResendGroupId> latestResendOffset = m_resendDao.latest(topicName, partition, consumerId,
 		      ResendGroupIdEntity.READSET_FULL);
 		if (!CollectionUtil.isNullOrEmpty(latestResendOffset)) {
@@ -346,9 +421,42 @@ public class ConsumerService {
 		}
 	}
 
+	private void doUpdateResendOffsetByShift(String topicName, int partition, int consumerId, long shift, long max)
+	      throws DalException {
+		if (max > 0) {
+			List<OffsetResend> offsetResends = m_offsetResendDao.top(topicName, partition, consumerId,
+			      OffsetResendEntity.READSET_FULL);
+			if (!CollectionUtil.isNullOrEmpty(offsetResends)) {
+				OffsetResend offsetResend = offsetResends.get(0);
+				offsetResend.setTopic(topicName);
+				offsetResend.setPartition(partition);
+				offsetResend.setLastId(correctOffset(offsetResend.getLastId() + shift, max, 0));
+				m_offsetResendDao.updateByPK(offsetResend, OffsetResendEntity.UPDATESET_OFFSET);
+			} else {
+				OffsetResend theOffsetResend = new OffsetResend();
+				theOffsetResend.setTopic(topicName);
+				theOffsetResend.setPartition(partition);
+				theOffsetResend.setLastId(correctOffset(max + shift, max, 0));
+				theOffsetResend.setGroupId(consumerId);
+				theOffsetResend.setLastScheduleDate(new Date());
+				m_offsetResendDao.insert(theOffsetResend);
+			}
+		}
+	}
+
+	private long correctOffset(long offset, long max, long min) {
+		if (max < min || min < 0) {
+			logger.warn("Invalid parameter: max={}, min={}.", max, min);
+			throw new IllegalArgumentException(String.format("Invalid Max value %s or Min value %s.", max, min));
+		}
+
+		return offset > max ? max : offset < min ? min : offset;
+	}
+
 	private ConsumerGroupView fillConsumerView(Long topicId, ConsumerGroupView view) throws DalException {
 		com.ctrip.hermes.metaservice.model.Topic topicModel = m_topicDao.findByPK(topicId);
 		view.setTopicName(topicModel.getName());
 		return view;
 	}
+
 }
