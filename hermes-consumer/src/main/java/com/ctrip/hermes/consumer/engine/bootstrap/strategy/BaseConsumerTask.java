@@ -228,7 +228,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				}
 
 				if (!m_msgs.isEmpty()) {
-//					consumeMessages(token);
+					consumeMessages(token);
 					noMessageSchedulePolicy.succeess();
 				} else {
 					noMessageSchedulePolicy.fail(true);
@@ -635,7 +635,6 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				if (result != null) {
 					result.release();
 				}
-				consumeMessages(m_token);
 			}
 		}
 
