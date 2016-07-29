@@ -25,7 +25,7 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.queue.QueueTypecConstants;
+import com.ctrip.hermes.metaservice.queue.QueueType;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
@@ -87,7 +87,7 @@ public class ConsumerResource {
 		}
 
 		try {
-			consumerService.resetOffset(topicName, consumerGroup, timestamp);
+			consumerService.resetOffsetByTimestamp(topicName, consumerGroup, timestamp);
 		} catch (Exception e) {
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
@@ -112,7 +112,7 @@ public class ConsumerResource {
 			throw new RestException("Consumer group NOT found!", Status.NOT_FOUND);
 		}
 
-		if (!QueueTypecConstants.isValidQueueType(queueType)) {
+		if (!QueueType.isValidQueueType(queueType)) {
 			throw new RestException(String.format("Invalid queueType: %s!", queueType), Status.BAD_REQUEST);
 		}
 
