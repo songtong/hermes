@@ -431,11 +431,6 @@ public class ConsumerService {
 				offsetResend.setTopic(topicName);
 				offsetResend.setPartition(partition);
 				offsetResend.setLastId(correctOffset(offsetResend.getLastId() + shift, max, 0));
-				if (offsetResend.getLastId() > max) {
-					offsetResend.setLastId(max);
-				} else if (offsetResend.getLastId() < 0) {
-					offsetResend.setLastId(0);
-				}
 				m_offsetResendDao.updateByPK(offsetResend, OffsetResendEntity.UPDATESET_OFFSET);
 			} else {
 				OffsetResend theOffsetResend = new OffsetResend();
@@ -444,11 +439,6 @@ public class ConsumerService {
 				theOffsetResend.setLastId(correctOffset(max + shift, max, 0));
 				theOffsetResend.setGroupId(consumerId);
 				theOffsetResend.setLastScheduleDate(new Date());
-				if (theOffsetResend.getLastId() > max) {
-					theOffsetResend.setLastId(max);
-				} else if (theOffsetResend.getLastId() < 0) {
-					theOffsetResend.setLastId(0);
-				}
 				m_offsetResendDao.insert(theOffsetResend);
 			}
 		}
