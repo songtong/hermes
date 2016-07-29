@@ -6,7 +6,7 @@ public interface Selector<T> {
 		OLDEST, NEWEST
 	}
 
-	void register(T key, ExpireTimeHolder expireTimeHolder, SelectorCallback callback, Slot... slots);
+	void register(T key, ExpireTimeHolder expireTimeHolder, SelectorCallback callback, long lastTriggerTime, Slot... slots);
 	
 	void update(T key, boolean refreshUpdateTimeWhenNoOb, Slot... slots);
 

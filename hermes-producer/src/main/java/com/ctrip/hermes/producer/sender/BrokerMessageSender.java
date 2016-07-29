@@ -37,7 +37,6 @@ import com.ctrip.hermes.core.selector.SelectorCallback;
 import com.ctrip.hermes.core.selector.Slot;
 import com.ctrip.hermes.core.selector.TriggerResult;
 import com.ctrip.hermes.core.selector.TriggerResult.State;
-import com.ctrip.hermes.core.transport.command.v5.SendMessageCommandV5;
 import com.ctrip.hermes.core.transport.command.v6.SendMessageCommandV6;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -154,7 +153,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					cmdSelectorOffset = cmd.getSelectorOffset();
 
 					if (!cmd.getProducerMessages().isEmpty()) {
-						
+
 						int produceTimeoutSeconds = m_config.getProduceTimeoutSeconds(cmd.getTopic());
 
 						if (produceTimeoutSeconds > 0 && System.currentTimeMillis() - cmd.getBornTime() > produceTimeoutSeconds * 1000) {
@@ -335,7 +334,7 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 
 		public long nextOffset() {
-			return m_offsetGenerator.nextOffset();
+			return m_offsetGenerator.nextOffset(1);
 		}
 
 		public void push(SendMessageCommandV6 cmd) {
@@ -414,6 +413,11 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				MessageSendException throwable = new MessageSendException(warning, msg);
 				notifySendFail(future, throwable);
 			}
+		}
+
+		@Override
+		public long nextOffset(int delta) {
+			throw new UnsupportedOperationException();
 		}
 	}
 

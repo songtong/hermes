@@ -54,7 +54,7 @@ public class SelectorTest {
 			public void onReady(CallbackContext ctx) {
 				latch.countDown();
 			}
-		}, slot);
+		}, System.currentTimeMillis(), slot);
 
 		assertTrue(latch.await(100, TimeUnit.MILLISECONDS));
 	}
@@ -72,7 +72,7 @@ public class SelectorTest {
 			public void onReady(CallbackContext ctx) {
 				latch.countDown();
 			}
-		}, slot);
+		}, System.currentTimeMillis(), slot);
 
 		assertTrue(latch.await(200, TimeUnit.MILLISECONDS));
 	}
@@ -90,7 +90,7 @@ public class SelectorTest {
 			public void onReady(CallbackContext ctx) {
 				latch.countDown();
 			}
-		}, new Slot(0, 2));
+		}, System.currentTimeMillis(), new Slot(0, 2));
 
 		assertFalse(latch.await(200, TimeUnit.MILLISECONDS));
 	}
@@ -106,7 +106,7 @@ public class SelectorTest {
 			public void onReady(CallbackContext ctx) {
 				latch.countDown();
 			}
-		}, slot);
+		}, System.currentTimeMillis(), slot);
 
 		s.update(key, true, slot);
 
@@ -132,7 +132,7 @@ public class SelectorTest {
 			public void onReady(CallbackContext ctx) {
 				latch.countDown();
 			}
-		}, slot);
+		}, System.currentTimeMillis(), slot);
 
 		s.update(key, true, new Slot(0, 1));
 
@@ -152,7 +152,7 @@ public class SelectorTest {
 				called.incrementAndGet();
 				latch.countDown();
 			}
-		}, slot);
+		}, System.currentTimeMillis(), slot);
 
 		s.update(key, true, new Slot(0, 1));
 		s.update(key, true, new Slot(0, 2));
@@ -173,7 +173,7 @@ public class SelectorTest {
 			public void onReady(CallbackContext ctx) {
 				latch1.countDown();
 			}
-		}, slot);
+		}, System.currentTimeMillis(), slot);
 
 		final CountDownLatch latch2 = new CountDownLatch(1);
 		s.register(key, expireTimeHolder, new SelectorCallback() {
@@ -182,7 +182,7 @@ public class SelectorTest {
 			public void onReady(CallbackContext ctx) {
 				latch2.countDown();
 			}
-		}, new Slot(0, 2));
+		}, System.currentTimeMillis(), new Slot(0, 2));
 
 		s.update(key, true, new Slot(0, 2));
 
@@ -203,7 +203,7 @@ public class SelectorTest {
 				called.incrementAndGet();
 				latch1.countDown();
 			}
-		}, new Slot(0, 2L));
+		}, System.currentTimeMillis(), new Slot(0, 2L));
 
 		final CountDownLatch latch2 = new CountDownLatch(1);
 		s.register(key, expireTimeHolder, new SelectorCallback() {
@@ -213,7 +213,7 @@ public class SelectorTest {
 				called.incrementAndGet();
 				latch2.countDown();
 			}
-		}, new Slot(1, 20L));
+		}, System.currentTimeMillis(), new Slot(1, 20L));
 
 		s.update(key, true, new Slot(0, 2));
 
@@ -249,7 +249,7 @@ public class SelectorTest {
 				public void onReady(CallbackContext ctx) {
 					latch.countDown();
 				}
-			}, slotNonPriority, slotPriority, slotResend);
+			}, System.currentTimeMillis(), slotNonPriority, slotPriority, slotResend);
 
 			long offset = i == slotCount - 1 ? System.currentTimeMillis() : (i + 1) * 10;
 			s.update(key, true, new Slot(i, offset));
@@ -280,7 +280,7 @@ public class SelectorTest {
 			public void onReady(CallbackContext ctx) {
 				latch.countDown();
 			}
-		}, new Slot(0, 10));
+		}, System.currentTimeMillis(), new Slot(0, 10));
 
 		assertTrue(latch.await(100, TimeUnit.MILLISECONDS));
 		assertEquals(1, loadAsyncCalled.get());
@@ -301,7 +301,7 @@ public class SelectorTest {
 				ctxRef.set(ctx);
 				latch.countDown();
 			}
-		}, new Slot(0, 10), new Slot(1, 20), new Slot(2, 30));
+		}, System.currentTimeMillis(), new Slot(0, 10), new Slot(1, 20), new Slot(2, 30));
 
 		s.update(key, true, new Slot(1, 22));
 
@@ -336,7 +336,7 @@ public class SelectorTest {
 				ctxRef.set(ctx);
 				latch.countDown();
 			}
-		}, new Slot(0, 10), new Slot(1, 20), new Slot(2, 30));
+		}, System.currentTimeMillis(), new Slot(0, 10), new Slot(1, 20), new Slot(2, 30));
 
 		s.update(key, true, new Slot(0, 11), new Slot(1, 22));
 

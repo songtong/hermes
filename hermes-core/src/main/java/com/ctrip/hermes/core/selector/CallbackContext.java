@@ -11,9 +11,11 @@ package com.ctrip.hermes.core.selector;
 public class CallbackContext {
 
 	private SlotMatchResult[] slotMatchResults;
+	private long triggerTime;
 
 	public CallbackContext(SlotMatchResult[] slotMatchResults) {
 		this.slotMatchResults = slotMatchResults;
+		this.triggerTime = System.currentTimeMillis();
 	}
 
 	public SlotMatchResult[] getSlotMatchResults() {
@@ -43,4 +45,8 @@ public class CallbackContext {
 		return nextAwaitingSlots;
 	}
 
+	public long getTriggerTime() {
+		return triggerTime;
+	}
+	
 }

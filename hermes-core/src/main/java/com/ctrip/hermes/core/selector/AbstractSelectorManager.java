@@ -92,7 +92,7 @@ public abstract class AbstractSelectorManager<T> implements SelectorManager<T> {
 			break;
 		}
 
-		getSelector().register(key, expireTimeHolder, callback, nextAwaitingSlots);
+		getSelector().register(key, expireTimeHolder, callback, callbackCtx.getTriggerTime(), nextAwaitingSlots);
 	}
 
 	@Override
@@ -109,7 +109,7 @@ public abstract class AbstractSelectorManager<T> implements SelectorManager<T> {
 
 		slots[slotCount - 1] = new Slot(slotCount - 1, nextAwaitingSafeTriggerOffset(key, arg));
 
-		getSelector().register(key, expireTimeHolder, callback, slots);
+		getSelector().register(key, expireTimeHolder, callback, System.currentTimeMillis(), slots);
 	}
 
 }

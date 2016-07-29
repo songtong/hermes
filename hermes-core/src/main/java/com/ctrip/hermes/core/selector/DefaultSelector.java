@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,7 @@ public class DefaultSelector<T> implements Selector<T> {
 	}
 
 	@Override
-	public void register(T key, ExpireTimeHolder expireTimeHolder, SelectorCallback callback, Slot... slots) {
+	public void register(T key, ExpireTimeHolder expireTimeHolder, SelectorCallback callback, long lastTriggerTime, Slot... slots) {
 		if (key == null || slots == null) {
 			return;
 		}
@@ -56,7 +57,7 @@ public class DefaultSelector<T> implements Selector<T> {
 		ObserveContext ctx = findOrCreateObserveContext(key, initialLastUpdateTime);
 
 		synchronized (ctx) {
-			ctx.addObserver(expireTimeHolder, callback, slots);
+			ctx.addObserver(expireTimeHolder, callback, lastTriggerTime, slots);
 		}
 	}
 
@@ -119,57 +120,41 @@ public class DefaultSelector<T> implements Selector<T> {
 	private class ObserveContext {
 		private T key;
 		private AtomicLong lastUpdateTime;
-		private List<AtomicLong> maxWriteOffsets = new ArrayList<>();
+		private List<AtomicReference<Slot>> maxWriteOffsets = new ArrayList<>();
 		private List<Observer> obs = new LinkedList<>();
 
 		public ObserveContext(T key, long lastUpdateTime) {
 			this.key = key;
 			this.lastUpdateTime = new AtomicLong(lastUpdateTime);
 			for (int i = 0; i < slotCount; i++) {
-				maxWriteOffsets.add(new AtomicLong(-1L));
+				maxWriteOffsets.add(new AtomicReference<Slot>(new Slot(i, -1L)));
 			}
 		}
 
-		public void addObserver(ExpireTimeHolder expireTimeHolder, SelectorCallback callback, Slot[] slots) {
+		public void addObserver(ExpireTimeHolder expireTimeHolder, SelectorCallback callback, long lastTriggerTime, Slot[] slots) {
 			log.debug("addObserver {} {}", key, slots);
-			obs.add(new Observer(expireTimeHolder, callback, slots));
+			obs.add(new Observer(expireTimeHolder, callback, lastTriggerTime, slots));
 			fire();
 		}
 
 		public void updateMaxWriteOffset(boolean refreshUpdateTimeWhenNoOb, Slot[] slots) {
-			boolean anyOffsetUpdated = false;
 			for (Slot slot : slots) {
-				if (isSlotIndexValid(slot) && isSlotMinFireIntervalValid(slot, lastUpdateTime.get())) {
+				if (isSlotIndexValid(slot)) {
 					int index = slot.getIndex();
-					maxWriteOffsets.get(index).set(Math.max(slot.getOffset(), maxWriteOffsets.get(index).get()));
-					anyOffsetUpdated = true;
+					Slot newWriteSlot = new Slot(index, Math.max(slot.getOffset(), maxWriteOffsets.get(index).get().getOffset()), slot.getMinFireInterval());
+					maxWriteOffsets.get(index).set(newWriteSlot);
 				} else {
 					log.debug("wont fire due to invalid slot fire interval");
 				}
 			}
 
-			if (anyOffsetUpdated) {
-				// remove expired observers first to avoid refresh
-				// lastUpdateTime when no valid observer exists
-				removeExpiredObservers();
-
-				if (obs.isEmpty()) {
-					if (refreshUpdateTimeWhenNoOb) {
-						lastUpdateTime.set(newLastUpdateTime());
-					}
-				} else {
+			if (obs.isEmpty()) {
+				if (refreshUpdateTimeWhenNoOb) {
 					lastUpdateTime.set(newLastUpdateTime());
-					fire();
 				}
-			}
-		}
-
-		private void removeExpiredObservers() {
-			for (Iterator<Observer> iter = obs.iterator(); iter.hasNext();) {
-				Observer ob = iter.next();
-				if (ob.isExpired()) {
-					iter.remove();
-				}
+			} else {
+				lastUpdateTime.set(newLastUpdateTime());
+				fire();
 			}
 		}
 
@@ -187,8 +172,9 @@ public class DefaultSelector<T> implements Selector<T> {
 					if (ob.isExpired()) {
 						iter.remove();
 					} else {
-						final Pair<Boolean, SlotMatchResult[]> matchResult = ob.tryMatch(maxWriteOffsets);
-						if (longTimeNoUpdate || matchResult.getKey()) {
+						final Pair<Boolean, SlotMatchResult[]> matchResult = ob.tryMatch(maxWriteOffsets, longTimeNoUpdate);
+
+						if (matchResult.getKey()) {
 							iter.remove();
 							execCallback(ob, matchResult.getValue());
 						}
@@ -212,9 +198,11 @@ public class DefaultSelector<T> implements Selector<T> {
 		private ExpireTimeHolder expireTimeHolder;
 		private List<Long> awaitingOffsets;
 		private SelectorCallback callback;
+		private long lastTriggerTime;
 
-		public Observer(ExpireTimeHolder expireTimeHolder, SelectorCallback callback, Slot[] slots) {
+		public Observer(ExpireTimeHolder expireTimeHolder, SelectorCallback callback, long lastTriggerTime, Slot[] slots) {
 			this.expireTimeHolder = expireTimeHolder;
+			this.lastTriggerTime = lastTriggerTime;
 			awaitingOffsets = new ArrayList<>(slotCount);
 
 			for (int i = 0; i < slotCount; i++) {
@@ -234,17 +222,18 @@ public class DefaultSelector<T> implements Selector<T> {
 			return System.currentTimeMillis() > expireTimeHolder.currentExpireTime();
 		}
 
-		public Pair<Boolean, SlotMatchResult[]> tryMatch(List<AtomicLong> maxWriteOffsets) {
+		public Pair<Boolean, SlotMatchResult[]> tryMatch(List<AtomicReference<Slot>> maxWriteOffsets, boolean longTimeNoUpdate) {
 			boolean match = false;
 			SlotMatchResult[] slotMatchResults = new SlotMatchResult[slotCount];
 
 			for (int i = 0; i < slotCount; i++) {
-				long writeOffset = maxWriteOffsets.get(i).get();
+				Slot writeSlot = maxWriteOffsets.get(i).get();
+				long writeOffset = writeSlot.getOffset();
 				long awaitingOffset = awaitingOffsets.get(i);
 				boolean thisMatch = false;
 
-				if (writeOffset >= awaitingOffset) {
-					log.debug("match {} {}", writeOffset, awaitingOffset);
+				if ((writeOffset >= awaitingOffset || (i == slotCount - 1 && longTimeNoUpdate)) //
+						&& isSlotMinFireIntervalValid(writeSlot, lastTriggerTime)) {
 					thisMatch = true;
 					match = true;
 				}

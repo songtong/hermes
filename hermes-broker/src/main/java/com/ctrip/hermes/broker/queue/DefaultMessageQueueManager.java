@@ -77,9 +77,10 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 			MessageQueue mq = getOrInitializeMessageQueue(topic, partition);
 
 			ListenableFuture<Map<Integer, SendMessageResult>> f;
+
 			// generate selector offset and add to "wait queue" should be atomic
 			synchronized (mq) {
-				data.setSelectorOffset(mq.nextOffset());
+				data.setSelectorOffset(mq.nextOffset(data.getMsgSeqs().isEmpty() ? 1 : data.getMsgSeqs().size()));
 				f = mq.appendMessageAsync(priority, data, expireTime);
 			}
 
@@ -114,7 +115,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 						public void onReady(CallbackContext ctx) {
 							flush(topic, partition, ctx);
 						}
-					}, null, mqp.nextOffset());
+					}, null, mqp.nextOffset(1));
 				}
 			}
 		}
@@ -377,7 +378,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 			} else {
 				state = State.GotNothing;
 			}
-			
+
 			TriggerResult triggerResult = new TriggerResult(state, new long[] { maxPurgedOrSavedSelectorOffset });
 
 			m_selectorManager.reRegister(new Pair<>(topic, partition), ctx, triggerResult, new FixedExpireTimeHolder(Long.MAX_VALUE), new SelectorCallback() {

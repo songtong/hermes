@@ -10,6 +10,6 @@ package com.ctrip.hermes.core.selector;
  */
 public interface OffsetGenerator {
 
-	long nextOffset();
+	long nextOffset(int delta);
 
 }

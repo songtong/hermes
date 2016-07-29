@@ -15,8 +15,8 @@ public class DefaultOffsetGenerator implements OffsetGenerator {
 	private AtomicLong m_seed = new AtomicLong(1);
 
 	@Override
-	public long nextOffset() {
-		return m_seed.getAndIncrement();
+	public long nextOffset(int delta) {
+		return m_seed.addAndGet(delta);
 	}
 
 }

@@ -56,12 +56,12 @@ public class PerfTest {
 			Slot rslot0 = new Slot(0, i);
 			Slot rslot1 = new Slot(1, i);
 			Slot rslotResend = new Slot(2, System.currentTimeMillis());
-			s.register(key, expireTimeHolder, callback, rslot0, rslot1, rslotResend);
+			s.register(key, expireTimeHolder, callback, System.currentTimeMillis(), rslot0, rslot1, rslotResend);
 
 			expireTime.set(System.currentTimeMillis() - 1);
 			Thread.sleep(2000);
 			produceTime.set(System.currentTimeMillis());
-			s.register(key, expireTimeHolder, callback, rslot0, rslot1, rslotResend);
+			s.register(key, expireTimeHolder, callback, System.currentTimeMillis(), rslot0, rslot1, rslotResend);
 			// s.update(key, false, uslot0);
 		}
 
