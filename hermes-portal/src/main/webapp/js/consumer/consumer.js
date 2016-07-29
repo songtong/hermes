@@ -20,18 +20,18 @@ consumer_module.run(function(editableOptions) {
 			method : 'PUT',
 			url : '/api/consumers/'
 		},
-		'reset_offset' : {
+		'reset_offset_by_timestamp' : {
 			method : 'POST',
-			url : '/api/consumers/:topic/:consumer/offset',
+			url : '/api/consumers/:topic/:consumer/resetOffset/timestamp',
 			params : {
 				topic : '@topic',
 				consumer : '@consumer',
 				timestamp : '@timestamp'
 			}
 		},
-		'reset_offset_by_relative_shift' : {
+		'reset_offset_by_shift' : {
 			method : 'POST',
-			url : '/api/consumers/:topic/:consumer/offset/relative',
+			url : '/api/consumers/:topic/:consumer/resetOffset/relative',
 			params : {
 				topic : '@topic',
 				consumer : '@consumer',
@@ -210,7 +210,7 @@ consumer_module.run(function(editableOptions) {
 			callback : function(result) {
 				if (result) {
 					if (scope.currentConsumer.resetOption == 'shift') {
-						consumer_resource.reset_offset_by_relative_shift({
+						consumer_resource.reset_offset_by_shift({
 							topic : scope.currentConsumer.topicName,
 							consumer : scope.currentConsumer.name,
 							shift : scope.shift,
@@ -222,7 +222,7 @@ consumer_module.run(function(editableOptions) {
 							scope.$broadcast('alert-error', 'alert', '重置Offset失败！' + result.data);
 						});
 					} else {
-						consumer_resource.reset_offset({
+						consumer_resource.reset_offset_by_timestamp({
 							topic : scope.currentConsumer.topicName,
 							consumer : scope.currentConsumer.name,
 							timestamp : scope.currentTimestamp.getTime()

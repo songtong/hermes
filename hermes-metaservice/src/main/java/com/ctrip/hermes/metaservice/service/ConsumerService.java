@@ -360,26 +360,16 @@ public class ConsumerService {
 		if (CollectionUtil.isNullOrEmpty(offsets)) {
 			offset = new OffsetMessage();
 			offset.setGroupId(consumerId);
-			offset.setOffset(max + shift);
+			offset.setOffset(correctOffset(max + shift, max, 0));
 			offset.setPartition(partition);
 			offset.setPriority(priority);
 			offset.setTopic(topicName);
-			if (offset.getOffset() > max) {
-				offset.setOffset(max);
-			} else if (offset.getOffset() < 0) {
-				offset.setOffset(0);
-			}
 			m_offsetDao.insert(offset);
 		} else {
 			offset = offsets.get(0);
-			offset.setOffset(offset.getOffset() + shift);
+			offset.setOffset(correctOffset(offset.getOffset() + shift, max, 0));
 			offset.setTopic(topicName);
 			offset.setPartition(partition);
-			if (offset.getOffset() > max) {
-				offset.setOffset(max);
-			} else if (offset.getOffset() < 0) {
-				offset.setOffset(0);
-			}
 			m_offsetDao.updateByPK(offset, OffsetMessageEntity.UPDATESET_OFFSET);
 		}
 	}
@@ -440,7 +430,7 @@ public class ConsumerService {
 				OffsetResend offsetResend = offsetResends.get(0);
 				offsetResend.setTopic(topicName);
 				offsetResend.setPartition(partition);
-				offsetResend.setLastId(offsetResend.getLastId() + shift);
+				offsetResend.setLastId(correctOffset(offsetResend.getLastId() + shift, max, 0));
 				if (offsetResend.getLastId() > max) {
 					offsetResend.setLastId(max);
 				} else if (offsetResend.getLastId() < 0) {
@@ -451,7 +441,7 @@ public class ConsumerService {
 				OffsetResend theOffsetResend = new OffsetResend();
 				theOffsetResend.setTopic(topicName);
 				theOffsetResend.setPartition(partition);
-				theOffsetResend.setLastId(max + shift);
+				theOffsetResend.setLastId(correctOffset(max + shift, max, 0));
 				theOffsetResend.setGroupId(consumerId);
 				theOffsetResend.setLastScheduleDate(new Date());
 				if (theOffsetResend.getLastId() > max) {
@@ -462,6 +452,23 @@ public class ConsumerService {
 				m_offsetResendDao.insert(theOffsetResend);
 			}
 		}
+	}
+
+	private long correctOffset(long offset, long max, long min) {
+		if (max < min || min < 0) {
+			logger.warn("Invalid parameter: max={}, min={}.", max, min);
+			throw new RuntimeException("Invalid parameter!");
+		}
+
+		if (offset > max) {
+			return max;
+		}
+
+		if (offset < min) {
+			return min;
+		}
+
+		return offset;
 	}
 
 	private ConsumerGroupView fillConsumerView(Long topicId, ConsumerGroupView view) throws DalException {

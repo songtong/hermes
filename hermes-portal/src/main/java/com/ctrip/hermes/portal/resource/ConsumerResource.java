@@ -67,7 +67,7 @@ public class ConsumerResource {
 	}
 
 	@POST
-	@Path("{topic}/{consumer}/offset")
+	@Path("{topic}/{consumer}/restOffset/timestamp")
 	public Response resetOffsetByTimestamp(@PathParam("topic") String topicName,
 	      @PathParam("consumer") String consumerGroupName, @QueryParam("timestamp") long timestamp) {
 		Topic topic = topicService.findTopicEntityByName(topicName);
@@ -96,7 +96,7 @@ public class ConsumerResource {
 	}
 
 	@POST
-	@Path("{topic}/{consumer}/offset/relative")
+	@Path("{topic}/{consumer}/resetOffset/shift")
 	public Response resetOffsetByShift(@PathParam("topic") String topicName, @QueryParam("partition") String partition,
 	      @QueryParam("queueType") String queueType, @PathParam("consumer") String consumerGroupName,
 	      @QueryParam("shift") long shift) {
