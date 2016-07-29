@@ -55,7 +55,7 @@
         		LIMIT 1]]>
 				</statement>
 			</query>
-			<query name="find-latest-offset" type="SELECT" multiple="false">
+			<query name="find-latest-offset" type="SELECT" multiple="true">
 				<param name="topic" />
 				<param name="partition" />
 				<param name="priority" />

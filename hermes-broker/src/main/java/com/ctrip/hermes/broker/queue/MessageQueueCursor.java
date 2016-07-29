@@ -7,6 +7,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
+import com.ctrip.hermes.core.selector.CallbackContext;
 
 /**
  * 
@@ -15,7 +16,7 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
  */
 public interface MessageQueueCursor {
 
-	Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize, String filter);
+	Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize, String filter, CallbackContext callbackCtx);
 
 	void init();
 

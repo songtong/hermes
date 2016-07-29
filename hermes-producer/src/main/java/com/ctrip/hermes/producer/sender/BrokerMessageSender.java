@@ -1,9 +1,7 @@
 package com.ctrip.hermes.producer.sender;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,8 +29,13 @@ import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
-import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
-import com.ctrip.hermes.core.schedule.SchedulePolicy;
+import com.ctrip.hermes.core.selector.CallbackContext;
+import com.ctrip.hermes.core.selector.DefaultOffsetGenerator;
+import com.ctrip.hermes.core.selector.FixedExpireTimeHolder;
+import com.ctrip.hermes.core.selector.OffsetGenerator;
+import com.ctrip.hermes.core.selector.SelectorCallback;
+import com.ctrip.hermes.core.selector.Slot;
+import com.ctrip.hermes.core.transport.command.v5.SendMessageCommandV5;
 import com.ctrip.hermes.core.transport.command.v6.SendMessageCommandV6;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -56,6 +59,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 	@Inject
 	private ProducerConfig m_config;
 
+	@Inject
+	private MessageSenderSelectorManager m_selectorManager;
+
 	private ConcurrentMap<Pair<String, Integer>, TaskQueue> m_taskQueues = new ConcurrentHashMap<Pair<String, Integer>, TaskQueue>();
 
 	private ExecutorService m_callbackExecutor;
@@ -67,123 +73,78 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		if (m_started.compareAndSet(false, true)) {
 			int callbackThreadCount = m_config.getProducerCallbackThreadCount();
 
-			m_callbackExecutor = Executors.newFixedThreadPool(callbackThreadCount,
-			      HermesThreadFactory.create("ProducerCallback", false));
-
-			startEndpointSender();
+			m_callbackExecutor = Executors.newFixedThreadPool(callbackThreadCount, HermesThreadFactory.create("ProducerCallback", false));
 		}
 
-		Pair<String, Integer> taskQueueKey = computeTaskQueueKey(msg);
+		final Pair<String, Integer> taskQueueKey = computeTaskQueueKey(msg);
+		TaskQueue taskQueue = getOrInitializeTaskQueue(taskQueueKey, msg);
 
+		Future<SendResult> f;
+		// generate offset and put to "wait queue" should be atomic
+		synchronized (taskQueue) {
+			msg.setSelectorOffset(taskQueue.nextOffset());
+			f = taskQueue.submit(msg);
+		}
+
+		m_selectorManager.getSelector().update(taskQueueKey, true, new Slot(0, msg.getSelectorOffset()));
+		return f;
+	}
+
+	private TaskQueue getOrInitializeTaskQueue(final Pair<String, Integer> taskQueueKey, ProducerMessage<?> msg) {
 		TaskQueue taskQueue = m_taskQueues.get(taskQueueKey);
+
 		if (taskQueue == null) {
-			m_taskQueues.putIfAbsent(taskQueueKey,
-			      new TaskQueue(msg.getTopic(), msg.getPartition(), m_config.getBrokerSenderTaskQueueSize()));
-			taskQueue = m_taskQueues.get(taskQueueKey);
+			synchronized (this) {
+				taskQueue = m_taskQueues.get(taskQueueKey);
+
+				if (taskQueue == null) {
+					taskQueue = new TaskQueue(msg.getTopic(), msg.getPartition(), m_config.getBrokerSenderTaskQueueSize());
+					m_taskQueues.put(taskQueueKey, taskQueue);
+
+					log.debug("register for {}", taskQueueKey);
+					m_selectorManager.register(taskQueueKey, new FixedExpireTimeHolder(Long.MAX_VALUE), new SelectorCallback() {
+
+						@Override
+						public void onReady(CallbackContext ctx) {
+							log.debug("selector send to broker " + taskQueueKey);
+							new SendTask(taskQueueKey, ctx).send();
+						}
+					}, null, taskQueue.nextOffset());
+				}
+			}
 		}
 
-		return taskQueue.submit(msg);
+		return taskQueue;
 	}
 
 	private Pair<String, Integer> computeTaskQueueKey(ProducerMessage<?> msg) {
 		int pkHashCode = getPartitionKeyHashCode(msg);
 
-		int taskQueueIndex = msg.getPartition()
-		      * m_config.getBrokerSenderConcurrentLevel()
-		      + ((pkHashCode == Integer.MIN_VALUE ? 0 : Math.abs(pkHashCode)) % m_config.getBrokerSenderConcurrentLevel());
+		int taskQueueIndex = msg.getPartition() * m_config.getBrokerSenderConcurrentLevel()
+				+ ((pkHashCode == Integer.MIN_VALUE ? 0 : Math.abs(pkHashCode)) % m_config.getBrokerSenderConcurrentLevel());
 
 		Pair<String, Integer> taskQueueKey = new Pair<String, Integer>(msg.getTopic(), taskQueueIndex);
 		return taskQueueKey;
 	}
 
-	private void startEndpointSender() {
-		Executors.newSingleThreadExecutor(HermesThreadFactory.create("ProducerEndpointSender", false)).submit(
-		      new EndpointSender());
-	}
+	private class SendTask {
 
-	private class EndpointSender implements Runnable {
+		private Pair<String, Integer> taskQueueKey;
+		private CallbackContext callbackContext;
 
-		private ConcurrentMap<Pair<String, Integer>, AtomicBoolean> m_runnings = new ConcurrentHashMap<Pair<String, Integer>, AtomicBoolean>();
-
-		private ExecutorService m_taskExecThreadPool;
-
-		public EndpointSender() {
-			int threadCount = m_config.getBrokerSenderNetworkIoThreadCount();
-
-			m_taskExecThreadPool = Executors.newFixedThreadPool(threadCount,
-			      HermesThreadFactory.create("BrokerMessageSender", false));
+		public SendTask(Pair<String, Integer> taskQueueKey, CallbackContext callbackContext) {
+			this.taskQueueKey = taskQueueKey;
+			this.callbackContext = callbackContext;
 		}
 
-		@Override
-		public void run() {
-			int checkIntervalBase = m_config.getBrokerSenderNetworkIoCheckIntervalBaseMillis();
-			int checkIntervalMax = m_config.getBrokerSenderNetworkIoCheckIntervalMaxMillis();
+		public void send() {
+			boolean sendSuccess = false;
+			long cmdSelectorOffset = 0;
+			SendMessageCommandV5 cmd = null;
+			int batchSize = m_config.getBrokerSenderBatchSize();
 
-			SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkIntervalBase, checkIntervalMax);
-
-			while (!Thread.currentThread().isInterrupted()) {
-				boolean hasTask = scanAndExecuteTasks();
-				if (hasTask) {
-					schedulePolicy.succeess();
-				} else {
-					schedulePolicy.fail(true);
-				}
-			}
-
-		}
-
-		private boolean scanAndExecuteTasks() {
-			boolean hasTask = false;
-
-			List<Map.Entry<Pair<String, Integer>, TaskQueue>> entries = new ArrayList<>(m_taskQueues.entrySet());
-
-			Collections.shuffle(entries);
-			for (Map.Entry<Pair<String, Integer>, TaskQueue> entry : entries) {
-				try {
-					TaskQueue queue = entry.getValue();
-
-					if (queue.hasTask()) {
-						hasTask = scheduleTaskExecution(entry.getKey(), queue) || hasTask;
-					}
-				} catch (RuntimeException e) {
-					// ignore
-					log.warn("Exception occurred, ignore it", e);
-				}
-			}
-
-			return hasTask;
-		}
-
-		private boolean scheduleTaskExecution(Pair<String, Integer> taskQueueKey, TaskQueue queue) {
-
-			AtomicBoolean queueRunning = m_runnings.get(taskQueueKey);
-			if (queueRunning == null) {
-				m_runnings.putIfAbsent(taskQueueKey, new AtomicBoolean(false));
-				queueRunning = m_runnings.get(taskQueueKey);
-			}
-
-			if (queueRunning.compareAndSet(false, true)) {
-				m_taskExecThreadPool.submit(new SendTask(queue, queueRunning));
-				return true;
-			}
-			return false;
-		}
-	}
-
-	private class SendTask implements Runnable {
-
-		private TaskQueue m_taskQueue;
-
-		private AtomicBoolean m_running;
-
-		public SendTask(TaskQueue taskQueue, AtomicBoolean running) {
-			m_taskQueue = taskQueue;
-			m_running = running;
-		}
-
-		@Override
-		public void run() {
 			try {
+<<<<<<< HEAD
 				int batchSize = m_config.getBrokerSenderBatchSize();
 				SendMessageCommandV6 cmd = m_taskQueue.pop(batchSize);
 
@@ -204,6 +165,23 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 						t.complete();
 					} else {
 						SendMessageResult sendResult = sendMessagesToBroker(cmd);
+=======
+				TaskQueue taskQueue = m_taskQueues.get(taskQueueKey);
+				cmd = taskQueue.pop(batchSize);
+
+				if (cmd != null) {
+					Context wholeSendProcessTimer = ProducerStatusMonitor.INSTANCE.getTimer(cmd.getTopic(), cmd.getPartition(), "send-message-duration").time();
+
+					cmdSelectorOffset = cmd.getSelectorOffset();
+					sendSuccess = sendMessagesToBroker(cmd);
+					if (!sendSuccess) {
+						taskQueue.push(cmd);
+						tracking(cmd, false);
+					} else {
+						tracking(cmd, true);
+					}
+					log.debug("write to broker {}", sendSuccess);
+>>>>>>> selector
 
 						if (!sendResult.isSuccess() && !sendResult.isShouldSkip()) {
 							m_taskQueue.push(cmd);
@@ -211,12 +189,34 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 						tracking(cmd, sendResult);
 					}
 				}
+			} catch (Exception e) {
+				log.error("Unexpected exception when send cmd to broker", e);
 			} finally {
-				m_running.set(false);
-			}
 
+				State state;
+				if (sendSuccess) {
+					state = State.GotAndSuccessfullyProcessed;
+				} else {
+					if (cmd == null) {
+						state = State.GotNothing;
+					} else {
+						state = State.GotButErrorInProcessing;
+					}
+				}
+				TriggerResult triggerResult = new TriggerResult(state, new long[] { cmdSelectorOffset });
+
+				m_selectorManager.reRegister(taskQueueKey, callbackContext, triggerResult, new FixedExpireTimeHolder(Long.MAX_VALUE), new SelectorCallback() {
+
+					@Override
+					public void onReady(CallbackContext innerCtx) {
+						log.debug("selector send to broker2");
+						new SendTask(taskQueueKey, innerCtx).send();
+					}
+				});
+			}
 		}
 
+<<<<<<< HEAD
 		private void tracking(SendMessageCommandV6 sendMessageCommand, SendMessageResult sendResult) {
 			if (!sendResult.isSuccess()) {
 				if (!sendResult.isShouldSkip()) {
@@ -240,6 +240,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					t.setStatus(Transaction.SUCCESS);
 					t.complete();
 				}
+=======
+		private void tracking(SendMessageCommandV5 sendMessageCommand, boolean success) {
+			if (!success || m_config.isCatEnabled()) {
+				Transaction t = Cat.newTransaction(CatConstants.TYPE_MESSAGE_PRODUCE_TRANSPORT, sendMessageCommand.getTopic());
+				t.addData("*count", sendMessageCommand.getMessageCount());
+				t.setStatus(success ? Transaction.SUCCESS : "FAILED");
+				t.complete();
+>>>>>>> selector
 			}
 
 		}
@@ -258,6 +266,12 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					long resultTimeout = cmd.getTimeout();
 
 					if (m_endpointClient.writeCommand(endpoint, cmd, acceptTimeout, TimeUnit.MILLISECONDS)) {
+<<<<<<< HEAD
+=======
+						Context acceptTimer = ProducerStatusMonitor.INSTANCE.getTimer(topic, partition, "broker-accept-duration").time();
+
+						ProducerStatusMonitor.INSTANCE.wroteToBroker(topic, partition, cmd.getMessageCount());
+>>>>>>> selector
 
 						Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(cmd, acceptFuture, acceptTimeout);
 
@@ -268,8 +282,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 							return new SendMessageResult(false, false, null);
 						}
 					} else {
+<<<<<<< HEAD
 						m_endpointManager.refreshEndpoint(topic, partition);
 						return new SendMessageResult(false, false, null);
+=======
+						System.out.println("-----------------------write command fail------------------------");
+						m_endpointManager.refreshEndpoint(topic, partition);
+						return false;
+>>>>>>> selector
 					}
 				} else {
 					// ignore
@@ -288,21 +308,35 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			}
 		}
 
+<<<<<<< HEAD
 		private Pair<Boolean, Endpoint> waitForBrokerAcceptance(SendMessageCommandV6 cmd,
 		      Future<Pair<Boolean, Endpoint>> acceptFuture, long timeout) throws InterruptedException, ExecutionException {
+=======
+		private Pair<Boolean, Endpoint> waitForBrokerAcceptance(SendMessageCommandV5 cmd, Future<Pair<Boolean, Endpoint>> acceptFuture, long timeout)
+				throws InterruptedException, ExecutionException {
+>>>>>>> selector
 			Pair<Boolean, Endpoint> acceptResult = null;
 			try {
 				acceptResult = acceptFuture.get(timeout, TimeUnit.MILLISECONDS);
 			} catch (TimeoutException e) {
+<<<<<<< HEAD
 				ProducerStatusMonitor.INSTANCE.brokerAcceptTimeout(cmd.getTopic(), cmd.getPartition(),
 				      cmd.getMessageCount());
+=======
+				ProducerStatusMonitor.INSTANCE.waitBrokerAcceptanceTimeout(cmd.getTopic(), cmd.getPartition(), cmd.getMessageCount());
+>>>>>>> selector
 			}
 			return acceptResult;
 		}
 
+<<<<<<< HEAD
 		private SendMessageResult waitForBrokerResultIfNecessary(SendMessageCommandV6 cmd,
 		      Future<SendMessageResult> resultFuture, Pair<Boolean, Endpoint> acceptResult, long timeout)
 		      throws InterruptedException, ExecutionException {
+=======
+		private boolean waitForBrokerResultIfNecessary(SendMessageCommandV5 cmd, Future<Boolean> resultFuture, Pair<Boolean, Endpoint> acceptResult,
+				long timeout) throws InterruptedException, ExecutionException {
+>>>>>>> selector
 			Boolean brokerAccept = acceptResult.getKey();
 			String topic = cmd.getTopic();
 			int partition = cmd.getPartition();
@@ -318,8 +352,13 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			}
 		}
 
+<<<<<<< HEAD
 		private SendMessageResult waitForBrokerResult(SendMessageCommandV6 cmd, Future<SendMessageResult> resultFuture,
 		      long timeout) throws InterruptedException, ExecutionException {
+=======
+		private boolean waitForBrokerResult(SendMessageCommandV5 cmd, Future<Boolean> resultFuture, long timeout)
+				throws InterruptedException, ExecutionException {
+>>>>>>> selector
 			try {
 				return resultFuture.get(timeout, TimeUnit.MILLISECONDS);
 			} catch (TimeoutException e) {
@@ -330,11 +369,15 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		}
 	}
 
+<<<<<<< HEAD
 	private void notifySendFail(SettableFuture<SendResult> future, MessageSendException exception) {
 		future.setException(exception);
 	}
 
 	private class TaskQueue {
+=======
+	private class TaskQueue implements OffsetGenerator {
+>>>>>>> selector
 		private String m_topic;
 
 		private int m_partition;
@@ -342,6 +385,8 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		private AtomicReference<SendMessageCommandV6> m_cmd = new AtomicReference<>(null);
 
 		private BlockingQueue<ProducerWorkerContext> m_queue;
+
+		private OffsetGenerator m_offsetGenerator = new DefaultOffsetGenerator();
 
 		public TaskQueue(String topic, int partition, int queueSize) {
 			m_topic = topic;
@@ -351,7 +396,15 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			ProducerStatusMonitor.INSTANCE.watchTaskQueue(m_topic, m_partition, m_queue);
 		}
 
+<<<<<<< HEAD
 		public void push(SendMessageCommandV6 cmd) {
+=======
+		public long nextOffset() {
+			return m_offsetGenerator.nextOffset();
+		}
+
+		public void push(SendMessageCommandV5 cmd) {
+>>>>>>> selector
 			m_cmd.set(cmd);
 		}
 
@@ -362,13 +415,20 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 			return m_cmd.getAndSet(null);
 		}
 
+<<<<<<< HEAD
 		private SendMessageCommandV6 createSendMessageCommand(int size) {
 			SendMessageCommandV6 cmd = null;
+=======
+		private SendMessageCommandV5 createSendMessageCommand(int size) {
+			long maxMsgSelectorOffset = Long.MIN_VALUE;
+			SendMessageCommandV5 cmd = null;
+>>>>>>> selector
 			List<ProducerWorkerContext> contexts = new ArrayList<ProducerWorkerContext>(size);
 			m_queue.drainTo(contexts, size);
 			if (!contexts.isEmpty()) {
 				cmd = new SendMessageCommandV6(m_topic, m_partition, m_config.getBrokerSenderResultTimeoutMillis());
 				for (ProducerWorkerContext context : contexts) {
+<<<<<<< HEAD
 					int produceTimeoutSeconds = m_config.getProduceTimeoutSeconds(m_topic);
 
 					if (produceTimeoutSeconds > 0
@@ -382,13 +442,14 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					} else {
 						cmd.addMessage(context.m_msg, context.m_future);
 					}
+=======
+					cmd.addMessage(context.m_msg, context.m_future);
+					maxMsgSelectorOffset = Math.max(maxMsgSelectorOffset, context.m_msg.getSelectorOffset());
+>>>>>>> selector
 				}
+				cmd.setSelectorOffset(maxMsgSelectorOffset);
 			}
 			return cmd == null ? null : (cmd.getMessageCount() == 0 ? null : cmd);
-		}
-
-		public boolean hasTask() {
-			return m_cmd.get() != null || !m_queue.isEmpty();
 		}
 
 		public Future<SendResult> submit(final ProducerMessage<?> msg) {
@@ -423,9 +484,8 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 				} catch (Exception e) {
 					body = msg.toString();
 				}
-				String warning = String.format(
-				      "Producer task queue is full(queueSize=%s), will drop this message(refKey=%s, body=%s).",
-				      m_queue.size(), msg.getKey(), body);
+				String warning = String.format("Producer task queue is full(queueSize=%s), will drop this message(refKey=%s, body=%s).", m_queue.size(),
+						msg.getKey(), body);
 				log.warn(warning);
 				MessageSendException throwable = new MessageSendException(warning, msg);
 				notifySendFail(future, throwable);

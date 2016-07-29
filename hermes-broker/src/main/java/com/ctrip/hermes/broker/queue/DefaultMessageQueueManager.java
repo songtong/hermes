@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +21,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.broker.ack.internal.AckHolder.AckHolderType;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation.OperationType;
+import com.ctrip.hermes.broker.selector.SendMessageSelectorManager;
 import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.SendMessageResult;
@@ -30,8 +30,12 @@ import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
-import com.ctrip.hermes.core.schedule.ExponentialSchedulePolicy;
-import com.ctrip.hermes.core.schedule.SchedulePolicy;
+import com.ctrip.hermes.core.selector.CallbackContext;
+import com.ctrip.hermes.core.selector.FixedExpireTimeHolder;
+import com.ctrip.hermes.core.selector.SelectorCallback;
+import com.ctrip.hermes.core.selector.Slot;
+import com.ctrip.hermes.core.selector.TriggerResult;
+import com.ctrip.hermes.core.selector.TriggerResult.State;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
@@ -54,6 +58,9 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	@Inject
 	private SystemClockService m_systemClockService;
 
+	@Inject
+	private SendMessageSelectorManager m_selectorManager;
+
 	// one <topic, partition, lease> mapping to one MessageQueue
 	private Map<Pair<String, Integer>, MessageQueue> m_messageQueues = new ConcurrentHashMap<>();
 
@@ -63,15 +70,22 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 	private ScheduledExecutorService m_ackMessagesTaskExecutor;
 
-	private ExecutorService m_flushExecutor;
-
-	private FlusherScheduleTask m_flushCheckerTask;
-
 	@Override
-	public ListenableFuture<Map<Integer, SendMessageResult>> appendMessageAsync(String topic, int partition,
-	      boolean priority, MessageBatchWithRawData data, long expireTime) {
+	public ListenableFuture<Map<Integer, SendMessageResult>> appendMessageAsync(final String topic, final int partition, boolean priority,
+			final MessageBatchWithRawData data, long expireTime) {
 		if (!m_stopped.get()) {
-			return getMessageQueue(topic, partition).appendMessageAsync(priority, data, expireTime);
+			MessageQueue mq = getOrInitializeMessageQueue(topic, partition);
+
+			ListenableFuture<Map<Integer, SendMessageResult>> f;
+			// generate selector offset and add to "wait queue" should be atomic
+			synchronized (mq) {
+				data.setSelectorOffset(mq.nextOffset());
+				f = mq.appendMessageAsync(priority, data, expireTime);
+			}
+
+			log.debug("update {} {} to {}", topic, partition, data.getSelectorOffset());
+			m_selectorManager.getSelector().update(new Pair<>(topic, partition), true, new Slot(0, data.getSelectorOffset()));
+			return f;
 		} else {
 			return null;
 		}
@@ -80,20 +94,27 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	@Override
 	public MessageQueueCursor getCursor(Tpg tpg, Lease lease, Offset offset) {
 		if (!m_stopped.get()) {
-			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).getCursor(tpg.getGroupId(), lease, offset);
+			return getOrInitializeMessageQueue(tpg.getTopic(), tpg.getPartition()).getCursor(tpg.getGroupId(), lease, offset);
 		} else {
 			return null;
 		}
 	}
 
-	private MessageQueue getMessageQueue(String topic, int partition) {
+	private MessageQueue getOrInitializeMessageQueue(final String topic, final int partition) {
 		Pair<String, Integer> key = new Pair<>(topic, partition);
 		if (!m_messageQueues.containsKey(key)) {
 			synchronized (m_messageQueues) {
 				if (!m_messageQueues.containsKey(key)) {
-					MessageQueue mqp = m_queueFactory.getMessageQueue(topic, partition, m_ackOpExecutor,
-					      m_ackMessagesTaskExecutor);
+					MessageQueue mqp = m_queueFactory.getMessageQueue(topic, partition, m_ackOpExecutor, m_ackMessagesTaskExecutor);
 					m_messageQueues.put(key, mqp);
+
+					m_selectorManager.register(new Pair<>(topic, partition), new FixedExpireTimeHolder(Long.MAX_VALUE), new SelectorCallback() {
+
+						@Override
+						public void onReady(CallbackContext ctx) {
+							flush(topic, partition, ctx);
+						}
+					}, null, mqp.nextOffset());
 				}
 			}
 		}
@@ -123,7 +144,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 				}
 			}
 
-			m_flushCheckerTask.stop();
+			// m_flushCheckerTask.stop();
+			// TODO [selector] flush remaining messages
 
 			for (MessageQueue mq : m_messageQueues.values()) {
 				mq.stop();
@@ -133,8 +155,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	}
 
 	@Override
-	public void delivered(TppConsumerMessageBatch batch, String groupId, boolean withOffset,
-	      boolean needServerSideAckHolder) {
+	public void delivered(TppConsumerMessageBatch batch, String groupId, boolean withOffset, boolean needServerSideAckHolder) {
 		// TODO remove legacy code
 		if (needServerSideAckHolder) {
 			if (m_stopped.get()) {
@@ -150,9 +171,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 			}
 
 			AckHolderType ackHolderType = withOffset ? AckHolderType.FORWARD_ONLY : AckHolderType.NORMAL;
-			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offerAckHolderOp(
-			      new Operation(key, batch.isResend(), OperationType.DELIVERED, ackHolderType, msgId2Metas,
-			            m_systemClockService.now()));
+			boolean offered = getOrInitializeMessageQueue(tpp.getTopic(), tpp.getPartition())
+					.offerAckHolderOp(new Operation(key, batch.isResend(), OperationType.DELIVERED, ackHolderType, msgId2Metas, m_systemClockService.now()));
 
 			logIfOfferFail("delivered", offered);
 		}
@@ -166,9 +186,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		resetPriorityIfResend(tpp, resend);
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
 		for (AckContext context : ackContexts) {
-			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offerAckHolderOp(
-			      new Operation(key, resend, OperationType.ACK, getHolderType(ackType), context.getMsgSeq(),
-			            m_systemClockService.now()));
+			boolean offered = getOrInitializeMessageQueue(tpp.getTopic(), tpp.getPartition())
+					.offerAckHolderOp(new Operation(key, resend, OperationType.ACK, getHolderType(ackType), context.getMsgSeq(), m_systemClockService.now()));
 			logIfOfferFail("acked", offered);
 		}
 	}
@@ -181,9 +200,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		resetPriorityIfResend(tpp, resend);
 		Pair<Boolean, String> key = new Pair<>(tpp.isPriority(), groupId);
 		for (AckContext context : nackContexts) {
-			boolean offered = getMessageQueue(tpp.getTopic(), tpp.getPartition()).offerAckHolderOp(
-			      new Operation(key, resend, OperationType.NACK, getHolderType(ackType), context.getMsgSeq(),
-			            m_systemClockService.now()));
+			boolean offered = getOrInitializeMessageQueue(tpp.getTopic(), tpp.getPartition())
+					.offerAckHolderOp(new Operation(key, resend, OperationType.NACK, getHolderType(ackType), context.getMsgSeq(), m_systemClockService.now()));
 			logIfOfferFail("nacked", offered);
 		}
 	}
@@ -194,7 +212,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 			return;
 		}
 
-		boolean offered = getMessageQueue(task.getTopic(), task.getPartition()).offerAckMessagesTask(task);
+		boolean offered = getOrInitializeMessageQueue(task.getTopic(), task.getPartition()).offerAckMessagesTask(task);
 		logIfOfferFail("offerAckMessageTask", offered);
 
 	}
@@ -233,8 +251,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 		private AckHolderType m_ackHolderType = AckHolderType.NORMAL;
 
-		Operation(Pair<Boolean, String> key, boolean isResend, OperationType operationType, AckHolderType ackHolderType,
-		      Object data, long createTime) {
+		Operation(Pair<Boolean, String> key, boolean isResend, OperationType operationType, AckHolderType ackHolderType, Object data, long createTime) {
 			m_key = key;
 			m_resend = isResend;
 			m_data = data;
@@ -271,22 +288,15 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_ackOpExecutor = Executors.newScheduledThreadPool(m_config.getAckOpExecutorThreadCount(),
-		      HermesThreadFactory.create("AckOp", true));
+		m_ackOpExecutor = Executors.newScheduledThreadPool(m_config.getAckOpExecutorThreadCount(), HermesThreadFactory.create("AckOp", true));
 		m_ackMessagesTaskExecutor = Executors.newScheduledThreadPool(m_config.getAckMessagesTaskExecutorThreadCount(),
-		      HermesThreadFactory.create("AckMessagesTaskExecutor", true));
-
-		m_flushExecutor = Executors.newCachedThreadPool(HermesThreadFactory.create("MessageQueueFlushExecutor", true));
-		m_flushCheckerTask = new FlusherScheduleTask();
-		Thread checkerThread = HermesThreadFactory.create("MessageQueueFlushChecker", false)
-		      .newThread(m_flushCheckerTask);
-		checkerThread.start();
+				HermesThreadFactory.create("AckMessagesTaskExecutor", true));
 	}
 
 	@Override
 	public Offset findLatestConsumerOffset(Tpg tpg) {
 		if (!m_stopped.get()) {
-			return getMessageQueue(tpg.getTopic(), tpg.getPartition()).findLatestConsumerOffset(tpg.getGroupId());
+			return getOrInitializeMessageQueue(tpg.getTopic(), tpg.getPartition()).findLatestConsumerOffset(tpg.getGroupId());
 		}
 		return null;
 	}
@@ -294,7 +304,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	@Override
 	public Offset findMessageOffsetByTime(String topic, int partition, long time) {
 		if (!m_stopped.get()) {
-			return getMessageQueue(topic, partition).findMessageOffsetByTime(time);
+			return getOrInitializeMessageQueue(topic, partition).findMessageOffsetByTime(time);
 		}
 		return null;
 	}
@@ -303,26 +313,25 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	@SuppressWarnings("unchecked")
 	public List<TppConsumerMessageBatch> findMessagesByOffsets(String topic, int partition, List<Offset> offsets) {
 		List<TppConsumerMessageBatch> result = new ArrayList<TppConsumerMessageBatch>();
-		MessageQueue queue = getMessageQueue(topic, partition);
+		MessageQueue queue = getOrInitializeMessageQueue(topic, partition);
 		if (!m_stopped.get()) {
 			if (queue != null) {
-				TppConsumerMessageBatch priorityMessasges = queue.findMessagesByOffsets(true,
-				      (List<Long>) CollectionUtil.collect(offsets, new Transformer() {
-					      @Override
-					      public Object transform(Object offset) {
-						      return ((Offset) offset).getPriorityOffset();
-					      }
-				      }));
+				TppConsumerMessageBatch priorityMessasges = queue.findMessagesByOffsets(true, (List<Long>) CollectionUtil.collect(offsets, new Transformer() {
+					@Override
+					public Object transform(Object offset) {
+						return ((Offset) offset).getPriorityOffset();
+					}
+				}));
 				if (priorityMessasges != null) {
 					result.add(priorityMessasges);
 				}
 				TppConsumerMessageBatch nonPriorityMessages = queue.findMessagesByOffsets(false,
-				      (List<Long>) CollectionUtil.collect(offsets, new Transformer() {
-					      @Override
-					      public Object transform(Object offset) {
-						      return ((Offset) offset).getNonPriorityOffset();
-					      }
-				      }));
+						(List<Long>) CollectionUtil.collect(offsets, new Transformer() {
+							@Override
+							public Object transform(Object offset) {
+								return ((Offset) offset).getNonPriorityOffset();
+							}
+						}));
 				if (nonPriorityMessages != null) {
 					result.add(nonPriorityMessages);
 				}
@@ -331,44 +340,53 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		return result;
 	}
 
-	private class FlusherScheduleTask implements Runnable {
+	@SuppressWarnings("unused")
+	private class FlusherScheduleTask {
 
 		private AtomicBoolean m_stopped = new AtomicBoolean(false);
-
-		@Override
-		public void run() {
-			int checkIntervalBase = m_config.getFlushCheckerNoMessageWaitBaseMillis();
-			int checkIntervalMax = m_config.getFlushCheckerNoMessageWaitMaxMillis();
-
-			SchedulePolicy schedulePolicy = new ExponentialSchedulePolicy(checkIntervalBase, checkIntervalMax);
-
-			while (!m_stopped.get() && !Thread.interrupted()) {
-				boolean flushed = false;
-
-				for (MessageQueue mq : m_messageQueues.values()) {
-					flushed = flush(mq, m_config.getMessageQueueFlushBatchSize()) || flushed;
-				}
-
-				if (flushed) {
-					schedulePolicy.succeess();
-				} else {
-					schedulePolicy.fail(true);
-				}
-
-			}
-
-			for (MessageQueue mq : m_messageQueues.values()) {
-				flush(mq, -1);
-			}
-			log.info("Message queue flush checker stopped.");
-		}
 
 		public void stop() {
 			m_stopped.set(true);
 		}
 
-		private boolean flush(final MessageQueue mq, final int batchSize) {
-			return mq.flush(m_flushExecutor, batchSize);
+	}
+
+	@Override
+	public void flush(final String topic, final int partition, CallbackContext ctx) {
+		Pair<Boolean, Long> flushResult = new Pair<>(false, Long.MIN_VALUE);
+		try {
+			final Pair<String, Integer> tp = new Pair<>(topic, partition);
+			MessageQueue mq = m_messageQueues.get(tp);
+			log.debug("flushing MessageQueue {} {} {}", mq, topic, partition);
+			int batchSize = m_config.getMessageQueueFlushBatchSize();
+			flushResult = mq.flush(batchSize);
+		} catch (Exception e) {
+			log.error("Unexpected exception ", e);
+		} finally {
+			boolean hasUnflushedMessagesBeforeFlush = flushResult.getKey();
+			long maxPurgedOrSavedSelectorOffset = flushResult.getValue();
+
+			State state;
+			if (hasUnflushedMessagesBeforeFlush) {
+				if (maxPurgedOrSavedSelectorOffset > 0) {
+					state = State.GotAndSuccessfullyProcessed;
+				} else {
+					// flush fail, stop flush until trigger by safe trigger
+					state = State.GotButErrorInProcessing;
+				}
+			} else {
+				state = State.GotNothing;
+			}
+			
+			TriggerResult triggerResult = new TriggerResult(state, new long[] { maxPurgedOrSavedSelectorOffset });
+
+			m_selectorManager.reRegister(new Pair<>(topic, partition), ctx, triggerResult, new FixedExpireTimeHolder(Long.MAX_VALUE), new SelectorCallback() {
+
+				@Override
+				public void onReady(CallbackContext innerCtx) {
+					flush(topic, partition, innerCtx);
+				}
+			});
 		}
 	}
 

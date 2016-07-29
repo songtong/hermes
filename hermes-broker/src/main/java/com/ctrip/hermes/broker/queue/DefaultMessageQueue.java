@@ -18,6 +18,8 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.selector.DefaultOffsetGenerator;
+import com.ctrip.hermes.core.selector.OffsetGenerator;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -27,6 +29,8 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueue.class);
 
 	private MetaService m_metaService;
+	
+	private OffsetGenerator m_offsetGenerator = new DefaultOffsetGenerator();
 
 	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService,
 	      ScheduledExecutorService ackOpExecutor, ScheduledExecutorService ackMessagesTaskExecutor) {
@@ -89,6 +93,12 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 		Tpp tpp = new Tpp(m_topic, m_partition, isPriority);
 		FetchResult fetchResult = m_storage.fetchMessages(tpp, new ArrayList<Object>(offsets));
 		return fetchResult == null ? null : fetchResult.getBatch();
+	}
+
+
+	@Override
+	public long nextOffset() {
+		return m_offsetGenerator.nextOffset();
 	}
 
 }

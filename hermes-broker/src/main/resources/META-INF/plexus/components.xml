@@ -441,6 +441,9 @@
 					<role>com.ctrip.hermes.core.log.FileBizLogger</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.broker.selector.PullMessageSelectorManager</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.broker.queue.MessageQueueManager</role>
 				</requirement>
 				<requirement>
@@ -514,6 +517,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.service.SystemClockService</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.selector.SendMessageSelectorManager</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -553,6 +559,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.broker.queue.storage.filter.Filter</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.selector.PullMessageSelectorManager</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -656,6 +665,27 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.broker.selector.PullMessageSelectorManager</role>
+			<implementation>com.ctrip.hermes.broker.selector.DefaultPullMessageSelectorManager</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.dal.hermes.MessagePriorityDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.broker.selector.SendMessageSelectorManager</role>
+			<implementation>com.ctrip.hermes.broker.selector.DefaultSendMessageSelectorManager</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.broker.config.BrokerConfig</role>
 				</requirement>
 			</requirements>
 		</component>

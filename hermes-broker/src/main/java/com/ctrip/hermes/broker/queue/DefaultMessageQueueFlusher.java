@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,8 +60,6 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 	private MetaService m_metaService;
 
-	private AtomicBoolean m_flushing = new AtomicBoolean(false);
-
 	public DefaultMessageQueueFlusher(String topic, int partition, MessageQueueStorage storage, MetaService metaService) {
 		m_topic = topic;
 		m_partition = partition;
@@ -77,13 +74,9 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	@Override
-	public boolean startFlush() {
-		return m_flushing.compareAndSet(false, true);
-	}
-
-	@Override
-	public void flush(int batchSize) {
-		purgeExpiredMsgs();
+	public long flush(int batchSize) {
+		long maxPurgedSelectorOffset = purgeExpiredMsgs();
+		long maxSavedSelectorOffset = Long.MIN_VALUE;
 
 		if (!m_pendingMessages.isEmpty()) {
 			List<PendingMessageWrapper> todos = new ArrayList<>(batchSize < 0 ? m_pendingMessages.size() : batchSize);
@@ -97,10 +90,13 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 			Transaction catTx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_BROKER_FLUSH, m_topic + "-" + m_partition);
 			catTx.addData("*count", getMessageCount(todos));
 
-			appendMessageSync(todos);
+			maxSavedSelectorOffset = appendMessageSync(todos);
+			
 			catTx.setStatus(Transaction.SUCCESS);
 			catTx.complete();
 		}
+		
+		return Math.max(maxPurgedSelectorOffset, maxSavedSelectorOffset);
 	}
 
 	private int getMessageCount(List<PendingMessageWrapper> todos) {
@@ -111,30 +107,30 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		return count;
 	}
 
-	private void purgeExpiredMsgs() {
+	private long purgeExpiredMsgs() {
+		long maxPurgedSelectorOffset = Long.MIN_VALUE;
 		long now = System.currentTimeMillis();
 
 		while (!m_pendingMessages.isEmpty()) {
 			if (m_pendingMessages.peek().getExpireTime() < now) {
-				purgeExpiredMsg();
+				long purgedSelectorOfset = purgeExpiredMsg();
+				maxPurgedSelectorOffset = Math.max(maxPurgedSelectorOffset, purgedSelectorOfset);
 			} else {
 				break;
 			}
 		}
+		
+		return maxPurgedSelectorOffset;
 	}
 
-	private void purgeExpiredMsg() {
+	private long purgeExpiredMsg() {
 		PendingMessageWrapper messageWrapper = m_pendingMessages.poll();
 		if (messageWrapper != null && messageWrapper.getBatch() != null) {
 			Map<Integer, SendMessageResult> result = new HashMap<>();
 			addResults(result, messageWrapper.getBatch().getMsgSeqs(), false);
 			messageWrapper.getFuture().set(result);
 		}
-	}
-
-	@Override
-	public void finishFlush() {
-		m_flushing.set(false);
+		return messageWrapper.getBatch().getSelectorOffset();
 	}
 
 	private static class FutureBatchResultWrapperTransformer implements
@@ -145,13 +141,15 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		}
 	}
 
-	protected void appendMessageSync(List<PendingMessageWrapper> todos) {
-
+	protected long appendMessageSync(List<PendingMessageWrapper> todos) {
+		long maxSelectorOffset = Long.MIN_VALUE;
+		
 		List<FutureBatchResultWrapper> priorityTodos = new ArrayList<>(todos.size());
 		List<FutureBatchResultWrapper> nonPriorityTodos = new ArrayList<>(todos.size());
 
 		for (PendingMessageWrapper todo : todos) {
 			Map<Integer, SendMessageResult> result = new HashMap<>();
+			maxSelectorOffset = Math.max(maxSelectorOffset, todo.getBatch().getSelectorOffset());
 			addResults(result, todo.getBatch().getMsgSeqs(), false);
 
 			if (todo.isPriority()) {
@@ -172,7 +170,8 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 				future.set(result);
 			}
 		}
-
+		
+		return maxSelectorOffset;
 	}
 
 	protected void addResults(Map<Integer, SendMessageResult> result, List<Integer> seqs, boolean success) {

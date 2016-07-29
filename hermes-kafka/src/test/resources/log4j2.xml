@@ -33,6 +33,10 @@
 		<Logger name="org.apache.http" level="INFO">
 			<Appender-ref ref="ASYNC" />
 		</Logger>
+		
+		<Logger name="com.ctrip.hermes.core.meta.remote.DefaultMetaServerLocator" level="FATAL">
+			<Appender-ref ref="ASYNC" />
+		</Logger>
 
 		<Logger name="io.netty" level="INFO">
 			<Appender-ref ref="ASYNC" />

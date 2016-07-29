@@ -1,8 +1,6 @@
 package com.ctrip.hermes.broker.queue.storage.mysql;
 
 import static com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity.READSET_OFFSET;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,6 +22,7 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 import org.unidal.tuple.Triple;
 
+import com.codahale.metrics.MetricRegistry;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetter;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetterDao;
@@ -43,8 +42,10 @@ import com.ctrip.hermes.broker.queue.storage.FetchResult;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.filter.Filter;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.CachedMessagePriorityDaoInterceptor;
+import com.ctrip.hermes.broker.selector.PullMessageSelectorManager;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.broker.transport.BrokerDummyMessagePriority;
+import com.ctrip.hermes.core.bo.Tp;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
@@ -57,6 +58,7 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.selector.Slot;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.TransferCallback;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
@@ -64,6 +66,10 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metrics.HermesMetricsRegistry;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -106,13 +112,15 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	@Inject
 	private Filter m_filter;
 
+	@Inject
+	private PullMessageSelectorManager selectorManager;
+
 	private Map<Triple<String, Integer, Integer>, OffsetResend> m_offsetResendCache = new ConcurrentHashMap<>();
 
 	private Map<Pair<Tpp, Integer>, OffsetMessage> m_offsetMessageCache = new ConcurrentHashMap<>();
 
 	@Override
-	public void appendMessages(String topicName, int partition, boolean priority,
-	      Collection<MessageBatchWithRawData> batches) throws Exception {
+	public void appendMessages(String topicName, int partition, boolean priority, Collection<MessageBatchWithRawData> batches) throws Exception {
 		List<MessagePriority> msgs = new ArrayList<>(m_config.getMySQLBatchInsertSize());
 
 		Topic topic = m_metaService.findTopicByName(topicName);
@@ -141,27 +149,44 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				msgs.add(msg);
 
 				if (msgs.size() == m_config.getMySQLBatchInsertSize()) {
-					batchInsert(topicName, partition, priority, msgs);
+					batchInsert(topic, partition, priority, msgs);
 					msgs.clear();
 				}
 			}
 		}
 
 		if (!msgs.isEmpty()) {
-			batchInsert(topicName, partition, priority, msgs);
+			batchInsert(topic, partition, priority, msgs);
 		}
 	}
 
-	private void batchInsert(String topic, int partition, boolean priority, List<MessagePriority> msgs)
-	      throws DalException {
+	private void batchInsert(Topic topic, int partition, boolean priority, List<MessagePriority> msgs) throws DalException {
+		HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name("MySQL", "INSERT")).mark(1);
 		long startTime = m_systemClockService.now();
 		m_msgDao.insert(msgs.toArray(new MessagePriority[msgs.size()]));
+		notifySelector(topic, partition, priority, msgs);
 
-		bizLog(topic, partition, priority, msgs, startTime, m_systemClockService.now());
+		bizLog(topic.getName(), partition, priority, msgs, startTime, m_systemClockService.now());
 	}
 
-	private void bizLog(String topic, int partition, boolean priority, List<MessagePriority> msgs, long startTime,
-	      long endTime) {
+	private void notifySelector(Topic topic, int partition, boolean priority, List<MessagePriority> msgs) {
+		if (msgs != null && msgs.size() > 0) {
+			long maxId = -1L;
+			for (MessagePriority msg : msgs) {
+				maxId = Math.max(maxId, msg.getId());
+			}
+
+			if (maxId > 0) {
+				boolean insertToPriorityTable = topic.isPriorityMessageEnabled() && priority;
+
+				int slotIndex = insertToPriorityTable ? PullMessageSelectorManager.SLOT_PRIORITY_INDEX : PullMessageSelectorManager.SLOT_NONPRIORITY_INDEX;
+				Slot slot = new Slot(slotIndex, maxId);
+				selectorManager.getSelector().update(new Tp(topic.getName(), partition), true, slot);
+			}
+		}
+	}
+
+	private void bizLog(String topic, int partition, boolean priority, List<MessagePriority> msgs, long startTime, long endTime) {
 		for (MessagePriority msg : msgs) {
 			BizEvent event = new BizEvent("RefKey.Transformed");
 			event.addData("topic", m_metaService.findTopicByName(topic).getId());
@@ -187,10 +212,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		return findLastOffset(topic, partition, priority, groupId).getOffset();
 	}
 
-	private synchronized OffsetMessage findLastOffset(String topic, int partition, int priority, int intGroupId)
-	      throws DalException {
-		List<OffsetMessage> lastOffset = m_offsetMessageDao.find(topic, partition, priority, intGroupId,
-		      OffsetMessageEntity.READSET_FULL);
+	private synchronized OffsetMessage findLastOffset(String topic, int partition, int priority, int intGroupId) throws DalException {
+		List<OffsetMessage> lastOffset = m_offsetMessageDao.find(topic, partition, priority, intGroupId, OffsetMessageEntity.READSET_FULL);
 
 		if (lastOffset.isEmpty()) {
 			List<MessagePriority> topMsg = m_msgDao.top(topic, partition, priority, MessagePriorityEntity.READSET_FULL);
@@ -235,8 +258,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 		for (Long[] subOffsets : splitOffsets(offsets)) {
 			try {
-				msgs.addAll(m_msgDao.findWithOffsets(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), subOffsets,
-				      MessagePriorityEntity.READSET_FULL));
+				msgs.addAll(m_msgDao.findWithOffsets(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), subOffsets, MessagePriorityEntity.READSET_FULL));
 			} catch (Exception e) {
 				log.error("Failed to fetch message({}).", tpp, e);
 				continue;
@@ -252,8 +274,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		}
 
 		try {
-			return buildFetchResult(tpp, m_msgDao.findIdAfter(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(),
-			      (Long) startOffset, batchSize, MessagePriorityEntity.READSET_FULL), filter);
+			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name("MySQL", "SELECT")).mark(1);
+			return buildFetchResult(tpp, m_msgDao.findIdAfter(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), (Long) startOffset, batchSize,
+					MessagePriorityEntity.READSET_FULL), filter);
 		} catch (DalException e) {
 			log.error("Failed to fetch message({}).", tpp, e);
 			return null;
@@ -261,7 +284,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	}
 
 	private FetchResult buildFetchResult( //
-	      final Tpp tpp, final List<MessagePriority> msgs, final String filter) {
+			final Tpp tpp, final List<MessagePriority> msgs, final String filter) {
 		if (CollectionUtil.isNotEmpty(msgs)) {
 			FetchResult result = new FetchResult();
 
@@ -366,8 +389,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				if (resendAfter(dataObj, latestResend)) {
 					latestResend = dataObj;
 				}
-				MessageMeta msgMeta = new MessageMeta(dataObj.getId(), dataObj.getRemainingRetries(),
-				      dataObj.getOriginId(), dataObj.getPriority(), true);
+				MessageMeta msgMeta = new MessageMeta(dataObj.getId(), dataObj.getRemainingRetries(), dataObj.getOriginId(), dataObj.getPriority(), true);
 
 				batch.addMessageMeta(msgMeta);
 
@@ -432,14 +454,13 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				copyToDeadLetter(tpp, groupId, toDeadLetter, resend);
 				copyToResend(tpp, groupId, toResend, resend, retryPolicy);
 			} catch (Exception e) {
-				log.error("Failed to nack messages(topic={}, partition={}, priority={}, groupId={}).", tpp.getTopic(),
-				      tpp.getPartition(), tpp.isPriority(), groupId, e);
+				log.error("Failed to nack messages(topic={}, partition={}, priority={}, groupId={}).", tpp.getTopic(), tpp.getPartition(), tpp.isPriority(),
+						groupId, e);
 			}
 		}
 	}
 
-	private void copyToResend(Tpp tpp, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas, boolean resend,
-	      RetryPolicy retryPolicy) throws DalException {
+	private void copyToResend(Tpp tpp, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas, boolean resend, RetryPolicy retryPolicy) throws DalException {
 		if (CollectionUtil.isNotEmpty(msgId2Metas)) {
 			long now = m_systemClockService.now();
 
@@ -463,8 +484,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				}
 
 				Long[] pks = id2RemainingRetries.keySet().toArray(new Long[id2RemainingRetries.size()]);
-				List<ResendGroupId> resends = m_resendDao.findByPKs(tpp.getTopic(), tpp.getPartition(), intGroupId, pks,
-				      ResendGroupIdEntity.READSET_FULL);
+				List<ResendGroupId> resends = m_resendDao.findByPKs(tpp.getTopic(), tpp.getPartition(), intGroupId, pks, ResendGroupIdEntity.READSET_FULL);
 
 				for (ResendGroupId r : resends) {
 					r.setTopic(tpp.getTopic());
@@ -482,8 +502,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		}
 	}
 
-	private void copyToDeadLetter(Tpp tpp, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas, boolean resend)
-	      throws DalException {
+	private void copyToDeadLetter(Tpp tpp, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas, boolean resend) throws DalException {
 		if (CollectionUtil.isNotEmpty(msgId2Metas)) {
 			DeadLetter proto = new DeadLetter();
 			proto.setTopic(tpp.getTopic());
@@ -536,8 +555,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				m_offsetMessageDao.increaseOffset(proto, OffsetMessageEntity.UPDATESET_OFFSET);
 			}
 		} catch (DalException e) {
-			log.error("Failed to ack messages(topic={}, partition={}, priority={}, groupId={}).", tpp.getTopic(),
-			      tpp.getPartition(), tpp.isPriority(), groupId, e);
+			log.error("Failed to ack messages(topic={}, partition={}, priority={}, groupId={}).", tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId,
+					e);
 		}
 	}
 
@@ -547,8 +566,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		if (!m_offsetMessageCache.containsKey(key)) {
 			synchronized (m_offsetMessageCache) {
 				if (!m_offsetMessageCache.containsKey(key)) {
-					m_offsetMessageCache.put(key,
-					      findLastOffset(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), intGroupId));
+					m_offsetMessageCache.put(key, findLastOffset(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), intGroupId));
 				}
 			}
 		}
@@ -575,8 +593,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		return new Pair<>(offset.getLastScheduleDate(), offset.getLastId());
 	}
 
-	private synchronized OffsetResend findLastResendOffset(String topic, int partition, int intGroupId)
-	      throws DalException {
+	private synchronized OffsetResend findLastResendOffset(String topic, int partition, int intGroupId) throws DalException {
 		List<OffsetResend> tops = m_offsetResendDao.top(topic, partition, intGroupId, OffsetResendEntity.READSET_FULL);
 		if (CollectionUtil.isNotEmpty(tops)) {
 			OffsetResend top = CollectionUtil.first(tops);
@@ -612,26 +629,25 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 			Long maxId = findMaxDuedResendId(tpg, groupId);
 
 			if (maxId != null) {
-				final List<ResendGroupId> dataObjs = m_resendDao.find(tpg.getTopic(), tpg.getPartition(), groupId,
-				      batchSize, startPair.getValue(), maxId, ResendGroupIdEntity.READSET_FULL);
+				final List<ResendGroupId> dataObjs = m_resendDao.find(tpg.getTopic(), tpg.getPartition(), groupId, batchSize, startPair.getValue(), maxId,
+						ResendGroupIdEntity.READSET_FULL);
 
 				return buildFetchResult(tpg, dataObjs);
 			}
 		} catch (DalException e) {
-			log.error("Failed to fetch resend messages(topic={}, partition={}, groupId={}).", tpg.getTopic(),
-			      tpg.getPartition(), tpg.getGroupId(), e);
+			log.error("Failed to fetch resend messages(topic={}, partition={}, groupId={}).", tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), e);
 		}
 
 		return null;
 	}
 
 	private Long findMaxDuedResendId(Tpg tpg, int groupId) throws DalException {
-		List<ResendGroupId> maxDuedRow = m_resendDao.findMaxDuedScheduleDate(tpg.getTopic(), tpg.getPartition(), groupId,
-		      new Date(m_systemClockService.now()), ResendGroupIdEntity.READSET_SCHEDULE_DATE);
+		List<ResendGroupId> maxDuedRow = m_resendDao.findMaxDuedScheduleDate(tpg.getTopic(), tpg.getPartition(), groupId, new Date(m_systemClockService.now()),
+				ResendGroupIdEntity.READSET_SCHEDULE_DATE);
 		if (CollectionUtil.isNotEmpty(maxDuedRow)) {
 			Date maxDuedScheduleDate = maxDuedRow.get(0).getScheduleDate();
-			List<ResendGroupId> maxDuedId = m_resendDao.findMaxIdByScheduleDate(tpg.getTopic(), tpg.getPartition(),
-			      groupId, maxDuedScheduleDate, ResendGroupIdEntity.READSET_ID);
+			List<ResendGroupId> maxDuedId = m_resendDao.findMaxIdByScheduleDate(tpg.getTopic(), tpg.getPartition(), groupId, maxDuedScheduleDate,
+					ResendGroupIdEntity.READSET_ID);
 			if (CollectionUtil.isNotEmpty(maxDuedId)) {
 				return maxDuedId.get(0).getId();
 			}
@@ -666,8 +682,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		}
 
 		long offset = Long.MIN_VALUE == time ? oldestMsg.getId() //
-		      : Long.MAX_VALUE == time ? latestMsg.getId() //
-		            : findMessageOffsetByTimeInRange(tpp, oldestMsg, latestMsg, time);
+				: Long.MAX_VALUE == time ? latestMsg.getId() //
+						: findMessageOffsetByTimeInRange(tpp, oldestMsg, latestMsg, time);
 
 		return offset <= 0 ? 0L : offset - 1L;
 	}
@@ -675,7 +691,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	private MessagePriority findOldestMessageOffset(Tpp tpp) {
 		try {
 			return m_msgDao.findOldestOffset( //
-			      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), READSET_OFFSET);
+					tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), READSET_OFFSET);
 		} catch (Exception e) {
 			log.warn("Find oldest message offset failed.{}", tpp);
 			return null;
@@ -684,12 +700,15 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 	private MessagePriority findLatestMessageOffset(Tpp tpp) {
 		try {
-			return m_msgDao.findLatestOffset( //
-			      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), READSET_OFFSET);
+			List<MessagePriority> msgs = m_msgDao.findLatestOffset( //
+					tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), READSET_OFFSET);
+			if(msgs != null && msgs.size() > 0) {
+				return msgs.get(0);
+			}
 		} catch (Exception e) {
 			log.warn("Find latest message offset failed.{}", tpp);
-			return null;
 		}
+		return null;
 	}
 
 	private long findMessageOffsetByTimeInRange(Tpp tpp, MessagePriority left, MessagePriority right, long time) {
@@ -713,11 +732,11 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 			while (leftId <= rightId) {
 				long midId = leftId + (rightId - leftId) / 2L;
 
-				MessagePriority smallestIdGEMidId = m_msgDao.findOffsetGreaterOrEqual(tpp.getTopic(), tpp.getPartition(),
-				      tpp.getPriorityInt(), midId, READSET_OFFSET);
+				MessagePriority smallestIdGEMidId = m_msgDao.findOffsetGreaterOrEqual(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), midId,
+						READSET_OFFSET);
 
-				MessagePriority largestIdLEMidId = m_msgDao.findOffsetLessOrEqual(tpp.getTopic(), tpp.getPartition(),
-				      tpp.getPriorityInt(), midId, READSET_OFFSET);
+				MessagePriority largestIdLEMidId = m_msgDao.findOffsetLessOrEqual(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), midId,
+						READSET_OFFSET);
 
 				if (compareWithPrecision(smallestIdGEMidId.getCreationDate().getTime(), time, precisionMillis) < 0) {
 					leftId = smallestIdGEMidId.getId() + 1;
@@ -732,8 +751,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				}
 			}
 
-			MessagePriority msg = m_msgDao.findOffsetGreaterOrEqual(tpp.getTopic(), tpp.getPartition(),
-			      tpp.getPriorityInt(), rightId, READSET_OFFSET);
+			MessagePriority msg = m_msgDao.findOffsetGreaterOrEqual(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), rightId, READSET_OFFSET);
 			return msg.getId();
 		} catch (Exception e) {
 			if (log.isDebugEnabled()) {

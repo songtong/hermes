@@ -17,11 +17,21 @@ public class MessageBatchWithRawData {
 	private ByteBuf m_rawData;
 
 	private List<PartialDecodedMessage> m_msgs;
+	
+	private long m_selectorOffset;
 
 	public MessageBatchWithRawData(String topic, List<Integer> msgSeqs, ByteBuf rawData) {
 		m_topic = topic;
 		m_msgSeqs = msgSeqs;
 		m_rawData = rawData;
+	}
+	
+	public long getSelectorOffset() {
+		return m_selectorOffset;
+	}
+
+	public void setSelectorOffset(long selectorOffset) {
+		m_selectorOffset = selectorOffset;
 	}
 
 	public String getTopic() {

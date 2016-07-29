@@ -28,7 +28,9 @@ import com.ctrip.hermes.producer.pipeline.ProducerPipeline;
 import com.ctrip.hermes.producer.pipeline.ProducerValveRegistry;
 import com.ctrip.hermes.producer.pipeline.TracingMessageValve;
 import com.ctrip.hermes.producer.sender.BrokerMessageSender;
+import com.ctrip.hermes.producer.sender.DefaultMessageSenderSelectorManager;
 import com.ctrip.hermes.producer.sender.MessageSender;
+import com.ctrip.hermes.producer.sender.MessageSenderSelectorManager;
 import com.ctrip.hermes.producer.transport.command.processor.SendMessageAckCommandProcessor;
 import com.ctrip.hermes.producer.transport.command.processor.SendMessageResultCommandProcessor;
 
@@ -64,6 +66,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(SendMessageResultMonitor.class)//
 		      .req(ProducerConfig.class)//
 		      .req(EndpointClient.class)//
+		      .req(MessageSenderSelectorManager.class)//
 		);
 
 		// command processors
@@ -77,6 +80,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		// monitors
 		all.add(A(DefaultSendMessageResultMonitor.class));
 		all.add(A(DefaultSendMessageAcceptanceMonitor.class));
+		
+		all.add(A(DefaultMessageSenderSelectorManager.class));
 
 		all.add(A(ProducerConfig.class));
 
