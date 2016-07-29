@@ -19,15 +19,21 @@ import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 
 public class ConsumerBacklogCalculateTask implements Runnable {
 	private static final Logger log = LoggerFactory.getLogger(DefaultDashboardService.class);
+
 	private String topicName;
+
 	private ConsumerGroup consumer;
+
 	private int partitionId;
+
 	private CountDownLatch latch;
+
 	private List<DelayDetail> consumerDelay;
+
 	private MessageQueueDao dao;
 
 	public ConsumerBacklogCalculateTask(String topicName, ConsumerGroup consumer, int partitionId, CountDownLatch latch,
-			MessageQueueDao dao, List<DelayDetail> consumerDelay) {
+	      MessageQueueDao dao, List<DelayDetail> consumerDelay) {
 		this.topicName = topicName;
 		this.consumer = consumer;
 		this.partitionId = partitionId;
@@ -40,24 +46,27 @@ public class ConsumerBacklogCalculateTask implements Runnable {
 	public void run() {
 		try {
 			MessagePriority msgPriority = dao.getLatestProduced(topicName, partitionId, PortalConstants.PRIORITY_TRUE);
-			MessagePriority msgNonPriority = dao.getLatestProduced(topicName, partitionId,
-					PortalConstants.PRIORITY_FALSE);
+			MessagePriority msgNonPriority = dao.getLatestProduced(topicName, partitionId, PortalConstants.PRIORITY_FALSE);
 			ResendGroupId maxResend = dao.getMaxResend(topicName, partitionId, consumer.getId());
 			Long priorityMsgId = msgPriority == null ? 0 : msgPriority.getId();
 			Long nonPriorityMsgId = msgNonPriority == null ? 0 : msgNonPriority.getId();
 			Long maxResendId = maxResend == null ? 0 : maxResend.getId();
-			Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = dao.getLatestConsumed(topicName,
-					partitionId);
+			Map<Integer, Pair<OffsetMessage, OffsetMessage>> offsetMsgMap = dao.getLatestConsumed(topicName, partitionId);
 			Long priorityDelay = null;
 			Long nonPriorityDelay = null;
 			Long priorityMsgOffset = null;
 			Long nonPriorityMsgOffset = null;
 			Pair<OffsetMessage, OffsetMessage> offsets = offsetMsgMap.get(consumer.getId());
 			if (offsets != null) {
-				priorityMsgOffset = offsets.getKey() == null ? 0 : offsets.getKey().getOffset();
-				nonPriorityMsgOffset = offsets.getValue() == null ? 0 : offsets.getValue().getOffset();
-				priorityDelay = priorityMsgId - priorityMsgOffset;
-				nonPriorityDelay = nonPriorityMsgId - nonPriorityMsgOffset;
+				if (offsets.getKey() != null) {
+					priorityMsgOffset = offsets.getKey().getOffset();
+					priorityDelay = priorityMsgId - priorityMsgOffset;
+				}
+
+				if (offsets.getValue() != null) {
+					nonPriorityMsgOffset = offsets.getValue().getOffset();
+					nonPriorityDelay = nonPriorityMsgId - nonPriorityMsgOffset;
+				}
 			}
 			Map<Integer, OffsetResend> offsetResendMap = dao.getLatestResend(topicName, partitionId);
 			Long resendOffset = null;
@@ -80,7 +89,7 @@ public class ConsumerBacklogCalculateTask implements Runnable {
 			consumerDelay.add(delayDetail);
 		} catch (Exception e) {
 			log.warn("Get delay of topic: {}, partition: {}, consumer: {} failed.", topicName, partitionId,
-					consumer.getName(), e);
+			      consumer.getName(), e);
 		} finally {
 			latch.countDown();
 		}
