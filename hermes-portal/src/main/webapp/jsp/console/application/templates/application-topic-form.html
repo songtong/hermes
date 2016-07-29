@@ -39,11 +39,21 @@
 		</div>
 	</div>
 	<div class="form-group">
+		<label class="col-md-4 control-label">开启优先队列功能？</label>
+		<div class="col-md-6">
+			<div class="btn-group">
+				<label class="btn"> <input type="radio" name="priorityMessageEnabled" ng-value=true ng-model="application.priorityMessageEnabled"> 是
+				</label> <label class="btn"> <input type="radio" name="priorityMessageEnabled" ng-value=false ng-model="application.priorityMessageEnabled"> 否
+				</label>
+			</div>
+		</div>
+	</div>
+	<div class="form-group">
 		<label class="col-md-4 control-label">需要压缩？</label>
 		<div class="col-md-6">
 			<div class="btn-group">
-				<label class="btn"> <input type="radio" name="retryStrategy" ng-value="true" ng-model="application.needCompress"> 是
-				</label> <label class="btn"> <input type="radio" name="retryStrategy" ng-value="false" ng-model="application.needCompress"> 否
+				<label class="btn"> <input type="radio" name="retryStrategy" ng-value=true ng-model="application.needCompress"> 是
+				</label> <label class="btn"> <input type="radio" name="retryStrategy" ng-value=false ng-model="application.needCompress"> 否
 				</label>
 			</div>
 		</div>

@@ -372,6 +372,7 @@ public class TopicService {
 		topicModel.setEndpointType(topicView.getEndpointType());
 		topicModel.setStatus(topicView.getStatus());
 		topicModel.setBrokerGroup(topicView.getBrokerGroup());
+		topicModel.setPriorityMessageEnabled(topicView.isPriorityMessageEnabled());
 
 		List<Partition> partitions = new ArrayList<>();
 		for (Partition partition : topicView.getPartitions()) {

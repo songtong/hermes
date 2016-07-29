@@ -10,7 +10,8 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 		ownerEmail1Prefix : ssoMail.split('@')[0],
 		needCompress : 'false',
 		compressionType : 'deflater',
-		compressionLevel : 1
+		compressionLevel : 1,
+		priorityMessageEnabled : false
 	};
 	$scope.productLines = ApplicationService.get_productLines();
 	$scope.getFilteredProductLine = function(val) {
