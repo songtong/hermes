@@ -23,7 +23,7 @@
 				<TimeBasedTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
-			<DefaultRolloverStrategy>
+			<DefaultRolloverStrategy max="10">
 				<Delete basePath="${baseDir}" maxDepth="2">
 					<IfFileName glob="*/hermes-metaserver.*.log.gz" />
 					<IfLastModified age="30d" />
@@ -38,9 +38,9 @@
 				<TimeBasedTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="200 MB" />
 			</Policies>
-			<DefaultRolloverStrategy>
+			<DefaultRolloverStrategy max="50">
 				<Delete basePath="${baseDir}" maxDepth="2">
-					<IfFileName glob="*/hermes-metaserver-trace.*.log.gz" />
+					<IfFileName glob="*/hermes-metaserver-trace*.log.gz" />
 					<IfLastModified age="5d" />
 				</Delete>
 			</DefaultRolloverStrategy>

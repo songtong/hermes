@@ -23,9 +23,9 @@
 				<TimeBasedTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
-			<DefaultRolloverStrategy>
+			<DefaultRolloverStrategy max="10">
 				<Delete basePath="${baseDir}" maxDepth="2">
-					<IfFileName glob="*/hermes-broker.*.log.gz" />
+					<IfFileName glob="*/hermes-broker*.log.gz" />
 					<IfLastModified age="30d" />
 				</Delete>
 			</DefaultRolloverStrategy>
@@ -39,9 +39,9 @@
 				<TimeBasedTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="500 MB" />
 			</Policies>
-			<DefaultRolloverStrategy>
+			<DefaultRolloverStrategy max="20">
 				<Delete basePath="${baseDir}" maxDepth="2">
-					<IfFileName glob="*/hermes-skipped-msgs.*.log.gz" />
+					<IfFileName glob="*/hermes-skipped-msgs*.log.gz" />
 					<IfLastModified age="30d" />
 				</Delete>
 			</DefaultRolloverStrategy>
