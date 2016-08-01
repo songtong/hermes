@@ -79,7 +79,7 @@
 						<a href="http://cat.ctripcorp.com/cat/r/e">CAT系统</a>
 						确认自己的客户端版本是否为最新。
 					</p>
-					<p>Java客户端最新版本为0.7.2.5，CAT系统中显示为java-0.7.2.5；.Net Dll最新版本为2.0.7.2，CAT系统中显示为net-0.7.2.6。</p>
+					<p>客户端最新版本请查看<a href="http://conf.ctripcorp.com/pages/viewpage.action?pageId=104759534">此链接</a></p>
 					<p>
 						<font color="red">快捷解决办法为重启消费者进程，.net一般需要回收IIS。同时请尽快升级到最新版本客户端</font>。
 					</p>
