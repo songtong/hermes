@@ -16,6 +16,7 @@
 		<attribute name="name" value-type="String" key="true" />
 		<attribute name="retry-policy" value-type="String" />
 		<attribute name="ordered-consume" value-type="boolean" default-value="true" />
+		<attribute name="enabled" value-type="boolean" default-value="true" />
 	</entity>
 
 	<entity name="producer">

@@ -86,6 +86,7 @@
     <member name="phone-2" field="phone_2" value-type="String" length="20" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
+    <member name="enabled" field="enabled" value-type="boolean" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />

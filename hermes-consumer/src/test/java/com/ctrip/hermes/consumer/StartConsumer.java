@@ -1,6 +1,8 @@
 package com.ctrip.hermes.consumer;
 
 import java.io.BufferedReader;
+import java.io.Console;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -225,6 +227,19 @@ public class StartConsumer extends ComponentTestCase {
 				msg.nack();
 			}
 		}
+	}
+
+	@Test
+	public void testConsumer() throws Exception {
+		Consumer.getInstance().start("fx.sbst.sb", "fx.yq.test", new BaseMessageListener<String>() {
+
+			@Override
+			protected void onMessage(ConsumerMessage<String> msg) {
+				System.out.println("RECEIVED MESSAGE: " + msg.getBody());
+			}
+		});
+		System.out.println("Start success");
+		System.in.read();
 	}
 
 }

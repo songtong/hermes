@@ -150,7 +150,7 @@ consumer_module.run(function(editableOptions) {
 
 	scope.queueType = 'priority';
 
-	scope.order_opts = [ true, false ];
+	scope.ops = [ true, false ];
 
 	meta_resource.get_topic_names({}, function(result) {
 		var result = new Bloodhound({

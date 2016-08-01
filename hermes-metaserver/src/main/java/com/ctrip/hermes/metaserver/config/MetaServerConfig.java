@@ -23,6 +23,10 @@ public class MetaServerConfig {
 		return 1000L;
 	}
 
+	public long getEnabledConsumerCheckIntervalTimeMillis() {
+		return 20 * 1000L;
+	}
+
 	public long getConsumerLeaseTimeMillis() {
 		return 20 * 1000L;
 	}

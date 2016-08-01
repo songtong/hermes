@@ -291,3 +291,6 @@ CREATE TABLE `producer_monitor_config` (
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='producer monitor configs';
+
+ALTER TABLE `consumer_group`
+	ADD COLUMN `enabled` BIT(1)  COMMENT '是否启用';

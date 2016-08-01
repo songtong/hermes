@@ -14,7 +14,8 @@ application_module.controller('app-consumer-controller', [ '$scope', 'Applicatio
 		ownerName1 : ssoUser,
 		ownerEmail1Prefix : ssoMail.split('@')[0],
 		ackTimeoutSeconds : 5,
-		needRetry : 'true'
+		needRetry : 'true',
+		enabled : true
 	};
 	ApplicationService.get_topic_names().then(function(result) {
 		var result = new Bloodhound({
