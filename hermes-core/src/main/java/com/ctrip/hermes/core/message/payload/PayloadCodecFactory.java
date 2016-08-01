@@ -65,7 +65,7 @@ public class PayloadCodecFactory {
 
 	}
 
-	private static class CodecDesc {
+	public static class CodecDesc {
 		private String m_codec;
 
 		private String m_compressionAlgo;

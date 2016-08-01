@@ -85,7 +85,7 @@
 			<dependency>
 				<groupId>com.ctrip.framework</groupId>
 				<artifactId>vi</artifactId>
-				<version>0.7.0</version>
+				<version>0.7.2</version>
 			</dependency>
 			<!--javax -->
 			<dependency>
