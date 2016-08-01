@@ -9,6 +9,9 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.meta.entity.Endpoint;
 
 public class MetaStatusStatusResponse {
+
+	private String currentHost;
+
 	private Boolean leader;
 
 	private HostPort leaderInfo;
@@ -28,6 +31,14 @@ public class MetaStatusStatusResponse {
 	private Map<String, Map<String, ClientContext>> m_effectiveBrokers;
 
 	private Map<String, ClientContext> m_runningBrokers;
+
+	public String getCurrentHost() {
+		return currentHost;
+	}
+
+	public void setCurrentHost(String currentHost) {
+		this.currentHost = currentHost;
+	}
 
 	public Boolean isLeader() {
 		return leader;
