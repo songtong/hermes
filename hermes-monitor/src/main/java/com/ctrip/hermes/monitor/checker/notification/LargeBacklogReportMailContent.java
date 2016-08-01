@@ -99,7 +99,8 @@ public class LargeBacklogReportMailContent extends MailNoticeContent {
 	}
 
 	public void addMonitorEvent(MonitorEvent event, ConsumerGroupView consumer) {
-		title = String.format("【Hermes监控报告】消费积压报告 [%s ~ %s]", DATE_FMT.format(start), DATE_FMT.format(new Date()));
+		title = String.format("【Hermes监控报告】【%s】消费积压报告 [%s ~ %s]", //
+		      m_env, DATE_FMT.format(start), DATE_FMT.format(new Date()));
 		if (event instanceof ConsumeLargeBacklogEvent) {
 			ConsumeLargeBacklogEvent e = (ConsumeLargeBacklogEvent) event;
 			Pair<String, String> key = new Pair<String, String>(consumer.getTopicName(), consumer.getName());

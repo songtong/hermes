@@ -109,7 +109,8 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 			}
 			PartitionInfo p = ps.get(idx);
 			CreationStamp stamp = getCreationStampFinder().findSpecific(ctx, p.getUpperbound() - 1);
-			if (stamp.getDate().getTime() < System.currentTimeMillis() - TimeUnit.HOURS.toMillis(ctx.getRetainInHour())) {
+			if (stamp != null && //
+			      stamp.getDate().getTime() < System.currentTimeMillis() - TimeUnit.HOURS.toMillis(ctx.getRetainInHour())) {
 				list.add(p);
 			} else {
 				break;
@@ -123,7 +124,8 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		if (speed > 0) {
 			long incrementPartitionCount = ctx.getIncrementInDay() * speed / partitionSize + 1;
 			if (incrementPartitionCount > getConfig().getPartitionIncrementMaxCount()) {
-				Pair<Long, Long> pair = renewPartitionSizeAndCount(ctx, ctx.getIncrementInDay() * speed, ctx.getIncrementInDay());
+				Pair<Long, Long> pair = renewPartitionSizeAndCount(ctx, ctx.getIncrementInDay() * speed,
+				      ctx.getIncrementInDay());
 				partitionSize = pair.getKey();
 				incrementPartitionCount = pair.getValue();
 			}
@@ -214,7 +216,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 	}
 
 	private List<PartitionInfo> findSamplePartitions(List<PartitionInfo> partitions) {
-		if (SPEED_SAMPLE_COUNT > partitions.size()) {
+		if (SPEED_SAMPLE_COUNT >= partitions.size()) {
 			return removeEmptyPartition(new ArrayList<PartitionInfo>(partitions));
 		}
 		if (partitions.get(partitions.size() - 1).getRows() > 0) {
