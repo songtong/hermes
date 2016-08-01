@@ -15,6 +15,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import org.unidal.net.Networks;
+
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -39,6 +41,8 @@ public class MetaServerResource {
 	private ClusterStateHolder m_clusterStatusHolder = PlexusComponentLocator.lookup(ClusterStateHolder.class);
 
 	private CoreConfig m_coreConfig = PlexusComponentLocator.lookup(CoreConfig.class);
+
+	private final String ip = Networks.forIp().getLocalHostAddress();
 
 	@GET
 	@Path("servers")
@@ -69,12 +73,14 @@ public class MetaServerResource {
 	@Path("status")
 	public MetaStatusStatusResponse getStatus() throws Exception {
 		MetaStatusStatusResponse response = new MetaStatusStatusResponse();
+		response.setCurrentHost(ip);
 		response.setLeader(m_clusterStatusHolder.hasLeadership());
 		response.setLeaderInfo(m_clusterStatusHolder.getLeader());
 		response.setBrokerAssignments(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getAssignments());
 		response.setConfigedBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getConfigedBrokers()
 		      .get());
-		response.setEffectiveBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getMergedBrokers().get());
+		response
+		      .setEffectiveBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getMergedBrokers().get());
 		response.setRunningBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getRunningBrokers().get());
 		response.setMetaServerAssignments(PlexusComponentLocator.lookup(MetaServerAssignmentHolder.class)
 		      .getAssignments());
