@@ -133,5 +133,6 @@ public abstract class PartitionStrategy {
 		topicView.setStoragePartitionCount(3);
 		topicView.setResendPartitionSize(topicView.getStoragePartitionSize() / 10);
 		topicView.setDescription(application.getDescription());
+		topicView.setPriorityMessageEnabled(application.isPriorityMessageEnabled());
 	}
 }

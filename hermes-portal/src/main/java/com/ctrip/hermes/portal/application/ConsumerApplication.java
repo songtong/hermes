@@ -11,7 +11,7 @@ public class ConsumerApplication extends HermesApplication {
 	private String m_project;
 
 	private String m_appName;
-	
+
 	private String m_onlineEnv;
 
 	private String m_ownerName1;
@@ -29,6 +29,8 @@ public class ConsumerApplication extends HermesApplication {
 	private int m_retryCount;
 
 	private int m_retryInterval;
+
+	private boolean m_enabled;
 
 	public String getTopicName() {
 		return m_topicName;
@@ -69,7 +71,7 @@ public class ConsumerApplication extends HermesApplication {
 	public void setAppName(String appName) {
 		this.m_appName = appName;
 	}
-	
+
 	public String getOnlineEnv() {
 		return m_onlineEnv;
 	}
@@ -142,13 +144,23 @@ public class ConsumerApplication extends HermesApplication {
 		this.m_ownerPhone2 = ownerPhone2;
 	}
 
-	@Override
-	public String toString() {
-		return "ConsumerApplication [m_topicName=" + m_topicName + ", m_productLine=" + m_productLine + ", m_product="
-				+ m_product + ", m_project=" + m_project + ", m_appName=" + m_appName + ", m_ownerName1=" + m_ownerName1
-				+ ", m_ownerName2=" + m_ownerName2 + ", m_ownerPhone1=" + m_ownerPhone1 + ", m_ownerPhone2="
-				+ m_ownerPhone2 + ", m_ackTimeoutSeconds=" + m_ackTimeoutSeconds + ", m_needRetry=" + m_needRetry
-				+ ", m_retryCount=" + m_retryCount + ", m_retryInterval=" + m_retryInterval + "]";
-	}
+	public boolean isEnabled() {
+	   return m_enabled;
+   }
 
+	public void setEnabled(boolean enabled) {
+	   this.m_enabled = enabled;
+   }
+
+	@Override
+   public String toString() {
+	   return "ConsumerApplication [m_topicName=" + m_topicName + ", m_productLine=" + m_productLine + ", m_product="
+	         + m_product + ", m_project=" + m_project + ", m_appName=" + m_appName + ", m_onlineEnv=" + m_onlineEnv
+	         + ", m_ownerName1=" + m_ownerName1 + ", m_ownerName2=" + m_ownerName2 + ", m_ownerPhone1=" + m_ownerPhone1
+	         + ", m_ownerPhone2=" + m_ownerPhone2 + ", m_ackTimeoutSeconds=" + m_ackTimeoutSeconds + ", m_needRetry="
+	         + m_needRetry + ", m_retryCount=" + m_retryCount + ", m_retryInterval=" + m_retryInterval + ", m_enabled="
+	         + m_enabled + "]";
+   }
+
+	
 }

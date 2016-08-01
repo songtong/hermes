@@ -275,6 +275,7 @@
 	<entity name="consumer-group">
 		<member name="ack-timeout-seconds" value-type="Integer" />
 		<member name="ordered-consume" value-type="Boolean" />
+		<member name="enabled" value-type="Boolean" />
 		<var name="tId" value-type="long" />
 		<var name="cName" value-type="String" />
 		<query-defs>

@@ -40,16 +40,28 @@
 							<span ng-bind="currentConsumer.appIds" e-form="consumerDetailForm" editable-text="currentConsumer.appIds" e-name="appIds"></span>
 						</div>
 					</div>
-					<div class="form-group">
+					<div ng-if="!logined" class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">消费策略</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.retryPolicy"></span>
+						</div>
+					</div>
+					<div ng-if="logined" class="form-group">
 						<label class="col-md-4 control-label" style="padding-top: 0px">消费策略</label>
 						<div class="col-md-8">
 							<span ng-bind="currentConsumer.retryPolicy" e-form="consumerDetailForm" editable-text="currentConsumer.retryPolicy" e-name="retryPolicy"></span>
 						</div>
 					</div>
-					<div class="form-group">
-						<label class="col-md-4 control-label" style="padding-top: 0px">是否有序</label>
+					<div ng-if="!logined" class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">启用</label>
 						<div class="col-md-8">
-							<span ng-bind="currentConsumer.orderedConsume" e-form="consumerDetailForm" editable-select="currentConsumer.orderedConsume" e-name="orderedConsume" e-ng-options="order for order in order_opts"></span>
+							<span ng-bind="currentConsumer.enabled"></span>
+						</div>
+					</div>
+					<div ng-if="logined" class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">启用</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.enabled" e-form="consumerDetailForm" editable-select="currentConsumer.enabled" e-name="enabled" e-ng-options="op for op in ops"></span>
 						</div>
 					</div>
 					<div class="form-group">
