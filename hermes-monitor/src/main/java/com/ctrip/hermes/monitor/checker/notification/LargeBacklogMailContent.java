@@ -25,6 +25,6 @@ public class LargeBacklogMailContent extends MailNoticeContent {
 	@SuppressWarnings("unchecked")
 	public LargeBacklogMailContent(List<? extends MonitorEvent> events) {
 		m_events = (List<ConsumeLargeBacklogEvent>) events;
-		m_title = String.format("【Hermes监控】消费积压过多 %s", DATE_FMT.format(new Date()));
+		m_title = String.format("【Hermes监控】【%s】消费积压过多 %s", m_env, DATE_FMT.format(new Date()));
 	}
 }
