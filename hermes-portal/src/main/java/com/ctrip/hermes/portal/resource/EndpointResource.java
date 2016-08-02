@@ -85,10 +85,10 @@ public class EndpointResource {
 		try {
 			endpointService.deleteEndpoint(id);
 		} catch (IllegalStateException e) {
-			logger.warn("Delete endpoint failed", e);
+			logger.warn("Delete endpoint failed.", e);
 			throw new RestException(e.getMessage(), Status.BAD_REQUEST);
 		} catch (Exception e) {
-			logger.warn("Delete endpoint failed", e);
+			logger.warn("Delete endpoint failed.", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -115,7 +115,7 @@ public class EndpointResource {
 			endpointService.updateEndpoint(endpoint);
 			return Response.status(Status.OK).build();
 		} catch (IllegalStateException e) {
-			logger.warn("Delete endpoint failed", e);
+			logger.warn("Update endpoint failed.", e);
 			throw new RestException(e.getMessage(), Status.BAD_REQUEST);
 		} catch (Exception e) {
 			logger.error("Update endpoint failed.", e);
