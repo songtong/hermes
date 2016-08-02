@@ -67,7 +67,7 @@ public class ConsumerResource {
 	}
 
 	@POST
-	@Path("{topic}/{consumer}/restOffset/timestamp")
+	@Path("{topic}/{consumer}/resetOffset/timestamp")
 	public Response resetOffsetByTimestamp(@PathParam("topic") String topicName,
 	      @PathParam("consumer") String consumerGroupName, @QueryParam("timestamp") long timestamp) {
 		Topic topic = topicService.findTopicEntityByName(topicName);
