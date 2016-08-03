@@ -7,25 +7,30 @@ angular.module('hermes-tracer', [ 'ngResource', 'ui.bootstrap', 'global', 'utils
 	$scope.unUsedEvents = [];
 	$scope.hintWord = "";
 	$scope.topicNames = [];
+	$scope.topicName = "";
+	$scope.refKey = "";
 
 	topicResource.query(function(result) {
 		result = new Bloodhound({
-			  datumTokenizer: Bloodhound.tokenizers.whitespace,
-			  queryTokenizer: Bloodhound.tokenizers.whitespace,
-			  local: result
-			});
+			datumTokenizer : Bloodhound.tokenizers.whitespace,
+			queryTokenizer : Bloodhound.tokenizers.whitespace,
+			local : result
+		});
 
-			$('#topicNames').typeahead({
-			  hint: true,
-			  highlight: true,
-			  minLength: 1
-			},
-			{
-			  name: 'result',
-			  source: result
-			});
+		$('#topicNames').typeahead({
+			hint : true,
+			highlight : true,
+			minLength : 1
+		}, {
+			name : 'result',
+			source : result
+		});
+
+		$('#topicNames').bind('typeahead:select', function(ev, suggestion) {
+			$scope.topicName = suggestion;
+		});
 	})
-	
+
 	$scope.trace = function trace(topicName, refKey, msgDate) {
 		if (msgDate.getTime() > new Date()) {
 			$scope.$broadcast('alert-error', 'alert', '无效的时间！');

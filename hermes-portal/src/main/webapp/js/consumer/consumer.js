@@ -31,7 +31,7 @@ consumer_module.run(function(editableOptions) {
 		},
 		'reset_offset_by_shift' : {
 			method : 'POST',
-			url : '/api/consumers/:topic/:consumer/resetOffset/relative',
+			url : '/api/consumers/:topic/:consumer/resetOffset/shift',
 			params : {
 				topic : '@topic',
 				consumer : '@consumer',
