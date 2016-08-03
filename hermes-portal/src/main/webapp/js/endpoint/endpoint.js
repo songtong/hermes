@@ -129,6 +129,9 @@ angular.module('hermes-endpoint', [ 'ngResource', 'smart-table', 'xeditable' ]).
 					scope.get_broker_groups();
 				}, function(error_result) {
 					show_op_info.show("更新失败: " + error_result.data, false);
+					endpoint_resource.get_endpoints().$promise.then(function(query_result) {
+						reload_table(scope, query_result);
+					});
 				});
 			}
 		});
