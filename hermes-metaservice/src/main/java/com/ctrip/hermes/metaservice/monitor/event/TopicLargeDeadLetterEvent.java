@@ -1,14 +1,11 @@
 package com.ctrip.hermes.metaservice.monitor.event;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.ctrip.hermes.metaservice.model.MonitorEvent;
 import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
 
 public class TopicLargeDeadLetterEvent extends BaseMonitorEvent {
-
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
 	private String m_topic;
 
@@ -45,7 +42,7 @@ public class TopicLargeDeadLetterEvent extends BaseMonitorEvent {
 		e.setKey3(String.valueOf(m_startDate.getTime()));
 		e.setKey4(String.valueOf(m_endDate.getTime()));
 		e.setMessage(String.format("Too much dead-letter, topic:%s, count:%s, [%s to %s].", //
-		      m_topic, m_deadCount, DATE_FORMAT.format(m_startDate), DATE_FORMAT.format(m_endDate)));
+		      m_topic, m_deadCount, DATE_FORMATTER.format(m_startDate), DATE_FORMATTER.format(m_endDate)));
 	}
 
 	public String getTopic() {

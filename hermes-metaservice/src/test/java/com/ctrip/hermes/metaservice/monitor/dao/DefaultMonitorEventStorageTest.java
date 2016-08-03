@@ -18,6 +18,7 @@ public class DefaultMonitorEventStorageTest extends ComponentTestCase {
 	public void testAddMonitorEvent() {
 		BrokerErrorEvent e = new BrokerErrorEvent();
 		try {
+			e.setShouldNotify(true);
 			m_storage.addMonitorEvent(e);
 		} catch (Exception e1) {
 			e1.printStackTrace();

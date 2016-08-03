@@ -19,6 +19,7 @@ import com.ctrip.hermes.metaservice.model.MonitorEventDao;
 import com.ctrip.hermes.metaservice.monitor.event.CheckerExceptionEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
+import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.job.partition.PartitionManagementJob.PartitionCheckerResult;
 
 @Component
@@ -29,8 +30,11 @@ public class PartitionManagementScheduler {
 	@Qualifier(value = PartitionManagementJob.ID)
 	PartitionManagementJob m_job;
 
+	@Autowired
+	private MonitorConfig m_config;
+
 	private MonitorEventDao m_monitorEventDao = PlexusComponentLocator.lookup(MonitorEventDao.class);
-	
+
 	@Scheduled(initialDelay = 0L, fixedDelay = 900000L)
 	public void execute() {
 		printStartInfo();
@@ -68,6 +72,7 @@ public class PartitionManagementScheduler {
 			if (result.isRunSuccess()) {
 				if (!result.getMonitorEvents().isEmpty()) {
 					for (MonitorEvent event : result.getMonitorEvents()) {
+						event.setShouldNotify(m_config.isMonitorCheckerNotifyEnable());
 						try {
 							m_monitorEventDao.insert(event.toDBEntity());
 						} catch (DalException e) {
