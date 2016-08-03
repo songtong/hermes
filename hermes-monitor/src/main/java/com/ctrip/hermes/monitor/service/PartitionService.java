@@ -138,15 +138,20 @@ public class PartitionService {
 	}
 
 	public boolean executeSQL(Datasource ds, String sql) throws Exception {
-		Statement stat = null;
-		Connection conn = null;
-		try {
-			conn = getConnection(ds, false);
-			stat = conn.createStatement();
-			return stat.execute(sql);
-		} finally {
-			closeStatement(sql, stat);
-			closeConnection(conn);
+		if (m_config.isPartitionServiceEnable()) {
+			Statement stat = null;
+			Connection conn = null;
+			try {
+				conn = getConnection(ds, false);
+				stat = conn.createStatement();
+				return stat.execute(sql);
+			} finally {
+				closeStatement(sql, stat);
+				closeConnection(conn);
+			}
+		} else {
+			log.info("Partition service is disabled, no sql will be executed.");
+			return true;
 		}
 	}
 
