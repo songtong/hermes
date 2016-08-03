@@ -26,7 +26,7 @@
          <page name="resender" title="Resender" path="resender" template="default">
             <description>Resender</description>
          </page>
-         <page name="home" title="Home" path="home" default="true" template="default">
+         <page name="home" title="Home" default="true" path="home" template="default">
             <description>Home</description>
          </page>
          <page name="application" title="Application" path="application" template="default">
@@ -34,6 +34,9 @@
          </page>
          <page name="meta" title="Meta" path="meta" template="default">
             <description>Meta</description>
+         </page>
+         <page name="idc" title="Idc" path="idc" template="default">
+            <description>Idc</description>
          </page>
       </module>
    </webapp>
