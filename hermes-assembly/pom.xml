@@ -74,6 +74,7 @@
 							<descriptors>
 								<descriptor>assembly/metaserver-assembly.xml</descriptor>
 							</descriptors>
+							<outputDirectory>${project.basedir}/../hermes-metaserver/target</outputDirectory>
 						</configuration>
 					</execution>
 					<execution>
@@ -88,6 +89,7 @@
 							<descriptors>
 								<descriptor>assembly/broker-assembly.xml</descriptor>
 							</descriptors>
+							<outputDirectory>${project.basedir}/../hermes-broker/target</outputDirectory>
 						</configuration>
 					</execution>
 					<execution>
@@ -130,6 +132,36 @@
 							<descriptors>
 								<descriptor>assembly/monitor-assembly.xml</descriptor>
 							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>clean-war</id>
+						<phase>package</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+						<configuration>
+							<excludeDefaultDirectories>true</excludeDefaultDirectories>
+							<filesets>
+								<fileset>
+									<directory>${project.basedir}/../hermes-broker/target</directory>
+									<includes>
+										<include>*.war</include>
+									</includes>
+								</fileset>
+								<fileset>
+									<directory>${project.basedir}/../hermes-metaserver/target</directory>
+									<includes>
+										<include>*.war</include>
+									</includes>
+								</fileset>
+							</filesets>
 						</configuration>
 					</execution>
 				</executions>

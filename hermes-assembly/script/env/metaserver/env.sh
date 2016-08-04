@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_PATH=/opt/logs/hermes-metaserver/
+LOG_PATH=/opt/logs/100003805/
 JMX_PORT=8304
 STOP_PORT=9304
 
