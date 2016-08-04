@@ -74,6 +74,8 @@ public class TopicsResource {
 
 	public static final String PROPERTIES = "X-Hermes-Message-Property";
 
+	public static final String TRANSFORM = "X-Hermes-Message-Transform";
+
 	private ProducerSendService producerService = PlexusComponentLocator.lookup(ProducerSendService.class);
 
 	private ClientEnvironment env = PlexusComponentLocator.lookup(ClientEnvironment.class);
@@ -100,6 +102,9 @@ public class TopicsResource {
 		}
 		if (requestHeaders.containsKey(PROPERTIES)) {
 			params.put("properties", requestHeaders.getFirst(PROPERTIES));
+		}
+		if (requestHeaders.containsKey(TRANSFORM)) {
+			params.put("transform", requestHeaders.getFirst(TRANSFORM));
 		}
 		return params;
 	}

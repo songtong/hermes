@@ -33,6 +33,11 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>com.ctrip.fx.ubt.schema</groupId>
+			<artifactId>ubt-avro-servercustom</artifactId>
+			<version>1</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka_2.11</artifactId>
 			<scope>test</scope>
