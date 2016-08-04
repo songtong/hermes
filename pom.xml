@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ctrip.hermes</groupId>
 	<artifactId>hermes</artifactId>
-	<version>0.7.3</version>
+	<version>0.7.3.1</version>
 	<name>Hermes</name>
 	<packaging>pom</packaging>
 
@@ -85,7 +85,7 @@
 			<dependency>
 				<groupId>com.ctrip.framework</groupId>
 				<artifactId>vi</artifactId>
-				<version>0.7.2</version>
+				<version>0.7.3</version>
 			</dependency>
 			<!--javax -->
 			<dependency>
