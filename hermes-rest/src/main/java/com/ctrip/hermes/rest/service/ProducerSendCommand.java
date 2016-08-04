@@ -6,10 +6,11 @@ import java.util.concurrent.Future;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.ParserConfig;
-import com.ctrip.hermes.core.message.payload.AvroPayloadCodec;
+import com.ctrip.hermes.core.message.payload.PayloadCodec;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 import com.ctrip.hermes.rest.service.json.CharSequenceDeserializer;
@@ -54,7 +55,7 @@ public class ProducerSendCommand extends HystrixCommand<Future<SendResult>> {
 		String transform = params.get("transform");
 		if ("true".equalsIgnoreCase(transform)) {
 			if ("ubt.servercustom.created".equals(topic)) {
-				payload = PlexusComponentLocator.lookup(AvroPayloadCodec.class).encode(
+				payload = PlexusComponentLocator.lookup(PayloadCodec.class, Codec.AVRO).encode(
 				      topic,
 				      JSON.parseObject(new String(payload, Charsets.UTF_8), ServerCustomEvent.class, parserConfig,
 				            JSON.DEFAULT_PARSER_FEATURE));
