@@ -1,11 +1,16 @@
 package com.ctrip.hermes.rest.service;
 
+import hermes.ubt.custom.ServerCustomEvent;
+
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.message.payload.AvroPayloadCodec;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 import com.google.common.io.ByteStreams;
@@ -37,6 +42,17 @@ public class ProducerSendCommand extends HystrixCommand<Future<SendResult>> {
 	@Override
 	protected Future<SendResult> run() throws Exception {
 		byte[] payload = ByteStreams.toByteArray(is);
+
+		String transform = params.get("transform");
+		if ("true".equalsIgnoreCase(transform)) {
+			if ("ubt.servercustom.created".equals(topic)) {
+				payload = PlexusComponentLocator.lookup(AvroPayloadCodec.class).encode(topic,
+				      JSON.parseObject(payload, ServerCustomEvent.class));
+			} else {
+				throw new IllegalArgumentException(String.format("Message transform not support for topic %s", topic));
+			}
+		}
+
 		RawMessage rawMsg = new RawMessage(payload);
 
 		String partitionKey = null;
@@ -68,5 +84,4 @@ public class ProducerSendCommand extends HystrixCommand<Future<SendResult>> {
 		Future<SendResult> sendResult = messageHolder.send();
 		return sendResult;
 	}
-
 }
