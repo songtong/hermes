@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_PATH=/opt/logs/hermes-monitor/
+LOG_PATH=/opt/logs/100003808/
 JMX_PORT=8307
 STOP_PORT=9307
 HTTP_PORT=8090

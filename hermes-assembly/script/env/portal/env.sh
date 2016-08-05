@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_PATH=/opt/logs/hermes-portal/
+LOG_PATH=/opt/logs/100003806/
 JMX_PORT=8305
 STOP_PORT=9305
 APP_ID=100003806
