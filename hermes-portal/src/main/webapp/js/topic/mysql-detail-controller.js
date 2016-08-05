@@ -65,8 +65,8 @@ topic_module.run(function(editableOptions) {
 					});
 				} else {
 					scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {
-						decodeCodec(scope.topic);
 						scope.topic = result;
+						decodeCodec(scope.topic);
 					});
 				}
 			}

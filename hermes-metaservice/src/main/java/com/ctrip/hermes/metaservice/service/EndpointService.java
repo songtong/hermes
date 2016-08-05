@@ -12,6 +12,7 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
@@ -40,9 +41,10 @@ public class EndpointService {
 		Endpoint e = findEndpoint(endpointId);
 		if (isUnique(e)) {
 			if (hasTopicOnGroup(e.getGroup())) {
-				throw new IllegalStateException(String.format(
-				      "Topic exits on group '%s'! Please migrate topic(s) or add one another endpoint to this group first!",
-				      e.getGroup()));
+				throw new IllegalStateException(
+				      String.format(
+				            "Topic exits on group '%s'! Please migrate topic(s) or add one another endpoint to this group first!",
+				            e.getGroup()));
 			}
 		}
 		com.ctrip.hermes.metaservice.model.Endpoint proto = new com.ctrip.hermes.metaservice.model.Endpoint();
@@ -62,7 +64,9 @@ public class EndpointService {
 
 	private boolean isUnique(Endpoint e) throws DalException {
 		for (Endpoint endpoint : findEndpoints(false)) {
-			if (endpoint.getGroup() == e.getGroup() && endpoint.getType() == e.getType() && endpoint.getId() != e.getId()) {
+			if (StringUtils.equals(endpoint.getGroup(), e.getGroup())
+			      && StringUtils.equals(endpoint.getType(), e.getType())
+			      && !StringUtils.equals(endpoint.getId(), e.getId())) {
 				return false;
 			}
 		}
