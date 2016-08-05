@@ -30,7 +30,10 @@ if [[ ! -e $CONFIG_DIR/hermes-config ]]; then
 	su - deploy -c "cd ${CONFIG_DIR} && git clone http://git.dev.sh.ctripcorp.com/hermes/hermes-config.git ${CONFIG_DIR}/hermes-config"
 fi
 
-cd ${CONFIG_DIR}/hermes-config && git pull
+# Fix legacy bug.
+chown -R deploy:deploy ${CONFIG_DIR}/hermes-config
+
+su - deploy -c "cd ${CONFIG_DIR}/hermes-config && git pull"
 
 # Get env param required for config distribution.
 ENV=$(cat $SERVER_SETTINGS | grep env | cut -d'=' -f2 | tr '[:upper:]' '[:lower:]')

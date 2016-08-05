@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Configuration>
 	<Properties>
-		<Property name="baseDir">/opt/logs/hermes-metaserver</Property>
+		<Property name="baseDir">/opt/logs/100003805</Property>
 	</Properties>
 	<Appenders>
 		<Async name="ASYNC">

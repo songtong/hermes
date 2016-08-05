@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Configuration>
 	<Properties>
-		<Property name="baseDir">/opt/logs/hermes-broker</Property>
+		<Property name="baseDir">/opt/logs/100003804</Property>
 	</Properties>
 	<Appenders>
 		<Async name="ASYNC">
