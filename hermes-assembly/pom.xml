@@ -104,7 +104,6 @@
 							<descriptors>
 								<descriptor>assembly/portal-assembly.xml</descriptor>
 							</descriptors>
-							<outputDirectory>${project.basedir}/../hermes-portal/target</outputDirectory>
 						</configuration>
 					</execution>
 					<execution>
@@ -119,7 +118,6 @@
 							<descriptors>
 								<descriptor>assembly/rest-assembly.xml</descriptor>
 							</descriptors>
-							<outputDirectory>${project.basedir}/../hermes-rest/target</outputDirectory>
 						</configuration>
 					</execution>
 					<execution>
@@ -134,7 +132,6 @@
 							<descriptors>
 								<descriptor>assembly/monitor-assembly.xml</descriptor>
 							</descriptors>
-							<outputDirectory>${project.basedir}/../hermes-monitor/target</outputDirectory>
 						</configuration>
 					</execution>
 				</executions>
