@@ -48,4 +48,5 @@ if [ ! -f $SCRIPT_DIR/../context/WEB-INF/web.xml ];then
 fi
 
 cp $SOURCE_DIR/$ENV/hermes.properties $SCRIPT_DIR/../context/WEB-INF/classes/
+cp $SOURCE_DIR/$ENV/env.sh $SCRIPT_DIR/
 
