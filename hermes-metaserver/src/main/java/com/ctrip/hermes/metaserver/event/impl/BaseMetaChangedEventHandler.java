@@ -3,6 +3,8 @@ package com.ctrip.hermes.metaserver.event.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -24,6 +26,8 @@ import com.ctrip.hermes.metaservice.service.MetaService;
  */
 @Named(type = EventHandler.class, value = "BaseMetaChangedEventHandler")
 public class BaseMetaChangedEventHandler extends BaseEventHandler {
+	private static final Logger log = LoggerFactory.getLogger(BaseMetaChangedEventHandler.class);
+
 	@Inject
 	private MetaService m_metaService;
 
@@ -47,6 +51,7 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 	@Override
 	protected void processEvent(Event event) throws Exception {
 		Meta baseMeta = m_metaService.refreshMeta();
+		log.info("BaseMeta refreshed(id:{}, version:{}).", baseMeta.getId(), baseMeta.getVersion());
 
 		ArrayList<Topic> topics = new ArrayList<Topic>(baseMeta.getTopics().values());
 		List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>() : new ArrayList<>(
