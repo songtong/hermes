@@ -163,7 +163,7 @@ wait_or_kill() {
 }
 
 kill_all(){
-	ps ax | grep java | awk -v tomcat=com.ctrip.hermes.tomcat.HermesTomcat '$(NF-2)==tomcat{print $1}' | xargs $sudo kill -9
+	ps ax | grep java | grep tomcat | grep $APP_ID | awk '{print $1}' | xargs $sudo kill -9
 }
 
 
@@ -178,7 +178,7 @@ ensure_not_started() {
 }
 
 find_pid() {
-	echo $(ps ax | grep java | awk -v tomcat=com.ctrip.hermes.tomcat.HermesTomcat '$(NF-2)==tomcat{print $1}' | head -n1)
+	echo $(ps ax | grep java | grep tomcat | grep $APP_ID | awk '{print $1}' | head -n1)
 }
 
 

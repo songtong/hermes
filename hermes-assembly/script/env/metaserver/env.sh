@@ -3,7 +3,7 @@
 LOG_PATH=/opt/logs/100003805/
 JMX_PORT=8304
 STOP_PORT=9304
-
+APP_ID=100003805
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \

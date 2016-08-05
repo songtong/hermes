@@ -3,7 +3,7 @@
 LOG_PATH=/opt/logs/hermes-portal/
 JMX_PORT=8305
 STOP_PORT=9305
-
+APP_ID=100003806
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \

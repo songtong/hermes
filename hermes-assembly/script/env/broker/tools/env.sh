@@ -4,6 +4,7 @@ LOG_PATH=/opt/logs/hermes-broker/
 JMX_PORT=8301
 STOP_PORT=9301
 STOP_TIMEOUT=30
+APP_ID=100003804
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
