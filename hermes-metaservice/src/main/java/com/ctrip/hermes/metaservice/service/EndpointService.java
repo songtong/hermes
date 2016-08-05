@@ -90,11 +90,13 @@ public class EndpointService {
 
 	public void updateEndpoint(Endpoint endpoint) throws IllegalStateException, Exception {
 		Endpoint e = findEndpoint(endpoint.getId());
-		if (isUnique(e)) {
-			if (hasTopicOnGroup(e.getGroup())) {
-				throw new IllegalStateException(String.format(
-				      "Topic exits on group %s! Please migrate topic(s) or add one another endpoint to this group first!",
-				      e.getGroup()));
+		if (!StringUtils.equals(endpoint.getGroup(), e.getGroup())) {
+			if (isUnique(e)) {
+				if (hasTopicOnGroup(e.getGroup())) {
+					throw new IllegalStateException(String.format(
+							"Topic exits on group %s! Please migrate topic(s) or add one another endpoint to this group first!",
+							e.getGroup()));
+				}
 			}
 		}
 		com.ctrip.hermes.metaservice.model.Endpoint proto = EntityToModelConverter.convert(endpoint);
