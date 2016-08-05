@@ -4,7 +4,7 @@ LOG_PATH=/opt/logs/hermes-monitor/
 JMX_PORT=8307
 STOP_PORT=9307
 HTTP_PORT=8090
-
+APP_ID=100003808
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
