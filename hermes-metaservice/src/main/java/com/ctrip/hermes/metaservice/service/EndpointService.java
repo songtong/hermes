@@ -63,7 +63,7 @@ public class EndpointService {
 	}
 
 	private boolean isUnique(Endpoint e) throws DalException {
-		for (Endpoint endpoint : findEndpoints(false)) {
+		for (Endpoint endpoint : findEndpoints(true)) {
 			if (StringUtils.equals(endpoint.getGroup(), e.getGroup())
 			      && StringUtils.equals(endpoint.getType(), e.getType())
 			      && !StringUtils.equals(endpoint.getId(), e.getId())) {
