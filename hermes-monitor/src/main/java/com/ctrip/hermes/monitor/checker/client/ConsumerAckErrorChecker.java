@@ -47,15 +47,17 @@ public class ConsumerAckErrorChecker extends CatBasedChecker implements Initiali
 		System.out.println(catNameRanges);
 		for (Entry<String, Map<Integer, CatRangeEntity>> entry : catNameRanges.entrySet()) {
 			String[] parts = entry.getKey().split(":");
-			String topic = parts[0];
-			String consumer = parts[1];
+			if (parts.length >= 2) {
+				String topic = parts[0];
+				String consumer = parts[1];
 
-			if (isIncludeConsumer(consumer)) {
-				Pair<Integer, Integer> pair = sumRanges(timespan, entry.getValue());
-				int total = pair.getKey();
-				int fails = pair.getValue();
-				if (fails / (float) total > m_config.getConsumeAckCmdFailRatioLimit()) {
-					result.addMonitorEvent(new ConsumerAckErrorEvent(topic, consumer, total, fails));
+				if (isIncludeConsumer(consumer)) {
+					Pair<Integer, Integer> pair = sumRanges(timespan, entry.getValue());
+					int total = pair.getKey();
+					int fails = pair.getValue();
+					if (fails / (float) total > m_config.getConsumeAckCmdFailRatioLimit()) {
+						result.addMonitorEvent(new ConsumerAckErrorEvent(topic, consumer, total, fails));
+					}
 				}
 			}
 		}
