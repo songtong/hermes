@@ -1,9 +1,7 @@
 package com.ctrip.hermes.metaserver.meta;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -17,17 +15,13 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializeConfig;
-import com.alibaba.fastjson.serializer.ValueFilter;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Server;
-import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.metaserver.commons.MetaUtils;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
+import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
@@ -41,6 +35,8 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 public class MetaHolder implements Initializable {
 
 	private static final Logger log = LoggerFactory.getLogger(MetaHolder.class);
+
+	private static final Logger traceLog = LoggerFactory.getLogger(LoggerConstants.TRACE);
 
 	@Inject
 	private MetaServerConfig m_config;
@@ -123,6 +119,11 @@ public class MetaHolder implements Initializable {
 					m_mergedCache.set(newMeta);
 					m_mergedCacheJson.set(MetaUtils.filterSensitiveField(newMeta));
 					m_mergedCacheJsonComplete.set(JSON.toJSONString(newMeta));
+
+					traceLog.info("Upgrade dynamic meta(id={}, version={}, meta={}).", newMeta.getId(),
+					      newMeta.getVersion(), m_mergedCacheJsonComplete.get());
+					log.info("Upgrade dynamic meta(id={}, version={}).", newMeta.getId(), newMeta.getVersion());
+
 				} catch (Exception e) {
 					log.error("Exception occurred while updating meta.", e);
 				}
@@ -152,9 +153,6 @@ public class MetaHolder implements Initializable {
 		metaInfo.setPort(m_config.getMetaServerPort());
 
 		m_zkService.persist(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
-
-		log.info("Upgrade dynamic meta(id={}, version={}, meta={}).", meta.getId(), metaInfo.getTimestamp(),
-		      JSON.toJSONString(meta));
 	}
 
 }

@@ -50,7 +50,7 @@ public abstract class BaseEventBasedZkWatcher implements Watcher {
 					try {
 						doProcess(event);
 					} finally {
-						log.info("Handle zk event (type:{}, path={}, duration={}).", event.getType(), event.getPath(),
+						log.info("Handle zk event (type={}, path={}, duration={}).", event.getType(), event.getPath(),
 						      (System.currentTimeMillis() - start));
 					}
 				}

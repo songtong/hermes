@@ -291,7 +291,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 							m_eventBus.pubEvent(new Event(EventType.BROKER_LIST_CHANGED, m_version, m_clusterStateHolder,
 							      brokerList));
 						} finally {
-							log.info("Broker list changed.(duration:{})", (System.currentTimeMillis() - start));
+							log.info("Broker list changed.(duration={})", (System.currentTimeMillis() - start));
 						}
 					}
 				});
