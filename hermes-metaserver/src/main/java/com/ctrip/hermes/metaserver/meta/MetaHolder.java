@@ -1,7 +1,9 @@
 package com.ctrip.hermes.metaserver.meta;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,10 +17,16 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.alibaba.fastjson.serializer.ValueFilter;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Server;
+import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hermes.metaserver.commons.MetaUtils;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
@@ -45,6 +53,10 @@ public class MetaHolder implements Initializable {
 
 	private AtomicReference<Meta> m_mergedCache = new AtomicReference<>();
 
+	private AtomicReference<String> m_mergedCacheJson = new AtomicReference<String>();
+
+	private AtomicReference<String> m_mergedCacheJsonComplete = new AtomicReference<String>();
+
 	private AtomicReference<Meta> m_baseCache = new AtomicReference<>();
 
 	private AtomicReference<List<Server>> m_metaServerListCache = new AtomicReference<>();
@@ -58,6 +70,10 @@ public class MetaHolder implements Initializable {
 
 	public Meta getMeta() {
 		return m_mergedCache.get();
+	}
+
+	public String getMetaJson(boolean needComplete) {
+		return needComplete ? m_mergedCacheJsonComplete.get() : m_mergedCacheJson.get();
 	}
 
 	@Override
@@ -105,6 +121,8 @@ public class MetaHolder implements Initializable {
 					Meta newMeta = m_metaMerger.merge(m_baseCache.get(), m_metaServerListCache.get(), m_endpointCache.get());
 					upgradeMetaVersion(newMeta);
 					m_mergedCache.set(newMeta);
+					m_mergedCacheJson.set(MetaUtils.filterSensitiveField(newMeta));
+					m_mergedCacheJsonComplete.set(JSON.toJSONString(newMeta));
 				} catch (Exception e) {
 					log.error("Exception occurred while updating meta.", e);
 				}
