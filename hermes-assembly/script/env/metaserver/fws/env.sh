@@ -7,7 +7,8 @@ APP_ID=100003805
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
-            -DmaxThreads=1500 \
+            -DmaxThreads=200 \
+            -DmaxQueueSize=200 \
             -Xms4g \
             -Xmx4g \
             -XX:PermSize=256m \

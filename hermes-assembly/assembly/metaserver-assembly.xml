@@ -18,7 +18,7 @@
 			<fileMode>0755</fileMode>
 		</fileSet>
 		<fileSet>
-			<directory>${project.basedir}/script/env/metaserver</directory>
+			<directory>${project.basedir}/script/env/metaserver/${package.environment}</directory>
 			<outputDirectory>/scripts</outputDirectory>
 			<includes>
 				<include>env.sh</include>
