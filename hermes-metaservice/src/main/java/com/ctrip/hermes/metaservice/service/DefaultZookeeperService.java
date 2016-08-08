@@ -1,8 +1,12 @@
 package com.ctrip.hermes.metaservice.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.transaction.CuratorTransaction;
 import org.apache.curator.framework.api.transaction.CuratorTransactionBridge;
 import org.apache.curator.utils.EnsurePath;
 import org.apache.curator.utils.PathUtils;
@@ -33,6 +37,8 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 	@Inject
 	private SystemClockService m_systemClockService;
+
+	private ConcurrentMap<String, EnsurePath> m_ensurePathCache = new ConcurrentHashMap<>();
 
 	public void setZkClient(ZKClient zkClient) {
 		m_zkClient = zkClient;
@@ -177,10 +183,10 @@ public class DefaultZookeeperService implements ZookeeperService {
 			CuratorTransactionBridge curatorTransactionBridge = m_zkClient.get().inTransaction().setData()
 			      .forPath(path, data);
 
-			long now = m_systemClockService.now();
+			byte[] now = ZKSerializeUtils.serialize(m_systemClockService.now());
 			if (touchPaths != null && touchPaths.length > 0) {
 				for (String touchPath : touchPaths) {
-					curatorTransactionBridge.and().setData().forPath(touchPath, ZKSerializeUtils.serialize(now));
+					curatorTransactionBridge.and().setData().forPath(touchPath, now);
 				}
 			}
 
@@ -192,9 +198,59 @@ public class DefaultZookeeperService implements ZookeeperService {
 		}
 	}
 
+	@Override
+	public void persistBulk(Map<String, byte[]> pathAndDatas, String... touchPaths) throws Exception {
+		if (pathAndDatas != null && !pathAndDatas.isEmpty()) {
+			try {
+				CuratorTransaction transaction = m_zkClient.get().inTransaction();
+
+				CuratorTransactionBridge bridge = null;
+
+				for (Map.Entry<String, byte[]> pathAndData : pathAndDatas.entrySet()) {
+
+					String path = pathAndData.getKey();
+					byte[] data = pathAndData.getValue();
+
+					ensurePath(path);
+
+					if (bridge == null) {
+						bridge = transaction.setData().forPath(path, data);
+					} else {
+						bridge.and().setData().forPath(path, data);
+					}
+
+				}
+
+				if (touchPaths != null && touchPaths.length > 0) {
+					byte[] now = ZKSerializeUtils.serialize(m_systemClockService.now());
+					for (String touchPath : touchPaths) {
+
+						ensurePath(touchPath);
+
+						if (bridge == null) {
+							bridge = transaction.setData().forPath(touchPath, now);
+						} else {
+							bridge.and().setData().forPath(touchPath, now);
+						}
+					}
+				}
+
+				if (bridge != null) {
+					bridge.and().commit();
+				}
+
+			} catch (Exception e) {
+				log.error("Exception occurred in persist", e);
+				throw e;
+			}
+		}
+	}
+
 	public void ensurePath(String path) throws Exception {
-		EnsurePath ensurePath = m_zkClient.get().newNamespaceAwareEnsurePath(path);
-		ensurePath.ensure(m_zkClient.get().getZookeeperClient());
+		if (!m_ensurePathCache.containsKey(path)) {
+			m_ensurePathCache.putIfAbsent(path, m_zkClient.get().newNamespaceAwareEnsurePath(path));
+		}
+		m_ensurePathCache.get(path).ensure(m_zkClient.get().getZookeeperClient());
 	}
 
 	@Override
