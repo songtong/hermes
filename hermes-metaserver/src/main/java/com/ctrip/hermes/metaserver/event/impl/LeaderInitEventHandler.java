@@ -226,7 +226,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		protected void doProcess(WatchedEvent event) {
 			try {
 				Long baseMetaVersion = loadAndAddBaseMetaWatcher(this);
-
+				log.info("BaseMeta changed(version:{}).", baseMetaVersion);
 				m_eventBus.pubEvent(new com.ctrip.hermes.metaserver.event.Event(EventType.BASE_META_CHANGED, m_version,
 				      m_clusterStateHolder, baseMetaVersion));
 			} catch (Exception e) {

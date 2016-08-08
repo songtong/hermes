@@ -135,7 +135,8 @@ public class MetaHolder implements Initializable {
 
 		m_zkService.persist(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
 
-		log.info("Upgrade dynamic meta(version={}, meta={}).", metaInfo.getTimestamp(), JSON.toJSONString(meta));
+		log.info("Upgrade dynamic meta(id={}, version={}, meta={}).", meta.getId(), metaInfo.getTimestamp(),
+		      JSON.toJSONString(meta));
 	}
 
 }
