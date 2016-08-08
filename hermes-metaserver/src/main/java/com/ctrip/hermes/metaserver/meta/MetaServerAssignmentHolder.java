@@ -90,7 +90,7 @@ public class MetaServerAssignmentHolder {
 		setAssignments(newAssignments);
 
 		if (traceLog.isInfoEnabled()) {
-			traceLog.debug("Meta server assignment changed.(new assignment={})", newAssignments.toString());
+			traceLog.info("Meta server assignment changed.(new assignment={})", newAssignments.toString());
 		}
 	}
 
