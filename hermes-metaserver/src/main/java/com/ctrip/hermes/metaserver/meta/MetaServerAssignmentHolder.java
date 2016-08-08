@@ -16,6 +16,7 @@ import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
+import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
@@ -29,6 +30,8 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 public class MetaServerAssignmentHolder {
 
 	private static final Logger log = LoggerFactory.getLogger(MetaServerAssignmentHolder.class);
+
+	private static final Logger traceLog = LoggerFactory.getLogger(LoggerConstants.TRACE);
 
 	@Inject
 	private ZookeeperService m_zkService;
@@ -86,8 +89,8 @@ public class MetaServerAssignmentHolder {
 		      m_topicsCache.get(), getAssignments());
 		setAssignments(newAssignments);
 
-		if (log.isDebugEnabled()) {
-			log.debug("Meta server assignment changed.(new assignment={})", newAssignments.toString());
+		if (traceLog.isInfoEnabled()) {
+			traceLog.debug("Meta server assignment changed.(new assignment={})", newAssignments.toString());
 		}
 	}
 
