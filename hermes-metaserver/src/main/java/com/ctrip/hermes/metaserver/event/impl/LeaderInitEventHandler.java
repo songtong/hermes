@@ -285,9 +285,14 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 					@Override
 					public void run() {
-						Map<String, ClientContext> brokerList = loadAndAddBrokerListWatcher(null);
-						m_eventBus.pubEvent(new Event(EventType.BROKER_LIST_CHANGED, m_version, m_clusterStateHolder,
-						      brokerList));
+						long start = System.currentTimeMillis();
+						try {
+							Map<String, ClientContext> brokerList = loadAndAddBrokerListWatcher(null);
+							m_eventBus.pubEvent(new Event(EventType.BROKER_LIST_CHANGED, m_version, m_clusterStateHolder,
+							      brokerList));
+						} finally {
+							log.info("Broker list changed.(duration:{})", (System.currentTimeMillis() - start));
+						}
 					}
 				});
 			} else {

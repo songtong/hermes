@@ -7,6 +7,8 @@ import java.util.Set;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.Watcher.Event.EventType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaserver.event.EventBus;
@@ -17,6 +19,8 @@ import com.ctrip.hermes.metaserver.event.Guard;
  *
  */
 public abstract class BaseEventBasedZkWatcher implements Watcher {
+
+	private static final Logger log = LoggerFactory.getLogger(BaseEventBasedZkWatcher.class);
 
 	protected EventBus m_eventBus;
 
@@ -42,7 +46,13 @@ public abstract class BaseEventBasedZkWatcher implements Watcher {
 
 				@Override
 				public void run() {
-					doProcess(event);
+					long start = System.currentTimeMillis();
+					try {
+						doProcess(event);
+					} finally {
+						log.info("Handle zk event (type:{}, path={}, duration={}).", event.getType(), event.getPath(),
+						      (System.currentTimeMillis() - start));
+					}
 				}
 			});
 		}
