@@ -1,5 +1,7 @@
 package com.ctrip.hermes.metaservice.service;
 
+import java.util.Map;
+
 import com.ctrip.hermes.meta.entity.Topic;
 
 /**
@@ -26,5 +28,7 @@ public interface ZookeeperService {
 	public String queryData(String path) throws Exception;
 
 	public void updateZkBaseMetaVersion(long version) throws Exception;
+
+	void persistBulk(Map<String, byte[]> pathAndDatas, String... touchPaths) throws Exception;
 
 }
