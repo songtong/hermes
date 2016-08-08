@@ -68,18 +68,6 @@
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder" level="DEBUG" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
-		<Logger name="com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder" level="DEBUG" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
-		<Logger name="com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder" level="DEBUG" additivity="false">
-			<Appender-ref ref="ASYNC" />
-		</Logger>
-
 		<Root level="info">
 			<Appender-ref ref="ASYNC" />
 		</Root>
