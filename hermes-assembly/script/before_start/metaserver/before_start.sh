@@ -39,6 +39,7 @@ fi
 
 # Distribute list of config files.
 cp $SOURCE_DIR/$ENV/datasources.xml $CONFIG_DIR/datasources.xml
+cp $SOURCE_DIR/$ENV/env.sh $SCRIPT_DIR/
 
 WAR=$(ls $SCRIPT_DIR/../*.war)
 
