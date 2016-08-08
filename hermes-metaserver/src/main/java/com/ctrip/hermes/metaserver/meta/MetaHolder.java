@@ -78,7 +78,7 @@ public class MetaHolder implements Initializable {
 	}
 
 	public void setMeta(Meta meta) {
-		m_mergedCache.set(meta);
+		setMetaCache(meta);
 	}
 
 	public void setMetaServers(List<Server> metaServers) {
@@ -95,6 +95,12 @@ public class MetaHolder implements Initializable {
 
 	public void update(final Map<String, Map<Integer, Endpoint>> newEndpoints) {
 		update(null, null, newEndpoints);
+	}
+
+	private void setMetaCache(Meta newMeta) {
+		m_mergedCache.set(newMeta);
+		m_mergedCacheJson.set(MetaUtils.filterSensitiveField(newMeta));
+		m_mergedCacheJsonComplete.set(JSON.toJSONString(newMeta));
 	}
 
 	private void update(final Meta baseMeta, final List<Server> metaServerList,
@@ -116,9 +122,7 @@ public class MetaHolder implements Initializable {
 				try {
 					Meta newMeta = m_metaMerger.merge(m_baseCache.get(), m_metaServerListCache.get(), m_endpointCache.get());
 					upgradeMetaVersion(newMeta);
-					m_mergedCache.set(newMeta);
-					m_mergedCacheJson.set(MetaUtils.filterSensitiveField(newMeta));
-					m_mergedCacheJsonComplete.set(JSON.toJSONString(newMeta));
+					setMetaCache(newMeta);
 
 					traceLog.info("Upgrade dynamic meta(id={}, version={}, meta={}).", newMeta.getId(),
 					      newMeta.getVersion(), m_mergedCacheJsonComplete.get());
