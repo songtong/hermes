@@ -2,6 +2,9 @@ package com.ctrip.hermes.metaserver.meta;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -12,6 +15,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.commons.Assignment;
@@ -49,6 +53,9 @@ public class MetaServerAssignmentHolder {
 	private AtomicReference<List<Topic>> m_topicsCache = new AtomicReference<>();
 
 	private ReentrantReadWriteLock m_lock = new ReentrantReadWriteLock();
+
+	private ExecutorService m_zkExecutor = Executors.newFixedThreadPool(10,
+	      HermesThreadFactory.create("MetaServerAssignmentZkFlushExecutor", true));
 
 	public MetaServerAssignmentHolder() {
 		m_assignments.set(new Assignment<String>());
@@ -109,17 +116,36 @@ public class MetaServerAssignmentHolder {
 
 	private void persistToZk(Assignment<String> assignments) {
 		if (assignments != null) {
-			for (Map.Entry<String, Map<String, ClientContext>> entry : assignments.getAssignments().entrySet()) {
-				String topic = entry.getKey();
-				Map<String, ClientContext> metaServers = entry.getValue();
+			Map<String, Map<String, ClientContext>> topicAssignments = assignments.getAssignments();
 
-				String path = ZKPathUtils.getMetaServerAssignmentZkPath(topic);
-				try {
-					m_zkService.persist(path, ZKSerializeUtils.serialize(metaServers),
-					      ZKPathUtils.getMetaServerAssignmentRootZkPath());
-				} catch (Exception e) {
-					log.error("Failed to persisit meta server assignments to zk.", e);
-				}
+			final CountDownLatch latch = new CountDownLatch(topicAssignments.size());
+
+			for (Map.Entry<String, Map<String, ClientContext>> entry : topicAssignments.entrySet()) {
+				final String topic = entry.getKey();
+				final Map<String, ClientContext> metaServers = entry.getValue();
+
+				m_zkExecutor.submit(new Runnable() {
+
+					@Override
+					public void run() {
+						try {
+							String path = ZKPathUtils.getMetaServerAssignmentZkPath(topic);
+
+							m_zkService.persist(path, ZKSerializeUtils.serialize(metaServers),
+							      ZKPathUtils.getMetaServerAssignmentRootZkPath());
+						} catch (Exception e) {
+							log.error("Failed to persisit meta server assignments to zk.", e);
+						} finally {
+							latch.countDown();
+						}
+					}
+				});
+			}
+
+			try {
+				latch.await();
+			} catch (InterruptedException e) {
+				// ignore
 			}
 		}
 	}
