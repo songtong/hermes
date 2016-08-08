@@ -37,7 +37,7 @@ public class DefaultEventBus implements EventBus, Initializable {
 			return;
 		}
 
-		EventType type = event.getType();
+		final EventType type = event.getType();
 
 		List<EventHandler> handlers = m_handlerRegistry.findHandler(type);
 
@@ -51,11 +51,14 @@ public class DefaultEventBus implements EventBus, Initializable {
 
 					@Override
 					public void run() {
+						long start = System.currentTimeMillis();
 						try {
 							handler.onEvent(event);
 						} catch (Exception e) {
 							log.error("Exception occurred while processing event {} in handler {}", event.getType(),
 							      handler.getName(), e);
+						} finally {
+							log.info("Handle event.(type={}, duration={}).", type, (System.currentTimeMillis() - start));
 						}
 					}
 				});
