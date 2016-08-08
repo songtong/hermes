@@ -1,9 +1,6 @@
 package com.ctrip.hermes.metaserver.rest.resource;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 import javax.ws.rs.DefaultValue;
@@ -19,16 +16,11 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializeConfig;
-import com.alibaba.fastjson.serializer.ValueFilter;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.meta.entity.Property;
-import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaserver.commons.MetaUtils;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.rest.commons.RestException;
 
@@ -40,8 +32,6 @@ public class MetaResource {
 	private static final Logger logger = LoggerFactory.getLogger(MetaResource.class);
 
 	private MetaHolder m_metaHolder = PlexusComponentLocator.lookup(MetaHolder.class);
-
-	private static SerializeConfig jsonConfig = new SerializeConfig();
 
 	@GET
 	@Path("complete")
@@ -61,7 +51,7 @@ public class MetaResource {
 			logger.warn("get meta failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
-		return Response.status(Status.OK).entity(meta).build();
+		return Response.status(Status.OK).entity(m_metaHolder.getMetaJson(true)).build();
 	}
 
 	@GET
@@ -75,33 +65,7 @@ public class MetaResource {
 			return Response.status(Status.NOT_MODIFIED).build();
 		}
 
-		return Response.status(Status.OK).entity(processMetaSensitiveField(meta)).build();
-	}
-
-	private String processMetaSensitiveField(Meta meta) {
-		final Storage storage = meta.findStorage(Storage.MYSQL);
-
-		// pass empty jsonConfig to make JSON.toJSONString use this overloaded function
-		// to skip serializer.config(SerializerFeature.WriteDateUseDateFormat, true);
-		// to make Date field serialize to timestamp instead of date string
-		return JSON.toJSONString(meta, jsonConfig, new ValueFilter() {
-			@Override
-			@SuppressWarnings("unchecked")
-			public Object process(Object owner, String fieldName, Object fieldValue) {
-				if (storage != null && owner instanceof Datasource && fieldValue instanceof Map) {
-					for (Datasource d : storage.getDatasources()) {
-						if (d.getId().equals(((Datasource) owner).getId())) {
-							Map<String, Property> newFieldValue = new HashMap<String, Property>();
-							for (Entry<String, Property> entry : ((Map<String, Property>) fieldValue).entrySet()) {
-								newFieldValue.put(entry.getKey(), new Property(entry.getKey()).setValue("**********"));
-							}
-							return newFieldValue;
-						}
-					}
-				}
-				return fieldValue;
-			}
-		});
+		return Response.status(Status.OK).entity(m_metaHolder.getMetaJson(false)).build();
 	}
 
 	@POST
@@ -113,7 +77,7 @@ public class MetaResource {
 		}
 
 		if (topics == null || topics.isEmpty()) {
-			return Response.status(Status.OK).entity(processMetaSensitiveField(meta)).build();
+			return Response.status(Status.OK).entity(MetaUtils.filterSensitiveField(meta)).build();
 		} else {
 			Meta topicsMeta = new Meta();
 			topicsMeta.setVersion(meta.getVersion());

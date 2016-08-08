@@ -19,7 +19,9 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
+import com.ctrip.hermes.metaserver.commons.MetaUtils;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
+import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
@@ -34,6 +36,8 @@ public class MetaHolder implements Initializable {
 
 	private static final Logger log = LoggerFactory.getLogger(MetaHolder.class);
 
+	private static final Logger traceLog = LoggerFactory.getLogger(LoggerConstants.TRACE);
+
 	@Inject
 	private MetaServerConfig m_config;
 
@@ -44,6 +48,10 @@ public class MetaHolder implements Initializable {
 	private ZookeeperService m_zkService;
 
 	private AtomicReference<Meta> m_mergedCache = new AtomicReference<>();
+
+	private AtomicReference<String> m_mergedCacheJson = new AtomicReference<String>();
+
+	private AtomicReference<String> m_mergedCacheJsonComplete = new AtomicReference<String>();
 
 	private AtomicReference<Meta> m_baseCache = new AtomicReference<>();
 
@@ -58,6 +66,10 @@ public class MetaHolder implements Initializable {
 
 	public Meta getMeta() {
 		return m_mergedCache.get();
+	}
+
+	public String getMetaJson(boolean needComplete) {
+		return needComplete ? m_mergedCacheJsonComplete.get() : m_mergedCacheJson.get();
 	}
 
 	@Override
@@ -105,6 +117,13 @@ public class MetaHolder implements Initializable {
 					Meta newMeta = m_metaMerger.merge(m_baseCache.get(), m_metaServerListCache.get(), m_endpointCache.get());
 					upgradeMetaVersion(newMeta);
 					m_mergedCache.set(newMeta);
+					m_mergedCacheJson.set(MetaUtils.filterSensitiveField(newMeta));
+					m_mergedCacheJsonComplete.set(JSON.toJSONString(newMeta));
+
+					traceLog.info("Upgrade dynamic meta(id={}, version={}, meta={}).", newMeta.getId(),
+					      newMeta.getVersion(), m_mergedCacheJsonComplete.get());
+					log.info("Upgrade dynamic meta(id={}, version={}).", newMeta.getId(), newMeta.getVersion());
+
 				} catch (Exception e) {
 					log.error("Exception occurred while updating meta.", e);
 				}
@@ -134,9 +153,6 @@ public class MetaHolder implements Initializable {
 		metaInfo.setPort(m_config.getMetaServerPort());
 
 		m_zkService.persist(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
-
-		log.info("Upgrade dynamic meta(id={}, version={}, meta={}).", meta.getId(), metaInfo.getTimestamp(),
-		      JSON.toJSONString(meta));
 	}
 
 }
