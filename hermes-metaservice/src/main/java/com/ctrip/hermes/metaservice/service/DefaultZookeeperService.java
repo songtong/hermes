@@ -32,6 +32,8 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 public class DefaultZookeeperService implements ZookeeperService {
 	private static final Logger log = LoggerFactory.getLogger(DefaultZookeeperService.class);
 
+	private static final int BULK_PERSISTENCE_MAX_SIZE = 100;
+
 	@Inject
 	private ZKClient m_zkClient;
 
@@ -89,13 +91,13 @@ public class DefaultZookeeperService implements ZookeeperService {
 		List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic, topic.getPartitions(), consumerGroupName);
 		String topicParentPath = ZKPathUtils.getConsumerLeaseTopicParentZkPath(topic.getName());
 
-		long now = m_systemClockService.now();
+		byte[] now = ZKSerializeUtils.serialize(m_systemClockService.now());
 
 		for (String path : paths) {
 			try {
 				m_zkClient.get().inTransaction()//
 				      .delete().forPath(path)//
-				      .and().setData().forPath(topicParentPath, ZKSerializeUtils.serialize(now))//
+				      .and().setData().forPath(topicParentPath, now)//
 				      .and().commit();
 			} catch (Exception e) {
 				log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
@@ -202,24 +204,40 @@ public class DefaultZookeeperService implements ZookeeperService {
 	public void persistBulk(Map<String, byte[]> pathAndDatas, String... touchPaths) throws Exception {
 		if (pathAndDatas != null && !pathAndDatas.isEmpty()) {
 			try {
-				CuratorTransaction transaction = m_zkClient.get().inTransaction();
-
+				CuratorTransaction transaction = null;
 				CuratorTransactionBridge bridge = null;
 
-				for (Map.Entry<String, byte[]> pathAndData : pathAndDatas.entrySet()) {
+				int uncommittedCount = 0;
 
+				for (Map.Entry<String, byte[]> pathAndData : pathAndDatas.entrySet()) {
 					String path = pathAndData.getKey();
 					byte[] data = pathAndData.getValue();
 
 					ensurePath(path);
 
-					if (bridge == null) {
+					if (transaction == null) {
+						transaction = m_zkClient.get().inTransaction();
 						bridge = transaction.setData().forPath(path, data);
 					} else {
 						bridge.and().setData().forPath(path, data);
 					}
 
+					uncommittedCount++;
+
+					if (uncommittedCount % BULK_PERSISTENCE_MAX_SIZE == 0) {
+						bridge.and().commit();
+						transaction = null;
+						bridge = null;
+						uncommittedCount = 0;
+					}
 				}
+
+				if (uncommittedCount > 0) {
+					bridge.and().commit();
+				}
+
+				transaction = null;
+				bridge = null;
 
 				if (touchPaths != null && touchPaths.length > 0) {
 					byte[] now = ZKSerializeUtils.serialize(m_systemClockService.now());
@@ -227,7 +245,8 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 						ensurePath(touchPath);
 
-						if (bridge == null) {
+						if (transaction == null) {
+							transaction = m_zkClient.get().inTransaction();
 							bridge = transaction.setData().forPath(touchPath, now);
 						} else {
 							bridge.and().setData().forPath(touchPath, now);
@@ -235,7 +254,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 					}
 				}
 
-				if (bridge != null) {
+				if (transaction != null) {
 					bridge.and().commit();
 				}
 
@@ -255,17 +274,16 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 	@Override
 	public void deleteMetaServerAssignmentZkPath(String topicName) {
-		long now = m_systemClockService.now();
+		byte[] now = ZKSerializeUtils.serialize(m_systemClockService.now());
 
 		try {
 			ensurePath(ZKPathUtils.getMetaServerAssignmentZkPath(topicName));
 
 			m_zkClient.get().inTransaction()
-			      //
+			//
 			      .delete().forPath(ZKPathUtils.getMetaServerAssignmentZkPath(topicName))
 			      //
-			      .and().setData()
-			      .forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath(), ZKSerializeUtils.serialize(now))//
+			      .and().setData().forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath(), now)//
 			      .and().commit();
 		} catch (Exception e) {
 			log.error("Exception occurred in deleteMetaServerAssignmentZkPath", e);
