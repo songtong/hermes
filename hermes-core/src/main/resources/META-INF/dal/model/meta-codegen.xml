@@ -7,6 +7,7 @@
     <entity-ref name="codec" type="list" names="codecs" />
     <entity-ref name="endpoint" type="list" names="endpoints" />
     <entity-ref name="idc" type="list" names="idcs" />
+    <entity-ref name="server" type="list" names="servers" />
     <entity-ref name="storage" type="list" names="storages" />
   </entity>
   <entity name="topic">
@@ -71,6 +72,13 @@
     <attribute name="id" value-type="String" />
     <attribute name="primary" value-type="boolean" />
     <attribute name="enabled" value-type="boolean" />
+  </entity>
+  <entity name="server">
+    <attribute name="id" value-type="String" />
+    <attribute name="host" value-type="String" />
+    <attribute name="port" value-type="int" />
+    <attribute name="enabled" value-type="boolean" />
+    <attribute name="idc" value-type="String" />
   </entity>
   <entity name="storage">
     <attribute name="type" value-type="String" />

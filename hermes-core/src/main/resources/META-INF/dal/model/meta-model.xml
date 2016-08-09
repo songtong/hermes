@@ -7,6 +7,7 @@
 		<entity-ref name="codec" type="map" names="codecs" />
 		<entity-ref name="app" type="map" names="apps" />
 		<entity-ref name="server" type="map" names="servers" />
+		<entity-ref name="idc" type="map" names="idcs" />
 		<attribute name="version" value-type="long" />
 		<attribute name="id" value-type="long" />
 	</entity>
@@ -42,7 +43,7 @@
 
 	<entity name="idc">
 		<attribute name="id" value-type="String" key='true' />
-		<attribute name="enabled" value-type="boolean" default-value="true"/>
+		<attribute name="enabled" value-type="boolean" default-value="true" />
 	</entity>
 
 	<entity name="storage">
@@ -100,6 +101,8 @@
 		<attribute name="id" value-type="String" key="true" />
 		<attribute name="host" value-type="String" />
 		<attribute name="port" value-type="int" />
+		<attribute name="enabled" value-type="boolean" default-value="true" />
+		<attribute name="idc" value-type="String" />
 	</entity>
 </model>
 
