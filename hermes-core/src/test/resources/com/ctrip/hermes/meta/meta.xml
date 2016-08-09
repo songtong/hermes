@@ -33,10 +33,14 @@
 		<property name="k" value="v" />
 	</codec>
 
-	<endpoint id='br0' type="broker" host="1.1.1.1" port="4376" group="hotel" />
-	<endpoint id='br1' type="broker" host="1.1.1.1" port="4376" group="default" />
-	<endpoint id='local' type="local" />
-	<endpoint id='kafka-endpoint1' type="kafka" />
+	<endpoint id='br0' type="broker" host="1.1.1.1" port="4376" group="hotel" idc="JQ" enabled="true" />
+	<endpoint id='br1' type="broker" host="1.1.1.1" port="4376" group="default" idc="OY" enabled="true" />
+	<endpoint id='local' type="local" idc="JQ" enabled="true" />
+	<endpoint id='kafka-endpoint1' type="kafka" idc="JQ" enabled="true" />
+	
+	<idc id="JQ" primary="true" enabled="true" />
+	<idc id="OY" primary="false" enabled="true" />
+	
 
 
 	<storage type='memory' default='true'>
