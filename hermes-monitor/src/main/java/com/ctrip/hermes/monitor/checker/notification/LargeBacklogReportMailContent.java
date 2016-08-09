@@ -111,7 +111,7 @@ public class LargeBacklogReportMailContent extends MailNoticeContent {
 			r.setO1Email(consumer.getOwner1());
 			r.setO1Phone(consumer.getPhone1());
 			r.setO2Email(consumer.getOwner2());
-			r.setO2Phone(consumer.getOwner2());
+			r.setO2Phone(consumer.getPhone2());
 			r.getBacklogs().add(new Pair<String, Long>(DATE_FMT.format(e.getCreateTime()), e.getTotalBacklog()));
 		}
 	}
