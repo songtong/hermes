@@ -30,6 +30,7 @@
 	<entity name="endpoint">
 		<attribute name="id" key='true' />
 		<attribute name="group" value-type="String" default-value="default" />
+		<attribute name="enabled" value-type="boolean" default-value="true" />
 		<snippet lang='java'><![CDATA[
 			public final static String LOCAL = "local";
 			public final static String BROKER = "broker";
@@ -38,6 +39,12 @@
 			]]>
 		</snippet>
 	</entity>
+
+	<entity name="idc">
+		<attribute name="id" value-type="String" key='true' />
+		<attribute name="enabled" value-type="boolean" default-value="true"/>
+	</entity>
+
 	<entity name="storage">
 		<attribute name="type" key='true' />
 		<entity-ref name="partition" type="map" names="partitions" />
