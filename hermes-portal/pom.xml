@@ -137,6 +137,10 @@
 			<groupId>com.ctrip.framework</groupId>
 			<artifactId>framework-foundation</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>de.danielbechler</groupId>
+			<artifactId>java-object-diff</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
