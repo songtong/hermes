@@ -30,7 +30,7 @@ public class ConsumerApplication extends HermesApplication {
 
 	private int m_retryInterval;
 
-	private boolean m_enabled;
+	private boolean m_enabled = true;
 
 	public String getTopicName() {
 		return m_topicName;
