@@ -121,8 +121,9 @@ public class MetaHolder implements Initializable {
 			public void run() {
 				try {
 					Meta newMeta = m_metaMerger.merge(m_baseCache.get(), m_metaServerListCache.get(), m_endpointCache.get());
-					upgradeMetaVersion(newMeta);
-					setMetaCache(newMeta);
+					MetaInfo metaInfo = fetchLatestMetaInfo();
+					setMetaCache(newMeta.setVersion(metaInfo.getTimestamp()));
+					persistMetaInfo(metaInfo);
 
 					traceLog.info("Upgrade dynamic meta(id={}, version={}, meta={}).", newMeta.getId(),
 					      newMeta.getVersion(), m_mergedCacheJsonComplete.get());
@@ -136,8 +137,8 @@ public class MetaHolder implements Initializable {
 		});
 	}
 
-	private void upgradeMetaVersion(Meta meta) throws Exception {
-		MetaInfo metaInfo = ZKSerializeUtils.deserialize(
+	private MetaInfo fetchLatestMetaInfo() throws Exception {
+		MetaInfo metaInfo = ZKSerializeUtils.deserialize( //
 		      m_zkClient.get().getData().forPath(ZKPathUtils.getMetaInfoZkPath()), MetaInfo.class);
 
 		long newMetaVersion = System.currentTimeMillis() / 1000L;
@@ -146,8 +147,6 @@ public class MetaHolder implements Initializable {
 			newMetaVersion = metaInfo.getTimestamp() >= newMetaVersion ? metaInfo.getTimestamp() + 1 : newMetaVersion;
 		}
 
-		meta.setVersion(newMetaVersion);
-
 		if (metaInfo == null) {
 			metaInfo = new MetaInfo();
 		}
@@ -155,8 +154,10 @@ public class MetaHolder implements Initializable {
 		metaInfo.setTimestamp(newMetaVersion);
 		metaInfo.setHost(Networks.forIp().getLocalHostAddress());
 		metaInfo.setPort(m_config.getMetaServerPort());
-
-		m_zkService.persist(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
+		return metaInfo;
 	}
 
+	private void persistMetaInfo(MetaInfo metaInfo) throws Exception {
+		m_zkService.persist(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
+	}
 }
