@@ -47,11 +47,7 @@ public class MetaHolder implements Initializable {
 	@Inject
 	private ZookeeperService m_zkService;
 
-	private AtomicReference<Meta> m_mergedCache = new AtomicReference<>();
-
-	private AtomicReference<String> m_mergedCacheJson = new AtomicReference<String>();
-
-	private AtomicReference<String> m_mergedCacheJsonComplete = new AtomicReference<String>();
+	private AtomicReference<MetaCache> m_mergedMetaCache = new AtomicReference<>();
 
 	private AtomicReference<Meta> m_baseCache = new AtomicReference<>();
 
@@ -64,12 +60,45 @@ public class MetaHolder implements Initializable {
 
 	private MetaMerger m_metaMerger = new MetaMerger();
 
+	private static class MetaCache {
+		private Meta m_meta;
+
+		private String m_jsonString;
+
+		private String m_jsonStringComplete;
+
+		public MetaCache(Meta meta, String jsonString, String jsonStringComplete) {
+			m_meta = meta;
+			m_jsonString = jsonString;
+			m_jsonStringComplete = jsonStringComplete;
+		}
+
+		public Meta getMeta() {
+			return m_meta;
+		}
+
+		public String getJsonString() {
+			return m_jsonString;
+		}
+
+		public String getJsonStringComplete() {
+			return m_jsonStringComplete;
+		}
+
+	}
+
 	public Meta getMeta() {
-		return m_mergedCache.get();
+		MetaCache metaCache = m_mergedMetaCache.get();
+		return metaCache == null ? null : metaCache.getMeta();
 	}
 
 	public String getMetaJson(boolean needComplete) {
-		return needComplete ? m_mergedCacheJsonComplete.get() : m_mergedCacheJson.get();
+		MetaCache metaCache = m_mergedMetaCache.get();
+		if (metaCache == null) {
+			return null;
+		} else {
+			return needComplete ? metaCache.getJsonStringComplete() : metaCache.getJsonString();
+		}
 	}
 
 	@Override
@@ -98,9 +127,8 @@ public class MetaHolder implements Initializable {
 	}
 
 	private void setMetaCache(Meta newMeta) {
-		m_mergedCache.set(newMeta);
-		m_mergedCacheJson.set(MetaUtils.filterSensitiveField(newMeta));
-		m_mergedCacheJsonComplete.set(JSON.toJSONString(newMeta));
+		m_mergedMetaCache
+		      .set(new MetaCache(newMeta, MetaUtils.filterSensitiveField(newMeta), JSON.toJSONString(newMeta)));
 	}
 
 	private void update(final Meta baseMeta, final List<Server> metaServerList,
@@ -126,7 +154,7 @@ public class MetaHolder implements Initializable {
 					persistMetaInfo(metaInfo);
 
 					traceLog.info("Upgrade dynamic meta(id={}, version={}, meta={}).", newMeta.getId(),
-					      newMeta.getVersion(), m_mergedCacheJsonComplete.get());
+					      newMeta.getVersion(), m_mergedMetaCache.get().getJsonStringComplete());
 					log.info("Upgrade dynamic meta(id={}, version={}).", newMeta.getId(), newMeta.getVersion());
 
 				} catch (Exception e) {
