@@ -1,8 +1,11 @@
 package com.ctrip.hermes.core.message.codec;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.message.payload.DeflaterPayloadCodec;
 import com.ctrip.hermes.core.message.payload.GZipPayloadCodec;
@@ -23,6 +26,11 @@ public class MessageCodecUtils {
 	 * @return
 	 */
 	public static ByteBuffer getPayload(ByteBuffer consumerMsg) {
+		Pair<ByteBuffer, Date> pair = getPayloadAndBornTime(consumerMsg);
+		return pair != null ? pair.getKey() : null;
+	}
+
+	public static Pair<ByteBuffer, Date> getPayloadAndBornTime(ByteBuffer consumerMsg) {
 		Magic.readAndCheckMagic(consumerMsg);// skip magic number
 		consumerMsg.get();// skip version
 
@@ -34,6 +42,9 @@ public class MessageCodecUtils {
 
 		final int CRC_LENGTH = 8;
 		consumerMsg.limit(consumerMsg.limit() - CRC_LENGTH);
+
+		Date bornTime = getBornTime(consumerMsg);
+
 		consumerMsg.position(consumerMsg.position() + headerLen);
 
 		byte[] rawBytes = new byte[consumerMsg.remaining()];
@@ -47,7 +58,7 @@ public class MessageCodecUtils {
 			bytes = rawBytes;
 		}
 
-		return ByteBuffer.wrap(bytes);
+		return new Pair<ByteBuffer, Date>(ByteBuffer.wrap(bytes), bornTime);
 	}
 
 	private static PayloadCodec getCompressionCodec(String codecType) {
@@ -91,6 +102,21 @@ public class MessageCodecUtils {
 
 	}
 
+	private static Date getBornTime(ByteBuffer consumerMsg) {
+		consumerMsg.mark();
+		byte firstByte = consumerMsg.get();
+		if (HermesPrimitiveCodec.NULL != firstByte) {
+			consumerMsg.position(consumerMsg.position() - 1);
+			int refKeyLen = consumerMsg.getInt();
+			consumerMsg.position(consumerMsg.position() + refKeyLen);
+		}
+
+		Date bornTime = new Date(consumerMsg.getLong());
+		consumerMsg.reset();
+
+		return bornTime;
+	}
+
 	private static String getCodecType(ByteBuffer consumerMsg) {
 		consumerMsg.mark();
 		String codecType = Codec.AVRO;
@@ -126,5 +152,4 @@ public class MessageCodecUtils {
 		ByteBuffer byteBuffer = ByteBuffer.wrap(consumerMsg);
 		return getPayload(byteBuffer).array();
 	}
-
 }
