@@ -185,7 +185,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
 		      .getProperty("meta.port", "80").trim(), "metaserver/status");
 		try {
-			HttpResponse response = Request.Get(url).execute().returnResponse();
+			HttpResponse response = Request.Get(url).connectTimeout(2000).socketTimeout(5000).execute().returnResponse();
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) {
 				metaServer = EntityUtils.toString(response.getEntity());
