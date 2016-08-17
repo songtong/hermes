@@ -42,7 +42,8 @@
 	</entity>
 
 	<entity name="idc">
-		<attribute name="id" value-type="String" key='true' />
+		<attribute name="id" value-type="int" />
+		<attribute name="name" value-type="String" key="true" />
 		<attribute name="enabled" value-type="boolean" default-value="true" />
 	</entity>
 
@@ -98,7 +99,8 @@
 		<attribute name="name" key='true' />
 	</entity>
 	<entity name="server">
-		<attribute name="id" value-type="String" key="true" />
+		<attribute name="id" value-type="int" />
+		<attribute name="name" value-type="String" key="true" />
 		<attribute name="host" value-type="String" />
 		<attribute name="port" value-type="int" />
 		<attribute name="enabled" value-type="boolean" default-value="true" />

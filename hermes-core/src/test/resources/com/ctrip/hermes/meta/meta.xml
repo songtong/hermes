@@ -38,11 +38,11 @@
 	<endpoint id='local' type="local" idc="JQ" enabled="true" />
 	<endpoint id='kafka-endpoint1' type="kafka" idc="JQ" enabled="true" />
 
-	<idc id="JQ" primary="true" enabled="true" />
-	<idc id="OY" primary="false" enabled="true" />
+	<idc id="1" name="JQ" primary="true" enabled="true" />
+	<idc id="2" name="OY" primary="false" enabled="true" />
 
-	<server id="s1" host="1.1.1.1" port="8080" enabled="true" idc="JQ" />
-	<server id="s2" host="1.1.1.2" port="8080" enabled="true" idc="OY" />
+	<server id="1" name="s1" host="1.1.1.1" port="8080" enabled="true" idc="JQ" />
+	<server id="2" name="s2" host="1.1.1.2" port="8080" enabled="true" idc="OY" />
 
 
 	<storage type='memory' default='true'>
