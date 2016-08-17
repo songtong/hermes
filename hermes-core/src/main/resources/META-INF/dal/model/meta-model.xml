@@ -42,8 +42,7 @@
 	</entity>
 
 	<entity name="idc">
-		<attribute name="id" value-type="int" />
-		<attribute name="name" value-type="String" key="true" />
+		<attribute name="id" value-type="String" key="true" />
 		<attribute name="enabled" value-type="boolean" default-value="true" />
 	</entity>
 
