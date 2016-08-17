@@ -75,8 +75,7 @@
     <attribute name="enabled" value-type="boolean" />
   </entity>
   <entity name="server">
-    <attribute name="id" value-type="int" />
-    <attribute name="name" value-type="String" />
+    <attribute name="id" value-type="String" />
     <attribute name="host" value-type="String" />
     <attribute name="port" value-type="int" />
     <attribute name="enabled" value-type="boolean" />
