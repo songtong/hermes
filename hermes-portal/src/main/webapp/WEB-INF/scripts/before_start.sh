@@ -7,16 +7,13 @@ SCRIPT_PATH=$(readlink -f $0)
 SCRIPT_DIR=$(dirname $SCRIPT_PATH)
 
 # Define app id.
-APP_ID=100003808
-
-# Define app name.
-APP_NAME=portal
+APP_ID=100003806
 
 # Define hermes dir.
 CONFIG_DIR=/opt/data/hermes
 
 # Define source dir.
-SOURCE_DIR=$CONFIG_DIR/hermes-config/${APP_NAME}
+SOURCE_DIR=$CONFIG_DIR/hermes-config/${APP_ID}
 
 # Solid server settings position.
 SERVER_SETTINGS=/opt/settings/server.properties
@@ -48,6 +45,9 @@ fi
 
 # Replace web.xml
 cp $SOURCE_DIR/$ENV/web.xml $SCRIPT_DIR/../web.xml
+
+# Add extraenv.sh
+cp $SOURCE_DIR/env.sh $SCRIPT_DIR/extraenv.sh
 
 # Replace hermes.properties file.
 cp $SOURCE_DIR/$ENV/hermes.properties $SCRIPT_DIR/../classes/

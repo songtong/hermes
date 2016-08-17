@@ -7,7 +7,7 @@ SCRIPT_PATH=$(readlink -f $0)
 SCRIPT_DIR=$(dirname $SCRIPT_PATH)
 
 # Define app id.
-APP_ID=100003808
+APP_ID=100003807
 
 # Define hermes dir.
 CONFIG_DIR=/opt/data/hermes
@@ -17,6 +17,9 @@ SOURCE_DIR=$CONFIG_DIR/hermes-config/${APP_ID}
 
 # Solid server settings position.
 SERVER_SETTINGS=/opt/settings/server.properties
+
+# Get ip address of current machine.
+IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 
 # Clone or pull git config project.
 if [[ ! -e $CONFIG_DIR ]]; then
@@ -37,11 +40,17 @@ if [[ $ENV = 'pro' ]]; then
 	ENV='prod'
 fi
 
+if [[ $ENV = 'prod' && -n `grep $IP $SOURCE_DIR/tools/servers` ]]; then
+	ENV='tools'
+fi
+
 # Replace hermes.properties file.
 cp $SOURCE_DIR/$ENV/hermes.properties $SCRIPT_DIR/../classes/
 
+# Add extraenv.sh
+cp $SOURCE_DIR/env.sh $SCRIPT_DIR/extraenv.sh
+
 # Distribute list of config files.
 cp $SOURCE_DIR/$ENV/datasources.xml $CONFIG_DIR/datasources.xml
-cp $SOURCE_DIR/mail.properties $CONFIG_DIR/mail.properties
-cp $SOURCE_DIR/hermes-es.token $CONFIG_DIR/hermes-es.token
-cp $SOURCE_DIR/TTS.TOKEN $CONFIG_DIR/TTS.TOKEN
+
+

@@ -9,14 +9,11 @@ SCRIPT_DIR=$(dirname $SCRIPT_PATH)
 # Define app id.
 APP_ID=100003808
 
-# Define app name.
-APP_NAME=monitor
-
 # Define hermes dir.
 CONFIG_DIR=/opt/data/hermes
 
 # Define source dir.
-SOURCE_DIR=$CONFIG_DIR/hermes-config/${APP_NAME}
+SOURCE_DIR=$CONFIG_DIR/hermes-config/${APP_ID}
 
 # Top secret
 gpasswd -a deploy admin
