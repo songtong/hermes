@@ -11,6 +11,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.TreeCache;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
+import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -21,11 +25,9 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
-import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
-import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 
 /**
@@ -39,13 +41,10 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	private static final Logger traceLog = LoggerFactory.getLogger(LoggerConstants.TRACE);
 
 	@Inject
-	protected SystemClockService m_systemClockService;
-
-	@Inject
 	protected ZookeeperService m_zookeeperService;
 
 	@Inject
-	protected ZKClient m_zkClient;
+	private LeaseHolderZkClient m_zkClient;
 
 	private AtomicLong m_leaseIdGenerator = new AtomicLong(System.nanoTime());
 
@@ -54,6 +53,8 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	private ReentrantReadWriteLock m_LeaseContextsLock = new ReentrantReadWriteLock();
 
 	protected AtomicBoolean m_inited = new AtomicBoolean(false);
+
+	protected TreeCache m_treeCache;
 
 	@Override
 	public Map<Key, Map<String, ClientLeaseInfo>> getAllValidLeases() throws Exception {
@@ -109,7 +110,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	@Override
 	public Lease newLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
 	      long leaseTimeMillis, String ip, int port) throws Exception {
-		Lease newLease = new Lease(m_leaseIdGenerator.incrementAndGet(), m_systemClockService.now() + leaseTimeMillis);
+		Lease newLease = new Lease(m_leaseIdGenerator.incrementAndGet(), System.currentTimeMillis() + leaseTimeMillis);
 		existingValidLeases.put(clientKey, new ClientLeaseInfo(newLease, ip, port));
 		persistToZK(contextKey, existingValidLeases);
 		return newLease;
@@ -120,7 +121,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	      ClientLeaseInfo existingLeaseInfo, long leaseTimeMillis, String ip, int port) throws Exception {
 		existingValidLeases.put(clientKey, existingLeaseInfo);
 		long newExpireTime = existingLeaseInfo.getLease().getExpireTime() + leaseTimeMillis;
-		long now = m_systemClockService.now();
+		long now = System.currentTimeMillis();
 		if (newExpireTime > now + 2 * leaseTimeMillis) {
 			newExpireTime = now + 2 * leaseTimeMillis;
 		}
@@ -132,9 +133,8 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 
 	protected void persistToZK(Key contextKey, Map<String, ClientLeaseInfo> existingValidLeases) throws Exception {
 		String path = convertKeyToZkPath(contextKey);
-		String[] touchPaths = getZkPersistTouchPaths(contextKey);
 
-		m_zookeeperService.persist(path, ZKSerializeUtils.serialize(existingValidLeases), touchPaths);
+		m_zookeeperService.persist(path, ZKSerializeUtils.serialize(existingValidLeases));
 	}
 
 	protected void removeExpiredLeases(Key contextKey, Map<String, ClientLeaseInfo> existingLeases) throws Exception {
@@ -196,40 +196,57 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 		try {
 			doInitialize();
 			startHouseKeeper();
-			loadAndWatchContexts();
 			m_inited.set(true);
-			log.info("{} inited", this.getClass().getSimpleName());
+			log.info("{} inited", getName());
 		} catch (Exception e) {
 			log.error("Failed to init LeaseHolder", e);
 			throw new InitializationException("Failed to init LeaseHolder", e);
 		}
 	}
 
-	protected void doInitialize() {
+	protected void doInitialize() throws Exception {
+		m_treeCache = new TreeCache(m_zkClient.get(), getBaseZkPath());
+		m_treeCache.start();
+
+		m_treeCache.getListenable().addListener(new TreeCacheListener() {
+
+			@Override
+			public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
+				try {
+					switch (event.getType()) {
+					case NODE_ADDED:
+						if (isPathMatch(event.getData().getPath())) {
+							leaseAdded(event.getData().getPath(), deserializeExistingLeases(event.getData().getData()));
+						}
+						break;
+					case NODE_REMOVED:
+						if (isPathMatch(event.getData().getPath())) {
+							leaseRemoved(event.getData().getPath(), deserializeExistingLeases(event.getData().getData()));
+						}
+						break;
+					case NODE_UPDATED:
+						if (isPathMatch(event.getData().getPath())) {
+							leaseUpdated(event.getData().getPath(), deserializeExistingLeases(event.getData().getData()));
+						}
+						break;
+					default:
+						break;
+					}
+				} catch (Exception e) {
+					log.error("[{}]Exception occurred in TreeCache's listener(type:{}, path:{})", getName(),
+					      event.getType(), event.getData() == null ? null : event.getData().getPath(), e);
+				}
+			}
+		}, Executors.newSingleThreadExecutor(HermesThreadFactory.create(getName() + "-TreeCacheThread", true)));
 
 	}
-
-	protected void loadAndWatchContexts() throws Exception {
-		Map<String, Map<String, ClientLeaseInfo>> path2ExistingLeases = loadExistingLeases();
-
-		updateContexts(path2ExistingLeases);
-	}
-
-	@Override
-	public void updateContexts(Map<String, Map<String, ClientLeaseInfo>> path2ExistingLeases) throws Exception {
-		for (Map.Entry<String, Map<String, ClientLeaseInfo>> entry : path2ExistingLeases.entrySet()) {
-			updateLeaseContext(entry.getKey(), entry.getValue());
-		}
-	}
-
-	protected abstract Map<String, Map<String, ClientLeaseInfo>> loadExistingLeases() throws Exception;
 
 	protected Map<String, ClientLeaseInfo> deserializeExistingLeases(byte[] data) {
 		return ZKSerializeUtils.deserialize(data, new TypeReference<Map<String, ClientLeaseInfo>>() {
 		}.getType());
 	}
 
-	private void updateLeaseContext(String path, Map<String, ClientLeaseInfo> existingLeases) throws Exception {
+	protected void updateLeaseContext(String path, Map<String, ClientLeaseInfo> existingLeases) throws Exception {
 		if (existingLeases == null) {
 			return;
 		}
@@ -295,16 +312,30 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 				}
 			}
 		} catch (Exception e) {
-			log.warn("Exception occurred while doing housekeeping", e);
+			log.warn("Exception occurred while clearExpiredLeases", e);
 		} finally {
 			m_LeaseContextsLock.writeLock().unlock();
 		}
 	}
 
-	protected abstract String[] getZkPersistTouchPaths(Key contextKey);
-
 	protected abstract String convertKeyToZkPath(Key contextKey);
 
 	protected abstract Key convertZkPathToKey(String path);
+
+	protected abstract String getBaseZkPath();
+
+	protected abstract boolean isPathMatch(String path);
+
+	protected void leaseAdded(String path, Map<String, ClientLeaseInfo> existingLeases) throws Exception {
+		updateLeaseContext(path, existingLeases);
+	}
+
+	protected void leaseRemoved(String path, Map<String, ClientLeaseInfo> existingLeases) throws Exception {
+
+	}
+
+	protected void leaseUpdated(String path, Map<String, ClientLeaseInfo> existingLeases) throws Exception {
+		updateLeaseContext(path, existingLeases);
+	}
 
 }
