@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -63,6 +64,11 @@ public class EndpointResource {
 		} catch (Exception e) {
 			logger.error("Parse consumer failed, content: {}", content, e);
 			throw new RestException(e, Status.BAD_REQUEST);
+		}
+
+		Pair<Boolean, String> validate = validateEndpoint(endpoint);
+		if (!validate.getKey()) {
+			throw new RestException(validate.getValue(), Status.BAD_REQUEST);
 		}
 
 		if (endpointService.getEndpoints().containsKey(endpoint.getId())) {
@@ -133,5 +139,14 @@ public class EndpointResource {
 			brokerGroups.add(endpoint.getGroup());
 		}
 		return Response.status(Status.OK).entity(brokerGroups).build();
+	}
+
+	private Pair<Boolean, String> validateEndpoint(Endpoint e) {
+		if (StringUtils.isEmpty(e.getId())) {
+			return new Pair<Boolean, String>(false, "Endpoint id can not be null!");
+		}
+
+		return new Pair<Boolean, String>(true, null);
+
 	}
 }
