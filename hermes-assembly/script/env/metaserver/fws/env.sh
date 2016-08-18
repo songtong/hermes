@@ -9,6 +9,7 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
             -DmaxThreads=200 \
             -DmaxQueueSize=200 \
+            -Dtomcat.log=$LOG_PATH/tomcat \
             -Xms4g \
             -Xmx4g \
             -XX:PermSize=256m \

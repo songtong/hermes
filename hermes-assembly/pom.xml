@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
 		<artifactId>hermes</artifactId>
 		<groupId>com.ctrip.hermes</groupId>
@@ -16,18 +15,16 @@
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-dbcp</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.tomcat</groupId>
+					<artifactId>tomcat-juli</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
 			<artifactId>tomcat-embed-jasper</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat.embed</groupId>
-			<artifactId>tomcat-embed-logging-log4j</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat.embed</groupId>
-			<artifactId>tomcat-embed-logging-juli</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
@@ -36,6 +33,15 @@
 		<dependency>
 			<groupId>org.eclipse.jdt.core.compiler</groupId>
 			<artifactId>ecj</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.17</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-logging-log4j</artifactId>
 		</dependency>
 	</dependencies>
 
@@ -54,7 +60,7 @@
 						</goals>
 						<configuration>
 							<outputDirectory>${project.basedir}/target/tomcat</outputDirectory>
-							<includeArtifactIds>tomcat-dbcp,tomcat-embed-core,tomcat-embed-el,tomcat-embed-jasper,tomcat-embed-logging-log4j,tomcat-embed-websocket,tomcat-embed-logging-juli,ecj</includeArtifactIds>
+							<includeArtifactIds>tomcat-dbcp,tomcat-embed-core,tomcat-embed-el,tomcat-embed-jasper,tomcat-embed-websocket,tomcat-embed-logging-log4j,ecj,log4j</includeArtifactIds>
 						</configuration>
 					</execution>
 				</executions>
