@@ -24,6 +24,7 @@ import com.ctrip.hermes.metaserver.TestHelper;
 import com.ctrip.hermes.metaserver.ZKSuppportTestCase;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.LeaderMetaFetcher;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
@@ -166,7 +167,7 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 
 	private ClusterStateHolder createClusterStateHolder() {
 		ClusterStateHolder holder = new ClusterStateHolder();
-		holder.setHasLeadership(false);
+		holder.setRole(Role.FOLLOWER);
 		return holder;
 	}
 }

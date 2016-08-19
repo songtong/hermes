@@ -1,5 +1,7 @@
 package com.ctrip.hermes.metaserver.meta;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -13,10 +15,12 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.metaserver.commons.MetaUtils;
@@ -52,6 +56,10 @@ public class MetaHolder implements Initializable {
 	private AtomicReference<Meta> m_baseCache = new AtomicReference<>();
 
 	private AtomicReference<List<Server>> m_metaServerListCache = new AtomicReference<>();
+
+	private AtomicReference<List<Idc>> m_idcs;
+
+	private AtomicReference<Map<Pair<String, Integer>, Server>> m_configedMetaServers;
 
 	// topic -> partition -> endpoint
 	private AtomicReference<Map<String, Map<Integer, Endpoint>>> m_endpointCache = new AtomicReference<>();
@@ -104,6 +112,12 @@ public class MetaHolder implements Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		m_updateTaskExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("MetaUpdater", true));
+
+		m_configedMetaServers = new AtomicReference<>();
+		m_configedMetaServers.set(new HashMap<Pair<String, Integer>, Server>());
+
+		m_idcs = new AtomicReference<>();
+		m_idcs.set(new ArrayList<Idc>());
 	}
 
 	public void setMeta(Meta meta) {
@@ -111,7 +125,27 @@ public class MetaHolder implements Initializable {
 	}
 
 	public void setMetaServers(List<Server> metaServers) {
-		m_metaServerListCache.set(metaServers);
+		List<Server> servers = new ArrayList<>();
+		if (metaServers != null) {
+			Map<Pair<String, Integer>, Server> configedServers = m_configedMetaServers.get();
+			for (Server server : metaServers) {
+				Server configedServer = configedServers.get(new Pair<String, Integer>(server.getHost(), server.getPort()));
+				if (configedServer != null) {
+					server.setIdc(configedServer.getIdc());
+					server.setEnabled(configedServer.getEnabled());
+					servers.add(server);
+				}
+			}
+		}
+		m_metaServerListCache.set(servers);
+	}
+
+	public void setIdcs(List<Idc> idcs) {
+		m_idcs.set(idcs == null ? new ArrayList<Idc>() : idcs);
+	}
+
+	public List<Idc> getIdcs() {
+		return m_idcs.get();
 	}
 
 	public void setBaseMeta(Meta baseMeta) {
@@ -137,7 +171,7 @@ public class MetaHolder implements Initializable {
 			m_baseCache.set(baseMeta);
 		}
 		if (metaServerList != null) {
-			m_metaServerListCache.set(metaServerList);
+			setMetaServers(metaServerList);
 		}
 		if (newEndpoints != null) {
 			m_endpointCache.set(newEndpoints);
@@ -187,5 +221,22 @@ public class MetaHolder implements Initializable {
 
 	private void persistMetaInfo(MetaInfo metaInfo) throws Exception {
 		m_zkService.persist(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
+	}
+
+	public List<Server> getConfigedMetaServers() {
+		Map<Pair<String, Integer>, Server> servers = m_configedMetaServers.get();
+		return servers == null ? null : new ArrayList<>(servers.values());
+	}
+
+	public void setConfigedMetaServers(List<Server> configedMetaServers) {
+		if (configedMetaServers != null) {
+			Map<Pair<String, Integer>, Server> configedServers = new HashMap<Pair<String, Integer>, Server>(
+			      configedMetaServers.size());
+			for (Server server : configedMetaServers) {
+				configedServers.put(new Pair<String, Integer>(server.getHost(), server.getPort()), server);
+			}
+
+			m_configedMetaServers.set(configedServers);
+		}
 	}
 }

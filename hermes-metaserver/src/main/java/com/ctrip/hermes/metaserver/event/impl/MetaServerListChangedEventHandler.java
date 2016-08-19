@@ -6,6 +6,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Server;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;

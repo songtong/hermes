@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaserver.commons;
 
+import java.util.List;
 import java.util.Map;
 
 import org.unidal.tuple.Pair;
@@ -7,12 +8,15 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Idc;
+import com.ctrip.hermes.meta.entity.Server;
+import com.ctrip.hermes.metaserver.cluster.Role;
 
 public class MetaStatusStatusResponse {
 
 	private String currentHost;
 
-	private Boolean leader;
+	private Role role;
 
 	private HostPort leaderInfo;
 
@@ -32,6 +36,10 @@ public class MetaStatusStatusResponse {
 
 	private Map<String, ClientContext> m_runningBrokers;
 
+	private List<Server> m_configedMetaServers;
+
+	private List<Idc> m_idcs;
+
 	public String getCurrentHost() {
 		return currentHost;
 	}
@@ -40,12 +48,12 @@ public class MetaStatusStatusResponse {
 		this.currentHost = currentHost;
 	}
 
-	public Boolean isLeader() {
-		return leader;
+	public Role getRole() {
+		return role;
 	}
 
-	public void setLeader(Boolean leader) {
-		this.leader = leader;
+	public void setRole(Role role) {
+		this.role = role;
 	}
 
 	public Map<String, Assignment<Integer>> getBrokerAssignments() {
@@ -118,6 +126,22 @@ public class MetaStatusStatusResponse {
 
 	public Map<String, ClientContext> getRunningBrokers() {
 		return m_runningBrokers;
+	}
+
+	public void setConfigedMetaServers(List<Server> configedMetaServers) {
+		m_configedMetaServers = configedMetaServers;
+	}
+
+	public List<Server> getConfigedMetaServers() {
+		return m_configedMetaServers;
+	}
+
+	public void setIdcs(List<Idc> idcs) {
+		m_idcs = idcs;
+	}
+
+	public List<Idc> getIdcs() {
+		return m_idcs;
 	}
 
 }

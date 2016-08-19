@@ -6,6 +6,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.event.Event;
