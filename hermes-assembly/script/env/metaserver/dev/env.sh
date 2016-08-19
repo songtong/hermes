@@ -1,20 +1,19 @@
 #!/bin/bash
 
-LOG_PATH=/opt/logs/100003804/
-JMX_PORT=8301
-STOP_PORT=9301
-STOP_TIMEOUT=30
-APP_ID=100003804
+LOG_PATH=/opt/logs/100003805/
+JMX_PORT=8304
+STOP_PORT=9304
+APP_ID=100003805
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
-            -Xms12g \
-            -Xmx12g \
-            -Xmn4g \
+            -DmaxThreads=200 \
+            -DmaxQueueSize=200 \
             -Dtomcat.log=$LOG_PATH/tomcat \
+            -Xms4g \
+            -Xmx4g \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
-            -XX:MaxDirectMemorySize=4g \
             -XX:+PrintGC \
             -XX:+PrintGCDetails \
             -XX:+PrintGCDateStamps \
