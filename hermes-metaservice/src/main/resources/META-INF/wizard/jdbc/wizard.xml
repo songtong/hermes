@@ -27,6 +27,7 @@
          <table name="notification"/>
          <table name="consumer_monitor_config"/>
          <table name="producer_monitor_config"/>
+         <table name="idc"/>
       </group>
    </jdbc>
 </wizard>

@@ -39,6 +39,9 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	private EndpointService m_endpointService;
 
 	@Inject
+	private IdcService m_idcService;
+
+	@Inject
 	private PartitionService m_partitionService;
 
 	@Inject
@@ -80,7 +83,13 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		for (com.ctrip.hermes.meta.entity.Endpoint entity : endpoints) {
 			metaEntity.addEndpoint(entity);
 		}
-		List<com.ctrip.hermes.meta.entity.Server> servers = m_serverService.findServers(true);
+
+		List<com.ctrip.hermes.meta.entity.Idc> idcs = m_idcService.listIdcEntities();
+		for (com.ctrip.hermes.meta.entity.Idc entity : idcs) {
+			metaEntity.addIdc(entity);
+		}
+
+		List<com.ctrip.hermes.meta.entity.Server> servers = m_serverService.listServerEntities();
 		for (com.ctrip.hermes.meta.entity.Server entity : servers) {
 			metaEntity.addServer(entity);
 		}

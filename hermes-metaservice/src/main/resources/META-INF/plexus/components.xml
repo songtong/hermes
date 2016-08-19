@@ -321,6 +321,15 @@
 			</configuration>
 		</component>
 		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>idc</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>idc</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaservice.model.AppDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.AppDao</implementation>
 			<requirements>
@@ -483,6 +492,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.metaservice.model.IdcDao</role>
+			<implementation>com.ctrip.hermes.metaservice.model.IdcDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaservice.queue.DeadLetterDao</role>
 			<implementation>com.ctrip.hermes.metaservice.queue.DeadLetterDao</implementation>
 			<requirements>
@@ -563,9 +581,6 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedSchemaDao</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedServerDao</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.dal.CachedStorageDao</role>
@@ -673,6 +688,9 @@
 					<role>com.ctrip.hermes.metaservice.service.EndpointService</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.IdcService</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.PartitionService</role>
 				</requirement>
 				<requirement>
@@ -727,7 +745,7 @@
 			<implementation>com.ctrip.hermes.metaservice.service.ServerService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedServerDao</role>
+					<role>com.ctrip.hermes.metaservice.model.ServerDao</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -833,6 +851,18 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.KvDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.service.IdcService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.IdcService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.IdcDao</role>
+				</requirement>
+				<requirement>
+					<role>org.unidal.dal.jdbc.transaction.TransactionManager</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -964,10 +994,6 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.dal.CachedEndpointDao</role>
 			<implementation>com.ctrip.hermes.metaservice.dal.CachedEndpointDao</implementation>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaservice.dal.CachedServerDao</role>
-			<implementation>com.ctrip.hermes.metaservice.dal.CachedServerDao</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaservice.dal.CachedStorageDao</role>
