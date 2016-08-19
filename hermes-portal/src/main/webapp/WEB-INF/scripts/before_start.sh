@@ -7,19 +7,18 @@ SCRIPT_PATH=$(readlink -f $0)
 SCRIPT_DIR=$(dirname $SCRIPT_PATH)
 
 # Define app id.
-APP_ID=100003808
-
-# Define app name.
-APP_NAME=portal
+APP_ID=100003806
 
 # Define hermes dir.
 CONFIG_DIR=/opt/data/hermes
 
 # Define source dir.
-SOURCE_DIR=$CONFIG_DIR/hermes-config/${APP_NAME}
+SOURCE_DIR=$CONFIG_DIR/hermes-config/${APP_ID}
 
 # Solid server settings position.
 SERVER_SETTINGS=/opt/settings/server.properties
+
+IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 
 # Clone or pull git config project.
 if [[ ! -e $CONFIG_DIR ]]; then
@@ -40,8 +39,15 @@ if [[ $ENV = 'pro' ]]; then
 	ENV='prod'
 fi
 
+if [[ $ENV = 'prod' && -n `grep $IP $SOURCE_DIR/tools/servers` ]]; then
+	ENV='tools'
+fi
+
 # Replace web.xml
 cp $SOURCE_DIR/$ENV/web.xml $SCRIPT_DIR/../web.xml
+
+# Add extraenv.sh
+cp $SOURCE_DIR/env.sh $SCRIPT_DIR/extraenv.sh
 
 # Replace hermes.properties file.
 cp $SOURCE_DIR/$ENV/hermes.properties $SCRIPT_DIR/../classes/
