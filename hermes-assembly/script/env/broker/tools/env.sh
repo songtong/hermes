@@ -11,6 +11,7 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Xms12g \
             -Xmx12g \
             -Xmn4g \
+            -Dtomcat.log=$LOG_PATH/tomcat \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
             -XX:MaxDirectMemorySize=4g \

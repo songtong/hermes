@@ -10,6 +10,7 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
             -Xms2g \
             -Xmx2g \
+            -Dtomcat.log=$LOG_PATH/tomcat \
             -XX:PermSize=128m \
             -XX:MaxPermSize=128m \
             -XX:+PrintGC \

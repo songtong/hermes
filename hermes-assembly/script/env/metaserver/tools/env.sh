@@ -7,6 +7,7 @@ APP_ID=100003805
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
+            -Dtomcat.log=$LOG_PATH/tomcat \
             -DmaxThreads=1500 \
             -Xms6g \
             -Xmx6g \
