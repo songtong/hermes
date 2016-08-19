@@ -7,7 +7,7 @@ SCRIPT_PATH=$(readlink -f $0)
 SCRIPT_DIR=$(dirname $SCRIPT_PATH)
 
 # Define app dir.
-APP_DIR=$(realpath $SCRIPT_DIR/../../..)
+APP_DIR=$(realpath $SCRIPT_DIR/../../../..)
 
 # Define app id.
 APP_ID=$(echo $APP_DIR | rev | cut -d '/' -f 1 | rev)
