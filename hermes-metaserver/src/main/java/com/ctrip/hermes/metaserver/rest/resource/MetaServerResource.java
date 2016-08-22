@@ -3,6 +3,7 @@ package com.ctrip.hermes.metaserver.rest.resource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
@@ -14,6 +15,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
+
+import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -76,7 +79,10 @@ public class MetaServerResource {
 		response.setRole(m_clusterStatusHolder.getRole());
 		response.setLeaderInfo(m_clusterStatusHolder.getLeader());
 		response.setIdcs(PlexusComponentLocator.lookup(MetaHolder.class).getIdcs());
-		response.setConfigedMetaServers(PlexusComponentLocator.lookup(MetaHolder.class).getConfigedMetaServers());
+		Map<Pair<String, Integer>, Server> configedMetaServers = PlexusComponentLocator.lookup(MetaHolder.class)
+		      .getConfigedMetaServers();
+		response.setConfigedMetaServers(configedMetaServers == null ? new ArrayList<Server>() : new ArrayList<Server>(
+		      configedMetaServers.values()));
 		response.setBrokerAssignments(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getAssignments());
 		response.setConfigedBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getConfigedBrokers()
 		      .get());

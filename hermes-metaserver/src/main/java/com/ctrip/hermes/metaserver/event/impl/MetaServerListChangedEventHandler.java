@@ -38,7 +38,7 @@ public class MetaServerListChangedEventHandler extends BaseEventHandler {
 		if (data != null) {
 			List<Server> metaServers = (List<Server>) data;
 			m_metaHolder.update(metaServers);
-			m_metaServerAssignmentHolder.reassign(metaServers, null);
+			m_metaServerAssignmentHolder.reassign(metaServers, m_metaHolder.getConfigedMetaServers(), null);
 		}
 	}
 

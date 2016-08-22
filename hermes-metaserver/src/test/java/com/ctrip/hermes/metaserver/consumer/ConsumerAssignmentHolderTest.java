@@ -68,38 +68,38 @@ public class ConsumerAssignmentHolderTest {
 		Map<Pair<String, String>, Map<String, ClientContext>> changes1 = new HashMap<>();
 		Pair<String, String> t1g1 = new Pair<String, String>("t1", "g1");
 		Map<String, ClientContext> t1g1Consumers = new LinkedHashMap<>();
-		t1g1Consumers.put("c1", new ClientContext("c1", "1.1.1.1", 1111, null, -1L));
-		t1g1Consumers.put("c2", new ClientContext("c2", "2.2.2.2", 2222, null, -2L));
+		t1g1Consumers.put("c1", new ClientContext("c1", "1.1.1.1", 1111, null, null, -1L));
+		t1g1Consumers.put("c2", new ClientContext("c2", "2.2.2.2", 2222, null, null, -2L));
 		changes1.put(t1g1, t1g1Consumers);
 
 		// consuemr group not exist
 		Pair<String, String> t1g4 = new Pair<String, String>("t1", "g4");
 		Map<String, ClientContext> t1g4Consumers = new LinkedHashMap<>();
-		t1g4Consumers.put("c1", new ClientContext("c1", "1.1.1.1", 1111, null, -1L));
+		t1g4Consumers.put("c1", new ClientContext("c1", "1.1.1.1", 1111, null, null, -1L));
 		changes1.put(t1g4, t1g4Consumers);
 
 		Pair<String, String> t1g2 = new Pair<String, String>("t1", "g2");
 		Map<String, ClientContext> t1g2Consumers = new LinkedHashMap<>();
-		t1g2Consumers.put("c3", new ClientContext("c3", "3.3.3.3", 3333, null, -3L));
-		t1g2Consumers.put("c4", new ClientContext("c4", "4.4.4.4", 4444, null, -4L));
+		t1g2Consumers.put("c3", new ClientContext("c3", "3.3.3.3", 3333, null, null, -3L));
+		t1g2Consumers.put("c4", new ClientContext("c4", "4.4.4.4", 4444, null, null, -4L));
 		changes1.put(t1g2, t1g2Consumers);
 
 		Pair<String, String> t2g1 = new Pair<String, String>("t2", "g1");
 		Map<String, ClientContext> t2g1Consumers = new LinkedHashMap<>();
-		t2g1Consumers.put("c1", new ClientContext("c1", "1.1.1.1", 1111, null, -1L));
-		t2g1Consumers.put("c4", new ClientContext("c4", "4.4.4.4", 4444, null, -4L));
+		t2g1Consumers.put("c1", new ClientContext("c1", "1.1.1.1", 1111, null, null, -1L));
+		t2g1Consumers.put("c4", new ClientContext("c4", "4.4.4.4", 4444, null, null, -4L));
 		changes1.put(t2g1, t2g1Consumers);
 
 		Pair<String, String> t2g2 = new Pair<String, String>("t2", "g2");
 		Map<String, ClientContext> t2g2Consumers = new LinkedHashMap<>();
-		t2g2Consumers.put("c2", new ClientContext("c2", "2.2.2.2", 2222, null, -2L));
-		t2g2Consumers.put("c3", new ClientContext("c3", "3.3.3.3", 3333, null, -3L));
+		t2g2Consumers.put("c2", new ClientContext("c2", "2.2.2.2", 2222, null, null, -2L));
+		t2g2Consumers.put("c3", new ClientContext("c3", "3.3.3.3", 3333, null, null, -3L));
 		changes1.put(t2g2, t2g2Consumers);
 
 		// topic not exist
 		Pair<String, String> t3g1 = new Pair<String, String>("t3", "g1");
 		Map<String, ClientContext> t3g1Consumers = new LinkedHashMap<>();
-		t3g1Consumers.put("c2", new ClientContext("c2", "2.2.2.2", 2222, null, -2L));
+		t3g1Consumers.put("c2", new ClientContext("c2", "2.2.2.2", 2222, null, null, -2L));
 		changes1.put(t3g1, t3g1Consumers);
 
 		when(m_activeConsumerListHolder.scanChanges(anyLong(), any(TimeUnit.class))).thenReturn(changes1);
@@ -109,41 +109,37 @@ public class ConsumerAssignmentHolderTest {
 		// t1g1
 		assertAssignment(t1g1, Arrays.asList(
 		      //
-		      new Pair<Integer, List<ClientContext>>(0, Arrays
-		            .asList(new ClientContext("c1", "1.1.1.1", 1111, null, -1L))),//
-		      new Pair<Integer, List<ClientContext>>(1, Arrays
-		            .asList(new ClientContext("c2", "2.2.2.2", 2222, null, -2L)))//
+		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(new ClientContext("c1", "1.1.1.1", 1111, null,
+		            null, -1L))),//
+		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(new ClientContext("c2", "2.2.2.2", 2222, null,
+		            null, -2L)))//
 		      )//
 		);
 		// t1g2
 		assertAssignment(t1g2, Arrays.asList(
 		      //
-		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(
-		            new ClientContext("c3", "3.3.3.3", 3333, null, -3L), new ClientContext("c4", "4.4.4.4", 4444, null,
-		                  -4L))),//
-		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(
-		            new ClientContext("c3", "3.3.3.3", 3333, null, -3L), new ClientContext("c4", "4.4.4.4", 4444, null,
-		                  -4L)))//
+		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(new ClientContext("c3", "3.3.3.3", 3333, null,
+		            null, -3L), new ClientContext("c4", "4.4.4.4", 4444, null, null, -4L))),//
+		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(new ClientContext("c3", "3.3.3.3", 3333, null,
+		            null, -3L), new ClientContext("c4", "4.4.4.4", 4444, null, null, -4L)))//
 		      )//
 		);
 		// t2g1
 		assertAssignment(t2g1, Arrays.asList(
 		      //
-		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(
-		            new ClientContext("c1", "1.1.1.1", 1111, null, -1L), new ClientContext("c4", "4.4.4.4", 4444, null,
-		                  -4L))),//
-		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(
-		            new ClientContext("c1", "1.1.1.1", 1111, null, -1L), new ClientContext("c4", "4.4.4.4", 4444, null,
-		                  -4L)))//
+		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(new ClientContext("c1", "1.1.1.1", 1111, null,
+		            null, -1L), new ClientContext("c4", "4.4.4.4", 4444, null, null, -4L))),//
+		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(new ClientContext("c1", "1.1.1.1", 1111, null,
+		            null, -1L), new ClientContext("c4", "4.4.4.4", 4444, null, null, -4L)))//
 		      )//
 		);
 		// t2g2
 		assertAssignment(t2g2, Arrays.asList(
 		      //
-		      new Pair<Integer, List<ClientContext>>(0, Arrays
-		            .asList(new ClientContext("c2", "2.2.2.2", 2222, null, -2L))),//
-		      new Pair<Integer, List<ClientContext>>(1, Arrays
-		            .asList(new ClientContext("c3", "3.3.3.3", 3333, null, -3L)))//
+		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(new ClientContext("c2", "2.2.2.2", 2222, null,
+		            null, -2L))),//
+		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(new ClientContext("c3", "3.3.3.3", 3333, null,
+		            null, -3L)))//
 		      )//
 		);
 
@@ -151,7 +147,7 @@ public class ConsumerAssignmentHolderTest {
 		changes2.get(t1g1).remove("c1");
 		changes2.get(t1g2).remove("c3");
 		changes2.get(t2g2).remove("c2");
-		changes2.get(t2g2).put("c4", new ClientContext("c4", "4.4.4.4", 4444, null, -4L));
+		changes2.get(t2g2).put("c4", new ClientContext("c4", "4.4.4.4", 4444, null, null, -4L));
 		reset(m_activeConsumerListHolder);
 		when(m_activeConsumerListHolder.scanChanges(anyLong(), any(TimeUnit.class))).thenReturn(changes2);
 		// rebanlance again
@@ -160,39 +156,37 @@ public class ConsumerAssignmentHolderTest {
 		// t1g1
 		assertAssignment(t1g1, Arrays.asList(
 		      //
-		      new Pair<Integer, List<ClientContext>>(0, Arrays
-		            .asList(new ClientContext("c2", "2.2.2.2", 2222, null, -2L))),//
-		      new Pair<Integer, List<ClientContext>>(1, Arrays
-		            .asList(new ClientContext("c2", "2.2.2.2", 2222, null, -2L)))//
+		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(new ClientContext("c2", "2.2.2.2", 2222, null,
+		            null, -2L))),//
+		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(new ClientContext("c2", "2.2.2.2", 2222, null,
+		            null, -2L)))//
 		      )//
 		);
 		// t1g2
 		assertAssignment(t1g2, Arrays.asList(
 		      //
-		      new Pair<Integer, List<ClientContext>>(0, Arrays
-		            .asList(new ClientContext("c4", "4.4.4.4", 4444, null, -4L))),//
-		      new Pair<Integer, List<ClientContext>>(1, Arrays
-		            .asList(new ClientContext("c4", "4.4.4.4", 4444, null, -4L)))//
+		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(new ClientContext("c4", "4.4.4.4", 4444, null,
+		            null, -4L))),//
+		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(new ClientContext("c4", "4.4.4.4", 4444, null,
+		            null, -4L)))//
 		      )//
 		);
 		// t2g1
 		assertAssignment(t2g1, Arrays.asList(
 		      //
-		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(
-		            new ClientContext("c1", "1.1.1.1", 1111, null, -1L), new ClientContext("c4", "4.4.4.4", 4444, null,
-		                  -4L))),//
-		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(
-		            new ClientContext("c1", "1.1.1.1", 1111, null, -1L), new ClientContext("c4", "4.4.4.4", 4444, null,
-		                  -4L)))//
+		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(new ClientContext("c1", "1.1.1.1", 1111, null,
+		            null, -1L), new ClientContext("c4", "4.4.4.4", 4444, null, null, -4L))),//
+		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(new ClientContext("c1", "1.1.1.1", 1111, null,
+		            null, -1L), new ClientContext("c4", "4.4.4.4", 4444, null, null, -4L)))//
 		      )//
 		);
 		// t2g2
 		assertAssignment(t2g2, Arrays.asList(
 		      //
-		      new Pair<Integer, List<ClientContext>>(0, Arrays
-		            .asList(new ClientContext("c3", "3.3.3.3", 3333, null, -3L))),//
-		      new Pair<Integer, List<ClientContext>>(1, Arrays
-		            .asList(new ClientContext("c4", "4.4.4.4", 4444, null, -4L)))//
+		      new Pair<Integer, List<ClientContext>>(0, Arrays.asList(new ClientContext("c3", "3.3.3.3", 3333, null,
+		            null, -3L))),//
+		      new Pair<Integer, List<ClientContext>>(1, Arrays.asList(new ClientContext("c4", "4.4.4.4", 4444, null,
+		            null, -4L)))//
 		      )//
 		);
 	}

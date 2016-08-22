@@ -39,8 +39,8 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 	public void testBrokerAdded() throws Exception {
 		long now = System.currentTimeMillis();
 		Map<String, ClientContext> brokers = createBrokers(Arrays.asList(//
-		      new ClientContext("br0", "0.0.0.0", 1234, null, now),//
-		      new ClientContext("br1", "0.0.0.1", 1234, null, now)//
+		      new ClientContext("br0", "0.0.0.0", 1234, null, null, now),//
+		      new ClientContext("br1", "0.0.0.1", 1234, null, null, now)//
 		      ));
 
 		List<Topic> topics = new ArrayList<>();
@@ -49,10 +49,10 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		topics.add(createTopic("t3", 2, Endpoint.BROKER));
 
 		Map<String, Assignment<Integer>> originAssignments = createAssignments(Arrays.asList(//
-		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br0", "0.0.0.0", 1234, null, now))//
+		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br0", "0.0.0.0", 1234, null, null, now))//
 
 		      ));
 		Map<String, Assignment<Integer>> assignments = m_strategy.assign(brokers, topics, originAssignments);
@@ -60,8 +60,8 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		assertAssignment(assignments,//
 		      topics,//
 		      Arrays.asList(//
-		            new ClientContext("br0", "0.0.0.0", 1234, null, now),//
-		            new ClientContext("br1", "0.0.0.1", 1234, null, now)//
+		            new ClientContext("br0", "0.0.0.0", 1234, null, null, now),//
+		            new ClientContext("br1", "0.0.0.1", 1234, null, null, now)//
 		      ));
 	}
 
@@ -69,7 +69,7 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 	public void testBrokerDeleted() throws Exception {
 		long now = System.currentTimeMillis();
 		Map<String, ClientContext> brokers = createBrokers(Arrays.asList(//
-		      new ClientContext("br0", "0.0.0.0", 1234, null, now)//
+		      new ClientContext("br0", "0.0.0.0", 1234, null, null, now)//
 		      ));
 
 		List<Topic> topics = new ArrayList<>();
@@ -78,10 +78,10 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		topics.add(createTopic("t3", 2, Endpoint.BROKER));
 
 		Map<String, Assignment<Integer>> originAssignments = createAssignments(Arrays.asList(//
-		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br1", "0.0.0.1", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br1", "0.0.0.1", 1234, null, now))//
+		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br1", "0.0.0.1", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br1", "0.0.0.1", 1234, null, null, now))//
 
 		      ));
 		Map<String, Assignment<Integer>> assignments = m_strategy.assign(brokers, topics, originAssignments);
@@ -89,7 +89,7 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		assertAssignment(assignments,//
 		      topics,//
 		      Arrays.asList(//
-		      new ClientContext("br0", "0.0.0.0", 1234, null, now)//
+		      new ClientContext("br0", "0.0.0.0", 1234, null, null, now)//
 		      ));
 	}
 
@@ -97,8 +97,8 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 	public void testTopicAdded() throws Exception {
 		long now = System.currentTimeMillis();
 		Map<String, ClientContext> brokers = createBrokers(Arrays.asList(//
-		      new ClientContext("br0", "0.0.0.0", 1234, null, now),//
-		      new ClientContext("br1", "0.0.0.1", 1234, null, now)//
+		      new ClientContext("br0", "0.0.0.0", 1234, null, null, now),//
+		      new ClientContext("br1", "0.0.0.1", 1234, null, null, now)//
 		      ));
 
 		List<Topic> topics = new ArrayList<>();
@@ -108,10 +108,10 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		topics.add(createTopic("t4", 2, Endpoint.BROKER));
 
 		Map<String, Assignment<Integer>> originAssignments = createAssignments(Arrays.asList(//
-		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br1", "0.0.0.1", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br1", "0.0.0.1", 1234, null, now))//
+		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br1", "0.0.0.1", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br1", "0.0.0.1", 1234, null, null, now))//
 
 		      ));
 		Map<String, Assignment<Integer>> assignments = m_strategy.assign(brokers, topics, originAssignments);
@@ -119,8 +119,8 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		assertAssignment(assignments,//
 		      topics,//
 		      Arrays.asList(//
-		            new ClientContext("br0", "0.0.0.0", 1234, null, now),//
-		            new ClientContext("br1", "0.0.0.1", 1234, null, now)//
+		            new ClientContext("br0", "0.0.0.0", 1234, null, null, now),//
+		            new ClientContext("br1", "0.0.0.1", 1234, null, null, now)//
 		      ));
 	}
 
@@ -128,8 +128,8 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 	public void testTopicDeleted() throws Exception {
 		long now = System.currentTimeMillis();
 		Map<String, ClientContext> brokers = createBrokers(Arrays.asList(//
-		      new ClientContext("br0", "0.0.0.0", 1234, null, now),//
-		      new ClientContext("br1", "0.0.0.1", 1234, null, now)//
+		      new ClientContext("br0", "0.0.0.0", 1234, null, null, now),//
+		      new ClientContext("br1", "0.0.0.1", 1234, null, null, now)//
 		      ));
 
 		List<Topic> topics = new ArrayList<>();
@@ -137,10 +137,10 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		topics.add(createTopic("t2", 2, Endpoint.KAFKA));
 
 		Map<String, Assignment<Integer>> originAssignments = createAssignments(Arrays.asList(//
-		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br1", "0.0.0.1", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br1", "0.0.0.1", 1234, null, now))//
+		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br1", "0.0.0.1", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br1", "0.0.0.1", 1234, null, null, now))//
 
 		      ));
 		Map<String, Assignment<Integer>> assignments = m_strategy.assign(brokers, topics, originAssignments);
@@ -148,8 +148,8 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		assertAssignment(assignments,//
 		      topics,//
 		      Arrays.asList(//
-		            new ClientContext("br0", "0.0.0.0", 1234, null, now),//
-		            new ClientContext("br1", "0.0.0.1", 1234, null, now)//
+		            new ClientContext("br0", "0.0.0.0", 1234, null, null, now),//
+		            new ClientContext("br1", "0.0.0.1", 1234, null, null, now)//
 		      ));
 	}
 
@@ -157,8 +157,8 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 	public void testTopicAndBrokerAllChanged() throws Exception {
 		long now = System.currentTimeMillis();
 		Map<String, ClientContext> brokers = createBrokers(Arrays.asList(//
-		      new ClientContext("br0", "0.0.0.0", 1234, null, now),//
-		      new ClientContext("br2", "0.0.0.2", 1234, null, now)//
+		      new ClientContext("br0", "0.0.0.0", 1234, null, null, now),//
+		      new ClientContext("br2", "0.0.0.2", 1234, null, null, now)//
 		      ));
 
 		List<Topic> topics = new ArrayList<>();
@@ -167,10 +167,10 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		topics.add(createTopic("t4", 2, Endpoint.BROKER));
 
 		Map<String, Assignment<Integer>> originAssignments = createAssignments(Arrays.asList(//
-		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br1", "0.0.0.1", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, now)),//
-		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br1", "0.0.0.1", 1234, null, now))//
+		      new Pair<>(new Pair<>("t1", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t1", 1), new ClientContext("br1", "0.0.0.1", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 0), new ClientContext("br0", "0.0.0.0", 1234, null, null, now)),//
+		      new Pair<>(new Pair<>("t3", 1), new ClientContext("br1", "0.0.0.1", 1234, null, null, now))//
 
 		      ));
 		Map<String, Assignment<Integer>> assignments = m_strategy.assign(brokers, topics, originAssignments);
@@ -178,8 +178,8 @@ public class DefaultBrokerPartitionAssigningStrategyTest {
 		assertAssignment(assignments,//
 		      topics,//
 		      Arrays.asList(//
-		            new ClientContext("br0", "0.0.0.0", 1234, null, now),//
-		            new ClientContext("br2", "0.0.0.2", 1234, null, now)//
+		            new ClientContext("br0", "0.0.0.0", 1234, null, null, now),//
+		            new ClientContext("br2", "0.0.0.2", 1234, null, null, now)//
 		      ));
 	}
 

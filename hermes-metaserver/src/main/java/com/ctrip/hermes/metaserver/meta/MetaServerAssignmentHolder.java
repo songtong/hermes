@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaserver.meta;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.meta.entity.Server;
@@ -73,11 +75,12 @@ public class MetaServerAssignmentHolder {
 		}
 	}
 
-	public void reassign(List<Server> metaServers, List<Topic> topics) {
+	public void reassign(List<Server> metaServers, Map<Pair<String, Integer>, Server> configedMetaServers,
+	      List<Topic> topics) {
 		m_lock.writeLock().lock();
 		try {
 			if (metaServers != null) {
-				m_metaServersCache.set(metaServers);
+				setMetaServersCache(metaServers, configedMetaServers);
 			}
 
 			if (topics != null) {
@@ -92,6 +95,27 @@ public class MetaServerAssignmentHolder {
 
 		if (traceLog.isInfoEnabled()) {
 			traceLog.info("Meta server assignment changed.(new assignment={})", newAssignments.toString());
+		}
+	}
+
+	private void setMetaServersCache(List<Server> metaServers, Map<Pair<String, Integer>, Server> configedMetaServers) {
+		if (metaServers != null && configedMetaServers != null) {
+			List<Server> mergedMetaServers = new ArrayList<>(metaServers.size());
+			for (Server metaServer : metaServers) {
+				Server configedMetaServer = configedMetaServers.get(new Pair<String, Integer>(metaServer.getHost(),
+				      metaServer.getPort()));
+				if (configedMetaServer != null) {
+					Server tmpServer = new Server();
+					tmpServer.setEnabled(configedMetaServer.getEnabled());
+					tmpServer.setHost(configedMetaServer.getHost());
+					tmpServer.setId(metaServer.getId());
+					tmpServer.setIdc(configedMetaServer.getIdc());
+					tmpServer.setPort(configedMetaServer.getPort());
+					mergedMetaServers.add(tmpServer);
+				}
+			}
+
+			m_metaServersCache.set(mergedMetaServers);
 		}
 	}
 

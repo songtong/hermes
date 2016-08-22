@@ -91,7 +91,7 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 			m_metaHolder.update(m_endpointMaker.makeEndpoints(event.getEventBus(), event.getVersion(),
 			      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), false));
 
-			m_metaServerAssignmentHolder.reassign(null, topics);
+			m_metaServerAssignmentHolder.reassign(null, null, topics);
 		} catch (Exception e) {
 			log.error("Exception occurred while processing BaseMetaChanged event, will retry.", e);
 			delayRetry(event, m_scheduledExecutor, new Task() {

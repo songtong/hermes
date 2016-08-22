@@ -15,15 +15,26 @@ public class ClientContext {
 
 	private String m_group;
 
+	private String m_idc;
+
 	public ClientContext() {
 	}
 
-	public ClientContext(String name, String ip, int port, String group, long lastHeartbeatTime) {
+	public ClientContext(String name, String ip, int port, String group, String idc, long lastHeartbeatTime) {
 		m_name = name;
 		m_ip = ip;
 		m_port = port;
 		m_group = group;
+		m_idc = idc;
 		m_lastHeartbeatTime = lastHeartbeatTime;
+	}
+
+	public String getIdc() {
+		return m_idc;
+	}
+
+	public void setIdc(String idc) {
+		m_idc = idc;
 	}
 
 	public String getName() {

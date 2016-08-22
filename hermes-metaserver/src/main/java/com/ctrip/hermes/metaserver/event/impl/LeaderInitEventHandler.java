@@ -159,7 +159,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		m_metaHolder.update(topicPartition2Endpoint);
 
 		m_metaServerAssignmentHolder.reload();
-		m_metaServerAssignmentHolder.reassign(metaServers, topics);
+		m_metaServerAssignmentHolder.reassign(metaServers, m_metaHolder.getConfigedMetaServers(), topics);
 	}
 
 	private Map<String, ClientContext> loadAndAddBrokerListWatcher(ServiceCacheListener listener) {
@@ -172,7 +172,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			String name = instance.getId();
 			String ip = instance.getAddress();
 			int port = instance.getPort();
-			brokers.put(name, new ClientContext(name, ip, port, null, m_systemClockService.now()));
+			brokers.put(name, new ClientContext(name, ip, port, null, null, m_systemClockService.now()));
 		}
 		return brokers;
 	}

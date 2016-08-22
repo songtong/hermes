@@ -223,9 +223,8 @@ public class MetaHolder implements Initializable {
 		m_zkService.persist(ZKPathUtils.getMetaInfoZkPath(), ZKSerializeUtils.serialize(metaInfo));
 	}
 
-	public List<Server> getConfigedMetaServers() {
-		Map<Pair<String, Integer>, Server> servers = m_configedMetaServers.get();
-		return servers == null ? null : new ArrayList<>(servers.values());
+	public Map<Pair<String, Integer>, Server> getConfigedMetaServers() {
+		return m_configedMetaServers.get();
 	}
 
 	public void setConfigedMetaServers(List<Server> configedMetaServers) {
