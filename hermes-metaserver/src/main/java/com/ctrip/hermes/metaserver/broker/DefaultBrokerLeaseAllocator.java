@@ -96,7 +96,8 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 		      new LeaseOperationCallback() {
 
 			      @Override
-			      public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) throws Exception {
+			      public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
+			            throws Exception {
 				      if (existingValidLeases.isEmpty()) {
 					      return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					            + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
@@ -118,19 +119,25 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 		return m_leaseHolder.executeLeaseOperation(contextKey, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) throws Exception {
+			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
+			      throws Exception {
 
 				if (existingValidLeases.isEmpty()) {
-					Lease newLease = m_leaseHolder.newLease(contextKey, brokerName, existingValidLeases,
+					Lease newLease = m_leaseHolder.newLease(contextKey, brokerName, existingValidLeases, version,
 					      m_config.getBrokerLeaseTimeMillis(), ip, port);
 
-					if (log.isDebugEnabled()) {
-						log.debug("Acquire lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).", topic,
-						      partition, brokerName, newLease.getExpireTime());
-					}
+					if (newLease != null) {
+						if (log.isDebugEnabled()) {
+							log.debug("Acquire lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).", topic,
+							      partition, brokerName, newLease.getExpireTime());
+						}
 
-					return new LeaseAcquireResponse(true, new Lease(newLease.getId(), newLease.getExpireTime()
-					      + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1);
+						return new LeaseAcquireResponse(true, new Lease(newLease.getId(), newLease.getExpireTime()
+						      + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1);
+					} else {
+						return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+						      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
+					}
 				} else {
 					ClientLeaseInfo existingClientLeaseInfo = null;
 
@@ -168,7 +175,8 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 		return m_leaseHolder.executeLeaseOperation(contextKey, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) throws Exception {
+			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
+			      throws Exception {
 				if (existingValidLeases.isEmpty()) {
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
@@ -186,15 +194,19 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 					}
 
 					if (existingClientLeaseInfo != null) {
-						m_leaseHolder.renewLease(contextKey, brokerName, existingValidLeases, existingClientLeaseInfo,
-						      m_config.getBrokerLeaseTimeMillis(), ip, port);
-						if (log.isDebugEnabled()) {
-							log.debug("Renew lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).", topic,
-							      partition, brokerName, existingClientLeaseInfo.getLease().getExpireTime());
-						}
+						if (m_leaseHolder.renewLease(contextKey, brokerName, existingValidLeases, existingClientLeaseInfo,
+						      version, m_config.getBrokerLeaseTimeMillis(), ip, port)) {
+							if (log.isDebugEnabled()) {
+								log.debug("Renew lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).",
+								      topic, partition, brokerName, existingClientLeaseInfo.getLease().getExpireTime());
+							}
 
-						return new LeaseAcquireResponse(true, new Lease(leaseId, existingClientLeaseInfo.getLease()
-						      .getExpireTime() + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1L);
+							return new LeaseAcquireResponse(true, new Lease(leaseId, existingClientLeaseInfo.getLease()
+							      .getExpireTime() + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1L);
+						} else {
+							return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+							      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
+						}
 					} else {
 						Collection<ClientLeaseInfo> leases = existingValidLeases.values();
 						// use the first lease's exp time
@@ -206,5 +218,4 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 		});
 
 	}
-
 }

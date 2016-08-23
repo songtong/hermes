@@ -76,6 +76,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.commons.LeaseHolderZkClient</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -117,6 +120,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.commons.LeaseHolderZkClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
