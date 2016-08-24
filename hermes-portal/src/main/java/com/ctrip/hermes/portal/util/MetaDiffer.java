@@ -90,30 +90,13 @@ public class MetaDiffer {
 					visit.dontGoDeeper();
 				}
 
-				if (state == State.CHANGED && !node.hasChildren()) {
+				if (state == State.CHANGED) {
 					changed.add(node);
-					if (is(node, "version", "id", "apps", "codecs", "endpoints", "storages", "servers", "idcs")) {
-						visit.dontGoDeeper();
-					}
 				}
 			}
 		};
 		root.visit(visitor);
 
-		// /**
-		// * version id
-		// *
-		// * topics apps codecs endpoints storages servers
-		// */
-		//
-		// List<DiffNode> all = new LinkedList<>();
-		// all.addAll(added);
-		// all.addAll(removed);
-		// all.addAll(changed);
-		//
-		// Set<String> nonTopicPropertiesToShow = new HashSet<>();
-		// Set<String> topicsToShow = new HashSet<>();
-		//
 		for (DiffNode node : changed) {
 			if (is(node, "topics")) {
 				metaDiff.addChangedTopic(newMeta.getTopics().get(findTopicName(node)));
@@ -125,7 +108,7 @@ public class MetaDiffer {
 		for (DiffNode node : added) {
 			if (is(node, "topics")) {
 				String topicName = findTopicName(node);
-				if (metaDiff.getChangedTopics().get(topicName) == null) {
+				if (metaDiff.getChangedTopics() == null || metaDiff.getChangedTopics().get(topicName) == null) {
 					metaDiff.addAddedTopic(newMeta.getTopics().get(findTopicName(node)));
 				}
 			} else {
@@ -135,7 +118,7 @@ public class MetaDiffer {
 		for (DiffNode node : removed) {
 			if (is(node, "topics")) {
 				String topicName = findTopicName(node);
-				if (metaDiff.getChangedTopics().get(topicName) == null) {
+				if (metaDiff.getChangedTopics() == null || metaDiff.getChangedTopics().get(topicName) == null) {
 					metaDiff.addRemovedTopic(oldMeta.getTopics().get(findTopicName(node)));
 				}
 			} else {
@@ -150,6 +133,10 @@ public class MetaDiffer {
 	private String findTopicName(DiffNode node) throws Exception {
 		while (true) {
 			// /topics{topic.name}
+			if (node.getParentNode() == null || node.getParentNode().getParentNode() == null) {
+				return null;
+			}
+
 			if (node.getParentNode().getParentNode().isRootNode()) {
 				MapEntryAccessor accessor = (MapEntryAccessor) getAccessor(node);
 				return (String) referenceKeyField.get(accessor);
@@ -249,6 +236,10 @@ public class MetaDiffer {
 		}
 
 		public void addChangedTopic(Topic topic) {
+			if (topic == null) {
+				return;
+			}
+
 			if (changedTopics == null) {
 				changedTopics = new LinkedHashMap<String, Topic>();
 			}
