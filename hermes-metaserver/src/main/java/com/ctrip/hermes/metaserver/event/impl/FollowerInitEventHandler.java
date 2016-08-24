@@ -167,7 +167,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	protected void handleBaseMetaChanged(Meta baseMeta, ClusterStateHolder clusterStateHolder) {
 		Server server = getCurServerAndFixStatusByIDC(baseMeta);
 
-		if (server != null && !server.isEnabled()) {
+		if (server == null || !server.isEnabled()) {
 			log.info("[{}]Marked down!", role());
 			clusterStateHolder.becomeObserver();
 		}

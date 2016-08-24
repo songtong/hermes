@@ -166,8 +166,11 @@ public class ClusterStateHolder implements Initializable {
 				while (!Thread.interrupted() && !m_closed.get()) {
 					m_roleLock.readLock().lock();
 					try {
-						if (m_role == Role.FOLLOWER && m_leaderLatch != null && m_consumerLeaseHolder.inited()
-						      && m_brokerLeaseHolder.inited()) {
+						if (m_role != Role.FOLLOWER || m_leaderLatch == null) {
+							break;
+						}
+
+						if (m_consumerLeaseHolder.inited() && m_brokerLeaseHolder.inited()) {
 							try {
 								m_leaderLatch.start();
 								log.info("LeaderLatch started");
@@ -175,16 +178,17 @@ public class ClusterStateHolder implements Initializable {
 							} catch (Exception e) {
 								log.error("Failed to start LeaderLatch!!", e);
 							}
-						} else {
-							try {
-								TimeUnit.SECONDS.sleep(1);
-							} catch (InterruptedException e) {
-								log.error("Failed to start LeaderLatch!!", e);
-								Thread.currentThread().interrupt();
-							}
 						}
+
 					} finally {
 						m_roleLock.readLock().unlock();
+
+						try {
+							TimeUnit.SECONDS.sleep(1);
+						} catch (InterruptedException e) {
+							log.error("Failed to start LeaderLatch!!", e);
+							Thread.currentThread().interrupt();
+						}
 					}
 				}
 			}

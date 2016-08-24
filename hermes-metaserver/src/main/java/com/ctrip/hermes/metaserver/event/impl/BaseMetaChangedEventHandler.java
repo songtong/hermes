@@ -69,7 +69,7 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 
 			Server server = getCurServerAndFixStatusByIDC(baseMeta);
 
-			if (server != null && !server.isEnabled()) {
+			if (server == null || !server.isEnabled()) {
 				log.info("Marked down!");
 				event.getStateHolder().becomeObserver();
 				return;
