@@ -15,9 +15,10 @@ import org.unidal.dal.jdbc.DalException;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.MetaRefactor;
 import com.ctrip.hermes.portal.resource.assists.RestException;
+import com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService;
+import com.ctrip.hermes.portal.util.MetaDiffer.MetaDiff;
 
 @Path("/meta/")
 @Singleton
@@ -99,4 +100,15 @@ public class PortalMetaResource {
 		return Response.status(Status.OK).build();
 	}
 
+	@GET
+	@Path("diff")
+	public Response getMetaDiff() {
+		MetaDiff metaDiff = null;
+		try {
+			metaDiff = metaService.getMetaDiff();
+		} catch (Exception e) {
+			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+		}
+		return Response.ok().entity(metaDiff).build();
+	}
 }

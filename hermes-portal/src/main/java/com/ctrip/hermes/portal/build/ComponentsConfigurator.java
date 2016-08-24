@@ -23,6 +23,7 @@ import com.ctrip.hermes.portal.service.application.MysqlPartitionStrategy;
 import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService;
 import com.ctrip.hermes.portal.service.elastic.DefaultPortalElasticClient;
 import com.ctrip.hermes.portal.service.mail.DefaultPortalMailService;
+import com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService;
 import com.ctrip.hermes.portal.service.tag.DefaultTagService;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
@@ -64,6 +65,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(MysqlPartitionStrategy.class));
 		
 		all.add(A(KafkaPartitionStrategy.class));
+		
+		all.add(A(DefaultPortalMetaService.class));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

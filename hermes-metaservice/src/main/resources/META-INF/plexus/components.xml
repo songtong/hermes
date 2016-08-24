@@ -669,45 +669,6 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.service.DefaultPortalMetaService</role>
-			<implementation>com.ctrip.hermes.metaservice.service.DefaultPortalMetaService</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.AppService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.CodecService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.StorageService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.EndpointService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.IdcService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PartitionService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ServerService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.MetaDao</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 			<implementation>com.ctrip.hermes.metaservice.service.DefaultZookeeperService</implementation>
 			<requirements>

@@ -26,7 +26,7 @@ import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTag;
 import com.ctrip.hermes.portal.dal.tag.Tag;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.tag.DefaultTagService;
-import com.ctrip.hermes.protal.util.ResponseUtils;
+import com.ctrip.hermes.portal.util.ResponseUtils;
 
 @Path("/tags")
 @Singleton

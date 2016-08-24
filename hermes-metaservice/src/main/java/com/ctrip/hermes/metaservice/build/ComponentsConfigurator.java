@@ -28,7 +28,6 @@ import com.ctrip.hermes.metaservice.service.CompileService;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.DefaultKVService;
 import com.ctrip.hermes.metaservice.service.DefaultMetaService;
-import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.DefaultZookeeperService;
 import com.ctrip.hermes.metaservice.service.EndpointService;
 import com.ctrip.hermes.metaservice.service.IdcService;
@@ -98,7 +97,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(CompileService.class));
 		all.add(A(ConsumerService.class));
 		all.add(A(StorageService.class));
-		all.add(A(DefaultPortalMetaService.class));
 		all.add(A(DefaultZookeeperService.class));
 		all.add(A(EndpointService.class));
 		all.add(A(PartitionService.class));
