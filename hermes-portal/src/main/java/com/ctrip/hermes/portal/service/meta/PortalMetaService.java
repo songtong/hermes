@@ -12,6 +12,6 @@ public interface PortalMetaService extends MetaService {
 
 	public Meta previewNewMeta() throws DalException;
 
-	public MetaDiff getMetaDiff() throws DalException, Exception;
+	public MetaDiff getMetaDiff() throws DalException;
 
 }

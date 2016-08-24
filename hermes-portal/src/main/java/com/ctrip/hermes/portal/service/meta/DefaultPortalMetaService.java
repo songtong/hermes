@@ -141,7 +141,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 	}
 
 	@Override
-	public MetaDiff getMetaDiff() throws DalException, Exception {
+	public MetaDiff getMetaDiff() throws DalException {
 		Meta newMeta = previewNewMeta();
 		Meta oldMeta = getMetaEntity();
 		if (newMeta == null || oldMeta == null) {

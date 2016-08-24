@@ -39,12 +39,16 @@ public class MetaDiffer {
 
 	private Field accessorField;
 
-	public MetaDiffer() throws Exception {
-		referenceKeyField = MapEntryAccessor.class.getDeclaredField("referenceKey");
-		referenceKeyField.setAccessible(true);
+	public MetaDiffer() {
+		try {
+			referenceKeyField = MapEntryAccessor.class.getDeclaredField("referenceKey");
+			referenceKeyField.setAccessible(true);
 
-		accessorField = DiffNode.class.getDeclaredField("accessor");
-		accessorField.setAccessible(true);
+			accessorField = DiffNode.class.getDeclaredField("accessor");
+			accessorField.setAccessible(true);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
@@ -57,7 +61,7 @@ public class MetaDiffer {
 	 * can further find topic in oldMeta and newMeta to determine whether topic is added(in newMeta only), removed(in oldMeta only)
 	 * or changed(in both meta)
 	 */
-	public MetaDiff compare(Meta oldMeta, Meta newMeta) throws Exception {
+	public MetaDiff compare(Meta oldMeta, Meta newMeta) {
 
 		ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
 		DiffNode root = builder.build().compare(newMeta, oldMeta);
@@ -130,19 +134,23 @@ public class MetaDiffer {
 		return metaDiff;
 	}
 
-	private String findTopicName(DiffNode node) throws Exception {
-		while (true) {
-			// /topics{topic.name}
-			if (node.getParentNode() == null || node.getParentNode().getParentNode() == null) {
-				return null;
-			}
+	private String findTopicName(DiffNode node) {
+		try {
+			while (true) {
+				// /topics{topic.name}
+				if (node.getParentNode() == null || node.getParentNode().getParentNode() == null) {
+					return null;
+				}
 
-			if (node.getParentNode().getParentNode().isRootNode()) {
-				MapEntryAccessor accessor = (MapEntryAccessor) getAccessor(node);
-				return (String) referenceKeyField.get(accessor);
-			} else {
-				node = node.getParentNode();
+				if (node.getParentNode().getParentNode().isRootNode()) {
+					MapEntryAccessor accessor = (MapEntryAccessor) getAccessor(node);
+					return (String) referenceKeyField.get(accessor);
+				} else {
+					node = node.getParentNode();
+				}
 			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -217,7 +225,7 @@ public class MetaDiffer {
 			if (topic == null) {
 				return;
 			}
-			
+
 			if (addedTopics == null) {
 				addedTopics = new LinkedHashMap<String, Topic>();
 			}
