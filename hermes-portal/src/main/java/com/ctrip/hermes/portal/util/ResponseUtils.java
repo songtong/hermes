@@ -1,4 +1,4 @@
-package com.ctrip.hermes.protal.util;
+package com.ctrip.hermes.portal.util;
 
 import javax.ws.rs.core.Response.Status;
 

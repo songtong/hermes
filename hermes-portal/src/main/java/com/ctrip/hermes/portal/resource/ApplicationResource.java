@@ -35,7 +35,7 @@ import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.application.ApplicationService;
 import com.ctrip.hermes.portal.service.mail.PortalMailService;
-import com.ctrip.hermes.protal.util.ResponseUtils;
+import com.ctrip.hermes.portal.util.ResponseUtils;
 
 @Path("/applications/")
 @Singleton

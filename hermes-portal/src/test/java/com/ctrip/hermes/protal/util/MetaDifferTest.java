@@ -3,18 +3,15 @@
  */
 package com.ctrip.hermes.protal.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
-import java.util.Set;
 
 import org.junit.Test;
 import org.unidal.helper.Files.IO;
-import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.meta.entity.Meta;
+import com.ctrip.hermes.portal.util.MetaDiffer;
+import com.ctrip.hermes.portal.util.MetaDiffer.MetaDiff;
 
 /**
  * @author marsqing
@@ -34,20 +31,10 @@ public class MetaDifferTest {
 		Meta oldMeta = JSON.parseObject(IO.INSTANCE.readFrom(new File(resourceDir, "old.json")), Meta.class);
 		Meta newMeta = JSON.parseObject(IO.INSTANCE.readFrom(new File(resourceDir, "new.json")), Meta.class);
 
-		Pair<Set<String>, Set<String>> result = new MetaDiffer().compare(oldMeta, newMeta);
+		MetaDiff result = new MetaDiffer().compare(oldMeta, newMeta);
 
-		Set<String> nonTopicProperties = result.getKey();
-		Set<String> topics = result.getValue();
-
-		assertEquals(2, nonTopicProperties.size());
-		assertTrue(nonTopicProperties.contains("storages"));
-		assertTrue(nonTopicProperties.contains("codecs"));
-
-		assertEquals(3, topics.size());
-		assertTrue(topics.contains("added.topic"));
-		assertTrue(topics.contains("modified.topic"));
-		assertTrue(topics.contains("deleted.topic"));
-
+		System.out.println(result);
+		
 	}
 
 }

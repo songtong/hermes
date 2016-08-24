@@ -1,4 +1,4 @@
-package com.ctrip.hermes.metaservice.service;
+package com.ctrip.hermes.portal.service.meta;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -16,6 +16,19 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.metaservice.converter.EntityToModelConverter;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
+import com.ctrip.hermes.metaservice.service.AppService;
+import com.ctrip.hermes.metaservice.service.CodecService;
+import com.ctrip.hermes.metaservice.service.ConsumerService;
+import com.ctrip.hermes.metaservice.service.DefaultMetaService;
+import com.ctrip.hermes.metaservice.service.EndpointService;
+import com.ctrip.hermes.metaservice.service.IdcService;
+import com.ctrip.hermes.metaservice.service.PartitionService;
+import com.ctrip.hermes.metaservice.service.ServerService;
+import com.ctrip.hermes.metaservice.service.StorageService;
+import com.ctrip.hermes.metaservice.service.TopicService;
+import com.ctrip.hermes.metaservice.service.ZookeeperService;
+import com.ctrip.hermes.portal.util.MetaDiffer;
+import com.ctrip.hermes.portal.util.MetaDiffer.MetaDiff;
 
 @Named
 public class DefaultPortalMetaService extends DefaultMetaService implements PortalMetaService, Initializable {
@@ -62,7 +75,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 		try {
 			m_zookeeperService.updateZkBaseMetaVersion(this.getMetaEntity().getVersion());
 		} catch (Exception e) {
-			m_logger.warn("update zk base meta failed", e);
+			logger.warn("update zk base meta failed", e);
 		}
 		return metaEntity;
 	}
@@ -111,7 +124,7 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				m_zookeeperService.updateZkBaseMetaVersion(this.getMetaEntity().getVersion());
 			}
 		} catch (Exception e) {
-			m_logger.warn("Update meta from db failed, maybe update base meta version in zk failed.", e);
+			logger.warn("Update meta from db failed, maybe update base meta version in zk failed.", e);
 		}
 	}
 
@@ -125,6 +138,16 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 				      syncMetaFromDB();
 			      }
 		      }, 1, 1, TimeUnit.MINUTES); // sync from db with interval: 1 mins
+	}
+
+	@Override
+	public MetaDiff getMetaDiff() throws DalException {
+		Meta newMeta = previewNewMeta();
+		Meta oldMeta = getMetaEntity();
+		if (newMeta == null || oldMeta == null) {
+			return null;
+		}
+		return new MetaDiffer().compare(oldMeta, newMeta);
 	}
 
 }
