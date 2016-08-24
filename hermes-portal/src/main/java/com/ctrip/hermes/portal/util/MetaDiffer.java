@@ -214,6 +214,10 @@ public class MetaDiffer {
 		}
 
 		public void addAddedTopic(Topic topic) {
+			if (topic == null) {
+				return;
+			}
+			
 			if (addedTopics == null) {
 				addedTopics = new LinkedHashMap<String, Topic>();
 			}
@@ -225,6 +229,9 @@ public class MetaDiffer {
 		}
 
 		public void addRemovedTopic(Topic topic) {
+			if (topic == null) {
+				return;
+			}
 			if (removedTopics == null) {
 				removedTopics = new LinkedHashMap<String, Topic>();
 			}

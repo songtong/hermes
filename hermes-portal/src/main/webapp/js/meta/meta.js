@@ -67,15 +67,10 @@ meta_app.controller('meta-controller', [ '$scope', '$resource', '$q', function($
 	}
 
 	$scope.toJsonFormat = function toJsonFormat(str) {
-		console.log(str);
-		console.log(JSON.stringify(str, null, "\t"))
 		return JSON.stringify(str, null, "\t");
 	}
 
 	$scope.prettyDiff = function prettyDiff(oldOne, newOne, diffDetail) {
-		console.log(meta);
-		console.log(oldOne)
-		console.log(newOne)
 		$scope.currentDiffDetail = diffDetail;
 		var options = {
 			source : JSON.stringify(oldOne, null, "\t"),
@@ -92,6 +87,5 @@ meta_app.controller('meta-controller', [ '$scope', '$resource', '$q', function($
 		$scope.meta['diff'] = strToDivDom(pd[0]).getElementsByClassName('diff');
 		$("#prettydiff").empty();
 		$("#prettydiff").append($scope.meta['diff']);
-		console.log($scope.meta['diff']);
 	}
 } ])

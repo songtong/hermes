@@ -142,19 +142,12 @@ public class DefaultPortalMetaService extends DefaultMetaService implements Port
 
 	@Override
 	public MetaDiff getMetaDiff() throws DalException, Exception {
-		try {
-			Meta newMeta = previewNewMeta();
-			Meta oldMeta = getMetaEntity();
-			if (newMeta == null || oldMeta == null) {
-				return null;
-			}
-			return new MetaDiffer().compare(oldMeta, newMeta);
-		} catch (DalException e) {
-			throw e;
-		} catch (Exception e) {
-			logger.warn("Failed to get meta diff.", e);
-			throw e;
+		Meta newMeta = previewNewMeta();
+		Meta oldMeta = getMetaEntity();
+		if (newMeta == null || oldMeta == null) {
+			return null;
 		}
+		return new MetaDiffer().compare(oldMeta, newMeta);
 	}
 
 }

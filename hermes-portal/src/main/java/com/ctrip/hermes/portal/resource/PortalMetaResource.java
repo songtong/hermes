@@ -107,6 +107,7 @@ public class PortalMetaResource {
 		try {
 			metaDiff = metaService.getMetaDiff();
 		} catch (Exception e) {
+			logger.warn("Failed to get meta diff!", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.ok().entity(metaDiff).build();
