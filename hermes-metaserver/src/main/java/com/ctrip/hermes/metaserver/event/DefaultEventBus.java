@@ -51,6 +51,10 @@ public class DefaultEventBus implements EventBus, Initializable {
 
 					@Override
 					public void run() {
+						if (event.getVersion() != m_guard.getVersion()) {
+							return;
+						}
+
 						long start = System.currentTimeMillis();
 						try {
 							handler.onEvent(event);

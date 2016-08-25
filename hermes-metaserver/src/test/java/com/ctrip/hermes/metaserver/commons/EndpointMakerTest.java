@@ -105,7 +105,7 @@ public class EndpointMakerTest {
 
 	private Map<String, ClientContext> createBroker(String name, String ip, int port) {
 		Map<String, ClientContext> res = new HashMap<>();
-		res.put(name, new ClientContext(name, ip, port, null, -1));
+		res.put(name, new ClientContext(name, ip, port, null, null, -1));
 		return res;
 	}
 

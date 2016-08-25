@@ -14,7 +14,6 @@ import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy;
 import com.ctrip.hermes.metaserver.broker.endpoint.MetaEndpointClient;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
-import com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.commons.LeaseHolderZkClient;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
@@ -34,6 +33,7 @@ import com.ctrip.hermes.metaserver.event.impl.DefaultLeaderMetaFetcher;
 import com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.LeaderInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.MetaServerListChangedEventHandler;
+import com.ctrip.hermes.metaserver.event.impl.ObserverInitEventHandler;
 import com.ctrip.hermes.metaserver.meta.DefaultMetaServerAssigningStrategy;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
@@ -77,7 +77,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultMetaServerAssigningStrategy.class));
 
 		// event handler
-		all.add(A(EventBusBootstrapListener.class));
 		all.add(A(DefaultEventHandlerRegistry.class));
 		all.add(A(EndpointMaker.class));
 
@@ -94,6 +93,9 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		// follower
 		all.add(A(FollowerInitEventHandler.class));
 		all.add(A(DefaultLeaderMetaFetcher.class));
+
+		// observer
+		all.add(A(ObserverInitEventHandler.class));
 
 		// endpoint client
 		all.add(A(MetaEndpointClient.class));

@@ -37,6 +37,7 @@ import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseAllocator;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator;
@@ -302,12 +303,17 @@ public class LeaseResource {
 
 	private LeaseAcquireResponse proxyBrokerLeaseRequestIfNecessary(HttpServletRequest req, String uri,
 	      Map<String, String> params, Object payload) {
-		if (m_clusterStateHolder.hasLeadership()) {
+		if (m_clusterStateHolder.getRole() == Role.LEADER) {
 			return null;
 		} else {
 			if (!isFromAnotherMetaServer(req)) {
 				HostPort leader = m_clusterStateHolder.getLeader();
-				return proxyPass(leader.getHost(), leader.getPort(), uri, params, payload);
+				if (leader != null) {
+					return proxyPass(leader.getHost(), leader.getPort(), uri, params, payload);
+				} else {
+					return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+					      + PROXY_PASS_FAIL_DELAY_TIME_MILLIS);
+				}
 			} else {
 				return new LeaseAcquireResponse(false, null, m_systemClockService.now() + PROXY_PASS_FAIL_DELAY_TIME_MILLIS);
 			}

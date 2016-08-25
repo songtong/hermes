@@ -34,6 +34,7 @@ import com.ctrip.hermes.metaserver.TestHelper;
 import com.ctrip.hermes.metaserver.ZKSuppportTestCase;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.event.impl.BaseMetaChangedEventHandler;
@@ -128,7 +129,8 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 	public void testStart() throws Exception {
 		startEngine();
 		verify(m_metaHolder, times(1)).update(anyMap());
-		verify(m_metaServerAssignmentHolder, times(1)).reassign(anyListOf(Server.class), anyListOf(Topic.class));
+		verify(m_metaServerAssignmentHolder, times(1))
+		      .reassign(anyListOf(Server.class), anyMap(), anyListOf(Topic.class));
 		verify(m_brokerAssignmentHolder, times(1)).reassign(anyMapOf(String.class, ClientContext.class),
 		      anyListOf(Endpoint.class), anyListOf(Topic.class));
 	}
@@ -194,7 +196,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 				latch.countDown();
 				return null;
 			}
-		}).when(m_metaServerAssignmentHolder).reassign(anyListOf(Server.class), anyListOf(Topic.class));
+		}).when(m_metaServerAssignmentHolder).reassign(anyListOf(Server.class), anyMap(), anyListOf(Topic.class));
 
 		m_eventBus.pubEvent(new Event(EventType.LEADER_INIT, 0, createClusterStateHolder(), null));
 
@@ -203,7 +205,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 
 	private ClusterStateHolder createClusterStateHolder() {
 		ClusterStateHolder holder = new ClusterStateHolder();
-		holder.setHasLeadership(true);
+		holder.setRole(Role.LEADER);
 		return holder;
 	}
 

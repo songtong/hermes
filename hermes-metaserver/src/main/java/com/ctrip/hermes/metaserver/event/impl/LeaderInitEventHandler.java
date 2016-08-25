@@ -26,15 +26,16 @@ import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.BaseEventBasedZkWatcher;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
-import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventBus;
 import com.ctrip.hermes.metaserver.event.EventHandler;
@@ -58,9 +59,6 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	@Inject
 	private SystemClockService m_systemClockService;
-
-	@Inject
-	private MetaServerConfig m_config;
 
 	@Inject
 	private MetaService m_metaService;
@@ -135,15 +133,17 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	@Override
 	protected void processEvent(Event event) throws Exception {
-		loadAndAddBaseMetaWatcher(new BaseMetaWatcher(event.getEventBus(), event.getStateHolder(), event.getVersion()));
+		loadAndAddBaseMetaWatcher(new BaseMetaWatcher(event));
 		Meta baseMeta = loadBaseMeta();
 
-		List<Server> metaServers = loadAndAddMetaServerListWatcher(new MetaServerListWatcher(event.getEventBus(),
-		      event.getStateHolder(), event.getVersion()));
-
-		Map<String, ClientContext> brokers = loadAndAddBrokerListWatcher(new BrokerChangedListener(event.getEventBus(),
-		      event.getStateHolder(), event.getVersion()));
 		ArrayList<Topic> topics = new ArrayList<>(baseMeta.getTopics().values());
+		List<Server> metaServers = loadAndAddMetaServerListWatcher(new MetaServerListWatcher(event));
+		List<Server> configedMetaServers = baseMeta.getServers() == null ? new ArrayList<Server>()
+		      : new ArrayList<Server>(baseMeta.getServers().values());
+		List<Idc> idcs = baseMeta.getIdcs() == null ? new ArrayList<Idc>() : new ArrayList<Idc>(baseMeta.getIdcs()
+		      .values());
+
+		Map<String, ClientContext> brokers = loadAndAddBrokerListWatcher(new BrokerChangedListener(event));
 		List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>() : new ArrayList<>(
 		      baseMeta.getEndpoints().values());
 
@@ -152,12 +152,14 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoint = m_endpointMaker.makeEndpoints(event.getEventBus(),
 		      event.getVersion(), event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), false);
 
+		m_metaHolder.setIdcs(idcs);
+		m_metaHolder.setConfigedMetaServers(configedMetaServers);
 		m_metaHolder.setBaseMeta(baseMeta);
 		m_metaHolder.setMetaServers(metaServers);
 		m_metaHolder.update(topicPartition2Endpoint);
 
 		m_metaServerAssignmentHolder.reload();
-		m_metaServerAssignmentHolder.reassign(metaServers, topics);
+		m_metaServerAssignmentHolder.reassign(metaServers, m_metaHolder.getConfigedMetaServers(), topics);
 	}
 
 	private Map<String, ClientContext> loadAndAddBrokerListWatcher(ServiceCacheListener listener) {
@@ -170,7 +172,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			String name = instance.getId();
 			String ip = instance.getAddress();
 			int port = instance.getPort();
-			brokers.put(name, new ClientContext(name, ip, port, null, m_systemClockService.now()));
+			brokers.put(name, new ClientContext(name, ip, port, null, null, m_systemClockService.now()));
 		}
 		return brokers;
 	}
@@ -217,16 +219,16 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		private ClusterStateHolder m_clusterStateHolder;
 
-		protected BaseMetaWatcher(EventBus eventBus, ClusterStateHolder clusterStateHolder, long version) {
-			super(eventBus, version, org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
-			m_clusterStateHolder = clusterStateHolder;
+		protected BaseMetaWatcher(com.ctrip.hermes.metaserver.event.Event event) {
+			super(event.getEventBus(), event.getVersion(), org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
+			m_clusterStateHolder = event.getStateHolder();
 		}
 
 		@Override
 		protected void doProcess(WatchedEvent event) {
 			try {
 				Long baseMetaVersion = loadAndAddBaseMetaWatcher(this);
-				log.info("BaseMeta changed(version:{}).", baseMetaVersion);
+				log.info("Leader BaseMeta changed(version:{}).", baseMetaVersion);
 				m_eventBus.pubEvent(new com.ctrip.hermes.metaserver.event.Event(EventType.BASE_META_CHANGED, m_version,
 				      m_clusterStateHolder, baseMetaVersion));
 			} catch (Exception e) {
@@ -240,9 +242,10 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		private ClusterStateHolder m_clusterStateHolder;
 
-		protected MetaServerListWatcher(EventBus eventBus, ClusterStateHolder clusterStateHolder, long version) {
-			super(eventBus, version, org.apache.zookeeper.Watcher.Event.EventType.NodeChildrenChanged);
-			m_clusterStateHolder = clusterStateHolder;
+		protected MetaServerListWatcher(com.ctrip.hermes.metaserver.event.Event event) {
+			super(event.getEventBus(), event.getVersion(),
+			      org.apache.zookeeper.Watcher.Event.EventType.NodeChildrenChanged);
+			m_clusterStateHolder = event.getStateHolder();
 		}
 
 		@Override
@@ -267,10 +270,10 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		private long m_version;
 
-		public BrokerChangedListener(EventBus eventBus, ClusterStateHolder clusterStateHolder, long version) {
-			m_eventBus = eventBus;
-			m_clusterStateHolder = clusterStateHolder;
-			m_version = version;
+		public BrokerChangedListener(com.ctrip.hermes.metaserver.event.Event event) {
+			m_eventBus = event.getEventBus();
+			m_clusterStateHolder = event.getStateHolder();
+			m_version = event.getVersion();
 		}
 
 		@Override
