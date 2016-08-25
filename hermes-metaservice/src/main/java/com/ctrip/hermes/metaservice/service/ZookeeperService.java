@@ -25,6 +25,8 @@ public interface ZookeeperService {
 
 	public void persist(String path, byte[] data, String... touchPaths) throws Exception;
 
+	public boolean persistWithVersionCheck(String path, byte[] data, int version) throws Exception;
+
 	public String queryData(String path) throws Exception;
 
 	public void updateZkBaseMetaVersion(long version) throws Exception;

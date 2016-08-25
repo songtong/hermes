@@ -12,6 +12,7 @@ import org.apache.curator.utils.EnsurePath;
 import org.apache.curator.utils.PathUtils;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.KeeperException.BadVersionException;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -196,6 +197,22 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 		} catch (Exception e) {
 			log.error("Exception occurred in persist", e);
+			throw e;
+		}
+	}
+
+	@Override
+	public boolean persistWithVersionCheck(String path, byte[] data, int version) throws Exception {
+		try {
+			ensurePath(path);
+
+			m_zkClient.get().inTransaction().check().withVersion(version).forPath(path).and().setData()
+			      .forPath(path, data).and().commit();
+			return true;
+		} catch (BadVersionException be) {
+			return false;
+		} catch (Exception e) {
+			log.error("Exception occurred in persistWithVersionCheck", e);
 			throw e;
 		}
 	}

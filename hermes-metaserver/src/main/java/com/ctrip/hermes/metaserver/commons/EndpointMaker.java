@@ -173,7 +173,7 @@ public class EndpointMaker implements Initializable {
 		Long delayStart = delayTimespan.getKey();
 		Long delayEnd = delayTimespan.getValue();
 		if (delayStart > 0) {
-			for (long delay = delayStart; delay < delayEnd + interval; delay += interval) {
+			for (long delay = delayStart; delay < delayEnd + m_config.getBrokerLeaseTimeMillis() + 2 * interval; delay += interval) {
 				m_scheduledExecutor.schedule(new Runnable() {
 
 					@Override

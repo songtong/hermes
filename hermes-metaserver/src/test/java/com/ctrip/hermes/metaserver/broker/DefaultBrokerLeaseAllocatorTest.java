@@ -349,7 +349,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 	private void mockLeaseHolderNewLease(String topic, int partition, String broker, long leaseId, long leaseTime)
 	      throws Exception {
 		when(
-		      m_leaseHolder.newLease(eq(new Pair<String, Integer>(topic, partition)), eq(broker), anyMap(),
+		      m_leaseHolder.newLease(eq(new Pair<String, Integer>(topic, partition)), eq(broker), anyMap(), anyInt(),
 		            eq(leaseTime), anyString(), anyInt())).thenReturn(new Lease(leaseId, leaseTime));
 	}
 
@@ -368,7 +368,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 				return null;
 			}
 		}).when(m_leaseHolder).renewLease(eq(new Pair<String, Integer>(topic, partition)), eq(broker), anyMap(),
-		      any(ClientLeaseInfo.class), eq(leaseTime), anyString(), anyInt());
+		      any(ClientLeaseInfo.class), anyInt(), eq(leaseTime), anyString(), anyInt());
 
 	}
 
@@ -382,7 +382,7 @@ public class DefaultBrokerLeaseAllocatorTest {
 			public LeaseAcquireResponse answer(InvocationOnMock invocation) throws Throwable {
 				LeaseOperationCallback callback = invocation.getArgumentAt(1, LeaseOperationCallback.class);
 
-				return callback.execute(existingValidLeases);
+				return callback.execute(existingValidLeases, -1);
 			}
 		});
 	}

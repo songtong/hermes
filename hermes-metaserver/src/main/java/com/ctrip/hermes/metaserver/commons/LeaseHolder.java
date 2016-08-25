@@ -16,10 +16,10 @@ public interface LeaseHolder<Key> {
 	public LeaseAcquireResponse executeLeaseOperation(Key contextKey, LeaseOperationCallback callback) throws Exception;
 
 	public Lease newLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
-	      long leaseTimeMillis, String ip, int port) throws Exception;
+	      int version, long leaseTimeMillis, String ip, int port) throws Exception;
 
-	public void renewLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
-	      ClientLeaseInfo existingLeaseInfo, long leaseTimeMillis, String ip, int port) throws Exception;
+	public boolean renewLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
+	      ClientLeaseInfo existingLeaseInfo, int version, long leaseTimeMillis, String ip, int port) throws Exception;
 
 	public boolean inited();
 }

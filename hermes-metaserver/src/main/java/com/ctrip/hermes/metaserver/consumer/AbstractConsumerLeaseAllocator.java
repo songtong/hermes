@@ -129,7 +129,7 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) {
+			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version) {
 				if (existingValidLeases.isEmpty()) {
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
@@ -149,8 +149,9 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) throws Exception {
-				return doAcquireLease(tpg, consumerName, existingValidLeases, ip);
+			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
+			      throws Exception {
+				return doAcquireLease(tpg, consumerName, existingValidLeases, version, ip);
 			}
 
 		});
@@ -163,8 +164,9 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases) throws Exception {
-				return doRenewLease(tpg, consumerName, leaseId, existingValidLeases, ip);
+			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
+			      throws Exception {
+				return doRenewLease(tpg, consumerName, leaseId, existingValidLeases, version, ip);
 			}
 
 		});
@@ -172,9 +174,9 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	protected abstract LeaseAcquireResponse doAcquireLease(final Tpg tpg, final String consumerName,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception;
+	      Map<String, ClientLeaseInfo> existingValidLeases, int version, String ip) throws Exception;
 
 	protected abstract LeaseAcquireResponse doRenewLease(final Tpg tpg, final String consumerName, final long leaseId,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception;
+	      Map<String, ClientLeaseInfo> existingValidLeases, int version, String ip) throws Exception;
 
 }
