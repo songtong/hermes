@@ -135,11 +135,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 		existingLeaseInfo.setPort(port);
 		existingValidLeases.put(clientKey, existingLeaseInfo);
 
-		if (persistToZK(contextKey, existingValidLeases, version)) {
-			return true;
-		} else {
-			return false;
-		}
+		return persistToZK(contextKey, existingValidLeases, version);
 	}
 
 	protected boolean persistToZK(Key contextKey, Map<String, ClientLeaseInfo> existingValidLeases, int version)
