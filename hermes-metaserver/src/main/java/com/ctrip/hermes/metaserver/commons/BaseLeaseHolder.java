@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.TreeCache;
+import org.apache.zookeeper.data.Stat;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -86,9 +87,11 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 			ChildData child = m_treeCache.getCurrentData(path);
 
 			if (child != null && child.getData() != null && child.getData().length > 0) {
-				Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(child.getData());
+				Stat stat = child.getStat();
+				byte[] data = child.getData();
+				Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(data);
 				removeExpiredLeases(existingLeases);
-				return new Pair<>(existingLeases, child.getStat().getVersion());
+				return new Pair<>(existingLeases, stat.getVersion());
 			}
 		} catch (Exception e) {
 			log.error("Exception occurred while getting valid leases for path {}.", path, e);
