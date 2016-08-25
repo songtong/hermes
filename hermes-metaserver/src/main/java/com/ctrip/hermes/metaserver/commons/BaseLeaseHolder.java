@@ -9,9 +9,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.TreeCache;
-import org.apache.zookeeper.data.Stat;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
+import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -28,6 +30,8 @@ import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -54,6 +58,8 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 
 	protected TreeCache m_treeCache;
 
+	protected Cache<String, Map<String, ClientLeaseInfo>> m_dataCache;
+
 	@Override
 	public Map<Key, Map<String, ClientLeaseInfo>> getAllValidLeases() throws Exception {
 		Map<Key, Map<String, ClientLeaseInfo>> leases = new HashMap<>();
@@ -67,7 +73,8 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 			if (children != null && !children.isEmpty()) {
 				for (ChildData child : children.values()) {
 					if (isPathMatch(child.getPath()) && child.getData() != null && child.getData().length > 0) {
-						Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(child.getData());
+						Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(child.getPath(),
+						      child.getData());
 						removeExpiredLeases(existingLeases);
 						if (!existingLeases.isEmpty()) {
 							leases.put(convertZkPathToKey(child.getPath()), existingLeases);
@@ -87,11 +94,9 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 			ChildData child = m_treeCache.getCurrentData(path);
 
 			if (child != null && child.getData() != null && child.getData().length > 0) {
-				Stat stat = child.getStat();
-				byte[] data = child.getData();
-				Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(data);
+				Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(child.getPath(), child.getData());
 				removeExpiredLeases(existingLeases);
-				return new Pair<>(existingLeases, stat.getVersion());
+				return new Pair<>(existingLeases, child.getStat().getVersion());
 			}
 		} catch (Exception e) {
 			log.error("Exception occurred while getting valid leases for path {}.", path, e);
@@ -200,13 +205,38 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	}
 
 	protected void doInitialize() throws Exception {
+		m_dataCache = CacheBuilder.newBuilder().maximumSize(5000).initialCapacity(5000)
+		      .expireAfterAccess(1, TimeUnit.MINUTES).build();
+
 		m_treeCache = new TreeCache(m_zkClient.get(), getBaseZkPath());
+
+		m_treeCache.getListenable().addListener(new TreeCacheListener() {
+
+			@Override
+			public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
+				if (event.getType() == TreeCacheEvent.Type.NODE_REMOVED
+				      || event.getType() == TreeCacheEvent.Type.NODE_UPDATED) {
+					m_dataCache.invalidate(event.getData().getPath());
+				}
+			}
+		});
+
 		m_treeCache.start();
 	}
 
-	protected Map<String, ClientLeaseInfo> deserializeExistingLeases(byte[] data) {
-		return ZKSerializeUtils.deserialize(data, new TypeReference<Map<String, ClientLeaseInfo>>() {
-		}.getType());
+	protected Map<String, ClientLeaseInfo> deserializeExistingLeases(String path, byte[] data) {
+		Map<String, ClientLeaseInfo> leases = m_dataCache.getIfPresent(path);
+		if (leases == null) {
+			synchronized (m_dataCache) {
+				leases = m_dataCache.getIfPresent(path);
+				if (leases == null) {
+					leases = ZKSerializeUtils.deserialize(data, new TypeReference<Map<String, ClientLeaseInfo>>() {
+					}.getType());
+					m_dataCache.put(path, leases);
+				}
+			}
+		}
+		return leases;
 	}
 
 	protected abstract String getName();
