@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
@@ -29,6 +31,8 @@ import com.ctrip.hermes.metaserver.event.EventType;
  */
 @Named(type = EndpointMaker.class)
 public class EndpointMaker implements Initializable {
+
+	private static final Logger log = LoggerFactory.getLogger(EndpointMaker.class);
 
 	@Inject
 	private BrokerLeaseHolder m_brokerLeaseHolder;
@@ -53,52 +57,54 @@ public class EndpointMaker implements Initializable {
 	public Map<String, Map<Integer, Endpoint>> makeEndpoints(EventBus eventBus, long version,
 	      ClusterStateHolder stateHolder, Map<String, Assignment<Integer>> brokerAssignments, boolean mergeOnce)
 	      throws Exception {
+		long start = System.currentTimeMillis();
+		try {
+			Map<String, Map<Integer, Endpoint>> topicPartition2Endpoints = new HashMap<>();
 
-		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoints = new HashMap<>();
+			Pair<Long, Long> delayRebalanceTimespan = new Pair<>(0L, 0L);
 
-		Pair<Long, Long> delayRebalanceTimespan = new Pair<>(0L, 0L);
+			Map<Pair<String, Integer>, Map<String, ClientLeaseInfo>> brokerLeases = m_brokerLeaseHolder
+			      .getAllValidLeases();
 
-		for (Map.Entry<String, Assignment<Integer>> topicAssignment : brokerAssignments.entrySet()) {
+			for (Map.Entry<String, Assignment<Integer>> topicAssignment : brokerAssignments.entrySet()) {
+				String topicName = topicAssignment.getKey();
+				Map<Integer, Map<String, ClientContext>> assignment = topicAssignment.getValue().getAssignments();
 
-			String topicName = topicAssignment.getKey();
-			Map<Integer, Map<String, ClientContext>> assignment = topicAssignment.getValue().getAssignments();
+				if (assignment != null && !assignment.isEmpty()) {
 
-			if (assignment != null && !assignment.isEmpty()) {
+					topicPartition2Endpoints.put(topicName, new HashMap<Integer, Endpoint>());
 
-				topicPartition2Endpoints.put(topicName, new HashMap<Integer, Endpoint>());
+					for (Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment : assignment.entrySet()) {
+						int partition = partitionAssignment.getKey();
+						Map<String, ClientContext> assignedBrokers = partitionAssignment.getValue();
+						topicPartition2Endpoints.get(topicName).putAll(
+						      makePartition2Endpoints(topicName, partition, assignedBrokers,
+						            brokerLeases.get(new Pair<>(topicName, partition)), delayRebalanceTimespan));
 
-				for (Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment : assignment.entrySet()) {
-					topicPartition2Endpoints.get(topicName).putAll(
-					      makePartition2Endpoints(eventBus, version, stateHolder, topicName, partitionAssignment,
-					            delayRebalanceTimespan));
+					}
 
 				}
 
 			}
 
-		}
+			if (!mergeOnce) {
+				scheduleDelayReblanceTasks(eventBus, version, stateHolder, delayRebalanceTimespan);
+			}
 
-		if (!mergeOnce) {
-			scheduleDelayReblanceTasks(eventBus, version, stateHolder, delayRebalanceTimespan);
+			return topicPartition2Endpoints;
+		} finally {
+			log.info("Make endpoint cost {}", (System.currentTimeMillis() - start));
 		}
-
-		return topicPartition2Endpoints;
 	}
 
-	private Map<Integer, Endpoint> makePartition2Endpoints(EventBus eventBus, long version,
-	      ClusterStateHolder stateHolder, String topic,
-	      Map.Entry<Integer, Map<String, ClientContext>> partitionAssignment, Pair<Long, Long> delayRebalanceTimespan)
-	      throws Exception {
+	private Map<Integer, Endpoint> makePartition2Endpoints(String topic, int partition,
+	      Map<String, ClientContext> assignedBrokers, Map<String, ClientLeaseInfo> brokerLease,
+	      Pair<Long, Long> delayRebalanceTimespan) throws Exception {
 
 		Map<Integer, Endpoint> partition2Endpoints = new HashMap<>();
 
-		int partition = partitionAssignment.getKey();
-		Map<String, ClientContext> assignedBrokers = partitionAssignment.getValue();
-
 		Endpoint endpoint = null;
 
-		Map<String, ClientLeaseInfo> brokerLease = m_brokerLeaseHolder.getAllValidLeases().get(
-		      new Pair<String, Integer>(topic, partition));
 		ClientContext assignedBroker = assignedBrokers != null && !assignedBrokers.isEmpty() ? assignedBrokers.entrySet()
 		      .iterator().next().getValue() : null;
 
