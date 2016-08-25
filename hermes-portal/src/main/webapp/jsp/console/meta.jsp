@@ -23,7 +23,7 @@
 				</div>
 				<div class="panel-body">
 					<textarea ng-show="metaStatus!='diff'" id="meta" class="form-control" rows="35" disabled style="cursor: default">{{meta[metaStatus]|json:4}}</textarea>
-					<div ng-show="metaStatus=='diff'">
+					<div ng-show="metaStatus=='diff' && reloadFinished">
 						<div class="col-md-4">
 							<div class="panel panel-default">
 								<div class="panel-heading">
