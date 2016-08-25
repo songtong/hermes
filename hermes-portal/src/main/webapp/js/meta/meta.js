@@ -28,7 +28,12 @@ meta_app.controller('meta-controller', [ '$scope', '$resource', '$q', function($
 
 	$scope.metaDiff = {}
 
+	$scope.reloadFinished = false;
+
 	$scope.refreshCachedMeta = function refreshCachedMeta() {
+		$("#prettydiff").empty();
+		$scope.reloadFinished = false;
+		$scope.currentDiffDetail = "";
 		meta_resource.get({}, function(result) {
 			$scope.meta.oldMeta = result;
 		})
@@ -37,7 +42,9 @@ meta_app.controller('meta-controller', [ '$scope', '$resource', '$q', function($
 		})
 		meta_resource.get_meta_diff(function(result) {
 			$scope.metaDiff = result;
+			$scope.reloadFinished = true;
 		})
+		
 	}
 	$scope.refreshCachedMeta();
 	$scope.buildMeta = function buildMeta() {

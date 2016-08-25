@@ -8,7 +8,7 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 		languageType : 'java',
 		ownerName1 : ssoUser,
 		ownerEmail1Prefix : ssoMail.split('@')[0],
-		needCompress : 'true',
+		needCompress : 'false',
 		compressionType : 'deflater',
 		compressionLevel : 1,
 		priorityMessageEnabled : false

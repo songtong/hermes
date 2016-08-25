@@ -24,7 +24,7 @@
 			</div>
 			<button style="margin-left: 20px" class="btn btn-danger" ng-click="deleteIdc()">Delete</button>
 		</form>
-		
+
 		<hr>
 		<h4>
 			servers
@@ -35,12 +35,14 @@
 		<table class="table table-striped" style="font-size: small;" st-table="displayedServers" st-safe-src="currentServers">
 			<thead>
 				<tr>
+					<th>#</th>
 					<th st-sort="id">名称</th>
 					<th st-sort="host">Host</th>
 					<th st-sort="port">Port</th>
 					<th st-sort="enabled">Enabled</th>
 				</tr>
 				<tr>
+					<th></th>
 					<th><input st-search="id" placeholder="Name" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="host" placeholder="Host" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="port" placeholder="Port" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -49,6 +51,7 @@
 			</thead>
 			<tbody>
 				<tr ng-if="currentServers.length!=0" ng-repeat="server in displayedServers">
+					<td>{{$index+1}}</td>
 					<td><span e-form="serverForm" e-name="id">{{server.id}}</span></td>
 					<td><span e-form="serverForm" e-name="host" editable-text="server.host">{{server.host}}</span></td>
 					<td><span e-form="serverForm" e-name="port" editable-text="server.port">{{server.port}}</span></td>
@@ -65,11 +68,11 @@
 					</td>
 				</tr>
 				<tr ng-if="currentServers.length==0">
-					<td colspan="5"><label>No Server Found!</label></td>
+					<td colspan="6"><label>No Server Found!</label></td>
 				</tr>
 			</tbody>
 		</table>
-		
+
 		<hr>
 		<h4>
 			endpoints
@@ -80,6 +83,7 @@
 		<table class="table table-striped" style="font-size: small;" st-table="displayedCurrentEndpoints" st-safe-src="currentEndpoints">
 			<thead>
 				<tr>
+					<th>#</th>
 					<th st-sort="id">名称</th>
 					<th st-sort="type">类型</th>
 					<th st-sort="host">Host</th>
@@ -88,6 +92,7 @@
 					<th>idle</th>
 				</tr>
 				<tr>
+					<th></th>
 					<th><input st-search="id" placeholder="Name" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="type" placeholder="Type" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="host" placeholder="Host" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -97,6 +102,7 @@
 			</thead>
 			<tbody>
 				<tr ng-if="currentEndpoints.length!=0" ng-repeat="endpoint in displayedCurrentEndpoints">
+					<td>{{$index+1}}</td>
 					<td><span e-form="endpointForm" e-name="id">{{endpoint.id}}</span></td>
 					<td><span e-form="endpointForm" e-name="type">{{endpoint.type}}</span></td>
 					<td><span e-form="endpointForm" e-name="host" editable-text="endpoint.host">{{endpoint.host}}</span></td>
@@ -158,7 +164,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<div class="modal fade" id="addServerModal" tabindex="-1" role="dialog">
 			<div class="modal-dialog" style="width: 400px">
 				<div class="modal-content">
