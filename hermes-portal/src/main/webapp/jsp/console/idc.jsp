@@ -27,7 +27,7 @@
 
 		<hr>
 		<h4>
-			servers
+			servers <span class="badge">{{currentServers.length}}</span>
 			<button type="button" class="btn btn-success btn-xs" data-toggle="modal" data-target="#addServerModal">
 				<span class="glyphicon glyphicon-plus"></span>
 			</button>
@@ -75,7 +75,7 @@
 
 		<hr>
 		<h4>
-			endpoints
+			endpoints <span class="badge">{{currentEndpoints.length}}</span>
 			<button type="button" class="btn btn-success btn-xs" data-toggle="modal" data-target="#addEndpointModal">
 				<span class="glyphicon glyphicon-plus"></span>
 			</button>
@@ -89,7 +89,7 @@
 					<th st-sort="host">Host</th>
 					<th st-sort="port">Port</th>
 					<th st-sort="enabled">Enabled</th>
-					<th>idle</th>
+					<th st-sort="group">group</th>
 				</tr>
 				<tr>
 					<th></th>
@@ -98,6 +98,7 @@
 					<th><input st-search="host" placeholder="Host" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="port" placeholder="Port" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="enabled" placeholder="Enabled" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+					<th><input st-search="group" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -108,7 +109,7 @@
 					<td><span e-form="endpointForm" e-name="host" editable-text="endpoint.host">{{endpoint.host}}</span></td>
 					<td><span e-form="endpointForm" e-name="port" editable-text="endpoint.port">{{endpoint.port}}</span></td>
 					<td><span e-form="endpointForm" e-name="enabled" editable-select="endpoint.enabled" e-ng-options="op for op in ops">{{endpoint.enabled}}</span></td>
-					<td><span>{{endpoint.group=='idle'}}</span></td>
+					<td><span>{{endpoint.group}}</span></td>
 					<td style="white-space: nowrap">
 						<form editable-form name="endpointForm" onaftersave="updateEndpoint(endpoint)" ng-show="endpointForm.$visible" class="form-buttons form-inline">
 							<button type="submit" ng-disabled="endpointForm.$waiting" class="btn btn-primary btn-xs">save</button>
