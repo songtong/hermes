@@ -86,10 +86,15 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 		try {
 			ChildData child = m_treeCache.getCurrentData(path);
 
-			if (child != null && child.getData() != null && child.getData().length > 0) {
-				Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(child.getPath(), child.getData());
-				removeExpiredLeases(existingLeases);
-				return new Pair<>(existingLeases, child.getStat().getVersion());
+			if (child != null) {
+				if (child.getData() != null && child.getData().length > 0) {
+					Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(child.getPath(), child.getData());
+					removeExpiredLeases(existingLeases);
+					return new Pair<>(existingLeases, child.getStat().getVersion());
+				} else {
+					return new Pair<Map<String, ClientLeaseInfo>, Integer>(new HashMap<String, ClientLeaseInfo>(), child
+					      .getStat().getVersion());
+				}
 			}
 		} catch (Exception e) {
 			log.error("Exception occurred while getting valid leases for path {}.", path, e);
