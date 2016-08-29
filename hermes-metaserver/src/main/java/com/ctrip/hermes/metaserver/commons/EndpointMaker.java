@@ -93,7 +93,7 @@ public class EndpointMaker implements Initializable {
 
 			return topicPartition2Endpoints;
 		} finally {
-			log.info("Make endpoint cost {}", (System.currentTimeMillis() - start));
+			log.info("Make endpoint cost {}ms", (System.currentTimeMillis() - start));
 		}
 	}
 

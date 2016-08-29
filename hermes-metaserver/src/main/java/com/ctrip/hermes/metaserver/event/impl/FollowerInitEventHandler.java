@@ -5,8 +5,9 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
+import org.apache.curator.framework.listen.ListenerContainer;
+import org.apache.curator.framework.recipes.cache.NodeCache;
+import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -22,8 +23,9 @@ import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.cluster.Role;
-import com.ctrip.hermes.metaserver.commons.BaseEventBasedZkWatcher;
+import com.ctrip.hermes.metaserver.commons.BaseNodeCacheListener;
 import com.ctrip.hermes.metaserver.event.Event;
+import com.ctrip.hermes.metaserver.event.EventBus.Task;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
@@ -63,6 +65,12 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 	protected ScheduledExecutorService m_scheduledExecutor;
 
+	protected NodeCache m_baseMetaVersionCache;
+
+	protected NodeCache m_leaderMetaVersionCache;
+
+	protected NodeCache m_metaServerAssignmentVersionCache;
+
 	public void setMetaHolder(MetaHolder metaHolder) {
 		m_metaHolder = metaHolder;
 	}
@@ -92,42 +100,56 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 	public void initialize() throws InitializationException {
 		m_scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory
 		      .create("FollowerRetry", true));
+		try {
+			m_baseMetaVersionCache = new NodeCache(m_zkClient.get(), ZKPathUtils.getBaseMetaVersionZkPath());
+			m_baseMetaVersionCache.start(true);
+
+			m_leaderMetaVersionCache = new NodeCache(m_zkClient.get(), ZKPathUtils.getMetaInfoZkPath());
+			m_leaderMetaVersionCache.start(true);
+
+			m_metaServerAssignmentVersionCache = new NodeCache(m_zkClient.get(),
+			      ZKPathUtils.getMetaServerAssignmentRootZkPath());
+			m_metaServerAssignmentVersionCache.start(true);
+		} catch (Exception e) {
+			throw new InitializationException(String.format("Init {} failed.", getName()), e);
+		}
+
 	}
 
 	@Override
 	protected void processEvent(Event event) throws Exception {
+		long version = event.getVersion();
+
 		m_brokerAssignmentHolder.clear();
-		loadAndAddBaseMetaWatcher(new BaseMetaWatcher(event), event.getStateHolder(), true);
 
-		loadAndAddLeaderMetaWatcher(new LeaderMetaChangedWatcher(event), event);
-
-		loadAndAddMetaServerAssignmentWatcher(new MetaServerAssignmentChangedWatcher(event));
+		loadAndAddBaseMetaVersionListener(version);
+		loadAndAddLeaderMetaVersionListener(version);
+		loadAndAddMetaServerAssignmentVersionListener(version);
 	}
 
-	protected Long loadAndAddBaseMetaWatcher(Watcher watcher, ClusterStateHolder clusterStateHolder, boolean firstTime)
-	      throws Exception {
-		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getBaseMetaVersionZkPath());
-		if (firstTime) {
-			fetchBaseMetaAndHandleChanged(clusterStateHolder);
-		}
-
-		return ZKSerializeUtils.deserialize(data, Long.class);
+	protected void loadAndAddBaseMetaVersionListener(long version) throws DalException {
+		ListenerContainer<NodeCacheListener> listenerContainer = m_baseMetaVersionCache.getListenable();
+		listenerContainer.addListener(new BaseMetaVersionListener(version, listenerContainer), m_eventBus.getExecutor());
+		fetchBaseMetaAndHandleChanged(m_clusterStateHolder);
 	}
 
-	protected void loadAndAddMetaServerAssignmentWatcher(MetaServerAssignmentChangedWatcher watcher) throws Exception {
-		m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
+	protected void loadAndAddLeaderMetaVersionListener(long version) {
+		ListenerContainer<NodeCacheListener> listenerContainer = m_leaderMetaVersionCache.getListenable();
+		listenerContainer
+		      .addListener(new LeaderMetaVersionListener(version, listenerContainer), m_eventBus.getExecutor());
+		loadLeaderMeta(version);
+	}
+
+	protected void loadAndAddMetaServerAssignmentVersionListener(long version) {
+		ListenerContainer<NodeCacheListener> listenerContainer = m_metaServerAssignmentVersionCache.getListenable();
+		listenerContainer.addListener(new MetaServerAssignmentVersionListener(version, listenerContainer),
+		      m_eventBus.getExecutor());
 		m_metaServerAssignmentHolder.reload();
 	}
 
-	protected void loadAndAddLeaderMetaWatcher(Watcher watcher, final Event event) throws Exception {
-		byte[] data = null;
-		if (watcher == null) {
-			data = m_zkClient.get().getData().forPath(ZKPathUtils.getMetaInfoZkPath());
-		} else {
-			data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getMetaInfoZkPath());
-		}
-
-		MetaInfo metaInfo = ZKSerializeUtils.deserialize(data, MetaInfo.class);
+	protected void loadLeaderMeta(final long version) {
+		MetaInfo metaInfo = ZKSerializeUtils.deserialize(m_leaderMetaVersionCache.getCurrentData().getData(),
+		      MetaInfo.class);
 		Meta meta = m_leaderMetaFetcher.fetchMetaInfo(metaInfo);
 
 		if (meta != null && (m_metaHolder.getMeta() == null || meta.getVersion() != m_metaHolder.getMeta().getVersion())) {
@@ -135,15 +157,21 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 			log.info("[{}]Fetched meta from leader(endpoint={}:{},version={})", role(), metaInfo.getHost(),
 			      metaInfo.getPort(), meta.getVersion());
 		} else if (meta == null) {
-			delayRetry(event, m_scheduledExecutor, new Task() {
+			delayRetry(version, m_scheduledExecutor, new Task() {
 
 				@Override
 				public void run() {
 					try {
-						loadAndAddLeaderMetaWatcher(null, event);
+						loadLeaderMeta(version);
 					} catch (Exception e) {
 						log.error("[{}]Exception occurred while loading meta from leader.", role(), e);
 					}
+				}
+
+				@Override
+				public void onGuardNotPass() {
+					// do nothing
+
 				}
 			});
 		}
@@ -178,78 +206,81 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		return Role.FOLLOWER;
 	}
 
-	protected class BaseMetaWatcher extends BaseEventBasedZkWatcher {
+	protected class BaseMetaVersionListener extends BaseNodeCacheListener {
 
-		private ClusterStateHolder m_clusterStateHolder;
-
-		private com.ctrip.hermes.metaserver.event.Event m_event;
-
-		protected BaseMetaWatcher(com.ctrip.hermes.metaserver.event.Event event) {
-			super(event.getEventBus(), event.getVersion(), org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
-			m_clusterStateHolder = event.getStateHolder();
-			m_event = event;
+		protected BaseMetaVersionListener(long version, ListenerContainer<NodeCacheListener> listenerContainer) {
+			super(version, listenerContainer);
 		}
 
 		@Override
-		protected void doProcess(WatchedEvent event) {
-			fetchBaseMetaAndCheckStateChange(m_event);
-		}
-
-		private void fetchBaseMetaAndCheckStateChange(final com.ctrip.hermes.metaserver.event.Event event) {
+		protected void processNodeChanged() {
 			try {
-				Long baseMetaVersion = loadAndAddBaseMetaWatcher(this, m_clusterStateHolder, false);
-				log.info("[{}]BaseMeta changed(version:{}).", role(), baseMetaVersion);
-
 				fetchBaseMetaAndHandleChanged(m_clusterStateHolder);
 			} catch (Exception e) {
-				log.error("[{}]Exception occurred while fetchBaseMetaAndCheckStateChange, will retry.", role(), e);
+				log.error("[{}]Exception occurred while doing BaseMetaVersionListener.processNodeChanged, will retry.",
+				      role(), e);
 
-				delayRetry(event, m_scheduledExecutor, new Task() {
+				delayRetry(m_version, m_scheduledExecutor, new Task() {
 
 					@Override
 					public void run() {
-						fetchBaseMetaAndCheckStateChange(event);
+						processNodeChanged();
+					}
+
+					@Override
+					public void onGuardNotPass() {
+						// do nothing
 					}
 				});
 			}
 		}
 
+		@Override
+		protected String getName() {
+			return "BaseMetaVersionListener";
+		}
 	}
 
-	private class LeaderMetaChangedWatcher extends BaseEventBasedZkWatcher {
+	protected class LeaderMetaVersionListener extends BaseNodeCacheListener {
 
-		private com.ctrip.hermes.metaserver.event.Event m_event;
-
-		protected LeaderMetaChangedWatcher(com.ctrip.hermes.metaserver.event.Event event) {
-			super(event.getEventBus(), event.getVersion(), org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
-			m_event = event;
+		protected LeaderMetaVersionListener(long version, ListenerContainer<NodeCacheListener> listenerContainer) {
+			super(version, listenerContainer);
 		}
 
 		@Override
-		protected void doProcess(WatchedEvent event) {
+		protected void processNodeChanged() {
 			try {
-				loadAndAddLeaderMetaWatcher(this, m_event);
+				loadLeaderMeta(m_version);
 			} catch (Exception e) {
 				log.error("[{}]Exception occurred while handling leader meta watcher event.", role(), e);
 			}
 		}
 
+		@Override
+		protected String getName() {
+			return "LeaderMetaVersionListener";
+		}
 	}
 
-	private class MetaServerAssignmentChangedWatcher extends BaseEventBasedZkWatcher {
+	protected class MetaServerAssignmentVersionListener extends BaseNodeCacheListener {
 
-		protected MetaServerAssignmentChangedWatcher(com.ctrip.hermes.metaserver.event.Event event) {
-			super(event.getEventBus(), event.getVersion(), org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
+		protected MetaServerAssignmentVersionListener(long version, ListenerContainer<NodeCacheListener> listenerContainer) {
+			super(version, listenerContainer);
 		}
 
 		@Override
-		protected void doProcess(WatchedEvent event) {
+		protected void processNodeChanged() {
 			try {
-				loadAndAddMetaServerAssignmentWatcher(this);
+				m_metaServerAssignmentHolder.reload();
 			} catch (Exception e) {
-				log.error("[{}]Exception occurred while handling meta server assignment watcher event.", role(), e);
+				log.error("[{}]Exception occurred while handling leader meta watcher event.", role(), e);
 			}
 		}
 
+		@Override
+		protected String getName() {
+			return "MetaServerAssignmentVersionListener";
+		}
 	}
+
 }

@@ -20,6 +20,7 @@ import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.event.Event;
+import com.ctrip.hermes.metaserver.event.EventBus.Task;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
@@ -71,7 +72,7 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 
 			if (server == null || !server.isEnabled()) {
 				log.info("Marked down!");
-				event.getStateHolder().becomeObserver();
+				m_clusterStateHolder.becomeObserver();
 				return;
 			}
 
@@ -88,17 +89,22 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 			m_metaHolder.setIdcs(idcs);
 			m_metaHolder.setConfigedMetaServers(configedMetaServers);
 			m_metaHolder.setBaseMeta(baseMeta);
-			m_metaHolder.update(m_endpointMaker.makeEndpoints(event.getEventBus(), event.getVersion(),
-			      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), false));
+			m_metaHolder.update(m_endpointMaker.makeEndpoints(m_eventBus, event.getVersion(), m_clusterStateHolder,
+			      m_brokerAssignmentHolder.getAssignments(), false));
 
 			m_metaServerAssignmentHolder.reassign(null, null, topics);
 		} catch (Exception e) {
 			log.error("Exception occurred while processing BaseMetaChanged event, will retry.", e);
-			delayRetry(event, m_scheduledExecutor, new Task() {
+			delayRetry(event.getVersion(), m_scheduledExecutor, new Task() {
 
 				@Override
 				public void run() {
 					doProcess(event);
+				}
+
+				@Override
+				public void onGuardNotPass() {
+					// do nothing
 				}
 			});
 		}

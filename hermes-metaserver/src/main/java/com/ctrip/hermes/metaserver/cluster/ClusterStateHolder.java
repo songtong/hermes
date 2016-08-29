@@ -8,12 +8,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatch.CloseMode;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.apache.curator.framework.recipes.locks.LockInternals;
 import org.apache.curator.framework.recipes.locks.LockInternalsSorter;
 import org.apache.curator.framework.recipes.locks.StandardLockInternalsDriver;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.utils.ZKPaths;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -72,6 +75,8 @@ public class ClusterStateHolder implements Initializable {
 	private ReentrantReadWriteLock m_roleLock = new ReentrantReadWriteLock(true);
 
 	private volatile Role m_role = null;
+
+	private AtomicBoolean m_connected = new AtomicBoolean(true);
 
 	public void becomeLeader() {
 		m_roleLock.writeLock().lock();
@@ -232,8 +237,34 @@ public class ClusterStateHolder implements Initializable {
 		return null;
 	}
 
+	public boolean isConnected() {
+		return m_connected.get();
+	}
+
 	@Override
 	public void initialize() throws InitializationException {
+		m_eventBus.start(this);
+
+		m_client.get().getConnectionStateListenable().addListener(new ConnectionStateListener() {
+
+			@Override
+			public void stateChanged(CuratorFramework client, ConnectionState newState) {
+				switch (newState) {
+				case SUSPENDED:
+				case LOST:
+					m_connected.set(false);
+					m_guard.upgradeVersion();
+					break;
+				case RECONNECTED:
+				case CONNECTED:
+					m_connected.set(true);
+					becomeObserver();
+				default:
+					break;
+				}
+			}
+		}, m_eventBus.getExecutor());
+
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("LeaderInfoFetcher", true))
 		      .scheduleWithFixedDelay(new Runnable() {
 

@@ -2,13 +2,10 @@ package com.ctrip.hermes.metaservice.service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransaction;
 import org.apache.curator.framework.api.transaction.CuratorTransactionBridge;
-import org.apache.curator.utils.EnsurePath;
 import org.apache.curator.utils.PathUtils;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
@@ -40,8 +37,6 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 	@Inject
 	private SystemClockService m_systemClockService;
-
-	private ConcurrentMap<String, EnsurePath> m_ensurePathCache = new ConcurrentHashMap<>();
 
 	public void setZkClient(ZKClient zkClient) {
 		m_zkClient = zkClient;
@@ -283,10 +278,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 	}
 
 	public void ensurePath(String path) throws Exception {
-		if (!m_ensurePathCache.containsKey(path)) {
-			m_ensurePathCache.putIfAbsent(path, m_zkClient.get().newNamespaceAwareEnsurePath(path));
-		}
-		m_ensurePathCache.get(path).ensure(m_zkClient.get().getZookeeperClient());
+		m_zkClient.get().createContainers(path);
 	}
 
 	@Override

@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
-import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
@@ -15,8 +14,9 @@ import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.event.Event;
+import com.ctrip.hermes.metaserver.event.EventBus;
+import com.ctrip.hermes.metaserver.event.EventBus.Task;
 import com.ctrip.hermes.metaserver.event.EventHandler;
-import com.ctrip.hermes.metaserver.event.Guard;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -29,15 +29,27 @@ public abstract class BaseEventHandler implements EventHandler {
 	@Inject
 	protected MetaServerConfig m_config;
 
+	protected EventBus m_eventBus;
+
+	protected ClusterStateHolder m_clusterStateHolder;
+
 	@Override
 	public void onEvent(Event event) throws Exception {
-		ClusterStateHolder clusterStateHolder = event.getStateHolder();
-
-		if (clusterStateHolder.getRole() != role()) {
+		if (m_clusterStateHolder.getRole() != role()) {
 			return;
 		}
 
 		processEvent(event);
+	}
+
+	@Override
+	public void setClusterStateHolder(ClusterStateHolder clusterStateHolder) {
+		m_clusterStateHolder = clusterStateHolder;
+	}
+
+	@Override
+	public void setEventBus(EventBus eventBus) {
+		m_eventBus = eventBus;
 	}
 
 	@Override
@@ -78,25 +90,14 @@ public abstract class BaseEventHandler implements EventHandler {
 		return null;
 	}
 
-	protected void delayRetry(final Event event, ScheduledExecutorService executor, final Task task) {
+	protected void delayRetry(final long version, ScheduledExecutorService executor, final Task task) {
 		executor.schedule(new Runnable() {
 
 			@Override
 			public void run() {
-				if (event.getVersion() == PlexusComponentLocator.lookup(Guard.class).getVersion()) {
-					event.getEventBus().getExecutor().submit(new Runnable() {
-
-						@Override
-						public void run() {
-							task.run();
-						}
-					});
-				}
+				m_eventBus.submit(version, task);
 			}
 		}, 2, TimeUnit.SECONDS);
 	}
 
-	protected interface Task {
-		public void run();
-	}
 }

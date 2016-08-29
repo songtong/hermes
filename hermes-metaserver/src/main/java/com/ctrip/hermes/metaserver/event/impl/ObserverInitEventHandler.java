@@ -33,6 +33,7 @@ public class ObserverInitEventHandler extends FollowerInitEventHandler {
 	public void initialize() throws InitializationException {
 		m_scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory
 		      .create("ObserverRetry", true));
+		super.initialize();
 	}
 
 	protected void handleBaseMetaChanged(Meta baseMeta, ClusterStateHolder clusterStateHolder) {

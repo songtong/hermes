@@ -43,8 +43,8 @@ public class BrokerListChangedEventHandler extends BaseEventHandler {
 			Map<String, ClientContext> brokers = (Map<String, ClientContext>) data;
 
 			m_brokerAssignmentHolder.reassign(brokers);
-			m_metaHolder.update(m_endpointMaker.makeEndpoints(event.getEventBus(), event.getVersion(),
-			      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), false));
+			m_metaHolder.update(m_endpointMaker.makeEndpoints(m_eventBus, event.getVersion(), m_clusterStateHolder,
+			      m_brokerAssignmentHolder.getAssignments(), false));
 		}
 	}
 
