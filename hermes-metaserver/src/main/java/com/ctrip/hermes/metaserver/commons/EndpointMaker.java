@@ -184,8 +184,7 @@ public class EndpointMaker implements Initializable {
 
 					@Override
 					public void run() {
-						eventBus.pubEvent(new Event(EventType.BROKER_LEASE_CHANGED, version, stateHolder, Boolean
-						      .valueOf(true)));
+						eventBus.pubEvent(new Event(EventType.BROKER_LEASE_CHANGED, version, Boolean.valueOf(true)));
 					}
 				}, delay, TimeUnit.MILLISECONDS);
 			}

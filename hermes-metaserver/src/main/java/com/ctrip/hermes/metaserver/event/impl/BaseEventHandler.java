@@ -15,8 +15,8 @@ import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventBus;
-import com.ctrip.hermes.metaserver.event.EventBus.Task;
 import com.ctrip.hermes.metaserver.event.EventHandler;
+import com.ctrip.hermes.metaserver.event.Task;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -57,6 +57,11 @@ public abstract class BaseEventHandler implements EventHandler {
 		return this.getClass().getSimpleName();
 	}
 
+	@Override
+	public void start() {
+
+	}
+
 	protected abstract void processEvent(Event event) throws Exception;
 
 	protected abstract Role role();
@@ -90,14 +95,31 @@ public abstract class BaseEventHandler implements EventHandler {
 		return null;
 	}
 
-	protected void delayRetry(final long version, ScheduledExecutorService executor, final Task task) {
-		executor.schedule(new Runnable() {
-
-			@Override
-			public void run() {
-				m_eventBus.submit(version, task);
-			}
-		}, 2, TimeUnit.SECONDS);
+	protected void delayRetry(ScheduledExecutorService executor, final Task task) {
+		executor.schedule(new DelayRetryTaskRunner(task), 2, TimeUnit.SECONDS);
 	}
 
+	private class DelayRetryTaskRunner implements Runnable {
+
+		private Task m_task;
+
+		public DelayRetryTaskRunner(Task task) {
+			m_task = task;
+		}
+
+		@Override
+		public void run() {
+			m_eventBus.getExecutor().submit(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						m_task.run();
+					} catch (Exception e) {
+						log.error("Excpetion occurred while running delay retry task {}", m_task.name());
+					}
+				}
+			});
+		}
+	}
 }

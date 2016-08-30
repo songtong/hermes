@@ -159,7 +159,7 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 			}
 		}).when(m_metaServerAssignmentHolder).reload();
 
-		m_eventBus.pubEvent(new Event(EventType.FOLLOWER_INIT, 0, createClusterStateHolder(), null));
+		m_eventBus.pubEvent(new Event(EventType.FOLLOWER_INIT, 0, null));
 
 		latch.await(5, TimeUnit.SECONDS);
 		return loadedMeta.get();

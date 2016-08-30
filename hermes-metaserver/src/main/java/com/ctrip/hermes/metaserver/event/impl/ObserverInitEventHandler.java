@@ -2,7 +2,6 @@ package com.ctrip.hermes.metaserver.event.impl;
 
 import java.util.concurrent.Executors;
 
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
@@ -29,21 +28,22 @@ public class ObserverInitEventHandler extends FollowerInitEventHandler {
 		return EventType.OBSERVER_INIT;
 	}
 
-	@Override
-	public void initialize() throws InitializationException {
+	public void start() {
 		m_scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory
 		      .create("ObserverRetry", true));
-		super.initialize();
+		super.start();
 	}
 
-	protected void handleBaseMetaChanged(Meta baseMeta, ClusterStateHolder clusterStateHolder) {
+	protected boolean roleChanged(Meta baseMeta, ClusterStateHolder clusterStateHolder) {
 		Server server = getCurServerAndFixStatusByIDC(baseMeta);
 
 		if (server != null && server.isEnabled()) {
 			log.info("[{}]Marked up!", role());
 			clusterStateHolder.becomeFollower();
+			return true;
 		} else {
 			log.info("[{}]Still marked down!", role());
+			return false;
 		}
 	}
 

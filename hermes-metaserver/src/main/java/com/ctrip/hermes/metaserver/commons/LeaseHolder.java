@@ -21,5 +21,4 @@ public interface LeaseHolder<Key> {
 	public boolean renewLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
 	      ClientLeaseInfo existingLeaseInfo, int version, long leaseTimeMillis, String ip, int port) throws Exception;
 
-	public boolean inited();
 }

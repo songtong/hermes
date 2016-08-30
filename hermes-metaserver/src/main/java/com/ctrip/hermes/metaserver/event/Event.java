@@ -1,7 +1,5 @@
 package com.ctrip.hermes.metaserver.event;
 
-import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
-
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
@@ -13,7 +11,7 @@ public class Event {
 
 	private Object m_data;
 
-	public Event(EventType type, long version, ClusterStateHolder stateHolder, Object data) {
+	public Event(EventType type, long version, Object data) {
 		m_type = type;
 		m_version = version;
 		m_data = data;

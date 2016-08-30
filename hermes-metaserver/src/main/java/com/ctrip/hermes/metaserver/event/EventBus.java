@@ -14,14 +14,6 @@ public interface EventBus {
 
 	ExecutorService getExecutor();
 
-	void submit(long version, Task task);
-
 	void start(ClusterStateHolder clusterStateHolder);
-
-	public interface Task {
-		public void run();
-
-		public void onGuardNotPass();
-	}
 
 }

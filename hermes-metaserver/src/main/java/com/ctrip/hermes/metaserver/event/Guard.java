@@ -19,7 +19,7 @@ public class Guard {
 
 	public long upgradeVersion() {
 		long version = m_version.incrementAndGet();
-		log.debug("Guard version upgrade to {}", version);
+		log.info("Guard version upgrade to {}", version);
 		return version;
 	}
 

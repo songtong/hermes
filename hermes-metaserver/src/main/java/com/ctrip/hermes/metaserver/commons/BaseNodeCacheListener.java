@@ -8,8 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.event.EventBus;
-import com.ctrip.hermes.metaserver.event.EventBus.Task;
-import com.ctrip.hermes.metaserver.event.Guard;
+import com.ctrip.hermes.metaserver.event.VersionAwareTask;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -23,8 +22,6 @@ public abstract class BaseNodeCacheListener implements NodeCacheListener {
 
 	protected long m_version;
 
-	protected Guard m_guard;
-
 	protected ClusterStateHolder m_clusterStateHolder;
 
 	private ListenerContainer<NodeCacheListener> m_listenerContainer;
@@ -32,35 +29,34 @@ public abstract class BaseNodeCacheListener implements NodeCacheListener {
 	protected BaseNodeCacheListener(long version, ListenerContainer<NodeCacheListener> listenerContainer) {
 		m_version = version;
 		m_eventBus = PlexusComponentLocator.lookup(EventBus.class);
-		m_guard = PlexusComponentLocator.lookup(Guard.class);
 		m_clusterStateHolder = PlexusComponentLocator.lookup(ClusterStateHolder.class);
 		m_listenerContainer = listenerContainer;
 	}
 
 	@Override
 	public void nodeChanged() throws Exception {
-		m_eventBus.submit(m_version, new Task() {
+		new VersionAwareTask(m_version) {
 
 			@Override
-			public void run() {
-				long start = System.currentTimeMillis();
-				try {
-					processNodeChanged();
-				} finally {
-					log.info("NodeCacheListener handle nodeChanged cost {}ms(name:{}, version:{}).",
-					      (System.currentTimeMillis() - start), getName(), m_version);
-				}
+			public String name() {
+				return getName();
 			}
 
 			@Override
-			public void onGuardNotPass() {
+			protected void doRun() {
+				processNodeChanged();
+			}
+
+			@Override
+			protected void onGuardNotPass() {
 				removeListener();
 			}
-		});
+		}.run();
+
 	}
 
-	private void removeListener() {
-		log.debug("NodeCacheListener invalidate, will remove from nodeCache(name:{}, version:{})", getName(), m_version);
+	protected void removeListener() {
+		log.info("NodeCacheListener invalidate, will remove from nodeCache(name:{}, version:{})", getName(), m_version);
 		m_listenerContainer.removeListener(this);
 	}
 
