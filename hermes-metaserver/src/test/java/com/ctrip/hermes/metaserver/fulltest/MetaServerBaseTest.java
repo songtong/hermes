@@ -62,7 +62,7 @@ import com.ctrip.hermes.meta.transform.DefaultXmlBuilder;
 import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
-import com.ctrip.hermes.metaserver.commons.MetaStatusStatusResponse;
+import com.ctrip.hermes.metaserver.commons.MetaServerStatusResponse;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
@@ -244,7 +244,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		HostPort leader = null;
 		HostPort trueLeader = null;
 		for (Map.Entry<Integer, HermesClassLoaderMetaServer> entry : metaServers.entrySet()) {
-			MetaStatusStatusResponse re = BaseRestClient.getMetaStatusLeaderInfo(entry.getKey());
+			MetaServerStatusResponse re = BaseRestClient.getMetaStatusLeaderInfo(entry.getKey());
 			if (re.getRole() == Role.LEADER) {
 				leaderCount++;
 				trueLeader = re.getLeaderInfo();
@@ -290,7 +290,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		List<Topic> topics = new ArrayList<>(MetaHelper.loadMeta().getTopics().values());
 
 		for (Integer port : metaServers.keySet()) {
-			MetaStatusStatusResponse re = BaseRestClient.getMetaStatusBrokerAssignment(port);
+			MetaServerStatusResponse re = BaseRestClient.getMetaStatusBrokerAssignment(port);
 
 			// only Leader has Broker Assignment Info.
 			if (re.getRole() == Role.LEADER) {
@@ -327,7 +327,7 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		List<Topic> topics = new ArrayList<>(MetaHelper.loadMeta().getTopics().values());
 
 		for (Integer port : metaServers.keySet()) {
-			MetaStatusStatusResponse re = BaseRestClient.getMetaStatusMetaServerAssignment(port);
+			MetaServerStatusResponse re = BaseRestClient.getMetaStatusMetaServerAssignment(port);
 			assertEquals("Topics.size() should be equal to MetaServer Assignments", topics.size(), re
 			      .getMetaServerAssignments().getAssignments().size());
 
@@ -667,11 +667,11 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		// MetaServerResource.MetaStatusStatusResponse.class)
 		// HermesClassLoader problem.
 		// so have to parse into map/JsonObject...
-		public static MetaStatusStatusResponse getMetaStatusLeaderInfo(int port) throws IOException {
+		public static MetaServerStatusResponse getMetaStatusLeaderInfo(int port) throws IOException {
 			WebTarget webTarget = getWebTarget(port);
 			Map map = webTarget.path("/metaserver/status").request().get().readEntity(Map.class);
 
-			MetaStatusStatusResponse re = new MetaStatusStatusResponse();
+			MetaServerStatusResponse re = new MetaServerStatusResponse();
 			re.setRole(Role.valueOf((String) map.get("role")));
 			Map map2 = (Map) map.get("leaderInfo");
 			HostPort hostport = new HostPort((String) map2.get("host"), (Integer) map2.get("port"));
@@ -680,11 +680,11 @@ public class MetaServerBaseTest extends ComponentTestCase {
 			return re;
 		}
 
-		public static MetaStatusStatusResponse getMetaStatusBrokerAssignment(int port) throws IOException {
+		public static MetaServerStatusResponse getMetaStatusBrokerAssignment(int port) throws IOException {
 			WebTarget webTarget = getWebTarget(port);
 			Map map = webTarget.path("/metaserver/status").request().get().readEntity(Map.class);
 
-			MetaStatusStatusResponse re = new MetaStatusStatusResponse();
+			MetaServerStatusResponse re = new MetaServerStatusResponse();
 			Map<String, Assignment<Integer>> assignment = JSON.parseObject(
 			      JSON.toJSONString(map.get("brokerAssignments")), new TypeReference<Map<String, Assignment<Integer>>>() {
 			      }.getType());
@@ -694,11 +694,11 @@ public class MetaServerBaseTest extends ComponentTestCase {
 			return re;
 		}
 
-		public static MetaStatusStatusResponse getMetaStatusMetaServerAssignment(int port) throws IOException {
+		public static MetaServerStatusResponse getMetaStatusMetaServerAssignment(int port) throws IOException {
 			WebTarget webTarget = getWebTarget(port);
 			Map map = webTarget.path("/metaserver/status").request().get().readEntity(Map.class);
 
-			MetaStatusStatusResponse re = new MetaStatusStatusResponse();
+			MetaServerStatusResponse re = new MetaServerStatusResponse();
 
 			Assignment<String> assignment = JSON.parseObject(JSON.toJSONString(map.get("metaServerAssignments")),
 			      new TypeReference<Assignment<String>>() {

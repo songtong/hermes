@@ -12,7 +12,7 @@ import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.metaserver.cluster.Role;
 
-public class MetaStatusStatusResponse {
+public class MetaServerStatusResponse {
 
 	private String currentHost;
 
