@@ -15,7 +15,6 @@ import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrateg
 import com.ctrip.hermes.metaserver.broker.endpoint.MetaEndpointClient;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
-import com.ctrip.hermes.metaserver.commons.LeaseHolderZkClient;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
@@ -50,7 +49,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(MetaHolder.class));
 		all.add(A(MetaServerConfig.class));
-		all.add(A(LeaseHolderZkClient.class));
 
 		// consumer lease
 		all.add(A(DefaultConsumerLeaseAllocator.class));

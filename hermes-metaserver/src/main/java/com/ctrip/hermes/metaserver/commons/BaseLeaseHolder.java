@@ -26,6 +26,7 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
+import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 
 /**
@@ -42,7 +43,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	protected ZookeeperService m_zookeeperService;
 
 	@Inject
-	private LeaseHolderZkClient m_zkClient;
+	private ZKClient m_zkClient;
 
 	@Inject
 	private MetaServerConfig m_config;

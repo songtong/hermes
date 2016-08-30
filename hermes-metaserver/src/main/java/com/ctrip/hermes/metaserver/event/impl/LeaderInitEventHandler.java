@@ -204,7 +204,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		return brokers;
 	}
 
-	private void addMetaServerListListener(long version) throws Exception {
+	protected void addMetaServerListListener(long version) throws Exception {
 		ListenerContainer<PathChildrenCacheListener> listenerContainer = m_metaServerListCache.getListenable();
 		listenerContainer.addListener(new MetaServerListListener(version, listenerContainer), m_eventBus.getExecutor());
 	}
