@@ -45,8 +45,8 @@ public class BrokerLeaseChangedEventHandler extends BaseEventHandler {
 		}
 
 		m_brokerAssignmentHolder.reassign(new ArrayList<Topic>(m_metaHolder.getMeta().getTopics().values()));
-		m_metaHolder.update(m_endpointMaker.makeEndpoints(event.getEventBus(), event.getVersion(),
-		      event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), mergeOnce));
+		m_metaHolder.update(m_endpointMaker.makeEndpoints(m_eventBus, event.getVersion(), m_clusterStateHolder,
+		      m_brokerAssignmentHolder.getAssignments(), mergeOnce));
 	}
 
 	@Override

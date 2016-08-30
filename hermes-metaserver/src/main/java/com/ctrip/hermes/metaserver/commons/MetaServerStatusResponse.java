@@ -12,7 +12,7 @@ import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.metaserver.cluster.Role;
 
-public class MetaStatusStatusResponse {
+public class MetaServerStatusResponse {
 
 	private String currentHost;
 
@@ -39,6 +39,16 @@ public class MetaStatusStatusResponse {
 	private List<Server> m_configedMetaServers;
 
 	private List<Idc> m_idcs;
+
+	private boolean m_zkConnected;
+
+	public boolean isZkConnected() {
+		return m_zkConnected;
+	}
+
+	public void setZkConnected(boolean zkConnected) {
+		m_zkConnected = zkConnected;
+	}
 
 	public String getCurrentHost() {
 		return currentHost;

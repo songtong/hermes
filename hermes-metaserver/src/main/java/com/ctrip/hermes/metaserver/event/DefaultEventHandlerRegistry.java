@@ -37,4 +37,13 @@ public class DefaultEventHandlerRegistry extends ContainerHolder implements Even
 		}
 	}
 
+	@Override
+	public void forEachHandler(Function fun) {
+		for (List<EventHandler> handlers : m_handlers.values()) {
+			for (EventHandler handler : handlers) {
+				fun.apply(handler);
+			}
+		}
+	}
+
 }

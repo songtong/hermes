@@ -13,27 +13,10 @@ public class Event {
 
 	private Object m_data;
 
-	private EventBus m_eventBus;
-
-	private ClusterStateHolder m_stateHolder;
-
 	public Event(EventType type, long version, ClusterStateHolder stateHolder, Object data) {
 		m_type = type;
 		m_version = version;
-		m_stateHolder = stateHolder;
 		m_data = data;
-	}
-
-	public ClusterStateHolder getStateHolder() {
-		return m_stateHolder;
-	}
-
-	public EventBus getEventBus() {
-		return m_eventBus;
-	}
-
-	public void setEventBus(EventBus eventBus) {
-		m_eventBus = eventBus;
 	}
 
 	public EventType getType() {

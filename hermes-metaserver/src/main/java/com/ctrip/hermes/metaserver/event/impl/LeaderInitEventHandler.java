@@ -6,19 +6,24 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.listen.ListenerContainer;
+import org.apache.curator.framework.recipes.cache.ChildData;
+import org.apache.curator.framework.recipes.cache.NodeCache;
+import org.apache.curator.framework.recipes.cache.NodeCacheListener;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.utils.ZKPaths;
 import org.apache.curator.x.discovery.ServiceCache;
 import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.details.ServiceCacheListener;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -31,13 +36,13 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
-import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.cluster.Role;
-import com.ctrip.hermes.metaserver.commons.BaseEventBasedZkWatcher;
+import com.ctrip.hermes.metaserver.commons.BaseNodeCacheListener;
+import com.ctrip.hermes.metaserver.commons.BasePathChildrenCacheListener;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.event.Event;
-import com.ctrip.hermes.metaserver.event.EventBus;
+import com.ctrip.hermes.metaserver.event.EventBus.Task;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
 import com.ctrip.hermes.metaserver.event.Guard;
@@ -85,6 +90,10 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	private ServiceCache<Void> m_serviceCache;
 
+	protected NodeCache m_baseMetaVersionCache;
+
+	protected PathChildrenCache m_metaServerListCache;
+
 	public void setMetaService(MetaService metaService) {
 		m_metaService = metaService;
 	}
@@ -129,28 +138,41 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			throw new InitializationException("Failed to start broker discovery service", e);
 		}
 
+		try {
+			m_baseMetaVersionCache = new NodeCache(m_zkClient.get(), ZKPathUtils.getBaseMetaVersionZkPath());
+			m_baseMetaVersionCache.start(true);
+
+			m_metaServerListCache = new PathChildrenCache(m_zkClient.get(), ZKPathUtils.getMetaServersZkPath(), true);
+			m_metaServerListCache.start(StartMode.BUILD_INITIAL_CACHE);
+		} catch (Exception e) {
+			throw new InitializationException(String.format("Init {} failed.", getName()), e);
+		}
+
 	}
 
 	@Override
 	protected void processEvent(Event event) throws Exception {
-		loadAndAddBaseMetaWatcher(new BaseMetaWatcher(event));
+		long version = event.getVersion();
+		addBaseMetaVersionListener(version);
+
 		Meta baseMeta = loadBaseMeta();
 
 		ArrayList<Topic> topics = new ArrayList<>(baseMeta.getTopics().values());
-		List<Server> metaServers = loadAndAddMetaServerListWatcher(new MetaServerListWatcher(event));
 		List<Server> configedMetaServers = baseMeta.getServers() == null ? new ArrayList<Server>()
 		      : new ArrayList<Server>(baseMeta.getServers().values());
 		List<Idc> idcs = baseMeta.getIdcs() == null ? new ArrayList<Idc>() : new ArrayList<Idc>(baseMeta.getIdcs()
 		      .values());
 
-		Map<String, ClientContext> brokers = loadAndAddBrokerListWatcher(new BrokerChangedListener(event));
+		addMetaServerListListener(version);
+		List<Server> metaServers = loadMetaServerList();
+		Map<String, ClientContext> brokers = loadAndAddBrokerListWatcher(new BrokerChangedListener(version));
 		List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>() : new ArrayList<>(
 		      baseMeta.getEndpoints().values());
 
 		m_brokerAssignmentHolder.reassign(brokers, configedBrokers, topics);
 
-		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoint = m_endpointMaker.makeEndpoints(event.getEventBus(),
-		      event.getVersion(), event.getStateHolder(), m_brokerAssignmentHolder.getAssignments(), false);
+		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoint = m_endpointMaker.makeEndpoints(m_eventBus,
+		      event.getVersion(), m_clusterStateHolder, m_brokerAssignmentHolder.getAssignments(), false);
 
 		m_metaHolder.setIdcs(idcs);
 		m_metaHolder.setConfigedMetaServers(configedMetaServers);
@@ -160,6 +182,11 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		m_metaServerAssignmentHolder.reload();
 		m_metaServerAssignmentHolder.reassign(metaServers, m_metaHolder.getConfigedMetaServers(), topics);
+	}
+
+	protected void addBaseMetaVersionListener(long version) throws DalException {
+		ListenerContainer<NodeCacheListener> listenerContainer = m_baseMetaVersionCache.getListenable();
+		listenerContainer.addListener(new BaseMetaVersionListener(version, listenerContainer), m_eventBus.getExecutor());
 	}
 
 	private Map<String, ClientContext> loadAndAddBrokerListWatcher(ServiceCacheListener listener) {
@@ -177,33 +204,25 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		return brokers;
 	}
 
-	private List<Server> loadAndAddMetaServerListWatcher(Watcher watcher) throws Exception {
+	protected void addMetaServerListListener(long version) throws Exception {
+		ListenerContainer<PathChildrenCacheListener> listenerContainer = m_metaServerListCache.getListenable();
+		listenerContainer.addListener(new MetaServerListListener(version, listenerContainer), m_eventBus.getExecutor());
+	}
+
+	private List<Server> loadMetaServerList() {
 		List<Server> metaServers = new ArrayList<>();
-
-		CuratorFramework client = m_zkClient.get();
-
-		String rootPath = ZKPathUtils.getMetaServersZkPath();
-
-		List<String> serverPaths = client.getChildren().usingWatcher(watcher).forPath(rootPath);
-
-		for (String serverPath : serverPaths) {
-			HostPort hostPort = ZKSerializeUtils.deserialize(
-			      client.getData().forPath(ZKPaths.makePath(rootPath, serverPath)), HostPort.class);
+		for (ChildData childData : m_metaServerListCache.getCurrentData()) {
+			HostPort hostPort = ZKSerializeUtils.deserialize(childData.getData(), HostPort.class);
 
 			Server s = new Server();
 			s.setHost(hostPort.getHost());
-			s.setId(serverPath);
+			s.setId(ZKPathUtils.lastSegment(childData.getPath()));
 			s.setPort(hostPort.getPort());
 
 			metaServers.add(s);
 		}
 
 		return metaServers;
-	}
-
-	private Long loadAndAddBaseMetaWatcher(Watcher watcher) throws Exception {
-		byte[] data = m_zkClient.get().getData().usingWatcher(watcher).forPath(ZKPathUtils.getBaseMetaVersionZkPath());
-		return ZKSerializeUtils.deserialize(data, Long.class);
 	}
 
 	private Meta loadBaseMeta() throws Exception {
@@ -215,19 +234,17 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		return Role.LEADER;
 	}
 
-	private class BaseMetaWatcher extends BaseEventBasedZkWatcher {
+	protected class BaseMetaVersionListener extends BaseNodeCacheListener {
 
-		private ClusterStateHolder m_clusterStateHolder;
-
-		protected BaseMetaWatcher(com.ctrip.hermes.metaserver.event.Event event) {
-			super(event.getEventBus(), event.getVersion(), org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged);
-			m_clusterStateHolder = event.getStateHolder();
+		protected BaseMetaVersionListener(long version, ListenerContainer<NodeCacheListener> listenerContainer) {
+			super(version, listenerContainer);
 		}
 
 		@Override
-		protected void doProcess(WatchedEvent event) {
+		protected void processNodeChanged() {
 			try {
-				Long baseMetaVersion = loadAndAddBaseMetaWatcher(this);
+				Long baseMetaVersion = ZKSerializeUtils.deserialize(m_baseMetaVersionCache.getCurrentData().getData(),
+				      Long.class);
 				log.info("Leader BaseMeta changed(version:{}).", baseMetaVersion);
 				m_eventBus.pubEvent(new com.ctrip.hermes.metaserver.event.Event(EventType.BASE_META_CHANGED, m_version,
 				      m_clusterStateHolder, baseMetaVersion));
@@ -236,22 +253,22 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			}
 		}
 
+		@Override
+		protected String getName() {
+			return "BaseMetaVersionListener";
+		}
 	}
 
-	private class MetaServerListWatcher extends BaseEventBasedZkWatcher {
+	protected class MetaServerListListener extends BasePathChildrenCacheListener {
 
-		private ClusterStateHolder m_clusterStateHolder;
-
-		protected MetaServerListWatcher(com.ctrip.hermes.metaserver.event.Event event) {
-			super(event.getEventBus(), event.getVersion(),
-			      org.apache.zookeeper.Watcher.Event.EventType.NodeChildrenChanged);
-			m_clusterStateHolder = event.getStateHolder();
+		protected MetaServerListListener(long version, ListenerContainer<PathChildrenCacheListener> listenerContainer) {
+			super(version, listenerContainer);
 		}
 
 		@Override
-		protected void doProcess(WatchedEvent event) {
+		protected void childChanged() {
 			try {
-				List<Server> metaServers = loadAndAddMetaServerListWatcher(this);
+				List<Server> metaServers = loadMetaServerList();
 
 				m_eventBus.pubEvent(new com.ctrip.hermes.metaserver.event.Event(EventType.META_SERVER_LIST_CHANGED,
 				      m_version, m_clusterStateHolder, metaServers));
@@ -260,20 +277,19 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			}
 		}
 
+		@Override
+		protected String getName() {
+			return "MetaServerListListener";
+		}
+
 	}
 
 	private class BrokerChangedListener implements ServiceCacheListener {
 
-		private EventBus m_eventBus;
-
-		private ClusterStateHolder m_clusterStateHolder;
-
 		private long m_version;
 
-		public BrokerChangedListener(com.ctrip.hermes.metaserver.event.Event event) {
-			m_eventBus = event.getEventBus();
-			m_clusterStateHolder = event.getStateHolder();
-			m_version = event.getVersion();
+		public BrokerChangedListener(long version) {
+			m_version = version;
 		}
 
 		@Override
@@ -283,24 +299,25 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		@Override
 		public void cacheChanged() {
-			if (m_version == m_guard.getVersion()) {
-				m_eventBus.getExecutor().submit(new Runnable() {
+			m_eventBus.submit(m_version, new Task() {
 
-					@Override
-					public void run() {
-						long start = System.currentTimeMillis();
-						try {
-							Map<String, ClientContext> brokerList = loadAndAddBrokerListWatcher(null);
-							m_eventBus.pubEvent(new Event(EventType.BROKER_LIST_CHANGED, m_version, m_clusterStateHolder,
-							      brokerList));
-						} finally {
-							log.info("Broker list changed.(duration={})", (System.currentTimeMillis() - start));
-						}
+				@Override
+				public void run() {
+					long start = System.currentTimeMillis();
+					try {
+						Map<String, ClientContext> brokerList = loadAndAddBrokerListWatcher(null);
+						m_eventBus.pubEvent(new Event(EventType.BROKER_LIST_CHANGED, m_version, m_clusterStateHolder,
+						      brokerList));
+					} finally {
+						log.info("Broker list changed.(duration={})", (System.currentTimeMillis() - start));
 					}
-				});
-			} else {
-				m_serviceCache.removeListener(this);
-			}
+				}
+
+				@Override
+				public void onGuardNotPass() {
+					m_serviceCache.removeListener(BrokerChangedListener.this);
+				}
+			});
 		}
 	}
 

@@ -72,9 +72,7 @@ public class LeaseResource {
 
 	private static final long EXCEPTION_CAUGHT_DELAY_TIME_MILLIS = 5 * 1000L;
 
-	private static final long CONSUMER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS = 5 * 1000L;
-
-	private static final long BROKER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS = 5 * 1000L;
+	private static final long CLUSTER_NOT_READY_DELAY_TIME_MILLIS = 5 * 1000L;
 
 	private ConsumerLeaseAllocatorLocator m_consumerLeaseAllocatorLocator;
 
@@ -113,9 +111,9 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			if (!PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).inited()) {
+			if (!PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).inited() || !m_clusterStateHolder.isConnected()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + CONSUMER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
+				      + CLUSTER_NOT_READY_DELAY_TIME_MILLIS);
 			} else {
 				try {
 					LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
@@ -165,9 +163,9 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			if (!PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).inited()) {
+			if (!PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).inited() || !m_clusterStateHolder.isConnected()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + CONSUMER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
+				      + CLUSTER_NOT_READY_DELAY_TIME_MILLIS);
 			} else {
 				try {
 					LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
@@ -220,9 +218,9 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			if (!PlexusComponentLocator.lookup(BrokerLeaseHolder.class).inited()) {
+			if (!PlexusComponentLocator.lookup(BrokerLeaseHolder.class).inited() || !m_clusterStateHolder.isConnected()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + BROKER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
+				      + CLUSTER_NOT_READY_DELAY_TIME_MILLIS);
 			} else {
 				try {
 					LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/acquire",
@@ -272,9 +270,9 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			if (!PlexusComponentLocator.lookup(BrokerLeaseHolder.class).inited()) {
+			if (!PlexusComponentLocator.lookup(BrokerLeaseHolder.class).inited() || !m_clusterStateHolder.isConnected()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-				      + BROKER_LEASE_HOLDER_INITING_DELAY_TIME_MILLIS);
+				      + CLUSTER_NOT_READY_DELAY_TIME_MILLIS);
 			} else {
 				try {
 					LeaseAcquireResponse leaseAcquireResponse = proxyBrokerLeaseRequestIfNecessary(req, "/broker/renew",

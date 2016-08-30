@@ -25,15 +25,6 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaserver.commons.LeaseHolderZkClient</role>
-			<implementation>com.ctrip.hermes.metaserver.commons.LeaseHolderZkClient</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.zk.ZKConfig</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator</role>
 			<implementation>com.ctrip.hermes.metaserver.consumer.DefaultConsumerLeaseAllocator</implementation>
 			<requirements>
@@ -74,7 +65,7 @@
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.commons.LeaseHolderZkClient</role>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
@@ -119,7 +110,7 @@
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.commons.LeaseHolderZkClient</role>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>

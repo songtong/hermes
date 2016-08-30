@@ -25,7 +25,7 @@ import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
-import com.ctrip.hermes.metaserver.commons.MetaStatusStatusResponse;
+import com.ctrip.hermes.metaserver.commons.MetaServerStatusResponse;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
@@ -73,8 +73,9 @@ public class MetaServerResource {
 
 	@GET
 	@Path("status")
-	public MetaStatusStatusResponse getStatus() throws Exception {
-		MetaStatusStatusResponse response = new MetaStatusStatusResponse();
+	public MetaServerStatusResponse getStatus() throws Exception {
+		MetaServerStatusResponse response = new MetaServerStatusResponse();
+		response.setZkConnected(m_clusterStatusHolder.isConnected());
 		response.setCurrentHost(m_config.getMetaServerName());
 		response.setRole(m_clusterStatusHolder.getRole());
 		response.setLeaderInfo(m_clusterStatusHolder.getLeader());

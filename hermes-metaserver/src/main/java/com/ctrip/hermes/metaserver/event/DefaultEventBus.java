@@ -12,6 +12,8 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.event.EventHandlerRegistry.Function;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -32,8 +34,8 @@ public class DefaultEventBus implements EventBus, Initializable {
 
 	@Override
 	public void pubEvent(final Event event) {
-
-		if (event.getVersion() != m_guard.getVersion()) {
+		if (!m_guard.pass(event.getVersion())) {
+			log.debug("Can't pub event, due to event expired(event:{}, version:{}).", event.getType(), event.getVersion());
 			return;
 		}
 
@@ -44,14 +46,13 @@ public class DefaultEventBus implements EventBus, Initializable {
 		if (handlers == null || handlers.isEmpty()) {
 			log.error("Event handler not found for type {}.", type);
 		} else {
-			event.setEventBus(this);
-
 			for (final EventHandler handler : handlers) {
 				m_executor.submit(new Runnable() {
 
 					@Override
 					public void run() {
-						if (event.getVersion() != m_guard.getVersion()) {
+						if (!m_guard.pass(event.getVersion())) {
+							log.debug("Event expired(event:{}, version:{}).", event.getType(), event.getVersion());
 							return;
 						}
 
@@ -62,7 +63,7 @@ public class DefaultEventBus implements EventBus, Initializable {
 							log.error("Exception occurred while processing event {} in handler {}", event.getType(),
 							      handler.getName(), e);
 						} finally {
-							log.info("Handle event.(type={}, duration={}).", type, (System.currentTimeMillis() - start));
+							log.info("Handle event.(type={}, duration={}ms).", type, (System.currentTimeMillis() - start));
 						}
 					}
 				});
@@ -79,6 +80,39 @@ public class DefaultEventBus implements EventBus, Initializable {
 	@Override
 	public ExecutorService getExecutor() {
 		return m_executor;
+	}
+
+	@Override
+	public void submit(final long version, final Task task) {
+		if (m_guard.pass(version)) {
+			m_executor.submit(new Runnable() {
+
+				@Override
+				public void run() {
+					if (m_guard.pass(version)) {
+						task.run();
+					} else {
+						log.debug("Can't run task, due to event expired(version:{}).", version);
+						task.onGuardNotPass();
+					}
+				}
+			});
+		} else {
+			log.debug("Can't submit task, due to event expired(version:{}).", version);
+			task.onGuardNotPass();
+		}
+	}
+
+	@Override
+	public void start(final ClusterStateHolder clusterStateHolder) {
+		m_handlerRegistry.forEachHandler(new Function() {
+
+			@Override
+			public void apply(EventHandler handler) {
+				handler.setClusterStateHolder(clusterStateHolder);
+				handler.setEventBus(DefaultEventBus.this);
+			}
+		});
 	}
 
 }
