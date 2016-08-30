@@ -254,11 +254,13 @@ public class ClusterStateHolder implements Initializable {
 				case LOST:
 					m_connected.set(false);
 					m_guard.upgradeVersion();
+					log.info("Disconnected from zk(state:{})", newState);
 					break;
 				case RECONNECTED:
 				case CONNECTED:
 					m_connected.set(true);
 					becomeObserver();
+					log.info("Reconnected to zk(state:{})", newState);
 				default:
 					break;
 				}
