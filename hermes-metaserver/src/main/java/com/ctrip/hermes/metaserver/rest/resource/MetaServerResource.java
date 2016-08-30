@@ -75,6 +75,7 @@ public class MetaServerResource {
 	@Path("status")
 	public MetaServerStatusResponse getStatus() throws Exception {
 		MetaServerStatusResponse response = new MetaServerStatusResponse();
+		response.setZkConnected(m_clusterStatusHolder.isConnected());
 		response.setCurrentHost(m_config.getMetaServerName());
 		response.setRole(m_clusterStatusHolder.getRole());
 		response.setLeaderInfo(m_clusterStatusHolder.getLeader());

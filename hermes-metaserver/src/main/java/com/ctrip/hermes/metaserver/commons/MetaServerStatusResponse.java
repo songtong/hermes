@@ -40,6 +40,16 @@ public class MetaServerStatusResponse {
 
 	private List<Idc> m_idcs;
 
+	private boolean m_zkConnected;
+
+	public boolean isZkConnected() {
+		return m_zkConnected;
+	}
+
+	public void setZkConnected(boolean zkConnected) {
+		m_zkConnected = zkConnected;
+	}
+
 	public String getCurrentHost() {
 		return currentHost;
 	}

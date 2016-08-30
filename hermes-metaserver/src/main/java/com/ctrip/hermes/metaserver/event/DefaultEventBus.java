@@ -35,7 +35,7 @@ public class DefaultEventBus implements EventBus, Initializable {
 	@Override
 	public void pubEvent(final Event event) {
 		if (!m_guard.pass(event.getVersion())) {
-			log.info("Can't pub event, due to event expired(event:{}, version:{}).", event.getType(), event.getVersion());
+			log.debug("Can't pub event, due to event expired(event:{}, version:{}).", event.getType(), event.getVersion());
 			return;
 		}
 
@@ -52,7 +52,7 @@ public class DefaultEventBus implements EventBus, Initializable {
 					@Override
 					public void run() {
 						if (!m_guard.pass(event.getVersion())) {
-							log.info("Event expired(event:{}, version:{}).", event.getType(), event.getVersion());
+							log.debug("Event expired(event:{}, version:{}).", event.getType(), event.getVersion());
 							return;
 						}
 
