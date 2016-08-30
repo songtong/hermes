@@ -84,7 +84,7 @@ public class CmessageResource {
 	private void updateCmsgConfig() {
 		ChildData childData = m_cmsgConfigCache.getCurrentData();
 		if (childData != null) {
-			m_info.set(ZKSerializeUtils.deserialize(childData.getData(), String.class));
+			m_cmsgConfig.set(ZKSerializeUtils.deserialize(childData.getData(), String.class));
 		}
 	}
 
