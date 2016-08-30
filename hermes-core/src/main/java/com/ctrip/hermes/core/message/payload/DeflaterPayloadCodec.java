@@ -42,11 +42,14 @@ public class DeflaterPayloadCodec extends AbstractPayloadCodec {
 		try {
 			DeflaterOutputStream gout = new DeflaterOutputStream(bout, def);
 			IO.INSTANCE.copy(input, gout, AutoClose.INPUT_OUTPUT);
+			return bout.toByteArray();
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("Unexpected exception when encode %s of topic %s", obj, topic), e);
+		} finally {
+			if (def != null) {
+				def.end();
+			}
 		}
-
-		return bout.toByteArray();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -62,6 +65,10 @@ public class DeflaterPayloadCodec extends AbstractPayloadCodec {
 			return (T) bout.toByteArray();
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("Unexpected exception when decoding"), e);
+		} finally {
+			if (inf != null) {
+				inf.end();
+			}
 		}
 	}
 
