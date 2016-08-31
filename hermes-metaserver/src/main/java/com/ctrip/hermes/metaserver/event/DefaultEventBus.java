@@ -72,29 +72,8 @@ public class DefaultEventBus implements EventBus, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		// LIFO ExecutorService
-		m_executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>() {
-			private static final long serialVersionUID = 1L;
-
-			public boolean offer(Runnable r) {
-				return super.offerFirst(r);
-			}
-
-			@Override
-			public boolean offer(Runnable r, long timeout, TimeUnit unit) throws InterruptedException {
-				return super.offerFirst(r, timeout, unit);
-			}
-
-			@Override
-			public boolean add(Runnable r) {
-				return super.offerFirst(r);
-			}
-
-			@Override
-			public void put(Runnable r) throws InterruptedException {
-				super.putFirst(r);
-			}
-		}, HermesThreadFactory.create("EventBusExecutor", true));
+		m_executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>(),
+		      HermesThreadFactory.create("EventBusExecutor", true));
 	}
 
 	@Override
