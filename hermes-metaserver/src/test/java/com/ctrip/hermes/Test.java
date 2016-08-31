@@ -13,7 +13,7 @@ public class Test {
 		Builder builder = CuratorFrameworkFactory.builder();
 
 		builder.connectionTimeoutMs(1000);
-		builder.connectString("127.0.0.1:2181");
+		builder.connectString("127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183");
 		builder.retryPolicy(new RetryNTimes(1, 1000));
 		builder.sessionTimeoutMs(5000);
 
@@ -25,12 +25,6 @@ public class Test {
 			throw new InitializationException(e.getMessage(), e);
 		}
 
-		framework.createContainers("/hermes1/b");
-		System.in.read();
-		// framework.checkExists().creatingParentContainersIfNeeded().forPath("/hermes/b");
-		framework.createContainers("/hermes1/b");
-		System.in.read();
-		framework.createContainers("/hermes1/b");
 		System.in.read();
 	}
 
