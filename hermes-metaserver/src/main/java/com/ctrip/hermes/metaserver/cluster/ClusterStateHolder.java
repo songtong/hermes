@@ -128,7 +128,7 @@ public class ClusterStateHolder implements Initializable {
 				public void isLeader() {
 					becomeLeader();
 				}
-			}, m_eventBus.getExecutor());
+			});
 
 			try {
 				m_leaderLatch.start();
@@ -247,7 +247,7 @@ public class ClusterStateHolder implements Initializable {
 					break;
 				}
 			}
-		}, m_eventBus.getExecutor());
+		});
 	}
 
 	private void startLeaderLatchPathChildrenCache() throws InitializationException {
