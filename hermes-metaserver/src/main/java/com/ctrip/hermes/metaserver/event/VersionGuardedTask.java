@@ -9,15 +9,15 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class VersionGuaredTask implements Task {
+public abstract class VersionGuardedTask implements Task {
 
-	private static final Logger log = LoggerFactory.getLogger(VersionGuaredTask.class);
+	private static final Logger log = LoggerFactory.getLogger(VersionGuardedTask.class);
 
 	private long m_version;
 
 	private Guard m_guard;
 
-	public VersionGuaredTask(long version) {
+	public VersionGuardedTask(long version) {
 		m_version = version;
 		m_guard = PlexusComponentLocator.lookup(Guard.class);
 	}

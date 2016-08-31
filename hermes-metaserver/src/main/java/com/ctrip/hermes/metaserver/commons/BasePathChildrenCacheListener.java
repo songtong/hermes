@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.event.EventBus;
-import com.ctrip.hermes.metaserver.event.VersionGuaredTask;
+import com.ctrip.hermes.metaserver.event.VersionGuardedTask;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -41,7 +41,7 @@ public abstract class BasePathChildrenCacheListener implements PathChildrenCache
 		      || event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED
 		      || event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
 
-			new VersionGuaredTask(m_version) {
+			new VersionGuardedTask(m_version) {
 
 				@Override
 				public String name() {

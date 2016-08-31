@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.event.EventBus;
-import com.ctrip.hermes.metaserver.event.VersionGuaredTask;
+import com.ctrip.hermes.metaserver.event.VersionGuardedTask;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -35,7 +35,7 @@ public abstract class BaseNodeCacheListener implements NodeCacheListener {
 
 	@Override
 	public void nodeChanged() throws Exception {
-		new VersionGuaredTask(m_version) {
+		new VersionGuardedTask(m_version) {
 
 			@Override
 			public String name() {
