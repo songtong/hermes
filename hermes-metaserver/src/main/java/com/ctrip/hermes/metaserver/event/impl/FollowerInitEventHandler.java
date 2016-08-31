@@ -8,8 +8,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.apache.curator.framework.listen.ListenerContainer;
 import org.apache.curator.framework.recipes.cache.NodeCache;
 import org.apache.curator.framework.recipes.cache.NodeCacheListener;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -25,9 +23,9 @@ import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.BaseNodeCacheListener;
 import com.ctrip.hermes.metaserver.event.Event;
-import com.ctrip.hermes.metaserver.event.EventBus.Task;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
+import com.ctrip.hermes.metaserver.event.VersionGuardedTask;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaInfo;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
@@ -41,7 +39,7 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
  *
  */
 @Named(type = EventHandler.class, value = "FollowerInitEventHandler")
-public class FollowerInitEventHandler extends BaseEventHandler implements Initializable {
+public class FollowerInitEventHandler extends BaseEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(FollowerInitEventHandler.class);
 
@@ -96,8 +94,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		return EventType.FOLLOWER_INIT;
 	}
 
-	@Override
-	public void initialize() throws InitializationException {
+	public void start() {
 		m_scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory
 		      .create("FollowerRetry", true));
 		try {
@@ -111,7 +108,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 			      ZKPathUtils.getMetaServerAssignmentRootZkPath());
 			m_metaServerAssignmentVersionCache.start(true);
 		} catch (Exception e) {
-			throw new InitializationException(String.format("Init {} failed.", getName()), e);
+			throw new RuntimeException(String.format("Init {} failed.", getName()), e);
 		}
 
 	}
@@ -122,15 +119,16 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 		m_brokerAssignmentHolder.clear();
 
-		loadAndAddBaseMetaVersionListener(version);
-		loadAndAddLeaderMetaVersionListener(version);
-		loadAndAddMetaServerAssignmentVersionListener(version);
+		addBaseMetaVersionListener(version);
+		if (!fetchBaseMetaAndRoleChangeIfNeeded(m_clusterStateHolder)) {
+			loadAndAddLeaderMetaVersionListener(version);
+			loadAndAddMetaServerAssignmentVersionListener(version);
+		}
 	}
 
-	protected void loadAndAddBaseMetaVersionListener(long version) throws DalException {
+	protected void addBaseMetaVersionListener(long version) throws DalException {
 		ListenerContainer<NodeCacheListener> listenerContainer = m_baseMetaVersionCache.getListenable();
 		listenerContainer.addListener(new BaseMetaVersionListener(version, listenerContainer), m_eventBus.getExecutor());
-		fetchBaseMetaAndHandleChanged(m_clusterStateHolder);
 	}
 
 	protected void loadAndAddLeaderMetaVersionListener(long version) {
@@ -157,27 +155,22 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 			log.info("[{}]Fetched meta from leader(endpoint={}:{},version={})", role(), metaInfo.getHost(),
 			      metaInfo.getPort(), meta.getVersion());
 		} else if (meta == null) {
-			delayRetry(version, m_scheduledExecutor, new Task() {
+			delayRetry(m_scheduledExecutor, new VersionGuardedTask(version) {
 
 				@Override
-				public void run() {
-					try {
-						loadLeaderMeta(version);
-					} catch (Exception e) {
-						log.error("[{}]Exception occurred while loading meta from leader.", role(), e);
-					}
+				public void doRun() throws Exception {
+					loadLeaderMeta(version);
 				}
 
 				@Override
-				public void onGuardNotPass() {
-					// do nothing
-
+				public String name() {
+					return String.format("[%s]LeaderMetaVersionListenerRetry", role());
 				}
 			});
 		}
 	}
 
-	protected void fetchBaseMetaAndHandleChanged(ClusterStateHolder clusterStateHolder) throws DalException {
+	protected boolean fetchBaseMetaAndRoleChangeIfNeeded(ClusterStateHolder clusterStateHolder) throws DalException {
 		Meta baseMeta = m_metaService.refreshMeta();
 		log.info("[{}]BaseMeta refreshed(id:{}, version:{}).", role(), baseMeta.getId(), baseMeta.getVersion());
 
@@ -189,16 +182,19 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		m_metaHolder.setConfigedMetaServers(configedMetaServers);
 		m_metaHolder.setIdcs(idcs);
 
-		handleBaseMetaChanged(baseMeta, clusterStateHolder);
+		return roleChanged(baseMeta, clusterStateHolder);
 	}
 
-	protected void handleBaseMetaChanged(Meta baseMeta, ClusterStateHolder clusterStateHolder) {
+	protected boolean roleChanged(Meta baseMeta, ClusterStateHolder clusterStateHolder) {
 		Server server = getCurServerAndFixStatusByIDC(baseMeta);
 
 		if (server == null || !server.isEnabled()) {
 			log.info("[{}]Marked down!", role());
 			clusterStateHolder.becomeObserver();
+			return true;
 		}
+
+		return false;
 	}
 
 	@Override
@@ -215,21 +211,26 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 		@Override
 		protected void processNodeChanged() {
 			try {
-				fetchBaseMetaAndHandleChanged(m_clusterStateHolder);
+				fetchBaseMetaAndRoleChangeIfNeeded(m_clusterStateHolder);
 			} catch (Exception e) {
 				log.error("[{}]Exception occurred while doing BaseMetaVersionListener.processNodeChanged, will retry.",
 				      role(), e);
 
-				delayRetry(m_version, m_scheduledExecutor, new Task() {
+				delayRetry(m_scheduledExecutor, new VersionGuardedTask(m_version) {
 
 					@Override
-					public void run() {
+					public String name() {
+						return String.format("[%s]BaseMetaVersionListener", role());
+					}
+
+					@Override
+					protected void doRun() throws Exception {
 						processNodeChanged();
 					}
 
 					@Override
-					public void onGuardNotPass() {
-						// do nothing
+					protected void onGuardNotPass() {
+						removeListener();
 					}
 				});
 			}
@@ -258,7 +259,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 		@Override
 		protected String getName() {
-			return "LeaderMetaVersionListener";
+			return String.format("[%s]LeaderMetaVersionListener", role());
 		}
 	}
 
@@ -279,7 +280,7 @@ public class FollowerInitEventHandler extends BaseEventHandler implements Initia
 
 		@Override
 		protected String getName() {
-			return "MetaServerAssignmentVersionListener";
+			return String.format("[%s]MetaServerAssignmentVersionListener", role());
 		}
 	}
 

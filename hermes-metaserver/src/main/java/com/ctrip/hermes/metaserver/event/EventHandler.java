@@ -18,4 +18,6 @@ public interface EventHandler {
 
 	public void setClusterStateHolder(ClusterStateHolder clusterStateHolder);
 
+	public void start();
+
 }

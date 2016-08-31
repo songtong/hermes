@@ -100,7 +100,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 
 		m_curator.setData().forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(1L));
 
-		leaderInitEventHandler.initialize();
+		leaderInitEventHandler.start();
 		m_eventBus = lookup(EventBus.class);
 	}
 
@@ -198,7 +198,7 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 			}
 		}).when(m_metaServerAssignmentHolder).reassign(anyListOf(Server.class), anyMap(), anyListOf(Topic.class));
 
-		m_eventBus.pubEvent(new Event(EventType.LEADER_INIT, 0, createClusterStateHolder(), null));
+		m_eventBus.pubEvent(new Event(EventType.LEADER_INIT, 0, null));
 
 		latch.await(5, TimeUnit.SECONDS);
 	}

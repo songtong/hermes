@@ -19,8 +19,6 @@ import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.details.ServiceCacheListener;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -42,10 +40,9 @@ import com.ctrip.hermes.metaserver.commons.BasePathChildrenCacheListener;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.event.Event;
-import com.ctrip.hermes.metaserver.event.EventBus.Task;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
-import com.ctrip.hermes.metaserver.event.Guard;
+import com.ctrip.hermes.metaserver.event.VersionGuardedTask;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaservice.service.MetaService;
@@ -58,7 +55,7 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
  *
  */
 @Named(type = EventHandler.class, value = "LeaderInitEventHandler")
-public class LeaderInitEventHandler extends BaseEventHandler implements Initializable {
+public class LeaderInitEventHandler extends BaseEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(LeaderInitEventHandler.class);
 
@@ -82,9 +79,6 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 	@Inject
 	private EndpointMaker m_endpointMaker;
-
-	@Inject
-	private Guard m_guard;
 
 	private ServiceDiscovery<Void> m_serviceDiscovery;
 
@@ -120,7 +114,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 	}
 
 	@Override
-	public void initialize() throws InitializationException {
+	public void start() {
 		m_serviceDiscovery = ServiceDiscoveryBuilder.builder(Void.class)//
 		      .client(m_zkClient.get())//
 		      .basePath(m_config.getBrokerRegistryBasePath())//
@@ -129,13 +123,14 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		m_serviceCache = m_serviceDiscovery.serviceCacheBuilder()//
 		      .name(m_config.getBrokerRegistryName(null))//
 		      .threadFactory(HermesThreadFactory.create("brokerDiscoveryCache", true))//
+		      .executorService(m_eventBus.getExecutor())//
 		      .build();
 
 		try {
 			m_serviceDiscovery.start();
 			m_serviceCache.start();
 		} catch (Exception e) {
-			throw new InitializationException("Failed to start broker discovery service", e);
+			throw new RuntimeException("Failed to start broker discovery service", e);
 		}
 
 		try {
@@ -145,7 +140,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 			m_metaServerListCache = new PathChildrenCache(m_zkClient.get(), ZKPathUtils.getMetaServersZkPath(), true);
 			m_metaServerListCache.start(StartMode.BUILD_INITIAL_CACHE);
 		} catch (Exception e) {
-			throw new InitializationException(String.format("Init {} failed.", getName()), e);
+			throw new RuntimeException(String.format("Init {} failed.", getName()), e);
 		}
 
 	}
@@ -157,6 +152,14 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		Meta baseMeta = loadBaseMeta();
 
+		Server server = getCurServerAndFixStatusByIDC(baseMeta);
+
+		if (server == null || !server.isEnabled()) {
+			log.info("Marked down!");
+			m_clusterStateHolder.becomeObserver();
+			return;
+		}
+
 		ArrayList<Topic> topics = new ArrayList<>(baseMeta.getTopics().values());
 		List<Server> configedMetaServers = baseMeta.getServers() == null ? new ArrayList<Server>()
 		      : new ArrayList<Server>(baseMeta.getServers().values());
@@ -165,7 +168,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		addMetaServerListListener(version);
 		List<Server> metaServers = loadMetaServerList();
-		Map<String, ClientContext> brokers = loadAndAddBrokerListWatcher(new BrokerChangedListener(version));
+		Map<String, ClientContext> brokers = loadAndAddBrokerListListener(new BrokerListChangedListener(version));
 		List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>() : new ArrayList<>(
 		      baseMeta.getEndpoints().values());
 
@@ -189,7 +192,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 		listenerContainer.addListener(new BaseMetaVersionListener(version, listenerContainer), m_eventBus.getExecutor());
 	}
 
-	private Map<String, ClientContext> loadAndAddBrokerListWatcher(ServiceCacheListener listener) {
+	private Map<String, ClientContext> loadAndAddBrokerListListener(ServiceCacheListener listener) {
 		if (listener != null) {
 			m_serviceCache.addListener(listener);
 		}
@@ -247,7 +250,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 				      Long.class);
 				log.info("Leader BaseMeta changed(version:{}).", baseMetaVersion);
 				m_eventBus.pubEvent(new com.ctrip.hermes.metaserver.event.Event(EventType.BASE_META_CHANGED, m_version,
-				      m_clusterStateHolder, baseMetaVersion));
+				      baseMetaVersion));
 			} catch (Exception e) {
 				log.error("Exception occurred while handling base meta watcher event.", e);
 			}
@@ -255,7 +258,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		@Override
 		protected String getName() {
-			return "BaseMetaVersionListener";
+			return "[Leader]BaseMetaVersionListener";
 		}
 	}
 
@@ -271,7 +274,7 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 				List<Server> metaServers = loadMetaServerList();
 
 				m_eventBus.pubEvent(new com.ctrip.hermes.metaserver.event.Event(EventType.META_SERVER_LIST_CHANGED,
-				      m_version, m_clusterStateHolder, metaServers));
+				      m_version, metaServers));
 			} catch (Exception e) {
 				log.error("Exception occurred while handling meta server list watcher event.", e);
 			}
@@ -279,16 +282,16 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		@Override
 		protected String getName() {
-			return "MetaServerListListener";
+			return "[Leader]MetaServerListListener";
 		}
 
 	}
 
-	private class BrokerChangedListener implements ServiceCacheListener {
+	private class BrokerListChangedListener implements ServiceCacheListener {
 
 		private long m_version;
 
-		public BrokerChangedListener(long version) {
+		public BrokerListChangedListener(long version) {
 			m_version = version;
 		}
 
@@ -299,25 +302,29 @@ public class LeaderInitEventHandler extends BaseEventHandler implements Initiali
 
 		@Override
 		public void cacheChanged() {
-			m_eventBus.submit(m_version, new Task() {
+			try {
+				new VersionGuardedTask(m_version) {
 
-				@Override
-				public void run() {
-					long start = System.currentTimeMillis();
-					try {
-						Map<String, ClientContext> brokerList = loadAndAddBrokerListWatcher(null);
-						m_eventBus.pubEvent(new Event(EventType.BROKER_LIST_CHANGED, m_version, m_clusterStateHolder,
-						      brokerList));
-					} finally {
-						log.info("Broker list changed.(duration={})", (System.currentTimeMillis() - start));
+					@Override
+					public String name() {
+						return "[Leader]BrokerListChangedListener";
 					}
-				}
 
-				@Override
-				public void onGuardNotPass() {
-					m_serviceCache.removeListener(BrokerChangedListener.this);
-				}
-			});
+					@Override
+					protected void doRun() {
+						Map<String, ClientContext> brokerList = loadAndAddBrokerListListener(null);
+						m_eventBus.pubEvent(new Event(EventType.BROKER_LIST_CHANGED, m_version, brokerList));
+					}
+
+					@Override
+					protected void onGuardNotPass() {
+						m_serviceCache.removeListener(BrokerListChangedListener.this);
+					}
+				}.run();
+			} catch (Exception e) {
+				log.error("Exception occurred while handling BrokerListChangedListener", e);
+			}
+
 		}
 	}
 

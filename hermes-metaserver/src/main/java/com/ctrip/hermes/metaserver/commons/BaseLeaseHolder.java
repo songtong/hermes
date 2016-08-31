@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -49,8 +48,6 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	private MetaServerConfig m_config;
 
 	private AtomicLong m_leaseIdGenerator = new AtomicLong(System.nanoTime());
-
-	protected AtomicBoolean m_inited = new AtomicBoolean(false);
 
 	protected TreeCache m_treeCache;
 
@@ -165,18 +162,10 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	}
 
 	@Override
-	public boolean inited() {
-		return m_inited.get();
-	}
-
-	@Override
 	public void initialize() throws InitializationException {
-		log.info("Start to init {}", this.getClass().getSimpleName());
 		try {
 			doInitialize();
 			startDetailPrinterThread();
-			m_inited.set(true);
-			log.info("{} inited", getName());
 		} catch (Exception e) {
 			log.error("Failed to init LeaseHolder", e);
 			throw new InitializationException("Failed to init LeaseHolder", e);

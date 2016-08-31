@@ -10,8 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.event.EventBus;
-import com.ctrip.hermes.metaserver.event.EventBus.Task;
-import com.ctrip.hermes.metaserver.event.Guard;
+import com.ctrip.hermes.metaserver.event.VersionGuardedTask;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -25,8 +24,6 @@ public abstract class BasePathChildrenCacheListener implements PathChildrenCache
 
 	protected long m_version;
 
-	protected Guard m_guard;
-
 	protected ClusterStateHolder m_clusterStateHolder;
 
 	private ListenerContainer<PathChildrenCacheListener> m_listenerContainer;
@@ -34,7 +31,6 @@ public abstract class BasePathChildrenCacheListener implements PathChildrenCache
 	protected BasePathChildrenCacheListener(long version, ListenerContainer<PathChildrenCacheListener> listenerContainer) {
 		m_version = version;
 		m_eventBus = PlexusComponentLocator.lookup(EventBus.class);
-		m_guard = PlexusComponentLocator.lookup(Guard.class);
 		m_clusterStateHolder = PlexusComponentLocator.lookup(ClusterStateHolder.class);
 		m_listenerContainer = listenerContainer;
 	}
@@ -44,24 +40,25 @@ public abstract class BasePathChildrenCacheListener implements PathChildrenCache
 		if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED
 		      || event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED
 		      || event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
-			m_eventBus.submit(m_version, new Task() {
+
+			new VersionGuardedTask(m_version) {
 
 				@Override
-				public void run() {
-					long start = System.currentTimeMillis();
-					try {
-						childChanged();
-					} finally {
-						log.info("PathChildrenCacheListener handle childChanged cost {}ms(name:{}, version:{}).",
-						      (System.currentTimeMillis() - start), getName(), m_version);
-					}
+				public String name() {
+					return getName();
 				}
 
 				@Override
-				public void onGuardNotPass() {
+				protected void doRun() {
+					childChanged();
+				}
+
+				@Override
+				protected void onGuardNotPass() {
 					removeListener();
 				}
-			});
+			}.run();
+
 		}
 	}
 

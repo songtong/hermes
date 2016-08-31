@@ -2,7 +2,9 @@ package com.ctrip.hermes.metaserver.event;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -27,18 +29,10 @@ public class DefaultEventBus implements EventBus, Initializable {
 	@Inject
 	private EventHandlerRegistry m_handlerRegistry;
 
-	@Inject
-	private Guard m_guard;
-
 	private ExecutorService m_executor;
 
 	@Override
 	public void pubEvent(final Event event) {
-		if (!m_guard.pass(event.getVersion())) {
-			log.debug("Can't pub event, due to event expired(event:{}, version:{}).", event.getType(), event.getVersion());
-			return;
-		}
-
 		final EventType type = event.getType();
 
 		List<EventHandler> handlers = m_handlerRegistry.findHandler(type);
@@ -51,19 +45,23 @@ public class DefaultEventBus implements EventBus, Initializable {
 
 					@Override
 					public void run() {
-						if (!m_guard.pass(event.getVersion())) {
-							log.debug("Event expired(event:{}, version:{}).", event.getType(), event.getVersion());
-							return;
-						}
 
-						long start = System.currentTimeMillis();
 						try {
-							handler.onEvent(event);
+							new VersionGuardedTask(event.getVersion()) {
+
+								@Override
+								public String name() {
+									return handler.getName();
+								}
+
+								@Override
+								protected void doRun() throws Exception {
+									handler.onEvent(event);
+								}
+							}.run();
 						} catch (Exception e) {
 							log.error("Exception occurred while processing event {} in handler {}", event.getType(),
 							      handler.getName(), e);
-						} finally {
-							log.info("Handle event.(type={}, duration={}ms).", type, (System.currentTimeMillis() - start));
 						}
 					}
 				});
@@ -74,33 +72,34 @@ public class DefaultEventBus implements EventBus, Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_executor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("EventBus", true));
+		// LIFO ExecutorService
+		m_executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>() {
+			private static final long serialVersionUID = 1L;
+
+			public boolean offer(Runnable r) {
+				return super.offerFirst(r);
+			}
+
+			@Override
+			public boolean offer(Runnable r, long timeout, TimeUnit unit) throws InterruptedException {
+				return super.offerFirst(r, timeout, unit);
+			}
+
+			@Override
+			public boolean add(Runnable r) {
+				return super.offerFirst(r);
+			}
+
+			@Override
+			public void put(Runnable r) throws InterruptedException {
+				super.putFirst(r);
+			}
+		}, HermesThreadFactory.create("EventBusExecutor", true));
 	}
 
 	@Override
 	public ExecutorService getExecutor() {
 		return m_executor;
-	}
-
-	@Override
-	public void submit(final long version, final Task task) {
-		if (m_guard.pass(version)) {
-			m_executor.submit(new Runnable() {
-
-				@Override
-				public void run() {
-					if (m_guard.pass(version)) {
-						task.run();
-					} else {
-						log.debug("Can't run task, due to event expired(version:{}).", version);
-						task.onGuardNotPass();
-					}
-				}
-			});
-		} else {
-			log.debug("Can't submit task, due to event expired(version:{}).", version);
-			task.onGuardNotPass();
-		}
 	}
 
 	@Override
@@ -111,6 +110,7 @@ public class DefaultEventBus implements EventBus, Initializable {
 			public void apply(EventHandler handler) {
 				handler.setClusterStateHolder(clusterStateHolder);
 				handler.setEventBus(DefaultEventBus.this);
+				handler.start();
 			}
 		});
 	}

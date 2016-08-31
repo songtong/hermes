@@ -20,9 +20,9 @@ import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.event.Event;
-import com.ctrip.hermes.metaserver.event.EventBus.Task;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
+import com.ctrip.hermes.metaserver.event.VersionGuardedTask;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaservice.service.MetaService;
@@ -95,16 +95,16 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 			m_metaServerAssignmentHolder.reassign(null, null, topics);
 		} catch (Exception e) {
 			log.error("Exception occurred while processing BaseMetaChanged event, will retry.", e);
-			delayRetry(event.getVersion(), m_scheduledExecutor, new Task() {
+			delayRetry(m_scheduledExecutor, new VersionGuardedTask(event.getVersion()) {
 
 				@Override
-				public void run() {
+				public void doRun() throws Exception {
 					doProcess(event);
 				}
 
 				@Override
-				public void onGuardNotPass() {
-					// do nothing
+				public String name() {
+					return "BaseMetaChangedEventHandler";
 				}
 			});
 		}

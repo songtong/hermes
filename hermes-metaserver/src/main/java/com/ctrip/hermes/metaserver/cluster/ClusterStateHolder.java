@@ -1,14 +1,22 @@
 package com.ctrip.hermes.metaserver.cluster;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.ChildData;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatch.CloseMode;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
@@ -17,7 +25,6 @@ import org.apache.curator.framework.recipes.locks.LockInternalsSorter;
 import org.apache.curator.framework.recipes.locks.StandardLockInternalsDriver;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
-import org.apache.curator.utils.ZKPaths;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -78,13 +85,18 @@ public class ClusterStateHolder implements Initializable {
 
 	private AtomicBoolean m_connected = new AtomicBoolean(true);
 
+	private ExecutorService m_roleChangeExecutor;
+
+	private PathChildrenCache m_leaderLatchPathChildrenCache;
+
 	public void becomeLeader() {
 		m_roleLock.writeLock().lock();
 		try {
-			log.info("Become Leader");
-			m_leader.set(new HostPort(Networks.forIp().getLocalHostAddress(), m_config.getMetaServerPort()));
+			log.info("Become Leader!!!");
 			m_role = Role.LEADER;
-			m_eventBus.pubEvent(new Event(EventType.LEADER_INIT, m_guard.upgradeVersion(), this, null));
+			long newVersion = m_guard.upgradeVersion();
+			m_leader.set(new HostPort(Networks.forIp().getLocalHostAddress(), m_config.getMetaServerPort()));
+			m_eventBus.pubEvent(new Event(EventType.LEADER_INIT, newVersion, null));
 		} finally {
 			m_roleLock.writeLock().unlock();
 		}
@@ -93,11 +105,11 @@ public class ClusterStateHolder implements Initializable {
 	public void becomeFollower() {
 		m_roleLock.writeLock().lock();
 		try {
-			log.info("Become Follower");
+			log.info("Become Follower!!!");
 			m_role = Role.FOLLOWER;
+			long newVersion = m_guard.upgradeVersion();
 			startLeaderLatch();
-
-			m_eventBus.pubEvent(new Event(EventType.FOLLOWER_INIT, m_guard.upgradeVersion(), this, null));
+			m_eventBus.pubEvent(new Event(EventType.FOLLOWER_INIT, newVersion, null));
 		} finally {
 			m_roleLock.writeLock().unlock();
 		}
@@ -119,19 +131,25 @@ public class ClusterStateHolder implements Initializable {
 				public void isLeader() {
 					becomeLeader();
 				}
-			}, m_eventBus.getExecutor());
+			}, m_roleChangeExecutor);
 
-			delayStartLeaderLatch();
+			try {
+				m_leaderLatch.start();
+				log.info("LeaderLatch started");
+			} catch (Exception e) {
+				log.error("Failed to start LeaderLatch!!!", e);
+			}
 		}
 	}
 
 	public void becomeObserver() {
 		m_roleLock.writeLock().lock();
 		try {
-			log.info("Become Observer");
+			log.info("Become Observer!!!");
 			m_role = Role.OBSERVER;
+			long newVersion = m_guard.upgradeVersion();
 			closeLeaderLatch();
-			m_eventBus.pubEvent(new Event(EventType.OBSERVER_INIT, m_guard.upgradeVersion(), this, null));
+			m_eventBus.pubEvent(new Event(EventType.OBSERVER_INIT, newVersion, null));
 		} finally {
 			m_roleLock.writeLock().unlock();
 		}
@@ -141,7 +159,7 @@ public class ClusterStateHolder implements Initializable {
 		if (m_leaderLatch != null) {
 			try {
 				m_leaderLatch.close(CloseMode.SILENT);
-				log.info("LeaderLatch closed");
+				log.info("LeaderLatch closed!!!");
 			} catch (IOException e) {
 				log.error("Exception occurred while closing leaderLatch.", e);
 			} finally {
@@ -163,44 +181,6 @@ public class ClusterStateHolder implements Initializable {
 		becomeObserver();
 	}
 
-	private void delayStartLeaderLatch() {
-		Thread t = HermesThreadFactory.create("LeaderLatchDelayStarter", true).newThread(new Runnable() {
-
-			@Override
-			public void run() {
-				while (!Thread.interrupted() && !m_closed.get()) {
-					m_roleLock.readLock().lock();
-					try {
-						if (m_role != Role.FOLLOWER || m_leaderLatch == null) {
-							break;
-						}
-
-						if (m_consumerLeaseHolder.inited() && m_brokerLeaseHolder.inited()) {
-							try {
-								m_leaderLatch.start();
-								log.info("LeaderLatch started");
-								break;
-							} catch (Exception e) {
-								log.error("Failed to start LeaderLatch!!", e);
-							}
-						}
-
-					} finally {
-						m_roleLock.readLock().unlock();
-
-						try {
-							TimeUnit.SECONDS.sleep(1);
-						} catch (InterruptedException e) {
-							log.error("Failed to start LeaderLatch!!", e);
-							Thread.currentThread().interrupt();
-						}
-					}
-				}
-			}
-		});
-		t.start();
-	}
-
 	public void close() throws Exception {
 		if (m_closed.compareAndSet(false, true)) {
 			closeLeaderLatch();
@@ -211,30 +191,30 @@ public class ClusterStateHolder implements Initializable {
 		return m_leader.get();
 	}
 
-	private HostPort fetchLeaderInfoFromZk() {
-		try {
-			List<String> children = m_client.get().getChildren().forPath(ZKPathUtils.getMetaServersZkPath());
+	private void updateLeaderInfo() {
+		List<ChildData> children = m_leaderLatchPathChildrenCache.getCurrentData();
 
-			if (children != null && !children.isEmpty()) {
-
-				List<String> sortedChildren = LockInternals.getSortedChildren("latch-", new LockInternalsSorter() {
-
-					@Override
-					public String fixForSorting(String str, String lockName) {
-						return StandardLockInternalsDriver.standardFixForSorting(str, lockName);
-					}
-				}, children);
-
-				return ZKSerializeUtils.deserialize(
-				      m_client.get().getData()
-				            .forPath(ZKPaths.makePath(ZKPathUtils.getMetaServersZkPath(), sortedChildren.get(0))),
-				      HostPort.class);
+		if (children != null && !children.isEmpty()) {
+			List<String> childrenNames = new ArrayList<>(children.size());
+			Map<String, byte[]> nameDataMapping = new HashMap<>(children.size());
+			for (ChildData child : children) {
+				if (child.getData() != null && child.getData().length > 0) {
+					String name = ZKPathUtils.lastSegment(child.getPath());
+					childrenNames.add(name);
+					nameDataMapping.put(name, child.getData());
+				}
 			}
-		} catch (Exception e) {
-			log.error("Failed to fetch leader info from zk.", e);
-		}
 
-		return null;
+			List<String> sortedChildren = LockInternals.getSortedChildren("latch-", new LockInternalsSorter() {
+
+				@Override
+				public String fixForSorting(String str, String lockName) {
+					return StandardLockInternalsDriver.standardFixForSorting(str, lockName);
+				}
+			}, childrenNames);
+
+			m_leader.set(ZKSerializeUtils.deserialize(nameDataMapping.get(sortedChildren.get(0)), HostPort.class));
+		}
 	}
 
 	public boolean isConnected() {
@@ -243,8 +223,16 @@ public class ClusterStateHolder implements Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
+		m_roleChangeExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("ClusterRoleChangeExecutor",
+		      true));
+
 		m_eventBus.start(this);
 
+		addConnectionStateListener();
+		startLeaderLatchPathChildrenCache();
+	}
+
+	private void addConnectionStateListener() {
 		m_client.get().getConnectionStateListenable().addListener(new ConnectionStateListener() {
 
 			@Override
@@ -265,23 +253,35 @@ public class ClusterStateHolder implements Initializable {
 					break;
 				}
 			}
-		}, m_eventBus.getExecutor());
+		}, m_roleChangeExecutor);
+	}
 
-		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("LeaderInfoFetcher", true))
-		      .scheduleWithFixedDelay(new Runnable() {
+	private void startLeaderLatchPathChildrenCache() throws InitializationException {
+		try {
+			m_leaderLatchPathChildrenCache = new PathChildrenCache(m_client.get(), ZKPathUtils.getMetaServersZkPath(),
+			      true);
 
-			      @Override
-			      public void run() {
-				      try {
-					      HostPort leaderInfo = fetchLeaderInfoFromZk();
-					      if (leaderInfo != null) {
-						      m_leader.set(leaderInfo);
+			m_leaderLatchPathChildrenCache.getListenable().addListener(
+			      new PathChildrenCacheListener() {
+
+				      @Override
+				      public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) throws Exception {
+					      if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED
+					            || event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED
+					            || event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
+						      updateLeaderInfo();
 					      }
-				      } catch (Exception e) {
-					      log.error("Exception occurred while fetching leader info.", e);
 				      }
-			      }
-		      }, 5, 2, TimeUnit.SECONDS);
+			      },
+			      Executors.newSingleThreadExecutor(HermesThreadFactory.create(
+			            "LeaderLatchPathChildrenCacheListenerExecutor", true)));
+
+			m_leaderLatchPathChildrenCache.start(StartMode.BUILD_INITIAL_CACHE);
+		} catch (Exception e) {
+			throw new InitializationException("Init metaServer leaderLatch parent pathChildrenCache failed.", e);
+		}
+
+		updateLeaderInfo();
 	}
 
 	// for test only
