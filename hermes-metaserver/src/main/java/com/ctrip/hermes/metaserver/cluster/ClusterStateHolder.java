@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -80,6 +81,8 @@ public class ClusterStateHolder implements Initializable {
 
 	private ReentrantReadWriteLock m_roleLock = new ReentrantReadWriteLock(true);
 
+	private ExecutorService m_roleChangeExecutor;
+
 	private volatile Role m_role = null;
 
 	private AtomicBoolean m_connected = new AtomicBoolean(true);
@@ -121,14 +124,16 @@ public class ClusterStateHolder implements Initializable {
 
 				@Override
 				public void notLeader() {
-					becomeFollower();
+					if (m_connected.get()) {
+						becomeFollower();
+					}
 				}
 
 				@Override
 				public void isLeader() {
 					becomeLeader();
 				}
-			});
+			}, m_roleChangeExecutor);
 
 			try {
 				m_leaderLatch.start();
@@ -220,6 +225,9 @@ public class ClusterStateHolder implements Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
+		m_roleChangeExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("ClusterRoleChangeExecutor",
+		      true));
+
 		m_eventBus.start(this);
 
 		addConnectionStateListener();
@@ -234,20 +242,25 @@ public class ClusterStateHolder implements Initializable {
 				switch (newState) {
 				case SUSPENDED:
 				case LOST:
-					m_connected.set(false);
-					m_guard.upgradeVersion();
-					log.info("Disconnected from zk(state:{})", newState);
+					if (m_connected.get()) {
+						m_connected.set(false);
+						m_guard.upgradeVersion();
+						log.info("Disconnected from zk(state:{})", newState);
+					}
 					break;
 				case RECONNECTED:
 				case CONNECTED:
-					m_connected.set(true);
-					becomeObserver();
-					log.info("Reconnected to zk(state:{})", newState);
+					if (!m_connected.get()) {
+						m_connected.set(true);
+						becomeObserver();
+						log.info("Reconnected to zk(state:{})", newState);
+					}
+					break;
 				default:
 					break;
 				}
 			}
-		});
+		}, m_roleChangeExecutor);
 	}
 
 	private void startLeaderLatchPathChildrenCache() throws InitializationException {
