@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -85,8 +84,6 @@ public class ClusterStateHolder implements Initializable {
 
 	private AtomicBoolean m_connected = new AtomicBoolean(true);
 
-	private ExecutorService m_roleChangeExecutor;
-
 	private PathChildrenCache m_leaderLatchPathChildrenCache;
 
 	public void becomeLeader() {
@@ -131,7 +128,7 @@ public class ClusterStateHolder implements Initializable {
 				public void isLeader() {
 					becomeLeader();
 				}
-			}, m_roleChangeExecutor);
+			}, m_eventBus.getExecutor());
 
 			try {
 				m_leaderLatch.start();
@@ -223,9 +220,6 @@ public class ClusterStateHolder implements Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_roleChangeExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("ClusterRoleChangeExecutor",
-		      true));
-
 		m_eventBus.start(this);
 
 		addConnectionStateListener();
@@ -253,7 +247,7 @@ public class ClusterStateHolder implements Initializable {
 					break;
 				}
 			}
-		}, m_roleChangeExecutor);
+		}, m_eventBus.getExecutor());
 	}
 
 	private void startLeaderLatchPathChildrenCache() throws InitializationException {
