@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -15,6 +18,7 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.commons.Assignment;
@@ -53,8 +57,11 @@ public class MetaServerAssignmentHolder {
 
 	private ReentrantReadWriteLock m_lock = new ReentrantReadWriteLock();
 
+	private ExecutorService m_executor;
+
 	public MetaServerAssignmentHolder() {
 		m_assignments.set(new Assignment<String>());
+		m_executor = Executors.newFixedThreadPool(5, HermesThreadFactory.create("MetaServerAssignmentLoader", true));
 	}
 
 	public Map<String, ClientContext> getAssignment(String topic) {
@@ -154,42 +161,65 @@ public class MetaServerAssignmentHolder {
 	}
 
 	public void reload() {
-		Assignment<String> assignments = loadFromZk();
-		if (assignments != null) {
-			m_lock.writeLock().lock();
-			try {
-				m_assignments.set(assignments);
-			} finally {
-				m_lock.writeLock().unlock();
+		long start = System.currentTimeMillis();
+		try {
+			Assignment<String> assignments = loadFromZk();
+			if (assignments != null) {
+				m_lock.writeLock().lock();
+				try {
+					m_assignments.set(assignments);
+				} finally {
+					m_lock.writeLock().unlock();
+				}
 			}
+		} finally {
+			log.info("Reload metaServerAssignment cost {}ms", (System.currentTimeMillis() - start));
 		}
 	}
 
 	public Assignment<String> loadFromZk() {
-		Assignment<String> assignments = new Assignment<String>();
+		final Assignment<String> assignments = new Assignment<String>();
 
 		try {
 			String rootPath = ZKPathUtils.getMetaServerAssignmentRootZkPath();
-			CuratorFramework client = m_zkClient.get();
+			final CuratorFramework client = m_zkClient.get();
 
 			m_zkService.ensurePath(rootPath);
 
 			List<String> topics = client.getChildren().forPath(rootPath);
 
 			if (topics != null && !topics.isEmpty()) {
-				for (String topic : topics) {
-					String topicPath = ZKPathUtils.getMetaServerAssignmentZkPath(topic);
 
-					byte[] data = client.getData().forPath(topicPath);
+				final CountDownLatch latch = new CountDownLatch(topics.size());
 
-					Map<String, ClientContext> clients = ZKSerializeUtils.deserialize(data,
-					      new TypeReference<Map<String, ClientContext>>() {
-					      }.getType());
+				for (final String topic : topics) {
+					m_executor.submit(new Runnable() {
 
-					if (clients != null) {
-						assignments.addAssignment(topic, clients);
-					}
+						@Override
+						public void run() {
+							try {
+								String topicPath = ZKPathUtils.getMetaServerAssignmentZkPath(topic);
+
+								byte[] data = client.getData().forPath(topicPath);
+
+								Map<String, ClientContext> clients = ZKSerializeUtils.deserialize(data,
+								      new TypeReference<Map<String, ClientContext>>() {
+								      }.getType());
+
+								if (clients != null) {
+									assignments.addAssignment(topic, clients);
+								}
+							} catch (Exception e) {
+								log.error("Failed to load broker assignments from zk(topic:{}).", topic, e);
+							} finally {
+								latch.countDown();
+							}
+						}
+					});
+
 				}
+
+				latch.await();
 			}
 
 		} catch (Exception e) {
