@@ -20,7 +20,7 @@ public class ZKConfig {
 	}
 
 	public int getZkConnectionTimeoutMillis() {
-		return 1000;
+		return 5000;
 	}
 
 	public String getZkConnectionString() {
