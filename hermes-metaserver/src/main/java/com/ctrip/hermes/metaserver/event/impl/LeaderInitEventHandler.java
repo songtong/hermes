@@ -42,7 +42,7 @@ import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
-import com.ctrip.hermes.metaserver.event.VersionAwareTask;
+import com.ctrip.hermes.metaserver.event.VersionGuaredTask;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaservice.service.MetaService;
@@ -303,7 +303,7 @@ public class LeaderInitEventHandler extends BaseEventHandler {
 		@Override
 		public void cacheChanged() {
 			try {
-				new VersionAwareTask(m_version) {
+				new VersionGuaredTask(m_version) {
 
 					@Override
 					public String name() {

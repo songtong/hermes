@@ -22,7 +22,7 @@ import com.ctrip.hermes.metaserver.commons.EndpointMaker;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
-import com.ctrip.hermes.metaserver.event.VersionAwareTask;
+import com.ctrip.hermes.metaserver.event.VersionGuaredTask;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaservice.service.MetaService;
@@ -95,7 +95,7 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 			m_metaServerAssignmentHolder.reassign(null, null, topics);
 		} catch (Exception e) {
 			log.error("Exception occurred while processing BaseMetaChanged event, will retry.", e);
-			delayRetry(m_scheduledExecutor, new VersionAwareTask(event.getVersion()) {
+			delayRetry(m_scheduledExecutor, new VersionGuaredTask(event.getVersion()) {
 
 				@Override
 				public void doRun() throws Exception {

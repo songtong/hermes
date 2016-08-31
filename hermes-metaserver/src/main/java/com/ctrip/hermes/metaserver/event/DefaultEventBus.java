@@ -47,7 +47,7 @@ public class DefaultEventBus implements EventBus, Initializable {
 					public void run() {
 
 						try {
-							new VersionAwareTask(event.getVersion()) {
+							new VersionGuaredTask(event.getVersion()) {
 
 								@Override
 								public String name() {

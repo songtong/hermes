@@ -25,7 +25,7 @@ import com.ctrip.hermes.metaserver.commons.BaseNodeCacheListener;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
-import com.ctrip.hermes.metaserver.event.VersionAwareTask;
+import com.ctrip.hermes.metaserver.event.VersionGuaredTask;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaInfo;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
@@ -155,7 +155,7 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 			log.info("[{}]Fetched meta from leader(endpoint={}:{},version={})", role(), metaInfo.getHost(),
 			      metaInfo.getPort(), meta.getVersion());
 		} else if (meta == null) {
-			delayRetry(m_scheduledExecutor, new VersionAwareTask(version) {
+			delayRetry(m_scheduledExecutor, new VersionGuaredTask(version) {
 
 				@Override
 				public void doRun() throws Exception {
@@ -216,7 +216,7 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 				log.error("[{}]Exception occurred while doing BaseMetaVersionListener.processNodeChanged, will retry.",
 				      role(), e);
 
-				delayRetry(m_scheduledExecutor, new VersionAwareTask(m_version) {
+				delayRetry(m_scheduledExecutor, new VersionGuaredTask(m_version) {
 
 					@Override
 					public String name() {
