@@ -79,7 +79,7 @@
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="org.apache.zookeeper" level="WARN" additivity="false">
+		<Logger name="org.apache.zookeeper" level="INFO" additivity="false">
 			<Appender-ref ref="ASYNC_ZK" />
 		</Logger>
 		<Logger name="org.apache.curator" level="INFO" additivity="false">
