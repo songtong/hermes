@@ -240,7 +240,6 @@ public class ClusterStateHolder implements Initializable {
 			@Override
 			public void stateChanged(CuratorFramework client, ConnectionState newState) {
 				switch (newState) {
-				case SUSPENDED:
 				case LOST:
 					if (m_connected.get()) {
 						m_connected.set(false);

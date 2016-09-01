@@ -3,14 +3,14 @@ package com.ctrip.hermes.metaserver.commons;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
 public class Assignment<Key> {
-	private Map<Key, Map<String, ClientContext>> m_assignment = new ConcurrentHashMap<>();
+	private ConcurrentMap<Key, Map<String, ClientContext>> m_assignment = new ConcurrentHashMap<>();
 
 	public boolean isAssignTo(Key key, String client) {
 		Map<String, ClientContext> clients = m_assignment.get(key);
@@ -23,7 +23,7 @@ public class Assignment<Key> {
 
 	public void addAssignment(Key key, Map<String, ClientContext> clients) {
 		if (!m_assignment.containsKey(key)) {
-			m_assignment.put(key, new HashMap<String, ClientContext>());
+			m_assignment.putIfAbsent(key, new HashMap<String, ClientContext>());
 		}
 		m_assignment.get(key).putAll(clients);
 	}

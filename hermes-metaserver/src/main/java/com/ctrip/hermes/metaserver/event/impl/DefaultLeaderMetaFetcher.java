@@ -37,6 +37,7 @@ public class DefaultLeaderMetaFetcher implements LeaderMetaFetcher {
 			return null;
 		}
 
+		long start = System.currentTimeMillis();
 		try {
 			if (Networks.forIp().getLocalHostAddress().equals(metaInfo.getHost())
 			      && m_config.getMetaServerPort() == metaInfo.getPort()) {
@@ -65,6 +66,8 @@ public class DefaultLeaderMetaFetcher implements LeaderMetaFetcher {
 
 		} catch (Exception e) {
 			log.error("Failed to fetch meta from leader({}:{})", metaInfo.getHost(), metaInfo.getPort(), e);
+		} finally {
+			log.info("Fetch leader info cost {}ms", (System.currentTimeMillis() - start));
 		}
 		return null;
 	}
