@@ -183,7 +183,6 @@ public class LeaderInitEventHandler extends BaseEventHandler {
 		m_metaHolder.setMetaServers(metaServers);
 		m_metaHolder.update(topicPartition2Endpoint);
 
-		m_metaServerAssignmentHolder.reload();
 		m_metaServerAssignmentHolder.reassign(metaServers, m_metaHolder.getConfigedMetaServers(), topics);
 	}
 

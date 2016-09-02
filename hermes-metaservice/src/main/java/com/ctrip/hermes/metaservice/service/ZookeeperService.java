@@ -31,6 +31,6 @@ public interface ZookeeperService {
 
 	public void updateZkBaseMetaVersion(long version) throws Exception;
 
-	void persistBulk(Map<String, byte[]> pathAndDatas, String... touchPaths) throws Exception;
+	void persistBulk(Map<String, byte[]> pathAndDatas) throws Exception;
 
 }
