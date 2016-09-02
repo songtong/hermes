@@ -39,6 +39,7 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 		if (originAssignments == null) {
 			originAssignments = new Assignment<>();
 		}
+		originAssignments = removeDeletedTopics(topics, originAssignments);
 
 		Map<String, List<String>> originMetaServerToTopic = mapMetaServerToTopics(originAssignments);
 
@@ -76,6 +77,24 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 		}
 
 		return newAssignments;
+	}
+
+	private Assignment<String> removeDeletedTopics(List<Topic> topics, Assignment<String> originAssignments) {
+		Set<String> topicNames = new HashSet<>();
+		for (Topic topic : topics) {
+			topicNames.add(topic.getName());
+		}
+
+		Assignment<String> assignment = new Assignment<>();
+
+		for (Map.Entry<String, Map<String, ClientContext>> entry : originAssignments.getAssignments().entrySet()) {
+			String topicName = entry.getKey();
+			if (topicNames.contains(topicName)) {
+				assignment.addAssignment(topicName, entry.getValue());
+			}
+		}
+
+		return assignment;
 	}
 
 	private void putAssignToResult(Assignment<String> newAssignments, Map<String, Server> currentMetaServers,
