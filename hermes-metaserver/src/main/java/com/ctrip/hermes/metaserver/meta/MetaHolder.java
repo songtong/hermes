@@ -19,10 +19,13 @@ import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Server;
+import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.MetaUtils;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.log.LoggerConstants;
@@ -184,13 +187,16 @@ public class MetaHolder implements Initializable {
 				try {
 					Meta newMeta = m_metaMerger.merge(m_baseCache.get(), m_metaServerListCache.get(), m_endpointCache.get());
 					MetaInfo metaInfo = fetchLatestMetaInfo();
-					setMetaCache(newMeta.setVersion(metaInfo.getTimestamp()));
-					persistMetaInfo(metaInfo);
 
-					traceLog.info("Upgrade dynamic meta(id={}, version={}, meta={}).", newMeta.getId(),
-					      newMeta.getVersion(), m_mergedMetaCache.get().getJsonStringComplete());
-					log.info("Upgrade dynamic meta(id={}, version={}).", newMeta.getId(), newMeta.getVersion());
+					if (PlexusComponentLocator.lookup(ClusterStateHolder.class).getRole() == Role.LEADER) {
+						setMetaCache(newMeta.setVersion(metaInfo.getTimestamp()));
+						persistMetaInfo(metaInfo);
 
+						traceLog.info("Upgrade dynamic meta(id={}, version={}, meta={}).", newMeta.getId(),
+						      newMeta.getVersion(), m_mergedMetaCache.get().getJsonStringComplete());
+						log.info("Upgrade dynamic meta(id={}, version={}).", newMeta.getId(), newMeta.getVersion());
+
+					}
 				} catch (Exception e) {
 					log.error("Exception occurred while updating meta.", e);
 				}

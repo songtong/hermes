@@ -30,7 +30,7 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 public class DefaultZookeeperService implements ZookeeperService {
 	private static final Logger log = LoggerFactory.getLogger(DefaultZookeeperService.class);
 
-	private static final int BULK_PERSISTENCE_MAX_SIZE = 100;
+	private static final int BULK_PERSISTENCE_MAX_SIZE = 200;
 
 	@Inject
 	private ZKClient m_zkClient;

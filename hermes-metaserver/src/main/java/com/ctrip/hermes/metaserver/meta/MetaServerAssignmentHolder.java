@@ -2,8 +2,13 @@ package com.ctrip.hermes.metaserver.meta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -21,8 +26,12 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.log.LoggerConstants;
@@ -61,9 +70,51 @@ public class MetaServerAssignmentHolder implements Initializable {
 
 	private Cache<String, Map<String, ClientContext>> m_topiAssignmentCache;
 
+	private BlockingQueue<Runnable> m_persistZKTaskQueue = new LinkedBlockingQueue<>();
+
 	@Override
 	public void initialize() throws InitializationException {
 		m_topiAssignmentCache = CacheBuilder.newBuilder().maximumSize(2000).build();
+		initPathChildrenCache();
+
+		startPersistZkThread();
+	}
+
+	private void startPersistZkThread() {
+		ExecutorService persistTaskExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create(
+		      "MetaServerAssignmentZKPersistThread", true));
+		persistTaskExecutor.submit(new Runnable() {
+
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						int skipped = 0;
+						Runnable task = m_persistZKTaskQueue.take();
+						if (!m_persistZKTaskQueue.isEmpty()) {
+							LinkedList<Runnable> queuedTasks = new LinkedList<>();
+							m_persistZKTaskQueue.drainTo(queuedTasks);
+							skipped = queuedTasks.size();
+							task = queuedTasks.getLast();
+						}
+
+						try {
+							task.run();
+						} finally {
+							if (skipped > 0) {
+								log.info("Skip {} metaServerAssignment persistence tasks.", skipped);
+							}
+						}
+
+					} catch (Throwable e) {
+						log.error("Exeception occurred in MetaServerAssignmentZKPersistThread loop", e);
+					}
+				}
+			}
+		});
+	}
+
+	private void initPathChildrenCache() throws InitializationException {
 		m_pathChildrenCache = new PathChildrenCache(m_zkClient.get(), ZKPathUtils.getMetaServerAssignmentRootZkPath(),
 		      true);
 
@@ -160,9 +211,16 @@ public class MetaServerAssignmentHolder implements Initializable {
 		}
 	}
 
-	private void updateAssignments(Assignment<String> newAssignments) {
+	private void updateAssignments(final Assignment<String> newAssignments) {
 		if (newAssignments != null) {
-			persistToZk(newAssignments, getAssignments());
+			m_persistZKTaskQueue.offer(new Runnable() {
+				@Override
+				public void run() {
+					if (PlexusComponentLocator.lookup(ClusterStateHolder.class).getRole() == Role.LEADER) {
+						persistToZk(newAssignments, getAssignments());
+					}
+				}
+			});
 		}
 	}
 
