@@ -169,28 +169,34 @@ public class MetaServerAssignmentHolder implements Initializable {
 	private void persistToZk(Assignment<String> newAssignments, Assignment<String> originAssignments) {
 		if (newAssignments != null) {
 			Map<String, byte[]> zkPathAndDatas = new HashMap<>();
-			for (Map.Entry<String, Map<String, ClientContext>> entry : newAssignments.getAssignments().entrySet()) {
-				String topic = entry.getKey();
-				Map<String, ClientContext> metaServers = entry.getValue();
-
-				if (originAssignments != null) {
-					Map<String, ClientContext> originMetaServers = originAssignments.getAssignment(topic);
-					if (originMetaServers == null || originMetaServers.isEmpty()) {
-						putToPathDataPair(zkPathAndDatas, topic, metaServers);
-					} else {
-						if (!originMetaServers.keySet().equals(metaServers.keySet())) {
-							putToPathDataPair(zkPathAndDatas, topic, metaServers);
-						}
-					}
-				} else {
-					putToPathDataPair(zkPathAndDatas, topic, metaServers);
-				}
-			}
-
+			long start = System.currentTimeMillis();
 			try {
-				m_zkService.persistBulk(zkPathAndDatas);
-			} catch (Exception e) {
-				log.error("Failed to persisit meta server assignments to zk.", e);
+				for (Map.Entry<String, Map<String, ClientContext>> entry : newAssignments.getAssignments().entrySet()) {
+					String topic = entry.getKey();
+					Map<String, ClientContext> metaServers = entry.getValue();
+
+					if (originAssignments != null) {
+						Map<String, ClientContext> originMetaServers = originAssignments.getAssignment(topic);
+						if (originMetaServers == null || originMetaServers.isEmpty()) {
+							putToPathDataPair(zkPathAndDatas, topic, metaServers);
+						} else {
+							if (!originMetaServers.keySet().equals(metaServers.keySet())) {
+								putToPathDataPair(zkPathAndDatas, topic, metaServers);
+							}
+						}
+					} else {
+						putToPathDataPair(zkPathAndDatas, topic, metaServers);
+					}
+				}
+
+				try {
+					m_zkService.persistBulk(zkPathAndDatas);
+				} catch (Exception e) {
+					log.error("Failed to persisit meta server assignments to zk.", e);
+				}
+			} finally {
+				log.info("Persist {} metaServerAssignments cost {}ms.", zkPathAndDatas.size(),
+				      (System.currentTimeMillis() - start));
 			}
 		}
 	}
