@@ -67,8 +67,6 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 
 	protected NodeCache m_leaderMetaVersionCache;
 
-	protected NodeCache m_metaServerAssignmentVersionCache;
-
 	public void setMetaHolder(MetaHolder metaHolder) {
 		m_metaHolder = metaHolder;
 	}
@@ -103,10 +101,6 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 
 			m_leaderMetaVersionCache = new NodeCache(m_zkClient.get(), ZKPathUtils.getMetaInfoZkPath());
 			m_leaderMetaVersionCache.start(true);
-
-			m_metaServerAssignmentVersionCache = new NodeCache(m_zkClient.get(),
-			      ZKPathUtils.getMetaServerAssignmentRootZkPath());
-			m_metaServerAssignmentVersionCache.start(true);
 		} catch (Exception e) {
 			throw new RuntimeException(String.format("Init {} failed.", getName()), e);
 		}
@@ -122,7 +116,6 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 		addBaseMetaVersionListener(version);
 		if (!fetchBaseMetaAndRoleChangeIfNeeded(m_clusterStateHolder)) {
 			loadAndAddLeaderMetaVersionListener(version);
-			loadAndAddMetaServerAssignmentVersionListener(version);
 		}
 	}
 
@@ -136,13 +129,6 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 		listenerContainer
 		      .addListener(new LeaderMetaVersionListener(version, listenerContainer), m_eventBus.getExecutor());
 		loadLeaderMeta(version);
-	}
-
-	protected void loadAndAddMetaServerAssignmentVersionListener(long version) {
-		ListenerContainer<NodeCacheListener> listenerContainer = m_metaServerAssignmentVersionCache.getListenable();
-		listenerContainer.addListener(new MetaServerAssignmentVersionListener(version, listenerContainer),
-		      m_eventBus.getExecutor());
-		m_metaServerAssignmentHolder.reload();
 	}
 
 	protected void loadLeaderMeta(final long version) {
@@ -260,27 +246,6 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 		@Override
 		protected String getName() {
 			return String.format("[%s]LeaderMetaVersionListener", role());
-		}
-	}
-
-	protected class MetaServerAssignmentVersionListener extends BaseNodeCacheListener {
-
-		protected MetaServerAssignmentVersionListener(long version, ListenerContainer<NodeCacheListener> listenerContainer) {
-			super(version, listenerContainer);
-		}
-
-		@Override
-		protected void processNodeChanged() {
-			try {
-				m_metaServerAssignmentHolder.reload();
-			} catch (Exception e) {
-				log.error("[{}]Exception occurred while handling leader meta watcher event.", role(), e);
-			}
-		}
-
-		@Override
-		protected String getName() {
-			return String.format("[%s]MetaServerAssignmentVersionListener", role());
 		}
 	}
 

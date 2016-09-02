@@ -213,7 +213,7 @@ public class DefaultZookeeperService implements ZookeeperService {
 	}
 
 	@Override
-	public void persistBulk(Map<String, byte[]> pathAndDatas, String... touchPaths) throws Exception {
+	public void persistBulk(Map<String, byte[]> pathAndDatas) throws Exception {
 		if (pathAndDatas != null && !pathAndDatas.isEmpty()) {
 			try {
 				CuratorTransaction transaction = null;
@@ -247,29 +247,6 @@ public class DefaultZookeeperService implements ZookeeperService {
 				if (uncommittedCount > 0) {
 					bridge.and().commit();
 				}
-
-				transaction = null;
-				bridge = null;
-
-				if (touchPaths != null && touchPaths.length > 0) {
-					byte[] now = ZKSerializeUtils.serialize(m_systemClockService.now());
-					for (String touchPath : touchPaths) {
-
-						ensurePath(touchPath);
-
-						if (transaction == null) {
-							transaction = m_zkClient.get().inTransaction();
-							bridge = transaction.setData().forPath(touchPath, now);
-						} else {
-							bridge.and().setData().forPath(touchPath, now);
-						}
-					}
-				}
-
-				if (transaction != null) {
-					bridge.and().commit();
-				}
-
 			} catch (Exception e) {
 				log.error("Exception occurred in persist", e);
 				throw e;

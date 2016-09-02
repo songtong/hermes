@@ -33,7 +33,7 @@ import com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.LeaderInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.MetaServerListChangedEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.ObserverInitEventHandler;
-import com.ctrip.hermes.metaserver.meta.DefaultMetaServerAssigningStrategy;
+import com.ctrip.hermes.metaserver.meta.LeastAdjustmentMetaServerAssigningStrategy;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaserver.monitor.DefaultQueryOffsetResultMonitor;
@@ -72,7 +72,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(BrokerAssignmentHolder.class));
 		all.add(A(DefaultBrokerPartitionAssigningStrategy.class));
 		all.add(A(MetaServerAssignmentHolder.class));
-		all.add(A(DefaultMetaServerAssigningStrategy.class));
+		all.add(A(LeastAdjustmentMetaServerAssigningStrategy.class));
 
 		// event handler
 		all.add(A(DefaultEventHandlerRegistry.class));

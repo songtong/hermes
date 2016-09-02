@@ -202,7 +202,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.meta.MetaServerAssigningStrategy</role>
-			<implementation>com.ctrip.hermes.metaserver.meta.DefaultMetaServerAssigningStrategy</implementation>
+			<implementation>com.ctrip.hermes.metaserver.meta.LeastAdjustmentMetaServerAssigningStrategy</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.event.EventHandlerRegistry</role>

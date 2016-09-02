@@ -4,13 +4,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.ChildData;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -18,7 +21,6 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.TypeReference;
-import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.commons.Assignment;
@@ -28,13 +30,15 @@ import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
 @Named(type = MetaServerAssignmentHolder.class)
-public class MetaServerAssignmentHolder {
+public class MetaServerAssignmentHolder implements Initializable {
 
 	private static final Logger log = LoggerFactory.getLogger(MetaServerAssignmentHolder.class);
 
@@ -49,56 +53,86 @@ public class MetaServerAssignmentHolder {
 	@Inject
 	private MetaServerAssigningStrategy m_metaServerAssigningStrategy;
 
-	private AtomicReference<Assignment<String>> m_assignments = new AtomicReference<>();
-
 	private AtomicReference<List<Server>> m_metaServersCache = new AtomicReference<>();
 
 	private AtomicReference<List<Topic>> m_topicsCache = new AtomicReference<>();
 
-	private ReentrantReadWriteLock m_lock = new ReentrantReadWriteLock();
+	private PathChildrenCache m_pathChildrenCache;
 
-	private ExecutorService m_executor;
+	private Cache<String, Map<String, ClientContext>> m_topiAssignmentCache;
 
-	public MetaServerAssignmentHolder() {
-		m_assignments.set(new Assignment<String>());
-		m_executor = Executors.newFixedThreadPool(5, HermesThreadFactory.create("MetaServerAssignmentLoader", true));
+	@Override
+	public void initialize() throws InitializationException {
+		m_topiAssignmentCache = CacheBuilder.newBuilder().maximumSize(2000).build();
+		m_pathChildrenCache = new PathChildrenCache(m_zkClient.get(), ZKPathUtils.getMetaServerAssignmentRootZkPath(),
+		      true);
+
+		m_pathChildrenCache.getListenable().addListener(new PathChildrenCacheListener() {
+
+			@Override
+			public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) throws Exception {
+				if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED
+				      || event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED
+				      || event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
+					String topic = ZKPathUtils.lastSegment(event.getData().getPath());
+					m_topiAssignmentCache.invalidate(topic);
+				}
+			}
+		});
+
+		try {
+			m_pathChildrenCache.start(StartMode.BUILD_INITIAL_CACHE);
+		} catch (Exception e) {
+			throw new InitializationException("Init metaServerAssignmentHolder failed.", e);
+		}
 	}
 
 	public Map<String, ClientContext> getAssignment(String topic) {
-		m_lock.readLock().lock();
-		try {
-			return m_assignments.get().getAssignment(topic);
-		} finally {
-			m_lock.readLock().unlock();
+		Map<String, ClientContext> assignment = m_topiAssignmentCache.getIfPresent(topic);
+		if (assignment == null) {
+			assignment = getAssignmentWithoutCache(topic);
+			m_topiAssignmentCache.put(topic, assignment);
 		}
+
+		return assignment;
+	}
+
+	private Map<String, ClientContext> getAssignmentWithoutCache(String topic) {
+		Map<String, ClientContext> assignment = null;
+		ChildData node = m_pathChildrenCache.getCurrentData(ZKPathUtils.getMetaServerAssignmentZkPath(topic));
+		if (node != null) {
+			assignment = ZKSerializeUtils.deserialize(node.getData(), new TypeReference<Map<String, ClientContext>>() {
+			}.getType());
+		}
+		return assignment == null ? new HashMap<String, ClientContext>() : assignment;
 	}
 
 	public Assignment<String> getAssignments() {
-		m_lock.readLock().lock();
-		try {
-			return m_assignments.get();
-		} finally {
-			m_lock.readLock().unlock();
+		Assignment<String> assignment = new Assignment<>();
+		List<ChildData> topicNodes = m_pathChildrenCache.getCurrentData();
+
+		if (topicNodes != null) {
+			for (ChildData topicNode : topicNodes) {
+				String topic = ZKPathUtils.lastSegment(topicNode.getPath());
+				assignment.addAssignment(topic, getAssignmentWithoutCache(topic));
+			}
 		}
+
+		return assignment;
 	}
 
 	public void reassign(List<Server> metaServers, Map<Pair<String, Integer>, Server> configedMetaServers,
 	      List<Topic> topics) {
-		m_lock.writeLock().lock();
-		try {
-			if (metaServers != null) {
-				setMetaServersCache(metaServers, configedMetaServers);
-			}
+		if (metaServers != null) {
+			setMetaServersCache(metaServers, configedMetaServers);
+		}
 
-			if (topics != null) {
-				m_topicsCache.set(topics);
-			}
-		} finally {
-			m_lock.writeLock().unlock();
+		if (topics != null) {
+			m_topicsCache.set(topics);
 		}
 		Assignment<String> newAssignments = m_metaServerAssigningStrategy.assign(m_metaServersCache.get(),
 		      m_topicsCache.get(), getAssignments());
-		setAssignments(newAssignments);
+		updateAssignments(newAssignments);
 
 		if (traceLog.isInfoEnabled()) {
 			traceLog.info("Meta server assignment changed.(new assignment={})", newAssignments.toString());
@@ -126,106 +160,46 @@ public class MetaServerAssignmentHolder {
 		}
 	}
 
-	private void setAssignments(Assignment<String> newAssignments) {
+	private void updateAssignments(Assignment<String> newAssignments) {
 		if (newAssignments != null) {
-			m_lock.writeLock().lock();
-			try {
-				m_assignments.set(newAssignments);
-			} finally {
-				m_lock.writeLock().unlock();
-			}
-
-			persistToZk(newAssignments);
+			persistToZk(newAssignments, getAssignments());
 		}
 	}
 
-	private void persistToZk(Assignment<String> assignments) {
-		if (assignments != null) {
+	private void persistToZk(Assignment<String> newAssignments, Assignment<String> originAssignments) {
+		if (newAssignments != null) {
 			Map<String, byte[]> zkPathAndDatas = new HashMap<>();
-			for (Map.Entry<String, Map<String, ClientContext>> entry : assignments.getAssignments().entrySet()) {
+			for (Map.Entry<String, Map<String, ClientContext>> entry : newAssignments.getAssignments().entrySet()) {
 				String topic = entry.getKey();
 				Map<String, ClientContext> metaServers = entry.getValue();
 
-				String path = ZKPathUtils.getMetaServerAssignmentZkPath(topic);
-				byte[] data = ZKSerializeUtils.serialize(metaServers);
-
-				zkPathAndDatas.put(path, data);
+				if (originAssignments != null) {
+					Map<String, ClientContext> originMetaServers = originAssignments.getAssignment(topic);
+					if (originMetaServers == null || originMetaServers.isEmpty()) {
+						putToPathDataPair(zkPathAndDatas, topic, metaServers);
+					} else {
+						if (!originMetaServers.keySet().equals(metaServers.keySet())) {
+							putToPathDataPair(zkPathAndDatas, topic, metaServers);
+						}
+					}
+				} else {
+					putToPathDataPair(zkPathAndDatas, topic, metaServers);
+				}
 			}
 
 			try {
-				m_zkService.persistBulk(zkPathAndDatas, ZKPathUtils.getMetaServerAssignmentRootZkPath());
+				m_zkService.persistBulk(zkPathAndDatas);
 			} catch (Exception e) {
 				log.error("Failed to persisit meta server assignments to zk.", e);
 			}
 		}
 	}
 
-	public void reload() {
-		long start = System.currentTimeMillis();
-		try {
-			Assignment<String> assignments = loadFromZk();
-			if (assignments != null) {
-				m_lock.writeLock().lock();
-				try {
-					m_assignments.set(assignments);
-				} finally {
-					m_lock.writeLock().unlock();
-				}
-			}
-		} finally {
-			log.info("Reload metaServerAssignment cost {}ms", (System.currentTimeMillis() - start));
-		}
+	private void putToPathDataPair(Map<String, byte[]> zkPathAndDatas, String topic,
+	      Map<String, ClientContext> metaServers) {
+		String path = ZKPathUtils.getMetaServerAssignmentZkPath(topic);
+		byte[] data = ZKSerializeUtils.serialize(metaServers);
+		zkPathAndDatas.put(path, data);
 	}
 
-	public Assignment<String> loadFromZk() {
-		final Assignment<String> assignments = new Assignment<String>();
-
-		try {
-			String rootPath = ZKPathUtils.getMetaServerAssignmentRootZkPath();
-			final CuratorFramework client = m_zkClient.get();
-
-			m_zkService.ensurePath(rootPath);
-
-			List<String> topics = client.getChildren().forPath(rootPath);
-
-			if (topics != null && !topics.isEmpty()) {
-
-				final CountDownLatch latch = new CountDownLatch(topics.size());
-
-				for (final String topic : topics) {
-					m_executor.submit(new Runnable() {
-
-						@Override
-						public void run() {
-							try {
-								String topicPath = ZKPathUtils.getMetaServerAssignmentZkPath(topic);
-
-								byte[] data = client.getData().forPath(topicPath);
-
-								Map<String, ClientContext> clients = ZKSerializeUtils.deserialize(data,
-								      new TypeReference<Map<String, ClientContext>>() {
-								      }.getType());
-
-								if (clients != null) {
-									assignments.addAssignment(topic, clients);
-								}
-							} catch (Exception e) {
-								log.error("Failed to load broker assignments from zk(topic:{}).", topic, e);
-							} finally {
-								latch.countDown();
-							}
-						}
-					});
-
-				}
-
-				latch.await();
-			}
-
-		} catch (Exception e) {
-			log.error("Failed to load broker assignments from zk.", e);
-		}
-
-		return assignments;
-	}
 }
