@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
@@ -57,14 +59,26 @@ public class MetaServerAssignmentHolder implements Initializable {
 
 	private PathChildrenCache m_pathChildrenCache;
 
-	private Cache<String, Map<String, ClientContext>> m_assignmentCache;
+	private Cache<String, Map<String, ClientContext>> m_topiAssignmentCache;
 
 	@Override
 	public void initialize() throws InitializationException {
+		m_topiAssignmentCache = CacheBuilder.newBuilder().maximumSize(2000).build();
 		m_pathChildrenCache = new PathChildrenCache(m_zkClient.get(), ZKPathUtils.getMetaServerAssignmentRootZkPath(),
 		      true);
 
-		m_assignmentCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.SECONDS).build();
+		m_pathChildrenCache.getListenable().addListener(new PathChildrenCacheListener() {
+
+			@Override
+			public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) throws Exception {
+				if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED
+				      || event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED
+				      || event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
+					String topic = ZKPathUtils.lastSegment(event.getData().getPath());
+					m_topiAssignmentCache.invalidate(topic);
+				}
+			}
+		});
 
 		try {
 			m_pathChildrenCache.start(StartMode.BUILD_INITIAL_CACHE);
@@ -74,10 +88,10 @@ public class MetaServerAssignmentHolder implements Initializable {
 	}
 
 	public Map<String, ClientContext> getAssignment(String topic) {
-		Map<String, ClientContext> assignment = m_assignmentCache.getIfPresent(topic);
+		Map<String, ClientContext> assignment = m_topiAssignmentCache.getIfPresent(topic);
 		if (assignment == null) {
 			assignment = getAssignmentWithoutCache(topic);
-			m_assignmentCache.put(topic, assignment);
+			m_topiAssignmentCache.put(topic, assignment);
 		}
 
 		return assignment;
@@ -118,7 +132,7 @@ public class MetaServerAssignmentHolder implements Initializable {
 		}
 		Assignment<String> newAssignments = m_metaServerAssigningStrategy.assign(m_metaServersCache.get(),
 		      m_topicsCache.get(), getAssignments());
-		setAssignments(newAssignments);
+		updateAssignments(newAssignments);
 
 		if (traceLog.isInfoEnabled()) {
 			traceLog.info("Meta server assignment changed.(new assignment={})", newAssignments.toString());
@@ -146,10 +160,9 @@ public class MetaServerAssignmentHolder implements Initializable {
 		}
 	}
 
-	private void setAssignments(Assignment<String> newAssignments) {
+	private void updateAssignments(Assignment<String> newAssignments) {
 		if (newAssignments != null) {
-			Assignment<String> originAssignment = getAssignments();
-			persistToZk(newAssignments, originAssignment);
+			persistToZk(newAssignments, getAssignments());
 		}
 	}
 
