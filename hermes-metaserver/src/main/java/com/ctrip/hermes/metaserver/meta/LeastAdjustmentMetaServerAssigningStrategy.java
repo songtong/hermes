@@ -50,9 +50,9 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 			currentMetaServers.put(server.getId(), server);
 		}
 
-		Set<String> deletedMetaServers = setMinus(originMetaServers, currentMetaServers.keySet());
-		Set<String> addedMetaServers = setMinus(currentMetaServers.keySet(), originMetaServers);
-		Set<String> commonMetaServers = setIntersect(originMetaServers, currentMetaServers.keySet());
+		List<String> deletedMetaServers = setMinus(originMetaServers, currentMetaServers.keySet());
+		List<String> addedMetaServers = setMinus(currentMetaServers.keySet(), originMetaServers);
+		List<String> commonMetaServers = setIntersect(originMetaServers, currentMetaServers.keySet());
 
 		List<String> neverAssignedTopicNames = findNeverAssignedTopics(topics, originAssignments.getAssignments()
 		      .keySet());
@@ -120,7 +120,7 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 		return result;
 	}
 
-	private List<String> findTopics(Set<String> metaServers, Map<String, List<String>> metaServerToTopic) {
+	private List<String> findTopics(List<String> metaServers, Map<String, List<String>> metaServerToTopic) {
 		List<String> result = new ArrayList<>();
 
 		for (String metaServer : metaServers) {
@@ -133,17 +133,19 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 		return result;
 	}
 
-	private Set<String> setIntersect(Set<String> left, Set<String> right) {
-		HashSet<String> result = new HashSet<>(left);
+	private List<String> setIntersect(Set<String> left, Set<String> right) {
+		List<String> result = new ArrayList<>(left);
 		result.retainAll(right);
 
+		Collections.sort(result);
 		return result;
 	}
 
-	private Set<String> setMinus(Set<String> left, Set<String> right) {
-		HashSet<String> result = new HashSet<>(left);
+	private List<String> setMinus(Set<String> left, Set<String> right) {
+		List<String> result = new ArrayList<>(left);
 		result.removeAll(right);
 
+		Collections.sort(result);
 		return result;
 	}
 
