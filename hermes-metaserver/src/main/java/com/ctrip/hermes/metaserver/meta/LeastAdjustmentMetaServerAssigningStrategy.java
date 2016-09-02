@@ -98,11 +98,11 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 	}
 
 	private void putAssignToResult(Assignment<String> newAssignments, Map<String, Server> currentMetaServers,
-	      String commonMetaServer, List<String> newAssign) {
+	      String metaServerName, List<String> newAssign) {
 		for (String topic : newAssign) {
 			Map<String, ClientContext> server = new HashMap<>();
-			Server metaServer = currentMetaServers.get(commonMetaServer);
-			server.put(commonMetaServer, new ClientContext(metaServer.getId(), metaServer.getHost(), metaServer.getPort(),
+			Server metaServer = currentMetaServers.get(metaServerName);
+			server.put(metaServerName, new ClientContext(metaServer.getId(), metaServer.getHost(), metaServer.getPort(),
 			      null, metaServer.getIdc(), -1));
 			newAssignments.addAssignment(topic, server);
 		}
@@ -165,6 +165,10 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 				result.put(metaServer, topics);
 			}
 			topics.add(topic);
+		}
+
+		for (Map.Entry<String, List<String>> entry : result.entrySet()) {
+			Collections.sort(entry.getValue());
 		}
 
 		return result;
