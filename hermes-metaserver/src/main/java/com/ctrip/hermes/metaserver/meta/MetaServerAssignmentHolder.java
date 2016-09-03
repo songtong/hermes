@@ -102,7 +102,7 @@ public class MetaServerAssignmentHolder implements Initializable {
 							task.run();
 						} finally {
 							if (skipped > 0) {
-								log.info("Skip {} metaServerAssignment persistence tasks.", skipped);
+								log.info("Skipped {} metaServerAssignment persistence tasks.", skipped);
 							}
 						}
 

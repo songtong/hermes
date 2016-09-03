@@ -2,10 +2,13 @@ package com.ctrip.hermes.metaserver.meta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -71,6 +74,8 @@ public class MetaHolder implements Initializable {
 
 	private MetaMerger m_metaMerger = new MetaMerger();
 
+	private BlockingQueue<Runnable> m_updateTaskQueue = new LinkedBlockingQueue<Runnable>();
+
 	private static class MetaCache {
 		private Meta m_meta;
 
@@ -115,6 +120,35 @@ public class MetaHolder implements Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		m_updateTaskExecutor = Executors.newSingleThreadExecutor(HermesThreadFactory.create("MetaUpdater", true));
+		m_updateTaskExecutor.submit(new Runnable() {
+
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						int skipped = 0;
+						Runnable task = m_updateTaskQueue.take();
+						if (!m_updateTaskQueue.isEmpty()) {
+							LinkedList<Runnable> queuedTasks = new LinkedList<>();
+							m_updateTaskQueue.drainTo(queuedTasks);
+							skipped = queuedTasks.size();
+							task = queuedTasks.getLast();
+						}
+
+						try {
+							task.run();
+						} finally {
+							if (skipped > 0) {
+								log.info("Skipped {} meta update tasks.", skipped);
+							}
+						}
+
+					} catch (Throwable e) {
+						log.error("Exeception occurred in MetaHolder's updateTaskExecutor loop", e);
+					}
+				}
+			}
+		});
 
 		m_configedMetaServers = new AtomicReference<>();
 		m_configedMetaServers.set(new HashMap<Pair<String, Integer>, Server>());
@@ -180,11 +214,12 @@ public class MetaHolder implements Initializable {
 			m_endpointCache.set(newEndpoints);
 		}
 
-		m_updateTaskExecutor.submit(new Runnable() {
+		m_updateTaskQueue.offer(new Runnable() {
 
 			@Override
 			public void run() {
 				try {
+					long start = System.currentTimeMillis();
 					Meta newMeta = m_metaMerger.merge(m_baseCache.get(), m_metaServerListCache.get(), m_endpointCache.get());
 					MetaInfo metaInfo = fetchLatestMetaInfo();
 
@@ -192,17 +227,17 @@ public class MetaHolder implements Initializable {
 						setMetaCache(newMeta.setVersion(metaInfo.getTimestamp()));
 						persistMetaInfo(metaInfo);
 
-						traceLog.info("Upgrade dynamic meta(id={}, version={}, meta={}).", newMeta.getId(),
+						traceLog.info("Update dynamic meta(id={}, version={}, meta={}).", newMeta.getId(),
 						      newMeta.getVersion(), m_mergedMetaCache.get().getJsonStringComplete());
-						log.info("Upgrade dynamic meta(id={}, version={}).", newMeta.getId(), newMeta.getVersion());
-
+						log.info("Update dynamic meta(id={}, version={}) cost {}ms.", newMeta.getId(), newMeta.getVersion(),
+						      (System.currentTimeMillis() - start));
 					}
 				} catch (Exception e) {
 					log.error("Exception occurred while updating meta.", e);
 				}
 			}
-
 		});
+
 	}
 
 	private MetaInfo fetchLatestMetaInfo() throws Exception {
