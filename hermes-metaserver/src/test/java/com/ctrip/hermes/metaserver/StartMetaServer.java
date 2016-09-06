@@ -42,8 +42,8 @@ public class StartMetaServer extends JettyServer {
 			} catch (Exception e) {
 				System.out.println("Start zk fake server failed, may be already started.");
 			}
+			setupZKNodes();
 		}
-		setupZKNodes();
 
 		super.startServer();
 	}

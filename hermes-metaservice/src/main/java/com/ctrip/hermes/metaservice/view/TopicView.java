@@ -66,6 +66,16 @@ public class TopicView {
 	private int storagePartitionCount;
 
 	private String brokerGroup;
+	
+	private boolean priorityMessageEnabled;
+
+	public boolean isPriorityMessageEnabled() {
+		return priorityMessageEnabled;
+	}
+
+	public void setPriorityMessageEnabled(boolean priorityMessageEnabled) {
+		this.priorityMessageEnabled = priorityMessageEnabled;
+	}
 
 	public TopicView() {
 

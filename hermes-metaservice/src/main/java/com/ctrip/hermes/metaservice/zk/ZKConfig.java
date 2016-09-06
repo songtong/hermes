@@ -20,7 +20,7 @@ public class ZKConfig {
 	}
 
 	public int getZkConnectionTimeoutMillis() {
-		return 3000;
+		return 5000;
 	}
 
 	public String getZkConnectionString() {
@@ -36,11 +36,11 @@ public class ZKConfig {
 	}
 
 	public int getSleepMsBetweenRetries() {
-		return 1000;
+		return 100;
 	}
 
 	public int getZkRetries() {
-		return Integer.MAX_VALUE;
+		return 3;
 	}
 
 	public int getZkSessionTimeoutMillis() {

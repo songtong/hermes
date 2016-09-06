@@ -6,6 +6,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Server;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.event.Event;
 import com.ctrip.hermes.metaserver.event.EventHandler;
 import com.ctrip.hermes.metaserver.event.EventType;
@@ -37,7 +38,7 @@ public class MetaServerListChangedEventHandler extends BaseEventHandler {
 		if (data != null) {
 			List<Server> metaServers = (List<Server>) data;
 			m_metaHolder.update(metaServers);
-			m_metaServerAssignmentHolder.reassign(metaServers, null);
+			m_metaServerAssignmentHolder.reassign(metaServers, m_metaHolder.getConfigedMetaServers(), null);
 		}
 	}
 

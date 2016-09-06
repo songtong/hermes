@@ -108,6 +108,8 @@ CREATE TABLE `endpoint` (
          `host` VARCHAR(500) NULL DEFAULT NULL COMMENT 'host',
          `port` SMALLINT(6) NULL DEFAULT NULL COMMENT 'port',
          `group` VARCHAR(50) NULL DEFAULT NULL COMMENT 'group',
+         `idc` varchar(50) NULL DEFAULT NULL COMMENT 'idc',
+		 `enabled` bit(1) NULL DEFAULT NULL COMMENT '是否启用',
          `DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
          PRIMARY KEY (`id`),
          INDEX `DataChange_LastTime` (`DataChange_LastTime`)
@@ -115,6 +117,7 @@ CREATE TABLE `endpoint` (
 COMMENT='endpoint'
 ENGINE=InnoDB
 ;
+
 CREATE TABLE `producer` (
          `app_id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'pk',
          `topic_id` BIGINT(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'topic id',
@@ -129,6 +132,8 @@ CREATE TABLE `server` (
          `id` VARCHAR(50) NOT NULL DEFAULT 'host1' COMMENT 'pk',
          `host` VARCHAR(500) NOT NULL DEFAULT 'localhost' COMMENT 'host',
          `port` SMALLINT(6) NOT NULL DEFAULT '1248' COMMENT 'port',
+         `enabled` bit(1) NULL DEFAULT NULL COMMENT 'enabled',
+         `idc` varchar(50) NULL DEFAULT 'idc1' COMMENT 'idc',
          `DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
          PRIMARY KEY (`id`),
          INDEX `DataChange_LastTime` (`DataChange_LastTime`)
@@ -291,3 +296,21 @@ CREATE TABLE `producer_monitor_config` (
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='producer monitor configs';
+
+ALTER TABLE `consumer_group`
+	ADD COLUMN `enabled` BIT(1)  COMMENT '是否启用';
+
+CREATE TABLE `idc` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'idc id',
+  `name` varchar(50) NOT NULL DEFAULT 'name' COMMENT 'idc name',
+  `primary` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否Primary',
+  `enabled` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否enabled',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='idc信息'
+
+
+
+
+

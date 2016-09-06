@@ -46,6 +46,11 @@
 				<div class="form-group">
 					<label>编码类型</label> <select class="form-control" ng-model="new_application.baseCodecType" ng-options="codecType for codecType in codecTypes"></select>
 				</div>
+				<div class="form-group">
+					<label>是否需要开启优先队列功能？</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.priorityMessageEnabled" ng-value=true> 是
+					</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.priorityMessageEnabled" ng-value=false> 否
+					</label>
+				</div>
 				<div class="form-group" style="margin-bottom: 0px;">
 					<label>消息是否需要压缩？</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needCompress" value=true> 是
 					</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needCompress" value=false> 否

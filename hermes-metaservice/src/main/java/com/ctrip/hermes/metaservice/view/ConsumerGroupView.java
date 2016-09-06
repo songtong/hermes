@@ -2,7 +2,7 @@ package com.ctrip.hermes.metaservice.view;
 
 public class ConsumerGroupView {
 	private Integer id;
-	
+
 	private String topicName;
 
 	private String owner1;
@@ -22,6 +22,8 @@ public class ConsumerGroupView {
 	private Integer ackTimeoutSeconds;
 
 	private boolean orderedConsume;
+
+	private boolean enabled = true;
 
 	public ConsumerGroupView() {
 	}
@@ -114,15 +116,20 @@ public class ConsumerGroupView {
 		this.id = id;
 	}
 
-	@Override
-	public String toString() {
-		return "ConsumerView [id=" + id + ", topicName=" + topicName + ", owner1=" + owner1 + ", owner2=" + owner2
-				+ ", phone1=" + phone1 + ", phone2=" + phone2 + ", name=" + name + ", appIds=" + appIds
-				+ ", retryPolicy=" + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume="
-				+ orderedConsume + "]";
+	public boolean isEnabled() {
+		return enabled;
 	}
 
+	public void setEnabled(boolean enable) {
+		this.enabled = enable;
+	}
 
-	
+	@Override
+	public String toString() {
+		return "ConsumerGroupView [id=" + id + ", topicName=" + topicName + ", owner1=" + owner1 + ", owner2=" + owner2
+		      + ", phone1=" + phone1 + ", phone2=" + phone2 + ", name=" + name + ", appIds=" + appIds + ", retryPolicy="
+		      + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume=" + orderedConsume
+		      + ", enabled=" + enabled + "]";
+	}
 
 }

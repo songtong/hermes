@@ -25,6 +25,7 @@ import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.queue.QueueType;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
@@ -66,9 +67,9 @@ public class ConsumerResource {
 	}
 
 	@POST
-	@Path("{topic}/{consumer}/offset")
-	public Response resetOffset(@PathParam("topic") String topicName, @PathParam("consumer") String consumerGroupName,
-	      @QueryParam("timestamp") long timestamp) {
+	@Path("{topic}/{consumer}/resetOffset/timestamp")
+	public Response resetOffsetByTimestamp(@PathParam("topic") String topicName,
+	      @PathParam("consumer") String consumerGroupName, @QueryParam("timestamp") long timestamp) {
 		Topic topic = topicService.findTopicEntityByName(topicName);
 
 		if (topic == null) {
@@ -86,12 +87,63 @@ public class ConsumerResource {
 		}
 
 		try {
-			consumerService.resetOffset(topicName, consumerGroup, timestamp);
+			consumerService.resetOffsetByTimestamp(topicName, consumerGroup, timestamp);
 		} catch (Exception e) {
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 
 		return Response.status(Status.OK).build();
+	}
+
+	@POST
+	@Path("{topic}/{consumer}/resetOffset/shift")
+	public Response resetOffsetByShift(@PathParam("topic") String topicName, @QueryParam("partition") String partition,
+	      @QueryParam("queueType") String queueType, @PathParam("consumer") String consumerGroupName,
+	      @QueryParam("shift") long shift) {
+		Topic topic = topicService.findTopicEntityByName(topicName);
+
+		if (topic == null) {
+			throw new RestException("Topic NOT found!", Status.NOT_FOUND);
+		}
+
+		ConsumerGroup consumerGroup = consumerService.findConsumerGroupEntity(topic.getId(), consumerGroupName);
+
+		if (consumerGroup == null) {
+			throw new RestException("Consumer group NOT found!", Status.NOT_FOUND);
+		}
+
+		if (!QueueType.isValidQueueType(queueType)) {
+			throw new RestException(String.format("Invalid queueType: %s!", queueType), Status.BAD_REQUEST);
+		}
+
+		if (consumerService.isConsumerAlive(topic, consumerGroup)) {
+			throw new RestException("请先停止Consumer！如果已经停止，请10秒之后重试。", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		if (partition.equals("all")) {
+			try {
+				for (int i = 0; i < topic.getPartitions().size(); i++)
+					consumerService.resetOffsetByShift(topicName, consumerGroup, i, queueType, shift);
+			} catch (Exception e) {
+				throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+			}
+
+		} else {
+			try {
+				int partitionId = Integer.parseInt(partition);
+				if (partitionId > topic.getPartitions().size() || partitionId < 0) {
+					throw new RestException(String.format("Invalid partition: %s!", partitionId), Status.BAD_REQUEST);
+				}
+				consumerService.resetOffsetByShift(topicName, consumerGroup, partitionId, queueType, shift);
+			} catch (NumberFormatException e) {
+				throw new RestException(String.format("Invalid partition param : %s!", partition), Status.BAD_REQUEST);
+			} catch (Exception e) {
+				throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+			}
+		}
+
+		return Response.status(Status.OK).build();
+
 	}
 
 	@GET

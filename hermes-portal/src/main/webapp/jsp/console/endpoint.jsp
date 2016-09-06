@@ -17,6 +17,7 @@
 						<th st-sort="host">Host</th>
 						<th st-sort="port">Port</th>
 						<th st-sort="group">Group</th>
+						<th st-sort="group">Idc</th>
 						<th style="text-align: left;"><button type="button" data-toggle="modal" data-target="#add-endpoint-modal" class="btn btn-xs btn-success" style="text-align: center;">新增</button></th>
 					</tr>
 					<tr>
@@ -25,6 +26,7 @@
 						<th><input st-search="host" placeholder="Host" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="port" placeholder="Port" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th><input st-search="group" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+						<th><input st-search="idc" placeholder="Idc" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 						<th></th>
 					</tr>
 				</thead>
@@ -35,6 +37,7 @@
 						<td><span e-form="rowform" editable-text="row.host" ng-bind="row.host" e-name="host"></td>
 						<td><span e-form="rowform" ng-bind="row.port" e-name="port" editable-text="row.port"></td>
 						<td><span e-form="rowform" ng-bind="row.group" e-name="group" editable-text="row.group"></td>
+						<td><span e-form="rowform" ng-bind="row.idc" e-name="idc" editable-text="row.idc"></td>
 						<td style="white-space: nowrap">
 							<form editable-form name="rowform" onbeforesave="update_endpoint(row)" ng-show="rowform.$visible">
 								<button type="submit" ng-disabled="rowform.$waiting" class="btn btn-xs btn-primary">保存</button>
@@ -105,6 +108,7 @@
 			</div>
 		</div>
 	</div>
+	
 	<script type="text/javascript" src="${model.webapp}/js/angular/xeditable.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/angular/smart-table.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/endpoint/endpoint.js"></script>

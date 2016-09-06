@@ -24,6 +24,7 @@ import com.ctrip.hermes.metaserver.TestHelper;
 import com.ctrip.hermes.metaserver.ZKSuppportTestCase;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.event.impl.FollowerInitEventHandler;
 import com.ctrip.hermes.metaserver.event.impl.LeaderMetaFetcher;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
@@ -82,7 +83,6 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 	public void testStart() throws Exception {
 		Meta loadedMeta = startEngine();
 		verify(m_brokerAssignmentHolder, times(1)).clear();
-		verify(m_metaServerAssignmentHolder, times(1)).reload();
 
 		assertEquals(TestHelper.loadLocalMeta(this).toString(), loadedMeta.toString());
 	}
@@ -120,20 +120,11 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 
 		reset(m_metaServerAssignmentHolder);
 		final CountDownLatch latch = new CountDownLatch(1);
-		doAnswer(new Answer<Void>() {
-
-			@Override
-			public Void answer(InvocationOnMock invocation) throws Throwable {
-				latch.countDown();
-				return null;
-			}
-		}).when(m_metaServerAssignmentHolder).reload();
 
 		m_curator.setData().forPath(ZKPathUtils.getMetaServerAssignmentRootZkPath(),
 		      ZKSerializeUtils.serialize(System.currentTimeMillis()));
 
 		latch.await(5, TimeUnit.SECONDS);
-		verify(m_metaServerAssignmentHolder, times(1)).reload();
 	}
 
 	private Meta startEngine() throws Exception, InterruptedException {
@@ -149,16 +140,7 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 			}
 		}).when(m_metaHolder).setMeta(any(Meta.class));
 
-		doAnswer(new Answer<Void>() {
-
-			@Override
-			public Void answer(InvocationOnMock invocation) throws Throwable {
-				latch.countDown();
-				return null;
-			}
-		}).when(m_metaServerAssignmentHolder).reload();
-
-		m_eventBus.pubEvent(new Event(EventType.FOLLOWER_INIT, 0, createClusterStateHolder(), null));
+		m_eventBus.pubEvent(new Event(EventType.FOLLOWER_INIT, 0, null));
 
 		latch.await(5, TimeUnit.SECONDS);
 		return loadedMeta.get();
@@ -166,7 +148,7 @@ public class FollowerEventEngineTest extends ZKSuppportTestCase {
 
 	private ClusterStateHolder createClusterStateHolder() {
 		ClusterStateHolder holder = new ClusterStateHolder();
-		holder.setHasLeadership(false);
+		holder.setRole(Role.FOLLOWER);
 		return holder;
 	}
 }

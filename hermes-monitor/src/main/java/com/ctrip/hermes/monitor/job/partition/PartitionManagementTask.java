@@ -64,7 +64,7 @@ public class PartitionManagementTask implements Runnable {
 					analysisResult = findStrategy(m_task).analysisTable(m_task);
 					m_wastePartitionInfos.putIfAbsent(m_task.getTableName(), analysisResult.getWasteList());
 				} catch (Exception e) {
-					log.debug("Analysis table failed: {}", m_task, e);
+					log.warn("Analysis table failed: {}", m_task, e);
 				}
 				if (analysisResult != null) {
 					try {

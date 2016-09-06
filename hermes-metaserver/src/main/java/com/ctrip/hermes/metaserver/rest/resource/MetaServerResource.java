@@ -3,6 +3,7 @@ package com.ctrip.hermes.metaserver.rest.resource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
@@ -15,6 +16,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import org.unidal.tuple.Pair;
+
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
@@ -22,7 +25,8 @@ import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
-import com.ctrip.hermes.metaserver.commons.MetaStatusStatusResponse;
+import com.ctrip.hermes.metaserver.commons.MetaServerStatusResponse;
+import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
@@ -39,6 +43,8 @@ public class MetaServerResource {
 	private ClusterStateHolder m_clusterStatusHolder = PlexusComponentLocator.lookup(ClusterStateHolder.class);
 
 	private CoreConfig m_coreConfig = PlexusComponentLocator.lookup(CoreConfig.class);
+
+	private MetaServerConfig m_config = PlexusComponentLocator.lookup(MetaServerConfig.class);
 
 	@GET
 	@Path("servers")
@@ -67,14 +73,22 @@ public class MetaServerResource {
 
 	@GET
 	@Path("status")
-	public MetaStatusStatusResponse getStatus() throws Exception {
-		MetaStatusStatusResponse response = new MetaStatusStatusResponse();
-		response.setLeader(m_clusterStatusHolder.hasLeadership());
+	public MetaServerStatusResponse getStatus() throws Exception {
+		MetaServerStatusResponse response = new MetaServerStatusResponse();
+		response.setZkConnected(m_clusterStatusHolder.isConnected());
+		response.setCurrentHost(m_config.getMetaServerName());
+		response.setRole(m_clusterStatusHolder.getRole());
 		response.setLeaderInfo(m_clusterStatusHolder.getLeader());
+		response.setIdcs(PlexusComponentLocator.lookup(MetaHolder.class).getIdcs());
+		Map<Pair<String, Integer>, Server> configedMetaServers = PlexusComponentLocator.lookup(MetaHolder.class)
+		      .getConfigedMetaServers();
+		response.setConfigedMetaServers(configedMetaServers == null ? new ArrayList<Server>() : new ArrayList<Server>(
+		      configedMetaServers.values()));
 		response.setBrokerAssignments(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getAssignments());
 		response.setConfigedBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getConfigedBrokers()
 		      .get());
-		response.setEffectiveBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getMergedBrokers().get());
+		response
+		      .setEffectiveBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getMergedBrokers().get());
 		response.setRunningBrokers(PlexusComponentLocator.lookup(BrokerAssignmentHolder.class).getRunningBrokers().get());
 		response.setMetaServerAssignments(PlexusComponentLocator.lookup(MetaServerAssignmentHolder.class)
 		      .getAssignments());

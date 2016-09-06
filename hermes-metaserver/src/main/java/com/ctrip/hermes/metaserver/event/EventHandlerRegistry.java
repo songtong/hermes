@@ -10,4 +10,10 @@ public interface EventHandlerRegistry {
 
 	List<EventHandler> findHandler(EventType type);
 
+	public void forEachHandler(Function fun);
+
+	public interface Function {
+		public void apply(EventHandler handler);
+	}
+
 }

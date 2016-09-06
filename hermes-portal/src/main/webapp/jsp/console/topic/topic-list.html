@@ -53,7 +53,7 @@
 				<td style="width: 20%"><a href="" ng-bind="row.schema.name | short:20" tooltip="{{row.schema.name}}"></a></td>
 				<td><a href="" ng-bind="row.schema.version" ng-click="show_schema_view(row.schema)" tooltip="点击查看详情"></a></td>
 				<td style="text-align: right;" class="col-md-3">
-					<div ng-if="row.codecType == 'avro'&& environment =='FWS'" ng-click="set_selected(row)" data="schema_data" upload-button url="/api/schemas" tooltip="上传Schema文件" class="btn  btn-link btn-upload" on-success="upload_result(row, true, response)" on-error="upload_result(row, false, response)" style="padding: 1px 1px;">
+					<div ng-if="row.codecType == 'avro' || row.codecType == 'avro,gzip'||row.codecType == 'avro,deflater(5)'||row.codecType == 'avro,deflater(1)'" ng-click="set_selected(row)" data="schema_data" upload-button url="/api/schemas" tooltip="上传Schema文件" class="btn  btn-link btn-upload" on-success="upload_result(row, true, response)" on-error="upload_result(row, false, response)" style="padding: 1px 1px;">
 						<span class="glyphicon glyphicon-upload"></span>
 					</div>
 					<div ng-if="row.schema != null && environment =='FWS'" ng-click="deploy_maven_row_selected(row)" data-toggle="modal" data-target="#upload-schema-view" class="btn  btn-link" tooltip="部署Schema Jar" style="padding: 1px 1px;">

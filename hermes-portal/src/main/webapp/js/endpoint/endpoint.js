@@ -36,6 +36,7 @@ angular.module('hermes-endpoint', [ 'ngResource', 'smart-table', 'xeditable' ]).
 			isArray : true
 		}
 	});
+	
 
 	scope.is_loading = true;
 	scope.src_endpoints = [];
@@ -46,7 +47,8 @@ angular.module('hermes-endpoint', [ 'ngResource', 'smart-table', 'xeditable' ]).
 		host : '127.0.0.1',
 		type : 'broker',
 		port : 4376,
-		group : 'default'
+		group : 'default',
+		idc : 'JQ'
 	};
 
 	scope.get_endpoints = function get_endpoints(table_state) {
@@ -70,20 +72,17 @@ angular.module('hermes-endpoint', [ 'ngResource', 'smart-table', 'xeditable' ]).
 				queryTokenizer : Bloodhound.tokenizers.whitespace,
 			});
 			$('#inputEndpointGroup').typeahead({
-				  minLength: 1,
-				  highlight: true
-				},
-				{
-				  name: 'broker_groups',
-				  source: result
-				});
-		
+				minLength : 1,
+				highlight : true
+			}, {
+				name : 'broker_groups',
+				source : result
+			});
+
 		})
 	}
 	console.log(scope.get_broker_groups());
 	scope.broker_groups = scope.get_broker_groups();
-	
-	
 
 	scope.display_broker_groups = [].concat(scope.broker_groups);
 
@@ -122,13 +121,16 @@ angular.module('hermes-endpoint', [ 'ngResource', 'smart-table', 'xeditable' ]).
 		bootbox.confirm("确认保存 Endpoint: " + row.id + "?", function(result) {
 			if (result) {
 				endpoint_resource.update_endpoint(row, function(result) {
-					show_op_info.show("更新成功" , true);
+					show_op_info.show("更新成功", true);
 					endpoint_resource.get_endpoints().$promise.then(function(query_result) {
 						reload_table(scope, query_result);
 					});
 					scope.get_broker_groups();
 				}, function(error_result) {
 					show_op_info.show("更新失败: " + error_result.data, false);
+					endpoint_resource.get_endpoints().$promise.then(function(query_result) {
+						reload_table(scope, query_result);
+					});
 				});
 			}
 		});

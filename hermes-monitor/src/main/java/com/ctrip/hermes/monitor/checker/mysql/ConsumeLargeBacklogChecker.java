@@ -160,8 +160,10 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 				es.shutdownNow();
 			}
 
-			notifyOwnersIfNecessary(result);
-			notifyLargeBacklogReportIfNecessary(result);
+			if (m_config.isMonitorCheckerNotifyEnable()) {
+				notifyOwnersIfNecessary(result);
+				notifyLargeBacklogReportIfNecessary(result);
+			}
 		}
 		return result;
 	}

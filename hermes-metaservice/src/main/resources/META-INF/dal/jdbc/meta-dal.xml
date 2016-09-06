@@ -275,6 +275,7 @@
 	<entity name="consumer-group">
 		<member name="ack-timeout-seconds" value-type="Integer" />
 		<member name="ordered-consume" value-type="Boolean" />
+		<member name="enabled" value-type="Boolean" />
 		<var name="tId" value-type="long" />
 		<var name="cName" value-type="String" />
 		<query-defs>
@@ -308,6 +309,7 @@
 	</entity>
 	<entity name="endpoint">
 		<member name="port" value-type="Integer" />
+		<member name="enabled" value-type="Boolean" />
 		<query-defs>
 			<query name="list" type="SELECT" multiple="true">
 				<statement><![CDATA[SELECT <FIELDS/>
@@ -368,10 +370,19 @@
 		</query-defs>
 	</entity>
 	<entity name="server">
+		<member name="enabled" value-type="Boolean" />
 		<query-defs>
 			<query name="list" type="SELECT" multiple="true">
 				<statement><![CDATA[SELECT <FIELDS/>
         FROM <TABLE/> ]]></statement>
+			</query>
+			<query name="find-by-id" type="SELECT" multiple="true">
+				<param name="id" />
+				<statement><![CDATA[
+					SELECT <FIELDS/>
+	        		FROM <TABLE/>
+	        		WHERE <FIELD name="id"/> =${id} 
+        		]]></statement>
 			</query>
 		</query-defs>
 	</entity>
@@ -454,6 +465,65 @@
 					SELECT <FIELDS/>
         			FROM <TABLE/>
         		]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="idc">
+		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[
+					SELECT <FIELDS/>
+	        		FROM <TABLE/>
+        		]]></statement>
+			</query>
+			<query name="find-by-id" type="SELECT" multiple="true">
+				<param name="id" />
+				<statement><![CDATA[
+					SELECT <FIELDS/>
+	        		FROM <TABLE/>
+	        		WHERE <FIELD name="id"/> =${id} 
+        		]]></statement>
+			</query>
+			<query name="find-by-primary-status" type="SELECT" multiple="true">
+				<param name="primary" />
+				<statement><![CDATA[
+					SELECT <FIELDS/>
+	        		FROM <TABLE/>
+	        		WHERE <FIELD name="primary"/> = ${primary}
+        		]]></statement>
+			</query>
+			<query name="find-by-enabled-status" type="SELECT" multiple="true">
+				<param name="enabled" />
+				<statement><![CDATA[
+					SELECT <FIELDS/>
+	        		FROM <TABLE/>
+	        		WHERE <FIELD name="enabled"/> = ${enabled}
+        		]]></statement>
+			</query>
+			<query name="set-primary-by-id" type="UPDATE">
+				<param name="id" />
+				<statement><![CDATA[
+					UPDATE <TABLE/>
+					SET <FIELD name='primary'/> = TRUE
+					WHERE <FIELD name='id'/> = ${id}
+       			]]></statement>
+			</query>
+			<query name="set-not-primary-by-id" type="UPDATE">
+				<param name="id" />
+				<statement><![CDATA[
+					UPDATE <TABLE/>
+					SET <FIELD name='primary'/> = FALSE
+					WHERE <FIELD name='id'/> = ${id}
+       			]]></statement>
+			</query>
+			<query name="set-enabled-status-by-id" type="UPDATE">
+				<param name="id" />
+				<param name="enabled" />
+				<statement><![CDATA[
+					UPDATE <TABLE/>
+					SET <FIELD name='enabled'/> = ${enabled}
+					WHERE <FIELD name='id'/> = ${id}
+       			]]></statement>
 			</query>
 		</query-defs>
 	</entity>

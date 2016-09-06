@@ -47,7 +47,7 @@ public class DefaultApplicationService implements ApplicationService {
 			m_dao.saveApplication(dbApp);
 		} catch (DalException e) {
 			log.error("Create new topic application : {}.{}.{} failed", topicApplication.getProductLine(),
-					topicApplication.getEntity(), topicApplication.getEvent(), e);
+			      topicApplication.getEntity(), topicApplication.getEvent(), e);
 			return null;
 		}
 
@@ -98,7 +98,7 @@ public class DefaultApplicationService implements ApplicationService {
 			log.error("Update application:id={} failed!", app.getId(), e);
 			return null;
 		}
-		
+
 		return app;
 
 	}
@@ -108,7 +108,7 @@ public class DefaultApplicationService implements ApplicationService {
 		Application dbApp = null;
 		try {
 			dbApp = m_dao.getAppById(id);
-			
+
 			dbApp.setStatus(status);
 			dbApp.setComment(comment);
 			dbApp.setApprover(approver);
@@ -117,7 +117,7 @@ public class DefaultApplicationService implements ApplicationService {
 			log.error("Update status of apllication: id={} failed.", id, e);
 			return null;
 		}
-		
+
 		return HermesApplication.parse(dbApp);
 	}
 
@@ -129,10 +129,10 @@ public class DefaultApplicationService implements ApplicationService {
 			m_dao.saveApplication(dbApp);
 		} catch (DalException e) {
 			log.error("Create new consumer application : {}.{}.{} failed", consumerApplication.getProductLine(),
-					consumerApplication.getProduct(), consumerApplication.getProject(), e);
+			      consumerApplication.getProduct(), consumerApplication.getProject(), e);
 			return null;
 		}
-		
+
 		return (ConsumerApplication) HermesApplication.parse(dbApp);
 	}
 
@@ -148,9 +148,9 @@ public class DefaultApplicationService implements ApplicationService {
 		consumerView.setOwner2(app.getOwnerName2() + "/" + app.getOwnerEmail2());
 		consumerView.setPhone1(app.getOwnerPhone1());
 		consumerView.setPhone2(app.getOwnerPhone2());
+		consumerView.setEnabled(app.isEnabled());
 		if (app.isNeedRetry()) {
-			consumerView
-					.setRetryPolicy(String.format("3:[%s,%s]", app.getRetryCount(), app.getRetryInterval() * 1000L));
+			consumerView.setRetryPolicy(String.format("3:[%s,%s]", app.getRetryCount(), app.getRetryInterval() * 1000L));
 		} else {
 			consumerView.setRetryPolicy("2:[]");
 		}
@@ -162,7 +162,7 @@ public class DefaultApplicationService implements ApplicationService {
 	public int countApplicationsByOwnerStatus(String owner, int status) {
 		try {
 			if (owner == null) {
-				return m_dao.countApplicationsByStatus(status); 
+				return m_dao.countApplicationsByStatus(status);
 			}
 			return m_dao.countApplicationsByOwnerStatus(owner, status);
 		} catch (DalException e) {

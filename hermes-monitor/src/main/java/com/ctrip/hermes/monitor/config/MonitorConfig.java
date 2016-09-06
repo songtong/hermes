@@ -245,6 +245,9 @@ public class MonitorConfig {
 	@Value("${partition.service.drop.table.enable:false}")
 	private boolean partitionServiceDropTableEnable;
 
+	@Value("${partition.service.enable:true}")
+	private boolean partitionServiceEnable;
+
 	public String getEsClusterName() {
 		return esClusterName;
 	}
@@ -809,5 +812,13 @@ public class MonitorConfig {
 
 	public void setPartitionServiceDropTableEnable(boolean partitionServiceDropTableEnable) {
 		this.partitionServiceDropTableEnable = partitionServiceDropTableEnable;
+	}
+
+	public boolean isPartitionServiceEnable() {
+		return partitionServiceEnable;
+	}
+
+	public void setPartitionServiceEnable(boolean partitionServiceEnable) {
+		this.partitionServiceEnable = partitionServiceEnable;
 	}
 }

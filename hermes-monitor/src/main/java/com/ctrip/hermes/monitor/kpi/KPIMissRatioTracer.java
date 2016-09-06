@@ -189,44 +189,46 @@ public class KPIMissRatioTracer {
 
 	@PostConstruct
 	public void startTraceMissRatio() throws Exception {
-		m_ttsHours = new HashSet<>();
-		int startHour = m_config.getKpiTtsStartHour();
-		if (startHour >= 24) {
-			throw new RuntimeException("TTS start hour is too large(more than 24)");
-		}
-		for (int i = 0; i < m_config.getKpiTtsLastHours() % 24; i++) {
-			m_ttsHours.add((startHour + i) % 24);
-		}
-		Thread t = new Thread(new KPITracerTask(), "HERMES_KPI_TRACER");
-		t.setDaemon(true);
-		t.start();
+		if (m_config.isMonitorCheckerNotifyEnable()) {
+			m_ttsHours = new HashSet<>();
+			int startHour = m_config.getKpiTtsStartHour();
+			if (startHour >= 24) {
+				throw new RuntimeException("TTS start hour is too large(more than 24)");
+			}
+			for (int i = 0; i < m_config.getKpiTtsLastHours() % 24; i++) {
+				m_ttsHours.add((startHour + i) % 24);
+			}
+			Thread t = new Thread(new KPITracerTask(), "HERMES_KPI_TRACER");
+			t.setDaemon(true);
+			t.start();
 
-		Executors.newSingleThreadExecutor().execute(new Runnable() {
-			@Override
-			public void run() {
-				while (!Thread.interrupted()) {
-					Date now = new Date();
-					try {
-						long freezeMins = m_latestConsume.getTime() != 0 ? TimeUnit.MILLISECONDS.toMinutes(now.getTime()
-						      - m_latestConsume.getTime()) : -1;
-						if (freezeMins > 0 && freezeMins > m_config.getKpiTtsErrorLimitMinute()) {
-							if (shouldTts()) {
-								NoticeContent content = new TtsNoticeContent(String.format("紧急情况, Hermes监控超过%s分钟没有消费",
-								      freezeMins));
-								m_notifyService.notify(new HermesNotice(DEFAULT_ON_CALL_MOBILE, content));
+			Executors.newSingleThreadExecutor().execute(new Runnable() {
+				@Override
+				public void run() {
+					while (!Thread.interrupted()) {
+						Date now = new Date();
+						try {
+							long freezeMins = m_latestConsume.getTime() != 0 ? TimeUnit.MILLISECONDS.toMinutes(now.getTime()
+							      - m_latestConsume.getTime()) : -1;
+							if (freezeMins > 0 && freezeMins > m_config.getKpiTtsErrorLimitMinute()) {
+								if (shouldTts()) {
+									NoticeContent content = new TtsNoticeContent(String.format("紧急情况, Hermes监控超过%s分钟没有消费",
+									      freezeMins));
+									m_notifyService.notify(new HermesNotice(DEFAULT_ON_CALL_MOBILE, content));
+								}
+								log.warn("*** *** KPI tracer's consumption stopped for {} minutes...", freezeMins);
 							}
-							log.warn("*** *** KPI tracer's consumption stopped for {} minutes...", freezeMins);
+						} catch (Exception e) {
+							log.error("TTS watch dog failed.", e);
 						}
-					} catch (Exception e) {
-						log.error("TTS watch dog failed.", e);
-					}
-					try {
-						TimeUnit.SECONDS.sleep(30);
-					} catch (InterruptedException e) {
-						Thread.interrupted();
+						try {
+							TimeUnit.SECONDS.sleep(30);
+						} catch (InterruptedException e) {
+							Thread.interrupted();
+						}
 					}
 				}
-			}
-		});
+			});
+		}
 	}
 }

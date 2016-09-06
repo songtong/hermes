@@ -15,7 +15,6 @@ import com.ctrip.hermes.metaservice.dal.CachedEndpointDao;
 import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
 import com.ctrip.hermes.metaservice.dal.CachedProducerDao;
 import com.ctrip.hermes.metaservice.dal.CachedSchemaDao;
-import com.ctrip.hermes.metaservice.dal.CachedServerDao;
 import com.ctrip.hermes.metaservice.dal.CachedStorageDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.ctrip.hermes.metaservice.monitor.dao.DefaultMonitorEventStorage;
@@ -29,9 +28,9 @@ import com.ctrip.hermes.metaservice.service.CompileService;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.DefaultKVService;
 import com.ctrip.hermes.metaservice.service.DefaultMetaService;
-import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.DefaultZookeeperService;
 import com.ctrip.hermes.metaservice.service.EndpointService;
+import com.ctrip.hermes.metaservice.service.IdcService;
 import com.ctrip.hermes.metaservice.service.KafkaService;
 import com.ctrip.hermes.metaservice.service.MetaRefactor;
 import com.ctrip.hermes.metaservice.service.PartitionService;
@@ -98,7 +97,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(CompileService.class));
 		all.add(A(ConsumerService.class));
 		all.add(A(StorageService.class));
-		all.add(A(DefaultPortalMetaService.class));
 		all.add(A(DefaultZookeeperService.class));
 		all.add(A(EndpointService.class));
 		all.add(A(PartitionService.class));
@@ -110,6 +108,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(TopicDeployService.class));
 		all.add(A(KafkaService.class));
 		all.add(A(DefaultKVService.class));
+		all.add(A(IdcService.class));
 
 		all.add(A(DefaultNoticeStorage.class));
 		all.add(A(DefaultNotifyService.class));
@@ -123,7 +122,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(CachedConsumerGroupDao.class));
 		all.add(A(CachedDatasourceDao.class));
 		all.add(A(CachedEndpointDao.class));
-		all.add(A(CachedServerDao.class));
 		all.add(A(CachedStorageDao.class));
 		all.add(A(CachedTopicDao.class));
 		all.add(A(CachedSchemaDao.class));

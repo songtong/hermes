@@ -23,19 +23,24 @@ public class DefaultConsumerLeaseAllocator extends AbstractConsumerLeaseAllocato
 
 	@Override
 	protected LeaseAcquireResponse doAcquireLease(Tpg tpg, String consumerName,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception {
+	      Map<String, ClientLeaseInfo> existingValidLeases, int version, String ip) throws Exception {
 		if (existingValidLeases.isEmpty()) {
-			Lease newLease = m_leaseHolder.newLease(tpg, consumerName, existingValidLeases,
+			Lease newLease = m_leaseHolder.newLease(tpg, consumerName, existingValidLeases, version,
 			      m_config.getConsumerLeaseTimeMillis(), ip, -1);
 
-			if (log.isDebugEnabled()) {
-				log.debug(
-				      "Acquire lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
-				      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, newLease.getExpireTime());
-			}
+			if (newLease != null) {
+				if (log.isDebugEnabled()) {
+					log.debug(
+					      "Acquire lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
+					      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, newLease.getExpireTime());
+				}
 
-			return new LeaseAcquireResponse(true, new Lease(newLease.getId(), newLease.getExpireTime()
-			      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
+				return new LeaseAcquireResponse(true, new Lease(newLease.getId(), newLease.getExpireTime()
+				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1);
+			} else {
+				return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+				      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
+			}
 		} else {
 			ClientLeaseInfo existingClientLeaseInfo = null;
 
@@ -62,7 +67,7 @@ public class DefaultConsumerLeaseAllocator extends AbstractConsumerLeaseAllocato
 
 	@Override
 	protected LeaseAcquireResponse doRenewLease(Tpg tpg, String consumerName, long leaseId,
-	      Map<String, ClientLeaseInfo> existingValidLeases, String ip) throws Exception {
+	      Map<String, ClientLeaseInfo> existingValidLeases, int version, String ip) throws Exception {
 		if (existingValidLeases.isEmpty()) {
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 			      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
@@ -80,18 +85,22 @@ public class DefaultConsumerLeaseAllocator extends AbstractConsumerLeaseAllocato
 			}
 
 			if (existingClientLeaseInfo != null) {
-				m_leaseHolder.renewLease(tpg, consumerName, existingValidLeases, existingClientLeaseInfo,
-				      m_config.getConsumerLeaseTimeMillis(), ip, -1);
+				if (m_leaseHolder.renewLease(tpg, consumerName, existingValidLeases, existingClientLeaseInfo, version,
+				      m_config.getConsumerLeaseTimeMillis(), ip, -1)) {
 
-				if (log.isDebugEnabled()) {
-					log.debug(
-					      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
-					      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingClientLeaseInfo
-					            .getLease().getExpireTime());
+					if (log.isDebugEnabled()) {
+						log.debug(
+						      "Renew lease success(topic={}, partition={}, consumerGroup={}, consumerName={}, leaseExpTime={}).",
+						      tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), consumerName, existingClientLeaseInfo
+						            .getLease().getExpireTime());
+					}
+
+					return new LeaseAcquireResponse(true, new Lease(leaseId, existingClientLeaseInfo.getLease()
+					      .getExpireTime() + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1L);
+				} else {
+					return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+					      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 				}
-
-				return new LeaseAcquireResponse(true, new Lease(leaseId, existingClientLeaseInfo.getLease().getExpireTime()
-				      + m_config.getConsumerLeaseClientSideAdjustmentTimeMills()), -1L);
 			} else {
 				Collection<ClientLeaseInfo> leases = existingValidLeases.values();
 				// use the first lease's exp time

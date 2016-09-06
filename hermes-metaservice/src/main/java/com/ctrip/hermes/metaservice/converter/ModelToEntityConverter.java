@@ -77,4 +77,13 @@ public class ModelToEntityConverter {
 		return entity;
 	}
 
+	public static com.ctrip.hermes.meta.entity.Idc convert(com.ctrip.hermes.metaservice.model.Idc model) {
+		com.ctrip.hermes.meta.entity.Idc entity = new com.ctrip.hermes.meta.entity.Idc();
+		BeanUtils.copyProperties(model, entity, ConverterUtils.getNullPropertyNames(model));
+		if (model.getName() != null) {
+			entity.setId(model.getName());
+		}
+		return entity;
+	}
+
 }

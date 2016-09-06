@@ -1,5 +1,7 @@
 package com.ctrip.hermes.metaserver.event;
 
+import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
@@ -11,5 +13,11 @@ public interface EventHandler {
 	public String getName();
 
 	public EventType eventType();
+
+	public void setEventBus(EventBus eventBus);
+
+	public void setClusterStateHolder(ClusterStateHolder clusterStateHolder);
+
+	public void start();
 
 }

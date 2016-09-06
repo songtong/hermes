@@ -286,7 +286,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -315,7 +315,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -339,7 +339,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, ip, -1, null, 1L);
+		ClientContext consumer = new ClientContext(consumerName, ip, -1, null, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -367,7 +367,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -393,7 +393,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -423,7 +423,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -453,7 +453,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 
 		Assignment<Integer> assignment = new Assignment<Integer>();
 		Map<String, ClientContext> consumers = new HashMap<>();
-		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, 1L);
+		ClientContext consumer = new ClientContext(consumerName, "1.1.1.1", 1234, null, null, 1L);
 		consumers.put(consumerName, consumer);
 		assignment.addAssignment(partition, consumers);
 
@@ -473,8 +473,8 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 	private void mockLeaseHolderNewLease(String topic, int partition, String group, String consumerName, long leaseId,
 	      long leaseTime) throws Exception {
 		when(
-		      m_leaseHolder.newLease(eq(new Tpg(topic, partition, group)), eq(consumerName), anyMap(), eq(leaseTime),
-		            anyString(), anyInt())).thenReturn(new Lease(leaseId, leaseTime));
+		      m_leaseHolder.newLease(eq(new Tpg(topic, partition, group)), eq(consumerName), anyMap(), anyInt(),
+		            eq(leaseTime), anyString(), anyInt())).thenReturn(new Lease(leaseId, leaseTime));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -492,7 +492,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 				return null;
 			}
 		}).when(m_leaseHolder).renewLease(eq(new Tpg(topic, partition, group)), eq(consumerName), anyMap(),
-		      any(ClientLeaseInfo.class), eq(leaseTime), anyString(), anyInt());
+		      any(ClientLeaseInfo.class), anyInt(), eq(leaseTime), anyString(), anyInt());
 
 	}
 
@@ -505,7 +505,7 @@ public class OrderedConsumeConsumerLeaseAllocatorTest {
 			      public LeaseAcquireResponse answer(InvocationOnMock invocation) throws Throwable {
 				      LeaseOperationCallback callback = invocation.getArgumentAt(1, LeaseOperationCallback.class);
 
-				      return callback.execute(existingValidLeases);
+				      return callback.execute(existingValidLeases, -1);
 			      }
 		      });
 	}

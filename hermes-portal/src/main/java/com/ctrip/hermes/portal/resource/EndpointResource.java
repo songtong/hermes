@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -65,6 +66,11 @@ public class EndpointResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
+		Pair<Boolean, String> validate = validateEndpoint(endpoint);
+		if (!validate.getKey()) {
+			throw new RestException(validate.getValue(), Status.BAD_REQUEST);
+		}
+
 		if (endpointService.getEndpoints().containsKey(endpoint.getId())) {
 			throw new RestException(String.format("Endpoint %s already exists.", endpoint.getId()), Status.CONFLICT);
 		}
@@ -84,8 +90,11 @@ public class EndpointResource {
 		logger.info("Delete endpoint: {}", id);
 		try {
 			endpointService.deleteEndpoint(id);
+		} catch (IllegalStateException e) {
+			logger.warn("Delete endpoint failed.", e);
+			throw new RestException(e.getMessage(), Status.BAD_REQUEST);
 		} catch (Exception e) {
-			logger.warn("Delete endpoint failed", e);
+			logger.warn("Delete endpoint failed.", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).build();
@@ -111,6 +120,9 @@ public class EndpointResource {
 		try {
 			endpointService.updateEndpoint(endpoint);
 			return Response.status(Status.OK).build();
+		} catch (IllegalStateException e) {
+			logger.warn("Update endpoint failed.", e);
+			throw new RestException(e.getMessage(), Status.BAD_REQUEST);
 		} catch (Exception e) {
 			logger.error("Update endpoint failed.", e);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
@@ -127,5 +139,14 @@ public class EndpointResource {
 			brokerGroups.add(endpoint.getGroup());
 		}
 		return Response.status(Status.OK).entity(brokerGroups).build();
+	}
+
+	private Pair<Boolean, String> validateEndpoint(Endpoint e) {
+		if (StringUtils.isEmpty(e.getId())) {
+			return new Pair<Boolean, String>(false, "Endpoint id can not be null!");
+		}
+
+		return new Pair<Boolean, String>(true, null);
+
 	}
 }

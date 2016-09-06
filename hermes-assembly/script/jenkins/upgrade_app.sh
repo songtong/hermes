@@ -32,7 +32,7 @@ APP_BASE_DIR=/opt/ctrip/app
 APP_NAME=$1
 APP_DIR=$APP_BASE_DIR/hermes-$APP_NAME
 APP_RELEASE_DIR=$APP_BASE_DIR/hermes-$APP_NAME.releases/`date "+%Y-%m-%d.%H.%M.%S"`
-APP_STARTUP_SCRIPT=$APP_DIR/bin/startup.sh
+APP_STARTUP_SCRIPT=$APP_DIR/scripts/__startup.sh
 
 
 if [ -e $APP_STARTUP_SCRIPT ];then
@@ -40,7 +40,7 @@ if [ -e $APP_STARTUP_SCRIPT ];then
 fi
 
 mkdir -p $APP_RELEASE_DIR
-tar xf *${APP_NAME}*.tar -C $APP_RELEASE_DIR
+unzip *${APP_NAME}*.zip -d $APP_RELEASE_DIR
 
 if [ -d $APP_DIR ];then 
 	rm -rf $APP_DIR

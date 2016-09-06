@@ -12,11 +12,12 @@ topic_module.controller('mysql-add-controller', [ '$scope', '$resource', 'TopicS
 		storagePartitionSize : '1000000',
 		resendPartitionSize : '5000',
 		storagePartitionCount : '10',
-		brokerGroup : 'default'
+		brokerGroup : 'default',
+		priorityMessageEnabled : false
 	};
 	$scope.codecTypes = [ 'json', 'cmessaging', 'avro' ];
 	$scope.compressionTypes = [ 'gzip', 'deflater' ];
-	
+
 	$scope.current_datasource_names = [];
 	TopicService.get_broker_groups().then(function(result) {
 		$scope.broker_groups = result;

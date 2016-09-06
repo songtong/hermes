@@ -22,10 +22,10 @@ import com.google.common.cache.LoadingCache;
 @Named
 public class CachedEndpointDao extends EndpointDao implements CachedDao<String, Endpoint> {
 
-	private int max_size = 100;
+	private int max_size = 500;
 
-	private LoadingCache<String, Endpoint> cache = CacheBuilder.newBuilder().maximumSize(max_size).recordStats()
-	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Endpoint>() {
+	private LoadingCache<String, Endpoint> cache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size)
+	      .recordStats().refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, Endpoint>() {
 
 		      @Override
 		      public Endpoint load(String key) throws Exception {

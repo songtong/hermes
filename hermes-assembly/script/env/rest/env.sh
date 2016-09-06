@@ -1,14 +1,15 @@
 #!/bin/bash
 
-LOG_PATH=/opt/logs/hermes-rest/
+LOG_PATH=/opt/logs/100003807/
 JMX_PORT=8303
 STOP_PORT=9303
-
+APP_ID=100003807
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
             -Xms4g \
             -Xmx4g \
+            -Dtomcat.log=$LOG_PATH/tomcat \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
             -XX:+PrintGC \

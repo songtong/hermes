@@ -86,6 +86,7 @@
     <member name="phone-2" field="phone_2" value-type="String" length="20" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
+    <member name="enabled" field="enabled" value-type="boolean" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
@@ -165,6 +166,8 @@
     <member name="port" field="port" value-type="int" length="5" />
     <member name="group" field="group" value-type="String" length="50" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <member name="idc" field="idc" value-type="String" length="50" />
+    <member name="enabled" field="enabled" value-type="boolean" />
     <var name="key-id" value-type="String" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
@@ -498,6 +501,8 @@
     <member name="id" field="id" value-type="String" length="50" nullable="false" key="true" />
     <member name="host" field="host" value-type="String" length="500" nullable="false" />
     <member name="port" field="port" value-type="int" length="5" nullable="false" />
+    <member name="idc" field="idc" value-type="String" length="50" />
+    <member name="enabled" field="enabled" value-type="boolean" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="String" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
@@ -724,6 +729,45 @@
     <member name="long-time-no-produce-limit" field="long_time_no_produce_limit" value-type="int" length="10" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <member name="create-time" field="create_time" value-type="Date" />
+    <var name="key-id" value-type="int" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+   <entity name="idc" table="idc" alias="i">
+    <member name="id" field="id" value-type="int" length="5" nullable="false" key="true" auto-increment="true" />
+    <member name="name" field="name" value-type="String" length="50" nullable="false" />
+    <member name="primary" field="primary" value-type="boolean" nullable="false" />
+    <member name="enabled" field="enabled" value-type="boolean" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />

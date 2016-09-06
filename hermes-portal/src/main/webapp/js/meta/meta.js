@@ -10,38 +10,41 @@ meta_app.controller('meta-controller', [ '$scope', '$resource', '$q', function($
 		'preview_meta' : {
 			method : 'GET',
 			url : '/api/meta/preview'
+		},
+		'get_meta_diff' : {
+			method : 'GET',
+			url : '/api/meta/diff'
 		}
 	})
 
-	$scope.metaStatus = "oldMeta";
+	$scope.metaStatus = "diff";
 	$scope.meta = {
 		oldMeta : "old",
 		newMeta : "new",
 		diff : ""
 	}
 
+	$scope.currentDiffDetail = "";
+
+	$scope.metaDiff = {}
+
+	$scope.reloadFinished = false;
+
 	$scope.refreshCachedMeta = function refreshCachedMeta() {
+		$("#prettydiff").empty();
+		$scope.reloadFinished = false;
+		$scope.currentDiffDetail = "";
 		meta_resource.get({}, function(result) {
-			$scope.meta.oldMeta = JSON.stringify(result, null, "\t");
-			meta_resource.preview_meta({}, function(result) {
-				$scope.meta.newMeta = JSON.stringify(result, null, "\t");
-				var options = {
-					source : $scope.meta.oldMeta,
-					diff : $scope.meta.newMeta,
-					mode : "diff", // beautify, diff, minify, parse
-					lang : "javascript",
-					diffview : "sidebyside",
-					objsort : true,
-					context : 5
-				// number of indent characters per indent
-				}
-				var pd = prettydiff(options); // returns and array:
-				// [beautified, report]
-				$scope.meta['diff'] = strToDivDom(pd[0]).getElementsByClassName('diff');
-				$("#prettydiff").empty();
-				$("#prettydiff").append($scope.meta['diff']);
-			})
+			$scope.meta.oldMeta = result;
 		})
+		meta_resource.preview_meta({}, function(result) {
+			$scope.meta.newMeta = result;
+		})
+		meta_resource.get_meta_diff(function(result) {
+			$scope.metaDiff = result;
+			$scope.reloadFinished = true;
+		})
+		
 	}
 	$scope.refreshCachedMeta();
 	$scope.buildMeta = function buildMeta() {
@@ -60,7 +63,7 @@ meta_app.controller('meta-controller', [ '$scope', '$resource', '$q', function($
 				}
 			}
 		});
-		
+
 	}
 	$scope.previewMeta = function previewMeta() {
 		meta_resource.preview_meta({}, function(result) {
@@ -68,5 +71,28 @@ meta_app.controller('meta-controller', [ '$scope', '$resource', '$q', function($
 		}, function(result) {
 			show_op_info.show("Preview mate failed: " + result.data, false)
 		})
+	}
+
+	$scope.toJsonFormat = function toJsonFormat(str) {
+		return JSON.stringify(str, null, "\t");
+	}
+
+	$scope.prettyDiff = function prettyDiff(oldOne, newOne, diffDetail) {
+		$scope.currentDiffDetail = diffDetail;
+		var options = {
+			source : JSON.stringify(oldOne, null, "\t"),
+			diff : JSON.stringify(newOne, null, "\t"),
+			mode : "diff", // beautify, diff, minify, parse
+			lang : "javascript",
+			diffview : "sidebyside",
+			objsort : true,
+			context : 10
+		// number of indent characters per indent
+		}
+		var pd = prettydiff(options); // returns and array:
+		// [beautified, report]
+		$scope.meta['diff'] = strToDivDom(pd[0]).getElementsByClassName('diff');
+		$("#prettydiff").empty();
+		$("#prettydiff").append($scope.meta['diff']);
 	}
 } ])

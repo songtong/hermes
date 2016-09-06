@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.helper.Files.IO;
 
+import sun.net.www.protocol.http.HttpURLConnection;
+
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.bo.Offset;
@@ -48,6 +50,7 @@ import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.endpoint.MetaEndpointClient;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
+import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
@@ -55,8 +58,6 @@ import com.ctrip.hermes.metaserver.meta.MetaHolder;
 import com.ctrip.hermes.metaserver.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.metaserver.rest.commons.RestException;
 import com.google.common.util.concurrent.SettableFuture;
-
-import sun.net.www.protocol.http.HttpURLConnection;
 
 @Path("/message/")
 @Singleton
@@ -101,7 +102,7 @@ public class MessageAssistResource {
 			time = -1 == time ? Long.MAX_VALUE : -2 == time ? Long.MIN_VALUE : time;
 
 			Map<Integer, Offset> result = null;
-			if (m_clusterStateHolder.hasLeadership()) {
+			if (m_clusterStateHolder.getRole() == Role.LEADER) {
 				result = findOffsetFromBroker(topic, partition, time);
 			} else if (!isFromAnotherMetaServer(req)) {
 				Map<String, String> params = new HashMap<String, String>();
@@ -110,7 +111,9 @@ public class MessageAssistResource {
 				params.put("time", String.valueOf(time));
 
 				HostPort leader = m_clusterStateHolder.getLeader();
-				result = findOffsetFromMetaLeader(leader.getHost(), leader.getPort(), params);
+				if (leader != null) {
+					result = findOffsetFromMetaLeader(leader.getHost(), leader.getPort(), params);
+				}
 			}
 
 			if (result == null || result.size() == 0) {

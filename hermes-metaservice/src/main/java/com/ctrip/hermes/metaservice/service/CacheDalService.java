@@ -14,7 +14,6 @@ import com.ctrip.hermes.metaservice.dal.CachedEndpointDao;
 import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
 import com.ctrip.hermes.metaservice.dal.CachedProducerDao;
 import com.ctrip.hermes.metaservice.dal.CachedSchemaDao;
-import com.ctrip.hermes.metaservice.dal.CachedServerDao;
 import com.ctrip.hermes.metaservice.dal.CachedStorageDao;
 import com.ctrip.hermes.metaservice.dal.CachedTopicDao;
 import com.google.common.cache.CacheStats;
@@ -47,9 +46,6 @@ public class CacheDalService {
 	private CachedSchemaDao schemaDao;
 
 	@Inject
-	private CachedServerDao serverDao;
-
-	@Inject
 	private CachedStorageDao storageDao;
 
 	@Inject
@@ -64,7 +60,6 @@ public class CacheDalService {
 		result.putAll(endpointDao.getStats());
 		result.putAll(producerDao.getStats());
 		result.putAll(schemaDao.getStats());
-		result.putAll(serverDao.getStats());
 		result.putAll(storageDao.getStats());
 		result.putAll(topicDao.getStats());
 		result.putAll(partitionDao.getStats());
@@ -79,7 +74,6 @@ public class CacheDalService {
 		endpointDao.invalidateAll();
 		producerDao.invalidateAll();
 		schemaDao.invalidateAll();
-		serverDao.invalidateAll();
 		storageDao.invalidateAll();
 		topicDao.invalidateAll();
 		partitionDao.invalidateAll();

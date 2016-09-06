@@ -43,6 +43,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolder</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -59,13 +62,13 @@
 			<implementation>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.service.SystemClockService</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -104,13 +107,13 @@
 			<implementation>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.service.SystemClockService</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -134,9 +137,6 @@
 					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.metaserver.event.EventBus</role>
 				</requirement>
 				<requirement>
@@ -144,6 +144,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.event.Guard</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -199,19 +202,7 @@
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.meta.MetaServerAssigningStrategy</role>
-			<implementation>com.ctrip.hermes.metaserver.meta.DefaultMetaServerAssigningStrategy</implementation>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener</role>
-			<implementation>com.ctrip.hermes.metaserver.cluster.listener.EventBusBootstrapListener</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.event.EventBus</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.event.Guard</role>
-				</requirement>
-			</requirements>
+			<implementation>com.ctrip.hermes.metaserver.meta.LeastAdjustmentMetaServerAssigningStrategy</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.event.EventHandlerRegistry</role>
@@ -236,9 +227,6 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.event.EventHandlerRegistry</role>
 				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.event.Guard</role>
-				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -252,9 +240,6 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.service.SystemClockService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.MetaService</role>
@@ -275,7 +260,7 @@
 					<role>com.ctrip.hermes.metaserver.commons.EndpointMaker</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaserver.event.Guard</role>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -299,6 +284,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -315,6 +303,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -327,6 +318,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -343,6 +337,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -366,6 +363,12 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.event.impl.LeaderMetaFetcher</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -377,6 +380,34 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.event.EventHandler</role>
+			<role-hint>ObserverInitEventHandler</role-hint>
+			<implementation>com.ctrip.hermes.metaserver.event.impl.ObserverInitEventHandler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.event.impl.LeaderMetaFetcher</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
 				</requirement>
 			</requirements>
 		</component>

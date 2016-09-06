@@ -3,7 +3,6 @@ package com.ctrip.hermes.portal.service.dashboard;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -19,18 +18,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import kafka.api.OffsetRequest;
-import kafka.api.PartitionOffsetRequestInfo;
-import kafka.common.OffsetMetadataAndError;
-import kafka.common.TopicAndPartition;
-import kafka.javaapi.OffsetFetchRequest;
-import kafka.javaapi.OffsetFetchResponse;
-import kafka.javaapi.OffsetResponse;
-import kafka.javaapi.PartitionMetadata;
-import kafka.javaapi.TopicMetadata;
-import kafka.javaapi.TopicMetadataRequest;
-import kafka.javaapi.consumer.SimpleConsumer;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -61,7 +48,6 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
-import com.ctrip.hermes.metaservice.service.DefaultPortalMetaService;
 import com.ctrip.hermes.metaservice.service.PartitionService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.config.PortalConstants;
@@ -69,8 +55,21 @@ import com.ctrip.hermes.portal.resource.view.BrokerQPSBriefView;
 import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.elastic.PortalElasticClient;
+import com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+
+import kafka.api.OffsetRequest;
+import kafka.api.PartitionOffsetRequestInfo;
+import kafka.common.OffsetMetadataAndError;
+import kafka.common.TopicAndPartition;
+import kafka.javaapi.OffsetFetchRequest;
+import kafka.javaapi.OffsetFetchResponse;
+import kafka.javaapi.OffsetResponse;
+import kafka.javaapi.PartitionMetadata;
+import kafka.javaapi.TopicMetadata;
+import kafka.javaapi.TopicMetadataRequest;
+import kafka.javaapi.consumer.SimpleConsumer;
 
 @Named(type = DashboardService.class)
 public class DefaultDashboardService implements DashboardService, Initializable {
@@ -186,7 +185,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
 		      .getProperty("meta.port", "80").trim(), "metaserver/status");
 		try {
-			HttpResponse response = Request.Get(url).execute().returnResponse();
+			HttpResponse response = Request.Get(url).connectTimeout(2000).socketTimeout(5000).execute().returnResponse();
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) {
 				metaServer = EntityUtils.toString(response.getEntity());
