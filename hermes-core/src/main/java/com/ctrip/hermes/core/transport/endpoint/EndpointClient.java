@@ -1,7 +1,5 @@
 package com.ctrip.hermes.core.transport.endpoint;
 
-import java.util.concurrent.TimeUnit;
-
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.meta.entity.Endpoint;
 
@@ -11,8 +9,6 @@ import com.ctrip.hermes.meta.entity.Endpoint;
  */
 public interface EndpointClient {
 	public boolean writeCommand(Endpoint endpoint, Command cmd);
-
-	public boolean writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit);
 
 	public void close();
 

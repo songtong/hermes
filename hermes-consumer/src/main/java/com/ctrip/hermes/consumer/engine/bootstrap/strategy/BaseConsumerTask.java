@@ -303,8 +303,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 					queryOffsetResultMonitor.monitor(cmd);
 					SettableFuture<Pair<Boolean, Endpoint>> acceptFuture = queryOffsetAcceptMonitor.monitor(cmd.getHeader()
 					      .getCorrelationId());
-					if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, acceptTimeout,
-					      TimeUnit.MILLISECONDS)) {
+					if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd)) {
 
 						Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(acceptFuture, acceptTimeout);
 
@@ -610,8 +609,7 @@ public abstract class BaseConsumerTask implements ConsumerTask {
 				long acceptTimeout = m_config.getPullMessageAcceptTimeoutMillis() > timeout ? timeout : m_config
 				      .getPullMessageAcceptTimeoutMillis();
 
-				if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd, acceptTimeout,
-				      TimeUnit.MILLISECONDS)) {
+				if (PlexusComponentLocator.lookup(EndpointClient.class).writeCommand(endpoint, cmd)) {
 
 					Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(acceptFuture, acceptTimeout);
 

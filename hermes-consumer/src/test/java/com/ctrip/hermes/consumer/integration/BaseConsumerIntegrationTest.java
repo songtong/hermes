@@ -104,11 +104,6 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 		}
 
 		@Override
-		public boolean writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
-			return m_delegate.writeCommand(endpoint, cmd, timeout, timeUnit);
-		}
-
-		@Override
 		public void close() {
 			m_delegate.close();
 		}
@@ -134,9 +129,7 @@ public class BaseConsumerIntegrationTest extends ComponentTestCase {
 		doAnswer(answer)//
 		      .when(m_endpointClient)//
 		      .writeCommand(any(Endpoint.class), //
-		            any(Command.class), //
-		            anyLong(), //
-		            any(TimeUnit.class));
+		            any(Command.class));
 	}
 
 	protected void metaProxyActions4LeaseOperation(Answer<?> acquireAnswer, Answer<?> renewAnswer) {

@@ -23,12 +23,13 @@ public class PerfTest {
 		int offsetTtl = 1000;
 		int longPollingThreadCount = 50;
 
-		ExecutorService longPollingThreadPool = Executors.newFixedThreadPool(longPollingThreadCount, HermesThreadFactory.create("LongPollingService", true));
+		ExecutorService longPollingThreadPool = Executors.newFixedThreadPool(longPollingThreadCount,
+		      HermesThreadFactory.create("LongPollingService", true));
 
 		Selector<Tp> s = new DefaultSelector<>(longPollingThreadPool, slotCount, offsetTtl, new OffsetLoader<Tp>() {
 
 			@Override
-			public void loadAsync(Tp tp) {
+			public void loadAsync(Tp tp, Selector<Tp> selector) {
 				System.out.println("loading");
 			}
 		}, InitialLastUpdateTime.OLDEST);

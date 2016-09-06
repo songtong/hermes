@@ -21,8 +21,6 @@ public abstract class AbstractSelectorManager<T> implements SelectorManager<T> {
 
 	protected abstract long nextAwaitingSafeTriggerOffset(T key, Object arg);
 
-	// TODO [selector] remove temporary metrics
-
 	@Override
 	public void reRegister(T key, CallbackContext callbackCtx, TriggerResult triggerResult, ExpireTimeHolder expireTimeHolder, SelectorCallback callback) {
 		SlotMatchResult[] slotMatchResults = callbackCtx.getSlotMatchResults();

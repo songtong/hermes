@@ -88,7 +88,7 @@ public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<T
 	}
 
 	class DaoOffsetLoader implements OffsetLoader<Tp> {
-		private void doLoadAsync(final Tp tp, final int priority) {
+		private void doLoadAsync(final Tp tp, final int priority, final Selector<Tp> selector) {
 			offsetLoaderThreadPool.submit(new Runnable() {
 
 				@Override
@@ -110,9 +110,9 @@ public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<T
 		}
 
 		@Override
-		public void loadAsync(final Tp tp) {
-			doLoadAsync(tp, 0);
-			doLoadAsync(tp, 1);
+		public void loadAsync(final Tp tp, final Selector<Tp> selector) {
+			doLoadAsync(tp, 0, selector);
+			doLoadAsync(tp, 1, selector);
 		}
 	}
 

@@ -106,7 +106,7 @@ public class DefaultSelector<T> implements Selector<T> {
 	}
 
 	private void loadMaxWriteOffsetAsync(T key) {
-		offsetLoader.loadAsync(key);
+		offsetLoader.loadAsync(key, this);
 	}
 
 	protected boolean isLongTimeNoUpdate(long lastUpdateTime) {
