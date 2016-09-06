@@ -99,7 +99,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		// cmessaging config service
 		all.add(A(DefaultCMessagingConfigService.class));
-
+		
 		return all;
 	}
 

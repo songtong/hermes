@@ -25,6 +25,8 @@ import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.MessageDataSourceProvider;
 import com.ctrip.hermes.broker.registry.DefaultBrokerRegistry;
+import com.ctrip.hermes.broker.selector.DefaultPullMessageSelectorManager;
+import com.ctrip.hermes.broker.selector.DefaultSendMessageSelectorManager;
 import com.ctrip.hermes.broker.shutdown.ShutdownRequestMonitor;
 import com.ctrip.hermes.broker.transport.NettyServer;
 import com.ctrip.hermes.broker.transport.NettyServerConfig;
@@ -217,6 +219,9 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultBrokerRegistry.class));
 		all.add(A(ZKClient.class));
 		all.add(A(ZKConfig.class));
+		
+		all.add(A(DefaultPullMessageSelectorManager.class));
+		all.add(A(DefaultSendMessageSelectorManager.class));
 
 		all.addAll(new HermesDatabaseConfigurator().defineComponents());
 

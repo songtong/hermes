@@ -11,12 +11,14 @@ import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.FetchResult;
+import com.ctrip.hermes.broker.selector.PullMessageSelectorManager;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.selector.CallbackContext;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -111,14 +113,14 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public synchronized Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize, String filter) {
-		List<TppConsumerMessageBatch> batches = doNext(batchSize, filter);
+	public synchronized Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize, String filter, CallbackContext callbackCtx) {
+		List<TppConsumerMessageBatch> batches = doNext(batchSize, filter, callbackCtx);
 		Offset offset = new Offset((long) m_priorityOffset, (long) m_nonPriorityOffset, (Pair<Date, Long>) m_resendOffset);
 
 		return new Pair<Offset, List<TppConsumerMessageBatch>>(batches == null ? null : offset, batches);
 	}
 
-	protected List<TppConsumerMessageBatch> doNext(int batchSize, String filter) {
+	protected List<TppConsumerMessageBatch> doNext(int batchSize, String filter, CallbackContext callbackCtx) {
 		if (m_stopped.get() || m_lease.isExpired()) {
 			return null;
 		}
@@ -126,18 +128,21 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		try {
 			List<TppConsumerMessageBatch> result = new LinkedList<>();
 			int remainingSize = batchSize;
-			FetchResult pFetchResult = fetchPriorityMessages(batchSize, filter);
 
-			if (pFetchResult != null) {
-				TppConsumerMessageBatch priorityMessageBatch = pFetchResult.getBatch();
-				if (priorityMessageBatch != null && priorityMessageBatch.size() > 0) {
-					result.add(priorityMessageBatch);
-					remainingSize -= priorityMessageBatch.size();
-					m_priorityOffset = pFetchResult.getOffset();
+			if (selectorTriggedByPriorityMessage(callbackCtx) || selectorTriggedByResendMessage(callbackCtx)) {
+				FetchResult pFetchResult = fetchPriorityMessages(batchSize, filter);
+				
+				if (pFetchResult != null) {
+					TppConsumerMessageBatch priorityMessageBatch = pFetchResult.getBatch();
+					if (priorityMessageBatch != null && priorityMessageBatch.size() > 0) {
+						result.add(priorityMessageBatch);
+						remainingSize -= priorityMessageBatch.size();
+						m_priorityOffset = pFetchResult.getOffset();
+					}
 				}
 			}
 
-			if (remainingSize > 0) {
+			if (selectorTriggedByResendMessage(callbackCtx) && remainingSize > 0) {
 				FetchResult rFetchResult = fetchResendMessages(remainingSize);
 
 				if (rFetchResult != null) {
@@ -150,7 +155,7 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 				}
 			}
 
-			if (remainingSize > 0) {
+			if ((selectorTriggedByNonPriorityMessage(callbackCtx) || selectorTriggedByResendMessage(callbackCtx)) && remainingSize > 0) {
 				FetchResult npFetchResult = fetchNonPriorityMessages(remainingSize, filter);
 
 				if (npFetchResult != null) {
@@ -169,6 +174,18 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		}
 
 		return null;
+	}
+
+	private boolean selectorTriggedByPriorityMessage(CallbackContext callbackCtx) {
+		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_PRIORITY_INDEX].isMatch();
+	}
+
+	private boolean selectorTriggedByNonPriorityMessage(CallbackContext callbackCtx) {
+		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_NONPRIORITY_INDEX].isMatch();
+	}
+
+	private boolean selectorTriggedByResendMessage(CallbackContext callbackCtx) {
+		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_RESEND_INDEX].isMatch();
 	}
 
 	@Override

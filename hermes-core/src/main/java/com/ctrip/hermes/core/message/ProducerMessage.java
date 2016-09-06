@@ -1,5 +1,7 @@
 package com.ctrip.hermes.core.message;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.ctrip.hermes.core.result.CompletionCallback;
 import com.ctrip.hermes.core.result.SendResult;
 
@@ -25,6 +27,8 @@ public class ProducerMessage<T> {
 	private PropertiesHolder m_propertiesHolder = new PropertiesHolder();
 
 	private CompletionCallback<SendResult> m_callback;
+	
+	private AtomicLong m_selectorOffset = new AtomicLong();
 
 	public ProducerMessage() {
 
@@ -33,6 +37,14 @@ public class ProducerMessage<T> {
 	public ProducerMessage(String m_topic, T m_body) {
 		this.m_topic = m_topic;
 		this.m_body = m_body;
+	}
+	
+	public long getSelectorOffset() {
+		return m_selectorOffset.get();
+	}
+
+	public void setSelectorOffset(long selectorOffset) {
+		m_selectorOffset.set(selectorOffset);
 	}
 
 	public int getMsgSeqNo() {

@@ -1,10 +1,15 @@
 package com.ctrip.hermes.producer.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.StringUtils;
 
@@ -33,6 +38,10 @@ public class ProducerConfig implements Initializable {
 
 	private static final int DEFAULT_BROKER_SENDER_CONCURRENT_LEVEL = 2;
 
+	private static final int DEFAULT_MESSAGE_SENDER_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 1;
+	
+	private static final int DEFAULT_MESSAGE_SENDER_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
+
 	@Inject
 	private ClientEnvironment m_clientEnv;
 
@@ -58,10 +67,17 @@ public class ProducerConfig implements Initializable {
 
 	private int m_brokerSenderConcurrentLevel = DEFAULT_BROKER_SENDER_CONCURRENT_LEVEL;
 
+	private int m_messageSenderSelectorSafeTriggerMinFireIntervalMillis = 50;
+
+	private int m_messageSenderSelectorSafeTriggerIntervalMillis = 100;
+
+	private Map<String, Integer> m_messageSenderSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
+	
+	private Map<String, Integer> m_messageSenderSelectorSafeTriggerTriggeringOffsetDeltas = new HashMap<>();
+
 	@Override
 	public void initialize() throws InitializationException {
-		String brokerSenderNetworkIoThreadCountStr = m_clientEnv.getGlobalConfig().getProperty(
-		      "producer.networkio.threadcount");
+		String brokerSenderNetworkIoThreadCountStr = m_clientEnv.getGlobalConfig().getProperty("producer.networkio.threadcount");
 		if (StringUtils.isNumeric(brokerSenderNetworkIoThreadCountStr)) {
 			m_brokerSenderNetworkIoThreadCount = Integer.valueOf(brokerSenderNetworkIoThreadCountStr);
 		}
@@ -71,22 +87,17 @@ public class ProducerConfig implements Initializable {
 			m_brokerSenderTaskQueueSize = Integer.valueOf(brokerSenderTaskQueueSizeStr);
 		}
 
-		String brokerSenderNetworkIoCheckIntervalBaseMillisStr = m_clientEnv.getGlobalConfig().getProperty(
-		      "producer.networkio.interval.base");
+		String brokerSenderNetworkIoCheckIntervalBaseMillisStr = m_clientEnv.getGlobalConfig().getProperty("producer.networkio.interval.base");
 		if (StringUtils.isNumeric(brokerSenderNetworkIoCheckIntervalBaseMillisStr)) {
-			m_brokerSenderNetworkIoCheckIntervalBaseMillis = Integer
-			      .valueOf(brokerSenderNetworkIoCheckIntervalBaseMillisStr);
+			m_brokerSenderNetworkIoCheckIntervalBaseMillis = Integer.valueOf(brokerSenderNetworkIoCheckIntervalBaseMillisStr);
 		}
 
-		String brokerSenderNetworkIoCheckIntervalMaxMillisStr = m_clientEnv.getGlobalConfig().getProperty(
-		      "producer.networkio.interval.max");
+		String brokerSenderNetworkIoCheckIntervalMaxMillisStr = m_clientEnv.getGlobalConfig().getProperty("producer.networkio.interval.max");
 		if (StringUtils.isNumeric(brokerSenderNetworkIoCheckIntervalMaxMillisStr)) {
-			m_brokerSenderNetworkIoCheckIntervalMaxMillis = Integer
-			      .valueOf(brokerSenderNetworkIoCheckIntervalMaxMillisStr);
+			m_brokerSenderNetworkIoCheckIntervalMaxMillis = Integer.valueOf(brokerSenderNetworkIoCheckIntervalMaxMillisStr);
 		}
 
-		String producerCallbackThreadCountStr = m_clientEnv.getGlobalConfig()
-		      .getProperty("producer.callback.threadcount");
+		String producerCallbackThreadCountStr = m_clientEnv.getGlobalConfig().getProperty("producer.callback.threadcount");
 		if (StringUtils.isNumeric(producerCallbackThreadCountStr)) {
 			m_ProducerCallbackThreadCount = Integer.valueOf(producerCallbackThreadCountStr);
 		}
@@ -122,7 +133,47 @@ public class ProducerConfig implements Initializable {
 			m_brokerSenderResultTimeout = Integer.valueOf(brokerSenderResultTimeout);
 		}
 
+		String messageSenderSelectorSafeTriggerMinFireIntervalMillisStr = m_clientEnv.getGlobalConfig()
+				.getProperty("producer.message.sender.selector.safe.trigger.min.fire.interval.millis");
+		if (StringUtils.isNumeric(messageSenderSelectorSafeTriggerMinFireIntervalMillisStr)) {
+			m_messageSenderSelectorSafeTriggerMinFireIntervalMillis = Integer.valueOf(messageSenderSelectorSafeTriggerMinFireIntervalMillisStr);
+		}
+
+		String messageSenderSelectorSafeTriggerIntervalMillisStr = m_clientEnv.getGlobalConfig()
+				.getProperty("producer.message.sender.selector.safe.trigger.interval.millis");
+		if (StringUtils.isNumeric(messageSenderSelectorSafeTriggerIntervalMillisStr)) {
+			m_messageSenderSelectorSafeTriggerIntervalMillis = Integer.valueOf(messageSenderSelectorSafeTriggerIntervalMillisStr);
+		}
+
+		String messageSenderSelectorNormalTriggeringOffsetDeltas = m_clientEnv.getGlobalConfig()
+				.getProperty("producer.message.sender.selector.normal.triggering.offset.deltas");
+		if (!StringUtils.isEmpty(messageSenderSelectorNormalTriggeringOffsetDeltas)) {
+			m_messageSenderSelectorNormalTriggeringOffsetDeltas = JSON.parseObject(messageSenderSelectorNormalTriggeringOffsetDeltas,
+					new TypeReference<Map<String, Integer>>() {
+					});
+		}
+		
+		String messageSenderSelectorSafeTriggerTriggeringOffsetDeltas = m_clientEnv.getGlobalConfig()
+				.getProperty("producer.message.sender.selector.safe.trigger.triggering.offset.deltas");
+		if (!StringUtils.isEmpty(messageSenderSelectorSafeTriggerTriggeringOffsetDeltas)) {
+			m_messageSenderSelectorSafeTriggerTriggeringOffsetDeltas = JSON.parseObject(messageSenderSelectorSafeTriggerTriggeringOffsetDeltas,
+					new TypeReference<Map<String, Integer>>() {
+			});
+		}
+
 		// FIXME log config loading details.
+	}
+	
+	public int getProduceTimeoutSeconds(String topic) {
+		try {
+			String produceTimeout = m_clientEnv.getProducerConfig(topic).getProperty("produce.timeout.seconds");
+			if (StringUtils.isNumeric(produceTimeout)) {
+				return Integer.valueOf(produceTimeout);
+			}
+		} catch (Exception e) {
+			// ignore
+		}
+		return -1;
 	}
 
 	public boolean isCatEnabled() {
@@ -169,16 +220,30 @@ public class ProducerConfig implements Initializable {
 		return m_brokerSenderConcurrentLevel;
 	}
 
-	public int getProduceTimeoutSeconds(String topic) {
-		try {
-			String produceTimeout = m_clientEnv.getProducerConfig(topic).getProperty("produce.timeout.seconds");
-			if (StringUtils.isNumeric(produceTimeout)) {
-				return Integer.valueOf(produceTimeout);
-			}
-		} catch (Exception e) {
-			// ignore
+	public int getMessageSenderSelectorSafeTriggerMinFireIntervalMillis() {
+		return m_messageSenderSelectorSafeTriggerMinFireIntervalMillis;
+	}
+
+	public int getMessageSenderSelectorSafeTriggerIntervalMillis() {
+		return m_messageSenderSelectorSafeTriggerIntervalMillis;
+	}
+
+	public int getMessageSenderSelectorNormalTriggeringOffsetDelta(String topic) {
+		Integer delta = m_messageSenderSelectorNormalTriggeringOffsetDeltas.get(topic);
+		if (delta != null && delta > 0) {
+			return delta;
+		} else {
+			return DEFAULT_MESSAGE_SENDER_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA;
 		}
-		return -1;
+	}
+
+	public long getMessageSenderSelectorSafeTriggerTriggeringOffsetDelta(String topic) {
+		Integer delta = m_messageSenderSelectorSafeTriggerTriggeringOffsetDeltas.get(topic);
+		if (delta != null && delta > 0) {
+			return delta;
+		} else {
+			return DEFAULT_MESSAGE_SENDER_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA;
+		}
 	}
 
 }

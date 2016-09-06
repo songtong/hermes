@@ -67,7 +67,38 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_FILTER_TOPIC_CACHE_SIZE = 5000;
 
+	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 1;
+
+	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
+
+	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 1;
+
+	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
+
 	private int m_filterTopicCacheSize = DEFAULT_FILTER_TOPIC_CACHE_SIZE;
+
+	private Map<String, Integer> m_sendMessageSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
+
+	private Map<String, Integer> m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = new HashMap<>();
+
+	private int m_pullMessageSelectorWriteOffsetTtlMillis = 8000;
+
+	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 5000;
+
+	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 30;
+
+	private int m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = 60;
+
+	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 1000;
+
+	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 500;
+
+	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 1000;
+
+	// Topic -> GroupId or default -> delta
+	private Map<String, Map<String, Integer>> m_pullMessageSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
+
+	private Map<String, Map<String, Integer>> m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = new HashMap<>();
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -81,29 +112,98 @@ public class BrokerConfig implements Initializable {
 			m_mySQLBatchInsertSzie = Integer.valueOf(mysqlBatchInsertSizeStr);
 		}
 
-		String longPollingServiceThreadCount = m_env.getGlobalConfig().getProperty(
-		      "broker.long.polling.service.thread.count");
+		String longPollingServiceThreadCount = m_env.getGlobalConfig().getProperty("broker.long.polling.service.thread.count");
 		if (StringUtils.isNumeric(longPollingServiceThreadCount)) {
 			m_longPollingServiceThreadCount = Integer.valueOf(longPollingServiceThreadCount);
 		}
 
-		String longPollingCheckIntervalMillis = m_env.getGlobalConfig().getProperty(
-		      "broker.long.polling.check.interval.millis");
+		String longPollingCheckIntervalMillis = m_env.getGlobalConfig().getProperty("broker.long.polling.check.interval.millis");
 		if (!StringUtils.isEmpty(longPollingCheckIntervalMillis)) {
-			m_longPollingCheckIntervalMillis = JSON.parseObject(longPollingCheckIntervalMillis,
-			      new TypeReference<Map<String, Integer[]>>() {
-			      });
+			m_longPollingCheckIntervalMillis = JSON.parseObject(longPollingCheckIntervalMillis, new TypeReference<Map<String, Integer[]>>() {
+			});
 		}
 
-		String flushCheckerNoMessageWaitIntervalBaseMillis = m_env.getGlobalConfig().getProperty(
-		      "broker.flush.checker.no.message.wait.base.millis");
+		String flushCheckerNoMessageWaitIntervalBaseMillis = m_env.getGlobalConfig().getProperty("broker.flush.checker.no.message.wait.base.millis");
 		if (StringUtils.isNumeric(flushCheckerNoMessageWaitIntervalBaseMillis)) {
 			m_flushCheckerNoMessageWaitBaseMillis = Integer.valueOf(flushCheckerNoMessageWaitIntervalBaseMillis);
 		}
-		String flushCheckerNoMessageWaitIntervalMaxMillis = m_env.getGlobalConfig().getProperty(
-		      "broker.flush.checker.no.message.wait.max.millis");
+		String flushCheckerNoMessageWaitIntervalMaxMillis = m_env.getGlobalConfig().getProperty("broker.flush.checker.no.message.wait.max.millis");
 		if (StringUtils.isNumeric(flushCheckerNoMessageWaitIntervalMaxMillis)) {
 			m_flushCheckerNoMessageWaitMaxMillis = Integer.valueOf(flushCheckerNoMessageWaitIntervalMaxMillis);
+		}
+
+		// pull message selector
+		String pullMessageSelectorNormalTriggeringOffsetDeltas = m_env.getGlobalConfig()
+				.getProperty("broker.pull.message.selector.normal.triggering.offset.deltas");
+		if (!StringUtils.isEmpty(pullMessageSelectorNormalTriggeringOffsetDeltas)) {
+			m_pullMessageSelectorNormalTriggeringOffsetDeltas = JSON.parseObject(pullMessageSelectorNormalTriggeringOffsetDeltas,
+					new TypeReference<Map<String, Map<String, Integer>>>() {
+					});
+		}
+
+		String pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = m_env.getGlobalConfig()
+				.getProperty("broker.pull.message.selector.safe.trigger.triggering.offset.deltas");
+		if (!StringUtils.isEmpty(pullMessageSelectorSafeTriggerTriggeringOffsetDeltas)) {
+			m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = JSON.parseObject(pullMessageSelectorSafeTriggerTriggeringOffsetDeltas,
+					new TypeReference<Map<String, Map<String, Integer>>>() {
+					});
+		}
+
+		String pullMessageSelectorWriteOffsetTtlMillis = m_env.getGlobalConfig().getProperty("broker.pull.message.selector.write.offset.ttl.millis");
+		if (StringUtils.isNumeric(pullMessageSelectorWriteOffsetTtlMillis)) {
+			m_pullMessageSelectorWriteOffsetTtlMillis = Integer.valueOf(pullMessageSelectorWriteOffsetTtlMillis);
+		}
+		
+		String pullMessageSelectorSafeTriggerIntervalMillis = m_env.getGlobalConfig().getProperty("broker.pull.message.selector.safe.trigger.interval.millis");
+		if (StringUtils.isNumeric(pullMessageSelectorSafeTriggerIntervalMillis)) {
+			m_pullMessageSelectorSafeTriggerIntervalMillis = Integer.valueOf(pullMessageSelectorSafeTriggerIntervalMillis);
+		}
+		
+		String pullMessageSelectorOffsetLoaderThreadPoolSize = m_env.getGlobalConfig()
+				.getProperty("broker.pull.message.selector.offset.loader.thread.pool.size");
+		if (StringUtils.isNumeric(pullMessageSelectorOffsetLoaderThreadPoolSize)) {
+			m_pullMessageSelectorOffsetLoaderThreadPoolSize = Integer.valueOf(pullMessageSelectorOffsetLoaderThreadPoolSize);
+		}
+		
+		String pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = m_env.getGlobalConfig()
+				.getProperty("broker.pull.message.selector.offset.loader.thread.pool.keepalive.seconds");
+		if (StringUtils.isNumeric(pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds)) {
+			m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = Integer.valueOf(pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds);
+		}
+		
+		String pullMessageSelectorSafeTriggerMinFireIntervalMillis = m_env.getGlobalConfig()
+				.getProperty("broker.pull.message.selector.safe.trigger.min.fire.interval.millis");
+		if (StringUtils.isNumeric(pullMessageSelectorSafeTriggerMinFireIntervalMillis)) {
+			m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = Integer.valueOf(pullMessageSelectorSafeTriggerMinFireIntervalMillis);
+		}
+		
+		
+		// send message selector
+		String sendMessageSelectorNormalTriggeringOffsetDeltas = m_env.getGlobalConfig()
+				.getProperty("broker.send.message.selector.normal.triggering.offset.deltas");
+		if (!StringUtils.isEmpty(sendMessageSelectorNormalTriggeringOffsetDeltas)) {
+			m_sendMessageSelectorNormalTriggeringOffsetDeltas = JSON.parseObject(sendMessageSelectorNormalTriggeringOffsetDeltas,
+					new TypeReference<Map<String, Integer>>() {
+					});
+		}
+
+		String sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = m_env.getGlobalConfig()
+				.getProperty("broker.send.message.selector.safe.trigger.triggering.offset.deltas");
+		if (!StringUtils.isEmpty(sendMessageSelectorSafeTriggerTriggeringOffsetDeltas)) {
+			m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = JSON.parseObject(sendMessageSelectorSafeTriggerTriggeringOffsetDeltas,
+					new TypeReference<Map<String, Integer>>() {
+					});
+		}
+		
+		String sendMessageSelectorSafeTriggerMinFireIntervalMillis = m_env.getGlobalConfig()
+				.getProperty("broker.send.message.selector.safe.trigger.min.fire.interval.millis");
+		if (StringUtils.isNumeric(sendMessageSelectorSafeTriggerMinFireIntervalMillis)) {
+			m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = Integer.valueOf(sendMessageSelectorSafeTriggerMinFireIntervalMillis);
+		}
+		
+		String sendMessageSelectorSafeTriggerIntervalMillis = m_env.getGlobalConfig().getProperty("broker.send.message.selector.safe.trigger.interval.millis");
+		if (StringUtils.isNumeric(sendMessageSelectorSafeTriggerIntervalMillis)) {
+			m_sendMessageSelectorSafeTriggerIntervalMillis = Integer.valueOf(sendMessageSelectorSafeTriggerIntervalMillis);
 		}
 
 		m_cacheConfig.init(m_env.getGlobalConfig());
@@ -248,4 +348,89 @@ public class BrokerConfig implements Initializable {
 	public int getFilterTopicCacheSize() {
 		return m_filterTopicCacheSize;
 	}
+
+	public int getPullMessageSelectorWriteOffsetTtlMillis() {
+		return m_pullMessageSelectorWriteOffsetTtlMillis;
+	}
+
+	public int getPullMessageSelectorSafeTriggerIntervalMillis() {
+		return m_pullMessageSelectorSafeTriggerIntervalMillis;
+	}
+
+	public int getPullMessageSelectorOffsetLoaderThreadPoolSize() {
+		return m_pullMessageSelectorOffsetLoaderThreadPoolSize;
+	}
+
+	public int getPullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds() {
+		return m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds;
+	}
+
+	public long getPullMessageSelectorSafeTriggerMinFireIntervalMillis() {
+		return m_pullMessageSelectorSafeTriggerMinFireIntervalMillis;
+	}
+
+	public int getSendMessageSelectorSafeTriggerMinFireIntervalMillis() {
+		return m_sendMessageSelectorSafeTriggerMinFireIntervalMillis;
+	}
+
+	public int getSendMessageSelectorSafeTriggerIntervalMillis() {
+		return m_sendMessageSelectorSafeTriggerIntervalMillis;
+	}
+
+	public int getSendMessageSelectorNormalTriggeringOffsetDelta(String topic) {
+		Integer delta = m_sendMessageSelectorNormalTriggeringOffsetDeltas.get(topic);
+		if (delta != null && delta > 0) {
+			return delta;
+		} else {
+			return DEFAULT_SEND_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA;
+		}
+	}
+
+	public long getSendMessageSelectorSafeTriggerTriggeringOffsetDelta(String topic) {
+		Integer delta = m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas.get(topic);
+		if (delta != null && delta > 0) {
+			return delta;
+		} else {
+			return DEFAULT_SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA;
+		}
+	}
+
+	public int getPullMessageSelectorNormalTriggeringOffsetDelta(String topic, String groupId) {
+		Map<String, Integer> topicDeltas = m_pullMessageSelectorNormalTriggeringOffsetDeltas.get(topic);
+		if (topicDeltas == null) {
+			return DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA;
+		} else {
+			Integer groupDelta = topicDeltas.get(groupId);
+			if (groupDelta != null && groupDelta > 0) {
+				return groupDelta;
+			} else {
+				groupDelta = topicDeltas.get("default");
+				if (groupDelta != null && groupDelta > 0) {
+					return groupDelta;
+				} else {
+					return DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA;
+				}
+			}
+		}
+	}
+
+	public long getPullMessageSelectorSafeTriggerTriggeringOffsetDelta(String topic, String groupId) {
+		Map<String, Integer> topicDeltas = m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas.get(topic);
+		if (topicDeltas == null) {
+			return DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA;
+		} else {
+			Integer groupDelta = topicDeltas.get(groupId);
+			if (groupDelta != null && groupDelta > 0) {
+				return groupDelta;
+			} else {
+				groupDelta = topicDeltas.get("default");
+				if (groupDelta != null && groupDelta > 0) {
+					return groupDelta;
+				} else {
+					return DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA;
+				}
+			}
+		}
+	}
+
 }

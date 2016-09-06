@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.unidal.tuple.Pair;
 
@@ -49,6 +50,8 @@ public class SendMessageCommandV5 extends AbstractCommand {
 	private transient Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<Integer, MessageBatchWithRawData>();
 
 	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<Integer, SettableFuture<SendResult>>();
+	
+	private transient AtomicLong m_selectorOffset = new AtomicLong();
 
 	public SendMessageCommandV5() {
 		this(null, -1, -1L);
@@ -59,6 +62,14 @@ public class SendMessageCommandV5 extends AbstractCommand {
 		m_topic = topic;
 		m_partition = partition;
 		m_timeout = timeout;
+	}
+	
+	public long getSelectorOffset() {
+		return m_selectorOffset.get();
+	}
+
+	public void setSelectorOffset(long selectorOffset) {
+		m_selectorOffset.set(selectorOffset);
 	}
 
 	public ConcurrentMap<Integer, List<ProducerMessage<?>>> getMsgs() {
