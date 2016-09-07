@@ -41,15 +41,7 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_SHUTDOWN_PORT = 4888;
 
-	private static final int DEFAULT_FLUSH_CHECKER_NO_MESSAGE_WAIT_BASE_MILLIS = 10;
-
-	private static final int DEFAULT_FLUSH_CHECKER_NO_MESSAGE_WAIT_MAX_MILLIS = 20;
-
 	private MySQLCacheConfig m_cacheConfig = new MySQLCacheConfig();
-
-	private int m_flushCheckerNoMessageWaitBaseMillis = DEFAULT_FLUSH_CHECKER_NO_MESSAGE_WAIT_BASE_MILLIS;
-
-	private int m_flushCheckerNoMessageWaitMaxMillis = DEFAULT_FLUSH_CHECKER_NO_MESSAGE_WAIT_MAX_MILLIS;
 
 	private static final int DEFAULT_FILTER_PATTERN_CACHE_SIZE = 10000;
 
@@ -110,17 +102,6 @@ public class BrokerConfig implements Initializable {
 		      "broker.long.polling.service.thread.count");
 		if (StringUtils.isNumeric(longPollingServiceThreadCount)) {
 			m_longPollingServiceThreadCount = Integer.valueOf(longPollingServiceThreadCount);
-		}
-
-		String flushCheckerNoMessageWaitIntervalBaseMillis = m_env.getGlobalConfig().getProperty(
-		      "broker.flush.checker.no.message.wait.base.millis");
-		if (StringUtils.isNumeric(flushCheckerNoMessageWaitIntervalBaseMillis)) {
-			m_flushCheckerNoMessageWaitBaseMillis = Integer.valueOf(flushCheckerNoMessageWaitIntervalBaseMillis);
-		}
-		String flushCheckerNoMessageWaitIntervalMaxMillis = m_env.getGlobalConfig().getProperty(
-		      "broker.flush.checker.no.message.wait.max.millis");
-		if (StringUtils.isNumeric(flushCheckerNoMessageWaitIntervalMaxMillis)) {
-			m_flushCheckerNoMessageWaitMaxMillis = Integer.valueOf(flushCheckerNoMessageWaitIntervalMaxMillis);
 		}
 
 		// pull message selector
@@ -233,14 +214,6 @@ public class BrokerConfig implements Initializable {
 
 	public int getMySQLBatchInsertSize() {
 		return m_mySQLBatchInsertSzie;
-	}
-
-	public int getFlushCheckerNoMessageWaitBaseMillis() {
-		return m_flushCheckerNoMessageWaitBaseMillis;
-	}
-
-	public int getFlushCheckerNoMessageWaitMaxMillis() {
-		return m_flushCheckerNoMessageWaitMaxMillis;
 	}
 
 	public long getAckOpCheckIntervalMillis() {
