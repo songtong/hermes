@@ -26,7 +26,6 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.selector.CallbackContext;
 import com.ctrip.hermes.core.selector.ExpireTimeHolder;
 import com.ctrip.hermes.core.selector.SelectorCallback;
-import com.ctrip.hermes.core.selector.SlotMatchResult;
 import com.ctrip.hermes.core.selector.TriggerResult;
 import com.ctrip.hermes.core.selector.TriggerResult.State;
 import com.ctrip.hermes.core.utils.CatUtil;
@@ -74,7 +73,6 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 	}
 
 	private void executeTask(final PullMessageTask pullMessageTask, CallbackContext callbackCtx) {
-		printWhichTableToQuery(callbackCtx);
 		if (m_stopped.get()) {
 			return;
 		}
@@ -128,14 +126,6 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 			}
 		} catch (Exception e) {
 			log.error("Exception occurred while executing pull message task", e);
-		}
-	}
-
-	private void printWhichTableToQuery(CallbackContext ctx) {
-		for (SlotMatchResult result : ctx.getSlotMatchResults()) {
-			if (result.isMatch()) {
-				log.debug("------------------QUERY DB {}------------------", result.getIndex());
-			}
 		}
 	}
 

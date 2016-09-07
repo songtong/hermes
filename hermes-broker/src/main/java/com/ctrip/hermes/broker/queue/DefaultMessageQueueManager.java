@@ -84,7 +84,6 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 				f = mq.appendMessageAsync(priority, data, expireTime);
 			}
 
-			log.debug("update {} {} to {}", topic, partition, data.getSelectorOffset());
 			m_selectorManager.getSelector().update(new Pair<>(topic, partition), true, new Slot(0, data.getSelectorOffset()));
 			return f;
 		} else {
@@ -358,7 +357,6 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		try {
 			final Pair<String, Integer> tp = new Pair<>(topic, partition);
 			MessageQueue mq = m_messageQueues.get(tp);
-			log.debug("flushing MessageQueue {} {} {}", mq, topic, partition);
 			int batchSize = m_config.getMessageQueueFlushBatchSize();
 			flushResult = mq.flush(batchSize);
 		} catch (Exception e) {
