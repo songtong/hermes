@@ -30,7 +30,8 @@ import com.ctrip.hermes.producer.config.ProducerConfig;
  *         Jun 28, 2016 4:11:44 PM
  */
 @Named(type = MessageSenderSelectorManager.class)
-public class DefaultMessageSenderSelectorManager extends AbstractSelectorManager<Pair<String, Integer>> implements MessageSenderSelectorManager, Initializable {
+public class DefaultMessageSenderSelectorManager extends AbstractSelectorManager<Pair<String, Integer>> implements
+      MessageSenderSelectorManager, Initializable {
 
 	private static Logger log = LoggerFactory.getLogger(DefaultMessageSenderSelectorManager.class);
 
@@ -49,26 +50,38 @@ public class DefaultMessageSenderSelectorManager extends AbstractSelectorManager
 	@Override
 	public void initialize() throws InitializationException {
 		int threadCount = m_config.getBrokerSenderNetworkIoThreadCount();
-		m_taskExecThreadPool = Executors.newFixedThreadPool(threadCount, HermesThreadFactory.create("BrokerMessageSender", false));
+		m_taskExecThreadPool = Executors.newFixedThreadPool(threadCount,
+		      HermesThreadFactory.create("BrokerMessageSender", false));
 
 		// no write from "outside", so write offset never expires
 		long maxWriteOffsetTtlMillis = Long.MAX_VALUE;
 		NoOpOffsetLoader<Pair<String, Integer>> offsetLoader = new NoOpOffsetLoader<Pair<String, Integer>>();
-		m_selector = new DefaultSelector<>(m_taskExecThreadPool, SLOT_COUNT, maxWriteOffsetTtlMillis, offsetLoader, InitialLastUpdateTime.NEWEST);
+		m_selector = new DefaultSelector<>(m_taskExecThreadPool, SLOT_COUNT, maxWriteOffsetTtlMillis, offsetLoader,
+		      InitialLastUpdateTime.NEWEST);
 
-		Executors.newScheduledThreadPool(1, HermesThreadFactory.create("MessageSenderSelectorSafeTrigger", true)).scheduleWithFixedDelay(new Runnable() {
+		Thread safeTriggerThread = HermesThreadFactory.create("MessageSenderSelectorSafeTrigger", true).newThread(
+		      new Runnable() {
 
-			@Override
-			public void run() {
-				try {
-					m_selector.updateAll(false,
-							new Slot(SLOT_SAFE_TRIGGER_INDEX, System.currentTimeMillis(), m_config.getMessageSenderSelectorSafeTriggerMinFireIntervalMillis()));
-				} catch (Throwable e) {
-					log.error("Error update selector's safe trigger slots", e);
-				}
-			}
-		}, 0, m_config.getMessageSenderSelectorSafeTriggerIntervalMillis(), TimeUnit.MILLISECONDS);
+			      @Override
+			      public void run() {
+				      while (true) {
+					      try {
+						      m_selector.updateAll(false, new Slot(SLOT_SAFE_TRIGGER_INDEX, System.currentTimeMillis(),
+						            m_config.getMessageSenderSelectorSafeTriggerMinFireIntervalMillis()));
+					      } catch (Throwable e) {
+						      log.error("Error update MessageSenderSelectorSafeTrigger", e);
+					      } finally {
+						      try {
+							      TimeUnit.MILLISECONDS.sleep(m_config.getMessageSenderSelectorSafeTriggerIntervalMillis());
+						      } catch (InterruptedException e) {
+							      // ignore
+						      }
+					      }
+				      }
+			      }
+		      });
 
+		safeTriggerThread.start();
 	}
 
 	@Override
