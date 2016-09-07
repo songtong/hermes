@@ -69,21 +69,31 @@ public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<T
 		selector = new DefaultSelector<>(longPollingThreadPool, SLOT_COUNT,
 		      m_config.getPullMessageSelectorWriteOffsetTtlMillis(), offsetLoader, InitialLastUpdateTime.OLDEST);
 
-		Executors.newScheduledThreadPool(1, HermesThreadFactory.create("PullMessageSelectorSafeTrigger", true))
-		      .scheduleWithFixedDelay(new Runnable() {
+		Thread safeTriggerThread = HermesThreadFactory.create("PullMessageSelectorSafeTrigger", true).newThread(
+		      new Runnable() {
 
 			      @Override
 			      public void run() {
-				      try {
-					      selector.updateAll(
-					            false,
-					            new Slot(SLOT_RESEND_INDEX, System.currentTimeMillis(), m_config
-					                  .getPullMessageSelectorSafeTriggerMinFireIntervalMillis()));
-				      } catch (Throwable e) {
-					      log.error("Error update PullMessageSelectorSafeTrigger", e);
+				      while (true) {
+					      try {
+						      selector.updateAll(
+						            false,
+						            new Slot(SLOT_RESEND_INDEX, System.currentTimeMillis(), m_config
+						                  .getPullMessageSelectorSafeTriggerMinFireIntervalMillis()));
+					      } catch (Throwable e) {
+						      log.error("Error update PullMessageSelectorSafeTrigger", e);
+					      } finally {
+						      try {
+							      TimeUnit.MILLISECONDS.sleep(m_config.getPullMessageSelectorSafeTriggerIntervalMillis());
+						      } catch (InterruptedException e) {
+							      // ignore
+						      }
+					      }
 				      }
 			      }
-		      }, 0, m_config.getPullMessageSelectorSafeTriggerIntervalMillis(), TimeUnit.MILLISECONDS);
+		      });
+
+		safeTriggerThread.start();
 	}
 
 	@Override

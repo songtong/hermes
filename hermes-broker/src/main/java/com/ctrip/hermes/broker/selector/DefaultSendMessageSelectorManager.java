@@ -31,7 +31,8 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
  *         Jun 27, 2016 3:06:10 PM
  */
 @Named(type = SendMessageSelectorManager.class)
-public class DefaultSendMessageSelectorManager extends AbstractSelectorManager<Pair<String, Integer>> implements SendMessageSelectorManager, Initializable {
+public class DefaultSendMessageSelectorManager extends AbstractSelectorManager<Pair<String, Integer>> implements
+      SendMessageSelectorManager, Initializable {
 
 	private static Logger log = LoggerFactory.getLogger(DefaultSendMessageSelectorManager.class);
 
@@ -47,26 +48,39 @@ public class DefaultSendMessageSelectorManager extends AbstractSelectorManager<P
 
 	@Override
 	public void initialize() throws InitializationException {
-		ExecutorService flushExecutor = Executors.newCachedThreadPool(HermesThreadFactory.create("MessageQueueFlushExecutor", true));
+		ExecutorService flushExecutor = Executors.newCachedThreadPool(HermesThreadFactory.create(
+		      "MessageQueueFlushExecutor", true));
 
 		// send message update never expires
 		long maxWriteOffsetTtlMillis = Long.MAX_VALUE;
 		OffsetLoader<Pair<String, Integer>> offsetLoader = new NoOpOffsetLoader<Pair<String, Integer>>();
 
-		m_selector = new DefaultSelector<>(flushExecutor, SLOT_COUNT, maxWriteOffsetTtlMillis, offsetLoader, InitialLastUpdateTime.NEWEST);
+		m_selector = new DefaultSelector<>(flushExecutor, SLOT_COUNT, maxWriteOffsetTtlMillis, offsetLoader,
+		      InitialLastUpdateTime.NEWEST);
 
-		Executors.newScheduledThreadPool(1, HermesThreadFactory.create("SendMessageSelectorSafeTrigger", true)).scheduleWithFixedDelay(new Runnable() {
+		Thread safeTriggerThread = HermesThreadFactory.create("SendMessageSelectorSafeTrigger", true).newThread(
+		      new Runnable() {
 
-			@Override
-			public void run() {
-				try {
-					m_selector.updateAll(false,
-							new Slot(SLOT_SAFE_TRIGGER_INDEX, System.currentTimeMillis(), m_config.getSendMessageSelectorSafeTriggerMinFireIntervalMillis()));
-				} catch (Throwable e) {
-					log.error("Error update SendMessageSelectorSafeTrigger", e);
-				}
-			}
-		}, 0, m_config.getSendMessageSelectorSafeTriggerIntervalMillis(), TimeUnit.MILLISECONDS);
+			      @Override
+			      public void run() {
+				      while (true) {
+					      try {
+						      m_selector.updateAll(false, new Slot(SLOT_SAFE_TRIGGER_INDEX, System.currentTimeMillis(),
+						            m_config.getSendMessageSelectorSafeTriggerMinFireIntervalMillis()));
+					      } catch (Throwable e) {
+						      log.error("Error update SendMessageSelectorSafeTrigger", e);
+					      } finally {
+						      try {
+							      TimeUnit.MILLISECONDS.sleep(m_config.getSendMessageSelectorSafeTriggerIntervalMillis());
+						      } catch (InterruptedException e) {
+							      // ignore
+						      }
+					      }
+				      }
+			      }
+		      });
+
+		safeTriggerThread.start();
 	}
 
 	@Override
