@@ -10,7 +10,6 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
-import com.ctrip.hermes.core.selector.CallbackContext;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -43,7 +42,5 @@ public interface MessageQueueManager {
 	public Offset findLatestConsumerOffset(Tpg tpg);
 
 	public Offset findMessageOffsetByTime(String topic, int partition, long time);
-	
-	void flush(String topic, int partition, CallbackContext ctx);
 
 }

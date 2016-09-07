@@ -1,6 +1,8 @@
 package com.ctrip.hermes.broker.queue.storage.mysql;
 
 import static com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity.READSET_OFFSET;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +24,6 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 import org.unidal.tuple.Triple;
 
-import com.codahale.metrics.MetricRegistry;
 import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetter;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetterDao;
@@ -66,10 +67,6 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metrics.HermesMetricsRegistry;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -161,7 +158,6 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	}
 
 	private void batchInsert(Topic topic, int partition, boolean priority, List<MessagePriority> msgs) throws DalException {
-		HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name("MySQL", "INSERT")).mark(1);
 		long startTime = m_systemClockService.now();
 		m_msgDao.insert(msgs.toArray(new MessagePriority[msgs.size()]));
 		notifySelector(topic, partition, priority, msgs);
@@ -274,7 +270,6 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		}
 
 		try {
-			HermesMetricsRegistry.getMetricRegistry().meter(MetricRegistry.name("MySQL", "SELECT")).mark(1);
 			return buildFetchResult(tpp, m_msgDao.findIdAfter(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), (Long) startOffset, batchSize,
 					MessagePriorityEntity.READSET_FULL), filter);
 		} catch (DalException e) {
