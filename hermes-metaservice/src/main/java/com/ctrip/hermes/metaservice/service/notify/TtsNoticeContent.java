@@ -7,8 +7,8 @@ public class TtsNoticeContent extends ShortNoticeContent {
 	}
 
 	@Override
-	public NoticeType getType() {
-		return NoticeType.TTS;
+	public HermesNoticeType getType() {
+		return HermesNoticeType.TTS;
 	}
 
 }

@@ -3,7 +3,7 @@ package com.ctrip.hermes.metaservice.service.notify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ShortNoticeContent implements NoticeContent {
+public abstract class ShortNoticeContent implements HermesNoticeContent {
 	private static final Logger log = LoggerFactory.getLogger(ShortNoticeContent.class);
 
 	private static final int MAX_CONTENT_LEN = 280;

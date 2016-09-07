@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.env.ClientEnvironment;
@@ -30,13 +29,9 @@ import com.ctrip.soa.platform.cti.comm.messageplatfrom.v1.SendMessageResponseTyp
 import com.ctriposs.baiji.rpc.client.ServiceClientBase;
 import com.ctriposs.baiji.rpc.client.ServiceClientConfig;
 
-@Named(type = NotifyHandler.class, value = SmsNotifyHandler.ID)
-public class SmsNotifyHandler extends AbstractNotifyHandler implements Initializable {
-	private static final Logger log = LoggerFactory.getLogger(SmsNotifyHandler.class);
-
-	private static final long DFT_SMS_LIMIT = 1;
-
-	private static final long DFT_SMS_INTERVAL = 1800000;
+@Named(type = NotifyHandler.class, value = SMSNotifyHandler.ID)
+public class SMSNotifyHandler implements NotifyHandler, Initializable {
+	private static final Logger log = LoggerFactory.getLogger(SMSNotifyHandler.class);
 
 	private static final int DEFAULT_SMS_THREAD_COUNT = 1;
 
@@ -83,7 +78,7 @@ public class SmsNotifyHandler extends AbstractNotifyHandler implements Initializ
 	}
 
 	@Override
-	protected boolean doHandle(boolean persisted, final HermesNotice notice) {
+	public boolean handle(final HermesNotice notice) {
 		final AtomicInteger sentCount = new AtomicInteger(0);
 
 		List<String> receivers = notice.getReceivers();
@@ -163,10 +158,5 @@ public class SmsNotifyHandler extends AbstractNotifyHandler implements Initializ
 		default:
 			return TEST_FX_CFG_URL;
 		}
-	}
-
-	@Override
-	protected Pair<Long, Long> getThrottleLimit() {
-		return new Pair<Long, Long>(DFT_SMS_LIMIT, DFT_SMS_INTERVAL);
 	}
 }

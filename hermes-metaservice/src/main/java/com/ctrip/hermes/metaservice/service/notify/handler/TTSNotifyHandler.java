@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.helper.Files.IO;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.env.ClientEnvironment;
@@ -34,13 +33,9 @@ import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
 import com.ctrip.hermes.metaservice.service.notify.ShortNoticeContent;
 import com.google.common.base.Charsets;
 
-@Named(type = NotifyHandler.class, value = TtsNotifyHandler.ID)
-public class TtsNotifyHandler extends AbstractNotifyHandler implements Initializable {
-	private static final Logger log = LoggerFactory.getLogger(TtsNotifyHandler.class);
-
-	private static final long DFT_TTS_LIMIT = 1;
-
-	private static final long DFT_TTS_INTERVAL = 3600000;
+@Named(type = NotifyHandler.class, value = TTSNotifyHandler.ID)
+public class TTSNotifyHandler implements NotifyHandler, Initializable {
+	private static final Logger log = LoggerFactory.getLogger(TTSNotifyHandler.class);
 
 	private static final String TTS_PDID = "1006";
 
@@ -66,7 +61,7 @@ public class TtsNotifyHandler extends AbstractNotifyHandler implements Initializ
 	private ExecutorService m_ttsExecutor = Executors.newFixedThreadPool(DEFAULT_TTS_THREAD_COUNT);
 
 	@Override
-	protected boolean doHandle(boolean persisted, HermesNotice notice) {
+	public boolean handle(HermesNotice notice) {
 		final AtomicInteger sentCount = new AtomicInteger(0);
 
 		List<String> receivers = notice.getReceivers();
@@ -189,10 +184,5 @@ public class TtsNotifyHandler extends AbstractNotifyHandler implements Initializ
 	@Override
 	public void initialize() throws InitializationException {
 		m_ttsUrl = m_env.getGlobalConfig().getProperty("notify.handler.tts.url", DEFAULT_TTS_URL);
-	}
-
-	@Override
-	protected Pair<Long, Long> getThrottleLimit() {
-		return new Pair<Long, Long>(DFT_TTS_LIMIT, DFT_TTS_INTERVAL);
 	}
 }

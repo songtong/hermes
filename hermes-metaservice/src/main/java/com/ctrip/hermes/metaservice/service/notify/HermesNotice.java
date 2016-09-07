@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaservice.service.notify;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,18 +10,18 @@ import com.ctrip.hermes.metaservice.model.Notification;
 public class HermesNotice {
 	private List<String> m_receivers;
 
-	private NoticeContent m_content;
+	private HermesNoticeContent m_content;
 
-	public HermesNotice(String receiver, NoticeContent content) {
+	public HermesNotice(String receiver, HermesNoticeContent content) {
 		this(Arrays.asList(receiver), content);
 	}
 
-	public HermesNotice(List<String> receivers, NoticeContent content) {
-		m_receivers = receivers;
+	public HermesNotice(List<String> receivers, HermesNoticeContent content) {
+		m_receivers = receivers instanceof ArrayList ? receivers : new ArrayList<String>(receivers);
 		m_content = content;
 	}
 
-	public NoticeType getType() {
+	public HermesNoticeType getType() {
 		return m_content.getType();
 	}
 
@@ -28,7 +29,7 @@ public class HermesNotice {
 		return m_receivers;
 	}
 
-	public NoticeContent getContent() {
+	public HermesNoticeContent getContent() {
 		return m_content;
 	}
 
@@ -36,7 +37,7 @@ public class HermesNotice {
 		m_receivers = receivers;
 	}
 
-	public void setContent(NoticeContent content) {
+	public void setContent(HermesNoticeContent content) {
 		m_content = content;
 	}
 
@@ -52,5 +53,4 @@ public class HermesNotice {
 	public String toString() {
 		return "HermesNotice [m_receivers=" + m_receivers + ", m_content=" + m_content + "]";
 	}
-
 }

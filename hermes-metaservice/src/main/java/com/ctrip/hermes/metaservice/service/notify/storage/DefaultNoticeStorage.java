@@ -17,7 +17,7 @@ import com.ctrip.hermes.metaservice.model.Notification;
 import com.ctrip.hermes.metaservice.model.NotificationDao;
 import com.ctrip.hermes.metaservice.model.NotificationEntity;
 import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.NoticeType;
+import com.ctrip.hermes.metaservice.service.notify.HermesNoticeType;
 import com.ctrip.hermes.metaservice.service.notify.SmsNoticeContent;
 
 @Named(type = NoticeStorage.class)
@@ -53,7 +53,7 @@ public class DefaultNoticeStorage implements NoticeStorage {
 		try {
 			m_transactionManager.startTransaction(DS_NAME);
 			List<Notification> unnotifiedNotices = //
-			m_dao.findUnnotifiedNotifications(NoticeType.SMS.name(), DEFAULT_NOTIFICATION_TIMEOUT_DAYS,
+			m_dao.findUnnotifiedNotifications(HermesNoticeType.SMS.name(), DEFAULT_NOTIFICATION_TIMEOUT_DAYS,
 			      NotificationEntity.READSET_FULL);
 			m_dao.updateNotifiedStatus(unnotifiedNotices.toArray(new Notification[unnotifiedNotices.size()]),
 			      NotificationEntity.UPDATESET_FULL);
@@ -73,7 +73,7 @@ public class DefaultNoticeStorage implements NoticeStorage {
 
 	private List<Notification> findUnnotifiedNotices() {
 		try {
-			return m_dao.findUnnotifiedNotifications(NoticeType.SMS.name(), DEFAULT_NOTIFICATION_TIMEOUT_DAYS,
+			return m_dao.findUnnotifiedNotifications(HermesNoticeType.SMS.name(), DEFAULT_NOTIFICATION_TIMEOUT_DAYS,
 			      NotificationEntity.READSET_FULL);
 		} catch (Exception e) {
 			log.error("Find unnotified monitor event failed.", e);

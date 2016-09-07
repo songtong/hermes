@@ -26,7 +26,7 @@ import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.NoticeContent;
+import com.ctrip.hermes.metaservice.service.notify.HermesNoticeContent;
 import com.ctrip.hermes.metaservice.service.notify.NotifyService;
 import com.ctrip.hermes.metaservice.service.notify.TtsNoticeContent;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
@@ -212,7 +212,7 @@ public class KPIMissRatioTracer {
 							      - m_latestConsume.getTime()) : -1;
 							if (freezeMins > 0 && freezeMins > m_config.getKpiTtsErrorLimitMinute()) {
 								if (shouldTts()) {
-									NoticeContent content = new TtsNoticeContent(String.format("紧急情况, Hermes监控超过%s分钟没有消费",
+									HermesNoticeContent content = new TtsNoticeContent(String.format("紧急情况, Hermes监控超过%s分钟没有消费",
 									      freezeMins));
 									m_notifyService.notify(new HermesNotice(DEFAULT_ON_CALL_MOBILE, content));
 								}
