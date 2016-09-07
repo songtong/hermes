@@ -211,7 +211,7 @@ public class MessageAssistResource {
 			cmd.setFuture(future);
 
 			m_monitor.monitor(cmd);
-			if (m_endpointClient.writeCommand(endpoint, cmd, timeout, TimeUnit.MILLISECONDS)) {
+			if (m_endpointClient.writeCommand(endpoint, cmd)) {
 				QueryOffsetResultCommand resultCmd = null;
 				try {
 					resultCmd = future.get(timeout, TimeUnit.MILLISECONDS);

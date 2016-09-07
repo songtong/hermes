@@ -19,6 +19,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 public class SelectorTest {
 
 	private Selector<String> s;
+
 	private ExpireTimeHolder expireTimeHolder = new ExpireTimeHolder() {
 
 		@Override
@@ -28,12 +29,13 @@ public class SelectorTest {
 	};
 
 	private Selector<String> makeSelector(int slotCount, InitialLastUpdateTime initialLastUpdateTime) {
-		return new DefaultSelector<>(MoreExecutors.newDirectExecutorService(), slotCount, 5000, new OffsetLoader<String>() {
+		return new DefaultSelector<>(MoreExecutors.newDirectExecutorService(), slotCount, 5000,
+		      new OffsetLoader<String>() {
 
-			@Override
-			public void loadAsync(String key) {
-			}
-		}, initialLastUpdateTime);
+			      @Override
+			      public void loadAsync(String key, Selector<String> selector) {
+			      }
+		      }, initialLastUpdateTime);
 	}
 
 	@Before
@@ -119,7 +121,7 @@ public class SelectorTest {
 		s = new DefaultSelector<>(MoreExecutors.newDirectExecutorService(), slotCount, 5000, new OffsetLoader<String>() {
 
 			@Override
-			public void loadAsync(String key) {
+			public void loadAsync(String key, Selector<String> selector) {
 			}
 		}, InitialLastUpdateTime.NEWEST);
 
@@ -228,12 +230,12 @@ public class SelectorTest {
 	@Test
 	public void testResend() throws Exception {
 		int slotCount = 3;
-		Selector<Pair<String, Integer>> s = new DefaultSelector<>(MoreExecutors.newDirectExecutorService(), slotCount, 5000,
-				new OffsetLoader<Pair<String, Integer>>() {
-					@Override
-					public void loadAsync(Pair<String, Integer> key) {
-					}
-				}, InitialLastUpdateTime.OLDEST);
+		Selector<Pair<String, Integer>> s = new DefaultSelector<>(MoreExecutors.newDirectExecutorService(), slotCount,
+		      5000, new OffsetLoader<Pair<String, Integer>>() {
+			      @Override
+			      public void loadAsync(Pair<String, Integer> key, Selector<Pair<String, Integer>> selector) {
+			      }
+		      }, InitialLastUpdateTime.OLDEST);
 
 		int partition = 0;
 		Pair<String, Integer> key = new Pair<>("topic", partition);
@@ -265,7 +267,7 @@ public class SelectorTest {
 		s = new DefaultSelector<>(MoreExecutors.newDirectExecutorService(), 3, ttl, new OffsetLoader<String>() {
 
 			@Override
-			public void loadAsync(String key) {
+			public void loadAsync(String key, Selector<String> selector) {
 				loadAsyncCalled.incrementAndGet();
 			}
 		}, InitialLastUpdateTime.OLDEST);
@@ -308,9 +310,9 @@ public class SelectorTest {
 		assertTrue(latch.await(100, TimeUnit.MILLISECONDS));
 		SlotMatchResult[] actualResults = ctxRef.get().getSlotMatchResults();
 		SlotMatchResult[] expResults = new SlotMatchResult[] { //
-				new SlotMatchResult(0, false, 10, -1), //
-				new SlotMatchResult(1, true, 20, 22), //
-				new SlotMatchResult(2, false, 30, -1) };
+		new SlotMatchResult(0, false, 10, -1), //
+		      new SlotMatchResult(1, true, 20, 22), //
+		      new SlotMatchResult(2, false, 30, -1) };
 
 		for (int i = 0; i < actualResults.length; i++) {
 			assertEquals(expResults[i], actualResults[i]);
@@ -344,9 +346,9 @@ public class SelectorTest {
 		assertEquals(1, called.get());
 		SlotMatchResult[] actualResults = ctxRef.get().getSlotMatchResults();
 		SlotMatchResult[] expResults = new SlotMatchResult[] { //
-				new SlotMatchResult(0, true, 10, 11), //
-				new SlotMatchResult(1, true, 20, 22), //
-				new SlotMatchResult(2, false, 30, 3) };
+		new SlotMatchResult(0, true, 10, 11), //
+		      new SlotMatchResult(1, true, 20, 22), //
+		      new SlotMatchResult(2, false, 30, 3) };
 
 		for (int i = 0; i < actualResults.length; i++) {
 			assertEquals(expResults[i], actualResults[i]);

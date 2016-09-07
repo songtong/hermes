@@ -63,7 +63,7 @@ public class DefaultSendMessageSelectorManager extends AbstractSelectorManager<P
 					m_selector.updateAll(false,
 							new Slot(SLOT_SAFE_TRIGGER_INDEX, System.currentTimeMillis(), m_config.getSendMessageSelectorSafeTriggerMinFireIntervalMillis()));
 				} catch (Throwable e) {
-					log.error("Error update selector's resend slots", e);
+					log.error("Error update SendMessageSelectorSafeTrigger", e);
 				}
 			}
 		}, 0, m_config.getSendMessageSelectorSafeTriggerIntervalMillis(), TimeUnit.MILLISECONDS);

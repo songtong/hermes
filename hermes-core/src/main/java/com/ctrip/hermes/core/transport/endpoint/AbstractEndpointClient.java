@@ -1,5 +1,19 @@
 package com.ctrip.hermes.core.transport.endpoint;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.timeout.IdleStateHandler;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -16,7 +30,6 @@ import org.unidal.lookup.annotation.Inject;
 
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.constants.CatConstants;
-import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
@@ -27,20 +40,6 @@ import com.ctrip.hermes.core.transport.netty.NettyEncoder;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.dianping.cat.Cat;
-
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.timeout.IdleStateHandler;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -59,20 +58,12 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 	@Inject
 	private CommandProcessorManager m_commandProcessorManager;
 
-	@Inject
-	private SystemClockService m_systemClockService;
-
 	private AtomicBoolean m_closed = new AtomicBoolean(false);
 
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
 	@Override
 	public boolean writeCommand(Endpoint endpoint, Command cmd) {
-		return writeCommand(endpoint, cmd, m_config.getEndpointChannelDefaultWrtieTimeout(), TimeUnit.MILLISECONDS);
-	}
-
-	@Override
-	public boolean writeCommand(Endpoint endpoint, Command cmd, long timeout, TimeUnit timeUnit) {
 		if (m_closed.get()) {
 			return false;
 		}
@@ -84,15 +75,13 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 		lock.readLock().lock();
 		try {
-			EndpointChannel channel = getChannel(endpoint);
-			boolean writeResult = channel.write(cmd, timeout, timeUnit);
-			return writeResult;
+			return getChannel(endpoint).write(cmd);
 		} finally {
 			lock.readLock().unlock();
 		}
 	}
 
-	private EndpointChannel getChannel(final Endpoint endpoint) {
+	private EndpointChannel getChannel(Endpoint endpoint) {
 		if (Endpoint.BROKER.equalsIgnoreCase(endpoint.getType())) {
 			EndpointChannel channel = m_channels.get(endpoint);
 
@@ -120,8 +109,6 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 				if (m_channels.containsKey(endpoint)) {
 					EndpointChannel tmp = m_channels.get(endpoint);
 					if (tmp == endpointChannel) {
-						// TODO review logic
-						// if (!sinceIdle || !endpointChannel.hasUnflushOps()) {
 						if (!sinceIdle) {
 							m_channels.remove(endpoint);
 							removedChannel = endpointChannel;
@@ -131,7 +118,8 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 			}
 
 			if (removedChannel != null) {
-				log.info("Closing idle connection to broker({}:{}, endpointId={})", endpoint.getHost(), endpoint.getPort(), endpoint.getId());
+				log.info("Closing connection to broker({}:{}, endpointId={}, sinceIdle:{})", endpoint.getHost(),
+				      endpoint.getPort(), endpoint.getId(), sinceIdle);
 				removedChannel.close();
 			}
 		} finally {
@@ -148,7 +136,8 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 	protected abstract boolean isEndpointValid(Endpoint endpoint);
 
 	void connect(final Endpoint endpoint, final EndpointChannel endpointChannel) {
-		ChannelFuture channelFuture = createBootstrap(endpoint, endpointChannel).connect(endpoint.getHost(), endpoint.getPort());
+		ChannelFuture channelFuture = createBootstrap(endpoint, endpointChannel).connect(endpoint.getHost(),
+		      endpoint.getPort());
 
 		channelFuture.addListener(new ChannelFutureListener() {
 
@@ -163,7 +152,8 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 							loop.schedule(new Runnable() {
 								@Override
 								public void run() {
-									log.info("Reconnecting to broker({}:{}, endpointId={})", endpoint.getHost(), endpoint.getPort(), endpoint.getId());
+									log.info("Reconnecting to broker({}:{}, endpointId={})", endpoint.getHost(),
+									      endpoint.getPort(), endpoint.getId());
 									connect(endpoint, endpointChannel);
 								}
 							}, m_config.getEndpointChannelAutoReconnectDelay(), TimeUnit.SECONDS);
@@ -209,25 +199,26 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 		bootstrap.group(m_eventLoopGroup);
 		bootstrap.channel(NioSocketChannel.class);
 		bootstrap.option(ChannelOption.SO_KEEPALIVE, true)//
-				.option(ChannelOption.TCP_NODELAY, true)//
-				.option(ChannelOption.SO_SNDBUF, m_config.getNettySendBufferSize())//
-				.option(ChannelOption.SO_RCVBUF, m_config.getNettyReceiveBufferSize());
+		      .option(ChannelOption.TCP_NODELAY, true)//
+		      .option(ChannelOption.SO_SNDBUF, m_config.getNettySendBufferSize())//
+		      .option(ChannelOption.SO_RCVBUF, m_config.getNettyReceiveBufferSize());
 
 		bootstrap.handler(new ChannelInitializer<SocketChannel>() {
 			@Override
 			public void initChannel(SocketChannel ch) throws Exception {
 
 				ch.pipeline().addLast(
-						//
-						new DefaultNettyChannelOutboundHandler(), //
-						new NettyDecoder(), //
-						new MagicNumberPrepender(), //
-						new LengthFieldPrepender(4), //
-						new NettyEncoder(), //
-						new IdleStateHandler(m_config.getEndpointChannelReadIdleTime(), //
-								m_config.getEndpointChannelWriteIdleTime(), //
-								m_config.getEndpointChannelMaxIdleTime()), //
-						new DefaultClientChannelInboundHandler(m_commandProcessorManager, endpoint, endpointChannel, AbstractEndpointClient.this, m_config));
+				      //
+				      new DefaultNettyChannelOutboundHandler(), //
+				      new NettyDecoder(), //
+				      new MagicNumberPrepender(), //
+				      new LengthFieldPrepender(4), //
+				      new NettyEncoder(), //
+				      new IdleStateHandler(m_config.getEndpointChannelReadIdleTime(), //
+				            m_config.getEndpointChannelWriteIdleTime(), //
+				            m_config.getEndpointChannelMaxIdleTime()), //
+				      new DefaultClientChannelInboundHandler(m_commandProcessorManager, endpoint, endpointChannel,
+				            AbstractEndpointClient.this, m_config));
 			}
 		});
 
@@ -259,8 +250,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 			}
 		}
 
-		// TODO [selector] remove timeout?
-		public boolean write(Command cmd, long timeout, TimeUnit timeUnit) {
+		public boolean write(Command cmd) {
 			if (!isClosed()) {
 				ChannelFuture channelFuture = m_channelFuture.get();
 				Channel channel = null;

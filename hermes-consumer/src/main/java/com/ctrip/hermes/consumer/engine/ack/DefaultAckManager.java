@@ -178,7 +178,7 @@ public class DefaultAckManager implements AckManager {
 			try {
 				Future<Pair<Boolean, Endpoint>> acceptFuture = m_acceptMonitor.monitor(correlationId);
 				Future<Boolean> resultFuture = m_resultMonitor.monitor(correlationId);
-				if (m_endpointClient.writeCommand(endpoint, cmd, acceptTimeout, TimeUnit.MILLISECONDS)) {
+				if (m_endpointClient.writeCommand(endpoint, cmd)) {
 
 					Pair<Boolean, Endpoint> acceptResult = waitForBrokerAcceptance(cmd, acceptFuture, acceptTimeout);
 

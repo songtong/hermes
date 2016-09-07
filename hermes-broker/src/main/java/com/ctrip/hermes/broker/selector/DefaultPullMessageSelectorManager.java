@@ -36,7 +36,8 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
  *         Jun 22, 2016 3:54:28 PM
  */
 @Named(type = PullMessageSelectorManager.class)
-public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<Tp> implements Initializable, PullMessageSelectorManager {
+public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<Tp> implements Initializable,
+      PullMessageSelectorManager {
 
 	private static Logger log = LoggerFactory.getLogger(DefaultPullMessageSelectorManager.class);
 
@@ -55,31 +56,34 @@ public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<T
 	@Override
 	public void initialize() throws InitializationException {
 		longPollingThreadPool = Executors.newFixedThreadPool(m_config.getLongPollingServiceThreadCount(),
-				HermesThreadFactory.create("LongPollingService", true));
+		      HermesThreadFactory.create("LongPollingService", true));
 
 		offsetLoaderThreadPool = new ThreadPoolExecutor(m_config.getPullMessageSelectorOffsetLoaderThreadPoolSize(),
-				m_config.getPullMessageSelectorOffsetLoaderThreadPoolSize(), m_config.getPullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds(),
-				TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), HermesThreadFactory.create("SelectorOffsetLoader", false));
-		// TODO [selector] allowCoreThreadTimeOut?
+		      m_config.getPullMessageSelectorOffsetLoaderThreadPoolSize(),
+		      m_config.getPullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds(), TimeUnit.SECONDS,
+		      new LinkedBlockingQueue<Runnable>(), HermesThreadFactory.create("SelectorOffsetLoader", false));
 		offsetLoaderThreadPool.allowCoreThreadTimeOut(true);
 
 		OffsetLoader<Tp> offsetLoader = new DaoOffsetLoader();
 
-		selector = new DefaultSelector<>(longPollingThreadPool, SLOT_COUNT, m_config.getPullMessageSelectorWriteOffsetTtlMillis(), offsetLoader,
-				InitialLastUpdateTime.OLDEST);
+		selector = new DefaultSelector<>(longPollingThreadPool, SLOT_COUNT,
+		      m_config.getPullMessageSelectorWriteOffsetTtlMillis(), offsetLoader, InitialLastUpdateTime.OLDEST);
 
-		Executors.newScheduledThreadPool(1, HermesThreadFactory.create("PullMessageSelectorSafeTrigger", true)).scheduleWithFixedDelay(new Runnable() {
+		Executors.newScheduledThreadPool(1, HermesThreadFactory.create("PullMessageSelectorSafeTrigger", true))
+		      .scheduleWithFixedDelay(new Runnable() {
 
-			@Override
-			public void run() {
-				try {
-					selector.updateAll(false,
-							new Slot(SLOT_RESEND_INDEX, System.currentTimeMillis(), m_config.getPullMessageSelectorSafeTriggerMinFireIntervalMillis()));
-				} catch (Throwable e) {
-					log.error("Error update selector's resend slots", e);
-				}
-			}
-		}, 0, m_config.getPullMessageSelectorSafeTriggerIntervalMillis(), TimeUnit.MILLISECONDS);
+			      @Override
+			      public void run() {
+				      try {
+					      selector.updateAll(
+					            false,
+					            new Slot(SLOT_RESEND_INDEX, System.currentTimeMillis(), m_config
+					                  .getPullMessageSelectorSafeTriggerMinFireIntervalMillis()));
+				      } catch (Throwable e) {
+					      log.error("Error update PullMessageSelectorSafeTrigger", e);
+				      }
+			      }
+		      }, 0, m_config.getPullMessageSelectorSafeTriggerIntervalMillis(), TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -88,21 +92,24 @@ public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<T
 	}
 
 	class DaoOffsetLoader implements OffsetLoader<Tp> {
-		private void doLoadAsync(final Tp tp, final int priority) {
+		private void doLoadAsync(final Tp tp, final int priority, final Selector<Tp> selector) {
 			offsetLoaderThreadPool.submit(new Runnable() {
 
 				@Override
 				public void run() {
 					try {
-						List<MessagePriority> offsets = messageDao.findLatestOffset(tp.getTopic(), tp.getPartition(), priority, MessagePriorityEntity.READSET_OFFSET);
+						List<MessagePriority> offsets = messageDao.findLatestOffset(tp.getTopic(), tp.getPartition(),
+						      priority, MessagePriorityEntity.READSET_OFFSET);
 						if (offsets != null && offsets.size() > 0) {
 							MessagePriority offset = offsets.get(0);
 							int index = priority == 0 ? SLOT_PRIORITY_INDEX : SLOT_NONPRIORITY_INDEX;
 							selector.update(tp, true, new Slot(index, offset.getId()));
-							log.info("Loaded max offset:{} for topic:{} partition:{}, priority:{}", offset.getId(), tp.getTopic(), tp.getPartition(), priority);
+							log.info("Loaded max offset:{} for topic:{} partition:{}, priority:{}", offset.getId(),
+							      tp.getTopic(), tp.getPartition(), priority);
 						}
 					} catch (Exception e) {
-						log.error("Error load max id for topic:{} partition:{} priority:{} for selector", tp.getTopic(), tp.getPartition(), priority, e);
+						log.error("Error load max id for topic:{} partition:{} priority:{} for selector", tp.getTopic(),
+						      tp.getPartition(), priority, e);
 					}
 				}
 
@@ -110,9 +117,9 @@ public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<T
 		}
 
 		@Override
-		public void loadAsync(final Tp tp) {
-			doLoadAsync(tp, 0);
-			doLoadAsync(tp, 1);
+		public void loadAsync(final Tp tp, final Selector<Tp> selector) {
+			doLoadAsync(tp, 0, selector);
+			doLoadAsync(tp, 1, selector);
 		}
 	}
 
@@ -125,7 +132,8 @@ public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<T
 	@Override
 	protected long nextAwaitingSafeTriggerOffset(Tp tp, Object arg) {
 		String groupId = (String) arg;
-		return System.currentTimeMillis() + m_config.getPullMessageSelectorSafeTriggerTriggeringOffsetDelta(tp.getTopic(), groupId);
+		return System.currentTimeMillis()
+		      + m_config.getPullMessageSelectorSafeTriggerTriggeringOffsetDelta(tp.getTopic(), groupId);
 	}
 
 }

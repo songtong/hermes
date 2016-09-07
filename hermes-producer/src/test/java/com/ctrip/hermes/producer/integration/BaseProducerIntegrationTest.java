@@ -171,9 +171,7 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 		doAnswer(new CompositeAnswer(answers))//
 		      .when(m_endpointClient)//
 		      .writeCommand(any(Endpoint.class), //
-		            any(SendMessageCommandV6.class), //
-		            anyLong(), //
-		            any(TimeUnit.class));
+		            any(SendMessageCommandV6.class));
 	}
 
 	protected List<Command> getBrokerReceivedCmds() {

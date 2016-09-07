@@ -27,10 +27,6 @@ public class CoreConfig implements Initializable {
 
 	public static final String TIME_UNSYNC_HEADER = "X-Hermes-Time-Unsync";
 
-	private static final int DEFAULT_ENDPOINT_CHANNEL_WRITER_CHECK_INTERVAL_BASE = 5;
-
-	private static final int DEFAULT_ENDPOINT_CHANNEL_WRITER_CHECK_INTERVAL_MAX = 10;
-
 	private static final long DEFAULT_META_CACHE_REFRESH_INTERVAL_SECOND = 60 * 2;
 
 	private static final long DEFAULT_COMMAND_PROCESSOR_CMD_EXPIRE_MILLIS = 60 * 1000;
@@ -38,8 +34,6 @@ public class CoreConfig implements Initializable {
 	private static final long DEFAULT_ENDPOINT_REFRESH_MIN_INTERVAL_MILLIS = 10 * 1000;
 
 	private static final long DEFAULT_ENDPOINT_CACHE_MILLIS = 2 * 60 * 1000;
-
-	private static final long DEFAULT_ENDPOINT_CHANNEL_WRITE_RETRY_DELAY_MILLIS = 10;
 
 	@Inject
 	private ClientEnvironment m_env;
@@ -54,10 +48,6 @@ public class CoreConfig implements Initializable {
 
 	private int m_commandProcessorDefaultThreadCount = DEFAULT_COMMAND_PROCESSOR_DEFAULT_THREAD_COUNT;
 
-	private int m_endpointChannelWriterCheckIntervalBase = DEFAULT_ENDPOINT_CHANNEL_WRITER_CHECK_INTERVAL_BASE;
-
-	private int m_endpointChannelWriterCheckIntervalMax = DEFAULT_ENDPOINT_CHANNEL_WRITER_CHECK_INTERVAL_MAX;
-
 	private long m_metaCacheRefreshIntervalSecond = DEFAULT_META_CACHE_REFRESH_INTERVAL_SECOND;
 
 	private long m_commandProcessorCmdExpireMillis = DEFAULT_COMMAND_PROCESSOR_CMD_EXPIRE_MILLIS;
@@ -65,8 +55,6 @@ public class CoreConfig implements Initializable {
 	private long m_endpointRefreshMinIntervalMillis = DEFAULT_ENDPOINT_REFRESH_MIN_INTERVAL_MILLIS;
 
 	private long m_endpointCacheMillis = DEFAULT_ENDPOINT_CACHE_MILLIS;
-
-	private long m_endpointChannelWriteRetryDelayMillis = DEFAULT_ENDPOINT_CHANNEL_WRITE_RETRY_DELAY_MILLIS;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -98,10 +86,6 @@ public class CoreConfig implements Initializable {
 		if (StringUtils.isNumeric(allIdleStr)) {
 			m_channelAllIdle = Integer.valueOf(allIdleStr);
 		}
-		String endpointChannelWriteRetryDelayMillis = m_env.getGlobalConfig().getProperty("channel.retry.delay.millis");
-		if (StringUtils.isNumeric(endpointChannelWriteRetryDelayMillis)) {
-			m_endpointChannelWriteRetryDelayMillis = Long.valueOf(endpointChannelWriteRetryDelayMillis);
-		}
 
 		String maxClientTimeDiffMillis = m_env.getGlobalConfig().getProperty("max.client.time.diff.millis");
 		if (StringUtils.isNumeric(maxClientTimeDiffMillis)) {
@@ -119,16 +103,6 @@ public class CoreConfig implements Initializable {
 			m_commandProcessorCmdExpireMillis = Integer.valueOf(commandProcessorCmdExpireMillisStr);
 		}
 
-		String endpointChannelWriterCheckIntervalBase = m_env.getGlobalConfig().getProperty(
-		      "endpoint.channel.writer.check.interval.base");
-		if (StringUtils.isNumeric(endpointChannelWriterCheckIntervalBase)) {
-			m_endpointChannelWriterCheckIntervalBase = Integer.valueOf(endpointChannelWriterCheckIntervalBase);
-		}
-		String endpointChannelWriterCheckIntervalMax = m_env.getGlobalConfig().getProperty(
-		      "endpoint.channel.writer.check.interval.max");
-		if (StringUtils.isNumeric(endpointChannelWriterCheckIntervalMax)) {
-			m_endpointChannelWriterCheckIntervalMax = Integer.valueOf(endpointChannelWriterCheckIntervalMax);
-		}
 	}
 
 	public int getCommandProcessorDefaultThreadCount() {
@@ -163,28 +137,8 @@ public class CoreConfig implements Initializable {
 		return 65535;
 	}
 
-	public int getEndpointChannelSendBufferSize() {
-		return 1000;
-	}
-
-	public int getEndpointChannelWriterCheckIntervalBase() {
-		return m_endpointChannelWriterCheckIntervalBase;
-	}
-
-	public int getEndpointChannelWriterCheckIntervalMax() {
-		return m_endpointChannelWriterCheckIntervalMax;
-	}
-
-	public long getEndpointChannelWriteRetryDelayMillis() {
-		return m_endpointChannelWriteRetryDelayMillis;
-	}
-
 	public long getEndpointChannelAutoReconnectDelay() {
 		return 1;
-	}
-
-	public long getEndpointChannelDefaultWrtieTimeout() {
-		return 3600 * 1000L;
 	}
 
 	public int getEndpointChannelMaxIdleTime() {
