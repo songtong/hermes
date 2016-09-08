@@ -35,10 +35,10 @@ public class LeastAdjustmentBrokerPartitionAssigningStrategy implements BrokerPa
 			return newAssignments;
 		}
 
-		Map<String, List<Pair<String, Integer>>> avalibleGroupOriginAssignments = new HashMap<String, List<Pair<String, Integer>>>();
+		Map<String, List<Pair<String, Integer>>> avalibleOriginAssignments = new HashMap<String, List<Pair<String, Integer>>>();
 		List<Pair<String, Integer>> freeTps = new ArrayList<Pair<String, Integer>>();
 		for (String broker : brokers.keySet()) {
-			avalibleGroupOriginAssignments.put(broker, new ArrayList<Pair<String, Integer>>());
+			avalibleOriginAssignments.put(broker, new ArrayList<Pair<String, Integer>>());
 		}
 
 		for (Topic topic : topics) {
@@ -52,7 +52,7 @@ public class LeastAdjustmentBrokerPartitionAssigningStrategy implements BrokerPa
 						}
 						ClientContext broker = originTPAssianment.values().iterator().next();
 						if (brokers.containsKey(broker.getName())) {
-							avalibleGroupOriginAssignments.get(broker.getName()).add(
+							avalibleOriginAssignments.get(broker.getName()).add(
 							      new Pair<String, Integer>(topic.getName(), partition.getId()));
 							continue;
 						}
@@ -66,7 +66,7 @@ public class LeastAdjustmentBrokerPartitionAssigningStrategy implements BrokerPa
 			}
 		}
 
-		Map<String, List<Pair<String, Integer>>> newAssigns = m_assignBalancer.assign(avalibleGroupOriginAssignments,
+		Map<String, List<Pair<String, Integer>>> newAssigns = m_assignBalancer.assign(avalibleOriginAssignments,
 		      freeTps);
 
 		// change from brokerPartitionMap to tpBrokerAssignments

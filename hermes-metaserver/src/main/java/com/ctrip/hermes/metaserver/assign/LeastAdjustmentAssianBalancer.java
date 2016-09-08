@@ -55,17 +55,19 @@ public class LeastAdjustmentAssianBalancer implements AssignBalancer {
 			Collections.shuffle(linkedFreeAssigns);
 			for (Map.Entry<K, List<V>> assign : newAssigns.entrySet()) {
 				int originSize = assign.getValue().size();
-				int targetSize = avg;
-				if (countEqualsAvgPlus1 < remainder) {
-					targetSize = avg + 1;
-					countEqualsAvgPlus1++;
-				}
-				for (int i = 0; i < targetSize - originSize; i++) {
-					assign.getValue().add(linkedFreeAssigns.removeFirst());
-				}
+				if (originSize < avg + 1) {
+					int targetSize = avg;
+					if (countEqualsAvgPlus1 < remainder) {
+						targetSize = avg + 1;
+						countEqualsAvgPlus1++;
+					}
+					for (int i = 0; i < targetSize - originSize; i++) {
+						assign.getValue().add(linkedFreeAssigns.removeFirst());
+					}
 
-				if (linkedFreeAssigns.isEmpty()) {
-					break;
+					if (linkedFreeAssigns.isEmpty()) {
+						break;
+					}
 				}
 			}
 		}

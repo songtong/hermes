@@ -172,7 +172,7 @@ public class LeaderInitEventHandler extends BaseEventHandler {
 		List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>() : new ArrayList<>(
 		      baseMeta.getEndpoints().values());
 
-		m_brokerAssignmentHolder.reassign(brokers, configedBrokers, topics, new HashMap<String, Idc>(baseMeta.getIdcs()));
+		m_brokerAssignmentHolder.reassign(brokers, configedBrokers, topics, idcs);
 
 		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoint = m_endpointMaker.makeEndpoints(m_eventBus,
 		      event.getVersion(), m_clusterStateHolder, m_brokerAssignmentHolder.getAssignments(), false);

@@ -86,7 +86,7 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 			ArrayList<Topic> topics = new ArrayList<Topic>(baseMeta.getTopics().values());
 			List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>()
 			      : new ArrayList<>(baseMeta.getEndpoints().values());
-			m_brokerAssignmentHolder.reassign(configedBrokers, topics, new HashMap<String, Idc>(baseMeta.getIdcs()));
+			m_brokerAssignmentHolder.reassign(configedBrokers, topics, idcs);
 
 			m_metaHolder.setIdcs(idcs);
 			m_metaHolder.setConfigedMetaServers(configedMetaServers);

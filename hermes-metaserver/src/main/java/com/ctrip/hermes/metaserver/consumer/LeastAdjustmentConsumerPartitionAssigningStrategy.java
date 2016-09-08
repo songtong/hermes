@@ -44,8 +44,8 @@ public class LeastAdjustmentConsumerPartitionAssigningStrategy implements Consum
 
 		Map<String, List<Integer>> originConsumerToPartition = mapConsumerToPartitions(partitions, currentConsumers,
 		      originAssigns);
-		List<Integer> freePartitions2 = getFreePartitions(originConsumerToPartition, partitions);
-		Map<String, List<Integer>> newAssigns = m_assignBalancer.assign(originConsumerToPartition, freePartitions2);
+		List<Integer> freePartitions = getFreePartitions(originConsumerToPartition, partitions);
+		Map<String, List<Integer>> newAssigns = m_assignBalancer.assign(originConsumerToPartition, freePartitions);
 		for (Entry<String, List<Integer>> assign : newAssigns.entrySet()) {
 			putAssignToResult(result, currentConsumers, assign.getKey(), assign.getValue());
 		}

@@ -146,7 +146,7 @@ public class BrokerAssignmentHolder {
 		return m_assignments.get();
 	}
 
-	public void reassign(Map<String, ClientContext> runningBrokers,Map<String, Idc> idcs) {
+	public void reassign(Map<String, ClientContext> runningBrokers, Map<String, Idc> idcs) {
 		reassign(runningBrokers, null, null, idcs);
 	}
 
