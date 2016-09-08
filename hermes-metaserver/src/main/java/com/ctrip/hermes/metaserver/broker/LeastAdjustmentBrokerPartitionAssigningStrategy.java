@@ -24,7 +24,7 @@ public class LeastAdjustmentBrokerPartitionAssigningStrategy implements BrokerPa
 	private final static Logger log = LoggerFactory.getLogger(LeastAdjustmentBrokerPartitionAssigningStrategy.class);
 
 	@Inject
-	private AssignBalancer<Pair<String, Integer>> m_assignBalancer;
+	private AssignBalancer m_assignBalancer;
 
 	@Override
 	public Map<String, Assignment<Integer>> assign(Map<String, ClientContext> brokers, List<Topic> topics,

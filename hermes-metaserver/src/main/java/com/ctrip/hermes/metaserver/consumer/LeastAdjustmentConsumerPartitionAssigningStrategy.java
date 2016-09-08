@@ -27,7 +27,7 @@ public class LeastAdjustmentConsumerPartitionAssigningStrategy implements Consum
 	private final static Logger log = LoggerFactory.getLogger(LeastAdjustmentConsumerPartitionAssigningStrategy.class);
 
 	@Inject
-	private AssignBalancer<Integer> m_assignBalancer;
+	private AssignBalancer m_assignBalancer;
 
 	@Override
 	public Map<Integer, Map<String, ClientContext>> assign(List<Partition> partitions,

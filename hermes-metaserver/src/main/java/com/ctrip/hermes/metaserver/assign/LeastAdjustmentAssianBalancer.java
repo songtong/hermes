@@ -9,9 +9,9 @@ import java.util.Map;
 import org.unidal.lookup.annotation.Named;
 
 @Named(type = AssignBalancer.class)
-public class LeastAdjustmentAssianBalancer<T> implements AssignBalancer<T> {
+public class LeastAdjustmentAssianBalancer implements AssignBalancer {
 
-	public Map<String, List<T>> assign(Map<String, List<T>> originAssigns, List<T> freeAssigns) {
+	public <T> Map<String, List<T>> assign(Map<String, List<T>> originAssigns, List<T> freeAssigns) {
 		if (originAssigns == null || originAssigns.isEmpty()) {
 			return new HashMap<String, List<T>>();
 		}

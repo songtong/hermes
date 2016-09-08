@@ -30,7 +30,7 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 	private final static Logger log = LoggerFactory.getLogger(LeastAdjustmentMetaServerAssigningStrategy.class);
 
 	@Inject
-	private AssignBalancer<String> m_assignBalancer;
+	private AssignBalancer m_assignBalancer;
 
 	@Override
 	public Assignment<String> assign(List<Server> metaServers, List<Topic> topics, Assignment<String> originAssignments) {

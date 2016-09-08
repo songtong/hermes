@@ -50,7 +50,7 @@ public class LeastAdjustmentMetaServerAssigningStrategyTest {
 	@Test
 	public void AddAndDeleteMetaServerTest() {
 		LeastAdjustmentMetaServerAssigningStrategy strategy = new LeastAdjustmentMetaServerAssigningStrategy();
-		AssignBalancer<String> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentMetaServerAssigningStrategy.class, "m_assignBalancer",
 		      strategy, assignBalancer);
 
@@ -137,7 +137,7 @@ public class LeastAdjustmentMetaServerAssigningStrategyTest {
 	@Test
 	public void AddAndDeleteTopicTest() {
 		LeastAdjustmentMetaServerAssigningStrategy strategy = new LeastAdjustmentMetaServerAssigningStrategy();
-		AssignBalancer<String> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentMetaServerAssigningStrategy.class, "m_assignBalancer",
 		      strategy, assignBalancer);
 
@@ -223,7 +223,7 @@ public class LeastAdjustmentMetaServerAssigningStrategyTest {
 	@Test
 	public void AddAndDeleteTopicAndMetaServerTest() {
 		LeastAdjustmentMetaServerAssigningStrategy strategy = new LeastAdjustmentMetaServerAssigningStrategy();
-		AssignBalancer<String> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentMetaServerAssigningStrategy.class, "m_assignBalancer",
 		      strategy, assignBalancer);
 

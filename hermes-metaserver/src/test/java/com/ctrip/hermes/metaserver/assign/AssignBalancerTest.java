@@ -12,7 +12,7 @@ public class AssignBalancerTest {
 
 	@Test
 	public void testAssign() {
-		AssignBalancer<Integer> a = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer a = new LeastAdjustmentAssianBalancer();
 		List<Integer> freeAssigns = new LinkedList<>();
 		
 		long start = System.currentTimeMillis();

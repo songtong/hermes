@@ -102,7 +102,7 @@ public class LeastAdjustmentBrokerPartitionAssigningStrategyTest {
 	@Test
 	public void AddAndDeleteBrokerTest() {
 		LeastAdjustmentBrokerPartitionAssigningStrategy strategy = new LeastAdjustmentBrokerPartitionAssigningStrategy();
-		AssignBalancer<Pair<String, Integer>> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentBrokerPartitionAssigningStrategy.class,
 		      "m_assignBalancer", strategy, assignBalancer);
 
@@ -157,7 +157,7 @@ public class LeastAdjustmentBrokerPartitionAssigningStrategyTest {
 	@Test
 	public void AddAndDeleteTPTest() {
 		LeastAdjustmentBrokerPartitionAssigningStrategy strategy = new LeastAdjustmentBrokerPartitionAssigningStrategy();
-		AssignBalancer<Pair<String, Integer>> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentBrokerPartitionAssigningStrategy.class,
 		      "m_assignBalancer", strategy, assignBalancer);
 
@@ -212,7 +212,7 @@ public class LeastAdjustmentBrokerPartitionAssigningStrategyTest {
 	@Test
 	public void AddAndDeleteBrokerAndTPTest() {
 		LeastAdjustmentBrokerPartitionAssigningStrategy strategy = new LeastAdjustmentBrokerPartitionAssigningStrategy();
-		AssignBalancer<Pair<String, Integer>> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentBrokerPartitionAssigningStrategy.class,
 		      "m_assignBalancer", strategy, assignBalancer);
 
@@ -280,7 +280,7 @@ public class LeastAdjustmentBrokerPartitionAssigningStrategyTest {
 	@Test
 	public void AddAndDeletPartitionTest() {
 		LeastAdjustmentBrokerPartitionAssigningStrategy strategy = new LeastAdjustmentBrokerPartitionAssigningStrategy();
-		AssignBalancer<Pair<String, Integer>> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentBrokerPartitionAssigningStrategy.class,
 		      "m_assignBalancer", strategy, assignBalancer);
 

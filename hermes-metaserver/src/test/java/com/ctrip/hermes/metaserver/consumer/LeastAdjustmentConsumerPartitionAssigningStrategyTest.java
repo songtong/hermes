@@ -54,7 +54,7 @@ public class LeastAdjustmentConsumerPartitionAssigningStrategyTest {
 	@Test
 	public void testPartitionAddAndDelete() {
 		LeastAdjustmentConsumerPartitionAssigningStrategy strategy = new LeastAdjustmentConsumerPartitionAssigningStrategy();
-		AssignBalancer<Integer> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentConsumerPartitionAssigningStrategy.class,
 		      "m_assignBalancer", strategy, assignBalancer);
 
@@ -134,7 +134,7 @@ public class LeastAdjustmentConsumerPartitionAssigningStrategyTest {
 	@Test
 	public void testConsumerAddAndDelete() {
 		LeastAdjustmentConsumerPartitionAssigningStrategy strategy = new LeastAdjustmentConsumerPartitionAssigningStrategy();
-		AssignBalancer<Integer> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentConsumerPartitionAssigningStrategy.class,
 		      "m_assignBalancer", strategy, assignBalancer);
 
@@ -214,7 +214,7 @@ public class LeastAdjustmentConsumerPartitionAssigningStrategyTest {
 	@Test
 	public void testParitionAndConsumerAddAndDelete() {
 		LeastAdjustmentConsumerPartitionAssigningStrategy strategy = new LeastAdjustmentConsumerPartitionAssigningStrategy();
-		AssignBalancer<Integer> assignBalancer = new LeastAdjustmentAssianBalancer<>();
+		AssignBalancer assignBalancer = new LeastAdjustmentAssianBalancer();
 		Reflects.forField().setDeclaredFieldValue(LeastAdjustmentConsumerPartitionAssigningStrategy.class,
 		      "m_assignBalancer", strategy, assignBalancer);
 
