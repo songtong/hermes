@@ -16,65 +16,54 @@ public class LeastAdjustmentAssianBalancer implements AssignBalancer {
 			return new HashMap<String, List<T>>();
 		}
 
-		LinkedList<T> linkedFreeAssigns = null;
-		if (freeAssigns == null || freeAssigns.isEmpty()) {
-			linkedFreeAssigns = new LinkedList<>();
-		} else {
-			linkedFreeAssigns = new LinkedList<>(freeAssigns);
-		}
+		LinkedList<T> linkedFreeAssigns = (freeAssigns == null) ? new LinkedList<T>() : new LinkedList<T>(freeAssigns);
 
 		// is Integer enough?
 		int total = linkedFreeAssigns.size();
 		Map<String, List<T>> newAssigns = new HashMap<String, List<T>>();
 
 		for (Map.Entry<String, List<T>> assign : originAssigns.entrySet()) {
+			LinkedList<T> newAssignList = new LinkedList<T>();
 			if (assign.getValue() == null) {
-				LinkedList<T> newAssignList = new LinkedList<T>();
 				newAssigns.put(assign.getKey(), newAssignList);
 			} else {
-				LinkedList<T> newAssignList = new LinkedList<T>(assign.getValue());
-				newAssigns.put(assign.getKey(), newAssignList);
+				newAssignList.addAll(assign.getValue());
 				total += assign.getValue().size();
 			}
+			newAssigns.put(assign.getKey(), newAssignList);
 		}
 
 		int avg = total / originAssigns.size();
-		int remaining = total % originAssigns.size();
+		int remainder = total % originAssigns.size();
 		int countEqualsAvgPlus1 = 0;
 
 		for (Map.Entry<String, List<T>> assign : newAssigns.entrySet()) {
 			int originSize = assign.getValue().size();
 			if (originSize > avg) {
 				int targetSize = avg;
-				if (countEqualsAvgPlus1 < remaining) {
+				if (countEqualsAvgPlus1 < remainder) {
 					countEqualsAvgPlus1++;
-					targetSize++;
+					targetSize = avg + 1;
 				}
 				for (int i = 0; i < originSize - targetSize; i++) {
 					linkedFreeAssigns.add(assign.getValue().remove(0));
 				}
 			}
 		}
-		
 
 		if (!linkedFreeAssigns.isEmpty()) {
 			Collections.shuffle(linkedFreeAssigns);
 			for (Map.Entry<String, List<T>> assign : newAssigns.entrySet()) {
 				int originSize = assign.getValue().size();
-				if (countEqualsAvgPlus1 < remaining) {
-					if (originSize < avg + 1) {
-						countEqualsAvgPlus1++;
-						for (int i = 0; i < avg + 1 - originSize; i++) {
-							assign.getValue().add(linkedFreeAssigns.removeFirst());
-						}
-					}
-				} else {
-					if (originSize < avg) {
-						for (int i = 0; i < avg - originSize; i++) {
-							assign.getValue().add(linkedFreeAssigns.removeFirst());
-						}
-					}
+				int targetSize = avg;
+				if (countEqualsAvgPlus1 < remainder) {
+					targetSize = avg + 1;
+					countEqualsAvgPlus1++;
 				}
+				for (int i = 0; i < targetSize - originSize; i++) {
+					assign.getValue().add(linkedFreeAssigns.removeFirst());
+				}
+
 				if (linkedFreeAssigns.isEmpty()) {
 					break;
 				}
