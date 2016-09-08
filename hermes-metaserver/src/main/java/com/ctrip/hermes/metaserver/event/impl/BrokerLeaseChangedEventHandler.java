@@ -1,10 +1,13 @@
 package com.ctrip.hermes.metaserver.event.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.cluster.Role;
@@ -44,7 +47,6 @@ public class BrokerLeaseChangedEventHandler extends BaseEventHandler {
 			mergeOnce = (Boolean) data;
 		}
 
-		m_brokerAssignmentHolder.reassign(new ArrayList<Topic>(m_metaHolder.getMeta().getTopics().values()));
 		m_metaHolder.update(m_endpointMaker.makeEndpoints(m_eventBus, event.getVersion(), m_clusterStateHolder,
 		      m_brokerAssignmentHolder.getAssignments(), mergeOnce));
 	}

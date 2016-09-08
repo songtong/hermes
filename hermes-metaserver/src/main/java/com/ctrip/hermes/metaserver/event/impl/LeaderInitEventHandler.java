@@ -163,8 +163,8 @@ public class LeaderInitEventHandler extends BaseEventHandler {
 		ArrayList<Topic> topics = new ArrayList<>(baseMeta.getTopics().values());
 		List<Server> configedMetaServers = baseMeta.getServers() == null ? new ArrayList<Server>()
 		      : new ArrayList<Server>(baseMeta.getServers().values());
-		List<Idc> idcs = baseMeta.getIdcs() == null ? new ArrayList<Idc>() : new ArrayList<Idc>(baseMeta.getIdcs()
-		      .values());
+		Map<String, Idc> idcs = baseMeta.getIdcs() == null ? new HashMap<String, Idc>() : new HashMap<String, Idc>(
+		      baseMeta.getIdcs());
 
 		addMetaServerListListener(version);
 		List<Server> metaServers = loadMetaServerList();
@@ -172,7 +172,7 @@ public class LeaderInitEventHandler extends BaseEventHandler {
 		List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>() : new ArrayList<>(
 		      baseMeta.getEndpoints().values());
 
-		m_brokerAssignmentHolder.reassign(brokers, configedBrokers, topics);
+		m_brokerAssignmentHolder.reassign(brokers, configedBrokers, topics, idcs);
 
 		Map<String, Map<Integer, Endpoint>> topicPartition2Endpoint = m_endpointMaker.makeEndpoints(m_eventBus,
 		      event.getVersion(), m_clusterStateHolder, m_brokerAssignmentHolder.getAssignments(), false);

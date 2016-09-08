@@ -171,6 +171,11 @@
 		<component>
 			<role>com.ctrip.hermes.metaserver.consumer.ConsumerPartitionAssigningStrategy</role>
 			<implementation>com.ctrip.hermes.metaserver.consumer.LeastAdjustmentConsumerPartitionAssigningStrategy</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.assign.AssignBalancer</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder</role>
@@ -179,11 +184,19 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.meta.MetaHolder</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.broker.BrokerPartitionAssigningStrategy</role>
-			<implementation>com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy</implementation>
+			<implementation>com.ctrip.hermes.metaserver.broker.LeastAdjustmentBrokerPartitionAssigningStrategy</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.assign.AssignBalancer</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder</role>
@@ -203,6 +216,15 @@
 		<component>
 			<role>com.ctrip.hermes.metaserver.meta.MetaServerAssigningStrategy</role>
 			<implementation>com.ctrip.hermes.metaserver.meta.LeastAdjustmentMetaServerAssigningStrategy</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaserver.assign.AssignBalancer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaserver.assign.AssignBalancer</role>
+			<implementation>com.ctrip.hermes.metaserver.assign.LeastAdjustmentAssianBalancer</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaserver.event.EventHandlerRegistry</role>

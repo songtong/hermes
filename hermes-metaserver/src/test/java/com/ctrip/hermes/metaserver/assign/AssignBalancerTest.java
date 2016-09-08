@@ -1,34 +1,34 @@
 package com.ctrip.hermes.metaserver.assign;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
 public class AssignBalancerTest {
 
 	@Test
-	public void testPointToAvg() {
-		AssignBalancer<Integer> a = new AssignBalancer<>(6, 2, Collections.<Integer> emptyList());
+	public void testAssign() {
+		AssignBalancer a = new LeastAdjustmentAssianBalancer();
+		List<Integer> freeAssigns = new LinkedList<>();
+		
+		long start = System.currentTimeMillis();
+		for (int i = 21; i < 10000; i++) {
+			freeAssigns.add(i);
+		}
+		System.out.println("Cost time: " + (System.currentTimeMillis() - start));
+		
+		// freeAssigns = Arrays.asList(21, 22, 23);
+		Map<String, List<Integer>> originAssigns = new HashMap<>();
+		originAssigns.put("a", Arrays.asList(0));
+		originAssigns.put("b", Arrays.asList(1, 2));
+		originAssigns.put("c", Arrays.asList(3, 4, 5));
+		originAssigns.put("d", Arrays.asList(6, 7, 8, 9));
+		originAssigns.put("e", Arrays.asList(10, 11, 12, 13, 14, 15));
+		System.out.println(a.assign(originAssigns, freeAssigns));
 
-		assertEquals(3, a.distanceToAvg(0));
-		assertEquals(2, a.distanceToAvg(1));
-		assertEquals(1, a.distanceToAvg(2));
-		assertEquals(0, a.distanceToAvg(3));
-		assertEquals(-1, a.distanceToAvg(4));
-		assertEquals(-2, a.distanceToAvg(5));
-		assertEquals(-3, a.distanceToAvg(6));
-
-		a = new AssignBalancer<>(7, 2, Collections.<Integer> emptyList());
-
-		assertEquals(3, a.distanceToAvg(0));
-		assertEquals(2, a.distanceToAvg(1));
-		assertEquals(1, a.distanceToAvg(2));
-		assertEquals(0, a.distanceToAvg(3));
-		assertEquals(0, a.distanceToAvg(4));
-		assertEquals(-1, a.distanceToAvg(5));
-		assertEquals(-2, a.distanceToAvg(6));
-		assertEquals(-3, a.distanceToAvg(7));
 	}
 }

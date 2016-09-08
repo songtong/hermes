@@ -1,16 +1,16 @@
 package com.ctrip.hermes.metaserver.meta;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Server;
@@ -28,6 +28,9 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 
 	private final static Logger log = LoggerFactory.getLogger(LeastAdjustmentMetaServerAssigningStrategy.class);
 
+	@Inject
+	private AssignBalancer m_assignBalancer;
+
 	@Override
 	public Assignment<String> assign(List<Server> metaServers, List<Topic> topics, Assignment<String> originAssignments) {
 		Assignment<String> newAssignments = new Assignment<>();
@@ -39,62 +42,42 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 		if (originAssignments == null) {
 			originAssignments = new Assignment<>();
 		}
-		originAssignments = removeDeletedTopics(topics, originAssignments);
 
-		Map<String, List<String>> originMetaServerToTopic = mapMetaServerToTopics(originAssignments);
-
-		Set<String> originMetaServers = originMetaServerToTopic.keySet();
+		Set<String> topicNames = new HashSet<>();
+		for (Topic topic : topics) {
+			topicNames.add(topic.getName());
+		}
 
 		Map<String, Server> currentMetaServers = new HashMap<>();
 		for (Server server : metaServers) {
 			currentMetaServers.put(server.getId(), server);
 		}
 
-		List<String> deletedMetaServers = setMinus(originMetaServers, currentMetaServers.keySet());
-		List<String> addedMetaServers = setMinus(currentMetaServers.keySet(), originMetaServers);
-		List<String> commonMetaServers = setIntersect(originMetaServers, currentMetaServers.keySet());
-
-		List<String> neverAssignedTopicNames = findNeverAssignedTopics(topics, originAssignments.getAssignments()
-		      .keySet());
-		List<String> assignLostTopics = findTopics(deletedMetaServers, originMetaServerToTopic);
-
-		List<String> freeTopics = new LinkedList<>();
-		freeTopics.addAll(neverAssignedTopicNames);
-		freeTopics.addAll(assignLostTopics);
-
-		AssignBalancer<String> allocator = new AssignBalancer<>(topics.size(), Math.min(currentMetaServers.size(),
-		      topics.size()), freeTopics);
-
-		for (String commonMetaServer : commonMetaServers) {
-			List<String> originAssign = originMetaServerToTopic.get(commonMetaServer);
-			List<String> newAssign = allocator.adjust(originAssign);
-			putAssignToResult(newAssignments, currentMetaServers, commonMetaServer, newAssign);
-		}
-
-		for (String addedMetaServer : addedMetaServers) {
-			List<String> newAssign = allocator.adjust(Collections.<String> emptyList());
-			putAssignToResult(newAssignments, currentMetaServers, addedMetaServer, newAssign);
+		Map<String, List<String>> originMetaServerToTopic = mapMetaServerToTopics(topicNames, currentMetaServers,
+		      originAssignments);
+		List<String> freeTopics = findFreeTopics(topics, originMetaServerToTopic);
+		Map<String, List<String>> newAssins = m_assignBalancer.assign(originMetaServerToTopic, freeTopics);
+		for (Entry<String, List<String>> entry : newAssins.entrySet()) {
+			putAssignToResult(newAssignments, currentMetaServers, entry.getKey(), entry.getValue());
 		}
 
 		return newAssignments;
 	}
 
-	private Assignment<String> removeDeletedTopics(List<Topic> topics, Assignment<String> originAssignments) {
-		Set<String> topicNames = new HashSet<>();
+	private List<String> findFreeTopics(List<Topic> topics, Map<String, List<String>> originMetaServerToTopic) {
+		List<String> freeTopics = new ArrayList<>();
+		Set<String> originTopics = new HashSet<>();
+		
+		for (List<String> ts : originMetaServerToTopic.values()) {
+			originTopics.addAll(ts);
+      }
+		
 		for (Topic topic : topics) {
-			topicNames.add(topic.getName());
-		}
-
-		Assignment<String> assignment = new Assignment<>();
-
-		for (Map.Entry<String, Map<String, ClientContext>> entry : originAssignments.getAssignments().entrySet()) {
-			String topicName = entry.getKey();
-			if (topicNames.contains(topicName)) {
-				assignment.addAssignment(topicName, entry.getValue());
+			if (!originTopics.contains(topic.getName())) {
+				freeTopics.add(topic.getName());
 			}
 		}
-
-		return assignment;
+		return freeTopics;
 	}
 
 	private void putAssignToResult(Assignment<String> newAssignments, Map<String, Server> currentMetaServers,
@@ -108,49 +91,15 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 		}
 	}
 
-	private List<String> findNeverAssignedTopics(List<Topic> topics, Set<String> originAssign) {
-		List<String> result = new ArrayList<>();
-
-		for (Topic topic : topics) {
-			if (!originAssign.contains(topic.getName())) {
-				result.add(topic.getName());
-			}
-		}
-
-		return result;
-	}
-
-	private List<String> findTopics(List<String> metaServers, Map<String, List<String>> metaServerToTopic) {
-		List<String> result = new ArrayList<>();
-
-		for (String metaServer : metaServers) {
-			List<String> topics = metaServerToTopic.get(metaServer);
-			if (topics != null) {
-				result.addAll(topics);
-			}
-		}
-
-		return result;
-	}
-
-	private List<String> setIntersect(Set<String> left, Set<String> right) {
-		List<String> result = new ArrayList<>(left);
-		result.retainAll(right);
-
-		Collections.sort(result);
-		return result;
-	}
-
-	private List<String> setMinus(Set<String> left, Set<String> right) {
-		List<String> result = new ArrayList<>(left);
-		result.removeAll(right);
-
-		Collections.sort(result);
-		return result;
-	}
-
-	private Map<String, List<String>> mapMetaServerToTopics(Assignment<String> originAssignments) {
+	private Map<String, List<String>> mapMetaServerToTopics(Set<String> currentTopics,
+	      Map<String, Server> currentMetaServers, Assignment<String> originAssignments) {
 		Map<String, List<String>> result = new HashMap<>();
+		for (Entry<String, Server> server : currentMetaServers.entrySet()) {
+			result.put(server.getKey(), new ArrayList<String>());
+		}
+
+		Set<String> metaServerNames = currentMetaServers.keySet();
+
 		for (Map.Entry<String, Map<String, ClientContext>> entry : originAssignments.getAssignments().entrySet()) {
 			String topic = entry.getKey();
 			if (entry.getValue().size() != 1) {
@@ -159,16 +108,9 @@ public class LeastAdjustmentMetaServerAssigningStrategy implements MetaServerAss
 
 			String metaServer = entry.getValue().keySet().iterator().next();
 
-			List<String> topics = result.get(metaServer);
-			if (topics == null) {
-				topics = new ArrayList<>();
-				result.put(metaServer, topics);
+			if (currentTopics.contains(topic) && metaServerNames.contains(metaServer)) {
+				result.get(metaServer).add(topic);
 			}
-			topics.add(topic);
-		}
-
-		for (Map.Entry<String, List<String>> entry : result.entrySet()) {
-			Collections.sort(entry.getValue());
 		}
 
 		return result;

@@ -23,7 +23,7 @@ public class DefaultBrokerPartitionAssigningStrategy implements BrokerPartitionA
 
 	@Override
 	public Map<String, Assignment<Integer>> assign(Map<String, ClientContext> brokers, List<Topic> topics,
-	      Map<String, Assignment<Integer>> originAssignment) {
+	      Map<String, Assignment<Integer>> originAssignments) {
 		Map<String, Assignment<Integer>> newAssignments = new HashMap<>();
 		if (topics != null && !topics.isEmpty()) {
 			List<Entry<String, ClientContext>> brokerEntries = brokers != null && !brokers.isEmpty() ? new ArrayList<>(
