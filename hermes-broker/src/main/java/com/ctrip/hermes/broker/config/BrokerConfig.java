@@ -69,13 +69,13 @@ public class BrokerConfig implements Initializable {
 
 	private int m_pullMessageSelectorWriteOffsetTtlMillis = 8000;
 
-	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 100;
+	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 500;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 30;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = 60;
 
-	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 100;
+	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 500;
 
 	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 20;
 
@@ -86,11 +86,17 @@ public class BrokerConfig implements Initializable {
 
 	private Map<String, Map<String, Integer>> m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = new HashMap<>();
 
+	private int m_messageQueueFlushThreadCount = 500;
+
 	@Override
 	public void initialize() throws InitializationException {
 		String flushBatchSizeStr = m_env.getGlobalConfig().getProperty("broker.flush.batch.size");
 		if (StringUtils.isNumeric(flushBatchSizeStr)) {
 			m_messageQueueFlushBatchSzie = Integer.valueOf(flushBatchSizeStr);
+		}
+		String flushThreadCountStr = m_env.getGlobalConfig().getProperty("broker.flush.thread.count");
+		if (StringUtils.isNumeric(flushThreadCountStr)) {
+			m_messageQueueFlushThreadCount = Integer.valueOf(flushThreadCountStr);
 		}
 
 		String mysqlBatchInsertSizeStr = m_env.getGlobalConfig().getProperty("broker.mysql.batch.size");
@@ -384,6 +390,10 @@ public class BrokerConfig implements Initializable {
 				}
 			}
 		}
+	}
+
+	public int getMessageQueueFlushThreadCount() {
+		return m_messageQueueFlushThreadCount;
 	}
 
 }

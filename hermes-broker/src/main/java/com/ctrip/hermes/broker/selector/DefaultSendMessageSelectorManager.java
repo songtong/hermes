@@ -3,8 +3,8 @@
  */
 package com.ctrip.hermes.broker.selector;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -48,8 +48,10 @@ public class DefaultSendMessageSelectorManager extends AbstractSelectorManager<P
 
 	@Override
 	public void initialize() throws InitializationException {
-		ExecutorService flushExecutor = Executors.newCachedThreadPool(HermesThreadFactory.create(
-		      "MessageQueueFlushExecutor", true));
+		ThreadPoolExecutor flushExecutor = new ThreadPoolExecutor(m_config.getMessageQueueFlushThreadCount(),
+		      m_config.getMessageQueueFlushThreadCount(), 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+		      HermesThreadFactory.create("MessageQueueFlushExecutor", true));
+		flushExecutor.allowCoreThreadTimeOut(true);
 
 		// send message update never expires
 		long maxWriteOffsetTtlMillis = Long.MAX_VALUE;
