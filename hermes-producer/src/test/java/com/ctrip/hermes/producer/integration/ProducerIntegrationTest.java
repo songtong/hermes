@@ -481,10 +481,6 @@ public class ProducerIntegrationTest extends BaseProducerIntegrationTest {
 		List<Pair<String, String>> appProperties = Arrays.asList(new Pair<String, String>("a", "A"));
 		for (int i = 0; i < times; i++) {
 			futures.add(sendAsync(TEST_TOPIC, "pKey", "body", "rKey", appProperties, false, null));
-			if (i == 0) {
-				TimeUnit.MILLISECONDS.sleep(Integer.valueOf(lookup(ProducerConfig.class)
-				      .getBrokerSenderNetworkIoCheckIntervalMaxMillis()) + 100L);
-			}
 		}
 
 		for (int i = 0; i < times - 1; i++) {

@@ -3,7 +3,6 @@ package com.ctrip.hermes.producer.integration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -336,15 +334,6 @@ public class BaseProducerIntegrationTest extends ComponentTestCase {
 			return 100L;
 		}
 
-		@Override
-		public int getBrokerSenderNetworkIoCheckIntervalMaxMillis() {
-			return 5;
-		}
-
-		@Override
-		public int getBrokerSenderNetworkIoCheckIntervalBaseMillis() {
-			return 1;
-		}
 	}
 
 	public static class TestSendMessageResultMonitor extends DefaultSendMessageResultMonitor {
