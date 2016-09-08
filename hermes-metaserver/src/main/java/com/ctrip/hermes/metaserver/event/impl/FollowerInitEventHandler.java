@@ -1,7 +1,9 @@
 package com.ctrip.hermes.metaserver.event.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -162,8 +164,8 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 
 		List<Server> configedMetaServers = baseMeta.getServers() == null ? new ArrayList<Server>()
 		      : new ArrayList<Server>(baseMeta.getServers().values());
-		List<Idc> idcs = baseMeta.getIdcs() == null ? new ArrayList<Idc>() : new ArrayList<Idc>(baseMeta.getIdcs()
-		      .values());
+		Map<String, Idc> idcs = baseMeta.getIdcs() == null ? new HashMap<String, Idc>() : new HashMap<String, Idc>(
+		      baseMeta.getIdcs());
 
 		m_metaHolder.setConfigedMetaServers(configedMetaServers);
 		m_metaHolder.setIdcs(idcs);

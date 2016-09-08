@@ -38,7 +38,7 @@ public class MetaServerStatusResponse {
 
 	private List<Server> m_configedMetaServers;
 
-	private List<Idc> m_idcs;
+	private Map<String, Idc> m_idcs;
 
 	private boolean m_zkConnected;
 
@@ -146,11 +146,11 @@ public class MetaServerStatusResponse {
 		return m_configedMetaServers;
 	}
 
-	public void setIdcs(List<Idc> idcs) {
+	public void setIdcs(Map<String, Idc> idcs) {
 		m_idcs = idcs;
 	}
 
-	public List<Idc> getIdcs() {
+	public Map<String, Idc> getIdcs() {
 		return m_idcs;
 	}
 

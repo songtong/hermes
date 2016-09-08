@@ -14,5 +14,5 @@ import com.ctrip.hermes.metaserver.commons.ClientContext;
 public interface BrokerPartitionAssigningStrategy {
 
 	public Map<String, Assignment<Integer>> assign(Map<String, ClientContext> brokers, List<Topic> topics,
-	      Map<String, Assignment<Integer>> originAssignment);
+	      Map<String, Assignment<Integer>> originAssignments);
 }

@@ -1,7 +1,9 @@
 package com.ctrip.hermes.metaserver.event.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -78,13 +80,13 @@ public class BaseMetaChangedEventHandler extends BaseEventHandler {
 
 			List<Server> configedMetaServers = baseMeta.getServers() == null ? new ArrayList<Server>()
 			      : new ArrayList<Server>(baseMeta.getServers().values());
-			List<Idc> idcs = baseMeta.getIdcs() == null ? new ArrayList<Idc>() : new ArrayList<Idc>(baseMeta.getIdcs()
-			      .values());
+			Map<String, Idc> idcs = baseMeta.getIdcs() == null ? new HashMap<String, Idc>() : new HashMap<String, Idc>(
+			      baseMeta.getIdcs());
 
 			ArrayList<Topic> topics = new ArrayList<Topic>(baseMeta.getTopics().values());
 			List<Endpoint> configedBrokers = baseMeta.getEndpoints() == null ? new ArrayList<Endpoint>()
 			      : new ArrayList<>(baseMeta.getEndpoints().values());
-			m_brokerAssignmentHolder.reassign(configedBrokers, topics);
+			m_brokerAssignmentHolder.reassign(configedBrokers, topics, new HashMap<String, Idc>(baseMeta.getIdcs()));
 
 			m_metaHolder.setIdcs(idcs);
 			m_metaHolder.setConfigedMetaServers(configedMetaServers);

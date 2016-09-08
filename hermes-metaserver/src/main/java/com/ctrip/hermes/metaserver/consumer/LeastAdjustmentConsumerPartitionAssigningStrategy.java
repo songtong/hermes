@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.meta.entity.Partition;
@@ -23,11 +22,12 @@ import com.ctrip.hermes.metaserver.commons.ClientContext;
  *
  */
 @Named(type = ConsumerPartitionAssigningStrategy.class)
-public class LeastAdjustmentConsumerPartitionAssigningStrategy implements
-      ConsumerPartitionAssigningStrategy {
+public class LeastAdjustmentConsumerPartitionAssigningStrategy implements ConsumerPartitionAssigningStrategy {
 
-	private final static Logger log = LoggerFactory
-	      .getLogger(LeastAdjustmentConsumerPartitionAssigningStrategy.class);
+	private final static Logger log = LoggerFactory.getLogger(LeastAdjustmentConsumerPartitionAssigningStrategy.class);
+
+	@Inject
+	private AssignBalancer<Integer> m_assignBalancer;
 
 	@Override
 	public Map<Integer, Map<String, ClientContext>> assign(List<Partition> partitions,
@@ -42,49 +42,31 @@ public class LeastAdjustmentConsumerPartitionAssigningStrategy implements
 			originAssigns = Collections.emptyMap();
 		}
 
-		Map<String, List<Integer>> originConsumerToPartition = mapConsumerToPartitions(originAssigns);
-		Map<String, ClientContext> consumerToClientContext = mapConsumerToClientContext(originAssigns, currentConsumers);
-		Set<String> originConsumers = originConsumerToPartition.keySet();
-
-		Set<String> deleted = setMinus(originConsumers, currentConsumers.keySet());
-		Set<String> added = setMinus(currentConsumers.keySet(), originConsumers);
-		Set<String> common = setIntersect(originConsumers, currentConsumers.keySet());
-
-		List<Integer> neverAssignedPartitions = findNeverAssignedPartitions(partitions, originAssigns.keySet());
-		List<Integer> assignLostPartitions = findPartitions(deleted, originConsumerToPartition);
-
-		LinkedList<Integer> freePartitions = new LinkedList<>();
-		freePartitions.addAll(neverAssignedPartitions);
-		freePartitions.addAll(assignLostPartitions);
-
-		AssignBalancer<Integer> allocator = new AssignBalancer<>(partitions.size(), Math.min(currentConsumers.size(),
-		      partitions.size()), freePartitions);
-
-		for (String commonConsumer : common) {
-			List<Integer> originAssign = originConsumerToPartition.get(commonConsumer);
-			List<Integer> newAssign = allocator.adjust(originAssign);
-			putAssignToResult(result, consumerToClientContext, commonConsumer, newAssign);
-		}
-
-		for (String addedConsumer : added) {
-			List<Integer> newAssign = allocator.adjust(Collections.<Integer> emptyList());
-			putAssignToResult(result, consumerToClientContext, addedConsumer, newAssign);
+		Map<String, List<Integer>> originConsumerToPartition = mapConsumerToPartitions(partitions, currentConsumers,
+		      originAssigns);
+		List<Integer> freePartitions2 = getFreePartitions(originConsumerToPartition, partitions);
+		Map<String, List<Integer>> newAssigns = m_assignBalancer.assign(originConsumerToPartition, freePartitions2);
+		for (Entry<String, List<Integer>> assign : newAssigns.entrySet()) {
+			putAssignToResult(result, currentConsumers, assign.getKey(), assign.getValue());
 		}
 
 		return result;
 	}
 
-	private List<Integer> findNeverAssignedPartitions(List<Partition> partitions, Set<Integer> originAssign) {
-		List<Integer> result = new ArrayList<>();
-
-		for (Partition p : partitions) {
-			Integer partitionId = p.getId();
-			if (!originAssign.contains(partitionId)) {
-				result.add(partitionId);
-			}
+	 List<Integer> getFreePartitions(Map<String, List<Integer>> originConsumerToPartition,
+	      List<Partition> partitions) {
+		List<Integer> freePartitions = new ArrayList<Integer>();
+		for (Partition partition : partitions) {
+			freePartitions.add(partition.getId());
 		}
 
-		return result;
+		for (Entry<String, List<Integer>> assign : originConsumerToPartition.entrySet()) {
+			for (Integer partition : assign.getValue()) {
+				freePartitions.remove(partition);
+			}
+		}
+		return freePartitions;
+
 	}
 
 	private void putAssignToResult(Map<Integer, Map<String, ClientContext>> result,
@@ -97,50 +79,20 @@ public class LeastAdjustmentConsumerPartitionAssigningStrategy implements
 		}
 	}
 
-	private Map<String, ClientContext> mapConsumerToClientContext(
-	      Map<Integer, Map<String, ClientContext>> originAssigns, Map<String, ClientContext> currentConsumers) {
-		Map<String, ClientContext> result = new HashMap<>();
-
-		for (Map<String, ClientContext> entry : originAssigns.values()) {
-			result.putAll(entry);
-		}
-
-		result.putAll(currentConsumers);
-
-		return result;
-	}
-
-	private List<Integer> findPartitions(Set<String> consumers, Map<String, List<Integer>> consumerToPartition) {
-		List<Integer> result = new ArrayList<>();
-
-		for (String consumer : consumers) {
-			List<Integer> partitions = consumerToPartition.get(consumer);
-			if (partitions != null) {
-				result.addAll(partitions);
-			}
-		}
-
-		return result;
-	}
-
-	private Set<String> setIntersect(Set<String> left, Set<String> right) {
-		HashSet<String> result = new HashSet<>(left);
-		result.retainAll(right);
-
-		return result;
-	}
-
-	private Set<String> setMinus(Set<String> left, Set<String> right) {
-		HashSet<String> result = new HashSet<>(left);
-		result.removeAll(right);
-
-		return result;
-	}
-
-	private Map<String, List<Integer>> mapConsumerToPartitions(Map<Integer, Map<String, ClientContext>> originAssignment) {
+	 Map<String, List<Integer>> mapConsumerToPartitions(List<Partition> currentPartitions,
+	      Map<String, ClientContext> currentConsumers, Map<Integer, Map<String, ClientContext>> originAssignment) {
 		Map<String, List<Integer>> result = new HashMap<>();
+		for (Entry<String, ClientContext> currentConsumer : currentConsumers.entrySet()) {
+			result.put(currentConsumer.getKey(), new ArrayList<Integer>());
+		}
+
+		HashSet<Integer> partitionIds = new HashSet<>();
+		for (Partition partition : currentPartitions) {
+			partitionIds.add(partition.getId());
+		}
 
 		for (Entry<Integer, Map<String, ClientContext>> entry : originAssignment.entrySet()) {
+			// support only has one assignment
 			if (!entry.getValue().isEmpty()) {
 				if (entry.getValue().size() != 1) {
 					log.warn("Partition have more than one consumer assigned");
@@ -149,16 +101,11 @@ public class LeastAdjustmentConsumerPartitionAssigningStrategy implements
 				String consumer = entry.getValue().keySet().iterator().next();
 				int partition = entry.getKey();
 
-				List<Integer> partitions = result.get(consumer);
-				if (partitions == null) {
-					partitions = new ArrayList<>();
-					result.put(consumer, partitions);
+				if (partitionIds.contains(partition) && currentConsumers.containsKey((consumer))) {
+					result.get(consumer).add(partition);
 				}
-				partitions.add(partition);
 			}
 		}
-
 		return result;
 	}
-
 }

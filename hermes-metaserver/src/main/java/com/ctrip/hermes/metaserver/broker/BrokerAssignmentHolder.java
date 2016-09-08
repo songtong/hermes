@@ -15,10 +15,12 @@ import org.unidal.tuple.Pair;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.log.LoggerConstants;
+import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -43,6 +45,9 @@ public class BrokerAssignmentHolder {
 	private AtomicReference<Map<Pair<String, Integer>, Endpoint>> m_configedBrokers;
 
 	private AtomicReference<Map<String, ClientContext>> m_runningBrokers;
+
+	@Inject
+	private MetaHolder m_metaHolder;
 
 	public BrokerAssignmentHolder() {
 		m_assignments.set(new HashMap<String, Assignment<Integer>>());
@@ -85,28 +90,33 @@ public class BrokerAssignmentHolder {
 		}
 	}
 
-	private void mergeAvailableBrokers() {
+	private void mergeAvailableBrokers(Map<String, Idc> idcs) {
 		Map<String, Map<String, ClientContext>> aggregateBrokers = new HashMap<String, Map<String, ClientContext>>();
 		Map<String, ClientContext> runningBrokers = m_runningBrokers.get();
 		Map<Pair<String, Integer>, Endpoint> configedBrokers = m_configedBrokers.get();
 
-		if (runningBrokers != null && !runningBrokers.isEmpty() && configedBrokers != null && !configedBrokers.isEmpty()) {
+		if (runningBrokers != null && !runningBrokers.isEmpty() && configedBrokers != null && !configedBrokers.isEmpty()
+		      && idcs != null && !idcs.isEmpty()) {
 			for (Map.Entry<String, ClientContext> entry : runningBrokers.entrySet()) {
 				ClientContext currentBroker = entry.getValue();
 				if (currentBroker != null) {
 					Pair<String, Integer> ipPort = new Pair<>(currentBroker.getIp(), currentBroker.getPort());
 					Endpoint configedBroker = configedBrokers.get(ipPort);
 					if (configedBroker != null) {
-						String brokerGroup = configedBroker.getGroup();
-						if (!aggregateBrokers.containsKey(brokerGroup)) {
-							aggregateBrokers.put(brokerGroup, new HashMap<String, ClientContext>());
-						}
+						Idc idc = idcs.get(configedBroker.getIdc());
+						if (idc != null && idc.isEnabled() && configedBroker.isEnabled()) {
+							String brokerGroup = configedBroker.getGroup();
+							if (!aggregateBrokers.containsKey(brokerGroup)) {
+								aggregateBrokers.put(brokerGroup, new HashMap<String, ClientContext>());
+							}
 
-						ClientContext existedBroker = aggregateBrokers.get(brokerGroup).get(currentBroker.getName());
-						if (existedBroker == null
-						      || existedBroker.getLastHeartbeatTime() < currentBroker.getLastHeartbeatTime()) {
-							currentBroker.setGroup(brokerGroup);
-							aggregateBrokers.get(brokerGroup).put(currentBroker.getName(), currentBroker);
+							ClientContext existedBroker = aggregateBrokers.get(brokerGroup).get(currentBroker.getName());
+							if (existedBroker == null
+							      || existedBroker.getLastHeartbeatTime() < currentBroker.getLastHeartbeatTime()) {
+								currentBroker.setGroup(brokerGroup);
+								currentBroker.setIdc(configedBroker.getIdc());
+								aggregateBrokers.get(brokerGroup).put(currentBroker.getName(), currentBroker);
+							}
 						}
 					}
 				}
@@ -136,19 +146,16 @@ public class BrokerAssignmentHolder {
 		return m_assignments.get();
 	}
 
-	public void reassign(Map<String, ClientContext> runningBrokers) {
-		reassign(runningBrokers, null, null);
+	public void reassign(Map<String, ClientContext> runningBrokers,Map<String, Idc> idcs) {
+		reassign(runningBrokers, null, null, idcs);
 	}
 
-	public void reassign(List<Endpoint> configedBrokers, List<Topic> topics) {
-		reassign(null, configedBrokers, topics);
+	public void reassign(List<Endpoint> configedBrokers, List<Topic> topics, Map<String, Idc> idcs) {
+		reassign(null, configedBrokers, topics, idcs);
 	}
 
-	public void reassign(List<Topic> topics) {
-		reassign(null, null, topics);
-	}
-
-	public void reassign(Map<String, ClientContext> runningBrokers, List<Endpoint> configedBrokers, List<Topic> topics) {
+	public void reassign(Map<String, ClientContext> runningBrokers, List<Endpoint> configedBrokers, List<Topic> topics,
+	      Map<String, Idc> idcs) {
 		if (runningBrokers != null) {
 			setRunningBrokers(runningBrokers);
 		}
@@ -157,7 +164,7 @@ public class BrokerAssignmentHolder {
 			setConfigedBrokers(configedBrokers);
 		}
 
-		mergeAvailableBrokers();
+		mergeAvailableBrokers(idcs);
 
 		if (topics != null) {
 			m_topicsCache.set(groupTopics(topics));

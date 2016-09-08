@@ -8,10 +8,11 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
+import com.ctrip.hermes.metaserver.assign.LeastAdjustmentAssianBalancer;
 import com.ctrip.hermes.metaserver.broker.BrokerAssignmentHolder;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocator;
-import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategy;
+import com.ctrip.hermes.metaserver.broker.LeastAdjustmentBrokerPartitionAssigningStrategy;
 import com.ctrip.hermes.metaserver.broker.endpoint.MetaEndpointClient;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.commons.EndpointMaker;
@@ -70,9 +71,10 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(ConsumerAssignmentHolder.class));
 		all.add(A(LeastAdjustmentConsumerPartitionAssigningStrategy.class));
 		all.add(A(BrokerAssignmentHolder.class));
-		all.add(A(DefaultBrokerPartitionAssigningStrategy.class));
+		all.add(A(LeastAdjustmentBrokerPartitionAssigningStrategy.class));
 		all.add(A(MetaServerAssignmentHolder.class));
 		all.add(A(LeastAdjustmentMetaServerAssigningStrategy.class));
+		all.add(A(LeastAdjustmentAssianBalancer.class));
 
 		// event handler
 		all.add(A(DefaultEventHandlerRegistry.class));

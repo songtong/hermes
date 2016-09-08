@@ -63,7 +63,7 @@ public class MetaHolder implements Initializable {
 
 	private AtomicReference<List<Server>> m_metaServerListCache = new AtomicReference<>();
 
-	private AtomicReference<List<Idc>> m_idcs;
+	private AtomicReference<Map<String, Idc>> m_idcs;
 
 	private AtomicReference<Map<Pair<String, Integer>, Server>> m_configedMetaServers;
 
@@ -154,7 +154,7 @@ public class MetaHolder implements Initializable {
 		m_configedMetaServers.set(new HashMap<Pair<String, Integer>, Server>());
 
 		m_idcs = new AtomicReference<>();
-		m_idcs.set(new ArrayList<Idc>());
+		m_idcs.set(new HashMap<String, Idc>());
 	}
 
 	public void setMeta(Meta meta) {
@@ -177,11 +177,11 @@ public class MetaHolder implements Initializable {
 		m_metaServerListCache.set(servers);
 	}
 
-	public void setIdcs(List<Idc> idcs) {
-		m_idcs.set(idcs == null ? new ArrayList<Idc>() : idcs);
+	public void setIdcs(Map<String, Idc> idcs) {
+		m_idcs.set(idcs == null ? new HashMap<String, Idc>() : idcs);
 	}
 
-	public List<Idc> getIdcs() {
+	public  Map<String, Idc> getIdcs() {
 		return m_idcs.get();
 	}
 
