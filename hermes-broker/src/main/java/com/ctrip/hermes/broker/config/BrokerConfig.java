@@ -69,13 +69,13 @@ public class BrokerConfig implements Initializable {
 
 	private int m_pullMessageSelectorWriteOffsetTtlMillis = 8000;
 
-	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 1000;
+	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 500;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 30;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = 60;
 
-	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 1000;
+	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 500;
 
 	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 20;
 
