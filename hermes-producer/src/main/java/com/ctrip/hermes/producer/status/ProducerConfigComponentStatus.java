@@ -24,12 +24,6 @@ public class ProducerConfigComponentStatus {
 	@FieldInfo(name = "producer.concurrent.level", description = "每个partition网络传输最大并行度")
 	private int brokerSenderConcurrentLevel;
 
-	@FieldInfo(name = "producer.networkio.interval.base", description = "空闲时网络发送最小间隔(毫秒)")
-	private int brokerSenderNetworkIoCheckIntervalBaseMillis;
-
-	@FieldInfo(name = "producer.networkio.interval.max", description = "空闲时网络发送最大间隔(毫秒)")
-	private int brokerSenderNetworkIoCheckIntervalMaxMillis;
-
 	@FieldInfo(name = "producer.networkio.threadcount", description = "网络IO线程数")
 	private int brokerSenderNetworkIoThreadCount;
 
@@ -46,8 +40,6 @@ public class ProducerConfigComponentStatus {
 		brokerSenderResultTimeoutMillis = config.getBrokerSenderResultTimeoutMillis();
 		brokerSenderBatchSize = config.getBrokerSenderBatchSize();
 		brokerSenderConcurrentLevel = config.getBrokerSenderConcurrentLevel();
-		brokerSenderNetworkIoCheckIntervalBaseMillis = config.getBrokerSenderNetworkIoCheckIntervalBaseMillis();
-		brokerSenderNetworkIoCheckIntervalMaxMillis = config.getBrokerSenderNetworkIoCheckIntervalMaxMillis();
 		brokerSenderNetworkIoThreadCount = config.getBrokerSenderNetworkIoThreadCount();
 		brokerSenderTaskQueueSize = config.getBrokerSenderTaskQueueSize();
 		producerCallbackThreadCount = config.getProducerCallbackThreadCount();
@@ -67,14 +59,6 @@ public class ProducerConfigComponentStatus {
 
 	public int getBrokerSenderConcurrentLevel() {
 		return brokerSenderConcurrentLevel;
-	}
-
-	public int getBrokerSenderNetworkIoCheckIntervalBaseMillis() {
-		return brokerSenderNetworkIoCheckIntervalBaseMillis;
-	}
-
-	public int getBrokerSenderNetworkIoCheckIntervalMaxMillis() {
-		return brokerSenderNetworkIoCheckIntervalMaxMillis;
 	}
 
 	public int getBrokerSenderNetworkIoThreadCount() {
