@@ -11,19 +11,19 @@ import org.unidal.lookup.annotation.Named;
 @Named(type = AssignBalancer.class)
 public class LeastAdjustmentAssianBalancer implements AssignBalancer {
 
-	public <T> Map<String, List<T>> assign(Map<String, List<T>> originAssigns, List<T> freeAssigns) {
+	public <K, V> Map<K, List<V>> assign(Map<K, List<V>> originAssigns, List<V> freeAssigns) {
 		if (originAssigns == null || originAssigns.isEmpty()) {
-			return new HashMap<String, List<T>>();
+			return new HashMap<K, List<V>>();
 		}
 
-		LinkedList<T> linkedFreeAssigns = (freeAssigns == null) ? new LinkedList<T>() : new LinkedList<T>(freeAssigns);
+		LinkedList<V> linkedFreeAssigns = (freeAssigns == null) ? new LinkedList<V>() : new LinkedList<V>(freeAssigns);
 
 		// is Integer enough?
 		int total = linkedFreeAssigns.size();
-		Map<String, List<T>> newAssigns = new HashMap<String, List<T>>();
+		Map<K, List<V>> newAssigns = new HashMap<K, List<V>>();
 
-		for (Map.Entry<String, List<T>> assign : originAssigns.entrySet()) {
-			LinkedList<T> newAssignList = new LinkedList<T>();
+		for (Map.Entry<K, List<V>> assign : originAssigns.entrySet()) {
+			LinkedList<V> newAssignList = new LinkedList<V>();
 			if (assign.getValue() == null) {
 				newAssigns.put(assign.getKey(), newAssignList);
 			} else {
@@ -37,7 +37,7 @@ public class LeastAdjustmentAssianBalancer implements AssignBalancer {
 		int remainder = total % originAssigns.size();
 		int countEqualsAvgPlus1 = 0;
 
-		for (Map.Entry<String, List<T>> assign : newAssigns.entrySet()) {
+		for (Map.Entry<K, List<V>> assign : newAssigns.entrySet()) {
 			int originSize = assign.getValue().size();
 			if (originSize > avg) {
 				int targetSize = avg;
@@ -53,7 +53,7 @@ public class LeastAdjustmentAssianBalancer implements AssignBalancer {
 
 		if (!linkedFreeAssigns.isEmpty()) {
 			Collections.shuffle(linkedFreeAssigns);
-			for (Map.Entry<String, List<T>> assign : newAssigns.entrySet()) {
+			for (Map.Entry<K, List<V>> assign : newAssigns.entrySet()) {
 				int originSize = assign.getValue().size();
 				int targetSize = avg;
 				if (countEqualsAvgPlus1 < remainder) {

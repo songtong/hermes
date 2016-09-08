@@ -4,5 +4,5 @@ import java.util.List;
 import java.util.Map;
 
 public interface AssignBalancer {
-	public <T> Map<String, List<T>> assign(Map<String, List<T>> originAssigns, List<T> freeAssigns);
+	public <K, V> Map<K, List<V>> assign(Map<K, List<V>> originAssigns, List<V> freeAssigns);
 }
