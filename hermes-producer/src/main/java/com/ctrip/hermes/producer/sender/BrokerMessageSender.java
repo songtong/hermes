@@ -103,13 +103,11 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					taskQueue = new TaskQueue(msg.getTopic(), msg.getPartition(), m_config.getBrokerSenderTaskQueueSize());
 					m_taskQueues.put(taskQueueKey, taskQueue);
 
-					log.debug("register for {}", taskQueueKey);
 					m_selectorManager.register(taskQueueKey, new FixedExpireTimeHolder(Long.MAX_VALUE),
 					      new SelectorCallback() {
 
 						      @Override
 						      public void onReady(CallbackContext ctx) {
-							      log.debug("selector send to broker " + taskQueueKey);
 							      new SendTask(taskQueueKey, ctx).send();
 						      }
 					      }, null, taskQueue.nextOffset());

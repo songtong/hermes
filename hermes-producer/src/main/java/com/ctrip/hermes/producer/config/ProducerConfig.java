@@ -30,16 +30,12 @@ public class ProducerConfig implements Initializable {
 
 	public static final int DEFAULT_BROKER_SENDER_BATCH_SIZE = 500;
 
-	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_BASE_MILLIS = 10;
-
-	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_MAX_MILLIS = 10;
-
 	public static final int DEFAULT_PRODUCER_CALLBACK_THREAD_COUNT = 10;
 
 	private static final int DEFAULT_BROKER_SENDER_CONCURRENT_LEVEL = 2;
 
 	private static final int DEFAULT_MESSAGE_SENDER_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 1;
-	
+
 	private static final int DEFAULT_MESSAGE_SENDER_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
 
 	@Inject
@@ -57,10 +53,6 @@ public class ProducerConfig implements Initializable {
 
 	private int m_brokerSenderBatchSize = DEFAULT_BROKER_SENDER_BATCH_SIZE;
 
-	private int m_brokerSenderNetworkIoCheckIntervalBaseMillis = DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_BASE_MILLIS;
-
-	private int m_brokerSenderNetworkIoCheckIntervalMaxMillis = DEFAULT_BROKER_SENDER_NETWORK_IO_CHECK_INTERVAL_MAX_MILLIS;
-
 	private boolean m_logEnrichInfoEnabled = false;
 
 	private boolean m_catEnabled = true;
@@ -69,15 +61,16 @@ public class ProducerConfig implements Initializable {
 
 	private int m_messageSenderSelectorSafeTriggerMinFireIntervalMillis = 50;
 
-	private int m_messageSenderSelectorSafeTriggerIntervalMillis = 100;
+	private int m_messageSenderSelectorSafeTriggerIntervalMillis = 50;
 
 	private Map<String, Integer> m_messageSenderSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
-	
+
 	private Map<String, Integer> m_messageSenderSelectorSafeTriggerTriggeringOffsetDeltas = new HashMap<>();
 
 	@Override
 	public void initialize() throws InitializationException {
-		String brokerSenderNetworkIoThreadCountStr = m_clientEnv.getGlobalConfig().getProperty("producer.networkio.threadcount");
+		String brokerSenderNetworkIoThreadCountStr = m_clientEnv.getGlobalConfig().getProperty(
+		      "producer.networkio.threadcount");
 		if (StringUtils.isNumeric(brokerSenderNetworkIoThreadCountStr)) {
 			m_brokerSenderNetworkIoThreadCount = Integer.valueOf(brokerSenderNetworkIoThreadCountStr);
 		}
@@ -87,17 +80,8 @@ public class ProducerConfig implements Initializable {
 			m_brokerSenderTaskQueueSize = Integer.valueOf(brokerSenderTaskQueueSizeStr);
 		}
 
-		String brokerSenderNetworkIoCheckIntervalBaseMillisStr = m_clientEnv.getGlobalConfig().getProperty("producer.networkio.interval.base");
-		if (StringUtils.isNumeric(brokerSenderNetworkIoCheckIntervalBaseMillisStr)) {
-			m_brokerSenderNetworkIoCheckIntervalBaseMillis = Integer.valueOf(brokerSenderNetworkIoCheckIntervalBaseMillisStr);
-		}
-
-		String brokerSenderNetworkIoCheckIntervalMaxMillisStr = m_clientEnv.getGlobalConfig().getProperty("producer.networkio.interval.max");
-		if (StringUtils.isNumeric(brokerSenderNetworkIoCheckIntervalMaxMillisStr)) {
-			m_brokerSenderNetworkIoCheckIntervalMaxMillis = Integer.valueOf(brokerSenderNetworkIoCheckIntervalMaxMillisStr);
-		}
-
-		String producerCallbackThreadCountStr = m_clientEnv.getGlobalConfig().getProperty("producer.callback.threadcount");
+		String producerCallbackThreadCountStr = m_clientEnv.getGlobalConfig()
+		      .getProperty("producer.callback.threadcount");
 		if (StringUtils.isNumeric(producerCallbackThreadCountStr)) {
 			m_ProducerCallbackThreadCount = Integer.valueOf(producerCallbackThreadCountStr);
 		}
@@ -133,37 +117,39 @@ public class ProducerConfig implements Initializable {
 			m_brokerSenderResultTimeout = Integer.valueOf(brokerSenderResultTimeout);
 		}
 
-		String messageSenderSelectorSafeTriggerMinFireIntervalMillisStr = m_clientEnv.getGlobalConfig()
-				.getProperty("producer.message.sender.selector.safe.trigger.min.fire.interval.millis");
+		String messageSenderSelectorSafeTriggerMinFireIntervalMillisStr = m_clientEnv.getGlobalConfig().getProperty(
+		      "producer.message.sender.selector.safe.trigger.min.fire.interval.millis");
 		if (StringUtils.isNumeric(messageSenderSelectorSafeTriggerMinFireIntervalMillisStr)) {
-			m_messageSenderSelectorSafeTriggerMinFireIntervalMillis = Integer.valueOf(messageSenderSelectorSafeTriggerMinFireIntervalMillisStr);
+			m_messageSenderSelectorSafeTriggerMinFireIntervalMillis = Integer
+			      .valueOf(messageSenderSelectorSafeTriggerMinFireIntervalMillisStr);
 		}
 
-		String messageSenderSelectorSafeTriggerIntervalMillisStr = m_clientEnv.getGlobalConfig()
-				.getProperty("producer.message.sender.selector.safe.trigger.interval.millis");
+		String messageSenderSelectorSafeTriggerIntervalMillisStr = m_clientEnv.getGlobalConfig().getProperty(
+		      "producer.message.sender.selector.safe.trigger.interval.millis");
 		if (StringUtils.isNumeric(messageSenderSelectorSafeTriggerIntervalMillisStr)) {
-			m_messageSenderSelectorSafeTriggerIntervalMillis = Integer.valueOf(messageSenderSelectorSafeTriggerIntervalMillisStr);
+			m_messageSenderSelectorSafeTriggerIntervalMillis = Integer
+			      .valueOf(messageSenderSelectorSafeTriggerIntervalMillisStr);
 		}
 
-		String messageSenderSelectorNormalTriggeringOffsetDeltas = m_clientEnv.getGlobalConfig()
-				.getProperty("producer.message.sender.selector.normal.triggering.offset.deltas");
+		String messageSenderSelectorNormalTriggeringOffsetDeltas = m_clientEnv.getGlobalConfig().getProperty(
+		      "producer.message.sender.selector.normal.triggering.offset.deltas");
 		if (!StringUtils.isEmpty(messageSenderSelectorNormalTriggeringOffsetDeltas)) {
-			m_messageSenderSelectorNormalTriggeringOffsetDeltas = JSON.parseObject(messageSenderSelectorNormalTriggeringOffsetDeltas,
-					new TypeReference<Map<String, Integer>>() {
-					});
+			m_messageSenderSelectorNormalTriggeringOffsetDeltas = JSON.parseObject(
+			      messageSenderSelectorNormalTriggeringOffsetDeltas, new TypeReference<Map<String, Integer>>() {
+			      });
 		}
-		
-		String messageSenderSelectorSafeTriggerTriggeringOffsetDeltas = m_clientEnv.getGlobalConfig()
-				.getProperty("producer.message.sender.selector.safe.trigger.triggering.offset.deltas");
+
+		String messageSenderSelectorSafeTriggerTriggeringOffsetDeltas = m_clientEnv.getGlobalConfig().getProperty(
+		      "producer.message.sender.selector.safe.trigger.triggering.offset.deltas");
 		if (!StringUtils.isEmpty(messageSenderSelectorSafeTriggerTriggeringOffsetDeltas)) {
-			m_messageSenderSelectorSafeTriggerTriggeringOffsetDeltas = JSON.parseObject(messageSenderSelectorSafeTriggerTriggeringOffsetDeltas,
-					new TypeReference<Map<String, Integer>>() {
-			});
+			m_messageSenderSelectorSafeTriggerTriggeringOffsetDeltas = JSON.parseObject(
+			      messageSenderSelectorSafeTriggerTriggeringOffsetDeltas, new TypeReference<Map<String, Integer>>() {
+			      });
 		}
 
 		// FIXME log config loading details.
 	}
-	
+
 	public int getProduceTimeoutSeconds(String topic) {
 		try {
 			String produceTimeout = m_clientEnv.getProducerConfig(topic).getProperty("produce.timeout.seconds");
@@ -182,14 +168,6 @@ public class ProducerConfig implements Initializable {
 
 	public int getBrokerSenderNetworkIoThreadCount() {
 		return m_brokerSenderNetworkIoThreadCount;
-	}
-
-	public int getBrokerSenderNetworkIoCheckIntervalBaseMillis() {
-		return m_brokerSenderNetworkIoCheckIntervalBaseMillis;
-	}
-
-	public int getBrokerSenderNetworkIoCheckIntervalMaxMillis() {
-		return m_brokerSenderNetworkIoCheckIntervalMaxMillis;
 	}
 
 	public int getBrokerSenderBatchSize() {
