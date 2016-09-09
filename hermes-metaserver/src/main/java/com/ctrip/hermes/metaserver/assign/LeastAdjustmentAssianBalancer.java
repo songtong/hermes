@@ -17,8 +17,8 @@ public class LeastAdjustmentAssianBalancer implements AssignBalancer {
 		}
 
 		LinkedList<V> linkedFreeAssigns = (freeAssigns == null) ? new LinkedList<V>() : new LinkedList<V>(freeAssigns);
+		Collections.shuffle(linkedFreeAssigns);
 
-		// is Integer enough?
 		int total = linkedFreeAssigns.size();
 		Map<K, List<V>> newAssigns = new HashMap<K, List<V>>();
 
@@ -30,6 +30,7 @@ public class LeastAdjustmentAssianBalancer implements AssignBalancer {
 				newAssignList.addAll(assign.getValue());
 				total += assign.getValue().size();
 			}
+			Collections.shuffle(newAssignList);
 			newAssigns.put(assign.getKey(), newAssignList);
 		}
 
@@ -52,7 +53,6 @@ public class LeastAdjustmentAssianBalancer implements AssignBalancer {
 		}
 
 		if (!linkedFreeAssigns.isEmpty()) {
-			Collections.shuffle(linkedFreeAssigns);
 			for (Map.Entry<K, List<V>> assign : newAssigns.entrySet()) {
 				int originSize = assign.getValue().size();
 				if (originSize < avg + 1) {
