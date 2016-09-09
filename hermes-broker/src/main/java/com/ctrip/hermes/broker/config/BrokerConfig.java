@@ -53,11 +53,11 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_FILTER_TOPIC_CACHE_SIZE = 5000;
 
-	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_NORMAL_TRIGGER_TRIGGERING_OFFSET_DELTA = 3;
+	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_NORMAL_TRIGGER_TRIGGERING_OFFSET_DELTA = 2;
 
 	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
 
-	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 3;
+	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 2;
 
 	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
 
@@ -69,17 +69,17 @@ public class BrokerConfig implements Initializable {
 
 	private int m_pullMessageSelectorWriteOffsetTtlMillis = 8000;
 
-	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 500;
+	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 200;
 
-	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 30;
+	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 50;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = 60;
 
-	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 500;
+	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 200;
 
-	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 20;
+	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 10;
 
-	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 20;
+	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 10;
 
 	// Topic -> GroupId or default -> delta
 	private Map<String, Map<String, Integer>> m_pullMessageSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
