@@ -123,12 +123,11 @@ public class LeaderInitEventHandler extends BaseEventHandler {
 		m_serviceCache = m_serviceDiscovery.serviceCacheBuilder()//
 		      .name(m_config.getBrokerRegistryName(null))//
 		      .threadFactory(HermesThreadFactory.create("brokerDiscoveryCache", true))//
-		      .executorService(m_eventBus.getExecutor())//
 		      .build();
 
 		try {
-			m_serviceDiscovery.start();
 			m_serviceCache.start();
+			m_serviceDiscovery.start();
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to start broker discovery service", e);
 		}
@@ -193,7 +192,7 @@ public class LeaderInitEventHandler extends BaseEventHandler {
 
 	private Map<String, ClientContext> loadAndAddBrokerListListener(ServiceCacheListener listener) {
 		if (listener != null) {
-			m_serviceCache.addListener(listener);
+			m_serviceCache.addListener(listener, m_eventBus.getExecutor());
 		}
 		List<ServiceInstance<Void>> instances = m_serviceCache.getInstances();
 		Map<String, ClientContext> brokers = new HashMap<>();
