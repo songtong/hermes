@@ -132,7 +132,6 @@ public class DefaultSelector<T> implements Selector<T> {
 		}
 
 		public void addObserver(ExpireTimeHolder expireTimeHolder, SelectorCallback callback, long lastTriggerTime, Slot[] slots) {
-			log.debug("addObserver {} {}", key, slots);
 			obs.add(new Observer(expireTimeHolder, callback, lastTriggerTime, slots));
 			fire();
 		}
@@ -143,9 +142,7 @@ public class DefaultSelector<T> implements Selector<T> {
 					int index = slot.getIndex();
 					Slot newWriteSlot = new Slot(index, Math.max(slot.getOffset(), maxWriteOffsets.get(index).get().getOffset()), slot.getMinFireInterval());
 					maxWriteOffsets.get(index).set(newWriteSlot);
-				} else {
-					log.debug("wont fire due to invalid slot fire interval");
-				}
+				} 
 			}
 
 			if (obs.isEmpty()) {
@@ -162,7 +159,6 @@ public class DefaultSelector<T> implements Selector<T> {
 			if (!obs.isEmpty()) {
 				boolean longTimeNoUpdate = isLongTimeNoUpdate(lastUpdateTime.get());
 				if (longTimeNoUpdate) {
-					log.debug("long time no update");
 					lastUpdateTime.set(newLastUpdateTime());
 					loadMaxWriteOffsetAsync(key);
 				}
