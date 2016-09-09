@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -76,6 +77,11 @@ public class ServerResource {
 			throw new RestException("Can not parse query content to server object!", Status.BAD_REQUEST);
 		}
 
+		Pair<Boolean, String> validate = validateAndTrimServer(server);
+		if (!validate.getKey()) {
+			throw new RestException(validate.getValue(), Status.BAD_REQUEST);
+		}
+		
 		m_logger.info("Creating new server with payload:{}", content);
 		try {
 			m_serverService.addServer(server);
@@ -115,6 +121,11 @@ public class ServerResource {
 			throw new RestException("Can not parse query content to server object!", Status.BAD_REQUEST);
 		}
 
+		Pair<Boolean, String> validate = validateAndTrimServer(server);
+		if (!validate.getKey()) {
+			throw new RestException(validate.getValue(), Status.BAD_REQUEST);
+		}
+		
 		m_logger.info("Update server : {} with content : {}", server.getId(), content);
 		try {
 			m_serverService.updateServer(server);
@@ -127,4 +138,15 @@ public class ServerResource {
 
 	}
 
+	private Pair<Boolean, String> validateAndTrimServer(Server s) {
+		if (StringUtils.isEmpty(s.getId())) {
+			return new Pair<Boolean, String>(false, "Server id can not be null!");
+		}
+		
+		s.setHost(s.getHost().trim());
+		s.setIdc(s.getIdc().trim());
+
+		return new Pair<Boolean, String>(true, null);
+
+	}
 }
