@@ -1,30 +1,33 @@
 package com.ctrip.hermes.metaservice.service;
 
-import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.transaction.TransactionManager;
+import org.unidal.helper.Files.IO;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -52,11 +55,16 @@ import com.ctrip.hermes.metaservice.queue.ResendGroupIdDao;
 import com.ctrip.hermes.metaservice.queue.ResendGroupIdEntity;
 import com.ctrip.hermes.metaservice.service.storage.TopicStorageService;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
+import com.google.common.base.Charsets;
 
 @Named
 public class ConsumerService {
 
 	private static final Logger logger = LoggerFactory.getLogger(ConsumerService.class);
+
+	private static final int MetaServerConnectTimeout = 2000;
+
+	private static final int MetaServerReadTimeout = 5000;
 
 	@Inject
 	private TransactionManager tm;
@@ -93,9 +101,6 @@ public class ConsumerService {
 
 	@Inject
 	private OffsetResendDao m_offsetResendDao;
-
-	@Inject
-	private MetaService m_metaService;
 
 	private static final String ConsumerLeasesNodeName = "consumerLeases";
 
@@ -237,36 +242,34 @@ public class ConsumerService {
 	}
 
 	public boolean isConsumerAlive(Topic topic, ConsumerGroup consumer) {
-		String metaServerString = null;
-		String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
-		      .getProperty("meta.port", "80").trim(), "metaserver/status");
-		try {
-			HttpResponse response = Request.Get(url).execute().returnResponse();
-			int statusCode = response.getStatusLine().getStatusCode();
-			if (statusCode == HttpStatus.SC_OK) {
-				metaServerString = EntityUtils.toString(response.getEntity());
-			}
-		} catch (IOException e) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Load metaserver status from meta-servers faied.", e);
-			}
+		Pair<Integer, String> responsePair = getRequestToMetaServer("metaserver/status", null);
+
+		if (responsePair == null || !responsePair.getKey().equals(HttpStatus.SC_OK)) {
+			logger.warn("Check consumer status failed! Load metaserver status from meta-servers faied.");
 			throw new RuntimeException("Check consumer status failed! Load metaserver status from meta-servers faied.");
 		}
 
-		JSONObject metaServerJsonObject = JSON.parseObject(metaServerString);
-
-		JSONObject consumerLeases = metaServerJsonObject.getJSONObject(ConsumerLeasesNodeName);
-		for (Entry<String, Object> entry : consumerLeases.entrySet()) {
-			String[] splitKey = entry.getKey().split(",|=|]");
-			if (splitKey.length != 6) {
-				logger.warn("Parse comsumer lease for {} failed.", entry.getKey());
-				continue;
+		JSONObject metaServerJsonObject = JSON.parseObject(responsePair.getValue());
+		try {
+			JSONObject consumerLeases = metaServerJsonObject.getJSONObject(ConsumerLeasesNodeName);
+			for (Entry<String, Object> entry : consumerLeases.entrySet()) {
+				String[] splitKey = entry.getKey().split(",|=|]");
+				if (splitKey.length != 6) {
+					logger.warn("Parse comsumer lease for {} failed.", entry.getKey());
+					continue;
+				}
+				String topicName = splitKey[1].trim();
+				String consumerName = splitKey[5].trim();
+				if (topicName.equals(topic.getName()) && consumerName.equals(consumer.getName())) {
+					return true;
+				}
 			}
-			String topicName = splitKey[1].trim();
-			String consumerName = splitKey[5].trim();
-			if (topicName.equals(topic.getName()) && consumerName.equals(consumer.getName())) {
-				return true;
-			}
+		} catch (Exception e) {
+			logger.warn(
+			      "Check consumer status failed! Parse consumer lease from metaserver status string failed Metaserver status string:{}!",
+			      responsePair.getValue());
+			throw new RuntimeException(
+			      "Check consumer status failed! Parse consumer lease from metaserver status string failed!");
 		}
 		return false;
 	}
@@ -313,12 +316,35 @@ public class ConsumerService {
 		}
 	}
 
-	public Map<Integer, Offset> findMessageOffsetByTime(String topicName, long timestamp) {
+	@SuppressWarnings("unchecked")
+	private Map<Integer, Offset> findMessageOffsetByTime(String topicName, long timestamp) {
 		int retryTimes = 2;
 		Exception exception = null;
 		for (int i = 0; i < retryTimes; i++) {
 			try {
-				return m_metaService.findMessageOffsetByTime(topicName, timestamp);
+				Map<String, String> params = new HashMap<String, String>();
+				params.put("topic", topicName);
+				params.put("partition", "-1");
+				params.put("time", String.valueOf(timestamp));
+				Pair<Integer, String> responsePair = getRequestToMetaServer("message/offset", params);
+				if (responsePair == null || !responsePair.getKey().equals(HttpStatus.SC_OK)) {
+					logger.warn("Find message offset failed: [{}({}), {}], responsePair:{}.", topicName, -1, timestamp,
+					      responsePair);
+					throw new RuntimeException(String.format("Find message offset failed: [%s(%s), %s], responsePair:%s.",
+					      topicName, -1, timestamp, responsePair));
+				}
+				String response = responsePair.getValue();
+				try {
+					Map<Integer, JSONObject> map = (Map<Integer, JSONObject>) JSON.parse(response);
+					if (map != null) {
+						return parseFromJsonObject(map);
+					}
+				} catch (Exception e) {
+					logger.warn("Parse Offset object failed: [{}({}), {}], response:{}.", topicName, -1, timestamp,
+					      response, e);
+					throw new RuntimeException(String.format("Parse Offset object failed: [%s(%s), %s], response:%s.",
+					      topicName, -1, timestamp, response), e);
+				}
 			} catch (Exception e) {
 				exception = e;
 			}
@@ -330,6 +356,82 @@ public class ConsumerService {
 		}
 		throw new RuntimeException("Find offset from metaserver failed.", exception);
 
+	}
+
+	public Pair<Integer, String> getRequestToMetaServer(final String path, final Map<String, String> requestParams) {
+
+		String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env
+		      .getGlobalConfig().getProperty("meta.port", "80").trim(), path);
+		InputStream is = null;
+		try {
+			if (requestParams != null) {
+				String encodedRequestParamStr = encodePropertiesStr(requestParams);
+
+				if (encodedRequestParamStr != null) {
+					url = url + "?" + encodedRequestParamStr;
+				}
+
+			}
+
+			HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+
+			conn.setConnectTimeout(MetaServerConnectTimeout);
+			conn.setReadTimeout(MetaServerReadTimeout);
+			conn.setRequestMethod("GET");
+			conn.connect();
+
+			int statusCode = conn.getResponseCode();
+
+			if (statusCode == 200) {
+				is = conn.getInputStream();
+				return new Pair<Integer, String>(statusCode, IO.INSTANCE.readFrom(is, Charsets.UTF_8.name()));
+			} else {
+				return new Pair<Integer, String>(statusCode, null);
+			}
+
+		} catch (Exception e) {
+			// ignore
+			if (logger.isDebugEnabled()) {
+				logger.debug("Request meta server error.", e);
+			}
+			return null;
+		} finally {
+			if (is != null) {
+				try {
+					is.close();
+				} catch (Exception e) {
+					// ignore it
+				}
+			}
+		}
+
+	}
+
+	private String encodePropertiesStr(Map<String, String> properties) throws UnsupportedEncodingException {
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, String> entry : properties.entrySet()) {
+			sb.append(URLEncoder.encode(entry.getKey(), Charsets.UTF_8.name()))//
+			      .append("=")//
+			      .append(URLEncoder.encode(entry.getValue(), Charsets.UTF_8.name()))//
+			      .append("&");
+		}
+
+		if (sb.length() > 0) {
+			return sb.substring(0, sb.length() - 1);
+		} else {
+			return null;
+		}
+	}
+
+	private Map<Integer, Offset> parseFromJsonObject(Map<Integer, JSONObject> map) {
+		Map<Integer, Offset> result = new HashMap<Integer, Offset>();
+		for (Entry<Integer, JSONObject> entry : map.entrySet()) {
+			int partitionId = Integer.valueOf(String.valueOf(entry.getKey()));
+			long pOffset = Long.valueOf(entry.getValue().get("priorityOffset").toString());
+			long npOffset = Long.valueOf(entry.getValue().get("nonPriorityOffset").toString());
+			result.put(partitionId, new Offset(pOffset, npOffset, null));
+		}
+		return result;
 	}
 
 	private long doGetLatestMsgId(String topicName, int partition, int priority) throws DalException {

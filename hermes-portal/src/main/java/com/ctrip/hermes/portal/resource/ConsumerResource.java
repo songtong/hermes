@@ -82,7 +82,13 @@ public class ConsumerResource {
 			throw new RestException("Consumer group NOT found!", Status.NOT_FOUND);
 		}
 
-		if (consumerService.isConsumerAlive(topic, consumerGroup)) {
+		boolean isAlive = true;
+		try {
+			isAlive = consumerService.isConsumerAlive(topic, consumerGroup);
+		} catch (Exception e) {
+			throw new RestException(e);
+		}
+		if (isAlive) {
 			throw new RestException("请先停止Consumer！如果已经停止，请10秒之后重试。", Status.INTERNAL_SERVER_ERROR);
 		}
 
@@ -116,7 +122,13 @@ public class ConsumerResource {
 			throw new RestException(String.format("Invalid queueType: %s!", queueType), Status.BAD_REQUEST);
 		}
 
-		if (consumerService.isConsumerAlive(topic, consumerGroup)) {
+		boolean isAlive = true;
+		try {
+			isAlive = consumerService.isConsumerAlive(topic, consumerGroup);
+		} catch (Exception e) {
+			throw new RestException(e);
+		}
+		if (isAlive) {
 			throw new RestException("请先停止Consumer！如果已经停止，请10秒之后重试。", Status.INTERNAL_SERVER_ERROR);
 		}
 
