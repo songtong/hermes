@@ -57,23 +57,23 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 	@Override
 	public void initialize() throws InitializationException {
-		m_catSelectorByPriorityMetrics.put(0, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "eq-0");
-		m_catSelectorByPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "eq-1");
-		m_catSelectorByPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "le-10");
-		m_catSelectorByPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "le-50");
+		m_catSelectorByPriorityMetrics.put(0, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "0");
+		m_catSelectorByPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "1");
+		m_catSelectorByPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "2-10");
+		m_catSelectorByPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "11-50");
 		m_catSelectorByPriorityMetrics.put(Integer.MAX_VALUE, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "gt-50");
 
-		m_catSelectorByNonPriorityMetrics.put(0, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "eq-0");
-		m_catSelectorByNonPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "eq-1");
-		m_catSelectorByNonPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "le-10");
-		m_catSelectorByNonPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "le-50");
+		m_catSelectorByNonPriorityMetrics.put(0, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "0");
+		m_catSelectorByNonPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "1");
+		m_catSelectorByNonPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "2-10");
+		m_catSelectorByNonPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "11-50");
 		m_catSelectorByNonPriorityMetrics.put(Integer.MAX_VALUE, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY
 		      + "gt-50");
 
-		m_catSelectorBySafeTriggerMetrics.put(0, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "eq-0");
-		m_catSelectorBySafeTriggerMetrics.put(1, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "eq-1");
-		m_catSelectorBySafeTriggerMetrics.put(10, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "le-10");
-		m_catSelectorBySafeTriggerMetrics.put(50, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "le-50");
+		m_catSelectorBySafeTriggerMetrics.put(0, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "0");
+		m_catSelectorBySafeTriggerMetrics.put(1, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "1");
+		m_catSelectorBySafeTriggerMetrics.put(10, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "2-10");
+		m_catSelectorBySafeTriggerMetrics.put(50, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "11-50");
 		m_catSelectorBySafeTriggerMetrics.put(Integer.MAX_VALUE, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "gt-50");
 
 	}

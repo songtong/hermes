@@ -823,14 +823,14 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 			m_msgDao = CachedMessagePriorityDaoInterceptor.createProxy(m_msgDao, m_config.getMySQLCacheConfig());
 		}
 
-		m_catSelectorByPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_PRODUCE_BY_PRIORITY + "eq-1");
-		m_catSelectorByPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_PRODUCE_BY_PRIORITY + "le-10");
-		m_catSelectorByPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_PRODUCE_BY_PRIORITY + "le-50");
+		m_catSelectorByPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_PRODUCE_BY_PRIORITY + "1");
+		m_catSelectorByPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_PRODUCE_BY_PRIORITY + "2-10");
+		m_catSelectorByPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_PRODUCE_BY_PRIORITY + "11-50");
 		m_catSelectorByPriorityMetrics.put(Integer.MAX_VALUE, CatConstants.TYPE_MESSAGE_PRODUCE_BY_PRIORITY + "gt-50");
 
-		m_catSelectorByNonPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_PRODUCE_BY_NONPRIORITY + "eq-1");
-		m_catSelectorByNonPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_PRODUCE_BY_NONPRIORITY + "le-10");
-		m_catSelectorByNonPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_PRODUCE_BY_NONPRIORITY + "le-50");
+		m_catSelectorByNonPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_PRODUCE_BY_NONPRIORITY + "1");
+		m_catSelectorByNonPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_PRODUCE_BY_NONPRIORITY + "2-10");
+		m_catSelectorByNonPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_PRODUCE_BY_NONPRIORITY + "11-50");
 		m_catSelectorByNonPriorityMetrics.put(Integer.MAX_VALUE, CatConstants.TYPE_MESSAGE_PRODUCE_BY_NONPRIORITY
 		      + "gt-50");
 	}
