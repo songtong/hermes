@@ -18,14 +18,15 @@ import com.ctrip.hermes.portal.topic.TopicView;
 
 public abstract class PartitionStrategy {
 	private static final Logger log = LoggerFactory.getLogger(PartitionStrategy.class);
+
 	private static Map<String, PartitionStrategy> strategies = null;
-	
+
 	public static PartitionStrategy getStategy(String storageType) {
-		 if (strategies != null) {
-			 return strategies.get(storageType);
-		 }
-		 
-		 synchronized (PartitionStrategy.class) {
+		if (strategies != null) {
+			return strategies.get(storageType);
+		}
+
+		synchronized (PartitionStrategy.class) {
 			if (strategies == null) {
 				try {
 					strategies = ContainerLoader.getDefaultContainer().lookupMap(PartitionStrategy.class);
@@ -33,72 +34,76 @@ public abstract class PartitionStrategy {
 					log.error("Failed to find PartitionStrategy from plexus container", e);
 				}
 			}
-		 }
-		 return strategies.get(storageType);
+		}
+		return strategies.get(storageType);
 	}
-	
+
 	static class StrategyDatasource {
 		private Pair<String, String> datasource;
+
 		private List<Tag> tags = null;
-		
+
 		public static StrategyDatasource newInstance(Pair<String, String> datasource) {
 			StrategyDatasource strategyDatasource = new StrategyDatasource();
 			strategyDatasource.setDatasource(datasource);
 			return strategyDatasource;
 		}
-		
+
 		public static StrategyDatasource newInstance(Pair<String, String> datasource, List<Tag> tags) {
 			StrategyDatasource strategyDatasource = StrategyDatasource.newInstance(datasource);
 			strategyDatasource.setTags(tags);
 			return strategyDatasource;
 		}
-		
-		private StrategyDatasource() {}
-		
+
+		private StrategyDatasource() {
+		}
+
 		public Pair<String, String> getDatasource() {
 			return datasource;
 		}
-		
+
 		public void setDatasource(Pair<String, String> datasource) {
 			this.datasource = datasource;
 		}
-		
+
 		public List<Tag> getTags() {
 			return tags;
 		}
-		
+
 		public void setTags(List<Tag> tags) {
 			this.tags = tags;
 		}
-		
+
 		public void addTag(Tag tag) {
 			if (this.tags == null) {
 				this.tags = new ArrayList<Tag>();
 			}
-			
+
 			this.tags.add(tag);
 		}
 	}
-	
+
 	public TopicView apply(TopicApplication application) {
 		TopicView topicView = new TopicView();
 		applyStrategy(application, topicView);
 		applyDefault(application, topicView);
 		return topicView;
 	}
-	
+
 	protected abstract StrategyDatasource getDefaultDatasource(TopicApplication application) throws DalException;
-	
+
 	protected void applyStrategy(TopicApplication application, TopicView topicView) {
 		int partitionCount = 1;
-		if (application.getMaxMsgNumPerDay() >= 20000000) {
-			partitionCount = 20;
-		} else if (application.getMaxMsgNumPerDay() >= 10000000) {
-			partitionCount = 10;
-		} else {
-			partitionCount = 5;
+		if (application.getStorageType().equals("mysql")) {
+			if (application.getMaxMsgNumPerDay() >= 20000000) {
+				partitionCount = 20;
+			} else if (application.getMaxMsgNumPerDay() >= 10000000) {
+				partitionCount = 10;
+			} else {
+				partitionCount = 5;
+			}
 		}
-		
+
 		StrategyDatasource strategyDatasource;
 		try {
 			strategyDatasource = getDefaultDatasource(application);
@@ -106,9 +111,9 @@ public abstract class PartitionStrategy {
 			log.error("Exception encountered when retrieving default datasource", e);
 			throw new RuntimeException(e);
 		}
-		
+
 		topicView.setTags(strategyDatasource.getTags());
-		
+
 		List<Partition> topicPartitions = new ArrayList<Partition>();
 		for (int i = 0; i < partitionCount; i++) {
 			Partition p = new Partition();
@@ -118,7 +123,7 @@ public abstract class PartitionStrategy {
 		}
 		topicView.setPartitions(topicPartitions);
 	}
-	
+
 	protected void applyDefault(TopicApplication application, TopicView topicView) {
 		topicView.setStoragePartitionSize(5000000);
 		topicView.setOwner1(application.getOwnerName1() + "/" + application.getOwnerEmail1());

@@ -11,20 +11,24 @@ import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.topic.TopicView;
 
-@Named(type=PartitionStrategy.class, value="kafka")
+@Named(type = PartitionStrategy.class, value = "kafka")
 public class KafkaPartitionStrategy extends PartitionStrategy {
 	public static final String DEFAULT_READ_DATASOURCE = "kafka-consumer";
+
 	public static final String DEFAULT_WRITE_DATASOURCE = "kafka-producer";
 
+	public static final String DEFAULT_KAFKA_BROKER_GROUP = "kafka-default";
+
 	@Override
-	protected void applyStrategy(TopicApplication application,
-			TopicView topicView) {
+	protected void applyStrategy(TopicApplication application, TopicView topicView) {
+		topicView.setBrokerGroup(DEFAULT_KAFKA_BROKER_GROUP);
+
 		List<Property> kafkaProperties = new ArrayList<>();
 		kafkaProperties.add(new Property("partitions").setValue("3"));
 		kafkaProperties.add(new Property("replication-factor").setValue("2"));
-		kafkaProperties.add(new Property("retention.ms")
-				.setValue(String.valueOf(TimeUnit.DAYS.toMillis(application.getRetentionDays()))));
-		
+		kafkaProperties.add(new Property("retention.ms").setValue(String.valueOf(TimeUnit.DAYS.toMillis(application
+		      .getRetentionDays()))));
+
 		topicView.setProperties(kafkaProperties);
 		if ("java".equals(application.getLanguageType())) {
 			topicView.setEndpointType("kafka");
