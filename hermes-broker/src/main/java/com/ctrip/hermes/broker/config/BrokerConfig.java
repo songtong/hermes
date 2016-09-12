@@ -57,7 +57,7 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
 
-	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 2;
+	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 1;
 
 	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
 
@@ -69,13 +69,13 @@ public class BrokerConfig implements Initializable {
 
 	private int m_pullMessageSelectorWriteOffsetTtlMillis = 8000;
 
-	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 200;
+	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 500;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 50;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = 60;
 
-	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 200;
+	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 500;
 
 	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 10;
 
@@ -88,6 +88,12 @@ public class BrokerConfig implements Initializable {
 
 	private int m_messageQueueFlushThreadCount = 500;
 
+	private long m_messageQueueFetchPriorityMessageMinInterval = 100;
+
+	private long m_messageQueueFetchNonPriorityMessageMinInterval = 100;
+
+	private long m_messageQueueFetchResendMessageMinInterval = 100;
+
 	@Override
 	public void initialize() throws InitializationException {
 		String flushBatchSizeStr = m_env.getGlobalConfig().getProperty("broker.flush.batch.size");
@@ -97,6 +103,18 @@ public class BrokerConfig implements Initializable {
 		String flushThreadCountStr = m_env.getGlobalConfig().getProperty("broker.flush.thread.count");
 		if (StringUtils.isNumeric(flushThreadCountStr)) {
 			m_messageQueueFlushThreadCount = Integer.valueOf(flushThreadCountStr);
+		}
+		String messageQueueFetchPriorityMessageMinIntervalStr = m_env.getGlobalConfig().getProperty("broker.mq.priroty.msg.min.fetch.interval");
+		if (StringUtils.isNumeric(messageQueueFetchPriorityMessageMinIntervalStr)) {
+			m_messageQueueFetchPriorityMessageMinInterval = Integer.valueOf(messageQueueFetchPriorityMessageMinIntervalStr);
+		}
+		String messageQueueFetchNonPriorityMessageMinIntervalStr = m_env.getGlobalConfig().getProperty("broker.mq.nonpriroty.msg.min.fetch.interval");
+		if (StringUtils.isNumeric(messageQueueFetchNonPriorityMessageMinIntervalStr)) {
+			m_messageQueueFetchNonPriorityMessageMinInterval = Integer.valueOf(messageQueueFetchNonPriorityMessageMinIntervalStr);
+		}
+		String messageQueueFetchResendMessageMinIntervalStr = m_env.getGlobalConfig().getProperty("broker.mq.resend.msg.min.fetch.interval");
+		if (StringUtils.isNumeric(messageQueueFetchResendMessageMinIntervalStr)) {
+			m_messageQueueFetchResendMessageMinInterval = Integer.valueOf(messageQueueFetchResendMessageMinIntervalStr);
 		}
 
 		String mysqlBatchInsertSizeStr = m_env.getGlobalConfig().getProperty("broker.mysql.batch.size");
@@ -394,6 +412,18 @@ public class BrokerConfig implements Initializable {
 
 	public int getMessageQueueFlushThreadCount() {
 		return m_messageQueueFlushThreadCount;
+	}
+
+	public long getMessageQueueFetchPriorityMessageMinInterval() {
+		return m_messageQueueFetchPriorityMessageMinInterval;
+	}
+
+	public long getMessageQueueFetchNonPriorityMessageMinInterval() {
+		return m_messageQueueFetchNonPriorityMessageMinInterval;
+	}
+
+	public long getMessageQueueFetchResendMessageMinInterval() {
+		return m_messageQueueFetchResendMessageMinInterval;
 	}
 
 }

@@ -19,6 +19,9 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.selector.CallbackContext;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -34,6 +37,12 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 	protected static final int STATE_INITED = 2;
 
 	protected static final int STATE_INIT_ERROR = 0;
+
+	protected static LoadingCache<Tpg, Long> m_lastPriorityTriggerTime;
+
+	protected static LoadingCache<Tpg, Long> m_lastNonPriorityTriggerTime;
+
+	protected static LoadingCache<Tpg, Long> m_lastResendTriggerTime;
 
 	protected Tpg m_tpg;
 
@@ -59,7 +68,38 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	protected MessageQueue m_messageQueue;
 
-	public AbstractMessageQueueCursor(Tpg tpg, Lease lease, MetaService metaService, MessageQueue messageQueue) {
+	protected long m_priorityMessageFetchMinInterval;
+
+	protected long m_nonpriorityMessageFetchMinInterval;
+
+	protected long m_resendMessageFetchMinInterval;
+
+	static {
+		m_lastPriorityTriggerTime = CacheBuilder.newBuilder().maximumSize(5000).build(new CacheLoader<Tpg, Long>() {
+
+			@Override
+			public Long load(Tpg key) throws Exception {
+				return -1L;
+			}
+		});
+		m_lastNonPriorityTriggerTime = CacheBuilder.newBuilder().maximumSize(5000).build(new CacheLoader<Tpg, Long>() {
+
+			@Override
+			public Long load(Tpg key) throws Exception {
+				return -1L;
+			}
+		});
+		m_lastResendTriggerTime = CacheBuilder.newBuilder().maximumSize(5000).build(new CacheLoader<Tpg, Long>() {
+
+			@Override
+			public Long load(Tpg key) throws Exception {
+				return -1L;
+			}
+		});
+	}
+
+	public AbstractMessageQueueCursor(Tpg tpg, Lease lease, MetaService metaService, MessageQueue messageQueue,
+	      long priorityMsgFetchMinInterval, long nonpriorityMsgFetchMinInterval, long resendMsgFetchMinInterval) {
 		m_tpg = tpg;
 		m_lease = lease;
 		m_priorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), true);
@@ -67,6 +107,9 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		m_metaService = metaService;
 		m_groupIdInt = m_metaService.translateToIntGroupId(m_tpg.getTopic(), m_tpg.getGroupId());
 		m_messageQueue = messageQueue;
+		m_priorityMessageFetchMinInterval = priorityMsgFetchMinInterval;
+		m_nonpriorityMessageFetchMinInterval = nonpriorityMsgFetchMinInterval;
+		m_resendMessageFetchMinInterval = resendMsgFetchMinInterval;
 	}
 
 	@Override
@@ -113,7 +156,8 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public synchronized Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize, String filter, CallbackContext callbackCtx) {
+	public synchronized Pair<Offset, List<TppConsumerMessageBatch>> next(int batchSize, String filter,
+	      CallbackContext callbackCtx) {
 		List<TppConsumerMessageBatch> batches = doNext(batchSize, filter, callbackCtx);
 		Offset offset = new Offset((long) m_priorityOffset, (long) m_nonPriorityOffset, (Pair<Date, Long>) m_resendOffset);
 
@@ -129,9 +173,12 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 			List<TppConsumerMessageBatch> result = new LinkedList<>();
 			int remainingSize = batchSize;
 
-			if (selectorTriggedByPriorityMessage(callbackCtx) || selectorTriggedByResendMessage(callbackCtx)) {
+			long now = System.currentTimeMillis();
+
+			if (shouldFetchPriorityMessages(callbackCtx, now)) {
 				FetchResult pFetchResult = fetchPriorityMessages(batchSize, filter);
-				
+				m_lastPriorityTriggerTime.put(m_tpg, now);
+
 				if (pFetchResult != null) {
 					TppConsumerMessageBatch priorityMessageBatch = pFetchResult.getBatch();
 					if (priorityMessageBatch != null && priorityMessageBatch.size() > 0) {
@@ -142,8 +189,9 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 				}
 			}
 
-			if (selectorTriggedByResendMessage(callbackCtx) && remainingSize > 0) {
+			if (shouldFetchResendMessages(callbackCtx, now) && remainingSize > 0) {
 				FetchResult rFetchResult = fetchResendMessages(remainingSize);
+				m_lastResendTriggerTime.put(m_tpg, now);
 
 				if (rFetchResult != null) {
 					TppConsumerMessageBatch resendMessageBatch = rFetchResult.getBatch();
@@ -155,8 +203,9 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 				}
 			}
 
-			if ((selectorTriggedByNonPriorityMessage(callbackCtx) || selectorTriggedByResendMessage(callbackCtx)) && remainingSize > 0) {
+			if (shouldFetchNonPriorityMessages(callbackCtx, now) && remainingSize > 0) {
 				FetchResult npFetchResult = fetchNonPriorityMessages(remainingSize, filter);
+				m_lastNonPriorityTriggerTime.put(m_tpg, now);
 
 				if (npFetchResult != null) {
 					TppConsumerMessageBatch nonPriorityMessageBatch = npFetchResult.getBatch();
@@ -176,16 +225,22 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		return null;
 	}
 
-	private boolean selectorTriggedByPriorityMessage(CallbackContext callbackCtx) {
-		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_PRIORITY_INDEX].isMatch();
+	protected boolean shouldFetchPriorityMessages(CallbackContext callbackCtx, long now) {
+		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_PRIORITY_INDEX].isMatch()
+		      || (callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_RESEND_INDEX].isMatch() && now
+		            - m_lastPriorityTriggerTime.getUnchecked(m_tpg) > m_priorityMessageFetchMinInterval//
+		      );
 	}
 
-	private boolean selectorTriggedByNonPriorityMessage(CallbackContext callbackCtx) {
-		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_NONPRIORITY_INDEX].isMatch();
+	protected boolean shouldFetchNonPriorityMessages(CallbackContext callbackCtx, long now) {
+		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_NONPRIORITY_INDEX].isMatch()
+		      || (callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_RESEND_INDEX].isMatch() && now
+		            - m_lastNonPriorityTriggerTime.getUnchecked(m_tpg) > m_nonpriorityMessageFetchMinInterval);
 	}
 
-	private boolean selectorTriggedByResendMessage(CallbackContext callbackCtx) {
-		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_RESEND_INDEX].isMatch();
+	protected boolean shouldFetchResendMessages(CallbackContext callbackCtx, long now) {
+		return now - m_lastResendTriggerTime.getUnchecked(m_tpg) > m_resendMessageFetchMinInterval//
+		      && callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_RESEND_INDEX].isMatch();
 	}
 
 	@Override
