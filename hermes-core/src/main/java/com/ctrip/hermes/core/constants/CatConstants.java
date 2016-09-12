@@ -12,6 +12,12 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_DELIVER_ELAPSE = "Message.Deliver.Elapse";
 
+	public static final String TYPE_MESSAGE_DELIVER_BY_SAFE = "Message.Deliver.SafeTrigger-";
+
+	public static final String TYPE_MESSAGE_DELIVER_BY_PRIORITY = "Message.Deliver.PriorityTrigger-";
+
+	public static final String TYPE_MESSAGE_DELIVER_BY_NONPRIORITY = "Message.Deliver.NonPriorityTrigger-";
+
 	public static final String TYPE_MESSAGE_MISS_RATIO = "Hermes.KPI.Miss.Ratio";
 
 	public static final String TYPE_MESSAGE_CONSUME_LATENCY = "Message.Consume.Latency";
@@ -23,6 +29,10 @@ public interface CatConstants {
 	public static final String TYPE_MESSAGE_PRODUCE_ERROR = "Message.Produce.Error";
 
 	public static final String TYPE_MESSAGE_PRODUCE_ELAPSE = "Message.Produce.Elapse";
+
+	public static final String TYPE_MESSAGE_PRODUCE_BY_PRIORITY = "Message.Produce.PriorityTrigger-";
+
+	public static final String TYPE_MESSAGE_PRODUCE_BY_NONPRIORITY = "Message.Produce.NonPriorityTrigger-";
 
 	public static final String TYPE_MESSAGE_CONSUME_POLL_ELAPSE = "Message.Consume.Poll.Elapse";
 

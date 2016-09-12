@@ -68,11 +68,11 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 
 	protected MessageQueue m_messageQueue;
 
-	protected long m_priorityMessageFetchMinInterval;
+	protected long m_priorityMessageFetchBySafeTriggerMinInterval;
 
-	protected long m_nonpriorityMessageFetchMinInterval;
+	protected long m_nonpriorityMessageFetchBySafeTriggerMinInterval;
 
-	protected long m_resendMessageFetchMinInterval;
+	protected long m_resendMessageFetchBySafeTriggerMinInterval;
 
 	static {
 		m_lastPriorityTriggerTime = CacheBuilder.newBuilder().maximumSize(5000).build(new CacheLoader<Tpg, Long>() {
@@ -99,7 +99,8 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 	}
 
 	public AbstractMessageQueueCursor(Tpg tpg, Lease lease, MetaService metaService, MessageQueue messageQueue,
-	      long priorityMsgFetchMinInterval, long nonpriorityMsgFetchMinInterval, long resendMsgFetchMinInterval) {
+	      long priorityMsgFetchBySafeTriggerMinInterval, long nonpriorityMsgFetchBySafeTriggerMinInterval,
+	      long resendMsgFetchBySafeTriggerMinInterval) {
 		m_tpg = tpg;
 		m_lease = lease;
 		m_priorityTpp = new Tpp(tpg.getTopic(), tpg.getPartition(), true);
@@ -107,9 +108,9 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 		m_metaService = metaService;
 		m_groupIdInt = m_metaService.translateToIntGroupId(m_tpg.getTopic(), m_tpg.getGroupId());
 		m_messageQueue = messageQueue;
-		m_priorityMessageFetchMinInterval = priorityMsgFetchMinInterval;
-		m_nonpriorityMessageFetchMinInterval = nonpriorityMsgFetchMinInterval;
-		m_resendMessageFetchMinInterval = resendMsgFetchMinInterval;
+		m_priorityMessageFetchBySafeTriggerMinInterval = priorityMsgFetchBySafeTriggerMinInterval;
+		m_nonpriorityMessageFetchBySafeTriggerMinInterval = nonpriorityMsgFetchBySafeTriggerMinInterval;
+		m_resendMessageFetchBySafeTriggerMinInterval = resendMsgFetchBySafeTriggerMinInterval;
 	}
 
 	@Override
@@ -228,18 +229,17 @@ public abstract class AbstractMessageQueueCursor implements MessageQueueCursor {
 	protected boolean shouldFetchPriorityMessages(CallbackContext callbackCtx, long now) {
 		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_PRIORITY_INDEX].isMatch()
 		      || (callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_RESEND_INDEX].isMatch() && now
-		            - m_lastPriorityTriggerTime.getUnchecked(m_tpg) > m_priorityMessageFetchMinInterval//
-		      );
+		            - m_lastPriorityTriggerTime.getUnchecked(m_tpg) > m_priorityMessageFetchBySafeTriggerMinInterval);
 	}
 
 	protected boolean shouldFetchNonPriorityMessages(CallbackContext callbackCtx, long now) {
 		return callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_NONPRIORITY_INDEX].isMatch()
 		      || (callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_RESEND_INDEX].isMatch() && now
-		            - m_lastNonPriorityTriggerTime.getUnchecked(m_tpg) > m_nonpriorityMessageFetchMinInterval);
+		            - m_lastNonPriorityTriggerTime.getUnchecked(m_tpg) > m_nonpriorityMessageFetchBySafeTriggerMinInterval);
 	}
 
 	protected boolean shouldFetchResendMessages(CallbackContext callbackCtx, long now) {
-		return now - m_lastResendTriggerTime.getUnchecked(m_tpg) > m_resendMessageFetchMinInterval//
+		return now - m_lastResendTriggerTime.getUnchecked(m_tpg) > m_resendMessageFetchBySafeTriggerMinInterval
 		      && callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_RESEND_INDEX].isMatch();
 	}
 

@@ -69,17 +69,17 @@ public class BrokerConfig implements Initializable {
 
 	private int m_pullMessageSelectorWriteOffsetTtlMillis = 8000;
 
-	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 500;
+	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 1000;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 50;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = 60;
 
-	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 500;
+	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 1000;
 
-	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 10;
+	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 20;
 
-	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 10;
+	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 20;
 
 	// Topic -> GroupId or default -> delta
 	private Map<String, Map<String, Integer>> m_pullMessageSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
@@ -88,11 +88,11 @@ public class BrokerConfig implements Initializable {
 
 	private int m_messageQueueFlushThreadCount = 500;
 
-	private long m_messageQueueFetchPriorityMessageMinInterval = 100;
+	private long m_messageQueueFetchPriorityMessageBySafeTriggerMinInterval = 200;
 
-	private long m_messageQueueFetchNonPriorityMessageMinInterval = 100;
+	private long m_messageQueueFetchNonPriorityMessageBySafeTriggerMinInterval = 200;
 
-	private long m_messageQueueFetchResendMessageMinInterval = 100;
+	private long m_messageQueueFetchResendMessageBySafeTriggerMinInterval = 200;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -104,17 +104,23 @@ public class BrokerConfig implements Initializable {
 		if (StringUtils.isNumeric(flushThreadCountStr)) {
 			m_messageQueueFlushThreadCount = Integer.valueOf(flushThreadCountStr);
 		}
-		String messageQueueFetchPriorityMessageMinIntervalStr = m_env.getGlobalConfig().getProperty("broker.mq.priroty.msg.min.fetch.interval");
+		String messageQueueFetchPriorityMessageMinIntervalStr = m_env.getGlobalConfig().getProperty(
+		      "broker.mq.priroty.msg.by.safe.trigger.min.fetch.interval");
 		if (StringUtils.isNumeric(messageQueueFetchPriorityMessageMinIntervalStr)) {
-			m_messageQueueFetchPriorityMessageMinInterval = Integer.valueOf(messageQueueFetchPriorityMessageMinIntervalStr);
+			m_messageQueueFetchPriorityMessageBySafeTriggerMinInterval = Integer
+			      .valueOf(messageQueueFetchPriorityMessageMinIntervalStr);
 		}
-		String messageQueueFetchNonPriorityMessageMinIntervalStr = m_env.getGlobalConfig().getProperty("broker.mq.nonpriroty.msg.min.fetch.interval");
+		String messageQueueFetchNonPriorityMessageMinIntervalStr = m_env.getGlobalConfig().getProperty(
+		      "broker.mq.nonpriroty.msg.by.safe.trigger.min.fetch.interval");
 		if (StringUtils.isNumeric(messageQueueFetchNonPriorityMessageMinIntervalStr)) {
-			m_messageQueueFetchNonPriorityMessageMinInterval = Integer.valueOf(messageQueueFetchNonPriorityMessageMinIntervalStr);
+			m_messageQueueFetchNonPriorityMessageBySafeTriggerMinInterval = Integer
+			      .valueOf(messageQueueFetchNonPriorityMessageMinIntervalStr);
 		}
-		String messageQueueFetchResendMessageMinIntervalStr = m_env.getGlobalConfig().getProperty("broker.mq.resend.msg.min.fetch.interval");
+		String messageQueueFetchResendMessageMinIntervalStr = m_env.getGlobalConfig().getProperty(
+		      "broker.mq.resend.msg.by.safe.trigger.min.fetch.interval");
 		if (StringUtils.isNumeric(messageQueueFetchResendMessageMinIntervalStr)) {
-			m_messageQueueFetchResendMessageMinInterval = Integer.valueOf(messageQueueFetchResendMessageMinIntervalStr);
+			m_messageQueueFetchResendMessageBySafeTriggerMinInterval = Integer
+			      .valueOf(messageQueueFetchResendMessageMinIntervalStr);
 		}
 
 		String mysqlBatchInsertSizeStr = m_env.getGlobalConfig().getProperty("broker.mysql.batch.size");
@@ -414,16 +420,16 @@ public class BrokerConfig implements Initializable {
 		return m_messageQueueFlushThreadCount;
 	}
 
-	public long getMessageQueueFetchPriorityMessageMinInterval() {
-		return m_messageQueueFetchPriorityMessageMinInterval;
+	public long getMessageQueueFetchPriorityMessageBySafeTriggerMinInterval() {
+		return m_messageQueueFetchPriorityMessageBySafeTriggerMinInterval;
 	}
 
-	public long getMessageQueueFetchNonPriorityMessageMinInterval() {
-		return m_messageQueueFetchNonPriorityMessageMinInterval;
+	public long getMessageQueueFetchNonPriorityMessageBySafeTriggerMinInterval() {
+		return m_messageQueueFetchNonPriorityMessageBySafeTriggerMinInterval;
 	}
 
-	public long getMessageQueueFetchResendMessageMinInterval() {
-		return m_messageQueueFetchResendMessageMinInterval;
+	public long getMessageQueueFetchResendMessageBySafeTriggerMinInterval() {
+		return m_messageQueueFetchResendMessageBySafeTriggerMinInterval;
 	}
 
 }

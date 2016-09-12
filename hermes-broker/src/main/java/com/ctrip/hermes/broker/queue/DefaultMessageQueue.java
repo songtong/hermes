@@ -42,14 +42,14 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	protected MessageQueueCursor create(String groupId, Lease lease, Offset offset) {
 		if (offset == null) {
 			return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), lease, m_storage, m_metaService,
-			      this, m_config.getMessageQueueFetchPriorityMessageMinInterval(),
-			      m_config.getMessageQueueFetchNonPriorityMessageMinInterval(),
-			      m_config.getMessageQueueFetchResendMessageMinInterval());
+			      this, m_config.getMessageQueueFetchPriorityMessageBySafeTriggerMinInterval(),
+			      m_config.getMessageQueueFetchNonPriorityMessageBySafeTriggerMinInterval(),
+			      m_config.getMessageQueueFetchResendMessageBySafeTriggerMinInterval());
 		} else {
 			return new DefaultMessageQueueCursorV2(new Tpg(m_topic, m_partition, groupId), lease, m_storage,
-			      m_metaService, this, offset, m_config.getMessageQueueFetchPriorityMessageMinInterval(),
-			      m_config.getMessageQueueFetchNonPriorityMessageMinInterval(),
-			      m_config.getMessageQueueFetchResendMessageMinInterval());
+			      m_metaService, this, offset, m_config.getMessageQueueFetchPriorityMessageBySafeTriggerMinInterval(),
+			      m_config.getMessageQueueFetchNonPriorityMessageBySafeTriggerMinInterval(),
+			      m_config.getMessageQueueFetchResendMessageBySafeTriggerMinInterval());
 		}
 	}
 
