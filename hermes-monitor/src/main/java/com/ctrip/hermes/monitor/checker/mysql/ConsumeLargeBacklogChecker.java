@@ -37,8 +37,7 @@ import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
 import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.NoticeContent;
-import com.ctrip.hermes.metaservice.service.notify.NoticeType;
+import com.ctrip.hermes.metaservice.service.notify.HermesNoticeContent;
 import com.ctrip.hermes.metaservice.service.notify.NotifyService;
 import com.ctrip.hermes.metaservice.service.notify.SmsNoticeContent;
 import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
@@ -282,7 +281,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		}
 	}
 
-	private NoticeContent generateSmsContent(List<MonitorEvent> events) {
+	private HermesNoticeContent generateSmsContent(List<MonitorEvent> events) {
 		StringBuilder sb = new StringBuilder("消费积压: ");
 		for (MonitorEvent event : events) {
 			ConsumeLargeBacklogEvent e = (ConsumeLargeBacklogEvent) event;
@@ -291,7 +290,7 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		return new SmsNoticeContent(sb.toString());
 	}
 
-	private NoticeContent generateEmailContent(List<MonitorEvent> events) {
+	private HermesNoticeContent generateEmailContent(List<MonitorEvent> events) {
 		return new LargeBacklogMailContent(events);
 	}
 
@@ -428,6 +427,6 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		m_notifyService.setThrottle(m_rdHermes.getEmail(), NoticeType.EMAIL, 1000, 600000);
+		m_notifyService.registerRateLimiter(m_rdHermes.getEmail(), 1, TimeUnit.SECONDS);
 	}
 }

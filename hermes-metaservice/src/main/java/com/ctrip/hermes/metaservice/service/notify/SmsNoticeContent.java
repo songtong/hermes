@@ -7,7 +7,7 @@ public class SmsNoticeContent extends ShortNoticeContent {
 	}
 
 	@Override
-	public NoticeType getType() {
-		return NoticeType.SMS;
+	public HermesNoticeType getType() {
+		return HermesNoticeType.SMS;
 	}
 }

@@ -1,6 +1,8 @@
 package com.ctrip.hermes.monitor.notify;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
@@ -13,7 +15,7 @@ import com.ctrip.hermes.monitor.checker.notification.LargeBacklogReportMailConte
 
 public class NotifyServiceTest {
 	@Test
-	public void test() {
+	public void test() throws Exception {
 		ConsumeLargeBacklogEvent e = new ConsumeLargeBacklogEvent();
 		e.setCreateTime(new Date());
 		e.setTotalBacklog(1234);
@@ -24,6 +26,10 @@ public class NotifyServiceTest {
 		LargeBacklogReportMailContent mail = new LargeBacklogReportMailContent();
 		mail.addMonitorEvent(e, c);
 		NotifyService service = PlexusComponentLocator.lookup(NotifyService.class);
-		service.notify(new HermesNotice("XXXX@XXXX", mail));
+		service.registerRateLimiter("xxxx@xxxx", 5, TimeUnit.SECONDS);
+		for (int i = 0; i < 100; i++) {
+			service.notify(new HermesNotice(Arrays.asList("xxxx@xxxx", ""), mail));
+			TimeUnit.SECONDS.sleep(1);
+		}
 	}
 }

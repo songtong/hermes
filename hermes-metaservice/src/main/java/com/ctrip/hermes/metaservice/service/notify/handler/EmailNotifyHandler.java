@@ -1,10 +1,11 @@
 package com.ctrip.hermes.metaservice.service.notify.handler;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
-import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.metaservice.service.mail.HermesMail;
 import com.ctrip.hermes.metaservice.service.mail.MailService;
@@ -13,14 +14,11 @@ import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailUtil;
 import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
 import com.ctrip.hermes.metaservice.service.notify.MailNoticeContent;
 import com.ctrip.hermes.metaservice.service.template.TemplateService;
+import com.google.common.util.concurrent.RateLimiter;
 
 @Named(type = NotifyHandler.class, value = EmailNotifyHandler.ID)
-public class EmailNotifyHandler extends AbstractNotifyHandler {
+public class EmailNotifyHandler implements NotifyHandler {
 	private static final Logger log = LoggerFactory.getLogger(EmailNotifyHandler.class);
-
-	private static final long DFT_EMAIL_LIMIT = 1;
-
-	private static final long DFT_EMAIL_INTERVAL = 900000;
 
 	public static final String ID = "EmailNotifyHandler";
 
@@ -31,7 +29,7 @@ public class EmailNotifyHandler extends AbstractNotifyHandler {
 	private MailService m_mailService;
 
 	@Override
-	protected boolean doHandle(boolean persisted, HermesNotice notice) {
+	public boolean handle(HermesNotice notice) {
 		HermesMailContext mailCtx = HermesMailUtil.getHermesMailContext((MailNoticeContent) notice.getContent());
 		String content = m_templateService.render(mailCtx.getHermesTemplate(), mailCtx.getContentMap());
 		HermesMail mail = new HermesMail(mailCtx.getTitle(), content, notice.getReceivers());
@@ -43,10 +41,5 @@ public class EmailNotifyHandler extends AbstractNotifyHandler {
 			log.error("Send Hermes mail failed: {}", mail, e);
 		}
 		return false;
-	}
-
-	@Override
-	protected Pair<Long, Long> getThrottleLimit() {
-		return new Pair<Long, Long>(DFT_EMAIL_LIMIT, DFT_EMAIL_INTERVAL);
 	}
 }

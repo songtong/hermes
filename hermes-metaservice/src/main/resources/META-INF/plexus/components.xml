@@ -839,6 +839,11 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.notify.NotifyService</role>
 			<implementation>com.ctrip.hermes.metaservice.service.notify.DefaultNotifyService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.notify.handler.NotifyHandler</role>
@@ -851,43 +856,25 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.mail.MailService</role>
 				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.notify.NotifyThrottleManager</role>
-				</requirement>
 			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.notify.handler.NotifyHandler</role>
 			<role-hint>SmsNotifyHandler</role-hint>
-			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.SmsNotifyHandler</implementation>
+			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.SMSNotifyHandler</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.notify.NotifyThrottleManager</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.metaservice.service.notify.handler.NotifyHandler</role>
 			<role-hint>TtsNotifyHandler</role-hint>
-			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.TtsNotifyHandler</implementation>
+			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.TTSNotifyHandler</implementation>
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.notify.NotifyThrottleManager</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -988,10 +975,6 @@
 					<role>com.ctrip.hermes.metaservice.model.ConsumerMonitorConfigDao</role>
 				</requirement>
 			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaservice.service.notify.NotifyThrottleManager</role>
-			<implementation>com.ctrip.hermes.metaservice.service.notify.DefaultNotifyThrottleManager</implementation>
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.datasource.DataSourceProvider</role>

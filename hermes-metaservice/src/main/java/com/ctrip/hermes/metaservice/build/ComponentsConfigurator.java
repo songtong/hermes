@@ -44,10 +44,9 @@ import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.service.mail.DefaultMailService;
 import com.ctrip.hermes.metaservice.service.mail.FileMailAccountProvider;
 import com.ctrip.hermes.metaservice.service.notify.DefaultNotifyService;
-import com.ctrip.hermes.metaservice.service.notify.DefaultNotifyThrottleManager;
 import com.ctrip.hermes.metaservice.service.notify.handler.EmailNotifyHandler;
-import com.ctrip.hermes.metaservice.service.notify.handler.SmsNotifyHandler;
-import com.ctrip.hermes.metaservice.service.notify.handler.TtsNotifyHandler;
+import com.ctrip.hermes.metaservice.service.notify.handler.SMSNotifyHandler;
+import com.ctrip.hermes.metaservice.service.notify.handler.TTSNotifyHandler;
 import com.ctrip.hermes.metaservice.service.notify.storage.DefaultNoticeStorage;
 import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
 import com.ctrip.hermes.metaservice.service.storage.StorageDataSourceProvider;
@@ -113,8 +112,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultNoticeStorage.class));
 		all.add(A(DefaultNotifyService.class));
 		all.add(A(EmailNotifyHandler.class));
-		all.add(A(SmsNotifyHandler.class));
-		all.add(A(TtsNotifyHandler.class));
+		all.add(A(SMSNotifyHandler.class));
+		all.add(A(TTSNotifyHandler.class));
 
 		all.add(A(MetaRefactor.class));
 		all.add(A(CachedAppDao.class));
@@ -130,7 +129,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(DefaultTemplateService.class));
 		all.add(A(DefaultMonitorConfigService.class));
-		all.add(A(DefaultNotifyThrottleManager.class));
 
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/data/hermes/datasources.xml"));
 
