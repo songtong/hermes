@@ -32,8 +32,8 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 
 	private OffsetGenerator m_offsetGenerator = new DefaultOffsetGenerator();
 
-	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService, ScheduledExecutorService ackOpExecutor,
-			ScheduledExecutorService ackMessagesTaskExecutor) {
+	public DefaultMessageQueue(String topic, int partition, MessageQueueStorage storage, MetaService metaService,
+	      ScheduledExecutorService ackOpExecutor, ScheduledExecutorService ackMessagesTaskExecutor) {
 		super(topic, partition, storage, ackOpExecutor, ackMessagesTaskExecutor);
 		m_metaService = metaService;
 	}
@@ -41,9 +41,15 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 	@Override
 	protected MessageQueueCursor create(String groupId, Lease lease, Offset offset) {
 		if (offset == null) {
-			return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), lease, m_storage, m_metaService, this);
+			return new DefaultMessageQueueCursor(new Tpg(m_topic, m_partition, groupId), lease, m_storage, m_metaService,
+			      this, m_config.getMessageQueueFetchPriorityMessageBySafeTriggerMinInterval(),
+			      m_config.getMessageQueueFetchNonPriorityMessageBySafeTriggerMinInterval(),
+			      m_config.getMessageQueueFetchResendMessageBySafeTriggerMinInterval());
 		} else {
-			return new DefaultMessageQueueCursorV2(new Tpg(m_topic, m_partition, groupId), lease, m_storage, m_metaService, this, offset);
+			return new DefaultMessageQueueCursorV2(new Tpg(m_topic, m_partition, groupId), lease, m_storage,
+			      m_metaService, this, offset, m_config.getMessageQueueFetchPriorityMessageBySafeTriggerMinInterval(),
+			      m_config.getMessageQueueFetchNonPriorityMessageBySafeTriggerMinInterval(),
+			      m_config.getMessageQueueFetchResendMessageBySafeTriggerMinInterval());
 		}
 	}
 
@@ -70,7 +76,8 @@ public class DefaultMessageQueue extends AbstractMessageQueue {
 			long npOffset = (long) m_storage.findLastOffset(new Tpp(m_topic, m_partition, false), groupIdInt);
 
 			@SuppressWarnings("unchecked")
-			Pair<Date, Long> rOffset = (Pair<Date, Long>) m_storage.findLastResendOffset(new Tpg(m_topic, m_partition, groupId));
+			Pair<Date, Long> rOffset = (Pair<Date, Long>) m_storage.findLastResendOffset(new Tpg(m_topic, m_partition,
+			      groupId));
 			return new Offset(pOffset, npOffset, rOffset);
 		} catch (Exception e) {
 			log.error("Find latest offset failed: topic= {}, partition= {}, group= {}.", m_topic, m_partition, groupId, e);

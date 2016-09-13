@@ -2,6 +2,8 @@ package com.ctrip.hermes.broker.longpolling;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -29,6 +31,7 @@ import com.ctrip.hermes.core.selector.SelectorCallback;
 import com.ctrip.hermes.core.selector.TriggerResult;
 import com.ctrip.hermes.core.selector.TriggerResult.State;
 import com.ctrip.hermes.core.utils.CatUtil;
+import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
 
 /**
@@ -46,8 +49,33 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultLongPollingService.class);
 
+	private TreeMap<Integer, String> m_catSelectorByPriorityMetrics = new TreeMap<>();
+
+	private TreeMap<Integer, String> m_catSelectorByNonPriorityMetrics = new TreeMap<>();
+
+	private TreeMap<Integer, String> m_catSelectorBySafeTriggerMetrics = new TreeMap<>();
+
 	@Override
 	public void initialize() throws InitializationException {
+		m_catSelectorByPriorityMetrics.put(0, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "0");
+		m_catSelectorByPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "1");
+		m_catSelectorByPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "2-10");
+		m_catSelectorByPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "11-50");
+		m_catSelectorByPriorityMetrics.put(Integer.MAX_VALUE, CatConstants.TYPE_MESSAGE_DELIVER_BY_PRIORITY + "gt-50");
+
+		m_catSelectorByNonPriorityMetrics.put(0, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "0");
+		m_catSelectorByNonPriorityMetrics.put(1, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "1");
+		m_catSelectorByNonPriorityMetrics.put(10, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "2-10");
+		m_catSelectorByNonPriorityMetrics.put(50, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY + "11-50");
+		m_catSelectorByNonPriorityMetrics.put(Integer.MAX_VALUE, CatConstants.TYPE_MESSAGE_DELIVER_BY_NONPRIORITY
+		      + "gt-50");
+
+		m_catSelectorBySafeTriggerMetrics.put(0, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "0");
+		m_catSelectorBySafeTriggerMetrics.put(1, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "1");
+		m_catSelectorBySafeTriggerMetrics.put(10, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "2-10");
+		m_catSelectorBySafeTriggerMetrics.put(50, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "11-50");
+		m_catSelectorBySafeTriggerMetrics.put(Integer.MAX_VALUE, CatConstants.TYPE_MESSAGE_DELIVER_BY_SAFE + "gt-50");
+
 	}
 
 	@Override
@@ -81,8 +109,8 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 			Tpg tpg = pullMessageTask.getTpg();
 			if (pullMessageTask.getExpireTime() < m_systemClockService.now()) {
 				if (log.isDebugEnabled()) {
-					log.debug("Client expired(correlationId={}, topic={}, partition={}, groupId={})", pullMessageTask.getCorrelationId(), tpg.getTopic(),
-							tpg.getPartition(), tpg.getGroupId());
+					log.debug("Client expired(correlationId={}, topic={}, partition={}, groupId={})",
+					      pullMessageTask.getCorrelationId(), tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
 				}
 				return;
 			}
@@ -103,11 +131,12 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 						} else {
 							state = State.GotNothing;
 						}
-						
-						TriggerResult triggerResult = new TriggerResult(state,
-								new long[] { startOffsets.getPriorityOffset(), startOffsets.getNonPriorityOffset() }, tpg.getGroupId());
 
-						selectorManager.reRegister(tp, callbackCtx, triggerResult, new SelectorTaskExpireTimeHoler(pullMessageTask), new SelectorCallback() {
+						TriggerResult triggerResult = new TriggerResult(state, new long[] { startOffsets.getPriorityOffset(),
+						      startOffsets.getNonPriorityOffset() }, tpg.getGroupId());
+
+						selectorManager.reRegister(tp, callbackCtx, triggerResult, new SelectorTaskExpireTimeHoler(
+						      pullMessageTask), new SelectorCallback() {
 
 							@Override
 							public void onReady(CallbackContext innerCtx) {
@@ -118,8 +147,8 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 				}
 			} else {
 				if (log.isDebugEnabled()) {
-					log.debug("Broker no lease for this request(correlationId={}, topic={}, partition={}, groupId={})", pullMessageTask.getCorrelationId(),
-							tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
+					log.debug("Broker no lease for this request(correlationId={}, topic={}, partition={}, groupId={})",
+					      pullMessageTask.getCorrelationId(), tpg.getTopic(), tpg.getPartition(), tpg.getGroupId());
 				}
 				// no lease, return empty cmd
 				response(pullMessageTask, null, null, false);
@@ -165,16 +194,21 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 					boolean needServerSideAckHolder = pullTask.getPullMessageCommandVersion() < 3 ? true : false;
 					m_queueManager.delivered(batch, tpg.getGroupId(), pullTask.isWithOffset(), needServerSideAckHolder);
 
-					bizLogDelivered(pullTask.getClientIp(), batch.getMessageMetas(), tpg, pullTask.getReceiveTime(), pullTask.getPullTime(), responseOk);
+					bizLogDelivered(pullTask.getClientIp(), batch.getMessageMetas(), tpg, pullTask.getReceiveTime(),
+					      pullTask.getPullTime(), responseOk);
 
 					count += batch.size();
 				}
 
-				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime, count, null, Transaction.SUCCESS);
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime, count, null,
+				      Transaction.SUCCESS);
+
+				logSelecotrMetric(pullTask.getTpg(), callbackCtx, count);
 
 				someDataResponsed = true;
 				return new Pair<>(someDataResponsed, someErrorOccurred);
 			} else {
+				logSelecotrMetric(pullTask.getTpg(), callbackCtx, 0);
 				return new Pair<>(someDataResponsed, someErrorOccurred);
 			}
 		} else {
@@ -183,7 +217,24 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 		}
 	}
 
-	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg, Date pullCmdReceiveTime, Date pullTime, boolean networkWritten) {
+	private void logSelecotrMetric(Tpg tpg, CallbackContext callbackCtx, int count) {
+		TreeMap<Integer, String> metricNames = null;
+
+		if (callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_PRIORITY_INDEX].isMatch()) {
+			metricNames = m_catSelectorByPriorityMetrics;
+		} else if (callbackCtx.getSlotMatchResults()[PullMessageSelectorManager.SLOT_NONPRIORITY_INDEX].isMatch()) {
+			metricNames = m_catSelectorByNonPriorityMetrics;
+		} else {
+			metricNames = m_catSelectorBySafeTriggerMetrics;
+		}
+
+		Entry<Integer, String> ceilingEntry = metricNames.ceilingEntry(count);
+
+		Cat.logEvent(ceilingEntry.getValue(), tpg.getTopic() + "-" + tpg.getPartition());
+	}
+
+	private void bizLogDelivered(String ip, List<MessageMeta> metas, Tpg tpg, Date pullCmdReceiveTime, Date pullTime,
+	      boolean networkWritten) {
 		BrokerStatusMonitor.INSTANCE.msgDelivered(tpg.getTopic(), tpg.getPartition(), tpg.getGroupId(), ip, metas.size());
 
 		for (MessageMeta meta : metas) {

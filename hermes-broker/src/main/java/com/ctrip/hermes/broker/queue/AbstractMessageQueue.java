@@ -80,7 +80,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private AckMessagesTaskHandler m_ackMsgsTaskHandler;
 
-	private BrokerConfig m_config;
+	protected BrokerConfig m_config;
 
 	private MetaService m_metaService;
 
@@ -92,8 +92,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private SystemClockService m_systemClockService;
 
-	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage, ScheduledExecutorService ackOpExecutor,
-			ScheduledExecutorService ackMessagesTaskExecutor) {
+	public AbstractMessageQueue(String topic, int partition, MessageQueueStorage storage,
+	      ScheduledExecutorService ackOpExecutor, ScheduledExecutorService ackMessagesTaskExecutor) {
 		m_topic = topic;
 		m_partition = partition;
 		m_storage = storage;
@@ -117,7 +117,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 		m_ackMessageTaskQueue = new LinkedBlockingQueue<>(m_config.getAckMessagesTaskQueueSize());
 		m_ackMsgsTaskHandler = new AckMessagesTaskHandler();
-		m_ackMessagesTaskExecutor.schedule(m_ackMsgsTaskHandler, m_config.getAckMessagesTaskExecutorCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+		m_ackMessagesTaskExecutor.schedule(m_ackMsgsTaskHandler,
+		      m_config.getAckMessagesTaskExecutorCheckIntervalMillis(), TimeUnit.MILLISECONDS);
 	}
 
 	public String getTopic() {
@@ -147,7 +148,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			try {
 				maxPurgedOrSavedSelectorOffset = m_flusher.flush(batchSize);
 			} catch (RuntimeException e) {
-				String errorMsg = String.format("Exception occurred while flushing message queue(topic={}, partition={})", m_topic, m_partition);
+				String errorMsg = String.format("Exception occurred while flushing message queue(topic={}, partition={})",
+				      m_topic, m_partition);
 				Cat.logError(errorMsg, e);
 				// ignore
 				log.warn(errorMsg, e);
@@ -298,28 +300,30 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			EnumRange<MessageMeta> failRange = result.getFailRange();
 			if (failRange != null) {
 				if (log.isDebugEnabled()) {
-					log.debug("Nack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, msgIdToRemainingRetries={}).", tpp.getTopic(),
-							tpp.getPartition(), tpp.isPriority(), groupId, isResend, failRange.getOffsets());
+					log.debug(
+					      "Nack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, msgIdToRemainingRetries={}).",
+					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, failRange.getOffsets());
 				}
 
 				try {
 					doNack(isResend, pg.getKey(), groupId, failRange.getOffsets());
 				} catch (Exception e) {
-					log.error("Failed to nack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, msgIdToRemainingRetries={}).",
-							tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, failRange.getOffsets(), e);
+					log.error(
+					      "Failed to nack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, msgIdToRemainingRetries={}).",
+					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, failRange.getOffsets(), e);
 				}
 			}
 
 			if (doneRange != null) {
 				if (log.isDebugEnabled()) {
-					log.debug("Ack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, endOffset={}).", tpp.getTopic(), tpp.getPartition(),
-							tpp.isPriority(), groupId, isResend, doneRange.getEnd());
+					log.debug("Ack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, endOffset={}).",
+					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, doneRange.getEnd());
 				}
 				try {
 					doAck(isResend, pg.getKey(), groupId, doneRange.getEnd());
 				} catch (Exception e) {
-					log.error("Ack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, endOffset={}).", tpp.getTopic(), tpp.getPartition(),
-							tpp.isPriority(), groupId, isResend, doneRange.getEnd(), e);
+					log.error("Ack messages(topic={}, partition={}, priority={}, groupId={}, isResend={}, endOffset={}).",
+					      tpp.getTopic(), tpp.getPartition(), tpp.isPriority(), groupId, isResend, doneRange.getEnd(), e);
 				}
 			}
 		}
@@ -345,7 +349,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 			} finally {
 				if (!m_stopped.get()) {
-					m_ackMessagesTaskExecutor.schedule(m_ackMsgsTaskHandler, m_config.getAckMessagesTaskExecutorCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+					m_ackMessagesTaskExecutor.schedule(m_ackMsgsTaskHandler,
+					      m_config.getAckMessagesTaskExecutorCheckIntervalMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		}
@@ -354,7 +359,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			boolean success = false;
 			try {
 				doNackAndAck(task.getGroupId(), false, false, task.getAckedContexts(), task.getNackedContexts());
-				doNackAndAck(task.getGroupId(), true, false, task.getAckedPriorityContexts(), task.getNackedPriorityContexts());
+				doNackAndAck(task.getGroupId(), true, false, task.getAckedPriorityContexts(),
+				      task.getNackedPriorityContexts());
 				doNackAndAck(task.getGroupId(), false, true, task.getAckedResendContexts(), task.getNackedResendContexts());
 				success = true;
 			} finally {
@@ -377,14 +383,15 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			}
 		}
 
-		private void doNackAndAck(String groupId, boolean isPriority, boolean isResend, List<AckContext> ackedContexts, List<AckContext> nackedContexts) {
+		private void doNackAndAck(String groupId, boolean isPriority, boolean isResend, List<AckContext> ackedContexts,
+		      List<AckContext> nackedContexts) {
 			long maxAckOffset = calMaxAckOffset(ackedContexts, nackedContexts);
 
 			if (CollectionUtil.isNotEmpty(nackedContexts)) {
 				List<Pair<Long, MessageMeta>> msgId2Metas = new ArrayList<>(nackedContexts.size());
 				for (AckContext ackContext : nackedContexts) {
-					msgId2Metas.add(new Pair<>(ackContext.getMsgSeq(),
-							new MessageMeta(ackContext.getMsgSeq(), ackContext.getRemainingRetries(), -1L, isPriority ? 0 : 1, isResend)));
+					msgId2Metas.add(new Pair<>(ackContext.getMsgSeq(), new MessageMeta(ackContext.getMsgSeq(), ackContext
+					      .getRemainingRetries(), -1L, isPriority ? 0 : 1, isResend)));
 				}
 				doNack(isResend, isPriority, groupId, msgId2Metas);
 			}
@@ -428,7 +435,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 				log.error("Exception occurred while executing ack task.", e);
 			} finally {
 				if (!m_stopped.get()) {
-					m_ackOpExecutor.schedule(m_ackOpTaskHandler, m_config.getAckOpCheckIntervalMillis(), TimeUnit.MILLISECONDS);
+					m_ackOpExecutor.schedule(m_ackOpTaskHandler, m_config.getAckOpCheckIntervalMillis(),
+					      TimeUnit.MILLISECONDS);
 				}
 			}
 		}
@@ -507,7 +515,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	protected abstract MessageQueueCursor create(String groupId, Lease lease, Offset offset);
 
-	protected abstract void doNack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas);
+	protected abstract void doNack(boolean resend, boolean isPriority, String groupId,
+	      List<Pair<Long, MessageMeta>> msgId2Metas);
 
 	protected abstract void doAck(boolean resend, boolean isPriority, String groupId, long msgSeq);
 }

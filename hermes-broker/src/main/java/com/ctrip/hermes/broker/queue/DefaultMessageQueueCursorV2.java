@@ -23,8 +23,10 @@ public class DefaultMessageQueueCursorV2 extends AbstractMessageQueueCursor {
 	private Offset m_initailOffset;
 
 	public DefaultMessageQueueCursorV2(Tpg tpg, Lease lease, MessageQueueStorage storage, MetaService metaService,
-	      DefaultMessageQueue messageQueue, Offset initailOffset) {
-		super(tpg, lease, metaService, messageQueue);
+	      DefaultMessageQueue messageQueue, Offset initailOffset, long priorityMsgFetchBySafeTriggerMinInterval,
+	      long nonpriorityMsgFetchBySafeTriggerMinInterval, long resendMsgFetchBySafeTriggerMinInterval) {
+		super(tpg, lease, metaService, messageQueue, priorityMsgFetchBySafeTriggerMinInterval,
+		      nonpriorityMsgFetchBySafeTriggerMinInterval, resendMsgFetchBySafeTriggerMinInterval);
 		m_storage = storage;
 		m_initailOffset = initailOffset;
 	}

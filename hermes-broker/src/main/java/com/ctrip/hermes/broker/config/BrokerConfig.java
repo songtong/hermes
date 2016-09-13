@@ -57,7 +57,7 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
 
-	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 2;
+	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 1;
 
 	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
 
@@ -69,17 +69,17 @@ public class BrokerConfig implements Initializable {
 
 	private int m_pullMessageSelectorWriteOffsetTtlMillis = 8000;
 
-	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 200;
+	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 1000;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 50;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = 60;
 
-	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 200;
+	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 1000;
 
-	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 10;
+	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 20;
 
-	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 10;
+	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 20;
 
 	// Topic -> GroupId or default -> delta
 	private Map<String, Map<String, Integer>> m_pullMessageSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
@@ -87,6 +87,12 @@ public class BrokerConfig implements Initializable {
 	private Map<String, Map<String, Integer>> m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = new HashMap<>();
 
 	private int m_messageQueueFlushThreadCount = 500;
+
+	private long m_messageQueueFetchPriorityMessageBySafeTriggerMinInterval = 200;
+
+	private long m_messageQueueFetchNonPriorityMessageBySafeTriggerMinInterval = 200;
+
+	private long m_messageQueueFetchResendMessageBySafeTriggerMinInterval = 200;
 
 	@Override
 	public void initialize() throws InitializationException {
@@ -97,6 +103,24 @@ public class BrokerConfig implements Initializable {
 		String flushThreadCountStr = m_env.getGlobalConfig().getProperty("broker.flush.thread.count");
 		if (StringUtils.isNumeric(flushThreadCountStr)) {
 			m_messageQueueFlushThreadCount = Integer.valueOf(flushThreadCountStr);
+		}
+		String messageQueueFetchPriorityMessageMinIntervalStr = m_env.getGlobalConfig().getProperty(
+		      "broker.mq.priroty.msg.by.safe.trigger.min.fetch.interval");
+		if (StringUtils.isNumeric(messageQueueFetchPriorityMessageMinIntervalStr)) {
+			m_messageQueueFetchPriorityMessageBySafeTriggerMinInterval = Integer
+			      .valueOf(messageQueueFetchPriorityMessageMinIntervalStr);
+		}
+		String messageQueueFetchNonPriorityMessageMinIntervalStr = m_env.getGlobalConfig().getProperty(
+		      "broker.mq.nonpriroty.msg.by.safe.trigger.min.fetch.interval");
+		if (StringUtils.isNumeric(messageQueueFetchNonPriorityMessageMinIntervalStr)) {
+			m_messageQueueFetchNonPriorityMessageBySafeTriggerMinInterval = Integer
+			      .valueOf(messageQueueFetchNonPriorityMessageMinIntervalStr);
+		}
+		String messageQueueFetchResendMessageMinIntervalStr = m_env.getGlobalConfig().getProperty(
+		      "broker.mq.resend.msg.by.safe.trigger.min.fetch.interval");
+		if (StringUtils.isNumeric(messageQueueFetchResendMessageMinIntervalStr)) {
+			m_messageQueueFetchResendMessageBySafeTriggerMinInterval = Integer
+			      .valueOf(messageQueueFetchResendMessageMinIntervalStr);
 		}
 
 		String mysqlBatchInsertSizeStr = m_env.getGlobalConfig().getProperty("broker.mysql.batch.size");
@@ -394,6 +418,18 @@ public class BrokerConfig implements Initializable {
 
 	public int getMessageQueueFlushThreadCount() {
 		return m_messageQueueFlushThreadCount;
+	}
+
+	public long getMessageQueueFetchPriorityMessageBySafeTriggerMinInterval() {
+		return m_messageQueueFetchPriorityMessageBySafeTriggerMinInterval;
+	}
+
+	public long getMessageQueueFetchNonPriorityMessageBySafeTriggerMinInterval() {
+		return m_messageQueueFetchNonPriorityMessageBySafeTriggerMinInterval;
+	}
+
+	public long getMessageQueueFetchResendMessageBySafeTriggerMinInterval() {
+		return m_messageQueueFetchResendMessageBySafeTriggerMinInterval;
 	}
 
 }

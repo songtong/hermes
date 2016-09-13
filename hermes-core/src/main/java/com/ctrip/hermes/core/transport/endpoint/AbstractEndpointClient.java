@@ -62,6 +62,8 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
+	private ConcurrentMap<CommandType, Long> m_catCmdVersionLastLogTimes = new ConcurrentHashMap<>();
+
 	@Override
 	public boolean writeCommand(Endpoint endpoint, Command cmd) {
 		if (m_closed.get()) {
@@ -70,7 +72,16 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 		CommandType type = cmd.getHeader().getType();
 		if (type != null) {
-			Cat.logEvent(CatConstants.TYPE_HERMES_CMD_VERSION, type + "-SEND");
+			long now = System.currentTimeMillis();
+			if (!m_catCmdVersionLastLogTimes.containsKey(type)) {
+				m_catCmdVersionLastLogTimes.putIfAbsent(type, 0L);
+			}
+			Long lastLogTime = m_catCmdVersionLastLogTimes.get(type);
+
+			if (now - lastLogTime >= 60000 && m_catCmdVersionLastLogTimes.replace(type, lastLogTime, now)) {
+				Cat.logEvent(CatConstants.TYPE_HERMES_CMD_VERSION, type + "-SEND");
+			}
+
 		}
 
 		lock.readLock().lock();
