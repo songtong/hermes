@@ -9,6 +9,7 @@
     <entity-ref name="idc" type="list" names="idcs" />
     <entity-ref name="server" type="list" names="servers" />
     <entity-ref name="storage" type="list" names="storages" />
+    <entity-ref name="zookeeper-ensemble" type="list" names="zookeeper-ensembles" />
   </entity>
   <entity name="topic">
     <attribute name="name" value-type="String" />
@@ -89,6 +90,12 @@
   <entity name="datasource">
     <attribute name="id" value-type="String" />
     <entity-ref name="property" type="list" names="properties" />
+  </entity>
+  <entity name="zookeeper-ensemble">
+    <attribute name="id" value-type="String" />
+    <attribute name="idc" value-type="String" />
+    <attribute name="connection-string" value-type="String" />
+    <attribute name="primary" value-type="boolean" />
   </entity>
 </model>
 
