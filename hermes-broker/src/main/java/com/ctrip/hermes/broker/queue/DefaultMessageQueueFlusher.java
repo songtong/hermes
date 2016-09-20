@@ -27,6 +27,7 @@ import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
+import com.dianping.cat.message.Event;
 import com.dianping.cat.message.Transaction;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -91,11 +92,11 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 			catTx.addData("*count", getMessageCount(todos));
 
 			maxSavedSelectorOffset = appendMessageSync(todos);
-			
+
 			catTx.setStatus(Transaction.SUCCESS);
 			catTx.complete();
 		}
-		
+
 		return Math.max(maxPurgedSelectorOffset, maxSavedSelectorOffset);
 	}
 
@@ -111,15 +112,22 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		long maxPurgedSelectorOffset = Long.MIN_VALUE;
 		long now = System.currentTimeMillis();
 
+		long purgedCount = 0;
+
 		while (!m_pendingMessages.isEmpty()) {
 			if (m_pendingMessages.peek().getExpireTime() < now) {
 				long purgedSelectorOfset = purgeExpiredMsg();
 				maxPurgedSelectorOffset = Math.max(maxPurgedSelectorOffset, purgedSelectorOfset);
+				purgedCount++;
 			} else {
 				break;
 			}
 		}
-		
+
+		if (purgedCount > 0) {
+			Cat.logEvent(CatConstants.TYPE_MESSAGE_PRODUCE_QUEUE_EXPIRED, m_topic, Event.SUCCESS, "*count=" + purgedCount);
+		}
+
 		return maxPurgedSelectorOffset;
 	}
 
@@ -143,7 +151,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 	protected long appendMessageSync(List<PendingMessageWrapper> todos) {
 		long maxSelectorOffset = Long.MIN_VALUE;
-		
+
 		List<FutureBatchResultWrapper> priorityTodos = new ArrayList<>(todos.size());
 		List<FutureBatchResultWrapper> nonPriorityTodos = new ArrayList<>(todos.size());
 
@@ -170,7 +178,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 				future.set(result);
 			}
 		}
-		
+
 		return maxSelectorOffset;
 	}
 

@@ -35,6 +35,7 @@ import com.ctrip.hermes.core.transport.command.v6.SendMessageCommandV6;
 import com.ctrip.hermes.core.transport.command.v6.SendMessageResultCommandV6;
 import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
@@ -166,7 +167,7 @@ public class SendMessageCommandProcessorV6 implements CommandProcessor {
 		}
 	}
 
-	private static class AppendMessageCompletionCallback implements FutureCallback<Map<Integer, SendMessageResult>> {
+	private class AppendMessageCompletionCallback implements FutureCallback<Map<Integer, SendMessageResult>> {
 		private SendMessageResultCommandV6 m_result;
 
 		private CommandProcessorContext m_ctx;
@@ -209,13 +210,24 @@ public class SendMessageCommandProcessorV6 implements CommandProcessor {
 		private void logElapse() {
 			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE, m_topic + "-" + m_partition, m_start,
 			      m_result.getResults().size(), null, Transaction.SUCCESS);
+			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_DB + findDb(m_topic, m_partition), m_topic,
+			      m_start, m_result.getResults().size(), null, Transaction.SUCCESS);
+		}
+
+		private String findDb(String topic, int partition) {
+			Partition p = m_metaService.findPartitionByTopicAndPartition(topic, partition);
+			return p.getWriteDatasource();
 		}
 
 		private void logToCatIfHasError(SendMessageResultCommandV6 resultCmd) {
+			int failCount = 0;
 			for (SendMessageResult result : resultCmd.getResults().values()) {
 				if (!result.isSuccess()) {
-					Cat.logEvent(CatConstants.TYPE_MESSAGE_PRODUCE_ERROR, m_topic, Event.SUCCESS, "");
+					failCount++;
 				}
+			}
+			if (failCount > 0) {
+				Cat.logEvent(CatConstants.TYPE_MESSAGE_PRODUCE_ERROR, m_topic, Event.SUCCESS, "*count=" + failCount);
 			}
 		}
 
