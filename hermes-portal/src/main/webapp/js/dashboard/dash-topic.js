@@ -1,4 +1,4 @@
-var dashtopic = angular.module("dash-topic", [ 'ngResource', 'ui.bootstrap', 'smart-table', 'ngRoute' ]);
+var dashtopic = angular.module("dash-topic", [ 'ngResource', 'ui.bootstrap', 'smart-table', 'ngRoute', 'user' ]);
 
 dashtopic.config(function($routeProvider) {
 	$routeProvider.when('/detail/:topic/:consumer?', {

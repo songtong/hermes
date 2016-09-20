@@ -93,7 +93,7 @@ public abstract class PartitionStrategy {
 	protected abstract StrategyDatasource getDefaultDatasource(TopicApplication application) throws DalException;
 
 	protected void applyStrategy(TopicApplication application, TopicView topicView) {
-		int partitionCount = 1;
+		int partitionCount = 3;
 		if (application.getStorageType().equals("mysql")) {
 			if (application.getMaxMsgNumPerDay() >= 20000000) {
 				partitionCount = 20;
