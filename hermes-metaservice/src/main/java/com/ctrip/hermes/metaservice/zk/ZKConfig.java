@@ -20,11 +20,7 @@ public class ZKConfig {
 	}
 
 	public int getZkConnectionTimeoutMillis() {
-		return 5000;
-	}
-
-	public String getZkConnectionString() {
-		return m_env.getGlobalConfig().getProperty("meta.zk.connectionString");
+		return 3000;
 	}
 
 	public int getZkCloseWaitMillis() {

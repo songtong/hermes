@@ -10,6 +10,15 @@
 			</query>
 		</query-defs>
 	</entity>
+	<entity name="zookeeper-ensemble" alias="ze">
+		<query-defs>
+			<query name="list" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        ORDER BY <FIELD name='id'/> ASC]]></statement>
+			</query>
+		</query-defs>
+	</entity>
 	<entity name="kv" table="kv" alias="k">
 		<var name="key-name" value-type="String" />
 		<var name="tag-name" value-type="String" />

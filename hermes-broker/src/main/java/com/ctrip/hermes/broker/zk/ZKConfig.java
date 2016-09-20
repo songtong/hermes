@@ -32,11 +32,11 @@ public class ZKConfig {
 	}
 
 	public int getSleepMsBetweenRetries() {
-		return 1000;
+		return 100;
 	}
 
 	public int getZkRetries() {
-		return Integer.MAX_VALUE;
+		return 3;
 	}
 
 	public int getZkSessionTimeoutMillis() {
