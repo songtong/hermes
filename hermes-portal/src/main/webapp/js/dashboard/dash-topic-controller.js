@@ -2,76 +2,85 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 	var route_topic = $routeParams['topic'];
 	var route_consumer = $routeParams['consumer'];
 
-	var topic_delay_resource = $resource('/api/dashboard/detail/topics/:topic/delay', {}, {
-		query : {
-			method : "GET",
-			isArray : false
-		}
-	});
 	$scope.current_topic = route_topic == "_default" ? $scope.topic_briefs != undefined ? $scope.topic_briefs[0].topic : 'leo_test' : route_topic;
-	$scope.current_consumer = $routeParams['consumer'];
-	latest_message_resource = $resource('/api/dashboard', {}, {
-		get_topic_latest_msgs : {
-			method : 'GET',
-			isArray : true,
-			url : '/api/dashboard/topics/:topic/latest'
-		}
-	});
 	$scope.refresh_topic_latest = function() {
-		latest_message_resource.get_topic_latest_msgs({
-			'topic' : $scope.current_topic
-		}, function(data) {
-			$scope.topic_latest = data;
+		DashboardTopicService.get_topic_latest_msgs($scope.current_topic).then(function(result) {
+			$scope.topic_latest = result;
 		});
 	}
+
+	$scope.refreshTopicLatestDeadletters = function() {
+		DashboardTopicService.getLatestDeadletters($scope.current_topic, $scope.current_consumer).then(function(result) {
+			$scope.latestDeadletters = result;
+		});
+	}
+
+	$scope.downloadDeadletters = function() {
+		DashboardTopicService.downloadDeadletters($scope.current_topic, $scope.current_consumer, $scope.timeStart.getTime(), $scope.timeEnd.getTime());
+	}
+
 	DashboardTopicService.get_topic_briefs().then(function(result) {
 		$scope.topic_briefs = result;
 		$scope.topic = find($scope.current_topic, $scope.topic_briefs);
-		if ($scope.topic.storageType == 'kafka') {
-			$scope.trifecta_urls = DashboardTopicService.get_trifecta_urls();
-		} else if ($scope.topic.storageType = 'mysql') {
-			// ************** kibana urls **************** //
-			$scope.k_topic_produce_history = k_topic_produce_history($scope.topic.id, $sce);
-			$scope.k_consume_history = k_consumer_consume_history($scope.current_topic, $scope.current_consumer, $sce);
-			$scope.k_consume_process_history = k_consumer_process_history($scope.current_topic, $scope.current_consumer, $sce);
-			$scope.k_top_producer_current = k_top_producer_current($scope.current_topic, $sce);
-			$scope.k_bottom_producer_current = k_bottom_producer_current($scope.current_topic, $sce);
-			$scope.k_top_consumer_current = k_top_consumer_current($scope.current_topic, $sce);
-			$scope.k_bottom_consumer_current = k_bottom_consumer_current($scope.current_topic, $sce);
-			$scope.k_bottom_process_current = k_bottom_process_current($scope.current_topic, $sce);
-			$scope.k_max_did_current = k_max_did_current($scope.current_topic, $sce);
-			$scope.k_max_aid_current = k_max_aid_current($scope.current_topic, $sce);
+		DashboardTopicService.get_consumers_for_topic($scope.current_topic).then(function(result) {
+			$scope.consumers = result;
+			$scope.display_filtered_consumers = $scope.consumers;
+			$scope.current_consumer = route_consumer != null ? route_consumer : ($scope.consumers != null && $scope.consumers.length != 0) ? $scope.consumers[0].name : null;
 
-			// ************** latest messages **************** //
-			DashboardTopicService.get_topic_latest_msgs($scope.current_topic).then(function(result) {
-				$scope.topic_latest = result;
-			});
+			if ($scope.topic.storageType == 'kafka') {
+				$scope.trifecta_urls = DashboardTopicService.get_trifecta_urls();
+			} else if ($scope.topic.storageType = 'mysql') {
+				// ************** kibana urls **************** //
+				$scope.k_topic_produce_history = k_topic_produce_history($scope.topic.id, $sce);
+				$scope.k_consume_history = k_consumer_consume_history($scope.current_topic, $scope.current_consumer, $sce);
+				$scope.k_consume_process_history = k_consumer_process_history($scope.current_topic, $scope.current_consumer, $sce);
+				$scope.k_top_producer_current = k_top_producer_current($scope.current_topic, $sce);
+				$scope.k_bottom_producer_current = k_bottom_producer_current($scope.current_topic, $sce);
+				$scope.k_top_consumer_current = k_top_consumer_current($scope.current_topic, $sce);
+				$scope.k_bottom_consumer_current = k_bottom_consumer_current($scope.current_topic, $sce);
+				$scope.k_bottom_process_current = k_bottom_process_current($scope.current_topic, $sce);
+				$scope.k_max_did_current = k_max_did_current($scope.current_topic, $sce);
+				$scope.k_max_aid_current = k_max_aid_current($scope.current_topic, $sce);
 
-			// ************** consumer delays **************** //
-			$scope.consumers = DashboardTopicService.get_consumers_for_topic($scope.current_topic).then(function(result) {
-				$scope.consumers = result;
-				$scope.display_filtered_consumers = $scope.consumers;
-			});
-
-			$scope.get_consumer_delay_for_topic = function(topic_name, consumer_name) {
-				DashboardTopicService.get_consumer_delay_for_topic(topic_name, consumer_name).then(function(result) {
-					result.totalPriorityDelay = 0;
-					result.totalNonPriorityDelay = 0;
-					result.totalResendDelay = 0;
-					for (var i = 0; i < result.length; i++) {
-						result.totalPriorityDelay = result.totalPriorityDelay + result[i].priorityDelay;
-						result.totalNonPriorityDelay = result.totalNonPriorityDelay + result[i].nonPriorityDelay;
-						result.totalResendDelay = result.totalResendDelay + result[i].resendDelay;
-					}
-					$scope.consumer_delay = result;
+				// ************** latest messages **************** //
+				DashboardTopicService.get_topic_latest_msgs($scope.current_topic).then(function(result) {
+					$scope.topic_latest = result;
 				});
-			}
-			if ($scope.current_consumer != null) {
-				$scope.get_consumer_delay_for_topic($scope.current_topic, $scope.current_consumer);
-			}
 
-			$scope.display_topic_delay = [].concat($scope.topic_delay);
-		}
+				// ************** latest deadletters **************** //
+				if ($scope.current_consumer != null) {
+					DashboardTopicService.getLatestDeadletters($scope.current_topic, $scope.current_consumer).then(function(result) {
+						$scope.latestDeadletters = result;
+					});
+				} else {
+					$scope.latestDeadletters = [];
+				}
+
+				$scope.timeEnd = new Date();
+				$scope.timeStart = new Date($scope.timeEnd.getTime() - 3600 * 1000);
+
+				// ************** consumer delays **************** //
+
+				$scope.get_consumer_delay_for_topic = function(topic_name, consumer_name) {
+					DashboardTopicService.get_consumer_delay_for_topic(topic_name, consumer_name).then(function(result) {
+						result.totalPriorityDelay = 0;
+						result.totalNonPriorityDelay = 0;
+						result.totalResendDelay = 0;
+						for (var i = 0; i < result.length; i++) {
+							result.totalPriorityDelay = result.totalPriorityDelay + result[i].priorityDelay;
+							result.totalNonPriorityDelay = result.totalNonPriorityDelay + result[i].nonPriorityDelay;
+							result.totalResendDelay = result.totalResendDelay + result[i].resendDelay;
+						}
+						$scope.consumer_delay = result;
+					});
+				}
+				if ($scope.current_consumer != null) {
+					$scope.get_consumer_delay_for_topic($scope.current_topic, $scope.current_consumer);
+				}
+
+				$scope.display_topic_delay = [].concat($scope.topic_delay);
+			}
+		})
 	})
 
 	DashboardTopicService.set_current_topic($scope.current_topic);

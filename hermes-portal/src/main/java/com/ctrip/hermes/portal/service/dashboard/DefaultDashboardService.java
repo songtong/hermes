@@ -1,8 +1,11 @@
 package com.ctrip.hermes.portal.service.dashboard;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -19,6 +22,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.core.StreamingOutput;
+
+import org.apache.avro.generic.GenericRecord;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
@@ -39,13 +45,22 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
+import com.ctrip.hermes.core.utils.CollectionUtil;
+import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
+import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.queue.DeadLetter;
+import com.ctrip.hermes.metaservice.queue.DeadLetterDao;
+import com.ctrip.hermes.metaservice.queue.DeadLetterEntity;
+import com.ctrip.hermes.metaservice.queue.ListUtils;
 import com.ctrip.hermes.metaservice.queue.MessagePriority;
 import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
 import com.ctrip.hermes.metaservice.service.PartitionService;
@@ -59,6 +74,7 @@ import com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import io.netty.buffer.Unpooled;
 import kafka.api.OffsetRequest;
 import kafka.api.PartitionOffsetRequestInfo;
 import kafka.common.OffsetMetadataAndError;
@@ -81,7 +97,10 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private static final int CONSUMER_BACKLOG_CALCULATE_AWAITTIME_MINUTE = 1;
 
 	@Inject
-	private MessageQueueDao m_dao;
+	private MessageQueueDao m_messageDao;
+
+	@Inject
+	private DeadLetterDao m_deadletterDao;
 
 	@Inject
 	private DefaultPortalMetaService m_metaService;
@@ -326,7 +345,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			ConsumerGroup c = t.findConsumerGroup(consumer);
 			if (Storage.MYSQL.equals(t.getStorageType())) {
 				for (Partition p : t.getPartitions()) {
-					m_es.execute(new ConsumerBacklogCalculateTask(topic, c, p.getId(), latch, m_dao, consumerDelays));
+					m_es.execute(new ConsumerBacklogCalculateTask(topic, c, p.getId(), latch, m_messageDao, consumerDelays));
 				}
 				latch.await(CONSUMER_BACKLOG_CALCULATE_AWAITTIME_MINUTE, TimeUnit.MINUTES);
 				for (DelayDetail delay : consumerDelays) {
@@ -376,10 +395,10 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				Date latest = new Date(0);
 				for (Partition partition : m_partitionService.findPartitionsByTopic(topic.getId())) {
 					try {
-						MessagePriority msgPriority = m_dao.getLatestProduced(topicName, partition.getId(),
+						MessagePriority msgPriority = m_messageDao.getLatestProduced(topicName, partition.getId(),
 						      PortalConstants.PRIORITY_TRUE);
 						Date datePriority = msgPriority == null ? latest : msgPriority.getCreationDate();
-						MessagePriority msgNonPriority = m_dao.getLatestProduced(topicName, partition.getId(),
+						MessagePriority msgNonPriority = m_messageDao.getLatestProduced(topicName, partition.getId(),
 						      PortalConstants.PRIORITY_FALSE);
 
 						Date dateNonPriority = msgNonPriority == null ? latest : msgNonPriority.getCreationDate();
@@ -717,4 +736,185 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		return new BrokerQPSDetailView(brokerIp, m_elasticClient.getBrokerTopicDelivered(brokerIp, 50));
 	}
 
+	@Override
+	public List<DeadletterView> getLatestDeadLetter(String topic, String consumer, int count) throws DalException {
+		Topic theTopic = m_topicService.findTopicEntityByName(topic);
+
+		if (theTopic == null | theTopic.findConsumerGroup(consumer) == null || count <= 0) {
+			return null;
+		}
+
+		ConsumerGroup theConsumer = theTopic.findConsumerGroup(consumer);
+
+		@SuppressWarnings("unchecked")
+		List<DeadLetter>[] lists = new List[theTopic.getPartitions().size()];
+		for (int i = 0; i < theTopic.getPartitions().size(); i++) {
+			Partition partition = theTopic.getPartitions().get(i);
+			lists[i] = m_deadletterDao.findLatestByTpgAndCount(topic, partition.getId(), theConsumer.getId(), count,
+			      DeadLetterEntity.READSET_FULL);
+		}
+
+		List<DeadLetter> topK = ListUtils.getTopK(count, new Comparator<DeadLetter>() {
+
+			@Override
+			public int compare(DeadLetter o1, DeadLetter o2) {
+				return o1.getDeadDate().compareTo(o2.getDeadDate());
+			}
+		}, lists);
+
+		@SuppressWarnings("unchecked")
+		Collection<DeadletterView> collect = CollectionUtil.collect(topK, new Transformer() {
+
+			@Override
+			public Object transform(Object input) {
+				// TODO Auto-generated method stub
+				return new DeadletterView((DeadLetter) input);
+			}
+		});
+		return new ArrayList<>(collect);
+	}
+
+	public class DeadletterView {
+
+		private DeadLetter m_rawMessage;
+
+		private String m_attributesString;
+
+		private String m_payloadString;
+
+		public DeadletterView(DeadLetter msg) {
+			m_rawMessage = msg;
+			HermesPrimitiveCodec codec = new HermesPrimitiveCodec(Unpooled.wrappedBuffer(msg.getAttributes()));
+			m_attributesString = JSON.toJSONString(codec.readStringStringMap());
+			if (Codec.JSON.equals(msg.getCodecType().split(",")[0])) {
+				m_payloadString = JSON.toJSONString(PayloadCodecFactory.getCodecByType(msg.getCodecType()).decode(
+				      msg.getPayload(), Object.class));
+			} else if (Codec.AVRO.equals(msg.getCodecType().split(",")[0])) {
+				m_payloadString = JSON.toJSONString(PayloadCodecFactory.getCodecByType(msg.getCodecType())
+				      .decode(msg.getPayload(), GenericRecord.class).toString());
+			}
+		}
+
+		public String getAttributesString() {
+			return m_attributesString;
+		}
+
+		public String getPayloadString() {
+			return m_payloadString;
+		}
+
+		public DeadLetter getRawMessage() {
+			return m_rawMessage;
+		}
+
+	}
+
+	private List<DeadLetter> getLatestDeadLettersByEndtimeAndTpg(String topic, int partition, int consumerId,
+	      Date endTime, int count) throws DalException {
+		return m_deadletterDao.findLatestByEndtimeAndTpg(topic, partition, consumerId, endTime, count,
+		      DeadLetterEntity.READSET_FULL);
+	}
+
+	private List<DeadLetter> getDeadLettersByEndidAndStarttimeAndTpg(String topic, int partition, int consumerId,
+	      long endId, Date startTime, int count) throws DalException {
+		return m_deadletterDao.findLatestByEndidAndStarttimeAndTpg(topic, partition, consumerId, endId, startTime, count,
+		      DeadLetterEntity.READSET_FULL);
+
+	}
+
+	@Override
+	public StreamingOutput getDeadLetterStreamByTimespan(String topic, String consumer, final Date timeStart,
+	      final Date timeEnd, final long sleepIntelval) {
+
+		final Topic theTopic = m_topicService.findTopicEntityByName(topic);
+
+		if (theTopic == null || theTopic.findConsumerGroup(consumer) == null || timeEnd.before(timeStart)
+		      || timeStart.after(new Date(System.currentTimeMillis()))) {
+			return null;
+		}
+
+		final ConsumerGroup theConsumer = theTopic.findConsumerGroup(consumer);
+
+		StreamingOutput stream = new StreamingOutput() {
+			@Override
+			public void write(OutputStream output) {
+				OutputStreamWriter out = new OutputStreamWriter(output);
+
+				Map<Integer, Long> latestIds = new HashMap<>();
+				try {
+					for (Partition partition : theTopic.getPartitions()) {
+						List<DeadLetter> latestDeadLetters = getLatestDeadLettersByEndtimeAndTpg(theTopic.getName(),
+						      partition.getId(), theConsumer.getId(), timeEnd, 1);
+						if (latestDeadLetters == null || latestDeadLetters.isEmpty()) {
+							latestIds.put(partition.getId(), null);
+						} else {
+							latestIds.put(partition.getId(), latestDeadLetters.get(0).getId());
+						}
+					}
+				} catch (DalException e) {
+					log.error(String.format("Failed to get deadletters from db for topic:{}, consumer:{}",
+					      theTopic.getName(), theConsumer.getName()));
+					throw new RuntimeException(String.format("Failed to get deadletters from db for topic:{}, consumer:{}",
+					      theTopic.getName(), theConsumer.getName()));
+				}
+
+				try {
+					out.write(String.format("%s,%s,%s,%s,%s,%s\n", "id", "ref_key", "payload", "partition_key",
+					      "creation_date", "dead_date").toString());
+
+					long counter = 0;
+					int maxFlushSize = 1000;
+					for (Partition partition : theTopic.getPartitions()) {
+						while (latestIds.get(partition.getId()) != null) {
+							List<DeadLetter> deadLetters = getDeadLettersByEndidAndStarttimeAndTpg(theTopic.getName(),
+							      partition.getId(), theConsumer.getId(), latestIds.get(partition.getId()), timeStart,
+							      maxFlushSize);
+							if (deadLetters != null && !deadLetters.isEmpty()) {
+								for (DeadLetter deadLetter : deadLetters) {
+									String payload = null;
+									if (Codec.JSON.equals(deadLetter.getCodecType().split(",")[0])) {
+										payload = JSON.toJSONString(PayloadCodecFactory.getCodecByType(deadLetter.getCodecType())
+										      .decode(deadLetter.getPayload(), Object.class));
+									} else if (Codec.AVRO.equals(deadLetter.getCodecType().split(",")[0])) {
+										payload = JSON.toJSONString(PayloadCodecFactory.getCodecByType(deadLetter.getCodecType())
+										      .decode(deadLetter.getPayload(), GenericRecord.class).toString());
+									}
+									out.write(String.format("%s,%s,%s,%s,%s,%s\n", counter, deadLetter.getRefKey(), payload,
+									      "partition_key", deadLetter.getCreationDate(), deadLetter.getDeadDate()));
+									counter++;
+								}
+
+								out.flush();
+
+								if (deadLetters.size() < maxFlushSize) {
+									latestIds.put(partition.getId(), null);
+								} else {
+									latestIds.put(partition.getId(), deadLetters.get(deadLetters.size() - 1).getId() - 1);
+								}
+							} else {
+								latestIds.put(partition.getId(), null);
+							}
+							
+							try {
+								Thread.sleep(sleepIntelval);
+							} catch (InterruptedException e) {
+								// do nothing
+							}
+						}
+
+					}
+					
+					out.flush();
+				} catch (IOException e) {
+					throw new RuntimeException("Download failed: " + e.getMessage());
+				} catch (DalException e) {
+					log.error(String.format("Failed to get deadletters from db for topic:{}, consumer:{}",
+					      theTopic.getName(), theConsumer.getName()));
+					throw new RuntimeException(String.format("Failed to get deadletters from db for topic:{}, consumer:{}",
+					      theTopic.getName(), theConsumer.getName()));
+				}
+			}
+		};
+		return stream;
+	}
 }

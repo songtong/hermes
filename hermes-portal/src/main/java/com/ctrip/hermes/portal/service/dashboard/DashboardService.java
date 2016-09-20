@@ -5,11 +5,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.core.StreamingOutput;
+
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.portal.resource.view.BrokerQPSBriefView;
 import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
+import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService.DeadletterView;
 
 public interface DashboardService {
 
@@ -38,7 +42,12 @@ public interface DashboardService {
 	public BrokerQPSDetailView getBrokerReceivedDetailQPS(String brokerIp);
 
 	public BrokerQPSDetailView getBrokerDeliveredDetailQPS(String brokerIp);
-	
+
 	public Map<String, Map<String, Map<String, Long>>> getTopicOffsetLags();
+
+	public List<DeadletterView> getLatestDeadLetter(String topic, String consumer, int count) throws DalException;
+
+	public StreamingOutput getDeadLetterStreamByTimespan(String topic, String consumer, Date timeStart, Date timeEnd,
+	      long sleepIntelval);
 
 }
