@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +67,6 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 
 	@Inject
 	private SystemClockService m_systemClockService;
-
-	private AtomicLong m_lastLogSendReqToCatTime = new AtomicLong(0);
 
 	@Override
 	public List<CommandType> commandTypes() {
@@ -139,13 +136,8 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 	}
 
 	private void logReqToCat(SendMessageCommand reqCmd) {
-		long now = m_systemClockService.now();
-		if (now - m_lastLogSendReqToCatTime.get() > 60 * 1000L) {
-			Cat.logEvent(CatConstants.TYPE_SEND_CMD + reqCmd.getHeader().getType().getVersion(), reqCmd.getTopic() + "-"
-			      + reqCmd.getPartition());
-
-			m_lastLogSendReqToCatTime.set(now);
-		}
+		CatUtil.logEventPeriodically(CatConstants.TYPE_SEND_CMD + reqCmd.getHeader().getType().getVersion(),
+		      reqCmd.getTopic() + "-" + reqCmd.getPartition());
 	}
 
 	private void bizLog(CommandProcessorContext ctx, Map<Integer, MessageBatchWithRawData> rawBatches, int partition) {

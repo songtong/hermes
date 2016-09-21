@@ -3,7 +3,6 @@ package com.ctrip.hermes.broker.transport.command.processor;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +25,8 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageCommandV2;
 import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.StringUtils;
-import com.dianping.cat.Cat;
 
 public class PullMessageCommandProcessor implements CommandProcessor {
 
@@ -44,8 +43,6 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 
 	@Inject
 	private MetaService m_metaService;
-
-	private AtomicLong m_lastLogPullReqToCatTime = new AtomicLong(0);
 
 	@Override
 	public List<CommandType> commandTypes() {
@@ -83,13 +80,8 @@ public class PullMessageCommandProcessor implements CommandProcessor {
 	}
 
 	private void logReqToCat(CommandProcessorContext ctx, Tpg tpg) {
-		long now = System.currentTimeMillis();
-		if (now - m_lastLogPullReqToCatTime.get() > 60 * 1000L) {
-			Cat.logEvent(CatConstants.TYPE_PULL_CMD + ctx.getCommand().getHeader().getType().getVersion(), tpg.getTopic()
-			      + "-" + tpg.getPartition() + "-" + tpg.getGroupId());
-
-			m_lastLogPullReqToCatTime.set(now);
-		}
+		CatUtil.logEventPeriodically(CatConstants.TYPE_PULL_CMD + ctx.getCommand().getHeader().getType().getVersion(),
+		      tpg.getTopic() + "-" + tpg.getPartition() + "-" + tpg.getGroupId());
 	}
 
 	private void logDebug(String debugInfo, long correlationId, Tpg tpg, Exception e) {

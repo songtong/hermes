@@ -37,9 +37,9 @@ import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
 import com.ctrip.hermes.core.transport.netty.MagicNumberPrepender;
 import com.ctrip.hermes.core.transport.netty.NettyDecoder;
 import com.ctrip.hermes.core.transport.netty.NettyEncoder;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.dianping.cat.Cat;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -62,8 +62,6 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-	private ConcurrentMap<CommandType, Long> m_catCmdVersionLastLogTimes = new ConcurrentHashMap<>();
-
 	@Override
 	public boolean writeCommand(Endpoint endpoint, Command cmd) {
 		if (m_closed.get()) {
@@ -72,16 +70,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 
 		CommandType type = cmd.getHeader().getType();
 		if (type != null) {
-			long now = System.currentTimeMillis();
-			if (!m_catCmdVersionLastLogTimes.containsKey(type)) {
-				m_catCmdVersionLastLogTimes.putIfAbsent(type, 0L);
-			}
-			Long lastLogTime = m_catCmdVersionLastLogTimes.get(type);
-
-			if (now - lastLogTime >= 60000 && m_catCmdVersionLastLogTimes.replace(type, lastLogTime, now)) {
-				Cat.logEvent(CatConstants.TYPE_HERMES_CMD_VERSION, type + "-SEND");
-			}
-
+			CatUtil.logEventPeriodically(CatConstants.TYPE_HERMES_CMD_VERSION, type + "-SEND");
 		}
 
 		lock.readLock().lock();

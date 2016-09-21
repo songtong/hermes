@@ -5,14 +5,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import com.ctrip.framework.vi.component.ComponentManager;
 import com.ctrip.framework.vi.metrics.MetricsCollector;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
-import com.dianping.cat.Cat;
+import com.ctrip.hermes.core.utils.CatUtil;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -22,8 +21,6 @@ public enum StatusMonitor {
 	INSTANCE;
 
 	private Map<String, BlockingQueue<?>> m_commandProcessorQueues = new ConcurrentHashMap<>();
-
-	private ConcurrentMap<CommandType, Long> m_catCmdVersionLastLogTimes = new ConcurrentHashMap<>();
 
 	private StatusMonitor() {
 		registerVIComponents();
@@ -44,15 +41,7 @@ public enum StatusMonitor {
 		MetricsCollector.getCollector().record("commandReceived", tags);
 
 		if (type != null) {
-			long now = System.currentTimeMillis();
-			if (!m_catCmdVersionLastLogTimes.containsKey(type)) {
-				m_catCmdVersionLastLogTimes.putIfAbsent(type, 0L);
-			}
-			Long lastLogTime = m_catCmdVersionLastLogTimes.get(type);
-
-			if (now - lastLogTime >= 60000 && m_catCmdVersionLastLogTimes.replace(type, lastLogTime, now)) {
-				Cat.logEvent(CatConstants.TYPE_HERMES_CMD_VERSION, type.toString() + "-RCV");
-			}
+			CatUtil.logEventPeriodically(CatConstants.TYPE_HERMES_CMD_VERSION, type.toString() + "-RCV");
 		}
 	}
 
