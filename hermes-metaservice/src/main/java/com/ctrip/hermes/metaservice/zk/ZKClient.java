@@ -111,9 +111,6 @@ public class ZKClient implements Initializable {
 	}
 
 	public boolean pauseAndSwitchPrimaryEnsemble() {
-		HermesClientCnxnSocketNIO.pause();
-		log.info("Zookeeper client paused.");
-
 		ZookeeperEnsemble newPrimaryEnsemble = getPrimaryEnsemble();
 		synchronized (this) {
 			ZookeeperEnsemble oldPrimaryEnsemble = m_primaryZookeeperEnsemble.get();
@@ -121,9 +118,11 @@ public class ZKClient implements Initializable {
 				log.info("Zookeeper ensemble's connection string is unchanged({}).", JSON.toJSONString(oldPrimaryEnsemble));
 				return false;
 			} else {
+				HermesClientCnxnSocketNIO.pause();
+				log.info("Zookeeper client paused.");
+				m_primaryZookeeperEnsemble.set(newPrimaryEnsemble);
 				log.info("Zookeeper ensemble's connection string changed from {} to {}.",
 				      JSON.toJSONString(oldPrimaryEnsemble), JSON.toJSONString(newPrimaryEnsemble));
-				m_primaryZookeeperEnsemble.set(newPrimaryEnsemble);
 				return true;
 			}
 		}
