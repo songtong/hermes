@@ -178,15 +178,15 @@
 					<div class="modal-body">
 						<form class="form-horizontal">
 							<div class="form-group">
-								<label class="col-sm-3 control-label">名称</label>
+								<label class="col-sm-3 control-label">Host</label>
 								<div class="col-sm-9">
-									<input class="form-control" placeholder="Name" ng-model="newServer.id">
+									<input class="form-control" placeholder="Host" ng-model="newServer.host" ng-blur="newServer.id=newServer.idc.toLowerCase()+'-'+newServer.host">
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">Host</label>
+								<label class="col-sm-3 control-label">名称</label>
 								<div class="col-sm-9">
-									<input class="form-control" placeholder="Host" ng-model="newServer.host">
+									<input class="form-control" placeholder="Name" ng-model="newServer.id">
 								</div>
 							</div>
 							<div class="form-group">
@@ -223,6 +223,12 @@
 					<div class="modal-body">
 						<form class="form-horizontal">
 							<div class="form-group">
+								<label for="inputEndpointHost" class="col-sm-3 control-label">Host</label>
+								<div class="col-sm-9">
+									<input class="form-control" id="inputEndpointHost" placeholder="Host" ng-model="newEndpoint.host" ng-blur="newEndpoint.id=newEndpoint.idc.toLowerCase()+'-'+newEndpoint.host">
+								</div>
+							</div>
+							<div class="form-group">
 								<label for="inputEndpointName" class="col-sm-3 control-label">名称</label>
 								<div class="col-sm-9">
 									<input class="form-control" id="inputEndpointName" placeholder="Name" ng-model="newEndpoint.id">
@@ -232,12 +238,6 @@
 								<label for="inputEndpointType" class="col-sm-3 control-label">类型</label>
 								<div class="col-sm-9">
 									<select class="form-control" id="inputEndpointType" placeholder="Type" ng-model="newEndpoint.type" ng-options="type for type in endpointsTypes"></select>
-								</div>
-							</div>
-							<div class="form-group">
-								<label for="inputEndpointHost" class="col-sm-3 control-label">Host</label>
-								<div class="col-sm-9">
-									<input class="form-control" id="inputEndpointHost" placeholder="Host" ng-model="newEndpoint.host">
 								</div>
 							</div>
 							<div class="form-group">
