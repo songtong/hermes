@@ -105,6 +105,8 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 		$scope.currentIdc = idc;
 		$scope.newEndpoint.idc = idc.name;
 		$scope.newServer.idc = idc.name;
+		$scope.newEndpoint.id = idc.name.toLowerCase() + "-" + $scope.newEndpoint.host;
+		$scope.newServer.id = idc.name.toLowerCase() + "-" + $scope.newServer.host;
 	}
 
 	function setCurrentServers(idcName) {

@@ -7,16 +7,18 @@
 <a:layout>
 	<link href="${model.webapp}/css/xeditable.css" type="text/css" rel="stylesheet">
 	<div class="container" ng-app="hermes-endpoint" ng-controller="endpoint-controller" style="margin-top: 20px">
-		<ul class="nav nav-tabs">
+		<div class="row">
+		<ul class="nav nav-tabs col-md-8">
 			<li ng-repeat="groupType in groupTypes" role="presentation" ng-class="{active:groupType==currentGroupType}"><a href="#" ng-click="switchCurrentGroupType(groupType)">{{groupType}} <span class="badge">{{groupTypeToEndpointMap[groupType].length}}</span></a></li>
 		</ul>
 
-		<form class="form-inline" role="form" style="margin-top: 20px">
+		<form class="form-inline col-md-3 col-md-offset-1" role="form">
 			<div class="form-group">
-				<input id="searchHost" ng-model="searchHost" type="text" class="form-control" placeholder="Search: Accurate Host" style="width: 400px">
+				<input id="searchHost" ng-model="searchHost" type="text" class="form-control" placeholder="Search: Accurate Host" >
 			</div>
 			<button type="button" class="btn btn-sm btn-success" ng-click="searchByip(searchHost)">GO!</button>
 		</form>
+		</div>
 
 
 
