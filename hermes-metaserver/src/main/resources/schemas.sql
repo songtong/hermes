@@ -310,7 +310,13 @@ CREATE TABLE `idc` (
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='idc信息'
 
-
-
-
-
+CREATE TABLE `zookeeper_ensemble` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `name` varchar(128) NOT NULL DEFAULT '' COMMENT 'zk集群名称',
+  `connection_string` varchar(2048) NOT NULL DEFAULT '' COMMENT 'zk连接字符串',
+  `idc` varchar(50) NOT NULL DEFAULT '' COMMENT '机房',
+  `primary` bit(1) NOT NULL DEFAULT b'0' COMMENT 'is primary',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'changed time',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='zookeeper信息';

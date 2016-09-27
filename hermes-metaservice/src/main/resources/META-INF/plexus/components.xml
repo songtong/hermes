@@ -22,6 +22,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.metaservice.service.ZookeeperEnsembleService</role>
+			<implementation>com.ctrip.hermes.metaservice.service.DefaultZookeeperEnsembleService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.model.ZookeeperEnsembleDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaservice.zk.ZKConfig</role>
 			<implementation>com.ctrip.hermes.metaservice.zk.ZKConfig</implementation>
 			<requirements>
@@ -36,6 +45,9 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperEnsembleService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -330,6 +342,15 @@
 			</configuration>
 		</component>
 		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>zookeeper-ensemble</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>zookeeper_ensemble</physical-table-name>
+				<data-source-name>fxhermesmetadb</data-source-name>
+			</configuration>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.metaservice.model.AppDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.AppDao</implementation>
 			<requirements>
@@ -494,6 +515,15 @@
 		<component>
 			<role>com.ctrip.hermes.metaservice.model.IdcDao</role>
 			<implementation>com.ctrip.hermes.metaservice.model.IdcDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.metaservice.model.ZookeeperEnsembleDao</role>
+			<implementation>com.ctrip.hermes.metaservice.model.ZookeeperEnsembleDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

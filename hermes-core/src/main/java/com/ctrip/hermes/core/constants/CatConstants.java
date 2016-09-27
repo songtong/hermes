@@ -11,6 +11,7 @@ public interface CatConstants {
 	public static final String TYPE_REMOTE_CALL = "RemoteCall";
 
 	public static final String TYPE_MESSAGE_DELIVER_ELAPSE = "Message.Deliver.Elapse";
+	public static final String TYPE_MESSAGE_DELIVER_DB = "Message.Deliver.DB.";
 
 	public static final String TYPE_MESSAGE_DELIVER_BY_SAFE = "Message.Deliver.SafeTrigger-";
 
@@ -27,6 +28,8 @@ public interface CatConstants {
 	public static final String TYPE_MESSAGE_CONSUMED = "Message.Consumed";
 
 	public static final String TYPE_MESSAGE_PRODUCE_ERROR = "Message.Produce.Error";
+
+	public static final String TYPE_MESSAGE_PRODUCE_QUEUE_EXPIRED = "Message.Produce.Queue.Expired";
 
 	public static final String TYPE_MESSAGE_PRODUCE_ELAPSE = "Message.Produce.Elapse";
 
@@ -57,6 +60,8 @@ public interface CatConstants {
 	public static final String TYPE_MESSAGE_BROKER_FLUSH = "Message.Broker.Flush";
 
 	public static final String TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE = "Message.Broker.Produce.Elapse";
+
+	public static final String TYPE_MESSAGE_BROKER_PRODUCE_DB = "Message.Broker.Produce.DB.";
 
 	public static final String TYPE_MESSAGE_CONSUME_ACK_TRANSPORT = "Message.Consume.Ack.Transport";
 

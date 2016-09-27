@@ -73,5 +73,6 @@
 			<property name='request.required.acks' value='1' />
 		</datasource>
 	</storage>
-
+	<zookeeper-ensemble id="z1" idc="JQ" connection-string="127.0.0.1:2181" primary="true"/>
+	<zookeeper-ensemble id="z2" idc="OY" connection-string="127.0.0.1:2182" primary="false"/>
 </meta>

@@ -5,7 +5,6 @@ import io.netty.channel.Channel;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +25,9 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v5.PullMessageAckCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.PullMessageCommandV5;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.dianping.cat.Cat;
 
 public class PullMessageCommandProcessorV5 implements CommandProcessor {
 
@@ -45,8 +44,6 @@ public class PullMessageCommandProcessorV5 implements CommandProcessor {
 
 	@Inject
 	private MetaService m_metaService;
-
-	private AtomicLong m_lastLogPullReqToCatTime = new AtomicLong(0);
 
 	@Override
 	public List<CommandType> commandTypes() {
@@ -111,13 +108,8 @@ public class PullMessageCommandProcessorV5 implements CommandProcessor {
 	}
 
 	private void logReqToCat(PullMessageCommandV5 reqCmd) {
-		long now = System.currentTimeMillis();
-		if (now - m_lastLogPullReqToCatTime.get() > 60 * 1000L) {
-			Cat.logEvent(CatConstants.TYPE_PULL_CMD + reqCmd.getHeader().getType().getVersion(), reqCmd.getTopic() + "-"
-			      + reqCmd.getPartition() + "-" + reqCmd.getGroupId());
-
-			m_lastLogPullReqToCatTime.set(now);
-		}
+		CatUtil.logEventPeriodically(CatConstants.TYPE_PULL_CMD + reqCmd.getHeader().getType().getVersion(),
+		      reqCmd.getTopic() + "-" + reqCmd.getPartition() + "-" + reqCmd.getGroupId());
 	}
 
 	private PullMessageTask createPullMessageTask(PullMessageCommandV5 cmd, Lease brokerLease, Channel channel,

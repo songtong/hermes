@@ -8,8 +8,16 @@
 		<entity-ref name="app" type="map" names="apps" />
 		<entity-ref name="server" type="map" names="servers" />
 		<entity-ref name="idc" type="map" names="idcs" />
+		<entity-ref name="zookeeper-ensemble" type="map" names="zookeeper-ensembles" />
 		<attribute name="version" value-type="long" />
 		<attribute name="id" value-type="long" />
+	</entity>
+
+	<entity name="zookeeper-ensemble">
+		<attribute name="id" value-type="String" key="true"/>
+		<attribute name="idc" value-type="String" />
+		<attribute name="connection-string" value-type="String" />
+		<attribute name="primary" value-type="boolean" default-value="false"/>
 	</entity>
 
 	<entity name="consumer-group">

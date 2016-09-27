@@ -15,6 +15,7 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.meta.entity.ZookeeperEnsemble;
 
 /**
  * 
@@ -66,4 +67,6 @@ public interface MetaService {
 	Offset findMessageOffsetByTime(String topic, int partition, long time);
 
 	Map<Integer, Offset> findMessageOffsetByTime(String topicName, long time);
+
+	List<ZookeeperEnsemble> listAllZookeeperEnsemble();
 }

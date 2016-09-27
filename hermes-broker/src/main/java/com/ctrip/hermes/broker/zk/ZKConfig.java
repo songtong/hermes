@@ -19,10 +19,6 @@ public class ZKConfig {
 		return 3000;
 	}
 
-	public String getZkConnectionString() {
-		return env.getGlobalConfig().getProperty("meta.zk.connectionString");
-	}
-
 	public int getZkCloseWaitMillis() {
 		return 1000;
 	}
@@ -32,11 +28,11 @@ public class ZKConfig {
 	}
 
 	public int getSleepMsBetweenRetries() {
-		return 1000;
+		return 100;
 	}
 
 	public int getZkRetries() {
-		return Integer.MAX_VALUE;
+		return 3;
 	}
 
 	public int getZkSessionTimeoutMillis() {

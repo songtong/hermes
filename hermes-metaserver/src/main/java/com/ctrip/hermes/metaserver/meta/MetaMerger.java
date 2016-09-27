@@ -14,6 +14,7 @@ import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Server;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.meta.entity.ZookeeperEnsemble;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
 import com.ctrip.hermes.metaserver.commons.Constants;
 
@@ -21,7 +22,8 @@ public class MetaMerger {
 
 	private final static Logger log = LoggerFactory.getLogger(MetaMerger.class);
 
-	public Meta merge(Meta base, List<Server> newServers, Map<String, Map<Integer, Endpoint>> newPartition2Endpoint) {
+	public Meta merge(Meta base, List<Server> newServers, Map<String, Map<Integer, Endpoint>> newPartition2Endpoint,
+	      List<ZookeeperEnsemble> zookeeperEnsembles) {
 		Meta newMeta;
 		try {
 			newMeta = DefaultSaxParser.parse(base.toString());
@@ -33,6 +35,13 @@ public class MetaMerger {
 			newMeta.getServers().clear();
 			for (Server s : newServers) {
 				newMeta.addServer(s);
+			}
+		}
+		if (CollectionUtil.isNotEmpty(zookeeperEnsembles)) {
+			newMeta.getZookeeperEnsembles().clear();
+			;
+			for (ZookeeperEnsemble zookeeperEnsemble : zookeeperEnsembles) {
+				newMeta.getZookeeperEnsembles().put(zookeeperEnsemble.getId(), zookeeperEnsemble);
 			}
 		}
 

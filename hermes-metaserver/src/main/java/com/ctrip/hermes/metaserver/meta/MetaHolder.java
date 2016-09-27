@@ -181,7 +181,7 @@ public class MetaHolder implements Initializable {
 		m_idcs.set(idcs == null ? new HashMap<String, Idc>() : idcs);
 	}
 
-	public  Map<String, Idc> getIdcs() {
+	public Map<String, Idc> getIdcs() {
 		return m_idcs.get();
 	}
 
@@ -220,7 +220,8 @@ public class MetaHolder implements Initializable {
 			public void run() {
 				try {
 					long start = System.currentTimeMillis();
-					Meta newMeta = m_metaMerger.merge(m_baseCache.get(), m_metaServerListCache.get(), m_endpointCache.get());
+					Meta newMeta = m_metaMerger.merge(m_baseCache.get(), m_metaServerListCache.get(), m_endpointCache.get(),
+					      m_zkClient.getZookeeperEnsembles());
 					MetaInfo metaInfo = fetchLatestMetaInfo();
 
 					if (PlexusComponentLocator.lookup(ClusterStateHolder.class).getRole() == Role.LEADER) {

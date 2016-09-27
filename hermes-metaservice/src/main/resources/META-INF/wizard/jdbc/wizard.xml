@@ -5,7 +5,7 @@
          <driver>com.mysql.jdbc.Driver</driver>
          <url>jdbc:mysql://localhost:3306/fxhermesmetadb</url>
          <user>root</user>
-         <password>~{f4f8f0d0f18040f0f1f5fa8e8660d}</password>
+         <password>root</password>
          <properties>useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</properties>
       </datasource>
       <group name="meta" package="com.ctrip.hermes.metaservice.model">
@@ -28,6 +28,7 @@
          <table name="consumer_monitor_config"/>
          <table name="producer_monitor_config"/>
          <table name="idc"/>
+         <table name="zookeeper_ensemble"/>
       </group>
    </jdbc>
 </wizard>

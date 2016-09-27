@@ -31,6 +31,7 @@ import com.ctrip.hermes.core.selector.SelectorCallback;
 import com.ctrip.hermes.core.selector.TriggerResult;
 import com.ctrip.hermes.core.selector.TriggerResult.State;
 import com.ctrip.hermes.core.utils.CatUtil;
+import com.ctrip.hermes.meta.entity.Partition;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Transaction;
 
@@ -202,6 +203,8 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 
 				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime, count, null,
 				      Transaction.SUCCESS);
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_DB + findDb(tpg.getTopic(), tpg.getPartition()),
+				      tpg.getTopic(), startTime, count, null, Transaction.SUCCESS);
 
 				logSelecotrMetric(pullTask.getTpg(), callbackCtx, count);
 
@@ -215,6 +218,11 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 			someErrorOccurred = true;
 			return new Pair<>(someDataResponsed, someErrorOccurred);
 		}
+	}
+
+	private String findDb(String topic, int partition) {
+		Partition p = m_metaService.findPartitionByTopicAndPartition(topic, partition);
+		return p.getReadDatasource();
 	}
 
 	private void logSelecotrMetric(Tpg tpg, CallbackContext callbackCtx, int count) {

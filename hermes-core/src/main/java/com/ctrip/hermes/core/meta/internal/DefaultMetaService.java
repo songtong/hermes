@@ -36,6 +36,7 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.meta.entity.ZookeeperEnsemble;
 import com.ctrip.hermes.meta.transform.BaseVisitor2;
 
 /**
@@ -374,6 +375,11 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public Map<Integer, Offset> findMessageOffsetByTime(String topic, long time) {
 		return getMetaProxy().findMessageOffsetByTime(topic, -1, time);
+	}
+
+	@Override
+	public List<ZookeeperEnsemble> listAllZookeeperEnsemble() {
+		return new ArrayList<>(getMeta().getZookeeperEnsembles().values());
 	}
 
 }
