@@ -14,9 +14,12 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
 import com.ctrip.hermes.core.result.SendResult;
+import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Storage;
 
 @Named(type = ProducerPipelineSinkManager.class)
-public class DefaultProducerPipelineSinkManager extends ContainerHolder implements Initializable, ProducerPipelineSinkManager {
+public class DefaultProducerPipelineSinkManager extends ContainerHolder implements Initializable,
+      ProducerPipelineSinkManager {
 
 	@Inject
 	private MetaService m_meta;
@@ -25,10 +28,12 @@ public class DefaultProducerPipelineSinkManager extends ContainerHolder implemen
 
 	@Override
 	public PipelineSink<Future<SendResult>> getSink(String topic) {
-		String type = m_meta.findEndpointTypeByTopic(topic);
+		Storage storage = m_meta.findStorageByTopic(topic);
+		String endpointType = Storage.KAFKA.equals(storage.getType()) ? Endpoint.KAFKA : //
+		      Storage.MYSQL.equals(storage.getType()) ? Endpoint.BROKER : null;
 
-		if (m_sinks.containsKey(type)) {
-			return m_sinks.get(type);
+		if (m_sinks.containsKey(endpointType)) {
+			return m_sinks.get(endpointType);
 		} else {
 			throw new IllegalArgumentException(String.format("Unknown message sink for topic %s", topic));
 		}

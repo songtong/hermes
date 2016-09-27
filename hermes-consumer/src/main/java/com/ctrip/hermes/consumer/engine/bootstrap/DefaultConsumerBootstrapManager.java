@@ -1,7 +1,5 @@
 package com.ctrip.hermes.consumer.engine.bootstrap;
 
-import java.util.Arrays;
-
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -24,10 +22,8 @@ public class DefaultConsumerBootstrapManager implements ConsumerBootstrapManager
 
 		if (Storage.KAFKA.equals(topic.getStorageType())) {
 			bootstrap = m_registry.findConsumerBootstrap(Endpoint.KAFKA);
-		} else if (Arrays.asList(Endpoint.BROKER, Endpoint.KAFKA).contains(topic.getEndpointType())) {
-			bootstrap = m_registry.findConsumerBootstrap(topic.getEndpointType());
-		} else {
-			throw new IllegalArgumentException(String.format("Unknown endpoint type: %s", topic.getEndpointType()));
+		} else if (Storage.MYSQL.equals(topic.getStorageType())) {
+			bootstrap = m_registry.findConsumerBootstrap(Endpoint.BROKER);
 		}
 
 		if (bootstrap == null) {
