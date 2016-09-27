@@ -108,7 +108,7 @@ function decodeCodec(theObject) {
 
 function encodeCodec(theObject) {
 	theObject.codecType = theObject.baseCodecType;
-	if (theObject.needCompress || theObject.needCompress == 'true') {
+	if (theObject.needCompress == true || theObject.needCompress == 'true') {
 		theObject.codecType = theObject.codecType + ',' + theObject.compressionType;
 		if (theObject.compressionType == 'deflater') {
 			theObject.codecType = theObject.codecType + '(' + theObject.compressionLevel + ')';

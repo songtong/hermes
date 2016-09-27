@@ -270,6 +270,7 @@
 		<var name="message-ids" value-type="Long[]" />
 		<var name="start-time" value-type="Date" />
 		<var name="end-time" value-type="Date" />
+		<var name="batch-size" value-type="int" />
 		<member name="count-of-time-range" value-type="int" select-expr="COUNT(*)" all="false" />
 
 		<readsets>
@@ -293,6 +294,53 @@
         		FROM <TABLE/>
         		WHERE <FIELD name='dead-date'/> >= ${start-time}
         		AND <FIELD name='dead-date'/> <= ${end-time}
+        		]]>
+				</statement>
+			</query>
+			<query name="find-latest-by-tpg-and-count" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group-id" />
+				<param name="batch-size" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='group-id'/> = ${group-id}
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT ${batch-size}
+        		]]>
+				</statement>
+			</query>
+			<query name="find-latest-by-endtime-and-tpg" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group-id" />
+				<param name="end-time" />
+				<param name="batch-size" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='group-id'/> = ${group-id}
+        		AND <FIELD name='dead-date'/> <= ${end-time}
+        		ORDER BY <FIELD name='id'/> DESC 
+        		LIMIT ${batch-size}
+        		]]>
+				</statement>
+			</query>
+			<query name="find-latest-by-endid-and-starttime-and-tpg" type="SELECT" multiple="true">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group-id" />
+				<param name="id"/>
+				<param name="start-time" />
+				<param name="batch-size" />
+				<statement><![CDATA[
+				SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='group-id'/> = ${group-id}
+        		AND <FIELD name='id'/> <= ${id}
+        		AND <FIELD name='dead-date'/> >= ${start-time}
+        		ORDER BY <FIELD name='id'/> DESC 
+        		LIMIT ${batch-size}
         		]]>
 				</statement>
 			</query>

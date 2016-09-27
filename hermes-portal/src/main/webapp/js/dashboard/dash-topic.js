@@ -1,4 +1,4 @@
-var dashtopic = angular.module("dash-topic", [ 'ngResource', 'ui.bootstrap', 'smart-table', 'ngRoute' ]);
+var dashtopic = angular.module("dash-topic", [ 'ngResource', 'ui.bootstrap', 'smart-table', 'ngRoute', 'user' ]);
 
 dashtopic.config(function($routeProvider) {
 	$routeProvider.when('/detail/:topic/:consumer?', {
@@ -6,6 +6,9 @@ dashtopic.config(function($routeProvider) {
 		controller : 'dash-topic-controller'
 	}).when('/latest/:topic', {
 		templateUrl : '/jsp/console/dashboard/dash-topic-detail-latest.html',
+		controller : 'dash-topic-controller'
+	}).when('/deadletter/latest/:topic/:consumer', {
+		templateUrl : '/jsp/console/dashboard/dash-topic-deadletter.html',
 		controller : 'dash-topic-controller'
 	}).when('/consume/:topic/:consumer', {
 		templateUrl : '/jsp/console/dashboard/dash-topic-consume.html',
@@ -79,9 +82,52 @@ dashtopic.service("DashboardTopicService", [ '$resource', '$q', function($resour
 			method : 'GET',
 			isArray : true,
 			url : '/api/dashboard/:topic/:consumer/delay'
+		},
+		getLatestDeadletters : {
+			method : 'GET',
+			isArray : true,
+			url : '/api/dashboard/deadletter/latest/:topic/:consumer'
+		},
+		downloadDeadletters : {
+			method : 'GET',
+			isArray : true,
+			url : '/api/dashboard/deadletter/download/:topic/:consumer',
+			params : {
+				topic : '@topic',
+				consumer : '@consumer',
+				timeStart : '@timeStart',
+				timeEnd : '@timeEnd'
+			}
+
 		}
 	});
 	return {
+		getLatestDeadletters : function(topicName, consumerName) {
+			var delay = $q.defer();
+			dash_resource.getLatestDeadletters({
+				topic : topicName,
+				consumer : consumerName
+			}, function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+				show_op_info.show("获取consumer死信失败！Error Msg：" + result.data, false)
+			});
+			return delay.promise;
+		},
+		downloadDeadletters : function(topicName, consumerName, timeStart, timeEnd) {
+			console.log(topicName, consumerName, timeStart, timeEnd);
+			dash_resource.downloadDeadletters({
+				topic : topicName,
+				consumer : consumerName,
+				timeStart : timeStart,
+				timeEnd : timeEnd
+			}, function(result) {
+				return result;
+			}, function(result) {
+				show_op_info.show("下载失败！Error Msg：" + result.data, false)
+			});
+		},
 		get_trifecta_urls : function() {
 			return trifecta_urls;
 		},

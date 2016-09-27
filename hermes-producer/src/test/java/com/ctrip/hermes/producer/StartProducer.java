@@ -32,8 +32,8 @@ public class StartProducer extends ComponentTestCase {
 
 		Cat.initializeByDomain("hermes", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
 
-		VIServer viServer = new VIServer(8080);
-		viServer.start();
+		//VIServer viServer = new VIServer(8080);
+		//viServer.start();
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
@@ -41,7 +41,7 @@ public class StartProducer extends ComponentTestCase {
 			if ("quit".equals(line)) {
 				break;
 			} else {
-				String topic = "order_new";
+				String topic = "yq.test2";
 				if (!StringUtils.isBlank(line)) {
 					topic = StringUtils.trim(line);
 				}

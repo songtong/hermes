@@ -3,6 +3,7 @@ package com.ctrip.hermes.portal.resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
@@ -46,6 +48,7 @@ import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.dashboard.DashboardService;
+import com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService.DeadletterView;
 
 import io.netty.buffer.Unpooled;
 
@@ -55,7 +58,7 @@ import io.netty.buffer.Unpooled;
 public class DashboardResource {
 	private static final Logger log = LoggerFactory.getLogger(DashboardResource.class);
 
-	private DashboardService m_monitorService = PlexusComponentLocator.lookup(DashboardService.class);
+	private DashboardService m_dashboardService = PlexusComponentLocator.lookup(DashboardService.class);
 
 	private MessageQueueDao m_messageQueueDao = PlexusComponentLocator.lookup(MessageQueueDao.class);
 
@@ -67,8 +70,8 @@ public class DashboardResource {
 		List<TopicDelayBriefView> list = new ArrayList<TopicDelayBriefView>();
 		for (Entry<String, TopicView> entry : m_topicService.getTopicViews().entrySet()) {
 			TopicView t = entry.getValue();
-			list.add(new TopicDelayBriefView(t.getId(), t.getName(), m_monitorService.getLatestProduced(t.getName()), 0, t
-			      .getStorageType()));
+			list.add(new TopicDelayBriefView(t.getId(), t.getName(), m_dashboardService.getLatestProduced(t.getName()), 0,
+			      t.getStorageType()));
 		}
 
 		Collections.sort(list, new Comparator<TopicDelayBriefView>() {
@@ -85,7 +88,7 @@ public class DashboardResource {
 	@GET
 	@Path("brief/brokers")
 	public Response getBrokerBriefs() {
-		return Response.status(Status.OK).entity(m_monitorService.getLatestBrokers()).build();
+		return Response.status(Status.OK).entity(m_dashboardService.getLatestBrokers()).build();
 	}
 
 	@GET
@@ -95,7 +98,7 @@ public class DashboardResource {
 		List<DelayDetail> consumerDelay = new ArrayList<>();
 
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
-			consumerDelay = m_monitorService.getDelayDetailForConsumer(topicName, consumerName);
+			consumerDelay = m_dashboardService.getDelayDetailForConsumer(topicName, consumerName);
 		}
 
 		return Response.status(Status.OK).entity(consumerDelay).build();
@@ -172,45 +175,45 @@ public class DashboardResource {
 	@GET
 	@Path("top/outdate-topics")
 	public Response getTopOutdateTopic(@QueryParam("top") @DefaultValue("100") int top) {
-		return Response.status(Status.OK).entity(m_monitorService.getTopOutdateTopic(top)).build();
+		return Response.status(Status.OK).entity(m_dashboardService.getTopOutdateTopic(top)).build();
 	}
 
 	@GET
 	@Path("top/broker/qps/received")
 	public Response getTopBrokerReceived() {
-		return Response.status(Status.OK).entity(m_monitorService.getBrokerReceivedQPS()).build();
+		return Response.status(Status.OK).entity(m_dashboardService.getBrokerReceivedQPS()).build();
 	}
 
 	@GET
 	@Path("top/broker/qps/delivered")
 	public Response getTopBrokerDelivered() {
-		return Response.status(Status.OK).entity(m_monitorService.getBrokerDeliveredQPS()).build();
+		return Response.status(Status.OK).entity(m_dashboardService.getBrokerDeliveredQPS()).build();
 	}
 
 	@GET
 	@Path("top/broker/qps/received/{brokerIp}")
 	public Response getTopBrokerTopicReceived(@PathParam("brokerIp") String ip) {
-		return Response.status(Status.OK).entity(m_monitorService.getBrokerReceivedDetailQPS(ip)).build();
+		return Response.status(Status.OK).entity(m_dashboardService.getBrokerReceivedDetailQPS(ip)).build();
 	}
 
 	@GET
 	@Path("top/broker/qps/delivered/{brokerIp}")
 	public Response getTopBrokerTopicDelivered(@PathParam("brokerIp") String ip) {
-		return Response.status(Status.OK).entity(m_monitorService.getBrokerDeliveredDetailQPS(ip)).build();
+		return Response.status(Status.OK).entity(m_dashboardService.getBrokerDeliveredDetailQPS(ip)).build();
 	}
 
 	@GET
 	@Path("clients")
 	public Response findClients(@QueryParam("part") String part) {
-		return Response.status(Status.OK).entity(m_monitorService.getRelatedClients(part)).build();
+		return Response.status(Status.OK).entity(m_dashboardService.getRelatedClients(part)).build();
 	}
 
 	@GET
 	@Path("topics/{ip}")
 	public Response getDeclaredTopics(@PathParam("ip") String ip) {
 		MonitorClientView view = new MonitorClientView(ip);
-		view.setProduceTopics(getProduceTopicsList(m_monitorService.getProducerIP2Topics(), ip));
-		view.setConsumeTopics(getConsumeTopicsList(m_monitorService.getConsumerIP2Topics(), ip));
+		view.setProduceTopics(getProduceTopicsList(m_dashboardService.getProducerIP2Topics(), ip));
+		view.setConsumeTopics(getConsumeTopicsList(m_dashboardService.getConsumerIP2Topics(), ip));
 		return Response.status(Status.OK).entity(view).build();
 	}
 
@@ -239,4 +242,78 @@ public class DashboardResource {
 		return list;
 	}
 
+	@GET
+	@Path("deadletter/latest/{topic}/{consumer}")
+	public Response getLatestDeadLetters(@PathParam("topic") String topic, @PathParam("consumer") String consumer)
+	      throws DalException {
+		if (topic == null || consumer == null) {
+			throw new RestException("Topic or consumer can not be null!", Status.BAD_REQUEST);
+		}
+
+		Topic theTopic = m_topicService.findTopicEntityByName(topic);
+		if (theTopic == null) {
+			throw new RestException(String.format("Topic %s not found!", topic), Status.BAD_REQUEST);
+		}
+
+		if (theTopic.findConsumerGroup(consumer) == null) {
+			throw new RestException(String.format("Consumer %s not found!", consumer), Status.BAD_REQUEST);
+		}
+
+		List<DeadletterView> latestDeadLetter = null;
+		try {
+			latestDeadLetter = m_dashboardService.getLatestDeadLetter(topic, consumer, 20);
+		} catch (DalException e) {
+			log.error("Find latest deadletter failed!", e);
+			throw new RestException("Find latest deadletter failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		return Response.ok().entity(latestDeadLetter).build();
+	}
+
+	@GET
+	@Path("deadletter/download/{topic}/{consumer}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response downloadDeadLetters(@PathParam("topic") final String topic,
+	      @PathParam("consumer") final String consumer, @QueryParam("timeStart") long timeStart,
+	      @QueryParam("timeEnd") long timeEnd, @QueryParam("sleepInterval") Long sleepInterval) {
+
+		if (topic == null || consumer == null) {
+			throw new RestException("Topic or consumer can not be null!", Status.BAD_REQUEST);
+		}
+
+		if (timeStart <= 0 || timeEnd <= 0) {
+			throw new RestException("End time or start time is illegle!", Status.BAD_REQUEST);
+		}
+
+		if (timeStart >= timeEnd) {
+			throw new RestException("End time is before start time!", Status.BAD_REQUEST);
+		}
+
+		final Topic theTopic = m_topicService.findTopicEntityByName(topic);
+		if (theTopic == null) {
+			throw new RestException(String.format("Topic %s not found!", topic), Status.BAD_REQUEST);
+		}
+
+		if (theTopic.findConsumerGroup(consumer) == null) {
+			throw new RestException(String.format("Consumer %s not found!", consumer), Status.BAD_REQUEST);
+		}
+
+		StreamingOutput stream = null;
+		try {
+			if (sleepInterval == null) {
+				sleepInterval = 200L;
+			}
+			stream = m_dashboardService.getDeadLetterStreamByTimespan(topic, consumer, new Date(timeStart), new Date(
+			      timeEnd), sleepInterval);
+		} catch (Exception e) {
+			log.error("Failed to create download stream.", e);
+			throw new RestException("Download failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+		if (stream == null) {
+			log.error("Failed to create download stream.");
+			throw new RestException("Download failed!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		return Response.ok(stream).header("Content-Disposition", "attachment; filename=deadletter.csv").build();
+	}
 }

@@ -66,7 +66,7 @@ public class EndpointResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
-		Pair<Boolean, String> validate = validateEndpoint(endpoint);
+		Pair<Boolean, String> validate = validateAndTrimEndpoint(endpoint);
 		if (!validate.getKey()) {
 			throw new RestException(validate.getValue(), Status.BAD_REQUEST);
 		}
@@ -117,6 +117,8 @@ public class EndpointResource {
 			throw new RestException(e, Status.BAD_REQUEST);
 		}
 
+		validateAndTrimEndpoint(endpoint);
+		
 		try {
 			endpointService.updateEndpoint(endpoint);
 			return Response.status(Status.OK).build();
@@ -141,10 +143,15 @@ public class EndpointResource {
 		return Response.status(Status.OK).entity(brokerGroups).build();
 	}
 
-	private Pair<Boolean, String> validateEndpoint(Endpoint e) {
+	private Pair<Boolean, String> validateAndTrimEndpoint(Endpoint e) {
 		if (StringUtils.isEmpty(e.getId())) {
 			return new Pair<Boolean, String>(false, "Endpoint id can not be null!");
 		}
+
+		e.setHost(e.getHost() == null ? null : e.getHost().trim());
+		e.setGroup(e.getGroup() == null ? null : e.getGroup().trim());
+		e.setIdc(e.getIdc() == null ? null : e.getIdc().trim());
+		e.setType(e.getType() == null ? null : e.getType().trim());
 
 		return new Pair<Boolean, String>(true, null);
 

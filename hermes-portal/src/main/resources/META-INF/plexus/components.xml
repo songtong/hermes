@@ -63,6 +63,9 @@
 					<role>com.ctrip.hermes.metaservice.queue.MessageQueueDao</role>
 				</requirement>
 				<requirement>
+					<role>com.ctrip.hermes.metaservice.queue.DeadLetterDao</role>
+				</requirement>
+				<requirement>
 					<role>com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService</role>
 				</requirement>
 				<requirement>
