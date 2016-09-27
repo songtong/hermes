@@ -11,7 +11,7 @@ public enum ConsolePage implements Page {
 
    DASHBOARD("dashboard", "dashboard", "Dashboard", "Dashboard", true),
 
-   ENDPOINT("endpoint", "endpoint", "Endpoint", "Endpoint", true),
+   ENDPOINT("endpoint", "endpoint", "Group", "Endpoint", true),
 
    STORAGE("storage", "storage", "Storage", "Storage", true),
 

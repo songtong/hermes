@@ -148,7 +148,7 @@ consumer_module.run(function(editableOptions) {
 		value : 'resend'
 	} ];
 
-	scope.queueType = 'priority';
+	scope.queueType = 'nonPriority';
 
 	scope.ops = [ true, false ];
 

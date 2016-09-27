@@ -68,7 +68,7 @@
 					<label>消息预估上限（条/天）</label> <input class="form-control" ng-model="new_application.maxMsgNumPerDay" type="number"></input>
 				</div>
 				<div class="form-group">
-					<label>消息保留时间（天）</label> <input class="form-control" ng-model="new_application.retentionDays" type="number"></input>
+					<label>消息保留时间（天）<span class="text-danger">对天数有特殊要求请联系hermes团队</span></label> <input class="form-control" ng-model="new_application.retentionDays" type="number" disabled></input>
 				</div>
 				<div class="form-group" style="margin-bottom: 0px;">
 					<label>消息预估大小（Kb）</label> <input class="form-control" ng-model="new_application.size" type="number"></input>

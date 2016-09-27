@@ -11,7 +11,8 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 		needCompress : 'false',
 		compressionType : 'deflater',
 		compressionLevel : 1,
-		priorityMessageEnabled : false
+		priorityMessageEnabled : false,
+		retentionDays : 3
 	};
 	$scope.productLines = ApplicationService.get_productLines();
 	$scope.getFilteredProductLine = function(val) {
