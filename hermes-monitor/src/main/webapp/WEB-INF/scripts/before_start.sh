@@ -18,6 +18,9 @@ SOURCE_DIR=$CONFIG_DIR/hermes-config/${APP_ID}
 # Solid server settings position.
 SERVER_SETTINGS=/opt/settings/server.properties
 
+# Get ip of current machine.
+IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
+
 # Clone or pull git config project.
 if [[ ! -e $CONFIG_DIR ]]; then
 	mkdir -p $CONFIG_DIR
@@ -35,6 +38,10 @@ ENV=$(cat $SERVER_SETTINGS | grep env | cut -d'=' -f2 | tr '[:upper:]' '[:lower:
 # Correct env keyword 'pro' to 'prod'.
 if [[ $ENV = 'pro' ]]; then
 	ENV='prod'
+fi
+
+if [[ $ENV = 'prod' && -n `grep $IP $SOURCE_DIR/tools/servers` ]]; then
+	ENV='tools'
 fi
 
 # Replace hermes.properties file.
