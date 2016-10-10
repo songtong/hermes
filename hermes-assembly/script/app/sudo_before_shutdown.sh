@@ -90,7 +90,7 @@ log "Done updating forwarder.json if neccessary."
 
 PID=$(ps ax | grep logagent | awk '$(NF) ~ /logagent\/forwarder.json$/{print $1}' | head -n1) 
 if [[ -z $PID ]]; then
-	su - deploy -c "nohup $APP_DIR/logagent/logagent-linux-x64-105ebb9 -config $APP_DIR/logagent/forwarder.json &" >/dev/null 2>&1
+	su - deploy -c "nohup $APP_DIR/logagent/logagent-linux-x64-105ebb9 -config $APP_DIR/logagent/forwarder.json >/dev/null 2>&1 &" >/dev/null 2>&1
 fi
 log "Done checking/starting logagent."
 
