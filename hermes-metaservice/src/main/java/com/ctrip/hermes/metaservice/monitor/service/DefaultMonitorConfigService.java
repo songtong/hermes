@@ -32,7 +32,9 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 
 	private static final int CONFIG_CACHE_REFRESH_INTERVAL_MIN = 5;
 
-	private static boolean DFT_MONITOR_SWITCH = true;
+	private static boolean DFT_MONITOR_SWITCH_ENABLE = true;
+	
+	private static boolean DFT_MONITOR_SWITCH_DISABLE = false;
 
 	private static int DFT_MONITOR_LIMIT = -1;
 
@@ -40,7 +42,9 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 
 	private static int DFT_DEAD_LETTER_LIMIT = 1;
 
-	private static int DFT_LONG_TIME_NO_CONSUME = 10;
+	private static int DFT_LONG_TIME_NO_CONSUME_LIMIT = 10;
+	
+	private static int DFT_LONG_TIME_NO_PRODUCE_LIMIT = 10;
 
 	@Inject
 	private ProducerMonitorConfigDao m_producerMonitorConfigDao;
@@ -254,8 +258,8 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 		cfg.setTopic(topic);
 		cfg.setCreateTime(now);
 		cfg.setDataChangeLastTime(now);
-		cfg.setLongTimeNoProduceEnable(DFT_MONITOR_SWITCH);
-		cfg.setLongTimeNoProduceLimit(DFT_MONITOR_LIMIT);
+		cfg.setLongTimeNoProduceEnable(DFT_MONITOR_SWITCH_DISABLE);
+		cfg.setLongTimeNoProduceLimit(DFT_LONG_TIME_NO_PRODUCE_LIMIT);
 		return cfg;
 	}
 
@@ -267,14 +271,14 @@ public class DefaultMonitorConfigService implements MonitorConfigService, Initia
 		cfg.setConsumer(consumer);
 		cfg.setCreateTime(now);
 		cfg.setDataChangeLastTime(now);
-		cfg.setLargeBacklogEnable(DFT_MONITOR_SWITCH);
+		cfg.setLargeBacklogEnable(DFT_MONITOR_SWITCH_ENABLE);
 		cfg.setLargeBacklogLimit(DFT_BACKLOG_LIMIT);
-		cfg.setLargeDeadletterEnable(DFT_MONITOR_SWITCH);
+		cfg.setLargeDeadletterEnable(DFT_MONITOR_SWITCH_ENABLE);
 		cfg.setLargeDeadletterLimit(DFT_DEAD_LETTER_LIMIT);
-		cfg.setLargeDelayEnable(DFT_MONITOR_SWITCH);
+		cfg.setLargeDelayEnable(DFT_MONITOR_SWITCH_DISABLE);
 		cfg.setLargeDelayLimit(DFT_MONITOR_LIMIT);
-		cfg.setLongTimeNoConsumeEnable(DFT_MONITOR_SWITCH);
-		cfg.setLongTimeNoConsumeLimit(DFT_LONG_TIME_NO_CONSUME);
+		cfg.setLongTimeNoConsumeEnable(DFT_MONITOR_SWITCH_DISABLE);
+		cfg.setLongTimeNoConsumeLimit(DFT_LONG_TIME_NO_CONSUME_LIMIT);
 		return cfg;
 	}
 }

@@ -23,8 +23,10 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaservice.model.ConsumerMonitorConfig;
+import com.ctrip.hermes.metaservice.model.ProducerMonitorConfig;
 import com.ctrip.hermes.metaservice.monitor.service.MonitorConfigService;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
+import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/monitor/config/")
@@ -36,6 +38,8 @@ public class MonitorConfigResource {
 	private MonitorConfigService m_mcService = PlexusComponentLocator.lookup(MonitorConfigService.class);
 
 	private ConsumerService m_consumerService = PlexusComponentLocator.lookup(ConsumerService.class);
+	
+	private TopicService m_topicService = PlexusComponentLocator.lookup(TopicService.class);
 
 	@GET
 	@Path("consumer/{topic}/{consumer}")
@@ -125,5 +129,89 @@ public class MonitorConfigResource {
 		String msg = String.format("Consumer not found: %s [%s], remote: %s", topic, consumer, req.getRemoteAddr());
 		log.warn(msg);
 		return Response.status(Status.NOT_FOUND).entity(msg).build();
+	}
+	
+	private boolean ensureProducer(String topic) {
+		try {
+			return topic != null && m_topicService.findTopicViewByName(topic) != null;
+		} catch (Exception e) {
+			log.warn("Ensure topic {} failed.", topic);
+			return false;
+		}
+	}
+	
+	@GET
+	@Path("topic/{topic}")
+	public Response getProudcerMonitorConfig(@PathParam("topic") String topic, @Context HttpServletRequest req) {
+		if (!ensureProducer(topic)) {
+			return Response.status(Status.NOT_FOUND).entity(String.format("Topic not found: %s, remote: %s", topic, req.getRemoteAddr())).build();
+		}
+		
+		ProducerMonitorConfig config = null;
+		try {
+			config = m_mcService.getProducerMonitorConfig(topic);
+		} catch (Exception e) {
+			log.warn("Failed to find producer config from db: {}", topic, e);
+			throw new RestException("Failed to find producer config from db.", e);
+		}
+		
+		if (config == null) {
+			config = m_mcService.newDefaultProducerMonitorConfig(topic);
+		}
+		
+		return Response.status(Status.OK).entity(config).build();
+	}
+	
+	@POST
+	@Path("topic/{topic}")
+	public Response setProducerMonitorConfig( //
+	      @PathParam("topic") String topic,  //
+	      String content, //
+	      @QueryParam("ssoUser") @DefaultValue("not-set") String ssoUser, //
+	      @QueryParam("ssoMail") @DefaultValue("not-set") String ssoMail, //
+	      @Context HttpServletRequest req) {
+		if (!ensureProducer(topic)) {
+			return Response.status(Status.NOT_FOUND).entity(String.format("Topic not found: %s, remote: %s", topic, req.getRemoteAddr())).build();
+		}
+
+		ProducerMonitorConfig config = null;
+		try {
+			config = parseProducerConfig(topic, content);
+		} catch (Exception e) {
+			String msg = String.format("Parse config failed: %s , remote: %s, content: %s", //
+			      topic, req.getRemoteAddr(), content);
+			log.warn(msg, e);
+			return Response.status(Status.BAD_REQUEST).entity(msg).build();
+		}
+
+		if (JSON.parseObject(content).isEmpty() && m_mcService.getProducerMonitorConfig(topic) != null) {
+			String msg = String.format("Can not set an existed config to NULL: %s, remote: %s, content: %s", //
+			      topic, req.getRemoteAddr(), content);
+			log.warn(msg);
+			return Response.status(Status.BAD_REQUEST).entity(msg).build();
+		}
+		
+		if (config == null) {
+			config = m_mcService.newDefaultProducerMonitorConfig(topic);
+		}
+		
+		try {
+			m_mcService.setProducerMonitorConfig(config);
+			log.info("Set producer monitor config success: {}, remote: {}, user: {}, email: {}, new config: {}", //
+			      topic, req.getRemoteAddr(), ssoUser, ssoMail, config);
+		} catch (Exception e) {
+			log.warn("Set producer monitor config failed: {}, remote:{}, content: {}", //
+			      topic, req.getRemoteAddr(), content, e);
+			throw new RestException("Set producer monitor config failed.", e);
+		}
+
+		return Response.status(Status.OK).entity(config).build();
+	}
+	
+	private ProducerMonitorConfig parseProducerConfig(String topic, String content) {
+		ProducerMonitorConfig cfg = JSON.parseObject(content, ProducerMonitorConfig.class);
+		cfg.setTopic(topic);
+		cfg.setCreateTime(cfg.getCreateTime() == null ? new Date() : cfg.getCreateTime());
+		return cfg;
 	}
 }
