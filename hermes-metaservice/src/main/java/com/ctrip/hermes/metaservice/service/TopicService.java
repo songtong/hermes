@@ -128,11 +128,9 @@ public class TopicService {
 			}
 		}
 
-		if (Storage.MYSQL.equals(topic.getStorageType())) {
-			topic.getPartitions().addAll(partitions);
-			m_zookeeperService.ensureConsumerLeaseZkPath(topic);
-			m_zookeeperService.ensureBrokerLeaseZkPath(topic);
-		}
+	        topic.getPartitions().addAll(partitions);
+		m_zookeeperService.ensureConsumerLeaseZkPath(topic);
+		m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 
 		TopicView topicView = EntityToViewConverter.convert(topic);
 		fillTopicView(topicView);
@@ -178,10 +176,9 @@ public class TopicService {
 				m_logger.error("Init topic storage failed, please try later.");
 				throw new RuntimeException("Init topic storage failed, please try later.");
 			}
-
-			Topic topicEntity = findTopicEntityById(topicModel.getId());
-			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 		}
+		Topic topicEntity = findTopicEntityById(topicModel.getId());
+		m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 
 		return topicView;
 	}
@@ -381,11 +378,9 @@ public class TopicService {
 		addPartitionsForTopic(topicModel.getName(), partitions);
 		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
 
-		if (Storage.MYSQL.equals(topicView.getStorageType())) {
-			Topic topicEntity = findTopicEntityById(topicModel.getId());
-			m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
-			m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
-		}
+		Topic topicEntity = findTopicEntityById(topicModel.getId());
+		m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
+		m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 
 		return findTopicViewByName(topicModel.getName());
 	}
