@@ -34,3 +34,10 @@ su - deploy -c "cp $SOURCE_DIR/monitor_watchdog.sh $CONFIG_DIR/monitor_watchdog.
 
 # Install crontab.
 crontab $SOURCE_DIR/crontab.def
+
+if grep -Fq "LimitNOFILE" /usr/lib/systemd/system/ctripapp\@${APP_ID}.service; then
+       echo "already set LimitNOFILE";
+else
+       sed -i '/\[Service\]/a\LimitNOFILE=65536' /usr/lib/systemd/system/ctripapp\@${APP_ID}.service;
+       systemctl daemon-reload
+fi
