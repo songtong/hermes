@@ -94,3 +94,11 @@ if [[ -z $PID ]]; then
 fi
 log "Done checking/starting logagent."
 
+log "Check file limit."
+if grep -Fq "LimitNOFILE" /usr/lib/systemd/system/ctripapp\@${APP_ID}.service; then
+       echo "already set LimitNOFILE";
+else
+       sed -i '/\[Service\]/a\LimitNOFILE=65536' /usr/lib/systemd/system/ctripapp\@${APP_ID}.service;
+       systemctl daemon-reload
+fi
+log "Done checking file limit."
