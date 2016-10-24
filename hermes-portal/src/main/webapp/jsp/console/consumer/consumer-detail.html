@@ -91,10 +91,6 @@
 				</div>
 			</div>
 		</div>
-	</div>
-
-	<!-- partition information -->
-	<div class="col-md-5">
 		<div class="panel panel-info">
 			<div class="panel-heading clearfix">
 				<label class="label label-info">重置Offset</label> <span class="col-md-offset-1 text-danger">需要先停止consumer。</span>
@@ -143,6 +139,10 @@
 				</div>
 			</div>
 		</div>
+	</div>
+
+	<!-- partition information -->
+	<div class="col-md-5">
 		<div class="panel panel-info">
 			<div class="panel-heading clearfix">
 				<label class="label label-info pull-left">报警配置</label>
@@ -159,17 +159,17 @@
 			<div class="panel-body" style="padding:5px">
 				<div class="form-horizontal">
 					<div class="panel panel-warning" style="margin-bottom: 5px">
-						<div class="panel-heading clearfix" style="padding: 5px">告警阈值</div>
+						<div class="panel-heading clearfix" style="padding: 5px">消费积压报警</div>
 						<div class="panel-body" style="padding: 5px">
 							<div class="form-group">
-								<label class="col-md-4 control-label" style="padding-top: 0px">积压告警开关</label>
+								<label class="col-md-4 control-label" style="padding-top: 0px">告警开关</label>
 								<div class="col-md-8">
 									<span ng-bind="currentConsumerMonitorConfig.largeBacklogEnable" editable-select="currentConsumerMonitorConfig.largeBacklogEnable" e-ng-options="s.value as s.text for s in switch_statuses" e-form="consumerMonitorConfigForm"
 										e-name="largeBacklogEnable"></span>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-md-4 control-label" style="padding-top: 0px">积压告警阈值</label>
+								<label class="col-md-4 control-label" style="padding-top: 0px">告警阈值</label>
 								<div class="col-md-8">
 									<span ng-bind="currentConsumerMonitorConfig.largeBacklogLimit" editable-text="currentConsumerMonitorConfig.largeBacklogLimit" e-form="consumerMonitorConfigForm" e-name="largeBacklogLimit"></span>
 								</div>
@@ -177,7 +177,43 @@
 						</div>
 					</div>
 					<div class="panel panel-warning" style="margin-bottom: 5px">
-						<div class="panel-heading clearfix" style="padding:5px">额外联系人(除负责人以外)</div>
+						<div class="panel-heading clearfix" style="padding: 5px">死信报警</div>
+						<div class="panel-body" style="padding: 5px">
+							<div class="form-group">
+								<label class="col-md-4 control-label" style="padding-top: 0px">告警开关</label>
+								<div class="col-md-8">
+									<span ng-bind="currentConsumerMonitorConfig.largeDeadletterEnable" editable-select="currentConsumerMonitorConfig.largeDeadletterEnable" e-ng-options="s.value as s.text for s in switch_statuses" e-form="consumerMonitorConfigForm"
+										e-name="largeDeadletterEnable"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 control-label" style="padding-top: 0px">告警阈值</label>
+								<div class="col-md-8">
+									<span ng-bind="currentConsumerMonitorConfig.largeDeadletterLimit" editable-text="currentConsumerMonitorConfig.largeDeadletterLimit" e-form="consumerMonitorConfigForm" e-name="largeDeadletterLimit"></span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="panel panel-warning" style="margin-bottom: 5px">
+						<div class="panel-heading clearfix" style="padding: 5px">长时间未消费报警</div>
+						<div class="panel-body" style="padding: 5px">
+							<div class="form-group">
+								<label class="col-md-4 control-label" style="padding-top: 0px">告警开关</label>
+								<div class="col-md-8">
+									<span ng-bind="currentConsumerMonitorConfig.longTimeNoConsumeEnable" editable-select="currentConsumerMonitorConfig.longTimeNoConsumeEnable" e-ng-options="s.value as s.text for s in switch_statuses" e-form="consumerMonitorConfigForm"
+										e-name="longTimeNoConsumeEnable"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 control-label" style="padding-top: 0px">告警阈值</label>
+								<div class="col-md-8">
+									<span ng-bind="currentConsumerMonitorConfig.longTimeNoConsumeLimit" editable-text="currentConsumerMonitorConfig.longTimeNoConsumeLimit" e-form="consumerMonitorConfigForm" e-name="longTimeNoConsumeLimit"></span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="panel panel-warning" style="margin-bottom: 5px">
+						<div class="panel-heading clearfix" style="padding:5px">其他联系人(除负责人以外)</div>
 						<div class="panel-body" style="padding:5px">
 							<table class="table table-responsive">
 								<thead>
