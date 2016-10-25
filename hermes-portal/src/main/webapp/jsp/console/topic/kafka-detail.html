@@ -211,5 +211,49 @@
 				</table>
 			</div>
 		</div>
+		<div class="panel panel-info">
+			<div class="panel-heading clearfix">
+				<label class="label label-info pull-left">报警配置</label>
+				<form editable-form name="producerMonitorConfigForm" onaftersave="update_producer_monitor_config()" ng-show="producerMonitorConfigForm.$visible">
+					<button type="submit" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-disabled="producerMonitorConfigForm.$waiting">
+						<span class="glyphicon glyphicon-saved"></span>保存
+					</button>
+					<button type="button" style="margin-right: 15px" class="btn btn-xs btn-danger pull-right" aria-hidden="true" ng-disabled="producerMonitorConfigForm.$waiting" ng-click="producerMonitorConfigForm.$cancel()">取消</button>
+				</form>
+				<button id="updateConfigButton" class="btn btn-xs btn-success pull-right" aria-hidden="true" ng-click="producerMonitorConfigForm.$show()" ng-show="!producerMonitorConfigForm.$visible">
+					<span class="glyphicon glyphicon-pencil"></span> 修改
+				</button>
+			</div>
+			<div class="panel-body">
+				<div class="form-horizontal">
+					<div class="panel panel-warning" style="margin-bottom: 5px">
+						<div class="panel-heading clearfix" style="padding: 5px">长时间未生产</div>
+						<div class="panel-body" style="padding: 5px">
+							<div class="form-group">
+								<label class="col-md-4 control-label" style="padding-top: 0px">告警开关</label>
+								<div class="col-md-8">
+									<span
+										ng-bind="currentProducerMonitorConfig.longTimeNoProduceEnable"
+										editable-select="currentProducerMonitorConfig.longTimeNoProduceEnable"
+										e-ng-options="s.value as s.text for s in switch_statuses"
+										e-form="producerMonitorConfigForm"
+										e-name="longTimeNoProduceEnable"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-4 control-label" style="padding-top: 0px">告警阈值</label>
+								<div class="col-md-8">
+									<span
+										ng-bind="currentProducerMonitorConfig.longTimeNoProduceLimit"
+										editable-text="currentProducerMonitorConfig.longTimeNoProduceLimit"
+										e-form="producerMonitorConfigForm"
+										e-name="longTimeNoProduceLimit"></span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>

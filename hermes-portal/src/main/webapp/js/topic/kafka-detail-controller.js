@@ -1,6 +1,21 @@
 topic_module.run(function(editableOptions) {
 	editableOptions.theme = 'bs3';
 }).controller('kafka-detail-controller', [ '$scope', '$resource', '$routeParams', 'TopicService', '$q', 'user', function(scope, resource, routeParams, TopicService, $q, user) {
+	producer_monitor_config_resource = resource('/api/monitor/config/topic/:topic', {}, {
+		'set_producer_monitor_config' : {
+			method : 'POST',
+			params : {
+				topic : '@topic',
+				ssoUser : '@ssoUser',
+				ssoMail : '@ssoMail'
+			}
+		},
+		'get_producer_monitor_config' : {
+			method : 'GET',
+			isArray : false
+		}
+	});
+	
 	scope.logined = user.sn;
 	scope.current_topic_type = routeParams['type'];
 	scope.topic_name = routeParams['topicName'];
@@ -9,12 +24,49 @@ topic_module.run(function(editableOptions) {
 	scope.endpoint_types = [ 'kafka', 'broker' ];
 	scope.Ops = [ true, false ];
 	scope.compressionTypes = [ 'gzip', 'deflater' ];
+	
+	scope.switch_statuses = [ {
+		value : true,
+		text : 'true'
+	}, {
+		value : false,
+		text : 'false'
+	} ];
 
 	scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {
 		scope.topic = result;
 		decodeCodec(scope.topic);
 		scope.partitionCount = scope.topic.partitions.length;
+		
+		// Fetch producer monitor config.
+		producer_monitor_config_resource.get_producer_monitor_config({
+			topic: scope.topic.name
+		}).$promise.then(function(result) {
+			scope.currentProducerMonitorConfig = result;
+		});
 	});
+	
+	scope.update_producer_monitor_config = function() {
+		bootbox.confirm({
+			title : "确认",
+			message : "确认要更新报警配置？",
+			locale : "zh_CN",
+			callback : function(result) {
+				if (result) {
+					producer_monitor_config_resource.set_producer_monitor_config({
+						topic : scope.topic.name,
+						ssoUser : ssoUser,
+						ssoMail : ssoMail
+					}, JSON.stringify(scope.currentProducerMonitorConfig), function(result) {
+						show_op_info.show("修改 topic " + scope.currentProducerMonitorConfig.topic + " 监控配置成功!", true);
+					}, function(result) {
+						show_op_info.show("修改 topic " + scope.currentProducerMonitorConfig.topic + " 监控配置失败! " + result.data, false);
+					});
+				}
+			}
+		});
+	}
+	
 	scope.consumers = TopicService.fetch_consumers_for_topic(scope.topic_name).then(function(result) {
 		scope.consumers = result;
 	});
