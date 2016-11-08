@@ -89,7 +89,7 @@ public class ClusterStateHolder implements Initializable {
 
 	private PathChildrenCache m_leaderLatchPathChildrenCache;
 
-	private boolean m_leaseAssigning = true;
+	private volatile boolean m_leaseAssigning = true;
 
 	public void becomeLeader() {
 		m_roleLock.writeLock().lock();

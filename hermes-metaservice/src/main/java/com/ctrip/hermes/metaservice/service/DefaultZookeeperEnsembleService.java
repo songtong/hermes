@@ -22,7 +22,7 @@ import com.ctrip.hermes.metaservice.model.ZookeeperEnsembleEntity;
 @Named(type = ZookeeperEnsembleService.class)
 public class DefaultZookeeperEnsembleService implements ZookeeperEnsembleService {
 
-	private static final Logger m_logger = LoggerFactory.getLogger(DefaultZookeeperEnsembleService.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultZookeeperEnsembleService.class);
 
 	@Inject
 	private ZookeeperEnsembleDao m_dao;
@@ -108,7 +108,7 @@ public class DefaultZookeeperEnsembleService implements ZookeeperEnsembleService
 			m_tm.commitTransaction();
 		} catch (Exception e) {
 			m_tm.rollbackTransaction();
-			m_logger.error("Failed to switch primary zookeeperEnsemble to {}", zookeeperEnsemble.getConnectionString(), e);
+			log.error("Failed to switch primary zookeeperEnsemble to {}", zookeeperEnsemble.getConnectionString(), e);
 			throw e;
 		}
 	}
@@ -119,7 +119,7 @@ public class DefaultZookeeperEnsembleService implements ZookeeperEnsembleService
 		try {
 			zookeeperEnsemble = m_dao.findById(zookeeperEnsembleId, ZookeeperEnsembleEntity.READSET_FULL);
 		} catch (DalException e) {
-			m_logger.error("Failed to find zookeeper ensemble(id={}) from db.", zookeeperEnsembleId, e);
+			log.error("Failed to find zookeeper ensemble(id={}) from db.", zookeeperEnsembleId, e);
 			throw new RuntimeException(String.format("Failed to find zookeeper ensemble(id=%s) from db.",
 			      zookeeperEnsembleId), e);
 		}
@@ -136,14 +136,14 @@ public class DefaultZookeeperEnsembleService implements ZookeeperEnsembleService
 		try {
 			primaryZk = m_dao.findPrimary(ZookeeperEnsembleEntity.READSET_FULL);
 		} catch (DalException e) {
-			m_logger.error("Can not get primary zookeeper ensemble from db!", e);
+			log.error("Can not get primary zookeeper ensemble from db!", e);
 			throw new RuntimeException(String.format("Can not get primary zookeeper ensemble from db for reason: %s",
 			      e.getMessage()));
 		}
 		if (primaryZk.size() >= 1) {
-			m_logger.error("Existing {} primary zookeeper ensemble in db, will return the first one.", primaryZk.size());
+			log.error("Existing {} primary zookeeper ensemble in db, will return the first one.", primaryZk.size());
 		} else if (primaryZk.isEmpty()) {
-			m_logger.error("No primary zookeeper ensemble exists in db!");
+			log.error("No primary zookeeper ensemble exists in db!");
 			return null;
 		}
 
