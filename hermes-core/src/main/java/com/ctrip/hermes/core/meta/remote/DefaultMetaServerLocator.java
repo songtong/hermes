@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -26,7 +25,6 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.config.CoreConfig;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.CollectionUtil;
-import com.ctrip.hermes.core.utils.DNSUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
@@ -37,7 +35,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultMetaServerLocator.class);
 
-	private static final int DEFAULT_MASTER_METASERVER_PORT = 80;
+	private static final int DEFAULT_METASERVER_PORT = 80;
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
@@ -47,7 +45,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	private AtomicReference<List<String>> m_metaServerList = new AtomicReference<List<String>>(new ArrayList<String>());
 
-	private int m_masterMetaServerPort = DEFAULT_MASTER_METASERVER_PORT;
+	private int m_defaultMetaServerPort = DEFAULT_METASERVER_PORT;
 
 	@Override
 	public List<String> getMetaServerList() {
@@ -58,10 +56,17 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		int maxTries = 10;
 		RuntimeException exception = null;
 
-		for (int i = 0; i < maxTries; i++) {
+		for (int retries = 0; retries < maxTries; retries++) {
 			try {
-				if (CollectionUtil.isNullOrEmpty(m_metaServerList.get())) {
-					m_metaServerList.set(domainToIpPorts());
+				if (CollectionUtil.isNullOrEmpty(m_metaServerList.get()) || retries > 0) {
+					String domain = m_clientEnv.getMetaServerDomainName();
+					if (retries > 0) {
+						log.warn("Can not update meta server list, will retry with domain {}:{}", domain,
+						      m_defaultMetaServerPort);
+					} else {
+						log.info("Update meta server list with domain {}:{}", domain, m_defaultMetaServerPort);
+					}
+					m_metaServerList.set(new ArrayList<>(Arrays.asList(domain + ":" + m_defaultMetaServerPort)));
 				}
 
 				List<String> metaServerList = fetchMetaServerListFromExistingMetaServer();
@@ -111,28 +116,8 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		      + metaServerList.toString());
 	}
 
-	private List<String> domainToIpPorts() {
-		String domain = m_clientEnv.getMetaServerDomainName();
-		log.info("Meta server domain {}", domain);
-		try {
-			List<String> ips = DNSUtil.resolve(domain);
-			if (CollectionUtil.isNullOrEmpty(ips)) {
-				throw new RuntimeException();
-			}
-
-			List<String> ipPorts = new LinkedList<String>();
-			for (String ip : ips) {
-				ipPorts.add(String.format("%s:%s", ip, m_masterMetaServerPort));
-			}
-
-			return ipPorts;
-		} catch (Exception e) {
-			throw new RuntimeException("Can not resolve meta server domain " + domain, e);
-		}
-	}
-
 	private List<String> doFetch(String ipPort) throws IOException {
-		String url = String.format("http://%s%s?clientTimeMillis=%s", ipPort, "/metaserver/servers",
+		String url = String.format("http://%s%s?clientTimeMillis=%s", ipPort, "/metaserver/servers/v2",
 		      System.currentTimeMillis());
 
 		InputStream is = null;
@@ -174,8 +159,8 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		if (m_clientEnv.isLocalMode())
 			return;
 
-		m_masterMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig()
-		      .getProperty("meta.port", String.valueOf(DEFAULT_MASTER_METASERVER_PORT)).trim());
+		m_defaultMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig()
+		      .getProperty("meta.port", String.valueOf(DEFAULT_METASERVER_PORT)).trim());
 
 		updateMetaServerList();
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MetaServerIpFetcher", true))
