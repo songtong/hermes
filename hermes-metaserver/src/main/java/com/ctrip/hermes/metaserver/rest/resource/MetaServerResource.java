@@ -72,6 +72,13 @@ public class MetaServerResource {
 	}
 
 	@GET
+	@Path("servers/v2")
+	public List<String> getServersV2(@QueryParam("clientTimeMillis") @DefaultValue("0") long clientTimeMillis, //
+	      @Context HttpServletResponse res) {
+		return getServers(clientTimeMillis, res);
+	}
+
+	@GET
 	@Path("status")
 	public MetaServerStatusResponse getStatus() throws Exception {
 		MetaServerStatusResponse response = new MetaServerStatusResponse();
