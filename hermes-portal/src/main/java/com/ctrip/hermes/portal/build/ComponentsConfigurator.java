@@ -6,6 +6,7 @@ import java.util.List;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.metaservice.cmessage.DefaultCmessageConfigService;
 import com.ctrip.hermes.metaservice.queue.DefaultMessageQueueDao;
 import com.ctrip.hermes.metaservice.service.mail.DefaultMailService;
 import com.ctrip.hermes.metaservice.service.mail.FileMailAccountProvider;
@@ -67,6 +68,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(KafkaPartitionStrategy.class));
 		
 		all.add(A(DefaultPortalMetaService.class));
+		
+		all.add(A(DefaultCmessageConfigService.class));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

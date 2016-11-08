@@ -13,10 +13,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.cmessaging.entity.Cmessaging;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.metaservice.cmessage.CmessageConfigService;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
@@ -26,6 +25,8 @@ import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 @Produces(MediaType.APPLICATION_JSON)
 public class CmessageResource {
 	private ZookeeperService m_zkService = PlexusComponentLocator.lookup(ZookeeperService.class);
+
+	private CmessageConfigService m_cmessageConfigService = PlexusComponentLocator.lookup(CmessageConfigService.class);
 
 	@POST
 	@Path("exchange/update")
@@ -52,7 +53,8 @@ public class CmessageResource {
 	@Path("exchange")
 	public Response getExchangeInfo() {
 		try {
-			return Response.status(Status.OK).entity(m_zkService.queryData(ZKPathUtils.getCmessageExchangePath())).build();
+			return Response.status(Status.OK).entity(m_zkService.queryData(ZKPathUtils.getCmessageExchangePath()))
+					.build();
 		} catch (Exception e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
@@ -67,7 +69,7 @@ public class CmessageResource {
 
 		if (!StringUtils.isBlank(content)) {
 			try {
-				JSON.parseObject(content, Cmessaging.class);
+				m_cmessageConfigService.updateCmessaging(content);
 				m_zkService.persist(ZKPathUtils.getCmessageConfigPath(), ZKSerializeUtils.serialize(content));
 			} catch (Exception e) {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
@@ -80,7 +82,8 @@ public class CmessageResource {
 	@Path("config")
 	public Response getConfigInfo() {
 		try {
-			return Response.status(Status.OK).entity(m_zkService.queryData(ZKPathUtils.getCmessageConfigPath())).build();
+			return Response.status(Status.OK).entity(m_zkService.queryData(ZKPathUtils.getCmessageConfigPath()))
+					.build();
 		} catch (Exception e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
