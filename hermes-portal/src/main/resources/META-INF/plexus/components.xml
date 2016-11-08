@@ -295,6 +295,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKConfig</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.cmessage.CmessageConfigService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>

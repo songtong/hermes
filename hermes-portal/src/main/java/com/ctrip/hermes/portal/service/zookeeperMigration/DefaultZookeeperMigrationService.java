@@ -31,11 +31,13 @@ import org.unidal.tuple.Pair;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.ctrip.hermes.cmessaging.entity.Cmessaging;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
+import com.ctrip.hermes.metaservice.cmessage.CmessageConfigService;
 import com.ctrip.hermes.metaservice.model.Server;
 import com.ctrip.hermes.metaservice.model.ZookeeperEnsemble;
 import com.ctrip.hermes.metaservice.service.MetaService;
@@ -74,6 +76,9 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 	@Inject
 	private ZKConfig m_zkConfig;
 
+	@Inject
+	private CmessageConfigService m_cmessageConfigService;
+
 	private static final int ConnectTimeout = 2000;
 
 	private static int ReadTimeout = 10000;
@@ -99,7 +104,7 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 	private static final int MetaServerLeaseReassignedWaitTimeSeconds = 5;
 
 	private static final int MetaServerDisconnectToZkWaitTimeSeconds = 5;
-	
+
 	private static final int MetaServerReconnectToZkWaitTimeSeconds = 5;
 
 	private ExecutorService m_sendRequestExcutor = Executors.newCachedThreadPool(HermesThreadFactory.create(
@@ -126,6 +131,10 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 
 		public void ensurePath(String path) throws Exception {
 			m_client.createContainers(path);
+		}
+
+		public void updateCmessageConfigData(Cmessaging cmessaging) throws Exception {
+			m_client.setData().forPath(ZKPathUtils.getCmessageConfigPath(), ZKSerializeUtils.serialize(JSON.toJSONString(cmessaging)));
 		}
 
 		public boolean start() throws InterruptedException {
@@ -201,6 +210,7 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 			tempZkCli.ensurePath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
 			tempZkCli.ensurePath(ZKPathUtils.getBrokerRegistryBasePath());
 			tempZkCli.ensurePath(ZKPathUtils.getBrokerRegistryName(null));
+			tempZkCli.updateCmessageConfigData(m_cmessageConfigService.getCmessaging());
 
 		} catch (InterruptedException e) {
 			m_logger.error("Can not create temp zk cli to zkEnsemble(%s)", connectionString);
@@ -414,7 +424,7 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 			} catch (InterruptedException e) {
 				// ignore it
 			}
-			
+
 			int retryTimes = 2;
 
 			for (int i = 0; i < retryTimes; i++) {
