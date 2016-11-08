@@ -14,7 +14,7 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.service.ESMonitorService;
 
-@Component(value = MetaserverLogErrorChecker.ID)
+//@Component(value = MetaserverLogErrorChecker.ID)
 public class MetaserverLogErrorChecker implements Checker {
 	public static final String ID = "MetaserverLogErrorChecker";
 

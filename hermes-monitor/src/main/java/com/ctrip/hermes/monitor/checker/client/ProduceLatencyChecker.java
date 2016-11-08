@@ -37,7 +37,7 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Component(value = "ProducerLatencyChecker")
+//@Component(value = "ProducerLatencyChecker")
 public class ProduceLatencyChecker extends CatBasedChecker implements InitializingBean {
 
 	private static final String DEFAULT_THRESHOLD_KEY = "Default";

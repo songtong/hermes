@@ -31,7 +31,7 @@ import com.ctrip.hermes.monitor.checker.mysql.task.LongTimeNoProduceCheckerTask;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
 import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
 
-@Component(value = LongTimeNoProduceChecker.ID)
+//@Component(value = LongTimeNoProduceChecker.ID)
 public class LongTimeNoProduceChecker extends DBBasedChecker {
 
 	public static final String ID = "LongTimeNoProduceChecker";

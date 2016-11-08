@@ -44,7 +44,7 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Component(value = "ProduceTransportFailedRatioChecker")
+//@Component(value = "ProduceTransportFailedRatioChecker")
 public class ProduceTransportFailedRatioChecker extends CatBasedChecker implements InitializingBean {
 
 	private List<String> m_excludedTopics = new LinkedList<>();

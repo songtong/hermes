@@ -37,6 +37,7 @@ public class PartitionManagementScheduler {
 
 	@Scheduled(initialDelay = 0L, fixedDelay = 900000L)
 	public void execute() {
+		log.info("Checker suite start..");
 		printStartInfo();
 		List<PartitionCheckerResult> results = null;
 		try {

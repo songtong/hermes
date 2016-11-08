@@ -37,7 +37,7 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Component(value = "ProduceFailureChecker")
+//@Component(value = "ProduceFailureChecker")
 public class ProduceFailureChecker extends CatBasedChecker implements InitializingBean {
 
 	private static final String CAT_DOMAIN = "hermes";

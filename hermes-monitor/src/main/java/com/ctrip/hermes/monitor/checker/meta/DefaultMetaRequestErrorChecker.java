@@ -9,7 +9,7 @@ import com.ctrip.hermes.metaservice.monitor.event.MetaRequestErrorEvent;
 import com.ctrip.hermes.metaservice.monitor.event.MetaRequestErrorEvent.MetaRequestErrorType;
 import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 
-@Component(value = DefaultMetaRequestErrorChecker.ID)
+//@Component(value = DefaultMetaRequestErrorChecker.ID)
 public class DefaultMetaRequestErrorChecker extends AbstractMetaRequestErrorChecker {
 	public static final String ID = "DefaultMetaRequestErrorChecker";
 

@@ -12,7 +12,7 @@ import com.ctrip.hermes.metaservice.monitor.event.lease.ConsumerLeaseTimeoutMoni
 import com.ctrip.hermes.metaservice.monitor.event.lease.LeaseOperationAware.LeaseOperation;
 import com.ctrip.hermes.monitor.checker.meta.AbstractMetaRequestErrorChecker;
 
-@Component(value = ConsumerLeaseAcquireChecker.ID)
+//@Component(value = ConsumerLeaseAcquireChecker.ID)
 public class ConsumerLeaseAcquireChecker extends AbstractMetaRequestErrorChecker {
 	public static final String ID = "ConsumerLeaseAcquireChecker";
 
