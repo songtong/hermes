@@ -84,7 +84,13 @@ public class ZKClient implements Initializable {
 		HermesClientCnxnSocketNIO.pause();
 		log.info("Zookeeper client paused.");
 
-		LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(2 * m_config.getZkSessionTimeoutMillis()));
+		LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(Math.max(2 * m_config.getZkSessionTimeoutMillis(),
+		      m_config.getZkConnectionTimeoutMillis() + 1000)));
+		try {
+			m_client.getZookeeperClient().getZooKeeper();
+		} catch (Exception e) {
+			log.error("Exception occurred in getZooKeeper.", e);
+		}
 
 		HermesClientCnxnSocketNIO.resume();
 		log.info("Zookeeper client resume.");

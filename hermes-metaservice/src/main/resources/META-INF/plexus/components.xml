@@ -28,6 +28,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.model.ZookeeperEnsembleDao</role>
 				</requirement>
+				<requirement>
+					<role>org.unidal.dal.jdbc.transaction.TransactionManager</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>

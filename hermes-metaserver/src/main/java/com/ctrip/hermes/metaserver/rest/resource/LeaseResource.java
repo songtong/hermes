@@ -72,6 +72,8 @@ public class LeaseResource {
 
 	private static final long CLUSTER_NOT_READY_DELAY_TIME_MILLIS = 5 * 1000L;
 
+	private static final long CLUSTER_NO_LEASE_ASSIGNING_DELAY_TIME_MILLIS = 5 * 1000L;
+
 	private ConsumerLeaseAllocatorLocator m_consumerLeaseAllocatorLocator;
 
 	private BrokerLeaseAllocator m_brokerLeaseAllocator;
@@ -118,13 +120,18 @@ public class LeaseResource {
 					      "/consumer/acquire", params, tpg);
 
 					if (leaseAcquireResponse == null) {
-						ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
-						      tpg.getGroupId());
-						if (leaseAllocator != null) {
-							response = leaseAllocator.tryAcquireLease(tpg, sessionId, getRemoteAddr(host, req));
+						if (m_clusterStateHolder.isLeaseAssigning()) {
+							ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(
+							      tpg.getTopic(), tpg.getGroupId());
+							if (leaseAllocator != null) {
+								response = leaseAllocator.tryAcquireLease(tpg, sessionId, getRemoteAddr(host, req));
+							} else {
+								response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+								      + NO_STRATEGY_DELAY_TIME_MILLIS);
+							}
 						} else {
 							response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-							      + NO_STRATEGY_DELAY_TIME_MILLIS);
+							      + CLUSTER_NO_LEASE_ASSIGNING_DELAY_TIME_MILLIS);
 						}
 					} else {
 						response = leaseAcquireResponse;
@@ -169,13 +176,18 @@ public class LeaseResource {
 					LeaseAcquireResponse leaseAcquireResponse = proxyConsumerLeaseRequestIfNecessary(req, tpg.getTopic(),
 					      "/consumer/renew", params, tpg);
 					if (leaseAcquireResponse == null) {
-						ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(tpg.getTopic(),
-						      tpg.getGroupId());
-						if (leaseAllocator != null) {
-							response = leaseAllocator.tryRenewLease(tpg, sessionId, leaseId, getRemoteAddr(host, req));
+						if (m_clusterStateHolder.isLeaseAssigning()) {
+							ConsumerLeaseAllocator leaseAllocator = m_consumerLeaseAllocatorLocator.findAllocator(
+							      tpg.getTopic(), tpg.getGroupId());
+							if (leaseAllocator != null) {
+								response = leaseAllocator.tryRenewLease(tpg, sessionId, leaseId, getRemoteAddr(host, req));
+							} else {
+								response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+								      + NO_STRATEGY_DELAY_TIME_MILLIS);
+							}
 						} else {
 							response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
-							      + NO_STRATEGY_DELAY_TIME_MILLIS);
+							      + CLUSTER_NO_LEASE_ASSIGNING_DELAY_TIME_MILLIS);
 						}
 					} else {
 						response = leaseAcquireResponse;
@@ -225,8 +237,13 @@ public class LeaseResource {
 					      params, null);
 
 					if (leaseAcquireResponse == null) {
-						response = m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId,
-						      getRemoteAddr(host, req), port);
+						if (m_clusterStateHolder.isLeaseAssigning()) {
+							response = m_brokerLeaseAllocator.tryAcquireLease(topic, partition, sessionId,
+							      getRemoteAddr(host, req), port);
+						} else {
+							response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+							      + CLUSTER_NO_LEASE_ASSIGNING_DELAY_TIME_MILLIS);
+						}
 					} else {
 						response = leaseAcquireResponse;
 					}
@@ -277,8 +294,13 @@ public class LeaseResource {
 					      params, null);
 
 					if (leaseAcquireResponse == null) {
-						response = m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId,
-						      getRemoteAddr(host, req), port);
+						if (m_clusterStateHolder.isLeaseAssigning()) {
+							response = m_brokerLeaseAllocator.tryRenewLease(topic, partition, sessionId, leaseId,
+							      getRemoteAddr(host, req), port);
+						} else {
+							response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
+							      + CLUSTER_NO_LEASE_ASSIGNING_DELAY_TIME_MILLIS);
+						}
 					} else {
 						response = leaseAcquireResponse;
 					}

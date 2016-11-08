@@ -38,6 +38,9 @@
          <page name="idc" title="Idc" path="idc" template="default">
             <description>Idc</description>
          </page>
+         <page name="zk" title="Zk" path="zk" template="default">
+            <description>Zk</description>
+         </page>
       </module>
    </webapp>
 </wizard>

@@ -17,6 +17,7 @@ import com.ctrip.hermes.meta.entity.ZookeeperEnsemble;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
+import com.ctrip.hermes.metaserver.rest.commons.RestException;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 
 @Path("/management/")
@@ -25,6 +26,8 @@ import com.ctrip.hermes.metaservice.zk.ZKClient;
 public class ManagementResource {
 
 	private ZKClient m_zkClient = PlexusComponentLocator.lookup(ZKClient.class);
+
+	private ClusterStateHolder m_clusterStateHolder = PlexusComponentLocator.lookup(ClusterStateHolder.class);
 
 	@POST
 	@Path("zk/resume")
@@ -36,8 +39,12 @@ public class ManagementResource {
 	@POST
 	@Path("zk/pauseAndSwitch")
 	public Response pauseAndwitchZK() {
-		boolean switched = m_zkClient.pauseAndSwitchPrimaryEnsemble();
-		return Response.status(Status.OK).entity(switched).build();
+		try {
+			boolean switched = m_zkClient.pauseAndSwitchPrimaryEnsemble();
+			return Response.status(Status.OK).entity(switched).build();
+		} catch (Exception e) {
+			throw new RestException("Switch failed!", e);
+		}
 	}
 
 	@GET
@@ -50,7 +57,22 @@ public class ManagementResource {
 		status.setZookeeperEnsembles(PlexusComponentLocator.lookup(ZKClient.class).getZookeeperEnsembles());
 		status.setZkConnected(PlexusComponentLocator.lookup(ClusterStateHolder.class).isConnected());
 		status.setZkClientPaused(PlexusComponentLocator.lookup(ZKClient.class).isPaused());
+		status.setLeaseAssigning(PlexusComponentLocator.lookup(ClusterStateHolder.class).isLeaseAssigning());
 		return status;
+	}
+
+	@POST
+	@Path("leaseAssigning/stop")
+	public Response stopLeaseAssigning() {
+		m_clusterStateHolder.setLeaseAssigning(false);
+		return Response.ok().build();
+	}
+
+	@POST
+	@Path("leaseAssigning/start")
+	public Response startLeaseAssigning() {
+		m_clusterStateHolder.setLeaseAssigning(true);
+		return Response.ok().build();
 	}
 
 	public static class ManagementStatus {
@@ -65,6 +87,8 @@ public class ManagementResource {
 		private boolean m_zkClientPaused;
 
 		private List<ZookeeperEnsemble> m_zookeeperEnsembles;
+
+		private boolean m_leaseAssigning;
 
 		public String getCurrentHost() {
 			return currentHost;
@@ -112,6 +136,14 @@ public class ManagementResource {
 
 		public void setZookeeperEnsembles(List<ZookeeperEnsemble> zookeeperEnsembles) {
 			m_zookeeperEnsembles = zookeeperEnsembles;
+		}
+
+		public boolean isLeaseAssigning() {
+			return m_leaseAssigning;
+		}
+
+		public void setLeaseAssigning(boolean m_leaseAssigning) {
+			this.m_leaseAssigning = m_leaseAssigning;
 		}
 
 	}

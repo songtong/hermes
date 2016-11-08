@@ -2,6 +2,7 @@ package com.ctrip.hermes.metaservice.zk;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.curator.ensemble.EnsembleProvider;
@@ -15,6 +16,7 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
@@ -59,17 +61,22 @@ public class ZKClient implements Initializable {
 	}
 
 	private ZookeeperEnsemble getPrimaryEnsemble() {
-		List<ZookeeperEnsemble> ensembles = m_zookeeperEnsembleService.listEnsembles();
-
-		if (ensembles != null && !ensembles.isEmpty()) {
-			m_zookeeperEnsembles.set(ensembles);
-			for (ZookeeperEnsemble ensemble : ensembles) {
-				if (ensemble.isPrimary()) {
-					return ensemble;
+		List<ZookeeperEnsemble> ensembles;
+		try {
+			ensembles = m_zookeeperEnsembleService.listEnsembles();
+			if (ensembles != null && !ensembles.isEmpty()) {
+				m_zookeeperEnsembles.set(ensembles);
+				for (ZookeeperEnsemble ensemble : ensembles) {
+					if (ensemble.isPrimary()) {
+						return ensemble;
+					}
 				}
+			} else {
+				throw new RuntimeException("No zookeeper ensemble found in meta-db");
 			}
-		} else {
-			throw new RuntimeException("No zookeeper ensemble found in meta-db");
+		} catch (DalException e) {
+			log.error("Exception occurred while listing zookeeper ensembles", e);
+			throw new RuntimeException("Exception occurred while listing zookeeper ensembles", e);
 		}
 
 		throw new RuntimeException("Primary zookeeper ensemble not found in meta-db");
@@ -110,7 +117,7 @@ public class ZKClient implements Initializable {
 		}
 	}
 
-	public boolean pauseAndSwitchPrimaryEnsemble() {
+	public boolean pauseAndSwitchPrimaryEnsemble() throws Exception {
 		ZookeeperEnsemble newPrimaryEnsemble = getPrimaryEnsemble();
 		synchronized (this) {
 			ZookeeperEnsemble oldPrimaryEnsemble = m_primaryZookeeperEnsemble.get();
@@ -119,6 +126,12 @@ public class ZKClient implements Initializable {
 				return false;
 			} else {
 				m_primaryZookeeperEnsemble.set(newPrimaryEnsemble);
+
+				TimeUnit.MILLISECONDS.sleep(Math.max(m_config.getZkSessionTimeoutMillis(),
+				      m_config.getZkConnectionTimeoutMillis()) + 1000);
+
+				m_client.getZookeeperClient().getZooKeeper();
+
 				log.info("Zookeeper ensemble's connection string changed from {} to {}.",
 				      JSON.toJSONString(oldPrimaryEnsemble), JSON.toJSONString(newPrimaryEnsemble));
 				HermesClientCnxnSocketNIO.pause();
