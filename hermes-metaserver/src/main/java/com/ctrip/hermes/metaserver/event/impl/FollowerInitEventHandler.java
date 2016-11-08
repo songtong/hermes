@@ -95,8 +95,7 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 	}
 
 	public void start() {
-		m_scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory
-		      .create("FollowerRetry", true));
+		startScheduledExecutor();
 		try {
 			m_baseMetaVersionCache = new NodeCache(m_zkClient.get(), ZKPathUtils.getBaseMetaVersionZkPath());
 			m_baseMetaVersionCache.start(true);
@@ -108,6 +107,11 @@ public class FollowerInitEventHandler extends BaseEventHandler {
 		}
 
 	}
+
+	protected void startScheduledExecutor() {
+	   m_scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory
+		      .create("FollowerRetry", true));
+   }
 
 	@Override
 	protected void processEvent(Event event) throws Exception {

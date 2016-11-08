@@ -231,7 +231,7 @@ public class StartConsumer extends ComponentTestCase {
 
 	@Test
 	public void testConsumer() throws Exception {
-		Consumer.getInstance().start("fx.sbst.sb", "fx.yq.test", new BaseMessageListener<String>() {
+		Consumer.getInstance().start("yq.test2", "yq.test", new BaseMessageListener<String>() {
 
 			@Override
 			protected void onMessage(ConsumerMessage<String> msg) {

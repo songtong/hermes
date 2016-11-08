@@ -25,6 +25,7 @@ import com.ctrip.hermes.portal.service.elastic.DefaultPortalElasticClient;
 import com.ctrip.hermes.portal.service.mail.DefaultPortalMailService;
 import com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService;
 import com.ctrip.hermes.portal.service.tag.DefaultTagService;
+import com.ctrip.hermes.portal.service.zookeeperMigration.DefaultZookeeperMigrationService;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -49,24 +50,26 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		all.add(A(DefaultMailService.class));
 		all.add(A(DefaultPortalMailService.class));
-		
+
 		all.add(A(FileMailAccountProvider.class));
-		
+
 		all.add(A(SyncService.class));
-		
+
 		all.add(A(TracerEsQueryService.class));
-		
+
 		all.add(A(TracerService.class));
-		
+
 		all.add(A(CachedTagDao.class));
-		
+
 		all.add(A(DefaultTagService.class));
-		
+
 		all.add(A(MysqlPartitionStrategy.class));
-		
+
 		all.add(A(KafkaPartitionStrategy.class));
-		
+
 		all.add(A(DefaultPortalMetaService.class));
+
+		all.add(A(DefaultZookeeperMigrationService.class));
 
 		// Please keep it as last
 		all.addAll(new WebComponentConfigurator().defineComponents());

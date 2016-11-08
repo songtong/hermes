@@ -89,14 +89,6 @@ public class MetaServerConfig {
 		return 3000;
 	}
 
-	public String getBrokerRegistryBasePath() {
-		return "brokers";
-	}
-
-	public String getBrokerRegistryName(String name) {
-		return "default";
-	}
-
 	public int getLeaseExpireRebalanceTriggerThreadCount() {
 		return 5;
 	}

@@ -17,6 +17,17 @@
         FROM <TABLE/>
         ORDER BY <FIELD name='id'/> ASC]]></statement>
 			</query>
+			<query name="find-by-id" type="SELECT" multiple="true">
+				<param name="id" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${id}]]></statement>
+			</query>
+			<query name="find-primary" type="SELECT" multiple="true">
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='primary'/> = TRUE]]></statement>
+			</query>
 		</query-defs>
 	</entity>
 	<entity name="kv" table="kv" alias="k">

@@ -262,6 +262,33 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.portal.service.zookeeperMigration.ZookeeperMigrationService</role>
+			<implementation>com.ctrip.hermes.portal.service.zookeeperMigration.DefaultZookeeperMigrationService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ZookeeperEnsembleService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.service.ServerService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.metaservice.zk.ZKConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>org.unidal.web.mvc.model.ModuleRegistry</role>
 			<implementation>org.unidal.web.mvc.model.ModuleRegistry</implementation>
 			<configuration>
@@ -513,6 +540,24 @@
 		<component>
 			<role>com.ctrip.hermes.portal.console.idc.JspViewer</role>
 			<implementation>com.ctrip.hermes.portal.console.idc.JspViewer</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.web.mvc.view.model.ModelHandler</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.zk.Handler</role>
+			<implementation>com.ctrip.hermes.portal.console.zk.Handler</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.portal.console.zk.JspViewer</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.portal.console.zk.JspViewer</role>
+			<implementation>com.ctrip.hermes.portal.console.zk.JspViewer</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.web.mvc.view.model.ModelHandler</role>

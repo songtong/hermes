@@ -28,10 +28,10 @@ public class ObserverInitEventHandler extends FollowerInitEventHandler {
 		return EventType.OBSERVER_INIT;
 	}
 
-	public void start() {
+	@Override
+	protected void startScheduledExecutor() {
 		m_scheduledExecutor = Executors.newSingleThreadScheduledExecutor(HermesThreadFactory
 		      .create("ObserverRetry", true));
-		super.start();
 	}
 
 	protected boolean roleChanged(Meta baseMeta, ClusterStateHolder clusterStateHolder) {

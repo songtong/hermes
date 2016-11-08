@@ -39,10 +39,18 @@ public class ZKPathUtils {
 
 	private static final String BROKER_LEASE_PATH_PATTERN = BROKER_LEASE_PATH_PREFIX_PATTERN + "/%s";
 
+	public static String getBrokerRegistryBasePath() {
+		return "brokers";
+	}
+
+	public static String getBrokerRegistryName(String name) {
+		return "default";
+	}
+
 	public static String getCmessageExchangePath() {
 		return "/cmessage-exchange";
 	}
-	
+
 	public static String getCmessageConfigPath() {
 		return "/cmessage-config";
 	}
@@ -78,7 +86,7 @@ public class ZKPathUtils {
 	}
 
 	public static List<String> getConsumerLeaseZkPaths(Topic topic, List<Partition> partitions,
-			List<ConsumerGroup> consumerGroups) {
+	      List<ConsumerGroup> consumerGroups) {
 		List<String> paths = new LinkedList<>();
 		if (Endpoint.BROKER.equals(topic.getEndpointType())) {
 			String topicName = topic.getName();
