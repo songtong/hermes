@@ -37,7 +37,7 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Component(value = "ConsumeDelayChecker")
+//@Component(value = "ConsumeDelayChecker")
 public class ConsumeDelayChecker extends CatBasedChecker implements InitializingBean {
 
 	// key: topic, value: threshold in millisecond

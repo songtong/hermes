@@ -14,7 +14,7 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.service.ESMonitorService;
 
-@Component(value = BrokerLogErrorChecker.ID)
+//@Component(value = BrokerLogErrorChecker.ID)
 public class BrokerLogErrorChecker implements Checker {
 	public static final String ID = "BrokerLogErrorChecker";
 

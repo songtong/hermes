@@ -51,7 +51,7 @@ import com.ctrip.hermes.monitor.utils.MonitorUtils;
 
 import io.netty.util.internal.ConcurrentSet;
 
-@Component(value = ConsumeLargeBacklogChecker.ID)
+//@Component(value = ConsumeLargeBacklogChecker.ID)
 public class ConsumeLargeBacklogChecker extends DBBasedChecker implements InitializingBean {
 
 	private static final Logger log = LoggerFactory.getLogger(ConsumeLargeBacklogChecker.class);

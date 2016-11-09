@@ -37,7 +37,7 @@ import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.DBBasedChecker;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
 
-@Component(value = "LongTimeNoConsumeChecke")
+//@Component(value = "LongTimeNoConsumeChecke")
 public class LongTimeNoConsumeChecker extends DBBasedChecker {
 	private static final Logger log = LoggerFactory.getLogger(LongTimeNoConsumeChecker.class);
 

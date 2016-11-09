@@ -18,7 +18,7 @@ import com.ctrip.hermes.metaservice.monitor.event.ConsumerAckErrorEvent;
 import com.ctrip.hermes.monitor.checker.CatBasedChecker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
-@Component(value = ConsumerAckErrorChecker.ID)
+//@Component(value = ConsumerAckErrorChecker.ID)
 public class ConsumerAckErrorChecker extends CatBasedChecker implements InitializingBean {
 	private static final Logger log = LoggerFactory.getLogger(ConsumerAckErrorChecker.class);
 

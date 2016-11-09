@@ -29,7 +29,7 @@ import com.ctrip.hermes.monitor.checker.mysql.task.DeadLetterCheckerTask;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
 import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
 
-@Component(value = TopicLargeDeadLetterChecker.ID)
+//@Component(value = TopicLargeDeadLetterChecker.ID)
 public class TopicLargeDeadLetterChecker extends DBBasedChecker {
 	public static final String ID = "TopicLargeDeadLetterChecker";
 

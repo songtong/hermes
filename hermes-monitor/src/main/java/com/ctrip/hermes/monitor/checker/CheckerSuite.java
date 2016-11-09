@@ -34,7 +34,7 @@ import com.ctrip.hermes.monitor.config.MonitorConfig;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Component
+//@Component
 public class CheckerSuite {
 
 	private static final Logger log = LoggerFactory.getLogger(CheckerSuite.class);
@@ -69,7 +69,7 @@ public class CheckerSuite {
 		}
 	}
 
-	@Scheduled(cron = "0 */5 * * * *")
+//	@Scheduled(cron = "0 */5 * * * *")
 	public void runSuite() {
 		printStartInfo(m_checkers);
 
