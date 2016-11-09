@@ -89,6 +89,8 @@ public class ClusterStateHolder implements Initializable {
 
 	private PathChildrenCache m_leaderLatchPathChildrenCache;
 
+	private volatile boolean m_leaseAssigning = true;
+
 	public void becomeLeader() {
 		m_roleLock.writeLock().lock();
 		try {
@@ -294,4 +296,12 @@ public class ClusterStateHolder implements Initializable {
 	public void setRole(Role role) {
 		m_role = role;
 	}
+
+	public boolean isLeaseAssigning() {
+	   return m_leaseAssigning;
+   }
+
+	public void setLeaseAssigning(boolean m_leaseAssigning) {
+	   this.m_leaseAssigning = m_leaseAssigning;
+   }
 }

@@ -39,7 +39,6 @@ public class MetaMerger {
 		}
 		if (CollectionUtil.isNotEmpty(zookeeperEnsembles)) {
 			newMeta.getZookeeperEnsembles().clear();
-			;
 			for (ZookeeperEnsemble zookeeperEnsemble : zookeeperEnsembles) {
 				newMeta.getZookeeperEnsembles().put(zookeeperEnsemble.getId(), zookeeperEnsemble);
 			}

@@ -117,11 +117,11 @@ public class LeaderInitEventHandler extends BaseEventHandler {
 	public void start() {
 		m_serviceDiscovery = ServiceDiscoveryBuilder.builder(Void.class)//
 		      .client(m_zkClient.get())//
-		      .basePath(m_config.getBrokerRegistryBasePath())//
+		      .basePath(ZKPathUtils.getBrokerRegistryBasePath())//
 		      .build();
 
 		m_serviceCache = m_serviceDiscovery.serviceCacheBuilder()//
-		      .name(m_config.getBrokerRegistryName(null))//
+		      .name(ZKPathUtils.getBrokerRegistryName(null))//
 		      .threadFactory(HermesThreadFactory.create("brokerDiscoveryCache", true))//
 		      .build();
 
@@ -138,6 +138,7 @@ public class LeaderInitEventHandler extends BaseEventHandler {
 
 			m_metaServerListCache = new PathChildrenCache(m_zkClient.get(), ZKPathUtils.getMetaServersZkPath(), true);
 			m_metaServerListCache.start(StartMode.BUILD_INITIAL_CACHE);
+
 		} catch (Exception e) {
 			throw new RuntimeException(String.format("Init {} failed.", getName()), e);
 		}
