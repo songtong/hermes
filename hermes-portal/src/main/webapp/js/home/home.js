@@ -48,15 +48,10 @@ homeapp.controller("hermes-dashboard-controller", function($scope, $http,
 		$resource, $compile, $sce) {
 	$scope.consume_delays_detail = [];
 	$scope.oudate_topics = [];
-	$scope.broker_received_qps = [];
-	$scope.broker_delivered_qps = [];
 
 	$scope.display_consume_delays_deail = []
 			.concat($scope.consume_delays_detail);
 	$scope.display_outdate_topics = [].concat($scope.outdate_topics);
-	$scope.display_broker_received_qps = [].concat($scope.broker_received_qps);
-	$scope.display_broker_delivered_qps = []
-			.concat($scope.broker_delivered_qps);
 
 	$scope.delay_table_is_loading = true;
 	$scope.outdate_topics_table_is_loading = true;
@@ -74,48 +69,15 @@ homeapp.controller("hermes-dashboard-controller", function($scope, $http,
 			isArray : true,
 			url : '/api/dashboard/top/outdate-topics'
 		},
-		get_brokers_received_qps : {
-			method : 'GET',
-			isArray : true,
-			url : '/api/dashboard/top/broker/qps/received'
-		},
-		get_brokers_delivered_qps : {
-			method : 'GET',
-			isArray : true,
-			url : '/api/dashboard/top/broker/qps/delivered'
-		},
-		get_broker_received_qps : {
-			method : 'GET',
-			isArray : false,
-			url : '/api/dashboard/top/broker/qps/received/:brokerIp'
-		},
-		get_broker_delivered_qps : {
-			method : 'GET',
-			isArray : false,
-			url : '/api/dashboard/top/broker/qps/delivered/:brokerIp'
-		}
 	});
 
 	function update_datas() {
-//		dashboard_resource.get_consume_delays({}, function(data) {
-//			$scope.consume_delays_detail = recombineDelays(data);
-//			$scope.delay_table_is_loading = false;
-//		});
 
 		dashboard_resource.get_outdate_topics({}, function(data) {
 			$scope.outdate_topics = data;
 			$scope.outdate_topics_table_is_loading = false;
 		});
 
-		dashboard_resource.get_brokers_received_qps({}, function(data) {
-			$scope.broker_received_qps = data;
-			$scope.broker_received_table_is_loading = false;
-		});
-
-		dashboard_resource.get_brokers_delivered_qps({}, function(data) {
-			$scope.broker_delivered_qps = data;
-			$scope.broker_delivered_table_is_loading = false;
-		});
 	}
 
 	update_datas();
@@ -125,23 +87,6 @@ homeapp.controller("hermes-dashboard-controller", function($scope, $http,
 		return "/jsp/console/home/delay-detail.html";
 	}
 
-	$scope.get_broker_received_detail = function(broker) {
-		dashboard_resource.get_broker_received_qps({
-			'brokerIp' : broker
-		}, function(data) {
-			$scope.current_broker_received_details = data;
-		})
-	}
-
-	$scope.get_broker_delivered_detail = function(broker) {
-		console.log(broker);
-		dashboard_resource.get_broker_delivered_qps({
-			'brokerIp' : broker
-		}, function(data) {
-			console.log(data);
-			$scope.current_broker_delivered_details = data;
-		})
-	}
 
 	$scope.normalize_delay = function(delay) {
 		if (delay >= 86400000) {

@@ -75,19 +75,7 @@
 					<role>com.ctrip.hermes.metaservice.service.PartitionService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.portal.service.elastic.PortalElasticClient</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.portal.service.elastic.PortalElasticClient</role>
-			<implementation>com.ctrip.hermes.portal.service.elastic.DefaultPortalElasticClient</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.portal.config.PortalConfig</role>
 				</requirement>
 			</requirements>
 		</component>

@@ -10,23 +10,10 @@ angular
 					};
 
 					var monitor_resource = $resource("/api/dashboard/", {}, {
-						get_declare_topics : {
-							method : "GET",
-							isArray : false,
-							url : "/api/dashboard/topics/:ip"
-						},
 					});
 
 					$scope.$watch($scope.declare_topics, function() {
 					});
-
-					if ($scope.current_ip.length > 0) {
-						monitor_resource.get_declare_topics({
-							'ip' : $scope.current_ip
-						}, function(data) {
-							$scope.declare_topics = data;
-						});
-					}
 
 					$scope.get_client_produced_kibana = function(kibanaUrl, producedTopic) {
 						var url = kibanaUrl
@@ -51,13 +38,4 @@ angular
 					}
 
 					$scope.selected = undefined;
-					$scope.getClients = function(val) {
-						return $http.get('/api/dashboard/clients', {
-							params : {
-								part : val
-							}
-						}).then(function(response) {
-							return response.data;
-						});
-					};
 				});

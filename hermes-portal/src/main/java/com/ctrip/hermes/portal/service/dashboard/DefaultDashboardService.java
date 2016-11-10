@@ -52,8 +52,6 @@ import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -66,10 +64,7 @@ import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
 import com.ctrip.hermes.metaservice.service.PartitionService;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.config.PortalConstants;
-import com.ctrip.hermes.portal.resource.view.BrokerQPSBriefView;
-import com.ctrip.hermes.portal.resource.view.BrokerQPSDetailView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
-import com.ctrip.hermes.portal.service.elastic.PortalElasticClient;
 import com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -112,28 +107,9 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	private PartitionService m_partitionService;
 
 	@Inject
-	private PortalElasticClient m_elasticClient;
-
-	@Inject
 	private ClientEnvironment m_env;
 
-	private List<String> m_latestBroker = new ArrayList<String>();
-
-	private Set<String> m_latestClients = new HashSet<String>();
-
 	private Map<String, Date> m_latestProduced = new HashMap<>();
-
-	// key: topic, value: ips
-	private Map<String, Set<String>> m_topic2producers = new HashMap<>();
-
-	// key: topic, vlaue.key: consumerName, value.value: ips>
-	private Map<String, Map<String, Set<String>>> m_topic2consumers = new HashMap<>();
-
-	// key: producer ip, value: topics
-	private Map<String, Set<String>> m_producer2topics = new HashMap<>();
-
-	// key: consumer ip, value.key: consumerName, value.value: topics
-	private Map<String, Map<String, Set<String>>> m_consumer2topics = new HashMap<>();
 
 	private long m_timeStamp = -1;
 
@@ -153,50 +129,6 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	public Date getLatestProduced(String topic) {
 		Date date = m_latestProduced.get(topic);
 		return date == null ? new Date(0) : date;
-	}
-
-	@Override
-	public Map<String, Set<String>> getTopic2ProducerIPs() {
-		return m_topic2producers;
-	}
-
-	@Override
-	public Map<String, Map<String, Set<String>>> getTopic2ConsumerIPs() {
-		return m_topic2consumers;
-	}
-
-	@Override
-	public Map<String, Map<String, Set<String>>> getConsumerIP2Topics() {
-		return m_consumer2topics;
-	}
-
-	@Override
-	public Map<String, Set<String>> getProducerIP2Topics() {
-		return m_producer2topics;
-	}
-
-	@Override
-	public List<String> getLatestBrokers() {
-		return m_latestBroker;
-	}
-
-	private Meta loadMeta() {
-		try {
-			String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
-			      .getProperty("meta.port", "80").trim(), "meta");
-			HttpResponse response = Request.Get(url).execute().returnResponse();
-			int statusCode = response.getStatusLine().getStatusCode();
-			if (statusCode == HttpStatus.SC_OK) {
-				String responseContent = EntityUtils.toString(response.getEntity());
-				return JSON.parseObject(responseContent, Meta.class);
-			}
-			log.warn("Loading meta from meta-servers, status code is {}", statusCode);
-		} catch (Exception e) {
-			if (log.isDebugEnabled()) {
-				log.debug("Load meta from meta-servers faied.", e);
-			}
-		}
-		return m_metaService.getMetaEntity();
 	}
 
 	private String getMetaserverStatusString() {
@@ -306,23 +238,6 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		return topicConsumers;
 	}
 
-	private void updateLatestBroker() {
-		List<String> list = new ArrayList<String>();
-		Meta meta = loadMeta();
-		if (meta != null) {
-			for (Entry<String, Endpoint> entry : meta.getEndpoints().entrySet()) {
-				if (Endpoint.BROKER.equals(entry.getValue().getType())) {
-					String host = entry.getValue().getHost();
-					host = host.equals("localhost") || host.equals("127.0.0.1") ? PortalConstants.LOCALHOST : host;
-					list.add(host);
-				}
-			}
-		} else {
-			log.warn("Can not load meta from either meta-servers or db.");
-		}
-		m_latestBroker = list;
-	}
-
 	@Override
 	public List<DelayDetail> getDelayDetailForConsumer(String topic, String consumer) {
 		List<DelayDetail> consumerDelays = cachedConsumerBacklogs.getIfPresent(new Pair<String, String>(topic, consumer));
@@ -413,69 +328,6 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			}
 		}
 		m_latestProduced = m;
-	}
-
-	private void updateProducerTopicRelationship() {
-		Map<String, Set<String>> topic2producers = new HashMap<String, Set<String>>();
-		for (String topic : m_topicService.getTopicNames()) {
-			topic2producers.put(topic, new HashSet<String>(m_elasticClient.getLastWeekProducers(topic)));
-		}
-		m_topic2producers = topic2producers;
-
-		Map<String, Set<String>> producer2topics = new HashMap<String, Set<String>>();
-		for (Entry<String, Set<String>> entry : topic2producers.entrySet()) {
-			String topicName = entry.getKey();
-			for (String ip : entry.getValue()) {
-				Set<String> topics = producer2topics.get(ip);
-				if (topics == null) {
-					producer2topics.put(ip, topics = new HashSet<String>());
-				}
-				topics.add(topicName);
-			}
-		}
-		m_producer2topics = producer2topics;
-	}
-
-	private void updateConsumerTopicRelationship() {
-		Map<String, Map<String, Set<String>>> topic2consumers = new HashMap<>();
-		for (Entry<String, Topic> entry : m_topicService.getTopicEntities().entrySet()) {
-			String topic = entry.getKey();
-			for (ConsumerGroup c : entry.getValue().getConsumerGroups()) {
-				String consumer = c.getName();
-				if (!topic2consumers.containsKey(topic)) {
-					topic2consumers.put(topic, new HashMap<String, Set<String>>());
-				}
-				HashSet<String> set = new HashSet<String>(m_elasticClient.getLastWeekConsumers(topic, consumer));
-				topic2consumers.get(topic).put(consumer, set);
-			}
-		}
-		m_topic2consumers = topic2consumers;
-
-		Map<String, Map<String, Set<String>>> consumer2topics = new HashMap<String, Map<String, Set<String>>>();
-		for (Entry<String, Map<String, Set<String>>> entry : topic2consumers.entrySet()) {
-			String topicName = entry.getKey();
-			for (Entry<String, Set<String>> ips : entry.getValue().entrySet()) {
-				String groupName = ips.getKey();
-				for (String ip : ips.getValue()) {
-					Map<String, Set<String>> topics = consumer2topics.get(ip);
-					if (topics == null) {
-						consumer2topics.put(ip, topics = new HashMap<String, Set<String>>());
-					}
-					Set<String> set = topics.get(groupName);
-					if (set == null) {
-						topics.put(groupName, set = new HashSet<String>());
-					}
-					set.add(topicName);
-				}
-			}
-		}
-		m_consumer2topics = consumer2topics;
-	}
-
-	private void updateLatestClients() {
-		Set<String> set = new HashSet<String>(m_consumer2topics.keySet());
-		set.addAll(m_producer2topics.keySet());
-		m_latestClients = set;
 	}
 
 	public Map<String, Map<String, Map<String, Long>>> getTopicOffsetLags() {
@@ -627,7 +479,6 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	@Override
 	public void initialize() throws InitializationException {
-		updateLatestBroker();
 
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_MYSQL_UPDATE_TASK", true))
 		      .scheduleWithFixedDelay(new Runnable() {
@@ -635,26 +486,11 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			      public void run() {
 				      try {
 					      updateLatestProduced();
-					      updateLatestBroker();
 				      } catch (Throwable e) {
 					      log.error("Update mysql monitor information failed.", e);
 				      }
 			      }
 		      }, 0, 1, TimeUnit.MINUTES);
-
-		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_ELASTIC_UPDATE_TASK", true))
-		      .scheduleWithFixedDelay(new Runnable() {
-			      @Override
-			      public void run() {
-				      try {
-					      updateProducerTopicRelationship();
-					      updateConsumerTopicRelationship();
-					      updateLatestClients();
-				      } catch (Throwable e) {
-					      log.error("Update elastic monitor information failed.", e);
-				      }
-			      }
-		      }, 0, 30, TimeUnit.MINUTES);
 
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_KAFKA_OFFSET_TASK", true))
 		      .scheduleWithFixedDelay(new Runnable() {
@@ -668,18 +504,6 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			      }
 		      }, 0, 5, TimeUnit.MINUTES);
 
-	}
-
-	@Override
-	public List<String> getRelatedClients(String part) {
-		List<String> list = new ArrayList<String>();
-		for (String client : m_latestClients) {
-			if (client.contains(part)) {
-				list.add(client);
-			}
-		}
-		Collections.sort(list);
-		return list;
 	}
 
 	@Override
@@ -705,35 +529,6 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		});
 		top = top > list.size() ? list.size() : top;
 		return list.subList(0, top > 0 ? top : 0);
-	}
-
-	private Map<String, Integer> normalizeBrokerQPSMap(Map<String, Integer> map) {
-		for (String broker : m_latestBroker) {
-			if (!map.containsKey(broker)) {
-				map.put(broker, 0);
-			}
-		}
-		return map;
-	}
-
-	@Override
-	public List<BrokerQPSBriefView> getBrokerReceivedQPS() {
-		return BrokerQPSBriefView.convertFromMap(normalizeBrokerQPSMap(m_elasticClient.getBrokerReceived()));
-	}
-
-	@Override
-	public List<BrokerQPSBriefView> getBrokerDeliveredQPS() {
-		return BrokerQPSBriefView.convertFromMap(normalizeBrokerQPSMap(m_elasticClient.getBrokerDelivered()));
-	}
-
-	@Override
-	public BrokerQPSDetailView getBrokerReceivedDetailQPS(String brokerIp) {
-		return new BrokerQPSDetailView(brokerIp, m_elasticClient.getBrokerTopicReceived(brokerIp, 50));
-	}
-
-	@Override
-	public BrokerQPSDetailView getBrokerDeliveredDetailQPS(String brokerIp) {
-		return new BrokerQPSDetailView(brokerIp, m_elasticClient.getBrokerTopicDelivered(brokerIp, 50));
 	}
 
 	@Override
