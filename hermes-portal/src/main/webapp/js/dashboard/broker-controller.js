@@ -8,15 +8,6 @@ angular
 					$scope.main_board_content = "";
 
 					var monitor_resource = $resource("/api/dashboard/", {}, {
-						get_brokers : {
-							method : "GET",
-							isArray : true,
-							url : "/api/dashboard/brief/brokers"
-						},
-					});
-
-					monitor_resource.get_brokers({}, function(data) {
-						$scope.brokers = data;
 					});
 
 					function update_main_board(url) {

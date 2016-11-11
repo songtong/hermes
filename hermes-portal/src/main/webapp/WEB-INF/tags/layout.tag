@@ -100,8 +100,6 @@
 								<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">${page.title} <span class="caret"></span></a>
 									<ul class="dropdown-menu">
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}#/detail/_default">Topic</a></li>
-										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=broker">Broker</a></li>
-										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=client">Client</a></li>
 										<li><a href="${model.webapp}/${page.moduleName}/${page.path}?op=monitor_event">Monitor Event</a></li>
 									</ul></li>
 							</c:if>

@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.ws.rs.DefaultValue;
@@ -26,7 +23,6 @@ import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
-import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
@@ -44,7 +40,6 @@ import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
 import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
-import com.ctrip.hermes.portal.resource.view.MonitorClientView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayBriefView;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.dashboard.DashboardService;
@@ -83,12 +78,6 @@ public class DashboardResource {
 		});
 
 		return Response.status(Status.OK).entity(list).build();
-	}
-
-	@GET
-	@Path("brief/brokers")
-	public Response getBrokerBriefs() {
-		return Response.status(Status.OK).entity(m_dashboardService.getLatestBrokers()).build();
 	}
 
 	@GET
@@ -176,70 +165,6 @@ public class DashboardResource {
 	@Path("top/outdate-topics")
 	public Response getTopOutdateTopic(@QueryParam("top") @DefaultValue("100") int top) {
 		return Response.status(Status.OK).entity(m_dashboardService.getTopOutdateTopic(top)).build();
-	}
-
-	@GET
-	@Path("top/broker/qps/received")
-	public Response getTopBrokerReceived() {
-		return Response.status(Status.OK).entity(m_dashboardService.getBrokerReceivedQPS()).build();
-	}
-
-	@GET
-	@Path("top/broker/qps/delivered")
-	public Response getTopBrokerDelivered() {
-		return Response.status(Status.OK).entity(m_dashboardService.getBrokerDeliveredQPS()).build();
-	}
-
-	@GET
-	@Path("top/broker/qps/received/{brokerIp}")
-	public Response getTopBrokerTopicReceived(@PathParam("brokerIp") String ip) {
-		return Response.status(Status.OK).entity(m_dashboardService.getBrokerReceivedDetailQPS(ip)).build();
-	}
-
-	@GET
-	@Path("top/broker/qps/delivered/{brokerIp}")
-	public Response getTopBrokerTopicDelivered(@PathParam("brokerIp") String ip) {
-		return Response.status(Status.OK).entity(m_dashboardService.getBrokerDeliveredDetailQPS(ip)).build();
-	}
-
-	@GET
-	@Path("clients")
-	public Response findClients(@QueryParam("part") String part) {
-		return Response.status(Status.OK).entity(m_dashboardService.getRelatedClients(part)).build();
-	}
-
-	@GET
-	@Path("topics/{ip}")
-	public Response getDeclaredTopics(@PathParam("ip") String ip) {
-		MonitorClientView view = new MonitorClientView(ip);
-		view.setProduceTopics(getProduceTopicsList(m_dashboardService.getProducerIP2Topics(), ip));
-		view.setConsumeTopics(getConsumeTopicsList(m_dashboardService.getConsumerIP2Topics(), ip));
-		return Response.status(Status.OK).entity(view).build();
-	}
-
-	private List<String> getProduceTopicsList(Map<String, Set<String>> map, String key) {
-		Set<String> set = map.get(key);
-		List<String> list = set == null ? new ArrayList<String>() : new ArrayList<String>(set);
-		Collections.sort(list);
-		return list;
-	}
-
-	private List<Pair<String, List<String>>> getConsumeTopicsList(Map<String, Map<String, Set<String>>> m, String ip) {
-		List<Pair<String, List<String>>> list = new ArrayList<Pair<String, List<String>>>();
-		Map<String, Set<String>> ms = m.get(ip);
-		ms = ms == null ? new HashMap<String, Set<String>>() : ms;
-		for (Entry<String, Set<String>> entry : ms.entrySet()) {
-			ArrayList<String> l = new ArrayList<String>(entry.getValue());
-			Collections.sort(l);
-			list.add(new Pair<String, List<String>>(entry.getKey(), l));
-		}
-		Collections.sort(list, new Comparator<Pair<String, List<String>>>() {
-			@Override
-			public int compare(Pair<String, List<String>> o1, Pair<String, List<String>> o2) {
-				return o1.getKey().compareTo(o2.getKey());
-			}
-		});
-		return list;
 	}
 
 	@GET
