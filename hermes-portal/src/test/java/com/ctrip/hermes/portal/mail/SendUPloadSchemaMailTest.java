@@ -15,8 +15,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.unidal.helper.Reflects;
 
-import com.ctrip.hermes.Hermes.Env;
-import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
@@ -57,8 +56,7 @@ public class SendUPloadSchemaMailTest {
 		cgs.add(cg2);
 		when(mockConsumerService.findConsumerViews(anyLong())).thenReturn(cgs);
 
-		Env env = Env.FWS;
-		when(mockEnv.getEnv()).thenReturn(env);
+		when(mockEnv.getEnv()).thenReturn("FWS");
 
 		when(mockConfig.getHermesEmailGroupAddress()).thenReturn("qingyang@Ctrip.com");
 		when(mockConfig.getEmailTemplateDir()).thenReturn("/templates");

@@ -1,9 +1,7 @@
-package com.ctrip.hermes.core.env;
+package com.ctrip.hermes.env;
 
 import java.io.IOException;
 import java.util.Properties;
-
-import com.ctrip.hermes.Hermes.Env;
 
 public interface ClientEnvironment {
 
@@ -13,9 +11,7 @@ public interface ClientEnvironment {
 
 	Properties getGlobalConfig();
 
-	Env getEnv();
+	String getEnv();
 
-	boolean isLocalMode();
-	
 	String getMetaServerDomainName();
 }

@@ -38,7 +38,7 @@
 			<implementation>com.ctrip.hermes.metaservice.zk.ZKConfig</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -637,7 +637,7 @@
 			<implementation>com.ctrip.hermes.metaservice.service.CompileService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -667,7 +667,7 @@
 					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.queue.MessagePriorityDao</role>
@@ -897,7 +897,7 @@
 			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.SMSNotifyHandler</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -907,7 +907,7 @@
 			<implementation>com.ctrip.hermes.metaservice.service.notify.handler.TTSNotifyHandler</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>

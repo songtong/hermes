@@ -27,8 +27,8 @@ import org.unidal.tuple.Pair;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ctrip.hermes.core.bo.Offset;
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.CollectionUtil;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -360,8 +360,8 @@ public class ConsumerService {
 
 	public Pair<Integer, String> getRequestToMetaServer(final String path, final Map<String, String> requestParams) {
 
-		String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env
-		      .getGlobalConfig().getProperty("meta.port", "80").trim(), path);
+		String url = String.format("http://%s:%s/%s", m_env.getMetaServerDomainName(), m_env.getGlobalConfig()
+		      .getProperty("meta.port", "80").trim(), path);
 		InputStream is = null;
 		try {
 			if (requestParams != null) {

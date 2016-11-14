@@ -10,8 +10,8 @@ import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.env.ClientEnvironment;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)

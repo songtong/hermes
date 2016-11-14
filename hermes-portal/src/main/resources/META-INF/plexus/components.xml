@@ -24,7 +24,7 @@
 			<implementation>com.ctrip.hermes.portal.config.PortalConfig</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -75,7 +75,7 @@
 					<role>com.ctrip.hermes.metaservice.service.PartitionService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -126,7 +126,7 @@
 					<role>com.ctrip.hermes.portal.config.PortalConfig</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -278,7 +278,7 @@
 					<role>com.ctrip.hermes.metaservice.service.ServerService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKConfig</role>

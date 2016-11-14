@@ -43,8 +43,6 @@ import com.ctrip.hermes.broker.dal.hermes.MessagePriorityDao;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
-import com.ctrip.hermes.core.env.ClientEnvironment;
-import com.ctrip.hermes.core.env.DefaultClientEnvironment;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
@@ -96,7 +94,6 @@ public abstract class BaseBrokerTest extends MockitoComponentTestCase {
 
 	@Before
 	public final void before() throws Exception {
-		((DefaultClientEnvironment) lookup(ClientEnvironment.class)).setLocalMode(true);
 
 		// unidal's jdbc unit test support classes
 		defineComponent(JdbcTestHelper.class);

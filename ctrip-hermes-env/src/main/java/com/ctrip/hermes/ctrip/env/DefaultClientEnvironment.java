@@ -1,4 +1,4 @@
-package com.ctrip.hermes.core.env;
+package com.ctrip.hermes.ctrip.env;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,23 +7,19 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.ContainerHolder;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.Hermes;
-import com.ctrip.hermes.Hermes.Env;
+import com.ctrip.hermes.env.ClientEnvironment;
 
 @Named(type = ClientEnvironment.class)
 public class DefaultClientEnvironment extends ContainerHolder implements ClientEnvironment, Initializable {
@@ -37,11 +33,9 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	private final static String GLOBAL_DEFAULT_FILE = "/hermes.properties";
 
-	private static final String KEY_IS_LOCAL_MODE = "isLocalMode";
+	private ConcurrentMap<String, Properties> m_producerConfigCache = new ConcurrentHashMap<String, Properties>();
 
-	private ConcurrentMap<String, Properties> m_producerCache = new ConcurrentHashMap<String, Properties>();
-
-	private ConcurrentMap<String, Properties> m_consumerCache = new ConcurrentHashMap<String, Properties>();
+	private ConcurrentMap<String, Properties> m_consumerConfigCache = new ConcurrentHashMap<String, Properties>();
 
 	private Properties m_producerDefault;
 
@@ -51,24 +45,26 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	private static final Logger logger = LoggerFactory.getLogger(DefaultClientEnvironment.class);
 
-	private AtomicReference<Env> m_env = new AtomicReference<Env>();
-
-	private Map<Env, String> m_env2MetaDomain = new HashMap<>();
-
-	// for test only
-	private Boolean m_localMode;
+	@Inject
+	private EnvProvider m_envProvider;
 
 	@Override
 	public String getMetaServerDomainName() {
-		return m_env2MetaDomain.get(getEnv());
+		return m_envProvider.getMetaServerDomainName();
 	}
 
 	@Override
 	public Properties getProducerConfig(String topic) throws IOException {
-		Properties properties = m_producerCache.get(topic);
+		Properties properties = m_producerConfigCache.get(topic);
 		if (properties == null) {
-			properties = readConfigFile(String.format(PRODUCER_PATTERN, topic), m_producerDefault);
-			m_producerCache.putIfAbsent(topic, properties);
+			synchronized (m_producerConfigCache) {
+				properties = m_producerConfigCache.get(topic);
+				if (properties == null) {
+					m_producerConfigCache.put(topic,
+					      readConfigFile(String.format(PRODUCER_PATTERN, topic), m_producerDefault));
+					properties = m_producerConfigCache.get(topic);
+				}
+			}
 		}
 
 		return properties;
@@ -76,10 +72,16 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 
 	@Override
 	public Properties getConsumerConfig(String topic) throws IOException {
-		Properties properties = m_consumerCache.get(topic);
+		Properties properties = m_consumerConfigCache.get(topic);
 		if (properties == null) {
-			properties = readConfigFile(String.format(CONSUMER_PATTERN, topic), m_consumerDefault);
-			m_consumerCache.putIfAbsent(topic, properties);
+			synchronized (m_consumerConfigCache) {
+				properties = m_consumerConfigCache.get(topic);
+				if (properties == null) {
+					m_consumerConfigCache.put(topic,
+					      readConfigFile(String.format(CONSUMER_PATTERN, topic), m_consumerDefault));
+					properties = m_consumerConfigCache.get(topic);
+				}
+			}
 		}
 
 		return properties;
@@ -135,71 +137,12 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 			throw new InitializationException("Error read producer default config file", e);
 		}
 
-		m_env2MetaDomain.put(Env.LOCAL, m_globalDefault.getProperty("local.domain", "meta.hermes.local"));
-		// TODO use real dev&lpt domain when get dev&lpt domain
-		m_env2MetaDomain.put(Env.DEV, m_globalDefault.getProperty("dev.domain", "10.3.8.63"));
-		m_env2MetaDomain.put(Env.LPT, m_globalDefault.getProperty("lpt.domain", "10.2.5.133"));
-		m_env2MetaDomain.put(Env.FAT, m_globalDefault.getProperty("fat.domain", "meta.hermes.fws.qa.nt.ctripcorp.com"));
-		m_env2MetaDomain.put(Env.FWS, m_globalDefault.getProperty("fws.domain", "meta.hermes.fws.qa.nt.ctripcorp.com"));
-		m_env2MetaDomain
-		      .put(Env.UAT, m_globalDefault.getProperty("uat.domain", "meta.hermes.fx.uat.qa.nt.ctripcorp.com"));
-		m_env2MetaDomain.put(Env.PROD, m_globalDefault.getProperty("prod.domain", "meta.hermes.fx.ctripcorp.com"));
-		m_env2MetaDomain
-		      .put(Env.TOOLS, m_globalDefault.getProperty("tools.domain", "meta.hermes.fx.tools.ctripcorp.com"));
-
-		logger.info(String.format("Meta server domains: %s", m_env2MetaDomain));
+		m_envProvider.initialize(m_globalDefault);
 	}
 
 	@Override
-	public Env getEnv() {
-		if (m_env.get() == null) {
-			Env resultEnv = Hermes.getEnv();
-
-			List<EnvProvider> envProviders = lookupList(EnvProvider.class);
-			for (EnvProvider p : envProviders) {
-				Env newEnv = p.getEnv();
-				if (newEnv != null) {
-					if (resultEnv == null) {
-						resultEnv = newEnv;
-					} else {
-						if (newEnv != resultEnv) {
-							throw new IllegalArgumentException(String.format("Conflict hermes env found '%s' and '%s'",
-							      newEnv, resultEnv));
-						}
-					}
-				}
-			}
-
-			m_env.compareAndSet(null, resultEnv);
-		}
-
-		if (m_env.get() == null) {
-			throw new IllegalArgumentException("Hermes env is not set");
-		}
-
-		return m_env.get();
-	}
-
-	@Override
-	public boolean isLocalMode() {
-		if (m_localMode != null) {
-			return m_localMode;
-		} else {
-			boolean isLocalMode;
-			if (System.getenv().containsKey(KEY_IS_LOCAL_MODE)) {
-				isLocalMode = Boolean.parseBoolean(System.getenv(KEY_IS_LOCAL_MODE));
-			} else if (getGlobalConfig().containsKey(KEY_IS_LOCAL_MODE)) {
-				isLocalMode = Boolean.parseBoolean(getGlobalConfig().getProperty(KEY_IS_LOCAL_MODE));
-			} else {
-				isLocalMode = false;
-			}
-			return isLocalMode;
-		}
-	}
-
-	// for test only!
-	public void setLocalMode(Boolean localMode) {
-		m_localMode = localMode;
+	public String getEnv() {
+		return m_envProvider.getEnv();
 	}
 
 }

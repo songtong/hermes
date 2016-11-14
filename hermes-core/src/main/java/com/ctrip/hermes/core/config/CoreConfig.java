@@ -5,8 +5,8 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.env.ClientEnvironment;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)

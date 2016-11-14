@@ -18,8 +18,8 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.ConsumerService;
 import com.ctrip.hermes.metaservice.service.TopicService;
@@ -297,7 +297,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 		} catch (DalException e) {
 			log.error("Failed to get consumers for topic:{}!", topic.getName(), e);
 		}
-		String environment = m_env.getEnv().name();
+		String environment = m_env.getEnv();
 		String host = m_config.getCurrentPortalHost();
 		String jarUrl = String.format("%s/api/schemas/%s/jar", host, schema.getId());
 		String csUrl = String.format("%s/api/schemas/%s/cs", host, schema.getId());
@@ -345,7 +345,7 @@ public class DefaultPortalMailService implements PortalMailService, Initializabl
 
 	@Override
 	public void sendCreateTopicFromCatMail(com.ctrip.hermes.metaservice.model.Topic topic) {
-		String environment = m_env.getEnv().name();
+		String environment = m_env.getEnv();
 		String title = String.format("[Hermes new topic]名称：%s, 环境：%s", topic.getName(), environment);
 		String address = m_config.getHermesEmailGroupAddress();
 

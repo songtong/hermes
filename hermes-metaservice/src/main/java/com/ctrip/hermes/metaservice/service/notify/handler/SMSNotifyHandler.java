@@ -19,7 +19,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
 import com.ctrip.hermes.metaservice.service.notify.ShortNoticeContent;
 import com.ctrip.soa.common.types.v1.AckCodeType;
@@ -138,22 +138,22 @@ public class SMSNotifyHandler implements NotifyHandler, Initializable {
 		ServiceClientConfig config = new ServiceClientConfig();
 		config.setAppId("hermes-metaservice");
 		config.setFxConfigServiceUrl(getFxCfgUrl());
-		config.setSubEnv(m_env.getEnv().name().toLowerCase());
+		config.setSubEnv(m_env.getEnv().toLowerCase());
 		ServiceClientBase.initialize(config);
 	}
 
 	private String getFxCfgUrl() {
 		switch (m_env.getEnv()) {
-		case DEV:
-		case FAT:
-		case FWS:
-		case LOCAL:
-		case LPT:
+		case "DEV":
+		case "FAT":
+		case "FWS":
+		case "LOCAL":
+		case "LPT":
 			return TEST_FX_CFG_URL;
-		case UAT:
+		case "UAT":
 			return UAT_FX_CFG_URL;
-		case TOOLS:
-		case PROD:
+		case "TOOLS":
+		case "PROD":
 			return PROD_FX_CFG_URL;
 		default:
 			return TEST_FX_CFG_URL;

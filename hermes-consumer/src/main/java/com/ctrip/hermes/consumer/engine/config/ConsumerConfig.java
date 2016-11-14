@@ -7,9 +7,9 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.env.ClientEnvironment;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -240,19 +240,19 @@ public class ConsumerConfig implements Initializable {
 	}
 
 	public int getKafkaPollFailWaitBase() {
-	   return m_kafkaPollFailWaitBase;
-   }
+		return m_kafkaPollFailWaitBase;
+	}
 
 	public void setKafkaPollFailWaitBase(int kafkaPollFailWaitBase) {
-	   this.m_kafkaPollFailWaitBase = kafkaPollFailWaitBase;
-   }
+		this.m_kafkaPollFailWaitBase = kafkaPollFailWaitBase;
+	}
 
 	public int getKafkaPollFailWaitMax() {
-	   return m_kafkaPollFailWaitMax;
-   }
+		return m_kafkaPollFailWaitMax;
+	}
 
 	public void setKafkaPollFailWaitMax(int kafkaPollFailWaitMax) {
-	   this.m_kafkaPollFailWaitMax = kafkaPollFailWaitMax;
-   }
+		this.m_kafkaPollFailWaitMax = kafkaPollFailWaitMax;
+	}
 
 }

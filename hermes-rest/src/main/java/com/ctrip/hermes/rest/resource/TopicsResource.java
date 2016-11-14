@@ -30,14 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer;
-import com.ctrip.hermes.Hermes.Env;
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.log.BizEvent;
 import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.rest.service.ProducerSendService;
 import com.ctrip.hermes.rest.status.TopicsResourceStatusMonitor;
 
@@ -118,7 +117,7 @@ public class TopicsResource {
 				final Timer.Context contextGlobal = TopicsResourceStatusMonitor.INSTANCE.getSendTimerGlobal().time();
 				final Timer.Context context = TopicsResourceStatusMonitor.INSTANCE.getSendTimer(topic).time();
 				try {
-					if (env.getEnv() == Env.PROD) {
+					if ("PROD".equals(env.getEnv())) {
 						response.setTimeout(
 						      Integer.valueOf(env.getGlobalConfig().getProperty("gateway.topic.publish.timeout", "1000")),
 						      TimeUnit.MILLISECONDS);

@@ -11,6 +11,8 @@
 	<modules>
 		<module>hermes-metrics</module>
 		<module>hermes-core</module>
+		<module>hermes-env</module>
+		<module>ctrip-hermes-env</module>
 		<module>hermes-metaservice</module>
 		<module>hermes-metaserver</module>
 		<module>hermes-producer</module>
@@ -27,6 +29,16 @@
 	</modules>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>com.ctrip.hermes</groupId>
+				<artifactId>hermes-env</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.ctrip.hermes</groupId>
+				<artifactId>ctrip-hermes-env</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>com.ctrip.hermes</groupId>
 				<artifactId>hermes-core</artifactId>

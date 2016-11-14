@@ -40,7 +40,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.env.ClientEnvironment;
 
 @Named
 public class CompileService {
@@ -93,8 +93,8 @@ public class CompileService {
 		compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits).call();
 		for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
 			logger.warn(String.format("%s on line %d in %s: %s%n", diagnostic.getKind().toString(),
-					diagnostic.getLineNumber(), diagnostic.getSource() != null ? diagnostic.getSource().toUri() : "",
-					diagnostic.getMessage(null)));
+			      diagnostic.getLineNumber(), diagnostic.getSource() != null ? diagnostic.getSource().toUri() : "",
+			      diagnostic.getMessage(null)));
 		fileManager.close();
 	}
 
@@ -123,7 +123,7 @@ public class CompileService {
 	}
 
 	public void deployToMaven(Path jarPath, String groupId, String artifactId, String version, String repositoryId)
-			throws Exception {
+	      throws Exception {
 		String cmd = "mvn";
 		StringBuilder sb = new StringBuilder();
 		sb.append("deploy:deploy-file ").append("-DgroupId=").append(groupId).append(" ");
@@ -170,18 +170,16 @@ public class CompileService {
 	 * 
 	 * @param cmd
 	 * @param arguments
-	 *            If the argument doesn't include spaces or quotes, return it as
-	 *            is. If it contains double quotes, use single quotes - else
-	 *            surround the argument by double quotes.
+	 *           If the argument doesn't include spaces or quotes, return it as is. If it contains double quotes, use single quotes -
+	 *           else surround the argument by double quotes.
 	 * @param substitutionMap
-	 * @return Return.key indicates whether the process success or not.
-	 *         Return.value stores the normal output and err output msgs.
+	 * @return Return.key indicates whether the process success or not. Return.value stores the normal output and err output msgs.
 	 * @throws Exception
 	 */
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Pair<Boolean, Pair<String, String>> executeCommand(String cmd, String[] arguments, Map substitutionMap)
-			throws Exception {
+	      throws Exception {
 		String osName = System.getProperty("os.name").toLowerCase(Locale.US);
 		String[] windowsArguments = null;
 		if (osName.contains("windows")) {
@@ -217,10 +215,9 @@ public class CompileService {
 		if (watchdog.killedProcess()) {
 			throw new RuntimeException("Command:" + cmdLine + "exeute timeout!");
 		}
-		return new Pair<Boolean, Pair<String, String>>(!executor.isFailure(exitValue),
-				new Pair<>(new String(out.toByteArray()), new String(err.toByteArray())));
+		return new Pair<Boolean, Pair<String, String>>(!executor.isFailure(exitValue), new Pair<>(new String(
+		      out.toByteArray()), new String(err.toByteArray())));
 	}
-
 
 	/**
 	 * 
@@ -278,7 +275,5 @@ public class CompileService {
 		});
 		target.close();
 	}
-
-	
 
 }

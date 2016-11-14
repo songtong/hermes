@@ -23,7 +23,7 @@ import org.junit.BeforeClass;
 import org.mockito.Mock;
 import org.unidal.lookup.ComponentTestCase;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.metaservice.zk.ZKConfig;
 
 /**
