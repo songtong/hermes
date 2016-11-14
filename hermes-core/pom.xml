@@ -16,6 +16,10 @@
 			<artifactId>ctrip-hermes-env</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.ctrip.hermes</groupId>
+			<artifactId>hermes-env</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.ctrip.framework</groupId>
 			<artifactId>vi</artifactId>
 		</dependency>

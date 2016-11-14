@@ -17,10 +17,6 @@
 			<artifactId>hermes-metaservice</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.dianping.cat</groupId>
-			<artifactId>cat-client</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>fluent-hc</artifactId>
 		</dependency>
@@ -47,10 +43,6 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>jstl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.unidal.framework</groupId>
-			<artifactId>foundation-service</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
