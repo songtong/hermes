@@ -1019,6 +1019,7 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 					      "Failed to get metaserver status from leader! Leader:host=%s, port=%s, ResponsePair:%s.", host,
 					      port, responsePair));
 				}
+				metaServerJsonObject = JSON.parseObject(responsePair.getValue());
 			}
 
 			JSONObject runningBrokers = metaServerJsonObject.getJSONObject(RunningBrokersNodeName);
