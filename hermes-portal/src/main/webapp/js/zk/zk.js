@@ -255,14 +255,18 @@ angular.module('zkApp', [ 'ngResource', 'smart-table', 'xeditable', 'ui.bootstra
 	}
 
 	// ************* STEP 1*************************
+	$scope.initializeZk = $scope.checkStatus.pedding;
 	$scope.initlizeZookeeperEnsemble = function(zookeeperEnsemble) {
+		$scope.initializeZk = $scope.checkStatus.checking;
 		$scope.targetZookeeperEnsemble = zookeeperEnsemble;
 		zookeeperResource.initialize({
 			"zookeeperEnsembleId" : $scope.targetZookeeperEnsemble.id
 		}, function(result) {
+			$scope.initializeZk = $scope.checkStatus.success;
 			$scope.stepStatus.step1 = true;
 			show_op_info.show("初始化zookeeper集群:" + zookeeperEnsemble.name + "(" + zookeeperEnsemble.connectionString + ")成功！", true);
 		}, function(result) {
+			$scope.initializeZk = $scope.checkStatus.fail;
 			show_op_info.show("初始化zookeeper集群:" + zookeeperEnsemble.name + "(" + zookeeperEnsemble.connectionString + ")失败！" + result.data, false);
 		});
 	}
