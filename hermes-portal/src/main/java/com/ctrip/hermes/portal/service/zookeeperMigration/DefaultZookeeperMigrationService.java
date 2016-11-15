@@ -34,7 +34,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.ctrip.hermes.cmessaging.entity.Cmessaging;
 import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.cmessage.CmessageConfigService;
@@ -107,7 +106,7 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 
 	private static final int MetaServerReconnectToZkWaitTimeSeconds = 5;
 
-	private ExecutorService m_sendRequestExcutor = Executors.newCachedThreadPool(HermesThreadFactory.create(
+	private ExecutorService m_zookeeperMigrationExcutor = Executors.newCachedThreadPool(HermesThreadFactory.create(
 	      "ZookeeperMigration", true));
 
 	private class TempZkCli {
@@ -134,7 +133,8 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 		}
 
 		public void updateCmessageConfigData(Cmessaging cmessaging) throws Exception {
-			m_client.setData().forPath(ZKPathUtils.getCmessageConfigPath(), ZKSerializeUtils.serialize(JSON.toJSONString(cmessaging)));
+			m_client.setData().forPath(ZKPathUtils.getCmessageConfigPath(),
+			      ZKSerializeUtils.serialize(JSON.toJSONString(cmessaging)));
 		}
 
 		public boolean start() throws InterruptedException {
@@ -168,6 +168,44 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 
 	}
 
+	private class EnsurePathTask implements Runnable {
+
+		private List<Topic> topics;
+
+		private TempZkCli zkCli;
+
+		private CountDownLatch latch;
+
+		private volatile boolean success = false;
+
+		public EnsurePathTask(List<Topic> topics, TempZkCli zkCli, CountDownLatch latch) {
+			this.topics = topics;
+			this.zkCli = zkCli;
+			this.latch = latch;
+		}
+
+		@Override
+		public void run() {
+			try {
+				for (Topic topic : topics) {
+					zkCli.ensureBrokerLeaseZkPath(topic);
+					zkCli.ensureConsumerLeaseZkPath(topic);
+				}
+				success = true;
+			} catch (Exception e) {
+				m_logger.error("Ensure zookeeper path for topics {} failed!", topics, e);
+				success = false;
+			} finally {
+				latch.countDown();
+			}
+		}
+
+		public boolean isSuccess() {
+			return success;
+		}
+
+	}
+
 	public void initializeZkFromBaseMeta(int zkEnsembleId) {
 		m_logger.info("Start to initialize zkEnsemble({}).", zkEnsembleId);
 		ReadTimeout = Math.max(m_zkConfig.getZkSessionTimeoutMillis(), m_zkConfig.getZkConnectionTimeoutMillis()) + 5000;
@@ -194,14 +232,10 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 			}
 			m_logger.info("Create temp zkCli to zkEnsemble({}) success!.", connectionString);
 
-			for (Topic topic : meta.getTopics().values()) {
-				if (Endpoint.BROKER.equals(topic.getEndpointType())) {
-					tempZkCli.ensureBrokerLeaseZkPath(topic);
-					tempZkCli.ensureConsumerLeaseZkPath(topic);
-				}
-			}
-
 			// TODO: delay check: do I need to initialize metaInfo & metaServerAssignment?
+			long start = System.currentTimeMillis();
+			ensurePathBulk(meta, tempZkCli);
+			m_logger.info("Initialize zookeeper cost {}ms", System.currentTimeMillis() - start);
 			tempZkCli.updateZkBaseMetaVersion(meta.getVersion());
 			tempZkCli.ensurePath(ZKPathUtils.getCmessageConfigPath());
 			tempZkCli.ensurePath(ZKPathUtils.getCmessageExchangePath());
@@ -224,6 +258,52 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 		}
 
 		m_logger.info("Initialize zkEnsemble({}) success!", connectionString);
+	}
+
+	private void ensurePathBulk(Meta meta, TempZkCli tempZkCli) {
+		ExecutorService executor = Executors.newFixedThreadPool(20);
+
+		try {
+			int batchSize = 10;
+			int topicSize = meta.getTopics().size();
+			int round = topicSize / batchSize;
+			if (topicSize % batchSize != 0) {
+				round++;
+			}
+
+			List<Topic> topics = new ArrayList<>();
+			List<EnsurePathTask> tasks = new ArrayList<>();
+			CountDownLatch latch = new CountDownLatch(round);
+
+			for (Topic topic : meta.getTopics().values()) {
+				topics.add(topic);
+				if (topics.size() == batchSize) {
+					EnsurePathTask ensurePathTask = new EnsurePathTask(topics, tempZkCli, latch);
+					tasks.add(ensurePathTask);
+					executor.submit(ensurePathTask);
+					topics = new ArrayList<>();
+				}
+			}
+
+			if (!topics.isEmpty()) {
+				EnsurePathTask ensurePathTask = new EnsurePathTask(topics, tempZkCli, latch);
+				tasks.add(ensurePathTask);
+				executor.submit(ensurePathTask);
+			}
+
+			try {
+				latch.await();
+			} catch (InterruptedException e) {
+				// do nothing
+			}
+			for (EnsurePathTask ensurePathTask : tasks) {
+				if (!ensurePathTask.isSuccess()) {
+					throw new RuntimeException("Failed to ensure broker/consumer lease path!");
+				}
+			}
+		} finally {
+			executor.shutdownNow();
+		}
 	}
 
 	@Override
@@ -974,7 +1054,7 @@ public class DefaultZookeeperMigrationService implements ZookeeperMigrationServi
 	private void sendRequest(final String url, final String method, final Map<String, String> requestParams,
 	      final CountDownLatch latch, final Pair<Integer, String> requestResult) {
 
-		m_sendRequestExcutor.submit(new Runnable() {
+		m_zookeeperMigrationExcutor.submit(new Runnable() {
 
 			@Override
 			public void run() {
