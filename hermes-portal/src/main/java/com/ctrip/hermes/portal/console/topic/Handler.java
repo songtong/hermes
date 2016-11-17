@@ -11,10 +11,10 @@ import org.unidal.web.mvc.annotation.InboundActionMeta;
 import org.unidal.web.mvc.annotation.OutboundActionMeta;
 import org.unidal.web.mvc.annotation.PayloadMeta;
 
+import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.console.ConsolePage;
 

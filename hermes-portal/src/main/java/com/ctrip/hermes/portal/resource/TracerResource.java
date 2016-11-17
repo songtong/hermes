@@ -18,8 +18,8 @@ import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.messageLifecycle.entity.MessageLifecycle;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.TracerService;

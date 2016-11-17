@@ -11,14 +11,14 @@ import java.util.Set;
 
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.ContentField;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.Subject;
-import com.ctrip.hermes.metaservice.service.notify.MailNoticeContent;
-import com.ctrip.hermes.metaservice.service.template.HermesTemplate;
-import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
+import com.ctrip.hermes.admin.core.monitor.event.ConsumeLargeBacklogEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.ContentField;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.Subject;
+import com.ctrip.hermes.admin.core.service.notify.MailNoticeContent;
+import com.ctrip.hermes.admin.core.service.template.HermesTemplate;
+import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
 
 @HermesMailDescription(template = HermesTemplate.CONSUME_LARGE_BACKLOG_REPORT)
 public class LargeBacklogReportMailContent extends MailNoticeContent {

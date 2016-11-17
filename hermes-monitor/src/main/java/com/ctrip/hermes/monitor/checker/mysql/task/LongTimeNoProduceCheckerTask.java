@@ -13,14 +13,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.admin.core.monitor.event.LongTimeNoProduceEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.queue.CreationStamp;
+import com.ctrip.hermes.admin.core.queue.MessagePriority;
+import com.ctrip.hermes.admin.core.queue.MessagePriorityDao;
+import com.ctrip.hermes.admin.core.queue.MessagePriorityEntity;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.monitor.event.LongTimeNoProduceEvent;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.queue.CreationStamp;
-import com.ctrip.hermes.metaservice.queue.MessagePriority;
-import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
-import com.ctrip.hermes.metaservice.queue.MessagePriorityEntity;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 public class LongTimeNoProduceCheckerTask implements Runnable {

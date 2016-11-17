@@ -2,11 +2,11 @@ package com.ctrip.hermes.monitor.job.partition.context;
 
 import java.util.List;
 
+import com.ctrip.hermes.admin.core.queue.PartitionInfo;
+import com.ctrip.hermes.admin.core.queue.TableContext;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.queue.PartitionInfo;
-import com.ctrip.hermes.metaservice.queue.TableContext;
 
 public abstract class BaseTableContext implements TableContext {
 

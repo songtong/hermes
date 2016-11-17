@@ -14,11 +14,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ctrip.hermes.admin.core.monitor.MonitorEventType;
+import com.ctrip.hermes.admin.core.monitor.dao.MonitorEventStorage;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
-import com.ctrip.hermes.metaservice.monitor.dao.MonitorEventStorage;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.resource.view.MonitorEventView;
 
@@ -66,7 +66,7 @@ public class MonitorEventResource {
 		      m_eventStorage.findDBMonitorEvents(pageCount, pageOffset), new CollectionUtil.Transformer() {
 			      @Override
 			      public Object transform(Object input) {
-				      return new MonitorEventView((com.ctrip.hermes.metaservice.model.MonitorEvent) input);
+				      return new MonitorEventView((com.ctrip.hermes.admin.core.model.MonitorEvent) input);
 			      }
 		      });
 		long totalPage = m_eventStorage.totalPageCount(pageCount);

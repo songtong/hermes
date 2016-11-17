@@ -118,15 +118,6 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.service.SubscriptionService</role>
-			<implementation>com.ctrip.hermes.metaservice.service.SubscriptionService</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.SubscriptionDao</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.hermes.metaserver.cluster.ClusterStateHolder</role>
 			<implementation>com.ctrip.hermes.metaserver.cluster.ClusterStateHolder</implementation>
 			<requirements>

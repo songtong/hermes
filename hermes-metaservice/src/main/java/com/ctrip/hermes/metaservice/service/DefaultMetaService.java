@@ -7,7 +7,7 @@ import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
+import com.ctrip.hermes.metaservice.converter.MetaModelToEntityConverter;
 import com.ctrip.hermes.metaservice.model.Meta;
 import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
@@ -31,7 +31,7 @@ public class DefaultMetaService implements MetaService {
 	public com.ctrip.hermes.meta.entity.Meta refreshMeta() throws DalException {
 		try {
 			m_metaModel = m_metaDao.findLatest(MetaEntity.READSET_FULL);
-			m_metaEntity = ModelToEntityConverter.convert(m_metaModel);
+			m_metaEntity = MetaModelToEntityConverter.convert(m_metaModel);
 		} catch (DalNotFoundException e) {
 			m_logger.warn("find Latest Meta failed", e);
 			m_metaEntity = new com.ctrip.hermes.meta.entity.Meta();
@@ -59,7 +59,7 @@ public class DefaultMetaService implements MetaService {
 			Meta latestMeta = m_metaDao.findLatest(MetaEntity.READSET_FULL);
 			if (m_metaModel == null || latestMeta.getVersion() > m_metaModel.getVersion()) {
 				m_metaModel = latestMeta;
-				m_metaEntity = ModelToEntityConverter.convert(m_metaModel);
+				m_metaEntity = MetaModelToEntityConverter.convert(m_metaModel);
 				return true;
 			}
 		} catch (DalException e) {

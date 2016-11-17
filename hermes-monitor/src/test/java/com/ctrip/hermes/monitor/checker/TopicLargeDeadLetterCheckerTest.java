@@ -21,11 +21,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.unidal.dal.jdbc.Readset;
 
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.queue.DeadLetter;
+import com.ctrip.hermes.admin.core.queue.DeadLetterDao;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.queue.DeadLetter;
-import com.ctrip.hermes.metaservice.queue.DeadLetterDao;
 import com.ctrip.hermes.monitor.checker.mysql.TopicLargeDeadLetterChecker;
 
 @RunWith(SpringJUnit4ClassRunner.class)

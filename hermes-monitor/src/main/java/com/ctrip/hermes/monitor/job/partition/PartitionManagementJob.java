@@ -26,15 +26,15 @@ import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.admin.core.monitor.event.PartitionInformationEvent;
+import com.ctrip.hermes.admin.core.queue.PartitionInfo;
+import com.ctrip.hermes.admin.core.queue.TableContext;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.monitor.event.PartitionInformationEvent;
-import com.ctrip.hermes.metaservice.queue.PartitionInfo;
-import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
 import com.ctrip.hermes.monitor.config.MonitorConfig;

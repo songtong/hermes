@@ -7,10 +7,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.metaservice.monitor.event.PartitionInformationEvent;
-import com.ctrip.hermes.metaservice.queue.CreationStamp;
-import com.ctrip.hermes.metaservice.queue.PartitionInfo;
-import com.ctrip.hermes.metaservice.queue.TableContext;
+import com.ctrip.hermes.admin.core.monitor.event.PartitionInformationEvent;
+import com.ctrip.hermes.admin.core.queue.CreationStamp;
+import com.ctrip.hermes.admin.core.queue.PartitionInfo;
+import com.ctrip.hermes.admin.core.queue.TableContext;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
 import com.ctrip.hermes.monitor.job.partition.finder.CreationStampFinder;

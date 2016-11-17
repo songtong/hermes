@@ -12,12 +12,12 @@ import java.util.Map.Entry;
 import org.apache.http.client.fluent.Request;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.admin.core.converter.ModelToEntityConverter;
+import com.ctrip.hermes.admin.core.queue.CreationStamp;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.metaservice.converter.ModelToEntityConverter;
 import com.ctrip.hermes.metaservice.model.MetaDao;
 import com.ctrip.hermes.metaservice.model.MetaEntity;
-import com.ctrip.hermes.metaservice.queue.CreationStamp;
 
 public class MonitorUtils {
 	public static <K, V> List<Map<K, V>> splitMap(Map<K, V> map, int batchCount) {

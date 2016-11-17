@@ -14,6 +14,7 @@
 		<module>hermes-env</module>
 		<module>ctrip-hermes-env</module>
 		<module>hermes-metaservice</module>
+		<module>hermes-admin-core</module>
 		<module>hermes-metaserver</module>
 		<module>hermes-producer</module>
 		<module>hermes-consumer</module>
@@ -47,6 +48,11 @@
 			<dependency>
 				<groupId>com.ctrip.hermes</groupId>
 				<artifactId>hermes-metaservice</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.ctrip.hermes</groupId>
+				<artifactId>hermes-admin-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -236,6 +242,11 @@
 				<groupId>cglib</groupId>
 				<artifactId>cglib</artifactId>
 				<version>3.2.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-beans</artifactId>
+				<version>4.1.8.RELEASE</version>
 			</dependency>
 			<!--for test -->
 			<dependency>

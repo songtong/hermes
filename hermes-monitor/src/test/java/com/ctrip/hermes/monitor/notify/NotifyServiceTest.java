@@ -6,11 +6,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.ctrip.hermes.admin.core.monitor.event.ConsumeLargeBacklogEvent;
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
+import com.ctrip.hermes.admin.core.service.notify.NotifyService;
+import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.NotifyService;
-import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
 import com.ctrip.hermes.monitor.checker.notification.LargeBacklogReportMailContent;
 
 public class NotifyServiceTest {

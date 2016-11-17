@@ -14,10 +14,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.admin.core.model.MonitorEventDao;
+import com.ctrip.hermes.admin.core.monitor.event.CheckerExceptionEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.model.MonitorEventDao;
-import com.ctrip.hermes.metaservice.monitor.event.CheckerExceptionEvent;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.job.partition.PartitionManagementJob.PartitionCheckerResult;

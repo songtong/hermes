@@ -20,13 +20,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.model.ConsumerMonitorConfig;
+import com.ctrip.hermes.admin.core.model.ProducerMonitorConfig;
+import com.ctrip.hermes.admin.core.monitor.service.MonitorConfigService;
+import com.ctrip.hermes.admin.core.service.ConsumerService;
+import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
-import com.ctrip.hermes.metaservice.model.ConsumerMonitorConfig;
-import com.ctrip.hermes.metaservice.model.ProducerMonitorConfig;
-import com.ctrip.hermes.metaservice.monitor.service.MonitorConfigService;
-import com.ctrip.hermes.metaservice.service.ConsumerService;
-import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/monitor/config/")

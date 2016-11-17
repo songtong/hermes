@@ -17,9 +17,9 @@ import org.springframework.stereotype.Service;
 import org.unidal.dal.jdbc.datasource.model.entity.PropertiesDef;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.admin.core.queue.PartitionInfo;
+import com.ctrip.hermes.admin.core.queue.TableContext;
 import com.ctrip.hermes.meta.entity.Datasource;
-import com.ctrip.hermes.metaservice.queue.PartitionInfo;
-import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.checker.mysql.dal.ds.DataSourceManager;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
 import com.ctrip.hermes.monitor.job.partition.context.AbandonedTableContext;

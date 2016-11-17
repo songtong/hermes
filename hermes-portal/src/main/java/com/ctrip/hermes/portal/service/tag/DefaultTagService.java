@@ -14,7 +14,7 @@ import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.metaservice.dal.CachedDatasourceDao;
+import com.ctrip.hermes.admin.core.dal.CachedDatasourceDao;
 import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTag;
 import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagDao;
 import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagEntity;

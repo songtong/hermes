@@ -4,13 +4,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.ContentField;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.Subject;
-import com.ctrip.hermes.metaservice.service.notify.MailNoticeContent;
-import com.ctrip.hermes.metaservice.service.template.HermesTemplate;
+import com.ctrip.hermes.admin.core.monitor.event.ConsumeLargeBacklogEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.ContentField;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.Subject;
+import com.ctrip.hermes.admin.core.service.notify.MailNoticeContent;
+import com.ctrip.hermes.admin.core.service.template.HermesTemplate;
 
 @HermesMailDescription(template = HermesTemplate.CONSUME_LARGE_BACKLOG)
 public class LargeBacklogMailContent extends MailNoticeContent {

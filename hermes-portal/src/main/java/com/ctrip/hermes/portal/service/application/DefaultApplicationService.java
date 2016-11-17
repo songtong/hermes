@@ -9,10 +9,10 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.metaservice.service.ConsumerService;
-import com.ctrip.hermes.metaservice.service.TopicService;
-import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
-import com.ctrip.hermes.metaservice.view.TopicView;
+import com.ctrip.hermes.admin.core.service.ConsumerService;
+import com.ctrip.hermes.admin.core.service.TopicService;
+import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
+import com.ctrip.hermes.admin.core.view.TopicView;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;

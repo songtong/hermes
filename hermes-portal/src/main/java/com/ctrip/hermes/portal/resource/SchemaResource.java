@@ -28,14 +28,14 @@ import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.model.Schema;
+import com.ctrip.hermes.admin.core.service.SchemaService;
+import com.ctrip.hermes.admin.core.service.TopicService;
+import com.ctrip.hermes.admin.core.view.SchemaView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.model.Schema;
-import com.ctrip.hermes.metaservice.service.SchemaService;
-import com.ctrip.hermes.metaservice.service.TopicService;
-import com.ctrip.hermes.metaservice.view.SchemaView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.mail.PortalMailService;
 import com.google.common.io.ByteStreams;

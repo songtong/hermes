@@ -24,9 +24,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.view.SchemaView;
+import com.ctrip.hermes.admin.core.view.TopicView;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.metaservice.view.SchemaView;
-import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.StartPortal;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;

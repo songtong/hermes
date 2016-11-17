@@ -11,12 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.admin.core.monitor.event.TopicLargeDeadLetterEvent;
+import com.ctrip.hermes.admin.core.queue.DeadLetterDao;
+import com.ctrip.hermes.admin.core.queue.DeadLetterEntity;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.monitor.event.TopicLargeDeadLetterEvent;
-import com.ctrip.hermes.metaservice.queue.DeadLetterDao;
-import com.ctrip.hermes.metaservice.queue.DeadLetterEntity;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 public class DeadLetterCheckerTask implements Runnable {

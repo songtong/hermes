@@ -11,7 +11,7 @@
 					<role>com.ctrip.hermes.rest.service.SoaPushService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.SubscriptionService</role>
+					<role>com.ctrip.hermes.admin.core.service.SubscriptionService</role>
 				</requirement>
 			</requirements>
 		</component>

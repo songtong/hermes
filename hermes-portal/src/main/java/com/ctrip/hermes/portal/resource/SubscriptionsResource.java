@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.service.SubscriptionService;
+import com.ctrip.hermes.admin.core.view.SubscriptionView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.service.SubscriptionService;
-import com.ctrip.hermes.metaservice.view.SubscriptionView;
 
 @Path("/subscriptions/")
 @Singleton

@@ -15,11 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
-			<artifactId>hermes-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.ctrip.hermes</groupId>
-			<artifactId>hermes-metaservice</artifactId>
+			<artifactId>hermes-admin-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.ctrip.hermes</groupId>

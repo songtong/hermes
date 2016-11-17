@@ -20,6 +20,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.codahale.metrics.Timer;
+import com.ctrip.hermes.admin.core.view.SubscriptionView;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
@@ -30,7 +31,6 @@ import com.ctrip.hermes.core.message.ConsumerMessage.MessageStatus;
 import com.ctrip.hermes.core.message.payload.RawMessage;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.env.ClientEnvironment;
-import com.ctrip.hermes.metaservice.view.SubscriptionView;
 import com.ctrip.hermes.rest.status.SubscriptionPushStatusMonitor;
 import com.ctrip.hermes.rest.status.Tge;
 

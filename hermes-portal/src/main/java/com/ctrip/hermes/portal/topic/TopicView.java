@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.ctrip.hermes.portal.dal.tag.Tag;
 
-public class TopicView extends com.ctrip.hermes.metaservice.view.TopicView {
+public class TopicView extends com.ctrip.hermes.admin.core.view.TopicView {
 	private List<Tag> tags = new ArrayList<Tag>();
 
 	public List<Tag> getTags() {

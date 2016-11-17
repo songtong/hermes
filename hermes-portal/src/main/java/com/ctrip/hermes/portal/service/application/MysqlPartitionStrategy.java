@@ -11,10 +11,10 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.metaservice.dal.CachedDatasourceDao;
-import com.ctrip.hermes.metaservice.dal.CachedPartitionDao;
-import com.ctrip.hermes.metaservice.model.Partition;
-import com.ctrip.hermes.metaservice.model.PartitionEntity;
+import com.ctrip.hermes.admin.core.dal.CachedDatasourceDao;
+import com.ctrip.hermes.admin.core.dal.CachedPartitionDao;
+import com.ctrip.hermes.admin.core.model.Partition;
+import com.ctrip.hermes.admin.core.model.PartitionEntity;
 import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTag;
 import com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagDao;

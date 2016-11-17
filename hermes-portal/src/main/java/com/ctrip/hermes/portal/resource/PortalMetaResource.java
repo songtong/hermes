@@ -13,9 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.admin.core.service.MetaRefactor;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.metaservice.service.MetaRefactor;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService;
 import com.ctrip.hermes.portal.util.MetaDiffer.MetaDiff;

@@ -12,9 +12,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
+import com.ctrip.hermes.admin.core.service.notify.storage.NoticeStorage;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.storage.NoticeStorage;
 
 @Path("/notify")
 @Singleton

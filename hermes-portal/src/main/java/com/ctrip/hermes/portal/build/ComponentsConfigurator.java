@@ -6,12 +6,12 @@ import java.util.List;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
-import com.ctrip.hermes.metaservice.cmessage.DefaultCmessageConfigService;
-import com.ctrip.hermes.metaservice.queue.DefaultMessageQueueDao;
-import com.ctrip.hermes.metaservice.service.mail.DefaultMailService;
-import com.ctrip.hermes.metaservice.service.mail.FileMailAccountProvider;
-import com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService;
-import com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler;
+import com.ctrip.hermes.admin.core.cmessage.DefaultCmessageConfigService;
+import com.ctrip.hermes.admin.core.queue.DefaultMessageQueueDao;
+import com.ctrip.hermes.admin.core.service.mail.DefaultMailService;
+import com.ctrip.hermes.admin.core.service.mail.FileMailAccountProvider;
+import com.ctrip.hermes.admin.core.service.storage.DefaultTopicStorageService;
+import com.ctrip.hermes.admin.core.service.storage.handler.MysqlStorageHandler;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.dal.application.DefaultHermesApplicationDao;
 import com.ctrip.hermes.portal.dal.tag.CachedTagDao;

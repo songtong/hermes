@@ -7,12 +7,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.admin.core.queue.CreationStamp;
+import com.ctrip.hermes.admin.core.queue.ResendGroupId;
+import com.ctrip.hermes.admin.core.queue.ResendGroupIdDao;
+import com.ctrip.hermes.admin.core.queue.ResendGroupIdEntity;
+import com.ctrip.hermes.admin.core.queue.TableContext;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.queue.CreationStamp;
-import com.ctrip.hermes.metaservice.queue.ResendGroupId;
-import com.ctrip.hermes.metaservice.queue.ResendGroupIdDao;
-import com.ctrip.hermes.metaservice.queue.ResendGroupIdEntity;
-import com.ctrip.hermes.metaservice.queue.TableContext;
 import com.ctrip.hermes.monitor.job.partition.context.ResendTableContext;
 
 @Component

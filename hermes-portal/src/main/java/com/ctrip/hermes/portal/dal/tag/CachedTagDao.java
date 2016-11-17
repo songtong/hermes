@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.metaservice.dal.CachedDao;
+import com.ctrip.hermes.admin.core.dal.CachedDao;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;

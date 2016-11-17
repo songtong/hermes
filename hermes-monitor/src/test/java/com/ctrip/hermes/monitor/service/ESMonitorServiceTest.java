@@ -12,10 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.ctrip.hermes.admin.core.queue.DeadLetter;
+import com.ctrip.hermes.admin.core.queue.DeadLetterDao;
+import com.ctrip.hermes.admin.core.queue.DeadLetterEntity;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.queue.DeadLetter;
-import com.ctrip.hermes.metaservice.queue.DeadLetterDao;
-import com.ctrip.hermes.metaservice.queue.DeadLetterEntity;
 import com.ctrip.hermes.monitor.checker.BaseCheckerTest;
 import com.ctrip.hermes.monitor.domain.MonitorItem;
 import com.ctrip.hermes.monitor.service.ESMonitorService;

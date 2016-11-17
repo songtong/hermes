@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.ctrip.hermes.metaservice.monitor.event.MetaRequestErrorEvent;
-import com.ctrip.hermes.metaservice.monitor.event.MetaRequestErrorEvent.MetaRequestErrorType;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MetaRequestErrorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MetaRequestErrorEvent.MetaRequestErrorType;
 
 //@Component(value = DefaultMetaRequestErrorChecker.ID)
 public class DefaultMetaRequestErrorChecker extends AbstractMetaRequestErrorChecker {

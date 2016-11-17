@@ -27,9 +27,9 @@ import org.xml.sax.SAXException;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.admin.core.monitor.event.ProduceLatencyTooLargeEvent;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.StringUtils;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceLatencyTooLargeEvent;
 import com.ctrip.hermes.monitor.checker.CatBasedChecker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
