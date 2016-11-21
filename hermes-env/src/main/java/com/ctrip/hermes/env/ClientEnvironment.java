@@ -13,5 +13,7 @@ public interface ClientEnvironment {
 
 	String getEnv();
 
+	String getIdc();
+
 	String getMetaServerDomainName();
 }

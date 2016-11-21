@@ -19,6 +19,7 @@ import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.framework.foundation.Foundation;
 import com.ctrip.hermes.env.ClientEnvironment;
 
 @Named(type = ClientEnvironment.class)
@@ -143,6 +144,11 @@ public class DefaultClientEnvironment extends ContainerHolder implements ClientE
 	@Override
 	public String getEnv() {
 		return m_envProvider.getEnv();
+	}
+
+	@Override
+	public String getIdc() {
+		return Foundation.server().getDataCenter();
 	}
 
 }

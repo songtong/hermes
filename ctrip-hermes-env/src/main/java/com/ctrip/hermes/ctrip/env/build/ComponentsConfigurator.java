@@ -7,7 +7,7 @@ import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.ctrip.env.DefaultClientEnvironment;
-import com.ctrip.hermes.ctrip.env.DefaultEnvProvider;
+import com.ctrip.hermes.ctrip.env.CtripEnvProvider;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
@@ -16,7 +16,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		List<Component> all = new ArrayList<Component>();
 
 		all.add(A(DefaultClientEnvironment.class));
-		all.add(A(DefaultEnvProvider.class));
+		all.add(A(CtripEnvProvider.class));
 
 		return all;
 	}
