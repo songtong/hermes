@@ -5,14 +5,13 @@ import javax.servlet.ServletContextListener;
 
 import org.unidal.lookup.ContainerLoader;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaservice.service.MetaService;
 
 /**
- * used in HermesClassLoaderMetaServer:
- * 		Class clazz = parent.loadClass("com.ctrip.hermes.metaserver.fulltest.LoadMocksListener");
+ * used in HermesClassLoaderMetaServer: Class clazz = parent.loadClass("com.ctrip.hermes.metaserver.fulltest.LoadMocksListener");
  */
 public class LoadMocksListener extends MetaServerBaseTest implements ServletContextListener {
 

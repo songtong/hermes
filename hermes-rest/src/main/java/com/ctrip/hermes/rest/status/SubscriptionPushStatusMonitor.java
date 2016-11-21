@@ -9,8 +9,8 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.ctrip.hermes.admin.core.view.SubscriptionView;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
-import com.ctrip.hermes.metaservice.view.SubscriptionView;
 import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 
 public enum SubscriptionPushStatusMonitor {

@@ -23,9 +23,9 @@ import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.config.CoreConfig;
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
 import com.google.common.base.Charsets;
@@ -156,9 +156,6 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 
 	@Override
 	public void initialize() throws InitializationException {
-		if (m_clientEnv.isLocalMode())
-			return;
-
 		m_defaultMetaServerPort = Integer.parseInt(m_clientEnv.getGlobalConfig()
 		      .getProperty("meta.port", String.valueOf(DEFAULT_METASERVER_PORT)).trim());
 

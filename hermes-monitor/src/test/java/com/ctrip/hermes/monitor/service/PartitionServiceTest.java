@@ -9,11 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.ctrip.hermes.admin.core.queue.PartitionInfo;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.queue.PartitionInfo;
 import com.ctrip.hermes.monitor.checker.BaseCheckerTest;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
 

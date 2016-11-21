@@ -1,6 +1,6 @@
 package com.ctrip.hermes.portal.service.zookeeperMigration;
 
-import com.ctrip.hermes.metaservice.model.Server;
+import com.ctrip.hermes.admin.core.model.Server;
 
 public interface ZookeeperMigrationiService {
 

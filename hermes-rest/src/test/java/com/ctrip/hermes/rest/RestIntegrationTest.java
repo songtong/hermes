@@ -34,8 +34,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ctrip.hermes.admin.core.view.SubscriptionView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.view.SubscriptionView;
 import com.ctrip.hermes.metrics.HermesMetricsRegistry;
 import com.ctrip.hermes.rest.service.SubscriptionRegisterService;
 import com.google.common.base.Charsets;

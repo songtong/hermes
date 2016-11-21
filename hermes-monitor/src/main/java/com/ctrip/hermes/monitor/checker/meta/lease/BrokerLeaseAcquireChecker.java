@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.ctrip.hermes.metaservice.monitor.event.MetaRequestErrorEvent.MetaRequestErrorType;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.event.lease.BrokerLeaseErrorMonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.event.lease.BrokerLeaseTimeoutMonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.event.lease.LeaseOperationAware.LeaseOperation;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MetaRequestErrorEvent.MetaRequestErrorType;
+import com.ctrip.hermes.admin.core.monitor.event.lease.BrokerLeaseErrorMonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.lease.BrokerLeaseTimeoutMonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.lease.LeaseOperationAware.LeaseOperation;
 import com.ctrip.hermes.monitor.checker.meta.AbstractMetaRequestErrorChecker;
 
 //@Component(value = BrokerLeaseAcquireChecker.ID)

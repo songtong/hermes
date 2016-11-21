@@ -1,7 +1,7 @@
 package com.ctrip.hermes.portal.service.mail;
 
-import com.ctrip.hermes.metaservice.model.Topic;
-import com.ctrip.hermes.metaservice.view.SchemaView;
+import com.ctrip.hermes.admin.core.model.Topic;
+import com.ctrip.hermes.admin.core.view.SchemaView;
 import com.ctrip.hermes.portal.application.HermesApplication;
 
 public interface PortalMailService {

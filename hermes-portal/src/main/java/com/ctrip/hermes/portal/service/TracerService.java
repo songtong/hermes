@@ -14,9 +14,9 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.messageLifecycle.entity.Ack;
 import com.ctrip.hermes.portal.messageLifecycle.entity.Deliver;
 import com.ctrip.hermes.portal.messageLifecycle.entity.Group;

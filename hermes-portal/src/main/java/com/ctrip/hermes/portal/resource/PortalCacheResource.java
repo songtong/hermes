@@ -15,8 +15,8 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ctrip.hermes.admin.core.service.CacheDalService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.service.CacheDalService;
 import com.google.common.cache.CacheStats;
 
 @Path("/cache/")

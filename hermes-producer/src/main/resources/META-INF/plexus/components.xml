@@ -167,7 +167,7 @@
 			<implementation>com.ctrip.hermes.producer.config.ProducerConfig</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>

@@ -13,17 +13,17 @@ import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.admin.core.monitor.event.ConsumeLargeBacklogEvent;
+import com.ctrip.hermes.admin.core.queue.MessagePriority;
+import com.ctrip.hermes.admin.core.queue.MessagePriorityDao;
+import com.ctrip.hermes.admin.core.queue.MessagePriorityEntity;
+import com.ctrip.hermes.admin.core.queue.OffsetMessage;
+import com.ctrip.hermes.admin.core.queue.OffsetMessageDao;
+import com.ctrip.hermes.admin.core.queue.OffsetMessageEntity;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
-import com.ctrip.hermes.metaservice.queue.MessagePriority;
-import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
-import com.ctrip.hermes.metaservice.queue.MessagePriorityEntity;
-import com.ctrip.hermes.metaservice.queue.OffsetMessage;
-import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
-import com.ctrip.hermes.metaservice.queue.OffsetMessageEntity;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 
 import io.netty.util.internal.ConcurrentSet;

@@ -8,12 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.admin.core.queue.MessagePriority;
+import com.ctrip.hermes.admin.core.queue.MessageQueueDao;
+import com.ctrip.hermes.admin.core.queue.OffsetMessage;
+import com.ctrip.hermes.admin.core.queue.OffsetResend;
+import com.ctrip.hermes.admin.core.queue.ResendGroupId;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
-import com.ctrip.hermes.metaservice.queue.MessagePriority;
-import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
-import com.ctrip.hermes.metaservice.queue.OffsetMessage;
-import com.ctrip.hermes.metaservice.queue.OffsetResend;
-import com.ctrip.hermes.metaservice.queue.ResendGroupId;
 import com.ctrip.hermes.portal.config.PortalConstants;
 import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 

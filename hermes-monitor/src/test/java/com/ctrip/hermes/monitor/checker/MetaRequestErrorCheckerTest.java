@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
 import com.ctrip.hermes.monitor.checker.meta.DefaultMetaRequestErrorChecker;
 
 public class MetaRequestErrorCheckerTest extends BaseCheckerTest {

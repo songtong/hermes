@@ -1,0 +1,30 @@
+package com.ctrip.hermes.admin.core.monitor.service;
+
+import java.util.List;
+
+import com.ctrip.hermes.admin.core.model.ConsumerMonitorConfig;
+import com.ctrip.hermes.admin.core.model.ProducerMonitorConfig;
+
+public interface MonitorConfigService {
+	public ProducerMonitorConfig getProducerMonitorConfig(String topic);
+
+	public List<ProducerMonitorConfig> listProducerMonitorConfig();
+
+	public ConsumerMonitorConfig getConsumerMonitorConfig(String topic, String consumer);
+
+	public List<ConsumerMonitorConfig> getConsumerMonitorConfig(String topic);
+
+	public List<ConsumerMonitorConfig> listConsumerMonitorConfig();
+
+	public void setProducerMonitorConfig(ProducerMonitorConfig config);
+
+	public void setConsumerMonitorConfig(ConsumerMonitorConfig config);
+
+	public void deleteProducerMonitorConfig(String topic);
+
+	public void deleteConsumerMonitorConfig(String topic, String consumer);
+
+	public ProducerMonitorConfig newDefaultProducerMonitorConfig(String topic);
+
+	public ConsumerMonitorConfig newDefaultConsumerMonitorConfig(String topic, String consumer);
+}

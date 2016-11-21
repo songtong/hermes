@@ -8,8 +8,6 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.core.cmessaging.DefaultCMessagingConfigService;
 import com.ctrip.hermes.core.config.CoreConfig;
-import com.ctrip.hermes.core.env.DefaultClientEnvironment;
-import com.ctrip.hermes.core.env.FileEnvProvider;
 import com.ctrip.hermes.core.log.CatBizLogger;
 import com.ctrip.hermes.core.log.CatFileBizLogger;
 import com.ctrip.hermes.core.log.FileBizLogger;
@@ -26,8 +24,6 @@ import com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroSerializer;
 import com.ctrip.hermes.core.message.payload.assist.SchemaRegisterRestClient;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaManager;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaService;
-import com.ctrip.hermes.core.meta.internal.LocalMetaLoader;
-import com.ctrip.hermes.core.meta.internal.LocalMetaProxy;
 import com.ctrip.hermes.core.meta.remote.DefaultMetaServerLocator;
 import com.ctrip.hermes.core.meta.remote.RemoteMetaLoader;
 import com.ctrip.hermes.core.meta.remote.RemoteMetaProxy;
@@ -49,11 +45,9 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(HashPartitioningStrategy.class));
 
 		// meta
-		all.add(A(LocalMetaLoader.class));
 		all.add(A(RemoteMetaLoader.class));
 		all.add(A(DefaultMetaManager.class));
 		all.add(A(DefaultMetaService.class));
-		all.add(A(LocalMetaProxy.class));
 		all.add(A(RemoteMetaProxy.class));
 		all.add(A(DefaultMetaServerLocator.class));
 
@@ -84,10 +78,6 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 			      .config(E("level").value(Integer.toString(i))));
 		}
 
-		// env
-		all.add(A(DefaultClientEnvironment.class));
-		all.add(A(FileEnvProvider.class));
-
 		all.add(A(CoreConfig.class));
 		all.add(A(DefaultSystemClockService.class));
 
@@ -99,7 +89,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		// cmessaging config service
 		all.add(A(DefaultCMessagingConfigService.class));
-		
+
 		return all;
 	}
 

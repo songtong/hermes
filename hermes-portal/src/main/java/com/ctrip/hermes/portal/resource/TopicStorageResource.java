@@ -12,11 +12,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.ctrip.hermes.admin.core.service.TopicService;
+import com.ctrip.hermes.admin.core.service.storage.exception.StorageHandleErrorException;
+import com.ctrip.hermes.admin.core.service.storage.pojo.StoragePartition;
+import com.ctrip.hermes.admin.core.service.storage.pojo.StorageTable;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.service.TopicService;
-import com.ctrip.hermes.metaservice.service.storage.exception.StorageHandleErrorException;
-import com.ctrip.hermes.metaservice.service.storage.pojo.StoragePartition;
-import com.ctrip.hermes.metaservice.service.storage.pojo.StorageTable;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/storage/")

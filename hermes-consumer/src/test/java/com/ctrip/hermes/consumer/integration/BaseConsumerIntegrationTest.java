@@ -1,13 +1,11 @@
 package com.ctrip.hermes.consumer.integration;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import io.netty.channel.Channel;
 
 import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -24,12 +22,12 @@ import com.ctrip.hermes.consumer.integration.assist.TestConsumerConfig;
 import com.ctrip.hermes.consumer.integration.assist.TestMetaHolder;
 import com.ctrip.hermes.consumer.integration.assist.TestMetaService;
 import com.ctrip.hermes.core.bo.Tpg;
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.meta.internal.MetaProxy;
 import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;

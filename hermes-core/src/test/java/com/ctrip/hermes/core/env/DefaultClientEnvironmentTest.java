@@ -8,6 +8,8 @@ import java.util.Properties;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
+import com.ctrip.hermes.env.ClientEnvironment;
+
 public class DefaultClientEnvironmentTest extends ComponentTestCase {
 
 	@Test

@@ -5,7 +5,7 @@
 			<implementation>com.ctrip.hermes.broker.config.BrokerConfig</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -667,7 +667,7 @@
 			<implementation>com.ctrip.hermes.broker.zk.ZKConfig</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>

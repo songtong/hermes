@@ -18,11 +18,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.xml.sax.SAXException;
 
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.ProduceTransportFailedRatioErrorEvent;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.transform.DefaultSaxParser;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceTransportFailedRatioErrorEvent;
 import com.ctrip.hermes.monitor.checker.client.ProduceTransportFailedRatioChecker;
 
 /**

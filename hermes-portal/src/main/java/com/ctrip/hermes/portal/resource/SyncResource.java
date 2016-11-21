@@ -21,13 +21,13 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.model.Schema;
+import com.ctrip.hermes.admin.core.service.SchemaService;
+import com.ctrip.hermes.admin.core.service.TopicService;
+import com.ctrip.hermes.admin.core.view.TopicView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.model.Schema;
-import com.ctrip.hermes.metaservice.service.SchemaService;
-import com.ctrip.hermes.metaservice.service.TopicService;
-import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.SyncService;

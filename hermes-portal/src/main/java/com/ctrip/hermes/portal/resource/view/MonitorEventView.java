@@ -2,8 +2,8 @@ package com.ctrip.hermes.portal.resource.view;
 
 import java.util.Date;
 
-import com.ctrip.hermes.metaservice.model.MonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
+import com.ctrip.hermes.admin.core.model.MonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.MonitorEventType;
 
 public class MonitorEventView {
 	private MonitorEventType m_eventType;

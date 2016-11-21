@@ -13,14 +13,14 @@ import org.junit.Test;
 import org.unidal.helper.Reflects;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.core.env.DefaultClientEnvironment;
+import com.ctrip.hermes.admin.core.service.TopicService;
+import com.ctrip.hermes.ctrip.env.DefaultClientEnvironment;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.TopicService;
 import com.ctrip.hermes.portal.config.PortalConfig;
 import com.ctrip.hermes.portal.messageLifecycle.entity.MessageLifecycle;
 
-public class TestTracer  {
+public class TestTracer {
 	private TracerService tracerService;
 
 	@Before

@@ -2,8 +2,8 @@ package com.ctrip.hermes.portal.service.application;
 
 import java.util.List;
 
-import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
-import com.ctrip.hermes.metaservice.view.TopicView;
+import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
+import com.ctrip.hermes.admin.core.view.TopicView;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;

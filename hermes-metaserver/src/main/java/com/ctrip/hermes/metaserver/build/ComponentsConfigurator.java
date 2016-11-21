@@ -40,7 +40,6 @@ import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 import com.ctrip.hermes.metaserver.monitor.DefaultQueryOffsetResultMonitor;
 import com.ctrip.hermes.metaserver.monitor.QueryOffsetResultMonitor;
 import com.ctrip.hermes.metaserver.processor.QueryOffsetResultCommandProcessor;
-import com.ctrip.hermes.metaservice.service.SubscriptionService;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
@@ -60,9 +59,6 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		// broker lease
 		all.add(A(DefaultBrokerLeaseAllocator.class));
 		all.add(A(BrokerLeaseHolder.class));
-
-		// subscription service
-		all.add(A(SubscriptionService.class));
 
 		// cluster
 		all.add(A(ClusterStateHolder.class));

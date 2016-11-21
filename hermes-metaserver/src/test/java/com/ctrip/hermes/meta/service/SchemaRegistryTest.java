@@ -1,5 +1,7 @@
 package com.ctrip.hermes.meta.service;
 
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 
 import java.io.File;
@@ -8,13 +10,10 @@ import java.util.Properties;
 
 import org.apache.avro.Schema.Parser;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
-import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
-import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 
 public class SchemaRegistryTest {
 

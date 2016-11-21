@@ -13,9 +13,8 @@ import org.unidal.tuple.Pair;
 
 import com.ctrip.framework.apollo.Config;
 import com.ctrip.framework.apollo.ConfigService;
-import com.ctrip.hermes.Hermes.Env;
-import com.ctrip.hermes.core.env.ClientEnvironment;
 import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.env.ClientEnvironment;
 
 @Named(type = PortalConfig.class)
 public class PortalConfig implements Initializable {
@@ -59,7 +58,7 @@ public class PortalConfig implements Initializable {
 
 	public String getSyncHost() {
 		String host = m_env.getGlobalConfig().getProperty("portal.sync.host");
-		if (StringUtils.isBlank(host) && Env.LOCAL.equals(m_env.getEnv())) {
+		if (StringUtils.isBlank(host) && "LOCAL".equals(m_env.getEnv())) {
 			return "127.0.0.1";
 		}
 		return host;
@@ -102,7 +101,7 @@ public class PortalConfig implements Initializable {
 	public List<Pair<String, Integer>> getElasticClusterNodes() {
 		String defaultHost = "localhost";
 		Integer defaultPort = 9300;
-		if (Env.LOCAL.equals(m_env.getEnv())) {
+		if ("LOCAL".equals(m_env.getEnv())) {
 			return parseEndpoints(defaultHost, defaultPort);
 		}
 		List<Pair<String, Integer>> l = parseEndpoints(m_esClusterString, defaultPort);
@@ -134,7 +133,7 @@ public class PortalConfig implements Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		if (Env.LOCAL.equals(m_env.getEnv())) {
+		if ("LOCAL".equals(m_env.getEnv())) {
 			m_kibanaUrl = "http://localhost:5601";
 		} else {
 			m_kibanaUrl = getConfigFromApollo(KIBANA_URL_KEY, m_env.getGlobalConfig().getProperty(KIBANA_URL_KEY));

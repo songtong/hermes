@@ -31,12 +31,12 @@ import org.xml.sax.SAXException;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.admin.core.monitor.event.ProduceTransportFailedRatioErrorEvent;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.monitor.event.ProduceTransportFailedRatioErrorEvent;
 import com.ctrip.hermes.monitor.checker.CatBasedChecker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 

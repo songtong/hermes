@@ -1,0 +1,17 @@
+<plexus>
+	<components>
+		<component>
+			<role>com.ctrip.hermes.env.ClientEnvironment</role>
+			<implementation>com.ctrip.hermes.ctrip.env.DefaultClientEnvironment</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.ctrip.env.EnvProvider</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.ctrip.env.EnvProvider</role>
+			<implementation>com.ctrip.hermes.ctrip.env.CtripEnvProvider</implementation>
+		</component>
+	</components>
+</plexus>

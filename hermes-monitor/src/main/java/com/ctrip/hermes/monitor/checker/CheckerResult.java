@@ -3,7 +3,7 @@ package com.ctrip.hermes.monitor.checker;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)

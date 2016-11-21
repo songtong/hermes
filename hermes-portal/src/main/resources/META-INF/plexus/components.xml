@@ -1,18 +1,18 @@
 <plexus>
 	<components>
 		<component>
-			<role>com.ctrip.hermes.metaservice.service.storage.TopicStorageService</role>
-			<implementation>com.ctrip.hermes.metaservice.service.storage.DefaultTopicStorageService</implementation>
+			<role>com.ctrip.hermes.admin.core.service.storage.TopicStorageService</role>
+			<implementation>com.ctrip.hermes.admin.core.service.storage.DefaultTopicStorageService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.storage.handler.StorageHandler</role>
+					<role>com.ctrip.hermes.admin.core.service.storage.handler.StorageHandler</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.service.storage.handler.StorageHandler</role>
+			<role>com.ctrip.hermes.admin.core.service.storage.handler.StorageHandler</role>
 			<role-hint>mysql-storage-handler</role-hint>
-			<implementation>com.ctrip.hermes.metaservice.service.storage.handler.MysqlStorageHandler</implementation>
+			<implementation>com.ctrip.hermes.admin.core.service.storage.handler.MysqlStorageHandler</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.datasource.DataSourceManager</role>
@@ -24,25 +24,25 @@
 			<implementation>com.ctrip.hermes.portal.config.PortalConfig</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.queue.MessageQueueDao</role>
-			<implementation>com.ctrip.hermes.metaservice.queue.DefaultMessageQueueDao</implementation>
+			<role>com.ctrip.hermes.admin.core.queue.MessageQueueDao</role>
+			<implementation>com.ctrip.hermes.admin.core.queue.DefaultMessageQueueDao</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.MessagePriorityDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.MessagePriorityDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.OffsetMessageDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.OffsetMessageDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.ResendGroupIdDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.ResendGroupIdDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.OffsetResendDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.OffsetResendDao</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -60,22 +60,22 @@
 			<implementation>com.ctrip.hermes.portal.service.dashboard.DefaultDashboardService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.MessageQueueDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.MessageQueueDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.DeadLetterDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.DeadLetterDao</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+					<role>com.ctrip.hermes.admin.core.service.TopicService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PartitionService</role>
+					<role>com.ctrip.hermes.admin.core.service.PartitionService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -90,10 +90,10 @@
 					<role>com.ctrip.hermes.portal.service.mail.PortalMailService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+					<role>com.ctrip.hermes.admin.core.service.TopicService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>
+					<role>com.ctrip.hermes.admin.core.service.ConsumerService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.config.PortalConfig</role>
@@ -101,11 +101,11 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.service.mail.MailService</role>
-			<implementation>com.ctrip.hermes.metaservice.service.mail.DefaultMailService</implementation>
+			<role>com.ctrip.hermes.admin.core.service.mail.MailService</role>
+			<implementation>com.ctrip.hermes.admin.core.service.mail.DefaultMailService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.mail.MailAccountProvider</role>
+					<role>com.ctrip.hermes.admin.core.service.mail.MailAccountProvider</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -114,32 +114,32 @@
 			<implementation>com.ctrip.hermes.portal.service.mail.DefaultPortalMailService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.mail.MailService</role>
+					<role>com.ctrip.hermes.admin.core.service.mail.MailService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+					<role>com.ctrip.hermes.admin.core.service.TopicService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>
+					<role>com.ctrip.hermes.admin.core.service.ConsumerService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.config.PortalConfig</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.service.mail.MailAccountProvider</role>
-			<implementation>com.ctrip.hermes.metaservice.service.mail.FileMailAccountProvider</implementation>
+			<role>com.ctrip.hermes.admin.core.service.mail.MailAccountProvider</role>
+			<implementation>com.ctrip.hermes.admin.core.service.mail.FileMailAccountProvider</implementation>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.SyncService</role>
 			<implementation>com.ctrip.hermes.portal.service.SyncService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>
+					<role>com.ctrip.hermes.admin.core.service.ConsumerService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -160,7 +160,7 @@
 					<role>com.ctrip.hermes.portal.service.TracerEsQueryService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+					<role>com.ctrip.hermes.admin.core.service.TopicService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -176,7 +176,7 @@
 					<role>com.ctrip.hermes.portal.dal.tag.CachedTagDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedDatasourceDao</role>
+					<role>com.ctrip.hermes.admin.core.dal.CachedDatasourceDao</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagDao</role>
@@ -192,10 +192,10 @@
 			<implementation>com.ctrip.hermes.portal.service.application.MysqlPartitionStrategy</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedDatasourceDao</role>
+					<role>com.ctrip.hermes.admin.core.dal.CachedDatasourceDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.dal.CachedPartitionDao</role>
+					<role>com.ctrip.hermes.admin.core.dal.CachedPartitionDao</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.dal.tag.CachedTagDao</role>
@@ -215,31 +215,31 @@
 			<implementation>com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.AppService</role>
+					<role>com.ctrip.hermes.admin.core.service.AppService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.CodecService</role>
+					<role>com.ctrip.hermes.admin.core.service.CodecService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ConsumerService</role>
+					<role>com.ctrip.hermes.admin.core.service.ConsumerService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.StorageService</role>
+					<role>com.ctrip.hermes.admin.core.service.StorageService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.EndpointService</role>
+					<role>com.ctrip.hermes.admin.core.service.EndpointService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.IdcService</role>
+					<role>com.ctrip.hermes.admin.core.service.IdcService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.PartitionService</role>
+					<role>com.ctrip.hermes.admin.core.service.PartitionService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ServerService</role>
+					<role>com.ctrip.hermes.admin.core.service.ServerService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+					<role>com.ctrip.hermes.admin.core.service.TopicService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
@@ -250,11 +250,11 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.cmessage.CmessageConfigService</role>
-			<implementation>com.ctrip.hermes.metaservice.cmessage.DefaultCmessageConfigService</implementation>
+			<role>com.ctrip.hermes.admin.core.cmessage.CmessageConfigService</role>
+			<implementation>com.ctrip.hermes.admin.core.cmessage.DefaultCmessageConfigService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.KVService</role>
+					<role>com.ctrip.hermes.admin.core.service.KVService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -263,7 +263,7 @@
 			<implementation>com.ctrip.hermes.portal.service.zookeeperMigration.DefaultZookeeperMigrationService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+					<role>com.ctrip.hermes.admin.core.service.TopicService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
@@ -275,16 +275,16 @@
 					<role>com.ctrip.hermes.metaservice.service.MetaService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ServerService</role>
+					<role>com.ctrip.hermes.admin.core.service.ServerService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaservice.zk.ZKConfig</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.cmessage.CmessageConfigService</role>
+					<role>com.ctrip.hermes.admin.core.cmessage.CmessageConfigService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -308,7 +308,7 @@
 					<role>com.ctrip.hermes.portal.console.topic.JspViewer</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.TopicService</role>
+					<role>com.ctrip.hermes.admin.core.service.TopicService</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.portal.config.PortalConfig</role>

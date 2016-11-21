@@ -23,10 +23,10 @@ import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.service.EndpointService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.metaservice.service.EndpointService;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/endpoints/")

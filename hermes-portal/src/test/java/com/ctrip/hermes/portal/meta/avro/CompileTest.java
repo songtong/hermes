@@ -13,7 +13,7 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 
-import com.ctrip.hermes.metaservice.service.CompileService;
+import com.ctrip.hermes.admin.core.service.CompileService;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 

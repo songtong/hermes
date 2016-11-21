@@ -11,7 +11,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
 import com.ctrip.hermes.monitor.checker.client.ConsumerAckErrorChecker;
 
 @RunWith(SpringJUnit4ClassRunner.class)

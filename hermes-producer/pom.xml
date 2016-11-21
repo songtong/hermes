@@ -16,10 +16,6 @@
 			<artifactId>hermes-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.dianping.cat</groupId>
-			<artifactId>cat-client</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>

@@ -1,6 +1,6 @@
 package com.ctrip.hermes.metaserver.fulltest;
 
-import com.ctrip.hermes.core.env.DefaultClientEnvironment;
+import com.ctrip.hermes.ctrip.env.DefaultClientEnvironment;
 
 public class MockClientEnviroment extends DefaultClientEnvironment {
 

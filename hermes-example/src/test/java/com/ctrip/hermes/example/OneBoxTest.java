@@ -146,10 +146,10 @@ public class OneBoxTest extends ComponentTestCase {
 	@Test
 	public void test() throws Exception {
 		Cat.initializeByDomain("hermes", "cat.fws.qa.nt.ctripcorp.com");
-		startBroker();
+//		startBroker();
 
-		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
-		server.start();
+//		HttpMetricsServer server = new HttpMetricsServer("localhost", 9999);
+//		server.start();
 
 		String topic = "order_new";
 

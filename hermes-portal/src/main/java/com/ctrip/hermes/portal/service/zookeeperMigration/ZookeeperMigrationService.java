@@ -2,7 +2,7 @@ package com.ctrip.hermes.portal.service.zookeeperMigration;
 
 import java.util.Map;
 
-import com.ctrip.hermes.metaservice.model.Server;
+import com.ctrip.hermes.admin.core.model.Server;
 import com.ctrip.hermes.portal.service.zookeeperMigration.DefaultZookeeperMigrationService.CheckResult;
 
 public interface ZookeeperMigrationService {

@@ -21,15 +21,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.queue.QueueType;
+import com.ctrip.hermes.admin.core.service.ConsumerService;
+import com.ctrip.hermes.admin.core.service.TopicService;
+import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
+import com.ctrip.hermes.admin.core.view.TopicView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.queue.QueueType;
-import com.ctrip.hermes.metaservice.service.ConsumerService;
-import com.ctrip.hermes.metaservice.service.TopicService;
-import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
-import com.ctrip.hermes.metaservice.view.TopicView;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
 @Path("/consumers/")

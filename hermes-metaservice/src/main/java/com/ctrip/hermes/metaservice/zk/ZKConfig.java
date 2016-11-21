@@ -3,7 +3,7 @@ package com.ctrip.hermes.metaservice.zk;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.core.env.ClientEnvironment;
+import com.ctrip.hermes.env.ClientEnvironment;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)

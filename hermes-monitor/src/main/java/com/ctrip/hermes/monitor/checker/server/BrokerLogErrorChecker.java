@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.ctrip.hermes.metaservice.monitor.event.BrokerErrorEvent;
+import com.ctrip.hermes.admin.core.monitor.event.BrokerErrorEvent;
 import com.ctrip.hermes.monitor.checker.Checker;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.config.MonitorConfig;

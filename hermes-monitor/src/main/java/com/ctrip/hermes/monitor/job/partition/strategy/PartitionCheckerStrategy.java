@@ -2,8 +2,8 @@ package com.ctrip.hermes.monitor.job.partition.strategy;
 
 import java.util.List;
 
-import com.ctrip.hermes.metaservice.queue.PartitionInfo;
-import com.ctrip.hermes.metaservice.queue.TableContext;
+import com.ctrip.hermes.admin.core.queue.PartitionInfo;
+import com.ctrip.hermes.admin.core.queue.TableContext;
 
 public interface PartitionCheckerStrategy {
 	public AnalysisResult analysisTable(TableContext ctx);

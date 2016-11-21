@@ -1,5 +1,7 @@
 package com.ctrip.hermes.monitor.checker.mysql;
 
+import io.netty.util.internal.ConcurrentSet;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,29 +20,28 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.ctrip.hermes.admin.core.model.ConsumerMonitorConfig;
+import com.ctrip.hermes.admin.core.monitor.event.ConsumeLargeBacklogEvent;
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.monitor.service.MonitorConfigService;
+import com.ctrip.hermes.admin.core.queue.MessagePriorityDao;
+import com.ctrip.hermes.admin.core.queue.OffsetMessageDao;
+import com.ctrip.hermes.admin.core.service.ConsumerService;
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
+import com.ctrip.hermes.admin.core.service.notify.HermesNoticeContent;
+import com.ctrip.hermes.admin.core.service.notify.NotifyService;
+import com.ctrip.hermes.admin.core.service.notify.SmsNoticeContent;
+import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.model.ConsumerMonitorConfig;
-import com.ctrip.hermes.metaservice.monitor.event.ConsumeLargeBacklogEvent;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.service.MonitorConfigService;
-import com.ctrip.hermes.metaservice.queue.MessagePriorityDao;
-import com.ctrip.hermes.metaservice.queue.OffsetMessageDao;
-import com.ctrip.hermes.metaservice.service.ConsumerService;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.HermesNoticeContent;
-import com.ctrip.hermes.metaservice.service.notify.NotifyService;
-import com.ctrip.hermes.metaservice.service.notify.SmsNoticeContent;
-import com.ctrip.hermes.metaservice.view.ConsumerGroupView;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.DBBasedChecker;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
@@ -48,8 +49,6 @@ import com.ctrip.hermes.monitor.checker.mysql.task.ConsumeBacklogCheckerTask;
 import com.ctrip.hermes.monitor.checker.notification.LargeBacklogMailContent;
 import com.ctrip.hermes.monitor.checker.notification.LargeBacklogReportMailContent;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
-
-import io.netty.util.internal.ConcurrentSet;
 
 //@Component(value = ConsumeLargeBacklogChecker.ID)
 public class ConsumeLargeBacklogChecker extends DBBasedChecker implements InitializingBean {

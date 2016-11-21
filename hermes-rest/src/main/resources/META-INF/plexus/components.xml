@@ -11,7 +11,7 @@
 					<role>com.ctrip.hermes.rest.service.SoaPushService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.SubscriptionService</role>
+					<role>com.ctrip.hermes.admin.core.service.SubscriptionService</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -23,7 +23,7 @@
 					<role>com.ctrip.hermes.core.log.FileBizLogger</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
@@ -38,7 +38,7 @@
 					<role>com.ctrip.hermes.core.log.FileBizLogger</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -56,7 +56,7 @@
 			<implementation>com.ctrip.hermes.rest.service.CmessageTransferService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>

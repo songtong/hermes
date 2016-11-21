@@ -19,11 +19,11 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.schemaregistry.SchemaKey;
+import com.ctrip.hermes.admin.core.schemaregistry.SchemaRegistryKeyType;
+import com.ctrip.hermes.admin.core.schemaregistry.SchemaValue;
+import com.ctrip.hermes.admin.core.service.SchemaRegistryService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.schemaregistry.SchemaKey;
-import com.ctrip.hermes.metaservice.schemaregistry.SchemaRegistryKeyType;
-import com.ctrip.hermes.metaservice.schemaregistry.SchemaValue;
-import com.ctrip.hermes.metaservice.service.SchemaRegistryService;
 
 @Path("/schemaregistry/")
 @Singleton

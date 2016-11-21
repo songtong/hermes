@@ -20,7 +20,7 @@
 			<implementation>com.ctrip.hermes.metaserver.config.MetaServerConfig</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.core.env.ClientEnvironment</role>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -114,15 +114,6 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.hermes.metaservice.service.SubscriptionService</role>
-			<implementation>com.ctrip.hermes.metaservice.service.SubscriptionService</implementation>
-			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.model.SubscriptionDao</role>
 				</requirement>
 			</requirements>
 		</component>
