@@ -1,9 +1,17 @@
-function k_topic_produce_history(topic, $sce) {
+function k_topic_produce_history_backup(topic, $sce) {
 	var url = global_kibana_url
 			+ "/#/visualize/edit/Hermes-Message-Received?embed&_g=(refreshInterval:(display:Off,pause:!f,section:0,value:0),time:(from:now-1h,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Received%20AND%20topic:"
 			+ topic
 			+ "')),vis:(aggs:!((id:'1',params:(),schema:metric,type:count),(id:'3',params:(customInterval:'2h',extended_bounds:(),field:eventTime,interval:m,min_doc_count:1),schema:segment,type:date_histogram)),listeners:(),params:(addLegend:!f,addTimeMarker:!f,addTooltip:!t,defaultYExtents:!f,mode:stacked,scale:linear,setYExtents:!f,shareYAxis:!t,times:!(),yAxis:()),type:histogram))"	
 	return $sce.trustAsResourceUrl(url);
+};
+
+function k_topic_produce_history(topic, $sce) {
+        var url = global_kibana_url
+                        + "#/visualize/edit/Hermes-Message-Received?embed=true&_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-1h,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Received+AND+topic:"
+                        + topic
+                        + "')),uiState:(vis:(legendOpen:!f)),vis:(aggs:!((enabled:!t,id:'1',params:(),schema:metric,type:count),(enabled:!t,id:'2',params:(customInterval:'2h',customLabel:%E6%B6%88%E6%81%AF%E7%94%9F%E4%BA%A7%E9%80%9F%E7%8E%87,extended_bounds:(),field:eventTime,interval:auto,min_doc_count:1),schema:segment,type:date_histogram)),listeners:(),params:(addLegend:!t,addTimeMarker:!f,addTooltip:!t,defaultYExtents:!f,legendPosition:right,mode:stacked,scale:linear,setYExtents:!f,shareYAxis:!t,times:!(),yAxis:()),title:Hermes-Message-Received,type:histogram))"
+        return $sce.trustAsResourceUrl(url);
 };
 
 function k_consumer_consume_history(topic, consumer, $sce) {

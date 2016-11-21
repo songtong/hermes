@@ -150,7 +150,8 @@
 								</select>
 							</div>
 							<div class="form-group">
-								<button class="btn btn-primary pull-right" type="button" ng-click="initlizeZookeeperEnsemble(target)">初始化</button>
+								<span style="font-size: 18px; margin-top: 2px;" class="glyphicon glyphicon-repeat pull-right" ng-class="{rotate:initializeZk==checkStatus.checking}" ng-show="initializeZk==checkStatus.checking"></span>
+								<button style="margin-right: 5px" class="btn btn-primary pull-right" type="button" ng-click="initlizeZookeeperEnsemble(target)">初始化</button>
 							</div>
 						</div>
 					</div>
