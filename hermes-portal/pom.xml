@@ -34,10 +34,6 @@
 			<artifactId>fluent-hc</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.dianping.cat</groupId>
-			<artifactId>cat-client</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
 		</dependency>
@@ -128,14 +124,6 @@
 			<groupId>org.apache.shiro</groupId>
 			<artifactId>shiro-web</artifactId>
 			<version>1.2.4</version>
-		</dependency>
-		<dependency>
-			<groupId>com.ctrip.framework.apollo</groupId>
-			<artifactId>apollo-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.ctrip.framework</groupId>
-			<artifactId>framework-foundation</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.danielbechler</groupId>
