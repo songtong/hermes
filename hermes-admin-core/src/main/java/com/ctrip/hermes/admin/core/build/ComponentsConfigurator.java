@@ -79,6 +79,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultMailService.class));
 
 		all.addAll(new FxHermesShardDbDatabaseConfigurator().defineComponents());
+		all.addAll(new FxhermesmetadbDatabaseConfigurator().defineComponents());
 
 		all.add(A(AppService.class));
 		all.add(A(CacheDalService.class));
