@@ -43,7 +43,7 @@
 							<goal>plexus</goal>
 						</goals>
 						<configuration>
-							<className>com.ctrip.hermes.env.build.ComponentsConfigurator</className>
+							<className>com.ctrip.hermes.ctrip.env.build.ComponentsConfigurator</className>
 						</configuration>
 					</execution>
 				</executions>
