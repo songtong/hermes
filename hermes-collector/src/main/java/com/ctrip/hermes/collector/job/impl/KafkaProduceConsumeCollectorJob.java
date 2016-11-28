@@ -26,6 +26,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.admin.core.model.ConsumerGroup;
+import com.ctrip.hermes.admin.core.model.ConsumerGroupDao;
+import com.ctrip.hermes.admin.core.model.ConsumerGroupEntity;
+import com.ctrip.hermes.admin.core.model.Topic;
+import com.ctrip.hermes.admin.core.model.TopicDao;
+import com.ctrip.hermes.admin.core.model.TopicEntity;
 import com.ctrip.hermes.collector.conf.CollectorConfiguration;
 import com.ctrip.hermes.collector.hub.StateHub;
 import com.ctrip.hermes.collector.job.AbstractJob;
@@ -39,12 +45,6 @@ import com.ctrip.hermes.collector.state.impl.TPProduceState;
 import com.ctrip.hermes.collector.utils.IndexUtils;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.model.ConsumerGroup;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
-import com.ctrip.hermes.metaservice.model.Topic;
-import com.ctrip.hermes.metaservice.model.TopicDao;
-import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 @Component
 @JobDescription(group=JobGroup.BIZ, cron="0 */5 * * * ?")

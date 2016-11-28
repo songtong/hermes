@@ -15,6 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ctrip.hermes.admin.core.model.Endpoint;
+import com.ctrip.hermes.admin.core.model.EndpointDao;
+import com.ctrip.hermes.admin.core.model.EndpointEntity;
 import com.ctrip.hermes.collector.collector.CatHttpCollector.CatHttpCollectorContext;
 import com.ctrip.hermes.collector.collector.Collector.CollectorContext;
 import com.ctrip.hermes.collector.conf.CollectorConfiguration;
@@ -36,9 +39,6 @@ import com.ctrip.hermes.collector.utils.Constants;
 import com.ctrip.hermes.collector.utils.TimeUtils;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.model.Endpoint;
-import com.ctrip.hermes.metaservice.model.EndpointDao;
-import com.ctrip.hermes.metaservice.model.EndpointEntity;
 
 @Component
 @JobDescription(group=JobGroup.BIZ, cron="0 */5 * * * ?")

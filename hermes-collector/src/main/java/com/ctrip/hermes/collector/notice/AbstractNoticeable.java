@@ -6,11 +6,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
+import com.ctrip.hermes.admin.core.service.notify.HermesNoticeContent;
+import com.ctrip.hermes.admin.core.service.notify.HermesNoticeType;
 import com.ctrip.hermes.collector.exception.NoticeException;
 import com.ctrip.hermes.collector.notice.annotation.NoticeDetail;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.HermesNoticeContent;
-import com.ctrip.hermes.metaservice.service.notify.HermesNoticeType;
 
 public abstract class AbstractNoticeable implements Noticeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNoticeable.class);

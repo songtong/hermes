@@ -1,7 +1,7 @@
 package com.ctrip.hermes.collector.notice;
 
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
 import com.ctrip.hermes.collector.exception.NoticeException;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
 
 /**
  * @author tenglinxiao

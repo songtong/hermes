@@ -1,10 +1,10 @@
 package com.ctrip.hermes.collector.notice.impl;
 
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.ContentField;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.Subject;
-import com.ctrip.hermes.metaservice.service.notify.MailNoticeContent;
-import com.ctrip.hermes.metaservice.service.template.HermesTemplate;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.ContentField;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.Subject;
+import com.ctrip.hermes.admin.core.service.notify.MailNoticeContent;
+import com.ctrip.hermes.admin.core.service.template.HermesTemplate;
 
 @HermesMailDescription(template = HermesTemplate.POTENTIAL_ISSUE_NOTICE)
 public class PotentialIssueNotice extends MailNoticeContent {

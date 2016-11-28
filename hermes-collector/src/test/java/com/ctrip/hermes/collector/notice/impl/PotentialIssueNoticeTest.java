@@ -9,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
 import com.ctrip.hermes.collector.collector.CollectorTest;
 import com.ctrip.hermes.collector.hub.NotifierManager;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes=CollectorTest.class)

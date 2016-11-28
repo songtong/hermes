@@ -18,16 +18,16 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import org.unidal.tuple.Pair;
 import org.unidal.tuple.Triple;
 
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.ContentField;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.Subject;
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
+import com.ctrip.hermes.admin.core.service.notify.MailNoticeContent;
+import com.ctrip.hermes.admin.core.service.template.HermesTemplate;
 import com.ctrip.hermes.collector.conf.CollectorConfiguration;
 import com.ctrip.hermes.collector.notice.Noticeable;
 import com.ctrip.hermes.collector.state.State;
 import com.ctrip.hermes.collector.utils.ApplicationContextUtils;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.ContentField;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.Subject;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.MailNoticeContent;
-import com.ctrip.hermes.metaservice.service.template.HermesTemplate;
 
 public class TopicFlowDailyReportState extends State implements Noticeable {
 	public static final String SUBJECT = "%s[%s]";

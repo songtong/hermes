@@ -16,11 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
+import com.ctrip.hermes.admin.core.service.notify.NotifyService;
 import com.ctrip.hermes.collector.conf.CollectorConfiguration;
 import com.ctrip.hermes.collector.utils.CollectorThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.NotifyService;
 
 @Component
 public class NotifierManager {

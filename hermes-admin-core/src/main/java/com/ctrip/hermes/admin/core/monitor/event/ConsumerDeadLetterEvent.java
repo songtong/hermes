@@ -1,11 +1,10 @@
-package com.ctrip.hermes.metaservice.monitor.event;
+package com.ctrip.hermes.admin.core.monitor.event;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.ctrip.hermes.metaservice.model.MonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
+import com.ctrip.hermes.admin.core.monitor.MonitorEventType;
 
 public class ConsumerDeadLetterEvent extends BaseMonitorEvent {
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
@@ -69,7 +68,7 @@ public class ConsumerDeadLetterEvent extends BaseMonitorEvent {
 	}
 
 	@Override
-	protected void parse0(MonitorEvent dbEntity) {
+	protected void parse0(com.ctrip.hermes.admin.core.model.MonitorEvent dbEntity) {
 		m_topic = dbEntity.getKey1();
 		m_consumerGroup = dbEntity.getKey2();
 		m_deadLetterCount= Long.parseLong(dbEntity.getKey3());
@@ -87,7 +86,7 @@ public class ConsumerDeadLetterEvent extends BaseMonitorEvent {
 	}
 
 	@Override
-	protected void toDBEntity0(MonitorEvent e) {
+	protected void toDBEntity0(com.ctrip.hermes.admin.core.model.MonitorEvent e) {
 		e.setKey1(m_topic);
 		e.setKey2(m_consumerGroup);
 		e.setKey3(String.valueOf(m_deadLetterCount));

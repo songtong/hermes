@@ -28,6 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.admin.core.model.Topic;
+import com.ctrip.hermes.admin.core.model.TopicDao;
+import com.ctrip.hermes.admin.core.model.TopicEntity;
 import com.ctrip.hermes.collector.collector.Collector.CollectorContext;
 import com.ctrip.hermes.collector.collector.EsHttpCollector;
 import com.ctrip.hermes.collector.collector.EsHttpCollector.EsHttpCollectorContextBuilder;
@@ -43,9 +46,6 @@ import com.ctrip.hermes.collector.utils.JsonNodeUtils;
 import com.ctrip.hermes.collector.utils.JsonSerializer;
 import com.ctrip.hermes.collector.utils.Utils;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.model.Topic;
-import com.ctrip.hermes.metaservice.model.TopicDao;
-import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 @Component
 @Path("/report")

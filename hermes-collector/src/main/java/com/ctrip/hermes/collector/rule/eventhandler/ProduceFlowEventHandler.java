@@ -4,14 +4,13 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
 import com.ctrip.hermes.collector.rule.RuleEvent;
 import com.ctrip.hermes.collector.rule.RuleEventHandler;
 import com.ctrip.hermes.collector.rule.annotation.EPL;
 import com.ctrip.hermes.collector.rule.annotation.TriggeredBy;
 import com.ctrip.hermes.collector.state.impl.ProduceFlowState;
-import com.ctrip.hermes.metaservice.monitor.event.MonitorEvent;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
-import com.ctrip.hermes.metaservice.service.notify.HermesNoticeContent;
 
 @Component
 @TriggeredBy(ProduceFlowState.class)

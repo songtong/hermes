@@ -19,9 +19,14 @@ import kafka.javaapi.consumer.SimpleConsumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
+import com.ctrip.hermes.admin.core.model.ConsumerGroup;
+import com.ctrip.hermes.admin.core.model.ConsumerGroupDao;
+import com.ctrip.hermes.admin.core.model.ConsumerGroupEntity;
+import com.ctrip.hermes.admin.core.model.Topic;
+import com.ctrip.hermes.admin.core.model.TopicDao;
+import com.ctrip.hermes.admin.core.model.TopicEntity;
 import com.ctrip.hermes.collector.hub.StateHub;
 import com.ctrip.hermes.collector.job.AbstractJob;
 import com.ctrip.hermes.collector.job.JobContext;
@@ -33,12 +38,6 @@ import com.ctrip.hermes.collector.state.impl.TPGConsumeState;
 import com.ctrip.hermes.collector.utils.IndexUtils;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.model.ConsumerGroup;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
-import com.ctrip.hermes.metaservice.model.Topic;
-import com.ctrip.hermes.metaservice.model.TopicDao;
-import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 //@Component
 @JobDescription(group=JobGroup.BIZ, cron="0 */5 * * * ?")

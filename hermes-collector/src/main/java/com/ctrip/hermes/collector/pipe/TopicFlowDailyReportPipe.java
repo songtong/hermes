@@ -11,6 +11,9 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.springframework.stereotype.Component;
 
+import com.ctrip.hermes.admin.core.model.Topic;
+import com.ctrip.hermes.admin.core.model.TopicDao;
+import com.ctrip.hermes.admin.core.model.TopicEntity;
 import com.ctrip.hermes.collector.pipeline.annotation.Pipeline;
 import com.ctrip.hermes.collector.pipeline.annotation.ProcessOn;
 import com.ctrip.hermes.collector.record.Record;
@@ -19,9 +22,6 @@ import com.ctrip.hermes.collector.state.impl.TopicFlowDailyReportState;
 import com.ctrip.hermes.collector.state.impl.TopicFlowDailyReportState.FlowDetail;
 import com.ctrip.hermes.collector.utils.JsonNodeUtils;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.metaservice.model.Topic;
-import com.ctrip.hermes.metaservice.model.TopicDao;
-import com.ctrip.hermes.metaservice.model.TopicEntity;
 
 @Component
 @Pipeline(group = "flow_pipeline_aggregation_report", order = 1)

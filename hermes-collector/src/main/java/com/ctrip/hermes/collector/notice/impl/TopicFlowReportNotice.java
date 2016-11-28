@@ -5,12 +5,12 @@ import java.util.List;
 
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.ContentField;
+import com.ctrip.hermes.admin.core.service.mail.assist.HermesMailDescription.Subject;
+import com.ctrip.hermes.admin.core.service.notify.MailNoticeContent;
+import com.ctrip.hermes.admin.core.service.template.HermesTemplate;
 import com.ctrip.hermes.collector.state.impl.TopicFlowDailyReportState.FlowDetail;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.ContentField;
-import com.ctrip.hermes.metaservice.service.mail.assist.HermesMailDescription.Subject;
-import com.ctrip.hermes.metaservice.service.notify.MailNoticeContent;
-import com.ctrip.hermes.metaservice.service.template.HermesTemplate;
 
 @HermesMailDescription(template = HermesTemplate.TOPIC_FLOW_DAILY_REPORT)
 public class TopicFlowReportNotice extends MailNoticeContent {

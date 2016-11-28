@@ -8,10 +8,22 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.admin.core.model.ConsumerGroupDao;
+import com.ctrip.hermes.admin.core.model.ConsumerGroupEntity;
+import com.ctrip.hermes.admin.core.model.Partition;
+import com.ctrip.hermes.admin.core.model.PartitionDao;
+import com.ctrip.hermes.admin.core.model.PartitionEntity;
+import com.ctrip.hermes.admin.core.model.Topic;
+import com.ctrip.hermes.admin.core.model.TopicDao;
+import com.ctrip.hermes.admin.core.model.TopicEntity;
+import com.ctrip.hermes.admin.core.queue.DeadLetter;
+import com.ctrip.hermes.admin.core.queue.DeadLetterDao;
+import com.ctrip.hermes.admin.core.queue.DeadLetterEntity;
+import com.ctrip.hermes.admin.core.queue.MessageQueueDao;
+import com.ctrip.hermes.admin.core.queue.OffsetMessage;
 import com.ctrip.hermes.collector.hub.StateHub;
 import com.ctrip.hermes.collector.job.AbstractJob;
 import com.ctrip.hermes.collector.job.JobContext;
@@ -24,19 +36,6 @@ import com.ctrip.hermes.collector.utils.IndexUtils;
 import com.ctrip.hermes.collector.utils.TimeUtils;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupDao;
-import com.ctrip.hermes.metaservice.model.ConsumerGroupEntity;
-import com.ctrip.hermes.metaservice.model.Partition;
-import com.ctrip.hermes.metaservice.model.PartitionDao;
-import com.ctrip.hermes.metaservice.model.PartitionEntity;
-import com.ctrip.hermes.metaservice.model.Topic;
-import com.ctrip.hermes.metaservice.model.TopicDao;
-import com.ctrip.hermes.metaservice.model.TopicEntity;
-import com.ctrip.hermes.metaservice.queue.DeadLetter;
-import com.ctrip.hermes.metaservice.queue.DeadLetterDao;
-import com.ctrip.hermes.metaservice.queue.DeadLetterEntity;
-import com.ctrip.hermes.metaservice.queue.MessageQueueDao;
-import com.ctrip.hermes.metaservice.queue.OffsetMessage;
 import com.dianping.cat.Cat;
 
 

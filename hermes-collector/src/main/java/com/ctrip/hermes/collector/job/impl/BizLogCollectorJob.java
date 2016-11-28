@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ctrip.hermes.admin.core.service.notify.HermesNotice;
 import com.ctrip.hermes.collector.collector.Collector.CollectorContext;
 import com.ctrip.hermes.collector.collector.EsHttpCollector.EsHttpCollectorContext;
 import com.ctrip.hermes.collector.conf.CollectorConfiguration;
@@ -25,7 +26,6 @@ import com.ctrip.hermes.collector.job.strategy.DelayedRescheduleExecutionStrateg
 import com.ctrip.hermes.collector.notice.impl.PotentialIssueNotice;
 import com.ctrip.hermes.collector.service.EsHttpCollectorService;
 import com.ctrip.hermes.collector.utils.TimeUtils;
-import com.ctrip.hermes.metaservice.service.notify.HermesNotice;
 
 @Component
 @JobDescription(group=JobGroup.BIZ, cron="0 */5 * * * ?")

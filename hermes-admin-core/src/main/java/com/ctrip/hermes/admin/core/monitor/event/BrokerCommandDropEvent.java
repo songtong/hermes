@@ -1,7 +1,6 @@
-package com.ctrip.hermes.metaservice.monitor.event;
+package com.ctrip.hermes.admin.core.monitor.event;
 
-import com.ctrip.hermes.metaservice.model.MonitorEvent;
-import com.ctrip.hermes.metaservice.monitor.MonitorEventType;
+import com.ctrip.hermes.admin.core.monitor.MonitorEventType;
 
 public class BrokerCommandDropEvent extends BaseMonitorEvent {
     private String m_command;
@@ -55,14 +54,14 @@ public class BrokerCommandDropEvent extends BaseMonitorEvent {
 	}
 
 	@Override
-    protected void parse0(MonitorEvent dbEntity) {
+    protected void parse0(com.ctrip.hermes.admin.core.model.MonitorEvent dbEntity) {
         m_command = dbEntity.getKey1();
         m_count = Long.parseLong(dbEntity.getKey2());
         m_date = dbEntity.getKey3();
     }
 
     @Override
-    protected void toDBEntity0(MonitorEvent e) {
+    protected void toDBEntity0(com.ctrip.hermes.admin.core.model.MonitorEvent e) {
         e.setKey1(m_command);
         e.setKey2(String.valueOf(m_count));
         e.setKey3(m_date);

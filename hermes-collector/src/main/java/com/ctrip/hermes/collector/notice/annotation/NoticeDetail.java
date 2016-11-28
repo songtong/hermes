@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.ctrip.hermes.metaservice.service.notify.HermesNoticeContent;
+import com.ctrip.hermes.admin.core.service.notify.HermesNoticeContent;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

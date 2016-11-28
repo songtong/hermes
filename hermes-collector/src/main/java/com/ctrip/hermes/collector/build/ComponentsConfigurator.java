@@ -3,11 +3,10 @@ package com.ctrip.hermes.collector.build;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.unidal.dal.jdbc.datasource.JdbcDataSourceDescriptorManager;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
-import com.ctrip.hermes.metaservice.queue.DefaultMessageQueueDao;
+import com.ctrip.hermes.admin.core.queue.DefaultMessageQueueDao;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
    @Override
