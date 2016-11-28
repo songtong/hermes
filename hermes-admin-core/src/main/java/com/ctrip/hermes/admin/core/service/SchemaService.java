@@ -359,7 +359,7 @@ public class SchemaService {
 	 * @throws DalException
 	 */
 	public Schema getSchemaMeta(long schemaId) throws DalException {
-		Schema schema = m_schemaDao.findByPK(schemaId, SchemaEntity.READSET_FULL);
+		Schema schema = m_schemaDao.findByPK(schemaId);
 		return schema;
 	}
 

@@ -21,7 +21,7 @@ import com.google.common.cache.LoadingCache;
 @Named
 public class CachedPartitionDao extends PartitionDao implements CachedDao<Long, Partition> {
 
-	private int max_size = 1000;
+	private int max_size = 100000;
 
 	private LoadingCache<Long, List<Partition>> topicCache = CacheBuilder.newBuilder().concurrencyLevel(1).maximumSize(max_size).recordStats()
 	      .refreshAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<Long, List<Partition>>() {
