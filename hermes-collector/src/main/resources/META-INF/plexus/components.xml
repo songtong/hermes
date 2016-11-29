@@ -55,20 +55,20 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.hermes.metaservice.queue.MessageQueueDao</role>
-			<implementation>com.ctrip.hermes.metaservice.queue.DefaultMessageQueueDao</implementation>
+			<role>com.ctrip.hermes.admin.core.queue.MessageQueueDao</role>
+			<implementation>com.ctrip.hermes.admin.core.queue.DefaultMessageQueueDao</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.MessagePriorityDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.MessagePriorityDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.OffsetMessageDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.OffsetMessageDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.ResendGroupIdDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.ResendGroupIdDao</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.queue.OffsetResendDao</role>
+					<role>com.ctrip.hermes.admin.core.queue.OffsetResendDao</role>
 				</requirement>
 			</requirements>
 		</component>

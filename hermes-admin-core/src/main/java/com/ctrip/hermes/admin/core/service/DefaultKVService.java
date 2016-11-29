@@ -73,7 +73,6 @@ public class DefaultKVService implements KVService {
 			m_kvDao.insert(new Kv().setK(key).setV(value).setTag(tag.name()).setCreationDate(new Date()));
 		} else {
 			kv.setV(value);
-			kv.setDataChangeLastTime(new Date());
 			m_kvDao.updateByPK(kv, KvEntity.UPDATESET_FULL);
 		}
 	}
