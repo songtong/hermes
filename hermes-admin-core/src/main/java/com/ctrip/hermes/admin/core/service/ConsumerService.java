@@ -317,6 +317,28 @@ public class ConsumerService {
 		}
 	}
 
+	public void updateOffsetToZero(String topicName, ConsumerGroup consumerGroup, int partition, String queueType)
+	      throws DalException {
+		switch (QueueType.getQueueTypeByName(queueType)) {
+		case PRIORITY_TRUE:
+			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_TRUE, consumerGroup.getId(),
+			      0, 0);
+			break;
+		case PRIORITY_FALSE:
+			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_FALSE,
+			      consumerGroup.getId(), 0, 0);
+			break;
+		case RESEND:
+			doUpdateResendOffsetByShift(topicName, partition, consumerGroup.getId(), 0, 0);
+			break;
+		default:
+			logger.warn("Unknown queue type:{}, queue type should be one of:[{}, {}, {}]", queueType,
+			      QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND);
+			throw new RuntimeException(String.format("Unknown queue type:%s, queue type should be one of:[%s, %s, %s]",
+			      queueType, QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND));
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	private Map<Integer, Offset> findMessageOffsetByTime(String topicName, long timestamp) {
 		int retryTimes = 2;
@@ -526,7 +548,7 @@ public class ConsumerService {
 
 	private void doUpdateResendOffsetByShift(String topicName, int partition, int consumerId, long shift, long max)
 	      throws DalException {
-		if (max > 0) {
+		if (max >= 0) {
 			List<OffsetResend> offsetResends = m_offsetResendDao.top(topicName, partition, consumerId,
 			      OffsetResendEntity.READSET_FULL);
 			if (!CollectionUtil.isNullOrEmpty(offsetResends)) {

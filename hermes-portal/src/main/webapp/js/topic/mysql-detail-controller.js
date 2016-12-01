@@ -134,28 +134,6 @@ topic_module.run(function(editableOptions) {
 		scope.new_partitions.push(scope.inserted);
 	};
 
-	scope.save_partition = function(data, index) {
-		bootbox.confirm({
-			title : "请确认",
-			message : "确认要新增 Partition吗？",
-			locale : "zh_CN",
-			callback : function(result) {
-				if (result) {
-					TopicService.add_partition(scope.topic_name, data).then(function(result) {
-						show_op_info.show("保存partition成功！", true);
-						scope.topic = result;
-					}, function(data) {
-						show_op_info.show("保存partition失败！" + data, false);
-
-					});
-				} else {
-					scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {
-						scope.topic = result;
-					});
-				}
-			}
-		});
-	}
 
 	scope.remove_partition = function(index) {
 		scope.new_partitions.splice(index, 1);

@@ -1,7 +1,6 @@
 package com.ctrip.hermes.portal.resource;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,7 +32,6 @@ import com.ctrip.hermes.core.exception.MessageSendException;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 import com.ctrip.hermes.portal.service.dashboard.DashboardService;
@@ -223,36 +221,6 @@ public class TopicResource {
 			topicView = topicService.updateTopic(topicView);
 		} catch (Exception e) {
 			log.warn("update topic failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
-		}
-		return Response.status(Status.OK).entity(topicView).build();
-	}
-
-	@POST
-	@Path("{name}/partition/add")
-	public Response addPartitionForTopic(@PathParam("name") String name, String content) {
-		log.debug("add partition {} for topic {}", content, name);
-		if (StringUtils.isEmpty(content)) {
-			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
-		}
-
-		Partition partition = null;
-		try {
-			partition = JSON.parseObject(content, Partition.class);
-		} catch (Exception e) {
-			log.warn("parse partition failed", e);
-			throw new RestException(e, Status.BAD_REQUEST);
-		}
-
-		if (topicService.findTopicEntityByName(name) == null) {
-			throw new RestException("Topic does not exists.", Status.NOT_FOUND);
-		}
-
-		TopicView topicView = null;
-		try {
-			topicView = topicService.addPartitionsForTopic(name, Arrays.asList(partition));
-		} catch (Exception e) {
-			log.warn("add topic partition failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
 		return Response.status(Status.OK).entity(topicView).build();

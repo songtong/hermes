@@ -24,10 +24,6 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 		update_topic : {
 			method : 'PUT'
 		},
-		add_partition : {
-			method : 'POST',
-			url : '/api/topics/:name/partition/add'
-		},
 		deploy_topic : {
 			method : 'POST',
 			isArray : false,
@@ -159,17 +155,6 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 		'update_topic' : function(topic_name, content) {
 			var d = $q.defer();
 			topic_resource.update_topic({
-				name : topic_name
-			}, content, function(result) {
-				d.resolve(result);
-			}, function(result) {
-				d.reject(result.data);
-			});
-			return d.promise;
-		},
-		'add_partition' : function(topic_name, content) {
-			var d = $q.defer();
-			topic_resource.add_partition({
 				name : topic_name
 			}, content, function(result) {
 				d.resolve(result);
