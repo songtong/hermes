@@ -34,7 +34,7 @@ public class HermesNotice {
 	}
 
 	public void setReceivers(List<String> receivers) {
-		m_receivers = receivers;
+		m_receivers = receivers instanceof ArrayList ? receivers : new ArrayList<String>(receivers);
 	}
 
 	public void setContent(HermesNoticeContent content) {

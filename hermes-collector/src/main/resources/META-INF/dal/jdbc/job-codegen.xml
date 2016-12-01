@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities>
+  <entity name="job-history" table="job_history" alias="jh">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="name" field="name" value-type="String" length="100" nullable="false" />
+    <member name="group" field="group" value-type="String" length="100" nullable="false" />
+    <member name="schedule-time" field="schedule_time" value-type="Date"/>
+    <member name="start-time" field="start_time" value-type="Date"/>
+    <member name="end-time" field="end_time" value-type="Date"/>
+    <member name="status" field="status" value-type="String" length="20" nullable="false" />
+    <member name="message" field="message" value-type="byte[]" length="65535" />
+    <member name="created-time" field="created_time" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="job-status" table="job_status" alias="js">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="name" field="name" value-type="String" length="100" nullable="false" />
+    <member name="group" field="group" value-type="String" length="100" nullable="false" />
+    <member name="reschedule" field="reschedule" value-type="boolean"/>
+    <member name="context" field="context" value-type="String" length="1000" nullable="false" />
+    <member name="schedule-time" field="schedule_time" value-type="Date"/>
+    <member name="start-time" field="start_time" value-type="Date"/>
+    <member name="end-time" field="end_time" value-type="Date"/>
+    <member name="status" field="status" value-type="String" length="20" />
+    <member name="created-time" field="created_time" value-type="Date" nullable="false" />
+    <member name="modified-time" field="modified_time" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+</entities>
+

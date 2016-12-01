@@ -400,6 +400,18 @@
         		]]>
 				</statement>
 			</query>
+			<query name="count-by-consumer-time-range" type="SELECT">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group-id" />
+				<param name="start-time" />
+				<param name="end-time" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='group-id'/> = ${group-id} AND <FIELD name='dead-date'/> BETWEEN ${start-time} AND ${end-time}
+        		]]>
+				</statement>
+			</query>
 		</query-defs>
 	</entity>
 

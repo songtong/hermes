@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface KVService {
 	public static enum Tag {
-		DEFAULT("dft"), CHECKER("ckr"), CMSG("cmsg");
+		DEFAULT("dft"), CHECKER("ckr"), CMSG("cmsg"), BILL("bill"), ALERT("alert");
 
 		private String m_simple;
 

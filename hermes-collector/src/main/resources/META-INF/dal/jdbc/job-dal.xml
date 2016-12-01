@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.hermes.collector.dal.job" gen="true">
+  <entity name="job-history" table="job_history" alias="jh">
+  <query-defs>
+      <query name="find-by-name-group" type="SELECT">
+        <param name="name" />
+        <param name="group" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='name'/> = ${name} AND <FIELD name='group'/> = ${group}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="job-status" table="job_status" alias="js">
+  <query-defs>
+      <query name="find-by-name-group" type="SELECT">
+        <param name="name" />
+        <param name="group" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='name'/> = ${name} AND <FIELD name='group'/> = ${group} AND <FIELD name='reschedule'/> = 0]]></statement>
+      </query>
+      <query name="find-by-reschedule" type="SELECT" multiple="true">
+        <param name="reschedule" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='reschedule'/> = ${reschedule}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+</entities>
+

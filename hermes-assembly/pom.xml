@@ -140,6 +140,20 @@
 							</descriptors>
 						</configuration>
 					</execution>
+					<execution>
+						<id>collector</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>hermes-collector-${project.version}-${package.environment}-${maven.build.timestamp}</finalName>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>assembly/collector-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>

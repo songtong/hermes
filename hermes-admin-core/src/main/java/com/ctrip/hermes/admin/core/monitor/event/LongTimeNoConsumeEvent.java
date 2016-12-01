@@ -15,7 +15,7 @@ public class LongTimeNoConsumeEvent extends BaseMonitorEvent {
 	private String m_topic;
 
 	private String m_consumer;
-
+	
 	private Map<Integer, CreationStamp> m_latestConsumed;
 
 	public LongTimeNoConsumeEvent() {
@@ -42,7 +42,7 @@ public class LongTimeNoConsumeEvent extends BaseMonitorEvent {
 		e.setKey1(m_topic);
 		e.setKey2(m_consumer);
 		e.setKey3(JSON.toJSONString(m_latestConsumed));
-		e.setMessage(String.format("[%s] Topic: %s, Consumer: %s, Detail: %s",//
+		e.setMessage(String.format("*[%s] Topic: %s, Consumer: %s, Detail: %s",//
 		      DATE_FORMATTER.format(e.getCreateTime()), m_topic, m_consumer, generateDetail()));
 	}
 

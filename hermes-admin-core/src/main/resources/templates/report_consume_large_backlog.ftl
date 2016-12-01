@@ -17,7 +17,7 @@
 		<table border="1" cellpadding="0" cellspacing="0" width="100%" style="font-size: 12px">
 			<thead>
 				<tr>
-					<th align="left">纪录时间</th>
+					<th align="left">记录时间</th>
 					<th align="left">积压总量</th>
 				</tr>
 			</thead>

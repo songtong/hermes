@@ -15,7 +15,7 @@ if [ $# -eq 2 ];then
 fi
 
 valid_app=false
-for supported_app in metaserver broker portal rest monitor;do
+for supported_app in metaserver broker portal rest monitor collector;do
 	if [ $1 == $supported_app ];then
 		valid_app=true
 		break;

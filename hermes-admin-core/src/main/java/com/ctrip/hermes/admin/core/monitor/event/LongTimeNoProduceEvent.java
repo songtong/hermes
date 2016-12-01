@@ -45,7 +45,7 @@ public class LongTimeNoProduceEvent extends BaseMonitorEvent {
 	}
 
 	private String generateMessage(Map<Integer, Pair<Integer, CreationStamp>> limitsAndStamps) {
-		StringBuilder sb = new StringBuilder(String.format("[%s] Long time no produce(%s): ",
+		StringBuilder sb = new StringBuilder(String.format("*[%s] Long time no produce(%s): ",
 		      DATE_FORMATTER.format(new Date()), m_topic));
 		for (Entry<Integer, Pair<Integer, CreationStamp>> entry : limitsAndStamps.entrySet()) {
 			sb.append(String.format("[Partition: %s, Limit: %sm, Latest: %s(%s)] ", entry.getKey(), entry.getValue()
