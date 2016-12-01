@@ -23,7 +23,7 @@ public class BrokerConfig implements Initializable {
 	@Inject
 	private ClientEnvironment m_env;
 
-	private String m_sessionId = UUID.randomUUID().toString();
+	private String m_sessionId;
 
 	private long m_leaseRenewTimeMillsBeforeExpire = 2 * 1000L;
 
@@ -53,9 +53,9 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_FILTER_TOPIC_CACHE_SIZE = 5000;
 
-	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_NORMAL_TRIGGER_TRIGGERING_OFFSET_DELTA = 2;
+	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_NORMAL_TRIGGER_TRIGGERING_OFFSET_DELTA = 20;
 
-	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
+	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 30;
 
 	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 1;
 
@@ -77,9 +77,9 @@ public class BrokerConfig implements Initializable {
 
 	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 1000;
 
-	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 20;
+	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 10;
 
-	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 20;
+	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 10;
 
 	// Topic -> GroupId or default -> delta
 	private Map<String, Map<String, Integer>> m_pullMessageSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
@@ -93,6 +93,10 @@ public class BrokerConfig implements Initializable {
 	private long m_messageQueueFetchNonPriorityMessageBySafeTriggerMinInterval = 200;
 
 	private long m_messageQueueFetchResendMessageBySafeTriggerMinInterval = 200;
+
+	public BrokerConfig() {
+		m_sessionId = System.getProperty("brokerId", UUID.randomUUID().toString());
+	}
 
 	@Override
 	public void initialize() throws InitializationException {

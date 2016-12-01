@@ -23,6 +23,7 @@ import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.config.CoreConfig;
+import com.ctrip.hermes.core.meta.manual.ManualConfigService;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.env.ClientEnvironment;
@@ -43,6 +44,9 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 	@Inject
 	private CoreConfig m_coreConfig;
 
+	@Inject
+	private ManualConfigService m_manualConfigService;
+
 	private AtomicReference<List<String>> m_metaServerList = new AtomicReference<List<String>>(new ArrayList<String>());
 
 	private int m_defaultMetaServerPort = DEFAULT_METASERVER_PORT;
@@ -52,7 +56,14 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		return m_metaServerList.get();
 	}
 
-	private void updateMetaServerList() {
+	private int updateMetaServerList() {
+		if (m_manualConfigService.isManualConfigModeOn()) {
+			log.debug("Manual config mode is on, will not refresh meta from meta-server");
+			return 1;
+		}
+
+		int nextUpdateIntevalSec = m_coreConfig.getMetaServerIpFetchInterval();
+
 		int maxTries = 10;
 		RuntimeException exception = null;
 
@@ -72,7 +83,7 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 				List<String> metaServerList = fetchMetaServerListFromExistingMetaServer();
 				if (metaServerList != null && !metaServerList.isEmpty()) {
 					m_metaServerList.set(metaServerList);
-					return;
+					return nextUpdateIntevalSec;
 				}
 
 			} catch (RuntimeException e) {
@@ -89,6 +100,8 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		if (exception != null) {
 			log.warn("Failed to fetch meta server list for {} times", maxTries);
 			throw exception;
+		} else {
+			return nextUpdateIntevalSec;
 		}
 	}
 
@@ -160,19 +173,26 @@ public class DefaultMetaServerLocator implements MetaServerLocator, Initializabl
 		      .getProperty("meta.port", String.valueOf(DEFAULT_METASERVER_PORT)).trim());
 
 		updateMetaServerList();
-		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MetaServerIpFetcher", true))
-		      .scheduleWithFixedDelay(new Runnable() {
+		Executors.newSingleThreadExecutor(HermesThreadFactory.create("MetaServerIpFetcher", true)).submit(new Runnable() {
 
-			      @Override
-			      public void run() {
-				      try {
-					      updateMetaServerList();
-				      } catch (RuntimeException e) {
-					      log.warn("", e);
-				      }
-			      }
+			@Override
+			public void run() {
+				while (!Thread.currentThread().isInterrupted()) {
+					int nextUpdateIntervalSec = m_coreConfig.getMetaServerIpFetchInterval();
+					try {
+						nextUpdateIntervalSec = updateMetaServerList();
+					} catch (RuntimeException e) {
+						log.warn("Update meta server list failed", e);
+					} finally {
+						try {
+							TimeUnit.SECONDS.sleep(nextUpdateIntervalSec);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+						}
+					}
+				}
+			}
 
-		      }, m_coreConfig.getMetaServerIpFetchInterval(), m_coreConfig.getMetaServerIpFetchInterval(),
-		            TimeUnit.SECONDS);
+		});
 	}
 }

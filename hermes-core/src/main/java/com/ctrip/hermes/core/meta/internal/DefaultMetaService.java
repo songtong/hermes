@@ -25,6 +25,7 @@ import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.core.message.retry.RetryPolicyFactory;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.meta.manual.ManualConfigService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Codec;
@@ -55,16 +56,29 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Inject
 	private CoreConfig m_config;
 
+	@Inject
+	private ManualConfigService m_manualConfigService;
+
 	private AtomicReference<Meta> m_metaCache = new AtomicReference<Meta>();
 
 	private long m_lastLoadedTime = 0;
 
 	protected Meta getMeta() {
-		return m_metaCache.get();
+		Meta manualConfigMeta = m_manualConfigService.getMeta();
+		if (m_manualConfigService.isManualConfigModeOn() && manualConfigMeta != null) {
+			return manualConfigMeta;
+		} else {
+			return m_metaCache.get();
+		}
 	}
 
 	protected MetaProxy getMetaProxy() {
-		return m_manager.getMetaProxy();
+		MetaProxy manualConfigMetaProxy = m_manualConfigService.getMetaProxy();
+		if (m_manualConfigService.isManualConfigModeOn() && manualConfigMetaProxy != null) {
+			return manualConfigMetaProxy;
+		} else {
+			return m_manager.getMetaProxy();
+		}
 	}
 
 	protected Topic findTopic(String topicName, Meta meta) {
@@ -73,11 +87,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 			throw new RuntimeException(String.format("Topic %s not found", topicName));
 		}
 		return topic;
-	}
-
-	@Override
-	public String findEndpointTypeByTopic(String topicName) {
-		return findTopic(topicName, getMeta()).getEndpointType();
 	}
 
 	@Override
@@ -203,7 +212,14 @@ public class DefaultMetaService implements MetaService, Initializable {
 		return dataSources;
 	}
 
-	protected void refreshMeta() {
+	protected long refreshMeta() {
+		if (m_manualConfigService.isManualConfigModeOn()) {
+			log.debug("Manual config mode is on, will not refresh meta from meta-server");
+			return 1L;
+		}
+
+		long nextRefreshIntervalSec = m_config.getMetaCacheRefreshIntervalSecond();
+
 		int maxTries = 10;
 		RuntimeException exception = null;
 
@@ -215,7 +231,7 @@ public class DefaultMetaService implements MetaService, Initializable {
 						m_metaCache.set(meta);
 						m_lastLoadedTime = System.currentTimeMillis();
 					}
-					return;
+					return nextRefreshIntervalSec;
 				}
 			} catch (RuntimeException e) {
 				exception = e;
@@ -231,6 +247,8 @@ public class DefaultMetaService implements MetaService, Initializable {
 		if (exception != null) {
 			log.warn("Failed to refresh meta from meta-server for {} times", maxTries);
 			throw exception;
+		} else {
+			return nextRefreshIntervalSec;
 		}
 	}
 
@@ -275,19 +293,27 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public void initialize() throws InitializationException {
 		refreshMeta();
-		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("RefreshMeta", true))
-		      .scheduleWithFixedDelay(new Runnable() {
+		Executors.newSingleThreadExecutor(HermesThreadFactory.create("MetaRefresher", true)).submit(new Runnable() {
 
-			      @Override
-			      public void run() {
-				      try {
-					      refreshMeta();
-				      } catch (Exception e) {
-					      log.warn("Failed to refresh meta");
-				      }
-			      }
+			@Override
+			public void run() {
+				while (!Thread.currentThread().isInterrupted()) {
+					long nextRefreshIntervalSec = m_config.getMetaCacheRefreshIntervalSecond();
+					try {
+						nextRefreshIntervalSec = refreshMeta();
+					} catch (Exception e) {
+						log.warn("Failed to refresh meta");
+					} finally {
+						try {
+							TimeUnit.SECONDS.sleep(nextRefreshIntervalSec);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+						}
+					}
+				}
+			}
 
-		      }, 5, m_config.getMetaCacheRefreshIntervalSecond(), TimeUnit.SECONDS);
+		});
 	}
 
 	@Override

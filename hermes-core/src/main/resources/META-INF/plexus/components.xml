@@ -47,6 +47,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.config.CoreConfig</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.manual.ManualConfigService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -72,6 +75,21 @@
 				<requirement>
 					<role>com.ctrip.hermes.core.config.CoreConfig</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.manual.ManualConfigService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.meta.manual.ManualConfigService</role>
+			<implementation>com.ctrip.hermes.core.meta.manual.DefaultManualConfigService</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.env.ManualConfigProvider</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.transport.monitor.FetchManualConfigResultMonitor</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -93,9 +111,6 @@
 			<role>com.ctrip.hermes.core.transport.endpoint.EndpointClient</role>
 			<implementation>com.ctrip.hermes.core.transport.endpoint.DefaultEndpointClient</implementation>
 			<requirements>
-				<requirement>
-					<role>com.ctrip.hermes.core.transport.endpoint.EndpointManager</role>
-				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.config.CoreConfig</role>
 				</requirement>
@@ -327,6 +342,20 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.config.CoreConfig</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.transport.monitor.FetchManualConfigResultMonitor</role>
+			<implementation>com.ctrip.hermes.core.transport.monitor.DefaultFetchManualConfigResultMonitor</implementation>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>RESULT_FETCH_MANUAL_CONFIG_V6</role-hint>
+			<implementation>com.ctrip.hermes.core.transport.processor.FetchManualConfigResultCommandProcessorV6</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.transport.monitor.FetchManualConfigResultMonitor</role>
 				</requirement>
 			</requirements>
 		</component>

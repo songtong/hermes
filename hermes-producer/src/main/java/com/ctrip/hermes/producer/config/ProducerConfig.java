@@ -20,8 +20,6 @@ import com.ctrip.hermes.env.ClientEnvironment;
 @Named(type = ProducerConfig.class)
 public class ProducerConfig implements Initializable {
 
-	public static final int DEFAULT_BROKER_SENDER_NETWORK_IO_THREAD_COUNT = 10;
-
 	public static final long DEFAULT_BROKER_SENDER_ACCEPT_TIMEOUT = 4 * 1000L;
 
 	public static final long DEFAULT_BROKER_SENDER_RESULT_TIMEOUT = 4 * 1000L;
@@ -40,8 +38,6 @@ public class ProducerConfig implements Initializable {
 
 	@Inject
 	private ClientEnvironment m_clientEnv;
-
-	private int m_brokerSenderNetworkIoThreadCount = DEFAULT_BROKER_SENDER_NETWORK_IO_THREAD_COUNT;
 
 	private long m_brokerSenderAcceptTimeout = DEFAULT_BROKER_SENDER_ACCEPT_TIMEOUT;
 
@@ -69,11 +65,6 @@ public class ProducerConfig implements Initializable {
 
 	@Override
 	public void initialize() throws InitializationException {
-		String brokerSenderNetworkIoThreadCountStr = m_clientEnv.getGlobalConfig().getProperty(
-		      "producer.networkio.threadcount");
-		if (StringUtils.isNumeric(brokerSenderNetworkIoThreadCountStr)) {
-			m_brokerSenderNetworkIoThreadCount = Integer.valueOf(brokerSenderNetworkIoThreadCountStr);
-		}
 
 		String brokerSenderTaskQueueSizeStr = m_clientEnv.getGlobalConfig().getProperty("producer.sender.taskqueue.size");
 		if (StringUtils.isNumeric(brokerSenderTaskQueueSizeStr)) {
@@ -164,10 +155,6 @@ public class ProducerConfig implements Initializable {
 
 	public boolean isCatEnabled() {
 		return m_catEnabled;
-	}
-
-	public int getBrokerSenderNetworkIoThreadCount() {
-		return m_brokerSenderNetworkIoThreadCount;
 	}
 
 	public int getBrokerSenderBatchSize() {

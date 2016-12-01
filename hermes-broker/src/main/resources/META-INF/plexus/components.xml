@@ -434,6 +434,16 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
+			<role-hint>FETCH_MANUAL_CONFIG_V6</role-hint>
+			<implementation>com.ctrip.hermes.broker.transport.command.processor.FetchManualConfigCommandProcessorV6</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.manual.ManualConfigService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.broker.longpolling.LongPollingService</role>
 			<implementation>com.ctrip.hermes.broker.longpolling.DefaultLongPollingService</implementation>
 			<requirements>

@@ -34,6 +34,7 @@ import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProc
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV3;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV4;
 import com.ctrip.hermes.broker.transport.command.processor.AckMessageCommandProcessorV5;
+import com.ctrip.hermes.broker.transport.command.processor.FetchManualConfigCommandProcessorV6;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessor;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV3;
 import com.ctrip.hermes.broker.transport.command.processor.PullMessageCommandProcessorV4;
@@ -51,6 +52,7 @@ import com.ctrip.hermes.broker.zk.ZKClient;
 import com.ctrip.hermes.broker.zk.ZKConfig;
 import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.core.meta.manual.ManualConfigService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
@@ -191,6 +193,10 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MetaService.class)//
 		      .req(MessageQueueManager.class)//
 		);
+		all.add(C(CommandProcessor.class, CommandType.FETCH_MANUAL_CONFIG_V6.toString(),
+		      FetchManualConfigCommandProcessorV6.class)//
+		      .req(ManualConfigService.class)//
+		);
 
 		all.add(A(DefaultLongPollingService.class));
 		all.add(A(BrokerLeaseManager.class));
@@ -219,7 +225,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(DefaultBrokerRegistry.class));
 		all.add(A(ZKClient.class));
 		all.add(A(ZKConfig.class));
-		
+
 		all.add(A(DefaultPullMessageSelectorManager.class));
 		all.add(A(DefaultSendMessageSelectorManager.class));
 

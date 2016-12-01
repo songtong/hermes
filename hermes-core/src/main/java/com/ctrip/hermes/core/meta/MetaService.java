@@ -26,8 +26,6 @@ public interface MetaService {
 
 	Pair<Endpoint, Long> findEndpointByTopicAndPartition(String topic, int partition);
 
-	String findEndpointTypeByTopic(String topic);
-
 	Partition findPartitionByTopicAndPartition(String topic, int partition);
 
 	RetryPolicy findRetryPolicyByTopicAndGroup(String topic, String groupId);

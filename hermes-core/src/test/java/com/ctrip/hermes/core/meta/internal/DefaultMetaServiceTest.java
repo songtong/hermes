@@ -86,17 +86,6 @@ public class DefaultMetaServiceTest extends ComponentTestCase {
 	}
 
 	@Test
-	public void testFindEndpointTypeByTopic() throws Exception {
-		assertEquals(Endpoint.KAFKA, m_metaService.findEndpointTypeByTopic("test_kafka"));
-		assertEquals(Endpoint.BROKER, m_metaService.findEndpointTypeByTopic("test_broker"));
-	}
-
-	@Test(expected = RuntimeException.class)
-	public void testFindEndpointTypeByTopicTopicNotFound() throws Exception {
-		m_metaService.findEndpointTypeByTopic("topicNotFound");
-	}
-
-	@Test
 	public void testListPartitionsByTopic() throws Exception {
 		List<Partition> kafkaPartitions = m_metaService.listPartitionsByTopic("test_kafka");
 		assertEquals(1, kafkaPartitions.size());

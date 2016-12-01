@@ -24,15 +24,21 @@ import com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroSerializer;
 import com.ctrip.hermes.core.message.payload.assist.SchemaRegisterRestClient;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaManager;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaService;
+import com.ctrip.hermes.core.meta.manual.DefaultManualConfigService;
 import com.ctrip.hermes.core.meta.remote.DefaultMetaServerLocator;
 import com.ctrip.hermes.core.meta.remote.RemoteMetaLoader;
 import com.ctrip.hermes.core.meta.remote.RemoteMetaProxy;
 import com.ctrip.hermes.core.service.DefaultSystemClockService;
 import com.ctrip.hermes.core.service.RunningStatusStatisticsService;
+import com.ctrip.hermes.core.transport.command.CommandType;
+import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.command.processor.DefaultCommandProcessorRegistry;
 import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.DefaultEndpointManager;
+import com.ctrip.hermes.core.transport.monitor.DefaultFetchManualConfigResultMonitor;
+import com.ctrip.hermes.core.transport.monitor.FetchManualConfigResultMonitor;
+import com.ctrip.hermes.core.transport.processor.FetchManualConfigResultCommandProcessorV6;
 import com.ctrip.hermes.meta.entity.Codec;
 
 public class ComponentsConfigurator extends AbstractResourceConfigurator {
@@ -50,6 +56,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(DefaultMetaService.class));
 		all.add(A(RemoteMetaProxy.class));
 		all.add(A(DefaultMetaServerLocator.class));
+		all.add(A(DefaultManualConfigService.class));
 
 		// endpoint manager
 		all.add(A(DefaultEndpointManager.class));
@@ -89,6 +96,12 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
 		// cmessaging config service
 		all.add(A(DefaultCMessagingConfigService.class));
+
+		all.add(A(DefaultFetchManualConfigResultMonitor.class));
+		all.add(C(CommandProcessor.class, CommandType.RESULT_FETCH_MANUAL_CONFIG_V6,
+		      FetchManualConfigResultCommandProcessorV6.class)//
+		      .req(FetchManualConfigResultMonitor.class)//
+		);
 
 		return all;
 	}

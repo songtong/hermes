@@ -2,6 +2,8 @@ package com.ctrip.hermes.consumer.engine.pipeline;
 
 import java.util.List;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -12,20 +14,21 @@ import com.ctrip.hermes.Hermes;
 import com.ctrip.hermes.consumer.api.MessageListener;
 import com.ctrip.hermes.consumer.build.BuildConstants;
 import com.ctrip.hermes.consumer.engine.ConsumerContext;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.dianping.cat.Cat;
+import com.dianping.cat.status.ProductVersionManager;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
 @Named(type = PipelineSink.class, value = BuildConstants.CONSUMER)
-public class DefaultConsumerPipelineSink implements PipelineSink<Void> {
+public class DefaultConsumerPipelineSink implements PipelineSink<Void>, Initializable {
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultConsumerPipelineSink.class);
 
@@ -40,7 +43,6 @@ public class DefaultConsumerPipelineSink implements PipelineSink<Void> {
 		MessageListener consumer = pair.getKey().getConsumer();
 		List<ConsumerMessage<?>> msgs = pair.getValue();
 		setOnMessageStartTime(msgs);
-		logVersionToCat();
 		try {
 			consumer.onMessage(msgs);
 		} catch (Throwable e) {
@@ -69,8 +71,9 @@ public class DefaultConsumerPipelineSink implements PipelineSink<Void> {
 		}
 	}
 
-	private void logVersionToCat() {
-		Cat.logEvent("Hermes.Client.Version", Hermes.VERSION);
+	@Override
+	public void initialize() throws InitializationException {
+		ProductVersionManager.getInstance().register(CatConstants.TYPE_HERMES_CLIENT_VERSION, Hermes.VERSION);
 	}
 
 }
