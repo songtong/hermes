@@ -283,9 +283,9 @@ public class ConsumerService {
 		Map<Integer, Offset> messageOffsets = findMessageOffsetByTime(topicName, timestamp);
 
 		for (Entry<Integer, Offset> messageOffset : messageOffsets.entrySet()) {
-			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY_TRUE,
+			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY,
 			      consumer.getId(), messageOffset.getValue().getPriorityOffset());
-			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY_FALSE,
+			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.NON_PRIORITY,
 			      consumer.getId(), messageOffset.getValue().getNonPriorityOffset());
 			doUpdateResendOffsetToLatest(topicName, messageOffset.getKey(), consumer.getId());
 		}
@@ -296,13 +296,13 @@ public class ConsumerService {
 		long latestMessageOffset;
 		switch (QueueType.getQueueTypeByName(queueType)) {
 		case PRIORITY:
-			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY_TRUE);
-			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_TRUE, consumerGroup.getId(),
+			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY);
+			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY, consumerGroup.getId(),
 			      shift, latestMessageOffset);
 			break;
 		case NON_PRIORITY:
-			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY_FALSE);
-			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_FALSE,
+			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.NON_PRIORITY);
+			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.NON_PRIORITY,
 			      consumerGroup.getId(), shift, latestMessageOffset);
 			break;
 		case RESEND:
@@ -321,10 +321,10 @@ public class ConsumerService {
 	      throws DalException {
 		switch (QueueType.getQueueTypeByName(queueType)) {
 		case PRIORITY:
-			doUpdateMessageOffset(topicName, partition, MessageQueueConstants.PRIORITY_TRUE, consumerGroup.getId(), 0);
+			doUpdateMessageOffset(topicName, partition, MessageQueueConstants.PRIORITY, consumerGroup.getId(), 0);
 			break;
 		case NON_PRIORITY:
-			doUpdateMessageOffset(topicName, partition, MessageQueueConstants.PRIORITY_FALSE, consumerGroup.getId(), 0);
+			doUpdateMessageOffset(topicName, partition, MessageQueueConstants.NON_PRIORITY, consumerGroup.getId(), 0);
 			break;
 		case RESEND:
 			doUpdateResendOffset(topicName, partition, consumerGroup.getId(), 0);
