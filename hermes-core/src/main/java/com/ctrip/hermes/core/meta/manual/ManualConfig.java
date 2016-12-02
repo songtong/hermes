@@ -91,7 +91,7 @@ public class ManualConfig {
 	private byte[] compress(byte[] bytes) {
 		ByteArrayInputStream input = new ByteArrayInputStream(bytes);
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		Deflater def = new Deflater(2, true);
+		Deflater def = new Deflater(5, true);
 		try {
 			DeflaterOutputStream gout = new DeflaterOutputStream(bout, def);
 			IO.INSTANCE.copy(input, gout, AutoClose.INPUT_OUTPUT);
