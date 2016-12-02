@@ -13,5 +13,9 @@
 			<role>com.ctrip.hermes.ctrip.env.EnvProvider</role>
 			<implementation>com.ctrip.hermes.ctrip.env.CtripEnvProvider</implementation>
 		</component>
+		<component>
+			<role>com.ctrip.hermes.env.ManualConfigProvider</role>
+			<implementation>com.ctrip.hermes.ctrip.env.CtripManualConfigProvider</implementation>
+		</component>
 	</components>
 </plexus>

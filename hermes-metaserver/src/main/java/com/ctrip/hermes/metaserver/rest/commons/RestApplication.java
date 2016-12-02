@@ -9,6 +9,7 @@ import org.glassfish.jersey.server.ResourceConfig;
  */
 public class RestApplication extends ResourceConfig {
 	public RestApplication() {
+		register(DowngradeCheckFilter.class);
 		register(CharsetResponseFilter.class);
 		register(CORSResponseFilter.class);
 		register(ObjectMapperProvider.class);

@@ -49,9 +49,7 @@ public class DefaultMessageSenderSelectorManager extends AbstractSelectorManager
 
 	@Override
 	public void initialize() throws InitializationException {
-		int threadCount = m_config.getBrokerSenderNetworkIoThreadCount();
-		m_taskExecThreadPool = Executors.newFixedThreadPool(threadCount,
-		      HermesThreadFactory.create("BrokerMessageSender", false));
+		m_taskExecThreadPool = Executors.newCachedThreadPool(HermesThreadFactory.create("BrokerMessageSender", false));
 
 		// no write from "outside", so write offset never expires
 		long maxWriteOffsetTtlMillis = Long.MAX_VALUE;

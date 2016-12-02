@@ -30,6 +30,8 @@ import com.ctrip.hermes.core.transport.command.v5.QueryLatestConsumerOffsetComma
 import com.ctrip.hermes.core.transport.command.v5.QueryOffsetResultCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.SendMessageCommandV5;
+import com.ctrip.hermes.core.transport.command.v6.FetchManualConfigCommandV6;
+import com.ctrip.hermes.core.transport.command.v6.FetchManualConfigResultCommandV6;
 import com.ctrip.hermes.core.transport.command.v6.SendMessageAckCommandV6;
 import com.ctrip.hermes.core.transport.command.v6.SendMessageCommandV6;
 import com.ctrip.hermes.core.transport.command.v6.SendMessageResultCommandV6;
@@ -64,6 +66,8 @@ public enum CommandType {
 
 	MESSAGE_PULL_SPECIFIC(106, 1, PullSpecificMessageCommand.class), //
 
+	FETCH_MANUAL_CONFIG_V6(107, 6, FetchManualConfigCommandV6.class), //
+
 	ACK_MESSAGE_SEND(201, 1, SendMessageAckCommand.class), //
 	ACK_MESSAGE_SEND_V5(201, 5, SendMessageAckCommandV5.class), //
 	ACK_MESSAGE_SEND_V6(201, 6, SendMessageAckCommandV6.class), //
@@ -89,6 +93,8 @@ public enum CommandType {
 
 	RESULT_ACK_MESSAGE_V3(304, 3, AckMessageResultCommandV3.class), //
 	RESULT_ACK_MESSAGE_V5(304, 5, AckMessageResultCommandV5.class), //
+
+	RESULT_FETCH_MANUAL_CONFIG_V6(305, 6, FetchManualConfigResultCommandV6.class), //
 	;
 
 	private static Map<Pair<Integer, Integer>, CommandType> m_types = new HashMap<>();

@@ -11,6 +11,7 @@ public interface CatConstants {
 	public static final String TYPE_REMOTE_CALL = "RemoteCall";
 
 	public static final String TYPE_MESSAGE_DELIVER_ELAPSE = "Message.Deliver.Elapse";
+
 	public static final String TYPE_MESSAGE_DELIVER_DB = "Message.Deliver.DB.";
 
 	public static final String TYPE_MESSAGE_DELIVER_BY_SAFE = "Message.Deliver.SafeTrigger-";
@@ -80,4 +81,6 @@ public interface CatConstants {
 	public static final String NAME_HERMES_BILL_KAFKA = "Hermes.Bill.Kafka";
 
 	public static final String TYPE_HERMES_BILL_UNKNOWN = "Hermes.Bill.Unknown";
+
+	public static final String TYPE_HERMES_CLIENT_VERSION = "Hermes.Client.Version";
 }

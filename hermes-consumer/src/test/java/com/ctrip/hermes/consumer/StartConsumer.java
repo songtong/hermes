@@ -1,8 +1,6 @@
 package com.ctrip.hermes.consumer;
 
 import java.io.BufferedReader;
-import java.io.Console;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +15,6 @@ import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.framework.vi.VIServer;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
 import com.ctrip.hermes.consumer.api.Consumer;
 import com.ctrip.hermes.consumer.api.Consumer.ConsumerHolder;
@@ -41,8 +38,8 @@ public class StartConsumer extends ComponentTestCase {
 
 		Cat.initializeByDomain("hermes", 2280, 80, "cat.fws.qa.nt.ctripcorp.com");
 
-		VIServer viServer = new VIServer(8081);
-		viServer.start();
+		// VIServer viServer = new VIServer(8081);
+		// viServer.start();
 
 		Map<Pair<String, String>, List<Pair<String, ConsumerHolder>>> topicGroup2Consumers = new HashMap<Pair<String, String>, List<Pair<String, ConsumerHolder>>>();
 

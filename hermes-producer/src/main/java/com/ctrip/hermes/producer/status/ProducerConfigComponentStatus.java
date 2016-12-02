@@ -24,9 +24,6 @@ public class ProducerConfigComponentStatus {
 	@FieldInfo(name = "producer.concurrent.level", description = "每个partition网络传输最大并行度")
 	private int brokerSenderConcurrentLevel;
 
-	@FieldInfo(name = "producer.networkio.threadcount", description = "网络IO线程数")
-	private int brokerSenderNetworkIoThreadCount;
-
 	@FieldInfo(name = "producer.sender.taskqueue.size", description = "每个partition的异步发送队列大小")
 	private int brokerSenderTaskQueueSize;
 
@@ -40,7 +37,6 @@ public class ProducerConfigComponentStatus {
 		brokerSenderResultTimeoutMillis = config.getBrokerSenderResultTimeoutMillis();
 		brokerSenderBatchSize = config.getBrokerSenderBatchSize();
 		brokerSenderConcurrentLevel = config.getBrokerSenderConcurrentLevel();
-		brokerSenderNetworkIoThreadCount = config.getBrokerSenderNetworkIoThreadCount();
 		brokerSenderTaskQueueSize = config.getBrokerSenderTaskQueueSize();
 		producerCallbackThreadCount = config.getProducerCallbackThreadCount();
 	}
@@ -59,10 +55,6 @@ public class ProducerConfigComponentStatus {
 
 	public int getBrokerSenderConcurrentLevel() {
 		return brokerSenderConcurrentLevel;
-	}
-
-	public int getBrokerSenderNetworkIoThreadCount() {
-		return brokerSenderNetworkIoThreadCount;
 	}
 
 	public int getBrokerSenderTaskQueueSize() {

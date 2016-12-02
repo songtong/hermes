@@ -27,7 +27,7 @@ public class ConsumerContext {
 
 	private MessageListenerConfig m_messageListenerConfig;
 
-	private String m_sessionId = UUID.randomUUID().toString();
+	private String m_sessionId;
 
 	private OffsetStorage m_offsetStorage;
 
@@ -40,6 +40,7 @@ public class ConsumerContext {
 		m_consumerType = consumerType;
 		m_messageListenerConfig = messageListenerConfig;
 		m_offsetStorage = offsetStorage;
+		m_sessionId = System.getProperty("consumerSessionId", UUID.randomUUID().toString());
 	}
 
 	public String getSessionId() {
