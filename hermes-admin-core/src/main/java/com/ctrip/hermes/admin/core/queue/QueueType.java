@@ -1,7 +1,7 @@
 package com.ctrip.hermes.admin.core.queue;
 
 public enum QueueType {
-	PRIORITY_TRUE("priority"), PRIORITY_FALSE("nonPriority"), RESEND("resend");
+	PRIORITY("priority"), NON_PRIORITY("nonPriority"), RESEND("resend");
 
 	private String name;
 

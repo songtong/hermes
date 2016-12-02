@@ -1,7 +1,5 @@
 package com.ctrip.hermes.admin.core.service;
 
-import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,17 +30,21 @@ import com.ctrip.hermes.admin.core.dal.CachedTopicDao;
 import com.ctrip.hermes.admin.core.model.ConsumerGroup;
 import com.ctrip.hermes.admin.core.model.PartitionEntity;
 import com.ctrip.hermes.admin.core.model.TopicEntity;
+import com.ctrip.hermes.admin.core.queue.QueueType;
 import com.ctrip.hermes.admin.core.service.storage.TopicStorageService;
 import com.ctrip.hermes.admin.core.service.storage.exception.StorageHandleErrorException;
 import com.ctrip.hermes.admin.core.service.storage.pojo.StoragePartition;
 import com.ctrip.hermes.admin.core.service.storage.pojo.StorageTable;
 import com.ctrip.hermes.admin.core.view.SchemaView;
 import com.ctrip.hermes.admin.core.view.TopicView;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
+
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 
 @Named
 public class TopicService {
@@ -117,6 +119,17 @@ public class TopicService {
 						m_partitionDao.deleteByTopicId(partitionModel);
 						m_logger.error("Add new topic partition failed, please try later.");
 						throw new RuntimeException("Add new topic partition failed, please try later.");
+					} else {
+						ConsumerService consumerService = PlexusComponentLocator.lookup(ConsumerService.class);
+						for (com.ctrip.hermes.meta.entity.ConsumerGroup consumerGroup : consumerService
+						      .findConsumerGroupEntities(topicModel.getId())) {
+							consumerService.updateOffsetToZero(topicModel.getName(), consumerGroup, partitionModel.getId(),
+							      QueueType.NON_PRIORITY.getName());
+							consumerService.updateOffsetToZero(topicModel.getName(), consumerGroup, partitionModel.getId(),
+							      QueueType.PRIORITY.getName());
+							consumerService.updateOffsetToZero(topicModel.getName(), consumerGroup, partitionModel.getId(),
+							      QueueType.RESEND.getName());
+						}
 					}
 
 				}

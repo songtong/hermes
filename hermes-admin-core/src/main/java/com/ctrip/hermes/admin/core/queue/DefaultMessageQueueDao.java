@@ -55,7 +55,7 @@ public class DefaultMessageQueueDao implements MessageQueueDao {
 			if (!offsetMsgMap.containsKey(offsetMsg.getGroupId()))
 				offsetMsgMap.put(offsetMsg.getGroupId(), new Pair<OffsetMessage, OffsetMessage>());
 
-			if (MessageQueueConstants.PRIORITY_TRUE == offsetMsg.getPriority()) {
+			if (MessageQueueConstants.PRIORITY == offsetMsg.getPriority()) {
 				offsetMsgMap.get(offsetMsg.getGroupId()).setKey(offsetMsg);
 			} else {
 				offsetMsgMap.get(offsetMsg.getGroupId()).setValue(offsetMsg);
@@ -68,8 +68,8 @@ public class DefaultMessageQueueDao implements MessageQueueDao {
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<MessagePriority> getLatestMessages(String topic, int partition, int count) throws DalException {
-		List<MessagePriority> k0 = doFindLatestMessages(topic, partition, MessageQueueConstants.PRIORITY_TRUE, count);
-		List<MessagePriority> k1 = doFindLatestMessages(topic, partition, MessageQueueConstants.PRIORITY_FALSE, count);
+		List<MessagePriority> k0 = doFindLatestMessages(topic, partition, MessageQueueConstants.PRIORITY, count);
+		List<MessagePriority> k1 = doFindLatestMessages(topic, partition, MessageQueueConstants.NON_PRIORITY, count);
 		return ListUtils.getTopK(count, new Comparator<MessagePriority>() {
 			@Override
 			public int compare(MessagePriority o1, MessagePriority o2) {

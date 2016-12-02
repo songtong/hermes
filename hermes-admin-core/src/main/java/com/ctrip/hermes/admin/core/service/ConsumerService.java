@@ -283,9 +283,9 @@ public class ConsumerService {
 		Map<Integer, Offset> messageOffsets = findMessageOffsetByTime(topicName, timestamp);
 
 		for (Entry<Integer, Offset> messageOffset : messageOffsets.entrySet()) {
-			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY_TRUE,
+			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY,
 			      consumer.getId(), messageOffset.getValue().getPriorityOffset());
-			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY_FALSE,
+			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.NON_PRIORITY,
 			      consumer.getId(), messageOffset.getValue().getNonPriorityOffset());
 			doUpdateResendOffsetToLatest(topicName, messageOffset.getKey(), consumer.getId());
 		}
@@ -295,14 +295,14 @@ public class ConsumerService {
 	      long shift) throws DalException {
 		long latestMessageOffset;
 		switch (QueueType.getQueueTypeByName(queueType)) {
-		case PRIORITY_TRUE:
-			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY_TRUE);
-			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_TRUE, consumerGroup.getId(),
+		case PRIORITY:
+			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY);
+			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY, consumerGroup.getId(),
 			      shift, latestMessageOffset);
 			break;
-		case PRIORITY_FALSE:
-			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY_FALSE);
-			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_FALSE,
+		case NON_PRIORITY:
+			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.NON_PRIORITY);
+			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.NON_PRIORITY,
 			      consumerGroup.getId(), shift, latestMessageOffset);
 			break;
 		case RESEND:
@@ -310,10 +310,30 @@ public class ConsumerService {
 			doUpdateResendOffsetByShift(topicName, partition, consumerGroup.getId(), shift, latestMessageOffset);
 			break;
 		default:
-			logger.warn("Unknown queue type:{}, queue type should be one of:[{}, {}, {}]", queueType,
-			      QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND);
+			logger.warn("Unknown queue type:{}, queue type should be one of:[{}, {}, {}]", queueType, QueueType.PRIORITY,
+			      QueueType.NON_PRIORITY, QueueType.RESEND);
 			throw new RuntimeException(String.format("Unknown queue type:%s, queue type should be one of:[%s, %s, %s]",
-			      queueType, QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND));
+			      queueType, QueueType.PRIORITY, QueueType.NON_PRIORITY, QueueType.RESEND));
+		}
+	}
+
+	public void updateOffsetToZero(String topicName, ConsumerGroup consumerGroup, int partition, String queueType)
+	      throws DalException {
+		switch (QueueType.getQueueTypeByName(queueType)) {
+		case PRIORITY:
+			doUpdateMessageOffset(topicName, partition, MessageQueueConstants.PRIORITY, consumerGroup.getId(), 0);
+			break;
+		case NON_PRIORITY:
+			doUpdateMessageOffset(topicName, partition, MessageQueueConstants.NON_PRIORITY, consumerGroup.getId(), 0);
+			break;
+		case RESEND:
+			doUpdateResendOffset(topicName, partition, consumerGroup.getId(), 0);
+			break;
+		default:
+			logger.warn("Unknown queue type:{}, queue type should be one of:[{}, {}, {}]", queueType, QueueType.PRIORITY,
+			      QueueType.NON_PRIORITY, QueueType.RESEND);
+			throw new RuntimeException(String.format("Unknown queue type:%s, queue type should be one of:[%s, %s, %s]",
+			      queueType, QueueType.PRIORITY, QueueType.NON_PRIORITY, QueueType.RESEND));
 		}
 	}
 
@@ -526,7 +546,7 @@ public class ConsumerService {
 
 	private void doUpdateResendOffsetByShift(String topicName, int partition, int consumerId, long shift, long max)
 	      throws DalException {
-		if (max > 0) {
+		if (max >= 0) {
 			List<OffsetResend> offsetResends = m_offsetResendDao.top(topicName, partition, consumerId,
 			      OffsetResendEntity.READSET_FULL);
 			if (!CollectionUtil.isNullOrEmpty(offsetResends)) {
@@ -544,6 +564,26 @@ public class ConsumerService {
 				theOffsetResend.setLastScheduleDate(new Date());
 				m_offsetResendDao.insert(theOffsetResend);
 			}
+		}
+	}
+
+	private void doUpdateResendOffset(String topicName, int partition, int consumerId, long offset) throws DalException {
+		List<OffsetResend> offsetResends = m_offsetResendDao.top(topicName, partition, consumerId,
+		      OffsetResendEntity.READSET_FULL);
+		if (!CollectionUtil.isNullOrEmpty(offsetResends)) {
+			OffsetResend offsetResend = offsetResends.get(0);
+			offsetResend.setTopic(topicName);
+			offsetResend.setPartition(partition);
+			offsetResend.setLastId(offset);
+			m_offsetResendDao.updateByPK(offsetResend, OffsetResendEntity.UPDATESET_OFFSET);
+		} else {
+			OffsetResend theOffsetResend = new OffsetResend();
+			theOffsetResend.setTopic(topicName);
+			theOffsetResend.setPartition(partition);
+			theOffsetResend.setLastId(offset);
+			theOffsetResend.setGroupId(consumerId);
+			theOffsetResend.setLastScheduleDate(new Date());
+			m_offsetResendDao.insert(theOffsetResend);
 		}
 	}
 

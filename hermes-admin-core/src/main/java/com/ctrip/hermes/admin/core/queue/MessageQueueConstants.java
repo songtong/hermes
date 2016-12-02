@@ -1,7 +1,7 @@
 package com.ctrip.hermes.admin.core.queue;
 
 public class MessageQueueConstants {
-	public static final int PRIORITY_TRUE = 0;
+	public static final int PRIORITY = 0;
 
-	public static final int PRIORITY_FALSE = 1;
+	public static final int NON_PRIORITY = 1;
 }
