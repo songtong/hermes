@@ -124,9 +124,9 @@ public class TopicService {
 						for (com.ctrip.hermes.meta.entity.ConsumerGroup consumerGroup : consumerService
 						      .findConsumerGroupEntities(topicModel.getId())) {
 							consumerService.updateOffsetToZero(topicModel.getName(), consumerGroup, partitionModel.getId(),
-							      QueueType.PRIORITY_FALSE.getName());
+							      QueueType.NON_PRIORITY.getName());
 							consumerService.updateOffsetToZero(topicModel.getName(), consumerGroup, partitionModel.getId(),
-							      QueueType.PRIORITY_TRUE.getName());
+							      QueueType.PRIORITY.getName());
 							consumerService.updateOffsetToZero(topicModel.getName(), consumerGroup, partitionModel.getId(),
 							      QueueType.RESEND.getName());
 						}

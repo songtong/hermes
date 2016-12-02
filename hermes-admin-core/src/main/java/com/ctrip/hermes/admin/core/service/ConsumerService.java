@@ -295,12 +295,12 @@ public class ConsumerService {
 	      long shift) throws DalException {
 		long latestMessageOffset;
 		switch (QueueType.getQueueTypeByName(queueType)) {
-		case PRIORITY_TRUE:
+		case PRIORITY:
 			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY_TRUE);
 			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_TRUE, consumerGroup.getId(),
 			      shift, latestMessageOffset);
 			break;
-		case PRIORITY_FALSE:
+		case NON_PRIORITY:
 			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.PRIORITY_FALSE);
 			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_FALSE,
 			      consumerGroup.getId(), shift, latestMessageOffset);
@@ -310,32 +310,30 @@ public class ConsumerService {
 			doUpdateResendOffsetByShift(topicName, partition, consumerGroup.getId(), shift, latestMessageOffset);
 			break;
 		default:
-			logger.warn("Unknown queue type:{}, queue type should be one of:[{}, {}, {}]", queueType,
-			      QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND);
+			logger.warn("Unknown queue type:{}, queue type should be one of:[{}, {}, {}]", queueType, QueueType.PRIORITY,
+			      QueueType.NON_PRIORITY, QueueType.RESEND);
 			throw new RuntimeException(String.format("Unknown queue type:%s, queue type should be one of:[%s, %s, %s]",
-			      queueType, QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND));
+			      queueType, QueueType.PRIORITY, QueueType.NON_PRIORITY, QueueType.RESEND));
 		}
 	}
 
 	public void updateOffsetToZero(String topicName, ConsumerGroup consumerGroup, int partition, String queueType)
 	      throws DalException {
 		switch (QueueType.getQueueTypeByName(queueType)) {
-		case PRIORITY_TRUE:
-			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_TRUE, consumerGroup.getId(),
-			      0, 0);
+		case PRIORITY:
+			doUpdateMessageOffset(topicName, partition, MessageQueueConstants.PRIORITY_TRUE, consumerGroup.getId(), 0);
 			break;
-		case PRIORITY_FALSE:
-			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.PRIORITY_FALSE,
-			      consumerGroup.getId(), 0, 0);
+		case NON_PRIORITY:
+			doUpdateMessageOffset(topicName, partition, MessageQueueConstants.PRIORITY_FALSE, consumerGroup.getId(), 0);
 			break;
 		case RESEND:
-			doUpdateResendOffsetByShift(topicName, partition, consumerGroup.getId(), 0, 0);
+			doUpdateResendOffset(topicName, partition, consumerGroup.getId(), 0);
 			break;
 		default:
-			logger.warn("Unknown queue type:{}, queue type should be one of:[{}, {}, {}]", queueType,
-			      QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND);
+			logger.warn("Unknown queue type:{}, queue type should be one of:[{}, {}, {}]", queueType, QueueType.PRIORITY,
+			      QueueType.NON_PRIORITY, QueueType.RESEND);
 			throw new RuntimeException(String.format("Unknown queue type:%s, queue type should be one of:[%s, %s, %s]",
-			      queueType, QueueType.PRIORITY_TRUE, QueueType.PRIORITY_FALSE, QueueType.RESEND));
+			      queueType, QueueType.PRIORITY, QueueType.NON_PRIORITY, QueueType.RESEND));
 		}
 	}
 
@@ -566,6 +564,26 @@ public class ConsumerService {
 				theOffsetResend.setLastScheduleDate(new Date());
 				m_offsetResendDao.insert(theOffsetResend);
 			}
+		}
+	}
+
+	private void doUpdateResendOffset(String topicName, int partition, int consumerId, long offset) throws DalException {
+		List<OffsetResend> offsetResends = m_offsetResendDao.top(topicName, partition, consumerId,
+		      OffsetResendEntity.READSET_FULL);
+		if (!CollectionUtil.isNullOrEmpty(offsetResends)) {
+			OffsetResend offsetResend = offsetResends.get(0);
+			offsetResend.setTopic(topicName);
+			offsetResend.setPartition(partition);
+			offsetResend.setLastId(offset);
+			m_offsetResendDao.updateByPK(offsetResend, OffsetResendEntity.UPDATESET_OFFSET);
+		} else {
+			OffsetResend theOffsetResend = new OffsetResend();
+			theOffsetResend.setTopic(topicName);
+			theOffsetResend.setPartition(partition);
+			theOffsetResend.setLastId(offset);
+			theOffsetResend.setGroupId(consumerId);
+			theOffsetResend.setLastScheduleDate(new Date());
+			m_offsetResendDao.insert(theOffsetResend);
 		}
 	}
 
