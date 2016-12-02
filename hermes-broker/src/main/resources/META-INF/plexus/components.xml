@@ -68,6 +68,16 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.hermes.core.meta.manual.ManualConfigFetcher</role>
+			<role-hint>fromConfigProvider</role-hint>
+			<implementation>com.ctrip.hermes.broker.meta.manual.BrokerManualConfigFetcher</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.env.ManualConfigProvider</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.hermes.core.transport.command.processor.CommandProcessor</role>
 			<role-hint>MESSAGE_SEND</role-hint>
 			<implementation>com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessor</implementation>

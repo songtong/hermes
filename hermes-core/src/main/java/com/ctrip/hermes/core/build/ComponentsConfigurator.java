@@ -24,6 +24,7 @@ import com.ctrip.hermes.core.message.payload.assist.HermesKafkaAvroSerializer;
 import com.ctrip.hermes.core.message.payload.assist.SchemaRegisterRestClient;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaManager;
 import com.ctrip.hermes.core.meta.internal.DefaultMetaService;
+import com.ctrip.hermes.core.meta.manual.DefaultManualConfigFetcher;
 import com.ctrip.hermes.core.meta.manual.DefaultManualConfigService;
 import com.ctrip.hermes.core.meta.remote.DefaultMetaServerLocator;
 import com.ctrip.hermes.core.meta.remote.RemoteMetaLoader;
@@ -57,6 +58,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		all.add(A(RemoteMetaProxy.class));
 		all.add(A(DefaultMetaServerLocator.class));
 		all.add(A(DefaultManualConfigService.class));
+		all.add(A(DefaultManualConfigFetcher.class));
 
 		// endpoint manager
 		all.add(A(DefaultEndpointManager.class));

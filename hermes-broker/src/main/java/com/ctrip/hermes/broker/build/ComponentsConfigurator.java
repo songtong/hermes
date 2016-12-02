@@ -16,6 +16,7 @@ import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.lease.BrokerLeaseManager;
 import com.ctrip.hermes.broker.longpolling.DefaultLongPollingService;
 import com.ctrip.hermes.broker.longpolling.LongPollingService;
+import com.ctrip.hermes.broker.meta.manual.BrokerManualConfigFetcher;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory;
@@ -70,6 +71,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(A(NettyServerConfig.class));
 
 		all.add(A(ShutdownRequestMonitor.class));
+
+		all.add(A(BrokerManualConfigFetcher.class));
 
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND.toString(), SendMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class)//
