@@ -15,8 +15,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -27,6 +25,7 @@ import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.exception.MessageSendException;
+import com.ctrip.hermes.core.kafka.KafkaIdcStrategy;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.selector.CallbackContext;
@@ -40,6 +39,7 @@ import com.ctrip.hermes.core.selector.TriggerResult.State;
 import com.ctrip.hermes.core.transport.command.v6.SendMessageCommandV6;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.IdcPolicy;
 import com.ctrip.hermes.producer.config.ProducerConfig;
 import com.ctrip.hermes.producer.status.ProducerStatusMonitor;
 import com.dianping.cat.Cat;
@@ -53,7 +53,7 @@ import com.google.common.util.concurrent.SettableFuture;
  *
  */
 @Named(type = MessageSender.class, value = Endpoint.BROKER)
-public class BrokerMessageSender extends AbstractMessageSender implements MessageSender, Initializable {
+public class BrokerMessageSender extends AbstractMessageSender implements MessageSender {
 
 	private static Logger log = LoggerFactory.getLogger(BrokerMessageSender.class);
 
@@ -62,6 +62,9 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 
 	@Inject
 	private MessageSenderSelectorManager m_selectorManager;
+
+	@Inject
+	private KafkaIdcStrategy m_kafkaIdcStrategy;
 
 	private ConcurrentMap<Pair<String, Integer>, TaskQueue> m_taskQueues = new ConcurrentHashMap<Pair<String, Integer>, TaskQueue>();
 
@@ -381,8 +384,23 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 					maxMsgSelectorOffset = Math.max(maxMsgSelectorOffset, context.m_msg.getSelectorOffset());
 				}
 				cmd.setSelectorOffset(maxMsgSelectorOffset);
+				cmd.setTargetIdc(getTargetIdc().toLowerCase());
 			}
 			return cmd;
+		}
+
+		private String getTargetIdc() {
+			String idcPolicy = m_metaService.findTopicByName(m_topic).getIdcPolicy();
+			if (idcPolicy == null) {
+				idcPolicy = IdcPolicy.PRIMARY;
+			}
+
+			String targetIdc = m_kafkaIdcStrategy.getTargetIdc(idcPolicy);
+			if (targetIdc == null) {
+				throw new RuntimeException("Can not get target idc!");
+			}
+
+			return targetIdc;
 		}
 
 		public Future<SendResult> submit(final ProducerMessage<?> msg) {
@@ -430,11 +448,6 @@ public class BrokerMessageSender extends AbstractMessageSender implements Messag
 		public long nextOffset(int delta) {
 			throw new UnsupportedOperationException();
 		}
-	}
-
-	@Override
-	public void initialize() throws InitializationException {
-
 	}
 
 	private static class ProducerWorkerContext {

@@ -70,6 +70,12 @@
 							<span ng-bind="topic.endpointType" editable-select="topic.endpointType" e-form="topicForm" e-name="endpointType" e-ng-options="endpoint for endpoint in endpoint_types"></span>
 						</div>
 					</div>
+					<div class="form-group">
+						<label class="col-md-4 control-label">机房策略</label>
+						<div class="col-md-8" style="padding-top: 7px">
+							<span ng-bind="topic.idcPolicy" editable-select="topic.idcPolicy" e-form="topicForm" e-name="idcPolicy" e-ng-options="policy for policy in idcPolicies"></span>
+						</div>
+					</div>
 					<div class="form-group" ng-if="topic.endpointType == 'broker'">
 						<label class="col-md-4 control-label" style="padding-top: 0px">broker分组</label>
 						<div class="col-md-8">

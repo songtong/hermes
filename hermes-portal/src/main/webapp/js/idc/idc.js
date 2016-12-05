@@ -72,12 +72,57 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 		}
 	})
 
+	var storageResource = $resource('/api/storages', {}, {
+		'getStorage' : {
+			method : 'GET',
+			isArray : true,
+			params : {
+				type : '@type'
+			}
+		}
+	});
+
+	var datasourceResource = $resource('/api/datasources', {}, {
+		'updateDatasource' : {
+			url : '/api/datasources/kafka/:id/update',
+			method : 'POST',
+			params : {
+				id : '@id'
+			}
+		},
+		'updateBootstrapServersProperty' : {
+			url : '/api/datasources/kafka/property/update/bootstrapServers/:idc/:propertyValue',
+			method : 'POST',
+			params : {
+				idc : '@idc',
+				propertyValue : '@propertyValue'
+			}
+		},
+		'updateZookeeperConnectProperty' : {
+			url : '/api/datasources/kafka/property/update/zookeeperConnect/:idc/:propertyValue',
+			method : 'POST',
+			params : {
+				idc : '@idc',
+				propertyValue : '@propertyValue'
+			}
+		}
+	})
+
 	$scope.idcs = [];
 	$scope.currentIdc = null;
 	$scope.endpoints = [];
 	$scope.currentEndpoints = [];
 	$scope.servers = [];
 	$scope.currentServers = [];
+
+	var KAKFA_PRODUCER_DATASOURCE_NAME = "kafka-producer";
+	var KAKFA_CONSUMER_DATASOURCE_NAME = "kafka-consumer";
+	var ZOOKEEPER_CONNECT_PROPERTY_NAME = "zookeeper.connect";
+	var BOOTSTRAP_SERVERS_PROPERTY_NAME = "bootstrap.servers";
+	$scope.kafkaProducerDatasource = null;
+	$scope.kafkaConsumerDatasource = null;
+	$scope.currentKafkaBootstrapServers = null;
+	$scope.currentKafkaZookeeperConnect = null;
 
 	$scope.newIdc = {
 		enabled : true,
@@ -125,12 +170,55 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 		}
 	}
 
+	function setCurrentKafkaBootstrapServers(idcName) {
+		var targetBootstrapServersPropertyName = BOOTSTRAP_SERVERS_PROPERTY_NAME + "." + idcName.toLowerCase();
+		if ($scope.kafkaConsumerDatasource.properties.hasOwnProperty(targetBootstrapServersPropertyName)) {
+			$scope.currentKafkaBootstrapServers = $scope.kafkaConsumerDatasource.properties[targetBootstrapServersPropertyName].value;
+		} else {
+			$scope.currentKafkaBootstrapServers = null;
+		}
+	}
+
+	function setCurrentKafkaZookeeperConnect(idcName) {
+		var targetZookeeperConnectPropertyName = ZOOKEEPER_CONNECT_PROPERTY_NAME + "." + idcName.toLowerCase();
+		if ($scope.kafkaConsumerDatasource.properties.hasOwnProperty(targetZookeeperConnectPropertyName)) {
+			$scope.currentKafkaZookeeperConnect = $scope.kafkaConsumerDatasource.properties[targetZookeeperConnectPropertyName].value;
+		} else {
+			$scope.currentKafkaZookeeperConnect = null;
+		}
+	}
+
 	$scope.switchCurrentIdc = function switchCurrentIdc(idc) {
 		setCurrentIdc(idc);
 		setCurrentServers(idc.name);
 		setCurrentEndpoints(idc.name);
+		setCurrentKafkaBootstrapServers(idc.name);
+		setCurrentKafkaZookeeperConnect(idc.name);
 	}
 
+	// ***** initialize ********
+	function fetchKafkaProperties() {
+		storageResource.getStorage({
+			type : "kafka"
+		}, function(result) {
+			$scope.kafkaStorage = result[0];
+			$scope.kafkaProducerDatasource;
+			for (var i = 0; i < result[0].datasources.length; i++) {
+				if (result[0].datasources[i].id == KAKFA_PRODUCER_DATASOURCE_NAME) {
+					$scope.kafkaProducerDatasource = result[0].datasources[i];
+				} else if (result[0].datasources[i].id == KAKFA_CONSUMER_DATASOURCE_NAME) {
+					$scope.kafkaConsumerDatasource = result[0].datasources[i];
+				}
+			}
+			if ($scope.currentIdc != null && $scope.kafkaConsumerDatasource != null) {
+				setCurrentKafkaBootstrapServers($scope.currentIdc.name);
+				setCurrentKafkaZookeeperConnect($scope.currentIdc.name);
+			}
+
+			console.log($scope.kafkaConsumerDatasource)
+
+		})
+	}
 	idcResource.query(function(result) {
 		$scope.idcs = result;
 		if ($scope.idcs.length > 0) {
@@ -150,6 +238,8 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 				setCurrentEndpoints($scope.currentIdc.name);
 			}
 		})
+
+		fetchKafkaProperties();
 	});
 
 	$scope.addIdc = function addIdc(newIdc) {
@@ -319,7 +409,7 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 					idcResource.query(function(result) {
 						$scope.idcs = result;
 						if ($scope.idcs.length > 0) {
-							switchCurrentIdc($scope.idcs[0]);
+							$scope.switchCurrentIdc($scope.idcs[0]);
 						}
 					})
 				}, function(result) {
@@ -385,6 +475,32 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 				});
 			}
 		});
+	}
+
+	$scope.updateKafkaProperty = function(property, idc, value) {
+		if (property == BOOTSTRAP_SERVERS_PROPERTY_NAME) {
+			datasourceResource.updateBootstrapServersProperty({
+				"idc" : idc.toLowerCase(),
+				"propertyValue" : value
+			}, function(result) {
+				show_op_info.show("更新成功", true);
+				fetchKafkaProperties();
+			}, function(result) {
+				show_op_info.show("更新失败: " + result.data, false);
+				fetchKafkaProperties();
+			})
+		} else if (property == ZOOKEEPER_CONNECT_PROPERTY_NAME) {
+			datasourceResource.updateZookeeperConnectProperty({
+				"idc" : idc.toLowerCase(),
+				"propertyValue" : value
+			}, function(result) {
+				show_op_info.show("更新成功", true);
+				fetchKafkaProperties();
+			}, function(result) {
+				show_op_info.show("更新失败: " + result.data, false);
+				fetchKafkaProperties();
+			})
+		}
 	}
 
 } ])

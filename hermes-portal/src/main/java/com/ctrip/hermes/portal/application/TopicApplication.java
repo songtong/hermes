@@ -41,6 +41,8 @@ public class TopicApplication extends HermesApplication {
 
 	private boolean m_priorityMessageEnabled;
 
+	private boolean m_writePrimaryIdc;
+
 	public String getProductLine() {
 		return m_productLine;
 	}
@@ -194,11 +196,19 @@ public class TopicApplication extends HermesApplication {
 	}
 
 	public boolean isPriorityMessageEnabled() {
-	   return m_priorityMessageEnabled;
-   }
+		return m_priorityMessageEnabled;
+	}
 
 	public void setPriorityMessageEnabled(boolean priorityMessageEnabled) {
-	   this.m_priorityMessageEnabled = priorityMessageEnabled;
-   }
+		this.m_priorityMessageEnabled = priorityMessageEnabled;
+	}
+
+	public boolean isWritePrimaryIdc() {
+		return m_writePrimaryIdc;
+	}
+
+	public void setWritePrimaryIdc(boolean writePrimaryIdc) {
+		this.m_writePrimaryIdc = writePrimaryIdc;
+	}
 
 }

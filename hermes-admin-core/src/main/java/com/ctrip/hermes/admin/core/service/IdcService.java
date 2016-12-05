@@ -26,6 +26,9 @@ public class IdcService {
 	@Inject
 	private TransactionManager m_tm;
 
+	@Inject
+	private StorageService m_storageService;
+
 	public List<Idc> listIdcs() throws DalException {
 		return m_idcDao.list(IdcEntity.READSET_FULL);
 	}
@@ -69,6 +72,8 @@ public class IdcService {
 			Idc idc = new Idc();
 			idc.setId(idcId);
 			m_idcDao.setPrimaryById(idc, IdcEntity.UPDATESET_FULL);
+			
+			switchPrimaryKafkaProperties(idcId);
 			m_tm.commitTransaction();
 		} catch (Exception e) {
 			m_tm.rollbackTransaction();
@@ -89,12 +94,19 @@ public class IdcService {
 			Idc idc = new Idc();
 			idc.setId(idcId);
 			m_idcDao.setPrimaryById(idc, IdcEntity.UPDATESET_FULL);
+			switchPrimaryKafkaProperties(idcId);
 			m_tm.commitTransaction();
 		} catch (Exception e) {
 			m_tm.rollbackTransaction();
 			m_logger.error("Failed to switch primary idc to {}", idcId, e);
 			throw e;
 		}
+	}
+
+	private void switchPrimaryKafkaProperties(Integer idcId) throws Exception {
+		String idc = findIdc(idcId).getName();
+		m_storageService.switchDefaultKafkaBootstrapServersToPrimary(idc);
+		m_storageService.switchDefaultZookeeperConnectToPrimary(idc);
 	}
 
 	public void enableIdc(int idcId) throws DalException {
@@ -117,5 +129,24 @@ public class IdcService {
 			idcEntyties.add(ModelToEntityConverter.convert(idc));
 		}
 		return idcEntyties;
+	}
+
+	public Idc getPrimaryIdcEntity() throws DalException {
+		List<Idc> primaryIdc = m_idcDao.findByPrimaryStatus(true, IdcEntity.READSET_FULL);
+		if (!primaryIdc.isEmpty()) {
+			return primaryIdc.get(0);
+		} else {
+			return null;
+		}
+	}
+
+	public Idc getIdcByName(String name) throws DalException {
+		List<Idc> idcs = listIdcs();
+		for (Idc idc : idcs) {
+			if (name.compareToIgnoreCase(idc.getName()) == 0) {
+				return idc;
+			}
+		}
+		return null;
 	}
 }

@@ -55,6 +55,19 @@
 					</div>
 				</div>
 				<div class="form-group">
+					<label class="col-md-4 control-label">需要多机房容灾？</label>
+					<div class="col-md-6">
+						<div class="btn-group">
+							<label class="btn">
+							<input type="radio" name="retryStrategy" ng-value="true" ng-model="application.needMultiIdc"> Yes
+							</label>
+							<label class="btn">
+							<input type="radio" name="retryStrategy" ng-value="false" ng-model="application.needMultiIdc"> No
+							</label>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
 					<label class="col-md-4 control-label">负责人姓名1</label>
 					<div class="col-md-6">
 						<input class="form-control" placeholder="Topic Creator1" ng-model="application.ownerName1">

@@ -1,4 +1,10 @@
-application_module.controller('app-consumer-controller', [ '$scope', 'ApplicationService', '$location', function($scope, ApplicationService, $location) {
+application_module.controller('app-consumer-controller', [ '$scope', 'ApplicationService', '$location', '$resource', function($scope, ApplicationService, $location, $resource) {
+	var idcResource = $resource('/api/idcs/primary', {}, {})
+	$scope.primaryIdc = null;
+	idcResource.get(function(result) {
+		$scope.primaryIdc = result;
+	})
+
 	$scope.topicStorageType = "mysql";
 	$scope.productLines = ApplicationService.get_productLines();
 	$scope.getFilteredProductLine = function(val) {
@@ -15,8 +21,21 @@ application_module.controller('app-consumer-controller', [ '$scope', 'Applicatio
 		ownerEmail1Prefix : ssoMail.split('@')[0],
 		ackTimeoutSeconds : 5,
 		needRetry : 'true',
-		enabled : true
+		enabled : true,
+		needMultiIdc : true,
+		retryCount : 3,
+		retryInterval : 3
+
 	};
+
+	$scope.kafkaFullDrEnabled = false;
+	ApplicationService.get_kafka_fulldr_enabled().then(function(result) {
+		$scope.kafkaFullDrEnabled = result.value;
+		if (!$scope.kafkaFullDrEnabled) {
+			$scope.new_application.needMultiIdc = false;
+		}
+	})
+
 	ApplicationService.get_topic_names().then(function(result) {
 		var result = new Bloodhound({
 			local : result,
@@ -55,9 +74,19 @@ application_module.controller('app-consumer-controller', [ '$scope', 'Applicatio
 	});
 
 	$scope.create_consumer_application = function(new_consumer) {
+		var message = "申请新建consumer: <label class='label label-danger'>" + new_consumer.productLine + "." + new_consumer.product + "." + new_consumer.project + "</label> ";
+		if ($scope.kafkaFullDrEnabled) {
+			message = message + "<div class='text-danger' style='margin-top:5px'><strong>如果您的Topic为Kafka类型，请注意：</strong><div>";
+			if (new_consumer.needMultiIdc) {
+				message = message + "您选择了需要多机房容灾，这要求您必须在所有机房都部署消费者，否则未部署消费者机房的Kafka集群消息将会丢失。";
+			} else {
+				message = message + "您选择了不需要多机房容灾，消费者只会消费主机房Kafka集群消息；当前主机房为：" + $scope.primaryIdc.name + "（ " + $scope.primaryIdc.displayName + "），生产者发往其他机房的消息将会丢失！";
+			}
+		}
+
 		bootbox.confirm({
-			title : "请确认",
-			message : "确认要申请新建consumer: <label class='label label-danger'>" + new_consumer.productLine + "." + new_consumer.product + "." + new_consumer.project + "</label> 吗？",
+			title : "<strong>请确认</strong>",
+			message : message,
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {

@@ -177,6 +177,7 @@ CREATE TABLE `topic` (
          `properties` VARCHAR(5000) NULL DEFAULT NULL COMMENT 'properties',
          `priority_message_enabled` BIT(1) NULL DEFAULT NULL COMMENT 'priority_message_enabled',
          `broker_group` VARCHAR(50) NULL DEFAULT NULL COMMENT 'broker分组信息',
+         `idc_policy` VARCHAR(50) NULL DEFAULT NULL COMMENT 'idc policy',
          PRIMARY KEY (`id`),
          INDEX `DataChange_LastTime` (`DataChange_LastTime`)
 )
@@ -211,6 +212,7 @@ CREATE TABLE `consumer_group` (
          `phone_2` VARCHAR(20) NULL DEFAULT NULL COMMENT 'phone_2',
          `DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
          `topic_id` BIGINT(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'topic id',
+         `idc_policy` VARCHAR(50) NULL DEFAULT NULL COMMENT 'idc policy',
          PRIMARY KEY (`id`),
          INDEX `DataChange_LastTime` (`DataChange_LastTime`),
          INDEX `topic_id` (`topic_id`)
@@ -303,6 +305,7 @@ ALTER TABLE `consumer_group`
 CREATE TABLE `idc` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'idc id',
   `name` varchar(50) NOT NULL DEFAULT 'name' COMMENT 'idc name',
+  `display_name` varchar(50) NULL DEFAULT NULL COMMENT 'idc display name',
   `primary` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否Primary',
   `enabled` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否enabled',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',

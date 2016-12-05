@@ -12,6 +12,7 @@ import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.message.retry.RetryPolicy;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -67,4 +68,6 @@ public interface MetaService {
 	Map<Integer, Offset> findMessageOffsetByTime(String topicName, long time);
 
 	List<ZookeeperEnsemble> listAllZookeeperEnsemble();
+	
+	Idc getPrimaryIdc();
 }

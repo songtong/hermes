@@ -32,6 +32,7 @@ import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
@@ -406,6 +407,17 @@ public class DefaultMetaService implements MetaService, Initializable {
 	@Override
 	public List<ZookeeperEnsemble> listAllZookeeperEnsemble() {
 		return new ArrayList<>(getMeta().getZookeeperEnsembles().values());
+	}
+
+	@Override
+	public Idc getPrimaryIdc() {
+		Map<String, Idc> idcs = getMeta().getIdcs();
+		for (Idc idc : idcs.values()) {
+			if (idc.isPrimary()) {
+				return idc;
+			}
+		}
+		return null;
 	}
 
 }

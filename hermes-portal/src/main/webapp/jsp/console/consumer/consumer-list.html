@@ -5,8 +5,8 @@
 			<thead>
 				<tr>
 					<th st-sort="name">消费集群</th>
-					<th st-sort="appIds">应用</th>
 					<th st-sort="topicName">Topic名称</th>
+					<th st-sort="idcPolicy">机房策略</th>
 					<th st-sort="enabled">启用</th>
 					<th st-sort="retryPolicy">重试策略</th>
 					<th st-sort="owner1">负责人1</th>
@@ -15,8 +15,8 @@
 				</tr>
 				<tr>
 					<th><input st-search="name" placeholder="Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-					<th><input st-search="appIds" placeholder="App" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="topicName" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+					<th><input st-search="idcPolicy" placeholder="Idc Policy" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="enabled" placeholder="Enabled" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="retryPolicy" placeholder="Retry" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 					<th><input st-search="owner1" placeholder="Owner1" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
@@ -27,8 +27,8 @@
 			<tbody>
 				<tr ng-repeat="consumer in filteredConsumers">
 					<td><a href="/console/consumer#/detail/{{consumer.topicName}}/{{consumer.name}}"><span e-form="rowform" ng-bind="consumer.name" e-name="name"></a></td>
-					<td><span e-form="rowform" editable-text="consumer.appIds" ng-bind="consumer.appIds" e-name="appIds"></td>
 					<td><span e-form="rowform" ng-bind="consumer.topicName" e-name="topicName"></td>
+					<td><span e-form="rowform" editable-select="consumer.idcPolicy" ng-bind="consumer.idcPolicy" e-name="idcPolicy" e-ng-options="op for op in ops"></td>
 					<td><span e-form="rowform" editable-select="consumer.enabled" ng-bind="consumer.enabled" e-name="enabled" e-ng-options="op for op in ops"></td>
 					<td><span e-form="rowform" editable-text="consumer.retryPolicy" ng-bind="consumer.retryPolicy" e-name="retryPolicy"></td>
 					<td><span e-form="rowform" editable-text="consumer.owner1" ng-bind="consumer.owner1" e-name="owner1"></td>
@@ -39,7 +39,6 @@
 							<button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-xs btn-default">取消</button>
 						</form>
 						<div class="buttons" ng-show="!rowform.$visible">
-							<button type="button" ng-click="rowform.$show()" class="btn btn-xs btn-warning" style="text-align: center;">修改</button>
 							<button type="button" ng-click="confirmDeletion(consumer.topicName, consumer.name)" class="btn btn-xs btn-danger" style="text-align: center;">删除</button>
 						</div>
 					</td>
@@ -85,6 +84,12 @@
 							<label for="inputRetryPolicy" class="col-sm-3 control-label">消费重试策略</label>
 							<div class="col-sm-8">
 								<input class="form-control" id="inputRetryPolicy" placeholder="Consume Retry Policy" ng-model="newConsumer.retryPolicy">
+							</div>
+						</div>
+							<div class="form-group">
+							<label for="inputRetryPolicy" class="col-sm-3 control-label">机房策略</label>
+							<div class="col-sm-8">
+								<select class="form-control" id="inputRetryPolicy" placeholder="Consume Retry Policy" ng-model="newConsumer.idcPolicy" ng-options="op for op in idcPolicies"></select>
 							</div>
 						</div>
 						<div class="form-group">

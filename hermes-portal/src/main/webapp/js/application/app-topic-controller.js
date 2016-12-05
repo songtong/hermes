@@ -1,7 +1,5 @@
-application_module.controller('app-topic-controller', [ '$scope', 'ApplicationService', '$location', function($scope, ApplicationService, $location) {
-	console.log("app-topic-controller");
-	console.log(ssoUser);
-	console.log(ssoMail);
+application_module.controller('app-topic-controller', [ '$scope', 'ApplicationService', '$location', '$resource', function($scope, ApplicationService, $location, $resource) {
+	var idcResource = $resource('/api/idcs/primary', {}, {})
 	$scope.new_application = {
 		storageType : 'mysql',
 		baseCodecType : 'json',
@@ -12,8 +10,15 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 		compressionType : 'deflater',
 		compressionLevel : 1,
 		priorityMessageEnabled : false,
-		retentionDays : 3
+		retentionDays : 3,
+		writePrimaryIdc : true
 	};
+
+	$scope.kafkaFullDrEnabled = false;
+	ApplicationService.get_kafka_fulldr_enabled().then(function(result) {
+		$scope.kafkaFullDrEnabled = result.value;
+	})
+
 	$scope.productLines = ApplicationService.get_productLines();
 	$scope.getFilteredProductLine = function(val) {
 		var result = [];
@@ -39,10 +44,26 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 		value : 9
 	} ];
 
+	$scope.needMultiIdc = [ true, false ];
+	$scope.primaryIdc = null;
+
+	idcResource.get(function(result) {
+		$scope.primaryIdc = result;
+	})
+
 	$scope.create_topic_application = function(new_app) {
+		var message = "申请新建 Topic: <label class='label label-danger'>" + new_app.productLine + "." + new_app.entity + "." + new_app.event + "</label> ";
+		if (new_app.storageType == 'kafka' && $scope.kafkaFullDrEnabled) {
+			if (new_app.writePrimaryIdc) {
+				message = message + "<div style='margin-top: 5px;'><strong class='text-danger'>您选择写Kafka主机房,当前主机房为：" + $scope.primaryIdc.name + "( " + $scope.primaryIdc.displayName + " )，推荐在主机房部署生产者。</strong></div>";
+			} else {
+				message = message + "<div style='margin-top: 5px;'><strong class='text-danger'>您选择写生产者同机房Kafka集群，需要该Topic的消费者全部双机房部署，否则会有消息丢失！</strong></div>";
+			}
+
+		}
 		bootbox.confirm({
 			title : "请确认",
-			message : "确认要申请新建 Topic: <label class='label label-danger'>" + new_app.productLine + "." + new_app.entity + "." + new_app.event + "</label> 吗？",
+			message : message,
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {

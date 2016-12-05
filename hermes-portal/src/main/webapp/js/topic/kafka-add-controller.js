@@ -10,13 +10,15 @@ topic_module.controller('kafka-add-controller', [ '$scope', '$resource', 'TopicS
 		compressionType : 'deflater',
 		compressionLevel : 1,
 		properties : [],
-		priorityMessageEnabled : false
+		priorityMessageEnabled : false,
+		idcPolicy : 'primary'
 	};
 	$scope.current_datasource_names = [];
 	$scope.kafka_property_names = [ 'partitions', 'replication-factor', 'retention.bytes', 'retention.ms' ]
 	$scope.endpoint_types = [ 'kafka', 'broker' ];
 	$scope.codecTypes = [ 'avro', 'json' ];
 	$scope.compressionTypes = [ 'gzip', 'deflater' ];
+	$scope.idcPolicies = [ 'local', 'primary' ];
 
 	var meta_resource = $resource('/api/storages', {}, {
 		'get_storage' : {

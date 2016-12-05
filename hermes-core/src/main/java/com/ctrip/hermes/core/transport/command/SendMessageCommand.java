@@ -203,7 +203,7 @@ public class SendMessageCommand extends AbstractCommand {
 
 		ByteBuf rawData = buf.readSlice(payloadLen);
 
-		return new MessageBatchWithRawData(topic, msgSeqs, rawData);
+		return new MessageBatchWithRawData(topic, msgSeqs, rawData, null);
 
 	}
 

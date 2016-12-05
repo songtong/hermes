@@ -3,10 +3,9 @@ package com.ctrip.hermes.admin.core.service;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
-
-import kafka.admin.AdminUtils;
-import kafka.utils.ZkUtils;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
@@ -20,6 +19,9 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.admin.core.view.TopicView;
 import com.ctrip.hermes.meta.entity.Property;
 
+import kafka.admin.AdminUtils;
+import kafka.utils.ZkUtils;
+
 @Named
 public class TopicDeployService {
 
@@ -28,7 +30,7 @@ public class TopicDeployService {
 	public static final int DEFAULT_KAFKA_PARTITIONS = 3;
 
 	public static final int DEFAULT_KAFKA_REPLICATION_FACTOR = 2;
-	
+
 	// 1 hour
 	public static final String DEFAULT_KAFKA_SEGMENT_MS = "3600000";
 
@@ -59,30 +61,28 @@ public class TopicDeployService {
 	 * @param topic
 	 */
 	public void configTopicInKafka(TopicView topic) {
-		String zkConnect = m_dsService.getZookeeperList();
-		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
-		zkClient.setZkSerializer(new ZKStringSerializer());
-		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
-		Properties topicProp = new Properties();
-		for (Property prop : topic.getProperties()) {
-			if (validKafkaConfigKeys.contains(prop.getName())) {
-				topicProp.setProperty(prop.getName(), prop.getValue());
+		Map<String, String> zkConnects = m_dsService.getKafkaZookeeperList();
+		for (Entry<String, String> zkConnect : zkConnects.entrySet()) {
+			ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
+			zkClient.setZkSerializer(new ZKStringSerializer());
+			ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
+			Properties topicProp = new Properties();
+			for (Property prop : topic.getProperties()) {
+				if (validKafkaConfigKeys.contains(prop.getName())) {
+					topicProp.setProperty(prop.getName(), prop.getValue());
+				}
 			}
-		}
 
-		m_logger.info("config topic in kafka, topic {}, prop {}", topic.getName(), topicProp);
-		AdminUtils.changeTopicConfig(zkUtils, topic.getName(), topicProp);
+			m_logger.info("config topic in kafka {}, topic {}, prop {}", zkConnect.getKey(), topic.getName(), topicProp);
+			AdminUtils.changeTopicConfig(zkUtils, topic.getName(), topicProp);
+		}
 	}
 
 	/**
 	 * @param topic
 	 */
 	public void createTopicInKafka(TopicView topic) {
-		String zkConnect = m_dsService.getZookeeperList();
-		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
-		zkClient.setZkSerializer(new ZKStringSerializer());
 		int partition = DEFAULT_KAFKA_PARTITIONS;
-		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
 		int replication = DEFAULT_KAFKA_REPLICATION_FACTOR;
 		Properties topicProp = new Properties();
 		topicProp.put("segment.ms", DEFAULT_KAFKA_SEGMENT_MS);
@@ -95,24 +95,38 @@ public class TopicDeployService {
 				topicProp.setProperty(prop.getName(), prop.getValue());
 			}
 		}
+		Map<String, String> zkConnects = m_dsService.getKafkaZookeeperList();
+		try {
+			for (Entry<String, String> zkConnect : zkConnects.entrySet()) {
+				ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
+				zkClient.setZkSerializer(new ZKStringSerializer());
+				ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
+				m_logger.info("create topic in kafka {}, topic {}, partition {}, replication {}, prop {}",
+				      zkConnect.getKey(), topic.getName(), partition, replication, topicProp);
+				AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
 
-		m_logger.info("create topic in kafka, topic {}, partition {}, replication {}, prop {}", topic.getName(),
-		      partition, replication, topicProp);
-		AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
+			}
+		} catch(Exception e) {
+			deleteTopicInKafka(topic);
+			throw e;
+		}
+
 	}
 
 	/**
 	 * @param topic
 	 */
 	public void deleteTopicInKafka(TopicView topic) {
-		String zkConnect = m_dsService.getZookeeperList();
+		Map<String, String> zkConnects = m_dsService.getKafkaZookeeperList();
 
-		ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect));
-		ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect), false);
-		zkClient.setZkSerializer(new ZKStringSerializer());
+		for (Entry<String, String> zkConnect : zkConnects.entrySet()) {
+			ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
+			ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
+			zkClient.setZkSerializer(new ZKStringSerializer());
 
-		m_logger.info("delete topic in kafka, topic {}", topic.getName());
-		AdminUtils.deleteTopic(zkUtils, topic.getName());
+			m_logger.info("delete topic in kafka {}, topic {}", zkConnect.getKey(), topic.getName());
+			AdminUtils.deleteTopic(zkUtils, topic.getName());
+		}
 	}
 }
 

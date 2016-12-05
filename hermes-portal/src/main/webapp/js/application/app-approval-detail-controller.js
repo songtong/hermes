@@ -17,6 +17,8 @@ application_module.controller('app-approval-detail-controller', [ '$scope', '$ro
 			$scope.selectedTags = {};
 			$scope.datasourceCandidate = {};
 			$scope.brokerGroups = {};
+			
+			$scope.idcPolicyList=['local','primary']
 
 			// Use promise chain to fetch application.
 			promiseChain.add({

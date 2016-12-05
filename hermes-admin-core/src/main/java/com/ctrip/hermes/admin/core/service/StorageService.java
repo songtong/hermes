@@ -19,6 +19,9 @@ import com.ctrip.hermes.admin.core.converter.ModelToEntityConverter;
 import com.ctrip.hermes.admin.core.dal.CachedDatasourceDao;
 import com.ctrip.hermes.admin.core.dal.CachedStorageDao;
 import com.ctrip.hermes.admin.core.dal.CachedTopicDao;
+import com.ctrip.hermes.admin.core.model.Idc;
+import com.ctrip.hermes.core.kafka.KafkaConstants;
+import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -131,7 +134,7 @@ public class StorageService {
 			if ("kafka".equals(storage.getType())) {
 				for (Datasource ds : storage.getDatasources()) {
 					for (Property property : ds.getProperties().values()) {
-						if ("bootstrap.servers".equals(property.getName())) {
+						if (KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME.equals(property.getName())) {
 							return property.getValue();
 						}
 					}
@@ -154,7 +157,8 @@ public class StorageService {
 		return result;
 	}
 
-	public String getZookeeperList() {
+	public Map<String, String> getKafkaZookeeperList() {
+		Map<String, String> zooKeeperConnectList = new HashMap<>();
 		List<Storage> storages = new ArrayList<>();
 		try {
 			storages = findStorages(false);
@@ -165,19 +169,133 @@ public class StorageService {
 			if ("kafka".equals(storage.getType())) {
 				for (Datasource ds : storage.getDatasources()) {
 					for (Property property : ds.getProperties().values()) {
-						if ("zookeeper.connect".equals(property.getName())) {
-							return property.getValue();
+						if (property.getName().startsWith(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME)) {
+							if (!KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME.equals(property.getName())) {
+								zooKeeperConnectList.put(property.getName(), property.getValue());
+							}
 						}
 					}
 				}
 			}
 		}
-		return "";
+		return zooKeeperConnectList;
 	}
 
 	public void updateDatasource(Datasource dsEntity) throws Exception {
 		com.ctrip.hermes.admin.core.model.Datasource dsModel = m_datasourceDao.findByPK(dsEntity.getId());
 		dsModel.setProperties(JSON.toJSONString(dsEntity.getProperties()));
 		m_datasourceDao.updateByPK(dsModel);
+	}
+
+	public void addOrUpdateKafkaBootstrapServersProperty(String idc, String value) throws Exception {
+		Storage storage = getStorages().get("kafka");
+		if (storage == null) {
+			throw new RuntimeException("Kafka storage type not exists!");
+		}
+
+		boolean needChangeDefault = false;
+		Idc primaryIdc = null;
+		try {
+			primaryIdc = PlexusComponentLocator.lookup(IdcService.class).getPrimaryIdcEntity();
+		} catch (DalException e) {
+			throw new RuntimeException("Can not find primary idc from db!");
+		}
+
+		if (primaryIdc == null) {
+			throw new RuntimeException("There is no primary idc!");
+		}
+
+		if (idc.compareToIgnoreCase(primaryIdc.getName()) == 0) {
+			needChangeDefault = true;
+		}
+
+		Property property = new Property(String.format("%s.%s", KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME,
+		      idc.toLowerCase())).setValue(value);
+		Property defaultProperty = new Property(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME).setValue(value);
+		List<Datasource> datasources = storage.getDatasources();
+		for (Datasource datasource : datasources) {
+			datasource.addProperty(property);
+			if (needChangeDefault) {
+				datasource.addProperty(defaultProperty);
+			}
+			updateDatasource(datasource);
+		}
+	}
+
+	public void addOrUpdateZookeeperConnectProperty(String idc, String value) throws Exception {
+		Storage storage = getStorages().get("kafka");
+		if (storage == null) {
+			throw new RuntimeException("Kafka storage type not exists!");
+		}
+
+		boolean needChangeDefault = false;
+		Idc primaryIdc = null;
+		try {
+			primaryIdc = PlexusComponentLocator.lookup(IdcService.class).getPrimaryIdcEntity();
+		} catch (DalException e) {
+			throw new RuntimeException("Can not find primary idc from db!");
+		}
+
+		if (primaryIdc == null) {
+			throw new RuntimeException("There is no primary idc!");
+		}
+
+		if (idc.compareToIgnoreCase(primaryIdc.getName()) == 0) {
+			needChangeDefault = true;
+		}
+
+		Property property = new Property(String.format("%s.%s", KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME,
+		      idc.toLowerCase())).setValue(value);
+		Property defaultProperty = new Property(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME).setValue(value);
+		List<Datasource> datasources = storage.getDatasources();
+		for (Datasource datasource : datasources) {
+			if ("kafka-consumer".equals(datasource.getId())) {
+				datasource.addProperty(property);
+				if (needChangeDefault) {
+					datasource.addProperty(defaultProperty);
+				}
+				updateDatasource(datasource);
+			}
+		}
+	}
+
+	public void switchDefaultKafkaBootstrapServersToPrimary(String idc) throws Exception {
+		Storage storage = getStorages().get("kafka");
+		if (storage == null) {
+			throw new RuntimeException("Kafka storage type not exists!");
+		}
+
+		String targetBootstrapServers = String.format("%s.%s", KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME,
+		      idc.toLowerCase());
+		List<Datasource> datasources = storage.getDatasources();
+		for (Datasource datasource : datasources) {
+			Property property = datasource.findProperty(targetBootstrapServers);
+			if (property != null) {
+				Property defaultProperty = new Property(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME).setValue(property
+				      .getValue());
+				datasource.addProperty(defaultProperty);
+				updateDatasource(datasource);
+			}
+		}
+	}
+
+	public void switchDefaultZookeeperConnectToPrimary(String idc) throws Exception {
+		Storage storage = getStorages().get("kafka");
+		if (storage == null) {
+			throw new RuntimeException("Kafka storage type not exists!");
+		}
+
+		String targetZookeeperConnect = String.format("%s.%s", KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME,
+		      idc.toLowerCase());
+		List<Datasource> datasources = storage.getDatasources();
+		for (Datasource datasource : datasources) {
+			Property property = datasource.findProperty(targetZookeeperConnect);
+			if (property != null) {
+				Property defaultProperty = new Property(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME).setValue(property
+				      .getValue());
+				datasource.addProperty(defaultProperty);
+				updateDatasource(datasource);
+			}
+		}
 	}
 }

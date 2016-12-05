@@ -56,7 +56,7 @@ public class MySQLMessageQueueStorageTest extends ComponentTestCase {
 		Collection<MessageBatchWithRawData> batches = new ArrayList<>();
 		// TODO mock data
 		ByteBuf rawData = Unpooled.buffer();
-		MessageBatchWithRawData batch = new MessageBatchWithRawData(topic, Arrays.asList(1), rawData);
+		MessageBatchWithRawData batch = new MessageBatchWithRawData(topic, Arrays.asList(1), rawData, null);
 		batches.add(batch);
 		s.appendMessages(topic, 0, true, batches);
 	}

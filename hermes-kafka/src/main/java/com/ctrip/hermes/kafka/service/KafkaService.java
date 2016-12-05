@@ -93,6 +93,6 @@ public class KafkaService {
 
 		configs.put("group.id", consumerGroup);
 		configs.put("enable.auto.commit", "false");
-		return KafkaProperties.overrideByCtripDefaultConsumerSetting(configs, topic, consumerGroup);
+		return KafkaProperties.overrideByCtripDefaultConsumerSetting(configs, topic, consumerGroup, "");
 	}
 }

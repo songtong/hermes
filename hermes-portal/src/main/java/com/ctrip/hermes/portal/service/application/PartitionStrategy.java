@@ -9,8 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.lookup.ContainerLoader;
+import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.admin.core.service.EndpointService;
+import com.ctrip.hermes.meta.entity.IdcPolicy;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.dal.tag.Tag;
@@ -20,6 +23,9 @@ public abstract class PartitionStrategy {
 	private static final Logger log = LoggerFactory.getLogger(PartitionStrategy.class);
 
 	private static Map<String, PartitionStrategy> strategies = null;
+
+	@Inject
+	protected EndpointService m_endpointService;
 
 	public static PartitionStrategy getStategy(String storageType) {
 		if (strategies != null) {
@@ -92,6 +98,8 @@ public abstract class PartitionStrategy {
 
 	protected abstract StrategyDatasource getDefaultDatasource(TopicApplication application) throws DalException;
 
+	protected abstract String getDefaultBrokerGroup(TopicApplication application);
+
 	protected void applyStrategy(TopicApplication application, TopicView topicView) {
 		int partitionCount = 3;
 		if (application.getStorageType().equals("mysql")) {
@@ -104,6 +112,8 @@ public abstract class PartitionStrategy {
 			}
 		}
 
+		topicView.setBrokerGroup(getDefaultBrokerGroup(application));
+		
 		StrategyDatasource strategyDatasource;
 		try {
 			strategyDatasource = getDefaultDatasource(application);
@@ -139,5 +149,10 @@ public abstract class PartitionStrategy {
 		topicView.setResendPartitionSize(topicView.getStoragePartitionSize() / 10);
 		topicView.setDescription(application.getDescription());
 		topicView.setPriorityMessageEnabled(application.isPriorityMessageEnabled());
+		if (application.isWritePrimaryIdc()) {
+			topicView.setIdcPolicy(IdcPolicy.PRIMARY);
+		} else {
+			topicView.setIdcPolicy(IdcPolicy.LOCAL);
+		}
 	}
 }

@@ -36,8 +36,8 @@ application_module.config(function($routeProvider) {
 		return out;
 	}
 }).service('ApplicationService', [ '$resource', '$q', function($resource, $q) { // define
-																				// application
-																				// service.
+	// application
+	// service.
 
 	var application_resource = $resource("/api/applications/", {}, {
 		create_topic_application : {
@@ -111,6 +111,10 @@ application_module.config(function($routeProvider) {
 				comment : '@comment',
 				approver : '@approver'
 			}
+		},
+		get_kafka_fulldr_enabled : {
+			method : 'GET',
+			url : '/api/applications/fullDr/kafka/enabled'
 		}
 	});
 
@@ -147,6 +151,16 @@ application_module.config(function($routeProvider) {
 	});
 
 	return {
+		'get_kafka_fulldr_enabled' : function() {
+			var delay = $q.defer();
+			application_resource.get_kafka_fulldr_enabled(function(result) {
+				delay.resolve(result);
+			}, function(result) {
+				delay.reject(result);
+			});
+			return delay.promise;
+
+		},
 		'add_consumer' : function(consumer) {
 			var delay = $q.defer();
 			consumer_resource.add_consumer(consumer, function(result) {

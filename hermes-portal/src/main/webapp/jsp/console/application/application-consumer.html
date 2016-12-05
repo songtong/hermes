@@ -38,10 +38,10 @@
 			</div>
 		</div>
 		<hr>
-		<div class="row" ng-if="topicStorageType=='mysql'">
+		<div class="row">
 			<div class="col-md-5">
-				<h3 style="font-family: 微软雅黑;">参数</h3>
-				<span class="help-block"><small>仅mysql存储类型的Topic需要填写该栏，kafka存储类型请略过。</small></span>
+				<h3 style="font-family: 微软雅黑;">MySQL Topic 参数</h3>
+				<span class="help-block"><small>仅MySQL存储类型的Topic需要填写该栏，Kafka存储类型请略过。</small></span>
 			</div>
 			<div class="col-md-7">
 				<div class="form-group">
@@ -56,11 +56,31 @@
 					<div class="form-group" style="margin-bottom: 0px;">
 						<label>重发间隔（秒）</label> <input class="form-control" ng-model="new_application.retryInterval" type="number"></input>
 					</div>
-					<span class="help-block"><small>每次进行重发的时间间隔。</small></span>
 				</div>
 			</div>
 		</div>
 		<hr>
+		<div class="row" ng-show="kafkaFullDrEnabled">
+			<div class="col-md-5">
+				<h3 style="font-family: 微软雅黑;">
+					<Strong class="text-danger">Kafka</Strong> Topic 参数
+				</h3>
+				<span class="help-block"><small>仅Kafka存储类型的Topic需要填写该栏，MySQL存储类型请略过。</small></span>
+			</div>
+			<div class="col-md-7">
+				<div class="form-group">
+					<label>需要多机房容灾？</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needMultiIdc" ng-value=true> 是
+					</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needMultiIdc" ng-value=false> 否
+					</label>
+					<div class="text-danger">
+						<strong> 多机房容灾指必须在全部Kafka集群所在机房都部署消费者（目前有金桥和欧阳机房）。<br>如果在Topic配置中，生产者支持多机房容灾，则消费者必须选择支持多机房容灾
+						</strong>
+					</div>
+				</div>
+				<div></div>
+			</div>
+		</div>
+		<hr ng-show="kafkaFullDrEnabled">
 		<div class="row">
 			<div class="col-md-5">
 				<h3 style="font-family: 微软雅黑;">负责人信息</h3>
