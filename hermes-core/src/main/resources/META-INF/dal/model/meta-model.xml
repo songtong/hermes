@@ -26,6 +26,7 @@
 		<attribute name="retry-policy" value-type="String" />
 		<attribute name="ordered-consume" value-type="boolean" default-value="true" />
 		<attribute name="enabled" value-type="boolean" default-value="true" />
+		<attribute name="idc-policy" value-type="String" default-value="primary"/>
 	</entity>
 
 	<entity name="producer">
@@ -73,6 +74,7 @@
 		<attribute name="ack-timeout-seconds" value-type="int" default-value="5" />
 		<attribute name="priority-message-enabled" value-type="boolean" default-value="true" />
 		<attribute name="broker-group" value-type="String" default-value="default" />
+		<attribute name="idc-policy" value-type="String" default-value="primary"/>
 		<entity-ref name="consumer-group" type="list" names="consumer-groups" />
 
 		<snippet lang='java'><![CDATA[
@@ -93,6 +95,14 @@
 			public final static String GZIP = "gzip";
 			public final static String DEFLATER = "deflater";
 			public final static String CMESSAGING = "cmessaging";
+			]]>
+		</snippet>
+	</entity>
+	<entity name="idc-policy">
+		<attribute name="type" value-type="String" key='true' default-value="local" />
+		<snippet lang='java'><![CDATA[
+			public final static String LOCAL = "local";
+			public final static String PRIMARY = "primary";
 			]]>
 		</snippet>
 	</entity>

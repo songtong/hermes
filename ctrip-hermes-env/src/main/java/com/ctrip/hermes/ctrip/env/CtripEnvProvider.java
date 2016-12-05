@@ -21,6 +21,8 @@ public class CtripEnvProvider implements EnvProvider {
 
 	private Map<Env, String> m_env2MetaDomain = new HashMap<>();
 
+	private String m_idc;
+
 	@Override
 	public String getEnv() {
 		return m_env.toString();
@@ -41,9 +43,33 @@ public class CtripEnvProvider implements EnvProvider {
 
 		refineEnv(strEnvFromConfig, strEnvFromFoundation, Foundation.server().isTooling());
 
+		refineIdc();
+
 		m_metaServerDomainName = m_env2MetaDomain.get(m_env);
 
-		log.info("Hermes env is {}, meta-server domain is {}", m_env, m_metaServerDomainName);
+		log.info("Hermes env is {}, meta-server domain is {}, idc is {}", m_env, m_metaServerDomainName, m_idc);
+	}
+
+	private void refineIdc() {
+		String idc = Foundation.server().getDataCenter();
+		if (idc != null && idc.trim().length() > 0) {
+			switch (idc.toUpperCase()) {
+			case "SHAFQ":
+				m_idc = "FQ";
+				break;
+			case "SHAJQ":
+				m_idc = "JQ";
+				break;
+			case "SHAOY":
+				m_idc = "OY";
+				break;
+			default:
+				log.warn("Unknown idc value {} from framework-foundation", idc);
+				break;
+			}
+		} else {
+			log.warn("No idc found from framework-foundation");
+		}
 	}
 
 	private void refineEnv(String strEnvFromConfig, String strEnvFromFoundation, boolean tooling) {
@@ -117,6 +143,11 @@ public class CtripEnvProvider implements EnvProvider {
 	@Override
 	public String getMetaServerDomainName() {
 		return m_metaServerDomainName;
+	}
+
+	@Override
+	public String getIdc() {
+		return m_idc;
 	}
 
 }

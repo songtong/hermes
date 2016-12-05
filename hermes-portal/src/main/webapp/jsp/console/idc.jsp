@@ -127,6 +127,45 @@
 			</tbody>
 		</table>
 
+		<hr>
+		<h4>kafka</h4>
+		<table class="table table-striped" style="font-size: small;">
+			<thead>
+				<tr>
+					<th>属性</th>
+					<th>值</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>bootstrap.servers</td>
+					<td><span e-form="bootstrapServersForm" e-name="currentKafkaBootstrapServers" editable-textarea="currentKafkaBootstrapServers" e-rows="2" e-cols="80">{{currentKafkaBootstrapServers}}</span></td>
+					<td style="white-space: nowrap">
+						<form editable-form name="bootstrapServersForm" onaftersave="updateKafkaProperty('bootstrap.servers', currentIdc.name, currentKafkaBootstrapServers)" ng-show="bootstrapServersForm.$visible" class="form-buttons form-inline">
+							<button type="submit" ng-disabled="bootstrapServersForm.$waiting" class="btn btn-primary btn-xs">save</button>
+							<button type="button" ng-disabled="bootstrapServersForm.$waiting" ng-click="bootstrapServersForm.$cancel()" class="btn btn-default btn-xs">cancel</button>
+						</form>
+						<div class="buttons" ng-show="!bootstrapServersForm.$visible">
+							<button class="btn btn-primary btn-xs" ng-click="bootstrapServersForm.$show()">edit</button>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>zookeeper.connect</td>
+					<td><span e-form="zookeeperConnectForm" e-name="currentKafkaZookeeperConnect" editable-textarea="currentKafkaZookeeperConnect" e-rows="2" e-cols="80">{{currentKafkaZookeeperConnect}}</span></td>
+					<td style="white-space: nowrap">
+						<form editable-form name="zookeeperConnectForm" onaftersave="updateKafkaProperty('zookeeper.connect', currentIdc.name, currentKafkaZookeeperConnect)" ng-show="zookeeperConnectForm.$visible" class="form-buttons form-inline">
+							<button type="submit" ng-disabled="zookeeperConnectForm.$waiting" class="btn btn-primary btn-xs">save</button>
+							<button type="button" ng-disabled="zookeeperConnectForm.$waiting" ng-click="zookeeperConnectForm.$cancel()" class="btn btn-default btn-xs">cancel</button>
+						</form>
+						<div class="buttons" ng-show="!zookeeperConnectForm.$visible">
+							<button class="btn btn-primary btn-xs" ng-click="zookeeperConnectForm.$show()">edit</button>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
 		<div class="modal fade" id="addIdcModal" tabindex="-1" role="dialog">
 			<div class="modal-dialog" style="width: 400px">
 				<div class="modal-content">
@@ -142,6 +181,12 @@
 								<label class="col-sm-3 control-label">名称</label>
 								<div class="col-sm-9">
 									<input class="form-control" placeholder="ID" ng-model="newIdc.name">
+								</div>
+							</div>
+								<div class="form-group">
+								<label class="col-sm-3 control-label">备注</label>
+								<div class="col-sm-9">
+									<input class="form-control" placeholder="Display Name" ng-model="newIdc.displayName">
 								</div>
 							</div>
 							<div class="form-group">

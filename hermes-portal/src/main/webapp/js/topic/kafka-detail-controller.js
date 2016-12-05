@@ -15,7 +15,7 @@ topic_module.run(function(editableOptions) {
 			isArray : false
 		}
 	});
-	
+
 	scope.logined = user.sn;
 	scope.current_topic_type = routeParams['type'];
 	scope.topic_name = routeParams['topicName'];
@@ -24,7 +24,9 @@ topic_module.run(function(editableOptions) {
 	scope.endpoint_types = [ 'kafka', 'broker' ];
 	scope.Ops = [ true, false ];
 	scope.compressionTypes = [ 'gzip', 'deflater' ];
-	
+
+	scope.idcPolicies = [ 'local', 'primary' ];
+
 	scope.switch_statuses = [ {
 		value : true,
 		text : 'true'
@@ -37,15 +39,15 @@ topic_module.run(function(editableOptions) {
 		scope.topic = result;
 		decodeCodec(scope.topic);
 		scope.partitionCount = scope.topic.partitions.length;
-		
+
 		// Fetch producer monitor config.
 		producer_monitor_config_resource.get_producer_monitor_config({
-			topic: scope.topic.name
+			topic : scope.topic.name
 		}).$promise.then(function(result) {
 			scope.currentProducerMonitorConfig = result;
 		});
 	});
-	
+
 	scope.update_producer_monitor_config = function() {
 		bootbox.confirm({
 			title : "确认",
@@ -66,11 +68,11 @@ topic_module.run(function(editableOptions) {
 			}
 		});
 	}
-	
+
 	scope.consumers = TopicService.fetch_consumers_for_topic(scope.topic_name).then(function(result) {
 		scope.consumers = result;
 	});
-	
+
 	scope.load_broker_groups = function() {
 		return scope.broker_groups ? scope.broker_groups : TopicService.get_broker_groups().then(function(result) {
 			scope.broker_groups = result;

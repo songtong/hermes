@@ -44,8 +44,13 @@ topic_module.controller('mysql-add-controller', [ '$scope', '$resource', 'TopicS
 
 	$scope.add_partition = function() {
 		var new_partition = {};
-		new_partition.readDatasource = $scope.current_datasource_names[0];
-		new_partition.writeDatasource = $scope.current_datasource_names[0];
+		if ($scope.new_topic.partitions.length == 0) {
+			new_partition.readDatasource = $scope.current_datasource_names[0];
+			new_partition.writeDatasource = $scope.current_datasource_names[0];
+		} else {
+			new_partition.readDatasource = $scope.new_topic.partitions[$scope.new_topic.partitions.length - 1].readDatasource;
+			new_partition.writeDatasource = $scope.new_topic.partitions[$scope.new_topic.partitions.length - 1].writeDatasource;
+		}
 		$scope.new_topic.partitions.push(new_partition);
 	};
 

@@ -28,6 +28,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.env.ClientEnvironment</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.kafka.KafkaIdcStrategy</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -43,6 +46,9 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.consumer.engine.config.ConsumerConfig</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.core.kafka.KafkaIdcStrategy</role>
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.core.transport.endpoint.EndpointClient</role>

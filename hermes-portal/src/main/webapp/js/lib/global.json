@@ -4,7 +4,7 @@
 	"domains": {
 		"prod": "hermes.fx.ctripcorp.com",
 		"uat": "hermes.fx.uat.qa.nt.ctripcorp.com",
-		"fws": "hermes.fws.qa.nt.ctripcorp.com",
+		"fws": "localhost:7678",
 		"tools": "hermes.fx.tools.ctripcorp.com:8080",
 		"dev": "localhost:7678"
 	}

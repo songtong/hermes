@@ -89,7 +89,6 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 
 	@Override
 	public void deregister(long token, boolean force) {
-		if (token > 0) {
 			Triple<ConsumerContext, NotifyStrategy, ExecutorService> triple = m_consumerContexs.remove(token);
 			if (triple != null) {
 				ConsumerContext context = triple.getFirst();
@@ -103,7 +102,6 @@ public class DefaultConsumerNotifier implements ConsumerNotifier {
 					triple.getLast().shutdownNow();
 				}
 			}
-		}
 	}
 
 	@Override

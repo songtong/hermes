@@ -16,8 +16,11 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.admin.core.model.Idc;
+import com.ctrip.hermes.admin.core.service.IdcService;
 import com.ctrip.hermes.admin.core.service.StorageService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
@@ -34,6 +37,8 @@ public class DatasourceResource {
 	private static final Logger logger = LoggerFactory.getLogger(DatasourceResource.class);
 
 	private StorageService dsService = PlexusComponentLocator.lookup(StorageService.class);
+
+	private IdcService idcService = PlexusComponentLocator.lookup(IdcService.class);
 
 	@POST
 	@Path("{type}")
@@ -134,6 +139,66 @@ public class DatasourceResource {
 		}
 
 		throw new RestException("Datasource id not found: " + dsn.getId(), Status.NOT_FOUND);
+	}
+
+	@POST
+	@Path("kafka/property/update/bootstrapServers/{idc}/{propertyValue}")
+	public Response updateKafkaBootstrpServersProperty(@PathParam("idc") String idc,
+	      @PathParam("propertyValue") String value) {
+		if (StringUtils.isEmpty(idc) || StringUtils.isEmpty(value)) {
+			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
+		}
+
+		Idc idcFromDb = null;
+		try {
+			idcFromDb = idcService.getIdcByName(idc);
+		} catch (DalException e) {
+			logger.error("Failed to get idc from db!", e);
+			throw new RestException("Failed to get idc from db!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		if (idcFromDb == null) {
+			throw new RestException(String.format("Idc %s not exists!", idc), Status.BAD_REQUEST);
+		}
+
+		try {
+			dsService.addOrUpdateKafkaBootstrapServersProperty(idc, value);
+		} catch (Exception e) {
+			throw new RestException(String.format("Failed to add/update bootstrapServers property: %s!", e.getMessage()),
+			      Status.INTERNAL_SERVER_ERROR);
+		}
+
+		return Response.status(Status.OK).build();
+	}
+
+	@POST
+	@Path("kafka/property/update/zookeeperConnect/{idc}/{propertyValue}")
+	public Response updateZookeeperConnectProperty(@PathParam("idc") String idc,
+	      @PathParam("propertyValue") String value) {
+		if (StringUtils.isEmpty(idc) || StringUtils.isEmpty(value)) {
+			throw new RestException("HTTP POST body is empty", Status.BAD_REQUEST);
+		}
+
+		Idc idcFromDb = null;
+		try {
+			idcFromDb = idcService.getIdcByName(idc);
+		} catch (DalException e) {
+			logger.error("Failed to get idc from db!", e);
+			throw new RestException("Failed to get idc from db!", Status.INTERNAL_SERVER_ERROR);
+		}
+
+		if (idcFromDb == null) {
+			throw new RestException(String.format("Idc %s not exists!", idc), Status.BAD_REQUEST);
+		}
+
+		try {
+			dsService.addOrUpdateZookeeperConnectProperty(idc, value);
+		} catch (Exception e) {
+			throw new RestException(String.format("Failed to add/update zookeeperConnect property: %s!", e.getMessage()),
+			      Status.INTERNAL_SERVER_ERROR);
+		}
+
+		return Response.status(Status.OK).build();
 	}
 
 	private void normalizeDatasource(Datasource ds) {

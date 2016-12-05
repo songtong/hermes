@@ -6,6 +6,7 @@ import java.util.List;
 import org.unidal.lookup.configuration.AbstractResourceConfigurator;
 import org.unidal.lookup.configuration.Component;
 
+import com.ctrip.hermes.core.kafka.KafkaIdcStrategy;
 import com.ctrip.hermes.core.message.partition.PartitioningStrategy;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
@@ -13,6 +14,7 @@ import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.producer.DefaultProducer;
 import com.ctrip.hermes.producer.HermesProducerModule;
@@ -67,6 +69,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      .req(ProducerConfig.class)//
 		      .req(EndpointClient.class)//
 		      .req(MessageSenderSelectorManager.class)//
+		      .req(ClientEnvironment.class)//
+		      .req(KafkaIdcStrategy.class)//
 		);
 
 		// command processors
@@ -80,7 +84,7 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		// monitors
 		all.add(A(DefaultSendMessageResultMonitor.class));
 		all.add(A(DefaultSendMessageAcceptanceMonitor.class));
-		
+
 		all.add(A(DefaultMessageSenderSelectorManager.class));
 
 		all.add(A(ProducerConfig.class));

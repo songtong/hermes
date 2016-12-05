@@ -753,6 +753,9 @@
 				<requirement>
 					<role>org.unidal.dal.jdbc.transaction.TransactionManager</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.admin.core.service.StorageService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>

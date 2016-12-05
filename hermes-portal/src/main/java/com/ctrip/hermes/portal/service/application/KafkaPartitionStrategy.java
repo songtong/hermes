@@ -1,12 +1,15 @@
 package com.ctrip.hermes.portal.service.application;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.topic.TopicView;
@@ -43,4 +46,18 @@ public class KafkaPartitionStrategy extends PartitionStrategy {
 		return StrategyDatasource.newInstance(Pair.from(DEFAULT_READ_DATASOURCE, DEFAULT_WRITE_DATASOURCE));
 	}
 
+	@Override
+	protected String getDefaultBrokerGroup(TopicApplication application) {
+		Set<String> brokerGroups = new HashSet<>();
+		for (Endpoint endpoint : m_endpointService.getEndpoints().values()) {
+			brokerGroups.add(endpoint.getGroup());
+		}
+
+		String defaultBrokerGroup = "kafka-default";
+		if (!brokerGroups.contains(defaultBrokerGroup)) {
+			defaultBrokerGroup = "default";
+		}
+
+		return defaultBrokerGroup;
+	}
 }

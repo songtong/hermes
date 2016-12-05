@@ -203,12 +203,20 @@
 				<requirement>
 					<role>com.ctrip.hermes.portal.dal.datasourcetag.DatasourceTagDao</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.admin.core.service.EndpointService</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.application.PartitionStrategy</role>
 			<role-hint>kafka</role-hint>
 			<implementation>com.ctrip.hermes.portal.service.application.KafkaPartitionStrategy</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.admin.core.service.EndpointService</role>
+				</requirement>
+			</requirements>
 		</component>
 		<component>
 			<role>com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService</role>

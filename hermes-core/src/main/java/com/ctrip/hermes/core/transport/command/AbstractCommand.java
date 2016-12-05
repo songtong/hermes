@@ -15,6 +15,8 @@ public abstract class AbstractCommand implements Command {
 
 	private long m_receiveTime;
 
+	private static final String TARGET_IDC_KEY = "target_idc";
+
 	public AbstractCommand(CommandType commandType, int version) {
 		m_header.setVersion(version);
 		m_header.setType(commandType);
@@ -26,6 +28,14 @@ public abstract class AbstractCommand implements Command {
 
 	public void setHeader(Header header) {
 		m_header = header;
+	}
+
+	public void setTargetIdc(String targetIdc) {
+		getHeader().addProperty(TARGET_IDC_KEY, targetIdc);
+	}
+
+	public String getTargetIdc() {
+		return getHeader().getProperties().get(TARGET_IDC_KEY);
 	}
 
 	public long getReceiveTime() {

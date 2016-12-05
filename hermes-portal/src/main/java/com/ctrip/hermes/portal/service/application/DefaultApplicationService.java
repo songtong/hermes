@@ -13,6 +13,7 @@ import com.ctrip.hermes.admin.core.service.ConsumerService;
 import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
 import com.ctrip.hermes.admin.core.view.TopicView;
+import com.ctrip.hermes.meta.entity.IdcPolicy;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;
@@ -149,6 +150,11 @@ public class DefaultApplicationService implements ApplicationService {
 		consumerView.setPhone1(app.getOwnerPhone1());
 		consumerView.setPhone2(app.getOwnerPhone2());
 		consumerView.setEnabled(app.isEnabled());
+		if (app.isNeedMultiIdc()) {
+			consumerView.setIdcPolicy(IdcPolicy.LOCAL);
+		} else {
+			consumerView.setIdcPolicy(IdcPolicy.PRIMARY);
+		}
 		if (app.isNeedRetry()) {
 			consumerView.setRetryPolicy(String.format("3:[%s,%s]", app.getRetryCount(), app.getRetryInterval() * 1000L));
 		} else {

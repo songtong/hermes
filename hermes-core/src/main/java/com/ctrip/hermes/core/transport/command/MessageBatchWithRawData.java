@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
+import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 
 public class MessageBatchWithRawData {
@@ -17,15 +18,18 @@ public class MessageBatchWithRawData {
 	private ByteBuf m_rawData;
 
 	private List<PartialDecodedMessage> m_msgs;
-	
+
 	private long m_selectorOffset;
 
-	public MessageBatchWithRawData(String topic, List<Integer> msgSeqs, ByteBuf rawData) {
+	private String m_targetIdc;
+	
+	public MessageBatchWithRawData(String topic, List<Integer> msgSeqs, ByteBuf rawData, String targetIdc) {
 		m_topic = topic;
 		m_msgSeqs = msgSeqs;
 		m_rawData = rawData;
+		m_targetIdc = targetIdc == null ? PlexusComponentLocator.lookup(MetaService.class).getPrimaryIdc().getId() : targetIdc;
 	}
-	
+
 	public long getSelectorOffset() {
 		return m_selectorOffset;
 	}
@@ -44,6 +48,10 @@ public class MessageBatchWithRawData {
 
 	public ByteBuf getRawData() {
 		return m_rawData.duplicate();
+	}
+	
+	public String getTargetIdc() {
+		return m_targetIdc;
 	}
 
 	public List<PartialDecodedMessage> getMessages() {

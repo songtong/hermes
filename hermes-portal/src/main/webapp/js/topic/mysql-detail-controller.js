@@ -15,7 +15,7 @@ topic_module.run(function(editableOptions) {
 			isArray : false
 		}
 	});
-	
+
 	scope.logined = user.sn;
 	scope.current_topic_type = routeParams['type'];
 	scope.topic_name = routeParams['topicName'];
@@ -30,20 +30,20 @@ topic_module.run(function(editableOptions) {
 		value : false,
 		text : 'false'
 	} ];
-	
+
 	scope.topic = TopicService.fetch_topic_detail(scope.topic_name).then(function(result) {
 		scope.topic = result;
 		decodeCodec(scope.topic);
 		scope.partitionCount = scope.topic.partitions.length;
-		
+
 		// Fetch producer monitor config.
 		producer_monitor_config_resource.get_producer_monitor_config({
-			topic: scope.topic.name
+			topic : scope.topic.name
 		}).$promise.then(function(result) {
 			scope.currentProducerMonitorConfig = result;
 		});
 	});
-	
+
 	scope.update_producer_monitor_config = function() {
 		bootbox.confirm({
 			title : "确认",
@@ -64,7 +64,7 @@ topic_module.run(function(editableOptions) {
 			}
 		});
 	}
-	
+
 	scope.consumers = TopicService.fetch_consumers_for_topic(scope.topic_name).then(function(result) {
 		scope.consumers = result;
 	});
@@ -131,6 +131,14 @@ topic_module.run(function(editableOptions) {
 			readDatasource : null,
 			writeDatasource : null
 		}
+		if (scope.new_partitions.length != 0) {
+			scope.inserted.readDatasource = scope.new_partitions[scope.new_partitions.length - 1].readDatasource;
+			scope.inserted.writeDatasource = scope.new_partitions[scope.new_partitions.length - 1].writeDatasource;
+		} else if (scope.topic.partitions.length != 0) {
+			scope.inserted.readDatasource = scope.topic.partitions[scope.topic.partitions.length - 1].readDatasource;
+			scope.inserted.writeDatasource = scope.topic.partitions[scope.topic.partitions.length - 1].writeDatasource;
+		}
+
 		scope.new_partitions.push(scope.inserted);
 	};
 

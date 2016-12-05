@@ -17,6 +17,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.dal.jdbc.DalException;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.admin.core.model.Idc;
@@ -189,4 +190,18 @@ public class IdcResource {
 		return targetIdc;
 	}
 
+	@GET
+	@Path("primary")
+	public Response getPrimaryIdc() {
+		try {
+			Idc idc = m_idcService.getPrimaryIdcEntity();
+			if (idc == null) {
+				throw new RestException("There is no primary idc in db!", Status.NOT_FOUND);
+			} else {
+				return Response.ok().entity(idc).build();
+			}
+		} catch (DalException e) {
+			throw new RestException("Can not get primary idc from db!", Status.INTERNAL_SERVER_ERROR);
+		}
+	}
 }

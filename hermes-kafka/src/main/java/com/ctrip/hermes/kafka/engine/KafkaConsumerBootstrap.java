@@ -1,18 +1,17 @@
 package com.ctrip.hermes.kafka.engine;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -20,6 +19,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -30,6 +31,8 @@ import com.ctrip.hermes.consumer.engine.SubscribeHandle;
 import com.ctrip.hermes.consumer.engine.bootstrap.BaseConsumerBootstrap;
 import com.ctrip.hermes.consumer.engine.bootstrap.ConsumerBootstrap;
 import com.ctrip.hermes.consumer.engine.config.ConsumerConfig;
+import com.ctrip.hermes.core.kafka.KafkaConstants;
+import com.ctrip.hermes.core.kafka.KafkaIdcStrategy;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
@@ -42,13 +45,17 @@ import com.ctrip.hermes.kafka.message.KafkaConsumerMessage;
 import com.ctrip.hermes.kafka.util.KafkaProperties;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
+import com.ctrip.hermes.meta.entity.IdcPolicy;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 @Named(type = ConsumerBootstrap.class, value = Endpoint.KAFKA)
-public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
+public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Initializable {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(KafkaConsumerBootstrap.class);
 
@@ -64,21 +71,25 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 	@Inject
 	private ConsumerConfig m_consumerConfig;
 
+	@Inject
+	private KafkaIdcStrategy m_kafkaIdcStrategy;
+
 	private Map<ConsumerContext, KafkaConsumerThread> consumers = new HashMap<ConsumerContext, KafkaConsumerThread>();
 
 	private Map<ConsumerContext, Long> tokens = new HashMap<ConsumerContext, Long>();
 
 	@Override
 	protected SubscribeHandle doStart(final ConsumerContext consumerContext) {
+
 		Topic topic = consumerContext.getTopic();
 
-		Properties prop = getConsumerProperties(topic.getName(), consumerContext.getGroupId());
+		Properties props = getConsumerProperties(topic.getName(), consumerContext.getGroupId());
 
-		KafkaConsumer<String, byte[]> consumer = new KafkaConsumer<String, byte[]>(prop);
+		KafkaConsumer<String, byte[]> consumer = new KafkaConsumer<String, byte[]>(props);
 
 		final long token = CorrelationIdGenerator.generateCorrelationId();
 		m_consumerNotifier.register(token, consumerContext);
-		KafkaConsumerThread consumerThread = new KafkaConsumerThread(consumer, consumerContext, token);
+		KafkaConsumerThread consumerThread = new KafkaConsumerThread(consumer, consumerContext, props, token);
 		m_executor.submit(consumerThread);
 
 		consumers.put(consumerContext, consumerThread);
@@ -89,7 +100,13 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			@Override
 			public void close() {
 				m_logger.info("Stopping kafka consumer with token: " + token);
-				doStop(consumerContext);
+				if (consumers.containsKey(consumerContext)) {
+					synchronized (consumers) {
+						if (consumers.containsKey(consumerContext)) {
+							doStop(consumerContext);
+						}
+					}
+				}
 			}
 		};
 	}
@@ -102,9 +119,14 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 		Long token = tokens.remove(consumerContext);
 		if (token != null)
-			m_consumerNotifier.deregister(token, false);
+			m_consumerNotifier.deregister(token, true);
 
 		super.doStop(consumerContext);
+	}
+
+	private void restart(ConsumerContext consumerContext) {
+		doStop(consumerContext);
+		doStart(consumerContext);
 	}
 
 	class KafkaConsumerThread implements Runnable {
@@ -115,11 +137,15 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 
 		private ConsumerContext consumerContext;
 
+		private Properties props;
+
 		private long token;
 
-		public KafkaConsumerThread(KafkaConsumer<String, byte[]> consumer, ConsumerContext consumerContext, long token) {
+		public KafkaConsumerThread(KafkaConsumer<String, byte[]> consumer, ConsumerContext consumerContext,
+		      Properties props, long token) {
 			this.consumer = consumer;
 			this.consumerContext = consumerContext;
+			this.props = props;
 			this.token = token;
 		}
 
@@ -144,25 +170,27 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 					}
 					List<ConsumerMessage<?>> msgs = new ArrayList<ConsumerMessage<?>>();
 					for (ConsumerRecord<String, byte[]> consumerRecord : records) {
-						long offset = -1;
-						try {
-							offset = consumerRecord.offset();
-							ByteBuf byteBuf = Unpooled.wrappedBuffer(consumerRecord.value());
+						if (!closed.get()) {
+							long offset = -1;
+							try {
+								offset = consumerRecord.offset();
+								ByteBuf byteBuf = Unpooled.wrappedBuffer(consumerRecord.value());
 
-							BaseConsumerMessage<?> baseMsg = m_messageCodec.decode(consumerContext.getTopic().getName(),
-							      byteBuf, consumerContext.getMessageClazz());
-							@SuppressWarnings("rawtypes")
-							ConsumerMessage kafkaMsg = new KafkaConsumerMessage(baseMsg, consumerRecord.partition(),
-							      consumerRecord.offset());
-							msgs.add(kafkaMsg);
-						} catch (Exception e) {
-							m_logger.warn(
-							      "Kafka consumer failed Topic:{} Partition:{} Offset:{} Group:{} SesssionId:{} Exception:{}",
-							      consumerRecord.topic(), consumerRecord.partition(), offset, consumerContext.getGroupId(),
-							      consumerContext.getSessionId(), e.getMessage());
+								BaseConsumerMessage<?> baseMsg = m_messageCodec.decode(consumerContext.getTopic().getName(),
+								      byteBuf, consumerContext.getMessageClazz());
+								@SuppressWarnings("rawtypes")
+								ConsumerMessage kafkaMsg = new KafkaConsumerMessage(baseMsg, consumerRecord.partition(),
+								      consumerRecord.offset());
+								msgs.add(kafkaMsg);
+							} catch (Exception e) {
+								m_logger
+								      .warn("Kafka consumer failed Topic:{} Partition:{} Offset:{} Group:{} SesssionId:{} Exception:{}",
+								            consumerRecord.topic(), consumerRecord.partition(), offset,
+								            consumerContext.getGroupId(), consumerContext.getSessionId(), e.getMessage());
+							}
 						}
 					}
-					if (msgs.size() > 0)
+					if (msgs.size() > 0 && !closed.get())
 						m_consumerNotifier.messageReceived(token, msgs);
 				}
 			} catch (WakeupException e) {
@@ -185,6 +213,11 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			closed.set(true);
 			consumer.wakeup();
 		}
+
+		public Properties getProps() {
+			return props;
+		}
+
 	}
 
 	private Properties getConsumerProperties(String topic, String group) {
@@ -208,16 +241,80 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap {
 			return configs;
 		}
 
+		String targetIdc = getTargetIdc(m_metaService.findTopicByName(topic), group).toLowerCase();
+		String targetZk = String.format("%s.%s", KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME, targetIdc);
+		String targetBootstrapServers = String.format("%s.%s", KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME, targetIdc);
+
 		for (Datasource datasource : targetStorage.getDatasources()) {
 			if (consumerDatasource.equals(datasource.getId())) {
 				Map<String, Property> properties = datasource.getProperties();
 				for (Map.Entry<String, Property> prop : properties.entrySet()) {
-					configs.put(prop.getValue().getName(), prop.getValue().getValue());
+					String propName = prop.getValue().getName();
+					if (!propName.startsWith(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME)
+					      && !(propName.startsWith(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME))) {
+						configs.put(propName, prop.getValue().getValue());
+					}
 				}
+				configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME, properties.get(targetBootstrapServers)
+				      .getValue());
+				configs.put(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME, properties.get(targetZk).getValue());
+
 				break;
 			}
 		}
 		configs.put("group.id", group);
-		return KafkaProperties.overrideByCtripDefaultConsumerSetting(configs, topic, group);
+		return KafkaProperties.overrideByCtripDefaultConsumerSetting(configs, topic, group, targetIdc);
+	}
+
+	private String getTargetIdc(Topic topic, String consumerGroup) {
+		String idcPolicy = topic.findConsumerGroup(consumerGroup).getIdcPolicy();
+		if (idcPolicy == null) {
+			idcPolicy = IdcPolicy.LOCAL;
+		}
+
+		String targetIdc = m_kafkaIdcStrategy.getTargetIdc(idcPolicy);
+		if (targetIdc == null) {
+			throw new RuntimeException("Can not get target idc!");
+		}
+
+		return targetIdc;
+	}
+
+	@Override
+	public void initialize() throws InitializationException {
+		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("CheckIdcPolicyChangesExecutor", true))
+		      .scheduleWithFixedDelay(new Runnable() {
+			      @Override
+			      public void run() {
+				      try {
+					      for (Entry<ConsumerContext, KafkaConsumerThread> entry : consumers.entrySet()) {
+						      Properties newConsumerProperties = getConsumerProperties(entry.getKey().getTopic().getName(),
+						            entry.getKey().getGroup().getName());
+						      Properties currentConsumerProperties = entry.getValue().getProps();
+
+						      String newZookeeperConnectProperty = (String) newConsumerProperties.get(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME);
+						      String currentZookeeperConnectProperty = (String) currentConsumerProperties
+						            .get(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME);
+						      String newBootstrapServersProperty = (String) newConsumerProperties
+						            .get(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME);
+						      String currentBootstrapServersProperty = (String) currentConsumerProperties
+						            .get(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME);
+
+						      if (!(newZookeeperConnectProperty != null && currentConsumerProperties != null
+						            && newZookeeperConnectProperty.equals(currentZookeeperConnectProperty)
+						            && newBootstrapServersProperty != null && currentBootstrapServersProperty != null && newBootstrapServersProperty
+						            .equals(currentBootstrapServersProperty))) {
+							      synchronized (consumers) {
+								      if (consumers.containsKey(entry.getKey())) {
+									      restart(entry.getKey());
+								      }
+							      }
+						      }
+					      }
+				      } catch (Exception e) {
+					      m_logger.warn("Check idc policy changes failed!", e);
+				      }
+			      }
+		      }, 5, 20, TimeUnit.SECONDS);
 	}
 }

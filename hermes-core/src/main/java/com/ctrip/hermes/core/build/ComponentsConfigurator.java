@@ -8,6 +8,7 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.core.cmessaging.DefaultCMessagingConfigService;
 import com.ctrip.hermes.core.config.CoreConfig;
+import com.ctrip.hermes.core.kafka.KafkaIdcStrategy;
 import com.ctrip.hermes.core.log.CatBizLogger;
 import com.ctrip.hermes.core.log.CatFileBizLogger;
 import com.ctrip.hermes.core.log.FileBizLogger;
@@ -104,6 +105,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 		      FetchManualConfigResultCommandProcessorV6.class)//
 		      .req(FetchManualConfigResultMonitor.class)//
 		);
+
+		all.add(A(KafkaIdcStrategy.class));
 
 		return all;
 	}

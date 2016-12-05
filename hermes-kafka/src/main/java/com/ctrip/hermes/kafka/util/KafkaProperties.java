@@ -63,11 +63,12 @@ public class KafkaProperties {
 	 * @param producerProp
 	 * @return
 	 */
-	public static Properties overrideByCtripDefaultProducerSetting(Properties producerProp, String topic) {
+	public static Properties overrideByCtripDefaultProducerSetting(Properties producerProp, String topic,
+	      String targetIdc) {
 		producerProp.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
 		producerProp.put("key.serializer", StringSerializer.class.getCanonicalName());
 		if (!producerProp.containsKey("client.id")) {
-			producerProp.put("client.id", topic + "_" + Networks.forIp().getLocalHostAddress());
+			producerProp.put("client.id", topic + "_" + targetIdc + "_" + Networks.forIp().getLocalHostAddress());
 		}
 
 		return producerProp;
@@ -78,11 +79,13 @@ public class KafkaProperties {
 	 * @param consumerProp
 	 * @return
 	 */
-	public static Properties overrideByCtripDefaultConsumerSetting(Properties consumerProp, String topic, String group) {
+	public static Properties overrideByCtripDefaultConsumerSetting(Properties consumerProp, String topic, String group,
+	      String targetIdc) {
 		consumerProp.put("value.deserializer", ByteArrayDeserializer.class.getCanonicalName());
 		consumerProp.put("key.deserializer", StringDeserializer.class.getCanonicalName());
 		if (!consumerProp.containsKey("client.id")) {
-			consumerProp.put("client.id", topic + "_" + group + "_" + Networks.forIp().getLocalHostAddress());
+			consumerProp.put("client.id", topic + "_" + group + "_" + targetIdc + "_"
+			      + Networks.forIp().getLocalHostAddress());
 		}
 
 		return consumerProp;

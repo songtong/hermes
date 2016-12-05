@@ -12,4 +12,6 @@ public interface EnvProvider {
 	public void initialize(Properties config);
 
 	public String getMetaServerDomainName();
+
+	public String getIdc();
 }

@@ -46,6 +46,14 @@
 				<div class="form-group">
 					<label>编码类型</label> <select class="form-control" ng-model="new_application.baseCodecType" ng-options="codecType for codecType in codecTypes"></select>
 				</div>
+				<div ng-if="new_application.storageType=='kafka'&& kafkaFullDrEnabled" class="form-group">
+					<label>是否写Hermes Kafka集群主机房？</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.writePrimaryIdc" ng-value=true> 是
+					</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.writePrimaryIdc" ng-value=false> 否
+					</label>
+					<div class="text-danger">
+						<strong>当前主机房为：{{primaryIdc.name}}( {{primaryIdc.displayName}} )，推荐在主机房部署生产者。<br>如果选择不写主机房，生产者会向与自己同机房的Kafka集群写消息，需要该Topic的消费者全部双机房部署，否则会有消息丢失。</strong>
+					</div>
+				</div>
 				<div class="form-group">
 					<label>是否需要开启优先队列功能？</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.priorityMessageEnabled" ng-value=true> 是
 					</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.priorityMessageEnabled" ng-value=false> 否
@@ -63,7 +71,6 @@
 				<div ng-show="new_application.needCompress=='true'&&new_application.compressionType=='deflater'" class="form-group">
 					<label>压缩程度</label> <select class="form-control" ng-model="new_application.compressionLevel" ng-options="compressionLevel.value as compressionLevel.key for compressionLevel in compressionLevels"></select>
 				</div>
-
 				<div class="form-group">
 					<label>消息预估上限（条/天）</label> <input class="form-control" ng-model="new_application.maxMsgNumPerDay" type="number"></input>
 				</div>

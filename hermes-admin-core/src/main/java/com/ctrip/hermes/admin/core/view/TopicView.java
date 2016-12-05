@@ -66,9 +66,11 @@ public class TopicView {
 	private int storagePartitionCount;
 
 	private String brokerGroup;
-	
+
 	private boolean priorityMessageEnabled;
 
+	private String idcPolicy;
+	
 	public boolean isPriorityMessageEnabled() {
 		return priorityMessageEnabled;
 	}
@@ -307,4 +309,12 @@ public class TopicView {
 	public void setBrokerGroup(String brokerGroup) {
 		this.brokerGroup = brokerGroup;
 	}
+
+	public String getIdcPolicy() {
+	   return idcPolicy;
+   }
+
+	public void setIdcPolicy(String idcPolicy) {
+	   this.idcPolicy = idcPolicy;
+   }
 }

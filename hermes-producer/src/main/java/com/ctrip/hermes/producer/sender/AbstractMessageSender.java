@@ -10,6 +10,7 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.result.SendResult;
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.endpoint.EndpointManager;
+import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.producer.monitor.SendMessageAcceptanceMonitor;
 import com.ctrip.hermes.producer.monitor.SendMessageResultMonitor;
 
@@ -38,6 +39,9 @@ public abstract class AbstractMessageSender implements MessageSender {
 
 	@Inject
 	protected SendMessageResultMonitor m_messageResultMonitor;
+	
+	@Inject
+	protected ClientEnvironment m_clientEnv;
 
 	/*
 	 * (non-Javadoc)

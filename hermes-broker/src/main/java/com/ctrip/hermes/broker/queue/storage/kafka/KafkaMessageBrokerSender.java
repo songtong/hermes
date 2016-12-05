@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.net.Networks;
 
+import com.ctrip.hermes.core.kafka.KafkaConstants;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Partition;
@@ -26,8 +27,11 @@ public class KafkaMessageBrokerSender {
 
 	private MetaService m_metaService;
 
-	public KafkaMessageBrokerSender(String topic, MetaService metaService) {
+	private String m_targetIdc;
+
+	public KafkaMessageBrokerSender(String topic, MetaService metaService, String targetIdc) {
 		this.m_metaService = metaService;
+		this.m_targetIdc = targetIdc;
 		Properties configs = getProducerProperties(topic);
 		m_producer = new KafkaProducer<>(configs);
 		m_logger.debug("Kafka broker sender for {} initialized.", topic);
@@ -47,17 +51,24 @@ public class KafkaMessageBrokerSender {
 			return configs;
 		}
 
+		String targetBootstrapServersPropertyName = String.format("%s.%s",
+		      KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME, m_targetIdc.toLowerCase());
 		for (Datasource datasource : producerStorage.getDatasources()) {
 			if (producerDatasource.equals(datasource.getId())) {
 				Map<String, Property> properties = datasource.getProperties();
 				for (Map.Entry<String, Property> prop : properties.entrySet()) {
-					configs.put(prop.getValue().getName(), prop.getValue().getValue());
+					String propName = prop.getValue().getName();
+					if (!propName.startsWith(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME)) {
+						configs.put(propName, prop.getValue().getValue());
+					}
 				}
+				configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME,
+				      properties.get(targetBootstrapServersPropertyName).getValue());
 				break;
 			}
 		}
 
-		return overrideByCtripDefaultSetting(configs, topic);
+		return overrideByCtripDefaultSetting(configs, topic, m_targetIdc.toLowerCase());
 	}
 
 	/**
@@ -65,12 +76,12 @@ public class KafkaMessageBrokerSender {
 	 * @param producerProp
 	 * @return
 	 */
-	private Properties overrideByCtripDefaultSetting(Properties producerProp, String topic) {
+	private Properties overrideByCtripDefaultSetting(Properties producerProp, String topic, String targetIdc) {
 		producerProp.put("value.serializer", ByteArraySerializer.class.getCanonicalName());
 		producerProp.put("key.serializer", StringSerializer.class.getCanonicalName());
 
 		if (!producerProp.containsKey("client.id")) {
-			producerProp.put("client.id", topic + "_" + Networks.forIp().getLocalHostAddress());
+			producerProp.put("client.id", topic + "_" + Networks.forIp().getLocalHostAddress() + "_" + targetIdc);
 		}
 		if (!producerProp.containsKey("linger.ms")) {
 			producerProp.put("linger.ms", 50);

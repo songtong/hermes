@@ -42,6 +42,12 @@
 					</div>
 				</div>
 			</div>
+			<div class="form-group">
+				<label class="col-md-4 control-label">机房策略</label>
+				<div class="col-md-6">
+					<select class="form-control" ng-model="view.idcPolicy" ng-options="policy for policy in idcPolicyList"></select>
+				</div>
+			</div>
 			<div ng-show="view.needCompress" class="form-group">
 				<label for="inputCodec" class="col-md-4 control-label">压缩方式</label>
 				<div class="col-md-6">

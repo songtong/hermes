@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.framework.apollo.Config;
+import com.ctrip.framework.apollo.ConfigService;
 import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
 import com.ctrip.hermes.admin.core.view.TopicView;
@@ -74,7 +76,7 @@ public class ApplicationResource {
 
 		// 检验重复
 		String topicName = String.format("%s.%s.%s", topicApplication.getProductLine(), topicApplication.getEntity(),
-				topicApplication.getEvent());
+		      topicApplication.getEvent());
 		if (topicService.findTopicEntityByName(topicName) != null) {
 			throw new RestException("Topic already exists.", Status.CONFLICT);
 		}
@@ -267,11 +269,11 @@ public class ApplicationResource {
 	@GET
 	@Path("{status}")
 	public Response getApplicationsByStatus(@PathParam("status") int status, @QueryParam("owner") String owner,
-			@QueryParam("offset") int offset, @QueryParam("size") int size) {
+	      @QueryParam("offset") int offset, @QueryParam("size") int size) {
 		List<HermesApplication> apps = appService.getApplicationsByOwnerStatus(owner, status, offset, size);
 		int count = appService.countApplicationsByOwnerStatus(owner, status);
-		return Response.status(Status.OK)
-				.entity(ResponseUtils.wrapPaginationResponse(Status.OK, apps.toArray(), count)).build();
+		return Response.status(Status.OK).entity(ResponseUtils.wrapPaginationResponse(Status.OK, apps.toArray(), count))
+		      .build();
 	}
 
 	@GET
@@ -288,7 +290,7 @@ public class ApplicationResource {
 		case CREATE_CONSUMER:
 			ConsumerGroupView consumerView = appService.generateConsumerView((ConsumerApplication) app);
 			return Response.status(Status.OK).entity(new Pair<HermesApplication, ConsumerGroupView>(app, consumerView))
-					.build();
+			      .build();
 		default:
 			throw new RestException("Generate view failed.");
 		}
@@ -312,7 +314,7 @@ public class ApplicationResource {
 		case CREATE_CONSUMER:
 			ConsumerGroupView consumerView = appService.generateConsumerView((ConsumerApplication) app);
 			return Response.status(Status.OK).entity(new Pair<HermesApplication, ConsumerGroupView>(app, consumerView))
-					.build();
+			      .build();
 		default:
 			throw new RestException("Generate view failed.");
 		}
@@ -345,7 +347,7 @@ public class ApplicationResource {
 	@PUT
 	@Path("reject/{id}")
 	public Response rejectApplication(@PathParam("id") long id, @QueryParam("comment") String comment,
-			@QueryParam("approver") String approver) {
+	      @QueryParam("approver") String approver) {
 		if (id < 0) {
 			throw new RestException("Application id unavailable");
 		}
@@ -377,7 +379,7 @@ public class ApplicationResource {
 	@PUT
 	@Path("pass/{id}")
 	public Response passApplication(@PathParam("id") long id, @QueryParam("comment") String comment,
-			@QueryParam("approver") String approver) {
+	      @QueryParam("approver") String approver) {
 		if (id < 0) {
 			throw new RestException("Application id unavailable");
 		}
@@ -393,14 +395,14 @@ public class ApplicationResource {
 		if (app == null) {
 			throw new RestException("Pass application failed!", Status.INTERNAL_SERVER_ERROR);
 		}
-		
+
 		return Response.status(Status.OK).entity(app).build();
 	}
 
 	@PUT
 	@Path("status/{id}")
 	public Response updateApplicationStatus(@PathParam("id") long id, @QueryParam("status") int status,
-			@QueryParam("comment") String comment, @QueryParam("approver") String approver, String polishedContent) {
+	      @QueryParam("comment") String comment, @QueryParam("approver") String approver, String polishedContent) {
 		if (id < 0) {
 			throw new RestException("Application id unavailable");
 		}
@@ -419,5 +421,16 @@ public class ApplicationResource {
 		}
 
 		return Response.status(Status.OK).entity(app).build();
+	}
+
+	@GET
+	@Path("fullDr/kafka/enabled")
+	public Response getKafkaFullDrEnabled() {
+		Config config = ConfigService.getAppConfig();
+		return Response
+		      .status(Status.OK)
+		      .entity(
+		            new Pair<String, Boolean>("kafka.fulldr.enabled", config.getBooleanProperty(
+		                  "portal.kafka.fulldr.enabled", true))).build();
 	}
 }

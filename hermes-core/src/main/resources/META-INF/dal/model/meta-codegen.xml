@@ -5,6 +5,7 @@
     <entity-ref name="topic" type="list" names="topics" />
     <entity-ref name="app" type="list" names="apps" />
     <entity-ref name="codec" type="list" names="codecs" />
+    <entity-ref name="idc-policy" type="list" names="idc-policies" />
     <entity-ref name="endpoint" type="list" names="endpoints" />
     <entity-ref name="idc" type="list" names="idcs" />
     <entity-ref name="server" type="list" names="servers" />
@@ -25,6 +26,7 @@
     <attribute name="ack-timeout-seconds" value-type="int" />
     <attribute name="priority-message-enabled" value-type="boolean" />
     <attribute name="broker-group" value-type="String" />
+    <attribute name="idc-policy" value-type="String" />
     <attribute name="codec-type" value-type="String" />
     <entity-ref name="consumer-group" type="list" names="consumer-groups" />
     <entity-ref name="producer" type="list" names="producers" />
@@ -39,6 +41,7 @@
     <attribute name="ack-timeout-seconds" value-type="int" />
     <attribute name="ordered-consume" value-type="boolean" />
     <attribute name="enabled" value-type="boolean" />
+    <attribute name="idc-policy" value-type="String" />
   </entity>
   <entity name="producer">
     <attribute name="app-id" value-type="int" />
@@ -59,6 +62,9 @@
   <entity name="codec">
     <attribute name="type" value-type="String" />
     <entity-ref name="property" type="list" names="properties" />
+  </entity>
+  <entity name="idc-policy">
+    <attribute name="type" value-type="String" />
   </entity>
   <entity name="endpoint">
     <attribute name="id" value-type="String" />

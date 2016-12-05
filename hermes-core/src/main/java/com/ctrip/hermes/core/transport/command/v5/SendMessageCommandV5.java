@@ -50,7 +50,7 @@ public class SendMessageCommandV5 extends AbstractCommand {
 	private transient Map<Integer, MessageBatchWithRawData> m_decodedBatches = new HashMap<Integer, MessageBatchWithRawData>();
 
 	private transient Map<Integer, SettableFuture<SendResult>> m_futures = new HashMap<Integer, SettableFuture<SendResult>>();
-	
+
 	private transient AtomicLong m_selectorOffset = new AtomicLong();
 
 	public SendMessageCommandV5() {
@@ -63,7 +63,7 @@ public class SendMessageCommandV5 extends AbstractCommand {
 		m_partition = partition;
 		m_timeout = timeout;
 	}
-	
+
 	public long getSelectorOffset() {
 		return m_selectorOffset.get();
 	}
@@ -227,7 +227,7 @@ public class SendMessageCommandV5 extends AbstractCommand {
 
 		ByteBuf rawData = buf.readSlice(payloadLen);
 
-		return new MessageBatchWithRawData(topic, msgSeqs, rawData);
+		return new MessageBatchWithRawData(topic, msgSeqs, rawData, null);
 
 	}
 

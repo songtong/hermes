@@ -30,6 +30,8 @@ public class ConsumerApplication extends HermesApplication {
 
 	private int m_retryInterval;
 
+	private boolean m_needMultiIdc;
+
 	private boolean m_enabled = true;
 
 	public String getTopicName() {
@@ -145,11 +147,19 @@ public class ConsumerApplication extends HermesApplication {
 	}
 
 	public boolean isEnabled() {
-	   return m_enabled;
-   }
+		return m_enabled;
+	}
 
 	public void setEnabled(boolean enabled) {
-	   this.m_enabled = enabled;
+		this.m_enabled = enabled;
+	}
+
+	public boolean isNeedMultiIdc() {
+	   return m_needMultiIdc;
+   }
+
+	public void setNeedMultiIdc(boolean needMultiIdc) {
+	   this.m_needMultiIdc = needMultiIdc;
    }
 
 	@Override
@@ -158,8 +168,8 @@ public class ConsumerApplication extends HermesApplication {
 	         + m_product + ", m_project=" + m_project + ", m_appName=" + m_appName + ", m_onlineEnv=" + m_onlineEnv
 	         + ", m_ownerName1=" + m_ownerName1 + ", m_ownerName2=" + m_ownerName2 + ", m_ownerPhone1=" + m_ownerPhone1
 	         + ", m_ownerPhone2=" + m_ownerPhone2 + ", m_ackTimeoutSeconds=" + m_ackTimeoutSeconds + ", m_needRetry="
-	         + m_needRetry + ", m_retryCount=" + m_retryCount + ", m_retryInterval=" + m_retryInterval + ", m_enabled="
-	         + m_enabled + "]";
+	         + m_needRetry + ", m_retryCount=" + m_retryCount + ", m_retryInterval=" + m_retryInterval
+	         + ", m_needMultiIdc=" + m_needMultiIdc + ", m_enabled=" + m_enabled + "]";
    }
 
 	

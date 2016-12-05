@@ -65,6 +65,12 @@
 							<div class="form-control-static" ng-bind="application.compressionLevel" editable-range="application.compressionLevel" e-form="applicationForm" e-name="compressionLevel" e-step="1" e-min="1" e-max="9"></div>
 						</div>
 					</div>
+						<div class="form-group" ng-show="(application.storageType=='kafka' && !applicationForm.$visible)||(applicationForm['$data']['storageType']=='kafka' && applicationForm.$visible)">
+						<label class="col-md-3 control-label">是否写主机房？</label>
+						<div class="col-md-6">
+							<div class="form-control-static" ng-bind="application.writePrimaryIdc" e-form="applicationForm" editable-select="application.writePrimaryIdc" e-name="writePrimaryIdc" e-ng-options="op for op in Ops"></div>
+						</div>
+					</div>
 					<div class="form-group">
 						<label class="col-md-3 control-label">消息上限（条/天）</label>
 						<div class="col-md-6">
@@ -162,7 +168,7 @@
 						<div class="form-group">
 							<label class="col-md-3 control-label">需要重发？</label>
 							<div class="col-md-6">
-								<div editable-radiolist="application.needRetry" e-name="needRetry" e-form="applicationForm" ng-bind="application.needRetry" e-ng-options="s.value as s.text for s in needRetryList" class="form-control-static"></div>
+								<div editable-radiolist="application.needRetry" e-name="needRetry" e-form="applicationForm" ng-bind="application.needRetry" e-ng-options="op for op in Ops" class="form-control-static"></div>
 							</div>
 						</div>
 						<div class="form-group" ng-if="(application.needRetry=='true' && !applicationForm.$visible)||(applicationForm['$data']['needRetry']=='true' && applicationForm.$visible)">
@@ -175,6 +181,12 @@
 							<label class="col-md-3 control-label">重发间隔（秒）</label>
 							<div class="col-md-6">
 								<div class="form-control-static" editable-text="application.retryInterval" e-name="retryInterval" e-form="applicationForm" ng-bind="application.retryInterval"></div>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">需要多机房容灾？</label>
+							<div class="col-md-6">
+								<div editable-radiolist="application.needMultiIdc" e-name="needMultiIdc" e-form="applicationForm" ng-bind="application.needMultiIdc" e-ng-options="s for s in Ops" class="form-control-static"></div>
 							</div>
 						</div>
 						<div class="form-group">

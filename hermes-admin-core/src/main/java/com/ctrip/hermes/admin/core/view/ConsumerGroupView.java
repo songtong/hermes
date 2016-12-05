@@ -25,6 +25,8 @@ public class ConsumerGroupView {
 
 	private boolean enabled = true;
 
+	private String idcPolicy;
+
 	public ConsumerGroupView() {
 	}
 
@@ -124,12 +126,21 @@ public class ConsumerGroupView {
 		this.enabled = enable;
 	}
 
-	@Override
-	public String toString() {
-		return "ConsumerGroupView [id=" + id + ", topicName=" + topicName + ", owner1=" + owner1 + ", owner2=" + owner2
-		      + ", phone1=" + phone1 + ", phone2=" + phone2 + ", name=" + name + ", appIds=" + appIds + ", retryPolicy="
-		      + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume=" + orderedConsume
-		      + ", enabled=" + enabled + "]";
-	}
+	public String getIdcPolicy() {
+	   return idcPolicy;
+   }
 
+	public void setIdcPolicy(String idcPolicy) {
+	   this.idcPolicy = idcPolicy;
+   }
+
+	@Override
+   public String toString() {
+	   return "ConsumerGroupView [id=" + id + ", topicName=" + topicName + ", owner1=" + owner1 + ", owner2=" + owner2
+	         + ", phone1=" + phone1 + ", phone2=" + phone2 + ", name=" + name + ", appIds=" + appIds + ", retryPolicy="
+	         + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume=" + orderedConsume
+	         + ", enabled=" + enabled + ", idcPolicy=" + idcPolicy + "]";
+   }
+
+	
 }

@@ -1,12 +1,10 @@
 package com.ctrip.hermes.broker.queue.storage.kafka;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
@@ -26,6 +24,9 @@ import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.meta.entity.Storage;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 @Named(type = MessageQueueStorage.class, value = Storage.KAFKA)
 public class KafkaMessageQueueStorage implements MessageQueueStorage {
 
@@ -36,15 +37,19 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 	private MessageCodec m_messageCodec;
 
 	// TODO housekeeping
-	private Map<String, KafkaMessageBrokerSender> m_senders = new HashMap<>();
+	private ConcurrentMap<Pair<String, String>, KafkaMessageBrokerSender> m_senders = new ConcurrentHashMap<>();
 
 	@Override
 	public void appendMessages(String topic, int partition, boolean priority, Collection<MessageBatchWithRawData> batches)
 	      throws Exception {
+		if (batches.isEmpty()) {
+			return;
+		}
+
 		ByteBuf bodyBuf = Unpooled.buffer();
-		KafkaMessageBrokerSender sender = getSender(topic);
 		try {
 			for (MessageBatchWithRawData batch : batches) {
+				KafkaMessageBrokerSender sender = getSender(topic, batch.getTargetIdc());
 				List<PartialDecodedMessage> pdmsgs = batch.getMessages();
 				for (PartialDecodedMessage pdmsg : pdmsgs) {
 					m_messageCodec.encodePartial(pdmsg, bodyBuf);
@@ -94,16 +99,16 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 
 	}
 
-	private KafkaMessageBrokerSender getSender(String topic) {
-		if (!m_senders.containsKey(topic)) {
-			synchronized (m_senders) {
-				if (!m_senders.containsKey(topic)) {
-					m_senders.put(topic, new KafkaMessageBrokerSender(topic, m_metaService));
-				}
-			}
+	private KafkaMessageBrokerSender getSender(String topic, String targetIdc) {
+		Pair<String, String> topicIdcPair = new Pair<String, String>(topic, targetIdc);
+		KafkaMessageBrokerSender sender = m_senders.get(topicIdcPair);
+
+		if (sender == null) {
+			m_senders.putIfAbsent(topicIdcPair, new KafkaMessageBrokerSender(topic, m_metaService, targetIdc));
+			sender = m_senders.get(topicIdcPair);
 		}
 
-		return m_senders.get(topic);
+		return sender;
 	}
 
 	@Override

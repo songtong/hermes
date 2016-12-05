@@ -101,6 +101,8 @@ consumer_module.run(function(editableOptions) {
 		}
 	});
 
+	
+
 	scope.add_receiver = function() {
 		scope.currentConsumerMonitorReceivers.push({
 			"phone" : "",
@@ -122,8 +124,12 @@ consumer_module.run(function(editableOptions) {
 	scope.logined = user.admin;
 
 	scope.newConsumer = {
-		orderedConsume : true
+		orderedConsume : true,
+		retryPolicy : '3:[3,3000]',
+		idcPolicy : 'local'
 	};
+	
+	scope.idcPolicies = [ 'local', 'primary' ];
 
 	scope.newTopicNames = "";
 
@@ -151,6 +157,8 @@ consumer_module.run(function(editableOptions) {
 	scope.queueType = 'nonPriority';
 
 	scope.ops = [ true, false ];
+
+	scope.idcPolicies = [ 'local', 'primary' ];
 
 	meta_resource.get_topic_names({}, function(result) {
 		var result = new Bloodhound({
@@ -254,7 +262,7 @@ consumer_module.run(function(editableOptions) {
 	}
 
 	scope.addConsumer = function(newConsumer) {
-		var topics = scope.newTopicNames.split(",");
+		 var topics = scope.newTopicNames.split(",");
 		for (var i = 0; i < topics.length; i++) {
 			var consumer = clone(newConsumer);
 			consumer.topicName = topics[i];
@@ -269,7 +277,7 @@ consumer_module.run(function(editableOptions) {
 					show_op_info.show("新增 consumer " + consumer.name + " for topics (" + consumer.topicName + ") 失败! " + result.data, false);
 				});
 			})(consumer);
-		}
+		 }
 	};
 
 	scope.update_consumer = function update_consumer(data, topicName, name) {
