@@ -124,7 +124,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Ini
 		super.doStop(consumerContext);
 	}
 
-	private void reStart(ConsumerContext consumerContext) {
+	private void restart(ConsumerContext consumerContext) {
 		doStop(consumerContext);
 		doStart(consumerContext);
 	}
@@ -306,7 +306,7 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Ini
 						            .equals(currentBootstrapServersProperty))) {
 							      synchronized (consumers) {
 								      if (consumers.containsKey(entry.getKey())) {
-									      reStart(entry.getKey());
+									      restart(entry.getKey());
 								      }
 							      }
 						      }
