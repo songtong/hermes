@@ -94,9 +94,6 @@ public class BrokerCommandDropCollectorJob extends CollectorJob {
 								m_succeeds.incrementAndGet();
 								success(newContext);
 								if (newContext.commitable()) {
-									for (State state : newContext.getStates()) {
-										((CommandDropState)state).setHost(endpoint.getHost());
-									}
 									states.addAll(newContext.getStates());
 								}
 							} else {
@@ -112,7 +109,7 @@ public class BrokerCommandDropCollectorJob extends CollectorJob {
 			}
 			
 			latch.await(5, TimeUnit.MINUTES);
-			if (m_succeeds.get() > (1 + endpoints.size()) / 2) {
+			if (m_succeeds.get() >= (1 + endpoints.size()) / 2) {
 				context.setStates(states);
 				context.setSucceed(true);
 			} else {
