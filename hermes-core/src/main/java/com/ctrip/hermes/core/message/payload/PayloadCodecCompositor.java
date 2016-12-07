@@ -2,7 +2,7 @@ package com.ctrip.hermes.core.message.payload;
 
 import java.util.ArrayList;
 
-public class PayloadCodecCompositor extends AbstractPayloadCodec {
+public class PayloadCodecCompositor implements PayloadCodec {
 
 	private ArrayList<PayloadCodec> m_codecs = new ArrayList<>();
 
@@ -19,7 +19,7 @@ public class PayloadCodecCompositor extends AbstractPayloadCodec {
 	}
 
 	@Override
-	public byte[] doEncode(String topic, Object obj) {
+	public byte[] encode(String topic, Object obj) {
 		Object input = obj;
 
 		for (PayloadCodec codec : m_codecs) {
@@ -30,7 +30,7 @@ public class PayloadCodecCompositor extends AbstractPayloadCodec {
 	}
 
 	@Override
-	public <T> T doDecode(byte[] raw, Class<T> clazz) {
+	public <T> T decode(byte[] raw, Class<T> clazz) {
 		byte[] input = raw;
 		T result = null;
 
