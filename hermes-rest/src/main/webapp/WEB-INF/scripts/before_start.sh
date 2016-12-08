@@ -9,6 +9,9 @@ SCRIPT_DIR=$(dirname $SCRIPT_PATH)
 # Define app id.
 APP_ID=100003807
 
+# Define app dir.
+APP_DIR=$(realpath $SCRIPT_DIR/../../../..)
+
 # Define hermes dir.
 CONFIG_DIR=/opt/data/hermes
 
@@ -53,4 +56,23 @@ cp $SOURCE_DIR/env.sh $SCRIPT_DIR/extraenv.sh
 # Distribute list of config files.
 cp $SOURCE_DIR/$ENV/datasources.xml $CONFIG_DIR/datasources.xml
 
+if [[ ! -e $APP_DIR/logagent/logagent-linux-x64-105ebb9 ]]; then
+	cp $CONFIG_DIR/hermes-config/utils/logagent-linux-x64-105ebb9 $APP_DIR/logagent/
+	chmod +x $APP_DIR/logagent/logagent-linux-x64-105ebb9
+fi
+
+if [[ ! -e $APP_DIR/logagent/forwarder.json ]]; then
+	cp $CONFIG_DIR/hermes-config/utils/$ENV/forwarder.json $APP_DIR/logagent/
+elif [[ -n `diff $APP_DIR/logagent/forwarder.json $CONFIG_DIR/hermes-config/utils/$ENV/forwarder.json` ]]; then
+	PID=$(ps ax | grep logagent | awk '$(NF) ~ /logagent\/forwarder.json$/{print $1}' | head -n1) 
+	if [[ -n $PID ]]; then
+		kill -9 $PID
+	fi
+	cp $CONFIG_DIR/hermes-config/utils/$ENV/forwarder.json $APP_DIR/logagent/
+fi
+
+PID=$(ps ax | grep logagent | awk '$(NF) ~ /logagent\/forwarder.json$/{print $1}' | head -n1) 
+if [[ -z $PID ]]; then
+	nohup $APP_DIR/logagent/logagent-linux-x64-105ebb9 -config $APP_DIR/logagent/forwarder.json >/dev/null 2>&1 &
+fi
 
