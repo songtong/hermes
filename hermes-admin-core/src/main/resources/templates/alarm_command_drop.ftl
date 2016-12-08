@@ -15,6 +15,7 @@
 				</tr>
 			</thead>
 			<tbody>
+				<#if events??>
 				<#list events as event>
 				<tr>
 					<td align="left"><a href="http://cat.ctripcorp.com/cat/r/e?domain=100003804&date=${event.date?date('yyyy-MM-dd HH:mm:ss')?string('yyyyMMddHH')}&ip=${event.host}&type=Hermes.Command.Drop">${event.host}</a></td>
@@ -23,6 +24,7 @@
 					<td align="left">${event.count}</td>
 				</tr>
 				</#list>
+				</#if>
 			</tbody>
 		</table>
 	</div>

@@ -1,10 +1,10 @@
 package com.ctrip.hermes.collector.state.impl;
 
-import java.util.List;
-
 import com.ctrip.hermes.collector.state.State;
 
 public class CommandDropState extends State {
+	public static String ID_FORMAT = "%s-%s-%d";
+	
     private String m_commandType;
     
     private short m_minute;
@@ -13,20 +13,13 @@ public class CommandDropState extends State {
     
     private String m_host;
     
-    public CommandDropState(String commandType, short minute, long count) {
+    public CommandDropState(String commandType, short minute, long count, String host) {
         this.m_commandType = commandType;
         this.m_minute = minute;
         this.m_count = count;
+        this.m_host = host;
     }
     
-    public short getMinute() {
-        return m_minute;
-    }
-
-    public void setMinute(short minute) {
-        m_minute = minute;
-    }
-
     public String getCommandType() {
         return m_commandType;
     }
@@ -35,7 +28,15 @@ public class CommandDropState extends State {
         m_commandType = commandType;
     }
 
-    public long getCount() {
+    public short getMinute() {
+		return m_minute;
+	}
+
+	public void setMinute(short minute) {
+		m_minute = minute;
+	}
+
+	public long getCount() {
         return m_count;
     }
 
@@ -59,8 +60,7 @@ public class CommandDropState extends State {
 
     @Override
     protected Object generateId() {
-        // TODO Auto-generated method stub
-        return null;
+        return String.format(ID_FORMAT, m_commandType, m_host, System.currentTimeMillis());
     }
 
 }

@@ -17,7 +17,7 @@
 				<#list events as event>
 				<tr>
 					<#assign from = event.createTime?long - 300000>
-					<td align="left"><a href="http://es.ops.ctripcorp.com/k4/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:'${from?number_to_datetime?datetime?iso_utc}',mode:absolute,to:'${event.createTime?datetime?iso_utc}'))&_a=(columns:!(_source),filters:!(),index:%5Bhermes-log-%5DYYYY.MM.DD,interval:auto,query:(query_string:(analyze_wildcard:!t,query:'hostname:${event.host}')),sort:!('@timestamp',desc),vis:(aggs:!((params:(field:hostname,orderBy:'2',size:20),schema:segment,type:terms),(id:'2',schema:metric,type:count)),type:histogram))&indexPattern=%5Bhermes-log-%5DYYYY.MM.DD&type=histogram">${event.host}</a></td>
+					<td align="left"><a href="http://k5.es.ops.ctripcorp.com/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:'${from?number_to_datetime?datetime?iso_utc}',mode:absolute,to:'${event.createTime?datetime?iso_utc}'))&_a=(columns:!(_source),index:'hermes-log-*',interval:auto,query:(query_string:(analyze_wildcard:!t,query:'hostname:${event.host}')),sort:!('@timestamp',desc))">${event.host}</a></td>
 					<td align="left">${event.errorCount}</td>
 				</tr>
 				</#list>

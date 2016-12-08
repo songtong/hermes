@@ -65,7 +65,7 @@ public class BrokerCommandDropEvent extends BaseMonitorEvent {
         e.setKey1(m_command);
         e.setKey2(String.valueOf(m_count));
         e.setKey3(m_date);
-        e.setMessage(String.format("*Broker command drop type: %s, count: %d, date: %d", m_command, m_count, m_date));
+        e.setMessage(String.format("*Broker command drop type: %s, count: %d, date: %s", m_command, m_count, m_date));
     }
 
 }

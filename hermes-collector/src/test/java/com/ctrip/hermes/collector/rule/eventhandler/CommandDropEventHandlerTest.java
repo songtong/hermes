@@ -26,8 +26,7 @@ public class CommandDropEventHandlerTest {
 	public void testHandler() throws IOException {
 		int count = 3;
 		while (count > 0) {
-		    CommandDropState state = new CommandDropState("Send.Cmd.V1", (short)1, 1);
-		    state.setHost("host");
+		    CommandDropState state = new CommandDropState("Send.Cmd.V1", (short)1, 1, "host");
 		    state.setTimestamp(System.currentTimeMillis());
 			state.addObserver(m_rulesEngine);
 			state.notifyObservers();

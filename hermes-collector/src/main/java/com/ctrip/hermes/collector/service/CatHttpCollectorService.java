@@ -36,7 +36,12 @@ public class CatHttpCollectorService {
         }
         
         XPath xPath = XPathFactory.newInstance().newXPath();
-        String allEventsExpression = "/event/report[@domain='All']/machine[@ip='All']/type[@id='"
+        String allMachineExpression = "/event/report/machine";
+        NodeList machineNodes = (NodeList) xPath.compile(allMachineExpression).evaluate(record.getData(), 
+        		XPathConstants.NODESET);
+        String host = machineNodes.item(0).getAttributes().getNamedItem("ip").getNodeValue();
+        
+        String allEventsExpression = "/event/report/machine/type[@id='"
               + CatConstants.TYPE_CMD_DROP + "']/name";
 
         NodeList eventNodes = (NodeList) xPath.compile(allEventsExpression).evaluate(record.getData(),
@@ -46,12 +51,12 @@ public class CatHttpCollectorService {
         
         for (int i = 0; i < eventNodes.getLength(); i++) {
             Node eventNode = eventNodes.item(i);
+            String commandType = eventNode.getAttributes().getNamedItem("id").getNodeValue();
             String countStr = eventNode.getAttributes().getNamedItem("totalCount").getNodeValue();
-            if (countStr.equals("0")) {
+            if (countStr.equals("0") || commandType.equalsIgnoreCase("All")) {
                 continue;
             }
             
-            String commandType = eventNode.getAttributes().getNamedItem("id").getNodeValue();
             String allRangesExpression = "range";
 
             NodeList rangeNodes = (NodeList) xPath.compile(allRangesExpression).evaluate(eventNode,
@@ -70,7 +75,7 @@ public class CatHttpCollectorService {
                 }
                 
                 String minuteStr = rangeNode.getAttributes().getNamedItem("value").getNodeValue();
-                CommandDropState state = new CommandDropState(commandType, Short.parseShort(minuteStr), Long.parseLong(countStr));
+                CommandDropState state = new CommandDropState(commandType, Short.parseShort(minuteStr), Long.parseLong(countStr), host);
                 state.setIndex(IndexUtils.getDataStoredIndex(RecordType.COMANND_DROP.getCategory().getName(), false));
                 state.setTimestamp(record.getTimestamp());
                 states.add(state);
