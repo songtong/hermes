@@ -2,14 +2,13 @@ package com.ctrip.hermes.core.message.codec;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.unidal.tuple.Pair;
 
@@ -18,9 +17,15 @@ import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
+import com.ctrip.hermes.core.message.payload.GZipPayloadCodec;
 import com.ctrip.hermes.core.message.payload.JsonPayloadCodec;
+import com.ctrip.hermes.core.message.payload.PayloadCodecCompositor;
+import com.ctrip.hermes.core.message.payload.RawMessage;
 import com.ctrip.hermes.core.transport.netty.Magic;
 import com.ctrip.hermes.meta.entity.Codec;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -29,11 +34,24 @@ import com.ctrip.hermes.meta.entity.Codec;
 public class DefaultMessageCodecTest extends HermesCoreBaseTest {
 
 	@Test
+	public void test() {
+		byte[] bytes = "123".getBytes();
+
+		PayloadCodecCompositor codec = new PayloadCodecCompositor("json,gzip");
+		codec.addPayloadCodec(new JsonPayloadCodec());
+		codec.addPayloadCodec(new GZipPayloadCodec());
+
+		byte[] encodedBytes = codec.encode("", new RawMessage(bytes));
+
+		Assert.assertEquals("123", codec.decode(encodedBytes, String.class));
+	}
+
+	@Test
 	public void testEncodeWithProducerMsgAndPartialDecodeWithStringBody() throws Exception {
 		long bornTime = System.currentTimeMillis();
-		ProducerMessage<String> msg = createProducerMessage("topic", "body", "key", 10, 10, "pKey", bornTime, true, true,
-		      Arrays.asList(new Pair<String, String>("a", "A")), Arrays.asList(new Pair<String, String>("b", "B")),
-		      Arrays.asList(new Pair<String, String>("c", "C")));
+		ProducerMessage<String> msg = createProducerMessage("topic", "body", "key", 10, 10, "pKey", bornTime, true,
+				true, Arrays.asList(new Pair<String, String>("a", "A")),
+				Arrays.asList(new Pair<String, String>("b", "B")), Arrays.asList(new Pair<String, String>("c", "C")));
 
 		DefaultMessageCodec codec = new DefaultMessageCodec();
 
@@ -45,16 +63,18 @@ public class DefaultMessageCodecTest extends HermesCoreBaseTest {
 		assertEquals(Codec.JSON, pmsg.getBodyCodecType());
 		assertEquals(msg.getKey(), pmsg.getKey());
 		assertEquals(msg.getBody(), new JsonPayloadCodec().decode(pmsg.readBody(), String.class));
-		assertProeprties(readProperties(pmsg.getDurableProperties()), Arrays.asList(new Pair<String, String>(
-		      PropertiesHolder.APP + "a", "A"), new Pair<String, String>(PropertiesHolder.SYS + "b", "B")));
-		assertProeprties(readProperties(pmsg.getVolatileProperties()), Arrays.asList(new Pair<String, String>("c", "C")));
+		assertProeprties(readProperties(pmsg.getDurableProperties()),
+				Arrays.asList(new Pair<String, String>(PropertiesHolder.APP + "a", "A"),
+						new Pair<String, String>(PropertiesHolder.SYS + "b", "B")));
+		assertProeprties(readProperties(pmsg.getVolatileProperties()),
+				Arrays.asList(new Pair<String, String>("c", "C")));
 	}
 
 	@Test
 	public void testEncodeWithProducerMsgAndPartialDecodeWithStringBodyAndNullProperties() throws Exception {
 		long bornTime = System.currentTimeMillis();
-		ProducerMessage<String> msg = createProducerMessage("topic", "body", "key", 10, 10, "pKey", bornTime, true, true,
-		      null, null, null);
+		ProducerMessage<String> msg = createProducerMessage("topic", "body", "key", 10, 10, "pKey", bornTime, true,
+				true, null, null, null);
 
 		DefaultMessageCodec codec = new DefaultMessageCodec();
 
@@ -67,16 +87,16 @@ public class DefaultMessageCodecTest extends HermesCoreBaseTest {
 		assertEquals(msg.getKey(), pmsg.getKey());
 		assertEquals(msg.getBody(), new JsonPayloadCodec().decode(pmsg.readBody(), String.class));
 
-		assertProeprties(readProperties(pmsg.getDurableProperties()), Collections.<Pair<String, String>> emptyList());
-		assertProeprties(readProperties(pmsg.getVolatileProperties()), Collections.<Pair<String, String>> emptyList());
+		assertProeprties(readProperties(pmsg.getDurableProperties()), Collections.<Pair<String, String>>emptyList());
+		assertProeprties(readProperties(pmsg.getVolatileProperties()), Collections.<Pair<String, String>>emptyList());
 	}
 
 	@Test
 	public void testEncodeWithBufAndPartialDecodeWithStringBody() throws Exception {
 		long bornTime = System.currentTimeMillis();
-		ProducerMessage<String> msg = createProducerMessage("topic", "body", "key", 10, 10, "pKey", bornTime, true, true,
-		      Arrays.asList(new Pair<String, String>("a", "A")), Arrays.asList(new Pair<String, String>("b", "B")),
-		      Arrays.asList(new Pair<String, String>("c", "C")));
+		ProducerMessage<String> msg = createProducerMessage("topic", "body", "key", 10, 10, "pKey", bornTime, true,
+				true, Arrays.asList(new Pair<String, String>("a", "A")),
+				Arrays.asList(new Pair<String, String>("b", "B")), Arrays.asList(new Pair<String, String>("c", "C")));
 
 		DefaultMessageCodec codec = new DefaultMessageCodec();
 
@@ -90,9 +110,11 @@ public class DefaultMessageCodecTest extends HermesCoreBaseTest {
 		assertEquals(Codec.JSON, pmsg.getBodyCodecType());
 		assertEquals(msg.getKey(), pmsg.getKey());
 		assertEquals(msg.getBody(), new JsonPayloadCodec().decode(pmsg.readBody(), String.class));
-		assertProeprties(readProperties(pmsg.getDurableProperties()), Arrays.asList(new Pair<String, String>(
-		      PropertiesHolder.APP + "a", "A"), new Pair<String, String>(PropertiesHolder.SYS + "b", "B")));
-		assertProeprties(readProperties(pmsg.getVolatileProperties()), Arrays.asList(new Pair<String, String>("c", "C")));
+		assertProeprties(readProperties(pmsg.getDurableProperties()),
+				Arrays.asList(new Pair<String, String>(PropertiesHolder.APP + "a", "A"),
+						new Pair<String, String>(PropertiesHolder.SYS + "b", "B")));
+		assertProeprties(readProperties(pmsg.getVolatileProperties()),
+				Arrays.asList(new Pair<String, String>("c", "C")));
 	}
 
 	@Test
@@ -106,7 +128,7 @@ public class DefaultMessageCodecTest extends HermesCoreBaseTest {
 		pmsg.setBody(Unpooled.wrappedBuffer(new JsonPayloadCodec().encode("topic", "hello")));
 		ByteBuf durablePropsBuf = Unpooled.buffer();
 		writeProperties(Arrays.asList(new Pair<String, String>("a", "A"), new Pair<String, String>("b", "B")),
-		      durablePropsBuf);
+				durablePropsBuf);
 		pmsg.setDurableProperties(durablePropsBuf);
 		ByteBuf volatilePropsBuf = Unpooled.buffer();
 		writeProperties(Arrays.asList(new Pair<String, String>("c", "C")), volatilePropsBuf);
@@ -124,9 +146,9 @@ public class DefaultMessageCodecTest extends HermesCoreBaseTest {
 		assertEquals("topic", cmsg.getTopic());
 
 		assertProeprties(cmsg.getPropertiesHolder().getDurableProperties(),
-		      Arrays.asList(new Pair<String, String>("a", "A"), new Pair<String, String>("b", "B")));
+				Arrays.asList(new Pair<String, String>("a", "A"), new Pair<String, String>("b", "B")));
 		assertProeprties(cmsg.getPropertiesHolder().getVolatileProperties(),
-		      Arrays.asList(new Pair<String, String>("c", "C")));
+				Arrays.asList(new Pair<String, String>("c", "C")));
 	}
 
 	@Test
@@ -153,17 +175,17 @@ public class DefaultMessageCodecTest extends HermesCoreBaseTest {
 		assertEquals("topic", cmsg.getTopic());
 
 		assertProeprties(cmsg.getPropertiesHolder().getDurableProperties(),
-		      Collections.<Pair<String, String>> emptyList());
+				Collections.<Pair<String, String>>emptyList());
 		assertProeprties(cmsg.getPropertiesHolder().getVolatileProperties(),
-		      Collections.<Pair<String, String>> emptyList());
+				Collections.<Pair<String, String>>emptyList());
 	}
 
 	@Test
 	public void testEncodeAndDecodeWithStringBody() throws Exception {
 		long bornTime = System.currentTimeMillis();
-		ProducerMessage<String> msg = createProducerMessage("topic", "body", "key", 10, 10, "pKey", bornTime, true, true,
-		      Arrays.asList(new Pair<String, String>("a", "A")), Arrays.asList(new Pair<String, String>("b", "B")),
-		      Arrays.asList(new Pair<String, String>("c", "C")));
+		ProducerMessage<String> msg = createProducerMessage("topic", "body", "key", 10, 10, "pKey", bornTime, true,
+				true, Arrays.asList(new Pair<String, String>("a", "A")),
+				Arrays.asList(new Pair<String, String>("b", "B")), Arrays.asList(new Pair<String, String>("c", "C")));
 
 		DefaultMessageCodec codec = new DefaultMessageCodec();
 
@@ -176,10 +198,11 @@ public class DefaultMessageCodecTest extends HermesCoreBaseTest {
 		assertEquals("key", cmsg.getRefKey());
 		assertEquals("topic", cmsg.getTopic());
 
-		assertProeprties(cmsg.getPropertiesHolder().getDurableProperties(), Arrays.asList(new Pair<String, String>(
-		      PropertiesHolder.APP + "a", "A"), new Pair<String, String>(PropertiesHolder.SYS + "b", "B")));
+		assertProeprties(cmsg.getPropertiesHolder().getDurableProperties(),
+				Arrays.asList(new Pair<String, String>(PropertiesHolder.APP + "a", "A"),
+						new Pair<String, String>(PropertiesHolder.SYS + "b", "B")));
 		assertProeprties(cmsg.getPropertiesHolder().getVolatileProperties(),
-		      Arrays.asList(new Pair<String, String>("c", "C")));
+				Arrays.asList(new Pair<String, String>("c", "C")));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -214,9 +237,9 @@ public class DefaultMessageCodecTest extends HermesCoreBaseTest {
 	}
 
 	private ProducerMessage<String> createProducerMessage(String topic, String body, String key, int seq, int partition,
-	      String partitionKey, long bornTime, boolean isPriority, boolean withHeader,
-	      List<Pair<String, String>> appProperites, List<Pair<String, String>> sysProperites,
-	      List<Pair<String, String>> volatileProperites) {
+			String partitionKey, long bornTime, boolean isPriority, boolean withHeader,
+			List<Pair<String, String>> appProperites, List<Pair<String, String>> sysProperites,
+			List<Pair<String, String>> volatileProperites) {
 		ProducerMessage<String> msg = new ProducerMessage<String>(topic, body);
 		msg.setBornTime(bornTime);
 		msg.setKey(key);
