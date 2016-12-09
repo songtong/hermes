@@ -28,7 +28,7 @@ public class MetaMerger {
 		try {
 			newMeta = DefaultSaxParser.parse(base.toString());
 		} catch (Exception e) {
-			throw new RuntimeException("Error parse Meta xml");
+			throw new RuntimeException("Error parse Meta xml", e);
 		}
 
 		if (CollectionUtil.isNotEmpty(newServers)) {
