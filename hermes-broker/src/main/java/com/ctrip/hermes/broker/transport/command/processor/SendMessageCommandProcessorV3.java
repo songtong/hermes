@@ -214,8 +214,6 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 		}
 
 		private void logElapse() {
-			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE, m_topic + "-" + m_partition, m_start,
-			      m_result.getSuccesses().size(), null, Transaction.SUCCESS);
 			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_DB + findDb(m_topic, m_partition), m_topic,
 			      m_start, m_result.getSuccesses().size(), null, Transaction.SUCCESS);
 		}
