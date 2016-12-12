@@ -126,7 +126,7 @@ public class TopicDeployService {
 						m_logger.warn("Unknown idc for zk ({}:{})", zkConnect.getKey(), zkConnect.getValue());
 						continue;
 					}
-					
+
 					zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
 					zkClient.setZkSerializer(new ZKStringSerializer());
 					ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
@@ -134,11 +134,7 @@ public class TopicDeployService {
 					String portalKafkaDeployConfig = config.getProperty(
 					      String.format("%s.%s", APOLLO_KAFKA_DEPLOY_PROPERTY_PREFIX, idc), null);
 
-					if (StringUtils.isBlank(portalKafkaDeployConfig)) {
-						m_logger.info("Create topic in zk cluster {}, topic {}, partition {}, replication {}, prop {}",
-						      zkConnect.getKey(), topic.getName(), partition, replication, topicProp);
-						AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
-					} else {
+					if (!StringUtils.isBlank(portalKafkaDeployConfig)) {
 						List<Object> brokerList = new ArrayList<>();
 						JSONObject kafkaDepolyConfigs = JSON.parseObject(portalKafkaDeployConfig, JSONObject.class);
 						for (String key : kafkaDepolyConfigs.keySet()) {
@@ -146,6 +142,7 @@ public class TopicDeployService {
 								for (Object kafka : kafkaDepolyConfigs.getJSONArray(key)) {
 									brokerList.add(kafka);
 								}
+								break;
 							}
 						}
 
@@ -158,11 +155,7 @@ public class TopicDeployService {
 							}
 						}
 
-						if (brokerList.isEmpty()) {
-							m_logger.info("Create topic in zk cluster {}, topic {}, partition {}, replication {}, prop {}",
-							      zkConnect.getKey(), topic.getName(), partition, replication, topicProp);
-							AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
-						} else {
+						if (!brokerList.isEmpty()) {
 							m_logger.info(
 							      "Create topic in zk cluster {}, kafka {}, topic {}, partition {}, replication {}, prop {}",
 							      zkConnect.getKey(), brokerList, topic.getName(), partition, replication, topicProp);
@@ -171,8 +164,12 @@ public class TopicDeployService {
 							AdminUtils.createOrUpdateTopicPartitionAssignmentPathInZK(zkUtils, topic.getName(), assignments,
 							      topicProp, false);
 						}
-
+						return;
 					}
+
+					m_logger.info("Create topic in zk cluster {}, topic {}, partition {}, replication {}, prop {}",
+					      zkConnect.getKey(), topic.getName(), partition, replication, topicProp);
+					AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
 
 				} finally {
 					if (zkClient != null) {
