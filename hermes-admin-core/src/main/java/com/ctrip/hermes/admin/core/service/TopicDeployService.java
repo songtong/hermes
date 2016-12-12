@@ -22,6 +22,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.ctrip.framework.apollo.Config;
 import com.ctrip.framework.apollo.ConfigService;
 import com.ctrip.hermes.admin.core.view.TopicView;
+import com.ctrip.hermes.core.kafka.KafkaConstants;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Property;
 
@@ -120,7 +121,12 @@ public class TopicDeployService {
 			for (Entry<String, String> zkConnect : zkConnects.entrySet()) {
 				ZkClient zkClient = null;
 				try {
-					String idc = zkConnect.getKey().split("\\.")[2];
+					String idc = zkConnect.getKey().substring(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME.length());
+					if (StringUtils.isBlank(idc)) {
+						m_logger.warn("Unknown idc for zk ({}:{})", zkConnect.getKey(), zkConnect.getValue());
+						continue;
+					}
+					
 					zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
 					zkClient.setZkSerializer(new ZKStringSerializer());
 					ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
