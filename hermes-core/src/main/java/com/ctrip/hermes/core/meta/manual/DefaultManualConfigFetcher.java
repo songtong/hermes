@@ -90,7 +90,8 @@ public class DefaultManualConfigFetcher implements ManualConfigFetcher {
 
 	private List<Endpoint> convertToEndpoints(String brokers) {
 		try {
-			List<String> ipPortStrList = JSON.parseObject(brokers, TypeReference.LIST_STRING);
+			List<String> ipPortStrList = JSON.parseObject(brokers, new TypeReference<List<String>>() {
+			});
 			if (ipPortStrList != null && !ipPortStrList.isEmpty()) {
 				List<Endpoint> endpoints = new ArrayList<>();
 				for (String ipPortStr : ipPortStrList) {

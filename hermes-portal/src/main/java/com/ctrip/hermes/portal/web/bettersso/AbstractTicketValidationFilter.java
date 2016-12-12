@@ -1,0 +1,286 @@
+/*
+ * Copyright 2007 The JA-SIG Collaborative. All rights reserved. See license
+ * distributed with this file and available online at
+ * http://www.ja-sig.org/products/cas/overview/license/index.html
+ */
+package com.ctrip.hermes.portal.web.bettersso;
+import credis.java.client.CacheProvider;
+import credis.java.client.util.CacheFactory;
+import org.jasig.cas.client.util.AbstractCasFilter;
+import org.jasig.cas.client.util.CommonUtils;
+import org.jasig.cas.client.validation.Assertion;
+import org.jasig.cas.client.validation.TicketValidationException;
+import org.jasig.cas.client.validation.TicketValidator;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Constructor;
+import java.util.UUID;
+
+/**
+ * The filter that handles all the work of validating ticket requests.
+ * <p>
+ * This filter can be configured with the following values:
+ * <ul>
+ * <li><code>redirectAfterValidation</code> - redirect the CAS client to the same URL without the ticket.</li>
+ * <li><code>exceptionOnValidationFailure</code> - throw an exception if the validation fails.  Otherwise, continue
+ *  processing.</li>
+ * <li><code>useSession</code> - store any of the useful information in a session attribute.</li>
+ * </ul>
+ *
+ * @author Scott Battaglia
+ * @version $Revision$ $Date$
+ * @since 3.1
+ */
+public abstract class AbstractTicketValidationFilter extends AbstractCasFilter {
+
+    /** The TicketValidator we will use to validate tickets. */
+    private TicketValidator ticketValidator;
+
+    /**
+     * Specify whether the filter should redirect the user agent after a
+     * successful validation to remove the ticket parameter from the query
+     * string.
+     */
+    private boolean redirectAfterValidation = false;
+
+    /** Determines whether an exception is thrown when there is a ticket validation failure. */
+    private boolean exceptionOnValidationFailure = true;
+
+    private boolean useSession = true;
+
+    private boolean useRedis = true;
+    /**
+     * 用来存储用户认证信息.
+     */
+    private CacheProvider provider =null;
+
+    /**
+     * Template method to return the appropriate validator.
+     *
+     * @param filterConfig the FilterConfiguration that may be needed to construct a validator.
+     * @return the ticket validator.
+     */
+    protected TicketValidator getTicketValidator(final FilterConfig filterConfig) {
+        return this.ticketValidator;
+    }
+   
+    /**
+     * Gets the configured {@link HostnameVerifier} to use for HTTPS connections
+     * if one is configured for this filter.
+     * @param filterConfig Servlet filter configuration.
+     * @return Instance of specified host name verifier or null if none specified.
+     */
+    protected HostnameVerifier getHostnameVerifier(final FilterConfig filterConfig) {
+        final String className = getPropertyFromInitParams(filterConfig, "hostnameVerifier", null);
+        log.trace("Using hostnameVerifier parameter: " + className);
+        final String config = getPropertyFromInitParams(filterConfig, "hostnameVerifierConfig", null);
+        log.trace("Using hostnameVerifierConfig parameter: " + config);
+        HostnameVerifier verifier = null;
+        if (className != null) {
+            try {
+                final Class verifierClass = Class.forName(className);
+                if (config != null) {
+                    final Constructor cons = verifierClass.getConstructor(new Class[] {String.class});
+                    verifier = (HostnameVerifier) cons.newInstance(new Object[] {config});
+                } else {
+                    verifier = (HostnameVerifier) verifierClass.newInstance();
+                }
+            } catch (ClassNotFoundException e) {
+                throw new IllegalArgumentException("Invalid HostnameVerifier class " + className);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Error creating instance of " + className, e);
+            }
+        }
+        return verifier;
+    }
+
+    protected void initInternal(final FilterConfig filterConfig) throws ServletException {
+        setExceptionOnValidationFailure(parseBoolean(getPropertyFromInitParams(filterConfig, "exceptionOnValidationFailure", "true")));
+        log.trace("Setting exceptionOnValidationFailure parameter: " + this.exceptionOnValidationFailure);
+        setRedirectAfterValidation(parseBoolean(getPropertyFromInitParams(filterConfig, "redirectAfterValidation", "true")));
+        log.trace("Setting redirectAfterValidation parameter: " + this.redirectAfterValidation);
+        setUseSession(parseBoolean(getPropertyFromInitParams(filterConfig, "useSession", "true")));
+        log.trace("Setting useSession parameter: " + this.useSession);
+        setTicketValidator(getTicketValidator(filterConfig));
+
+
+        setUseRedis(parseBoolean(getPropertyFromInitParams(filterConfig, "useRedis", "true")));
+        log.trace("Setting useRedis parameter: " + this.useRedis);
+
+        String redisClusterName = getPropertyFromInitParams(filterConfig, "redisClusterName", "localhost:11211");
+        log.trace("Setting redisClusterName parameter: " + redisClusterName);
+        setProvider(CacheFactory.GetProvider(redisClusterName));
+
+        super.initInternal(filterConfig);
+    }
+
+    public void init() {
+        super.init();
+        CommonUtils.assertNotNull(this.ticketValidator, "ticketValidator cannot be null.");
+    }
+
+    /**
+     * Pre-process the request before the normal filter process starts.  This could be useful for pre-empting code.
+     *
+     * @param servletRequest The servlet request.
+     * @param servletResponse The servlet response.
+     * @param filterChain the filter chain.
+     * @return true if processing should continue, false otherwise.
+     * @throws IOException if there is an I/O problem
+     * @throws ServletException if there is a servlet problem.
+     */
+    protected boolean preFilter(final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain filterChain) throws IOException, ServletException {
+        return true;
+    }
+
+    /**
+     * Template method that gets executed if ticket validation succeeds.  Override if you want additional behavior to occur
+     * if ticket validation succeeds.  This method is called after all ValidationFilter processing required for a successful authentication
+     * occurs.
+     *
+     * @param request the HttpServletRequest.
+     * @param response the HttpServletResponse.
+     * @param assertion the successful Assertion from the server.
+     */
+    protected void onSuccessfulValidation(final HttpServletRequest request, final HttpServletResponse response, final Assertion assertion) {
+        // nothing to do here.                                                                                            
+    }
+
+    /**
+     * Template method that gets executed if validation fails.  This method is called right after the exception is caught from the ticket validator
+     * but before any of the processing of the exception occurs.
+     *
+     * @param request the HttpServletRequest.
+     * @param response the HttpServletResponse.
+     */
+    protected void onFailedValidation(final HttpServletRequest request, final HttpServletResponse response) {
+        // nothing to do here.
+    }
+
+    public final void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain filterChain) throws IOException, ServletException {
+
+        if (!preFilter(servletRequest, servletResponse, filterChain)) {
+            return;
+        }
+
+        final HttpServletRequest request = (HttpServletRequest) servletRequest;
+        final HttpServletResponse response = (HttpServletResponse) servletResponse;
+        final String ticket = CommonUtils.safeGetParameter(request, getArtifactParameterName());
+
+        if (CommonUtils.isNotBlank(ticket)) {
+            if (log.isDebugEnabled()) {
+                log.debug("Attempting to validate ticket: " + ticket);
+            }
+
+            try {
+                final Assertion assertion = this.ticketValidator.validate(ticket, constructServiceUrl(request, response));
+
+                if (log.isDebugEnabled()) {
+                    log.debug("Successfully authenticated user: " + assertion.getPrincipal().getName());
+                }
+
+                request.setAttribute(CONST_CAS_ASSERTION, assertion);
+
+                if (this.useSession) {
+                    request.getSession().setAttribute(CONST_CAS_ASSERTION, assertion);
+                }
+
+                if(this.useRedis){
+
+                    ByteArrayOutputStream byteArrayOutputStream= new ByteArrayOutputStream();
+                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+                    objectOutputStream.writeObject(assertion);
+
+                    String uuid = UUID.randomUUID().toString();
+                    provider.set(uuid.getBytes(),byteArrayOutputStream.toByteArray());
+                    provider.expire(uuid.getBytes(),30*60);
+
+
+                    Cookie cookie = new Cookie("memCacheAssertionID",uuid);
+                    cookie.setMaxAge(30*60);
+                    cookie.setPath(request.getContextPath()+"/");
+                    response.addCookie(cookie);
+                }
+                onSuccessfulValidation(request, response, assertion);
+
+                if (this.redirectAfterValidation) {
+                    log. debug("Redirecting after successful ticket validation.");
+                    //;jsessionid=BE4B937425C716A581AE5AE78688C56E
+                    String originServiceUrl = constructServiceUrl(request, response);
+                    String fixedServiceUrl = originServiceUrl;
+                    
+                    String flag = ";jsessionid=";
+                    int trashStartIndex = originServiceUrl.indexOf(flag);
+					if (trashStartIndex > 0) {
+						int indexAfterTrash = originServiceUrl.length();
+						for (int i = trashStartIndex + flag.length(); i < originServiceUrl.length(); i++) {
+							char c = originServiceUrl.charAt(i);
+							if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+								continue;
+							} else {
+								indexAfterTrash = i;
+								break;
+							}
+						}
+						
+						fixedServiceUrl = originServiceUrl.substring(0, trashStartIndex) + originServiceUrl.substring(indexAfterTrash);
+					}
+					
+                    response.sendRedirect(fixedServiceUrl);
+                    return;
+                }
+            } catch (final TicketValidationException e) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                log.warn(e, e);
+
+                onFailedValidation(request, response);
+
+                if (this.exceptionOnValidationFailure) {
+                    throw new ServletException(e);
+                }
+
+                return;
+            } catch (Exception e) {
+                throw new ServletException(e);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+
+    }
+
+    public final void setTicketValidator(final TicketValidator ticketValidator) {
+    this.ticketValidator = ticketValidator;
+}
+
+    public final void setRedirectAfterValidation(final boolean redirectAfterValidation) {
+        this.redirectAfterValidation = redirectAfterValidation;
+    }
+
+    public final void setExceptionOnValidationFailure(final boolean exceptionOnValidationFailure) {
+        this.exceptionOnValidationFailure = exceptionOnValidationFailure;
+    }
+
+    public final void setUseSession(final boolean useSession) {
+        this.useSession = useSession;
+    }
+
+    public void setUseRedis(boolean useRedis) {
+        this.useRedis = useRedis;
+    }
+
+    public void setProvider(CacheProvider provider) {
+        this.provider = provider;
+    }
+}
