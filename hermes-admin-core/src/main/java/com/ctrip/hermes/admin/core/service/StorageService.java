@@ -298,4 +298,40 @@ public class StorageService {
 			}
 		}
 	}
+
+	public void deleteBootstrapServersPropertyByIdc(String idc) throws Exception {
+		Storage storage = getStorages().get("kafka");
+		if (storage == null) {
+			throw new RuntimeException("Kafka storage type not exists!");
+		}
+
+		String targetBootstrapServers = String.format("%s.%s", KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME,
+		      idc.toLowerCase());
+		List<Datasource> datasources = storage.getDatasources();
+		for (Datasource datasource : datasources) {
+			Property property = datasource.findProperty(targetBootstrapServers);
+			if (property != null) {
+				datasource.getProperties().remove(targetBootstrapServers);
+				updateDatasource(datasource);
+			}
+		}
+	}
+
+	public void deleteZookeeperConnectByIdc(String idc) throws Exception {
+		Storage storage = getStorages().get("kafka");
+		if (storage == null) {
+			throw new RuntimeException("Kafka storage type not exists!");
+		}
+
+		String targetZookeeperConnect = String.format("%s.%s", KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME,
+		      idc.toLowerCase());
+		List<Datasource> datasources = storage.getDatasources();
+		for (Datasource datasource : datasources) {
+			Property property = datasource.findProperty(targetZookeeperConnect);
+			if (property != null) {
+				datasource.getProperties().remove(targetZookeeperConnect);
+				updateDatasource(datasource);
+			}
+		}
+	}
 }

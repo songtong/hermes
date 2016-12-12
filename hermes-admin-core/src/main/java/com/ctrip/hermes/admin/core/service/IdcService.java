@@ -45,7 +45,8 @@ public class IdcService {
 		m_idcDao.insert(idc);
 	}
 
-	public void deleteIdc(int idcId) throws DalException {
+	public void deleteIdc(int idcId) throws Exception {
+		deleteKafkaProperties(idcId);
 		Idc idc = new Idc();
 		idc.setId(idcId);
 		m_idcDao.deleteByPK(idc);
@@ -55,7 +56,7 @@ public class IdcService {
 		m_idcDao.updateByPK(idc, IdcEntity.UPDATESET_FULL);
 	}
 
-	public void switchPrimary(int idcId) throws Exception {
+	public void switchPrimary(int idcId, boolean changeKafkaDefaultProperty) throws Exception {
 		m_tm.startTransaction("fxhermesmetadb");
 		try {
 			List<Idc> primaryIdcs = m_idcDao.findByPrimaryStatus(true, IdcEntity.READSET_FULL);
@@ -72,8 +73,11 @@ public class IdcService {
 			Idc idc = new Idc();
 			idc.setId(idcId);
 			m_idcDao.setPrimaryById(idc, IdcEntity.UPDATESET_FULL);
-			
-			switchPrimaryKafkaProperties(idcId);
+
+			if (changeKafkaDefaultProperty) {
+				switchPrimaryKafkaProperties(idcId);
+			}
+
 			m_tm.commitTransaction();
 		} catch (Exception e) {
 			m_tm.rollbackTransaction();
@@ -82,7 +86,7 @@ public class IdcService {
 		}
 	}
 
-	public void forceSwitchPrimary(int idcId) throws Exception {
+	public void forceSwitchPrimary(int idcId, boolean changeKafkaDefaultProperty) throws Exception {
 		m_tm.startTransaction("fxhermesmetadb");
 		try {
 			List<Idc> primaryIdcs = m_idcDao.findByPrimaryStatus(true, IdcEntity.READSET_FULL);
@@ -94,7 +98,9 @@ public class IdcService {
 			Idc idc = new Idc();
 			idc.setId(idcId);
 			m_idcDao.setPrimaryById(idc, IdcEntity.UPDATESET_FULL);
-			switchPrimaryKafkaProperties(idcId);
+			if (changeKafkaDefaultProperty) {
+				switchPrimaryKafkaProperties(idcId);
+			}
 			m_tm.commitTransaction();
 		} catch (Exception e) {
 			m_tm.rollbackTransaction();
@@ -107,6 +113,12 @@ public class IdcService {
 		String idc = findIdc(idcId).getName();
 		m_storageService.switchDefaultKafkaBootstrapServersToPrimary(idc);
 		m_storageService.switchDefaultZookeeperConnectToPrimary(idc);
+	}
+
+	private void deleteKafkaProperties(Integer idcId) throws Exception {
+		String idc = findIdc(idcId).getName();
+		m_storageService.deleteBootstrapServersPropertyByIdc(idc);
+		m_storageService.deleteZookeeperConnectByIdc(idc);
 	}
 
 	public void enableIdc(int idcId) throws DalException {

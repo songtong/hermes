@@ -90,8 +90,16 @@ public class KafkaMessageSender implements MessageSender, Initializable {
 						configs.put(propName, prop.getValue().getValue());
 					}
 				}
-				configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME, properties.get(targetBootstrapServers)
-				      .getValue());
+
+				if (properties.get(targetBootstrapServers) != null) {
+					configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME, properties.get(targetBootstrapServers)
+					      .getValue());
+				} else {
+					configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME,
+					      properties.get(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME).getValue());
+
+				}
+
 				break;
 			}
 		}
@@ -180,6 +188,8 @@ public class KafkaMessageSender implements MessageSender, Initializable {
 						            .equals(currentBootstrapServersProperty))) {
 							      synchronized (m_producers) {
 								      if (m_producers.containsKey(producer.getKey())) {
+									      m_logger.info("Sending messages to topic:{} on new kafka cluster:{} instead of :{}.",
+									            producer.getKey(), newBootstrapServersProperty, currentBootstrapServersProperty);
 									      Pair<KafkaProducer<String, byte[]>, Properties> removedProducer = m_producers
 									            .remove(producer.getKey());
 									      removedProducer.getKey().close();

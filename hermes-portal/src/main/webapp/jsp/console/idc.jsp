@@ -24,6 +24,11 @@
 			</div>
 			<button style="margin-left: 20px" class="btn btn-danger" ng-click="deleteIdc()">Delete</button>
 		</form>
+		<div style="margin-top: 5px">
+			<span class="help-block">切机房时是否需要更新Default Kafka Property <label class="radio-inline"> <input type="radio" ng-model="changeKafkaDefaultProperty" ng-value=true> 是
+			</label> <label class="radio-inline"> <input type="radio" ng-model="changeKafkaDefaultProperty" ng-value=false> 否
+			</label></span>
+		</div>
 
 		<hr>
 		<h4>
@@ -183,7 +188,7 @@
 									<input class="form-control" placeholder="ID" ng-model="newIdc.name">
 								</div>
 							</div>
-								<div class="form-group">
+							<div class="form-group">
 								<label class="col-sm-3 control-label">备注</label>
 								<div class="col-sm-9">
 									<input class="form-control" placeholder="Display Name" ng-model="newIdc.displayName">

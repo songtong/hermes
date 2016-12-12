@@ -255,9 +255,21 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Ini
 						configs.put(propName, prop.getValue().getValue());
 					}
 				}
-				configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME, properties.get(targetBootstrapServers)
-				      .getValue());
-				configs.put(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME, properties.get(targetZk).getValue());
+
+				if (properties.get(targetBootstrapServers) != null) {
+					configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME, properties.get(targetBootstrapServers)
+					      .getValue());
+				} else {
+					configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME,
+					      properties.get(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME).getValue());
+				}
+
+				if (properties.get(targetZk) != null) {
+					configs.put(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME, properties.get(targetZk).getValue());
+				} else {
+					configs.put(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME,
+					      properties.get(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME).getValue());
+				}
 
 				break;
 			}
@@ -292,13 +304,13 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Ini
 						            entry.getKey().getGroup().getName());
 						      Properties currentConsumerProperties = entry.getValue().getProps();
 
-						      String newZookeeperConnectProperty = (String) newConsumerProperties.get(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME);
-						      String currentZookeeperConnectProperty = (String) currentConsumerProperties
-						            .get(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME);
-						      String newBootstrapServersProperty = (String) newConsumerProperties
-						            .get(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME);
-						      String currentBootstrapServersProperty = (String) currentConsumerProperties
-						            .get(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME);
+						      String newZookeeperConnectProperty = newConsumerProperties.getProperty(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME);
+						      String currentZookeeperConnectProperty = currentConsumerProperties
+						            .getProperty(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME);
+						      String newBootstrapServersProperty = newConsumerProperties
+						            .getProperty(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME);
+						      String currentBootstrapServersProperty = currentConsumerProperties
+						            .getProperty(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME);
 
 						      if (!(newZookeeperConnectProperty != null && currentConsumerProperties != null
 						            && newZookeeperConnectProperty.equals(currentZookeeperConnectProperty)
@@ -306,6 +318,9 @@ public class KafkaConsumerBootstrap extends BaseConsumerBootstrap implements Ini
 						            .equals(currentBootstrapServersProperty))) {
 							      synchronized (consumers) {
 								      if (consumers.containsKey(entry.getKey())) {
+									      m_logger.info("Restart consumer:{}, topic:{}, as target kafka cluster changed to {}.",
+									            entry.getKey().getGroupId(), entry.getKey().getTopic().getName(),
+									            newBootstrapServersProperty);
 									      restart(entry.getKey());
 								      }
 							      }
