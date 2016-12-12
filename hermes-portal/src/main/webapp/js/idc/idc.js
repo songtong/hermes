@@ -21,7 +21,8 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 			method : 'PUT',
 			url : '/api/idcs/primary/:idc',
 			params : {
-				idc : '@idc'
+				idc : '@idc',
+				changeKafkaDefaultProperty : '@changeKafkaDefaultProperty'
 			}
 		},
 		force_switch_primary : {
@@ -29,7 +30,8 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 			url : '/api/idcs/primary/:idc',
 			params : {
 				idc : '@idc',
-				force : '@force'
+				force : '@force',
+				changeKafkaDefaultProperty : '@changeKafkaDefaultProperty'
 			}
 		},
 		enable_idc : {
@@ -215,8 +217,6 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 				setCurrentKafkaZookeeperConnect($scope.currentIdc.name);
 			}
 
-			console.log($scope.kafkaConsumerDatasource)
-
 		})
 	}
 	idcResource.query(function(result) {
@@ -315,6 +315,7 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 		});
 	}
 
+	$scope.changeKafkaDefaultProperty = false;
 	$scope.switchPrimary = function(doSwitch) {
 		if ($scope.currentIdc.primary) {
 			show_op_info.show("请选择您想要置为primary的idc, 然后置为primary！", false);
@@ -322,7 +323,8 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 			bootbox.confirm("确认将idc： " + $scope.currentIdc.name + "置为primary?", function(result) {
 				if (result) {
 					idcResource.switch_primary({
-						"idc" : $scope.currentIdc.id
+						"idc" : $scope.currentIdc.id,
+						"changeKafkaDefaultProperty" : $scope.changeKafkaDefaultProperty
 					}, function(result) {
 						show_op_info.show("切换primary idc成功！当前primary idc: " + $scope.currentIdc.name, true);
 						doSwitch();
@@ -331,8 +333,6 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 						})
 					}, function(result) {
 						$scope.forceSwitchPrimary(doSwitch, result.data);
-						// show_op_info.show("切换primary idc失败: " + result.data,
-						// false);
 					})
 				}
 			})
@@ -347,7 +347,8 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 				if (result) {
 					idcResource.force_switch_primary({
 						"idc" : $scope.currentIdc.id,
-						"force" : true
+						"force" : true,
+						"changeKafkaDefaultProperty" : $scope.changeKafkaDefaultProperty
 					}, function(result) {
 						show_op_info.show("切换primary idc成功！当前primary idc: " + $scope.currentIdc.name, true);
 						doSwitch();

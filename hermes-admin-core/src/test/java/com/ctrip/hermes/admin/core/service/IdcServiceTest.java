@@ -46,14 +46,14 @@ public class IdcServiceTest extends ComponentTestCase {
 		System.out.println(idcService.listIdcs());
 
 		try {
-			idcService.switchPrimary(2);
+			idcService.switchPrimary(2, false);
 			System.out.println("After switch to primary to 2");
 			System.out.println(idcService.listIdcs());
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 
-		idcService.forceSwitchPrimary(2);
+		idcService.forceSwitchPrimary(2, false);
 		System.out.println("After force switch to primary to 1");
 		System.out.println(idcService.listIdcs());
 

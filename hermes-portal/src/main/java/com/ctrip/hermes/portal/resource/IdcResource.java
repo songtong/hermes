@@ -120,7 +120,8 @@ public class IdcResource {
 
 	@PUT
 	@Path("primary/{idc}")
-	public Response switchPrimaryIdc(@PathParam("idc") int idc, @QueryParam("force") boolean force) {
+	public Response switchPrimaryIdc(@PathParam("idc") int idc, @QueryParam("force") boolean force,
+	      @QueryParam("changeKafkaDefaultProperty") boolean changeKafkaDefaultProperty) {
 		Idc targetIdc = getValidIdc(idc);
 		if (!targetIdc.isEnabled()) {
 			throw new RestException("Can not switch primary idc to a disabled idc!", Status.BAD_REQUEST);
@@ -128,9 +129,9 @@ public class IdcResource {
 		m_logger.info("Switch primary idc to {}.", idc);
 		try {
 			if (force) {
-				m_idcService.forceSwitchPrimary(idc);
+				m_idcService.forceSwitchPrimary(idc, changeKafkaDefaultProperty);
 			} else {
-				m_idcService.switchPrimary(idc);
+				m_idcService.switchPrimary(idc, changeKafkaDefaultProperty);
 			}
 		} catch (IllegalStateException e) {
 			throw new RestException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);

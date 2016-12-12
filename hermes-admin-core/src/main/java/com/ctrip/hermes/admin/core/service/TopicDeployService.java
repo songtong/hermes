@@ -16,11 +16,19 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.ctrip.framework.apollo.Config;
+import com.ctrip.framework.apollo.ConfigService;
 import com.ctrip.hermes.admin.core.view.TopicView;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Property;
 
 import kafka.admin.AdminUtils;
 import kafka.utils.ZkUtils;
+import scala.collection.JavaConversions;
+import scala.collection.Seq;
 
 @Named
 public class TopicDeployService {
@@ -33,6 +41,8 @@ public class TopicDeployService {
 
 	// 1 hour
 	public static final String DEFAULT_KAFKA_SEGMENT_MS = "3600000";
+
+	private static final String APOLLO_KAFKA_DEPLOY_PROPERTY_PREFIX = "portal.kafka.deploy";
 
 	private List<String> validKafkaConfigKeys = new ArrayList<String>();
 
@@ -63,18 +73,27 @@ public class TopicDeployService {
 	public void configTopicInKafka(TopicView topic) {
 		Map<String, String> zkConnects = m_dsService.getKafkaZookeeperList();
 		for (Entry<String, String> zkConnect : zkConnects.entrySet()) {
-			ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
-			zkClient.setZkSerializer(new ZKStringSerializer());
-			ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
-			Properties topicProp = new Properties();
-			for (Property prop : topic.getProperties()) {
-				if (validKafkaConfigKeys.contains(prop.getName())) {
-					topicProp.setProperty(prop.getName(), prop.getValue());
+			ZkClient zkClient = null;
+			try {
+				zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
+				zkClient.setZkSerializer(new ZKStringSerializer());
+				ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
+				Properties topicProp = new Properties();
+				for (Property prop : topic.getProperties()) {
+					if (validKafkaConfigKeys.contains(prop.getName())) {
+						topicProp.setProperty(prop.getName(), prop.getValue());
+					}
+				}
+
+				m_logger
+				      .info("config topic in kafka {}, topic {}, prop {}", zkConnect.getKey(), topic.getName(), topicProp);
+				AdminUtils.changeTopicConfig(zkUtils, topic.getName(), topicProp);
+
+			} finally {
+				if (zkClient != null) {
+					zkClient.close();
 				}
 			}
-
-			m_logger.info("config topic in kafka {}, topic {}, prop {}", zkConnect.getKey(), topic.getName(), topicProp);
-			AdminUtils.changeTopicConfig(zkUtils, topic.getName(), topicProp);
 		}
 	}
 
@@ -95,22 +114,70 @@ public class TopicDeployService {
 				topicProp.setProperty(prop.getName(), prop.getValue());
 			}
 		}
+		Config config = ConfigService.getAppConfig();
 		Map<String, String> zkConnects = m_dsService.getKafkaZookeeperList();
 		try {
 			for (Entry<String, String> zkConnect : zkConnects.entrySet()) {
-				ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
-				zkClient.setZkSerializer(new ZKStringSerializer());
-				ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
-				m_logger.info("create topic in kafka {}, topic {}, partition {}, replication {}, prop {}",
-				      zkConnect.getKey(), topic.getName(), partition, replication, topicProp);
-				AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
+				ZkClient zkClient = null;
+				try {
+					String idc = zkConnect.getKey().split("\\.")[2];
+					zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
+					zkClient.setZkSerializer(new ZKStringSerializer());
+					ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
 
+					String portalKafkaDeployConfig = config.getProperty(
+					      String.format("%s.%s", APOLLO_KAFKA_DEPLOY_PROPERTY_PREFIX, idc), null);
+
+					if (StringUtils.isBlank(portalKafkaDeployConfig)) {
+						m_logger.info("Create topic in zk cluster {}, topic {}, partition {}, replication {}, prop {}",
+						      zkConnect.getKey(), topic.getName(), partition, replication, topicProp);
+						AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
+					} else {
+						List<Object> brokerList = new ArrayList<>();
+						JSONObject kafkaDepolyConfigs = JSON.parseObject(portalKafkaDeployConfig, JSONObject.class);
+						for (String key : kafkaDepolyConfigs.keySet()) {
+							if (topic.getName().startsWith(key)) {
+								for (Object kafka : kafkaDepolyConfigs.getJSONArray(key)) {
+									brokerList.add(kafka);
+								}
+							}
+						}
+
+						if (brokerList.isEmpty()) {
+							JSONArray defaultConfig = kafkaDepolyConfigs.getJSONArray("_default_");
+							if (defaultConfig != null) {
+								for (Object kafka : defaultConfig) {
+									brokerList.add(kafka);
+								}
+							}
+						}
+
+						if (brokerList.isEmpty()) {
+							m_logger.info("Create topic in zk cluster {}, topic {}, partition {}, replication {}, prop {}",
+							      zkConnect.getKey(), topic.getName(), partition, replication, topicProp);
+							AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
+						} else {
+							m_logger.info(
+							      "Create topic in zk cluster {}, kafka {}, topic {}, partition {}, replication {}, prop {}",
+							      zkConnect.getKey(), brokerList, topic.getName(), partition, replication, topicProp);
+							scala.collection.Map<Object, Seq<Object>> assignments = AdminUtils.assignReplicasToBrokers(
+							      JavaConversions.asScalaBuffer(brokerList).toSeq(), partition, replication, -1, -1);
+							AdminUtils.createOrUpdateTopicPartitionAssignmentPathInZK(zkUtils, topic.getName(), assignments,
+							      topicProp, false);
+						}
+
+					}
+
+				} finally {
+					if (zkClient != null) {
+						zkClient.close();
+					}
+				}
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			deleteTopicInKafka(topic);
 			throw e;
 		}
-
 	}
 
 	/**
@@ -120,12 +187,20 @@ public class TopicDeployService {
 		Map<String, String> zkConnects = m_dsService.getKafkaZookeeperList();
 
 		for (Entry<String, String> zkConnect : zkConnects.entrySet()) {
-			ZkClient zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
-			ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
-			zkClient.setZkSerializer(new ZKStringSerializer());
+			ZkClient zkClient = null;
+			try {
+				zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
+				ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
+				zkClient.setZkSerializer(new ZKStringSerializer());
 
-			m_logger.info("delete topic in kafka {}, topic {}", zkConnect.getKey(), topic.getName());
-			AdminUtils.deleteTopic(zkUtils, topic.getName());
+				m_logger.info("delete topic in kafka {}, topic {}", zkConnect.getKey(), topic.getName());
+				AdminUtils.deleteTopic(zkUtils, topic.getName());
+
+			} finally {
+				if (zkClient != null) {
+					zkClient.close();
+				}
+			}
 		}
 	}
 }

@@ -62,8 +62,15 @@ public class KafkaMessageBrokerSender {
 						configs.put(propName, prop.getValue().getValue());
 					}
 				}
-				configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME,
-				      properties.get(targetBootstrapServersPropertyName).getValue());
+
+				if (properties.get(targetBootstrapServersPropertyName) != null) {
+					configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME,
+					      properties.get(targetBootstrapServersPropertyName).getValue());
+				} else {
+					configs.put(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME,
+					      properties.get(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME).getValue());
+				}
+				
 				break;
 			}
 		}

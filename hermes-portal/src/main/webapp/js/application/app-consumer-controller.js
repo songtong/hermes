@@ -78,9 +78,9 @@ application_module.controller('app-consumer-controller', [ '$scope', 'Applicatio
 		if ($scope.kafkaFullDrEnabled) {
 			message = message + "<div class='text-danger' style='margin-top:5px'><strong>如果您的Topic为Kafka类型，请注意：</strong><div>";
 			if (new_consumer.needMultiIdc) {
-				message = message + "您选择了需要多机房容灾，这要求您必须在所有机房都部署消费者，否则未部署消费者机房的Kafka集群消息将会丢失。";
+				message = message + "您选择了需要多机房容灾，这要求您必须在所有机房都部署消费者，否则未部署消费者机房的Kafka集群消息将会丢失。并且请升级客户端版本至0.8.0。";
 			} else {
-				message = message + "您选择了不需要多机房容灾，消费者只会消费主机房Kafka集群消息；当前主机房为：" + $scope.primaryIdc.name + "（ " + $scope.primaryIdc.displayName + "），生产者发往其他机房的消息将会丢失！";
+				message = message + "您选择了不需要多机房容灾，消费者只会消费主机房Kafka集群消息；当前主机房为：" + $scope.primaryIdc.name + "（ " + $scope.primaryIdc.displayName + "），生产者发往其他机房的消息将会丢失！并且请升级客户端版本至0.8.0。";
 			}
 		}
 
