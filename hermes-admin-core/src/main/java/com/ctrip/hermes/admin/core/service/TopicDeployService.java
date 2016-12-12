@@ -116,20 +116,20 @@ public class TopicDeployService {
 			}
 		}
 		Config config = ConfigService.getAppConfig();
-		Map<String, String> zkConnects = m_dsService.getKafkaZookeeperList();
+		Map<String, String> kakfaZookeeperConnects = m_dsService.getKafkaZookeeperList();
 		try {
-			for (Entry<String, String> zkConnect : zkConnects.entrySet()) {
+			for (Entry<String, String> kafkaZookeeperConnect : kakfaZookeeperConnects.entrySet()) {
 				ZkClient zkClient = null;
 				try {
-					String idc = zkConnect.getKey().substring(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME.length());
+					String idc = kafkaZookeeperConnect.getKey().substring(KafkaConstants.ZOOKEEPER_CONNECT_PROPERTY_NAME.length());
 					if (StringUtils.isBlank(idc)) {
-						m_logger.warn("Unknown idc for zk ({}:{})", zkConnect.getKey(), zkConnect.getValue());
+						m_logger.warn("Unknown idc for zk ({}:{})", kafkaZookeeperConnect.getKey(), kafkaZookeeperConnect.getValue());
 						continue;
 					}
 
-					zkClient = new ZkClient(new ZkConnection(zkConnect.getValue()));
+					zkClient = new ZkClient(new ZkConnection(kafkaZookeeperConnect.getValue()));
 					zkClient.setZkSerializer(new ZKStringSerializer());
-					ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkConnect.getValue()), false);
+					ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(kafkaZookeeperConnect.getValue()), false);
 
 					String portalKafkaDeployConfig = config.getProperty(
 					      String.format("%s.%s", APOLLO_KAFKA_DEPLOY_PROPERTY_PREFIX, idc), null);
@@ -158,7 +158,7 @@ public class TopicDeployService {
 						if (!brokerList.isEmpty()) {
 							m_logger.info(
 							      "Create topic in zk cluster {}, kafka {}, topic {}, partition {}, replication {}, prop {}",
-							      zkConnect.getKey(), brokerList, topic.getName(), partition, replication, topicProp);
+							      kafkaZookeeperConnect.getKey(), brokerList, topic.getName(), partition, replication, topicProp);
 							scala.collection.Map<Object, Seq<Object>> assignments = AdminUtils.assignReplicasToBrokers(
 							      JavaConversions.asScalaBuffer(brokerList).toSeq(), partition, replication, -1, -1);
 							AdminUtils.createOrUpdateTopicPartitionAssignmentPathInZK(zkUtils, topic.getName(), assignments,
@@ -168,7 +168,7 @@ public class TopicDeployService {
 					}
 
 					m_logger.info("Create topic in zk cluster {}, topic {}, partition {}, replication {}, prop {}",
-					      zkConnect.getKey(), topic.getName(), partition, replication, topicProp);
+					      kafkaZookeeperConnect.getKey(), topic.getName(), partition, replication, topicProp);
 					AdminUtils.createTopic(zkUtils, topic.getName(), partition, replication, topicProp);
 
 				} finally {
