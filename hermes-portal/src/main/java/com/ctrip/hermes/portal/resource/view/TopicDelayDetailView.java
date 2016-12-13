@@ -72,6 +72,8 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 
 		private Long resendDelay;
 
+		private String consumerSessionId;
+
 		public DelayDetail() {
 
 		}
@@ -228,6 +230,14 @@ public class TopicDelayDetailView extends TopicDelayBriefView {
 		public void setResendDelay(Long resendDelay) {
 			this.resendDelay = resendDelay;
 		}
+
+		public String getConsumerSessionId() {
+	      return consumerSessionId;
+      }
+
+		public void setConsumerSessionId(String consumerSessionId) {
+	      this.consumerSessionId = consumerSessionId;
+      }
 
 	}
 }
