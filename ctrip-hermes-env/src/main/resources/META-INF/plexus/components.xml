@@ -17,5 +17,14 @@
 			<role>com.ctrip.hermes.env.ManualConfigProvider</role>
 			<implementation>com.ctrip.hermes.ctrip.env.CtripManualConfigProvider</implementation>
 		</component>
+		<component>
+			<role>com.ctrip.hermes.env.config.broker.BrokerConfigProvider</role>
+			<implementation>com.ctrip.hermes.ctrip.env.config.broker.CtripBrokerConfigProvider</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.env.ClientEnvironment</role>
+				</requirement>
+			</requirements>
+		</component>
 	</components>
 </plexus>

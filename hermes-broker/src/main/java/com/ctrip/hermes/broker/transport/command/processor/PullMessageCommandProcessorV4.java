@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.longpolling.PullMessageTask;
@@ -25,6 +24,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext
 import com.ctrip.hermes.core.transport.command.v4.PullMessageCommandV4;
 import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
 import com.ctrip.hermes.core.utils.CatUtil;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 public class PullMessageCommandProcessorV4 implements CommandProcessor {
 
@@ -37,7 +37,7 @@ public class PullMessageCommandProcessorV4 implements CommandProcessor {
 	private BrokerLeaseContainer m_leaseContainer;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private MetaService m_metaService;

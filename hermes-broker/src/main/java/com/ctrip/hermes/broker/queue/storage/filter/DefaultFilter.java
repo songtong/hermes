@@ -15,7 +15,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -27,7 +27,7 @@ public class DefaultFilter implements Filter, Initializable {
 	private static final Logger log = LoggerFactory.getLogger(DefaultFilter.class);
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	private LoadingCache<String, Map<String, String>> m_filterConditionCache;
 

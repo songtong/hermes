@@ -15,7 +15,6 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.core.selector.AbstractSelectorManager;
 import com.ctrip.hermes.core.selector.DefaultSelector;
 import com.ctrip.hermes.core.selector.OffsetLoader;
@@ -24,6 +23,7 @@ import com.ctrip.hermes.core.selector.Selector;
 import com.ctrip.hermes.core.selector.Selector.InitialLastUpdateTime;
 import com.ctrip.hermes.core.selector.Slot;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 /**
  * @author marsqing
@@ -37,7 +37,7 @@ public class DefaultSendMessageSelectorManager extends AbstractSelectorManager<P
 	private static Logger log = LoggerFactory.getLogger(DefaultSendMessageSelectorManager.class);
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	private DefaultSelector<Pair<String, Integer>> m_selector;
 

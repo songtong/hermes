@@ -19,7 +19,6 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.ack.internal.AckHolder.AckHolderType;
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation.OperationType;
 import com.ctrip.hermes.broker.selector.SendMessageSelectorManager;
 import com.ctrip.hermes.core.bo.AckContext;
@@ -42,6 +41,7 @@ import com.ctrip.hermes.core.transport.command.v2.AckMessageCommandV2;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.google.common.util.concurrent.ListenableFuture;
 
 @Named(type = MessageQueueManager.class)
@@ -53,7 +53,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	private MessageQueuePartitionFactory m_queueFactory;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private SystemClockService m_systemClockService;

@@ -4,13 +4,13 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.broker.build.BuildConstants;
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseManager.BrokerLeaseKey;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.lease.SessionIdAware;
 import com.ctrip.hermes.core.meta.MetaService;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -22,7 +22,7 @@ public class BrokerLeaseManager implements LeaseManager<BrokerLeaseKey> {
 	private MetaService m_metaService;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Override
 	public LeaseAcquireResponse tryAcquireLease(BrokerLeaseKey key) {

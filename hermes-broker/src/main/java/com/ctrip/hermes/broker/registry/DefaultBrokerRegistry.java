@@ -11,8 +11,8 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.zk.ZKClient;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -22,7 +22,7 @@ import com.ctrip.hermes.broker.zk.ZKClient;
 public class DefaultBrokerRegistry implements BrokerRegistry, Initializable {
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private ZKClient m_client;

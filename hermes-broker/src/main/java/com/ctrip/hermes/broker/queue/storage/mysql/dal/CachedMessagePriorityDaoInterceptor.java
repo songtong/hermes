@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.config.MySQLCacheConfig;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriorityDao;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity;
@@ -22,6 +21,7 @@ import com.ctrip.hermes.broker.queue.storage.mysql.cache.MessageCache.DefaultShr
 import com.ctrip.hermes.broker.queue.storage.mysql.cache.MessageCache.MessageLoader;
 import com.ctrip.hermes.broker.queue.storage.mysql.cache.MessageCacheBuilder;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.env.config.broker.MySQLCacheConfigProvider;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -37,9 +37,9 @@ public class CachedMessagePriorityDaoInterceptor implements MethodInterceptor {
 
 	private MessageCache<MessagePriority> m_nonpriorityMessageCache;
 
-	private MySQLCacheConfig m_config;
+	private MySQLCacheConfigProvider m_config;
 
-	public static MessagePriorityDao createProxy(MessagePriorityDao target, MySQLCacheConfig config) {
+	public static MessagePriorityDao createProxy(MessagePriorityDao target, MySQLCacheConfigProvider config) {
 		CachedMessagePriorityDaoInterceptor proxy = new CachedMessagePriorityDaoInterceptor(target, config);
 		Enhancer enhancer = new Enhancer();
 		enhancer.setSuperclass(target.getClass());
@@ -48,7 +48,7 @@ public class CachedMessagePriorityDaoInterceptor implements MethodInterceptor {
 		return (MessagePriorityDao) enhancer.create();
 	}
 
-	private CachedMessagePriorityDaoInterceptor(MessagePriorityDao target, MySQLCacheConfig config) {
+	private CachedMessagePriorityDaoInterceptor(MessagePriorityDao target, MySQLCacheConfigProvider config) {
 		m_target = target;
 		m_config = config;
 

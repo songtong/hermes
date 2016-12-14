@@ -16,7 +16,6 @@ import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler;
 import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
@@ -24,12 +23,13 @@ import com.ctrip.hermes.core.transport.netty.MagicNumberPrepender;
 import com.ctrip.hermes.core.transport.netty.NettyDecoder;
 import com.ctrip.hermes.core.transport.netty.NettyEncoder;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 @Named(type = NettyServer.class)
 public class NettyServer extends ContainerHolder {
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	private EventLoopGroup m_bossGroup = new NioEventLoopGroup(0, HermesThreadFactory.create("NettyServer-boss", false));
 

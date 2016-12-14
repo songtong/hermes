@@ -11,7 +11,6 @@ import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.broker.HermesBrokerModule;
 import com.ctrip.hermes.broker.bootstrap.DefaultBrokerBootstrap;
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.lease.BrokerLeaseManager;
 import com.ctrip.hermes.broker.longpolling.DefaultLongPollingService;
@@ -57,14 +56,13 @@ import com.ctrip.hermes.core.meta.manual.ManualConfigService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 	@Override
 	public List<Component> defineComponents() {
 		List<Component> all = new ArrayList<Component>();
-
-		all.add(A(BrokerConfig.class));
 
 		all.add(A(DefaultBrokerBootstrap.class));
 		all.add(A(NettyServer.class));
@@ -77,7 +75,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND.toString(), SendMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(FileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
@@ -85,7 +83,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND_V3.toString(), SendMessageCommandProcessorV3.class)//
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(FileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
@@ -93,7 +91,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND_V5.toString(), SendMessageCommandProcessorV5.class)//
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(FileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
@@ -101,7 +99,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND_V6.toString(), SendMessageCommandProcessorV6.class)//
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(FileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
@@ -109,32 +107,32 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL.toString(), PullMessageCommandProcessor.class)//
 		      .req(LongPollingService.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(MetaService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL_V3.toString(), PullMessageCommandProcessorV3.class)//
 		      .req(LongPollingService.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(MetaService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL_V4.toString(), PullMessageCommandProcessorV4.class)//
 		      .req(LongPollingService.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(MetaService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL_V5.toString(), PullMessageCommandProcessorV5.class)//
 		      .req(LongPollingService.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(MetaService.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_PULL_SPECIFIC.toString(),
 		      PullSpecificMessageCommandProcessor.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(MessageQueueManager.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class)//
@@ -158,41 +156,41 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(FileBizLogger.class) //
 		      .req(BrokerLeaseContainer.class)//
 		      .req(MetaService.class) //
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(SystemClockService.class) //
 		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET.toString(),
 		      QueryLatestConsumerOffsetCommandProcessor.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(MetaService.class)//
 		      .req(MessageQueueManager.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET_V3.toString(),
 		      QueryLatestConsumerOffsetCommandProcessorV3.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(MetaService.class)//
 		      .req(MessageQueueManager.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_LATEST_CONSUMER_OFFSET_V5.toString(),
 		      QueryLatestConsumerOffsetCommandProcessorV5.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(MetaService.class)//
 		      .req(MessageQueueManager.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_MESSAGE_OFFSET_BY_TIME.toString(),
 		      QueryMessageOffsetByTimeCommandProcessor.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(MetaService.class)//
 		      .req(MessageQueueManager.class)//
 		);
 		all.add(C(CommandProcessor.class, CommandType.QUERY_MESSAGE_OFFSET_BY_TIME.toString(),
 		      QueryMessageOffsetByTimeCommandProcessor.class)//
 		      .req(BrokerLeaseContainer.class)//
-		      .req(BrokerConfig.class)//
+		      .req(BrokerConfigProvider.class)//
 		      .req(MetaService.class)//
 		      .req(MessageQueueManager.class)//
 		);

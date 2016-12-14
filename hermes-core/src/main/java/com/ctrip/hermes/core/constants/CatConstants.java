@@ -81,4 +81,8 @@ public interface CatConstants {
 	public static final String TYPE_HERMES_BILL_UNKNOWN = "Hermes.Bill.Unknown";
 
 	public static final String TYPE_HERMES_CLIENT_VERSION = "Hermes.Client.Version";
+
+	public static final String TYPE_MESSAGE_BROKER_QPS_RATE_LIMIT_EXCEED = "Message.Broker.Rate.Limit.QPS";
+
+	public static final String TYPE_MESSAGE_BROKER_BYTES_RATE_LIMIT_EXCEED = "Message.Broker.Rate.Limit.Bytes";
 }

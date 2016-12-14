@@ -11,11 +11,11 @@ import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.registry.BrokerRegistry;
 import com.ctrip.hermes.broker.shutdown.ShutdownRequestMonitor;
 import com.ctrip.hermes.broker.transport.NettyServer;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -30,7 +30,7 @@ public class DefaultBrokerBootstrap extends ContainerHolder implements BrokerBoo
 	private NettyServer m_nettyServer;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private BrokerRegistry m_registry;
