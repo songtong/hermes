@@ -528,14 +528,16 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 				if (rateLimiter == null) {
 					rateLimiter = RateLimiter.create(limit);
 					m_topicPartitionQPSRateLimiters.put(tp, rateLimiter);
-					log.info("Set single partition's qps rate limit to {} for topic {}", limit, topic);
+					log.info("Set single partition's qps rate limit to {} for topic {} and partition {}", limit, topic,
+					      partition);
 				}
 			}
 		} else {
 			synchronized (rateLimiter) {
 				if (rateLimiter.getRate() != limit) {
 					rateLimiter.setRate(limit);
-					log.info("Single partition's qps rate limit changed to {} for topic {}", limit, topic);
+					log.info("Single partition's qps rate limit changed to {} for topic {} and partition {}", limit, topic,
+					      partition);
 				}
 			}
 		}
