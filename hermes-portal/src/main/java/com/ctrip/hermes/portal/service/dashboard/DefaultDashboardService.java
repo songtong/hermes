@@ -114,7 +114,8 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 
 	private long m_timeStamp = -1;
 
-	private Map<Tpg, String> m_consumerLeases = new HashMap<>();
+	// <Tpg, <sessionId, ip>>
+	private Map<Tpg, Pair<String, String>> m_consumerLeases = new HashMap<>();
 
 	private Map<Pair<String, Integer>, String> m_brokerLeases = new HashMap<>();
 
@@ -154,14 +155,16 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		if (metaServer == null) {
 			return;
 		}
-		Map<Tpg, String> temp_consumerLeases = new HashMap<>();
+		Map<Tpg, Pair<String, String>> temp_consumerLeases = new HashMap<>();
 		Map<Pair<String, Integer>, String> temp_brokerLeases = new HashMap<>();
 		JSONObject metaServerJsonObject = JSON.parseObject(metaServer);
 
 		JSONObject consumerLeases = metaServerJsonObject.getJSONObject("consumerLeases");
 		for (Entry<String, Object> entry : consumerLeases.entrySet()) {
 			JSONObject lease = (JSONObject) entry.getValue();
-			String ip = ((JSONObject) lease.entrySet().iterator().next().getValue()).getString("ip");
+			Entry<String, Object> leaseValue = lease.entrySet().iterator().next();
+			String sessionId = leaseValue.getKey();
+			String ip = ((JSONObject) leaseValue.getValue()).getString("ip");
 			String[] splitKey = entry.getKey().split(",|=|]");
 			if (splitKey.length != 6) {
 				log.warn("Parse comsumer lease for {} failed.", entry.getKey());
@@ -171,7 +174,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 			int partition = new Integer(splitKey[3].trim());
 			String group = splitKey[5].trim();
 			Tpg tpg = new Tpg(topic, partition, group);
-			temp_consumerLeases.put(tpg, ip);
+			temp_consumerLeases.put(tpg, new Pair<>(sessionId, ip));
 		}
 		m_consumerLeases = temp_consumerLeases;
 
@@ -265,7 +268,12 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				}
 				latch.await(CONSUMER_BACKLOG_CALCULATE_AWAITTIME_MINUTE, TimeUnit.MINUTES);
 				for (DelayDetail delay : consumerDelays) {
-					delay.setCurrentConsumerIp(m_consumerLeases.get(new Tpg(topic, delay.getPartitionId(), consumer)));
+					Pair<String, String> consumerLease = m_consumerLeases.get(new Tpg(topic, delay.getPartitionId(),
+					      consumer));
+					if (consumerLease != null) {
+						delay.setConsumerSessionId(consumerLease.getKey());
+						delay.setCurrentConsumerIp(consumerLease.getValue());
+					}
 					delay.setCurrentBrokerIp(m_brokerLeases.get(new Pair<String, Integer>(topic, delay.getPartitionId())));
 				}
 			}
@@ -690,7 +698,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 							} else {
 								latestIds.put(partition.getId(), null);
 							}
-							
+
 							try {
 								Thread.sleep(sleepIntelval);
 							} catch (InterruptedException e) {
@@ -699,7 +707,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 						}
 
 					}
-					
+
 					out.flush();
 				} catch (IOException e) {
 					throw new RuntimeException("Download failed: " + e.getMessage());

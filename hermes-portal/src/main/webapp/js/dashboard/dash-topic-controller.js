@@ -1,7 +1,7 @@
 dashtopic.controller('dash-topic-controller', function($scope, $http, $resource, $sce, $routeParams, DashboardTopicService, user) {
 	$scope.logined = user.admin;
 	var route_topic = $routeParams['topic'];
-	var route_consumer = $routeParams['consumer'];
+	$scope.route_consumer = $routeParams['consumer'];
 	$scope.current_topic = route_topic == "_default" ? $scope.topic_briefs != undefined ? $scope.topic_briefs[0].topic : 'leo_test' : route_topic;
 
 	$scope.refresh_topic_latest = function() {
@@ -23,7 +23,7 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 			DashboardTopicService.get_consumers_for_topic($scope.current_topic).then(function(result) {
 				$scope.consumers = result;
 				$scope.display_filtered_consumers = $scope.consumers;
-				$scope.current_consumer = route_consumer != null ? route_consumer : ($scope.consumers != null && $scope.consumers.length != 0) ? $scope.consumers[0].name : null;
+				$scope.current_consumer = $scope.route_consumer != null ? $scope.route_consumer : ($scope.consumers != null && $scope.consumers.length != 0) ? $scope.consumers[0].name : null;
 
 				if ($scope.topic.storageType == 'kafka') {
 					$scope.trifecta_urls = DashboardTopicService.get_trifecta_urls();
