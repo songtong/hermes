@@ -63,6 +63,9 @@ public class CtripEnvProvider implements EnvProvider {
 			case "SHAOY":
 				m_idc = "OY";
 				break;
+			case "NTGXH":
+				m_idc = "NT";
+				break;
 			default:
 				log.warn("Unknown idc value {} from framework-foundation", idc);
 				break;
