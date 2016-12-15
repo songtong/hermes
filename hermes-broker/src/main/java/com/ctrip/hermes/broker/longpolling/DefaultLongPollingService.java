@@ -201,8 +201,6 @@ public class DefaultLongPollingService extends AbstractLongPollingService implem
 					count += batch.size();
 				}
 
-				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_ELAPSE, tpg.getTopic(), startTime, count, null,
-				      Transaction.SUCCESS);
 				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_DELIVER_DB + findDb(tpg.getTopic(), tpg.getPartition()),
 				      tpg.getTopic(), startTime, count, null, Transaction.SUCCESS);
 

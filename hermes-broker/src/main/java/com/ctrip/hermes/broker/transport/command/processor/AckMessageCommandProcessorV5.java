@@ -9,7 +9,6 @@ import java.util.List;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.AckMessagesTask;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
@@ -28,6 +27,7 @@ import com.ctrip.hermes.core.transport.command.processor.ThreadCount;
 import com.ctrip.hermes.core.transport.command.v5.AckMessageAckCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.AckMessageCommandV5;
 import com.ctrip.hermes.core.utils.CollectionUtil;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.ctrip.hermes.meta.entity.Endpoint;
 
 /**
@@ -53,7 +53,7 @@ public class AckMessageCommandProcessorV5 implements CommandProcessor {
 	private BrokerLeaseContainer m_leaseContainer;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Override
 	public List<CommandType> commandTypes() {

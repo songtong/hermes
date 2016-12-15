@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.unidal.lookup.annotation.Inject;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
@@ -18,6 +17,7 @@ import com.ctrip.hermes.core.transport.command.v2.PullMessageResultCommandV2;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
 import com.ctrip.hermes.core.transport.command.v4.PullMessageResultCommandV4;
 import com.ctrip.hermes.core.transport.command.v5.PullMessageResultCommandV5;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -28,7 +28,7 @@ public abstract class AbstractLongPollingService implements LongPollingService {
 	protected MessageQueueManager m_queueManager;
 
 	@Inject
-	protected BrokerConfig m_config;
+	protected BrokerConfigProvider m_config;
 
 	@Inject
 	protected SystemClockService m_systemClockService;

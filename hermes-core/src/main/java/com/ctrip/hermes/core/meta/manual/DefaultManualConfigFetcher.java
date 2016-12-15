@@ -3,7 +3,7 @@ package com.ctrip.hermes.core.meta.manual;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -90,15 +90,15 @@ public class DefaultManualConfigFetcher implements ManualConfigFetcher {
 
 	private List<Endpoint> convertToEndpoints(String brokers) {
 		try {
-			List<String> ipPortStrList = JSON.parseObject(brokers, new TypeReference<List<String>>() {
+			Map<String, String> idEndpointMap = JSON.parseObject(brokers, new TypeReference<Map<String, String>>() {
 			});
-			if (ipPortStrList != null && !ipPortStrList.isEmpty()) {
+			if (idEndpointMap != null && !idEndpointMap.isEmpty()) {
 				List<Endpoint> endpoints = new ArrayList<>();
-				for (String ipPortStr : ipPortStrList) {
-					String[] splits = ipPortStr.split(":");
+				for (Map.Entry<String, String> idEndpoint : idEndpointMap.entrySet()) {
+					String[] splits = idEndpoint.getValue().split(":");
 					String ip = splits[0].trim();
 					int port = Integer.parseInt(splits[1].trim());
-					Endpoint endpoint = new Endpoint(UUID.randomUUID().toString());
+					Endpoint endpoint = new Endpoint(idEndpoint.getKey());
 					endpoint.setHost(ip);
 					endpoint.setPort(port);
 					endpoint.setType(Endpoint.BROKER);

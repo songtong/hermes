@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.ContainerHolder;
 import org.unidal.lookup.annotation.Inject;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Offset;
@@ -22,6 +21,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v3.QueryLatestConsumerOffsetCommandV3;
 import com.ctrip.hermes.core.transport.command.v3.QueryOffsetResultCommandV3;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 public class QueryLatestConsumerOffsetCommandProcessorV3 extends ContainerHolder implements CommandProcessor {
 
@@ -34,7 +34,7 @@ public class QueryLatestConsumerOffsetCommandProcessorV3 extends ContainerHolder
 	private BrokerLeaseContainer m_leaseContainer;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private MessageQueueManager m_messageQueueManager;

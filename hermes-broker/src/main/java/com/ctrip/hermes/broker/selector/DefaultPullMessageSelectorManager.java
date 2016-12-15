@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriorityDao;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity;
@@ -29,6 +28,7 @@ import com.ctrip.hermes.core.selector.Selector;
 import com.ctrip.hermes.core.selector.Selector.InitialLastUpdateTime;
 import com.ctrip.hermes.core.selector.Slot;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 /**
  * @author marsqing
@@ -42,7 +42,7 @@ public class DefaultPullMessageSelectorManager extends AbstractSelectorManager<T
 	private static Logger log = LoggerFactory.getLogger(DefaultPullMessageSelectorManager.class);
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private MessagePriorityDao messageDao;

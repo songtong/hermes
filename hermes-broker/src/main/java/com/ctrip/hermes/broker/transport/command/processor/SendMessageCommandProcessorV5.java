@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
@@ -34,6 +33,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext
 import com.ctrip.hermes.core.transport.command.v5.SendMessageAckCommandV5;
 import com.ctrip.hermes.core.transport.command.v5.SendMessageCommandV5;
 import com.ctrip.hermes.core.utils.CatUtil;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
@@ -43,6 +43,7 @@ import com.dianping.cat.message.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.RateLimiter;
 
 /**
  * 
@@ -62,7 +63,7 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 	private BrokerLeaseContainer m_leaseContainer;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private MetaService m_metaService;
@@ -87,50 +88,84 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 
 		if (m_metaService.findTopicByName(topic) != null) {
 			if (lease != null) {
-				// FIXME if dumper's queue is full, reject it.
-				writeAck(ctx, topic, partition, true);
+				int bytes = calSize(reqCmd.getMessageRawDataBatches());
 
-				Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
+				if (!isRateLimitExceeded(topic, partition, reqCmd.getMessageCount(), bytes)) {
+					writeAck(ctx, topic, partition, true);
 
-				bizLog(ctx, rawBatches, partition);
+					Map<Integer, MessageBatchWithRawData> rawBatches = reqCmd.getMessageRawDataBatches();
 
-				final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
-				result.correlate(reqCmd);
+					bizLog(ctx, rawBatches, partition);
 
-				FutureCallback<Map<Integer, SendMessageResult>> completionCallback = new AppendMessageCompletionCallback(
-				      result, ctx, topic, partition);
+					final SendMessageResultCommand result = new SendMessageResultCommand(reqCmd.getMessageCount());
+					result.correlate(reqCmd);
 
-				for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
-					MessageBatchWithRawData batch = entry.getValue();
-					try {
-						ListenableFuture<Map<Integer, SendMessageResult>> future = m_queueManager.appendMessageAsync(topic,
-						      partition, entry.getKey() == 0 ? true : false, batch,
-						      m_systemClockService.now() + reqCmd.getTimeout());
+					FutureCallback<Map<Integer, SendMessageResult>> completionCallback = new AppendMessageCompletionCallback(
+					      result, ctx, topic, partition);
 
-						if (future != null) {
-							Futures.addCallback(future, completionCallback);
+					for (Map.Entry<Integer, MessageBatchWithRawData> entry : rawBatches.entrySet()) {
+						MessageBatchWithRawData batch = entry.getValue();
+						try {
+							ListenableFuture<Map<Integer, SendMessageResult>> future = m_queueManager.appendMessageAsync(
+							      topic, partition, entry.getKey() == 0 ? true : false, batch, m_systemClockService.now()
+							            + reqCmd.getTimeout());
+
+							if (future != null) {
+								Futures.addCallback(future, completionCallback);
+							}
+						} catch (Exception e) {
+							log.error("Failed to append messages async.", e);
 						}
-					} catch (Exception e) {
-						log.error("Failed to append messages async.", e);
 					}
+				} else {
+					reqCmd.release();
 				}
-
-				return;
-
 			} else {
 				if (log.isDebugEnabled()) {
 					log.debug("No broker lease to handle client send message reqeust(topic={}, partition={})", topic,
 					      partition);
 				}
+				writeAck(ctx, topic, partition, false);
+				reqCmd.release();
 			}
 		} else {
 			if (log.isDebugEnabled()) {
 				log.debug("Topic {} not found", topic);
 			}
+			writeAck(ctx, topic, partition, false);
+			reqCmd.release();
 		}
 
-		writeAck(ctx, topic, partition, false);
-		reqCmd.release();
+	}
+
+	private boolean isRateLimitExceeded(String topic, int partition, int msgCount, int bytes) {
+		RateLimiter qpsRateLimiter = m_config.getPartitionProduceQPSRateLimiter(topic, partition);
+		RateLimiter bytesRateLimiter = m_config.getPartitionProduceBytesRateLimiter(topic, partition);
+		if (qpsRateLimiter.tryAcquire(msgCount)) {
+			if (bytesRateLimiter.tryAcquire(bytes)) {
+				return true;
+			} else {
+				Cat.logEvent(CatConstants.TYPE_MESSAGE_BROKER_BYTES_RATE_LIMIT_EXCEED, topic + "-" + partition,
+				      Event.SUCCESS, "msgCount=" + msgCount + "&bytes=" + bytes);
+			}
+		} else {
+			Cat.logEvent(CatConstants.TYPE_MESSAGE_BROKER_QPS_RATE_LIMIT_EXCEED, topic + "-" + partition, Event.SUCCESS,
+			      "msgCount=" + msgCount + "&bytes=" + bytes);
+		}
+
+		return false;
+	}
+
+	private int calSize(Map<Integer, MessageBatchWithRawData> messageRawDataBatches) {
+		int bytes = 0;
+
+		for (MessageBatchWithRawData batch : messageRawDataBatches.values()) {
+			for (PartialDecodedMessage pdmsg : batch.getMessages()) {
+				bytes += pdmsg.getDurableProperties().readableBytes() + pdmsg.getBody().readableBytes();
+			}
+		}
+
+		return bytes;
 	}
 
 	private void logReqToCat(SendMessageCommandV5 reqCmd) {
@@ -211,8 +246,6 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 		}
 
 		private void logElapse() {
-			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE, m_topic + "-" + m_partition, m_start,
-			      m_result.getSuccesses().size(), null, Transaction.SUCCESS);
 			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_DB + findDb(m_topic, m_partition), m_topic,
 			      m_start, m_result.getSuccesses().size(), null, Transaction.SUCCESS);
 		}

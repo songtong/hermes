@@ -26,7 +26,6 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 import org.unidal.tuple.Triple;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetter;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetterDao;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
@@ -68,9 +67,11 @@ import com.ctrip.hermes.core.transport.TransferCallback;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.dianping.cat.Cat;
+import com.dianping.cat.message.Event;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -108,7 +109,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	private SystemClockService m_systemClockService;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private Filter m_filter;
@@ -132,12 +133,14 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		Topic topic = m_metaService.findTopicByName(topicName);
 
 		int count = 0;
+		long bytes = 0;
 
 		for (MessageBatchWithRawData batch : batches) {
 			List<PartialDecodedMessage> pdmsgs = batch.getMessages();
 			BrokerStatusMonitor.INSTANCE.msgSaved(topicName, partition, pdmsgs.size());
 			for (PartialDecodedMessage pdmsg : pdmsgs) {
 				count++;
+				bytes += pdmsg.getBody().readableBytes() + pdmsg.getDurableProperties().readableBytes();
 				MessagePriority msg = new MessagePriority();
 				msg.setAttributes(pdmsg.readDurableProperties());
 				msg.setCreationDate(new Date(pdmsg.getBornTime()));
@@ -170,6 +173,16 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 		if (count > 0) {
 			logSelecotrMetric(topicName, partition, priority, count);
+		}
+
+		if (bytes > 0) {
+			try {
+				Cat.logEvent(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_BYTES_DB
+				      + topic.getPartitions().get(partition).getWriteDatasource(), topicName, Event.SUCCESS, "*count="
+				      + bytes);
+			} catch (Exception e) {
+				log.warn("Exception occurred while loging bytes for {}-{}", topicName, partition, e);
+			}
 		}
 	}
 

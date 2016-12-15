@@ -24,7 +24,6 @@ import com.ctrip.hermes.broker.ack.internal.ContinuousRange;
 import com.ctrip.hermes.broker.ack.internal.DefaultAckHolder;
 import com.ctrip.hermes.broker.ack.internal.EnumRange;
 import com.ctrip.hermes.broker.ack.internal.ForwardOnlyAckHolder;
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.queue.DefaultMessageQueueManager.Operation;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.AckContext;
@@ -44,6 +43,7 @@ import com.ctrip.hermes.core.transport.command.v3.AckMessageResultCommandV3;
 import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.dianping.cat.Cat;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -80,7 +80,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 
 	private AckMessagesTaskHandler m_ackMsgsTaskHandler;
 
-	protected BrokerConfig m_config;
+	protected BrokerConfigProvider m_config;
 
 	private MetaService m_metaService;
 
@@ -102,7 +102,7 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 		m_forwardOnlyAckHolders = new ConcurrentHashMap<>();
 		m_ackOpExecutor = ackOpExecutor;
 		m_ackMessagesTaskExecutor = ackMessagesTaskExecutor;
-		m_config = PlexusComponentLocator.lookup(BrokerConfig.class);
+		m_config = PlexusComponentLocator.lookup(BrokerConfigProvider.class);
 		m_metaService = PlexusComponentLocator.lookup(MetaService.class);
 		m_flusher = new DefaultMessageQueueFlusher(m_topic, m_partition, m_storage, m_metaService);
 		m_systemClockService = PlexusComponentLocator.lookup(SystemClockService.class);

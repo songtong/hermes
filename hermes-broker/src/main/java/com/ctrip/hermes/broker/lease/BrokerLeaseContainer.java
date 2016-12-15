@@ -17,13 +17,13 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.broker.build.BuildConstants;
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseManager.BrokerLeaseKey;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.lease.LeaseManager;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -38,7 +38,7 @@ public class BrokerLeaseContainer implements Initializable {
 	private LeaseManager<BrokerLeaseKey> m_leaseManager;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private SystemClockService m_systemClockService;

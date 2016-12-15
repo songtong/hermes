@@ -10,8 +10,6 @@ public interface CatConstants {
 
 	public static final String TYPE_REMOTE_CALL = "RemoteCall";
 
-	public static final String TYPE_MESSAGE_DELIVER_ELAPSE = "Message.Deliver.Elapse";
-
 	public static final String TYPE_MESSAGE_DELIVER_DB = "Message.Deliver.DB.";
 
 	public static final String TYPE_MESSAGE_DELIVER_BY_SAFE = "Message.Deliver.SafeTrigger-";
@@ -60,9 +58,9 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_BROKER_FLUSH = "Message.Broker.Flush";
 
-	public static final String TYPE_MESSAGE_BROKER_PRODUCE_ELAPSE = "Message.Broker.Produce.Elapse";
-
 	public static final String TYPE_MESSAGE_BROKER_PRODUCE_DB = "Message.Broker.Produce.DB.";
+
+	public static final String TYPE_MESSAGE_BROKER_PRODUCE_BYTES_DB = "Message.Broker.Produce.Bytes.DB.";
 
 	public static final String TYPE_MESSAGE_CONSUME_ACK_TRANSPORT = "Message.Consume.Ack.Transport";
 
@@ -83,4 +81,8 @@ public interface CatConstants {
 	public static final String TYPE_HERMES_BILL_UNKNOWN = "Hermes.Bill.Unknown";
 
 	public static final String TYPE_HERMES_CLIENT_VERSION = "Hermes.Client.Version";
+
+	public static final String TYPE_MESSAGE_BROKER_QPS_RATE_LIMIT_EXCEED = "Message.Broker.Rate.Limit.QPS";
+
+	public static final String TYPE_MESSAGE_BROKER_BYTES_RATE_LIMIT_EXCEED = "Message.Broker.Rate.Limit.Bytes";
 }

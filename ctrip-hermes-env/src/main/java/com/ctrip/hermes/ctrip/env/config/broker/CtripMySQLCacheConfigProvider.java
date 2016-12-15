@@ -1,4 +1,4 @@
-package com.ctrip.hermes.broker.config;
+package com.ctrip.hermes.ctrip.env.config.broker;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,15 +16,16 @@ import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.hermes.ctrip.env.StringUtils;
+import com.ctrip.hermes.env.config.broker.MySQLCacheConfigProvider;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class MySQLCacheConfig {
+public class CtripMySQLCacheConfigProvider implements MySQLCacheConfigProvider {
 
-	private static final Logger log = LoggerFactory.getLogger(MySQLCacheConfig.class);
+	private static final Logger log = LoggerFactory.getLogger(CtripMySQLCacheConfigProvider.class);
 
 	private static final String FALSE = "false";
 

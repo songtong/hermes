@@ -1,25 +1,44 @@
-package com.ctrip.hermes.broker.config;
+package com.ctrip.hermes.ctrip.env.config.broker;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.ctrip.hermes.core.utils.StringUtils;
+import com.ctrip.framework.apollo.Config;
+import com.ctrip.framework.apollo.ConfigChangeListener;
+import com.ctrip.framework.apollo.ConfigService;
+import com.ctrip.framework.apollo.model.ConfigChangeEvent;
+import com.ctrip.hermes.ctrip.env.StringUtils;
 import com.ctrip.hermes.env.ClientEnvironment;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
+import com.ctrip.hermes.env.config.broker.MySQLCacheConfigProvider;
+import com.google.common.util.concurrent.RateLimiter;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-@Named(type = BrokerConfig.class)
-public class BrokerConfig implements Initializable {
+@Named(type = BrokerConfigProvider.class)
+public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initializable {
+
+	private static final Logger log = LoggerFactory.getLogger(CtripBrokerConfigProvider.class);
+
+	private static final String RATE_LIMITS_QPS = "rateLimits.qps";
+
+	private static final String RATE_LIMITS_BYTES = "rateLimits.bytes";
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -41,7 +60,7 @@ public class BrokerConfig implements Initializable {
 
 	private static final int DEFAULT_SHUTDOWN_PORT = 4888;
 
-	private MySQLCacheConfig m_cacheConfig = new MySQLCacheConfig();
+	private CtripMySQLCacheConfigProvider m_cacheConfig = new CtripMySQLCacheConfigProvider();
 
 	private static final int DEFAULT_FILTER_PATTERN_CACHE_SIZE = 10000;
 
@@ -94,7 +113,17 @@ public class BrokerConfig implements Initializable {
 
 	private long m_messageQueueFetchResendMessageBySafeTriggerMinInterval = 200;
 
-	public BrokerConfig() {
+	private AtomicReference<Map<String, Double>> m_topicQPSRateLimits = new AtomicReference<Map<String, Double>>(
+	      new HashMap<String, Double>());
+
+	private Map<Pair<String, Integer>, RateLimiter> m_topicPartitionQPSRateLimiters = new ConcurrentHashMap<>();
+
+	private AtomicReference<Map<String, Double>> m_topicBytesRateLimits = new AtomicReference<Map<String, Double>>(
+	      new HashMap<String, Double>());
+
+	private Map<Pair<String, Integer>, RateLimiter> m_topicPartitionBytesRateLimiters = new ConcurrentHashMap<>();
+
+	public CtripBrokerConfigProvider() {
 		m_sessionId = System.getProperty("brokerId", UUID.randomUUID().toString());
 	}
 
@@ -220,6 +249,57 @@ public class BrokerConfig implements Initializable {
 		}
 
 		m_cacheConfig.init(m_env.getGlobalConfig());
+
+		initRateLimiters();
+	}
+
+	private void initRateLimiters() {
+		Config config = ConfigService.getAppConfig();
+
+		config.addChangeListener(new ConfigChangeListener() {
+
+			@Override
+			public void onChange(ConfigChangeEvent changeEvent) {
+				if (changeEvent.changedKeys().contains(RATE_LIMITS_QPS)) {
+					Map<String, Double> topicQPSRateLimits = parseTopicLimits(changeEvent.getChange(RATE_LIMITS_QPS)
+					      .getNewValue());
+					if (topicQPSRateLimits != null) {
+						m_topicQPSRateLimits.set(topicQPSRateLimits);
+						log.info("rateLimits.qps changed({}).", topicQPSRateLimits);
+					}
+				}
+				if (changeEvent.changedKeys().contains(RATE_LIMITS_BYTES)) {
+					Map<String, Double> topicBytesRateLimits = parseTopicLimits(changeEvent.getChange(RATE_LIMITS_BYTES)
+					      .getNewValue());
+					if (topicBytesRateLimits != null) {
+						m_topicBytesRateLimits.set(topicBytesRateLimits);
+						log.info("rateLimits.bytes changed({}).", topicBytesRateLimits);
+					}
+				}
+			}
+		});
+
+		Map<String, Double> topicQPSRateLimits = parseTopicLimits(config.getProperty(RATE_LIMITS_QPS, "{}"));
+		if (topicQPSRateLimits != null) {
+			m_topicQPSRateLimits.set(topicQPSRateLimits);
+			log.info("rateLimits.qps is {}.", JSON.toJSONString(topicQPSRateLimits));
+		}
+		Map<String, Double> topicBytesRateLimits = parseTopicLimits(config.getProperty(RATE_LIMITS_BYTES, "{}"));
+		if (topicBytesRateLimits != null) {
+			m_topicBytesRateLimits.set(topicBytesRateLimits);
+			log.info("rateLimits.bytes is {}.", JSON.toJSONString(topicBytesRateLimits));
+		}
+	}
+
+	private Map<String, Double> parseTopicLimits(String limitsStr) {
+		try {
+			Map<String, Double> topicLimits = JSON.parseObject(limitsStr, new TypeReference<Map<String, Double>>() {
+			});
+			return topicLimits;
+		} catch (Exception e) {
+			log.error("Parse limits failed.", e);
+		}
+		return null;
 	}
 
 	public String getSessionId() {
@@ -320,7 +400,7 @@ public class BrokerConfig implements Initializable {
 		return 100;
 	}
 
-	public MySQLCacheConfig getMySQLCacheConfig() {
+	public MySQLCacheConfigProvider getMySQLCacheConfig() {
 		return m_cacheConfig;
 	}
 
@@ -434,6 +514,75 @@ public class BrokerConfig implements Initializable {
 
 	public long getMessageQueueFetchResendMessageBySafeTriggerMinInterval() {
 		return m_messageQueueFetchResendMessageBySafeTriggerMinInterval;
+	}
+
+	public RateLimiter getPartitionProduceQPSRateLimiter(String topic, int partition) {
+		Double limit = getLimit(m_topicQPSRateLimits.get(), topic);
+
+		Pair<String, Integer> tp = new Pair<String, Integer>(topic, partition);
+		RateLimiter rateLimiter = m_topicPartitionQPSRateLimiters.get(tp);
+
+		if (rateLimiter == null) {
+			synchronized (m_topicPartitionQPSRateLimiters) {
+				rateLimiter = m_topicPartitionQPSRateLimiters.get(tp);
+				if (rateLimiter == null) {
+					rateLimiter = RateLimiter.create(limit);
+					m_topicPartitionQPSRateLimiters.put(tp, rateLimiter);
+					log.info("Set single partition's qps rate limit to {} for topic {} and partition {}", limit, topic,
+					      partition);
+				}
+			}
+		} else {
+			synchronized (rateLimiter) {
+				if (rateLimiter.getRate() != limit) {
+					rateLimiter.setRate(limit);
+					log.info("Single partition's qps rate limit changed to {} for topic {} and partition {}", limit, topic,
+					      partition);
+				}
+			}
+		}
+		return rateLimiter;
+	}
+
+	public RateLimiter getPartitionProduceBytesRateLimiter(String topic, int partition) {
+		Double limit = getLimit(m_topicBytesRateLimits.get(), topic);
+
+		Pair<String, Integer> tp = new Pair<String, Integer>(topic, partition);
+		RateLimiter rateLimiter = m_topicPartitionBytesRateLimiters.get(tp);
+
+		if (rateLimiter == null) {
+			synchronized (m_topicPartitionBytesRateLimiters) {
+				rateLimiter = m_topicPartitionBytesRateLimiters.get(tp);
+				if (rateLimiter == null) {
+					rateLimiter = RateLimiter.create(limit);
+					m_topicPartitionBytesRateLimiters.put(tp, rateLimiter);
+					log.info("Set single partition's bytes rate limit to {} for topic {}", limit, topic);
+				}
+			}
+		} else {
+			synchronized (rateLimiter) {
+				if (rateLimiter.getRate() != limit) {
+					rateLimiter.setRate(limit);
+					log.info("Single partition's bytes rate limit changed to {} for topic {}", limit, topic);
+				}
+			}
+		}
+		return rateLimiter;
+	}
+
+	private Double getLimit(Map<String, Double> limits, String topic) {
+		Double limit = limits.get(topic);
+		if (limit == null) {
+			limit = limits.get("default");
+
+			if (limit == null) {
+				return Double.MAX_VALUE;
+			} else {
+				return limit;
+			}
+		} else {
+			return limit;
+		}
 	}
 
 }

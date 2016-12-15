@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.longpolling.LongPollingService;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.transport.NettyServer;
@@ -30,6 +29,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager
 import com.ctrip.hermes.core.transport.endpoint.EndpointClient;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.google.common.base.Charsets;
 
 /**
@@ -55,7 +55,7 @@ public class ShutdownRequestMonitor {
 	private NettyServer m_nettyServer;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Inject
 	private EndpointClient m_endpointClient;

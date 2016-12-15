@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 
-import com.ctrip.hermes.broker.config.BrokerConfig;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.Offset;
@@ -19,6 +18,7 @@ import com.ctrip.hermes.core.transport.command.processor.CommandProcessor;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorContext;
 import com.ctrip.hermes.core.transport.command.v2.PullSpecificMessageCommand;
 import com.ctrip.hermes.core.transport.command.v3.PullMessageResultCommandV3;
+import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 
 public class PullSpecificMessageCommandProcessor implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(PullSpecificMessageCommandProcessor.class);
@@ -30,7 +30,7 @@ public class PullSpecificMessageCommandProcessor implements CommandProcessor {
 	private BrokerLeaseContainer m_leaseContainer;
 
 	@Inject
-	private BrokerConfig m_config;
+	private BrokerConfigProvider m_config;
 
 	@Override
 	public List<CommandType> commandTypes() {
