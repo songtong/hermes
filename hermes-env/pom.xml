@@ -12,6 +12,11 @@
 	<name>Hermes Env</name>
 	<dependencies>
 		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.unidal.framework</groupId>
 			<artifactId>foundation-service</artifactId>
 		</dependency>
