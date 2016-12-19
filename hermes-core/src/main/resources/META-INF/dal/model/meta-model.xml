@@ -98,14 +98,6 @@
 			]]>
 		</snippet>
 	</entity>
-	<entity name="idc-policy">
-		<attribute name="type" value-type="String" key='true' default-value="local" />
-		<snippet lang='java'><![CDATA[
-			public final static String LOCAL = "local";
-			public final static String PRIMARY = "primary";
-			]]>
-		</snippet>
-	</entity>
 	<entity name="partition">
 		<attribute name="id" value-type="int" key='true' />
 	</entity>

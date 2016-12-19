@@ -24,11 +24,6 @@
 			</div>
 			<button style="margin-left: 20px" class="btn btn-danger" ng-click="deleteIdc()">Delete</button>
 		</form>
-		<div style="margin-top: 5px">
-			<span class="help-block">切机房时是否需要更新Default Kafka Property <label class="radio-inline"> <input type="radio" ng-model="changeKafkaDefaultProperty" ng-value=true> 是
-			</label> <label class="radio-inline"> <input type="radio" ng-model="changeKafkaDefaultProperty" ng-value=false> 否
-			</label></span>
-		</div>
 
 		<hr>
 		<h4>
