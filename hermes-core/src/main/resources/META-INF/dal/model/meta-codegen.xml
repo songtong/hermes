@@ -5,7 +5,6 @@
     <entity-ref name="topic" type="list" names="topics" />
     <entity-ref name="app" type="list" names="apps" />
     <entity-ref name="codec" type="list" names="codecs" />
-    <entity-ref name="idc-policy" type="list" names="idc-policies" />
     <entity-ref name="endpoint" type="list" names="endpoints" />
     <entity-ref name="idc" type="list" names="idcs" />
     <entity-ref name="server" type="list" names="servers" />
@@ -62,9 +61,6 @@
   <entity name="codec">
     <attribute name="type" value-type="String" />
     <entity-ref name="property" type="list" names="properties" />
-  </entity>
-  <entity name="idc-policy">
-    <attribute name="type" value-type="String" />
   </entity>
   <entity name="endpoint">
     <attribute name="id" value-type="String" />

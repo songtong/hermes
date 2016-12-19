@@ -5,9 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import com.ctrip.hermes.core.constants.IdcPolicy;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.env.ClientEnvironment;
-import com.ctrip.hermes.meta.entity.IdcPolicy;
 
 @Named
 public class KafkaIdcStrategy {

@@ -13,7 +13,7 @@ import com.ctrip.hermes.admin.core.service.ConsumerService;
 import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
 import com.ctrip.hermes.admin.core.view.TopicView;
-import com.ctrip.hermes.meta.entity.IdcPolicy;
+import com.ctrip.hermes.core.constants.IdcPolicy;
 import com.ctrip.hermes.portal.application.ConsumerApplication;
 import com.ctrip.hermes.portal.application.HermesApplication;
 import com.ctrip.hermes.portal.application.TopicApplication;

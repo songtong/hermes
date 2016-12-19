@@ -21,6 +21,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.core.constants.IdcPolicy;
 import com.ctrip.hermes.core.kafka.KafkaConstants;
 import com.ctrip.hermes.core.kafka.KafkaIdcStrategy;
 import com.ctrip.hermes.core.message.ProducerMessage;
@@ -32,7 +33,6 @@ import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.kafka.util.KafkaProperties;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
-import com.ctrip.hermes.meta.entity.IdcPolicy;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;

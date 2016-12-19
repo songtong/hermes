@@ -13,7 +13,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.admin.core.service.EndpointService;
-import com.ctrip.hermes.meta.entity.IdcPolicy;
+import com.ctrip.hermes.core.constants.IdcPolicy;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.portal.application.TopicApplication;
 import com.ctrip.hermes.portal.dal.tag.Tag;
@@ -113,7 +113,7 @@ public abstract class PartitionStrategy {
 		}
 
 		topicView.setBrokerGroup(getDefaultBrokerGroup(application));
-		
+
 		StrategyDatasource strategyDatasource;
 		try {
 			strategyDatasource = getDefaultDatasource(application);
