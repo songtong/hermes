@@ -14,6 +14,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-admin-core</artifactId>
 		</dependency>

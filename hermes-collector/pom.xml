@@ -13,6 +13,11 @@
 	<packaging>war</packaging>
 	<dependencies>
 		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-core</artifactId>
 		</dependency>
