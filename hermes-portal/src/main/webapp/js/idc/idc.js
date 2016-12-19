@@ -322,18 +322,51 @@ angular.module('idcApp', [ 'ngResource', 'smart-table', 'xeditable', 'toggle-swi
 		} else {
 			bootbox.confirm("确认将idc： " + $scope.currentIdc.name + "置为primary?", function(result) {
 				if (result) {
-					idcResource.switch_primary({
-						"idc" : $scope.currentIdc.id,
-						"changeKafkaDefaultProperty" : $scope.changeKafkaDefaultProperty
-					}, function(result) {
-						show_op_info.show("切换primary idc成功！当前primary idc: " + $scope.currentIdc.name, true);
-						doSwitch();
-						idcResource.query(function(result) {
-							$scope.idcs = result;
-						})
-					}, function(result) {
-						$scope.forceSwitchPrimary(doSwitch, result.data);
-					})
+					bootbox.confirm({
+						message : "是否需要更新Default Kafka Property？",
+						buttons : {
+							confirm : {
+								label : '是',
+								className : 'btn-success'
+							},
+							cancel : {
+								label : '否',
+								className : 'btn-danger'
+							}
+						},
+						callback : function(result) {
+							if (result) {
+								idcResource.switch_primary({
+									"idc" : $scope.currentIdc.id,
+									"changeKafkaDefaultProperty" : true
+								}, function(result) {
+									show_op_info.show("切换primary idc成功！当前primary idc: " + $scope.currentIdc.name, true);
+									doSwitch();
+									idcResource.query(function(result) {
+										$scope.idcs = result;
+									})
+								}, function(result) {
+									$scope.changeKafkaDefaultProperty = true;
+									$scope.forceSwitchPrimary(doSwitch, result.data);
+								})
+							} else {
+								idcResource.switch_primary({
+									"idc" : $scope.currentIdc.id,
+									"changeKafkaDefaultProperty" : false
+								}, function(result) {
+									show_op_info.show("切换primary idc成功！当前primary idc: " + $scope.currentIdc.name, true);
+									doSwitch();
+									idcResource.query(function(result) {
+										$scope.idcs = result;
+									})
+								}, function(result) {
+									$scope.changeKafkaDefaultProperty = false;
+									$scope.forceSwitchPrimary(doSwitch, result.data);
+								})
+							}
+						}
+					});
+
 				}
 			})
 		}

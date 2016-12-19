@@ -55,7 +55,7 @@ application_module.controller('app-topic-controller', [ '$scope', 'ApplicationSe
 		var message = "申请新建 Topic: <label class='label label-danger'>" + new_app.productLine + "." + new_app.entity + "." + new_app.event + "</label> ";
 		if (new_app.storageType == 'kafka' && $scope.kafkaFullDrEnabled) {
 			if (new_app.writePrimaryIdc) {
-				message = message + "<div style='margin-top: 5px;'><strong class='text-danger'>您选择写Kafka主机房, 当前主机房为：" + $scope.primaryIdc.name + "( " + $scope.primaryIdc.displayName + " )，推荐在主机房部署生产者。并需要升级客户端至0.8.0。</strong></div>";
+				message = message + "<div style='margin-top: 5px;'><strong class='text-danger'>您选择写Kafka主机房, 当前主机房为：" + $scope.primaryIdc.name + "( " + $scope.primaryIdc.displayName + " )，推荐在主机房部署生产者。并需要升级客户端至0.8.0以上版本。</strong></div>";
 			} else {
 				message = message + "<div style='margin-top: 5px;'><strong class='text-danger'>您选择写生产者同机房Kafka集群，需要该Topic的消费者全部双机房部署，否则会有消息丢失！并需要升级客户端至0.8.0。</strong></div>";
 			}

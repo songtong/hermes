@@ -1,7 +1,5 @@
 package com.ctrip.hermes.portal.service.dashboard;
 
-import io.netty.buffer.Unpooled;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -26,18 +24,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.StreamingOutput;
 
-import kafka.api.OffsetRequest;
-import kafka.api.PartitionOffsetRequestInfo;
-import kafka.common.OffsetMetadataAndError;
-import kafka.common.TopicAndPartition;
-import kafka.javaapi.OffsetFetchRequest;
-import kafka.javaapi.OffsetFetchResponse;
-import kafka.javaapi.OffsetResponse;
-import kafka.javaapi.PartitionMetadata;
-import kafka.javaapi.TopicMetadata;
-import kafka.javaapi.TopicMetadataRequest;
-import kafka.javaapi.consumer.SimpleConsumer;
-
 import org.apache.avro.generic.GenericRecord;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -61,7 +47,6 @@ import com.ctrip.hermes.admin.core.queue.DeadLetter;
 import com.ctrip.hermes.admin.core.queue.DeadLetterDao;
 import com.ctrip.hermes.admin.core.queue.DeadLetterEntity;
 import com.ctrip.hermes.admin.core.queue.ListUtils;
-import com.ctrip.hermes.admin.core.queue.MessagePriority;
 import com.ctrip.hermes.admin.core.queue.MessageQueueDao;
 import com.ctrip.hermes.admin.core.service.PartitionService;
 import com.ctrip.hermes.admin.core.service.TopicService;
@@ -70,7 +55,6 @@ import com.ctrip.hermes.core.message.payload.PayloadCodecFactory;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil.Transformer;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
-import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
@@ -82,6 +66,19 @@ import com.ctrip.hermes.portal.resource.view.TopicDelayDetailView.DelayDetail;
 import com.ctrip.hermes.portal.service.meta.DefaultPortalMetaService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+
+import io.netty.buffer.Unpooled;
+import kafka.api.OffsetRequest;
+import kafka.api.PartitionOffsetRequestInfo;
+import kafka.common.OffsetMetadataAndError;
+import kafka.common.TopicAndPartition;
+import kafka.javaapi.OffsetFetchRequest;
+import kafka.javaapi.OffsetFetchResponse;
+import kafka.javaapi.OffsetResponse;
+import kafka.javaapi.PartitionMetadata;
+import kafka.javaapi.TopicMetadata;
+import kafka.javaapi.TopicMetadataRequest;
+import kafka.javaapi.consumer.SimpleConsumer;
 
 @Named(type = DashboardService.class)
 public class DefaultDashboardService implements DashboardService, Initializable {
@@ -309,35 +306,35 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 		return consumerLags;
 	}
 
-	private void updateLatestProduced() {
-		Map<String, Date> m = new HashMap<String, Date>();
-		for (Entry<String, Topic> entry : m_topicService.getTopicEntities().entrySet()) {
-			Topic topic = entry.getValue();
-			if (Storage.MYSQL.equals(topic.getStorageType())) {
-				String topicName = topic.getName();
-				Date current = m_latestProduced.get(topicName) == null ? new Date(0) : m_latestProduced.get(topicName);
-				Date latest = new Date(0);
-				for (Partition partition : m_partitionService.findPartitionsByTopic(topic.getId())) {
-					try {
-						MessagePriority msgPriority = m_messageDao.getLatestProduced(topicName, partition.getId(),
-						      PortalConstants.PRIORITY_TRUE);
-						Date datePriority = msgPriority == null ? latest : msgPriority.getCreationDate();
-						MessagePriority msgNonPriority = m_messageDao.getLatestProduced(topicName, partition.getId(),
-						      PortalConstants.PRIORITY_FALSE);
-
-						Date dateNonPriority = msgNonPriority == null ? latest : msgNonPriority.getCreationDate();
-						latest = datePriority.after(dateNonPriority) ? datePriority : dateNonPriority;
-					} catch (DalException e) {
-						log.warn("Find latest produced failed. {}:{}", topicName, partition.getId());
-						continue;
-					}
-					current = latest.after(current) ? latest : current;
-				}
-				m.put(topicName, current);
-			}
-		}
-		m_latestProduced = m;
-	}
+//	private void updateLatestProduced() {
+//		Map<String, Date> m = new HashMap<String, Date>();
+//		for (Entry<String, Topic> entry : m_topicService.getTopicEntities().entrySet()) {
+//			Topic topic = entry.getValue();
+//			if (Storage.MYSQL.equals(topic.getStorageType())) {
+//				String topicName = topic.getName();
+//				Date current = m_latestProduced.get(topicName) == null ? new Date(0) : m_latestProduced.get(topicName);
+//				Date latest = new Date(0);
+//				for (Partition partition : m_partitionService.findPartitionsByTopic(topic.getId())) {
+//					try {
+//						MessagePriority msgPriority = m_messageDao.getLatestProduced(topicName, partition.getId(),
+//						      PortalConstants.PRIORITY_TRUE);
+//						Date datePriority = msgPriority == null ? latest : msgPriority.getCreationDate();
+//						MessagePriority msgNonPriority = m_messageDao.getLatestProduced(topicName, partition.getId(),
+//						      PortalConstants.PRIORITY_FALSE);
+//
+//						Date dateNonPriority = msgNonPriority == null ? latest : msgNonPriority.getCreationDate();
+//						latest = datePriority.after(dateNonPriority) ? datePriority : dateNonPriority;
+//					} catch (DalException e) {
+//						log.warn("Find latest produced failed. {}:{}", topicName, partition.getId());
+//						continue;
+//					}
+//					current = latest.after(current) ? latest : current;
+//				}
+//				m.put(topicName, current);
+//			}
+//		}
+//		m_latestProduced = m;
+//	}
 
 	public Map<String, Map<String, Map<String, Long>>> getTopicOffsetLags() {
 		return m_topicOffsetLags;
@@ -489,29 +486,29 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 	@Override
 	public void initialize() throws InitializationException {
 
-		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_MYSQL_UPDATE_TASK", true))
-		      .scheduleWithFixedDelay(new Runnable() {
-			      @Override
-			      public void run() {
-				      try {
-					      updateLatestProduced();
-				      } catch (Throwable e) {
-					      log.error("Update mysql monitor information failed.", e);
-				      }
-			      }
-		      }, 0, 1, TimeUnit.MINUTES);
-
-		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_KAFKA_OFFSET_TASK", true))
-		      .scheduleWithFixedDelay(new Runnable() {
-			      @Override
-			      public void run() {
-				      try {
-					      updateTopicLags();
-				      } catch (Throwable e) {
-					      log.error("Update elastic monitor information failed.", e);
-				      }
-			      }
-		      }, 0, 5, TimeUnit.MINUTES);
+//		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_MYSQL_UPDATE_TASK", true))
+//		      .scheduleWithFixedDelay(new Runnable() {
+//			      @Override
+//			      public void run() {
+//				      try {
+//					      updateLatestProduced();
+//				      } catch (Throwable e) {
+//					      log.error("Update mysql monitor information failed.", e);
+//				      }
+//			      }
+//		      }, 0, 1, TimeUnit.MINUTES);
+//
+//		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create("MONITOR_KAFKA_OFFSET_TASK", true))
+//		      .scheduleWithFixedDelay(new Runnable() {
+//			      @Override
+//			      public void run() {
+//				      try {
+//					      updateTopicLags();
+//				      } catch (Throwable e) {
+//					      log.error("Update elastic monitor information failed.", e);
+//				      }
+//			      }
+//		      }, 0, 5, TimeUnit.MINUTES);
 
 	}
 
