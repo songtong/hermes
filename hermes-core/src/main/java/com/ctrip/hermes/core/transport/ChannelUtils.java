@@ -16,7 +16,7 @@ public class ChannelUtils {
 
 	public static boolean writeAndFlush(Channel channel, Object msg) {
 		if (channel.isActive() && channel.isWritable()) {
-			channel.writeAndFlush(msg, channel.voidPromise());
+			channel.writeAndFlush(msg);
 			return true;
 		} else {
 			log.warn("WriteAndFlush failed to {}(active:{}, writable:{})", NettyUtils.parseChannelRemoteAddr(channel),
