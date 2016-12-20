@@ -147,7 +147,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 		RateLimiter bytesRateLimiter = m_config.getPartitionProduceBytesRateLimiter(topic, partition);
 		if (qpsRateLimiter.tryAcquire(msgCount)) {
 			if (bytesRateLimiter.tryAcquire(bytes)) {
-				return true;
+				return false;
 			} else {
 				Cat.logEvent(CatConstants.TYPE_MESSAGE_BROKER_BYTES_RATE_LIMIT_EXCEED, topic + "-" + partition,
 				      Event.SUCCESS, "msgCount=" + msgCount + "&bytes=" + bytes);
@@ -157,7 +157,7 @@ public class SendMessageCommandProcessor implements CommandProcessor {
 			      "msgCount=" + msgCount + "&bytes=" + bytes);
 		}
 
-		return false;
+		return true;
 	}
 
 	private int calSize(Map<Integer, MessageBatchWithRawData> messageRawDataBatches) {
