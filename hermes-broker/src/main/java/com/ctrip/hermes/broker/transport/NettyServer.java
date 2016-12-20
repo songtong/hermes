@@ -1,7 +1,7 @@
 package com.ctrip.hermes.broker.transport;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -56,7 +56,7 @@ public class NettyServer extends ContainerHolder {
 		      }).option(ChannelOption.SO_BACKLOG, 128) // TODO set tcp options
 		      .childOption(ChannelOption.SO_KEEPALIVE, true)//
 		      .childOption(ChannelOption.SO_REUSEADDR, true)//
-		      .childOption(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT)//
+		      .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)//
 		      .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 2 * 1024 * 1024)//
 		      .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 1024 * 1024)//
 		;
