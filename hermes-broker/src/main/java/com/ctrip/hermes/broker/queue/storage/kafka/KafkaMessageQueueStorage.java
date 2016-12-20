@@ -1,11 +1,16 @@
 package com.ctrip.hermes.broker.queue.storage.kafka;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
@@ -15,6 +20,7 @@ import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
@@ -23,12 +29,13 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.meta.entity.Storage;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Event;
 
 @Named(type = MessageQueueStorage.class, value = Storage.KAFKA)
 public class KafkaMessageQueueStorage implements MessageQueueStorage {
+
+	private static final Logger log = LoggerFactory.getLogger(KafkaMessageQueueStorage.class);
 
 	@Inject
 	private MetaService m_metaService;
@@ -46,6 +53,7 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 			return;
 		}
 
+		long totalBytes = 0;
 		ByteBuf bodyBuf = Unpooled.buffer();
 		try {
 			for (MessageBatchWithRawData batch : batches) {
@@ -54,6 +62,7 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 				for (PartialDecodedMessage pdmsg : pdmsgs) {
 					m_messageCodec.encodePartial(pdmsg, bodyBuf);
 					byte[] bytes = new byte[bodyBuf.readableBytes()];
+					totalBytes += bytes.length;
 					bodyBuf.readBytes(bytes);
 					bodyBuf.clear();
 
@@ -64,8 +73,19 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 					BrokerStatusMonitor.INSTANCE.kafkaSend(topic);
 				}
 			}
+
+			if (totalBytes > 0) {
+				try {
+					Cat.logEvent(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_BYTES + "kafka", topic, Event.SUCCESS, "*count="
+					      + totalBytes);
+				} catch (Exception e) {
+					log.warn("Exception occurred while loging bytes for {}-{}", topic, partition, e);
+				}
+			}
+
 		} finally {
 			bodyBuf.release();
+
 		}
 	}
 

@@ -60,7 +60,7 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_BROKER_PRODUCE_DB = "Message.Broker.Produce.DB.";
 
-	public static final String TYPE_MESSAGE_BROKER_PRODUCE_BYTES_DB = "Message.Broker.Produce.Bytes.DB.";
+	public static final String TYPE_MESSAGE_BROKER_PRODUCE_BYTES = "Message.Broker.Produce.Bytes.";
 
 	public static final String TYPE_MESSAGE_CONSUME_ACK_TRANSPORT = "Message.Consume.Ack.Transport";
 
