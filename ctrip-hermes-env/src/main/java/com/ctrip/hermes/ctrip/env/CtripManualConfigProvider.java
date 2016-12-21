@@ -37,8 +37,6 @@ public class CtripManualConfigProvider implements ManualConfigProvider, Initiali
 
 	@Override
 	public void initialize() throws InitializationException {
-		// warmup call
-		fetchManualConfig();
 	}
 
 }
