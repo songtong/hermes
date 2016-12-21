@@ -49,15 +49,19 @@ public class CatUtil {
 	}
 
 	public static void logEventPeriodically(String type, String name) {
+		logEventPeriodically(type, name, 1L);
+	}
+
+	public static void logEventPeriodically(String type, String name, long count) {
 		Pair<AtomicLong, AtomicLong> countAndLastLogTimePair = m_catEventLastLogTimes
 		      .getUnchecked(new Pair<>(type, name));
 		long now = System.currentTimeMillis();
 
-		if (now - countAndLastLogTimePair.getValue().get() >= 60000) {
+		if (now - countAndLastLogTimePair.getValue().get() >= 20000) {
 			countAndLastLogTimePair.getValue().set(now);
 			Cat.logEvent(type, name, Event.SUCCESS, "*count=" + countAndLastLogTimePair.getKey().getAndSet(0));
 		} else {
-			countAndLastLogTimePair.getKey().incrementAndGet();
+			countAndLastLogTimePair.getKey().addAndGet(count);
 		}
 	}
 }

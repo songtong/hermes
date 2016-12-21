@@ -27,10 +27,9 @@ import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.message.codec.MessageCodec;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.meta.entity.Storage;
-import com.dianping.cat.Cat;
-import com.dianping.cat.message.Event;
 
 @Named(type = MessageQueueStorage.class, value = Storage.KAFKA)
 public class KafkaMessageQueueStorage implements MessageQueueStorage {
@@ -76,8 +75,8 @@ public class KafkaMessageQueueStorage implements MessageQueueStorage {
 
 			if (totalBytes > 0) {
 				try {
-					Cat.logEvent(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_BYTES + "kafka", topic, Event.SUCCESS, "*count="
-					      + totalBytes);
+					CatUtil
+					      .logEventPeriodically(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_BYTES + "kafka", topic, totalBytes);
 				} catch (Exception e) {
 					log.warn("Exception occurred while loging bytes for {}-{}", topic, partition, e);
 				}

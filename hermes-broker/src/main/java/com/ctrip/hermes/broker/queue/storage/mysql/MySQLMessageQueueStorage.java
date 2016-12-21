@@ -65,13 +65,13 @@ import com.ctrip.hermes.core.selector.Slot;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.TransferCallback;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
+import com.ctrip.hermes.core.utils.CatUtil;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.HermesPrimitiveCodec;
 import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.dianping.cat.Cat;
-import com.dianping.cat.message.Event;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -177,9 +177,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 		if (bytes > 0) {
 			try {
-				Cat.logEvent(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_BYTES
-				      + topic.getPartitions().get(partition).getWriteDatasource(), topicName, Event.SUCCESS, "*count="
-				      + bytes);
+				CatUtil.logEventPeriodically(
+				      CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_BYTES
+				            + topic.getPartitions().get(partition).getWriteDatasource(), topicName, bytes);
 			} catch (Exception e) {
 				log.warn("Exception occurred while loging bytes for {}-{}", topicName, partition, e);
 			}

@@ -12,6 +12,8 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_DELIVER_DB = "Message.Deliver.DB.";
 
+	public static final String TYPE_MESSAGE_DELIVER = "Message.Deliver";
+
 	public static final String TYPE_MESSAGE_DELIVER_BY_SAFE = "Message.Deliver.SafeTrigger-";
 
 	public static final String TYPE_MESSAGE_DELIVER_BY_PRIORITY = "Message.Deliver.PriorityTrigger-";
@@ -56,11 +58,13 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_PRODUCE_TRIED = "Message.Produce.Tried";
 
-	public static final String TYPE_MESSAGE_BROKER_FLUSH = "Message.Broker.Flush";
+	public static final String TYPE_MESSAGE_BROKER_FLUSH = "Message.Flush";
 
-	public static final String TYPE_MESSAGE_BROKER_PRODUCE_DB = "Message.Broker.Produce.DB.";
+	public static final String TYPE_MESSAGE_BROKER_PRODUCE_DB = "Message.Produce.DB.";
 
-	public static final String TYPE_MESSAGE_BROKER_PRODUCE_BYTES = "Message.Broker.Produce.Bytes.";
+	public static final String TYPE_MESSAGE_BROKER_PRODUCE = "Message.Produce";
+
+	public static final String TYPE_MESSAGE_BROKER_PRODUCE_BYTES = "Message.Produce.Bytes.";
 
 	public static final String TYPE_MESSAGE_CONSUME_ACK_TRANSPORT = "Message.Consume.Ack.Transport";
 
@@ -82,7 +86,7 @@ public interface CatConstants {
 
 	public static final String TYPE_HERMES_CLIENT_VERSION = "Hermes.Client.Version";
 
-	public static final String TYPE_MESSAGE_BROKER_QPS_RATE_LIMIT_EXCEED = "Message.Broker.Rate.Limit.QPS";
+	public static final String TYPE_MESSAGE_BROKER_QPS_RATE_LIMIT_EXCEED = "Message.Rate.Limit.QPS";
 
-	public static final String TYPE_MESSAGE_BROKER_BYTES_RATE_LIMIT_EXCEED = "Message.Broker.Rate.Limit.Bytes";
+	public static final String TYPE_MESSAGE_BROKER_BYTES_RATE_LIMIT_EXCEED = "Message.Rate.Limit.Bytes";
 }
