@@ -177,7 +177,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 		if (bytes > 0) {
 			try {
-				Cat.logEvent(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_BYTES_DB
+				Cat.logEvent(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_BYTES
 				      + topic.getPartitions().get(partition).getWriteDatasource(), topicName, Event.SUCCESS, "*count="
 				      + bytes);
 			} catch (Exception e) {
