@@ -35,6 +35,22 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final Logger log = LoggerFactory.getLogger(CtripBrokerConfigProvider.class);
 
+	private static final String SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS = "sendMessageSelectorSafeTriggerIntervalMillis";
+
+	private static final String SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS = "sendMessageSelectorSafeTriggerMinFireIntervalMillis";
+
+	private static final String SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS = "sendMessageSelectorSafeTriggerTriggeringOffsetDeltas";
+
+	private static final String SEND_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS = "sendMessageSelectorNormalTriggeringOffsetDeltas";
+
+	private static final String PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS = "pullMessageSelectorSafeTriggerIntervalMillis";
+
+	private static final String PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS = "pullMessageSelectorSafeTriggerMinFireIntervalMillis";
+
+	private static final String PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS = "pullMessageSelectorSafeTriggerTriggeringOffsetDeltas";
+
+	private static final String PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS = "pullMessageSelectorNormalTriggeringOffsetDeltas";
+
 	private static final String RATE_LIMITS_QPS = "rateLimits.qps";
 
 	private static final String RATE_LIMITS_BYTES = "rateLimits.bytes";
@@ -82,28 +98,32 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private int m_filterTopicCacheSize = DEFAULT_FILTER_TOPIC_CACHE_SIZE;
 
-	private Map<String, Integer> m_sendMessageSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
+	private AtomicReference<Map<String, Integer>> m_sendMessageSelectorNormalTriggeringOffsetDeltas = new AtomicReference<Map<String, Integer>>(
+	      new HashMap<String, Integer>());
 
-	private Map<String, Integer> m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = new HashMap<>();
+	private AtomicReference<Map<String, Integer>> m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = new AtomicReference<Map<String, Integer>>(
+	      new HashMap<String, Integer>());
+
+	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis;
 
 	private int m_pullMessageSelectorWriteOffsetTtlMillis = 8000;
 
-	private int m_pullMessageSelectorSafeTriggerIntervalMillis = 1000;
+	private int m_pullMessageSelectorSafeTriggerIntervalMillis;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 50;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = 60;
 
-	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = 1000;
+	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis;
 
-	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = 10;
-
-	private int m_sendMessageSelectorSafeTriggerIntervalMillis = 10;
+	private int m_sendMessageSelectorSafeTriggerIntervalMillis;
 
 	// Topic -> GroupId or default -> delta
-	private Map<String, Map<String, Integer>> m_pullMessageSelectorNormalTriggeringOffsetDeltas = new HashMap<>();
+	private AtomicReference<Map<String, Map<String, Integer>>> m_pullMessageSelectorNormalTriggeringOffsetDeltas = new AtomicReference<Map<String, Map<String, Integer>>>(
+	      new HashMap<String, Map<String, Integer>>());
 
-	private Map<String, Map<String, Integer>> m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = new HashMap<>();
+	private AtomicReference<Map<String, Map<String, Integer>>> m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = new AtomicReference<Map<String, Map<String, Integer>>>(
+	      new HashMap<String, Map<String, Integer>>());
 
 	private int m_messageQueueFlushThreadCount = 500;
 
@@ -167,34 +187,10 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 			m_longPollingServiceThreadCount = Integer.valueOf(longPollingServiceThreadCount);
 		}
 
-		// pull message selector
-		String pullMessageSelectorNormalTriggeringOffsetDeltas = m_env.getGlobalConfig().getProperty(
-		      "broker.pull.message.selector.normal.triggering.offset.deltas");
-		if (!StringUtils.isEmpty(pullMessageSelectorNormalTriggeringOffsetDeltas)) {
-			m_pullMessageSelectorNormalTriggeringOffsetDeltas = JSON.parseObject(
-			      pullMessageSelectorNormalTriggeringOffsetDeltas, new TypeReference<Map<String, Map<String, Integer>>>() {
-			      });
-		}
-
-		String pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = m_env.getGlobalConfig().getProperty(
-		      "broker.pull.message.selector.safe.trigger.triggering.offset.deltas");
-		if (!StringUtils.isEmpty(pullMessageSelectorSafeTriggerTriggeringOffsetDeltas)) {
-			m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = JSON.parseObject(
-			      pullMessageSelectorSafeTriggerTriggeringOffsetDeltas,
-			      new TypeReference<Map<String, Map<String, Integer>>>() {
-			      });
-		}
-
 		String pullMessageSelectorWriteOffsetTtlMillis = m_env.getGlobalConfig().getProperty(
 		      "broker.pull.message.selector.write.offset.ttl.millis");
 		if (StringUtils.isNumeric(pullMessageSelectorWriteOffsetTtlMillis)) {
 			m_pullMessageSelectorWriteOffsetTtlMillis = Integer.valueOf(pullMessageSelectorWriteOffsetTtlMillis);
-		}
-
-		String pullMessageSelectorSafeTriggerIntervalMillis = m_env.getGlobalConfig().getProperty(
-		      "broker.pull.message.selector.safe.trigger.interval.millis");
-		if (StringUtils.isNumeric(pullMessageSelectorSafeTriggerIntervalMillis)) {
-			m_pullMessageSelectorSafeTriggerIntervalMillis = Integer.valueOf(pullMessageSelectorSafeTriggerIntervalMillis);
 		}
 
 		String pullMessageSelectorOffsetLoaderThreadPoolSize = m_env.getGlobalConfig().getProperty(
@@ -218,39 +214,192 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 			      .valueOf(pullMessageSelectorSafeTriggerMinFireIntervalMillis);
 		}
 
-		// send message selector
-		String sendMessageSelectorNormalTriggeringOffsetDeltas = m_env.getGlobalConfig().getProperty(
-		      "broker.send.message.selector.normal.triggering.offset.deltas");
-		if (!StringUtils.isEmpty(sendMessageSelectorNormalTriggeringOffsetDeltas)) {
-			m_sendMessageSelectorNormalTriggeringOffsetDeltas = JSON.parseObject(
-			      sendMessageSelectorNormalTriggeringOffsetDeltas, new TypeReference<Map<String, Integer>>() {
-			      });
-		}
-
-		String sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = m_env.getGlobalConfig().getProperty(
-		      "broker.send.message.selector.safe.trigger.triggering.offset.deltas");
-		if (!StringUtils.isEmpty(sendMessageSelectorSafeTriggerTriggeringOffsetDeltas)) {
-			m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = JSON.parseObject(
-			      sendMessageSelectorSafeTriggerTriggeringOffsetDeltas, new TypeReference<Map<String, Integer>>() {
-			      });
-		}
-
-		String sendMessageSelectorSafeTriggerMinFireIntervalMillis = m_env.getGlobalConfig().getProperty(
-		      "broker.send.message.selector.safe.trigger.min.fire.interval.millis");
-		if (StringUtils.isNumeric(sendMessageSelectorSafeTriggerMinFireIntervalMillis)) {
-			m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = Integer
-			      .valueOf(sendMessageSelectorSafeTriggerMinFireIntervalMillis);
-		}
-
-		String sendMessageSelectorSafeTriggerIntervalMillis = m_env.getGlobalConfig().getProperty(
-		      "broker.send.message.selector.safe.trigger.interval.millis");
-		if (StringUtils.isNumeric(sendMessageSelectorSafeTriggerIntervalMillis)) {
-			m_sendMessageSelectorSafeTriggerIntervalMillis = Integer.valueOf(sendMessageSelectorSafeTriggerIntervalMillis);
-		}
-
 		m_cacheConfig.init(m_env.getGlobalConfig());
 
 		initRateLimiters();
+
+		initSendMessageSelector();
+		initPullMessageSelector();
+	}
+
+	private void initPullMessageSelector() {
+		Config config = ConfigService.getAppConfig();
+
+		config.addChangeListener(new ConfigChangeListener() {
+
+			@Override
+			public void onChange(ConfigChangeEvent changeEvent) {
+				if (changeEvent.changedKeys().contains(PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS)) {
+					try {
+						m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = Integer.parseInt(changeEvent.getChange(
+						      PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS).getNewValue());
+						log.info("PullMessageSelector safeTrigger minFireIntervalMillis changed ({})",
+						      m_pullMessageSelectorSafeTriggerMinFireIntervalMillis);
+					} catch (Exception e) {
+						log.error("Parse pullMessageSelector safeTrigger minFireIntervalMillis failed.", e);
+					}
+				}
+
+				if (changeEvent.changedKeys().contains(PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS)) {
+					try {
+						m_pullMessageSelectorSafeTriggerIntervalMillis = Integer.parseInt(changeEvent.getChange(
+						      PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS).getNewValue());
+						log.info("PullMessageSelector safeTrigger intervalMillis changed ({})",
+						      m_pullMessageSelectorSafeTriggerIntervalMillis);
+					} catch (Exception e) {
+						log.error("Parse pullMessageSelector safeTrigger intervalMillis failed.", e);
+					}
+				}
+
+				if (changeEvent.changedKeys().contains(PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS)) {
+					Map<String, Map<String, Integer>> pullMessageSelectorNormalTriggeringOffsetDeltas = parsePullMessageSelectorDeltas(changeEvent
+					      .getChange(PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS).getNewValue());
+					if (pullMessageSelectorNormalTriggeringOffsetDeltas != null) {
+						m_pullMessageSelectorNormalTriggeringOffsetDeltas
+						      .set(pullMessageSelectorNormalTriggeringOffsetDeltas);
+						log.info("PullMessageSelector normalTrigger offset deltas changed({})",
+						      JSON.toJSON(m_pullMessageSelectorNormalTriggeringOffsetDeltas.get()));
+					}
+				}
+
+				if (changeEvent.changedKeys().contains(PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS)) {
+					Map<String, Map<String, Integer>> pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = parsePullMessageSelectorDeltas(changeEvent
+					      .getChange(PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS).getNewValue());
+					if (pullMessageSelectorSafeTriggerTriggeringOffsetDeltas != null) {
+						m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas
+						      .set(pullMessageSelectorSafeTriggerTriggeringOffsetDeltas);
+						log.info("PullMessageSelector safteTrigger offset deltas changed({})",
+						      JSON.toJSON(m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas.get()));
+					}
+				}
+			}
+		});
+
+		m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = config.getIntProperty(
+		      PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS, 1000);
+		log.info("PullMessageSelector safeTrigger minFireIntervalMillis is {}",
+		      m_pullMessageSelectorSafeTriggerMinFireIntervalMillis);
+
+		m_pullMessageSelectorSafeTriggerIntervalMillis = config.getIntProperty(
+		      PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS, 1000);
+		log.info("PullMessageSelector safeTrigger intervalMillis is {}", m_pullMessageSelectorSafeTriggerIntervalMillis);
+
+		Map<String, Map<String, Integer>> pullMessageSelectorNormalTriggeringOffsetDeltas = parsePullMessageSelectorDeltas(config
+		      .getProperty(PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS, "{}"));
+		if (pullMessageSelectorNormalTriggeringOffsetDeltas != null) {
+			m_pullMessageSelectorNormalTriggeringOffsetDeltas.set(pullMessageSelectorNormalTriggeringOffsetDeltas);
+			log.info("PullMessageSelector normalTrigger offset deltas is {}",
+			      JSON.toJSON(m_pullMessageSelectorNormalTriggeringOffsetDeltas.get()));
+		}
+
+		Map<String, Map<String, Integer>> pullMessageSelectorSafeTriggerTriggeringOffsetDeltas = parsePullMessageSelectorDeltas(config
+		      .getProperty(PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS, "{}"));
+		if (pullMessageSelectorSafeTriggerTriggeringOffsetDeltas != null) {
+			m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas
+			      .set(pullMessageSelectorSafeTriggerTriggeringOffsetDeltas);
+			log.info("PullMessageSelector safteTrigger offset deltas is {}",
+			      JSON.toJSON(m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas.get()));
+		}
+	}
+
+	private Map<String, Map<String, Integer>> parsePullMessageSelectorDeltas(String deltasStr) {
+		try {
+			return JSON.parseObject(deltasStr, new TypeReference<Map<String, Map<String, Integer>>>() {
+			});
+		} catch (Exception e) {
+			log.error("Parse pull selector's delta failed.", e);
+		}
+		return null;
+	}
+
+	private void initSendMessageSelector() {
+		Config config = ConfigService.getAppConfig();
+
+		config.addChangeListener(new ConfigChangeListener() {
+
+			@Override
+			public void onChange(ConfigChangeEvent changeEvent) {
+				if (changeEvent.changedKeys().contains(SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS)) {
+					try {
+						m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = Integer.parseInt(changeEvent.getChange(
+						      SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS).getNewValue());
+						log.info("SendMessageSelector safeTrigger minFireIntervalMillis changed ({})",
+						      m_sendMessageSelectorSafeTriggerMinFireIntervalMillis);
+					} catch (Exception e) {
+						log.error("Parse sendMessageSelector safeTrigger minFireIntervalMillis failed.", e);
+					}
+				}
+
+				if (changeEvent.changedKeys().contains(SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS)) {
+					try {
+						m_sendMessageSelectorSafeTriggerIntervalMillis = Integer.parseInt(changeEvent.getChange(
+						      SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS).getNewValue());
+						log.info("SendMessageSelector safeTrigger intervalMillis is {}",
+						      m_sendMessageSelectorSafeTriggerIntervalMillis);
+					} catch (Exception e) {
+						log.error("Parse sendMessageSelector safeTrigger intervalMillis failed.", e);
+					}
+				}
+
+				if (changeEvent.changedKeys().contains(SEND_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS)) {
+					Map<String, Integer> sendMessageSelectorNormalTriggeringOffsetDeltas = parseSendMessageSelectorDeltas(changeEvent
+					      .getChange(SEND_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS).getNewValue());
+					if (sendMessageSelectorNormalTriggeringOffsetDeltas != null) {
+						m_sendMessageSelectorNormalTriggeringOffsetDeltas
+						      .set(sendMessageSelectorNormalTriggeringOffsetDeltas);
+						log.info("SendMessageSelector normalTrigger offset deltas changed({})",
+						      JSON.toJSON(m_sendMessageSelectorNormalTriggeringOffsetDeltas.get()));
+					}
+				}
+
+				if (changeEvent.changedKeys().contains(SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS)) {
+					Map<String, Integer> sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = parseSendMessageSelectorDeltas(changeEvent
+					      .getChange(SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS).getNewValue());
+					if (sendMessageSelectorSafeTriggerTriggeringOffsetDeltas != null) {
+						m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas
+						      .set(sendMessageSelectorSafeTriggerTriggeringOffsetDeltas);
+						log.info("SendMessageSelector safteTrigger offset deltas changed({})",
+						      JSON.toJSON(m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas.get()));
+					}
+				}
+			}
+		});
+
+		m_sendMessageSelectorSafeTriggerMinFireIntervalMillis = config.getIntProperty(
+		      SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS, 10);
+		log.info("SendMessageSelector safeTrigger minFireIntervalMillis is {}",
+		      m_sendMessageSelectorSafeTriggerMinFireIntervalMillis);
+
+		m_sendMessageSelectorSafeTriggerIntervalMillis = config.getIntProperty(
+		      SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS, 10);
+		log.info("SendMessageSelector safeTrigger intervalMillis is {}", m_sendMessageSelectorSafeTriggerIntervalMillis);
+
+		Map<String, Integer> sendMessageSelectorNormalTriggeringOffsetDeltas = parseSendMessageSelectorDeltas(config
+		      .getProperty(SEND_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS, "{}"));
+		if (sendMessageSelectorNormalTriggeringOffsetDeltas != null) {
+			m_sendMessageSelectorNormalTriggeringOffsetDeltas.set(sendMessageSelectorNormalTriggeringOffsetDeltas);
+			log.info("SendMessageSelector normalTrigger offset deltas is {}",
+			      JSON.toJSON(m_sendMessageSelectorNormalTriggeringOffsetDeltas.get()));
+		}
+
+		Map<String, Integer> sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = parseSendMessageSelectorDeltas(config
+		      .getProperty(SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS, "{}"));
+		if (sendMessageSelectorSafeTriggerTriggeringOffsetDeltas != null) {
+			m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas
+			      .set(sendMessageSelectorSafeTriggerTriggeringOffsetDeltas);
+			log.info("SendMessageSelector safteTrigger offset deltas is {}",
+			      JSON.toJSON(m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas.get()));
+		}
+	}
+
+	private Map<String, Integer> parseSendMessageSelectorDeltas(String deltasStr) {
+		try {
+			return JSON.parseObject(deltasStr, new TypeReference<Map<String, Integer>>() {
+			});
+		} catch (Exception e) {
+			log.error("Parse send selector's delta failed.", e);
+		}
+		return null;
 	}
 
 	private void initRateLimiters() {
@@ -445,7 +594,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	}
 
 	public int getSendMessageSelectorNormalTriggeringOffsetDelta(String topic) {
-		Integer delta = m_sendMessageSelectorNormalTriggeringOffsetDeltas.get(topic);
+		Integer delta = m_sendMessageSelectorNormalTriggeringOffsetDeltas.get().get(topic);
 		if (delta != null && delta > 0) {
 			return delta;
 		} else {
@@ -454,7 +603,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	}
 
 	public long getSendMessageSelectorSafeTriggerTriggeringOffsetDelta(String topic) {
-		Integer delta = m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas.get(topic);
+		Integer delta = m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas.get().get(topic);
 		if (delta != null && delta > 0) {
 			return delta;
 		} else {
@@ -463,7 +612,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	}
 
 	public int getPullMessageSelectorNormalTriggeringOffsetDelta(String topic, String groupId) {
-		Map<String, Integer> topicDeltas = m_pullMessageSelectorNormalTriggeringOffsetDeltas.get(topic);
+		Map<String, Integer> topicDeltas = m_pullMessageSelectorNormalTriggeringOffsetDeltas.get().get(topic);
 		if (topicDeltas == null) {
 			return DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA;
 		} else {
@@ -482,7 +631,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	}
 
 	public long getPullMessageSelectorSafeTriggerTriggeringOffsetDelta(String topic, String groupId) {
-		Map<String, Integer> topicDeltas = m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas.get(topic);
+		Map<String, Integer> topicDeltas = m_pullMessageSelectorSafeTriggerTriggeringOffsetDeltas.get().get(topic);
 		if (topicDeltas == null) {
 			return DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA;
 		} else {
