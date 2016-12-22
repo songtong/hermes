@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,7 +103,10 @@ public class LongTimeNoProduceEventHandler extends RuleEventHandler {
 				synchronized(LongTimeNoProduceEventHandler.this) {
 					m_reportContent.setEndTime(System.currentTimeMillis());
 					m_reportContent.finish();
-					LongTimeNoProduceEventHandler.this.notify(new HermesNotice(LongTimeNoProduceEventHandler.this.getDefaultRecipients(HermesNoticeType.EMAIL), m_reportContent), null);
+					HermesNotice notice = new HermesNotice(LongTimeNoProduceEventHandler.this.getDefaultRecipients(HermesNoticeType.EMAIL), m_reportContent);
+					LongTimeNoProduceEventHandler.this.notify(notice, null);
+					LOGGER.info("Generate report sent to {} for long time no produce.", StringUtils.join(notice.getReceivers(), ","));
+
 					m_reportContent = createReportContent();
 				}
 			}

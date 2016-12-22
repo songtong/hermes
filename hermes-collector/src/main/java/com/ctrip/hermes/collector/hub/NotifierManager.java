@@ -28,7 +28,6 @@ public class NotifierManager {
 	private static Logger LOGGER = LoggerFactory.getLogger(NotifierManager.class);
 	private ArrayBlockingQueue<Pair<HermesNotice, String>> m_queue;
 	private NotifyService m_noticeService = PlexusComponentLocator.lookup(NotifyService.class);
-	private Map<String, Pair<Integer, TimeUnit>> m_categoryDefaultRates = new HashMap<>();
 
 	@Autowired
 	private CollectorConfiguration m_conf;
@@ -55,7 +54,7 @@ public class NotifierManager {
 	}
 	
 	public void setCategoryRate(String category, int interval, TimeUnit timeUnit) {
-		m_categoryDefaultRates.put(category, Pair.from(interval, timeUnit));
+		m_noticeService.setCategoryDefaultRate(category, interval, timeUnit);
 	}
 
 	public class NotifierTask implements Runnable {
