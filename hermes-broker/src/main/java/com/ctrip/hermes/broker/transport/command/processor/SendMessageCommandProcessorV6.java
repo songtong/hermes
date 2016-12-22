@@ -235,6 +235,8 @@ public class SendMessageCommandProcessorV6 implements CommandProcessor {
 		private void logElapse() {
 			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_DB + findDb(m_topic, m_partition), m_topic,
 			      m_start, m_result.getResults().size(), null, Transaction.SUCCESS);
+			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE, m_topic, m_start, m_result.getResults().size(),
+			      null, Transaction.SUCCESS);
 		}
 
 		private String findDb(String topic, int partition) {

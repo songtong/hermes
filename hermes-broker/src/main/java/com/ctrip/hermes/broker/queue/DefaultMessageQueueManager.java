@@ -49,6 +49,8 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultMessageQueueManager.class);
 
+	private static final Long MIN_LONG = Long.MIN_VALUE;
+
 	@Inject
 	private MessageQueuePartitionFactory m_queueFactory;
 
@@ -353,7 +355,7 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 	}
 
 	private void flush(final String topic, final int partition, CallbackContext ctx) {
-		Pair<Boolean, Long> flushResult = new Pair<>(false, Long.MIN_VALUE);
+		Pair<Boolean, Long> flushResult = new Pair<>(false, MIN_LONG);
 		try {
 			final Pair<String, Integer> tp = new Pair<>(topic, partition);
 			MessageQueue mq = m_messageQueues.get(tp);
