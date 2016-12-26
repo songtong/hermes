@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<Configuration>
+<Configuration packages="com.ctrip.hermes.core.utils">
 	<Properties>
 		<Property name="baseDir">/opt/logs/100003805</Property>
 	</Properties>
 	<Appenders>
 		<Async name="ASYNC">
 			<AppenderRef ref="FILE" />
+			<AppenderRef ref="CatErrorAppender" />
 			<!-- <AppenderRef ref="CONSOLE" /> -->
 		</Async>
 		<Async name="ASYNC_ZK">
 			<AppenderRef ref="ZK" />
+			<AppenderRef ref="CatErrorAppender" />
 			<!-- <AppenderRef ref="CONSOLE" /> -->
 		</Async>
 		<Async name="ASYNC_TRACE">
 			<AppenderRef ref="TRACE" />
 		</Async>
-
+		<CatErrorAppender name="CatErrorAppender" />
 		<Console name="CONSOLE" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 		</Console>

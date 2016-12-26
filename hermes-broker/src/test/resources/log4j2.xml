@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<Configuration>
+<Configuration packages="com.ctrip.hermes.core.utils">
 	<Appenders>
 		<Async name="ASYNC">
 			<!-- <AppenderRef ref="FILE" /> -->
 			<AppenderRef ref="CONSOLE" />
+			<AppenderRef ref="CatErrorAppender" />
 		</Async>
 		<Console name="CONSOLE" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 		</Console>
 
-		<RollingFile name="SKIPPED" fileName="/opt/logs/hermes-broker/hermes-skipped-msgs.log" filePattern="/opt/logs/hermes-broker/$${date:yyyy-MM}/hermes-skipped-msgs.%d{yyyy-MM-dd}-%i.log.gz">
+		<CatErrorAppender name="CatErrorAppender" />
+
+		<RollingFile name="SKIPPED" fileName="/opt/logs/hermes-broker/hermes-skipped-msgs.log"
+			filePattern="/opt/logs/hermes-broker/$${date:yyyy-MM}/hermes-skipped-msgs.%d{yyyy-MM-dd}-%i.log.gz">
 			<PatternLayout pattern="%d %-5p [%t] %c{1.} - %m%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
