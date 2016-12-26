@@ -355,12 +355,14 @@ public class ConsumeLargeBacklogChecker extends DBBasedChecker implements Initia
 		List<Owner> owners = new ArrayList<>();
 		ConsumerGroupView consumer = m_consumerService.findConsumerView(topic, group);
 
-		List<Owner> configedOwners = getConfigedOwners(consumer);
-		owners.addAll(configedOwners);
+		if (consumer != null) {
+			List<Owner> configedOwners = getConfigedOwners(consumer);
+			owners.addAll(configedOwners);
 
-		if (!addOwner(owners, consumer) && configedOwners.size() == 0) {
-			log.warn("Can not found owner for consumer: {}[{}], please config it.", topic, group);
-			owners.addAll(m_hermesAdmins);
+			if (!addOwner(owners, consumer) && configedOwners.size() == 0) {
+				log.warn("Can not found owner for consumer: {}[{}], please config it.", topic, group);
+				owners.addAll(m_hermesAdmins);
+			}
 		}
 
 		return owners;

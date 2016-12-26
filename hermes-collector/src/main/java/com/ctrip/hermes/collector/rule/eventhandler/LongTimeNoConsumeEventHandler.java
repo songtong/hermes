@@ -215,16 +215,20 @@ public class LongTimeNoConsumeEventHandler extends RuleEventHandler {
 		events.add(e);
 		
 		long topicId = (long)beans[0].get("topicId");
-		ConsumerGroup consumer = null;
+		List<ConsumerGroup> consumer = null;
 		try {
 			consumer = m_consumerDao.findByTopicIdAndName(topicId, consumerGroup, ConsumerGroupEntity.READSET_FULL);
 		} catch (DalException ex) {
 			LOGGER.error("Failed to find consumer group from db.", ex);
 		}
 		
+		if(consumer.isEmpty()){
+			LOGGER.error("Consumer group:{} not exsits!", consumerGroup);
+		}
+		
 		synchronized(LongTimeNoConsumeEventHandler.this) {
-			if (consumer != null) {
-				m_reportContent.addReport(ReportKey.from(topicName, consumerGroup, consumer.getOwner1(), consumer.getOwner2(), consumer.getPhone1(), consumer.getPhone2()), e);
+			if (!consumer.isEmpty()) {
+				m_reportContent.addReport(ReportKey.from(topicName, consumerGroup, consumer.get(0).getOwner1(), consumer.get(0).getOwner2(), consumer.get(0).getPhone1(), consumer.get(0).getPhone2()), e);
 			} else {
 				m_reportContent.addReport(ReportKey.from(topicName, consumerGroup, null, null, null, null), e);
 			}
@@ -281,24 +285,28 @@ public class LongTimeNoConsumeEventHandler extends RuleEventHandler {
 				event.getConsumer(), event.getCreateTime().getTime());
 		content.setEvents(events);
 		
-		ConsumerGroup consumerGroup = null;
+		List<ConsumerGroup> consumerGroup = null;
 		try {
         	Topic topic = m_topicDao.findByName(event.getTopic(), TopicEntity.READSET_FULL);
         	consumerGroup = m_consumerDao.findByTopicIdAndName(topic.getId(), event.getConsumer(), ConsumerGroupEntity.READSET_FULL);
 	    } catch (Exception ex) {
 	    	LOGGER.error("Failed to find consumer group from db.", event);
 	    }
+		
+		if(consumerGroup.isEmpty()){
+			LOGGER.error("Consumer group not exists!", event);
+		}
 
 		List<String> recipients = this.getDefaultRecipients(HermesNoticeType.EMAIL);
-		if (consumerGroup != null) {
-			recipients = Utils.getRecipientsList(consumerGroup.getOwner1(), consumerGroup.getOwner2());
+		if (!consumerGroup.isEmpty()) {
+			recipients = Utils.getRecipientsList(consumerGroup.get(0).getOwner1(), consumerGroup.get(0).getOwner2());
 		}
 		
 		notices.add(new HermesNotice(recipients, content));
 		
 		recipients = this.getDefaultRecipients(HermesNoticeType.SMS);
-		if (consumerGroup != null) {
-			recipients = Utils.getRecipientsPhones(consumerGroup.getPhone1(), consumerGroup.getPhone2());
+		if (!consumerGroup.isEmpty()) {
+			recipients = Utils.getRecipientsPhones(consumerGroup.get(0).getPhone1(), consumerGroup.get(0).getPhone2());
 		}
 		
         notices.add(new HermesNotice(recipients, getSmsNoticeContent(events)));

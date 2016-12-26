@@ -231,6 +231,9 @@ public class ConsumerResource {
 
 		try {
 			TopicView topicView = topicService.findTopicViewByName(consumerView.getTopicName());
+			if (consumerService.findConsumerGroupEntity(topicView.getId(), consumerView.getName()) == null) {
+				throw new RestException("Consumer not exists!");
+			}
 			consumerView = consumerService.updateConsumerGroup(topicView.getId(), consumerView);
 		} catch (Exception e) {
 			logger.warn("Update consumer failed", e);
@@ -238,5 +241,4 @@ public class ConsumerResource {
 		}
 		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
-
 }

@@ -133,16 +133,18 @@ public class ConsumerService {
 		try {
 			tm.startTransaction("fxhermesmetadb");
 			com.ctrip.hermes.admin.core.model.Topic topicModel = m_topicDao.findByPK(topicId);
-			com.ctrip.hermes.admin.core.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
+			List<com.ctrip.hermes.admin.core.model.ConsumerGroup> consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
 			      topicId, consumer, ConsumerGroupEntity.READSET_FULL);
-			m_consumerGroupDao.deleteByPK(consumerGroup);
+			if (!consumerGroup.isEmpty()) {
+				m_consumerGroupDao.deleteByPK(consumerGroup.get(0));
 
-			if (Storage.MYSQL.equals(topicModel.getStorageType())) {
-				List<com.ctrip.hermes.admin.core.model.Partition> partitionModels = m_partitionDao.findByTopic(topicId,
-				      false);
-				m_storageService.delConsumerStorage(topicModel, partitionModels, consumerGroup);
-				Topic topicEntity = m_topicService.findTopicEntityById(topicId);
-				m_zookeeperService.deleteConsumerLeaseZkPath(topicEntity, consumer);
+				if (Storage.MYSQL.equals(topicModel.getStorageType())) {
+					List<com.ctrip.hermes.admin.core.model.Partition> partitionModels = m_partitionDao.findByTopic(topicId,
+					      false);
+					m_storageService.delConsumerStorage(topicModel, partitionModels, consumerGroup.get(0));
+					Topic topicEntity = m_topicService.findTopicEntityById(topicId);
+					m_zookeeperService.deleteConsumerLeaseZkPath(topicEntity, consumer);
+				}
 			}
 			tm.commitTransaction();
 		} catch (Exception e) {
@@ -153,9 +155,14 @@ public class ConsumerService {
 
 	public ConsumerGroup findConsumerGroupEntity(Long topicId, String consumer) {
 		try {
-			com.ctrip.hermes.admin.core.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
+			List<com.ctrip.hermes.admin.core.model.ConsumerGroup> consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
 			      topicId, consumer, ConsumerGroupEntity.READSET_FULL);
-			return ModelToEntityConverter.convert(consumerGroup);
+
+			if (consumerGroup.isEmpty()) {
+				return null;
+			}
+
+			return ModelToEntityConverter.convert(consumerGroup.get(0));
 		} catch (Exception e) {
 			logger.warn("findConsumerGroup failed", e);
 		}
@@ -188,10 +195,15 @@ public class ConsumerService {
 
 	public ConsumerGroupView findConsumerView(Long topicId, String consumer) {
 		try {
-			com.ctrip.hermes.admin.core.model.ConsumerGroup consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
+			List<com.ctrip.hermes.admin.core.model.ConsumerGroup> consumerGroup = m_consumerGroupDao.findByTopicIdAndName(
 			      topicId, consumer, ConsumerGroupEntity.READSET_FULL);
-			ConsumerGroupView view = ModelToViewConverter.convert(consumerGroup);
-			fillConsumerView(consumerGroup.getTopicId(), view);
+
+			if (consumerGroup.isEmpty()) {
+				return null;
+			}
+
+			ConsumerGroupView view = ModelToViewConverter.convert(consumerGroup.get(0));
+			fillConsumerView(consumerGroup.get(0).getTopicId(), view);
 			return view;
 		} catch (Exception e) {
 			logger.warn("findConsumerGroupView failed", e);
@@ -222,21 +234,24 @@ public class ConsumerService {
 
 	public synchronized ConsumerGroupView updateConsumerGroup(Long topicId, ConsumerGroupView consumer) throws Exception {
 		try {
-			tm.startTransaction("fxhermesmetadb");
 			com.ctrip.hermes.admin.core.model.Topic topicModel = m_topicDao.findByPK(topicId);
-			com.ctrip.hermes.admin.core.model.ConsumerGroup originConsumer = m_consumerGroupDao.findByTopicIdAndName(
-			      topicId, consumer.getName(), ConsumerGroupEntity.READSET_FULL);
-			consumer.setId(originConsumer.getId());
+			List<com.ctrip.hermes.admin.core.model.ConsumerGroup> originConsumer = m_consumerGroupDao
+			      .findByTopicIdAndName(topicId, consumer.getName(), ConsumerGroupEntity.READSET_FULL);
+
+			if (originConsumer.isEmpty()) {
+				return null;
+			}
+
+			consumer.setId(originConsumer.get(0).getId());
 			com.ctrip.hermes.admin.core.model.ConsumerGroup consumerGroupModel = ViewToModelConverter.convert(consumer);
+
 			m_consumerGroupDao.updateByPK(consumerGroupModel, ConsumerGroupEntity.UPDATESET_FULL);
 
 			if (Storage.MYSQL.equals(topicModel.getStorageType())) {
 				Topic topicEntity = m_topicService.findTopicEntityById(topicId);
 				m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
 			}
-			tm.commitTransaction();
 		} catch (Exception e) {
-			tm.rollbackTransaction();
 			throw e;
 		}
 		return consumer;
@@ -283,10 +298,10 @@ public class ConsumerService {
 		Map<Integer, Offset> messageOffsets = findMessageOffsetByTime(topicName, timestamp);
 
 		for (Entry<Integer, Offset> messageOffset : messageOffsets.entrySet()) {
-			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY,
-			      consumer.getId(), messageOffset.getValue().getPriorityOffset());
-			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.NON_PRIORITY,
-			      consumer.getId(), messageOffset.getValue().getNonPriorityOffset());
+			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY, consumer.getId(),
+			      messageOffset.getValue().getPriorityOffset());
+			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.NON_PRIORITY, consumer.getId(),
+			      messageOffset.getValue().getNonPriorityOffset());
 			doUpdateResendOffsetToLatest(topicName, messageOffset.getKey(), consumer.getId());
 		}
 	}
@@ -302,8 +317,8 @@ public class ConsumerService {
 			break;
 		case NON_PRIORITY:
 			latestMessageOffset = doGetLatestMsgId(topicName, partition, MessageQueueConstants.NON_PRIORITY);
-			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.NON_PRIORITY,
-			      consumerGroup.getId(), shift, latestMessageOffset);
+			doUpdateMessageOffsetByShift(topicName, partition, MessageQueueConstants.NON_PRIORITY, consumerGroup.getId(),
+			      shift, latestMessageOffset);
 			break;
 		case RESEND:
 			latestMessageOffset = doGetLatestResendMsgId(topicName, partition, consumerGroup.getId());

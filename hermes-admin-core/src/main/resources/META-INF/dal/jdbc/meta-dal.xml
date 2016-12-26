@@ -279,7 +279,7 @@
         FROM <TABLE/>
         WHERE <FIELD name='topic-id'/> = ${tId} ]]></statement>
 			</query>
-			<query name="find-by-topicId-and-name" type="SELECT">
+			<query name="find-by-topicId-and-name" type="SELECT" multiple="true">
 				<param name="tId" />
 				<param name="cName" />
 				<statement><![CDATA[SELECT <FIELDS/>
