@@ -9,7 +9,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.IdleStateHandler;
 
 import org.unidal.lookup.ContainerHolder;
@@ -19,7 +18,7 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler;
 import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
-import com.ctrip.hermes.core.transport.netty.MagicNumberPrepender;
+import com.ctrip.hermes.core.transport.netty.MagicNumberAndLengthPrepender;
 import com.ctrip.hermes.core.transport.netty.NettyDecoder;
 import com.ctrip.hermes.core.transport.netty.NettyEncoder;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
@@ -46,8 +45,7 @@ public class NettyServer extends ContainerHolder {
 				      ch.pipeline().addLast(
 				            new DefaultNettyChannelOutboundHandler(),//
 				            new NettyDecoder(), //
-				            new MagicNumberPrepender(), //
-				            new LengthFieldPrepender(4), //
+				            new MagicNumberAndLengthPrepender(), //
 				            new NettyEncoder(), //
 				            new IdleStateHandler(0, 0, m_config.getClientMaxIdleSeconds()),//
 				            new DefaultServerChannelInboundHandler(lookup(CommandProcessorManager.class), m_config
