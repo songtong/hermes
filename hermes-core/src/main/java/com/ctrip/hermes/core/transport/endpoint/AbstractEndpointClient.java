@@ -11,7 +11,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.IdleStateHandler;
 
 import java.util.Map;
@@ -34,7 +33,7 @@ import com.ctrip.hermes.core.transport.command.Command;
 import com.ctrip.hermes.core.transport.command.CommandType;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.netty.DefaultNettyChannelOutboundHandler;
-import com.ctrip.hermes.core.transport.netty.MagicNumberPrepender;
+import com.ctrip.hermes.core.transport.netty.MagicNumberAndLengthPrepender;
 import com.ctrip.hermes.core.transport.netty.NettyDecoder;
 import com.ctrip.hermes.core.transport.netty.NettyEncoder;
 import com.ctrip.hermes.core.utils.CatUtil;
@@ -211,8 +210,7 @@ public abstract class AbstractEndpointClient implements EndpointClient, Initiali
 				      //
 				      new DefaultNettyChannelOutboundHandler(), //
 				      new NettyDecoder(), //
-				      new MagicNumberPrepender(), //
-				      new LengthFieldPrepender(4), //
+				      new MagicNumberAndLengthPrepender(), //
 				      new NettyEncoder(), //
 				      new IdleStateHandler(m_config.getEndpointChannelReadIdleTime(), //
 				            m_config.getEndpointChannelWriteIdleTime(), //
