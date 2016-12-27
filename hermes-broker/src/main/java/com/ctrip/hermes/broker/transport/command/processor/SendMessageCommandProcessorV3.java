@@ -227,10 +227,8 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 			if (m_result.isAllResultsSet()) {
 				try {
 					if (m_written.compareAndSet(false, true)) {
-						logToCatIfHasError(m_result);
+						logElapse(m_result);
 						ChannelUtils.writeAndFlush(m_ctx.getChannel(), m_result);
-
-						logElapse();
 					}
 				} finally {
 					m_ctx.getCommand().release();
@@ -248,19 +246,7 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 			return newResults;
 		}
 
-		private void logElapse() {
-			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_DB + findDb(m_topic, m_partition), m_topic,
-			      m_start, m_result.getSuccesses().size(), null, Transaction.SUCCESS);
-			CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE, m_topic, m_start, m_result.getSuccesses().size(),
-			      null, Transaction.SUCCESS);
-		}
-
-		private String findDb(String topic, int partition) {
-			Partition p = m_metaService.findPartitionByTopicAndPartition(topic, partition);
-			return p.getWriteDatasource();
-		}
-
-		private void logToCatIfHasError(SendMessageResultCommand resultCmd) {
+		private void logElapse(SendMessageResultCommand resultCmd) {
 			int failCount = 0;
 			for (Boolean sendSuccess : resultCmd.getSuccesses().values()) {
 				if (!sendSuccess) {
@@ -268,9 +254,26 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 				}
 			}
 
-			if (failCount > 0) {
-				Cat.logEvent(CatConstants.TYPE_MESSAGE_PRODUCE_ERROR, m_topic, Event.SUCCESS, "*count=" + failCount);
+			int successCount = resultCmd.getSuccesses().size() - failCount;
+
+			if (successCount > 0) {
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_DB + findDb(m_topic, m_partition), m_topic,
+				      m_start, successCount, null, Transaction.SUCCESS);
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE, m_topic, m_start, successCount, null,
+				      Transaction.SUCCESS);
 			}
+
+			if (failCount > 0) {
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE_DB + findDb(m_topic, m_partition), m_topic,
+				      m_start, failCount, null, CatConstants.TRANSACTION_FAIL);
+				CatUtil.logElapse(CatConstants.TYPE_MESSAGE_BROKER_PRODUCE, m_topic, m_start, failCount, null,
+				      CatConstants.TRANSACTION_FAIL);
+			}
+		}
+
+		private String findDb(String topic, int partition) {
+			Partition p = m_metaService.findPartitionByTopicAndPartition(topic, partition);
+			return p.getWriteDatasource();
 		}
 
 		@Override

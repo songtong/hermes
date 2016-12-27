@@ -28,8 +28,6 @@ public interface CatConstants {
 
 	public static final String TYPE_MESSAGE_CONSUMED = "Message.Consumed";
 
-	public static final String TYPE_MESSAGE_PRODUCE_ERROR = "Message.Produce.Error";
-
 	public static final String TYPE_MESSAGE_PRODUCE_QUEUE_EXPIRED = "Message.Produce.Queue.Expired";
 
 	public static final String TYPE_MESSAGE_PRODUCE_ELAPSE = "Message.Produce.Elapse";
@@ -89,4 +87,6 @@ public interface CatConstants {
 	public static final String TYPE_MESSAGE_BROKER_QPS_RATE_LIMIT_EXCEED = "Message.Rate.Limit.QPS";
 
 	public static final String TYPE_MESSAGE_BROKER_BYTES_RATE_LIMIT_EXCEED = "Message.Rate.Limit.Bytes";
+
+	public static final String TRANSACTION_FAIL = "1";
 }
