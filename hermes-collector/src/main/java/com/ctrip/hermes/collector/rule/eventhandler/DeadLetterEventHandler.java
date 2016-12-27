@@ -133,16 +133,20 @@ public class DeadLetterEventHandler extends RuleEventHandler {
 				LOGGER.info("Created DEAD_LETTER event: {}, {}, {}", e.getTopic(), e.getConsumerGroup(), e.getDeadLetterCount());
 				
 				long topicId = (long)bean.get("topicId");
-				ConsumerGroup consumer = null;
+				List<ConsumerGroup> consumer = null;
 				try {
 					consumer = m_consumerDao.findByTopicIdAndName(topicId, e.getConsumerGroup(), ConsumerGroupEntity.READSET_FULL);
 				} catch (DalException ex) {
 					LOGGER.error("Failed to find consumer group from db.", ex);
 				}
 				
+				if(consumer.isEmpty()){
+					LOGGER.error("Consumer group:{} not exists!", e.getConsumerGroup());
+				}
+				
 				synchronized(DeadLetterEventHandler.this) {
-					if (consumer != null) {
-						m_reportContent.addReport(ReportKey.from(e.getTopic(), e.getConsumerGroup(), consumer.getOwner1(), consumer.getOwner2(), consumer.getPhone1(), consumer.getPhone2()), e);
+					if (!consumer.isEmpty()) {
+						m_reportContent.addReport(ReportKey.from(e.getTopic(), e.getConsumerGroup(), consumer.get(0).getOwner1(), consumer.get(0).getOwner2(), consumer.get(0).getPhone1(), consumer.get(0).getPhone2()), e);
 					} else {
 						m_reportContent.addReport(ReportKey.from(e.getTopic(), e.getConsumerGroup(), null, null, null, null), e);
 					}
@@ -169,7 +173,7 @@ public class DeadLetterEventHandler extends RuleEventHandler {
         DeadLetterEventMailContent content = new DeadLetterEventMailContent(event.getTopic(), event.getConsumerGroup(), event.getCreateTime().getTime());
         content.setEvents(events);
         
-        ConsumerGroup consumerGroup = null;
+        List<ConsumerGroup> consumerGroup = null;
         try {
         	Topic topic = m_topicDao.findByName(event.getTopic(), TopicEntity.READSET_FULL);
         	consumerGroup = m_consumerDao.findByTopicIdAndName(topic.getId(), event.getConsumerGroup(), ConsumerGroupEntity.READSET_FULL);
@@ -177,15 +181,20 @@ public class DeadLetterEventHandler extends RuleEventHandler {
         	LOGGER.error("Failed to find consumer group from db.", event);
         }
         
+
+  		if(consumerGroup.isEmpty()){
+  			LOGGER.error("Consumer group not exists!", event);
+  		}
+        
         List<String> recipients = null;
-        if (consumerGroup != null) {
-        	recipients = Utils.getRecipientsList(consumerGroup.getOwner1(), consumerGroup.getOwner2());
+        if (!consumerGroup.isEmpty()) {
+        	recipients = Utils.getRecipientsList(consumerGroup.get(0).getOwner1(), consumerGroup.get(0).getOwner2());
         }
         
         notices.add(new HermesNotice(recipients, content));
         
-        if (consumerGroup != null) {
-        	recipients = Utils.getRecipientsPhones(consumerGroup.getPhone1(), consumerGroup.getPhone2());
+        if (!consumerGroup.isEmpty()) {
+        	recipients = Utils.getRecipientsPhones(consumerGroup.get(0).getPhone1(), consumerGroup.get(0).getPhone2());
         }
         
         notices.add(new HermesNotice(recipients, getSmsNoticeContent(events)));
