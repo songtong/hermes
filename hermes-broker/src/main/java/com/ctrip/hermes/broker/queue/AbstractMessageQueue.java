@@ -44,7 +44,6 @@ import com.ctrip.hermes.core.transport.command.v5.AckMessageResultCommandV5;
 import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
-import com.dianping.cat.Cat;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
@@ -148,11 +147,8 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 			try {
 				maxPurgedOrSavedSelectorOffset = m_flusher.flush(batchSize);
 			} catch (RuntimeException e) {
-				String errorMsg = String.format("Exception occurred while flushing message queue(topic={}, partition={})",
-				      m_topic, m_partition);
-				Cat.logError(errorMsg, e);
-				// ignore
-				log.warn(errorMsg, e);
+				log.error("Exception occurred while flushing message queue(topic={}, partition={})", m_topic, m_partition,
+				      e);
 			}
 		}
 
