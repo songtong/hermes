@@ -43,5 +43,13 @@ public class LeaseAcquireResponse {
 	public void setNextTryTime(long nextTryTime) {
 		m_nextTryTime = nextTryTime;
 	}
+	
+	public void syncTimeWithClient(long timeDiff) {
+		if (m_acquired && m_lease != null) {
+			m_lease.setExpireTime(m_lease.getExpireTime() + timeDiff);
+		} else if (m_nextTryTime != -1){
+			m_nextTryTime += timeDiff;
+		}
+	}
 
 }
