@@ -60,7 +60,7 @@ dashtopic.service("DashboardTopicService", [ '$resource', '$q', function($resour
 	var trifecta_urls = {
 		fws : "http://10.2.7.138:8888/",
 		uat : "http://10.3.8.63:8888/",
-		prod : "http://10.8.82.32:8888/"
+		prod : "http://10.15.85.145:8888/"
 	}
 	var get_consumers_for_topic = $resource('/api/consumers/:topic');
 	var dash_resource = $resource('/api/dashboard', {}, {
