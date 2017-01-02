@@ -17,11 +17,14 @@ import org.unidal.net.Networks;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder;
 import com.ctrip.hermes.metaservice.model.BrokerLease;
 import com.ctrip.hermes.metaservice.model.BrokerLeaseDao;
 import com.ctrip.hermes.metaservice.model.BrokerLeaseEntity;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Transaction;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -99,43 +102,66 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 	private void persistDirtyLeases(int batchSize) throws DalException {
 		List<List<BrokerLease>> leaseBatches = new LinkedList<>();
 		List<BrokerLease> leaseBatch = null;
-		for (Map.Entry<Pair<String, Integer>, LeasesContext> entry : m_leases.entrySet()) {
-			LeasesContext leasesContext = entry.getValue();
-			leasesContext.lock();
-			try {
-				if (leasesContext.isDirty()) {
-					BrokerLease brokerLease = new BrokerLease();
-					brokerLease.setTopic(entry.getKey().getKey());
-					brokerLease.setPartition(entry.getKey().getValue());
-					brokerLease.setMetaserver(Networks.forIp().getLocalHostAddress());
-					brokerLease.setLeases(JSON.toJSONString(leasesContext.getLeasesMapping()));
-					brokerLease.setAssignTime(new Date(leasesContext.getLastModifiedTime()));
-					if (leaseBatch == null || leaseBatch.size() == batchSize) {
-						leaseBatch = new ArrayList<>(batchSize);
-						leaseBatches.add(leaseBatch);
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_DIRTY_PERSIST, "Broker");
+		int persistCount = 0;
+		try {
+			for (Map.Entry<Pair<String, Integer>, LeasesContext> entry : m_leases.entrySet()) {
+				LeasesContext leasesContext = entry.getValue();
+				leasesContext.lock();
+				try {
+					if (leasesContext.isDirty()) {
+						BrokerLease brokerLease = new BrokerLease();
+						brokerLease.setTopic(entry.getKey().getKey());
+						brokerLease.setPartition(entry.getKey().getValue());
+						brokerLease.setMetaserver(Networks.forIp().getLocalHostAddress());
+						brokerLease.setLeases(JSON.toJSONString(leasesContext.getLeasesMapping()));
+						brokerLease.setAssignTime(new Date(leasesContext.getLastModifiedTime()));
+						if (leaseBatch == null || leaseBatch.size() == batchSize) {
+							leaseBatch = new ArrayList<>(batchSize);
+							leaseBatches.add(leaseBatch);
+						}
+						leaseBatch.add(brokerLease);
+						leasesContext.setDirty(false);
 					}
-					leaseBatch.add(brokerLease);
-					leasesContext.setDirty(false);
+				} finally {
+					leasesContext.unlock();
 				}
-			} finally {
-				leasesContext.unlock();
 			}
-		}
 
-		if (!leaseBatches.isEmpty()) {
-			for (List<BrokerLease> batch : leaseBatches) {
-				if (!batch.isEmpty()) {
-					m_leasesDao.insert(batch.toArray(new BrokerLease[batch.size()]));
+			if (!leaseBatches.isEmpty()) {
+				for (List<BrokerLease> batch : leaseBatches) {
+					if (!batch.isEmpty()) {
+						m_leasesDao.insert(batch.toArray(new BrokerLease[batch.size()]));
+					}
 				}
 			}
+			transaction.setStatus(Transaction.SUCCESS);
+		} catch (Exception e) {
+			transaction.setStatus(e);
+			throw e;
+		} finally {
+			transaction.addData("*count", persistCount);
+			transaction.complete();
 		}
 	}
 
 	private void loadNewLeasesAssignedByOtherMetaservers(long lastRunTime) throws DalException {
-		List<BrokerLease> changes = m_leasesDao.listLatestChanges(new Date(lastRunTime), Networks.forIp()
-		      .getLocalHostAddress(), BrokerLeaseEntity.READSET_FULL);
-		if (changes != null && !changes.isEmpty()) {
-			loadExistingLeases(changes);
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_DIRTY_LOAD, "Broker");
+		int count = 0;
+		try {
+			List<BrokerLease> changes = m_leasesDao.listLatestChanges(new Date(lastRunTime), Networks.forIp()
+			      .getLocalHostAddress(), BrokerLeaseEntity.READSET_FULL);
+			if (changes != null && !changes.isEmpty()) {
+				count = changes.size();
+				loadExistingLeases(changes);
+			}
+			transaction.setStatus(Transaction.SUCCESS);
+		} catch (Exception e) {
+			transaction.setStatus(e);
+			throw e;
+		} finally {
+			transaction.addData("*count", count);
+			transaction.complete();
 		}
 	}
 

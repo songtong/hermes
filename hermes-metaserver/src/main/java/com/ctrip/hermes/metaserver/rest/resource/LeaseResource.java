@@ -30,6 +30,7 @@ import sun.net.www.protocol.http.HttpURLConnection;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.HostPort;
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -45,6 +46,9 @@ import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocatorLocator;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
 import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Message;
+import com.dianping.cat.message.Transaction;
 
 /**
  * 
@@ -117,6 +121,10 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("host", getRemoteAddr(host, req));
 
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_ACQUIRE_CONSUMER,
+		      tpg.getTopic() + ":" + tpg.getGroupId());
+		transaction.addData("host", params.get("host"));
+
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_consumerLeaseHolder.inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
@@ -146,13 +154,21 @@ public class LeaseResource {
 				} catch (Exception e) {
 					response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+					transaction.setStatus(e);
 				}
 			}
+			transaction.setStatus(Transaction.SUCCESS);
 		} finally {
 			if (traceLog.isInfoEnabled()) {
 				traceLog.info("[ACCESS]acquire consumer lease. req:{}, tpg:{} resp({})", JSON.toJSONString(params),
 				      JSON.toJSONString(tpg), JSON.toJSONString(response));
 			}
+			if (response.isAcquired()) {
+				Cat.logEvent(CatConstants.TYPE_LEASE_ACQUIRED_CONSUMER, tpg.getTopic() + ":" + tpg.getGroupId(),
+				      Message.SUCCESS, "host=" + params.get("host"));
+			}
+
+			transaction.complete();
 		}
 		return response;
 	}
@@ -173,6 +189,10 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("leaseId", Long.toString(leaseId));
 		params.put("host", getRemoteAddr(host, req));
+
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_RENEW_CONSUMER,
+		      tpg.getTopic() + ":" + tpg.getGroupId());
+		transaction.addData("host", params.get("host"));
 
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_consumerLeaseHolder.inited()) {
@@ -202,13 +222,21 @@ public class LeaseResource {
 				} catch (Exception e) {
 					response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+					transaction.setStatus(e);
 				}
 			}
+			transaction.setStatus(Transaction.SUCCESS);
 		} finally {
 			if (traceLog.isInfoEnabled()) {
 				traceLog.info("[ACCESS]renew consumer lease. req:{}, tpg:{} resp({})", JSON.toJSONString(params),
 				      JSON.toJSONString(tpg), JSON.toJSONString(response));
 			}
+			if (response.isAcquired()) {
+				Cat.logEvent(CatConstants.TYPE_LEASE_RENEWED_CONSUMER, tpg.getTopic() + ":" + tpg.getGroupId(),
+				      Message.SUCCESS, "host=" + params.get("host"));
+			}
+
+			transaction.complete();
 		}
 		return response;
 
@@ -234,6 +262,8 @@ public class LeaseResource {
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
 
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_ACQUIRE_BROKER, topic);
+		transaction.addData("host", params.get("host"));
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_brokerLeaseHolder.inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
@@ -257,13 +287,20 @@ public class LeaseResource {
 				} catch (Exception e) {
 					response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+					transaction.setStatus(e);
 				}
 			}
+			transaction.setStatus(Transaction.SUCCESS);
 		} finally {
 			if (traceLog.isInfoEnabled()) {
 				traceLog.info("[ACCESS]acquire broker lease. req:{}, resp({})", JSON.toJSONString(params),
 				      JSON.toJSONString(response));
 			}
+			if (response.isAcquired()) {
+				Cat.logEvent(CatConstants.TYPE_LEASE_ACQUIRED_BROKER, topic, Message.SUCCESS, "host=" + params.get("host"));
+			}
+
+			transaction.complete();
 		}
 
 		return response;
@@ -291,6 +328,8 @@ public class LeaseResource {
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
 
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_RENEW_BROKER, topic);
+		transaction.addData("host", params.get("host"));
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_brokerLeaseHolder.inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
@@ -314,13 +353,20 @@ public class LeaseResource {
 				} catch (Exception e) {
 					response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					      + EXCEPTION_CAUGHT_DELAY_TIME_MILLIS);
+					transaction.setStatus(e);
 				}
 			}
+			transaction.setStatus(Transaction.SUCCESS);
 		} finally {
 			if (traceLog.isInfoEnabled()) {
 				traceLog.info("[ACCESS]renew broker lease. req:{}, resp({})", JSON.toJSONString(params),
 				      JSON.toJSONString(response));
 			}
+			if (response.isAcquired()) {
+				Cat.logEvent(CatConstants.TYPE_LEASE_RENEWED_BROKER, topic, Message.SUCCESS, "host=" + params.get("host"));
+			}
+
+			transaction.complete();
 		}
 
 		return response;

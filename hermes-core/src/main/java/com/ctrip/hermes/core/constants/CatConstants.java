@@ -89,4 +89,26 @@ public interface CatConstants {
 	public static final String TYPE_MESSAGE_BROKER_BYTES_RATE_LIMIT_EXCEED = "Message.Rate.Limit.Bytes";
 
 	public static final String TRANSACTION_FAIL = "1";
+
+	public static final String TYPE_LEASE_DIRTY_PERSIST = "Lease.Dirty.Persist";
+
+	public static final String TYPE_LEASE_DIRTY_LOAD = "Lease.Dirty.Load";
+
+	public static final String TYPE_LEASE_ACQUIRE_CONSUMER = "Lease.Acquire.Consumer";
+
+	public static final String TYPE_LEASE_ACQUIRED_CONSUMER = "Lease.Acquired.Consumer";
+
+	public static final String TYPE_LEASE_RENEW_CONSUMER = "Lease.Renew.Consumer";
+
+	public static final String TYPE_LEASE_RENEWED_CONSUMER = "Lease.Renewed.Consumer";
+
+	public static final String TYPE_LEASE_ACQUIRE_BROKER = "Lease.Acquire.Broker";
+
+	public static final String TYPE_LEASE_ACQUIRED_BROKER = "Lease.Acquired.Broker";
+
+	public static final String TYPE_LEASE_RENEW_BROKER = "Lease.Renew.Broker";
+
+	public static final String TYPE_LEASE_RENEWED_BROKER = "Lease.Renewed.Broker";
+
+	public static final String TYPE_ROLE_CHANGED = "Role.Changed";
 }

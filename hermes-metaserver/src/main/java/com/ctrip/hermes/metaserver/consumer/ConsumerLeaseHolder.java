@@ -17,11 +17,14 @@ import org.unidal.net.Networks;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.core.bo.Tpg;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.commons.BaseLeaseHolder;
 import com.ctrip.hermes.metaservice.model.ConsumerLease;
 import com.ctrip.hermes.metaservice.model.ConsumerLeaseDao;
 import com.ctrip.hermes.metaservice.model.ConsumerLeaseEntity;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Transaction;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -96,46 +99,70 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 	}
 
 	private void loadNewLeasesAssignedByOtherMetaservers(long lastRunTime) throws DalException {
-		List<ConsumerLease> changes = m_leasesDao.listLatestChanges(new Date(lastRunTime), Networks.forIp()
-		      .getLocalHostAddress(), ConsumerLeaseEntity.READSET_FULL);
-		if (changes != null && !changes.isEmpty()) {
-			loadExistingLeases(changes);
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_DIRTY_LOAD, "Consumer");
+		int count = 0;
+		try {
+			List<ConsumerLease> changes = m_leasesDao.listLatestChanges(new Date(lastRunTime), Networks.forIp()
+			      .getLocalHostAddress(), ConsumerLeaseEntity.READSET_FULL);
+			if (changes != null && !changes.isEmpty()) {
+				count = changes.size();
+				loadExistingLeases(changes);
+			}
+			transaction.setStatus(Transaction.SUCCESS);
+		} catch (Exception e) {
+			transaction.setStatus(e);
+			throw e;
+		} finally {
+			transaction.addData("*count", count);
+			transaction.complete();
 		}
 	}
 
 	private void persistDirtyLeases(int batchSize) throws DalException {
 		List<List<ConsumerLease>> leaseBatches = new LinkedList<>();
 		List<ConsumerLease> leaseBatch = null;
-		for (Map.Entry<Tpg, LeasesContext> entry : m_leases.entrySet()) {
-			LeasesContext leasesContext = entry.getValue();
-			leasesContext.lock();
-			try {
-				if (leasesContext.isDirty()) {
-					ConsumerLease consumerLease = new ConsumerLease();
-					consumerLease.setTopic(entry.getKey().getTopic());
-					consumerLease.setPartition(entry.getKey().getPartition());
-					consumerLease.setGroup(entry.getKey().getGroupId());
-					consumerLease.setMetaserver(Networks.forIp().getLocalHostAddress());
-					consumerLease.setLeases(JSON.toJSONString(leasesContext.getLeasesMapping()));
-					consumerLease.setAssignTime(new Date(leasesContext.getLastModifiedTime()));
-					if (leaseBatch == null || leaseBatch.size() == batchSize) {
-						leaseBatch = new ArrayList<>(batchSize);
-						leaseBatches.add(leaseBatch);
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_DIRTY_PERSIST, "Consumer");
+		int persistCount = 0;
+		try {
+			for (Map.Entry<Tpg, LeasesContext> entry : m_leases.entrySet()) {
+				LeasesContext leasesContext = entry.getValue();
+				leasesContext.lock();
+				try {
+					if (leasesContext.isDirty()) {
+						persistCount++;
+						ConsumerLease consumerLease = new ConsumerLease();
+						consumerLease.setTopic(entry.getKey().getTopic());
+						consumerLease.setPartition(entry.getKey().getPartition());
+						consumerLease.setGroup(entry.getKey().getGroupId());
+						consumerLease.setMetaserver(Networks.forIp().getLocalHostAddress());
+						consumerLease.setLeases(JSON.toJSONString(leasesContext.getLeasesMapping()));
+						consumerLease.setAssignTime(new Date(leasesContext.getLastModifiedTime()));
+						if (leaseBatch == null || leaseBatch.size() == batchSize) {
+							leaseBatch = new ArrayList<>(batchSize);
+							leaseBatches.add(leaseBatch);
+						}
+						leaseBatch.add(consumerLease);
+						leasesContext.setDirty(false);
 					}
-					leaseBatch.add(consumerLease);
-					leasesContext.setDirty(false);
+				} finally {
+					leasesContext.unlock();
 				}
-			} finally {
-				leasesContext.unlock();
 			}
-		}
 
-		if (!leaseBatches.isEmpty()) {
-			for (List<ConsumerLease> batch : leaseBatches) {
-				if (!batch.isEmpty()) {
-					m_leasesDao.insert(batch.toArray(new ConsumerLease[batch.size()]));
+			if (!leaseBatches.isEmpty()) {
+				for (List<ConsumerLease> batch : leaseBatches) {
+					if (!batch.isEmpty()) {
+						m_leasesDao.insert(batch.toArray(new ConsumerLease[batch.size()]));
+					}
 				}
 			}
+			transaction.setStatus(Transaction.SUCCESS);
+		} catch (Exception e) {
+			transaction.setStatus(e);
+			throw e;
+		} finally {
+			transaction.addData("*count", persistCount);
+			transaction.complete();
 		}
 	}
 
