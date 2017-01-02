@@ -11,6 +11,8 @@
       <group name="meta" package="com.ctrip.hermes.metaservice.model">
          <table name="meta"/>
          <table name="zookeeper_ensemble"/>
+         <table name="broker_lease"/>
+         <table name="consumer_lease"/>
       </group>
    </jdbc>
 </wizard>

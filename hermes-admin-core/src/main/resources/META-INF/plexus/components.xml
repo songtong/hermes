@@ -562,9 +562,6 @@
 					<role>com.ctrip.hermes.admin.core.service.storage.TopicStorageService</role>
 				</requirement>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
-				</requirement>
-				<requirement>
 					<role>com.ctrip.hermes.admin.core.dal.CachedPartitionDao</role>
 				</requirement>
 				<requirement>

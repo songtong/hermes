@@ -5,16 +5,12 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.ctrip.hermes.metaserver.assign.AssignBalancerTest;
-import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolderTest;
-import com.ctrip.hermes.metaserver.broker.DefaultBrokerLeaseAllocatorTest;
 import com.ctrip.hermes.metaserver.broker.DefaultBrokerPartitionAssigningStrategyTest;
 import com.ctrip.hermes.metaserver.commons.EndpointMakerTest;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListHolderTest;
 import com.ctrip.hermes.metaserver.consumer.ActiveConsumerListTest;
 import com.ctrip.hermes.metaserver.consumer.ConsumerAssignmentHolderTest;
-import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolderTest;
 import com.ctrip.hermes.metaserver.consumer.LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest;
-import com.ctrip.hermes.metaserver.consumer.OrderedConsumeConsumerLeaseAllocatorTest;
 import com.ctrip.hermes.metaserver.event.FollowerEventEngineTest;
 import com.ctrip.hermes.metaserver.event.LeaderEventEngineTest;
 
@@ -31,17 +27,17 @@ import com.ctrip.hermes.metaserver.event.LeaderEventEngineTest;
 LeastAdjustmentOrderedConsumeConsumerPartitionAssigningStrategyTest.class,//
       AssignBalancerTest.class,//
       DefaultBrokerPartitionAssigningStrategyTest.class, //
-      DefaultBrokerLeaseAllocatorTest.class, //
-      BrokerLeaseHolderTest.class, //
+      // DefaultBrokerLeaseAllocatorTest.class, //
+      // BrokerLeaseHolderTest.class, //
       ActiveConsumerListTest.class, //
       ConsumerAssignmentHolderTest.class, //
-      OrderedConsumeConsumerLeaseAllocatorTest.class, //
-      ConsumerLeaseHolderTest.class, //
+      // OrderedConsumeConsumerLeaseAllocatorTest.class, //
+      // ConsumerLeaseHolderTest.class, //
       ActiveConsumerListHolderTest.class, //
       EndpointMakerTest.class, //
       FollowerEventEngineTest.class, //
       LeaderEventEngineTest.class, //
-      // add test classes here
+// add test classes here
 
 })
 public class AllTests {

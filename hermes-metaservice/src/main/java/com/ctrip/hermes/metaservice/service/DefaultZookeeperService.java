@@ -1,23 +1,15 @@
 package com.ctrip.hermes.metaservice.service;
 
-import java.util.List;
 import java.util.Map;
 
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransaction;
 import org.apache.curator.framework.api.transaction.CuratorTransactionBridge;
-import org.apache.curator.utils.PathUtils;
-import org.apache.curator.utils.ZKPaths;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.KeeperException.BadVersionException;
-import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
@@ -47,113 +39,10 @@ public class DefaultZookeeperService implements ZookeeperService {
 	}
 
 	@Override
-	public void ensureConsumerLeaseZkPath(Topic topic) {
-
-		try {
-			ensurePath(ZKPathUtils.getConsumerLeaseRootZkPath());
-			List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic, topic.getPartitions(),
-			      topic.getConsumerGroups());
-
-			for (String path : paths) {
-				ensurePath(path);
-			}
-		} catch (Exception e) {
-			log.error("Exception occurred in ensureConsumerLeaseZkPath", e);
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Override
 	public void updateZkBaseMetaVersion(long version) throws Exception {
 		ensurePath(ZKPathUtils.getBaseMetaVersionZkPath());
 
 		m_zkClient.get().setData().forPath(ZKPathUtils.getBaseMetaVersionZkPath(), ZKSerializeUtils.serialize(version));
-	}
-
-	@Override
-	public void deleteConsumerLeaseTopicParentZkPath(String topicName) {
-		String path = ZKPathUtils.getConsumerLeaseTopicParentZkPath(topicName);
-
-		try {
-			deleteChildren(path, true);
-		} catch (Exception e) {
-			log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Override
-	public void deleteConsumerLeaseZkPath(Topic topic, String consumerGroupName) {
-		List<String> paths = ZKPathUtils.getConsumerLeaseZkPaths(topic, topic.getPartitions(), consumerGroupName);
-		String topicParentPath = ZKPathUtils.getConsumerLeaseTopicParentZkPath(topic.getName());
-
-		byte[] now = ZKSerializeUtils.serialize(m_systemClockService.now());
-
-		for (String path : paths) {
-			try {
-				m_zkClient.get().inTransaction()//
-				      .delete().forPath(path)//
-				      .and().setData().forPath(topicParentPath, now)//
-				      .and().commit();
-			} catch (Exception e) {
-				log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
-				throw new RuntimeException(e);
-			}
-		}
-
-	}
-
-	private void deleteChildren(String path, boolean deleteSelf) throws Exception {
-		PathUtils.validatePath(path);
-
-		CuratorFramework client = m_zkClient.get();
-		Stat stat = client.checkExists().forPath(path);
-		if (stat != null) {
-			List<String> children = client.getChildren().forPath(path);
-			for (String child : children) {
-				String fullPath = ZKPaths.makePath(path, child);
-				deleteChildren(fullPath, true);
-			}
-
-			if (deleteSelf) {
-				try {
-					client.delete().forPath(path);
-				} catch (KeeperException.NotEmptyException e) {
-					// someone has created a new child since we checked ... delete again.
-					deleteChildren(path, true);
-				} catch (KeeperException.NoNodeException e) {
-					// ignore... someone else has deleted the node it since we checked
-				}
-
-			}
-		}
-	}
-
-	@Override
-	public void ensureBrokerLeaseZkPath(Topic topic) {
-		List<String> paths = ZKPathUtils.getBrokerLeaseZkPaths(topic, topic.getPartitions());
-
-		for (String path : paths) {
-			try {
-				ensurePath(path);
-			} catch (Exception e) {
-				log.error("Exception occurred in ensureBrokerLeaseZkPath", e);
-				throw new RuntimeException(e);
-			}
-		}
-
-	}
-
-	@Override
-	public void deleteBrokerLeaseTopicParentZkPath(String topicName) {
-		String path = ZKPathUtils.getBrokerLeaseTopicParentZkPath(topicName);
-
-		try {
-			deleteChildren(path, true);
-		} catch (Exception e) {
-			log.error("Exception occurred in deleteConsumerLeaseZkPath", e);
-			throw new RuntimeException(e);
-		}
 	}
 
 	@Override
@@ -192,22 +81,6 @@ public class DefaultZookeeperService implements ZookeeperService {
 
 		} catch (Exception e) {
 			log.error("Exception occurred in persist", e);
-			throw e;
-		}
-	}
-
-	@Override
-	public boolean persistWithVersionCheck(String path, byte[] data, int version) throws Exception {
-		try {
-			ensurePath(path);
-
-			m_zkClient.get().inTransaction().check().withVersion(version).forPath(path).and().setData()
-			      .forPath(path, data).and().commit();
-			return true;
-		} catch (BadVersionException be) {
-			return false;
-		} catch (Exception e) {
-			log.error("Exception occurred in persistWithVersionCheck", e);
 			throw e;
 		}
 	}

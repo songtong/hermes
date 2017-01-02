@@ -1,32 +1,29 @@
 package com.ctrip.hermes.metaserver.commons;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.curator.framework.recipes.cache.ChildData;
-import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.lookup.annotation.Inject;
-import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
-import com.ctrip.hermes.metaserver.config.MetaServerConfig;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaserver.log.LoggerConstants;
-import com.ctrip.hermes.metaservice.service.ZookeeperService;
-import com.ctrip.hermes.metaservice.zk.ZKClient;
-import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -38,119 +35,90 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 
 	private static final Logger traceLog = LoggerFactory.getLogger(LoggerConstants.TRACE);
 
-	@Inject
-	protected ZookeeperService m_zookeeperService;
+	protected static final Date EMPTY_DATE = new Date(0L);
 
-	@Inject
-	private ZKClient m_zkClient;
-
-	@Inject
-	private MetaServerConfig m_config;
+	protected static final String EMPTY_IP = "-----";
 
 	private AtomicLong m_leaseIdGenerator = new AtomicLong(System.nanoTime());
 
-	protected TreeCache m_treeCache;
+	protected ConcurrentMap<Key, LeasesContext> m_leases = new ConcurrentHashMap<>();
+
+	private AtomicBoolean m_inited = new AtomicBoolean(false);
 
 	@Override
 	public Map<Key, Map<String, ClientLeaseInfo>> getAllValidLeases() throws Exception {
-		Map<Key, Map<String, ClientLeaseInfo>> leases = new HashMap<>();
-		getValidLeasesRecursively(getBaseZkPath(), leases);
-		return leases;
-	}
-
-	private void getValidLeasesRecursively(String path, Map<Key, Map<String, ClientLeaseInfo>> leases) {
-		try {
-			Map<String, ChildData> children = m_treeCache.getCurrentChildren(path);
-			if (children != null && !children.isEmpty()) {
-				for (ChildData child : children.values()) {
-					if (isPathMatch(child.getPath()) && child.getData() != null && child.getData().length > 0) {
-						Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(child.getPath(),
-						      child.getData());
-						removeExpiredLeases(existingLeases);
-						if (!existingLeases.isEmpty()) {
-							leases.put(convertZkPathToKey(child.getPath()), existingLeases);
-						}
-					} else {
-						getValidLeasesRecursively(child.getPath(), leases);
-					}
+		Map<Key, Map<String, ClientLeaseInfo>> validLeases = new HashMap<>();
+		for (Map.Entry<Key, LeasesContext> entry : m_leases.entrySet()) {
+			LeasesContext leasesContext = entry.getValue();
+			leasesContext.lock();
+			try {
+				removeExpiredLeases(leasesContext);
+				if (!leasesContext.getLeasesMapping().isEmpty()) {
+					validLeases.put(entry.getKey(), leasesContext.getLeasesMapping());
 				}
+			} finally {
+				leasesContext.unlock();
 			}
-		} catch (Exception e) {
-			log.error("Exception occurred while getting valid leases recursively for path {}.", path, e);
 		}
-	}
 
-	private Pair<Map<String, ClientLeaseInfo>, Integer> getValidLeaseAndVersion(String path) {
-		try {
-			ChildData child = m_treeCache.getCurrentData(path);
-
-			if (child != null) {
-				if (child.getData() != null && child.getData().length > 0) {
-					Map<String, ClientLeaseInfo> existingLeases = deserializeExistingLeases(child.getPath(), child.getData());
-					removeExpiredLeases(existingLeases);
-					return new Pair<>(existingLeases, child.getStat().getVersion());
-				} else {
-					return new Pair<Map<String, ClientLeaseInfo>, Integer>(new HashMap<String, ClientLeaseInfo>(), child
-					      .getStat().getVersion());
-				}
-			}
-		} catch (Exception e) {
-			log.error("Exception occurred while getting valid leases for path {}.", path, e);
-		}
-		return null;
+		return validLeases;
 	}
 
 	@Override
 	public LeaseAcquireResponse executeLeaseOperation(Key contextKey, LeaseOperationCallback callback) throws Exception {
-		Pair<Map<String, ClientLeaseInfo>, Integer> existingLeaseAndVersion = getValidLeaseAndVersion(convertKeyToZkPath(contextKey));
-		if (existingLeaseAndVersion != null) {
-			return callback.execute(existingLeaseAndVersion.getKey(), existingLeaseAndVersion.getValue());
-		} else {
-			return new LeaseAcquireResponse(false, null, System.currentTimeMillis()
-			      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
+		LeasesContext leasesContext = m_leases.get(contextKey);
+		if (leasesContext == null) {
+			m_leases.putIfAbsent(contextKey, new LeasesContext());
+			leasesContext = m_leases.get(contextKey);
+		}
+		leasesContext.lock();
+		try {
+			removeExpiredLeases(leasesContext);
+			return callback.execute(leasesContext);
+		} finally {
+			leasesContext.unlock();
 		}
 	}
 
 	@Override
-	public Lease newLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
-	      int version, long leaseTimeMillis, String ip, int port) throws Exception {
-		Lease newLease = new Lease(m_leaseIdGenerator.incrementAndGet(), System.currentTimeMillis() + leaseTimeMillis);
-		existingValidLeases.put(clientKey, new ClientLeaseInfo(newLease, ip, port));
-
-		if (persistToZK(contextKey, existingValidLeases, version)) {
+	public Lease newLease(Key contextKey, String clientKey, LeasesContext leasesContext, long leaseTimeMillis,
+	      String ip, int port) throws Exception {
+		leasesContext.lock();
+		try {
+			Lease newLease = new Lease(m_leaseIdGenerator.incrementAndGet(), System.currentTimeMillis() + leaseTimeMillis);
+			leasesContext.getLeasesMapping().put(clientKey, new ClientLeaseInfo(newLease, ip, port));
+			leasesContext.setDirty(true);
 			return newLease;
-		} else {
-			return null;
+		} finally {
+			leasesContext.unlock();
 		}
 	}
 
 	@Override
-	public boolean renewLease(Key contextKey, String clientKey, Map<String, ClientLeaseInfo> existingValidLeases,
-	      ClientLeaseInfo existingLeaseInfo, int version, long leaseTimeMillis, String ip, int port) throws Exception {
+	public boolean renewLease(Key contextKey, String clientKey, LeasesContext leasesContext,
+	      ClientLeaseInfo existingLeaseInfo, long leaseTimeMillis, String ip, int port) throws Exception {
+		leasesContext.lock();
+		try {
+			long newExpireTime = existingLeaseInfo.getLease().getExpireTime() + leaseTimeMillis;
+			long now = System.currentTimeMillis();
+			if (newExpireTime > now + 2 * leaseTimeMillis) {
+				newExpireTime = now + 2 * leaseTimeMillis;
+			}
 
-		long newExpireTime = existingLeaseInfo.getLease().getExpireTime() + leaseTimeMillis;
-		long now = System.currentTimeMillis();
-		if (newExpireTime > now + 2 * leaseTimeMillis) {
-			newExpireTime = now + 2 * leaseTimeMillis;
+			existingLeaseInfo.getLease().setExpireTime(newExpireTime);
+			existingLeaseInfo.setIp(ip);
+			existingLeaseInfo.setPort(port);
+			leasesContext.getLeasesMapping().put(clientKey, existingLeaseInfo);
+			leasesContext.setDirty(true);
+			return true;
+		} finally {
+			leasesContext.unlock();
 		}
-
-		existingLeaseInfo.getLease().setExpireTime(newExpireTime);
-		existingLeaseInfo.setIp(ip);
-		existingLeaseInfo.setPort(port);
-		existingValidLeases.put(clientKey, existingLeaseInfo);
-
-		return persistToZK(contextKey, existingValidLeases, version);
 	}
 
-	protected boolean persistToZK(Key contextKey, Map<String, ClientLeaseInfo> existingValidLeases, int version)
-	      throws Exception {
-		String path = convertKeyToZkPath(contextKey);
-		return m_zookeeperService.persistWithVersionCheck(path, ZKSerializeUtils.serialize(existingValidLeases), version);
-	}
-
-	protected void removeExpiredLeases(Map<String, ClientLeaseInfo> existingLeases) {
-		if (existingLeases != null) {
-			Iterator<Entry<String, ClientLeaseInfo>> iter = existingLeases.entrySet().iterator();
+	protected void removeExpiredLeases(LeasesContext leasesContext) {
+		if (leasesContext != null) {
+			Iterator<Entry<String, ClientLeaseInfo>> iter = leasesContext.getLeasesMapping().entrySet().iterator();
 			while (iter.hasNext()) {
 				Entry<String, ClientLeaseInfo> entry = iter.next();
 				Lease lease = entry.getValue().getLease();
@@ -166,11 +134,14 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 		try {
 			doInitialize();
 			startDetailPrinterThread();
+			m_inited.set(true);
 		} catch (Exception e) {
 			log.error("Failed to init LeaseHolder", e);
 			throw new InitializationException("Failed to init LeaseHolder", e);
 		}
 	}
+
+	protected abstract void doInitialize() throws Exception;
 
 	private void startDetailPrinterThread() {
 		Executors.newSingleThreadScheduledExecutor(HermesThreadFactory.create(getName() + "-DetailPrinter", true))
@@ -192,24 +163,23 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 
 	}
 
-	protected void doInitialize() throws Exception {
-		m_treeCache = new TreeCache(m_zkClient.get(), getBaseZkPath());
-		m_treeCache.start();
+	protected Map<String, ClientLeaseInfo> deserializeExistingLeases(String jsonStr) {
+		try {
+			if (!StringUtils.isBlank(jsonStr)) {
+				return JSON.parseObject(jsonStr, new TypeReference<Map<String, ClientLeaseInfo>>() {
+				}.getType());
+			}
+		} catch (Exception e) {
+			log.error("Deserialize existing leases failed.", e);
+		}
+		return new HashMap<>();
 	}
 
-	protected Map<String, ClientLeaseInfo> deserializeExistingLeases(String path, byte[] data) {
-		return ZKSerializeUtils.deserialize(data, new TypeReference<Map<String, ClientLeaseInfo>>() {
-		}.getType());
+	@Override
+	public boolean inited() {
+		return m_inited.get();
 	}
 
 	protected abstract String getName();
-
-	protected abstract String convertKeyToZkPath(Key contextKey);
-
-	protected abstract Key convertZkPathToKey(String path);
-
-	protected abstract String getBaseZkPath();
-
-	protected abstract boolean isPathMatch(String path);
 
 }

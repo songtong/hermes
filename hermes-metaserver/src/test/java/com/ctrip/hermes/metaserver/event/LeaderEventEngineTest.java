@@ -78,8 +78,6 @@ public class LeaderEventEngineTest extends ZKSuppportTestCase {
 		ensurePath(ZKPathUtils.getMetaServersZkPath());
 		ensurePath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
 		ensurePath(ZKPathUtils.getBaseMetaVersionZkPath());
-		ensurePath(ZKPathUtils.getBrokerLeaseRootZkPath());
-		ensurePath(ZKPathUtils.getConsumerLeaseRootZkPath());
 
 	}
 

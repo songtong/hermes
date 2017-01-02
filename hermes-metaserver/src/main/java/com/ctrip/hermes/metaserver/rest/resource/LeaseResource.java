@@ -35,12 +35,14 @@ import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseAllocator;
+import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.cluster.ClusterStateHolder;
 import com.ctrip.hermes.metaserver.cluster.Role;
 import com.ctrip.hermes.metaserver.commons.ClientContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocator;
 import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseAllocatorLocator;
+import com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder;
 import com.ctrip.hermes.metaserver.log.LoggerConstants;
 import com.ctrip.hermes.metaserver.meta.MetaServerAssignmentHolder;
 
@@ -86,6 +88,10 @@ public class LeaseResource {
 
 	private MetaServerConfig m_config;
 
+	private BrokerLeaseHolder m_brokerLeaseHolder;
+
+	private ConsumerLeaseHolder m_consumerLeaseHolder;
+
 	public LeaseResource() {
 		m_consumerLeaseAllocatorLocator = PlexusComponentLocator.lookup(ConsumerLeaseAllocatorLocator.class);
 		m_brokerLeaseAllocator = PlexusComponentLocator.lookup(BrokerLeaseAllocator.class);
@@ -93,7 +99,8 @@ public class LeaseResource {
 		m_metaServerAssignmentHolder = PlexusComponentLocator.lookup(MetaServerAssignmentHolder.class);
 		m_config = PlexusComponentLocator.lookup(MetaServerConfig.class);
 		m_clusterStateHolder = PlexusComponentLocator.lookup(ClusterStateHolder.class);
-
+		m_brokerLeaseHolder = PlexusComponentLocator.lookup(BrokerLeaseHolder.class);
+		m_consumerLeaseHolder = PlexusComponentLocator.lookup(ConsumerLeaseHolder.class);
 	}
 
 	@POST
@@ -111,7 +118,7 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			if (!m_clusterStateHolder.isConnected()) {
+			if (!m_clusterStateHolder.isConnected() || !m_consumerLeaseHolder.inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + CLUSTER_NOT_READY_DELAY_TIME_MILLIS);
 			} else {
@@ -168,7 +175,7 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			if (!m_clusterStateHolder.isConnected()) {
+			if (!m_clusterStateHolder.isConnected() || !m_consumerLeaseHolder.inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + CLUSTER_NOT_READY_DELAY_TIME_MILLIS);
 			} else {
@@ -228,7 +235,7 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			if (!m_clusterStateHolder.isConnected()) {
+			if (!m_clusterStateHolder.isConnected() || !m_brokerLeaseHolder.inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + CLUSTER_NOT_READY_DELAY_TIME_MILLIS);
 			} else {
@@ -285,7 +292,7 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		try {
-			if (!m_clusterStateHolder.isConnected()) {
+			if (!m_clusterStateHolder.isConnected() || !m_brokerLeaseHolder.inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
 				      + CLUSTER_NOT_READY_DELAY_TIME_MILLIS);
 			} else {

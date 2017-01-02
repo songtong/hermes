@@ -62,13 +62,7 @@
 			<implementation>com.ctrip.hermes.metaserver.consumer.ConsumerLeaseHolder</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+					<role>com.ctrip.hermes.metaservice.model.ConsumerLeaseDao</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -107,13 +101,7 @@
 			<implementation>com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.metaservice.service.ZookeeperService</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaservice.zk.ZKClient</role>
-				</requirement>
-				<requirement>
-					<role>com.ctrip.hermes.metaserver.config.MetaServerConfig</role>
+					<role>com.ctrip.hermes.metaservice.model.BrokerLeaseDao</role>
 				</requirement>
 			</requirements>
 		</component>
