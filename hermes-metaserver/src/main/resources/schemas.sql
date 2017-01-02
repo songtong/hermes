@@ -333,7 +333,8 @@ CREATE TABLE `broker_lease` (
   `assign_time` datetime(3) NOT NULL COMMENT 'assign time',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'changed time',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `topic_partition` (`topic`,`partition`)
+  UNIQUE KEY `topic_partition` (`topic`,`partition`),
+  KEY `assign_time` (`assign_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='broker lease信息';
 
 CREATE TABLE `consumer_lease` (
@@ -346,5 +347,6 @@ CREATE TABLE `consumer_lease` (
   `assign_time` datetime(3) NOT NULL COMMENT 'assign time',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'changed time',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `topic_partition_group` (`topic`,`partition`,`group`)
+  UNIQUE KEY `topic_partition_group` (`topic`,`partition`,`group`),
+  KEY `assign_time` (`assign_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='consumer lease信息';
