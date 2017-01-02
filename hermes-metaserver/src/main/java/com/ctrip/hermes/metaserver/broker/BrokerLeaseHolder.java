@@ -140,7 +140,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			transaction.setStatus(e);
 			throw e;
 		} finally {
-			transaction.addData("*count", persistCount);
+			transaction.addData("count", persistCount);
 			transaction.complete();
 		}
 	}
@@ -160,7 +160,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			transaction.setStatus(e);
 			throw e;
 		} finally {
-			transaction.addData("*count", count);
+			transaction.addData("count", count);
 			transaction.complete();
 		}
 	}

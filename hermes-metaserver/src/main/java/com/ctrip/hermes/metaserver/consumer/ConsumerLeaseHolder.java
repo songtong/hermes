@@ -113,7 +113,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			transaction.setStatus(e);
 			throw e;
 		} finally {
-			transaction.addData("*count", count);
+			transaction.addData("count", count);
 			transaction.complete();
 		}
 	}
@@ -161,7 +161,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			transaction.setStatus(e);
 			throw e;
 		} finally {
-			transaction.addData("*count", persistCount);
+			transaction.addData("count", persistCount);
 			transaction.complete();
 		}
 	}
