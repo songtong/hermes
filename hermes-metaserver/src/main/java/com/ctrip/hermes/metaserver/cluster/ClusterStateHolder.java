@@ -34,6 +34,7 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
 import com.ctrip.hermes.core.bo.HostPort;
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.metaserver.broker.BrokerLeaseHolder;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
@@ -45,6 +46,7 @@ import com.ctrip.hermes.metaserver.event.Guard;
 import com.ctrip.hermes.metaservice.zk.ZKClient;
 import com.ctrip.hermes.metaservice.zk.ZKPathUtils;
 import com.ctrip.hermes.metaservice.zk.ZKSerializeUtils;
+import com.dianping.cat.Cat;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -95,6 +97,7 @@ public class ClusterStateHolder implements Initializable {
 		m_roleLock.writeLock().lock();
 		try {
 			log.info("Become Leader!!!");
+			Cat.logEvent(CatConstants.TYPE_ROLE_CHANGED, "Leader");
 			m_role = Role.LEADER;
 			long newVersion = m_guard.upgradeVersion();
 			m_leader.set(new HostPort(Networks.forIp().getLocalHostAddress(), m_config.getMetaServerPort()));
@@ -108,6 +111,7 @@ public class ClusterStateHolder implements Initializable {
 		m_roleLock.writeLock().lock();
 		try {
 			log.info("Become Follower!!!");
+			Cat.logEvent(CatConstants.TYPE_ROLE_CHANGED, "Follower");
 			m_role = Role.FOLLOWER;
 			long newVersion = m_guard.upgradeVersion();
 			startLeaderLatch();
@@ -150,6 +154,7 @@ public class ClusterStateHolder implements Initializable {
 		m_roleLock.writeLock().lock();
 		try {
 			log.info("Become Observer!!!");
+			Cat.logEvent(CatConstants.TYPE_ROLE_CHANGED, "Observer");
 			m_role = Role.OBSERVER;
 			long newVersion = m_guard.upgradeVersion();
 			closeLeaderLatch();
@@ -298,10 +303,10 @@ public class ClusterStateHolder implements Initializable {
 	}
 
 	public boolean isLeaseAssigning() {
-	   return m_leaseAssigning;
-   }
+		return m_leaseAssigning;
+	}
 
 	public void setLeaseAssigning(boolean m_leaseAssigning) {
-	   this.m_leaseAssigning = m_leaseAssigning;
-   }
+		this.m_leaseAssigning = m_leaseAssigning;
+	}
 }

@@ -11,9 +11,7 @@ import org.mortbay.servlet.GzipFilter;
 import org.unidal.test.jetty.JettyServer;
 
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
-import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaservice.service.MetaService;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
@@ -53,12 +51,6 @@ public class StartMetaServer extends JettyServer {
 		MetaService metaService = PlexusComponentLocator.lookup(MetaService.class);
 
 		Meta meta = metaService.getMetaEntity();
-		for (Topic topic : meta.getTopics().values()) {
-			if (Endpoint.BROKER.equals(topic.getEndpointType())) {
-				zkService.ensureBrokerLeaseZkPath(topic);
-				zkService.ensureConsumerLeaseZkPath(topic);
-			}
-		}
 		zkService.updateZkBaseMetaVersion(meta.getVersion());
 
 		zkService.ensurePath(ZKPathUtils.getMetaInfoZkPath());

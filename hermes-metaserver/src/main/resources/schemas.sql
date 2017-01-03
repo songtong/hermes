@@ -323,3 +323,28 @@ CREATE TABLE `zookeeper_ensemble` (
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='zookeeper信息';
+
+CREATE TABLE `broker_lease` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `topic` varchar(250) NOT NULL DEFAULT '' COMMENT 'topic name',
+  `partition` int(11) NOT NULL COMMENT 'partition',
+  `leases` varchar(20000) DEFAULT '{}' COMMENT 'leases',
+  `metaserver` varchar(15) NOT NULL DEFAULT '' COMMENT 'metaserver ip',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'changed time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `topic_partition` (`topic`,`partition`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='broker lease信息';
+
+CREATE TABLE `consumer_lease` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `topic` varchar(250) NOT NULL DEFAULT '' COMMENT 'topic name',
+  `partition` int(11) NOT NULL COMMENT 'partition',
+  `group` varchar(250) DEFAULT NULL COMMENT 'consumer group',
+  `leases` varchar(20000) DEFAULT '{}' COMMENT 'leases',
+  `metaserver` varchar(15) NOT NULL DEFAULT '' COMMENT 'metaserver ip',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'changed time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `topic_partition_group` (`topic`,`partition`,`group`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='consumer lease信息';

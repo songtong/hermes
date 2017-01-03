@@ -55,7 +55,6 @@ import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
-import com.ctrip.hermes.metaservice.service.ZookeeperService;
 import com.google.common.base.Charsets;
 
 @Named
@@ -72,9 +71,6 @@ public class ConsumerService {
 
 	@Inject
 	private TopicStorageService m_storageService;
-
-	@Inject
-	private ZookeeperService m_zookeeperService;
 
 	@Inject
 	private CachedPartitionDao m_partitionDao;
@@ -118,8 +114,6 @@ public class ConsumerService {
 				List<com.ctrip.hermes.admin.core.model.Partition> partitionModels = m_partitionDao.findByTopic(topicId,
 				      false);
 				m_storageService.addConsumerStorage(topicModel, partitionModels, consumerGroupModel);
-				Topic topicEntity = m_topicService.findTopicEntityById(topicId);
-				m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
 			}
 			tm.commitTransaction();
 		} catch (Exception e) {
@@ -142,8 +136,6 @@ public class ConsumerService {
 					List<com.ctrip.hermes.admin.core.model.Partition> partitionModels = m_partitionDao.findByTopic(topicId,
 					      false);
 					m_storageService.delConsumerStorage(topicModel, partitionModels, consumerGroup.get(0));
-					Topic topicEntity = m_topicService.findTopicEntityById(topicId);
-					m_zookeeperService.deleteConsumerLeaseZkPath(topicEntity, consumer);
 				}
 			}
 			tm.commitTransaction();
@@ -234,7 +226,6 @@ public class ConsumerService {
 
 	public synchronized ConsumerGroupView updateConsumerGroup(Long topicId, ConsumerGroupView consumer) throws Exception {
 		try {
-			com.ctrip.hermes.admin.core.model.Topic topicModel = m_topicDao.findByPK(topicId);
 			List<com.ctrip.hermes.admin.core.model.ConsumerGroup> originConsumer = m_consumerGroupDao
 			      .findByTopicIdAndName(topicId, consumer.getName(), ConsumerGroupEntity.READSET_FULL);
 
@@ -247,10 +238,6 @@ public class ConsumerService {
 
 			m_consumerGroupDao.updateByPK(consumerGroupModel, ConsumerGroupEntity.UPDATESET_FULL);
 
-			if (Storage.MYSQL.equals(topicModel.getStorageType())) {
-				Topic topicEntity = m_topicService.findTopicEntityById(topicId);
-				m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
-			}
 		} catch (Exception e) {
 			throw e;
 		}

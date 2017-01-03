@@ -1,7 +1,6 @@
 package com.ctrip.hermes.metaserver.consumer;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
@@ -13,7 +12,8 @@ import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
-import com.ctrip.hermes.metaserver.commons.LeaseOperationCallback;
+import com.ctrip.hermes.metaserver.commons.LeaseHolder.LeaseOperationCallback;
+import com.ctrip.hermes.metaserver.commons.LeaseHolder.LeasesContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
 
@@ -129,12 +129,12 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version) {
-				if (existingValidLeases.isEmpty()) {
+			public LeaseAcquireResponse execute(LeasesContext leasesContext) {
+				if (leasesContext.getLeasesMapping().isEmpty()) {
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 				} else {
-					Collection<ClientLeaseInfo> leases = existingValidLeases.values();
+					Collection<ClientLeaseInfo> leases = leasesContext.getLeasesMapping().values();
 					// use the first lease's exp time
 					return new LeaseAcquireResponse(false, null, leases.iterator().next().getLease().getExpireTime());
 				}
@@ -149,9 +149,8 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
-			      throws Exception {
-				return doAcquireLease(tpg, consumerName, existingValidLeases, version, ip);
+			public LeaseAcquireResponse execute(LeasesContext leasesContext) throws Exception {
+				return doAcquireLease(tpg, consumerName, leasesContext, ip);
 			}
 
 		});
@@ -164,9 +163,8 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		return m_leaseHolder.executeLeaseOperation(tpg, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
-			      throws Exception {
-				return doRenewLease(tpg, consumerName, leaseId, existingValidLeases, version, ip);
+			public LeaseAcquireResponse execute(LeasesContext leasesContext) throws Exception {
+				return doRenewLease(tpg, consumerName, leaseId, leasesContext, ip);
 			}
 
 		});
@@ -174,9 +172,9 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	protected abstract LeaseAcquireResponse doAcquireLease(final Tpg tpg, final String consumerName,
-	      Map<String, ClientLeaseInfo> existingValidLeases, int version, String ip) throws Exception;
+	      LeasesContext leasesContext, String ip) throws Exception;
 
 	protected abstract LeaseAcquireResponse doRenewLease(final Tpg tpg, final String consumerName, final long leaseId,
-	      Map<String, ClientLeaseInfo> existingValidLeases, int version, String ip) throws Exception;
+	      LeasesContext leasesContext, String ip) throws Exception;
 
 }

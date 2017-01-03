@@ -1,5 +1,7 @@
 package com.ctrip.hermes.admin.core.service;
 
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,8 +45,6 @@ import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaservice.service.ZookeeperService;
-
-import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 
 @Named
 public class TopicService {
@@ -143,8 +143,6 @@ public class TopicService {
 		}
 
 		topic.getPartitions().addAll(partitions);
-		m_zookeeperService.ensureConsumerLeaseZkPath(topic);
-		m_zookeeperService.ensureBrokerLeaseZkPath(topic);
 
 		TopicView topicView = EntityToViewConverter.convert(topic);
 		fillTopicView(topicView);
@@ -191,8 +189,6 @@ public class TopicService {
 				throw new RuntimeException("Init topic storage failed, please try later.");
 			}
 		}
-		Topic topicEntity = findTopicEntityById(topicModel.getId());
-		m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 
 		return topicView;
 	}
@@ -238,8 +234,6 @@ public class TopicService {
 		if (Storage.MYSQL.equals(topic.getStorageType())) {
 			try {
 				m_topicStorageService.dropTopicStorage(topicModel, partitions, consumerGroups);
-				m_zookeeperService.deleteConsumerLeaseTopicParentZkPath(topic.getName());
-				m_zookeeperService.deleteBrokerLeaseTopicParentZkPath(topic.getName());
 				m_zookeeperService.deleteMetaServerAssignmentZkPath(topic.getName());
 			} catch (Exception e) {
 				if (e instanceof StorageHandleErrorException) {
@@ -391,10 +385,6 @@ public class TopicService {
 		}
 		addPartitionsForTopic(topicModel.getName(), partitions);
 		m_topicDao.updateByPK(topicModel, TopicEntity.UPDATESET_FULL);
-
-		Topic topicEntity = findTopicEntityById(topicModel.getId());
-		m_zookeeperService.ensureConsumerLeaseZkPath(topicEntity);
-		m_zookeeperService.ensureBrokerLeaseZkPath(topicEntity);
 
 		return findTopicViewByName(topicModel.getName());
 	}

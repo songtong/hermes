@@ -30,5 +30,49 @@
 			</query>
 		</query-defs>
 	</entity>
+	<entity name="broker-lease" table="broker_lease" alias="bl">
+		<var name="from" value-type="Date" />
+		<var name="ip" value-type="String" />
+		<query-defs>
+			<query name="insert" type="INSERT" batch='true'>
+				<statement><![CDATA[INSERT INTO <TABLE/> (<FIELDS/>)
+        		VALUES(<VALUES/>) 
+        		ON DUPLICATE KEY UPDATE
+        		leases=VALUES(leases),
+        		metaserver=VALUES(metaserver)
+        		]]>
+				</statement>
+			</query>
+			<query name="list-latest-changes" type="SELECT" multiple="true">
+				<param name="from" />
+				<param name="ip" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='data-change-last-time'/> >= ${from} AND <FIELD name='metaserver'/> != ${ip}]]></statement>
+			</query>
+		</query-defs>
+	</entity>
+	<entity name="consumer-lease" table="consumer_lease" alias="cl">
+		<var name="from" value-type="Date" />
+		<var name="ip" value-type="String" />
+		<query-defs>
+			<query name="insert" type="INSERT" batch='true'>
+				<statement><![CDATA[INSERT INTO <TABLE/> (<FIELDS/>)
+        		VALUES(<VALUES/>) 
+        		ON DUPLICATE KEY UPDATE
+        		leases=VALUES(leases),
+        		metaserver=VALUES(metaserver)
+        		]]>
+				</statement>
+			</query>
+			<query name="list-latest-changes" type="SELECT" multiple="true">
+				<param name="from" />
+				<param name="ip" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='data-change-last-time'/> >= ${from} AND <FIELD name='metaserver'/> != ${ip}]]></statement>
+			</query>
+		</query-defs>
+	</entity>
 </entities>
 

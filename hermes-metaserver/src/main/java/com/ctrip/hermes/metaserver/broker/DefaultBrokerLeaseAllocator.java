@@ -14,7 +14,8 @@ import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.metaserver.commons.Assignment;
 import com.ctrip.hermes.metaserver.commons.ClientLeaseInfo;
-import com.ctrip.hermes.metaserver.commons.LeaseOperationCallback;
+import com.ctrip.hermes.metaserver.commons.LeaseHolder.LeaseOperationCallback;
+import com.ctrip.hermes.metaserver.commons.LeaseHolder.LeasesContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 
 /**
@@ -96,13 +97,12 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 		      new LeaseOperationCallback() {
 
 			      @Override
-			      public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
-			            throws Exception {
-				      if (existingValidLeases.isEmpty()) {
+			      public LeaseAcquireResponse execute(LeasesContext leasesContext) throws Exception {
+				      if (leasesContext.getLeasesMapping().isEmpty()) {
 					      return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					            + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 				      } else {
-					      Collection<ClientLeaseInfo> leases = existingValidLeases.values();
+					      Collection<ClientLeaseInfo> leases = leasesContext.getLeasesMapping().values();
 					      // use the first lease's exp time
 					      return new LeaseAcquireResponse(false, null, leases.iterator().next().getLease().getExpireTime());
 				      }
@@ -119,11 +119,10 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 		return m_leaseHolder.executeLeaseOperation(contextKey, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
-			      throws Exception {
+			public LeaseAcquireResponse execute(LeasesContext leasesContext) throws Exception {
 
-				if (existingValidLeases.isEmpty()) {
-					Lease newLease = m_leaseHolder.newLease(contextKey, brokerName, existingValidLeases, version,
+				if (leasesContext.getLeasesMapping().isEmpty()) {
+					Lease newLease = m_leaseHolder.newLease(contextKey, brokerName, leasesContext,
 					      m_config.getBrokerLeaseTimeMillis(), ip, port);
 
 					if (newLease != null) {
@@ -141,7 +140,7 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 				} else {
 					ClientLeaseInfo existingClientLeaseInfo = null;
 
-					for (Map.Entry<String, ClientLeaseInfo> entry : existingValidLeases.entrySet()) {
+					for (Map.Entry<String, ClientLeaseInfo> entry : leasesContext.getLeasesMapping().entrySet()) {
 						ClientLeaseInfo clientLeaseInfo = entry.getValue();
 						String leaseBrokerName = entry.getKey();
 						if (leaseBrokerName.equals(brokerName)) {
@@ -155,7 +154,7 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 						      existingClientLeaseInfo.getLease().getExpireTime()
 						            + m_config.getBrokerLeaseClientSideAdjustmentTimeMills()), -1);
 					} else {
-						Collection<ClientLeaseInfo> leases = existingValidLeases.values();
+						Collection<ClientLeaseInfo> leases = leasesContext.getLeasesMapping().values();
 						// use the first lease's exp time
 						return new LeaseAcquireResponse(false, null, leases.iterator().next().getLease().getExpireTime());
 					}
@@ -175,15 +174,14 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 		return m_leaseHolder.executeLeaseOperation(contextKey, new LeaseOperationCallback() {
 
 			@Override
-			public LeaseAcquireResponse execute(Map<String, ClientLeaseInfo> existingValidLeases, int version)
-			      throws Exception {
-				if (existingValidLeases.isEmpty()) {
+			public LeaseAcquireResponse execute(LeasesContext leasesContext) throws Exception {
+				if (leasesContext.getLeasesMapping().isEmpty()) {
 					return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 					      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 				} else {
 					ClientLeaseInfo existingClientLeaseInfo = null;
 
-					for (Map.Entry<String, ClientLeaseInfo> entry : existingValidLeases.entrySet()) {
+					for (Map.Entry<String, ClientLeaseInfo> entry : leasesContext.getLeasesMapping().entrySet()) {
 						ClientLeaseInfo clientLeaseInfo = entry.getValue();
 						Lease lease = clientLeaseInfo.getLease();
 						String leaseBrokerName = entry.getKey();
@@ -194,8 +192,8 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 					}
 
 					if (existingClientLeaseInfo != null) {
-						if (m_leaseHolder.renewLease(contextKey, brokerName, existingValidLeases, existingClientLeaseInfo,
-						      version, m_config.getBrokerLeaseTimeMillis(), ip, port)) {
+						if (m_leaseHolder.renewLease(contextKey, brokerName, leasesContext, existingClientLeaseInfo,
+						      m_config.getBrokerLeaseTimeMillis(), ip, port)) {
 							if (log.isDebugEnabled()) {
 								log.debug("Renew lease success(topic={}, partition={}, brokerName={}, leaseExpTime={}).",
 								      topic, partition, brokerName, existingClientLeaseInfo.getLease().getExpireTime());
@@ -208,7 +206,7 @@ public class DefaultBrokerLeaseAllocator implements BrokerLeaseAllocator {
 							      + m_config.getDefaultLeaseAcquireOrRenewRetryDelayMillis());
 						}
 					} else {
-						Collection<ClientLeaseInfo> leases = existingValidLeases.values();
+						Collection<ClientLeaseInfo> leases = leasesContext.getLeasesMapping().values();
 						// use the first lease's exp time
 						return new LeaseAcquireResponse(false, null, leases.iterator().next().getLease().getExpireTime());
 					}

@@ -53,7 +53,6 @@ import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
-import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
 import com.ctrip.hermes.meta.entity.Topic;
@@ -170,20 +169,12 @@ public class MetaServerBaseTest extends ComponentTestCase {
 		ZookeeperService zkService = PlexusComponentLocator.lookup(ZookeeperService.class);
 
 		Meta meta = new MockMetaService().refreshMeta();
-		for (Topic topic : meta.getTopics().values()) {
-			if (Endpoint.BROKER.equals(topic.getEndpointType())) {
-				zkService.ensureBrokerLeaseZkPath(topic);
-				zkService.ensureConsumerLeaseZkPath(topic);
-			}
-		}
 		zkService.updateZkBaseMetaVersion(meta.getVersion());
 
 		zkService.updateZkBaseMetaVersion(MetaServerBaseTest.zkVersion.getAndIncrement());
 
 		zkService.ensurePath(ZKPathUtils.getMetaInfoZkPath());
-		zkService.ensurePath(ZKPathUtils.getBrokerLeasesZkPath());
 		zkService.ensurePath(ZKPathUtils.getMetaServerAssignmentRootZkPath());
-		zkService.ensurePath(ZKPathUtils.getConsumerLeaseRootZkPath());
 	}
 
 	protected void startMultipleMetaServers(int number) throws Exception {
