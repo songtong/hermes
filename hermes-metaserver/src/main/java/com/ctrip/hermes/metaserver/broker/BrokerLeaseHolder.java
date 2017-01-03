@@ -116,6 +116,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 				leasesContext.lock();
 				try {
 					if (leasesContext.isDirty()) {
+						persistCount++;
 						BrokerLease brokerLease = new BrokerLease();
 						brokerLease.setTopic(entry.getKey().getKey());
 						brokerLease.setPartition(entry.getKey().getValue());
