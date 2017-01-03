@@ -54,6 +54,8 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			if (existingLeasesFromDB != null) {
 				log.info("[{}]Existing leases loaded.", getName());
 				break;
+			} else {
+				TimeUnit.SECONDS.sleep(1);
 			}
 		}
 

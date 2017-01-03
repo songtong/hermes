@@ -53,6 +53,8 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			if (existingLeasesFromDB != null) {
 				log.info("[{}]Existing leases loaded.", getName());
 				break;
+			} else {
+				TimeUnit.SECONDS.sleep(1);
 			}
 		}
 
