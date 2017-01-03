@@ -122,7 +122,7 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_ACQUIRE_CONSUMER,
-		      tpg.getTopic() + ":" + tpg.getGroupId());
+		      tpg.getTopic() + ":" + tpg.getPartition() + ":" + tpg.getGroupId());
 		transaction.addData("host", params.get("host"));
 
 		try {
@@ -164,8 +164,8 @@ public class LeaseResource {
 				      JSON.toJSONString(tpg), JSON.toJSONString(response));
 			}
 			if (response.isAcquired()) {
-				Cat.logEvent(CatConstants.TYPE_LEASE_ACQUIRED_CONSUMER, tpg.getTopic() + ":" + tpg.getGroupId(),
-				      Message.SUCCESS, "host=" + params.get("host"));
+				Cat.logEvent(CatConstants.TYPE_LEASE_ACQUIRED_CONSUMER, tpg.getTopic() + ":" + tpg.getPartition() + ":"
+				      + tpg.getGroupId(), Message.SUCCESS, "host=" + params.get("host"));
 			}
 
 			transaction.complete();
@@ -191,7 +191,7 @@ public class LeaseResource {
 		params.put("host", getRemoteAddr(host, req));
 
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_RENEW_CONSUMER,
-		      tpg.getTopic() + ":" + tpg.getGroupId());
+		      tpg.getTopic() + ":" + tpg.getPartition() + ":" + tpg.getGroupId());
 		transaction.addData("host", params.get("host"));
 
 		try {
@@ -232,8 +232,8 @@ public class LeaseResource {
 				      JSON.toJSONString(tpg), JSON.toJSONString(response));
 			}
 			if (response.isAcquired()) {
-				Cat.logEvent(CatConstants.TYPE_LEASE_RENEWED_CONSUMER, tpg.getTopic() + ":" + tpg.getGroupId(),
-				      Message.SUCCESS, "host=" + params.get("host"));
+				Cat.logEvent(CatConstants.TYPE_LEASE_RENEWED_CONSUMER, tpg.getTopic() + ":" + tpg.getPartition() + ":"
+				      + tpg.getGroupId(), Message.SUCCESS, "host=" + params.get("host"));
 			}
 
 			transaction.complete();
@@ -262,7 +262,7 @@ public class LeaseResource {
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
 
-		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_ACQUIRE_BROKER, topic);
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_ACQUIRE_BROKER, topic + ":" + partition);
 		transaction.addData("host", params.get("host"));
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_brokerLeaseHolder.inited()) {
@@ -297,7 +297,8 @@ public class LeaseResource {
 				      JSON.toJSONString(response));
 			}
 			if (response.isAcquired()) {
-				Cat.logEvent(CatConstants.TYPE_LEASE_ACQUIRED_BROKER, topic, Message.SUCCESS, "host=" + params.get("host"));
+				Cat.logEvent(CatConstants.TYPE_LEASE_ACQUIRED_BROKER, topic + ":" + partition, Message.SUCCESS, "host="
+				      + params.get("host"));
 			}
 
 			transaction.complete();
@@ -328,7 +329,7 @@ public class LeaseResource {
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
 
-		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_RENEW_BROKER, topic);
+		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_RENEW_BROKER, topic + ":" + partition);
 		transaction.addData("host", params.get("host"));
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_brokerLeaseHolder.inited()) {
@@ -363,7 +364,8 @@ public class LeaseResource {
 				      JSON.toJSONString(response));
 			}
 			if (response.isAcquired()) {
-				Cat.logEvent(CatConstants.TYPE_LEASE_RENEWED_BROKER, topic, Message.SUCCESS, "host=" + params.get("host"));
+				Cat.logEvent(CatConstants.TYPE_LEASE_RENEWED_BROKER, topic + ":" + partition, Message.SUCCESS, "host="
+				      + params.get("host"));
 			}
 
 			transaction.complete();
