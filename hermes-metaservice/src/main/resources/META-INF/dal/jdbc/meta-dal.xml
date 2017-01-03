@@ -39,8 +39,7 @@
         		VALUES(<VALUES/>) 
         		ON DUPLICATE KEY UPDATE
         		leases=VALUES(leases),
-        		metaserver=VALUES(metaserver),
-        		assign_time=VALUES(assign_time)
+        		metaserver=VALUES(metaserver)
         		]]>
 				</statement>
 			</query>
@@ -49,7 +48,7 @@
 				<param name="ip" />
 				<statement><![CDATA[SELECT <FIELDS/>
         FROM <TABLE/>
-        WHERE <FIELD name='assign-time'/> >= ${from} AND <FIELD name='metaserver'/> != ${ip}]]></statement>
+        WHERE <FIELD name='data-change-last-time'/> >= ${from} AND <FIELD name='metaserver'/> != ${ip}]]></statement>
 			</query>
 		</query-defs>
 	</entity>
@@ -62,8 +61,7 @@
         		VALUES(<VALUES/>) 
         		ON DUPLICATE KEY UPDATE
         		leases=VALUES(leases),
-        		metaserver=VALUES(metaserver),
-        		assign_time=VALUES(assign_time)
+        		metaserver=VALUES(metaserver)
         		]]>
 				</statement>
 			</query>
@@ -72,7 +70,7 @@
 				<param name="ip" />
 				<statement><![CDATA[SELECT <FIELDS/>
         FROM <TABLE/>
-        WHERE <FIELD name='assign-time'/> >= ${from} AND <FIELD name='metaserver'/> != ${ip}]]></statement>
+        WHERE <FIELD name='data-change-last-time'/> >= ${from} AND <FIELD name='metaserver'/> != ${ip}]]></statement>
 			</query>
 		</query-defs>
 	</entity>

@@ -330,11 +330,10 @@ CREATE TABLE `broker_lease` (
   `partition` int(11) NOT NULL COMMENT 'partition',
   `leases` varchar(20000) DEFAULT '{}' COMMENT 'leases',
   `metaserver` varchar(15) NOT NULL DEFAULT '' COMMENT 'metaserver ip',
-  `assign_time` datetime(3) NOT NULL COMMENT 'assign time',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'changed time',
   PRIMARY KEY (`id`),
   UNIQUE KEY `topic_partition` (`topic`,`partition`),
-  KEY `assign_time` (`assign_time`)
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='broker lease信息';
 
 CREATE TABLE `consumer_lease` (
@@ -344,9 +343,8 @@ CREATE TABLE `consumer_lease` (
   `group` varchar(250) DEFAULT NULL COMMENT 'consumer group',
   `leases` varchar(20000) DEFAULT '{}' COMMENT 'leases',
   `metaserver` varchar(15) NOT NULL DEFAULT '' COMMENT 'metaserver ip',
-  `assign_time` datetime(3) NOT NULL COMMENT 'assign time',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'changed time',
   PRIMARY KEY (`id`),
   UNIQUE KEY `topic_partition_group` (`topic`,`partition`,`group`),
-  KEY `assign_time` (`assign_time`)
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='consumer lease信息';

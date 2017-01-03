@@ -49,7 +49,12 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 
 		int maxRetries = 3;
 		for (int i = 0; i < maxRetries; i++) {
-			existingLeasesFromDB = m_leasesDao.listLatestChanges(EMPTY_DATE, EMPTY_IP, ConsumerLeaseEntity.READSET_FULL);
+			try {
+				existingLeasesFromDB = m_leasesDao
+				      .listLatestChanges(EMPTY_DATE, EMPTY_IP, ConsumerLeaseEntity.READSET_FULL);
+			} catch (Exception e) {
+				log.error("[{}]Exception occurred while loading latest leases from db", getName(), e);
+			}
 			if (existingLeasesFromDB != null) {
 				log.info("[{}]Existing leases loaded.", getName());
 				break;
@@ -138,7 +143,6 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 						consumerLease.setGroup(entry.getKey().getGroupId());
 						consumerLease.setMetaserver(Networks.forIp().getLocalHostAddress());
 						consumerLease.setLeases(JSON.toJSONString(leasesContext.getLeasesMapping()));
-						consumerLease.setAssignTime(new Date(leasesContext.getLastModifiedTime()));
 						if (leaseBatch == null || leaseBatch.size() == batchSize) {
 							leaseBatch = new ArrayList<>(batchSize);
 							leaseBatches.add(leaseBatch);
@@ -154,7 +158,11 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			if (!leaseBatches.isEmpty()) {
 				for (List<ConsumerLease> batch : leaseBatches) {
 					if (!batch.isEmpty()) {
-						m_leasesDao.insert(batch.toArray(new ConsumerLease[batch.size()]));
+						try {
+							m_leasesDao.insert(batch.toArray(new ConsumerLease[batch.size()]));
+						} catch (Exception e) {
+							log.error("[{}]Exception occurred while persisting latest leases to db", getName(), e);
+						}
 					}
 				}
 			}

@@ -50,7 +50,12 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 
 		int maxRetries = 3;
 		for (int i = 0; i < maxRetries; i++) {
-			existingLeasesFromDB = m_leasesDao.listLatestChanges(EMPTY_DATE, EMPTY_IP, BrokerLeaseEntity.READSET_FULL);
+			try {
+				existingLeasesFromDB = m_leasesDao.listLatestChanges(EMPTY_DATE, EMPTY_IP, BrokerLeaseEntity.READSET_FULL);
+			} catch (Exception e) {
+				log.error("[{}]Exception occurred while loading latest leases from db", getName(), e);
+			}
+
 			if (existingLeasesFromDB != null) {
 				log.info("[{}]Existing leases loaded.", getName());
 				break;
@@ -80,7 +85,6 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 				      long intervalMillis = 2000;
 
 				      while (!Thread.currentThread().isInterrupted()) {
-
 					      long currRunTime = System.currentTimeMillis();
 					      try {
 						      persistDirtyLeases(100);
@@ -117,7 +121,6 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 						brokerLease.setPartition(entry.getKey().getValue());
 						brokerLease.setMetaserver(Networks.forIp().getLocalHostAddress());
 						brokerLease.setLeases(JSON.toJSONString(leasesContext.getLeasesMapping()));
-						brokerLease.setAssignTime(new Date(leasesContext.getLastModifiedTime()));
 						if (leaseBatch == null || leaseBatch.size() == batchSize) {
 							leaseBatch = new ArrayList<>(batchSize);
 							leaseBatches.add(leaseBatch);
@@ -133,7 +136,11 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			if (!leaseBatches.isEmpty()) {
 				for (List<BrokerLease> batch : leaseBatches) {
 					if (!batch.isEmpty()) {
-						m_leasesDao.insert(batch.toArray(new BrokerLease[batch.size()]));
+						try {
+							m_leasesDao.insert(batch.toArray(new BrokerLease[batch.size()]));
+						} catch (Exception e) {
+							log.error("[{}]Exception occurred while persisting latest leases to db", getName(), e);
+						}
 					}
 				}
 			}

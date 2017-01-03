@@ -31,8 +31,6 @@ public interface LeaseHolder<Key> {
 
 		private boolean m_dirty = false;
 
-		private long m_lastModifiedTime = 0L;
-
 		private Lock m_lock = new ReentrantLock();
 
 		public Map<String, ClientLeaseInfo> getLeasesMapping() {
@@ -45,17 +43,10 @@ public interface LeaseHolder<Key> {
 
 		public void setDirty(boolean dirty) {
 			m_dirty = dirty;
-			if (dirty) {
-				m_lastModifiedTime = System.currentTimeMillis();
-			}
 		}
 
 		public boolean isDirty() {
 			return m_dirty;
-		}
-
-		public long getLastModifiedTime() {
-			return m_lastModifiedTime;
 		}
 
 		public void lock() {
