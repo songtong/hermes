@@ -31,7 +31,7 @@ public interface LeaseHolder<Key> {
 
 		private boolean m_dirty = false;
 
-		private long m_lastModifiedTime = System.currentTimeMillis();
+		private long m_lastModifiedTime = 0L;
 
 		private Lock m_lock = new ReentrantLock();
 

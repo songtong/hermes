@@ -171,10 +171,12 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			m_leases.putIfAbsent(contextKey, new LeasesContext());
 			LeasesContext leasesContext = m_leases.get(contextKey);
 			leasesContext.lock();
-			try {
-				leasesContext.setLeasesMapping(deserializeExistingLeases(existingLease.getLeases()));
-			} finally {
-				leasesContext.unlock();
+			if (!leasesContext.isDirty()) {
+				try {
+					leasesContext.setLeasesMapping(deserializeExistingLeases(existingLease.getLeases()));
+				} finally {
+					leasesContext.unlock();
+				}
 			}
 		}
 	}
