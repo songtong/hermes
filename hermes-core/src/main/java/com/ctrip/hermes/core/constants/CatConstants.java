@@ -110,5 +110,7 @@ public interface CatConstants {
 
 	public static final String TYPE_LEASE_RENEWED_BROKER = "Lease.Renewed.Broker";
 
+	public static final String TYPE_LEASE_PROXY = "Lease.Proxy";
+
 	public static final String TYPE_ROLE_CHANGED = "Role.Changed";
 }
