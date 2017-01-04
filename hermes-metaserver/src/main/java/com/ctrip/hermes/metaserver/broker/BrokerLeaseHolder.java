@@ -159,14 +159,16 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 	private long loadNewLeasesAssignedByOtherMetaservers(long lastRunTime) throws DalException {
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_DIRTY_LOAD, "Broker");
 		int count = 0;
+		long maxLodedTime = -1L;
 		try {
 			List<BrokerLease> changes = m_leasesDao.listLatestChanges(new Date(lastRunTime), Networks.forIp()
 			      .getLocalHostAddress(), BrokerLeaseEntity.READSET_FULL);
 			if (changes != null && !changes.isEmpty()) {
 				count = changes.size();
-				return loadExistingLeases(changes);
+				maxLodedTime = loadExistingLeases(changes);
 			}
 			transaction.setStatus(Transaction.SUCCESS);
+			return maxLodedTime;
 		} catch (Exception e) {
 			transaction.setStatus(e);
 			throw e;
@@ -174,8 +176,6 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			transaction.addData("count", count);
 			transaction.complete();
 		}
-
-		return -1L;
 	}
 
 	private long loadExistingLeases(List<BrokerLease> existingLeases) {

@@ -108,14 +108,16 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 	private long loadNewLeasesAssignedByOtherMetaservers(long lastRunTime) throws DalException {
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_DIRTY_LOAD, "Consumer");
 		int count = 0;
+		long maxLodedTime = -1L;
 		try {
 			List<ConsumerLease> changes = m_leasesDao.listLatestChanges(new Date(lastRunTime), Networks.forIp()
 			      .getLocalHostAddress(), ConsumerLeaseEntity.READSET_FULL);
 			if (changes != null && !changes.isEmpty()) {
 				count = changes.size();
-				return loadExistingLeases(changes);
+				maxLodedTime = loadExistingLeases(changes);
 			}
 			transaction.setStatus(Transaction.SUCCESS);
+			return maxLodedTime;
 		} catch (Exception e) {
 			transaction.setStatus(e);
 			throw e;
@@ -123,7 +125,6 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			transaction.addData("count", count);
 			transaction.complete();
 		}
-		return -1L;
 	}
 
 	private void persistDirtyLeases(int batchSize) throws DalException {
