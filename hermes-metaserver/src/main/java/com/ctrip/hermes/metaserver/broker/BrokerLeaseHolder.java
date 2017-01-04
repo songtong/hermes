@@ -64,35 +64,36 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			}
 		}
 
+		long latestDataChangeTime = -1L;
+
 		if (existingLeasesFromDB == null) {
 			log.warn(
 			      "[{}]Failed to load existing leases for {} times, will start metaserver without existing leases aware.",
 			      getName(), maxRetries);
 		} else {
-			loadExistingLeases(existingLeasesFromDB);
+			latestDataChangeTime = loadExistingLeases(existingLeasesFromDB);
 		}
 
-		startLeaseSynchronizationThread();
+		startLeaseSynchronizationThread(latestDataChangeTime);
 	}
 
-	private void startLeaseSynchronizationThread() {
+	private void startLeaseSynchronizationThread(final long latestDataChangeTime) {
 		Executors.newSingleThreadExecutor(HermesThreadFactory.create("BrokerLeaseSynchronizationThread", true)).submit(
 		      new Runnable() {
 
 			      @Override
 			      public void run() {
-				      long lastRunTime = System.currentTimeMillis();
+				      long lastScanTime = latestDataChangeTime;
 				      long intervalMillis = 2000;
 
 				      while (!Thread.currentThread().isInterrupted()) {
-					      long currRunTime = System.currentTimeMillis();
 					      try {
 						      persistDirtyLeases(100);
-						      loadNewLeasesAssignedByOtherMetaservers(lastRunTime);
+						      long maxDataTime = loadNewLeasesAssignedByOtherMetaservers(lastScanTime);
+						      lastScanTime = Math.max(lastScanTime, maxDataTime);
 					      } catch (Throwable e) {
 						      log.error("Exception occurred in BrokerLeaseSynchronizationThread", e);
 					      } finally {
-						      lastRunTime = currRunTime;
 						      try {
 							      TimeUnit.MILLISECONDS.sleep(intervalMillis);
 						      } catch (InterruptedException e) {
@@ -155,7 +156,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 		}
 	}
 
-	private void loadNewLeasesAssignedByOtherMetaservers(long lastRunTime) throws DalException {
+	private long loadNewLeasesAssignedByOtherMetaservers(long lastRunTime) throws DalException {
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_DIRTY_LOAD, "Broker");
 		int count = 0;
 		try {
@@ -163,7 +164,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			      .getLocalHostAddress(), BrokerLeaseEntity.READSET_FULL);
 			if (changes != null && !changes.isEmpty()) {
 				count = changes.size();
-				loadExistingLeases(changes);
+				return loadExistingLeases(changes);
 			}
 			transaction.setStatus(Transaction.SUCCESS);
 		} catch (Exception e) {
@@ -173,10 +174,14 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			transaction.addData("count", count);
 			transaction.complete();
 		}
+
+		return -1L;
 	}
 
-	private void loadExistingLeases(List<BrokerLease> existingLeases) {
+	private long loadExistingLeases(List<BrokerLease> existingLeases) {
+		long latestDataChangeTime = -1L;
 		for (BrokerLease existingLease : existingLeases) {
+			latestDataChangeTime = Math.max(latestDataChangeTime, existingLease.getDataChangeLastTime().getTime());
 			Pair<String, Integer> contextKey = new Pair<>(existingLease.getTopic(), existingLease.getPartition());
 			m_leases.putIfAbsent(contextKey, new LeasesContext());
 			LeasesContext leasesContext = m_leases.get(contextKey);
@@ -189,5 +194,7 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 				}
 			}
 		}
+
+		return latestDataChangeTime;
 	}
 }

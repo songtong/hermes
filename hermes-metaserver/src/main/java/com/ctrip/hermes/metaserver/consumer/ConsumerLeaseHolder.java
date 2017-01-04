@@ -63,36 +63,36 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			}
 		}
 
+		long latestDataChangeTime = -1L;
+
 		if (existingLeasesFromDB == null) {
 			log.warn(
 			      "[{}]Failed to load existing leases for {} times, will start metaserver without existing leases aware.",
 			      getName(), maxRetries);
 		} else {
-			loadExistingLeases(existingLeasesFromDB);
+			latestDataChangeTime = loadExistingLeases(existingLeasesFromDB);
 		}
 
-		startLeaseSynchronizationThread();
+		startLeaseSynchronizationThread(latestDataChangeTime);
 	}
 
-	private void startLeaseSynchronizationThread() {
+	private void startLeaseSynchronizationThread(final long latestDataChangeTime) {
 		Executors.newSingleThreadExecutor(HermesThreadFactory.create("ConsumerLeaseSynchronizationThread", true)).submit(
 		      new Runnable() {
 
 			      @Override
 			      public void run() {
-				      long lastRunTime = System.currentTimeMillis();
+				      long lastScanTime = latestDataChangeTime;
 				      long intervalMillis = 2000;
 
 				      while (!Thread.currentThread().isInterrupted()) {
-
-					      long currRunTime = System.currentTimeMillis();
 					      try {
 						      persistDirtyLeases(100);
-						      loadNewLeasesAssignedByOtherMetaservers(lastRunTime);
+						      long maxDataTime = loadNewLeasesAssignedByOtherMetaservers(lastScanTime);
+						      lastScanTime = Math.max(lastScanTime, maxDataTime);
 					      } catch (Throwable e) {
 						      log.error("Exception occurred in ConsumerLeaseSynchronizationThread", e);
 					      } finally {
-						      lastRunTime = currRunTime;
 						      try {
 							      TimeUnit.MILLISECONDS.sleep(intervalMillis);
 						      } catch (InterruptedException e) {
@@ -105,7 +105,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 		      });
 	}
 
-	private void loadNewLeasesAssignedByOtherMetaservers(long lastRunTime) throws DalException {
+	private long loadNewLeasesAssignedByOtherMetaservers(long lastRunTime) throws DalException {
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_DIRTY_LOAD, "Consumer");
 		int count = 0;
 		try {
@@ -113,7 +113,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			      .getLocalHostAddress(), ConsumerLeaseEntity.READSET_FULL);
 			if (changes != null && !changes.isEmpty()) {
 				count = changes.size();
-				loadExistingLeases(changes);
+				return loadExistingLeases(changes);
 			}
 			transaction.setStatus(Transaction.SUCCESS);
 		} catch (Exception e) {
@@ -123,6 +123,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			transaction.addData("count", count);
 			transaction.complete();
 		}
+		return -1L;
 	}
 
 	private void persistDirtyLeases(int batchSize) throws DalException {
@@ -176,8 +177,10 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 		}
 	}
 
-	private void loadExistingLeases(List<ConsumerLease> existingLeases) {
+	private long loadExistingLeases(List<ConsumerLease> existingLeases) {
+		long latestDataChangeTime = -1L;
 		for (ConsumerLease existingLease : existingLeases) {
+			latestDataChangeTime = Math.max(latestDataChangeTime, existingLease.getDataChangeLastTime().getTime());
 			Tpg contextKey = new Tpg(existingLease.getTopic(), existingLease.getPartition(), existingLease.getGroup());
 			m_leases.putIfAbsent(contextKey, new LeasesContext());
 			LeasesContext leasesContext = m_leases.get(contextKey);
@@ -190,6 +193,7 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 				}
 			}
 		}
+		return latestDataChangeTime;
 	}
 
 }

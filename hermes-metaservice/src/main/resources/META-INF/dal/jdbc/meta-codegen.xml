@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities>
   <entity name="broker-lease" table="broker_lease" alias="bl">
-    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
     <member name="topic" field="topic" value-type="String" length="250" nullable="false" />
     <member name="partition" field="partition" value-type="int" length="10" nullable="false" />
     <member name="leases" field="leases" value-type="String" length="20000" />
     <member name="metaserver" field="metaserver" value-type="String" length="15" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
-    <var name="key-id" value-type="int" key-member="id" />
+    <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="topic_partition" unique="true" members="topic ASC, partition ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -41,16 +42,17 @@
     </query-defs>
   </entity>
   <entity name="consumer-lease" table="consumer_lease" alias="cl">
-    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
     <member name="topic" field="topic" value-type="String" length="250" nullable="false" />
     <member name="partition" field="partition" value-type="int" length="10" nullable="false" />
     <member name="group" field="group" value-type="String" length="250" />
     <member name="leases" field="leases" value-type="String" length="20000" />
     <member name="metaserver" field="metaserver" value-type="String" length="15" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
-    <var name="key-id" value-type="int" key-member="id" />
+    <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="topic_partition_group" unique="true" members="topic ASC, partition ASC, group ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
