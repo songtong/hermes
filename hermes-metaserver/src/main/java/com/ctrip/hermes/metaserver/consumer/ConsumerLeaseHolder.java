@@ -186,12 +186,12 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			m_leases.putIfAbsent(contextKey, new LeasesContext());
 			LeasesContext leasesContext = m_leases.get(contextKey);
 			leasesContext.lock();
-			if (!leasesContext.isDirty()) {
-				try {
+			try {
+				if (!leasesContext.isDirty()) {
 					leasesContext.setLeasesMapping(deserializeExistingLeases(existingLease.getLeases()));
-				} finally {
-					leasesContext.unlock();
 				}
+			} finally {
+				leasesContext.unlock();
 			}
 		}
 		return latestDataChangeTime;
