@@ -89,7 +89,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 			}
 
 			Transaction catTx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_BROKER_FLUSH, m_topic + "-" + m_partition);
-			catTx.addData("*count", getMessageCount(todos));
+			catTx.addData("count", getMessageCount(todos));
 
 			maxSavedSelectorOffset = appendMessageSync(todos);
 

@@ -44,14 +44,14 @@ public class MessageDataSourceProvider implements DataSourceProvider {
 			dsDef.setProperties(props);
 
 			int maxPoolSize = 20;
-			if (dsProps.get("maximumPoolSize") != null) {
-				maxPoolSize = Integer.parseInt(dsProps.get("maximumPoolSize").getValue());
+			if (dsProps.get("maximumSize") != null) {
+				maxPoolSize = Integer.parseInt(dsProps.get("maximumSize").getValue());
 			}
 			dsDef.setMaximumPoolSize(maxPoolSize);
 
 			int minPoolSize = 10;
-			if (dsProps.get("minimumPoolSize") != null) {
-				minPoolSize = Integer.parseInt(dsProps.get("minimumPoolSize").getValue());
+			if (dsProps.get("minimumSize") != null) {
+				minPoolSize = Integer.parseInt(dsProps.get("minimumSize").getValue());
 			}
 			dsDef.setMinimumPoolSize(minPoolSize);
 
