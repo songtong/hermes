@@ -1,5 +1,6 @@
 package com.ctrip.hermes.broker.transport;
 
+import java.io.ByteArrayInputStream;
 import java.util.Date;
 
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
@@ -13,7 +14,7 @@ public class BrokerDummyMessagePriority extends MessagePriority implements Dummy
 		setPartition(tpp.getPartition());
 		setPriority(tpp.getPriorityInt());
 		setAttributes(DUMMY_HEADER);
-		setPayload(new byte[0]);
+		setPayload(new ByteArrayInputStream(new byte[0]));
 		setCreationDate(new Date());
 	}
 }

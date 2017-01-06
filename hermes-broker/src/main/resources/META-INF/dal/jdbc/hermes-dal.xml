@@ -2,6 +2,7 @@
 <entities do-package="com.ctrip.hermes.broker.dal.hermes" gen="true">
 	<entity name="message-priority"
 		implements="com.ctrip.hermes.broker.queue.storage.mysql.dal.TopicPartitionPriorityAware, com.ctrip.hermes.broker.queue.storage.mysql.dal.IdAware">
+		<member name="payload" field="payload" value-type="java.io.InputStream" />
 		<var name="topic" value-type="String" />
 		<var name="partition" value-type="int" />
 		<var name="priority" value-type="int" />
@@ -144,6 +145,7 @@
 	</entity>
 
 	<entity name="resend-group-id" implements="com.ctrip.hermes.broker.queue.storage.mysql.dal.TopicPartitionPriorityGroupAware">
+		<member name="payload" field="payload" value-type="java.io.InputStream" />
 		<relation name="message-priority" entity-name="message-priority" entity-alias="mp" />
 
 		<var name="topic" value-type="String" />
@@ -295,6 +297,7 @@
 	</entity>
 
 	<entity name="dead-letter" implements="com.ctrip.hermes.broker.queue.storage.mysql.dal.TopicPartitionPriorityGroupAware">
+		<member name="payload" field="payload" value-type="java.io.InputStream" />
 		<relation name="message-priority" entity-name="message-priority" entity-alias="mp" />
 		<relation name="resend-group-id" entity-name="resend-group-id" entity-alias="rgi" />
 		<var name="topic" value-type="String" />

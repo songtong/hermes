@@ -2,8 +2,11 @@ package com.ctrip.hermes.broker.queue.storage.mysql;
 
 import static com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity.READSET_OFFSET;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
 
+import java.io.ByteArrayInputStream;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -18,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.codehaus.plexus.util.StringUtils;
+import org.mortbay.util.IO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
@@ -125,6 +129,8 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 	private TreeMap<Integer, String> m_catSelectorByNonPriorityMetrics = new TreeMap<>();
 
+	private Field m_bufFieldOfByteArrayInputStream;
+
 	@Override
 	public void appendMessages(String topicName, int partition, boolean priority,
 	      Collection<MessageBatchWithRawData> batches) throws Exception {
@@ -145,7 +151,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				msg.setAttributes(pdmsg.readDurableProperties());
 				msg.setCreationDate(new Date(pdmsg.getBornTime()));
 				msg.setPartition(partition);
-				msg.setPayload(pdmsg.readBody());
+				msg.setPayload(new ByteBufInputStream(pdmsg.getBody().duplicate()));
 				if (topic.isPriorityMessageEnabled()) {
 					msg.setPriority(priority ? 0 : 1);
 				} else {
@@ -357,15 +363,23 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				@Override
 				public void transfer(ByteBuf out) {
 					for (MessagePriority dataObj : msgs) {
-						PartialDecodedMessage partialMsg = new PartialDecodedMessage();
-						partialMsg.setRemainingRetries(0);
-						partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
-						partialMsg.setBody(Unpooled.wrappedBuffer(dataObj.getPayload()));
-						partialMsg.setBornTime(dataObj.getCreationDate().getTime());
-						partialMsg.setKey(dataObj.getRefKey());
-						partialMsg.setBodyCodecType(dataObj.getCodecType());
+						try {
+							PartialDecodedMessage partialMsg = new PartialDecodedMessage();
+							partialMsg.setRemainingRetries(0);
+							partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
+							if (dataObj.getPayload() instanceof ByteArrayInputStream) {
+								partialMsg.setBody(Unpooled.wrappedBuffer(getBytes((ByteArrayInputStream) dataObj.getPayload())));
+							} else {
+								partialMsg.setBody(Unpooled.wrappedBuffer(IO.readBytes(dataObj.getPayload())));
+							}
+							partialMsg.setBornTime(dataObj.getCreationDate().getTime());
+							partialMsg.setKey(dataObj.getRefKey());
+							partialMsg.setBodyCodecType(dataObj.getCodecType());
 
-						m_messageCodec.encodePartial(partialMsg, out);
+							m_messageCodec.encodePartial(partialMsg, out);
+						} catch (Exception e) {
+							log.error("Exception occurred in storage's TransferCallback.", e);
+						}
 					}
 				}
 			});
@@ -376,6 +390,14 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 		}
 
 		return null;
+	}
+
+	private byte[] getBytes(ByteArrayInputStream bais) {
+		try {
+			return (byte[]) m_bufFieldOfByteArrayInputStream.get(bais);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to get bytes from ByteArrayInputStream", e);
+		}
 	}
 
 	private Map<String, String> getAppProperties(ByteBuf buf) {
@@ -444,15 +466,23 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				@Override
 				public void transfer(ByteBuf out) {
 					for (ResendGroupId dataObj : msgs) {
-						PartialDecodedMessage partialMsg = new PartialDecodedMessage();
-						partialMsg.setRemainingRetries(dataObj.getRemainingRetries());
-						partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
-						partialMsg.setBody(Unpooled.wrappedBuffer(dataObj.getPayload()));
-						partialMsg.setBornTime(dataObj.getCreationDate().getTime());
-						partialMsg.setKey(dataObj.getRefKey());
-						partialMsg.setBodyCodecType(dataObj.getCodecType());
+						try {
+							PartialDecodedMessage partialMsg = new PartialDecodedMessage();
+							partialMsg.setRemainingRetries(dataObj.getRemainingRetries());
+							partialMsg.setDurableProperties(Unpooled.wrappedBuffer(dataObj.getAttributes()));
+							if (dataObj.getPayload() instanceof ByteArrayInputStream) {
+								partialMsg.setBody(Unpooled.wrappedBuffer(getBytes((ByteArrayInputStream) dataObj.getPayload())));
+							} else {
+								partialMsg.setBody(Unpooled.wrappedBuffer(IO.readBytes(dataObj.getPayload())));
+							}
+							partialMsg.setBornTime(dataObj.getCreationDate().getTime());
+							partialMsg.setKey(dataObj.getRefKey());
+							partialMsg.setBodyCodecType(dataObj.getCodecType());
 
-						m_messageCodec.encodePartial(partialMsg, out);
+							m_messageCodec.encodePartial(partialMsg, out);
+						} catch (Exception e) {
+							log.error("Exception occurred in storage's TransferCallback.", e);
+						}
 					}
 				}
 
@@ -832,6 +862,14 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 	@Override
 	public void initialize() throws InitializationException {
+
+		try {
+			m_bufFieldOfByteArrayInputStream = ByteArrayInputStream.class.getDeclaredField("buf");
+			m_bufFieldOfByteArrayInputStream.setAccessible(true);
+		} catch (Exception e) {
+			throw new InitializationException("Failed to get field \"buf\" from ByteArrayInputStream.", e);
+		}
+
 		if (m_config.getMySQLCacheConfig().isEnabled()) {
 			m_msgDao = CachedMessagePriorityDaoInterceptor.createProxy(m_msgDao, m_config.getMySQLCacheConfig());
 		}
