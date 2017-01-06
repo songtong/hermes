@@ -14,7 +14,7 @@ import com.ctrip.hermes.producer.api.Producer;
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public class BrokerBechmarkTest {
+public class BrokerBenchmarkTest {
 
 	public static String randomString(int len) {
 		String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
