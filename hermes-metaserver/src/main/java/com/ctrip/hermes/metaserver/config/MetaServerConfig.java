@@ -106,7 +106,7 @@ public class MetaServerConfig {
 	}
 
 	public long getQueryMessageOffsetTimeoutMillis() {
-		return 3000;
+		return 15000;
 	}
 
 }

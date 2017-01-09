@@ -69,7 +69,7 @@ public class MessageAssistResource {
 
 	private static final String HEADER_PROXY_VALUE = "true";
 
-	private static final int DEFAULT_CONCURRENT_LEVEL = 10;
+	private static final int DEFAULT_CONCURRENT_LEVEL = 30;
 
 	private static final AtomicInteger m_singals = new AtomicInteger(DEFAULT_CONCURRENT_LEVEL);
 
