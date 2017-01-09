@@ -114,7 +114,10 @@ public class LeaseResource {
 	      Tpg tpg, //
 	      @QueryParam("sessionId") String sessionId,//
 	      @QueryParam("host") @DefaultValue("-") String host,//
+	      @QueryParam("currentTimestamp") @DefaultValue("-1") long clientCurrentTimestamp,//
 	      @Context HttpServletRequest req) {
+
+		long timeDiff = getClientTimeDiff(clientCurrentTimestamp);
 
 		LeaseAcquireResponse response = null;
 		Map<String, String> params = new HashMap<>();
@@ -124,6 +127,7 @@ public class LeaseResource {
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_ACQUIRE_CONSUMER,
 		      tpg.getTopic() + ":" + tpg.getPartition() + ":" + tpg.getGroupId());
 		transaction.addData("host", params.get("host"));
+		transaction.addData("timeDiff", timeDiff);
 
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_consumerLeaseHolder.inited()) {
@@ -179,7 +183,7 @@ public class LeaseResource {
 
 			transaction.complete();
 		}
-		return response;
+		return response.toClientLeaseResponse(timeDiff);
 	}
 
 	@POST
@@ -190,7 +194,10 @@ public class LeaseResource {
 	      @QueryParam("leaseId") long leaseId,//
 	      @QueryParam("sessionId") String sessionId,//
 	      @QueryParam("host") @DefaultValue("-") String host,//
+	      @QueryParam("currentTimestamp") @DefaultValue("-1") long clientCurrentTimestamp,//
 	      @Context HttpServletRequest req) {
+
+		long timeDiff = getClientTimeDiff(clientCurrentTimestamp);
 
 		LeaseAcquireResponse response = null;
 
@@ -198,10 +205,11 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("leaseId", Long.toString(leaseId));
 		params.put("host", getRemoteAddr(host, req));
-
+		
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_RENEW_CONSUMER,
 		      tpg.getTopic() + ":" + tpg.getPartition() + ":" + tpg.getGroupId());
 		transaction.addData("host", params.get("host"));
+		transaction.addData("timeDiff", timeDiff);
 
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_consumerLeaseHolder.inited()) {
@@ -257,7 +265,7 @@ public class LeaseResource {
 
 			transaction.complete();
 		}
-		return response;
+		return response.toClientLeaseResponse(timeDiff);
 
 	}
 
@@ -270,7 +278,10 @@ public class LeaseResource {
 	      @QueryParam("sessionId") String sessionId,//
 	      @QueryParam("brokerPort") int port, //
 	      @QueryParam("host") @DefaultValue("-") String host,// FIXME use empty string as default value
+	      @QueryParam("currentTimestamp") @DefaultValue("-1") long clientCurrentTimestamp,//
 	      @Context HttpServletRequest req) {
+
+		long timeDiff = getClientTimeDiff(clientCurrentTimestamp);
 
 		LeaseAcquireResponse response = null;
 
@@ -283,6 +294,8 @@ public class LeaseResource {
 
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_ACQUIRE_BROKER, topic + ":" + partition);
 		transaction.addData("host", params.get("host"));
+		transaction.addData("timeDiff", timeDiff);
+		
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_brokerLeaseHolder.inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
@@ -331,8 +344,8 @@ public class LeaseResource {
 
 			transaction.complete();
 		}
-
-		return response;
+		
+		return response.toClientLeaseResponse(timeDiff);
 	}
 
 	@POST
@@ -345,7 +358,10 @@ public class LeaseResource {
 	      @QueryParam("sessionId") String sessionId,//
 	      @QueryParam("brokerPort") int port,//
 	      @QueryParam("host") @DefaultValue("-") String host,//
+	      @QueryParam("currentTimestamp") @DefaultValue("-1") long clientCurrentTimestamp,//
 	      @Context HttpServletRequest req) {
+
+		long timeDiff = getClientTimeDiff(clientCurrentTimestamp);
 
 		LeaseAcquireResponse response = null;
 
@@ -356,9 +372,12 @@ public class LeaseResource {
 		params.put("sessionId", sessionId);
 		params.put("brokerPort", Integer.toString(port));
 		params.put("host", getRemoteAddr(host, req));
+		
 
 		Transaction transaction = Cat.newTransaction(CatConstants.TYPE_LEASE_RENEW_BROKER, topic + ":" + partition);
 		transaction.addData("host", params.get("host"));
+		transaction.addData("timeDiff", timeDiff);
+
 		try {
 			if (!m_clusterStateHolder.isConnected() || !m_brokerLeaseHolder.inited()) {
 				response = new LeaseAcquireResponse(false, null, m_systemClockService.now()
@@ -407,7 +426,7 @@ public class LeaseResource {
 			transaction.complete();
 		}
 
-		return response;
+		return response.toClientLeaseResponse(timeDiff);
 	}
 
 	private LeaseAcquireResponse proxyBrokerLeaseRequestIfNecessary(HttpServletRequest req, String uri,
@@ -459,6 +478,13 @@ public class LeaseResource {
 	private boolean isFromAnotherMetaServer(HttpServletRequest req) {
 		String proxyHeader = req.getHeader(HEADER_PROXY_KEY);
 		return StringUtils.equals(proxyHeader, HEADER_PROXY_VALUE);
+	}
+	
+	private long getClientTimeDiff(long clientTimestamp) {
+		if (clientTimestamp == -1) {
+			return Long.MIN_VALUE;
+		}
+		return clientTimestamp - System.currentTimeMillis();
 	}
 
 	private LeaseAcquireResponse proxyPass(String host, int port, String uri, Map<String, String> params, Object payload) {

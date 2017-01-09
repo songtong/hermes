@@ -49,6 +49,8 @@ public class RemoteMetaProxy implements MetaProxy {
 
 	private static final String PARTITION = "partition";
 
+	private static final String CURRENT_TIMESTAMP = "currentTimestamp";
+
 	public final static String ID = "remote";
 
 	@Inject
@@ -62,6 +64,8 @@ public class RemoteMetaProxy implements MetaProxy {
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(SESSION_ID, sessionId);
 		params.put(HOST, Networks.forIp().getLocalHostAddress());
+		params.put(CURRENT_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
+		
 		String response = post("/lease/consumer/acquire", params, tpg);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
@@ -79,6 +83,8 @@ public class RemoteMetaProxy implements MetaProxy {
 		params.put(LEASE_ID, String.valueOf(lease.getId()));
 		params.put(SESSION_ID, sessionId);
 		params.put(HOST, Networks.forIp().getLocalHostAddress());
+		params.put(CURRENT_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
+
 		String response = post("/lease/consumer/renew", params, tpg);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
@@ -100,6 +106,8 @@ public class RemoteMetaProxy implements MetaProxy {
 		params.put(PARTITION, Integer.toString(partition));
 		params.put(BROKER_PORT, String.valueOf(brokerPort));
 		params.put(HOST, Networks.forIp().getLocalHostAddress());
+		params.put(CURRENT_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
+
 		String response = post("/lease/broker/renew", params, null);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
@@ -119,6 +127,8 @@ public class RemoteMetaProxy implements MetaProxy {
 		params.put(PARTITION, Integer.toString(partition));
 		params.put(BROKER_PORT, String.valueOf(brokerPort));
 		params.put(HOST, Networks.forIp().getLocalHostAddress());
+		params.put(CURRENT_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
+
 		String response = post("/lease/broker/acquire", params, null);
 		if (response != null) {
 			return JSON.parseObject(response, LeaseAcquireResponse.class);
