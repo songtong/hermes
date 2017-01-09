@@ -161,7 +161,18 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 				for (List<ConsumerLease> batch : leaseBatches) {
 					if (!batch.isEmpty()) {
 						try {
-							m_leasesDao.insert(batch.toArray(new ConsumerLease[batch.size()]));
+							int[] updatedLeases = m_leasesDao.updateLeases(batch.toArray(new ConsumerLease[batch.size()]),
+							      ConsumerLeaseEntity.UPDATESET_LEASES);
+
+							int updatedCount = 0;
+							for (int updated : updatedLeases) {
+								updatedCount += updated;
+							}
+
+							if (updatedCount != batch.size()) {
+								m_leasesDao.insertLeases(batch.toArray(new ConsumerLease[batch.size()]));
+							}
+
 						} catch (Exception e) {
 							log.error("[{}]Exception occurred while persisting latest leases to db", getName(), e);
 						}

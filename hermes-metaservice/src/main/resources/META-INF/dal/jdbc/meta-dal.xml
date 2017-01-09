@@ -33,13 +33,29 @@
 	<entity name="broker-lease" table="broker_lease" alias="bl">
 		<var name="from" value-type="Date" />
 		<var name="ip" value-type="String" />
+		<updatesets>
+			<updateset name="LEASES" all="false">
+				<member name="leases" />
+				<member name="metaserver" />
+			</updateset>
+		</updatesets>
 		<query-defs>
-			<query name="insert" type="INSERT" batch='true'>
+			<query name="insert-leases" type="INSERT" batch='true'>
 				<statement><![CDATA[INSERT INTO <TABLE/> (<FIELDS/>)
         		VALUES(<VALUES/>) 
         		ON DUPLICATE KEY UPDATE
         		leases=VALUES(leases),
         		metaserver=VALUES(metaserver)
+        		]]>
+				</statement>
+			</query>
+			<query name="update-leases" type="UPDATE" batch='true'>
+				<param name="topic" />
+				<param name="partition" />
+				<statement><![CDATA[UPDATE <TABLE/> 
+				SET <FIELDS/>
+        		WHERE <FIELD name='topic'/> = ${topic}
+        		AND <FIELD name='partition'/> = ${partition}
         		]]>
 				</statement>
 			</query>
@@ -55,13 +71,31 @@
 	<entity name="consumer-lease" table="consumer_lease" alias="cl">
 		<var name="from" value-type="Date" />
 		<var name="ip" value-type="String" />
+		<updatesets>
+			<updateset name="LEASES" all="false">
+				<member name="leases" />
+				<member name="metaserver" />
+			</updateset>
+		</updatesets>
 		<query-defs>
-			<query name="insert" type="INSERT" batch='true'>
+			<query name="insert-leases" type="INSERT" batch='true'>
 				<statement><![CDATA[INSERT INTO <TABLE/> (<FIELDS/>)
         		VALUES(<VALUES/>) 
         		ON DUPLICATE KEY UPDATE
         		leases=VALUES(leases),
         		metaserver=VALUES(metaserver)
+        		]]>
+				</statement>
+			</query>
+			<query name="update-leases" type="UPDATE" batch='true'>
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group" />
+				<statement><![CDATA[UPDATE <TABLE/> 
+				SET <FIELDS/>
+        		WHERE <FIELD name='topic'/> = ${topic}
+        		AND <FIELD name='partition'/> = ${partition}
+        		AND <FIELD name='group'/> = ${group}
         		]]>
 				</statement>
 			</query>
