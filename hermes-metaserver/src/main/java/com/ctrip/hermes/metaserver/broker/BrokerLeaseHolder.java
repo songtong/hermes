@@ -139,7 +139,18 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 				for (List<BrokerLease> batch : leaseBatches) {
 					if (!batch.isEmpty()) {
 						try {
-							m_leasesDao.insert(batch.toArray(new BrokerLease[batch.size()]));
+							int[] updatedLeases = m_leasesDao.updateLeases(batch.toArray(new BrokerLease[batch.size()]),
+							      BrokerLeaseEntity.UPDATESET_LEASES);
+
+							int updatedCount = 0;
+							for (int updated : updatedLeases) {
+								updatedCount += updated;
+							}
+
+							if (updatedCount != batch.size()) {
+								m_leasesDao.insertLeases(batch.toArray(new BrokerLease[batch.size()]));
+							}
+
 						} catch (Exception e) {
 							log.error("[{}]Exception occurred while persisting latest leases to db", getName(), e);
 						}
