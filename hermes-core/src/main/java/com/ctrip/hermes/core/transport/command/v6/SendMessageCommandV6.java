@@ -180,7 +180,7 @@ public class SendMessageCommandV6 extends AbstractCommand {
 
 	private void writeDatas(ByteBuf buf, HermesPrimitiveCodec codec, Map<Integer, List<ProducerMessage<?>>> msgs) {
 		codec.writeInt(msgs.size());
-		for (Map.Entry<Integer, List<ProducerMessage<?>>> entry : m_msgs.entrySet()) {
+		for (Map.Entry<Integer, List<ProducerMessage<?>>> entry : msgs.entrySet()) {
 			// priority flag
 			codec.writeInt(entry.getKey());
 

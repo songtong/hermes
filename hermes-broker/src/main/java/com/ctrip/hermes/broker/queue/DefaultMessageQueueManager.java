@@ -359,8 +359,16 @@ public class DefaultMessageQueueManager extends ContainerHolder implements Messa
 		try {
 			final Pair<String, Integer> tp = new Pair<>(topic, partition);
 			MessageQueue mq = m_messageQueues.get(tp);
-			int batchSize = m_config.getMessageQueueFlushBatchSize();
-			flushResult = mq.flush(batchSize);
+
+			int maxMsgCount;
+			if (m_config.isMessageQueueFlushLimitAutomated(topic)) {
+				//TODO temporary use fix value
+				maxMsgCount = m_config.getMessageQueueFlushCountLimit(topic);
+				flushResult = mq.flush(maxMsgCount);
+			} else {
+				maxMsgCount = m_config.getMessageQueueFlushCountLimit(topic);
+				flushResult = mq.flush(maxMsgCount);
+			}
 		} catch (Exception e) {
 			log.error("Unexpected exception ", e);
 		} finally {

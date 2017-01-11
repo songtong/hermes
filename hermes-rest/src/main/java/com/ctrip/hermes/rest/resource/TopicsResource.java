@@ -125,7 +125,7 @@ public class TopicsResource {
 					response.setTimeoutHandler(new TopicTimeoutHandler(topic));
 					Future<SendResult> sendResult = producerService.send(topic, params, content);
 					response.resume(sendResult.get());
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					response.resume(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e));
 					response.cancel();
 				} finally {
