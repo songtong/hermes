@@ -39,7 +39,7 @@ public class ClusterStateServletListener implements ServletContextListener {
 			PlexusComponentLocator.lookup(BrokerLeaseHolder.class).close();
 			PlexusComponentLocator.lookup(ConsumerLeaseHolder.class).close();
 
-			TimeUnit.MILLISECONDS.sleep(2 * Math.max(BrokerLeaseHolder.LEASE_SYNC_INTERVAL_MILLIS, ConsumerLeaseHolder.LEASE_SYNC_INTERVAL_MILLIS));
+			TimeUnit.MILLISECONDS.sleep(Math.max(BrokerLeaseHolder.LEASE_SYNC_INTERVAL_MILLIS, ConsumerLeaseHolder.LEASE_SYNC_INTERVAL_MILLIS));
 
 			clusterStateHolder.close();
 		} catch (Exception e) {
