@@ -35,12 +35,26 @@ import com.dianping.cat.message.Transaction;
 public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 	private static final Logger log = LoggerFactory.getLogger(ConsumerLeaseHolder.class);
 
+	private static final int PERSIST_BATCH_SIZE = 100;
+	
+	public static final int LEASE_SYNC_INTERVAL_MILLIS = 2000;
+
 	@Inject
 	private ConsumerLeaseDao m_leasesDao;
 
 	@Override
 	protected String getName() {
 		return "ConsumerLeaseHolder";
+	}
+
+	@Override
+	public void close() {
+		try {
+			log.info("Closing consumer lease holder ...");
+			persistDirtyLeases(PERSIST_BATCH_SIZE);
+		} catch (DalException e) {
+			log.warn("Persist consumer leases failed when closing broker lease holder.", e);
+		}
 	}
 
 	@Override
@@ -83,18 +97,17 @@ public class ConsumerLeaseHolder extends BaseLeaseHolder<Tpg> {
 			      @Override
 			      public void run() {
 				      long lastScanTime = latestDataChangeTime;
-				      long intervalMillis = 2000;
 
 				      while (!Thread.currentThread().isInterrupted()) {
 					      try {
-						      persistDirtyLeases(100);
+						      persistDirtyLeases(PERSIST_BATCH_SIZE);
 						      long maxDataTime = loadNewLeasesAssignedByOtherMetaservers(lastScanTime);
 						      lastScanTime = Math.max(lastScanTime, maxDataTime);
 					      } catch (Throwable e) {
 						      log.error("Exception occurred in ConsumerLeaseSynchronizationThread", e);
 					      } finally {
 						      try {
-							      TimeUnit.MILLISECONDS.sleep(intervalMillis);
+							      TimeUnit.MILLISECONDS.sleep(LEASE_SYNC_INTERVAL_MILLIS);
 						      } catch (InterruptedException e) {
 							      Thread.currentThread().interrupt();
 						      }

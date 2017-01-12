@@ -181,5 +181,7 @@ public abstract class BaseLeaseHolder<Key> implements Initializable, LeaseHolder
 	}
 
 	protected abstract String getName();
+	
+	protected abstract void close();
 
 }
