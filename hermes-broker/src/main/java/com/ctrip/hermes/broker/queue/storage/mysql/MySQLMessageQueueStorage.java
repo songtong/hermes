@@ -1,6 +1,9 @@
 package com.ctrip.hermes.broker.queue.storage.mysql;
 
 import static com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity.READSET_OFFSET;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.Unpooled;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
@@ -19,10 +22,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.codehaus.plexus.util.StringUtils;
-import org.mortbay.util.IO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.helper.Files.IO;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
@@ -74,10 +77,6 @@ import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.dianping.cat.Cat;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.Unpooled;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -367,7 +366,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 							if (dataObj.getPayload() instanceof ByteArrayInputStream) {
 								partialMsg.setBody(Unpooled.wrappedBuffer(getBytes((ByteArrayInputStream) dataObj.getPayload())));
 							} else {
-								partialMsg.setBody(Unpooled.wrappedBuffer(IO.readBytes(dataObj.getPayload())));
+								partialMsg.setBody(Unpooled.wrappedBuffer(IO.INSTANCE.readFrom(dataObj.getPayload())));
 							}
 							partialMsg.setBornTime(dataObj.getCreationDate().getTime());
 							partialMsg.setKey(dataObj.getRefKey());
@@ -470,7 +469,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 							if (dataObj.getPayload() instanceof ByteArrayInputStream) {
 								partialMsg.setBody(Unpooled.wrappedBuffer(getBytes((ByteArrayInputStream) dataObj.getPayload())));
 							} else {
-								partialMsg.setBody(Unpooled.wrappedBuffer(IO.readBytes(dataObj.getPayload())));
+								partialMsg.setBody(Unpooled.wrappedBuffer(IO.INSTANCE.readFrom(dataObj.getPayload())));
 							}
 							partialMsg.setBornTime(dataObj.getCreationDate().getTime());
 							partialMsg.setKey(dataObj.getRefKey());
