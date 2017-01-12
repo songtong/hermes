@@ -208,6 +208,8 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 
 		private long m_start;
 
+		private boolean m_shouldResponse;
+
 		public AppendMessageCompletionCallback(SendMessageResultCommand result, CommandProcessorContext ctx,
 		      String topic, int partition) {
 			m_result = result;
@@ -215,18 +217,28 @@ public class SendMessageCommandProcessorV5 implements CommandProcessor {
 			m_topic = topic;
 			m_partition = partition;
 			m_start = System.currentTimeMillis();
+			m_shouldResponse = true;
 		}
 
 		@Override
 		public void onSuccess(Map<Integer, SendMessageResult> results) {
 			m_result.addResults(convertResults(results));
+			if (m_shouldResponse) {
+				for (SendMessageResult sendMessageResult : results.values()) {
+					if (!sendMessageResult.isShouldResponse()) {
+						m_shouldResponse = false;
+						break;
+					}
+				}
+			}
 
 			if (m_result.isAllResultsSet()) {
 				try {
 					if (m_written.compareAndSet(false, true)) {
 						logElapse(m_result);
-						ChannelUtils.writeAndFlush(m_ctx.getChannel(), m_result);
-
+						if (m_shouldResponse) {
+							ChannelUtils.writeAndFlush(m_ctx.getChannel(), m_result);
+						}
 					}
 				} finally {
 					m_ctx.getCommand().release();

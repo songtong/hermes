@@ -20,8 +20,6 @@ public interface BrokerConfigProvider {
 
 	public int getMessageQueueFlushBatchSize();
 
-	public int getMySQLBatchInsertSize();
-
 	public long getAckOpCheckIntervalMillis();
 
 	public int getAckOpHandlingBatchSize();
@@ -94,4 +92,7 @@ public interface BrokerConfigProvider {
 
 	public RateLimiter getPartitionProduceQPSRateLimiter(String topic, int partition);
 
+	public int getMessageQueueFlushCountLimit(String topic);
+	
+	public boolean isMessageQueueFlushLimitDynamicAdjust(String topic);
 }

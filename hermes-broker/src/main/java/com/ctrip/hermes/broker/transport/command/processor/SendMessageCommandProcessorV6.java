@@ -221,6 +221,11 @@ public class SendMessageCommandProcessorV6 implements CommandProcessor {
 				try {
 					if (m_written.compareAndSet(false, true)) {
 						logElapse(m_result);
+						for (SendMessageResult result : m_result.getResults().values()) {
+							if (!result.isShouldResponse()) {
+								return;
+							}
+						}
 						ChannelUtils.writeAndFlush(m_ctx.getChannel(), m_result);
 					}
 				} finally {

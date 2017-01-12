@@ -139,13 +139,13 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	}
 
 	@Override
-	public Pair<Boolean, Long> flush(final int batchSize) {
+	public Pair<Boolean, Long> flush(final int maxMsgCount) {
 		long maxPurgedOrSavedSelectorOffset = Long.MIN_VALUE;
 		boolean hasUnflushedMessagesBeforeFlush = m_flusher.hasUnflushedMessages();
 
 		if (hasUnflushedMessagesBeforeFlush) {
 			try {
-				maxPurgedOrSavedSelectorOffset = m_flusher.flush(batchSize);
+				maxPurgedOrSavedSelectorOffset = m_flusher.flush(maxMsgCount);
 			} catch (RuntimeException e) {
 				log.error("Exception occurred while flushing message queue(topic={}, partition={})", m_topic, m_partition,
 				      e);

@@ -1,9 +1,6 @@
 package com.ctrip.hermes.broker.queue.storage.mysql;
 
 import static com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity.READSET_OFFSET;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.Unpooled;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
@@ -12,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -77,6 +75,10 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.dianping.cat.Cat;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.Unpooled;
+
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
@@ -134,7 +136,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	@Override
 	public void appendMessages(String topicName, int partition, boolean priority,
 	      Collection<MessageBatchWithRawData> batches) throws Exception {
-		List<MessagePriority> msgs = new ArrayList<>(m_config.getMySQLBatchInsertSize());
+		List<MessagePriority> msgs = new LinkedList<>();
 
 		Topic topic = m_metaService.findTopicByName(topicName);
 
@@ -165,11 +167,6 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				msg.setCodecType(pdmsg.getBodyCodecType());
 
 				msgs.add(msg);
-
-				if (msgs.size() == m_config.getMySQLBatchInsertSize()) {
-					batchInsert(topic, partition, priority, msgs);
-					msgs.clear();
-				}
 			}
 		}
 

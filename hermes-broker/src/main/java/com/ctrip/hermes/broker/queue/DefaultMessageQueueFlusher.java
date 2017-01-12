@@ -2,6 +2,7 @@ package com.ctrip.hermes.broker.queue;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.BatchUpdateException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,6 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.dal.jdbc.DalRuntimeException;
 import org.unidal.tuple.Pair;
 
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
@@ -33,6 +35,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.mchange.v2.resourcepool.TimeoutException;
 import com.mysql.jdbc.PacketTooBigException;
 
 /**
@@ -75,21 +78,32 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	@Override
-	public long flush(int batchSize) {
+	public long flush(int maxMsgCount) {
 		long maxPurgedSelectorOffset = purgeExpiredMsgs();
 		long maxSavedSelectorOffset = Long.MIN_VALUE;
 
+		int msgCount = 0;
+
+		List<PendingMessageWrapper> todos = new ArrayList<>();
 		if (!m_pendingMessages.isEmpty()) {
-			List<PendingMessageWrapper> todos = new ArrayList<>(batchSize < 0 ? m_pendingMessages.size() : batchSize);
+			PendingMessageWrapper msg = m_pendingMessages.poll();
+			todos.add(msg);
+			msgCount = msg.getBatch().getMsgSeqs().size();
 
-			if (batchSize < 0) {
-				m_pendingMessages.drainTo(todos);
-			} else {
-				m_pendingMessages.drainTo(todos, batchSize);
+			PendingMessageWrapper nextMsg = null;
+			while ((nextMsg = m_pendingMessages.peek()) != null) {
+				int nextPendingMsgCount = nextMsg.getBatch().getMsgSeqs().size();
+				if (msgCount + nextPendingMsgCount > maxMsgCount) {
+					break;
+				}
+				todos.add(m_pendingMessages.poll());
+				msgCount += nextPendingMsgCount;
 			}
+		}
 
+		if (!todos.isEmpty()) {
 			Transaction catTx = Cat.newTransaction(CatConstants.TYPE_MESSAGE_BROKER_FLUSH, m_topic + "-" + m_partition);
-			catTx.addData("count", getMessageCount(todos));
+			catTx.addData("count", msgCount);
 
 			maxSavedSelectorOffset = appendMessageSync(todos);
 
@@ -98,14 +112,6 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		}
 
 		return Math.max(maxPurgedSelectorOffset, maxSavedSelectorOffset);
-	}
-
-	private int getMessageCount(List<PendingMessageWrapper> todos) {
-		int count = 0;
-		for (PendingMessageWrapper todo : todos) {
-			count += todo.getBatch().getMsgSeqs().size();
-		}
-		return count;
 	}
 
 	private long purgeExpiredMsgs() {
@@ -189,9 +195,9 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 	}
 
 	protected void addResults(Map<Integer, SendMessageResult> result, boolean success, boolean shouldSkip,
-	      String errorMessage) {
+	      String errorMessage, boolean shouldResponse) {
 		for (Integer key : result.keySet()) {
-			result.put(key, new SendMessageResult(success, shouldSkip, errorMessage));
+			result.put(key, new SendMessageResult(success, shouldSkip, errorMessage, shouldResponse));
 		}
 	}
 
@@ -220,10 +226,10 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 			batches = Collections2.transform(todos, m_messageBatchAndResultTransformer);
 			m_storage.appendMessages(m_topic, m_partition, isPriority, batches);
 
-			setBatchesResult(isPriority, todos, true, false, null);
+			setBatchesResult(isPriority, todos, true, false, null, true);
 		} catch (Exception e) {
 			if (shoudlSkip(e)) {
-				setBatchesResult(isPriority, todos, false, true, "Message too large.");
+				setBatchesResult(isPriority, todos, false, true, "Message too large.", true);
 				if (batches != null) {
 					for (MessageBatchWithRawData batch : batches) {
 						for (PartialDecodedMessage msg : batch.getMessages()) {
@@ -232,11 +238,33 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 						}
 					}
 				}
+			} else if (isCheckoutTimeout(e)) {
+				setBatchesResult(isPriority, todos, false, false, null, false);
+				log.error("Failed to append messages due to DB checkout timeout!", e);
 			} else {
-				setBatchesResult(isPriority, todos, false, false, null);
+				setBatchesResult(isPriority, todos, false, false, null, true);
 				log.error("Failed to append messages.", e);
 			}
 		}
+	}
+
+	private boolean isCheckoutTimeout(Exception e) {
+		if (e instanceof InvocationTargetException) {
+			InvocationTargetException ite = (InvocationTargetException) e;
+			if (ite.getTargetException() instanceof DalException) {
+				DalException de = (DalException) ite.getTargetException();
+				if (de.getCause() instanceof DalRuntimeException) {
+					DalRuntimeException dre = (DalRuntimeException) de.getCause();
+					if (dre.getCause() instanceof SQLException) {
+						SQLException se = (SQLException) dre.getCause();
+						if (se.getCause() instanceof TimeoutException) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	private boolean shoudlSkip(Exception e) {
@@ -258,11 +286,11 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 	private void setBatchesResult(boolean isPriority,
 	      Collection<Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>>> todos, boolean success,
-	      boolean shouldSkip, String errorMessage) {
+	      boolean shouldSkip, String errorMessage, boolean shouldResponse) {
 		for (Pair<MessageBatchWithRawData, Map<Integer, SendMessageResult>> todo : todos) {
 			bizLog(isPriority, todo.getKey(), success);
 			Map<Integer, SendMessageResult> result = todo.getValue();
-			addResults(result, success, shouldSkip, errorMessage);
+			addResults(result, success, shouldSkip, errorMessage, shouldResponse);
 		}
 	}
 

@@ -55,6 +55,12 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final String RATE_LIMITS_BYTES = "rateLimits.bytes";
 
+	private static final String FLUSH_LIMITS_COUNT = "flushLimits.count";
+
+	private static final String FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES = "flushLimits.dynamicAdjust.switches";
+
+	private static final String DEFAULT_KEY = "_default_";
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -66,11 +72,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final int DEFAULT_MESSAGE_QUEUE_FLUSH_BATCH_SIZE = 5000;
 
-	private static final int DEFAULT_MYSQL_BATCH_INSERT_SIZE = 200;
-
 	private int m_messageQueueFlushBatchSzie = DEFAULT_MESSAGE_QUEUE_FLUSH_BATCH_SIZE;
-
-	private int m_mySQLBatchInsertSzie = DEFAULT_MYSQL_BATCH_INSERT_SIZE;
 
 	private static final int DEFAULT_BROKER_PORT = 4376;
 
@@ -95,6 +97,10 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 1;
 
 	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
+
+	private static final int DEFAULT_FLUSH_MESSAGE_LIMITS = 1000;
+
+	private static final boolean DEFAULT_FLUSH_MESSAGE_LIMIT_DYNAMIC_ADJUST = false;
 
 	private int m_filterTopicCacheSize = DEFAULT_FILTER_TOPIC_CACHE_SIZE;
 
@@ -143,6 +149,10 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private Map<Pair<String, Integer>, RateLimiter> m_topicPartitionBytesRateLimiters = new ConcurrentHashMap<>();
 
+	private AtomicReference<Map<String, Integer>> m_topicsFlushCountLimits = new AtomicReference<Map<String, Integer>>();
+
+	private AtomicReference<Map<String, Boolean>> m_topicsFlushLimitDynamicAdjustSwitches = new AtomicReference<Map<String, Boolean>>();
+
 	public CtripBrokerConfigProvider() {
 		m_sessionId = System.getProperty("brokerId", UUID.randomUUID().toString());
 	}
@@ -174,11 +184,6 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 		if (StringUtils.isNumeric(messageQueueFetchResendMessageMinIntervalStr)) {
 			m_messageQueueFetchResendMessageBySafeTriggerMinInterval = Integer
 			      .valueOf(messageQueueFetchResendMessageMinIntervalStr);
-		}
-
-		String mysqlBatchInsertSizeStr = m_env.getGlobalConfig().getProperty("broker.mysql.batch.size");
-		if (StringUtils.isNumeric(mysqlBatchInsertSizeStr)) {
-			m_mySQLBatchInsertSzie = Integer.valueOf(mysqlBatchInsertSizeStr);
 		}
 
 		String longPollingServiceThreadCount = m_env.getGlobalConfig().getProperty(
@@ -218,8 +223,51 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 		initRateLimiters();
 
+		initStorageFlushLimits();
+
 		initSendMessageSelector();
 		initPullMessageSelector();
+	}
+
+	private void initStorageFlushLimits() {
+
+		Config config = ConfigService.getAppConfig();
+
+		config.addChangeListener(new ConfigChangeListener() {
+
+			@Override
+			public void onChange(ConfigChangeEvent changeEvent) {
+				if (changeEvent.changedKeys().contains(FLUSH_LIMITS_COUNT)) {
+					Map<String, Integer> topicFlushCountLimits = parseTopicFlushLimits(changeEvent.getChange(
+					      FLUSH_LIMITS_COUNT).getNewValue());
+					if (topicFlushCountLimits != null) {
+						m_topicsFlushCountLimits.set(topicFlushCountLimits);
+						log.info("{} changed({}).", FLUSH_LIMITS_COUNT, JSON.toJSONString(topicFlushCountLimits));
+					}
+				}
+				if (changeEvent.changedKeys().contains(FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES)) {
+					Map<String, Boolean> topicFlushLimitAutomations = parseTopicAutomations(changeEvent.getChange(
+					      FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES).getNewValue());
+					if (topicFlushLimitAutomations != null) {
+						m_topicsFlushLimitDynamicAdjustSwitches.set(topicFlushLimitAutomations);
+						log.info("{} changed({}).", FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES, topicFlushLimitAutomations);
+					}
+				}
+			}
+		});
+
+		Map<String, Integer> topicFlushCountLimits = parseTopicFlushLimits(config.getProperty(FLUSH_LIMITS_COUNT, "{}"));
+		if (topicFlushCountLimits != null) {
+			m_topicsFlushCountLimits.set(topicFlushCountLimits);
+			log.info("{} is {}.", FLUSH_LIMITS_COUNT, JSON.toJSONString(topicFlushCountLimits));
+		}
+		Map<String, Boolean> topicFlushLimitAutomations = parseTopicAutomations(config.getProperty(
+		      FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES, "{}"));
+		if (topicFlushLimitAutomations != null) {
+			m_topicsFlushLimitDynamicAdjustSwitches.set(topicFlushLimitAutomations);
+			log.info("{} is {}.", FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES, JSON.toJSONString(topicFlushLimitAutomations));
+		}
+
 	}
 
 	private void initPullMessageSelector() {
@@ -451,6 +499,29 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 		return null;
 	}
 
+	private Map<String, Integer> parseTopicFlushLimits(String limitsStr) {
+		try {
+			Map<String, Integer> topicLimits = JSON.parseObject(limitsStr, new TypeReference<Map<String, Integer>>() {
+			});
+			return topicLimits;
+		} catch (Exception e) {
+			log.error("Parse limits failed.", e);
+		}
+		return null;
+	}
+
+	private Map<String, Boolean> parseTopicAutomations(String automationsStr) {
+		try {
+			Map<String, Boolean> topicAutomations = JSON.parseObject(automationsStr,
+			      new TypeReference<Map<String, Boolean>>() {
+			      });
+			return topicAutomations;
+		} catch (Exception e) {
+			log.error("Parse automations failed.", e);
+		}
+		return null;
+	}
+
 	public String getSessionId() {
 		return m_sessionId;
 	}
@@ -475,8 +546,26 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 		return m_messageQueueFlushBatchSzie;
 	}
 
-	public int getMySQLBatchInsertSize() {
-		return m_mySQLBatchInsertSzie;
+	public int getMessageQueueFlushCountLimit(String topic) {
+		Map<String, Integer> topicFlushCountLimits = m_topicsFlushCountLimits.get();
+		Integer limit = topicFlushCountLimits.get(topic);
+
+		if (limit == null) {
+			limit = topicFlushCountLimits.get(DEFAULT_KEY);
+		}
+
+		return limit == null ? DEFAULT_FLUSH_MESSAGE_LIMITS : limit;
+	}
+
+	public boolean isMessageQueueFlushLimitDynamicAdjust(String topic) {
+		Map<String, Boolean> topicFlushCountLimitDynamicAdjustSwitches = m_topicsFlushLimitDynamicAdjustSwitches.get();
+		Boolean swtich = topicFlushCountLimitDynamicAdjustSwitches.get(topic);
+
+		if (swtich == null) {
+			swtich = topicFlushCountLimitDynamicAdjustSwitches.get(DEFAULT_KEY);
+		}
+
+		return swtich == null ? DEFAULT_FLUSH_MESSAGE_LIMIT_DYNAMIC_ADJUST : swtich;
 	}
 
 	public long getAckOpCheckIntervalMillis() {

@@ -48,6 +48,6 @@ public interface MessageQueue extends OffsetGenerator {
 
 	boolean offerAckMessagesTask(AckMessagesTask task);
 
-	Pair<Boolean, Long> flush(int batchSize);
+	Pair<Boolean, Long> flush(int maxMsgCount);
 
 }

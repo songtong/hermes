@@ -13,7 +13,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 public interface MessageQueueFlusher {
 	boolean hasUnflushedMessages();
 
-	long flush(int batchSize);
+	long flush(int msgCount);
 
 	ListenableFuture<Map<Integer, SendMessageResult>> append(boolean isPriority, MessageBatchWithRawData batch,
 	      long expireTime);
