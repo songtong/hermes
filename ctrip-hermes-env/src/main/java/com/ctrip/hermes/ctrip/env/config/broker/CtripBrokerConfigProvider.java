@@ -238,8 +238,8 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 			@Override
 			public void onChange(ConfigChangeEvent changeEvent) {
 				if (changeEvent.changedKeys().contains(FLUSH_LIMITS_COUNT)) {
-					Map<String, Integer> topicFlushCountLimits = parseTopicFlushLimits(changeEvent
-					      .getChange(FLUSH_LIMITS_COUNT).getNewValue());
+					Map<String, Integer> topicFlushCountLimits = parseTopicFlushLimits(changeEvent.getChange(
+					      FLUSH_LIMITS_COUNT).getNewValue());
 					if (topicFlushCountLimits != null) {
 						m_topicsFlushCountLimits.set(topicFlushCountLimits);
 						log.info("{} changed({}).", FLUSH_LIMITS_COUNT, JSON.toJSONString(topicFlushCountLimits));
@@ -548,25 +548,32 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	public int getMessageQueueFlushCountLimit(String topic) {
 		Map<String, Integer> topicFlushCountLimits = m_topicsFlushCountLimits.get();
-		if (topicFlushCountLimits.containsKey(topic)) {
-			return topicFlushCountLimits.get(topic);
-		} else if (topicFlushCountLimits.containsKey(DEFAULT_KEY)) {
-			return topicFlushCountLimits.get(DEFAULT_KEY);
-		} else {
-			return DEFAULT_FLUSH_MESSAGE_LIMITS;
+		Integer limit = topicFlushCountLimits.get(topic);
+
+		if (limit == null) {
+			limit = topicFlushCountLimits.get(DEFAULT_KEY);
 		}
 
+		if (limit == null) {
+			limit = DEFAULT_FLUSH_MESSAGE_LIMITS;
+		}
+
+		return limit;
 	}
 
 	public boolean isMessageQueueFlushLimitAutomated(String topic) {
 		Map<String, Boolean> topicFlushCountLimitAutomations = m_topicsFlushLimitAutomations.get();
-		if (topicFlushCountLimitAutomations.containsKey(topic)) {
-			return topicFlushCountLimitAutomations.get(topic);
-		} else if (topicFlushCountLimitAutomations.containsKey(DEFAULT_KEY)) {
-			return topicFlushCountLimitAutomations.get(DEFAULT_KEY);
-		} else {
-			return DEFAULT_FLUSH_MESSAGE_LIMIT_AUTOMATION;
+		Boolean automation = topicFlushCountLimitAutomations.get(topic);
+
+		if (automation == null) {
+			automation = topicFlushCountLimitAutomations.get(DEFAULT_KEY);
 		}
+
+		if (automation == null) {
+			automation = DEFAULT_FLUSH_MESSAGE_LIMIT_AUTOMATION;
+		}
+
+		return automation;
 	}
 
 	public long getAckOpCheckIntervalMillis() {
