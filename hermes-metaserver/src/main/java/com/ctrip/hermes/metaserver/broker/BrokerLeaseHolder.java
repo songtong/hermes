@@ -36,12 +36,26 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 
 	private static final Logger log = LoggerFactory.getLogger(BrokerLeaseHolder.class);
 
+	private static final int PERSIST_BATCH_SIZE = 100;
+	
+	public static final int LEASE_SYNC_INTERVAL_MILLIS = 2000;
+
 	@Inject
 	private BrokerLeaseDao m_leasesDao;
 
 	@Override
 	protected String getName() {
 		return "BrokerLeaseHolder";
+	}
+
+	@Override
+	public void close() {
+		try {
+			log.info("Closing broker lease holder ...");
+			persistDirtyLeases(PERSIST_BATCH_SIZE);
+		} catch (DalException e) {
+			log.warn("Persist broker leases failed when closing broker lease holder.", e);
+		}
 	}
 
 	@Override
@@ -84,18 +98,17 @@ public class BrokerLeaseHolder extends BaseLeaseHolder<Pair<String, Integer>> {
 			      @Override
 			      public void run() {
 				      long lastScanTime = latestDataChangeTime;
-				      long intervalMillis = 2000;
 
 				      while (!Thread.currentThread().isInterrupted()) {
 					      try {
-						      persistDirtyLeases(100);
+						      persistDirtyLeases(PERSIST_BATCH_SIZE);
 						      long maxDataTime = loadNewLeasesAssignedByOtherMetaservers(lastScanTime);
 						      lastScanTime = Math.max(lastScanTime, maxDataTime);
 					      } catch (Throwable e) {
 						      log.error("Exception occurred in BrokerLeaseSynchronizationThread", e);
 					      } finally {
 						      try {
-							      TimeUnit.MILLISECONDS.sleep(intervalMillis);
+							      TimeUnit.MILLISECONDS.sleep(LEASE_SYNC_INTERVAL_MILLIS);
 						      } catch (InterruptedException e) {
 							      Thread.currentThread().interrupt();
 						      }
