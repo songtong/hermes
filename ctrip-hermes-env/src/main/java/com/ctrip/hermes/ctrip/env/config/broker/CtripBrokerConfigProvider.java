@@ -554,11 +554,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 			limit = topicFlushCountLimits.get(DEFAULT_KEY);
 		}
 
-		if (limit == null) {
-			limit = DEFAULT_FLUSH_MESSAGE_LIMITS;
-		}
-
-		return limit;
+		return limit == null ? DEFAULT_FLUSH_MESSAGE_LIMITS : limit;
 	}
 
 	public boolean isMessageQueueFlushLimitAutomated(String topic) {
@@ -569,11 +565,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 			automation = topicFlushCountLimitAutomations.get(DEFAULT_KEY);
 		}
 
-		if (automation == null) {
-			automation = DEFAULT_FLUSH_MESSAGE_LIMIT_AUTOMATION;
-		}
-
-		return automation;
+		return automation == null ? DEFAULT_FLUSH_MESSAGE_LIMIT_AUTOMATION : automation;
 	}
 
 	public long getAckOpCheckIntervalMillis() {
