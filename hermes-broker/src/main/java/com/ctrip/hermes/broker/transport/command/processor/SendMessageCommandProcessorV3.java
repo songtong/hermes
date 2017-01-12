@@ -226,9 +226,12 @@ public class SendMessageCommandProcessorV3 implements CommandProcessor {
 		@Override
 		public void onSuccess(Map<Integer, SendMessageResult> results) {
 			m_result.addResults(convertResults(results));
-			for (SendMessageResult sendMessageResult : results.values()) {
-				if (!sendMessageResult.isShouldResponse()) {
-					m_shouldResponse = false;
+			if (m_shouldResponse) {
+				for (SendMessageResult sendMessageResult : results.values()) {
+					if (!sendMessageResult.isShouldResponse()) {
+						m_shouldResponse = false;
+						break;
+					}
 				}
 			}
 

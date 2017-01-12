@@ -94,5 +94,5 @@ public interface BrokerConfigProvider {
 
 	public int getMessageQueueFlushCountLimit(String topic);
 	
-	public boolean isMessageQueueFlushLimitAutomated(String topic);
+	public boolean isMessageQueueFlushLimitDynamicAdjust(String topic);
 }

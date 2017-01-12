@@ -57,7 +57,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final String FLUSH_LIMITS_COUNT = "flushLimits.count";
 
-	private static final String FLUSH_LIMITS_AUTOMATION = "flushLimits.automatioin";
+	private static final String FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES = "flushLimits.dynamicAdjust.switches";
 
 	private static final String DEFAULT_KEY = "_default_";
 
@@ -100,7 +100,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final int DEFAULT_FLUSH_MESSAGE_LIMITS = 1000;
 
-	private static final boolean DEFAULT_FLUSH_MESSAGE_LIMIT_AUTOMATION = false;
+	private static final boolean DEFAULT_FLUSH_MESSAGE_LIMIT_DYNAMIC_ADJUST = false;
 
 	private int m_filterTopicCacheSize = DEFAULT_FILTER_TOPIC_CACHE_SIZE;
 
@@ -151,7 +151,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private AtomicReference<Map<String, Integer>> m_topicsFlushCountLimits = new AtomicReference<Map<String, Integer>>();
 
-	private AtomicReference<Map<String, Boolean>> m_topicsFlushLimitAutomations = new AtomicReference<Map<String, Boolean>>();
+	private AtomicReference<Map<String, Boolean>> m_topicsFlushLimitDynamicAdjustSwitches = new AtomicReference<Map<String, Boolean>>();
 
 	public CtripBrokerConfigProvider() {
 		m_sessionId = System.getProperty("brokerId", UUID.randomUUID().toString());
@@ -245,12 +245,12 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 						log.info("{} changed({}).", FLUSH_LIMITS_COUNT, JSON.toJSONString(topicFlushCountLimits));
 					}
 				}
-				if (changeEvent.changedKeys().contains(FLUSH_LIMITS_AUTOMATION)) {
+				if (changeEvent.changedKeys().contains(FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES)) {
 					Map<String, Boolean> topicFlushLimitAutomations = parseTopicAutomations(changeEvent.getChange(
-					      FLUSH_LIMITS_AUTOMATION).getNewValue());
+					      FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES).getNewValue());
 					if (topicFlushLimitAutomations != null) {
-						m_topicsFlushLimitAutomations.set(topicFlushLimitAutomations);
-						log.info("{} changed({}).", FLUSH_LIMITS_AUTOMATION, topicFlushLimitAutomations);
+						m_topicsFlushLimitDynamicAdjustSwitches.set(topicFlushLimitAutomations);
+						log.info("{} changed({}).", FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES, topicFlushLimitAutomations);
 					}
 				}
 			}
@@ -262,10 +262,10 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 			log.info("{} is {}.", FLUSH_LIMITS_COUNT, JSON.toJSONString(topicFlushCountLimits));
 		}
 		Map<String, Boolean> topicFlushLimitAutomations = parseTopicAutomations(config.getProperty(
-		      FLUSH_LIMITS_AUTOMATION, "{}"));
+		      FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES, "{}"));
 		if (topicFlushLimitAutomations != null) {
-			m_topicsFlushLimitAutomations.set(topicFlushLimitAutomations);
-			log.info("{} is {}.", FLUSH_LIMITS_AUTOMATION, JSON.toJSONString(topicFlushLimitAutomations));
+			m_topicsFlushLimitDynamicAdjustSwitches.set(topicFlushLimitAutomations);
+			log.info("{} is {}.", FLUSH_LIMITS_DYNAMIC_ADJUST_SWITCHES, JSON.toJSONString(topicFlushLimitAutomations));
 		}
 
 	}
@@ -557,15 +557,15 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 		return limit == null ? DEFAULT_FLUSH_MESSAGE_LIMITS : limit;
 	}
 
-	public boolean isMessageQueueFlushLimitAutomated(String topic) {
-		Map<String, Boolean> topicFlushCountLimitAutomations = m_topicsFlushLimitAutomations.get();
-		Boolean automation = topicFlushCountLimitAutomations.get(topic);
+	public boolean isMessageQueueFlushLimitDynamicAdjust(String topic) {
+		Map<String, Boolean> topicFlushCountLimitDynamicAdjustSwitches = m_topicsFlushLimitDynamicAdjustSwitches.get();
+		Boolean swtich = topicFlushCountLimitDynamicAdjustSwitches.get(topic);
 
-		if (automation == null) {
-			automation = topicFlushCountLimitAutomations.get(DEFAULT_KEY);
+		if (swtich == null) {
+			swtich = topicFlushCountLimitDynamicAdjustSwitches.get(DEFAULT_KEY);
 		}
 
-		return automation == null ? DEFAULT_FLUSH_MESSAGE_LIMIT_AUTOMATION : automation;
+		return swtich == null ? DEFAULT_FLUSH_MESSAGE_LIMIT_DYNAMIC_ADJUST : swtich;
 	}
 
 	public long getAckOpCheckIntervalMillis() {

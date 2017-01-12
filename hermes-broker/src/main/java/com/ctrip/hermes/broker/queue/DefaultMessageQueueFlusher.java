@@ -96,7 +96,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 				if (msgCount + nextPendingMsgCount > maxMsgCount) {
 					break;
 				}
-				todos.add(m_pendingMessages.remove());
+				todos.add(m_pendingMessages.poll());
 				msgCount += nextPendingMsgCount;
 			}
 		}
