@@ -201,8 +201,6 @@ consumer_module.run(function(editableOptions) {
 	scope.submitReset = function() {
 		if (scope.currentConsumer.resetOption == "earliest") {
 			scope.currentTimestamp = new Date(0);
-		} else if (scope.currentConsumer.resetOption == "latest") {
-			scope.currentTimestamp = new Date();
 		}
 
 		var message;
@@ -233,7 +231,7 @@ consumer_module.run(function(editableOptions) {
 						consumer_resource.reset_offset_by_timestamp({
 							topic : scope.currentConsumer.topicName,
 							consumer : scope.currentConsumer.name,
-							timestamp : scope.currentTimestamp.getTime()
+							timestamp : scope.currentConsumer.resetOption == "latest" ? -1 : scope.currentTimestamp.getTime()
 						}, function(result) {
 							scope.$broadcast('alert-success', 'alert', '重置Offset成功！可以启动consumer。');
 						}, function(result) {
