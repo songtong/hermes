@@ -36,6 +36,10 @@
 			<artifactId>log4j-core</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+		</dependency>
 		<!--for Lease.class: JsonIgnore -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>

@@ -25,6 +25,16 @@
 			<groupId>org.unidal.framework</groupId>
 			<artifactId>dal-jdbc</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.ctrip.framework.clogging</groupId>
+			<artifactId>clogging-agent</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>ch.qos.logback</groupId>
+					<artifactId>logback-classic</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 		<!-- thirdparty dependencies -->
 		<dependency>
 			<groupId>org.freemarker</groupId>
@@ -99,12 +109,6 @@
 		<dependency>
 			<groupId>org.jasig.cas.client</groupId>
 			<artifactId>cas-client-core-infosec-credis</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>ch.qos.logback</groupId>
-					<artifactId>logback-classic</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
