@@ -93,6 +93,7 @@ public class ConsumerResource {
 		}
 
 		try {
+			timestamp = timestamp == -1 ? Long.MAX_VALUE : timestamp;
 			consumerService.resetOffsetByTimestamp(topicName, consumerGroup, timestamp);
 		} catch (Exception e) {
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);

@@ -285,6 +285,18 @@ public class ConsumerService {
 		Map<Integer, Offset> messageOffsets = findMessageOffsetByTime(topicName, timestamp);
 
 		for (Entry<Integer, Offset> messageOffset : messageOffsets.entrySet()) {
+			if (Long.MAX_VALUE == timestamp && messageOffset.getValue() != null) {
+				Offset offset = messageOffset.getValue();
+				if (offset.getNonPriorityOffset() > 0) {
+					offset.setNonPriorityOffset(offset.getNonPriorityOffset() + 1);
+				}
+				if (offset.getPriorityOffset() > 0) {
+					offset.setPriorityOffset(offset.getPriorityOffset() + 1);
+				}
+				if (offset.getResendOffset() != null && offset.getResendOffset().getValue() > 0) {
+					offset.getResendOffset().setValue(offset.getResendOffset().getValue() + 1);
+				}
+			}
 			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.PRIORITY, consumer.getId(),
 			      messageOffset.getValue().getPriorityOffset());
 			doUpdateMessageOffset(topicName, messageOffset.getKey(), MessageQueueConstants.NON_PRIORITY, consumer.getId(),
