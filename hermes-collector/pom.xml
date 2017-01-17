@@ -166,6 +166,10 @@
 			<artifactId>cat-client</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.ctrip.hickwall</groupId>
+			<artifactId>client</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math</artifactId>
 			<version>2.2</version>

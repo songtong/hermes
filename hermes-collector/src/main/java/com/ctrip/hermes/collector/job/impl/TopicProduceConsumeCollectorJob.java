@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalNotFoundException;
 import org.unidal.tuple.Pair;
@@ -26,6 +27,7 @@ import com.ctrip.hermes.admin.core.queue.DeadLetterEntity;
 import com.ctrip.hermes.admin.core.queue.MessagePriority;
 import com.ctrip.hermes.admin.core.queue.MessageQueueDao;
 import com.ctrip.hermes.admin.core.queue.OffsetMessage;
+import com.ctrip.hermes.collector.hub.MetricsHub;
 import com.ctrip.hermes.collector.hub.StateHub;
 import com.ctrip.hermes.collector.job.AbstractJob;
 import com.ctrip.hermes.collector.job.JobContext;
@@ -39,6 +41,8 @@ import com.ctrip.hermes.collector.utils.IndexUtils;
 import com.ctrip.hermes.collector.utils.TimeUtils;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hickwall.proxy.HickwallClient;
+import com.ctrip.hickwall.proxy.common.DataPoint;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Message;
 import com.dianping.cat.message.Transaction;
@@ -58,6 +62,9 @@ public class TopicProduceConsumeCollectorJob extends AbstractJob {
 	
 	private DeadLetterDao m_deadLetterDao = PlexusComponentLocator.lookup(DeadLetterDao.class);
 	
+	@Autowired
+	private MetricsHub m_metricsHub;
+	
 	public void setup(JobContext context) {}
 
 	@Override
@@ -74,6 +81,7 @@ public class TopicProduceConsumeCollectorJob extends AbstractJob {
 		List<Topic> topics = m_topicDao.list(TopicEntity.READSET_FULL);
 		
 		for (int index = 0; index < topics.size(); index++) {
+			ArrayList<DataPoint> points = new ArrayList<DataPoint>();
 			Topic topic = topics.get(index);
 			
 			// Ignore non-mysql topic.
@@ -83,7 +91,7 @@ public class TopicProduceConsumeCollectorJob extends AbstractJob {
 			
 			List<Partition> partitions = m_partitionDao.findByTopicId(topic.getId(), PartitionEntity.READSET_FULL);
 			
-			for (Partition partition : partitions) {				
+			for (Partition partition : partitions) {		
 				// Find produce state on partitions.
 				Transaction produce = Cat.newTransaction("Mysql", "CollectProduceOnPartition");
 				TPProduceState produceState = new TPProduceState();
@@ -98,12 +106,22 @@ public class TopicProduceConsumeCollectorJob extends AbstractJob {
 					if (message != null) {
 						produceState.setOffsetPriority(message.getId());
 						produceState.setLastPriorityCreationDate(message.getCreationDate());
+						
+						DataPoint point = new DataPoint(String.format("hermes.mysql.produce.priority.%d-%d", topic.getId(), partition.getId()), (double)produceState.getOffsetPriority(), TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis()));
+						point.setEndpoint(m_conf.getHickwallEndpoint());
+						points.add(point);
 					}
+					
+					
 					// Non-priority message.
 					message = m_messageQueueDao.getLatestProduced(topic.getName(), partition.getId(), 1);
 					if (message != null) {
 						produceState.setOffsetNonPriority(message.getId());
 						produceState.setLastNonPriorityCreationDate(message.getCreationDate());
+						
+						DataPoint point = new DataPoint(String.format("hermes.mysql.produce.nonpriority.%d-%d", topic.getId(), partition.getId()), (double)produceState.getOffsetNonPriority(), TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis()));
+						point.setEndpoint(m_conf.getHickwallEndpoint());
+						points.add(point);
 					}
 					
 					produceState.setIndex(IndexUtils.getDataStoredIndex(RecordType.TOPIC_FLOW_DB.getCategory().getName(), false));
@@ -140,11 +158,17 @@ public class TopicProduceConsumeCollectorJob extends AbstractJob {
 							if (offset.getKey() != null) {
 								consumeState.setOffsetPriority(offset.getKey().getOffset());
 								consumeState.setOffsetPriorityModifiedDate(offset.getKey().getLastModifiedDate());
+								DataPoint point = new DataPoint(String.format("hermes.mysql.consume.priority.%d-%d-%d", topic.getId(), partition.getId(), consumerGroupId), (double)consumeState.getOffsetPriority(), TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis()));
+								point.setEndpoint(m_conf.getHickwallEndpoint());
+								points.add(point);
 							}
 							
 							if (offset.getValue() != null){
 								consumeState.setOffsetNonPriority(offset.getValue().getOffset());
 								consumeState.setOffsetNonPriorityModifiedDate(offset.getValue().getLastModifiedDate());
+								DataPoint point = new DataPoint(String.format("hermes.mysql.consume.nonpriority.%d-%d-%d", topic.getId(), partition.getId(), consumerGroupId), (double)consumeState.getOffsetNonPriority(), TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis()));
+								point.setEndpoint(m_conf.getHickwallEndpoint());
+								points.add(point);
 							}
 							
 							DeadLetter deadLetter = m_deadLetterDao.countByConsumerTimeRange(topic.getName(), partition.getId(), consumerGroupId, new Date(from), new Date(to), DeadLetterEntity.READSET_COUNT);
@@ -172,6 +196,7 @@ public class TopicProduceConsumeCollectorJob extends AbstractJob {
 				}
 			}
 			
+			m_metricsHub.send(points);
 			commitStates(states);
 		}
 		
