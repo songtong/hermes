@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.ctrip.hermes</groupId>
 		<artifactId>hermes</artifactId>
-		<version>0.8.1</version>
+		<version>0.8.2-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -36,6 +36,10 @@
 			<artifactId>log4j-core</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+		</dependency>
 		<!--for Lease.class: JsonIgnore -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -45,16 +49,6 @@
 		<dependency>
 			<groupId>io.confluent</groupId>
 			<artifactId>kafka-avro-serializer</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.zookeeper</groupId>
-					<artifactId>zookeeper</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<!--netty -->
 		<dependency>
