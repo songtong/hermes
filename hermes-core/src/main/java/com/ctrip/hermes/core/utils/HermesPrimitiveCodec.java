@@ -1,6 +1,7 @@
 package com.ctrip.hermes.core.utils;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -98,9 +99,13 @@ public class HermesPrimitiveCodec {
 		} else {
 			readerIndexBack(m_buf, 1);
 			int strLen = m_buf.readInt();
-			byte[] strBytes = new byte[strLen];
-			m_buf.readBytes(strBytes);
-			return new String(strBytes, Charsets.UTF_8);
+			ByteBuf heapBuffer = PooledByteBufAllocator.DEFAULT.heapBuffer(strLen);
+			try {
+				m_buf.readBytes(heapBuffer);
+				return new String(heapBuffer.array(), heapBuffer.arrayOffset(), strLen, Charsets.UTF_8);
+			} finally {
+				heapBuffer.release();
+			}
 		}
 	}
 
