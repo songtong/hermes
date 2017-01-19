@@ -55,11 +55,11 @@ public class MessageDataSourceProvider implements DataSourceProvider {
 			}
 			dsDef.setMinimumPoolSize(minPoolSize);
 
-			int checkoutTimeoutMills = 1000;
-			if (dsProps.get("checkoutTimeoutMills") != null) {
-				checkoutTimeoutMills = Integer.parseInt(dsProps.get("checkoutTimeoutMills").getValue());
+			int checkoutTimeoutMillis = 1000;
+			if (dsProps.get("checkoutTimeoutMillis") != null) {
+				checkoutTimeoutMillis = Integer.parseInt(dsProps.get("checkoutTimeoutMillis").getValue());
 			}
-			dsDef.setCheckoutTimeoutInMillis(checkoutTimeoutMills);
+			dsDef.setCheckoutTimeoutInMillis(checkoutTimeoutMillis);
 
 			def.addDataSource(dsDef);
 		}
