@@ -26,6 +26,7 @@ public class DataSourceManager {
 		public JdbcDataSourceDescriptor buildDescriptor(DataSourceDef ds) {
 			ds.setConnectionTimeout("30m");
 			ds.setIdleTimeout("30m");
+			ds.setCheckoutTimeoutInMillis(0);
 			return super.buildDescriptor(ds);
 		}
 	}
