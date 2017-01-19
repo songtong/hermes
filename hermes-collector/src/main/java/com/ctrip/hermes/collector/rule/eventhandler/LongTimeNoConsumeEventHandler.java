@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,7 +109,10 @@ public class LongTimeNoConsumeEventHandler extends RuleEventHandler {
 				synchronized(LongTimeNoConsumeEventHandler.this) {
 					m_reportContent.setEndTime(System.currentTimeMillis());
 					m_reportContent.finish();
-					LongTimeNoConsumeEventHandler.this.notify(new HermesNotice(Arrays.asList(m_conf.getNotifierDefaultMail().split(",")), m_reportContent), null);
+					HermesNotice notice = new HermesNotice(Arrays.asList(m_conf.getNotifierDefaultMail().split(",")), m_reportContent);
+					LongTimeNoConsumeEventHandler.this.notify(notice, null);
+					LOGGER.info("Generate report sent to {} for long time no consume.", StringUtils.join(notice.getReceivers(), ","));
+
 					m_reportContent = createReportContent();
 				}
 			}

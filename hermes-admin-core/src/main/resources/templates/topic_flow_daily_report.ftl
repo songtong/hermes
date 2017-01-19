@@ -17,36 +17,36 @@
 						<td style="padding: 0px 30px 10px 0px; color: #318AAA; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px;"><b>有消费Topic数：</b>${total.hasConsumedTopicCount}</td>
 					</tr>
 					<tr>
-						<td colspan='3' style="padding: 0px 30px 10px 30px;">
+						<td colspan='3' style="padding: 0px 30px 10px 30px">
 							<table cellpadding="0" cellspacing="0" width="100%" style="table-layout:fixed">
 									<tr>
-										<td width="50%" style="vertical-align: text-top;">
+										<td width="50%" style="vertical-align: text-top; padding-right: 8px;">
 											<table cellpadding="0" cellspacing="0" width="100%" style="table-layout:fixed; word-wrap: break-word">
 												<tbody style="color: #5D5D5D; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px;">
 													<tr>
 														<td width="70%"><b>生产Top5</b></td>
-														<td width="30%"><b>生产量</b></td>
+														<td width="30%" style="text-align:right;"><b>生产量</b></td>
 													</tr>
 													<#list total.top5Produce as topic>
 														<tr>
 															<td>${topic.getMiddle()}</td>
-															<td>${topic.getLast()}</td>
+															<td style="text-align:right;">${topic.getLast()}</td>
 														</tr>
 													</#list>
 												</tbody>
 											</table>
 										</td>
-										<td width="50%" style="vertical-align: text-top;">
+										<td width="50%" style="vertical-align: text-top; padding-left: 8px;">
 											<table cellpadding="0" cellspacing="0" width="100%" style="table-layout:fixed; word-wrap: break-word">
 												<tbody style="color: #5D5D5D; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px;">
 													<tr>
 														<td width="70%"><b>消费Top5</b></td>
-														<td width="30%"><b>消费量</b></td>
+														<td width="30%" style="text-align:right;"><b>消费量</b></td>
 													</tr>
 													<#list total.top5Consume as topic>
 														<tr>
 															<td>${topic.getMiddle()}</td>
-															<td>${topic.getLast()}</td>
+															<td style="text-align:right;">${topic.getLast()}</td>
 														</tr>
 													</#list>
 												</tbody>
@@ -66,12 +66,12 @@
 						<td colspan='3' style="padding: 10px 30px 10px 30px;">
 							<table cellpadding="0" cellspacing="0" width="100%" style="table-layout:fixed">
 									<tr>
-										<td width="50%" style="vertical-align: text-top;">
+										<td width="50%" style="vertical-align: text-top; padding-right: 8px;">
 											<table cellpadding="0" cellspacing="0" width="100%" style="table-layout:fixed; word-wrap: break-word">
 												<tbody style="color: #5D5D5D; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px;">
 													<tr>
 														<td width="70%"><b>Bu生产Top5</b></td>
-														<td width="30%"><b>占比</b></td>
+														<td width="30%" style="text-align:right;"><b>占比</b></td>
 													</tr>
 													<#list buProduce as bu> 
 														<#if (bu?index >= 5)>
@@ -79,18 +79,18 @@
 														 </#if>
 														<tr>
 															<td>${bu.getKey()}</td>
-															<td>${bu.getValue()?string.percent}</td>
+															<td style="text-align:right;">${bu.getValue()?string.percent}</td>
 														</tr>
 													</#list>
 												</tbody>
 											</table>
 										</td>
-										<td width="50%" style="vertical-align: text-top;">
+										<td width="50%" style="vertical-align: text-top; padding-left: 8px;">
 											<table cellpadding="0" cellspacing="0" width="100%" style="table-layout:fixed; word-wrap: break-word">
 												<tbody style="color: #5D5D5D; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px;">
 													<tr>
 														<td width="70%"><b>Bu消费Top5</b></td>
-														<td width="30%"><b>占比</b></td>
+														<td width="30%" style="text-align:right;"><b>占比</b></td>
 													</tr>
 													<#list buConsume as bu>
 														<#if (bu?index >= 5)>
@@ -98,7 +98,7 @@
 														 </#if>
 														<tr>
 															<td>${bu.getKey()}</td>
-															<td>${bu.getValue()?string.percent}</td>
+															<td style="text-align:right;">${bu.getValue()?string.percent}</td>
 														</tr>
 													</#list>
 												</tbody>
@@ -125,36 +125,36 @@
 						<td colspan='3' style="padding: 0px 30px 10px 30px;">
 							<table cellpadding="0" cellspacing="0" width="100%" style="table-layout:fixed">
 									<tr>
-										<td width="50%" style="vertical-align: text-top;">
+										<td width="50%" style="vertical-align: text-top; padding-right: 8px;">
 											<table cellpadding="0" cellspacing="0" width="100%" style="table-layout:fixed; word-wrap: break-word">
 												<tbody style="color: #5D5D5D; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px;">
 													<tr>
 														<td width="70%"><b>生产Top5</b></td>
-														<td width="30%"><b>生产量</b></td>
+														<td width="30%" style="text-align:right;"><b>生产量</b></td>
 													</tr>
 													<#if buDetail.top5Produce??>
 														<#list buDetail.top5Produce as topic>
 															<tr>
 																<td>${topic.getMiddle()}</td>
-																<td>${topic.getLast()}</td>
+																<td style="text-align:right;">${topic.getLast()}</td>
 															</tr>
 														</#list>
 													</#if>
 												</tbody>
 											</table>
 										</td>
-										<td width="50%" style="vertical-align: text-top;">
+										<td width="50%" style="vertical-align: text-top; padding-left: 8px;">
 											<table cellpadding="0" cellspacing="0" width="100%" style="table-layout:fixed; word-wrap: break-word">
 												<tbody style="color: #5D5D5D; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px;">
 													<tr>
 														<td width="70%"><b>消费Top5</b></td>
-														<td width="30%"><b>消费量</b></td>
+														<td width="30%" style="text-align:right;"><b>消费量</b></td>
 													</tr>
 													<#if buDetail.top5Consume??>
 														<#list buDetail.top5Consume as topic>
 															<tr>
 																<td>${topic.getMiddle()}</td>
-																<td>${topic.getLast()}</td>
+																<td style="text-align:right;">${topic.getLast()}</td>
 															</tr>
 														</#list>
 													</#if>

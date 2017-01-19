@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +89,9 @@ public class DeadLetterEventHandler extends RuleEventHandler {
 				synchronized(DeadLetterEventHandler.this) {
 					m_reportContent.setEndTime(System.currentTimeMillis());
 					m_reportContent.finish();
-					DeadLetterEventHandler.this.notify(new HermesNotice(DeadLetterEventHandler.this.getDefaultRecipients(HermesNoticeType.EMAIL), m_reportContent), null);
+					HermesNotice notice = new HermesNotice(DeadLetterEventHandler.this.getDefaultRecipients(HermesNoticeType.EMAIL), m_reportContent);
+					DeadLetterEventHandler.this.notify(notice, null);
+					LOGGER.info("Generate report sent to {} for dead letter", StringUtils.join(notice.getReceivers(), ","));
 					m_reportContent = createReportContent();
 				}
 			}

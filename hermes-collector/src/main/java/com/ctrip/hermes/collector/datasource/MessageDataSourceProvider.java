@@ -13,11 +13,11 @@ import com.ctrip.hermes.meta.entity.Property;
 
 public class MessageDataSourceProvider implements DataSourceProvider {
 	public List<Datasource> datasources = null;
-	
+
 	public MessageDataSourceProvider(List<Datasource> datasources) {
 		this.datasources = datasources;
 	}
-	
+
 	@Override
 	public DataSourcesDef defineDatasources() {
 		DataSourcesDef def = new DataSourcesDef();
@@ -30,7 +30,9 @@ public class MessageDataSourceProvider implements DataSourceProvider {
 
 				props.setDriver("com.mysql.jdbc.Driver");
 				if (dsProps.get("url") == null || dsProps.get("user") == null) {
-					throw new IllegalArgumentException("url and user property can not be null in datasource definition " + ds);
+					throw new IllegalArgumentException(
+							"url and user property can not be null in datasource definition "
+									+ ds);
 				}
 				props.setUrl(dsProps.get("url").getValue());
 				props.setUser(dsProps.get("user").getValue());
@@ -41,22 +43,16 @@ public class MessageDataSourceProvider implements DataSourceProvider {
 				props.setConnectionProperties("useUnicode=true&autoReconnect=true&rewriteBatchedStatements=true");
 				dsDef.setProperties(props);
 
-				int maxPoolSize = 20;
-				if (dsProps.get("maximumPoolSize") != null) {
-					maxPoolSize = Integer.parseInt(dsProps.get("maximumPoolSize").getValue());
-				}
-				dsDef.setMaximumPoolSize(maxPoolSize);
+				dsDef.setMaximumPoolSize(20);
 
-				int minPoolSize = 10;
-				if (dsProps.get("minimumPoolSize") != null) {
-					minPoolSize = Integer.parseInt(dsProps.get("minimumPoolSize").getValue());
-				}
-				dsDef.setMinimumPoolSize(minPoolSize);
+				dsDef.setMinimumPoolSize(10);
+
+				dsDef.setCheckoutTimeoutInMillis(0);
 
 				def.addDataSource(dsDef);
 			}
 		}
-		
+
 		return def;
 	}
 

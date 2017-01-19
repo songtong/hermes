@@ -642,6 +642,11 @@
 				<artifactId>java-object-diff</artifactId>
 				<version>0.94</version>
 			</dependency>
+			<dependency>
+				<groupId>com.ctrip.hickwall</groupId>
+				<artifactId>client</artifactId>
+				<version>1.5</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<profiles>

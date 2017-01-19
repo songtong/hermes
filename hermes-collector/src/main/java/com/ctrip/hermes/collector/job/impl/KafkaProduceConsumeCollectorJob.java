@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import kafka.api.OffsetRequest;
 import kafka.api.PartitionOffsetRequestInfo;
@@ -33,6 +34,7 @@ import com.ctrip.hermes.admin.core.model.Topic;
 import com.ctrip.hermes.admin.core.model.TopicDao;
 import com.ctrip.hermes.admin.core.model.TopicEntity;
 import com.ctrip.hermes.collector.conf.CollectorConfiguration;
+import com.ctrip.hermes.collector.hub.MetricsHub;
 import com.ctrip.hermes.collector.hub.StateHub;
 import com.ctrip.hermes.collector.job.AbstractJob;
 import com.ctrip.hermes.collector.job.JobContext;
@@ -45,6 +47,7 @@ import com.ctrip.hermes.collector.state.impl.TPProduceState;
 import com.ctrip.hermes.collector.utils.IndexUtils;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Storage;
+import com.ctrip.hickwall.proxy.common.DataPoint;
 
 @Component
 @JobDescription(group=JobGroup.BIZ, cron="0 */5 * * * ?")
@@ -54,6 +57,9 @@ public class KafkaProduceConsumeCollectorJob extends AbstractJob {
 	private TopicDao m_topicDao = PlexusComponentLocator.lookup(TopicDao.class);
 	
 	private ConsumerGroupDao m_consumerGroupDao = PlexusComponentLocator.lookup(ConsumerGroupDao.class);
+	
+	@Autowired
+	private MetricsHub m_metricsHub;
 	
 	@Autowired
 	private CollectorConfiguration m_conf;
@@ -82,7 +88,9 @@ public class KafkaProduceConsumeCollectorJob extends AbstractJob {
 		if (kafkaTopics.size() > 0) {
 			Map<String, List<TopicAndPartition>> metadatas = getMetadataByLeaderHosts(findLeader(brokers, m_conf.getKafkaServerPort(), kafkaTopics));  
 	        	
-			for (Entry<String, List<TopicAndPartition>> metadata : metadatas.entrySet()) {				
+			for (Entry<String, List<TopicAndPartition>> metadata : metadatas.entrySet()) {	
+				ArrayList<DataPoint> points = new ArrayList<>();
+				
 	            String clientName = "Client_" + metadata.getKey();  
 	            SimpleConsumer consumer = null;
 	            try {
@@ -102,7 +110,13 @@ public class KafkaProduceConsumeCollectorJob extends AbstractJob {
 	            		state.setTimestamp(to);
 	            		state.setIndex(IndexUtils.getDataStoredIndex(RecordType.TOPIC_FLOW_DB.getCategory().getName(), false));
 	            		states.add(state);
-		            }
+	            		
+	            		DataPoint point = new DataPoint(String.format("hermes.kafka.produce.nonpriority.%d-%d", state.getTopicId(), state.getPartition()), (double)state.getOffsetNonPriority(), TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis()));
+						point.setEndpoint(m_conf.getHickwallEndpoint());
+						points.add(point);
+					}
+		            
+		            m_metricsHub.send(points);
 		            commitStates(states);
 		            
 		            // Check consumer states.
@@ -135,6 +149,8 @@ public class KafkaProduceConsumeCollectorJob extends AbstractJob {
 		Topic topic = m_topicDao.findByName(topicAndPartitions.get(0).topic(), TopicEntity.READSET_FULL);
 		List<State> states = new ArrayList<State>();
     	List<ConsumerGroup> groups = m_consumerGroupDao.findByTopicId(topic.getId(), ConsumerGroupEntity.READSET_FULL);
+    	ArrayList<DataPoint> points = new ArrayList<DataPoint>();
+    	
         for (ConsumerGroup group : groups) {
             Map<TopicAndPartition, Long> offsets = getLatestConsumerOffsets(consumer, topicAndPartitions, clientName, group.getName());  
             if (offsets.size() > 0) {
@@ -151,9 +167,15 @@ public class KafkaProduceConsumeCollectorJob extends AbstractJob {
 		            state.setTimestamp(timestamp);
 		            state.setIndex(IndexUtils.getDataStoredIndex(RecordType.TOPIC_FLOW_DB.getCategory().getName(), false));
 		            states.add(state);
+		            
+		            DataPoint point = new DataPoint(String.format("hermes.kafka.consume.nonpriority.%d-%d-%d", state.getTopicId(), state.getPartition(), state.getConsumerGroupId()), (double)state.getOffsetNonPriority(), TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis()));
+					point.setEndpoint(m_conf.getHickwallEndpoint());
+					points.add(point);
             	}
             }
         }
+        m_metricsHub.send(points);
+        
         return states;
 	}
 	

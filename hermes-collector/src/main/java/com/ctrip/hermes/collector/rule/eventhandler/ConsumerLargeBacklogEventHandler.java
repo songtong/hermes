@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,7 +141,9 @@ public class ConsumerLargeBacklogEventHandler extends RuleEventHandler {
 				synchronized(ConsumerLargeBacklogEventHandler.this) {
 					m_reportContent.setEndTime(System.currentTimeMillis());
 					m_reportContent.finish();
-					ConsumerLargeBacklogEventHandler.this.notify(new HermesNotice(Arrays.asList(m_conf.getNotifierDevMail().split(",")), m_reportContent), null);
+					HermesNotice notice = new HermesNotice(Arrays.asList(m_conf.getNotifierDevMail().split(",")), m_reportContent);
+					ConsumerLargeBacklogEventHandler.this.notify(notice, null);
+					LOGGER.info("Generate report sent to {} for consumer large backlog", StringUtils.join(notice.getReceivers(), ","));
 					m_reportContent = createReportContent();
 				}
 			}

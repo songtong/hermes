@@ -209,6 +209,15 @@ public class CollectorConfiguration {
 	
 	@Value("${topic.producer.ips.max:100}")
 	private int m_maxProduceIps;
+	
+	@Value("${hickwall.servers}")
+	private String m_hickwallServers;
+	
+	@Value("${hickwall.endpoint}")
+	private String m_hickwallEndpoint;
+	
+	@Value("${hickwall.send.timeout:1000}")
+	private long m_hickwallSendTimeout;
 
 	public int getDatahubQueueSize() {
 		return m_datahubQueueSize;
@@ -755,4 +764,28 @@ public class CollectorConfiguration {
 		m_maxProduceIps = maxProduceIps;
 	}
 
+	public String getHickwallServers() {
+		return m_hickwallServers;
+	}
+
+	public void setHickwallServers(String hickwallServers) {
+		m_hickwallServers = hickwallServers;
+	}
+
+	public String getHickwallEndpoint() {
+		return m_hickwallEndpoint;
+	}
+
+	public void setHickwallEndpoint(String hickwallEndpoint) {
+		m_hickwallEndpoint = hickwallEndpoint;
+	}
+
+	public long getHickwallSendTimeout() {
+		return m_hickwallSendTimeout;
+	}
+
+	public void setHickwallSendTimeout(long hickwallSendTimeout) {
+		m_hickwallSendTimeout = hickwallSendTimeout;
+	}
+	
 }

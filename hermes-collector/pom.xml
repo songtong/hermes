@@ -24,6 +24,12 @@
 		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-admin-core</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-beans</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
@@ -36,6 +42,15 @@
 		<dependency>
 			<groupId>com.ctrip.hermes</groupId>
 			<artifactId>hermes-consumer</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+			<version>4.3.4.RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>com.ctrip.framework.apollo</groupId>
+			<artifactId>apollo-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -92,8 +107,8 @@
 					<artifactId>hk2</artifactId>
 				</exclusion>
 				<exclusion>
-					<groupId>org.hibernate</groupId>
-					<artifactId>hibernate-validator</artifactId>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-beans</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -112,6 +127,10 @@
 				<exclusion>
 					<groupId>org.hibernate</groupId>
 					<artifactId>hibernate-validator</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-beans</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -162,6 +181,10 @@
 			<artifactId>cat-client</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.ctrip.hickwall</groupId>
+			<artifactId>client</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math</artifactId>
 			<version>2.2</version>
@@ -202,6 +225,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
 	<build>
