@@ -24,10 +24,10 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -XX:-UseAdaptiveSizePolicy \
             -Dcom.mchange.v2.log.MLog=com.mchange.v2.log.FallbackMLog \
             -Dcom.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL=WARNING \
-            -Dmysql.initialReusablePacketSize=2621440 \
-            -Dmysql.initialSharedSendPacketSize=2621440 \
-            -Dmysql.maxSharedSendPacketSize=2621440 \
-            -Dmysql.maxReuseablePacketSize=2621440 \
+            -Dmysql.initialReusablePacketSize=102400 \
+            -Dmysql.initialSharedSendPacketSize=102400 \
+            -Dmysql.maxSharedSendPacketSize=102400 \
+            -Dmysql.maxReuseablePacketSize=102400 \
             -XX:+UnlockCommercialFeatures \
             -XX:+FlightRecorder \
             -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$LOG_PATH
