@@ -69,7 +69,7 @@ public class Header implements Serializable {
 		m_version = codec.readInt();
 		m_type = CommandType.valueOf(codec.readInt(), m_version);
 		m_correlationId = codec.readLong();
-		m_properties = codec.readStringStringMap();
+		m_properties = codec.readStringStringMapWithSharedBuffer();
 	}
 
 	public void toBytes(ByteBuf buf) {
