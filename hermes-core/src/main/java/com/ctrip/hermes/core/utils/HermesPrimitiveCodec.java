@@ -1,6 +1,7 @@
 package com.ctrip.hermes.core.utils;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -101,6 +102,23 @@ public class HermesPrimitiveCodec {
 			byte[] strBytes = new byte[strLen];
 			m_buf.readBytes(strBytes);
 			return new String(strBytes, Charsets.UTF_8);
+		}
+	}
+
+	public String readStringWithSharedBuffer() {
+		byte firstByte = m_buf.readByte();
+		if (NULL == firstByte) {
+			return null;
+		} else {
+			readerIndexBack(m_buf, 1);
+			int strLen = m_buf.readInt();
+			ByteBuf heapBuffer = PooledByteBufAllocator.DEFAULT.heapBuffer(strLen);
+			try {
+				m_buf.readBytes(heapBuffer);
+				return new String(heapBuffer.array(), heapBuffer.arrayOffset(), strLen, Charsets.UTF_8);
+			} finally {
+				heapBuffer.release();
+			}
 		}
 	}
 
@@ -349,6 +367,23 @@ public class HermesPrimitiveCodec {
 			if (length > 0) {
 				for (int i = 0; i < length; i++) {
 					result.put(readString(), readString());
+				}
+			}
+			return result;
+		}
+	}
+
+	public Map<String, String> readStringStringMapWithSharedBuffer() {
+		byte firstByte = m_buf.readByte();
+		if (NULL == firstByte) {
+			return null;
+		} else {
+			readerIndexBack(m_buf, 1);
+			int length = m_buf.readInt();
+			Map<String, String> result = new HashMap<String, String>();
+			if (length > 0) {
+				for (int i = 0; i < length; i++) {
+					result.put(readStringWithSharedBuffer(), readStringWithSharedBuffer());
 				}
 			}
 			return result;
