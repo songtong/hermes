@@ -61,6 +61,16 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final String DEFAULT_KEY = "_default_";
 
+	private static final String ACK_FLUSH_THREAD_COUNT = "ack.flush.thread.count";
+
+	private static final String ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS = "ack.flush.selector.safe.trigger.interval.millis";
+
+	private static final String ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS = "ack.flush.selector.safe.trigger.triggering.offset.deltas";
+
+	private static final String ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS = "ack.flush.selector.normal.triggering.offset.deltas";
+
+	private static final String ACK_FLUSH_DEFAULT_KEY = "__default__";
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -102,6 +112,14 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final boolean DEFAULT_FLUSH_MESSAGE_LIMIT_DYNAMIC_ADJUST = false;
 
+	private static final int DEFAULT_ACK_FLUSH_THREAD_COUNT = 5;
+
+	private static final long DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS = 25;
+
+	private static final long DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS = 100;
+
+	private static final int DEFAULT_ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS = 50;
+
 	private int m_filterTopicCacheSize = DEFAULT_FILTER_TOPIC_CACHE_SIZE;
 
 	private AtomicReference<Map<String, Integer>> m_sendMessageSelectorNormalTriggeringOffsetDeltas = new AtomicReference<Map<String, Integer>>(
@@ -110,19 +128,19 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private AtomicReference<Map<String, Integer>> m_sendMessageSelectorSafeTriggerTriggeringOffsetDeltas = new AtomicReference<Map<String, Integer>>(
 	      new HashMap<String, Integer>());
 
-	private int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis;
+	private volatile int m_sendMessageSelectorSafeTriggerMinFireIntervalMillis;
 
 	private int m_pullMessageSelectorWriteOffsetTtlMillis = 8000;
 
-	private int m_pullMessageSelectorSafeTriggerIntervalMillis;
+	private volatile int m_pullMessageSelectorSafeTriggerIntervalMillis;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolSize = 50;
 
 	private int m_pullMessageSelectorOffsetLoaderThreadPoolKeepaliveSeconds = 60;
 
-	private int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis;
+	private volatile int m_pullMessageSelectorSafeTriggerMinFireIntervalMillis;
 
-	private int m_sendMessageSelectorSafeTriggerIntervalMillis;
+	private volatile int m_sendMessageSelectorSafeTriggerIntervalMillis;
 
 	// Topic -> GroupId or default -> delta
 	private AtomicReference<Map<String, Map<String, Integer>>> m_pullMessageSelectorNormalTriggeringOffsetDeltas = new AtomicReference<Map<String, Map<String, Integer>>>(
@@ -152,6 +170,20 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private AtomicReference<Map<String, Integer>> m_topicsFlushCountLimits = new AtomicReference<Map<String, Integer>>();
 
 	private AtomicReference<Map<String, Boolean>> m_topicsFlushLimitDynamicAdjustSwitches = new AtomicReference<Map<String, Boolean>>();
+
+	private int m_ackFlushThreadCount;
+
+	private volatile long m_ackFlushSelectorSafeTriggerIntervalMillis = DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS;
+
+	private AtomicReference<Map<String, Integer>> m_ackFlushSelectorNormalTriggeringOffsetDeltas = new AtomicReference<Map<String, Integer>>(
+	      new HashMap<String, Integer>());
+
+	private volatile int m_ackFlushSelectorNormalTriggeringOffsetDeltasDefault = DEFAULT_ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS;
+
+	private AtomicReference<Map<String, Long>> m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltas = new AtomicReference<Map<String, Long>>(
+	      new HashMap<String, Long>());
+
+	private volatile long m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltasDefault = DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS;
 
 	public CtripBrokerConfigProvider() {
 		m_sessionId = System.getProperty("brokerId", UUID.randomUUID().toString());
@@ -221,12 +253,102 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 		m_cacheConfig.init(m_env.getGlobalConfig());
 
+		initAckFlusherConfigs();
+
 		initRateLimiters();
 
 		initStorageFlushLimits();
 
 		initSendMessageSelector();
 		initPullMessageSelector();
+	}
+
+	private void initAckFlusherConfigs() {
+		Config config = ConfigService.getAppConfig();
+		if (config != null) {
+			m_ackFlushThreadCount = config.getIntProperty(ACK_FLUSH_THREAD_COUNT, DEFAULT_ACK_FLUSH_THREAD_COUNT);
+			m_ackFlushSelectorSafeTriggerIntervalMillis = config
+			      .getLongProperty(ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS,
+			            DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS);
+
+			setAckFlushSelectorNormalTriggeringOffsetDeltasValue(config.getProperty(
+			      ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS, null));
+			setAckFlushSelectorSafeTriggerTriggeringOffsetDeltasValue(config.getProperty(
+			      ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS, null));
+
+			config.addChangeListener(new ConfigChangeListener() {
+				@Override
+				public void onChange(ConfigChangeEvent changeEvent) {
+					if (changeEvent.changedKeys().contains(ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS)) {
+						try {
+							String newValue = changeEvent.getChange(ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS)
+							      .getNewValue();
+							if (!StringUtils.isBlank(newValue)) {
+								m_ackFlushSelectorSafeTriggerIntervalMillis = Long.valueOf(newValue);
+								log.info("{} changed({}).", ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS,
+								      m_ackFlushSelectorSafeTriggerIntervalMillis);
+							}
+						} catch (Exception e) {
+							log.error("Parse new config({}) failed.", ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS, e);
+						}
+					}
+					if (changeEvent.changedKeys().contains(ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS)) {
+						if (setAckFlushSelectorNormalTriggeringOffsetDeltasValue(changeEvent.getChange(
+						      ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS).getNewValue())) {
+							log.info("{} changed({}).", ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS,
+							      m_ackFlushSelectorNormalTriggeringOffsetDeltas.get());
+						}
+					}
+					if (changeEvent.changedKeys().contains(ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS)) {
+						if (setAckFlushSelectorSafeTriggerTriggeringOffsetDeltasValue(changeEvent.getChange(
+						      ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS).getNewValue())) {
+							log.info("{} changed({}).", ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS,
+							      m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltas.get());
+						}
+					}
+				}
+			});
+		}
+	}
+
+	private boolean setAckFlushSelectorNormalTriggeringOffsetDeltasValue(String newValue) {
+		if (!StringUtils.isBlank(newValue)) {
+			try {
+				Map<String, Integer> newConfig = JSON.parseObject(newValue, new TypeReference<Map<String, Integer>>() {
+				});
+				if (newConfig != null) {
+					m_ackFlushSelectorNormalTriggeringOffsetDeltas.set(newConfig);
+					if (newConfig.containsKey(ACK_FLUSH_DEFAULT_KEY)) {
+						m_ackFlushSelectorNormalTriggeringOffsetDeltasDefault = newConfig.get(ACK_FLUSH_DEFAULT_KEY);
+					}
+					return true;
+				}
+			} catch (Exception e) {
+				log.error("Parse config {} failed, new value: {}.", ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS,
+				      newValue, e);
+			}
+		}
+		return false;
+	}
+
+	private boolean setAckFlushSelectorSafeTriggerTriggeringOffsetDeltasValue(String newValue) {
+		if (!StringUtils.isBlank(newValue)) {
+			try {
+				Map<String, Long> newConfig = JSON.parseObject(newValue, new TypeReference<Map<String, Long>>() {
+				});
+				if (newConfig != null) {
+					m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltas.set(newConfig);
+					if (newConfig.containsKey(ACK_FLUSH_DEFAULT_KEY)) {
+						m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltasDefault = newConfig.get(ACK_FLUSH_DEFAULT_KEY);
+					}
+					return true;
+				}
+			} catch (Exception e) {
+				log.error("Parse config {} failed, new value: {}.",
+				      ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS, newValue, e);
+			}
+		}
+		return false;
 	}
 
 	private void initStorageFlushLimits() {
@@ -823,4 +945,25 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 		}
 	}
 
+	@Override
+	public int getAckFlushThreadCount() {
+		return m_ackFlushThreadCount;
+	}
+
+	@Override
+	public long getAckFlushSelectorSafeTriggerIntervalMillis() {
+		return m_ackFlushSelectorSafeTriggerIntervalMillis;
+	}
+
+	@Override
+	public int getAckFlushSelectorNormalTriggeringOffsetDeltas(String topic) {
+		Integer batchSize = m_ackFlushSelectorNormalTriggeringOffsetDeltas.get().get(topic);
+		return batchSize == null ? m_ackFlushSelectorNormalTriggeringOffsetDeltasDefault : batchSize;
+	}
+
+	@Override
+	public long getAckFlushSelectorSafeTriggerTriggeringOffsetDeltas(String topic) {
+		Long millis = m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltas.get().get(topic);
+		return millis == null ? m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltasDefault : millis;
+	}
 }

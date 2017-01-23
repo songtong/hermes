@@ -95,7 +95,7 @@
 			<Appender-ref ref="ASYNC" />
 		</Logger>
 
-		<Logger name="com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler" level="ERROR"
+		<Logger name="com.ctrip.hermes.core.transport.endpoint.DefaultServerChannelInboundHandler" level="WARN"
 			additivity="false">
 			<Appender-ref ref="ASYNC" />
 		</Logger>

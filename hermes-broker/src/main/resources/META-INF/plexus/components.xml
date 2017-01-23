@@ -574,6 +574,9 @@
 				<requirement>
 					<role>com.ctrip.hermes.broker.selector.PullMessageSelectorManager</role>
 				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.queue.storage.mysql.ack.MySQLMessageAckFlusher</role>
+				</requirement>
 			</requirements>
 		</component>
 		<component>
@@ -636,6 +639,33 @@
 			<requirements>
 				<requirement>
 					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.broker.queue.storage.mysql.ack.MySQLMessageAckSelectorManager</role>
+			<implementation>com.ctrip.hermes.broker.queue.storage.mysql.ack.MySQLMessageAckSelectorManager</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.env.config.broker.BrokerConfigProvider</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.broker.queue.storage.mysql.ack.MySQLMessageAckFlusher</role>
+			<implementation>com.ctrip.hermes.broker.queue.storage.mysql.ack.DefaultMySQLMessageAckFlusher</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.core.meta.MetaService</role>
+				</requirement>
+				<requirement>
+					<role>org.unidal.dal.jdbc.datasource.DataSourceManager</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.env.config.broker.BrokerConfigProvider</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.broker.queue.storage.mysql.ack.MySQLMessageAckSelectorManager</role>
 				</requirement>
 			</requirements>
 		</component>

@@ -68,6 +68,9 @@ public class Header implements Serializable {
 		Magic.readAndCheckMagic(buf);
 		m_version = codec.readInt();
 		m_type = CommandType.valueOf(codec.readInt(), m_version);
+		if (m_type == null) {
+			throw new IllegalArgumentException("Command type can not be null.");
+		}
 		m_correlationId = codec.readLong();
 		m_properties = codec.readStringStringMapWithSharedBuffer();
 	}

@@ -1,9 +1,6 @@
 package com.ctrip.hermes.broker.queue.storage.mysql;
 
 import static com.ctrip.hermes.broker.dal.hermes.MessagePriorityEntity.READSET_OFFSET;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.Unpooled;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
@@ -48,6 +45,7 @@ import com.ctrip.hermes.broker.dal.hermes.ResendGroupIdEntity;
 import com.ctrip.hermes.broker.queue.storage.FetchResult;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.filter.Filter;
+import com.ctrip.hermes.broker.queue.storage.mysql.ack.MySQLMessageAckFlusher;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.CachedMessagePriorityDaoInterceptor;
 import com.ctrip.hermes.broker.selector.PullMessageSelectorManager;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
@@ -77,6 +75,10 @@ import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.dianping.cat.Cat;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.Unpooled;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -121,6 +123,9 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 
 	@Inject
 	private PullMessageSelectorManager selectorManager;
+
+	@Inject
+	private MySQLMessageAckFlusher m_ackFlusher;
 
 	private Map<Triple<String, Integer, Integer>, OffsetResend> m_offsetResendCache = new ConcurrentHashMap<>();
 
@@ -614,14 +619,14 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 				proto.setLastScheduleDate(new Date());
 				proto.setLastId(msgSeq);
 
-				m_offsetResendDao.increaseOffset(proto, OffsetResendEntity.UPDATESET_OFFSET);
+				m_ackFlusher.ackOffsetResend(proto);
 			} else {
 				OffsetMessage proto = getOffsetMessage(tpp, intGroupId);
 				proto.setTopic(topic);
 				proto.setPartition(partition);
 				proto.setOffset(msgSeq);
 
-				m_offsetMessageDao.increaseOffset(proto, OffsetMessageEntity.UPDATESET_OFFSET);
+				m_ackFlusher.ackOffsetMessage(proto);
 			}
 		} catch (DalException e) {
 			log.error("Failed to ack messages(topic={}, partition={}, priority={}, groupId={}).", tpp.getTopic(),

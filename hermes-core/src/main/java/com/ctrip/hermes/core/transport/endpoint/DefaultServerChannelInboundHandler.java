@@ -7,9 +7,11 @@ import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.transport.command.processor.CommandProcessorManager;
 import com.ctrip.hermes.core.transport.netty.AbstractNettyChannelInboundHandler;
 import com.ctrip.hermes.core.transport.netty.NettyUtils;
+import com.dianping.cat.Cat;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
@@ -39,6 +41,7 @@ public class DefaultServerChannelInboundHandler extends AbstractNettyChannelInbo
 
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		log.warn("Exception caught in inbound, client ip {}", NettyUtils.parseChannelRemoteAddr(ctx.channel()), cause);
+		Cat.logEvent(CatConstants.TYPE_SERVER_INBOUND_ERROR, NettyUtils.parseChannelRemoteAddr(ctx.channel(), false));
 
 		ctx.channel().close();
 	}

@@ -93,6 +93,14 @@ public interface BrokerConfigProvider {
 	public RateLimiter getPartitionProduceQPSRateLimiter(String topic, int partition);
 
 	public int getMessageQueueFlushCountLimit(String topic);
-	
+
 	public boolean isMessageQueueFlushLimitDynamicAdjust(String topic);
+
+	public int getAckFlushThreadCount();
+
+	public long getAckFlushSelectorSafeTriggerIntervalMillis();
+
+	public int getAckFlushSelectorNormalTriggeringOffsetDeltas(String topic);
+
+	public long getAckFlushSelectorSafeTriggerTriggeringOffsetDeltas(String topic);
 }
