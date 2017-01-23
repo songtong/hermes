@@ -55,8 +55,8 @@ public class NettyServer extends ContainerHolder {
 		      .childOption(ChannelOption.SO_KEEPALIVE, true)//
 		      .childOption(ChannelOption.SO_REUSEADDR, true)//
 		      .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)//
-		      .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 2 * 1024 * 1024)//
-		      .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 1024 * 1024)//
+		      .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)//
+		      .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)//
 		;
 
 		// Bind and start to accept incoming connections.
