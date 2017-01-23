@@ -237,20 +237,6 @@ public abstract class AbstractMessageQueue implements MessageQueue {
 	}
 
 	@Override
-	public void nack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas) {
-		if (!m_stopped.get()) {
-			doNack(resend, isPriority, groupId, msgId2Metas);
-		}
-	}
-
-	@Override
-	public void ack(boolean resend, boolean isPriority, String groupId, long msgSeq) {
-		if (!m_stopped.get()) {
-			doAck(resend, isPriority, groupId, msgSeq);
-		}
-	}
-
-	@Override
 	public void stop() {
 		if (m_stopped.compareAndSet(false, true)) {
 			// TODO remove legacy code

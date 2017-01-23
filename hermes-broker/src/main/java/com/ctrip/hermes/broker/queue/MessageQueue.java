@@ -10,7 +10,6 @@ import com.ctrip.hermes.core.bo.Offset;
 import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
-import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
 import com.ctrip.hermes.core.selector.OffsetGenerator;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -35,10 +34,6 @@ public interface MessageQueue extends OffsetGenerator {
 	Offset findMessageOffsetByTime(long time);
 
 	TppConsumerMessageBatch findMessagesByOffsets(boolean isPriority, List<Long> offsets);
-
-	void nack(boolean resend, boolean isPriority, String groupId, List<Pair<Long, MessageMeta>> msgId2Metas);
-
-	void ack(boolean resend, boolean isPriority, String groupId, long msgSeq);
 
 	void stop();
 

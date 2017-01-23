@@ -22,6 +22,8 @@ import com.ctrip.hermes.broker.queue.MessageQueuePartitionFactory;
 import com.ctrip.hermes.broker.queue.storage.filter.DefaultFilter;
 import com.ctrip.hermes.broker.queue.storage.kafka.KafkaMessageQueueStorage;
 import com.ctrip.hermes.broker.queue.storage.mysql.MySQLMessageQueueStorage;
+import com.ctrip.hermes.broker.queue.storage.mysql.ack.DefaultMySQLMessageAckFlusher;
+import com.ctrip.hermes.broker.queue.storage.mysql.ack.MySQLMessageAckSelectorManager;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.HermesTableProvider;
 import com.ctrip.hermes.broker.queue.storage.mysql.dal.MessageDataSourceProvider;
 import com.ctrip.hermes.broker.registry.DefaultBrokerRegistry;
@@ -220,6 +222,9 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MetaService.class));
 		all.add(C(TableProvider.class, "dead-letter", HermesTableProvider.class) //
 		      .req(MetaService.class));
+
+		all.add(A(MySQLMessageAckSelectorManager.class));
+		all.add(A(DefaultMySQLMessageAckFlusher.class));
 
 		all.add(A(MessageDataSourceProvider.class));
 

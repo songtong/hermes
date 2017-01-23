@@ -113,4 +113,8 @@ public interface CatConstants {
 	public static final String TYPE_LEASE_PROXY = "Lease.ProxyPass";
 
 	public static final String TYPE_ROLE_CHANGED = "Role.Changed";
+
+	public static final String TYPE_ACK_FLUSH = "Ack.Flush.DB.";
+
+	public static final String TYPE_SERVER_INBOUND_ERROR = "Server.Inbound.Error";
 }
