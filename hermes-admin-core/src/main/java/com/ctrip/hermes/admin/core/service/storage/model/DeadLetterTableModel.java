@@ -19,6 +19,7 @@ public final class DeadLetterTableModel extends TableModel{
 				  dead_date, group_id, priority, origin_id);
 		setPrimaryKey(id);
 		setIndexKey("group_id", group_id.columnName);
+		setIndexKey("dead_date", group_id.columnName);
 		
 		setTableName("dead_letter");
 	}
