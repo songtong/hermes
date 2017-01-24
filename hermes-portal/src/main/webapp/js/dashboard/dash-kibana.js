@@ -8,9 +8,9 @@ function k_topic_produce_history_backup(topic, $sce) {
 
 function k_topic_produce_history(topic, $sce) {
         var url = global_kibana_url
-                        + "#/visualize/edit/Hermes-Message-Received?embed=true&_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-1h,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Received+AND+topic:"
+                        + "#/visualize/edit/Hermes-Message-Saved?embed=true&_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-1h,mode:quick,to:now))&_a=(filters:!(),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'eventType:Message.Saved+AND+topic:"
                         + topic
-                        + "')),uiState:(vis:(legendOpen:!f)),vis:(aggs:!((enabled:!t,id:'1',params:(),schema:metric,type:count),(enabled:!t,id:'2',params:(customInterval:'2h',customLabel:%E6%B6%88%E6%81%AF%E7%94%9F%E4%BA%A7%E9%80%9F%E7%8E%87,extended_bounds:(),field:eventTime,interval:auto,min_doc_count:1),schema:segment,type:date_histogram)),listeners:(),params:(addLegend:!t,addTimeMarker:!f,addTooltip:!t,defaultYExtents:!f,legendPosition:right,mode:stacked,scale:linear,setYExtents:!f,shareYAxis:!t,times:!(),yAxis:()),title:Hermes-Message-Received,type:histogram))"
+                        + "')),uiState:(vis:(legendOpen:!f)),vis:(aggs:!((enabled:!t,id:'1',params:(customLabel:%E6%B6%88%E6%81%AF%E7%94%9F%E4%BA%A7%E9%80%9F%E5%BA%A6%2F%E5%88%86%E9%92%9F),schema:metric,type:count),(enabled:!t,id:'2',params:(customInterval:'2h',customLabel:%E6%B6%88%E6%81%AF%E7%94%9F%E4%BA%A7%E7%BB%9F%E8%AE%A1%E6%97%B6%E6%AE%B5,extended_bounds:(),field:'@timestamp',interval:m,min_doc_count:1),schema:segment,type:date_histogram)),listeners:(),params:(addLegend:!t,addTimeMarker:!f,addTooltip:!t,defaultYExtents:!f,legendPosition:right,mode:stacked,scale:linear,setYExtents:!f,shareYAxis:!t,times:!(),yAxis:()),title:Hermes-Message-Saved,type:histogram))"
         return $sce.trustAsResourceUrl(url);
 };
 
