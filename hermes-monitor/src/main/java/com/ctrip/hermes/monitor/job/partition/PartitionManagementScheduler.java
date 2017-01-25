@@ -20,6 +20,7 @@ import com.ctrip.hermes.admin.core.monitor.event.MonitorEvent;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.config.PartitionCheckerConfig;
 import com.ctrip.hermes.monitor.job.partition.PartitionManagementJob.PartitionCheckerResult;
 
 @Component
@@ -32,6 +33,9 @@ public class PartitionManagementScheduler {
 
 	@Autowired
 	private MonitorConfig m_config;
+
+	@Autowired
+	private PartitionCheckerConfig m_partitionCheckerConfig;
 
 	private MonitorEventDao m_monitorEventDao = PlexusComponentLocator.lookup(MonitorEventDao.class);
 
@@ -115,6 +119,7 @@ public class PartitionManagementScheduler {
 		log.info("-----------------------------------------------------------------");
 		log.info("Starting partition management job ...");
 		log.info("Partition management job class name: {}", getClass().getName());
+		m_partitionCheckerConfig.printPartitionConfigs();
 		log.info("-----------------------------------------------------------------");
 	}
 

@@ -16,7 +16,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unidal.tuple.Pair;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.ctrip.hermes.admin.core.monitor.event.PartitionInformationEvent;
 import com.ctrip.hermes.admin.core.queue.PartitionInfo;
 import com.ctrip.hermes.admin.core.queue.TableContext;
@@ -37,14 +34,13 @@ import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.monitor.checker.CheckerResult;
 import com.ctrip.hermes.monitor.checker.exception.CompositeException;
-import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.config.PartitionCheckerConfig;
 import com.ctrip.hermes.monitor.job.partition.context.AbandonedTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.DeadLetterTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.ResendTableContext;
 import com.ctrip.hermes.monitor.service.PartitionService;
 import com.ctrip.hermes.monitor.utils.MonitorUtils;
-import com.ctrip.hermes.monitor.utils.MonitorUtils.Matcher;
 
 import io.netty.util.internal.ConcurrentSet;
 
@@ -63,7 +59,7 @@ public class PartitionManagementJob {
 	private PartitionService m_partitionService;
 
 	@Autowired
-	private MonitorConfig m_config;
+	private PartitionCheckerConfig m_config;
 
 	public static class PartitionCheckerResult {
 		private CheckerResult m_partitionInfo;
@@ -92,14 +88,13 @@ public class PartitionManagementJob {
 		ExecutorService executor = null;
 		try {
 			Meta meta = fetchMeta();
-			Map<String, Integer> limits = parseLimits(meta);
 			Map<Datasource, Map<String, Pair<Datasource, List<PartitionInfo>>>> pInfos = getPartitionInfosFromMeta(meta);
 			executor = Executors.newFixedThreadPool(pInfos.size());
 			CountDownLatch latch = new CountDownLatch(pInfos.size());
 			try {
 				for (Map.Entry<Datasource, Map<String, Pair<Datasource, List<PartitionInfo>>>> entry : pInfos.entrySet()) {
 					sortPartitionsInOrdinal(entry.getValue());
-					List<TableContext> tableContexts = createTableContexts(entry.getKey(), meta, entry.getValue(), limits);
+					List<TableContext> tableContexts = createTableContexts(entry.getKey(), meta, entry.getValue());
 					executor.execute(new DatasourcePartitionJob(latch, partitionCheckerResults, tableContexts));
 				}
 			} finally {
@@ -211,48 +206,11 @@ public class PartitionManagementJob {
 		return table2PartitionInfos;
 	}
 
-	private Map<String, Integer> parseLimits(Meta meta) {
-		Map<String, Integer> limits = new HashMap<String, Integer>();
-
-		Map<String, Integer> includes = JSON.parseObject(m_config.getPartitionRetainInHour(),
-		      new TypeReference<Map<String, Integer>>() {
-		      });
-		Set<String> excludes = JSON.parseObject(m_config.getPartitionCheckerExcludeTopics(),
-		      new TypeReference<Set<String>>() {
-		      });
-		log.info("***** Partition manager config, include: {}", includes);
-		log.info("***** Partition manager config, exclude: {}", excludes);
-		if (includes.containsKey(".*")) {
-			for (Entry<String, Topic> entry : findTopics(".*", meta)) {
-				if (!excludes.contains(entry.getValue().getName())) {
-					limits.put(entry.getValue().getName(), includes.get(".*"));
-				}
-			}
-		}
-		for (Entry<String, Integer> item : includes.entrySet()) {
-			if (!item.getKey().equals(".*") && item.getValue() > 0) {
-				for (Entry<String, Topic> entry : findTopics(item.getKey(), meta)) {
-					limits.put(entry.getValue().getName(), item.getValue());
-				}
-			}
-		}
-		log.info("**** Partition manager config, effective: {}", limits.keySet());
-		return limits;
-	}
-
-	private List<Entry<String, Topic>> findTopics(final String pattern, Meta meta) {
-		return MonitorUtils.findMatched(meta.getTopics().entrySet(), new Matcher<Entry<String, Topic>>() {
-			@Override
-			public boolean match(Entry<String, Topic> obj) {
-				return Pattern.matches(pattern, obj.getKey());
-			}
-		});
-	}
-
 	private void addMessageTableContext(Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, //
-	      Topic topic, Partition partition, int priority, int retain, List<TableContext> contexts) {
+	      Topic topic, Partition partition, int priority, List<TableContext> contexts) {
 		MessageTableContext ctx = new MessageTableContext(topic, partition, priority, //
-		      retain, m_config.getPartitionWatermarkInDay(), m_config.getPartitionIncrementInDay());
+		      m_config.getRetentionHour(topic.getName()), m_config.getPreAllocateLimitlineInDay(),
+		      m_config.getPreAllocateSizeInDay());
 		Pair<Datasource, List<PartitionInfo>> pair = partitions.get(ctx.getTableName());
 		if (pair != null) {
 			contexts.add(ctx.setPartitionInfos(pair.getValue()).setDatasource(pair.getKey()));
@@ -260,9 +218,10 @@ public class PartitionManagementJob {
 	}
 
 	private void addResendTableContext(Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, //
-	      Topic topic, Partition partition, ConsumerGroup consumer, int retain, List<TableContext> contexts) {
+	      Topic topic, Partition partition, ConsumerGroup consumer, List<TableContext> contexts) {
 		ResendTableContext ctx = new ResendTableContext(topic, partition, consumer, //
-		      retain, m_config.getPartitionWatermarkInDay(), m_config.getPartitionIncrementInDay());
+		      m_config.getRetentionHour(topic.getName()), m_config.getPreAllocateLimitlineInDay(),
+		      m_config.getPreAllocateSizeInDay());
 		Pair<Datasource, List<PartitionInfo>> pair = partitions.get(ctx.getTableName());
 		if (pair != null) {
 			contexts.add(ctx.setPartitionInfos(pair.getValue()).setDatasource(pair.getKey()));
@@ -270,9 +229,10 @@ public class PartitionManagementJob {
 	}
 
 	private void addDeadLetterTableContext(Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, //
-	      Topic topic, Partition partition, int retain, List<TableContext> contexts) {
+	      Topic topic, Partition partition, List<TableContext> contexts) {
 		DeadLetterTableContext ctx = new DeadLetterTableContext(topic, partition, //
-		      retain, m_config.getPartitionWatermarkInDay(), m_config.getPartitionIncrementInDay());
+		      m_config.getRetentionHour(topic.getName()) * 5, m_config.getPreAllocateLimitlineInDay(),
+		      m_config.getPreAllocateSizeInDay());
 		Pair<Datasource, List<PartitionInfo>> pair = partitions.get(ctx.getTableName());
 		if (pair != null) {
 			contexts.add(ctx.setPartitionInfos(pair.getValue()).setDatasource(pair.getKey()));
@@ -280,7 +240,7 @@ public class PartitionManagementJob {
 	}
 
 	private List<TableContext> createTableContexts(Datasource datasource, Meta meta,
-	      Map<String, Pair<Datasource, List<PartitionInfo>>> partitions, Map<String, Integer> topicRetainHours) {
+	      Map<String, Pair<Datasource, List<PartitionInfo>>> partitions) {
 		List<TableContext> ctxes = new ArrayList<TableContext>();
 		Map<Long, Topic> id2topics = new HashMap<>();
 		for (Topic topic : meta.getTopics().values()) {
@@ -290,15 +250,14 @@ public class PartitionManagementJob {
 		addAbandonedHermesTables(meta, datasource, id2topics, ctxes, partitions);
 
 		for (Topic topic : meta.getTopics().values()) {
-			if (topicRetainHours.containsKey(topic.getName())) {
-				int retain = topicRetainHours.get(topic.getName());
+			if (!m_config.isTopicExcluded(topic.getName())) {
 				for (Partition partition : topic.getPartitions()) {
 					if (isTopicPartitionActive(meta, datasource, id2topics, topic.getId(), partition.getId())) {
-						addMessageTableContext(partitions, topic, partition, 0, retain, ctxes);
-						addMessageTableContext(partitions, topic, partition, 1, retain, ctxes);
-						addDeadLetterTableContext(partitions, topic, partition, retain * 5, ctxes);
+						addMessageTableContext(partitions, topic, partition, 0, ctxes);
+						addMessageTableContext(partitions, topic, partition, 1, ctxes);
+						addDeadLetterTableContext(partitions, topic, partition, ctxes);
 						for (ConsumerGroup consumer : topic.getConsumerGroups()) {
-							addResendTableContext(partitions, topic, partition, consumer, retain, ctxes);
+							addResendTableContext(partitions, topic, partition, consumer, ctxes);
 						}
 					}
 				}

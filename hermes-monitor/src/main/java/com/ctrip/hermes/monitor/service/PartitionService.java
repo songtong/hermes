@@ -21,7 +21,7 @@ import com.ctrip.hermes.admin.core.queue.PartitionInfo;
 import com.ctrip.hermes.admin.core.queue.TableContext;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.monitor.checker.mysql.dal.ds.DataSourceManager;
-import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.config.PartitionCheckerConfig;
 import com.ctrip.hermes.monitor.job.partition.context.AbandonedTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.DeadLetterTableContext;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
@@ -42,7 +42,7 @@ public class PartitionService {
 	private DataSourceManager m_dsManager;
 
 	@Autowired
-	private MonitorConfig m_config;
+	private PartitionCheckerConfig m_config;
 
 	public boolean isHermesTable(String tableName) {
 		return MessageTableContext.isMessageTable(tableName) //
@@ -54,7 +54,7 @@ public class PartitionService {
 		if (ctx instanceof AbandonedTableContext && isHermesTable(ctx.getTableName())) {
 			log.warn("Hermes table [{}] of datasource [{}] is abandoned, ready to drop it.",//
 			      ctx.getTableName(), ctx.getDatasource().getProperties().get("url").getValue());
-			if (m_config.isPartitionServiceDropTableEnable()) {
+			if (m_config.isDropUnusedTableEnabled()) {
 				String sql = String.format("drop table %s;", ctx.getTableName());
 				log.warn("Drop table sql: {}", sql);
 				executeSQL(ctx.getDatasource(), sql);
@@ -138,7 +138,7 @@ public class PartitionService {
 	}
 
 	public boolean executeSQL(Datasource ds, String sql) throws Exception {
-		if (m_config.isPartitionServiceEnable()) {
+		if (m_config.isPartitionServiceEnabled()) {
 			Statement stat = null;
 			Connection conn = null;
 			try {
@@ -200,9 +200,6 @@ public class PartitionService {
 		PropertiesDef def = new PropertiesDef();
 		String url = ds.getProperties().get("url").getValue();
 		url = forSchemaInfo ? wrapperJdbcUrl(url) : url;
-		if (forSchemaInfo) {
-			log.info("Wrap ds url [{}] to [{}]", ds.getProperties().get("url").getValue(), url);
-		}
 
 		def.setUrl(url);
 		def.setDriver("com.mysql.jdbc.Driver");
