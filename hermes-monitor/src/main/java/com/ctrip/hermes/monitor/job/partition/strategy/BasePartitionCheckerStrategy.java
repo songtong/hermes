@@ -108,7 +108,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 				break;
 			}
 			PartitionInfo p = ps.get(idx);
-			CreationStamp stamp = getCreationStampFinder().findSpecific(ctx, p.getUpperbound() - 1);
+			CreationStamp stamp = getCreationStampFinder().findNearest(ctx, p.getUpperbound() - 1);
 			if (stamp != null && //
 			      stamp.getDate().getTime() < System.currentTimeMillis() - TimeUnit.HOURS.toMillis(ctx.getRetainInHour())) {
 				list.add(p);
@@ -202,7 +202,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 	      TableContext ctx, List<PartitionInfo> ps, CreationStamp oldest, CreationStamp latest) {
 		final long _1DayMillis = TimeUnit.DAYS.toMillis(1);
 		oldest = ps.get(0).getOrdinal() == 1 ? oldest : //
-		      getCreationStampFinder().findSpecific(ctx, ps.get(0).getUpperbound() - ps.get(0).getRows());
+		      getCreationStampFinder().findNearest(ctx, ps.get(0).getUpperbound() - ps.get(0).getRows());
 		if (oldest != null && latest != null) {
 			long period = latest.getDate().getTime() - oldest.getDate().getTime();
 			period = Math.max(1, period);

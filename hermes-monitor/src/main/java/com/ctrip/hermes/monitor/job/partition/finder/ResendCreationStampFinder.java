@@ -55,16 +55,16 @@ public class ResendCreationStampFinder implements CreationStampFinder {
 	}
 
 	@Override
-	public CreationStamp findSpecific(TableContext sCtx, long id) {
+	public CreationStamp findNearest(TableContext sCtx, long id) {
 		ResendTableContext ctx = (ResendTableContext) sCtx;
 		try {
-			ResendGroupId msg = m_dao.findByPK(id, ctx.getTopic().getName(), ctx.getPartition().getId(), //
-			      ctx.getConsumer().getId(), ResendGroupIdEntity.READSET_CREATE_DATE);
+			ResendGroupId msg = m_dao.findNearest(ctx.getTopic().getName(), ctx.getPartition().getId(), ctx.getConsumer()
+			      .getId(), id, ResendGroupIdEntity.READSET_CREATE_DATE);
 			if (msg != null) {
 				return new CreationStamp(msg.getId(), msg.getCreationDate());
 			}
 		} catch (DalException e) {
-			log.debug("Find specific id [{}] resend group failed: {}", id, ctx, e);
+			log.debug("Find nearest id [{}] resend group failed: {}", id, ctx, e);
 		}
 		return null;
 	}

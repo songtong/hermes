@@ -52,22 +52,23 @@ public class DeadLetterCreationStampFinder implements CreationStampFinder {
 				return new CreationStamp(msg.getId(), msg.getCreationDate());
 			}
 		} catch (DalException e) {
-			log.debug("Find oldest message priority failed: {}", ctx, e);
+			log.debug("Find oldest dead letter failed: {}", ctx, e);
 		}
 		return null;
 	}
 
 	@Override
-	public CreationStamp findSpecific(TableContext ctx, long id) {
+	public CreationStamp findNearest(TableContext ctx, long id) {
 		Topic topic = ((DeadLetterTableContext) ctx).getTopic();
 		Partition partition = ((DeadLetterTableContext) ctx).getPartition();
 		try {
-			DeadLetter msg = m_dao.findByPK(id, topic.getName(), partition.getId(), DeadLetterEntity.READSET_CREATE_DATE);
+			DeadLetter msg = m_dao.findNearest(topic.getName(), partition.getId(), id,
+			      DeadLetterEntity.READSET_CREATE_DATE);
 			if (msg != null) {
 				return new CreationStamp(msg.getId(), msg.getCreationDate());
 			}
 		} catch (DalException e) {
-			log.debug("Find specific id [{}] message priority failed: {}", id, ctx, e);
+			log.debug("Find nearest id [{}] dead letter failed: {}", id, ctx, e);
 		}
 		return null;
 	}
