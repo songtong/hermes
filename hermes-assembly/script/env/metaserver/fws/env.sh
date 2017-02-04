@@ -12,13 +12,27 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dtomcat.log=$LOG_PATH/tomcat \
             -Xms4g \
             -Xmx4g \
+            -Xmn3g \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
-            -XX:+PrintGC \
             -XX:+PrintGCDetails \
             -XX:+PrintGCDateStamps \
+            -XX:+PrintReferenceGC \
             -Xloggc:$LOG_PATH/gc.log \
             -XX:-OmitStackTraceInFastThrow \
+            -XX:ParallelGCThreads=2 \
+            -XX:SurvivorRatio=8 \
+            -XX:-UseAdaptiveSizePolicy \
+            -XX:+UseParNewGC \
+            -XX:+UseConcMarkSweepGC \
+            -XX:+UseCMSInitiatingOccupancyOnly \
+            -XX:+ScavengeBeforeFullGC \
+            -XX:+CMSParallelRemarkEnabled \
+            -XX:CMSInitiatingOccupancyFraction=80 \
+            -XX:+CMSClassUnloadingEnabled \
+            -XX:+CMSScavengeBeforeRemark \
+            -XX:+ExplicitGCInvokesConcurrent \
+            -XX:ParallelCMSThreads=2 \
             -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$LOG_PATH
             "
 export JAVA_OPTS=${JAVA_OPTS}

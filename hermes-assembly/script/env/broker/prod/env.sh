@@ -8,19 +8,37 @@ APP_ID=100003804
 # set jvm startup argument
 JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dfile.encoding=utf-8 \
-            -Xms13g \
-            -Xmx13g \
-            -Xmn9g \
+            -Xms15g \
+            -Xmx15g \
+            -Xmn10g \
             -Dtomcat.log=$LOG_PATH/tomcat \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
-            -XX:MaxDirectMemorySize=5g \
-            -XX:+PrintGC \
+            -XX:MaxDirectMemorySize=4g \
             -XX:+PrintGCDetails \
             -XX:+PrintGCDateStamps \
+            -XX:+PrintReferenceGC \
             -Xloggc:$LOG_PATH/gc.log \
             -XX:-OmitStackTraceInFastThrow \
-            -XX:SurvivorRatio=7 \
+            -XX:ParallelGCThreads=4 \
+            -XX:SurvivorRatio=8 \
+            -XX:-UseAdaptiveSizePolicy \
+            -XX:+UseParNewGC \
+            -XX:+UseConcMarkSweepGC \
+            -XX:+UseCMSInitiatingOccupancyOnly \
+            -XX:+ScavengeBeforeFullGC \
+            -XX:+CMSParallelRemarkEnabled \
+            -XX:CMSInitiatingOccupancyFraction=80 \
+            -XX:+CMSClassUnloadingEnabled \
+            -XX:+CMSScavengeBeforeRemark \
+            -XX:+ExplicitGCInvokesConcurrent \
+            -XX:ParallelCMSThreads=8 \
+            -Dcom.mchange.v2.log.MLog=com.mchange.v2.log.FallbackMLog \
+            -Dcom.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL=WARNING \
+            -Dmysql.initialReusablePacketSize=2621440 \
+            -Dmysql.initialSharedSendPacketSize=2621440 \
+            -Dmysql.maxSharedSendPacketSize=2621440 \
+            -Dmysql.maxReuseablePacketSize=2621440 \
             -XX:+UnlockCommercialFeatures \
             -XX:+FlightRecorder \
             -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$LOG_PATH

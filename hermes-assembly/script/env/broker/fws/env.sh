@@ -14,20 +14,31 @@ JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true \
             -Dtomcat.log=$LOG_PATH/tomcat \
             -XX:PermSize=256m \
             -XX:MaxPermSize=256m \
-            -XX:MaxDirectMemorySize=2g \
-            -XX:+PrintGC \
+            -XX:MaxDirectMemorySize=1g \
             -XX:+PrintGCDetails \
             -XX:+PrintGCDateStamps \
+            -XX:+PrintReferenceGC \
             -Xloggc:$LOG_PATH/gc.log \
             -XX:-OmitStackTraceInFastThrow \
-            -XX:SurvivorRatio=4 \
+            -XX:ParallelGCThreads=1 \
+            -XX:SurvivorRatio=8 \
             -XX:-UseAdaptiveSizePolicy \
+            -XX:+UseParNewGC \
+            -XX:+UseConcMarkSweepGC \
+            -XX:+UseCMSInitiatingOccupancyOnly \
+            -XX:+ScavengeBeforeFullGC \
+            -XX:+CMSParallelRemarkEnabled \
+            -XX:CMSInitiatingOccupancyFraction=80 \
+            -XX:+CMSClassUnloadingEnabled \
+            -XX:+CMSScavengeBeforeRemark \
+            -XX:+ExplicitGCInvokesConcurrent \
+            -XX:ParallelCMSThreads=2 \
             -Dcom.mchange.v2.log.MLog=com.mchange.v2.log.FallbackMLog \
             -Dcom.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL=WARNING \
-            -Dmysql.initialReusablePacketSize=102400 \
-            -Dmysql.initialSharedSendPacketSize=102400 \
-            -Dmysql.maxSharedSendPacketSize=102400 \
-            -Dmysql.maxReuseablePacketSize=102400 \
+            -Dmysql.initialReusablePacketSize=1048576 \
+            -Dmysql.initialSharedSendPacketSize=1048576 \
+            -Dmysql.maxSharedSendPacketSize=1048576 \
+            -Dmysql.maxReuseablePacketSize=1048576 \
             -XX:+UnlockCommercialFeatures \
             -XX:+FlightRecorder \
             -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$LOG_PATH
