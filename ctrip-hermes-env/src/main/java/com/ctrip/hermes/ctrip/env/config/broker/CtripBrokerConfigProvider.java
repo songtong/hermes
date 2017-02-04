@@ -61,8 +61,6 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final String DEFAULT_KEY = "_default_";
 
-	private static final String ACK_FLUSH_THREAD_COUNT = "ack.flush.thread.count";
-
 	private static final String ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS = "ack.flush.selector.safe.trigger.interval.millis";
 
 	private static final String ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS = "ack.flush.selector.safe.trigger.triggering.offset.deltas";
@@ -113,8 +111,6 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private static final int DEFAULT_FLUSH_MESSAGE_LIMITS = 1000;
 
 	private static final boolean DEFAULT_FLUSH_MESSAGE_LIMIT_DYNAMIC_ADJUST = false;
-
-	private static final int DEFAULT_ACK_FLUSH_THREAD_COUNT = 5;
 
 	private static final long DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS = 25;
 
@@ -174,8 +170,6 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private AtomicReference<Map<String, Integer>> m_topicsFlushCountLimits = new AtomicReference<Map<String, Integer>>();
 
 	private AtomicReference<Map<String, Boolean>> m_topicsFlushLimitDynamicAdjustSwitches = new AtomicReference<Map<String, Boolean>>();
-
-	private int m_ackFlushThreadCount;
 
 	private volatile long m_ackFlushSelectorSafeTriggerIntervalMillis = DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS;
 
@@ -274,7 +268,6 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private void initAckFlusherConfigs() {
 		Config config = ConfigService.getAppConfig();
 		if (config != null) {
-			m_ackFlushThreadCount = config.getIntProperty(ACK_FLUSH_THREAD_COUNT, DEFAULT_ACK_FLUSH_THREAD_COUNT);
 			m_ackFlushSelectorSafeTriggerIntervalMillis = config
 			      .getLongProperty(ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS,
 			            DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS);
@@ -971,11 +964,6 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 		} else {
 			return limit;
 		}
-	}
-
-	@Override
-	public int getAckFlushThreadCount() {
-		return m_ackFlushThreadCount;
 	}
 
 	@Override

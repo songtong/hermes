@@ -1,6 +1,5 @@
 package com.ctrip.hermes.broker.queue.storage.mysql.ack;
 
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -18,8 +17,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.dal.jdbc.DalException;
-import org.unidal.dal.jdbc.DalRuntimeException;
 import org.unidal.dal.jdbc.datasource.DataSource;
 import org.unidal.dal.jdbc.datasource.DataSourceManager;
 import org.unidal.lookup.annotation.Inject;
@@ -52,8 +49,6 @@ public class DefaultMySQLMessageAckFlusher implements MySQLMessageAckFlusher {
 	private static final Logger log = LoggerFactory.getLogger(DefaultMySQLMessageAckFlusher.class);
 
 	private static final ExpireTimeHolder NEVER_EXPIRE_TIME_HOLDER = new FixedExpireTimeHolder(Long.MAX_VALUE);
-
-	private static final int MAX_DS_CONNETION_TIMEOUT_TRIES = 2;
 
 	private static final Comparator<OffsetMessage> OFFSET_MESSAGE_COMPARATOR = new Comparator<OffsetMessage>() {
 		@Override
@@ -328,50 +323,21 @@ public class DefaultMySQLMessageAckFlusher implements MySQLMessageAckFlusher {
 		}
 
 		private Connection getConnection(String datasourceName) throws Exception {
-			int remains = MAX_DS_CONNETION_TIMEOUT_TRIES;
-			Exception error = null;
-			while (!Thread.interrupted() && remains-- > 0) {
-				try {
-					DataSource ds = m_dataSourceManager.getDataSource(datasourceName);
-					Connection conn = ds.getConnection();
-					if (conn != null) {
-						conn.setAutoCommit(true);
-						return conn;
-					}
-				} catch (Exception e) {
-					error = e;
-					if (isCheckoutTimeout(e)) {
-						log.error("Checkout connection(for flushing ack to {}) timeout, remaining retries: {}.", datasourceName, remains, e);
-						continue;
-					} else {
-						log.error("Checkout connection(for flushing ack to {}) failed.", datasourceName, e);
-						break;
-					}
+			try {
+				DataSource ds = m_dataSourceManager.getDataSource(datasourceName);
+				Connection conn = ds.getConnection();
+				if (conn != null) {
+					conn.setAutoCommit(true);
 				}
-			}
-			if (error != null) {
-				throw error;
-			}
-			return null;
-		}
-
-		private boolean isCheckoutTimeout(Exception e) {
-			if (e instanceof InvocationTargetException) {
-				InvocationTargetException ite = (InvocationTargetException) e;
-				if (ite.getTargetException() instanceof DalException) {
-					DalException de = (DalException) ite.getTargetException();
-					if (de.getCause() instanceof DalRuntimeException) {
-						DalRuntimeException dre = (DalRuntimeException) de.getCause();
-						if (dre.getCause() instanceof SQLException) {
-							SQLException se = (SQLException) dre.getCause();
-							if (se.getCause() instanceof TimeoutException) {
-								return true;
-							}
-						}
-					}
+				return conn;
+			} catch (Exception e) {
+				if (e instanceof SQLException && e.getCause() instanceof TimeoutException) {
+					log.error("Checkout connection(for flushing ack to {}) timeout.", datasourceName);
+				} else {
+					log.error("Checkout connection(for flushing ack to {}) failed.", datasourceName);
 				}
+				throw e;
 			}
-			return false;
 		}
 
 		private String generateOffsetMessageUpdateSQL(OffsetMessage offsetMessage) {
