@@ -28,6 +28,7 @@ import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 import org.unidal.tuple.Triple;
 
+import com.ctrip.hermes.broker.biz.logger.BrokerFileBizLogger;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetter;
 import com.ctrip.hermes.broker.dal.hermes.DeadLetterDao;
 import com.ctrip.hermes.broker.dal.hermes.MessagePriority;
@@ -55,7 +56,6 @@ import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
@@ -89,7 +89,7 @@ public class MySQLMessageQueueStorage implements MessageQueueStorage, Initializa
 	private static final Logger log = LoggerFactory.getLogger(MySQLMessageQueueStorage.class);
 
 	@Inject
-	private FileBizLogger m_bizLogger;
+	private BrokerFileBizLogger m_bizLogger;
 
 	@Inject
 	private MessageCodec m_messageCodec;

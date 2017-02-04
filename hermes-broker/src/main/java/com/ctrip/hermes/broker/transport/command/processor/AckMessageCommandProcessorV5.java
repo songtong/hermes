@@ -1,7 +1,5 @@
 package com.ctrip.hermes.broker.transport.command.processor;
 
-import io.netty.channel.Channel;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -9,6 +7,7 @@ import java.util.List;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.broker.biz.logger.BrokerFileBizLogger;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.AckMessagesTask;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
@@ -16,7 +15,6 @@ import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.ChannelUtils;
@@ -30,6 +28,8 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
 import com.ctrip.hermes.env.config.broker.BrokerConfigProvider;
 import com.ctrip.hermes.meta.entity.Endpoint;
 
+import io.netty.channel.Channel;
+
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
@@ -38,7 +38,7 @@ import com.ctrip.hermes.meta.entity.Endpoint;
 public class AckMessageCommandProcessorV5 implements CommandProcessor {
 
 	@Inject
-	private FileBizLogger m_bizLogger;
+	private BrokerFileBizLogger m_bizLogger;
 
 	@Inject
 	private MessageQueueManager m_messageQueueManager;

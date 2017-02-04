@@ -18,11 +18,11 @@ import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalRuntimeException;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.broker.biz.logger.BrokerFileBizLogger;
 import com.ctrip.hermes.broker.queue.storage.MessageQueueStorage;
 import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.transport.command.MessageBatchWithRawData;
@@ -52,7 +52,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 
 	private static MessageBatchAndResultTransformer m_messageBatchAndResultTransformer = new MessageBatchAndResultTransformer();
 
-	protected FileBizLogger m_bizLogger;
+	protected BrokerFileBizLogger m_bizLogger;
 
 	private String m_topic;
 
@@ -68,7 +68,7 @@ public class DefaultMessageQueueFlusher implements MessageQueueFlusher {
 		m_topic = topic;
 		m_partition = partition;
 		m_storage = storage;
-		m_bizLogger = PlexusComponentLocator.lookup(FileBizLogger.class);
+		m_bizLogger = PlexusComponentLocator.lookup(BrokerFileBizLogger.class);
 		m_metaService = metaService;
 	}
 

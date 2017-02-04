@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.broker.biz.logger.BrokerFileBizLogger;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
@@ -19,7 +20,6 @@ import com.ctrip.hermes.core.bo.SendMessageResult;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.lease.Lease;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.PartialDecodedMessage;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -52,7 +52,7 @@ public class SendMessageCommandProcessorV6 implements CommandProcessor {
 	private static final Logger log = LoggerFactory.getLogger(SendMessageCommandProcessorV6.class);
 
 	@Inject
-	private FileBizLogger m_bizLogger;
+	private BrokerFileBizLogger m_bizLogger;
 
 	@Inject
 	private MessageQueueManager m_queueManager;

@@ -10,6 +10,7 @@ import org.unidal.initialization.ModuleManager;
 import org.unidal.lookup.configuration.Component;
 
 import com.ctrip.hermes.broker.HermesBrokerModule;
+import com.ctrip.hermes.broker.biz.logger.BrokerFileBizLogger;
 import com.ctrip.hermes.broker.bootstrap.DefaultBrokerBootstrap;
 import com.ctrip.hermes.broker.lease.BrokerLeaseContainer;
 import com.ctrip.hermes.broker.lease.BrokerLeaseManager;
@@ -52,7 +53,6 @@ import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandPro
 import com.ctrip.hermes.broker.transport.command.processor.SendMessageCommandProcessorV6;
 import com.ctrip.hermes.broker.zk.ZKClient;
 import com.ctrip.hermes.broker.zk.ZKConfig;
-import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.meta.manual.ManualConfigService;
 import com.ctrip.hermes.core.service.SystemClockService;
@@ -74,11 +74,13 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(BrokerManualConfigFetcher.class));
 
+		all.add(A(BrokerFileBizLogger.class));
+
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_SEND.toString(), SendMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfigProvider.class)//
-		      .req(FileBizLogger.class)//
+		      .req(BrokerFileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
 		);
@@ -86,7 +88,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfigProvider.class)//
-		      .req(FileBizLogger.class)//
+		      .req(BrokerFileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
 		);
@@ -94,7 +96,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfigProvider.class)//
-		      .req(FileBizLogger.class)//
+		      .req(BrokerFileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
 		);
@@ -102,7 +104,7 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		      .req(MessageQueueManager.class)//
 		      .req(BrokerLeaseContainer.class)//
 		      .req(BrokerConfigProvider.class)//
-		      .req(FileBizLogger.class)//
+		      .req(BrokerFileBizLogger.class)//
 		      .req(MetaService.class)//
 		      .req(SystemClockService.class)//
 		);
@@ -138,24 +140,24 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK.toString(), AckMessageCommandProcessor.class)//
 		      .req(MessageQueueManager.class)//
-		      .req(FileBizLogger.class) //
+		      .req(BrokerFileBizLogger.class) //
 		      .req(MetaService.class) //
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK_V3.toString(), AckMessageCommandProcessorV3.class)//
 		      .req(MessageQueueManager.class)//
-		      .req(FileBizLogger.class) //
+		      .req(BrokerFileBizLogger.class) //
 		      .req(MetaService.class) //
 		      .req(SystemClockService.class) //
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK_V4.toString(), AckMessageCommandProcessorV4.class)//
 		      .req(MessageQueueManager.class)//
-		      .req(FileBizLogger.class) //
+		      .req(BrokerFileBizLogger.class) //
 		      .req(MetaService.class) //
 		      .req(SystemClockService.class) //
 		);
 		all.add(C(CommandProcessor.class, CommandType.MESSAGE_ACK_V5.toString(), AckMessageCommandProcessorV5.class)//
 		      .req(MessageQueueManager.class)//
-		      .req(FileBizLogger.class) //
+		      .req(BrokerFileBizLogger.class) //
 		      .req(BrokerLeaseContainer.class)//
 		      .req(MetaService.class) //
 		      .req(BrokerConfigProvider.class)//

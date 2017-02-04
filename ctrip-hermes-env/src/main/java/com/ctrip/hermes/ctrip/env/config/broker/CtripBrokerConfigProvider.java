@@ -71,6 +71,8 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final String ACK_FLUSH_DEFAULT_KEY = "__default__";
 
+	private static final String BIZ_LOGGER_ENABLED = "biz.logger.enabled";
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -119,6 +121,8 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private static final long DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS = 100;
 
 	private static final int DEFAULT_ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS = 50;
+
+	private static final boolean DEFAULT_BIZ_LOGGER_ENABLED = true;
 
 	private int m_filterTopicCacheSize = DEFAULT_FILTER_TOPIC_CACHE_SIZE;
 
@@ -184,6 +188,8 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	      new HashMap<String, Long>());
 
 	private volatile long m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltasDefault = DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS;
+
+	private volatile boolean m_bizLoggerEnabled = DEFAULT_BIZ_LOGGER_ENABLED;
 
 	public CtripBrokerConfigProvider() {
 		m_sessionId = System.getProperty("brokerId", UUID.randomUUID().toString());
@@ -261,6 +267,8 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 		initSendMessageSelector();
 		initPullMessageSelector();
+
+		initBizLoggerConfigs();
 	}
 
 	private void initAckFlusherConfigs() {
@@ -644,6 +652,26 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 		return null;
 	}
 
+	private void initBizLoggerConfigs() {
+		Config config = ConfigService.getAppConfig();
+		m_bizLoggerEnabled = !StringUtils.equals(config.getProperty(BIZ_LOGGER_ENABLED, ""), "false");
+		log.info("Config {} is {}", BIZ_LOGGER_ENABLED, m_bizLoggerEnabled);
+		config.addChangeListener(new ConfigChangeListener() {
+			@Override
+			public void onChange(ConfigChangeEvent changeEvent) {
+				if (changeEvent.changedKeys().contains(BIZ_LOGGER_ENABLED)) {
+					String newValue = changeEvent.getChange(BIZ_LOGGER_ENABLED).getNewValue();
+					try {
+						m_bizLoggerEnabled = !StringUtils.equals(newValue, "false");
+						log.info("Config {} changed to {}", BIZ_LOGGER_ENABLED, m_bizLoggerEnabled);
+					} catch (Exception e) {
+						log.error("Parse config({}) failed, new value: {}", BIZ_LOGGER_ENABLED, newValue);
+					}
+				}
+			}
+		});
+	}
+
 	public String getSessionId() {
 		return m_sessionId;
 	}
@@ -965,5 +993,10 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	public long getAckFlushSelectorSafeTriggerTriggeringOffsetDeltas(String topic) {
 		Long millis = m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltas.get().get(topic);
 		return millis == null ? m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltasDefault : millis;
+	}
+
+	@Override
+	public boolean isBizLoggerEnabled() {
+		return m_bizLoggerEnabled;
 	}
 }
