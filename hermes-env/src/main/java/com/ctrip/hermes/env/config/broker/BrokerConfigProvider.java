@@ -103,4 +103,6 @@ public interface BrokerConfigProvider {
 	public int getAckFlushSelectorNormalTriggeringOffsetDeltas(String topic);
 
 	public long getAckFlushSelectorSafeTriggerTriggeringOffsetDeltas(String topic);
+	
+	public boolean isBizLoggerEnabled();
 }

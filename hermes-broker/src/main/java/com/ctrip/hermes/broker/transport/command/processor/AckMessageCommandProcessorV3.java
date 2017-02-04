@@ -6,12 +6,12 @@ import java.util.List;
 
 import org.unidal.lookup.annotation.Inject;
 
+import com.ctrip.hermes.broker.biz.logger.BrokerFileBizLogger;
 import com.ctrip.hermes.broker.queue.AckMessagesTask;
 import com.ctrip.hermes.broker.queue.MessageQueueManager;
 import com.ctrip.hermes.core.bo.AckContext;
 import com.ctrip.hermes.core.bo.Tpp;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.service.SystemClockService;
 import com.ctrip.hermes.core.transport.command.CommandType;
@@ -29,7 +29,7 @@ import com.ctrip.hermes.core.utils.CollectionUtil;
 public class AckMessageCommandProcessorV3 implements CommandProcessor {
 
 	@Inject
-	private FileBizLogger m_bizLogger;
+	private BrokerFileBizLogger m_bizLogger;
 
 	@Inject
 	private MessageQueueManager m_messageQueueManager;

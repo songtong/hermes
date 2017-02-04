@@ -4,7 +4,6 @@
 package com.ctrip.hermes.broker.selector;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,6 @@ public class BizLogAnalyzer {
 
 	public static void main(String[] args) throws Exception {
 
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 		File biz = new File("/opt/logs/hermes-broker/biz.log");
 
 		List<String> lines = Files.readLines(biz, Charsets.UTF_8);
@@ -56,8 +54,8 @@ public class BizLogAnalyzer {
 			case "Message.Received":
 				Times times = new Times();
 				refKey2Times.put((String) map.get("refKey"), times);
-				times.bornTime = sdf.parse((String) map.get("bornTime")).getTime();
-				times.produceCmdRcv = sdf.parse((String) map.get("eventTime")).getTime();
+				times.bornTime = (long) map.get("bornTime");
+				times.produceCmdRcv = (long) map.get("eventTime");
 
 				break;
 
@@ -65,28 +63,28 @@ public class BizLogAnalyzer {
 				times = findTimesByRefKey((String) map.get("refKey"));
 				if (times != null) {
 					msgId2Times.put(getTppg(map), times);
-					times.transform = sdf.parse((String) map.get("eventTime")).getTime();
+					times.transform = (long) map.get("eventTime");
 				}
 				break;
 
 			case "Message.Saved":
 				times = findTimesByRefKey((String) map.get("refKey"));
 				if (times != null) {
-					times.save = sdf.parse((String) map.get("eventTime")).getTime();
+					times.save = (long) map.get("eventTime");
 				}
 				break;
 
 			case "Message.Delivered":
 				times = msgId2Times.get(getTppg(map));
 				if (times != null) {
-					times.deliver = sdf.parse((String) map.get("eventTime")).getTime();
+					times.deliver = (long) map.get("eventTime");
 				}
 				break;
 
 			case "Message.Acked":
 				times = msgId2Times.get(getTppg(map));
 				if (times != null) {
-					times.bizStart = sdf.parse((String) map.get("BizStart")).getTime();
+					times.bizStart = (long) map.get("BizStart");
 
 					long l1 = times.produceCmdRcv - times.bornTime;
 					long l2 = times.save - times.produceCmdRcv;

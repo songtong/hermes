@@ -13,6 +13,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.tuple.Pair;
 
+import com.ctrip.hermes.broker.biz.logger.BrokerFileBizLogger;
 import com.ctrip.hermes.broker.queue.MessageQueueCursor;
 import com.ctrip.hermes.broker.selector.PullMessageSelectorManager;
 import com.ctrip.hermes.broker.status.BrokerStatusMonitor;
@@ -21,7 +22,6 @@ import com.ctrip.hermes.core.bo.Tp;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.constants.CatConstants;
 import com.ctrip.hermes.core.log.BizEvent;
-import com.ctrip.hermes.core.log.FileBizLogger;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.DummyMessageMeta;
 import com.ctrip.hermes.core.message.TppConsumerMessageBatch.MessageMeta;
@@ -43,7 +43,7 @@ import com.dianping.cat.message.Transaction;
 public class DefaultLongPollingService extends AbstractLongPollingService implements Initializable {
 
 	@Inject
-	private FileBizLogger m_bizLogger;
+	private BrokerFileBizLogger m_bizLogger;
 
 	@Inject
 	private PullMessageSelectorManager selectorManager;
