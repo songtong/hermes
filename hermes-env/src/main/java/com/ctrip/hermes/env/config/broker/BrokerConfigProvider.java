@@ -96,8 +96,6 @@ public interface BrokerConfigProvider {
 
 	public boolean isMessageQueueFlushLimitDynamicAdjust(String topic);
 
-	public int getAckFlushThreadCount();
-
 	public long getAckFlushSelectorSafeTriggerIntervalMillis();
 
 	public int getAckFlushSelectorNormalTriggeringOffsetDeltas(String topic);
