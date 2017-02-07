@@ -57,6 +57,17 @@
 		        FROM <TABLE/>
 		        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
 			</query>
+			<query name="find-nearest" type="SELECT">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="priority" />
+				<param name="key-id" />
+				<statement><![CDATA[SELECT <FIELDS/>
+		        FROM <TABLE/>
+		        WHERE <FIELD name='id'/> <= ${key-id}
+				ORDER BY <FIELD name='id'/> DESC
+        		LIMIT 1]]></statement>
+			</query>
 			<query name="latest" type="SELECT" multiple="true">
 				<param name="topic" />
 				<param name="partition" />
@@ -202,6 +213,18 @@
 				<statement><![CDATA[SELECT <FIELDS/>
         		FROM <TABLE/>
         		WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+			</query>
+			<query name="find-nearest" type="SELECT">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="group-id" />
+				<param name="key-id" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='id'/> <= ${key-id} 
+        		ORDER BY <FIELD name='id'/> DESC
+				LIMIT 1
+        		]]></statement>
 			</query>
 			<query name="latest" type="SELECT" multiple="true">
 				<param name="topic" />
@@ -379,6 +402,17 @@
 				<statement><![CDATA[SELECT <FIELDS/>
         		FROM <TABLE/>
         		WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+			</query>
+			<query name="find-nearest" type="SELECT">
+				<param name="topic" />
+				<param name="partition" />
+				<param name="key-id" />
+				<statement><![CDATA[SELECT <FIELDS/>
+        		FROM <TABLE/>
+        		WHERE <FIELD name='id'/> <= ${key-id}
+        		ORDER BY <FIELD name='id'/> DESC
+        		LIMIT 1
+        		]]></statement>
 			</query>
 			<query name="latest" type="SELECT" multiple="true">
 				<param name="topic" />

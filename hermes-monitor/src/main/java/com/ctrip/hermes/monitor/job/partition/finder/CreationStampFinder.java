@@ -8,5 +8,5 @@ public interface CreationStampFinder {
 
 	public CreationStamp findOldest(TableContext ctx);
 
-	public CreationStamp findSpecific(TableContext ctx, long id);
+	public CreationStamp findNearest(TableContext ctx, long id);
 }

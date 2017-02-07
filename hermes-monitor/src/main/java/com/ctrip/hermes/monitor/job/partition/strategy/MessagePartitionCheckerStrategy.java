@@ -3,7 +3,7 @@ package com.ctrip.hermes.monitor.job.partition.strategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.config.PartitionCheckerConfig;
 import com.ctrip.hermes.monitor.job.partition.finder.CreationStampFinder;
 import com.ctrip.hermes.monitor.job.partition.finder.MessageCreationStampFinder;
 
@@ -13,7 +13,7 @@ public class MessagePartitionCheckerStrategy extends BasePartitionCheckerStrateg
 	private MessageCreationStampFinder m_finder;
 
 	@Autowired
-	private MonitorConfig m_config;
+	private PartitionCheckerConfig m_config;
 
 	@Override
 	protected CreationStampFinder getCreationStampFinder() {
@@ -21,7 +21,7 @@ public class MessagePartitionCheckerStrategy extends BasePartitionCheckerStrateg
 	}
 
 	@Override
-	protected MonitorConfig getConfig() {
+	protected PartitionCheckerConfig getConfig() {
 		return m_config;
 	}
 }

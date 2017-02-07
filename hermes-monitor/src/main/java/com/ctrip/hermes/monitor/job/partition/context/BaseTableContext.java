@@ -16,9 +16,9 @@ public abstract class BaseTableContext implements TableContext {
 
 	private List<PartitionInfo> m_partitionInfos;
 
-	private int m_retainInDay;
+	private int m_retainInHour;
 
-	private int m_watermarkInDay;
+	private int m_limitlineInDay;
 
 	private int m_incrementInDay;
 
@@ -29,8 +29,8 @@ public abstract class BaseTableContext implements TableContext {
 	public BaseTableContext(Topic topic, Partition partition, int retain, int watermark, int increment) {
 		m_topic = topic;
 		m_partition = partition;
-		m_retainInDay = retain;
-		m_watermarkInDay = watermark;
+		m_retainInHour = retain;
+		m_limitlineInDay = watermark;
 		m_incrementInDay = increment;
 	}
 
@@ -65,12 +65,12 @@ public abstract class BaseTableContext implements TableContext {
 
 	@Override
 	public int getRetainInHour() {
-		return m_retainInDay;
+		return m_retainInHour;
 	}
 
 	@Override
 	public int getWatermarkInDay() {
-		return m_watermarkInDay;
+		return m_limitlineInDay;
 	}
 
 	@Override
@@ -117,5 +117,12 @@ public abstract class BaseTableContext implements TableContext {
 		} else if (!m_topic.equals(other.m_topic))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "TableContext [topic=" + m_topic.getName() + ", partition=" + m_partition.getId() + ", retainInHour="
+		      + m_retainInHour + ", limitlineInDay=" + m_limitlineInDay + ", incrementInDay=" + m_incrementInDay
+		      + ", tableName=" + m_tableName + ", datasource=" + m_datasource.getId() + "]";
 	}
 }

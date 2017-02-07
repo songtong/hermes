@@ -55,16 +55,16 @@ public class MessageCreationStampFinder implements CreationStampFinder {
 	}
 
 	@Override
-	public CreationStamp findSpecific(TableContext ctx, long id) {
+	public CreationStamp findNearest(TableContext ctx, long id) {
 		Tpp tpp = ((MessageTableContext) ctx).getTpp();
 		try {
-			MessagePriority msg = m_dao.findByPK(id, //
-			      tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), MessagePriorityEntity.READSET_CREATE_DATE);
+			MessagePriority msg = m_dao.findNearest(tpp.getTopic(), tpp.getPartition(), tpp.getPriorityInt(), id,
+			      MessagePriorityEntity.READSET_CREATE_DATE);
 			if (msg != null) {
 				return new CreationStamp(msg.getId(), msg.getCreationDate());
 			}
 		} catch (DalException e) {
-			log.debug("Find specific id [{}] message priority failed: {}", id, ctx, e);
+			log.debug("Find nearest id [{}] message priority failed: {}", id, ctx, e);
 		}
 		return null;
 	}

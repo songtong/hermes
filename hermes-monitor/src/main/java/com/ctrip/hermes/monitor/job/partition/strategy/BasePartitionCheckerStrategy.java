@@ -11,7 +11,7 @@ import com.ctrip.hermes.admin.core.monitor.event.PartitionInformationEvent;
 import com.ctrip.hermes.admin.core.queue.CreationStamp;
 import com.ctrip.hermes.admin.core.queue.PartitionInfo;
 import com.ctrip.hermes.admin.core.queue.TableContext;
-import com.ctrip.hermes.monitor.config.MonitorConfig;
+import com.ctrip.hermes.monitor.config.PartitionCheckerConfig;
 import com.ctrip.hermes.monitor.job.partition.context.MessageTableContext;
 import com.ctrip.hermes.monitor.job.partition.finder.CreationStampFinder;
 
@@ -22,7 +22,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 
 	abstract protected CreationStampFinder getCreationStampFinder();
 
-	abstract protected MonitorConfig getConfig();
+	abstract protected PartitionCheckerConfig getConfig();
 
 	public AnalysisResult analysisTable(TableContext ctx) {
 		if (ctx == null) {
@@ -88,8 +88,8 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 	}
 
 	private int getPartitionIncrementStepByTableContext(TableContext ctx) {
-		return ctx instanceof MessageTableContext ? getConfig().getPartitionSizeIncrementStep() : //
-		      getConfig().getResendPartitionSizeIncrementStep();
+		int step = getConfig().getPartitionSizeIncreaseStep(ctx.getTopic().getName());
+		return ctx instanceof MessageTableContext ? step : step / 5;
 	}
 
 	private long getLatestCapacityPerPartition(TableContext ctx) {
@@ -108,7 +108,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 				break;
 			}
 			PartitionInfo p = ps.get(idx);
-			CreationStamp stamp = getCreationStampFinder().findSpecific(ctx, p.getUpperbound() - 1);
+			CreationStamp stamp = getCreationStampFinder().findNearest(ctx, p.getUpperbound() - 1);
 			if (stamp != null && //
 			      stamp.getDate().getTime() < System.currentTimeMillis() - TimeUnit.HOURS.toMillis(ctx.getRetainInHour())) {
 				list.add(p);
@@ -123,7 +123,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		List<PartitionInfo> list = new ArrayList<PartitionInfo>();
 		if (speed > 0) {
 			long incrementPartitionCount = ctx.getIncrementInDay() * speed / partitionSize + 1;
-			if (incrementPartitionCount > getConfig().getPartitionIncrementMaxCount()) {
+			if (incrementPartitionCount > getConfig().getPreAllocateMaxCount()) {
 				Pair<Long, Long> pair = renewPartitionSizeAndCount(ctx, ctx.getIncrementInDay() * speed,
 				      ctx.getIncrementInDay());
 				partitionSize = pair.getKey();
@@ -163,7 +163,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 		long capacityPerDay = capacityInCount / capacityInDay;
 		long step = getPartitionIncrementStepByTableContext(ctx);
 		long size = step;
-		while (size < getConfig().getPartitionMaxSize() && size < capacityPerDay) {
+		while (size < getConfig().getPartitionMaxSize(ctx.getTopic().getName()) && size < capacityPerDay) {
 			size += step;
 		}
 		return new Pair<Long, Long>(size, (long) Math.ceil(capacityInCount / (double) size));
@@ -202,7 +202,7 @@ public abstract class BasePartitionCheckerStrategy implements PartitionCheckerSt
 	      TableContext ctx, List<PartitionInfo> ps, CreationStamp oldest, CreationStamp latest) {
 		final long _1DayMillis = TimeUnit.DAYS.toMillis(1);
 		oldest = ps.get(0).getOrdinal() == 1 ? oldest : //
-		      getCreationStampFinder().findSpecific(ctx, ps.get(0).getUpperbound() - ps.get(0).getRows());
+		      getCreationStampFinder().findNearest(ctx, ps.get(0).getUpperbound() - ps.get(0).getRows());
 		if (oldest != null && latest != null) {
 			long period = latest.getDate().getTime() - oldest.getDate().getTime();
 			period = Math.max(1, period);
