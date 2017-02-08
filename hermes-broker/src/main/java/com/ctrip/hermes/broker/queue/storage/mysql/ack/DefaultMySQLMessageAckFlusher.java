@@ -227,7 +227,7 @@ public class DefaultMySQLMessageAckFlusher implements MySQLMessageAckFlusher {
 				for (Partition partition : topic.getPartitions()) {
 					DatasourceAckFlushTask dsTask = tasks.get(partition.getWriteDatasource());
 					if (dsTask == null) {
-						dsTask = new DatasourceAckFlushTask(partition.getWriteDatasource(), topic.getId());
+						dsTask = new DatasourceAckFlushTask(partition.getReadDatasource(), topic.getId());
 					}
 					for (ConsumerGroup consumer : topic.getConsumerGroups()) {
 						OffsetMessage priorityOffsetMessage = flushHolder.getMaxAndResetOffsetMessageHolder(new Triple<>(partition.getId(), true, consumer.getId()));
