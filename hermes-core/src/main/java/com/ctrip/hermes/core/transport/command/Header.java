@@ -72,7 +72,7 @@ public class Header implements Serializable {
 			throw new IllegalArgumentException("Command type can not be null.");
 		}
 		m_correlationId = codec.readLong();
-		m_properties = codec.readStringStringMapWithSharedBuffer();
+		m_properties = codec.readStringStringMap();
 	}
 
 	public void toBytes(ByteBuf buf) {
