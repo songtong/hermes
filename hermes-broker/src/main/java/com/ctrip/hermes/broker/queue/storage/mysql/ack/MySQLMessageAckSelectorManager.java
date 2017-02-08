@@ -1,6 +1,6 @@
 package com.ctrip.hermes.broker.queue.storage.mysql.ack;
 
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -39,8 +39,8 @@ public class MySQLMessageAckSelectorManager extends AbstractSelectorManager<Stri
 
 	@Override
 	public void initialize() throws InitializationException {
-		ThreadPoolExecutor flushExecutor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), HermesThreadFactory.create(
-		      "MySQLMessageAckFlushIOThread", true));
+		ThreadPoolExecutor flushExecutor = new ThreadPoolExecutor(m_config.getAckFlushThreadCount(), m_config.getAckFlushThreadCount(), 60, TimeUnit.SECONDS,
+		      new LinkedBlockingQueue<Runnable>(), HermesThreadFactory.create("MySQLMessageAckFlushIOThread", true));
 		flushExecutor.allowCoreThreadTimeOut(true);
 		m_selector = new DefaultSelector<>(flushExecutor, SLOT_COUNT, Long.MAX_VALUE, new NoOpOffsetLoader<String>(), InitialLastUpdateTime.NEWEST);
 
