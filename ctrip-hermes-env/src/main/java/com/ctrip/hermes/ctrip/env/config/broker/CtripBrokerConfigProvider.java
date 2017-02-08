@@ -71,6 +71,8 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final String BIZ_LOGGER_ENABLED = "biz.logger.enabled";
 
+	private static final String ACK_FLUSH_THREAD_COUNT = "ack.flush.thread.count";
+
 	@Inject
 	private ClientEnvironment m_env;
 
@@ -119,6 +121,8 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private static final int DEFAULT_ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS = 50;
 
 	private static final boolean DEFAULT_BIZ_LOGGER_ENABLED = true;
+
+	private static final int DEFAULT_ACK_FLUSH_THREAD_COUNT = 30;
 
 	private int m_filterTopicCacheSize = DEFAULT_FILTER_TOPIC_CACHE_SIZE;
 
@@ -184,6 +188,8 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private volatile long m_ackFlushSelectorSafeTriggerTriggeringOffsetDeltasDefault = DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS;
 
 	private volatile boolean m_bizLoggerEnabled = DEFAULT_BIZ_LOGGER_ENABLED;
+
+	private int m_ackFlushThreadCount;
 
 	public CtripBrokerConfigProvider() {
 		m_sessionId = System.getProperty("brokerId", UUID.randomUUID().toString());
@@ -268,6 +274,7 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	private void initAckFlusherConfigs() {
 		Config config = ConfigService.getAppConfig();
 		if (config != null) {
+			m_ackFlushThreadCount = config.getIntProperty(ACK_FLUSH_THREAD_COUNT, DEFAULT_ACK_FLUSH_THREAD_COUNT);
 			m_ackFlushSelectorSafeTriggerIntervalMillis = config
 			      .getLongProperty(ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS,
 			            DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS);
@@ -986,5 +993,10 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 	@Override
 	public boolean isBizLoggerEnabled() {
 		return m_bizLoggerEnabled;
+	}
+
+	@Override
+	public int getAckFlushThreadCount() {
+		return m_ackFlushThreadCount;
 	}
 }
