@@ -21,6 +21,7 @@ import org.unidal.net.Networks;
 import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
+import com.ctrip.hermes.core.bo.ClientMeta;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.meta.entity.Endpoint;
@@ -83,10 +84,13 @@ public class MetaHolder implements Initializable {
 
 		private String m_jsonStringComplete;
 
+		private byte[] m_compressedClientBytes;
+
 		public MetaCache(Meta meta, String jsonString, String jsonStringComplete) {
 			m_meta = meta;
 			m_jsonString = jsonString;
 			m_jsonStringComplete = jsonStringComplete;
+			setCompressedClientString(meta);
 		}
 
 		public Meta getMeta() {
@@ -99,6 +103,15 @@ public class MetaHolder implements Initializable {
 
 		public String getJsonStringComplete() {
 			return m_jsonStringComplete;
+		}
+
+		public byte[] getCompressedClientBytes() {
+			return m_compressedClientBytes;
+		}
+
+		private void setCompressedClientString(Meta meta) {
+			ClientMeta clientMeta = new ClientMeta(meta);
+			m_compressedClientBytes = clientMeta.compress();
 		}
 
 	}
@@ -115,6 +128,11 @@ public class MetaHolder implements Initializable {
 		} else {
 			return needComplete ? metaCache.getJsonStringComplete() : metaCache.getJsonString();
 		}
+	}
+
+	public byte[] getCompressedClientMeta() {
+		MetaCache metaCache = m_mergedMetaCache.get();
+		return metaCache == null ? null : metaCache.getCompressedClientBytes();
 	}
 
 	@Override
@@ -280,4 +298,5 @@ public class MetaHolder implements Initializable {
 			m_configedMetaServers.set(configedServers);
 		}
 	}
+
 }

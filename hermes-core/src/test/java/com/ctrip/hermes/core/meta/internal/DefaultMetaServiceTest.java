@@ -290,10 +290,6 @@ public class DefaultMetaServiceTest extends ComponentTestCase {
 		}
 	}
 
-	@Test
-	public void testFindAvroSchemaRegistryUrl() throws Exception {
-		assertEquals("http://10.3.8.63:8081", m_metaService.getAvroSchemaRegistryUrl());
-	}
 
 	private Meta loadLocalMeta() throws Exception {
 		String fileName = getClass().getSimpleName() + "-meta.xml";
