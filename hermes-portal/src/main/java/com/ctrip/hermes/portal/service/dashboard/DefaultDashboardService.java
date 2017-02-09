@@ -660,7 +660,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 				}
 
 				try {
-					out.write(String.format("%s,%s,%s,%s,%s,%s\n", "id", "ref_key", "payload", "partition_key",
+					out.write(String.format("%s,%s,%s,%s,%s,%s\n", "id", "ref_key", "payload", "partition",
 					      "creation_date", "dead_date").toString());
 
 					long counter = 0;
@@ -681,7 +681,7 @@ public class DefaultDashboardService implements DashboardService, Initializable 
 										      .decode(deadLetter.getPayload(), GenericRecord.class).toString());
 									}
 									out.write(String.format("%s,%s,%s,%s,%s,%s\n", counter, deadLetter.getRefKey(), payload,
-									      "partition_key", deadLetter.getCreationDate(), deadLetter.getDeadDate()));
+									      deadLetter.getPartition(), deadLetter.getCreationDate(), deadLetter.getDeadDate()));
 									counter++;
 								}
 

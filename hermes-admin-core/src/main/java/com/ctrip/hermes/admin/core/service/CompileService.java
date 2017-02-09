@@ -49,9 +49,9 @@ public class CompileService {
 
 	private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
-	private static final String RELEASE_REPO = "http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/fxrelease";
+	private static final String RELEASE_REPO = "http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/mixrelease";
 
-	private static final String SNAPSHORT_REPO = "http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/fxsnapshot";
+	private static final String SNAPSHORT_REPO = "http://maven.dev.sh.ctripcorp.com:8081/nexus/content/repositories/mixsnapshot";
 
 	@Inject
 	private ClientEnvironment m_env;
