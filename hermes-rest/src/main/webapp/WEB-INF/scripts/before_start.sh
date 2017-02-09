@@ -56,23 +56,30 @@ cp $SOURCE_DIR/env.sh $SCRIPT_DIR/extraenv.sh
 # Distribute list of config files.
 cp $SOURCE_DIR/$ENV/datasources.xml $CONFIG_DIR/datasources.xml
 
-if [[ ! -e $APP_DIR/logagent/logagent-linux-x64-105ebb9 ]]; then
-	cp $CONFIG_DIR/hermes-config/utils/logagent-linux-x64-105ebb9 $APP_DIR/logagent/
-	chmod +x $APP_DIR/logagent/logagent-linux-x64-105ebb9
+# Stop logagent if existed
+LOGAGENT_PID=$(ps ax | grep logagent | awk '$(NF) ~ /logagent\/forwarder.json$/{print $1}' | head -n1)
+if [[ -n $LOGAGENT_PID ]]; then
+		kill -9 $LOGAGENT_PID
 fi
 
-if [[ ! -e $APP_DIR/logagent/forwarder.json ]]; then
-	cp $CONFIG_DIR/hermes-config/utils/$ENV/forwarder.json $APP_DIR/logagent/
-elif [[ -n `diff $APP_DIR/logagent/forwarder.json $CONFIG_DIR/hermes-config/utils/$ENV/forwarder.json` ]]; then
-	PID=$(ps ax | grep logagent | awk '$(NF) ~ /logagent\/forwarder.json$/{print $1}' | head -n1) 
+# Test whether filebeat is copied to the target dir.
+if [[ ! -e $APP_DIR/filebeat/filebeat ]]; then
+	tar -zxvf $CONFIG_DIR/hermes-config/utils/filebeat.tar.gz -C $APP_DIR/filebeat/ --strip 1
+	chmod +x $APP_DIR/filebeat/filebeat
+fi
+
+if [[ ! -e $APP_DIR/filebeat/filebeat.yml ]]; then
+	cp $CONFIG_DIR/hermes-config/utils/$ENV/filebeat.yml $APP_DIR/filebeat/
+elif [[ -n `diff $APP_DIR/filebeat/filebeat.yml $CONFIG_DIR/hermes-config/utils/$ENV/filebeat.yml` ]]; then
+	PID=$(ps ax | grep filebeat | awk '$(NF) ~ /filebeat\/filebeat.yml$/{print $1}' | head -n1) 
 	if [[ -n $PID ]]; then
 		kill -9 $PID
 	fi
-	cp $CONFIG_DIR/hermes-config/utils/$ENV/forwarder.json $APP_DIR/logagent/
+	cp $CONFIG_DIR/hermes-config/utils/$ENV/filebeat.yml $APP_DIR/filebeat/
 fi
 
-PID=$(ps ax | grep logagent | awk '$(NF) ~ /logagent\/forwarder.json$/{print $1}' | head -n1) 
+PID=$(ps ax | grep filebeat | awk '$(NF) ~ /filebeat\/filebeat.yml$/{print $1}' | head -n1) 
 if [[ -z $PID ]]; then
-	nohup $APP_DIR/logagent/logagent-linux-x64-105ebb9 -config $APP_DIR/logagent/forwarder.json >/dev/null 2>&1 &
+	nohup $APP_DIR/filebeat/filebeat -e -c $APP_DIR/filebeat/filebeat.yml >/dev/null 2>&1 &
 fi
 
