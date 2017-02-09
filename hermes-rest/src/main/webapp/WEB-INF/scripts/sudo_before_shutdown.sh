@@ -32,10 +32,10 @@ if [[ ! -e $CONFIG_DIR ]]; then
 fi
 log "Done checking/creating config dir."
 
-if [[ ! -e $APP_DIR/logagent ]]; then
-	mkdir -p $APP_DIR/logagent && chown -R deploy:deploy $APP_DIR/logagent
+if [[ ! -e $APP_DIR/filebeat ]]; then
+	mkdir -p $APP_DIR/filebeat && chown -R deploy:deploy $APP_DIR/filebeat
 fi
-log "Done checking/creating logagent dir."
+log "Done checking/creating filebeat dir."
 
 log "Check file limit."
 if grep -Fq "LimitNOFILE" /usr/lib/systemd/system/ctripapp\@${APP_ID}.service; then
