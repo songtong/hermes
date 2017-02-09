@@ -30,7 +30,7 @@ public class CtripEnvProvider implements EnvProvider {
 
 	public void initialize(Properties config) {
 		m_env2MetaDomain.put(Env.LOCAL, config.getProperty("local.domain", "meta.hermes.local"));
-		m_env2MetaDomain.put(Env.DEV, config.getProperty("dev.domain", "10.3.8.63"));
+		m_env2MetaDomain.put(Env.DEV, config.getProperty("dev.domain", "meta.hermes.fws.qa.nt.ctripcorp.com"));
 		m_env2MetaDomain.put(Env.LPT, config.getProperty("lpt.domain", "10.2.5.133"));
 		m_env2MetaDomain.put(Env.FAT, config.getProperty("fat.domain", "meta.hermes.fws.qa.nt.ctripcorp.com"));
 		m_env2MetaDomain.put(Env.FWS, config.getProperty("fws.domain", "meta.hermes.fws.qa.nt.ctripcorp.com"));
