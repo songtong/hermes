@@ -77,6 +77,8 @@ public class SpaceportResource {
 				messages = m_receiver.receive(headerMap, content);
 			} catch (IOException e) {
 				logger.error("Failed to call ubt api!", e);
+				response.resume(e);
+				return;
 			}
 
 			List<Future<SendResult>> futures = new ArrayList<>(messages.size());
