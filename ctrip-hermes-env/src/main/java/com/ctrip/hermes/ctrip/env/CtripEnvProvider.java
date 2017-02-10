@@ -101,10 +101,16 @@ public class CtripEnvProvider implements EnvProvider {
 
 		if (envFromConfig != null && envFromFoundation != null) {
 			if (!envFromConfig.equals(envFromFoundation)) {
+				if (Env.PROD.equals(envFromFoundation) || Env.TOOLS.equals(envFromFoundation)) {
+					m_env = envFromFoundation;
+				} else {
+					m_env = envFromConfig;
+				}
 				log.warn("Hermes env from hermes.properties({}) conflict with env from foundation({}), will use {} as env",
-				      envFromConfig, envFromFoundation, envFromConfig);
+				      envFromConfig, envFromFoundation, m_env);
+			} else {
+				m_env = envFromConfig;
 			}
-			m_env = envFromConfig;
 		} else {
 			m_env = envFromConfig == null ? envFromFoundation : envFromConfig;
 		}
