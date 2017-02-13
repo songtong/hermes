@@ -68,6 +68,21 @@ public class MetaResource {
 		return Response.status(Status.OK).entity(m_metaHolder.getMetaJson(false)).build();
 	}
 
+	@GET
+	@Path("client")
+	public Response getCompressedClientMeta(@QueryParam("version") @DefaultValue("0") long version,
+	      @QueryParam("hashCode") @DefaultValue("0") long hashCode) throws Exception {
+		Meta meta = m_metaHolder.getMeta();
+		if (meta == null) {
+			throw new RestException("Meta not found", Status.NOT_FOUND);
+		}
+		if (!isMetaModified(version, hashCode, meta)) {
+			return Response.status(Status.NOT_MODIFIED).build();
+		}
+		
+		return Response.status(Status.OK).entity(m_metaHolder.getCompressedClientMeta()).build();
+	}
+
 	@POST
 	@Path("topics")
 	public Response getTopicsMeta(List<String> topics) {

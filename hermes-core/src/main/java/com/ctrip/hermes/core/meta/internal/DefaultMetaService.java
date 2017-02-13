@@ -28,14 +28,12 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.core.meta.manual.ManualConfigService;
 import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.core.utils.StringUtils;
-import com.ctrip.hermes.meta.entity.Codec;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Datasource;
 import com.ctrip.hermes.meta.entity.Endpoint;
 import com.ctrip.hermes.meta.entity.Idc;
 import com.ctrip.hermes.meta.entity.Meta;
 import com.ctrip.hermes.meta.entity.Partition;
-import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.meta.entity.ZookeeperEnsemble;
@@ -317,11 +315,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 		});
 	}
 
-	@Override
-	public String getAvroSchemaRegistryUrl() {
-		Codec avroCodec = getMeta().findCodec(Codec.AVRO);
-		return avroCodec.getProperties().get(m_config.getAvroSchemaRetryUrlKey()).getValue();
-	}
 
 	@Override
 	public synchronized Pair<Endpoint, Long> findEndpointByTopicAndPartition(String topic, int partition) {
@@ -357,40 +350,6 @@ public class DefaultMetaService implements MetaService, Initializable {
 	public boolean containsConsumerGroup(String topicName, String groupId) {
 		Topic topic = findTopic(topicName, getMeta());
 		return topic != null && topic.findConsumerGroup(groupId) != null;
-	}
-
-	@Override
-	public String getZookeeperList() {
-		Map<String, Storage> storages = getMeta().getStorages();
-		for (Storage storage : storages.values()) {
-			if ("kafka".equals(storage.getType())) {
-				for (Datasource ds : storage.getDatasources()) {
-					for (Property property : ds.getProperties().values()) {
-						if ("zookeeper.connect".equals(property.getName())) {
-							return property.getValue();
-						}
-					}
-				}
-			}
-		}
-		return "";
-	}
-
-	@Override
-	public String getKafkaBrokerList() {
-		Map<String, Storage> storages = getMeta().getStorages();
-		for (Storage storage : storages.values()) {
-			if ("kafka".equals(storage.getType())) {
-				for (Datasource ds : storage.getDatasources()) {
-					for (Property property : ds.getProperties().values()) {
-						if ("bootstrap.servers".equals(property.getName())) {
-							return property.getValue();
-						}
-					}
-				}
-			}
-		}
-		return "";
 	}
 
 	@Override

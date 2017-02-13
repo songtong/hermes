@@ -57,12 +57,6 @@ public interface MetaService {
 
 	boolean containsConsumerGroup(String topicName, String groupId);
 
-	String getAvroSchemaRegistryUrl();
-
-	String getZookeeperList();
-
-	String getKafkaBrokerList();
-
 	Offset findMessageOffsetByTime(String topic, int partition, long time);
 
 	Map<Integer, Offset> findMessageOffsetByTime(String topicName, long time);

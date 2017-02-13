@@ -43,13 +43,22 @@ public class GZipPayloadCodec extends AbstractPayloadCodec {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T doDecode(byte[] input, Class<T> clazz) {
+		GZIPInputStream gin = null;
 		try {
-			GZIPInputStream gin = new GZIPInputStream(new ByteArrayInputStream(input));
+			gin = new GZIPInputStream(new ByteArrayInputStream(input));
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			IO.INSTANCE.copy(gin, bout);
 			return (T) bout.toByteArray();
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("Unexpected exception when decoding"), e);
+		} finally {
+			if (gin != null) {
+				try {
+					gin.close();
+				} catch (IOException e) {
+					throw new RuntimeException(String.format("Failed to close GZIPInputStream!"), e);
+				}
+			}
 		}
 	}
 
