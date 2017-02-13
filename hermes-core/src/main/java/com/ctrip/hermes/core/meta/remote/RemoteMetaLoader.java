@@ -89,7 +89,7 @@ public class RemoteMetaLoader implements MetaLoader {
 					if (defaultClientMetaUri.equals(uri)) {
 						byte[] responseContent = IO.INSTANCE.readFrom(is);
 						try {
-							fetchedMeta = ClientMeta.decode(responseContent);
+							fetchedMeta = ClientMeta.deserialize(responseContent);
 							m_metaCache.set(fetchedMeta);
 							return m_metaCache.get();
 						} catch (Exception e) {

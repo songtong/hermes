@@ -90,7 +90,7 @@ public class MetaHolder implements Initializable {
 			m_meta = meta;
 			m_jsonString = jsonString;
 			m_jsonStringComplete = jsonStringComplete;
-			m_compressedClientBytes = ClientMeta.encode(meta);
+			m_compressedClientBytes = ClientMeta.serialize(meta);
 		}
 
 		public Meta getMeta() {

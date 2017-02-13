@@ -54,10 +54,10 @@ public class GZipPayloadCodec extends AbstractPayloadCodec {
 		} finally {
 			if (gin != null) {
 				try {
-	            gin.close();
-            } catch (IOException e) {
-            	throw new RuntimeException(String.format("Failed to close GZIPInputStream!"), e);
-            }
+					gin.close();
+				} catch (IOException e) {
+					throw new RuntimeException(String.format("Failed to close GZIPInputStream!"), e);
+				}
 			}
 		}
 	}

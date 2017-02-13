@@ -26,12 +26,12 @@ import com.ctrip.hermes.meta.entity.Storage;
 
 public class ClientMeta {
 
-	public static byte[] encode(Meta meta) {
+	public static byte[] serialize(Meta meta) {
 		ClientMeta clientMeta = convertToClientMeta(meta);
 		return clientMeta.compress();
 	}
 
-	public static Meta decode(byte[] bytes) throws Exception {
+	public static Meta deserialize(byte[] bytes) throws Exception {
 		ClientMeta clientMeta = decompress(bytes);
 		return clientMeta.convertToMeta();
 	}
