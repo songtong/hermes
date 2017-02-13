@@ -25,24 +25,32 @@ import com.ctrip.hermes.meta.entity.Property;
 import com.ctrip.hermes.meta.entity.Storage;
 
 public class ClientMeta {
-	public ClientMeta() {
 
+	public static byte[] encode(Meta meta) {
+		ClientMeta clientMeta = convertToClientMeta(meta);
+		return clientMeta.compress();
 	}
 
-	public ClientMeta(Meta meta) {
-		m_version = meta.getVersion();
-		m_id = meta.getId();
-		m_idcs = meta.getIdcs();
-		m_endpoints = meta.getEndpoints();
+	public static Meta decode(byte[] bytes) throws Exception {
+		ClientMeta clientMeta = decompress(bytes);
+		return clientMeta.convertToMeta();
+	}
+
+	private static ClientMeta convertToClientMeta(Meta meta) {
+		ClientMeta clientMeta = new ClientMeta();
+		clientMeta.m_version = meta.getVersion();
+		clientMeta.m_id = meta.getId();
+		clientMeta.m_idcs = meta.getIdcs();
+		clientMeta.m_endpoints = meta.getEndpoints();
 
 		for (String endpoint : meta.getEndpoints().keySet()) {
-			m_endpointMapping.put(endpoint, new LinkedHashMap<Long, List<Integer>>());
+			clientMeta.m_endpointMapping.put(endpoint, new LinkedHashMap<Long, List<Integer>>());
 		}
 
 		for (com.ctrip.hermes.meta.entity.Topic topic : meta.getTopics().values()) {
 			for (Partition partition : topic.getPartitions()) {
 				if (partition.getEndpoint() != null) {
-					Map<Long, List<Integer>> tpMap = m_endpointMapping.get(partition.getEndpoint());
+					Map<Long, List<Integer>> tpMap = clientMeta.m_endpointMapping.get(partition.getEndpoint());
 					List<Integer> pList = tpMap.get(topic.getId());
 					if (pList == null) {
 						pList = new ArrayList<>();
@@ -63,7 +71,6 @@ public class ClientMeta {
 			clientTopic.setName(topic.getName());
 			clientTopic.setPriorityMessageEnabled(topic.isPriorityMessageEnabled());
 			clientTopic.setStorageType(topic.getStorageType());
-			clientTopic.setPartitionCount(topic.getPartitions().size());
 			for (com.ctrip.hermes.meta.entity.ConsumerGroup consumerGroup : topic.getConsumerGroups()) {
 				ConsumerGroup clientConsumerGroup = new ConsumerGroup();
 				clientConsumerGroup.setName(consumerGroup.getName());
@@ -72,7 +79,7 @@ public class ClientMeta {
 				clientConsumerGroup.setRetryPolicy(consumerGroup.getRetryPolicy());
 				clientTopic.addConsumerGroup(clientConsumerGroup);
 			}
-			m_topics.put(clientTopic.getId(), clientTopic);
+			clientMeta.m_topics.put(clientTopic.getId(), clientTopic);
 		}
 
 		for (Storage storage : meta.getStorages().values()) {
@@ -89,12 +96,24 @@ public class ClientMeta {
 					clientStorage.addDatasource(clientDatasource);
 				}
 			}
-			m_storages.put(clientStorage.getType(), clientStorage);
+			clientMeta.m_storages.put(clientStorage.getType(), clientStorage);
 		}
+
+		return clientMeta;
 	}
 
-	public static ClientMeta parse(byte[] compressedJsonBytes) throws Exception {
-		return JSON.parseObject(new GZIPInputStream(new ByteArrayInputStream(compressedJsonBytes)), ClientMeta.class);
+	private static ClientMeta decompress(byte[] compressedJsonBytes) throws Exception {
+		GZIPInputStream gzipInputStream = null;
+		ClientMeta clientMeta = null;
+		try {
+			gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(compressedJsonBytes));
+			clientMeta = JSON.parseObject(gzipInputStream, ClientMeta.class);
+			return clientMeta;
+		} finally {
+			if (gzipInputStream != null) {
+				gzipInputStream.close();
+			}
+		}
 	}
 
 	public byte[] compress() {
@@ -110,7 +129,7 @@ public class ClientMeta {
 		return bout.toByteArray();
 	}
 
-	public Meta parseToMeta() {
+	private Meta convertToMeta() {
 		Meta meta = new Meta();
 		meta.setVersion(m_version);
 		meta.setId(m_id);
@@ -152,7 +171,6 @@ public class ClientMeta {
 			t.setName(topic.getName());
 			t.setPriorityMessageEnabled(topic.isPriorityMessageEnabled());
 			t.setStorageType(topic.getStorageType());
-			t.setPartitionCount(topic.getPartitionCount());
 
 			for (Partition partition : topic.getPartitions()) {
 				t.addPartition(partition);
@@ -250,8 +268,7 @@ public class ClientMeta {
 			return "Topic [name=" + name + ", codecType=" + codecType + ", consumerRetryPolicy=" + consumerRetryPolicy
 			      + ", endpointType=" + endpointType + ", id=" + id + ", idcPolicy=" + idcPolicy
 			      + ", priorityMessageEnabled=" + priorityMessageEnabled + ", storageType=" + storageType
-			      + ", partitionCount=" + partitionCount + ", consumerGroups=" + consumerGroups + ", partitions="
-			      + partitions + "]";
+			      + ", consumerGroups=" + consumerGroups + ", partitions=" + partitions + "]";
 		}
 
 		@JSONField(name = "n")
@@ -277,9 +294,6 @@ public class ClientMeta {
 
 		@JSONField(name = "s")
 		private String storageType;
-
-		@JSONField(name = "pc")
-		private Integer partitionCount;
 
 		@JSONField(name = "c")
 		private List<ConsumerGroup> consumerGroups = new ArrayList<ConsumerGroup>();
@@ -324,10 +338,6 @@ public class ClientMeta {
 			return name;
 		}
 
-		public Integer getPartitionCount() {
-			return partitionCount;
-		}
-
 		public List<Partition> getPartitions() {
 			return partitions;
 		}
@@ -370,10 +380,6 @@ public class ClientMeta {
 
 		public void setName(String name) {
 			this.name = name;
-		}
-
-		public void setPartitionCount(Integer partitionCount) {
-			this.partitionCount = partitionCount;
 		}
 
 		public void setPartitions(List<Partition> partitions) {

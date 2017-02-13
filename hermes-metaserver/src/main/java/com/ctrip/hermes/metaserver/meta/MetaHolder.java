@@ -90,7 +90,7 @@ public class MetaHolder implements Initializable {
 			m_meta = meta;
 			m_jsonString = jsonString;
 			m_jsonStringComplete = jsonStringComplete;
-			setCompressedClientString(meta);
+			m_compressedClientBytes = ClientMeta.encode(meta);
 		}
 
 		public Meta getMeta() {
@@ -107,11 +107,6 @@ public class MetaHolder implements Initializable {
 
 		public byte[] getCompressedClientBytes() {
 			return m_compressedClientBytes;
-		}
-
-		private void setCompressedClientString(Meta meta) {
-			ClientMeta clientMeta = new ClientMeta(meta);
-			m_compressedClientBytes = clientMeta.compress();
 		}
 
 	}
