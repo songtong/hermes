@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Named;
 
 import com.ctrip.framework.foundation.Foundation;
+import com.ctrip.hermes.Hermes;
+import com.ctrip.hermes.Hermes.Env;
 
 @Named(type = EnvProvider.class)
 public class CtripEnvProvider implements EnvProvider {
@@ -38,12 +40,17 @@ public class CtripEnvProvider implements EnvProvider {
 		m_env2MetaDomain.put(Env.PROD, config.getProperty("prod.domain", "meta.hermes.fx.ctripcorp.com"));
 		m_env2MetaDomain.put(Env.TOOLS, config.getProperty("tools.domain", "meta.hermes.fx.tools.ctripcorp.com"));
 
-		String strEnvFromConfig = config.getProperty("env");
-		String strEnvFromFoundation = Foundation.server().getEnvType();
+		if (Hermes.getEnv() != null) {
+			m_env = Hermes.getEnv();
+			log.info("Hermes env is inited by api: {}", m_env);
+		} else {
+			String strEnvFromConfig = config.getProperty("env");
+			String strEnvFromFoundation = Foundation.server().getEnvType();
 
-		refineEnv(strEnvFromConfig, strEnvFromFoundation, Foundation.server().isTooling());
+			refineEnv(strEnvFromConfig, strEnvFromFoundation, Foundation.server().isTooling());
 
-		refineIdc();
+			refineIdc();
+		}
 
 		m_metaServerDomainName = m_env2MetaDomain.get(m_env);
 
