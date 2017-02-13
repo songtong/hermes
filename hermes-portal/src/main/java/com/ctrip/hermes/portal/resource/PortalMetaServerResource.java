@@ -25,7 +25,7 @@ public class PortalMetaServerResource {
 
 	@GET
 	@Path("kafka/brokers")
-	public String getKafkaBrokerList() {
-		return dsService.getKafkaBrokerList();
+	public Response getKafkaBrokerList() {
+		return Response.ok().entity(dsService.getKafkaBrokerList()).build();
 	}
 }

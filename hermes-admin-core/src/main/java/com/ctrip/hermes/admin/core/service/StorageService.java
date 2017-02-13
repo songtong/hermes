@@ -123,7 +123,8 @@ public class StorageService {
 		return idMap;
 	}
 
-	public String getKafkaBrokerList() {
+	public Map<String, String> getKafkaBrokerList() {
+		Map<String, String> kafkaBrokerList = new HashMap<>();
 		List<Storage> storages = new ArrayList<>();
 		try {
 			storages = findStorages(false);
@@ -134,14 +135,16 @@ public class StorageService {
 			if ("kafka".equals(storage.getType())) {
 				for (Datasource ds : storage.getDatasources()) {
 					for (Property property : ds.getProperties().values()) {
-						if (KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME.equals(property.getName())) {
-							return property.getValue();
+						if (property.getName().startsWith(KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME)) {
+							if (!KafkaConstants.BOOTSTRAP_SERVERS_PROPERTY_NAME.equals(property.getName())) {
+								kafkaBrokerList.put(property.getName(), property.getValue());
+							}
 						}
 					}
 				}
 			}
 		}
-		return "";
+		return kafkaBrokerList;
 	}
 
 	public Map<String, Storage> getStorages() {

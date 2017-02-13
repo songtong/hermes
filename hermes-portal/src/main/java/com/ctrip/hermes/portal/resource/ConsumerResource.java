@@ -19,16 +19,19 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.admin.core.queue.QueueType;
 import com.ctrip.hermes.admin.core.service.ConsumerService;
+import com.ctrip.hermes.admin.core.service.KafkaService;
 import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
 import com.ctrip.hermes.admin.core.view.TopicView;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
+import com.ctrip.hermes.meta.entity.Storage;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.portal.resource.assists.RestException;
 
@@ -39,6 +42,8 @@ public class ConsumerResource {
 	private static final Logger logger = LoggerFactory.getLogger(ConsumerResource.class);
 
 	private ConsumerService consumerService = PlexusComponentLocator.lookup(ConsumerService.class);
+
+	private KafkaService kafkaService = PlexusComponentLocator.lookup(KafkaService.class);
 
 	private TopicService topicService = PlexusComponentLocator.lookup(TopicService.class);
 
@@ -67,9 +72,10 @@ public class ConsumerResource {
 	}
 
 	@POST
-	@Path("{topic}/{consumer}/resetOffset/timestamp")
-	public Response resetOffsetByTimestamp(@PathParam("topic") String topicName,
-	      @PathParam("consumer") String consumerGroupName, @QueryParam("timestamp") long timestamp) {
+	@Path("resetOffset/time")
+	public Response resetOffsetByTime(@QueryParam("topic") String topicName,
+	      @QueryParam("consumer") String consumerGroupName, @QueryParam("resetType") String resetType,
+	      @QueryParam("timestamp") long timestamp) {
 		Topic topic = topicService.findTopicEntityByName(topicName);
 
 		if (topic == null) {
@@ -82,30 +88,49 @@ public class ConsumerResource {
 			throw new RestException("Consumer group NOT found!", Status.NOT_FOUND);
 		}
 
-		boolean isAlive = true;
-		try {
-			isAlive = consumerService.isConsumerAlive(topic, consumerGroup);
-		} catch (Exception e) {
-			throw new RestException(e);
-		}
-		if (isAlive) {
-			throw new RestException("请先停止Consumer！如果已经停止，请10秒之后重试。", Status.INTERNAL_SERVER_ERROR);
-		}
+		if (Storage.KAFKA.equals(topic.getStorageType())) {
+			if (ConsumerService.RESET_OPTION_EARLIEST.equals(resetType)
+			      || ConsumerService.RESET_OPTION_LATEST.equals(resetType)) {
+				Pair<Boolean, String> resultInfo = kafkaService
+				      .resetConsumerOffset(topicName, consumerGroupName, resetType);
+				if (!resultInfo.getKey()) {
+					throw new RestException(resultInfo.getValue());
+				}
+			} else {
+				throw new RestException("Kafka consumer only supports reset to EARLIST or LATEST!", Status.BAD_REQUEST);
+			}
+		} else {
+			boolean isAlive = true;
+			try {
+				isAlive = consumerService.isConsumerAlive(topic, consumerGroup);
+			} catch (Exception e) {
+				throw new RestException(e);
+			}
+			if (isAlive) {
+				throw new RestException("请先停止Consumer！如果已经停止，请10秒之后重试。", Status.INTERNAL_SERVER_ERROR);
+			}
 
-		try {
-			timestamp = timestamp == -1 ? Long.MAX_VALUE : timestamp;
-			consumerService.resetOffsetByTimestamp(topicName, consumerGroup, timestamp);
-		} catch (Exception e) {
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+			try {
+				switch (resetType) {
+				case ConsumerService.RESET_OPTION_EARLIEST:
+					timestamp = 0;
+					break;
+				case ConsumerService.RESET_OPTION_LATEST:
+					timestamp = Long.MAX_VALUE;
+					break;
+				}
+				consumerService.resetOffsetByTimestamp(topicName, consumerGroup, timestamp);
+			} catch (Exception e) {
+				throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+			}
 		}
-
 		return Response.status(Status.OK).build();
 	}
 
 	@POST
-	@Path("{topic}/{consumer}/resetOffset/shift")
-	public Response resetOffsetByShift(@PathParam("topic") String topicName, @QueryParam("partition") String partition,
-	      @QueryParam("queueType") String queueType, @PathParam("consumer") String consumerGroupName,
+	@Path("resetOffset/shift")
+	public Response resetOffsetByShift(@QueryParam("topic") String topicName, @QueryParam("partition") String partition,
+	      @QueryParam("queueType") String queueType, @QueryParam("consumer") String consumerGroupName,
 	      @QueryParam("shift") long shift) {
 		Topic topic = topicService.findTopicEntityByName(topicName);
 
@@ -117,6 +142,10 @@ public class ConsumerResource {
 
 		if (consumerGroup == null) {
 			throw new RestException("Consumer group NOT found!", Status.NOT_FOUND);
+		}
+
+		if (Storage.KAFKA.equals(topic.getStorageType())) {
+			throw new RestException("Kafka topic can only reset offset to earliest or latest!", Status.BAD_REQUEST);
 		}
 
 		if (!QueueType.isValidQueueType(queueType)) {
@@ -242,4 +271,5 @@ public class ConsumerResource {
 		}
 		return Response.status(Status.CREATED).entity(consumerView).build();
 	}
+
 }

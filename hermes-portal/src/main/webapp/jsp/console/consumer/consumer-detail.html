@@ -113,8 +113,8 @@
 						<div class="col-sm-8">
 							<label class="radio-inline" ng-click="expandCollapse()"> <input type="radio" ng-model="currentConsumer.resetOption" " value="latest">最新
 							</label> <label class="radio-inline" ng-click="expandCollapse()"> <input type="radio" ng-model="currentConsumer.resetOption" value="earliest">最早
-							</label> <label class="radio-inline" ng-click="expandCollapse()"> <input type="radio" ng-model="currentConsumer.resetOption" value="timepoint">时间点
-							</label><label class="radio-inline" ng-click="expandCollapse()"> <input type="radio" ng-model="currentConsumer.resetOption" value="shift">相对位移
+							</label> <label class="radio-inline" ng-click="expandCollapse()" ng-show="topic.storageType=='mysql'"> <input type="radio" ng-model="currentConsumer.resetOption" value="timepoint">时间点
+							</label><label class="radio-inline" ng-click="expandCollapse()" ng-show="topic.storageType=='mysql'"> <input type="radio" ng-model="currentConsumer.resetOption" value="shift">相对位移
 							</label>
 						</div>
 						<div class="col-sm-4">
