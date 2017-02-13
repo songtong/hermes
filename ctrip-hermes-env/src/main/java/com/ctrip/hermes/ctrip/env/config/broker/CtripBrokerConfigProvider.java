@@ -102,23 +102,23 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 
 	private static final int DEFAULT_FILTER_TOPIC_CACHE_SIZE = 5000;
 
-	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_NORMAL_TRIGGER_TRIGGERING_OFFSET_DELTA = 20;
+	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_NORMAL_TRIGGER_TRIGGERING_OFFSET_DELTA = 50;
 
-	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 30;
+	private static final int DEFAULT_SEND_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 50;
 
-	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 1;
+	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTA = 10;
 
-	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 1;
+	private static final int DEFAULT_PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTA = 100;
 
 	private static final int DEFAULT_FLUSH_MESSAGE_LIMITS = 1000;
 
 	private static final boolean DEFAULT_FLUSH_MESSAGE_LIMIT_DYNAMIC_ADJUST = false;
 
-	private static final long DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS = 25;
+	private static final long DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS = 50;
 
-	private static final long DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS = 100;
+	private static final long DEFAULT_ACK_FLUSH_SELECTOR_SAFE_TRIGGER_TRIGGERING_OFFSET_DELTAS = 1000;
 
-	private static final int DEFAULT_ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS = 50;
+	private static final int DEFAULT_ACK_FLUSH_SELECTOR_NORMAL_TRIGGERING_OFFSET_DELTAS = 200;
 
 	private static final boolean DEFAULT_BIZ_LOGGER_ENABLED = true;
 
@@ -454,12 +454,12 @@ public class CtripBrokerConfigProvider implements BrokerConfigProvider, Initiali
 		});
 
 		m_pullMessageSelectorSafeTriggerMinFireIntervalMillis = config.getIntProperty(
-		      PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS, 1000);
+		      PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_MIN_FIRE_INTERVAL_MILLIS, 20);
 		log.info("PullMessageSelector safeTrigger minFireIntervalMillis is {}",
 		      m_pullMessageSelectorSafeTriggerMinFireIntervalMillis);
 
 		m_pullMessageSelectorSafeTriggerIntervalMillis = config.getIntProperty(
-		      PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS, 1000);
+		      PULL_MESSAGE_SELECTOR_SAFE_TRIGGER_INTERVAL_MILLIS, 20);
 		log.info("PullMessageSelector safeTrigger intervalMillis is {}", m_pullMessageSelectorSafeTriggerIntervalMillis);
 
 		Map<String, Map<String, Integer>> pullMessageSelectorNormalTriggeringOffsetDeltas = parsePullMessageSelectorDeltas(config
