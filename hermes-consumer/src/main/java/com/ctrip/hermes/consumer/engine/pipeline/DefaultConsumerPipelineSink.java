@@ -20,7 +20,7 @@ import com.ctrip.hermes.core.message.ConsumerMessage;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
 import com.ctrip.hermes.core.pipeline.PipelineSink;
 import com.ctrip.hermes.core.service.SystemClockService;
-import com.ctrip.hermes.env.VersionProvider;
+import com.ctrip.hermes.env.HermesVersion;
 import com.dianping.cat.status.ProductVersionManager;
 
 /**
@@ -73,7 +73,7 @@ public class DefaultConsumerPipelineSink implements PipelineSink<Void>, Initiali
 
 	@Override
 	public void initialize() throws InitializationException {
-		ProductVersionManager.getInstance().register(CatConstants.TYPE_HERMES_CLIENT_VERSION, VersionProvider.VERSION);
+		ProductVersionManager.getInstance().register(CatConstants.TYPE_HERMES_CLIENT_VERSION, HermesVersion.CURRENT);
 	}
 
 }
