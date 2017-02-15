@@ -718,7 +718,7 @@
 			<implementation>com.ctrip.hermes.admin.core.service.TopicDeployService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.admin.core.service.StorageService</role>
+					<role>com.ctrip.hermes.admin.core.kafka.KafkaClusterManager</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -727,7 +727,7 @@
 			<implementation>com.ctrip.hermes.admin.core.service.KafkaService</implementation>
 			<requirements>
 				<requirement>
-					<role>com.ctrip.hermes.admin.core.service.StorageService</role>
+					<role>com.ctrip.hermes.admin.core.kafka.KafkaClusterManager</role>
 				</requirement>
 			</requirements>
 		</component>
@@ -904,6 +904,18 @@
 				</requirement>
 				<requirement>
 					<role>com.ctrip.hermes.admin.core.model.ConsumerMonitorConfigDao</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.hermes.admin.core.kafka.KafkaClusterManager</role>
+			<implementation>com.ctrip.hermes.admin.core.kafka.KafkaClusterManager</implementation>
+			<requirements>
+				<requirement>
+					<role>com.ctrip.hermes.admin.core.service.StorageService</role>
+				</requirement>
+				<requirement>
+					<role>com.ctrip.hermes.admin.core.service.IdcService</role>
 				</requirement>
 			</requirements>
 		</component>

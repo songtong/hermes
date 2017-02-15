@@ -19,11 +19,11 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.unidal.tuple.Pair;
 
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.admin.core.queue.QueueType;
 import com.ctrip.hermes.admin.core.service.ConsumerService;
+import com.ctrip.hermes.admin.core.service.ConsumerService.ResetOption;
 import com.ctrip.hermes.admin.core.service.KafkaService;
 import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
@@ -88,13 +88,20 @@ public class ConsumerResource {
 			throw new RestException("Consumer group NOT found!", Status.NOT_FOUND);
 		}
 
+		ResetOption resetOption;
+		try {
+			resetOption = ResetOption.valueOf(resetType.toUpperCase());
+		} catch (Exception e) {
+			throw new RestException(String.format("Unkwnon reset type:%s! It should be [earliest | latest | timestamp].",
+			      resetType));
+		}
+
 		if (Storage.KAFKA.equals(topic.getStorageType())) {
-			if (ConsumerService.RESET_OPTION_EARLIEST.equals(resetType)
-			      || ConsumerService.RESET_OPTION_LATEST.equals(resetType)) {
-				Pair<Boolean, String> resultInfo = kafkaService
-				      .resetConsumerOffset(topicName, consumerGroupName, resetType);
-				if (!resultInfo.getKey()) {
-					throw new RestException(resultInfo.getValue());
+			if (ResetOption.EARLIEST.equals(resetOption) || ResetOption.LATEST.equals(resetOption)) {
+				try {
+					kafkaService.resetConsumerOffset(topicName, consumerGroupName, resetOption);
+				} catch (Exception e) {
+					throw new RestException(e.getMessage());
 				}
 			} else {
 				throw new RestException("Kafka consumer only supports reset to EARLIST or LATEST!", Status.BAD_REQUEST);
@@ -111,12 +118,14 @@ public class ConsumerResource {
 			}
 
 			try {
-				switch (resetType) {
-				case ConsumerService.RESET_OPTION_EARLIEST:
+				switch (resetOption) {
+				case EARLIEST:
 					timestamp = 0;
 					break;
-				case ConsumerService.RESET_OPTION_LATEST:
+				case LATEST:
 					timestamp = Long.MAX_VALUE;
+					break;
+				case TIMESTAMP:
 					break;
 				}
 				consumerService.resetOffsetByTimestamp(topicName, consumerGroup, timestamp);

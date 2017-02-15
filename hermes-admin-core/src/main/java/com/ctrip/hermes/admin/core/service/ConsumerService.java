@@ -59,11 +59,9 @@ import com.google.common.base.Charsets;
 
 @Named
 public class ConsumerService {
-	public static final String RESET_OPTION_EARLIEST = "earliest";
-
-	public static final String RESET_OPTION_LATEST = "latest";
-
-	public static final String RESET_OPTION_TIMESTAMP = "timestamp";
+	public enum ResetOption {
+		EARLIEST, LATEST, TIMESTAMP
+	}
 
 	private static final Logger logger = LoggerFactory.getLogger(ConsumerService.class);
 
