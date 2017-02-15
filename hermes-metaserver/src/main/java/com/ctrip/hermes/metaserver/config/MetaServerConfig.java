@@ -26,6 +26,10 @@ public class MetaServerConfig {
 	public long getEnabledConsumerCheckIntervalTimeMillis() {
 		return 20 * 1000L;
 	}
+	
+	public long getBlackListIpCheckIntervalTimeMills() {
+		return 20 * 1000L;
+	}
 
 	public long getConsumerLeaseTimeMillis() {
 		return 20 * 1000L;

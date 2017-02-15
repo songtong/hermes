@@ -1,5 +1,6 @@
 package com.ctrip.hermes.metaserver.consumer;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.unidal.lookup.annotation.Inject;
@@ -8,6 +9,7 @@ import org.unidal.tuple.Pair;
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.commons.Assignment;
@@ -71,6 +73,11 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 			      + m_config.getEnabledConsumerCheckIntervalTimeMillis());
 		}
+		
+		if (isIpInBlackList(tpg, ip)) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+					+ m_config.getBlackListIpCheckIntervalTimeMills());
+		}
 
 		heartbeat(tpg, consumerName, ip);
 
@@ -92,6 +99,11 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		if (!isConsumerEnabled(tpg.getTopic(), tpg.getGroupId())) {
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 			      + m_config.getEnabledConsumerCheckIntervalTimeMillis());
+		}
+		
+		if (isIpInBlackList(tpg, ip)) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+					+ m_config.getBlackListIpCheckIntervalTimeMills());
 		}
 
 		heartbeat(tpg, consumerName, ip);
@@ -115,6 +127,17 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 			ConsumerGroup consumer = topic.findConsumerGroup(consumerName);
 			if (consumer != null) {
 				return consumer.isEnabled();
+			}
+		}
+		return false;
+	}
+	
+	private boolean isIpInBlackList(Tpg tpg, String ip) {
+		Topic topic = m_metaHolder.getMeta().getTopics().get(tpg.getTopic());
+		if (topic != null) {
+			ConsumerGroup consumer = topic.findConsumerGroup(tpg.getGroupId());
+			if (consumer != null && !StringUtils.isBlank(consumer.getBlackList())){
+				return Arrays.asList(consumer.getBlackList().split(",")).contains(ip);
 			}
 		}
 		return false;

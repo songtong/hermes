@@ -27,6 +27,7 @@
 		<attribute name="ordered-consume" value-type="boolean" default-value="true" />
 		<attribute name="enabled" value-type="boolean" default-value="true" />
 		<attribute name="idc-policy" value-type="String" default-value="primary"/>
+		<attribute name="black-list" value-type="String" default-value=""/>
 	</entity>
 
 	<entity name="producer">
