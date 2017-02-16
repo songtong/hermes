@@ -40,7 +40,7 @@ public class TopicDeployResource {
 			}
 		} catch (Exception e) {
 			log.warn("deploy topic failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+			throw new RestException(e.getMessage());
 		}
 		return Response.status(Status.OK).build();
 	}
@@ -56,7 +56,7 @@ public class TopicDeployResource {
 			}
 		} catch (Exception e) {
 			log.warn("undeploy topic failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+			throw new RestException(e.getMessage());
 		}
 		return Response.status(Status.OK).build();
 	}
@@ -72,7 +72,7 @@ public class TopicDeployResource {
 			}
 		} catch (Exception e) {
 			log.warn("config topic failed", e);
-			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
+			throw new RestException(e.getMessage());
 		}
 		return Response.status(Status.OK).build();
 	}

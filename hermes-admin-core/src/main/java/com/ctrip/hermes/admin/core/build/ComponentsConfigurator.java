@@ -17,6 +17,7 @@ import com.ctrip.hermes.admin.core.dal.CachedProducerDao;
 import com.ctrip.hermes.admin.core.dal.CachedSchemaDao;
 import com.ctrip.hermes.admin.core.dal.CachedStorageDao;
 import com.ctrip.hermes.admin.core.dal.CachedTopicDao;
+import com.ctrip.hermes.admin.core.kafka.KafkaClusterManager;
 import com.ctrip.hermes.admin.core.monitor.dao.DefaultMonitorEventStorage;
 import com.ctrip.hermes.admin.core.monitor.service.DefaultMonitorConfigService;
 import com.ctrip.hermes.admin.core.queue.ds.MessageQueueDatasourceProvider;
@@ -119,6 +120,8 @@ public class ComponentsConfigurator extends AbstractJdbcResourceConfigurator {
 
 		all.add(A(DefaultTemplateService.class));
 		all.add(A(DefaultMonitorConfigService.class));
+		
+		all.add(A(KafkaClusterManager.class));
 
 		all.add(defineJdbcDataSourceConfigurationManagerComponent("/opt/data/hermes/datasources.xml"));
 

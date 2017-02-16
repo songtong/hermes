@@ -22,16 +22,17 @@ consumer_module.run(function(editableOptions) {
 		},
 		'reset_offset_by_timestamp' : {
 			method : 'POST',
-			url : '/api/consumers/:topic/:consumer/resetOffset/timestamp',
+			url : '/api/consumers/resetOffset/time',
 			params : {
 				topic : '@topic',
 				consumer : '@consumer',
+				resetType : '@resetType',
 				timestamp : '@timestamp'
 			}
 		},
 		'reset_offset_by_shift' : {
 			method : 'POST',
-			url : '/api/consumers/:topic/:consumer/resetOffset/shift',
+			url : '/api/consumers/resetOffset/shift',
 			params : {
 				topic : '@topic',
 				consumer : '@consumer',
@@ -86,7 +87,7 @@ consumer_module.run(function(editableOptions) {
 			topic_resource.get({
 				topic : $routeParams['topic']
 			}, function(topic_result) {
-				console.log(topic_result);
+				scope.topic = topic_result;
 				for (var i = 0; i < topic_result.partitions.length; i++) {
 					scope.partitions.push(i);
 				}
@@ -100,8 +101,6 @@ consumer_module.run(function(editableOptions) {
 			});
 		}
 	});
-
-	
 
 	scope.add_receiver = function() {
 		scope.currentConsumerMonitorReceivers.push({
@@ -128,7 +127,7 @@ consumer_module.run(function(editableOptions) {
 		retryPolicy : '3:[3,3000]',
 		idcPolicy : 'local'
 	};
-	
+
 	scope.idcPolicies = [ 'local', 'primary' ];
 
 	scope.newTopicNames = "";
@@ -140,6 +139,8 @@ consumer_module.run(function(editableOptions) {
 	scope.shift = 0;
 
 	scope.partitions = [ 'all' ];
+
+	scope.topic = {};
 
 	scope.partition = 'all';
 
@@ -231,7 +232,8 @@ consumer_module.run(function(editableOptions) {
 						consumer_resource.reset_offset_by_timestamp({
 							topic : scope.currentConsumer.topicName,
 							consumer : scope.currentConsumer.name,
-							timestamp : scope.currentConsumer.resetOption == "latest" ? -1 : scope.currentTimestamp.getTime()
+							resetType : scope.currentConsumer.resetOption,
+							timestamp : scope.currentTimestamp.getTime()
 						}, function(result) {
 							scope.$broadcast('alert-success', 'alert', '重置Offset成功！可以启动consumer。');
 						}, function(result) {
@@ -260,7 +262,7 @@ consumer_module.run(function(editableOptions) {
 	}
 
 	scope.addConsumer = function(newConsumer) {
-		 var topics = scope.newTopicNames.split(",");
+		var topics = scope.newTopicNames.split(",");
 		for (var i = 0; i < topics.length; i++) {
 			var consumer = clone(newConsumer);
 			consumer.topicName = topics[i];
@@ -275,7 +277,7 @@ consumer_module.run(function(editableOptions) {
 					show_op_info.show("新增 consumer " + consumer.name + " for topics (" + consumer.topicName + ") 失败! " + result.data, false);
 				});
 			})(consumer);
-		 }
+		}
 	};
 
 	scope.update_consumer = function update_consumer(data, topicName, name) {

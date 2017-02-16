@@ -59,6 +59,9 @@ import com.google.common.base.Charsets;
 
 @Named
 public class ConsumerService {
+	public enum ResetPosition {
+		EARLIEST, LATEST, TIMESTAMP
+	}
 
 	private static final Logger logger = LoggerFactory.getLogger(ConsumerService.class);
 
