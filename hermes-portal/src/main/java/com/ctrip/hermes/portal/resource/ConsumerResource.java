@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSON;
 import com.ctrip.hermes.admin.core.queue.QueueType;
 import com.ctrip.hermes.admin.core.service.ConsumerService;
-import com.ctrip.hermes.admin.core.service.ConsumerService.ResetOption;
+import com.ctrip.hermes.admin.core.service.ConsumerService.ResetPosition;
 import com.ctrip.hermes.admin.core.service.KafkaService;
 import com.ctrip.hermes.admin.core.service.TopicService;
 import com.ctrip.hermes.admin.core.view.ConsumerGroupView;
@@ -88,16 +88,16 @@ public class ConsumerResource {
 			throw new RestException("Consumer group NOT found!", Status.NOT_FOUND);
 		}
 
-		ResetOption resetOption;
+		ResetPosition resetOption;
 		try {
-			resetOption = ResetOption.valueOf(resetType.toUpperCase());
+			resetOption = ResetPosition.valueOf(resetType.toUpperCase());
 		} catch (Exception e) {
 			throw new RestException(String.format("Unkwnon reset type:%s! It should be [earliest | latest | timestamp].",
 			      resetType));
 		}
 
 		if (Storage.KAFKA.equals(topic.getStorageType())) {
-			if (ResetOption.EARLIEST.equals(resetOption) || ResetOption.LATEST.equals(resetOption)) {
+			if (ResetPosition.EARLIEST.equals(resetOption) || ResetPosition.LATEST.equals(resetOption)) {
 				try {
 					kafkaService.resetConsumerOffset(topicName, consumerGroupName, resetOption);
 				} catch (Exception e) {

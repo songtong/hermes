@@ -10,7 +10,7 @@ import org.unidal.lookup.annotation.Named;
 import com.ctrip.hermes.admin.core.kafka.KafkaCluster;
 import com.ctrip.hermes.admin.core.kafka.KafkaClusterManager;
 import com.ctrip.hermes.admin.core.kafka.KafkaClusterOperationResult;
-import com.ctrip.hermes.admin.core.service.ConsumerService.ResetOption;
+import com.ctrip.hermes.admin.core.service.ConsumerService.ResetPosition;
 
 @Named
 public class KafkaService {
@@ -20,7 +20,7 @@ public class KafkaService {
 
 	private static final Logger m_logger = LoggerFactory.getLogger(KafkaService.class);
 
-	public void resetConsumerOffset(String topic, String consumerGroup, ResetOption resetOption) {
+	public void resetConsumerOffset(String topic, String consumerGroup, ResetPosition resetOption) {
 		Map<String, KafkaCluster> clusters;
 		try {
 			clusters = m_kafkaClusterManager.listClusters();

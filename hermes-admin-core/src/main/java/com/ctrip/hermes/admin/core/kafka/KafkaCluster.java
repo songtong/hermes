@@ -18,7 +18,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.ctrip.framework.apollo.Config;
 import com.ctrip.framework.apollo.ConfigService;
-import com.ctrip.hermes.admin.core.service.ConsumerService.ResetOption;
+import com.ctrip.hermes.admin.core.service.ConsumerService.ResetPosition;
 import com.ctrip.hermes.admin.core.view.TopicView;
 import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.Property;
@@ -59,7 +59,7 @@ public class KafkaCluster {
 		m_zookeeperConnect = zookeeperConnect;
 	}
 
-	public void resetOffset(String topic, String consumerGroup, ResetOption resetOption) {
+	public void resetOffset(String topic, String consumerGroup, ResetPosition resetOption) {
 		KafkaConsumer<String, byte[]> consumer = simpleConsumer(topic, consumerGroup);
 		List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
 		List<TopicPartition> topicPartitions = new ArrayList<TopicPartition>();
@@ -82,9 +82,9 @@ public class KafkaCluster {
 
 		try {
 			for (TopicPartition tp : assignment) {
-				if (ResetOption.EARLIEST.equals(resetOption)) {
+				if (ResetPosition.EARLIEST.equals(resetOption)) {
 					consumer.seekToBeginning(tp);
-				} else if (ResetOption.LATEST.equals(resetOption)) {
+				} else if (ResetPosition.LATEST.equals(resetOption)) {
 					consumer.seekToEnd(tp);
 				}
 			}

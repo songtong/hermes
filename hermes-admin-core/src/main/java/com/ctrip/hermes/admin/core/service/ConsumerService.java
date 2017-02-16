@@ -59,7 +59,7 @@ import com.google.common.base.Charsets;
 
 @Named
 public class ConsumerService {
-	public enum ResetOption {
+	public enum ResetPosition {
 		EARLIEST, LATEST, TIMESTAMP
 	}
 
