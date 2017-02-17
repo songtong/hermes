@@ -71,6 +71,12 @@
 						</div>
 					</div>
 					<div ng-if="logined" class="form-group">
+						<label class="col-md-4 control-label" style="padding-top: 0px">IP黑名单</label>
+						<div class="col-md-8">
+							<span ng-bind="currentConsumer.blackList" e-form="consumerDetailForm" editable-text="currentConsumer.blackList" e-name="blackList"></span>
+						</div>
+					</div>
+					<div ng-if="logined" class="form-group">
 						<label class="col-md-4 control-label" style="padding-top: 0px">机房消费策略</label>
 						<div class="col-md-8">
 							<span ng-bind="currentConsumer.idcPolicy" e-form="consumerDetailForm" editable-select="currentConsumer.idcPolicy" e-name="idcPolicy" e-ng-options="op for op in idcPolicies"></span>

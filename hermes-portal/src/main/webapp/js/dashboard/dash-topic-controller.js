@@ -23,7 +23,8 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 			DashboardTopicService.get_consumers_for_topic($scope.current_topic).then(function(result) {
 				$scope.consumers = result;
 				$scope.display_filtered_consumers = $scope.consumers;
-				$scope.current_consumer = $scope.route_consumer != null ? $scope.route_consumer : ($scope.consumers != null && $scope.consumers.length != 0) ? $scope.consumers[0].name : null;
+				$scope.consumer = findConsumer($scope.consumers, $scope.route_consumer);
+				$scope.current_consumer = $scope.consumer == null? null : $scope.consumer.name;
 
 				if ($scope.topic.storageType == 'kafka') {
 					$scope.trifecta_urls = DashboardTopicService.get_trifecta_urls();
@@ -60,7 +61,8 @@ dashtopic.controller('dash-topic-controller', function($scope, $http, $resource,
 
 					// ************** consumer delays **************** //
 
-					$scope.get_consumer_delay_for_topic = function(topic_name, consumer_name) {
+					$scope.get_consumer_delay_for_topic = function(topic_name, consumer_name, $event) {
+						$scope.current_consumer = consumer_name;
 						DashboardTopicService.get_consumer_delay_for_topic(topic_name, consumer_name).then(function(result) {
 							result.totalPriorityDelay = 0;
 							result.totalNonPriorityDelay = 0;
@@ -147,6 +149,26 @@ function find(key, list) {
 	for (var i = 0; i < list.length; i++) {
 		if (list[i].topic == key) {
 			return list[i];
+		}
+	}
+	return null;
+}
+
+function findConsumer(consumers, consumerName) {
+	if (!consumers) {
+		return null;
+	}
+	
+	if (!consumerName) {
+		if (consumers.length > 0) {
+			return consumers[0];
+		}
+		return null;
+	}
+	
+	for (var index in consumers) {
+		if (consumers[index].name = consumerName) {
+			return consumers[index];
 		}
 	}
 	return null;

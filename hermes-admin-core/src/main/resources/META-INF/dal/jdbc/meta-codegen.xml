@@ -87,6 +87,7 @@
 		<member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
 		<member name="topic-id" field="topic_id" value-type="long" length="20" nullable="false" />
 		<member name="enabled" field="enabled" value-type="boolean" />
+		<member name="black-list" field="blacklist" value-type="String"/>
 		<member name="idc-policy" field="idc_policy" value-type="String" length="50" />
 		<var name="key-id" value-type="int" key-member="id" />
 		<primary-key name="PRIMARY" members="id" />

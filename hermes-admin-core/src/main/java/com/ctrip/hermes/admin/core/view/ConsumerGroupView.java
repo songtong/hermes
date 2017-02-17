@@ -1,5 +1,6 @@
 package com.ctrip.hermes.admin.core.view;
 
+
 public class ConsumerGroupView {
 	private Integer id;
 
@@ -26,6 +27,8 @@ public class ConsumerGroupView {
 	private boolean enabled = true;
 
 	private String idcPolicy;
+	
+	private String blackList;
 
 	public ConsumerGroupView() {
 	}
@@ -128,19 +131,27 @@ public class ConsumerGroupView {
 
 	public String getIdcPolicy() {
 	   return idcPolicy;
-   }
+    }
 
 	public void setIdcPolicy(String idcPolicy) {
 	   this.idcPolicy = idcPolicy;
-   }
+	}
+
+	public String getBlackList() {
+		return blackList;
+	}
+
+	public void setBlackList(String blackList) {
+		this.blackList = blackList;
+	}
 
 	@Override
-   public String toString() {
+	public String toString() {
 	   return "ConsumerGroupView [id=" + id + ", topicName=" + topicName + ", owner1=" + owner1 + ", owner2=" + owner2
 	         + ", phone1=" + phone1 + ", phone2=" + phone2 + ", name=" + name + ", appIds=" + appIds + ", retryPolicy="
 	         + retryPolicy + ", ackTimeoutSeconds=" + ackTimeoutSeconds + ", orderedConsume=" + orderedConsume
 	         + ", enabled=" + enabled + ", idcPolicy=" + idcPolicy + "]";
-   }
+	}
 
 	
 }

@@ -1,13 +1,19 @@
 package com.ctrip.hermes.metaserver.consumer;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.tuple.Pair;
+import org.unidal.tuple.Triple;
 
 import com.ctrip.hermes.core.bo.Tpg;
 import com.ctrip.hermes.core.lease.LeaseAcquireResponse;
 import com.ctrip.hermes.core.service.SystemClockService;
+import com.ctrip.hermes.core.utils.StringUtils;
 import com.ctrip.hermes.meta.entity.ConsumerGroup;
 import com.ctrip.hermes.meta.entity.Topic;
 import com.ctrip.hermes.metaserver.commons.Assignment;
@@ -16,12 +22,15 @@ import com.ctrip.hermes.metaserver.commons.LeaseHolder.LeaseOperationCallback;
 import com.ctrip.hermes.metaserver.commons.LeaseHolder.LeasesContext;
 import com.ctrip.hermes.metaserver.config.MetaServerConfig;
 import com.ctrip.hermes.metaserver.meta.MetaHolder;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 /**
  * @author Leo Liang(jhliang@ctrip.com)
  *
  */
-public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAllocator {
+public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAllocator, Initializable {
 
 	@Inject
 	protected MetaServerConfig m_config;
@@ -40,6 +49,8 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 
 	@Inject
 	protected MetaHolder m_metaHolder;
+
+	protected LoadingCache<Triple<String, String, String>, Boolean> m_blackListCache;
 
 	public void setConfig(MetaServerConfig config) {
 		m_config = config;
@@ -72,6 +83,11 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 			      + m_config.getEnabledConsumerCheckIntervalTimeMillis());
 		}
 
+		if (isIpInBlackList(tpg, ip)) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+			      + m_config.getBlackListIpCheckIntervalTimeMillis());
+		}
+
 		heartbeat(tpg, consumerName, ip);
 
 		Pair<String, String> topicGroup = new Pair<>(tpg.getTopic(), tpg.getGroupId());
@@ -92,6 +108,11 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 		if (!isConsumerEnabled(tpg.getTopic(), tpg.getGroupId())) {
 			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
 			      + m_config.getEnabledConsumerCheckIntervalTimeMillis());
+		}
+
+		if (isIpInBlackList(tpg, ip)) {
+			return new LeaseAcquireResponse(false, null, m_systemClockService.now()
+			      + m_config.getBlackListIpCheckIntervalTimeMillis());
 		}
 
 		heartbeat(tpg, consumerName, ip);
@@ -118,6 +139,10 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 			}
 		}
 		return false;
+	}
+
+	private boolean isIpInBlackList(Tpg tpg, String ip) {
+		return m_blackListCache.getUnchecked(Triple.from(tpg.getTopic(), tpg.getGroupId(), ip));
 	}
 
 	protected LeaseAcquireResponse topicConsumerGroupNoAssignment() {
@@ -176,5 +201,26 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 
 	protected abstract LeaseAcquireResponse doRenewLease(final Tpg tpg, final String consumerName, final long leaseId,
 	      LeasesContext leasesContext, String ip) throws Exception;
+
+	public void initialize() {
+		m_blackListCache = CacheBuilder.newBuilder()
+		      .expireAfterWrite(m_config.getBlackListReloadIntervalTimeMillis(), TimeUnit.MILLISECONDS)
+		      .build(new CacheLoader<Triple<String, String, String>, Boolean>() {
+
+			      @Override
+			      public Boolean load(Triple<String, String, String> key) throws Exception {
+				      Topic topic = m_metaHolder.getMeta().findTopic(key.getFirst());
+				      if (topic != null) {
+					      ConsumerGroup consumer = topic.findConsumerGroup(key.getMiddle());
+					      if (consumer != null && !StringUtils.isBlank(consumer.getBlackList())) {
+						      return Arrays.asList(consumer.getBlackList().split(",")).contains(key.getLast());
+					      }
+					      return false;
+				      }
+				      return false;
+			      }
+
+		      });
+	}
 
 }

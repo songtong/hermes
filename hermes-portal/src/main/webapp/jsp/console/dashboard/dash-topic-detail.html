@@ -8,6 +8,11 @@
 		<li>fws: <a href="{{trifecta_urls.fws}}">{{trifecta_urls.fws}}</a></li>
 		<li>uat: <a href="{{trifecta_urls.uat}}">{{trifecta_urls.uat}}</a></li>
 		<li>prod: <a href="{{trifecta_urls.prod}}">{{trifecta_urls.prod}}</a></li>
+		<li>prod: <a href="{{trifecta_urls.prod}}">{{trifecta_urls.prod}}</a></li>
+	</ul>
+	<h4>Kafka Topic 消息产生和消费趋势对比：</h4>
+	<ul>
+		<li>prod: <a href="http://hickwall.ctripcorp.com/grafana/dashboard/db/1/hermes?templating=topic:{{topic.id}}">http://hickwall.ctripcorp.com/grafana/dashboard/db/1/hermes?templating=topic:{{topic.id}}</a></li>
 	</ul>
 </div>
 <div ng-if="topic.storageType=='mysql'">
@@ -33,8 +38,7 @@
 		<div class="col-md-12" style="height: 100%">
 			<div class="panel panel-success" style="height: 100%">
 				<div class="panel-heading">
-					Consumer 消费延时 <a href="#deadletter/latest/{{current_topic}}/{{current_consumer}}" class="btn btn-xs btn-info" style="text-align: center;"> <span class="glyphicon glyphicon-eye-open"></span> 查看死信
-					</a>
+					Consumer 消费延时
 				</div>
 				<div class="panel-body" style="height: 90%">
 					<div ng-if="consumers.length==0">
@@ -47,9 +51,21 @@
 							<input class="form-control" ng-model="search.name"> <br>
 							<div class="well" style="overflow-y: auto; height: 80%; padding: 0px;">
 								<ul class="nav nav-pills nav-stacked" ng-repeat="consumer in consumers|filter:search:strict">
-									<li ng-if="route_consumer!=null && current_consumer==consumer.name" role="presentation" ng-class="'active'" tooltip="{{consumer.name}} (id:{{consumer.id}})" ng-click="get_consumer_delay_for_topic(current_topic,consumer.name)"><a style="cursor: pointer;">{{consumer.name|short:26}}</a></li>
-									<li ng-if="route_consumer==null && current_consumer==consumer.name" role="presentation" ng-class="'active'" tooltip="{{consumer.name}} (id:{{consumer.id}})"><a href="#/detail/{{current_topic}}/{{consumer.name}}">{{consumer.name|short:26}}</a></li>
-									<li ng-if="current_consumer!=consumer.name" role="presentation" tooltip="{{consumer.name}} (id:{{consumer.id}})"><a href="#/detail/{{current_topic}}/{{consumer.name}}">{{consumer.name|short:26}}</a></li>
+									<li role="presentation" tooltip="{{consumer.name}} (id:{{consumer.id}})" ng-click="get_consumer_delay_for_topic(current_topic,consumer.name)">
+									<!-- Split button -->
+									<div class="btn-group col-md-12" style="padding-left:0px; padding-right:0px;">
+									  <button type="button" ng-class="'btn btn-primary col-md-11 ' + {true: 'active', false: ''}[current_consumer==consumer.name]">{{consumer.name|short:26}}</button>
+									  <button type="button" class="btn btn-primary col-md-1 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									  	<span class="caret"></span>
+									  	&nbsp;
+									  	<span class="sr-only">Toggle Dropdown</span>
+									  </button>
+									  <ul class="dropdown-menu pull-right">
+									    <li><a href="#deadletter/latest/{{current_topic}}/{{current_consumer}}"><span class="glyphicon glyphicon-eye-open"></span>&nbsp死信</a></li>
+									    <li><a target="_blank" href="http://hickwall.ctripcorp.com/grafana/dashboard/db/1/hermes?templating=topic:{{topic.id}}&templating=consumer:{{consumer.id}}"><span class="glyphicon glyphicon-stats"></span>&nbsp生产消费对比(Prod)</a></li>
+									  </ul>
+									</div>
+									</li>
 								</ul>
 							</div>
 						</div>
