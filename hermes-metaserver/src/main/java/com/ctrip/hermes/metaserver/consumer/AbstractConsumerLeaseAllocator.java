@@ -142,11 +142,7 @@ public abstract class AbstractConsumerLeaseAllocator implements ConsumerLeaseAll
 	}
 
 	private boolean isIpInBlackList(Tpg tpg, String ip) {
-		try {
-			return m_blackListCache.get(Triple.from(tpg.getTopic(), tpg.getGroupId(), ip));
-		} catch (ExecutionException e) {
-			return false;
-		}
+		return m_blackListCache.getUnchecked(Triple.from(tpg.getTopic(), tpg.getGroupId(), ip));
 	}
 
 	protected LeaseAcquireResponse topicConsumerGroupNoAssignment() {
