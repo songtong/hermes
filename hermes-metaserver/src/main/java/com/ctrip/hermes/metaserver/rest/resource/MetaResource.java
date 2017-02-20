@@ -80,7 +80,7 @@ public class MetaResource {
 			return Response.status(Status.NOT_MODIFIED).build();
 		}
 		
-		return Response.status(Status.OK).entity(m_metaHolder.getCompressedClientMeta()).build();
+		return Response.status(Status.OK).entity(m_metaHolder.getCompressedClientMeta()).header("Content-Encoding", "gzip").build();
 	}
 
 	@POST
