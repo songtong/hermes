@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -26,6 +24,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.ctrip.hermes.portal.config.PortalConfig;
 
 @Named
@@ -79,7 +78,7 @@ public class TracerEsQueryService {
 		return m_token;
 	}
 
-	public JsonNode searchBizByRefKey(long topic, String refKey, Date date) {
+	public JSONObject searchBizByRefKey(long topic, String refKey, Date date) {
 		SearchSourceBuilder m_sourceBuilder = new SearchSourceBuilder();
 		m_sourceBuilder
 		      .query(
@@ -95,7 +94,7 @@ public class TracerEsQueryService {
 
 	}
 
-	public JsonNode searchBizByMsgId(long topic, int partition, long msgId, Date date) {
+	public JSONObject searchBizByMsgId(long topic, int partition, long msgId, Date date) {
 		// suppose message will be consumed within 2 days;
 		SearchSourceBuilder m_sourceBuilder = new SearchSourceBuilder();
 		m_sourceBuilder
@@ -119,7 +118,7 @@ public class TracerEsQueryService {
 		return requestElasticSearch(index, date, m_sourceBuilder.toString());
 	}
 
-	public JsonNode searchBizByResendId(long topic, int partition, List<Long> resendIds, Date date) {
+	public JSONObject searchBizByResendId(long topic, int partition, List<Long> resendIds, Date date) {
 		// suppose message will be consumed within 2 days;
 		// Result includes events which "isResend == false", U should remove them manually.
 		SearchSourceBuilder m_sourceBuilder = new SearchSourceBuilder();
@@ -146,7 +145,7 @@ public class TracerEsQueryService {
 		return requestElasticSearch(index, date, m_sourceBuilder.toString());
 	}
 
-	private JsonNode requestElasticSearch(String index, Date date, String query) {
+	private JSONObject requestElasticSearch(String index, Date date, String query) {
 		String esQueryUrl = String.format("%s/%s/_search", m_config.getEsQueryUrl(), index);
 		// String esQueryUrl = String.format("%s/%s/_search", "http://osg.ops.ctripcorp.com/api/10900", index);
 		System.out.println(esQueryUrl);
@@ -164,25 +163,23 @@ public class TracerEsQueryService {
 			conn.setRequestMethod("POST");
 			conn.addRequestProperty("content-type", "application/json");
 			conn.setDoOutput(true);
-			conn.connect();
 			os = conn.getOutputStream();
 			os.write(JSON.toJSONBytes(payload));
-			System.out.println(payload.values());
+			os.flush();
+			conn.connect();
 
 			int statusCode = conn.getResponseCode();
 			if (statusCode == 200) {
 				is = conn.getInputStream();
-				ObjectMapper om = new ObjectMapper();
-				return om.readTree(is);
+				return JSON.parseObject(is, JSONObject.class);
 				// return IO.INSTANCE.readFrom(is, Charsets.UTF_8.name());
 			} else {
 				m_logger.warn("Query Es Failed! ResponseStatusCode:{}, Payload:{} !", statusCode, query);
-				throw new RuntimeException(String.format("Query Es Failed! ResponseStatusCode:%s, Payload:%s!", statusCode,
-				      query));
+				throw new RuntimeException(String.format("Query Es Failed! ResponseStatusCode:%s!", statusCode));
 			}
 		} catch (Exception e) {
 			m_logger.warn("Query Es with payload:{} failed!", query, e);
-			throw new RuntimeException(String.format("Query Es Failed! Payload:%s.", query), e);
+			throw new RuntimeException(String.format("Query Es Failed! %s!", e.getMessage()));
 		} finally {
 			if (is != null) {
 				try {
