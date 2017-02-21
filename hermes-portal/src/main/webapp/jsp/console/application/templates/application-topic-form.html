@@ -52,18 +52,8 @@
 		<label class="col-md-4 control-label">需要压缩？</label>
 		<div class="col-md-6">
 			<div class="btn-group">
-				<label class="btn"> <input type="radio" name="retryStrategy" ng-value=true ng-model="application.needCompress"> 是
-				</label> <label class="btn"> <input type="radio" name="retryStrategy" ng-value=false ng-model="application.needCompress"> 否
-				</label>
-			</div>
-		</div>
-	</div>
-	<div class="form-group" ng-show="application.storageType=='kafka'">
-		<label class="col-md-4 control-label">是否写主机房？</label>
-		<div class="col-md-6">
-			<div class="btn-group">
-				<label class="btn"> <input type="radio" name="retryStrategy" ng-value=true ng-model="application.writePrimaryIdc"> 是
-				</label> <label class="btn"> <input type="radio" name="retryStrategy" ng-value=false ng-model="application.writePrimaryIdc"> 否
+				<label class="btn"> <input type="radio" name="needCompress" ng-value=true ng-model="application.needCompress"> 是
+				</label> <label class="btn"> <input type="radio" name="needCompress" ng-value=false ng-model="application.needCompress"> 否
 				</label>
 			</div>
 		</div>
@@ -81,6 +71,16 @@
 			<slider ng-model="application.compressionLevel" min="1" step="1" max="9" value="application.compressionLevel"></slider>
 		</div>
 		<div class="col-md-1">{{application.compressionLevel}}</div>
+	</div>
+	<div class="form-group" ng-show="application.storageType=='kafka'">
+		<label class="col-md-4 control-label">是否写主机房？</label>
+		<div class="col-md-6">
+			<div class="btn-group">
+				<label class="btn"> <input type="radio" name="writePrimaryIdc" ng-value=true ng-model="application.writePrimaryIdc"> 是
+				</label> <label class="btn"> <input type="radio" name="writePrimaryIdc" ng-value=false ng-model="application.writePrimaryIdc"> 否
+				</label>
+			</div>
+		</div>
 	</div>
 	<div class="form-group">
 		<label class="col-md-4 control-label">消息上限（条/天）</label>
