@@ -86,7 +86,7 @@ public class RemoteMetaLoader implements MetaLoader {
 
 				if (statusCode == 200) {
 					is = conn.getInputStream();
-					if (defaultClientMetaUri.equals(uri)) {
+					if ("gzip".equals(conn.getContentEncoding())) {
 						byte[] responseContent = IO.INSTANCE.readFrom(is);
 						try {
 							fetchedMeta = ClientMeta.deserialize(responseContent);
@@ -128,5 +128,4 @@ public class RemoteMetaLoader implements MetaLoader {
 		}
 		throw new RuntimeException(String.format("Failed to load remote meta from %s", ipPorts));
 	}
-
 }

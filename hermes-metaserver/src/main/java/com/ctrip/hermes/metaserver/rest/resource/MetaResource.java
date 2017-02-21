@@ -79,8 +79,8 @@ public class MetaResource {
 		if (!isMetaModified(version, hashCode, meta)) {
 			return Response.status(Status.NOT_MODIFIED).build();
 		}
-		
-		return Response.status(Status.OK).entity(m_metaHolder.getCompressedClientMeta()).build();
+
+		return Response.status(Status.OK).entity(m_metaHolder.getCompressedClientMeta()).encoding("gzip").build();
 	}
 
 	@POST
