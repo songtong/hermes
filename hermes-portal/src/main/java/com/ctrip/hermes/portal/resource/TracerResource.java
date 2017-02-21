@@ -37,22 +37,21 @@ public class TracerResource {
 	@GET
 	public Response trace(@QueryParam("topicName") String topicName, @QueryParam("refKey") String refKey,
 	      @QueryParam("date") long date) {
-		
+
 		if (m_topicService.findTopicEntityByName(topicName) == null) {
 			throw new RestException("Topic not found!", Status.BAD_REQUEST);
 		}
-		
+
 		if (new Date().getTime() < date) {
 			throw new RestException("Invalid date!", Status.BAD_REQUEST);
 		}
-		
+
 		Date d = new Date(getDate(date));
 		m_logger.info("Trace message with topic:{}, refKey:{}, date:{}", topicName, refKey, d);
-		
+
 		try {
 			Pair<List<MessageLifecycle>, List<Pair<String, Object>>> result = m_tracerService.trace(topicName, d, refKey);
 			String json = JSON.toJSONString(result);
-			System.out.println(json);
 			return Response.ok().entity(json).build();
 		} catch (Exception e) {
 			throw new RestException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
@@ -65,10 +64,6 @@ public class TracerResource {
 		date = date - date % TimeUnit.DAYS.toMillis(1);
 		date -= TimeUnit.HOURS.toMillis(8);
 		return date;
-	}
-
-	public static void main(String[] args) {
-
 	}
 
 }

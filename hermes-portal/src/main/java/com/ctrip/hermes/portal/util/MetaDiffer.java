@@ -66,8 +66,6 @@ public class MetaDiffer {
 		ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
 		DiffNode root = builder.build().compare(newMeta, oldMeta);
 
-		final boolean showAll = false;
-
 		MetaDiff metaDiff = new MetaDiff();
 
 		final List<DiffNode> added = new LinkedList<>();
@@ -78,9 +76,6 @@ public class MetaDiffer {
 
 			@Override
 			public void node(DiffNode node, Visit visit) {
-				if (showAll) {
-					System.out.println(node.getPath() + " => " + node.getState());
-				}
 
 				State state = node.getState();
 
