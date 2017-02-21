@@ -148,7 +148,6 @@ public class TracerEsQueryService {
 	private JSONObject requestElasticSearch(String index, Date date, String query) {
 		String esQueryUrl = String.format("%s/%s/_search", m_config.getEsQueryUrl(), index);
 		// String esQueryUrl = String.format("%s/%s/_search", "http://osg.ops.ctripcorp.com/api/10900", index);
-		System.out.println(esQueryUrl);
 
 		Map<String, Object> payload = new HashMap<>();
 		payload.put("access_token", getToken());

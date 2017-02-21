@@ -54,7 +54,6 @@ public class Handler implements PageHandler<Context> {
 					return ((ConsumerGroup) obj).getName();
 				}
 			});
-			System.out.println(list);
 			model.setConsumers(list);
 			model.setKibanaUrl(m_config.getKibanaBaseUrl());
 			break;
