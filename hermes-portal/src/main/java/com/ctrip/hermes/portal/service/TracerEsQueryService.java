@@ -163,10 +163,9 @@ public class TracerEsQueryService {
 			conn.setRequestMethod("POST");
 			conn.addRequestProperty("content-type", "application/json");
 			conn.setDoOutput(true);
+			conn.connect();
 			os = conn.getOutputStream();
 			os.write(JSON.toJSONBytes(payload));
-			os.flush();
-			conn.connect();
 
 			int statusCode = conn.getResponseCode();
 			if (statusCode == 200) {
