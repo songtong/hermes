@@ -368,10 +368,8 @@ public class SchemaService {
 	 * @param schemaId
 	 * @return
 	 * @throws DalException
-	 * @throws IOException
-	 * @throws RestClientException
 	 */
-	public SchemaView getSchemaView(long schemaId) throws DalException, IOException, RestClientException {
+	public SchemaView getSchemaView(long schemaId) throws DalException {
 		Schema schema = getSchemaMeta(schemaId);
 		SchemaView schemaView = toSchemaView(schema);
 		return schemaView;

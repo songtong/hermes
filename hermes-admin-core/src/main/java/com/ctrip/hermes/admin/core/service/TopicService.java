@@ -1,8 +1,5 @@
 package com.ctrip.hermes.admin.core.service;
 
-import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -301,6 +298,47 @@ public class TopicService {
 		return filtered;
 	}
 
+	public List<TopicView> filterTopicViews(TopicView topicView) throws Exception {
+		List<TopicView> filtered = new ArrayList<TopicView>();
+		for (TopicView topic : findTopicViews(true)) {
+			if (topicView.getStorageType() != null && topic.getStorageType() != null
+			      && !topic.getStorageType().contains(topicView.getStorageType())) {
+				continue;
+			}
+			// only topic name matches by regex
+			if (topicView.getName() != null && topic.getName() != null
+			      && !Pattern.matches(topicView.getName(), topic.getName())) {
+				continue;
+			}
+			if (topicView.getCodecType() != null && topic.getCodecType() != null
+			      && !topic.getCodecType().contains(topicView.getCodecType())) {
+				continue;
+			}
+			if (topicView.getConsumerRetryPolicy() != null && topic.getConsumerRetryPolicy() != null
+			      && !topic.getConsumerRetryPolicy().contains(topicView.getConsumerRetryPolicy())) {
+				continue;
+			}
+			if (topicView.getBrokerGroup() != null && topic.getBrokerGroup() != null
+			      && !topic.getBrokerGroup().contains(topicView.getBrokerGroup())) {
+				continue;
+			}
+			if (topicView.getEndpointType() != null && topic.getEndpointType() != null
+			      && !topic.getEndpointType().contains(topicView.getEndpointType())) {
+				continue;
+			}
+
+			filtered.add(topic);
+		}
+
+		Collections.sort(filtered, new Comparator<TopicView>() {
+			@Override
+			public int compare(TopicView o1, TopicView o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
+		return filtered;
+	}
+
 	public Map<String, TopicView> getTopicViews() {
 		Map<String, TopicView> result = new HashMap<String, TopicView>();
 		try {
@@ -389,7 +427,7 @@ public class TopicService {
 		return findTopicViewByName(topicModel.getName());
 	}
 
-	public List<TopicView> findTopicViews(boolean isFillDetail) throws DalException, IOException, RestClientException {
+	public List<TopicView> findTopicViews(boolean isFillDetail) throws DalException {
 		Collection<com.ctrip.hermes.admin.core.model.Topic> models = m_topicDao.list(false);
 		List<TopicView> views = new ArrayList<>();
 		for (com.ctrip.hermes.admin.core.model.Topic model : models) {
@@ -488,7 +526,7 @@ public class TopicService {
 		return topicEntity;
 	}
 
-	private TopicView fillTopicView(TopicView topicView) throws DalException, IOException, RestClientException {
+	private TopicView fillTopicView(TopicView topicView) throws DalException {
 		// Fill Storage
 		Storage storage = m_datasourceService.getStorages().get(topicView.getStorageType());
 		topicView.setStorage(storage);
@@ -510,4 +548,5 @@ public class TopicService {
 		return topicView;
 
 	}
+
 }

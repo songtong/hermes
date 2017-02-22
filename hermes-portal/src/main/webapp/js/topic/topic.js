@@ -1,4 +1,4 @@
-var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-table', 'ui.bootstrap', 'lr.upload', 'xeditable', 'user', 'ui.bootstrap-slider']).config(function($routeProvider) {
+var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-table', 'ui.bootstrap', 'lr.upload', 'xeditable', 'user', 'ui.bootstrap-slider', 'utils', 'components' ]).config(function($routeProvider) {
 	$routeProvider.when('/list/:type', {
 		templateUrl : '/jsp/console/topic/topic-list.html',
 		controller : 'list-controller'
@@ -128,19 +128,7 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 		return names;
 	}
 
-	var current_topics = [];
 	var storages = [];
-
-	function remove_topic_in_meta(topic, index) {
-		topic_resource.remove({
-			"name" : topic.name
-		}, function(remove_result) {
-			show_op_info.show("删除 " + topic.name + " 成功！", true);
-			current_topics.splice(index, 1);
-		}, function(error_result) {
-			show_op_info.show("删除 " + topic.name + " 失败: " + error_result.data, false);
-		});
-	}
 
 	return {
 		'get_broker_groups' : function() {
@@ -180,6 +168,8 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 				name : topic
 			}, function(query_result) {
 				d.resolve(query_result);
+			}, function(result) {
+				d.reject(result.data);
 			});
 			return d.promise;
 		},
@@ -192,15 +182,21 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 			});
 			return d.promise;
 		},
-		'fetch_topics' : function(type) {
-			topic_resource.query({
-				'type' : type
+		'fetch_topics' : function(type, filter, startPage, pageSize) {
+			console.log("type=" + type);
+			console.log("filter=" + JSON.stringify(filter));
+			console.log("startPage" + startPage);
+			console.log("pageSize" + pageSize);
+			var d = $q.defer();
+			topic_resource.get({
+				'type' : type,
+				'startPage' : startPage,
+				'pageSize' : pageSize,
+				'filter' : JSON.stringify(filter)
 			}, function(data) {
-				current_topics = data;
+				d.resolve(data);
 			});
-		},
-		'get_topics' : function() {
-			return current_topics;
+			return d.promise;
 		},
 		'save_topic' : function(new_topic, path_when_success) {
 			topic_resource.save(new_topic, function(save_result) {
@@ -229,29 +225,28 @@ var topic_module = angular.module('topic', [ 'ngResource', 'ngRoute', 'smart-tab
 				show_op_info.show("新增 " + new_topic.name + " 失败: " + error_result.data, false);
 			});
 		},
-		'delete_topic' : function(topic, index) {
-			if (topic.storageType == 'kafka') {
-				topic_resource.undeploy_topic({
-					name : topic.name
-				}, function(success_resp) {
-					show_op_info.show("删除Kafka记录成功, 正在删除Topic...", true);
-					remove_topic_in_meta(topic, index);
-				}, function(error_resp) {
-					show_op_info.show("删除Kafka记录失败", false);
-					bootbox.confirm({
-						title : "请确认",
-						message : "删除Kafka记录失败，是否继续删除Topic?",
-						locale : "zh_CN",
-						callback : function(result) {
-							if (result) {
-								remove_topic_in_meta(topic, index);
-							}
-						}
-					});
-				});
-			} else {
-				remove_topic_in_meta(topic, index);
-			}
+		'delete_topic' : function(topic) {
+			console.log(topic)
+			var d = $q.defer();
+			topic_resource.remove({
+				"name" : topic.name
+			}, function(result) {
+				d.resolve(result);
+			}, function(result) {
+				d.reject(result);
+			});
+			return d.promise;
+		},
+		'undeploy_topic' : function(topic) {
+			var d = $q.defer();
+			topic_resource.undeploy_topic({
+				name : topic.name
+			}, function(result) {
+				d.resolve(result);
+			}, function(result) {
+				d.reject(result);
+			});
+			return d.promise;
 		},
 		'sync_topic' : function(topic_name, force_sync_schema) {
 			topic_resource.sync_topic({

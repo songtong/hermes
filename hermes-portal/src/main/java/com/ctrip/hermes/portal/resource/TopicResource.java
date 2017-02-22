@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.inject.Singleton;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -141,25 +142,40 @@ public class TopicResource {
 	}
 
 	@GET
-	public List<TopicView> findTopics(@QueryParam("pattern") String pattern, @QueryParam("type") String type) {
-		log.debug("find topics, pattern {}", pattern);
-		if (StringUtils.isEmpty(pattern)) {
-			pattern = ".*";
-		}
+	public Pair<Integer, List<TopicView>> findTopics(@QueryParam("type") String type,
+	      @QueryParam("startPage") int startPage, @QueryParam("pageSize") @DefaultValue("15") int pageSize,
+	      @QueryParam("filter") String filterContent) {
+		log.debug("find topics, pattern {}", filterContent);
 
-		List<TopicView> result = new ArrayList<>();
 		try {
-			for (TopicView topicView : topicService.findTopicViews(pattern)) {
-				if (type == null || type.equals(topicView.getStorageType())) {
-					topicView.setLatestProduced(monitorService.getLatestProduced(topicView.getName()));
-					result.add(topicView);
+			TopicView filter = JSON.parseObject(filterContent, TopicView.class);
+			if (filter == null) {
+				filter = new TopicView();
+			}
+			if (filter.getName() == null) {
+				filter.setName(".*");
+			} else {
+				filter.setName(".*" + filter.getName() + ".*");
+			}
+			filter.setStorageType(type);
+
+			List<TopicView> topicViews = topicService.filterTopicViews(filter);
+			List<TopicView> result = new ArrayList<>();
+			int count = 0;
+			for (int i = startPage * pageSize; i < topicViews.size(); i++) {
+				TopicView topicView = topicViews.get(i);
+				topicView.setLatestProduced(monitorService.getLatestProduced(topicView.getName()));
+				result.add(topicView);
+				count++;
+				if (count >= pageSize) {
+					break;
 				}
 			}
+			return new Pair<Integer, List<TopicView>>(topicViews.size(), result);
 		} catch (Exception e) {
 			log.warn("find topics failed", e);
 			throw new RestException(e, Status.INTERNAL_SERVER_ERROR);
 		}
-		return result;
 	}
 
 	@GET
