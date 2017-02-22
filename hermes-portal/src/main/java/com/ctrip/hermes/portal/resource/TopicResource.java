@@ -152,11 +152,6 @@ public class TopicResource {
 			if (filter == null) {
 				filter = new TopicView();
 			}
-			if (filter.getName() == null) {
-				filter.setName(".*");
-			} else {
-				filter.setName(".*" + filter.getName() + ".*");
-			}
 			filter.setStorageType(type);
 
 			List<TopicView> topicViews = topicService.filterTopicViews(filter);

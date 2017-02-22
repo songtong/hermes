@@ -305,9 +305,7 @@ public class TopicService {
 			      && !topic.getStorageType().contains(topicView.getStorageType())) {
 				continue;
 			}
-			// only topic name matches by regex
-			if (topicView.getName() != null && topic.getName() != null
-			      && !Pattern.matches(topicView.getName(), topic.getName())) {
+			if (topicView.getName() != null && topic.getName() != null && !topic.getName().contains(topicView.getName())) {
 				continue;
 			}
 			if (topicView.getCodecType() != null && topic.getCodecType() != null
