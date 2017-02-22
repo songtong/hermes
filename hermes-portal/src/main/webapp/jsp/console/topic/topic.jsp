@@ -29,11 +29,12 @@
 	<script type="text/javascript" src="${model.webapp}/js/bootstrap-slider.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/slider.min.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/topic.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/topic/topic.js"></script>
-	<script type="text/javascript" src="${model.webapp}/js/topic/topic.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/topic-list-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/mysql-add-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/kafka-add-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/mysql-detail-controller.js"></script>
 	<script type="text/javascript" src="${model.webapp}/js/topic/kafka-detail-controller.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/global.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/utils.js"></script>
+	<script type="text/javascript" src="${model.webapp}/js/lib/components.js"></script>
 </a:layout>

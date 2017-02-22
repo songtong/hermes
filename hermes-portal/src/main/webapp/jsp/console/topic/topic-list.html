@@ -5,12 +5,8 @@
 		</label> <a ng-if="logined" href="#/add/{{current_topic_type}}/{{current_topic_type}}" class="btn btn-xs btn-success" style="text-align: center; float: right;"> <span class="glyphicon glyphicon-plus"></span> 新增
 		</a>
 	</div>
-	<div class="panel-body" ng-if="current_topics.length == 0">
-		<h2 style="text-align: center;">
-			<label class="label label-danger">NO TOPIC WAS FOUND</label>
-		</h2>
-	</div>
-	<table ng-if="current_topics.length > 0" class="table table-hover" st-safe-src="current_topics" st-pipe="current_topics" st-table="display_current_topics">
+
+	<table class="table table-hover" st-pipe="getTopics" st-table="display_current_topics">
 		<thead>
 			<tr>
 				<th>#</th>
@@ -29,13 +25,13 @@
 				<th></th>
 				<th><input st-search="name" placeholder="Topic" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 				<th><input st-search="codecType" placeholder="Codec" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
-				<th><input st-search="partitions" placeholder="Partitions" class="input-sm form-control" type="search" style="text-align: center;" ng-model-options="{updateOn:'blur'}" /></th>
+				<th></th>
 				<th ng-if="current_topic_type == 'mysql'"><input st-search="consumerRetryPolicy" placeholder="Policy" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 				<th ng-if="current_topic_type == 'mysql'"><input st-search="brokerGroup" placeholder="Broker Group" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
 				<th ng-if="current_topic_type == 'mysql'"></th>
 				<th ng-if="current_topic_type == 'kafka'"><input st-search="endpointType" placeholder="Endpoint" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-				<th><input st-search="schemaName" placeholder="Name" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
-				<th><input st-search="schemaVersion" placeholder="Version" class="input-sm form-control" type="search" ng-model-options="{updateOn:'blur'}" /></th>
+				<th></th>
+				<th></th>
 				<th></th>
 			</tr>
 		</thead>
@@ -100,7 +96,17 @@
 				<td colspan="8" class="text-center">Loading ...</td>
 			</tr>
 		</tbody>
+		<tfoot ng-if="display_current_topics.length != 0">
+			<tr>
+				<td class="text-center" colspan="11" pagination-x page-size="15"></td>
+			</tr>
+		</tfoot>
 	</table>
+	<div class="panel-body" ng-if="!is_loading && display_current_topics.length == 0">
+		<h2 style="text-align: center;">
+			<label class="label label-danger">NO TOPIC WAS FOUND</label>
+		</h2>
+	</div>
 </div>
 <div class="modal fade" id="schema-view" tabindex="-1" role="dialog" aria-labelledby="schema-view-label" aria-hidden="true">
 	<div class="modal-dialog" style="width: 1024px">

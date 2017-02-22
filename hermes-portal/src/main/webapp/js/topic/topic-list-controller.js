@@ -1,28 +1,75 @@
-topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParams', 'TopicService', 'upload', 'user', function($scope, $resource, $routeParams, TopicService, upload, user) {
+topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParams', 'TopicService', 'upload', 'user', '$filter', function($scope, $resource, $routeParams, TopicService, upload, user, $filter) {
 	$scope.logined = user.admin;
 	$scope.environment = environment;
 	$scope.routeParams = $routeParams;
 	$scope.cur_time = new Date();
 	$scope.current_topic_type = $scope.routeParams['type'] == undefined ? 'mysql' : $scope.routeParams['type'];
 	$scope.repositoryTypes = [ 'snapshots', 'releases' ];
-	TopicService.fetch_topics($scope.current_topic_type);
+	$scope.display_current_topics = [];
+	$scope.pageSize = 15;
 
-	$scope.$watch(TopicService.get_topics, function() {
-		$scope.current_topics = TopicService.get_topics();
-	});
-	$scope.display_current_topics = [].concat($scope.current_topics);
+	$scope.getTopics = function getTopics(tableState) {
+		// $scope.is_loading = true;
+		console.log(tableState)
+		var pagination = tableState.pagination;
+
+		var startPage = (pagination.start || 0) / $scope.pageSize;
+		var filter = tableState.search.predicateObject;
+		TopicService.fetch_topics($scope.current_topic_type, filter, startPage, $scope.pageSize).then(function(result) {
+			var topics = result.value;
+			topics = tableState.search.predicateObject ? $filter('filter')(topics, tableState.search.predicateObject) : topics;
+			if (tableState.sort.predicate) {
+				topics = $filter('orderBy')(topics, tableState.sort.predicate, tableState.sort.reverse);
+			}
+			$scope.display_current_topics = topics;
+			tableState.pagination.numberOfPages = Math.ceil(result.key / $scope.pageSize);
+			$scope.is_loading = false;
+		}, function(result) {
+			$scope.display_current_topics = [];
+			$scope.is_loading = false;
+		});
+	}
+
 	$scope.delete_topic = function(topic, index) {
+		console.log(topic, index)
 		bootbox.confirm({
 			title : "请确认",
 			message : "确认要删除 Topic: <label class='label label-danger'>" + topic.name + "</label> 吗？",
 			locale : "zh_CN",
 			callback : function(result) {
 				if (result) {
-					TopicService.delete_topic(topic, index);
+					if (topic.storageType == 'kafka') {
+						TopicService.undeploy_topic(topic).then(function(result) {
+							show_op_info.show("删除Kafka记录成功, 正在删除Topic...", true);
+							$scope.delete_topic_in_meta(topic);
+						}, function(result) {
+							bootbox.confirm({
+								title : "请确认",
+								message : "删除Kafka记录失败，是否继续删除Topic?",
+								locale : "zh_CN",
+								callback : function(result) {
+									if (result) {
+										$scope.delete_topic_in_meta(topic, index);
+									}
+								}
+							});
+						})
+					} else {
+						$scope.delete_topic_in_meta(topic, index);
+					}
 				}
 			}
 		});
 	};
+
+	$scope.delete_topic_in_meta = function(topic, index) {
+		TopicService.delete_topic(topic).then(function(result) {
+			show_op_info.show("删除Topic成功！", true);
+			$scope.display_current_topics.splice(index, 1);
+		}, function(result) {
+			show_op_info.show("删除Topic失败！", false);
+		});
+	}
 
 	$scope.delete_schema = function(row) {
 		console.log(row)
@@ -34,7 +81,11 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 				if (result) {
 					TopicService.delete_schema(row.schemaId).then(function(result) {
 						show_op_info.show("删除schema成功!", true);
-						TopicService.fetch_topics($scope.current_topic_type);
+						TopicService.fetch_topics($scope.current_topic_type).then(function(result) {
+							$scope.display_current_topics = result.value;
+						}, function(result) {
+							$scope.display_current_topics = [];
+						});
 					}, function(result) {
 						show_op_info.show("删除schema失败:" + result.data, false);
 					});
@@ -65,7 +116,11 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 	$scope.upload_result = function(row, success, response) {
 		if (success) {
 			show_op_info.show("上传schema成功!", true);
-			TopicService.fetch_topics($scope.current_topic_type);
+			TopicService.fetch_topics($scope.current_topic_type).then(function(result) {
+				$scope.display_current_topics = result.value;
+			}, function(result) {
+				$scope.display_current_topics = [];
+			});
 		} else {
 			if (response.status == 409) {
 				show_op_info.show("上传失败, Schema已经存在!", false);
@@ -112,7 +167,11 @@ topic_module.controller('list-controller', [ '$scope', '$resource', '$routeParam
 					$scope.prompt = "正在部署中...";
 					TopicService.deploy_schema_to_maven($scope.newSchema.id, $scope.newSchema.groupId, $scope.newSchema.artifactId, $scope.newSchema.version, $scope.newSchema.repositoryId).then(function(result) {
 						$scope.prompt = "部署成功！";
-						TopicService.fetch_topics($scope.current_topic_type);
+						TopicService.fetch_topics($scope.current_topic_type).then(function(result) {
+							$scope.display_current_topics = result.value;
+						}, function(result) {
+							$scope.display_current_topics = [];
+						});
 					}, function(result) {
 						$scope.prompt = "部署失败！";
 					});
