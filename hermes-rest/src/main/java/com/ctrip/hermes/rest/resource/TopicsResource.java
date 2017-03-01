@@ -126,8 +126,7 @@ public class TopicsResource {
 					Future<SendResult> sendResult = producerService.send(topic, params, content);
 					response.resume(sendResult.get());
 				} catch (Throwable e) {
-					response.resume(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e));
-					response.cancel();
+					response.resume(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
 				} finally {
 					context.stop();
 					contextGlobal.stop();
