@@ -1,6 +1,7 @@
 package com.ctrip.hermes.portal.resource;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -116,12 +117,18 @@ public class DashboardResource {
 			list = ListUtils.getTopK(20, MessagePriority.DATE_COMPARATOR_DESC, ls);
 		}
 
-		return Response.status(Status.OK).entity(CollectionUtil.collect(list, new Transformer() {
-			@Override
-			public Object transform(Object obj) {
-				return new MessageView((MessagePriority) obj);
-			}
-		})).build();
+		try {
+			@SuppressWarnings("rawtypes")
+			Collection collect = CollectionUtil.collect(list, new Transformer() {
+				@Override
+				public Object transform(Object obj) {
+					return new MessageView((MessagePriority) obj);
+				}
+			});
+			return Response.status(Status.OK).entity(collect).build();
+		} catch (Exception e) {
+			throw new RestException(String.format("Failed to decode some msgs!", e.getMessage()));
+		}
 	}
 
 	private static class MessageView {
