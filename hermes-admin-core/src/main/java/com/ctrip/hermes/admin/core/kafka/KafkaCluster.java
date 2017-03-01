@@ -87,6 +87,7 @@ public class KafkaCluster {
 				} else if (ResetPosition.LATEST.equals(resetOption)) {
 					consumer.seekToEnd(tp);
 				}
+				consumer.position(tp);
 			}
 			consumer.commitSync();
 		} catch (Exception e) {
