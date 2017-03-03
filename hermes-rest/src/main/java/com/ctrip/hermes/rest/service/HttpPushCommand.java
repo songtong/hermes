@@ -38,6 +38,10 @@ public class HttpPushCommand extends HystrixCommand<HttpResponse> {
 
 	private HttpClientContext context;
 
+	private byte[] rawMsg;
+
+	private boolean fromQmq;
+
 	public HttpPushCommand(CloseableHttpClient client, RequestConfig config, ConsumerMessage<RawMessage> msg, String url) {
 		super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(HttpPushCommand.class.getSimpleName()))
 		      .andCommandKey(HystrixCommandKey.Factory.asKey(url))
@@ -50,27 +54,47 @@ public class HttpPushCommand extends HystrixCommand<HttpResponse> {
 		this.url = url;
 	}
 
+	public HttpPushCommand(CloseableHttpClient client, RequestConfig config, byte[] rawMsg, String url) {
+		super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(HttpPushCommand.class.getSimpleName()))
+				.andCommandKey(HystrixCommandKey.Factory.asKey(url))
+				.andCommandPropertiesDefaults(HystrixCommandProperties.Setter().withExecutionTimeoutInMilliseconds(5000)));
+		this.client = client;
+		// this.client = HttpClients.createDefault();
+		this.context = HttpClientContext.create();
+		this.config = config;
+		this.rawMsg = rawMsg;
+		this.url = url;
+		this.fromQmq = true;
+	}
+
 	@Override
 	protected HttpResponse run() throws ClientProtocolException, IOException {
 		HttpPost post = new HttpPost(url);
 		CloseableHttpResponse response = null;
+		byte[] encodedMessage = null;
 		try {
 			post.setConfig(config);
-			byte[] encodedMessage = msg.getBody().getEncodedMessage();
-			ByteArrayInputStream stream = new ByteArrayInputStream(encodedMessage);
-			post.addHeader("X-Hermes-Topic", msg.getTopic());
-			post.addHeader("X-Hermes-Ref-Key", msg.getRefKey());
-			Iterator<String> propertyNames = msg.getPropertyNames();
-			if (propertyNames.hasNext()) {
-				StringBuilder sb = new StringBuilder();
-				while (propertyNames.hasNext()) {
-					String key = propertyNames.next();
-					String value = msg.getProperty(key);
-					sb.append(key).append('=').append(value).append(',');
+			if (this.fromQmq) {
+				encodedMessage = this.rawMsg;
+			} else {
+				encodedMessage = this.msg.getBody().getEncodedMessage();
+				post.addHeader("X-Hermes-Topic", msg.getTopic());
+				post.addHeader("X-Hermes-Ref-Key", msg.getRefKey());
+
+				Iterator<String> propertyNames = msg.getPropertyNames();
+				if (propertyNames.hasNext()) {
+					StringBuilder sb = new StringBuilder();
+					while (propertyNames.hasNext()) {
+						String key = propertyNames.next();
+						String value = msg.getProperty(key);
+						sb.append(key).append('=').append(value).append(',');
+					}
+					sb.deleteCharAt(sb.length() - 1);
+					post.addHeader("X-Hermes-Message-Property", sb.toString());
 				}
-				sb.deleteCharAt(sb.length() - 1);
-				post.addHeader("X-Hermes-Message-Property", sb.toString());
 			}
+
+			ByteArrayInputStream stream = new ByteArrayInputStream(encodedMessage);
 			post.setEntity(new InputStreamEntity(stream, encodedMessage.length, ContentType.APPLICATION_OCTET_STREAM));
 			// post.setEntity(new StringEntity(new String(msg.getBody().getEncodedMessage()), ContentType.TEXT_PLAIN));
 			response = client.execute(post, context);

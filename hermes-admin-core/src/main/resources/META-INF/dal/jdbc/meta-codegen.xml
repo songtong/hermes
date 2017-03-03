@@ -543,6 +543,7 @@
 	<entity name="subscription" table="subscription" alias="s4">
 		<member name="id" field="id" value-type="long" length="20" nullable="false" key="true" auto-increment="true" />
 		<member name="name" field="name" value-type="String" length="500" nullable="false" />
+		<member name="type" field="type" value-type="String" length="50" />
 		<member name="topic" field="topic" value-type="String" length="500" nullable="false" />
 		<member name="group" field="group" value-type="String" length="500" nullable="false" />
 		<member name="endpoints" field="endpoints" value-type="String" length="500" nullable="false" />

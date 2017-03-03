@@ -9,6 +9,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.ctrip.framework.clogging.agent.MessageConsumer;
+import com.ctrip.hermes.core.message.ConsumerMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
@@ -22,6 +24,9 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.rest.status.SubscriptionPushStatusMonitor;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import qunar.tc.qmq.Message;
+import qunar.tc.qmq.MessageListener;
+import qunar.tc.qmq.consumer.MessageConsumerProvider;
 
 @Named
 public class SubscriptionRegisterService {
@@ -31,6 +36,8 @@ public class SubscriptionRegisterService {
 	private Set<SubscriptionView> subscriptions = new HashSet<>();
 
 	private Map<SubscriptionView, ConsumerHolder> consumerHolders = new ConcurrentHashMap<>();
+
+	private Map<SubscriptionView, MessageConsumerProvider> consumerProviders = new ConcurrentHashMap<>();
 
 	@Inject
 	private HttpPushService httpService;
@@ -105,21 +112,17 @@ public class SubscriptionRegisterService {
 		ConsumerHolder consumerHolder = null;
 		boolean isStarted = true;
 		try {
-			if ("http".equalsIgnoreCase(sub.getType())) {
-				consumerHolder = httpService.startPusher(sub);
-			} else if ("soa".equalsIgnoreCase(sub.getType())) {
-				consumerHolder = soaService.startPusher(sub);
+			if (sub.getType() != null && "qmq".equalsIgnoreCase(sub.getType())) {
+				MessageConsumerProvider provider = httpService.startQmqPusher(sub);
+				consumerProviders.put(sub, provider);
 			} else {
-				// FIXME when portal support SOA
 				consumerHolder = httpService.startPusher(sub);
+				consumerHolders.put(sub, consumerHolder);
 			}
+			logger.info("Start {} succcessfully", sub);
 		} catch (Exception e) {
 			logger.warn("Start {} failed, {}", sub, e);
 			isStarted = false;
-		}
-		if (isStarted) {
-			consumerHolders.put(sub, consumerHolder);
-			logger.info("Start {} succcessfully", sub);
 		}
 
 		return isStarted;
@@ -129,8 +132,13 @@ public class SubscriptionRegisterService {
 		if (scheduledExecutor != null)
 			scheduledExecutor.shutdown();
 		for (SubscriptionView sub : subscriptions) {
-			ConsumerHolder consumerHolder = consumerHolders.remove(sub);
-			consumerHolder.close();
+			if (sub.getType() != null && sub.getType().equalsIgnoreCase("qmq")) {
+				MessageConsumerProvider provider = consumerProviders.get(sub);
+				provider.destroy();
+			} else {
+				ConsumerHolder consumerHolder = consumerHolders.remove(sub);
+				consumerHolder.close();
+			}
 		}
 		subscriptions.clear();
 		logger.info("SubscriptionRegisterService stopped");
@@ -139,17 +147,21 @@ public class SubscriptionRegisterService {
 	public boolean stopSubscription(SubscriptionView sub) {
 		logger.info("Stopping {}", sub);
 
-		ConsumerHolder consumerHolder = consumerHolders.get(sub);
 		boolean isClosed = true;
 		try {
-			consumerHolder.close();
+			if (sub.getType() != null && "qmq".equalsIgnoreCase(sub.getType())) {
+				MessageConsumerProvider provider = consumerProviders.get(sub);
+				provider.destroy();
+				consumerProviders.remove(sub);
+			} else {
+				ConsumerHolder consumerHolder = consumerHolders.get(sub);
+				consumerHolder.close();
+				consumerHolders.remove(sub);
+			}
+			logger.info("Stop {} successfully", sub);
 		} catch (Exception e) {
 			logger.warn("Stop {} failed, {}", sub, e);
 			isClosed = false;
-		}
-		if (isClosed) {
-			consumerHolders.remove(sub);
-			logger.info("Stop {} successfully", sub);
 		}
 
 		SubscriptionPushStatusMonitor.INSTANCE.removeMonitor(sub.getTopic(), sub.getGroup());

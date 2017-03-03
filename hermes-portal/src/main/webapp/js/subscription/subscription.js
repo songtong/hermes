@@ -39,7 +39,7 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 
 	scope.selected = {};
 	scope.subscribers = [];
-	scope.display_subscribers = [].concat(scope.subscribers);
+	scope.display_subscribers = scope.subscribers;
 
 	scope.topic_names = subscription_resource.get_topic_names({}, function(data) {
 		scope.topic_names = data;
@@ -49,7 +49,13 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 		scope.consumer_names = collect_schemas(data, 'name', true);
 	});
 
-	scope.subscribers = subscription_resource.get_subscribers({}, function(data) {
+	subscription_resource.get_subscribers({}, function(data) {
+		for (var index in data) {
+			var sub = data[index];
+			if (!sub.type) {
+				sub.type = 'hermes';
+			}
+		}
 		scope.subscribers = data;
 	});
 
@@ -121,10 +127,10 @@ angular.module('hermes-subscription', [ 'ngResource', 'ui.bootstrap', 'xeditable
 			show_op_info.show("Stop subscriber failed! " + resp.data, false);
 		});
 	};
-	
+
 	scope.checkName = function(data,id){
 		for(var idx =0; idx < scope.subscribers.length; idx++){
-			var subscriber =scope.subscribers[idx]; 
+			var subscriber =scope.subscribers[idx];
 			if(subscriber.id==id)
 				continue;
 			if(subscriber.name==data)
