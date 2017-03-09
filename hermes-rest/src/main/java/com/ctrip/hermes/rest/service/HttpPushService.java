@@ -33,6 +33,10 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.rest.status.SubscriptionPushStatusMonitor;
 import com.ctrip.hermes.rest.status.Tge;
+import qunar.tc.qmq.Message;
+import qunar.tc.qmq.MessageListener;
+import qunar.tc.qmq.consumer.MessageConsumerProvider;
+import qunar.tc.qmq.producer.MessageProducerProvider;
 
 @Named
 public class HttpPushService implements Initializable, Disposable {
@@ -147,6 +151,77 @@ public class HttpPushService implements Initializable, Disposable {
 			      }
 		      });
 		return consumerHolder;
+	}
+
+	public MessageConsumerProvider startQmqPusher(final SubscriptionView sub) throws Exception {
+		MessageConsumerProvider provider = new MessageConsumerProvider();
+		provider.afterPropertiesSet();
+
+		final String[] urls = sub.getEndpoints().split(",");
+
+		provider.addListener(sub.getTopic(), sub.getGroup(), new MessageListener(){
+
+			@Override
+			public void onMessage(Message msg) {
+				msg.autoAck(false);
+				Exception exception = null;
+
+				for (final String url : urls) {
+					Tge tge = new Tge(sub.getTopic(), sub.getGroup(), url);
+					BizEvent pushEvent = new BizEvent("Rest.push");
+					Timer.Context timerGlobal = SubscriptionPushStatusMonitor.INSTANCE.getPushTimerGlobal().time();
+					Timer.Context timer = SubscriptionPushStatusMonitor.INSTANCE.getPushTimer(tge).time();
+					try {
+						pushEvent.addData("topic", sub.getTopic());
+						pushEvent.addData("group", sub.getGroup());
+						pushEvent.addData("refKey", msg.getMessageId());
+						pushEvent.addData("endpoint", url);
+
+						byte[] rawMsg = msg.getStringProperty("data").getBytes();
+
+						SubscriptionPushStatusMonitor.INSTANCE.updateRequestMeter(tge);
+						SubscriptionPushStatusMonitor.INSTANCE.updateRequestSizeHistogram(tge, rawMsg.length);
+
+						HttpPushCommand command = new HttpPushCommand(m_httpClient, m_requestConfig, rawMsg, url);
+						HttpResponse pushResponse = command.execute();
+
+						pushEvent.addData("restResult", pushResponse.getStatusLine().getStatusCode());
+						if (pushResponse.getStatusLine().getStatusCode() == Response.Status.OK.getStatusCode()) {
+							break;
+						} else if (pushResponse.getStatusLine().getStatusCode() == Response.Status.INTERNAL_SERVER_ERROR
+								.getStatusCode()) {
+							m_logger
+									.warn("Http push message failed, will nack, endpoint:{} reason:{} topic:{} offset:{}",
+											url, pushResponse.getStatusLine().getReasonPhrase(), msg.getSubject(),
+											msg.getMessageId());
+							break;
+						} else {
+							m_logger
+									.warn("Http push message failed, will retry, endpoint:{} reason:{} topic:{} offset:{}",
+											url, pushResponse.getStatusLine().getReasonPhrase(), msg.getSubject(),
+											msg.getMessageId());
+						}
+
+						SubscriptionPushStatusMonitor.INSTANCE.updateFailedMeter(tge);
+						if (command.isCircuitBreakerOpen()) {
+							long errorCount = command.getMetrics().getHealthCounts().getErrorCount();
+							m_logger.warn("Http push message CircuitBreak is open, sleep {} seconds", errorCount);
+							Thread.sleep(1000 * errorCount);
+						}
+					} catch (Exception e) {
+						m_logger.warn("Http push message exception", e);
+						exception = e;
+					} finally {
+						m_bizLogger.log(pushEvent);
+						msg.ack(timer.stop(), exception);
+						timerGlobal.close();
+					}
+				}
+			}
+
+		});
+
+		return provider;
 	}
 
 }

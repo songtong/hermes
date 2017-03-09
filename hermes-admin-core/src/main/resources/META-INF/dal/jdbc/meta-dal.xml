@@ -244,6 +244,13 @@
       	FROM <TABLE/>
       	WHERE <FIELD name='status'/> = ${tStatus} ]]></statement>
 			</query>
+			<query name="findByTypeAndTopic" type="SELECT">
+				<param name="type" />
+				<param name="topic" />
+				<statement><![CDATA[SELECT <FIELDS/>
+      	FROM <TABLE/>
+      	WHERE <FIELD name='type'/> = ${type} AND <FIELD name='topic'/> = ${topic}]]></statement>
+			</query>
 		</query-defs>
 	</entity>
 	<entity name="app">

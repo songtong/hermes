@@ -14,6 +14,7 @@ import com.ctrip.hermes.admin.core.view.SubscriptionView;
 
 @Named
 public class SubscriptionService {
+	public static final String QMQ_TYPE = "qmq";
 
 	public enum SubscriptionStatus {
 		RUNNING, STOPPED
@@ -40,6 +41,10 @@ public class SubscriptionService {
 			result.add(view);
 		}
 		return result;
+	}
+
+	public SubscriptionView findSubscriptionByTypeAndTopic(String type, String topic) throws DalException {
+		return toSubscriptionView(m_subscriptionDao.findByTypeAndTopic(type, topic, SubscriptionEntity.READSET_FULL));
 	}
 
 	public SubscriptionView create(SubscriptionView view) throws DalException {
@@ -86,6 +91,8 @@ public class SubscriptionService {
 		sub.setEndpoints(view.getEndpoints());
 		sub.setName(view.getName());
 		sub.setStatus(view.getStatus());
+		sub.setType(view.getType());
+
 		return sub;
 	}
 
@@ -97,6 +104,8 @@ public class SubscriptionService {
 		view.setEndpoints(sub.getEndpoints());
 		view.setName(sub.getName());
 		view.setStatus(sub.getStatus());
+		view.setType(sub.getType());
+
 		return view;
 	}
 }

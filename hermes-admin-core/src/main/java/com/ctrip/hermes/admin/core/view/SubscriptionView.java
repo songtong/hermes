@@ -14,7 +14,7 @@ public class SubscriptionView {
 
 	private String endpoints;
 
-	private String type;// HTTP,SOA
+	private String type;
 
 	private String status;
 

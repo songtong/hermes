@@ -14,6 +14,7 @@
 					<tr>
 						<th style="width: 5%">#</th>
 						<th st-sort="name">Name</th>
+						<th st-sort="type">Type</th>
 						<th st-sort="topic">Topic</th>
 						<th st-sort="group">Consumer</th>
 						<th st-sort="endpoints">Endpoints</th>
@@ -26,6 +27,7 @@
 						<td style="width: 5%;"><label ng-bind="$index + 1"></label></td>
 						<td><span editable-text="sb.name" ng-bind="sb.name || 'Not Set'" e-name="name" e-form="rowform" onbeforesave="checkName($data, sb.id)"  e-required></span></td>
 						<td><span editable-text="sb.topic" ng-bind="sb.topic || 'Not Set'" e-name="topic" e-form="rowform" e-typeahead="topic for topic in topic_names | filter:$viewValue | limitTo:8"></span></td>
+						<td><span editable-text="sb.type" ng-bind="sb.type || 'hermes'" e-name="type" e-form="rowform" e-typeahead="type for type in ['qmq', 'hermes']"></span></td>
 						<td><span editable-text="sb.group" ng-bind="sb.group || 'Not Set'" e-name="group" e-form="rowform" e-typeahead="consumer for consumer in consumer_names | filter:$viewValue | limitTo:8"></span></td>
 						<td><span editable-text="sb.endpoints" ng-bind="sb.endpoints || 'Not Set'" e-name="endpoints" e-form="rowform"></span></td>
 						<td style="text-align: center;"><span ng-if="sb.status=='STOPPED'" tooltip="{{sb.status}}" class="status-danger"></span> <span ng-if="sb.status=='RUNNING'" tooltip="{{sb.status}}"

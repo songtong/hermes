@@ -109,7 +109,7 @@ public class TopicsResource {
 	}
 
 	private void publishAsync(final String topic, final Map<String, String> params, final InputStream content,
-	      final AsyncResponse response) {
+	      final AsyncResponse response, final boolean isQmq) {
 		executor.submit(new Runnable() {
 
 			@Override
@@ -119,11 +119,11 @@ public class TopicsResource {
 				try {
 					if ("PROD".equals(env.getEnv())) {
 						response.setTimeout(
-						      Integer.valueOf(env.getGlobalConfig().getProperty("gateway.topic.publish.timeout", "1000")),
-						      TimeUnit.MILLISECONDS);
+								Integer.valueOf(env.getGlobalConfig().getProperty("gateway.topic.publish.timeout", "1000")),
+								TimeUnit.MILLISECONDS);
 					}
 					response.setTimeoutHandler(new TopicTimeoutHandler(topic));
-					Future<SendResult> sendResult = producerService.send(topic, params, content);
+					Future<?> sendResult = producerService.send(topic, params, content, isQmq);
 					response.resume(sendResult.get());
 				} catch (Throwable e) {
 					response.resume(Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build());
@@ -161,7 +161,32 @@ public class TopicsResource {
 		TopicsResourceStatusMonitor.INSTANCE.updateRequestMeter(topicName);
 		TopicsResourceStatusMonitor.INSTANCE.updateRequestSizeHistogram(topicName, request.getContentLength());
 
-		publishAsync(topicName, params, content, response);
+		publishAsync(topicName, params, content, response, false);
+	}
+
+	@Path("qmq/{topicName}")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void publishAsync(@PathParam("topicName") String topicName, @Context HttpHeaders headers,
+							 @Context HttpServletRequest request, InputStream content, @Suspended final AsyncResponse response) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("{} {} {}", topicName, headers.getRequestHeaders().toString(), content);
+		}
+
+		Map<String, String> params = extractHeaderParams(headers);
+
+		BizEvent receiveEvent = new BizEvent("Rest.received");
+		receiveEvent
+				.addData("topic", topicName);
+		receiveEvent.addData("refKey", params.get("refKey"));
+		receiveEvent.addData("remoteHost", request.getRemoteHost());
+		bizLogger.log(receiveEvent);
+
+		TopicsResourceStatusMonitor.INSTANCE.updateRequestMeter(topicName);
+		TopicsResourceStatusMonitor.INSTANCE.updateRequestSizeHistogram(topicName, request.getContentLength());
+
+		publishAsync(topicName, params, content, response, true);
+
 	}
 
 }
