@@ -167,7 +167,7 @@ function findConsumer(consumers, consumerName) {
 	}
 	
 	for (var index in consumers) {
-		if (consumers[index].name = consumerName) {
+		if (consumers[index].name == consumerName) {
 			return consumers[index];
 		}
 	}

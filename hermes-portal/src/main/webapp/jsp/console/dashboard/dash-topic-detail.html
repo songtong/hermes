@@ -54,14 +54,16 @@
 									<li role="presentation" tooltip="{{consumer.name}} (id:{{consumer.id}})" ng-click="get_consumer_delay_for_topic(current_topic,consumer.name)">
 									<!-- Split button -->
 									<div class="btn-group col-md-12" style="padding-left:0px; padding-right:0px;">
-									  <button type="button" ng-class="'btn btn-primary col-md-11 ' + {true: 'active', false: ''}[current_consumer==consumer.name]">{{consumer.name|short:26}}</button>
-									  <button type="button" class="btn btn-primary col-md-1 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									  <button type="button" ng-class="'btn btn-default col-md-11 ' + {true: 'active', false: ''}[current_consumer==consumer.name]">
+									  	<a href="#/detail/{{current_topic}}/{{consumer.name}}">{{consumer.name|short:26}}</a>
+									  </button>
+									  <button type="button" class="btn btn-default col-md-1 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 									  	<span class="caret"></span>
 									  	&nbsp;
 									  	<span class="sr-only">Toggle Dropdown</span>
 									  </button>
 									  <ul class="dropdown-menu pull-right">
-									    <li><a href="#deadletter/latest/{{current_topic}}/{{current_consumer}}"><span class="glyphicon glyphicon-eye-open"></span>&nbsp死信</a></li>
+									    <li><a href="#deadletter/latest/{{current_topic}}/{{consumer.name}}"><span class="glyphicon glyphicon-eye-open"></span>&nbsp死信</a></li>
 									    <li><a target="_blank" href="http://hickwall.ctripcorp.com/grafana/dashboard/db/1/hermes?templating=topic:{{topic.id}}&templating=consumer:{{consumer.id}}"><span class="glyphicon glyphicon-stats"></span>&nbsp生产消费对比(Prod)</a></li>
 									  </ul>
 									</div>
