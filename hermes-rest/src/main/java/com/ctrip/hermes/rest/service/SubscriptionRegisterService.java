@@ -9,12 +9,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.ctrip.framework.clogging.agent.MessageConsumer;
-import com.ctrip.hermes.core.message.ConsumerMessage;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
+import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
+
+import qunar.tc.qmq.ListenerHolder;
+import qunar.tc.qmq.consumer.MessageConsumerProvider;
 
 import com.ctrip.hermes.admin.core.service.SubscriptionService;
 import com.ctrip.hermes.admin.core.service.SubscriptionService.SubscriptionStatus;
@@ -24,9 +27,6 @@ import com.ctrip.hermes.core.utils.HermesThreadFactory;
 import com.ctrip.hermes.rest.status.SubscriptionPushStatusMonitor;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import qunar.tc.qmq.Message;
-import qunar.tc.qmq.MessageListener;
-import qunar.tc.qmq.consumer.MessageConsumerProvider;
 
 @Named
 public class SubscriptionRegisterService {
@@ -37,8 +37,8 @@ public class SubscriptionRegisterService {
 
 	private Map<SubscriptionView, ConsumerHolder> consumerHolders = new ConcurrentHashMap<>();
 
-	private Map<SubscriptionView, MessageConsumerProvider> consumerProviders = new ConcurrentHashMap<>();
-
+	private Map<SubscriptionView, ListenerHolder> listenerHolders = new ConcurrentHashMap<>();
+	
 	@Inject
 	private HttpPushService httpService;
 
@@ -113,8 +113,8 @@ public class SubscriptionRegisterService {
 		boolean isStarted = true;
 		try {
 			if (sub.getType() != null && "qmq".equalsIgnoreCase(sub.getType())) {
-				MessageConsumerProvider provider = httpService.startQmqPusher(sub);
-				consumerProviders.put(sub, provider);
+				ListenerHolder holder = httpService.startQmqPusher(sub);
+				listenerHolders.put(sub, holder);
 			} else {
 				consumerHolder = httpService.startPusher(sub);
 				consumerHolders.put(sub, consumerHolder);
@@ -133,8 +133,8 @@ public class SubscriptionRegisterService {
 			scheduledExecutor.shutdown();
 		for (SubscriptionView sub : subscriptions) {
 			if (sub.getType() != null && sub.getType().equalsIgnoreCase("qmq")) {
-				MessageConsumerProvider provider = consumerProviders.get(sub);
-				provider.destroy();
+				ListenerHolder holder = listenerHolders.get(sub);
+				holder.stopListen();
 			} else {
 				ConsumerHolder consumerHolder = consumerHolders.remove(sub);
 				consumerHolder.close();
@@ -150,9 +150,9 @@ public class SubscriptionRegisterService {
 		boolean isClosed = true;
 		try {
 			if (sub.getType() != null && "qmq".equalsIgnoreCase(sub.getType())) {
-				MessageConsumerProvider provider = consumerProviders.get(sub);
-				provider.destroy();
-				consumerProviders.remove(sub);
+				ListenerHolder holder = listenerHolders.get(sub);
+				holder.stopListen();
+				listenerHolders.remove(sub);
 			} else {
 				ConsumerHolder consumerHolder = consumerHolders.get(sub);
 				consumerHolder.close();
@@ -172,4 +172,5 @@ public class SubscriptionRegisterService {
 	public Set<SubscriptionView> listSubscriptions() {
 		return this.subscriptions;
 	}
+
 }
