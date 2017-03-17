@@ -1,31 +1,23 @@
 package com.ctrip.hermes.rest.service;
 
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import qunar.tc.qmq.Message;
+import qunar.tc.qmq.MessageSendStateListener;
+import qunar.tc.qmq.base.BaseMessage;
+import qunar.tc.qmq.producer.MessageProducerProvider;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.ParserConfig;
-import com.ctrip.hermes.core.message.payload.PayloadCodec;
-import com.ctrip.hermes.core.message.payload.RawMessage;
-import com.ctrip.hermes.core.result.SendResult;
-import com.ctrip.hermes.core.utils.PlexusComponentLocator;
-import com.ctrip.hermes.meta.entity.Codec;
-import com.ctrip.hermes.producer.api.Producer;
-import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 import com.ctrip.hermes.rest.service.json.CharSequenceDeserializer;
-import com.google.common.base.Charsets;
-import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.SettableFuture;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
-
-import hermes.ubt.custom.ServerCustomEvent;
-import qunar.tc.qmq.Message;
-import qunar.tc.qmq.MessageSendStateListener;
-import qunar.tc.qmq.producer.MessageProducerProvider;
 
 public class QmqProducerSendCommand extends HystrixCommand<Future<Message>> {
     private static final ParserConfig parserConfig = new ParserConfig();
@@ -54,7 +46,7 @@ public class QmqProducerSendCommand extends HystrixCommand<Future<Message>> {
 
     @Override
     protected Future<Message> run() throws Exception {
-        byte[] payload = ByteStreams.toByteArray(is);
+        HashMap<String, Object> attrs = JSON.parseObject(is, HashMap.class);
 
         Message message = null;
         if (params.containsKey("refKey")) {
@@ -77,8 +69,10 @@ public class QmqProducerSendCommand extends HystrixCommand<Future<Message>> {
                 }
             }
         }
-
-        message.setProperty("data", new String(payload, "utf-8"));
+        
+        attrs.putAll(message.getAttrs());
+        ((BaseMessage)message).setAttrs(attrs);
+        
 
         final SettableFuture<Message> sendFuture = SettableFuture.create();
         provider.sendMessage(message, new MessageSendStateListener() {
@@ -96,4 +90,6 @@ public class QmqProducerSendCommand extends HystrixCommand<Future<Message>> {
 
         return sendFuture;
     }
+    
+    
 }

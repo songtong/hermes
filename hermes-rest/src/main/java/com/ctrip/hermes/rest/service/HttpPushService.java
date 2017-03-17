@@ -19,6 +19,12 @@ import org.slf4j.LoggerFactory;
 import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 
+import qunar.tc.qmq.ListenerHolder;
+import qunar.tc.qmq.Message;
+import qunar.tc.qmq.MessageListener;
+import qunar.tc.qmq.consumer.MessageConsumerProvider;
+
+import com.alibaba.fastjson.JSON;
 import com.codahale.metrics.Timer;
 import com.ctrip.hermes.admin.core.view.SubscriptionView;
 import com.ctrip.hermes.consumer.api.BaseMessageListener;
@@ -33,10 +39,6 @@ import com.ctrip.hermes.core.meta.MetaService;
 import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.rest.status.SubscriptionPushStatusMonitor;
 import com.ctrip.hermes.rest.status.Tge;
-import qunar.tc.qmq.Message;
-import qunar.tc.qmq.MessageListener;
-import qunar.tc.qmq.consumer.MessageConsumerProvider;
-import qunar.tc.qmq.producer.MessageProducerProvider;
 
 @Named
 public class HttpPushService implements Initializable, Disposable {
@@ -55,6 +57,8 @@ public class HttpPushService implements Initializable, Disposable {
 	private CloseableHttpClient m_httpClient;
 
 	private RequestConfig m_requestConfig;
+	
+	private MessageConsumerProvider m_consumerProvider;
 
 	@Override
 	public void dispose() {
@@ -78,6 +82,13 @@ public class HttpPushService implements Initializable, Disposable {
 		b.setConnectTimeout(Integer.valueOf(globalConfig.getProperty("gateway.subcription.connect.timeout", "2000")));
 		b.setSocketTimeout(Integer.valueOf(globalConfig.getProperty("gateway.subscription.socket.timeout", "5000")));
 		m_requestConfig = b.build();
+		
+		m_consumerProvider = new MessageConsumerProvider();
+		try {
+	      m_consumerProvider.afterPropertiesSet();
+      } catch (Exception e) {
+	      throw new InitializationException(e.getMessage());
+      }
 	}
 
 	public ConsumerHolder startPusher(final SubscriptionView sub) {
@@ -153,13 +164,10 @@ public class HttpPushService implements Initializable, Disposable {
 		return consumerHolder;
 	}
 
-	public MessageConsumerProvider startQmqPusher(final SubscriptionView sub) throws Exception {
-		MessageConsumerProvider provider = new MessageConsumerProvider();
-		provider.afterPropertiesSet();
-
+	public ListenerHolder startQmqPusher(final SubscriptionView sub) throws Exception {
 		final String[] urls = sub.getEndpoints().split(",");
 
-		provider.addListener(sub.getTopic(), sub.getGroup(), new MessageListener(){
+		return m_consumerProvider.addListener(sub.getTopic(), sub.getGroup(), new MessageListener(){
 
 			@Override
 			public void onMessage(Message msg) {
@@ -177,7 +185,7 @@ public class HttpPushService implements Initializable, Disposable {
 						pushEvent.addData("refKey", msg.getMessageId());
 						pushEvent.addData("endpoint", url);
 
-						byte[] rawMsg = msg.getStringProperty("data").getBytes();
+						byte[] rawMsg = JSON.toJSONBytes(msg);
 
 						SubscriptionPushStatusMonitor.INSTANCE.updateRequestMeter(tge);
 						SubscriptionPushStatusMonitor.INSTANCE.updateRequestSizeHistogram(tge, rawMsg.length);
@@ -221,7 +229,6 @@ public class HttpPushService implements Initializable, Disposable {
 
 		});
 
-		return provider;
 	}
 
 }
