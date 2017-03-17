@@ -109,7 +109,7 @@
 			<dependency>
 				<groupId>com.ctrip.framework</groupId>
 				<artifactId>vi</artifactId>
-				<version>0.7.3</version>
+				<version>0.9.0</version>
 				<exclusions>
 					<exclusion>
 						<groupId>commons-logging</groupId>
@@ -634,7 +634,7 @@
 			<dependency>
 				<groupId>com.ctrip.framework</groupId>
 				<artifactId>framework-foundation</artifactId>
-				<version>1.4.0</version>
+				<version>1.4.1</version>
 			</dependency>
 			<dependency>
 				<groupId>de.danielbechler</groupId>
