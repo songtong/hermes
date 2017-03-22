@@ -208,7 +208,7 @@ consumer_module.run(function(editableOptions) {
 		if (scope.currentConsumer.resetOption == 'shift') {
 			message = "确认要重置offset至相对位移:" + scope.shift + " ?";
 		} else {
-			message = "确认要重置offset至 " + scope.currentConsumer.resetOption + " " + (scope.currentConsumer.resetOption == "timepoint" ? scope.currentTimestamp.format('%y-%M-%dT%H:%m:%s') : "") + "吗？";
+			message = "确认要重置offset至 " + scope.currentConsumer.resetOption + " " + (scope.currentConsumer.resetOption == "timestamp" ? scope.currentTimestamp.format('%y-%M-%dT%H:%m:%s') : "") + "吗？";
 		}
 		bootbox.confirm({
 			title : "请确认",
@@ -246,12 +246,12 @@ consumer_module.run(function(editableOptions) {
 	}
 
 	scope.expandCollapse = function() {
-		if (scope.currentConsumer.resetOption == 'timepoint') {
+		if (scope.currentConsumer.resetOption == 'timestamp') {
 			scope.maxTimestamp = new Date().format('%y-%M-%dT%H:%m:%s');
-			$('#timepoint').removeClass('collapse');
+			$('#timestamp').removeClass('collapse');
 
 		} else {
-			$('#timepoint').addClass('collapse');
+			$('#timestamp').addClass('collapse');
 		}
 
 		if (scope.currentConsumer.resetOption == 'shift') {
