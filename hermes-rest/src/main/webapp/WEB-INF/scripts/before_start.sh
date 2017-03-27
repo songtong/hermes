@@ -52,6 +52,8 @@ cp $SOURCE_DIR/$ENV/hermes.properties $SCRIPT_DIR/../classes/
 
 # Add extraenv.sh
 cp $SOURCE_DIR/env.sh $SCRIPT_DIR/extraenv.sh
+cp $SOURCE_DIR/env.sh $APP_DIR/tomcat/bin/extraenv.sh
+sudo ln -s $APP_DIR/tomcat/bin/extraenv.sh $APP_DIR/bin/env.sh
 
 # Distribute list of config files.
 cp $SOURCE_DIR/$ENV/datasources.xml $CONFIG_DIR/datasources.xml
