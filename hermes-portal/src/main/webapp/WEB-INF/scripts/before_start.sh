@@ -9,6 +9,9 @@ SCRIPT_DIR=$(dirname $SCRIPT_PATH)
 # Define app id.
 APP_ID=100003806
 
+# Define app dir.
+APP_DIR=/opt/tars/apps/$APP_ID
+
 # Define hermes dir.
 CONFIG_DIR=/opt/data/hermes
 
@@ -48,6 +51,8 @@ cp $SOURCE_DIR/$ENV/web.xml $SCRIPT_DIR/../web.xml
 
 # Add extraenv.sh
 cp $SOURCE_DIR/env.sh $SCRIPT_DIR/extraenv.sh
+cp $SOURCE_DIR/env.sh $APP_DIR/tomcat/bin/extraenv.sh
+sudo ln -s $APP_DIR/tomcat/bin/extraenv.sh $APP_DIR/bin/env.sh
 
 # Replace hermes.properties file.
 cp $SOURCE_DIR/$ENV/hermes.properties $SCRIPT_DIR/../classes/
