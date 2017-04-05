@@ -37,11 +37,16 @@
 			</div>
 			<div class="col-md-7">
 				<div class="form-group" style="margin-bottom: 0px;">
-					<label>存储类型</label> <select class="form-control" ng-model="new_application.storageType" ng-options="storageType for storageType in storageTypes"></select>
+					<label>存储类型</label> <select class="form-control" ng-model="new_application.storageType" ng-change="checkQmqRouter()" ng-options="storageType for storageType in storageTypes"></select>
 				</div>
 				<span class=" help-block"><small>日志类消息请选择使用kafka存储类型。</small></span>
-				<div ng-if="new_application.storageType=='kafka'" class="form-group">
-					<label>语言环境</label> <select class="form-control" ng-model="new_application.languageType" ng-options="languageType for languageType in languageTypes"></select>
+				<div class="form-group">
+					<label>语言环境</label> <select class="form-control" ng-model="new_application.languageType" ng-change="checkQmqRouter()" ng-options="languageType for languageType in languageTypes"></select>
+				</div>
+				<div class="form-group">
+					<label>是否要求消息有序？</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needInOrder" ng-value=true> 是
+					</label> <label class="radio-inline"> <input type="radio" ng-model="new_application.needInOrder" ng-value=false ng-change="checkQmqRouter()"> 否
+					</label>
 				</div>
 				<div class="form-group">
 					<label>编码类型</label> <select class="form-control" ng-model="new_application.baseCodecType" ng-options="codecType for codecType in codecTypes"></select>

@@ -144,7 +144,7 @@
 <alert-x id="metaWarning" title="提醒" context="envInvolved">
 <p>您刚刚在下面的环境做了SYNC操作， 需要进行META的REBUILD.</p>
 <ul ng-repeat="env in context">
-	<li><strong>{{env | uppercase}}</strong> <a href="http://hermes.fws.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='fws'">http://hermes.fws.qa.nt.ctripcorp.com/console/meta</a> <a href="http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='uat'">http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta</a> <a href="http://hermes.fx.ctripcorp.com/console/console/meta" target="_blank" ng-if="env=='prod'">http://hermes.fx.ctripcorp.com/console/console/meta</a>
+	<li><strong>{{env | uppercase}}</strong> <a href="http://hermes.fws.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='fws'">http://hermes.fws.qa.nt.ctripcorp.com/console/meta</a> <a href="http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta" target="_blank" ng-if="env=='uat'">http://hermes.fx.uat.qa.nt.ctripcorp.com/console/meta</a> <a href="http://hermes.fx.ctripcorp.com/console/meta" target="_blank" ng-if="env=='prod'">http://hermes.fx.ctripcorp.com/console/meta</a>
 		<a href="http://hermes.fx.tools.ctripcorp.com/console/meta" target="_blank" ng-if="env=='tools'">http://hermes.fx.tools.ctripcorp.com/console/meta</a></li>
 </ul>
 </alert-x>
