@@ -107,7 +107,7 @@ application_module.controller('app-topic-controller', [
 				if (!$scope.new_application.needInOrder && $scope.new_application.storageType == 'mysql' && $scope.new_application.languageType == 'java') {
 					bootbox.alert({
 						title : "<span class='glyphicon glyphicon-alert' style='color:#a94442;'></span><span style='font-family: 微软雅黑;color:#a94442;'>&emsp;请注意</span>",
-						message : "<p>根据公司最新Java规范，无序消息队列请使用QMQ: <br />" + "<br>如何开始: <a href='http://conf.ctripcorp.com/pages/viewpage.action?pageId=118310160'>QMQ 携程版开发手册</a>"
+						message : "<p>根据公司最新Java规范，无序消息队列请使用QMQ: <br />" + "<br>如何开始: <a href='http://conf.ctripcorp.com/pages/viewpage.action?pageId=118310160' target='_blank'>QMQ 携程版开发手册</a>"
 								+ "<br />治理界面 : <a href='http://qmq.fws.qa.nt.ctripcorp.com/application/create.do' target='_blank'>FWS 环境</a>; <a href='http://qmq.uat.qa.nt.ctripcorp.com/application/create.do' target='_blank'>UAT 环境</a>; <a href='http://qmq.ctripcorp.com/application/create.do' target='_blank'>PROD 环境</a> "
 								+ "<br><br /> <span class='text-warning'><b>如仍选择使用Hermes，请继续完善表单。</b></span></p>",
 						buttons : {
