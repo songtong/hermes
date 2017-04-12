@@ -15,6 +15,10 @@ public interface ConsumerMessage<T> {
 	public Iterator<String> getPropertyNames();
 
 	public long getBornTime();
+	
+	public String getProducerIp();
+	
+	public String getProducerAppId();
 
 	public String getTopic();
 

@@ -10,6 +10,7 @@ import org.unidal.lookup.annotation.Inject;
 import org.unidal.lookup.annotation.Named;
 import org.unidal.net.Networks;
 
+import com.ctrip.framework.foundation.Foundation;
 import com.ctrip.hermes.core.message.MessagePropertyNames;
 import com.ctrip.hermes.core.message.ProducerMessage;
 import com.ctrip.hermes.core.pipeline.PipelineContext;
@@ -51,6 +52,7 @@ public class EnrichMessageValve implements Valve, Initializable {
 
 	private void enrichMessageProperties(ProducerMessage<?> msg, String ip) {
 		msg.addDurableSysProperty(MessagePropertyNames.PRODUCER_IP, ip);
+		msg.addDurableSysProperty(MessagePropertyNames.APP_ID, Foundation.app().getAppId());
 	}
 
 	private void enrichPartitionKey(ProducerMessage<?> msg) {
