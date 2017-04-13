@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 
 import org.codehaus.plexus.util.StringUtils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.unidal.lookup.ComponentTestCase;
 import org.unidal.tuple.Pair;
@@ -110,5 +111,65 @@ public class DefaultFilterTest extends ComponentTestCase {
 			}
 			System.out.println("cost: " + (System.currentTimeMillis() - begin));
 		}
+	}
+
+	@Test
+	public void testParseCondition() {
+		DefaultFilter filter = new DefaultFilter();
+		Map<String, List<String>> cs = filter
+		      .parseConditions(";;  CMsg-Sub~Account.Register, Account.Offline.Register; Hermes-Tag~ 	Hello World; ;; ");
+		for (Entry<String, List<String>> entry : cs.entrySet()) {
+			System.out.println(String.format("k: %s, v: %s", entry.getKey(), entry.getValue()));
+		}
+		Map<String, List<String>> cs2 = filter
+		      .parseConditions("CMsg-Sub~Account.Register, Account.Offline.Register; Hermes-Tag~Hello World, Hello Kitty");
+		for (Entry<String, List<String>> entry : cs2.entrySet()) {
+			System.out.println(String.format("k: %s, v: %s", entry.getKey(), entry.getValue()));
+		}
+	}
+
+	@Test
+	public void testMatch() {
+		String filterString = ";;  CMsg-Sub~Account.Register, Account.Offline.Register; ;; ";
+		Filter filter = lookup(Filter.class);
+		Map<String, String> tag1 = new HashMap<>();
+		tag1.put("CMsg-Sub", "Account.Register");
+
+		Map<String, String> tag2 = new HashMap<>();
+		tag2.put("CMsg-Sub", "Account.Offline.Register");
+
+		Map<String, String> tag3 = new HashMap<>();
+		tag3.put("CMsg-Sub", "Account.Register, Account.Offline.Register");
+
+		Assert.assertTrue(filter.isMatch("MockTopic", filterString, tag1));
+		Assert.assertTrue(filter.isMatch("MockTopic", filterString, tag2));
+		Assert.assertFalse(filter.isMatch("MockTopic", filterString, tag3));
+
+		String filterString2 = "CMsg-Sub~Account.Register";
+		Map<String, String> tag4 = new HashMap<>();
+		tag4.put("CMsg-Sub", "Account.Register");
+
+		Map<String, String> tag5 = new HashMap<>();
+		tag5.put("CMsg-Sub", "Account.Register, Account.Offline.Register");
+
+		Assert.assertTrue(filter.isMatch("MockTopic", filterString2, tag4));
+		Assert.assertFalse(filter.isMatch("MockTopic", filterString2, tag5));
+
+		String filterString3 = "CMsg-Sub~Account.Register, Account.Offline.Register; Hermes-Tag~Hello World, Hello Kitty";
+		Map<String, String> tag6 = new HashMap<>();
+		tag6.put("CMsg-Sub", "Account.Register");
+		tag6.put("Hermes-Tag", "HelloWorld");
+
+		Map<String, String> tag7 = new HashMap<>();
+		tag7.put("CMsg-Sub", "Account.Offline.Register");
+		tag7.put("Hermes-Tag", "Hello World");
+
+		Map<String, String> tag8 = new HashMap<>();
+		tag8.put("CMsg-Sub", "Account.Offline.Register");
+		tag8.put("Hermes-Tag", "HelloKitty");
+
+		Assert.assertTrue(filter.isMatch("MockTopic", filterString3, tag6));
+		Assert.assertFalse(filter.isMatch("MockTopic", filterString3, tag7));
+		Assert.assertTrue(filter.isMatch("MockTopic", filterString3, tag8));
 	}
 }

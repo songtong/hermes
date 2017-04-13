@@ -1,6 +1,8 @@
 package com.ctrip.hermes.broker.queue.storage.filter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
@@ -29,14 +31,14 @@ public class DefaultFilter implements Filter, Initializable {
 	@Inject
 	private BrokerConfigProvider m_config;
 
-	private LoadingCache<String, Map<String, String>> m_filterConditionCache;
+	private LoadingCache<String, Map<String, List<String>>> m_filterConditionCache;
 
 	private LoadingCache<String, Pattern> m_conditionPatternCache;
 
 	private LoadingCache<String, LoadingCache<Pair<String, String>, Boolean>> m_matchedCache;
 
-	private Map<String, String> parseConditions(String filter) {
-		Map<String, String> map = new HashMap<>();
+	protected Map<String, List<String>> parseConditions(String filter) {
+		Map<String, List<String>> map = new HashMap<>();
 		try {
 			StringBuilder sb = new StringBuilder(50);
 			String k = null, v = null;
@@ -44,7 +46,7 @@ public class DefaultFilter implements Filter, Initializable {
 			int idx = 0;
 			while (idx < filter.length()) {
 				wordChar = filter.charAt(idx);
-				if (wordChar != ' ' && wordChar != '\t' && wordChar != '\n' && wordChar != ',') {
+				if (wordChar != ' ' && wordChar != '\t' && wordChar != '\n' && wordChar != ',' && wordChar != ';') {
 					break;
 				}
 				idx++;
@@ -57,14 +59,21 @@ public class DefaultFilter implements Filter, Initializable {
 					switch (wordChar) {
 					case '~':
 						k = sb.toString();
+						map.put(k, new ArrayList<String>());
 						sb = new StringBuilder(50);
 						newCondition = false;
 						break;
 					case ',':
 						v = sb.toString();
 						sb = new StringBuilder(50);
+						map.get(k).add(v);
+						newCondition = false;
+						break;
+					case ';':
+						v = sb.toString();
+						sb = new StringBuilder(50);
 						if (!newCondition) {
-							map.put(k, v);
+							map.get(k).add(v);
 						}
 						newCondition = true;
 						break;
@@ -75,9 +84,9 @@ public class DefaultFilter implements Filter, Initializable {
 				}
 				idx++;
 			}
-			if (wordChar != ',') {
+			if (wordChar != ';') {
 				v = sb.toString();
-				map.put(k, v);
+				map.get(k).add(v);
 			}
 		} catch (Exception e) {
 			log.error("Parse filter failed: {}", filter, e);
@@ -113,8 +122,8 @@ public class DefaultFilter implements Filter, Initializable {
 	@Override
 	public boolean isMatch(String topicName, String filter, Map<String, String> source) {
 		try {
-			Map<String, String> conditions = m_filterConditionCache.get(filter);
-			for (Entry<String, String> entry : conditions.entrySet()) {
+			Map<String, List<String>> conditions = m_filterConditionCache.get(filter);
+			for (Entry<String, List<String>> entry : conditions.entrySet()) {
 				String sourceValue = source.get(entry.getKey());
 				if (StringUtils.isBlank(sourceValue) || !matches(topicName, sourceValue, entry.getValue())) {
 					return false;
@@ -136,14 +145,18 @@ public class DefaultFilter implements Filter, Initializable {
 		return false;
 	}
 
-	private boolean matches(String topic, String source, String pattern) {
-		if (source.equalsIgnoreCase(pattern)) {
-			return true;
-		} else if (isPattern(pattern)) {
-			try {
-				return m_matchedCache.get(topic).get(new Pair<String, String>(source, pattern));
-			} catch (ExecutionException e) {
-				log.debug("Filter matched cache load failed: {}\t{}", source, pattern, e);
+	private boolean matches(String topic, String source, List<String> patterns) {
+		for (String pattern : patterns) {
+			if (source.equalsIgnoreCase(pattern)) {
+				return true;
+			} else if (isPattern(pattern)) {
+				try {
+					if (m_matchedCache.get(topic).get(new Pair<String, String>(source, pattern))) {
+						return true;
+					}
+				} catch (ExecutionException e) {
+					log.debug("Filter matched cache load failed: {}\t{}", source, pattern, e);
+				}
 			}
 		}
 		return false;
@@ -154,9 +167,9 @@ public class DefaultFilter implements Filter, Initializable {
 		m_filterConditionCache = CacheBuilder.newBuilder() //
 		      .initialCapacity(m_config.getFilterPatternCacheSize()) //
 		      .maximumSize(m_config.getFilterPatternCacheSize()) //
-		      .build(new CacheLoader<String, Map<String, String>>() {
+		      .build(new CacheLoader<String, Map<String, List<String>>>() {
 			      @Override
-			      public Map<String, String> load(String filter) throws Exception {
+			      public Map<String, List<String>> load(String filter) throws Exception {
 				      return parseConditions(filter);
 			      }
 		      });
