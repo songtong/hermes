@@ -7,6 +7,7 @@ import java.util.Iterator;
 import com.ctrip.hermes.consumer.message.BrokerConsumerMessage;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.message.MessagePropertyNames;
 import com.ctrip.hermes.core.message.PropertiesHolder;
 
 public class PullBrokerConsumerMessage<T> implements ConsumerMessage<T> {
@@ -152,5 +153,15 @@ public class PullBrokerConsumerMessage<T> implements ConsumerMessage<T> {
 	public int getResendTimes() {
 		return m_brokerMsg.getResendTimes();
 	}
+	
+	@Override
+   public String getProducerIp() {
+		return getPropertiesHolder().getDurableSysProperty(MessagePropertyNames.PRODUCER_IP);
+   }
+
+	@Override
+   public String getProducerAppId() {
+		return getPropertiesHolder().getDurableSysProperty(MessagePropertyNames.APP_ID);
+   }
 
 }

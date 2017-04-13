@@ -4,10 +4,12 @@ import io.netty.channel.Channel;
 
 import java.util.Iterator;
 
+import com.ctrip.framework.foundation.Foundation;
 import com.ctrip.hermes.consumer.engine.ack.AckManager;
 import com.ctrip.hermes.core.message.BaseConsumerMessage;
 import com.ctrip.hermes.core.message.BaseConsumerMessageAware;
 import com.ctrip.hermes.core.message.ConsumerMessage;
+import com.ctrip.hermes.core.message.MessagePropertyNames;
 import com.ctrip.hermes.core.message.PropertiesHolder;
 import com.ctrip.hermes.core.message.PropertiesHolderAware;
 import com.ctrip.hermes.core.utils.PlexusComponentLocator;
@@ -184,4 +186,14 @@ public class BrokerConsumerMessage<T> implements ConsumerMessage<T>, PropertiesH
 			return 0;
 		}
 	}
+
+	@Override
+   public String getProducerIp() {
+		return getPropertiesHolder().getDurableSysProperty(MessagePropertyNames.PRODUCER_IP);
+   }
+
+	@Override
+   public String getProducerAppId() {
+		return getPropertiesHolder().getDurableSysProperty(MessagePropertyNames.APP_ID);
+   }
 }
