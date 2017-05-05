@@ -311,7 +311,7 @@ CREATE TABLE `idc` (
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='idc信息'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='idc信息';
 
 CREATE TABLE `zookeeper_ensemble` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
