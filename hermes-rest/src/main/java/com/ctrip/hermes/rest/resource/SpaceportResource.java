@@ -41,7 +41,7 @@ import com.ctrip.hermes.env.ClientEnvironment;
 import com.ctrip.hermes.producer.api.Producer;
 import com.ctrip.hermes.producer.api.Producer.MessageHolder;
 
-@Path("/spaceport/")
+@Path("/{a:spaceport|wireless}/")
 @Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class SpaceportResource {
